@@ -10,6 +10,7 @@ TUMOR_MAP = "tumor-map"
 TYPER_RESULT = "docs/results/2026-10-18-typing-calibration-reproduction.md"
 DETECTOR_RESULT = "docs/results/2026-10-18-geometric-scorer-reproduction.md"
 INTERACTIVE_RESULT = "docs/results/2026-11-06-interactive-protocol-on-tnbc.md"
+TUMOR_MAP_RESULT = "docs/results/2026-11-16-tumor-map-evaluation-on-three-test-slides.md"
 ROUND_ADR = "docs/adr/0319-training-rounds-start-from-the-typer-and-roll-back-by-pointer.md"
 MAX_ECE = 0.05
 TOLERANCE = 0.01
@@ -95,9 +96,10 @@ THRESHOLDS: Mapping[str, Thresholds] = {
     ),
     TUMOR_MAP: Thresholds(
         task=TUMOR_MAP,
-        benchmark="CAMELYON16 test slides",
-        source="TODO: MLEVAL-005 (tumor map evaluation) has not measured a tumor map yet",
-        unmeasured="no tumor map threshold is measured yet",
+        benchmark="CAMELYON16 test_001, test_065 and test_013, pooled lesion FROC and cell Dice",
+        source=TUMOR_MAP_RESULT,
+        baseline={"froc": 0.7222, "dice": 0.8986},
+        allowed_drop={"froc": TOLERANCE, "dice": TOLERANCE},
     ),
 }
 

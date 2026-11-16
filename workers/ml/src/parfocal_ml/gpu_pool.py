@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TypedDict
+from typing import NotRequired, TypedDict
+
+from parfocal_common.residency import home_of
 
 MIB_PER_GIB = 1024
 INTERACTIVE_SCALEDOWN_SECONDS = 300
@@ -51,6 +53,7 @@ class PoolLimits:
     scaledown_window_seconds: int
     min_containers: int = 0
     buffer_containers: int = 0
+    region: str | None = None
 
     @property
     def function_name(self) -> str:
@@ -132,6 +135,7 @@ class FunctionOptions(TypedDict):
     timeout: int
     serialized: bool
     name: str
+    region: NotRequired[str]
 
 
 class ConcurrencyOptions(TypedDict):
@@ -158,6 +162,8 @@ def pool_problems(pool: PoolLimits) -> list[str]:
         problems.append("scaledown window outside the idle cap")
     if not 0 < pool.timeout_seconds <= MAX_TIMEOUT_SECONDS:
         problems.append("timeout outside the job cap")
+    if pool.region is not None and home_of(pool.region) is None:
+        problems.append("region is not a Modal EU or US region")
     return problems
 
 
@@ -178,7 +184,7 @@ def worst_case_hourly_usd(pools: tuple[PoolLimits, ...]) -> float:
 
 
 def function_options(pool: PoolLimits) -> FunctionOptions:
-    return {
+    options: FunctionOptions = {
         "gpu": None if pool.gpu is None else pool.gpu.value,
         "memory": (pool.memory_request_mib, pool.memory_limit_mib),
         "max_containers": pool.max_containers,
@@ -189,6 +195,9 @@ def function_options(pool: PoolLimits) -> FunctionOptions:
         "serialized": True,
         "name": pool.function_name,
     }
+    if pool.region is not None:
+        options["region"] = pool.region
+    return options
 
 
 def concurrency_options(pool: PoolLimits) -> ConcurrencyOptions:

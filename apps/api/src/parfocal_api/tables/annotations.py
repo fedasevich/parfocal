@@ -22,7 +22,7 @@ from sqlalchemy import (
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import case_timestamps, owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
 class AnnotationKind(StrEnum):
@@ -54,7 +54,7 @@ slide_counters = Table(
     Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("letter", String(1), primary_key=True, info=OPERATIONAL),
     Column("last", Integer, nullable=False, info=OPERATIONAL),
-    ForeignKeyConstraint(["slide_id"], ["slides.id"]),
+    tenant_foreign_key("slide_id", "slides"),
     CheckConstraint("letter IN ('T', 'C', 'R', 'Z', 'M', 'A', 'N')", name="letter"),
     CheckConstraint("last >= 0", name="last"),
 )
@@ -107,13 +107,23 @@ annotations = Table(
     CheckConstraint("(origin <> 'human') = (source_number IS NOT NULL)", name="source"),
     CheckConstraint("origin = 'human' OR task_id IS NOT NULL", name="source_task"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
-        ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
     ),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
     ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
+    ),
+    tenant_unique(),
     Index("ix_annotations_geometry", "geometry", postgresql_using="gist"),
     one_of("kind", AnnotationKind),
     CheckConstraint("number > 0", name="number"),
@@ -151,7 +161,7 @@ annotation_versions = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
-    ForeignKeyConstraint(["annotation_id"], ["annotations.id"]),
+    tenant_foreign_key("annotation_id", "annotations"),
     one_of("change", AnnotationChange),
 )
 
@@ -176,7 +186,10 @@ painted_maps = Table(
     *timestamps(),
     UniqueConstraint("id", "tenant_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
+    ForeignKeyConstraint(
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
+    ),
     CheckConstraint("version > 0", name="version"),
     CheckConstraint("cell > 0", name="cell"),
     CheckConstraint("tile_cells > 0", name="tile_cells"),

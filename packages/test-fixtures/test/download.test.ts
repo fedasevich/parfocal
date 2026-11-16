@@ -17,6 +17,7 @@ type Behaviour = { honourRange: boolean; failFirst: number; truncateAt: number |
 let server: Server;
 let dir: string;
 let requests: IncomingHttpHeaders[];
+let paths: string[];
 let behaviour: Behaviour;
 
 function fixture(overrides: Partial<RemoteFixture> = {}): RemoteFixture {
@@ -34,9 +35,16 @@ function fixture(overrides: Partial<RemoteFixture> = {}): RemoteFixture {
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "fixtures-"));
   requests = [];
+  paths = [];
   behaviour = { honourRange: true, failFirst: 0, truncateAt: undefined };
   server = createServer((request, response) => {
     requests.push(request.headers);
+    paths.push(request.url ?? "");
+    if (request.url?.startsWith("/denied")) {
+      response.writeHead(403);
+      response.end("AccessDenied");
+      return;
+    }
     if (requests.length <= behaviour.failFirst) {
       response.destroy();
       return;
@@ -125,4 +133,42 @@ test("downloads when the local copy is corrupt", async () => {
   assert.equal(await downloadFixture(fixture(), cache, { localDirs: [local] }), "downloaded");
   assert.equal((await lstat(join(cache, "slide.svs"))).isSymbolicLink(), false);
   assert.equal(requests.length, 1);
+});
+
+function mirrorAt(path: string) {
+  const { port } = server.address() as AddressInfo;
+  return () => `http://127.0.0.1:${port}${path}?X-Amz-Signature=abc`;
+}
+
+test("reads from the R2 mirror before the upstream URL", async () => {
+  const result = await downloadFixture(fixture(), dir, {
+    mirrorUrl: mirrorAt("/mirror/slide.svs"),
+  });
+  assert.equal(result, "downloaded");
+  assert.deepEqual(paths, ["/mirror/slide.svs?X-Amz-Signature=abc"]);
+});
+
+test("falls back to the upstream URL when the mirror refuses", async () => {
+  const result = await downloadFixture(fixture(), dir, {
+    mirrorUrl: mirrorAt("/denied/slide.svs"),
+  });
+  assert.equal(result, "downloaded");
+  assert.deepEqual(paths, ["/denied/slide.svs?X-Amz-Signature=abc", "/slide.svs"]);
+});
+
+test("falls back to the upstream URL when the mirror is unreachable", async () => {
+  const result = await downloadFixture(fixture(), dir, {
+    mirrorUrl: () => "http://127.0.0.1:1/slide.svs",
+  });
+  assert.equal(result, "downloaded");
+  assert.deepEqual(paths, ["/slide.svs"]);
+});
+
+test("names the last source when every source refuses", async () => {
+  const { port } = server.address() as AddressInfo;
+  const refused = fixture({ url: `http://127.0.0.1:${port}/denied/upstream.svs` });
+  await assert.rejects(
+    downloadFixture(refused, dir, { attempts: 1, mirrorUrl: mirrorAt("/denied/slide.svs") }),
+    /GET http:\/\/127\.0\.0\.1:\d+\/denied\/slide\.svs: HTTP 403, then GET http:\/\/127\.0\.0\.1:\d+\/denied\/upstream\.svs: HTTP 403/,
+  );
 });

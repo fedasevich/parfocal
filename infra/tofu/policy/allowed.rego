@@ -8,6 +8,8 @@ free_resource_types := {
 	"cloudflare_r2_bucket",
 	"cloudflare_r2_bucket_cors",
 	"cloudflare_r2_bucket_lifecycle",
+	"cloudflare_r2_bucket_lock",
+	"cloudflare_account_token",
 }
 
 resource_type(type) if type in free_resource_types
@@ -15,6 +17,12 @@ resource_type(type) if type in free_resource_types
 resource_type(type) if startswith(type, "zitadel_")
 
 provider_sources := {"cloudflare/cloudflare", "zitadel/zitadel"}
+
+lifecycle_prefix := "t/"
+
+storage_classes := {"InfrequentAccess"}
+
+minimum_tier_age_seconds := 30 * 86400
 
 roots := {"global", "dev", "staging", "prod"}
 
@@ -26,3 +34,5 @@ strict_zone_settings := {
 	"tls_1_3": "on",
 	"ssl": "strict",
 }
+
+minimum_hsts_seconds := 31536000

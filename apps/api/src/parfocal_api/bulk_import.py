@@ -16,16 +16,26 @@ import httpx2
 from parfocal_api.case_imports import PATIENT_COLUMNS, column_name, dialect_of
 from parfocal_api.slide_ingest import label_of
 from parfocal_common.object_ids import LOOSE_CASE
+from parfocal_common.pairing import HEAD_BYTES, FileKind, kind_of
 
 MANIFEST_COLUMNS = ("file", "case", *PATIENT_COLUMNS)
+MANIFEST = "manifest.csv"
 PUT_ATTEMPTS = 4
-FINISHED = {"ready", "failed", "skipped", "waiting"}
+FINISHED = {"ready", "failed", "skipped"}
+UNFINISHED = ("uploading", "processing", "waiting")
+STUCK = {"needs-slide", "slide-refused", "needs-choices"}
+ON_ITS_WAY = {"processing", "waiting", "ready"}
+SLIDE_TARGETS = ("slide_id", "slide_upload_id")
+DROP_LIMIT = 5000
 
 
 class Outcome(StrEnum):
+    PLANNED = "planned"
     UPLOADED = "uploaded"
     RESUMED = "resumed"
+    ALREADY_SENT = "already-sent"
     ALREADY_IN_CASE = "already-in-case"
+    ALREADY_IMPORTED = "already-imported"
     FAILED = "failed"
 
 
@@ -71,7 +81,9 @@ class FileResult:
     outcome: Outcome
     upload_id: str | None = None
     status: str | None = None
+    reason: str | None = None
     message: str | None = None
+    chosen: bool = False
 
 
 @dataclass
@@ -82,9 +94,14 @@ class ImportReport:
     problems: list[ManifestProblem] = field(default_factory=list[ManifestProblem])
 
     @property
+    def unfinished(self) -> int:
+        return sum(item.status in UNFINISHED for item in self.files)
+
+    @property
     def ok(self) -> bool:
         return not self.problems and all(
-            item.outcome is not Outcome.FAILED and item.status != "failed" for item in self.files
+            item.outcome is not Outcome.FAILED and item.status not in ("failed", *UNFINISHED)
+            for item in self.files
         )
 
 
@@ -213,37 +230,89 @@ def open_upload(
     return answer(response)
 
 
+def already_sent(
+    api: httpx2.Client,
+    project_id: uuid.UUID,
+    path: Path,
+    size: int,
+    modified: int,
+    case_id: str | None,
+    target: dict[str, str],
+) -> str | None:
+    found = answer(
+        api.get(
+            "/api/uploads/sent",
+            params={
+                "project_id": str(project_id),
+                "name": path.name,
+                "size": size,
+                "last_modified": modified,
+            },
+        )
+    )
+    kind = "result" if target else "slide"
+    for state in found:
+        if (
+            state["status"] in ON_ITS_WAY
+            and state["kind"] == kind
+            and state["case_id"] == case_id
+            and all(state.get(name) == value for name, value in target.items())
+        ):
+            return str(state["upload_id"])
+    return None
+
+
+def resumable(
+    api: httpx2.Client, upload: dict[str, Any] | None, case_id: str | None, target: dict[str, str]
+) -> bool:
+    if upload is None or upload["case_id"] != case_id:
+        return False
+    if not target:
+        return True
+    state = answer(api.get(f"/api/uploads/{upload['uploadId']}/status"))
+    return state["kind"] == "result" and all(
+        state.get(name) == value for name, value in target.items()
+    )
+
+
 def send(
     api: httpx2.Client,
     storage: httpx2.Client,
     project_id: uuid.UUID,
-    item: SlideFile,
-    case_id: str,
+    path: Path,
+    case_id: str | None,
     sleep: Callable[[float], None],
+    result: dict[str, str] | None = None,
 ) -> tuple[Outcome, str]:
-    size = item.path.stat().st_size
-    modified = int(item.path.stat().st_mtime * 1000)
-    upload = open_upload(api, project_id, item.path, size, modified)
+    size = path.stat().st_size
+    modified = int(path.stat().st_mtime * 1000)
+    target = {name: value for name, value in (result or {}).items() if name in SLIDE_TARGETS}
+    known = already_sent(api, project_id, path, size, modified, case_id, target)
+    if known is not None:
+        return Outcome.ALREADY_SENT, known
+    upload = open_upload(api, project_id, path, size, modified)
     stored: dict[int, str] = {}
     outcome = Outcome.UPLOADED
-    if upload is not None and upload["case_id"] == case_id:
+    if upload is not None and resumable(api, upload, case_id, target):
         outcome = Outcome.RESUMED
         query = {"key": upload["key"]}
         parts = answer(api.get(f"/api/uploads/s3/multipart/{upload['uploadId']}", params=query))
         stored = {part["PartNumber"]: part["ETag"].strip('"') for part in parts}
     else:
+        metadata: dict[str, Any] = {
+            "project_id": str(project_id),
+            "case_id": case_id,
+            "size": size,
+            "last_modified": modified,
+            **({"kind": "result", **result} if result is not None else {}),
+        }
         upload = answer(
             api.post(
                 "/api/uploads/s3/multipart",
                 json={
-                    "filename": item.path.name,
+                    "filename": path.name,
                     "type": "application/octet-stream",
-                    "metadata": {
-                        "project_id": str(project_id),
-                        "case_id": case_id,
-                        "size": size,
-                        "last_modified": modified,
-                    },
+                    "metadata": metadata,
                 },
             ),
             201,
@@ -252,7 +321,7 @@ def send(
     query = {"key": upload["key"]}
     part_size = int(upload["part_size"])
     etags: list[dict[str, Any]] = []
-    with item.path.open("rb") as file:
+    with path.open("rb") as file:
         for number in range(1, int(upload["part_count"]) + 1):
             if number in stored:
                 etags.append({"PartNumber": number, "ETag": stored[number]})
@@ -267,21 +336,34 @@ def send(
     return outcome, str(upload["uploadId"])
 
 
+def settled(api: httpx2.Client, item: FileResult, import_as_is: bool) -> bool:
+    state = answer(api.get(f"/api/uploads/{item.upload_id}/status"))
+    item.status, item.reason = state["status"], state.get("reason")
+    item.message = state.get("message")
+    if item.status in FINISHED:
+        return True
+    if item.status != "waiting" or item.reason not in STUCK:
+        return False
+    if item.reason == "needs-choices" and import_as_is and not item.chosen:
+        answer(api.put(f"/api/uploads/{item.upload_id}/import-choices", json={}))
+        item.chosen = True
+        return False
+    return True
+
+
 def wait_for(
     api: httpx2.Client,
     results: Iterable[FileResult],
     timeout: float,
     sleep: Callable[[float], None],
     clock: Callable[[], float],
+    import_as_is: bool = False,
 ) -> None:
     pending = [item for item in results if item.upload_id is not None]
     deadline = clock() + timeout
     while pending:
         for item in list(pending):
-            state = answer(api.get(f"/api/uploads/{item.upload_id}/status"))
-            item.status = state["status"]
-            if item.status in FINISHED:
-                item.message = state.get("message")
+            if settled(api, item, import_as_is):
                 pending.remove(item)
         if not pending or clock() >= deadline:
             return
@@ -325,7 +407,7 @@ def import_folder(
         if label_of(item.path.name) not in taken[item.case]:
             try:
                 result.outcome, result.upload_id = send(
-                    api, storage, project_id, item, ids[item.case], sleep
+                    api, storage, project_id, item.path, ids[item.case], sleep
                 )
             except (ImportStoppedError, httpx2.TransportError) as error:
                 result.outcome = Outcome.FAILED
@@ -337,13 +419,156 @@ def import_folder(
     return report
 
 
+def dropped_files(folder: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in folder.rglob("*")
+        if path.is_file()
+        and not any(part.startswith(".") for part in path.relative_to(folder).parts)
+        and path != folder / MANIFEST
+    )
+
+
+def dropped_path(folder: Path, path: Path) -> str:
+    return f"{folder.name}/{path.relative_to(folder).as_posix()}"
+
+
+def head_of(path: Path) -> str:
+    with path.open("rb") as file:
+        return file.read(HEAD_BYTES).decode("utf-8", errors="ignore")[:HEAD_BYTES]
+
+
+def drop_of(project_id: uuid.UUID, folder: Path, files: list[Path]) -> dict[str, Any]:
+    entries: list[dict[str, Any]] = []
+    for path in files:
+        name = dropped_path(folder, path)
+        entry: dict[str, Any] = {"path": name, "size": path.stat().st_size}
+        if kind_of(name) is FileKind.RESULT:
+            entry["head"] = head_of(path)
+        entries.append(entry)
+    return {"project_id": str(project_id), "cases": "names", "files": entries}
+
+
+def unplaced(sorting: dict[str, Any]) -> list[ManifestProblem]:
+    problems = [
+        ManifestProblem(0, item["path"], "No case number in its folder or file name")
+        for item in sorting["slides"]
+        if item["outcome"] == "loose"
+    ]
+    for item in sorting["results"]:
+        if item["outcome"] == "tie":
+            problems.append(ManifestProblem(0, item["path"], "The result matches several slides"))
+        elif item["outcome"] == "unmatched":
+            problems.append(ManifestProblem(0, item["path"], "The result matches no slide"))
+    problems.extend(
+        ManifestProblem(0, path, "Neither a slide nor a result") for path in sorting["others"]
+    )
+    return problems
+
+
+def imported_sources(api: httpx2.Client, project_id: uuid.UUID) -> set[tuple[str, str]]:
+    found = answer(api.get(f"/api/projects/{project_id}/result-sets"))
+    return {(item["slide_id"], item["source_file"]) for item in found if item["source_file"]}
+
+
+def planned(sorting: dict[str, Any]) -> list[FileResult]:
+    files: list[FileResult] = []
+    for item in sorting["slides"]:
+        outcome = Outcome.ALREADY_IN_CASE if item["outcome"] == "left-out" else Outcome.PLANNED
+        files.append(FileResult(0, item["path"], item["case"]["label"], outcome))
+    for item in sorting["results"]:
+        slide = item["slide"]
+        files.append(
+            FileResult(0, item["path"], slide["path"] or slide["slide_id"], Outcome.PLANNED)
+        )
+    return files
+
+
+def import_named(
+    api: httpx2.Client,
+    storage: httpx2.Client,
+    project_id: uuid.UUID,
+    folder: Path,
+    *,
+    dry_run: bool = False,
+    wait_seconds: float = 0,
+    import_as_is: bool = False,
+    sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
+    progress: Callable[[FileResult], None] = lambda _: None,
+) -> ImportReport:
+    report = ImportReport()
+    files = dropped_files(folder)
+    if not files or len(files) > DROP_LIMIT:
+        message = "The folder holds no files" if not files else f"More than {DROP_LIMIT} files"
+        report.problems.append(ManifestProblem(0, None, message))
+        return report
+    drop = drop_of(project_id, folder, files)
+    checked = answer(api.post("/api/uploads/sorting", json=drop))
+    labels = {item["case"]["label"] for item in checked["slides"] if item["case"]}
+    report.cases_created = len(checked["new_cases"])
+    report.cases_existing = len(labels) - report.cases_created
+    report.problems = unplaced(checked)
+    if report.problems:
+        return report
+    if dry_run:
+        report.files = planned(checked)
+        return report
+    applied = answer(api.post("/api/uploads/sorting/apply", json=drop))
+    paths = {dropped_path(folder, path): path for path in files}
+    sent: dict[str, str] = {}
+    for item in applied["slides"]:
+        result = FileResult(0, item["path"], item["case"]["label"], Outcome.ALREADY_IN_CASE)
+        if item["outcome"] != "left-out":
+            try:
+                result.outcome, result.upload_id = send(
+                    api, storage, project_id, paths[item["path"]], item["case"]["case_id"], sleep
+                )
+                sent[item["path"]] = result.upload_id
+            except (ImportStoppedError, httpx2.TransportError) as error:
+                result.outcome = Outcome.FAILED
+                result.message = getattr(error, "message", None) or type(error).__name__
+        report.files.append(result)
+        progress(result)
+    imported = imported_sources(api, project_id)
+    for item in applied["results"]:
+        slide = item["slide"]
+        path = paths[item["path"]]
+        result = FileResult(0, item["path"], slide["path"] or slide["slide_id"], Outcome.FAILED)
+        pairing = {"pairing_rule": item["rule"], "pairing_certainty": item["certainty"]}
+        if slide["slide_id"] is not None:
+            target = {"slide_id": slide["slide_id"]}
+            if (slide["slide_id"], path.name) in imported:
+                result.outcome = Outcome.ALREADY_IMPORTED
+        elif slide["path"] in sent:
+            target = {"slide_upload_id": sent[slide["path"]]}
+        else:
+            result.message = "Its slide was not sent"
+            target = None
+        if target is not None and result.outcome is Outcome.FAILED:
+            try:
+                result.outcome, result.upload_id = send(
+                    api, storage, project_id, path, None, sleep, {**target, **pairing}
+                )
+            except (ImportStoppedError, httpx2.TransportError) as error:
+                result.message = getattr(error, "message", None) or type(error).__name__
+        report.files.append(result)
+        progress(result)
+    if wait_seconds > 0:
+        wait_for(api, report.files, wait_seconds, sleep, clock, import_as_is)
+    return report
+
+
 def printed(report: ImportReport) -> str:
     lines = [
-        f"row {item.row}: {item.message}" + (f" ({item.column})" if item.column else "")
+        (f"row {item.row}: " if item.row else "")
+        + item.message
+        + (f" ({item.column})" if item.column else "")
         for item in report.problems
     ]
     for item in report.files:
         status = f" {item.status}" if item.status else ""
+        status += f" {item.reason}" if item.status == "waiting" and item.reason else ""
         message = f" {item.message}" if item.message else ""
         lines.append(f"{item.file} -> {item.case}: {item.outcome}{status}{message}")
     lines.append(
@@ -351,45 +576,76 @@ def printed(report: ImportReport) -> str:
         f"{sum(item.outcome in (Outcome.UPLOADED, Outcome.RESUMED) for item in report.files)} "
         f"files sent, {sum(item.outcome is Outcome.FAILED for item in report.files)} failed"
     )
+    if report.unfinished:
+        lines.append(
+            f"{report.unfinished} files are not ready yet. Run again with --wait to follow "
+            "them, which sends nothing twice, or make any choices in the app"
+        )
     return "\n".join(lines)
+
+
+def shown(item: FileResult) -> None:
+    print(f"{item.file}: {item.outcome}", file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m parfocal_api.bulk_import",
-        description="Upload a folder of slides into cases named by a CSV manifest",
+        description="Upload a folder of slides and AI results into cases",
     )
     parser.add_argument("folder", type=Path)
     parser.add_argument("--manifest", type=Path, help="defaults to manifest.csv in the folder")
+    parser.add_argument(
+        "--cases-from-names",
+        action="store_true",
+        help="take cases from folder and file names, and pair AI results with their slides",
+    )
     parser.add_argument("--project", type=uuid.UUID, required=True)
     parser.add_argument(
         "--api", default=os.environ.get("PARFOCAL_API_URL", "http://localhost:8000")
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--wait", type=float, default=0, metavar="SECONDS")
+    parser.add_argument(
+        "--import-as-is",
+        action="store_true",
+        help="import a result that stops for choices with the default choices",
+    )
     args = parser.parse_args(argv)
     token = os.environ.get("PARFOCAL_API_TOKEN")
     if not token:
         print("Set PARFOCAL_API_TOKEN to a service account token", file=sys.stderr)
         return 2
     folder = args.folder.resolve()
-    manifest = (args.manifest or folder / "manifest.csv").read_text(encoding="utf-8-sig")
     headers = {"Authorization": f"Bearer {token}"}
     with (
         httpx2.Client(base_url=args.api, headers=headers, timeout=60) as api,
         httpx2.Client(timeout=300) as storage,
     ):
         try:
-            report = import_folder(
-                api,
-                storage,
-                args.project,
-                folder,
-                manifest,
-                dry_run=args.dry_run,
-                wait_seconds=args.wait,
-                progress=lambda item: print(f"{item.file}: {item.outcome}", file=sys.stderr),
-            )
+            if args.cases_from_names:
+                report = import_named(
+                    api,
+                    storage,
+                    args.project,
+                    folder,
+                    dry_run=args.dry_run,
+                    wait_seconds=args.wait,
+                    import_as_is=args.import_as_is,
+                    progress=shown,
+                )
+            else:
+                manifest = (args.manifest or folder / MANIFEST).read_text(encoding="utf-8-sig")
+                report = import_folder(
+                    api,
+                    storage,
+                    args.project,
+                    folder,
+                    manifest,
+                    dry_run=args.dry_run,
+                    wait_seconds=args.wait,
+                    progress=shown,
+                )
         except ImportStoppedError as error:
             print(error.message, file=sys.stderr)
             return 1

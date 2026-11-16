@@ -134,3 +134,18 @@ def test_cpu_stand_in_keeps_the_family_and_drops_the_gpu() -> None:
     assert options["max_containers"] == 3
     assert options["name"] == "detector_good"
     validate_pools((stand_in,))
+
+
+def test_pools_are_not_pinned_to_a_region_during_the_pilot() -> None:
+    assert all("region" not in function_options(pool) for pool in POOLS)
+
+
+def test_a_pinned_pool_passes_its_region_to_modal() -> None:
+    pinned = replace(pool_for(Family.DETECTOR_GOOD), region="eu-west")
+    assert function_options(pinned).get("region") == "eu-west"
+    validate_pools((pinned,))
+
+
+def test_a_pool_pinned_outside_the_eu_and_us_is_rejected() -> None:
+    with pytest.raises(PoolLimitError, match="Modal EU or US region"):
+        validate_pools((replace(pool_for(Family.DETECTOR_GOOD), region="uk"),))

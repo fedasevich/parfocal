@@ -10,6 +10,7 @@ import {
 } from "@parfocal/viewer-engine";
 import { type AisInstance, aisInstances } from "./ais-instances.ts";
 import type { PresetPatchQuery } from "./patch-reader.ts";
+import type { RegionFallback } from "./prompt-fallback.ts";
 import type { PresetPatchPlan, ScalePresetId } from "./scale-presets.ts";
 import type { SmartReader } from "./smart-session.ts";
 
@@ -61,6 +62,8 @@ export interface RegionPassOptions {
   readonly onProgress?: (progress: RegionProgress) => void;
   readonly onTile?: (nuclei: readonly RegionNucleus[]) => void;
   readonly outline?: (maps: Float32Array, width: number, height: number) => Promise<AisInstance[]>;
+  readonly fallback?: RegionFallback;
+  readonly onFallback?: (error: unknown) => void;
 }
 
 export class RegionPassAbortedError extends Error {
@@ -200,12 +203,52 @@ export function instancesToSlide(
   });
 }
 
+async function aisNuclei(options: RegionPassOptions, id: string, frame: SamFrame) {
+  const outputs = await options.sam.segmentAll(id);
+  const { data, size } = aisMaps(outputs);
+  const pool = samImageSize / size;
+  const width = Math.min(size, Math.ceil(frame.fittedWidth / pool));
+  const height = Math.min(size, Math.ceil(frame.fittedHeight / pool));
+  const cropped = cropMaps(data, size, width, height);
+  const instances =
+    options.outline === undefined
+      ? aisInstances(cropped, width, height)
+      : await options.outline(cropped, width, height);
+  return instancesToSlide(instances, frame, size);
+}
+
+interface PassState {
+  aisBroken: boolean;
+}
+
+async function tileNuclei(
+  options: RegionPassOptions,
+  state: PassState,
+  id: string,
+  rgb: Uint8Array,
+  frame: SamFrame,
+): Promise<RegionNucleus[]> {
+  const { fallback, signal } = options;
+  if (fallback === undefined) return aisNuclei(options, id, frame);
+  if (!state.aisBroken) {
+    try {
+      return await aisNuclei(options, id, frame);
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      state.aisBroken = true;
+      options.onFallback?.(error);
+    }
+  }
+  return fallback({ id, rgb, frame, ...(signal === undefined ? {} : { signal }) });
+}
+
 let passCount = 0;
 
 export async function runRegionPass(options: RegionPassOptions): Promise<RegionNucleus[]> {
   const { tiles, reader, sam, preset, signal } = options;
   const pass = ++passCount;
   const found: RegionNucleus[] = [];
+  const state: PassState = { aisBroken: false };
   options.onProgress?.({ done: 0, total: tiles.length, found: 0 });
   for (const [index, tile] of tiles.entries()) {
     if (signal?.aborted) throw new RegionPassAbortedError();
@@ -219,23 +262,14 @@ export async function runRegionPass(options: RegionPassOptions): Promise<RegionN
           ? samPixels(patch.rgb, frame)
           : await options.pixels(patch.rgb, frame);
       await sam.encode(id, pixels);
-      let outputs: SamOutputs;
+      let nuclei: RegionNucleus[];
       try {
-        outputs = await sam.segmentAll(id);
+        nuclei = await tileNuclei(options, state, id, patch.rgb, frame);
       } finally {
         sam.drop(id);
       }
-      const { data, size } = aisMaps(outputs);
-      const pool = samImageSize / size;
-      const width = Math.min(size, Math.ceil(frame.fittedWidth / pool));
-      const height = Math.min(size, Math.ceil(frame.fittedHeight / pool));
-      const cropped = cropMaps(data, size, width, height);
-      const instances =
-        options.outline === undefined
-          ? aisInstances(cropped, width, height)
-          : await options.outline(cropped, width, height);
       const core = tile.core === "patch" ? patchBounds(patch) : tile.core;
-      const kept = instancesToSlide(instances, frame, size).filter(
+      const kept = nuclei.filter(
         (nucleus) =>
           rectContains(core, nucleus.centroid) &&
           (options.keep === undefined || options.keep(nucleus.centroid)),

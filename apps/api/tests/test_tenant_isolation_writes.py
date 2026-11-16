@@ -85,6 +85,7 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
         "test_workspace_access",
         "test_a_person_from_another_domain_cannot_join_or_ask",
     ),
+    "scoreViewMapTile": ("test_view_maps", "test_only_a_member_who_runs_models_may_ask"),
 }
 
 CONFLICT = frozenset({409})
@@ -309,6 +310,7 @@ WRITE_ROUTES: dict[str, Write] = {
     "chooseHowToImport": Write(body=constant({"score_default": "none"}), owner=CONFLICT),
     "leaveResultOut": Write(owner=CONFLICT),
     "pairUploadWithSlide": Write(body=lambda a: {"slide_id": str(a.ids["slide"])}, owner=CONFLICT),
+    "warmSlideEmbedder": Write(body=constant({"device": "slow"})),
     "updateProject": Write(body=constant({"name": "Renamed"})),
     "deleteProject": Write(body=constant({"name": "Renamed"}), owner=BAD_REQUEST),
     "archiveProject": Write(),
@@ -355,6 +357,7 @@ WRITE_ROUTES: dict[str, Write] = {
         owner=BAD_REQUEST,
     ),
     "cancelModelRun": Write(),
+    "startTumorMap": Write(),
     "resumeModelRun": Write(owner=CONFLICT),
     "retryModelRun": Write(owner=CONFLICT),
     "publishOpinionForm": Write(
@@ -614,6 +617,8 @@ UNAIMED_WRITES: dict[str, str] = {
         ("startMaintenance", "endMaintenance"),
         "switches the one platform-wide maintenance row, for platform operators only",
     ),
+    "raiseSyntheticError": "raises a drill error for platform operators only and stores nothing",
+    "reportViewerFrames": "exports the caller's own frame timings and stores nothing",
     "endOtherSessions": "ends the caller's own other sessions",
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",

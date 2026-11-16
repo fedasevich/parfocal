@@ -10,6 +10,7 @@ import {
   nextStagingStep,
   nothingSelected,
   type StagingPanelArea,
+  sizeCheck,
   stagingSteps,
   stepBack,
   zoneNumbers,
@@ -171,4 +172,12 @@ test("the steps are worked in order and carry their answers", () => {
     stagingSteps(done).map((step) => step.answer),
     ["Tumor", "0.19 mm", "164 tumor cells"],
   );
+});
+
+test("a measurement inside the likely range is normal and outside it asks for a check", () => {
+  assert.equal(sizeCheck(area()), null);
+  assert.equal(sizeCheck(area({ measured: 6.0 })), "within");
+  assert.equal(sizeCheck(area({ measured: 4.8 })), "within");
+  assert.equal(sizeCheck(area({ measured: 4.7 })), "below");
+  assert.equal(sizeCheck(area({ measured: 7.2 })), "above");
 });

@@ -9,6 +9,8 @@ OPS-002 (deploy definitions) put everything a deploy needs in git. Production is
 | Environments | `workers/deploy/src/parfocal_deploy/environments.py` | One record per environment: Worker name, hostname, Modal environment, Neon branch, OpenTofu root and slide bucket |
 | Edge Worker | `apps/edge/wrangler.jsonc` | The top level is the local `parfocal-edge-dev`. `env.production` is `parfocal-edge` on the Workers Custom Domain `app.parfocal.eu`, and `env.staging` is kept as a definition. The Worker serves the web build itself with `run_worker_first` ([ADR 0050](../adr/0050-deploy-pipeline-and-previews.md), the deploy pipeline), and passes `/api` through to `API_ORIGIN` |
 | Modal apps | `workers/deploy/src/parfocal_deploy/modal_app.py` and `parfocal_ml.modal_pool` | App `parfocal-api` with the functions `web` (the FastAPI app) and `ingest`, whose memory comes from `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`. Both scale to zero |
+| Image locks | `workers/deploy/locks/*.txt` and `parfocal_deploy.image_locks` | Hashed `uv export` of `uv.lock` that the Modal images install. Run `pnpm images:lock` after changing `uv.lock`, or the deploy tests fail ([ADR 0339](../adr/0339-container-images-install-from-uv-lock.md), images install from uv.lock) |
+| API container | `apps/api/Dockerfile` | Non-root image for another host. It migrates when `MIGRATION_DATABASE_URL` is set and serves on `PORT`. `docker compose --profile api up -d --wait` runs it on the local database |
 | Neon | `workers/deploy/src/parfocal_deploy/neon.py` | Lists branches and creates the environment's branch only when it is missing. It never deletes |
 | Bootstrap | `pnpm --filter @parfocal/deploy bootstrap --env production` | Run once from the owner's Mac. It makes the secrets and the database role |
 | Deploy | `pnpm --filter @parfocal/deploy run deploy --env production` | What CI runs from `.github/workflows/deploy.yml`, by hand or after a green CI run on `main` once the owner turns that on |
@@ -22,7 +24,7 @@ It needs `NEON_API_KEY`, `NEON_PROJECT_ID`, `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_
 2. When the Modal secret `parfocal-api-keys` is missing, it generates the session, master, tile token and room token keys, creates the role `parfocal_app` (it can log in and cannot bypass row-level security, like `infra/local/postgres-init.sql`), writes the two token keys to the Worker and writes the keys with the pooled `DATABASE_URL` to Modal. This secret is never overwritten.
 3. It always rewrites the Modal secret `parfocal-api-config` with the origin, the login app, the bucket and the storage credentials.
 
-A second run writes only the config secret. If the role exists but the keys secret does not, the password is lost and the script stops. `--reset-app-role-password` sets a new one, which the owner agrees to first, because it is a rotation. No secret value is passed as a command argument. Set `EMAIL_BACKEND`, `ERROR_BACKEND`, `TELEMETRY_EXPORT`, `ANALYTICS_BACKEND` or `FLAG_BACKEND` in the shell to pass them into the config.
+A second run writes only the config secret. If the role exists but the keys secret does not, the password is lost and the script stops. `--reset-app-role-password` sets a new one, which the owner agrees to first, because it is a rotation. Never delete the keys secret to get there, because the new run also makes a new master keyring and every tenant's encrypted fields become unreadable. Rotation steps for every secret are in [secrets.md](secrets.md). No secret value is passed as a command argument. Set `EMAIL_BACKEND`, `ERROR_BACKEND`, `TELEMETRY_EXPORT`, `ANALYTICS_BACKEND` or `FLAG_BACKEND` in the shell to pass them into the config.
 
 ## Deploy, every time
 
@@ -90,6 +92,17 @@ Nothing was deployed by OPS-002. The lead runs the first deploy with the owner, 
 3. `https://app.parfocal.eu` added to the CORS origins of `parfocal-dev` in the dev OpenTofu root. Today only `http://localhost:5173` is allowed, so browser uploads from the deployed app would fail. It is an in-place change, confirm with `tofu plan` that nothing is replaced.
 4. A choice of email, error and analytics backends, because `APP_ENV=prod` refuses to start without real keys or an explicit override.
 5. One bootstrap run, then the `Deploy` workflow.
+
+## The tumor map pool's first deploy
+
+AITUM-011 (the tumor map pool is ready to deploy) left the pool ready and undeployed, because the train branch it was built on carried other unmerged work. The first `Deploy` run after that branch merges does this, with no extra step:
+
+1. `modal deploy -m parfocal_ml.modal_pool` rebuilds the shared pool image on `nvidia/cuda:13.3.1-cudnn-runtime-ubuntu24.04` pinned by digest, with `onnxruntime-gpu` 1.31.1 and OpenSlide from `workers/deploy/locks/ml.txt`. Modal's hosts run CUDA Driver API 13.3, so the tag must not pass 13.3. Every pool cold-starts on the bigger image afterwards.
+2. The `detector_good` function starts reading the secrets `parfocal-api-keys` and `parfocal-api-config`, and the `embedder` function, for view maps, reads `parfocal-api-config` alone. Bootstrap already writes both ([ADR 0358](../adr/0358-the-tumor-map-pool-runs-cuda-13-and-reuses-the-api-secrets.md), the tumor map pool runs CUDA 13 and reuses the API secrets).
+3. The `web` function spawns `detector_good` with `{"kind": "tumor-map"}` each time someone starts a tumor map. Nothing runs before that, and the container exits 30 s after the queue empties.
+4. The first call fetches `models/camelyon-tumor/v1.0/model.onnx` from `parfocal-dev`, published on 2026-11-16 and checked against the local export ([result](../results/2026-11-16-camelyon-tumor-artifact-published.md)).
+
+After the deploy, start one map on a small SVS from the app and read `modal app logs parfocal-gpu-pool`. A `NoCudaError` means the image has no working CUDA provider, so the job fails instead of scoring on the CPU while the T4 is billed. TODO: the T4 cold start with this image, its seconds per tile and its GPU memory are not measured yet. Log the first run's cost.
 
 ## The shared bucket
 

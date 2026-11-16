@@ -21,6 +21,7 @@ from parfocal_api.tile_access import (
     REFRESH_GRACE_SECONDS,
     TOKEN_SECONDS,
     sign_capability,
+    verified_claims,
     viewer_of,
 )
 from parfocal_common.ingest import original_key, restricted_ranges_key
@@ -36,6 +37,15 @@ RANGES = [[1000, 2000], [30_000, 34_000]]
 
 def test_the_api_signs_the_token_the_edge_expects() -> None:
     assert sign_capability(SECRET, VECTOR["claims"]) == VECTOR["token"]
+
+
+def test_the_api_signs_a_stored_etag_the_way_the_edge_expects() -> None:
+    tagged = json.loads(
+        (
+            Path(__file__).resolve().parents[2] / "edge" / "test" / "capability-etag-vector.json"
+        ).read_text()
+    )
+    assert sign_capability(tagged["secret"], tagged["claims"]) == tagged["token"]
 
 
 def claims_of(token: str) -> dict[str, Any]:
@@ -149,6 +159,21 @@ def test_a_reader_gets_a_short_lived_token_for_the_slide(lab: Lab) -> None:
 
 
 @pytest.mark.db
+def test_the_token_carries_the_stored_etag_of_the_original(lab: Lab) -> None:
+    assert "g" not in claims_of(
+        lab.api(lab.people["owner"]).get(lab.path(lab.bare)).json()["token"]
+    )
+    key = original_key(lab.tenant_id, lab.bare, "upload.svs")
+    with_store(lambda store: store.put_object(key, b"x" * FILE_BYTES, "image/tiff"))
+    stored = with_store(lambda store: store.stat_object(key))
+    assert stored is not None
+    assert stored.size == FILE_BYTES
+    token = lab.api(lab.people["owner"]).get(lab.path(lab.bare)).json()["token"]
+    assert claims_of(token)["g"] == stored.etag
+    assert stored.etag == hashlib.md5(b"x" * FILE_BYTES, usedforsecurity=False).hexdigest()
+
+
+@pytest.mark.db
 def test_a_slide_ingest_never_identified_has_no_format(lab: Lab) -> None:
     response = lab.api(lab.people["owner"]).get(lab.path(lab.bare))
     assert response.status_code == 200, response.text
@@ -257,6 +282,29 @@ def test_a_previous_token_that_does_not_continue_the_open_records_a_new_one(
     before = len(opens(database, lab, lab.bare))
     mint(lab, "colleague", lab.bare, previous=held)
     assert len(opens(database, lab, lab.bare)) == before + 1
+
+
+@pytest.mark.db
+def test_a_token_signed_with_the_previous_key_continues_the_open_while_it_is_listed(
+    database: str, lab: Lab
+) -> None:
+    newer = base64.b64encode(b"n" * 32).decode()
+    held = mint(lab, "owner", lab.bare)
+    configured = lab.api.app.settings
+    try:
+        lab.api.app.settings = configured.model_copy(
+            update={"tile_token_key": SecretStr(f"{newer},{SECRET}")}
+        )
+        before = len(opens(database, lab, lab.bare))
+        renewed = mint(lab, "owner", lab.bare, previous=held)
+        assert len(opens(database, lab, lab.bare)) == before
+        assert verified_claims(newer, renewed) is not None
+        assert verified_claims(SECRET, renewed) is None
+        lab.api.app.settings = configured.model_copy(update={"tile_token_key": SecretStr(newer)})
+        mint(lab, "owner", lab.bare, previous=held)
+        assert len(opens(database, lab, lab.bare)) == before + 1
+    finally:
+        lab.api.app.settings = configured
 
 
 @pytest.mark.db

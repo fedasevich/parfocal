@@ -32,6 +32,24 @@ export function parityDir(): string {
   return join(cache, "parfocal", "datasets", "sam-parity");
 }
 
+export const instansegGraph = "instanseg-fcn.onnx";
+
+export function instansegDir(): string {
+  const configured = process.env["PARFOCAL_MODELS_DIR"];
+  if (configured) return join(configured, "instanseg", "v0.1.1");
+  const cache = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
+  return join(cache, "parfocal", "models", "instanseg", "v0.1.1");
+}
+
+export const instansegPostProcess = "instanseg-postprocess.json";
+
+export function instansegTilesDir(): string {
+  const configured = process.env["PARFOCAL_DATASETS_DIR"];
+  if (configured) return join(configured, "instanseg-tnbc");
+  const cache = process.env["XDG_CACHE_HOME"] ?? join(homedir(), ".cache");
+  return join(cache, "parfocal", "datasets", "instanseg-tnbc");
+}
+
 export function missingGraphs(graphs: readonly string[]): string[] {
   return graphs.filter((graph) => !existsSync(join(modelsDir(), graph)));
 }
@@ -51,12 +69,21 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           "sam-variants": join(pageRoot, "sam-variants.html"),
           "smart-select-accuracy": join(pageRoot, "smart-select-accuracy.html"),
           "sam-parity": join(pageRoot, "sam-parity.html"),
+          instanseg: join(pageRoot, "instanseg.html"),
+          "instanseg-path": join(pageRoot, "instanseg-path.html"),
         },
       },
     },
   });
   const served = await serve(
-    { "/app": outDir, "/models": modelsDir(), "/fixtures": fixturesDir(), "/parity": parityDir() },
+    {
+      "/app": outDir,
+      "/models": modelsDir(),
+      "/fixtures": fixturesDir(),
+      "/parity": parityDir(),
+      "/instanseg": instansegDir(),
+      "/instanseg-tiles": instansegTilesDir(),
+    },
     { headers: crossOriginIsolated },
   );
   process.env[benchOriginVariable] = served.origin;

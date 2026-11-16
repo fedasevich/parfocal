@@ -152,9 +152,39 @@ SEC-018 asks that contacts be configured for alerting. That needs the owner's ac
 | Neon and Workers free plans | Stop work at the plan limit | Not recorded | Cost only |
 | GitHub budgets and included usage alerts | Usage of Actions, Packages, Codespaces, LFS and AI credits | Email to the GitHub account | Cost only |
 | CI secret scan with betterleaks in `.github/workflows/ci.yml` | A secret in a pull request | The failing CI check | Only on code that goes through CI |
-| Sentry, Grafana Cloud, PostHog, Resend | Nothing yet | No accounts exist | Errors, traces, latency and email bounces are not watched. OPS-006 (observability stack) and OPS-007 (alerting and on-call) build them |
+| Sentry, Grafana Cloud, PostHog, Resend | Nothing yet | No accounts exist | Errors, traces and email bounces are not watched. OPS-006 (observability stack) builds them |
+| SLO burn alerts in `parfocal_common.alerting` (OPS-007, alerting and on-call) | Availability, tile latency, ingest time or pre-read time burning its error budget | Email to `ALERT_PAGE_EMAIL` for pages and `ALERT_TICKET_EMAIL` for tickets, both `security@parfocal.eu` | Built and tested against fakes. Nothing runs them in production until OPS-006 emits the SLI events and schedules the check |
+| Cross-workspace audit watch in `parfocal_api.security_alerts` (OPS-007, alerting and on-call) | An audit event by anyone but a platform operator whose target is not in the actor's workspace | Page email to `ALERT_PAGE_EMAIL` | Same as above, it needs a scheduled run |
 
-No channel today alerts on a security event in production, such as a burst of failed sign-ins, an emergency access grant or an audit chain break.
+The policy is [ADR 0340](../adr/0340-slos-and-alerts-as-code-routed-by-email.md) (SLOs and alerts as code, routed by email). Apart from the cross-workspace watch, no channel alerts on a security event in production, such as a burst of failed sign-ins, an emergency access grant or an audit chain break.
+
+### Finding audit events that crossed workspaces
+
+The watch reads under each workspace's own scope, so it knows only that a target lies outside the actor's workspace. During an incident, run this read-only query with the database owner role, which can see every workspace, to name both workspaces. Set the start time to the suspected change, such as the deploy in the tabletop's inject 2.
+
+```sql
+SELECT e.occurred_at, e.tenant_id AS actor_workspace, t.tenant_id AS target_workspace,
+       e.seq, e.action, e.target_type, e.target_id
+FROM audit_events e
+JOIN (
+  SELECT 'case' AS kind, id, tenant_id FROM cases
+  UNION ALL SELECT 'slide', id, tenant_id FROM slides
+  UNION ALL SELECT 'project', id, tenant_id FROM projects
+  UNION ALL SELECT 'patient', id, tenant_id FROM patients
+  UNION ALL SELECT 'result-set', id, tenant_id FROM result_sets
+  UNION ALL SELECT 'upload', id, tenant_id FROM uploads
+  UNION ALL SELECT 'review-task', id, tenant_id FROM review_tasks
+  UNION ALL SELECT 'annotation', id, tenant_id FROM annotations
+  UNION ALL SELECT 'thread', id, tenant_id FROM threads
+  UNION ALL SELECT 'clinical-report', id, tenant_id FROM clinical_reports
+) t ON t.kind = e.target_type AND t.id = e.target_id
+WHERE e.actor_kind <> 'operator'
+  AND e.tenant_id IS DISTINCT FROM t.tenant_id
+  AND e.occurred_at >= TIMESTAMPTZ '2026-01-01 00:00Z'
+ORDER BY e.occurred_at;
+```
+
+The result holds ids only. Write counts, not ids of patients, into the register.
 
 ### Owner checklist
 

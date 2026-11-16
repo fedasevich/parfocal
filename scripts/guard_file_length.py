@@ -15,7 +15,6 @@ EXCEPTIONS = {
     "apps/api/src/parfocal_api/clinical_reports.py",
     "apps/api/src/parfocal_api/threads.py",
     "apps/web/src/screens/upload/live-wizard.tsx",
-    "apps/web/src/screens/viewer/full-viewer.tsx",
 }
 
 

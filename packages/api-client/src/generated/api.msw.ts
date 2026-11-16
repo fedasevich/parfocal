@@ -163,6 +163,7 @@ import type {
   SlideCopies,
   SlideCoverage,
   SlideDetail,
+  SlideEmbeddings,
   SlideFigure,
   SlideMoved,
   SlidePage,
@@ -188,6 +189,7 @@ import type {
   TierMapping,
   TileAccess,
   TrackRecord,
+  TumorMapJob,
   UploadedPart,
   UploadState,
   Validation,
@@ -4031,6 +4033,16 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     serving: faker.helpers.arrayElement(Object.values(Serving)),
   }));
 
+export const getStartTumorMapResponseMock = (
+  overrideResponse: Partial<Extract<TumorMapJob, object>> = {},
+): TumorMapJob => ({
+  job_id: faker.string.uuid(),
+  result_set_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  status: faker.helpers.arrayElement(Object.values(JobStatus)),
+  ...overrideResponse,
+});
+
 export const getListModelTiersResponseMock = (): TierMapping[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     task: faker.helpers.arrayElement(Object.values(TierTask)),
@@ -5578,6 +5590,51 @@ export const getFindOpenUploadResponseMock = (
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
+
+export const getFindSentUploadsResponseMock = (): UploadState[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    upload_id: faker.string.uuid(),
+    project_id: faker.string.uuid(),
+    case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+    status: faker.helpers.arrayElement(Object.values(IngestStatus)),
+    upload_status: faker.helpers.arrayElement(Object.values(UploadStatus)),
+    job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    step: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    failure_class: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(FailureClass)),
+      null,
+    ]),
+    message: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    notices: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+    result_format: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(ResultFormat)),
+      null,
+    ]),
+    slide_upload_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    pairing_rule: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(Rule)),
+      null,
+    ]),
+    pairing_certainty: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(Certainty)),
+      null,
+    ]),
+    result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  }));
 
 export const getGetUploadStatusResponseMock = (
   overrideResponse: Partial<Extract<UploadState, object>> = {},
@@ -16513,6 +16570,33 @@ export const getGetSlideTissueResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSlideEmbeddingsResponseMock = (
+  overrideResponse: Partial<Extract<SlideEmbeddings, object>> = {},
+): SlideEmbeddings => ({
+  slide_id: faker.string.uuid(),
+  encoder: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  dtype: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  dims: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.number.int(),
+  ),
+  level: faker.number.int(),
+  downsample: faker.number.float({ fractionDigits: 2 }),
+  tile: faker.number.int(),
+  level_width: faker.number.int(),
+  level_height: faker.number.int(),
+  columns: faker.number.int(),
+  rows: faker.number.int(),
+  tiles: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tile_count: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getScoreViewMapTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getListSlideAreasResponseMock = (): SlideArea[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -16614,6 +16698,44 @@ export const getEndMaintenanceMockHandler = (
           : getEndMaintenanceResponseMock(),
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getRaiseSyntheticErrorMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/platform/drills/synthetic-error",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getReportViewerFramesMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/telemetry/frames",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -17824,6 +17946,30 @@ export const getListProjectModelsMockHandler = (
             : overrideResponse
           : getListProjectModelsResponseMock(),
         { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStartTumorMapMockHandler = (
+  overrideResponse?:
+    | TumorMapJob
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<TumorMapJob> | TumorMapJob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/tumor-maps",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartTumorMapResponseMock(),
+        { status: 201 },
       );
     },
     options,
@@ -19094,6 +19240,30 @@ export const getFindOpenUploadMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getFindOpenUploadResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getFindSentUploadsMockHandler = (
+  overrideResponse?:
+    | UploadState[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<UploadState[]> | UploadState[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/uploads/sent",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getFindSentUploadsResponseMock(),
         { status: 200 },
       );
     },
@@ -24306,6 +24476,97 @@ export const getGetSlideTissueMockHandler = (
   );
 };
 
+export const getGetSlideEmbeddingsMockHandler = (
+  overrideResponse?:
+    | SlideEmbeddings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideEmbeddings> | SlideEmbeddings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/embeddings",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideEmbeddingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetSlideEmbeddingTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/embeddings/:column/:row",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideEmbeddingTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
+export const getWarmSlideEmbedderMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/embeddings/warm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getScoreViewMapTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/view-map/:column/:row",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getScoreViewMapTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getListSlideAreasMockHandler = (
   overrideResponse?:
     | SlideArea[]
@@ -24332,6 +24593,8 @@ export const getParfocalAPIMock = () => [
   getGetPlatformStatusMockHandler(),
   getStartMaintenanceMockHandler(),
   getEndMaintenanceMockHandler(),
+  getRaiseSyntheticErrorMockHandler(),
+  getReportViewerFramesMockHandler(),
   getGetSessionMockHandler(),
   getGetPasswordSignInMockHandler(),
   getCreateAccountMockHandler(),
@@ -24386,6 +24649,7 @@ export const getParfocalAPIMock = () => [
   getResumeModelRunMockHandler(),
   getRetryModelRunMockHandler(),
   getListProjectModelsMockHandler(),
+  getStartTumorMapMockHandler(),
   getListModelTiersMockHandler(),
   getSetModelTierMockHandler(),
   getResetModelTierMockHandler(),
@@ -24441,6 +24705,7 @@ export const getParfocalAPIMock = () => [
   getValidateResultsFileMockHandler(),
   getCreateUploadMockHandler(),
   getFindOpenUploadMockHandler(),
+  getFindSentUploadsMockHandler(),
   getGetUploadStatusMockHandler(),
   getSignUploadPartMockHandler(),
   getListUploadPartsMockHandler(),
@@ -24669,5 +24934,9 @@ export const getParfocalAPIMock = () => [
   getGetSlideCoverageMockHandler(),
   getRecordSlideCoverageMockHandler(),
   getGetSlideTissueMockHandler(),
+  getGetSlideEmbeddingsMockHandler(),
+  getGetSlideEmbeddingTileMockHandler(),
+  getWarmSlideEmbedderMockHandler(),
+  getScoreViewMapTileMockHandler(),
   getListSlideAreasMockHandler(),
 ];

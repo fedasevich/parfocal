@@ -90,6 +90,14 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells, packed
 from parfocal_common.db import async_database_url, metadata
+from parfocal_common.embedding_cache import (
+    EMBEDDING_BYTES,
+    SERVER_ENCODER,
+    EmbeddingManifest,
+    bitset,
+    manifest_key,
+)
+from parfocal_common.embedding_cache import tile_key as embedding_tile_key
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.jobs import enqueue
 from parfocal_common.model_runs import (
@@ -104,6 +112,9 @@ from parfocal_common.model_runs import (
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_common.view_maps import reply_of as view_tile_reply
+from parfocal_common.view_maps import tile_size as view_tile_size
+from parfocal_common.warm_gate import WarmGate
 from parfocal_ingest.tissue import TissueMask
 from parfocal_ingest.workflow import INGEST
 
@@ -122,6 +133,7 @@ OPEN_OPERATIONS = {
         "public",
     ),
     "getSession": "signed-in",
+    "reportViewerFrames": "signed-in",
     "getMe": "signed-in",
     "updateMe": "signed-in",
     "switchWorkspace": "signed-in",
@@ -150,6 +162,7 @@ OPEN_OPERATIONS = {
     "promoteRegisteredModel": "platform",
     "startMaintenance": "platform",
     "endMaintenance": "platform",
+    "raiseSyntheticError": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
     "listTenants": "platform",
@@ -412,6 +425,22 @@ def link_site_serving() -> threading.Thread:
     return thread
 
 
+INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile"})
+
+
+class BlankViewMap:
+    def spawn(self, function_name: str, call: dict[str, object]) -> None:
+        return None
+
+    def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        width, height = view_tile_size(4096, 2048, 0, 0)
+        return view_tile_reply(bytes(width * height), width, height)
+
+
+def answer_view_maps(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api.app.state, "warm_gate", WarmGate(BlankViewMap()), raising=False)
+
+
 def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
     link_site_serving()
     trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
@@ -614,6 +643,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "GET",
         f"/api/uploads/open?project_id={w.project}&name={UPLOAD_NAME}&size=10&last_modified=1",
     ),
+    "findSentUploads": lambda w: Call(
+        "GET",
+        f"/api/uploads/sent?project_id={w.project}&name={UPLOAD_NAME}&size=10&last_modified=1",
+    ),
     "signUploadPart": lambda w: Call("GET", w.open_upload.path("/1")),
     "listUploadParts": lambda w: Call("GET", w.open_upload.path()),
     "getUploadStatus": lambda w: Call("GET", f"/api/uploads/{w.open_upload.id}/status"),
@@ -672,6 +705,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "listModelRuns": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs"),
+    "startTumorMap": lambda w: Call(
+        "POST", f"/api/projects/{w.project}/slides/{w.slide}/tumor-maps"
+    ),
     "listProjectModels": lambda w: Call("GET", f"/api/projects/{w.project}/models"),
     "getModelRun": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}"),
     "listModelRunAreas": lambda w: Call(
@@ -812,6 +848,12 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
     "getSlideTissue": lambda w: Call("GET", f"/api/slides/{w.slide}/tissue"),
+    "getSlideEmbeddings": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings"),
+    "getSlideEmbeddingTile": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings/0/0"),
+    "warmSlideEmbedder": lambda w: Call(
+        "POST", f"/api/slides/{w.slide}/embeddings/warm", {"device": "fast"}
+    ),
+    "scoreViewMapTile": lambda w: Call("POST", f"/api/slides/{w.slide}/view-map/0/0"),
     "recordSlideCoverage": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/coverage",
@@ -2276,6 +2318,18 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
                     "image/png",
                 )
+                await store.put_object(
+                    manifest_key(tenant_id, case.loose_slide_id),
+                    EmbeddingManifest(
+                        SERVER_ENCODER, 0, 1.0, 512, 4096, 2048, 8, 4, bitset(8, 4, {(0, 0)})
+                    ).render(),
+                    "application/json",
+                )
+                await store.put_object(
+                    embedding_tile_key(tenant_id, case.loose_slide_id, 0, 0),
+                    bytes(EMBEDDING_BYTES),
+                    "application/octet-stream",
+                )
                 patch_job = await seed_patch_job(
                     connection, store, tenant_id, case.project_id, signed_annotate_task
                 )
@@ -2528,6 +2582,8 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
 ) -> None:
     if operation in LINK_OPERATIONS:
         trust_link_site(api, monkeypatch)
+    if operation in INTERACTIVE_OPERATIONS:
+        answer_view_maps(api, monkeypatch)
     permission = guarded_operations()[operation]
     workspace = workspaces[seat]
     status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))

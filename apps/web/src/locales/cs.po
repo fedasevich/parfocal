@@ -266,7 +266,7 @@ msgid "\"version\""
 msgstr ""
 
 #. placeholder {0}: learnerView.examples
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0, plural, one {# example} other {# examples}}"
 msgstr ""
 
@@ -436,7 +436,7 @@ msgstr ""
 
 #. placeholder {0}: current.object
 #: src/screens/viewer-tools/focus-view.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0} · Tumor region"
 msgstr ""
 
@@ -578,7 +578,7 @@ msgstr ""
 #. placeholder {0}: openCells.length
 #. placeholder {1}: openCells.length === 1 ? "" : "s"
 #. placeholder {2}: openCells.length === 1 ? "is" : "are"
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} cell{1} in the sample {2} still open"
 msgstr ""
 
@@ -589,7 +589,7 @@ msgstr ""
 
 #. placeholder {0}: openZoneCells.length
 #. placeholder {1}: openZone.name
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "{0} cells in {1} marked agree"
 msgstr ""
 
@@ -837,7 +837,7 @@ msgid "{0} is signed out. It goes to the clinician."
 msgstr ""
 
 #. placeholder {0}: region.object
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} is still open"
 msgstr ""
 
@@ -916,7 +916,7 @@ msgstr ""
 
 #. placeholder {0}: cut.mm
 #. placeholder {0}: formatMm(deposit.sizeMm)
-#. placeholder {0}: measurement.mm.toFixed(2)
+#. placeholder {0}: mm.toFixed(2)
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: ../../packages/ui/src/components/inspector.tsx
 #: src/screens/viewer-tools/measure-canvas.tsx
@@ -981,7 +981,7 @@ msgstr ""
 
 #. placeholder {0}: counts.open
 #. placeholder {1}: counts.open === 1 ? " is" : "s are"
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0} object{1} still open."
 msgstr ""
 
@@ -1938,7 +1938,7 @@ msgstr ""
 msgid "{more} more waiting."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "{object}: not a nucleus, counts as disagree"
 msgstr ""
 
@@ -2047,7 +2047,7 @@ msgstr ""
 msgid "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{setName}, imported 12 Oct"
 msgstr ""
 
@@ -2120,7 +2120,7 @@ msgstr ""
 msgid "{taskCodeOrThe} was withdrawn"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide."
 msgstr ""
 
@@ -3295,7 +3295,7 @@ msgstr ""
 msgid "All decided"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "All decided. Open the Slide done card"
 msgstr ""
 
@@ -3510,12 +3510,16 @@ msgstr ""
 msgid "Answer in the preview"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Answer it"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "Answer with one of the buttons, or press {answerKeyList}."
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Answered"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -4448,7 +4452,7 @@ msgstr ""
 msgid "Cells match when their centres are at most this many µm apart"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Cells on {slideLabel}"
 msgstr ""
 
@@ -4653,6 +4657,10 @@ msgstr ""
 
 #: src/screens/upload/files-step.tsx
 msgid "Check the address to list what is there. Nothing is fetched yet."
+msgstr ""
+
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Check the line"
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -5335,9 +5343,13 @@ msgstr ""
 msgid "Continue reviewing, your tasks, asks and mentions"
 msgstr ""
 
-#. placeholder {0}: chosen?.short_name ?? t`your institution`
+#. placeholder {0}: chosen.short_name
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Continue to {0} sign-in"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Continue to your organisation's sign-in"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -5950,6 +5962,7 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/overlays.tsx
 #: src/screens/upload/upload-page.tsx
+#: src/study/study-screen.tsx
 msgid "Done"
 msgstr ""
 
@@ -6007,6 +6020,10 @@ msgstr ""
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Download PDF"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Download results"
 msgstr ""
 
 #: src/screens/input-traces/input-traces.tsx
@@ -6303,6 +6320,10 @@ msgstr ""
 msgid "End announcement: {0}"
 msgstr ""
 
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "End of the ruler"
+msgstr ""
+
 #. placeholder {0}: item.text
 #: src/screens/admin/workspace-settings.tsx
 msgid "End: {0}"
@@ -6311,6 +6332,10 @@ msgstr ""
 #. placeholder {0}: day(link.revoked_at ?? link.expires_at)
 #: src/screens/evaluation/share-links.tsx
 msgid "Ended {0}"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Ends by itself when the task screen shows the goal."
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -7063,7 +7088,7 @@ msgstr ""
 msgid "For the file formats, see"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Forget"
 msgstr ""
 
@@ -7218,6 +7243,10 @@ msgstr ""
 msgid "Gamepad"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Gave up"
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "GeoJSON and .fgb"
 msgstr ""
@@ -7263,7 +7292,7 @@ msgstr ""
 #. placeholder {0}: thread.anchor
 #: ../../packages/ui/src/components/comments-tab.tsx
 #: src/screens/clinical-report/report-screen.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Go to {0}"
 msgstr ""
 
@@ -7276,7 +7305,7 @@ msgstr ""
 msgid "Go to {0}{1}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Go to {firstOpen}, the first open object"
 msgstr ""
 
@@ -7314,7 +7343,7 @@ msgstr ""
 msgid "Go to sign-off"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Go to the cells"
 msgstr ""
 
@@ -8305,6 +8334,10 @@ msgstr ""
 msgid "Large"
 msgstr ""
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Larger than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
+msgstr ""
+
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Largest deposit"
 msgstr ""
@@ -8391,7 +8424,7 @@ msgstr ""
 msgid "Learned"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Learned on this slide"
 msgstr ""
 
@@ -9077,6 +9110,10 @@ msgstr ""
 msgid "Median"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Median seconds"
+msgstr ""
+
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Median time per area visit"
 msgstr ""
@@ -9745,6 +9782,10 @@ msgstr ""
 msgid "No other task to compare"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
+msgstr ""
+
 #: src/screens/project/settings-tab.tsx
 msgid "No patient fields anywhere. Names are removed from file metadata and labels on upload."
 msgstr ""
@@ -9773,7 +9814,7 @@ msgstr ""
 msgid "No results yet"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "No review task asks about {slideLabel}. Look at it here, and write what you find in the clinical report."
 msgstr ""
 
@@ -9953,7 +9994,7 @@ msgstr ""
 msgid "Not {first}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "Not a cell"
 msgstr ""
 
@@ -10291,11 +10332,11 @@ msgstr ""
 msgid "Nothing to decide here yet."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Nothing to decide here yet. {slideLabel} has no {setName} result in {taskCodeOrThis}."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Nothing to decide on this slide"
 msgstr ""
 
@@ -10441,8 +10482,8 @@ msgid "Objects"
 msgstr ""
 
 #: src/screens/review/viewer-frame.tsx
-#: src/screens/viewer/full-viewer.tsx
 #: src/screens/viewer/object-table.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Objects on {slideLabel}"
 msgstr ""
 
@@ -10757,7 +10798,7 @@ msgstr ""
 msgid "Open on the slide"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Open report"
 msgstr ""
 
@@ -10768,6 +10809,10 @@ msgstr ""
 #. placeholder {0}: position + 1
 #: src/screens/review/slide-submitted.tsx
 msgid "Open slide {0}"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Open start screen"
 msgstr ""
 
 #. placeholder {0}: stepIndex + 1
@@ -10783,7 +10828,7 @@ msgstr ""
 msgid "Open the case"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Open the clinical report of this case"
 msgstr ""
 
@@ -11032,6 +11077,10 @@ msgstr ""
 msgid "Owners can switch a project later. Clinical projects need a security contact."
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "P1"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Page"
 msgstr ""
@@ -11213,6 +11262,10 @@ msgstr ""
 
 #: src/screens/admin/admin-shell.tsx
 msgid "Parfocal's models are always here. Connect your lab's own models next to them"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Participant code"
 msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx
@@ -11874,7 +11927,7 @@ msgid "Question"
 msgstr ""
 
 #. placeholder {0}: position + 1
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Question {0} is not answered"
 msgstr ""
 
@@ -12474,7 +12527,12 @@ msgid "Result sets"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/study/study-screen.tsx
 msgid "Results"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Results for this round"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
@@ -12833,6 +12891,16 @@ msgstr ""
 msgid "Rotate {0} pane right"
 msgstr ""
 
+#. placeholder {0}: round.number
+#: src/study/study-screen.tsx
+msgid "Round {0}. Its screens and tasks are frozen so sessions compare."
+msgstr ""
+
+#. placeholder {0}: round.number
+#: src/study/study-screen.tsx
+msgid "Round {0}. No session has run yet, so the tasks can change."
+msgstr ""
+
 #: src/screens/upload/check-step.tsx
 msgid "Rows with no score"
 msgstr ""
@@ -12883,6 +12951,10 @@ msgstr ""
 
 #: src/screens/viewer/viewer-result-sets.tsx
 msgid "Run a model on this slide"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Run a session"
 msgstr ""
 
 #: src/screens/viewer/viewer-result-sets.tsx
@@ -13095,6 +13167,10 @@ msgstr ""
 
 #: src/screens/project/case-slides-editor.tsx
 msgid "Save slides"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Save tasks"
 msgstr ""
 
 #: src/screens/admin/template-editor.tsx
@@ -13484,6 +13560,11 @@ msgstr ""
 msgid "Server"
 msgstr ""
 
+#. placeholder {0}: active.participant
+#: src/study/study-screen.tsx
+msgid "Session {0} finished."
+msgstr ""
+
 #: src/routes/issue-states.tsx
 msgid "Session expired"
 msgstr ""
@@ -13868,6 +13949,10 @@ msgstr ""
 msgid "Sign in with the code"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in with your organisation"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -14007,7 +14092,7 @@ msgstr ""
 msgid "Signed off {signedOn}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Signed off 15 Oct. Changes need an amendment."
 msgstr ""
 
@@ -14015,7 +14100,7 @@ msgstr ""
 msgid "Signed off by: ____________  Date: ________"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "Signed off. Ask the researcher to amend."
 msgstr ""
 
@@ -14106,6 +14191,7 @@ msgid "Skin"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
+#: src/study/study-screen.tsx
 #: src/viewer/guided-check.tsx
 msgid "Skip"
 msgstr ""
@@ -14330,6 +14416,10 @@ msgstr ""
 msgid "Small tumor cluster, about {0}"
 msgstr ""
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Smaller than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Smallest outline"
 msgstr ""
@@ -14516,9 +14606,21 @@ msgstr ""
 msgid "Start in guided review"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Start next round"
+msgstr ""
+
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "Start of the ruler"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-editor.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Start on a new page"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Start session"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -14527,6 +14629,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/systematic-scan.tsx
 msgid "Start systematic scan"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Start task"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -14672,6 +14778,10 @@ msgstr ""
 msgid "Study"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Study mode"
+msgstr ""
+
 #: src/screens/new-task/steps.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Study template"
@@ -14692,7 +14802,7 @@ msgstr ""
 #: ../../packages/ui/src/components/analysis-cards.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: ../../packages/ui/src/components/systematic-scan.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Submit"
 msgstr ""
 
@@ -14860,6 +14970,7 @@ msgstr ""
 #: src/screens/my-work/to-review-tab.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/study/study-screen.tsx
 msgid "Task"
 msgstr ""
 
@@ -14880,6 +14991,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Task presets"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Task set"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Task set JSON"
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
@@ -15047,7 +15166,7 @@ msgstr ""
 msgid "The AI found this. It is outlined in white."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "The AI is still reading"
 msgstr ""
 
@@ -15186,7 +15305,7 @@ msgid "The comment did not save. Try again."
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "The connection is lost. It saves when the connection is back."
 msgstr ""
 
@@ -15351,7 +15470,7 @@ msgstr ""
 msgid "The objects of finished tiles are in the layer and join the check scope."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "the other set"
 msgstr ""
 
@@ -15485,7 +15604,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "The researcher"
 msgstr ""
 
@@ -15621,12 +15740,12 @@ msgid "The style cannot change once a decision exists."
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "the task"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "The task"
 msgstr ""
 
@@ -15684,7 +15803,7 @@ msgid "The two passwords are not the same."
 msgstr ""
 
 #. placeholder {0}: learnerView.corrections
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
 msgstr ""
 
@@ -15833,7 +15952,7 @@ msgstr ""
 msgid "This page does not exist, or it was moved or deleted."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "This part of the slide can't be read yet"
 msgstr ""
 
@@ -15883,7 +16002,7 @@ msgstr ""
 
 #: src/screens/review/display-tab.tsx
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "this task"
 msgstr ""
 
@@ -15923,7 +16042,7 @@ msgstr ""
 msgid "Thread on {anchor}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Thread pinned on the slide."
 msgstr ""
 
@@ -16154,7 +16273,7 @@ msgstr ""
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
 #: src/viewer/slide-stage.tsx
 msgid "Try again"
@@ -16372,7 +16491,7 @@ msgid "Undo"
 msgstr ""
 
 #: ../../packages/ui/src/components/findings-panel.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Undo all"
 msgstr ""
 
@@ -16618,10 +16737,6 @@ msgstr ""
 msgid "Use my password instead"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Use single sign-on instead"
-msgstr ""
-
 #: src/screens/upload/result-problems.tsx
 msgid "Use this choice"
 msgstr ""
@@ -16686,7 +16801,7 @@ msgid "Version 2, replaces version 1"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "View"
 msgstr ""
 
@@ -16831,7 +16946,7 @@ msgid "Watershed"
 msgstr ""
 
 #: ../../packages/ui/src/components/visualize.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Ways to show results"
 msgstr ""
 
@@ -17228,6 +17343,10 @@ msgstr ""
 msgid "Withdraw the request"
 msgstr ""
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Within the AI's likely range, {low} to {high}."
+msgstr ""
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Word"
@@ -17509,10 +17628,6 @@ msgstr ""
 #. placeholder {0}: roles[role].effect
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Your home keeps a short checklist until each part has been tried once. {0}"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "your institution"
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx

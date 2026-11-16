@@ -1,12 +1,7 @@
+import { verifyingKeys } from "#capability.ts";
 import { type RoomEnv, roomEventOf, roomStub, type Seat } from "#room.ts";
 import { ROOM_PROTOCOL } from "#room-client.ts";
-import {
-  isPublishSignature,
-  isRoomName,
-  roomKey,
-  verifyPublish,
-  verifyRoomToken,
-} from "#room-token.ts";
+import { isPublishSignature, isRoomName, verifyPublish, verifyRoomToken } from "#room-token.ts";
 import { problem } from "#tiles.ts";
 
 export const PUBLISH_HEADER = "X-Room-Signature";
@@ -68,7 +63,7 @@ async function handleConnect(
   if (token === null) {
     return problem(401, "room-token-missing", "A room token is required");
   }
-  const access = await verifyRoomToken(token, await roomKey(env.ROOM_TOKEN_KEY), now);
+  const access = await verifyRoomToken(token, await verifyingKeys(env.ROOM_TOKEN_KEY), now);
   if (!access.ok) {
     return access.reason === "expired"
       ? problem(401, "room-token-expired", "The room token has expired")
@@ -163,8 +158,8 @@ async function handleInternal(
   if (text === null) {
     return problem(413, "publish-too-large", "The body of an internal room call is too large");
   }
-  const key = await roomKey(env.ROOM_TOKEN_KEY);
-  if (!(await verifyPublish(key, signature, text, now))) {
+  const keys = await verifyingKeys(env.ROOM_TOKEN_KEY);
+  if (!(await verifyPublish(keys, signature, text, now))) {
     return unsigned();
   }
   let body: unknown;

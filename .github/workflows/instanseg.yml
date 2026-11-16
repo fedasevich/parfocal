@@ -1,0 +1,77 @@
+name: instanseg
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - packages/viewer-engine/src/instanseg/**
+      - packages/viewer-engine/sam-bench/instanseg*
+      - packages/viewer-engine/sam-bench/page/instanseg*
+      - packages/viewer-engine/sam-bench/global-setup.ts
+      - workers/ml/src/parfocal_ml/instanseg.py
+      - .github/workflows/instanseg.yml
+  schedule:
+    - cron: "41 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instanseg-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+  INSTANSEG_DIR: ~/.cache/parfocal/models/instanseg/v0.1.1
+  INSTANSEG_URL: https://github.com/instanseg/instanseg/releases/download/instanseg_models_v0.1.1/brightfield_nuclei.zip
+  INSTANSEG_ZIP_SHA256: 427aa9cfe961b6d0012e2abf6befc6a9f76398db5d28dc2302ad911327d1c448
+  INSTANSEG_PT_SHA256: 0c724da169d507d8dd2e206ad3675a0b1566824eee6e20ad9a0ba916311d9dd0
+
+jobs:
+  wasm-path:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: instanseg
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/models/instanseg/v0.1.1/brightfield_nuclei.zip
+          key: instanseg-zip-${{ env.INSTANSEG_ZIP_SHA256 }}
+      - name: Fetch brightfield_nuclei.zip by its checksum
+        run: |
+          dir="${INSTANSEG_DIR/#\~/$HOME}"
+          mkdir -p "$dir"
+          [ -f "$dir/brightfield_nuclei.zip" ] || curl -sSfL -o "$dir/brightfield_nuclei.zip" "$INSTANSEG_URL"
+          echo "$INSTANSEG_ZIP_SHA256  $dir/brightfield_nuclei.zip" | sha256sum -c -
+          unzip -o -q "$dir/brightfield_nuclei.zip" -d "$dir"
+          echo "$INSTANSEG_PT_SHA256  $dir/instanseg.pt" | sha256sum -c -
+      - name: Export the network and the post-processing settings
+        run: pnpm --filter @parfocal/ml export:instanseg
+      - run: google-chrome --version
+      - run: nproc
+      - name: Network and whole path on WebAssembly
+        run: pnpm --filter @parfocal/viewer-engine bench:instanseg
+        env:
+          PARFOCAL_REQUIRE_INSTANSEG: "1"
+      - if: always()
+        name: Timing summary
+        run: >-
+          node -e "const fs=require('fs');const d='packages/viewer-engine/test-results/sam-bench';
+          const m=a=>{const s=[...a].sort((x,y)=>x-y);return Math.round(s[Math.floor(s.length/2)])};
+          for(const f of fs.readdirSync(d).filter(f=>f.startsWith('instanseg-path-'))){
+          const r=JSON.parse(fs.readFileSync(d+'/'+f));const s=r.runs.slice(1);
+          console.log('| '+r.threads+' threads of '+r.hardwareConcurrency+' | prepare '+m(s.map(x=>x.prepareMs))+
+          ' ms | network '+m(s.map(x=>x.networkMs))+' ms | labels '+m(s.map(x=>x.labelMs))+
+          ' ms | total '+m(s.map(x=>x.totalMs))+' ms | seeds '+s[0].seeds+' |')}"
+          >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: instanseg-wasm
+          path: packages/viewer-engine/test-results/sam-bench
+          retention-days: 30
+          if-no-files-found: ignore

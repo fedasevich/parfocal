@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 48 |
-| `personal` | 93 |
+| `personal` | 95 |
 | `secret` | 11 |
-| `operational` | 791 |
+| `operational` | 802 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -484,6 +484,15 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `released_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## linked_subjects
+
+| Column | Class |
+|---|---|
+| `subject` | personal |
+| `user_id` | personal |
+| `sso_tenant_id` | operational |
+| `created_at` | operational |
 
 ## maintenance
 
@@ -1163,6 +1172,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## sso_connections
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `idp_organisation_id` | operational |
+| `idp_id` | operational |
+| `email_domains` | operational |
+| `default_role` | operational |
+| `group_roles` | operational |
+| `domain_proofs` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## stage_throughput
 

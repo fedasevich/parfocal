@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
-from typing import Any, BinaryIO, Literal
+from typing import Any, BinaryIO, Literal, cast
 
 import httpx2
 import numpy as np
@@ -20,7 +20,7 @@ import shapely
 import tifffile
 from numpy.typing import NDArray
 from PIL import Image
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 from shapely import STRtree, box
 from shapely.geometry import shape as shape_of
 from shapely.geometry.base import BaseGeometry
@@ -42,8 +42,17 @@ from parfocal_api.training_exports import (
     dataset,
 )
 from parfocal_common.jobs import JobStoppedError, Step, StepFailedError, StepRun, Workflow
+from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.identify import Format, Refusal, identify
+from parfocal_ingest.isolated_child import ScopedStorage
+from parfocal_ingest.isolation import (
+    OUTPUT_LIMIT_BYTES,
+    JobScope,
+    output_folder,
+    parse_isolated,
+    read_output,
+)
 from parfocal_ingest.parse_jobs import READER_ERRORS
 from parfocal_ingest.pyramid import Level, Pyramid, Reader, main_series, read_pyramid, unpack
 from parfocal_ingest.thumbnail import WHITE, background_of, flattened
@@ -53,6 +62,8 @@ FORMAT = "parfocal-patch-dataset"
 FORMAT_VERSION = 1
 MANIFEST = "manifest.json"
 INDEX = "index.csv"
+PART = "patches.zip"
+MEMBER_LIMIT_BYTES = 64 * 1024 * 1024
 BACKGROUND = 0
 DRAWN_KINDS = ("region", "cell")
 INDEX_COLUMNS = (
@@ -286,12 +297,94 @@ def png(image: Image.Image) -> bytes:
     return buffer.getvalue()
 
 
+type Row = list[str | int]
+
+
+def drawn(
+    source: SlideSource, level_number: int, tile_size: int, archive: zipfile.ZipFile
+) -> tuple[list[Row], PatchSlide]:
+    level = source.pyramid.levels[level_number]
+    shapes, unclassed = labelled_of(json.loads(source.geojson)["features"])
+    painter = Painter(shapes, level.downsample)
+    tiles = tiles_of(level, tile_size)
+    rows: list[Row] = []
+    with level_reader(source, level) as read:
+        for tile in tiles:
+            x, y = tile.x * level.downsample, tile.y * level.downsample
+            name = f"{source.slide_id}/{x}_{y}.png"
+            mask = painter.mask(tile)
+            archive.writestr(f"tiles/{name}", png(read(tile)))
+            archive.writestr(f"masks/{name}", png(Image.fromarray(mask)))
+            present = [int(key) for key in np.unique(mask) if key != BACKGROUND]
+            rows.append(
+                [
+                    f"tiles/{name}",
+                    f"masks/{name}",
+                    str(source.slide_id),
+                    level_number,
+                    level.downsample,
+                    x,
+                    y,
+                    tile.width,
+                    tile.height,
+                    ";".join(str(key) for key in present),
+                ]
+            )
+    slide = PatchSlide(
+        slide_id=source.slide_id,
+        geojson=geojson_name(source.slide_id),
+        level=level_number,
+        downsample=level.downsample,
+        width=level.width,
+        height=level.height,
+        tiles=len(tiles),
+        unclassed_left_out=unclassed,
+    )
+    return rows, slide
+
+
+def geojson_name(slide_id: uuid.UUID) -> str:
+    return f"slides/{slide_id}.geojson"
+
+
+def patch_slide(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[str, Any]:
+    slide_id = uuid.UUID(arguments["slide_id"])
+    local = storage.fetch(arguments["key"])
+    source = source_of(slide_id, local, Path(arguments["geojson"]).read_bytes())
+    if source is None:
+        return {"skipped": "unreadable"}
+    level = int(arguments["level"])
+    if level >= len(source.pyramid.levels):
+        return {"skipped": "level-missing"}
+    with zipfile.ZipFile(Path(arguments["out"]) / PART, "w", zipfile.ZIP_DEFLATED) as archive:
+        rows, slide = drawn(source, level, int(arguments["tile_size"]), archive)
+    return {"rows": rows, "slide": slide.model_dump(mode="json")}
+
+
+def checked_row(row: object, slide: PatchSlide) -> Row:
+    if not isinstance(row, list) or len(row) != len(INDEX_COLUMNS):
+        raise ValueError("row")
+    tile, mask, slide_id, *numbers, classes = cast("list[object]", row)
+    prefix = f"{slide.slide_id}/"
+    if not (
+        isinstance(tile, str)
+        and isinstance(mask, str)
+        and tile.startswith(f"tiles/{prefix}")
+        and mask == f"masks/{tile.removeprefix('tiles/')}"
+        and slide_id == str(slide.slide_id)
+        and isinstance(classes, str)
+        and all(isinstance(value, int) and not isinstance(value, bool) for value in numbers)
+    ):
+        raise ValueError("row")
+    return [tile, mask, str(slide.slide_id), *cast("list[int]", numbers), classes]
+
+
 class PatchWriter:
     def __init__(self, target: BinaryIO, level: int, tile_size: int) -> None:
         self.archive = zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED)
         self.level = level
         self.tile_size = tile_size
-        self.rows: list[list[str | int]] = []
+        self.rows: list[Row] = []
         self.slides: list[PatchSlide] = []
         self.skipped: list[PatchSkipped] = []
 
@@ -302,46 +395,38 @@ class PatchWriter:
         if self.level >= len(source.pyramid.levels):
             self.skip(source.slide_id, "level-missing")
             return
-        level = source.pyramid.levels[self.level]
-        shapes, unclassed = labelled_of(json.loads(source.geojson)["features"])
-        painter = Painter(shapes, level.downsample)
-        geojson = f"slides/{source.slide_id}.geojson"
-        self.archive.writestr(geojson, source.geojson)
-        tiles = tiles_of(level, self.tile_size)
-        with level_reader(source, level) as read:
-            for tile in tiles:
-                x, y = tile.x * level.downsample, tile.y * level.downsample
-                name = f"{source.slide_id}/{x}_{y}.png"
-                mask = painter.mask(tile)
-                self.archive.writestr(f"tiles/{name}", png(read(tile)))
-                self.archive.writestr(f"masks/{name}", png(Image.fromarray(mask)))
-                present = [int(key) for key in np.unique(mask) if key != BACKGROUND]
-                self.rows.append(
-                    [
-                        f"tiles/{name}",
-                        f"masks/{name}",
-                        str(source.slide_id),
-                        self.level,
-                        level.downsample,
-                        x,
-                        y,
-                        tile.width,
-                        tile.height,
-                        ";".join(str(key) for key in present),
-                    ]
-                )
-        self.slides.append(
-            PatchSlide(
-                slide_id=source.slide_id,
-                geojson=geojson,
-                level=self.level,
-                downsample=level.downsample,
-                width=level.width,
-                height=level.height,
-                tiles=len(tiles),
-                unclassed_left_out=unclassed,
-            )
-        )
+        rows, slide = drawn(source, self.level, self.tile_size, self.archive)
+        self.archive.writestr(slide.geojson, source.geojson)
+        self.rows += rows
+        self.slides.append(slide)
+
+    def merge(
+        self, slide_id: uuid.UUID, geojson: bytes, facts: Mapping[str, Any], part: bytes
+    ) -> None:
+        reason = facts.get("skipped")
+        if reason in ("level-missing", "unreadable"):
+            self.skip(slide_id, cast("SkipReason", reason))
+            return
+        try:
+            slide = PatchSlide.model_validate(facts.get("slide"))
+            if (slide.slide_id, slide.level, slide.geojson) != (
+                slide_id,
+                self.level,
+                geojson_name(slide_id),
+            ):
+                raise ValueError("slide")
+            rows = [checked_row(row, slide) for row in cast("list[object]", facts.get("rows"))]
+            if len(rows) != slide.tiles:
+                raise ValueError("rows")
+            members = merged_members(part, {str(name) for row in rows for name in row[:2]})
+        except ValidationError, ValueError, TypeError, zipfile.BadZipFile:
+            self.skip(slide_id, "unreadable")
+            return
+        for name, data in members:
+            self.archive.writestr(name, data)
+        self.archive.writestr(slide.geojson, geojson)
+        self.rows += rows
+        self.slides.append(slide)
 
     def finish(self, task: ManifestTask, classes: list[ManifestClass]) -> PatchManifest:
         index = io.StringIO()
@@ -392,6 +477,67 @@ def opened_source(slide_id: uuid.UUID, path: Path, geojson: bytes) -> SlideSourc
     return SlideSource(slide_id, opened, found.format, pyramid, geojson)
 
 
+def merged_members(part: bytes, names: set[str]) -> list[tuple[str, bytes]]:
+    members: list[tuple[str, bytes]] = []
+    total = 0
+    with zipfile.ZipFile(io.BytesIO(part)) as archive:
+        infos = archive.infolist()
+        if len(infos) != len(names) or {info.filename for info in infos} != names:
+            raise ValueError("members")
+        for info in infos:
+            with archive.open(info) as member:
+                data = member.read(MEMBER_LIMIT_BYTES + 1)
+            total += len(data)
+            if len(data) > MEMBER_LIMIT_BYTES or total > OUTPUT_LIMIT_BYTES:
+                raise ValueError("size")
+            members.append((info.filename, data))
+    return members
+
+
+async def isolated_slide(
+    step: StepRun,
+    resources: Resources,
+    store: ObjectStore,
+    slide_id: uuid.UUID,
+    key: str,
+    geojson: bytes,
+) -> tuple[Mapping[str, Any], bytes]:
+    folder = resources.work_dir / str(step.job_id) / str(slide_id)
+    out = await asyncio.to_thread(output_folder, folder, "patches")
+    source = folder / "annotations.geojson"
+    await asyncio.to_thread(source.write_bytes, geojson)
+
+    async def fetcher(wanted: str) -> Path:
+        local = folder / PurePosixPath(wanted).name
+        await store.download(wanted, local)
+        return local
+
+    try:
+        facts = await parse_isolated(
+            f"{__name__}:patch_slide",
+            {
+                "slide_id": str(slide_id),
+                "key": key,
+                "geojson": str(source),
+                "level": int(step.input["level"]),
+                "tile_size": int(step.input["tile_size"]),
+                "out": str(out),
+            },
+            JobScope(step.tenant_id, slide_id, (key,)),
+            fetcher,
+            folder,
+            resources.parse_limits,
+            resources.parse_tokens,
+            inputs=(source,),
+        )
+        part = await asyncio.to_thread(read_output, out, PART) or b""
+    except StepFailedError:
+        return {"skipped": "unreadable"}, b""
+    finally:
+        await asyncio.to_thread(shutil.rmtree, folder, True)
+    return facts, part
+
+
 async def export_patches(step: StepRun, resources: Resources) -> Mapping[str, Any]:
     task_id = uuid.UUID(step.input["task_id"])
     async with httpx2.AsyncClient(timeout=60) as http:
@@ -427,17 +573,11 @@ async def export_patches(step: StepRun, resources: Resources) -> Mapping[str, An
                 if key is None:
                     writer.skip(entry.slide_id, "no-file")
                     continue
-                local = folder / str(entry.slide_id) / PurePosixPath(key).name
-                local.parent.mkdir(parents=True, exist_ok=True)
-                await store.download(key, local)
-                source = await asyncio.to_thread(
-                    source_of, entry.slide_id, local, files[entry.file.path]
+                geojson = files[entry.file.path]
+                facts, part = await isolated_slide(
+                    step, resources, store, entry.slide_id, key, geojson
                 )
-                if source is None:
-                    writer.skip(entry.slide_id, "unreadable")
-                else:
-                    await asyncio.to_thread(writer.add, source)
-                shutil.rmtree(local.parent, ignore_errors=True)
+                await asyncio.to_thread(writer.merge, entry.slide_id, geojson, facts, part)
             manifest = writer.finish(made.task, made.classes)
         finally:
             shutil.rmtree(folder, ignore_errors=True)

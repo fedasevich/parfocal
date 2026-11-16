@@ -3,16 +3,19 @@ import base64
 import contextlib
 import hashlib
 import hmac
+import importlib
 import json
 import os
 import secrets
+import shutil
 import signal
+import stat
 import sys
 import uuid
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from parfocal_common.ingest import FAILURES, Failure, Refusal, slide_prefixes
 from parfocal_common.jobs import StepFailedError
@@ -20,18 +23,61 @@ from parfocal_ingest import isolated_child
 from parfocal_ingest.isolated_child import TOKEN_VARIABLE
 from parfocal_ingest.settings import PARSE_MEMORY_MIB, PARSE_SECONDS
 
-__all__ = ["JobScope", "JobTokens", "ParseLimits", "ParseNotStartedError", "parse_isolated"]
+__all__ = [
+    "ChildProcess",
+    "JobScope",
+    "JobTokens",
+    "Launcher",
+    "LocalLauncher",
+    "ParseLimits",
+    "ParseNotStartedError",
+    "launcher_of",
+    "output_folder",
+    "parse_isolated",
+    "read_output",
+    "required_output",
+]
 
 CHILD_SCRIPT = isolated_child.__file__
 MAX_MESSAGE_BYTES = 1024 * 1024
 MIB = 1024 * 1024
 KIB = 1024
+OUTPUT_LIMIT_BYTES = 1024 * MIB
 
 type Fetcher = Callable[[str], Awaitable[Path]]
 
 
 class ParseNotStartedError(RuntimeError):
     pass
+
+
+class ChildProcess(Protocol):
+    async def write(self, data: bytes) -> None: ...
+
+    async def readline(self) -> bytes: ...
+
+    async def over_memory(self) -> None: ...
+
+    async def killed_for_memory(self) -> bool: ...
+
+    async def deliver(self, path: Path) -> Path: ...
+
+    async def collect(self) -> None: ...
+
+    async def stop(self) -> None: ...
+
+
+class Launcher(Protocol):
+    async def start(
+        self, command: Sequence[str], environment: Mapping[str, str], work_dir: Path
+    ) -> ChildProcess: ...
+
+
+def launcher_of(path: str | None) -> Launcher | None:
+    if path is None:
+        return None
+    module, _, name = path.partition(":")
+    return getattr(importlib.import_module(module), name)()
 
 
 def import_paths() -> list[str]:
@@ -44,6 +90,7 @@ class ParseLimits:
     seconds: float = PARSE_SECONDS
     poll_seconds: float = 0.1
     user: str | None = None
+    launcher: Launcher | None = None
 
 
 @dataclass(frozen=True)
@@ -117,6 +164,51 @@ def child_environment(token: str, work_dir: Path) -> dict[str, str]:
     }
 
 
+def output_folder(work_dir: Path, name: str) -> Path:
+    folder = work_dir / "outputs" / name
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    return folder
+
+
+def read_output(folder: Path, name: str, limit: int = OUTPUT_LIMIT_BYTES) -> bytes | None:
+    if not name or name in {".", ".."} or "/" in name:
+        raise ValueError(name)
+    try:
+        directory = os.open(folder, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except OSError:
+        raise StepFailedError(Refusal.UNREADABLE) from None
+    try:
+        handle = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        raise StepFailedError(Refusal.UNREADABLE) from None
+    finally:
+        os.close(directory)
+    with os.fdopen(handle, "rb") as file:
+        if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+            raise StepFailedError(Refusal.UNREADABLE)
+        data = file.read(limit + 1)
+    if len(data) > limit:
+        raise StepFailedError(Failure.PARSE_TOO_LARGE)
+    return data
+
+
+def required_output(folder: Path, name: str) -> bytes:
+    data = read_output(folder, name)
+    if data is None:
+        raise StepFailedError(Refusal.UNREADABLE)
+    return data
+
+
+def hand_over(work_dir: Path, user: str) -> None:
+    shutil.chown(work_dir, user)
+    for folder, names, _files in work_dir.walk():
+        for name in names:
+            shutil.chown(folder / name, user)
+
+
 def proc_resident_bytes(statm: Path) -> int | None:
     try:
         return int(statm.read_text().split()[1]) * os.sysconf("SC_PAGE_SIZE")
@@ -155,14 +247,66 @@ def stop(process: asyncio.subprocess.Process) -> None:
             os.killpg(process.pid, signal.SIGKILL)
 
 
-class Conversation:
-    def __init__(
-        self, process: asyncio.subprocess.Process, tokens: JobTokens, fetcher: Fetcher
-    ) -> None:
+class LocalChild:
+    def __init__(self, process: asyncio.subprocess.Process, limits: ParseLimits) -> None:
         assert process.stdin is not None
         assert process.stdout is not None
+        self.process = process
         self.writer = process.stdin
         self.reader = process.stdout
+        self.limits = limits
+
+    async def write(self, data: bytes) -> None:
+        self.writer.write(data)
+        await self.writer.drain()
+
+    async def readline(self) -> bytes:
+        return await self.reader.readline()
+
+    async def over_memory(self) -> None:
+        await memory_exceeded(self.process.pid, self.limits)
+
+    async def killed_for_memory(self) -> bool:
+        return False
+
+    async def deliver(self, path: Path) -> Path:
+        return path
+
+    async def collect(self) -> None:
+        return None
+
+    async def stop(self) -> None:
+        stop(self.process)
+        await self.process.wait()
+
+
+@dataclass(frozen=True)
+class LocalLauncher:
+    limits: ParseLimits = field(default_factory=ParseLimits)
+
+    async def start(
+        self, command: Sequence[str], environment: Mapping[str, str], work_dir: Path
+    ) -> ChildProcess:
+        user = self.limits.user
+        if user is not None:
+            await asyncio.to_thread(hand_over, work_dir, user)
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+            env=dict(environment),
+            cwd=work_dir,
+            start_new_session=True,
+            limit=MAX_MESSAGE_BYTES,
+            user=user,
+        )
+        return LocalChild(process, self.limits)
+
+
+class Conversation:
+    def __init__(self, child: ChildProcess, tokens: JobTokens, fetcher: Fetcher) -> None:
+        self.child = child
         self.tokens = tokens
         self.fetcher = fetcher
         self.ready = False
@@ -174,14 +318,13 @@ class Conversation:
 
     async def send(self, message: Mapping[str, Any]) -> None:
         try:
-            self.writer.write((json.dumps(message) + "\n").encode())
-            await self.writer.drain()
+            await self.child.write((json.dumps(message) + "\n").encode())
         except ConnectionError:
             raise self.broken() from None
 
     async def receive(self) -> dict[str, Any]:
         try:
-            line = await self.reader.readline()
+            line = await self.child.readline()
             message: object = json.loads(line) if line else None
         except ValueError:
             raise self.broken() from None
@@ -195,7 +338,8 @@ class Conversation:
         if not isinstance(key, str) or scope is None or not scope.allows(key):
             await self.send({"refused": str(key)})
             return
-        await self.send({"path": str(await self.fetcher(key))})
+        delivered = await self.child.deliver(await self.fetcher(key))
+        await self.send({"path": str(delivered)})
 
     async def run(self, request: Mapping[str, Any]) -> dict[str, Any]:
         await self.send(request)
@@ -211,6 +355,7 @@ class Conversation:
                 continue
             result = message.get("result")
             if isinstance(result, dict):
+                await self.child.collect()
                 return {str(name): value for name, value in result.items()}
             code = message.get("refusal")
             if isinstance(code, str) and code in FAILURES:
@@ -219,24 +364,28 @@ class Conversation:
 
 
 async def supervised(
-    process: asyncio.subprocess.Process, talk: Awaitable[dict[str, Any]], limits: ParseLimits
+    child: ChildProcess, talk: Awaitable[dict[str, Any]], limits: ParseLimits
 ) -> dict[str, Any]:
     talking = asyncio.ensure_future(talk)
-    watching = asyncio.ensure_future(memory_exceeded(process.pid, limits))
+    watching = asyncio.ensure_future(child.over_memory())
     try:
         done, _ = await asyncio.wait(
             {talking, watching}, timeout=limits.seconds, return_when=asyncio.FIRST_COMPLETED
         )
-        if talking in done:
+        if watching in done:
+            raise StepFailedError(Failure.PARSE_TOO_LARGE)
+        if talking not in done:
+            raise StepFailedError(Failure.PARSE_TOO_SLOW)
+        try:
             return talking.result()
-        raise StepFailedError(
-            Failure.PARSE_TOO_LARGE if watching in done else Failure.PARSE_TOO_SLOW
-        )
+        except StepFailedError as failure:
+            if failure.code == Refusal.UNREADABLE and await child.killed_for_memory():
+                raise StepFailedError(Failure.PARSE_TOO_LARGE) from None
+            raise
     finally:
         for task in (talking, watching):
             task.cancel()
-        stop(process)
-        await process.wait()
+        await child.stop()
 
 
 async def parse_isolated(
@@ -248,27 +397,27 @@ async def parse_isolated(
     limits: ParseLimits | None = None,
     tokens: JobTokens | None = None,
     paths: Sequence[str] = (),
+    inputs: Sequence[Path] = (),
 ) -> dict[str, Any]:
     chosen = limits or ParseLimits()
     issuer = tokens or JobTokens()
+    launcher = chosen.launcher or LocalLauncher(chosen)
     await asyncio.to_thread(work_dir.mkdir, parents=True, exist_ok=True)
-    process = await asyncio.create_subprocess_exec(
-        sys.executable,
-        "-I",
-        CHILD_SCRIPT,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
-        env=child_environment(issuer.issue(scope), work_dir),
-        cwd=work_dir,
-        start_new_session=True,
-        limit=MAX_MESSAGE_BYTES,
-        user=chosen.user,
+    child = await launcher.start(
+        (sys.executable, "-I", CHILD_SCRIPT),
+        child_environment(issuer.issue(scope), work_dir),
+        work_dir,
     )
-    conversation = Conversation(process, issuer, fetcher)
+    try:
+        for path in inputs:
+            await child.deliver(path)
+    except BaseException:
+        await child.stop()
+        raise
+    conversation = Conversation(child, issuer, fetcher)
     request = {
         "target": target,
         "arguments": dict(arguments),
         "paths": [*import_paths(), *paths],
     }
-    return await supervised(process, conversation.run(request), chosen)
+    return await supervised(child, conversation.run(request), chosen)

@@ -38,7 +38,7 @@ resource "zitadel_org" "scratch" {
 module "identity" {
   source                  = "../modules/zitadel-identity"
   org_id                  = zitadel_org.scratch.id
-  default_redirect_origin = "https://staging.parfocal.eu"
+  default_redirect_origin = "https://app.parfocal.eu"
   test_user_password      = var.test_user_password
 
   environments = {
@@ -50,8 +50,8 @@ module "identity" {
       origin   = "https://parfocal-edge-pr-*.example.workers.dev"
       dev_mode = true
     }
-    staging = {
-      origin   = "https://staging.parfocal.eu"
+    prod = {
+      origin   = "https://app.parfocal.eu"
       dev_mode = false
     }
   }

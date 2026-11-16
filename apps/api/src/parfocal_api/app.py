@@ -88,6 +88,7 @@ from parfocal_api import (
     slide_copies,
     slide_coverage,
     slide_details,
+    slide_embeddings,
     slide_moves,
     slide_tissue,
     study_templates,
@@ -101,10 +102,13 @@ from parfocal_api import (
     tile_access,
     track_record,
     training_exports,
+    tumor_maps,
     uploads,
     users,
+    view_maps,
     workspace_access,
 )
+from parfocal_api.observability import SliMiddleware, drill_router, rum_router, sli_emitter
 from parfocal_api.oidc import OidcClient
 from parfocal_api.origin_check import OriginCheck
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
@@ -117,11 +121,12 @@ from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine, require_row_security
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.object_store import ObjectStore
+from parfocal_common.otlp import otlp_exporter
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import load_settings
 from parfocal_common.structured_logging import configure_logging
 
-PRODUCTION_FACTORIES = ProductionFactories()
+PRODUCTION_FACTORIES = ProductionFactories(telemetry=otlp_exporter)
 
 
 class Health(BaseModel):
@@ -149,6 +154,7 @@ async def checked_role_then_closed_clients(app: FastAPI) -> AsyncGenerator[None]
         await require_row_security(state.engine)
         yield
     finally:
+        await app.state.sli.flush()
         await state.identity.http.aclose()
         storage: ObjectStore = app.state.storage
         await storage.http.aclose()
@@ -172,7 +178,8 @@ class ParfocalApi(FastAPI):
         self.state.engine = create_engine(str(settings.database_url))
         self.state.maintenance = maintenance.MaintenanceState(self.state.engine)
         self.state.realtime_http = httpx2.AsyncClient(timeout=5)
-        self.state.realtime = realtime_for(settings, self.state.realtime_http)
+        self.state.sli = sli_emitter(settings, clients, self.state.storage)
+        self.state.realtime = realtime_for(settings, self.state.realtime_http, self.state.sli)
         self.state.auth = auth.AuthState(
             engine=self.state.engine,
             identity=identity,
@@ -201,6 +208,7 @@ def create_app(
     app.add_middleware(maintenance.MaintenanceGate, state=app.state.maintenance)
     app.add_middleware(OriginCheck, origin=public_origin(resolved))
     app.add_middleware(RequestLogging)
+    app.add_middleware(SliMiddleware, emitter=app.state.sli)
 
     @app.get("/api/health", operation_id="getHealth")
     async def health() -> Health:
@@ -208,6 +216,8 @@ def create_app(
 
     app.include_router(maintenance.router)
     app.include_router(maintenance.platform_router)
+    app.include_router(drill_router)
+    app.include_router(rum_router)
     app.include_router(auth.router)
     app.include_router(password_login.router)
     app.include_router(sessions_api.router)
@@ -220,6 +230,7 @@ def create_app(
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)
     app.include_router(model_runs.router)
+    app.include_router(tumor_maps.router)
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)
     app.include_router(model_registry.router)
@@ -327,6 +338,8 @@ def create_app(
     app.include_router(security_contact.router)
     app.include_router(slide_coverage.router)
     app.include_router(slide_tissue.router)
+    app.include_router(slide_embeddings.router)
+    app.include_router(view_maps.router)
     app.include_router(slide_areas.router)
 
     return app

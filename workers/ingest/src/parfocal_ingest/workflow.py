@@ -1,11 +1,10 @@
 import asyncio
-import gzip
 import hashlib
 import json
 import shutil
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -20,6 +19,7 @@ from parfocal_api.tables import UploadStatus, job_steps
 from parfocal_common.ingest import (
     KIND,
     LEASE_SECONDS,
+    RESTRICTED_FILES,
     STEP_NAMES,
     Failure,
     RestrictedImage,
@@ -32,19 +32,32 @@ from parfocal_common.ingest import (
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.settings import load_settings
-from parfocal_ingest.associated import associated_images
-from parfocal_ingest.identify import Format, Identified, Refusal
-from parfocal_ingest.identifying_text import ranges_file
-from parfocal_ingest.isolation import JobScope, JobTokens, ParseLimits, parse_isolated
-from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
-from parfocal_ingest.parse_jobs import READER_ERRORS, unpacked_in
-from parfocal_ingest.pyramid import Pyramid, read_pyramid
+from parfocal_ingest.identify import Refusal
+from parfocal_ingest.isolation import (
+    JobScope,
+    JobTokens,
+    ParseLimits,
+    launcher_of,
+    output_folder,
+    parse_isolated,
+    read_output,
+    required_output,
+)
+from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME
+from parfocal_ingest.parse_jobs import (
+    LEVELS_OUTPUT,
+    OVERVIEW_OUTPUT,
+    RANGES_OUTPUT,
+    READER_ERRORS,
+    THUMBNAIL_OUTPUT,
+    TILE_INDEX_OUTPUT,
+    TISSUE_OUTPUT,
+    level_table,
+    restricted_output,
+)
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
-from parfocal_ingest.thumbnail import previews
-from parfocal_ingest.tile_index import index_document, tile_index
-from parfocal_ingest.tissue import tissue_mask
 
-__all__ = ["INGEST", "STEP_NAMES", "Resources", "ingest_workflow"]
+__all__ = ["INGEST", "STEP_NAMES", "Resources", "ingest_workflow", "level_table"]
 
 HASH_CHUNK_BYTES = 1024 * 1024
 PARSERS = "parfocal_ingest.parse_jobs"
@@ -52,6 +65,7 @@ UNIT_PREVIEWS = 0
 UNIT_TISSUE = 1
 UNIT_RESTRICTED = 2
 TILE_INDEX_NAME = "tile-index.json"
+BOX_FIELDS = ("x", "y", "width", "height")
 
 
 @dataclass(frozen=True)
@@ -81,6 +95,7 @@ def resources_from_environment() -> Resources:
             memory_mib=settings.ingest_parse_memory_mib,
             seconds=settings.ingest_parse_seconds,
             user=settings.ingest_parse_user,
+            launcher=launcher_of(settings.ingest_parse_launcher),
         ),
     )
 
@@ -159,22 +174,6 @@ async def fetch(context: Context) -> str | None:
     return downloaded.sha256
 
 
-def identified_of(results: Mapping[str, Mapping[str, Any]]) -> Identified:
-    found = results["identify"]
-    return Identified(Format(found["format"]), found.get("variant"))
-
-
-async def opened(context: Context) -> tuple[Path, Identified, Pyramid]:
-    results = await earlier_results(context.step)
-    await fetch(context)
-    identified = identified_of(results)
-    path = await asyncio.to_thread(unpacked_in, context.folder, context.local, identified)
-    found = await asyncio.to_thread(read_pyramid, path, identified)
-    if isinstance(found, Refusal):
-        raise StepFailedError(found)
-    return path, identified, found
-
-
 async def quarantine(context: Context) -> Mapping[str, Any]:
     stored = await context.store.head_object(context.upload.object_key)
     if stored is None:
@@ -232,39 +231,64 @@ async def validate(context: Context) -> Mapping[str, Any]:
     return await parsed(context, "validate_upload", results["identify"], slide_id_of(results))
 
 
-def level_table(found: Pyramid) -> bytes:
-    return json.dumps(asdict(found), separators=(",", ":")).encode()
-
-
 def slide_id_of(results: Mapping[str, Mapping[str, Any]]) -> uuid.UUID:
     return uuid.UUID(str(results["quarantine"]["slide_id"]))
 
 
+def whole(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise StepFailedError(Refusal.UNREADABLE)
+    return value
+
+
+def tissue_facts(found: object) -> dict[str, Any]:
+    if not isinstance(found, dict):
+        raise StepFailedError(Refusal.UNREADABLE)
+    fraction = found.get("fraction")
+    box = found.get("box")
+    if isinstance(fraction, bool) or not isinstance(fraction, int | float):
+        raise StepFailedError(Refusal.UNREADABLE)
+    if box is not None and not isinstance(box, dict):
+        raise StepFailedError(Refusal.UNREADABLE)
+    return {
+        "cell": whole(found.get("cell")),
+        "threshold": whole(found.get("threshold")),
+        "fraction": float(fraction),
+        "box": None if box is None else {name: whole(box.get(name)) for name in BOX_FIELDS},
+    }
+
+
+async def outputs_of(context: Context, name: str) -> Path:
+    return await asyncio.to_thread(output_folder, context.folder, name)
+
+
 async def index(context: Context) -> Mapping[str, Any]:
     results = await earlier_results(context.step)
-    path, identified, found = await opened(context)
-    prefix = slide_prefix(context.upload.tenant_id, slide_id_of(results))
-    await context.store.put_object(f"{prefix}levels.json", level_table(found), "application/json")
-    tiles = await asyncio.to_thread(tile_index, path, identified, found)
-    derived = None
-    if tiles is not None and identified.format is not None:
-        derived = await asyncio.to_thread(overview_levels, path, identified.format, found)
-    if tiles is not None and derived is not None:
-        await context.store.put_object(
-            f"{prefix}{OVERVIEW_LEVELS_NAME}", derived.data, "image/tiff"
-        )
-        tiles["overviewLevels"] = derived.reference()
+    slide_id = slide_id_of(results)
+    out = await outputs_of(context, "index")
+    facts = await parsed(
+        context, "index_upload", {**results["identify"], "out": str(out)}, slide_id
+    )
+    prefix = slide_prefix(context.upload.tenant_id, slide_id)
+    levels = await asyncio.to_thread(required_output, out, LEVELS_OUTPUT)
+    await context.store.put_object(f"{prefix}levels.json", levels, "application/json")
+    overview = await asyncio.to_thread(read_output, out, OVERVIEW_LEVELS_NAME)
+    if overview is not None:
+        await context.store.put_object(f"{prefix}{OVERVIEW_LEVELS_NAME}", overview, "image/tiff")
+    tiles = await asyncio.to_thread(read_output, out, TILE_INDEX_OUTPUT)
     if tiles is not None:
         await context.store.put_object(
-            f"{prefix}{TILE_INDEX_NAME}",
-            gzip.compress(index_document(tiles), mtime=0),
-            "application/json",
-            content_encoding="gzip",
+            f"{prefix}{TILE_INDEX_NAME}", tiles, "application/json", content_encoding="gzip"
         )
+    downsamples = facts.get("overview_levels")
     return {
-        "levels": len(found.levels),
+        "levels": whole(facts.get("levels")),
         "tile_index": tiles is not None,
-        "overview_levels": None if derived is None else list(derived.downsamples),
+        "overview_levels": (
+            [whole(value) for value in downsamples]
+            if overview is not None and isinstance(downsamples, list)
+            else None
+        ),
     }
 
 
@@ -275,38 +299,46 @@ async def derive(context: Context) -> Mapping[str, Any]:
     tenant_id = context.upload.tenant_id
     public = slide_prefix(tenant_id, slide_id)
     done = await step.done_units()
-    path, identified, found = await opened(context)
-    assert identified.format is not None
+    kept = False
+    if UNIT_RESTRICTED not in done:
+        async with step.transaction() as connection:
+            kept = keeps_restricted_images(
+                await held_privacy(connection, context.upload.row.project_id)
+            )
+    out = await outputs_of(context, "derive")
+    wanted = {
+        "previews": UNIT_PREVIEWS not in done,
+        "tissue": UNIT_TISSUE not in done,
+        "restricted": kept,
+    }
+    facts = await parsed(
+        context, "derive_upload", {**results["identify"], **wanted, "out": str(out)}, slide_id
+    )
     if UNIT_PREVIEWS not in done:
-        images = await asyncio.to_thread(previews, path, identified.format, found)
-        await context.store.put_object(f"{public}thumbnail.jpg", images.thumbnail, "image/jpeg")
-        await context.store.put_object(f"{public}overview.jpg", images.overview, "image/jpeg")
+        thumbnail = await asyncio.to_thread(required_output, out, THUMBNAIL_OUTPUT)
+        overview = await asyncio.to_thread(required_output, out, OVERVIEW_OUTPUT)
+        await context.store.put_object(f"{public}thumbnail.jpg", thumbnail, "image/jpeg")
+        await context.store.put_object(f"{public}overview.jpg", overview, "image/jpeg")
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_PREVIEWS)
     if UNIT_TISSUE not in done:
-        mask = await asyncio.to_thread(tissue_mask, path, identified.format, found)
-        await context.store.put_object(f"{public}tissue.png", mask.png(), "image/png")
-        facts = {
-            "cell": mask.cell,
-            "threshold": mask.threshold,
-            "fraction": mask.fraction,
-            "box": mask.box.facts() if mask.box else None,
-        }
+        tissue = tissue_facts(facts.get("tissue"))
+        mask = await asyncio.to_thread(required_output, out, TISSUE_OUTPUT)
+        await context.store.put_object(f"{public}tissue.png", mask, "image/png")
         await context.store.put_object(
-            f"{public}tissue.json", json.dumps(facts).encode(), "application/json"
+            f"{public}tissue.json", json.dumps(tissue).encode(), "application/json"
         )
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_TISSUE)
     if UNIT_RESTRICTED not in done:
-        async with step.transaction() as connection:
-            mode = await held_privacy(connection, context.upload.row.project_id)
-        if keeps_restricted_images(mode):
-            for image in await asyncio.to_thread(associated_images, path, found):
-                key = restricted_key(tenant_id, slide_id, RestrictedImage(image.kind.value))
-                await context.store.put_object(key, image.data, image.media_type)
+        for image in RestrictedImage if kept else ():
+            data = await asyncio.to_thread(read_output, out, restricted_output(image.value))
+            if data is not None:
+                key = restricted_key(tenant_id, slide_id, image)
+                await context.store.put_object(key, data, RESTRICTED_FILES[image][1])
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_RESTRICTED)
-    ranges = await asyncio.to_thread(ranges_file, context.local)
+    ranges = await asyncio.to_thread(required_output, out, RANGES_OUTPUT)
     await context.store.put_object(
         restricted_ranges_key(tenant_id, slide_id), ranges, "application/json"
     )

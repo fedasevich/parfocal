@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-15
+Last updated: 2026-11-16
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -8,9 +8,10 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note), 107 (how CI gets the model files for the parity test), 108 (whether experts on an annotate task may run a model), 109 (which Cloudflare token `.env` holds after the destructive action guard) and 110 (a smoke account for the browser check after each deploy) below.
-2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
-3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
+1. Decision 136 (whether a linear probe on frozen foundation model features counts as training) below, and clicking save on the Cloudflare page for decision 132 (the read-only fixtures key) when the lead opens it.
+2. When convenient, the Hugging Face token of decision 125 (gated foundation models) and the two Kaggle downloads of decision 131 (CryoNuSeg and Lizard).
+3. The checks on your Mac listed under "The review column" below, when you have a few minutes.
+4. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
 ## What your answers of 2026-11-04 changed
 
@@ -126,89 +127,116 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 
 Your choice: a
 
-## Open decisions from the night run of 2026-11-14
+## What your answers of 2026-11-16 changed
 
-### 105. Whether older Ventana iScan archives with several scan areas open
+- Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
+- Decision 106 (who reads the sealed clinical note), option A. Everyone who can see the case, as built in CASES-026 (encrypted clinical note per case).
+- Decision 107 (model files for the browser parity test), option A. An agent publishes the PathoSAM browser files to R2 once, about 450 MB, and adds a WebAssembly-only CI job that reads them with the read-only key of decision 132.
+- Decision 108 (experts on an annotate task running a model), option A. It stays with the project's "run models" right, as built.
+- Decision 109 (which Cloudflare token `.env` holds), Other. One token is enough, so `.env` keeps today's token and the SEC-031 guard (hard stops for destructive agent actions) is the protection.
+- Decision 110 (a smoke account for the deploy check), option A. The view-only smoke account is made in the deploy session, since deploys are paused by decision 96.
+- Decision 111 (ingest and pre-read SLO targets), option A. 10 minutes and 60 minutes stay, revisited after a month of real data.
+- Decision 112 (a slide for the viewer under make dev), option A. FOUND-040 (the edge Worker and the dev bucket under make dev) seeds the CAMELYON16 samples already in `parfocal-dev/fixtures/`, so no new upload is needed.
+- Decision 113 (how often the alert cycle runs), Other. Observability is paused, so nothing is scheduled. OPS-006 (observability stack) and OPS-007 (alerting and on-call) are on hold, built and tested with fakes.
+- Decision 114 (where the restore check puts the dump), option A. The GitHub runner stays while production holds only your test data.
+- Decision 115 (how long the bucket lock keeps tenant objects), option A. 7 days, applied before the first real user.
+- Decision 116 (which Zitadel the provisioning drill uses), option A. A throwaway local Zitadel, as built.
+- Decision 117 (the server encoder), option A. Full precision PathoSAM ViT-B on a T4, as built.
+- Decision 118 (best quality for the auto region tool), Other. Any quality is allowed, so AISEG-022 (best quality for the auto region tool) lets the outline tier setting choose best quality for the auto layer too.
+- Decision 119 (HSTS preload), option A. Preload stays off until the first real user.
+- Decision 120 (a Neon read replica), option A. Wait for slow reporting queries.
+- Decision 121 (SSO role conflict), option A. Researcher wins, as built.
+- Decision 122 (previews per pull request), option A. Previews stay off, and OPS-003 (environments) is ticked.
+- Decision 123 (newer nucleus models), option A with your note. AINUC-015 (score newer nucleus models on the Mac) checks each file size and peak RAM before a full run, keeps a run under about 8 GB, and aims for the best model rather than the fastest.
+- Decision 124 (a load workflow token), option A. An agent mints a read-only service token in your test workspace when deploys resume, and you add it with two slide ids.
+- Decision 125 (gated foundation models), option A. When you have a minute, accept the terms at `huggingface.co/bioptimus/H-optimus-0`, make a read token at `huggingface.co/settings/tokens`, and put it in `.env` as `HF_TOKEN`. AITUM-014 (a foundation model probe for the tumor map) then runs, after decision 136 below.
+- Decision 126 (embedder capacity), option A. One container, and AIP-007 (interactive priority gate) is ticked.
+- Decision 127 (the tumor map FROC range), option A. AITUM-001 (tumor map job) is ticked.
+- Decision 128 (the tumor area size range), option A. 0.90 to 1.15 stays until a wider run.
+- Decision 129 (who may map a view), option B with your note that everyone gets all AI tools. AITUM-013 (anyone who can read a slide maps a view) opens the route and counts GPU seconds per person. Decision 108 above still keeps whole-slide runs on annotate tasks to the "run models" right, as you chose there.
+- Decision 130 (a typed fixture run for "find more like these"), option B. AISEG-023 (find more like these on typed PanNuke nuclei) measures it.
+- Decision 131 (CryoNuSeg and Lizard), option A. When you have a minute, sign in to Kaggle and download the two zips into the paths listed under "The review column" below.
+- Decision 132 (the read-only fixtures key), option A. At your request the lead added "Account API Tokens Write" to `parfocal-tofu`, applied only the token `parfocal-fixtures-read` (1 added, 0 changed, 0 destroyed), put it in `.env`, and proved it lists `parfocal-dev` and is refused a write. INGEST-029 (shared test slides bucket) is ticked.
+- Decision 133 (a small SAM fine-tune), option A with your note. Nothing is trained or fine-tuned in the thesis.
+- Decision 134 (InstanSeg as the auto tool without WebGPU), option A.
+- Decision 135 (the nucleus job under one hour), Other. Time is not a target, quality and use of the Modal GPUs come first. AINUC-011 (throughput target) is ticked on the measured 2.56 hours on one L4.
 
-You asked to research before building. VIEW-069 (BIF with several scan areas) found, in [the research result](results/2026-11-14-bif-several-scan-areas.md), that a BIF holds one scan area per tissue piece, so such files are common. Today's DP 200 and DP 600 scanners join frames in a direction OpenSlide itself refuses, so neither OpenSlide nor Parfocal opens their files with or without several areas. Only older iScan files would gain, and Roche says those cannot be rebuilt exactly from their metadata. The refusal now has its own message instead of "unreadable".
+## Open decisions from 2026-11-16
 
-- **A. Keep the refusal with its own message, and build area placement later together with support for the DP 200 and DP 600 join direction (recommended).** Building it now helps only older archives that cannot be rebuilt exactly anyway.
-- B. Build area placement now against the public OpenSlide test file `OS-2.bif`.
+### 136. Whether a linear probe on frozen foundation model features counts as training
+
+Your answer to decision 133 says nothing is trained or fine-tuned in the thesis. AITUM-014 (a foundation model probe for the tumor map) keeps H-optimus-0 frozen, but a small linear classifier on its features has to be fitted on CAMELYON16 training slides, which is training in a narrow sense. Without it the foundation model cannot make a tumor map at all.
+
+- **A. Allow a linear probe on frozen features, since the foundation model itself is never changed (recommended).**
+- B. No probe. Drop AITUM-014 and keep the pretrained MONAI ResNet18 as the only tumor map.
 - Other.
 
-Your choice:
-
-### 106. Who can read the sealed clinical note of a case
-
-CASES-026 (encrypted clinical note per case) brought the note back sealed, writable only by project owners in clinical projects. As built, everyone who can see the case reads it, the same as the patient name, which includes a reviewer who only has slides of that case assigned.
-
-- **A. Everyone who can see the case, the same as the patient name (recommended).** A reviewer reading the slide usually needs the clinical context, and it keeps one rule for patient details.
-- B. Only project owners and the reviewers of that case's slides who have already submitted.
-- Other.
-
-Your choice:
-
-### 107. How CI gets the model files for the browser parity test
-
-MLEVAL-007 (browser parity tests) checks that the browser PathoSAM models match PyTorch, and it passes on the Mac (click mask IoU 0.9625 on WebGPU and 0.9822 on WebAssembly against a 0.96 bar, see [the result](results/2026-11-15-browser-parity-with-pytorch.md)). Its Done line asks CI to run it, but CI has none of the roughly 250 MB of model files and 200 MB fixture, so there it skips.
-
-- **A. Publish the files once to R2 as ADR 0276 (model files stored once with a checksum list) describes, and add a WebAssembly-only CI job that downloads them with a read-only token (recommended).** This is a production write of about 450 MB, well under a cent a month of storage, plus a new read-only secret, so it waits for your yes and the deploy session.
-- B. Run the test on a self-hosted GitHub runner on the Mac.
-- C. Keep the Mac run and the switch that makes a skip fail when required, and tick MLEVAL-007 without CI.
-- Other.
-
-Your choice:
-
-### 108. Whether experts on an annotate task may run a model on its slides
-
-JOBS-007 (run a model on a selection in Annotate) lets a person send a selected shape or the current view to a model, and the cells come back as AI objects the experts fix. Starting a run needs the "run models" right on the whole project, which experts assigned to an annotate task usually do not have, so as built only project owners and researchers see the panel.
-
-- **A. Keep it to people with the project's "run models" right, as built (recommended).** Runs cost GPU time, and the person who set up the task chooses when to spend it.
-- B. Let experts assigned to an annotate task run models on that task's slides only.
-- Other.
-
-Your choice:
-
-### 109. Which Cloudflare token `.env` holds after the destructive action guard
-
-SEC-031 (hard stops for destructive agent actions) now refuses agents' cloud deletes, resets and rotations, and it names a limited token, `parfocal-agent-dev-staging`, in `.env.example` for you to create. `scripts/tofu.sh` reads `CLOUDFLARE_API_TOKEN` from `.env` for every root, so a dev-only token there would break the `global` and `prod` roots. The guard also sends deleting or resetting the Neon branch to you, which is stricter than ADR 0293 (production only until the first real user).
-
-- **A. `.env` holds only the limited token, and you run `global` and `prod` with your own token in your shell (recommended).** No agent ever holds a token that can delete R2 buckets or DNS.
-- B. `tofu.sh` reads a separate production token variable from `.env`, so agents can still run additive production applies.
-- C. Keep today's broad token in `.env` and rely on the guard alone.
-- Other.
-
-Your choice:
-
-### 110. A smoke account for the browser check after each deploy
-
-OPS-016 (a real browser checks the deployed app after every deploy) added a read-only headless browser run after each production deploy. Signed out it checks the sign-in page. Signed in it opens home, a workspace, a case and a slide, and any `/api` write fails the run. The signed-in part needs a production account, which is skipped until it exists.
-
-- **A. Make a smoke account that can only view one workspace with one case and one fixture slide, and put `PARFOCAL_SMOKE_EMAIL` as a variable and `PARFOCAL_SMOKE_PASSWORD` as a secret in the GitHub environment `production` (recommended).** The check then covers the real viewer path, and OPS-014 (prepare production for the first real user) decides later whether the account stays.
-- B. Run the signed-out check only.
-- Other.
-
-Your choice:
+Your choice: a
 
 ## The review column, what each task waits for
 
-The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
+Last checked 2026-11-16 against `python3 scripts/board.py brief`. PR 9 (the cloud run of 2026-11-15) is merged to `main`, and PR 10 (the train after it) follows once its CI passes. Deploys stay paused by decision 96 (turning on deploys from `main`), so the tasks that wait for a deploy keep waiting. Each task is in review for one reason, listed once below.
 
 A few minutes of you on the Mac, when convenient:
 
 - DEV-008 (tablet layout). Look at the app once at 1024×1366, for example with the Chrome device toolbar on an iPad Pro portrait. There is no tablet mock, so your eye is the check. The spec is `apps/web/e2e/tablet-layout.spec.ts`.
 - VIEW-021 (wheel, trackpad and pinch) and DEV-013 (two-finger click and Safari pinch). Both wait for traces recorded on real hardware. The trace recorder page from VIEW-056 is built at `/spikes/input-traces` in the dev app (`pnpm dev`), so you spend about two minutes scrolling and pinching on the Mac trackpad in Safari and Chrome there, plus a mouse if you have one, and leave the downloaded files in `~/Downloads`.
 - VIEW-028 (overlay level of detail) and VIEW-029 (cull grid for overlays). Both need a GPU timing on your Mac: under 1 ms at overview with 81k nuclei, and under 6 ms at detail zoom with 1.6M nuclei. An agent prepares a one-command run for this.
-- VIEW-052 (hidden tab check in headed Chrome). A locked screen makes Chrome report every tab as hidden, so the night run could not do it. Keep the Mac unlocked and awake for about five minutes while an agent runs `pnpm --filter @parfocal/viewer-engine test:hidden-tab-hardware` three times; just say "Mac unlocked" in chat.
+- VIEW-052 (hidden tab check in headed Chrome). A locked screen makes Chrome report every tab as hidden, so the night run could not do it. Keep the Mac unlocked and awake for about five minutes while an agent runs `pnpm --filter @parfocal/viewer-engine test:hidden-tab-hardware` three times. Just say "Mac unlocked" in chat.
+- TEST-028 (model accuracy tests that cannot be skipped unseen). An agent runs `test:accuracy` once on your Mac and writes the result file with its numbers.
 
-Waiting on something else, nothing for you now:
+Waits for a deploy of the train after PR 9 and PR 10 merge:
 
-- IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session in decision 95 (the Zitadel login service user), paused until the app is ready for production.
-- OPS-005 (continuous deployment) is paused by your answer to decision 96, and TEST-020 (showcase seed) and SEC-042 (the edge guards the real API path) wait for the next production deploy.
-- IAM-001 (identity provider as code) and TEST-010 (load test tooling) waited for staging, which is dropped for good (ADR 0331, no staging environment), so the next session rescopes them to local dev or a drill environment.
-- FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
-- IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.
-- VIEW-017 (OME-Zarr reader) waits for converted real fixtures from INGEST-015 (conversion fallback worker), which an agent now finishes with lossless chunks after decision 104.
+- SKEL-001 (production environment exists). The live checks pass, and one tenant is still unverified.
+- SEC-027 (edge limits per IP). After the deploy, one login burst from one address to `app.parfocal.eu` should get a 429 at login 11.
+- SEC-042 (the edge limits and the bot check guard the real API path). Run `deployed-api-origin.test.ts` against the deployed edge and API origin.
+- TILES-002 (CDN in front of slide storage). It needs the deploy, the additive `tofu apply` of HTTP/3, and a warm p95 measurement over HTTP/2 and HTTP/3.
+- TILES-009 (a rewritten original never comes from a stale cache). Its checks are met, and it stays in review only because TILES-002 is not deployed.
+- SEC-002 (encryption in transit and at rest). One `tofu apply` of the global root, which only adds zone HSTS and the http3 setting, then a rescan of `parfocal.eu`.
+- SEC-045 (isolating the remaining parse steps in a Modal sandbox). It deploys with the merge, and then a real slide of 1 to 3 GiB needs measuring.
+- SEC-048 (rotation commands for the keys secret). Tested against fakes only, so the real Modal merge and the `parfocal-key-rotation` app are untried.
+- AIP-021 (pre-warm trigger from a slow device through the API). It needs a warm call against the deployed GPU pool with the real PathoSAM weights.
+- AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool) and AITUM-011 (the tumor map pool is ready to deploy). The pool is ready and the artifact is published, so the deploy comes with the train merge.
+- AITUM-012 (the interactive pool answers view map calls). The T4 time of one view tile is measured after the pool deploy.
+- OPS-009 (storage lifecycle and cost controls). A `policy.sh` plan and an additive apply for dev and prod, then the R2 lifecycle drill and a first live cost report.
+- TEST-020 (showcase seed over every feature and the real fixture slides). It waits for the next production deploy.
+
+Waits for a decision:
+
+- MLEVAL-010 (loaders for datasets behind a sign-in) waits for your two Kaggle downloads of decision 131 (how CryoNuSeg and Lizard reach the dataset cache). Sign in to Kaggle, download CryoNuSeg (416 MB) from `kaggle.com/datasets/ipateam/segmentation-of-nuclei-in-cryosectioned-he-images` to `~/.cache/parfocal/datasets/cryonuseg/segmentation-of-nuclei-in-cryosectioned-he-images.zip`, and the Lizard mirror (1.9 GB) from `kaggle.com/datasets/aadimator/lizard-dataset` to `~/.cache/parfocal/datasets/lizard/lizard-dataset.zip`. A browser download may be called `archive.zip`, so rename it. PanNuke and MoNuSeg already pass on their real archives.
+- OPS-016 (a real browser checks the deployed app after every deploy) waits for deploys to resume, when the smoke account of decision 110 is made.
+- TEST-010 (load test tooling) waits for the read-only service token of decision 124, minted when deploys resume. Only `/api/health` was measured on production, and the `load` workflow has not run yet.
+- SEC-014 (backups and restore testing) keeps the GitHub runner and the 7-day lock of decisions 114 and 115, and still needs the `tofu apply` of the bucket lock and a Neon point-in-time recovery test.
+- OPS-005 (continuous deployment) is paused by your answer to decision 96. You turn on the repository variable `DEPLOY_ON_MAIN` and run the rollback drill on production when you resume it.
+- IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session of decision 95 (the Zitadel login service user), paused until the app is ready for production.
+
+Waits for a green CI run:
+
+- FOUND-015 (container images). The images job is green. The Done line wants the Modal images built in CI, which only deploy.yml does, and decision 96 pauses it. Accept the lock resolution as the proof (ADR 0339) or add a Modal build step.
+- IAM-012 (per-organisation SSO), IAM-028 (SSO from the sign-in screen) and IAM-029 (SSO domain proof by DNS). The sign-in screen test of the SSO spec is intermittent, with three passes and two failures across the train and pull request 12 runs. Pull request 12 adds an `e2e-failures` artifact to find the cause. Tick all three after a few green e2e jobs in a row.
+- AITUM-009 (Map this view asks the server for its tiles). It waits for a db job that passes the tenant isolation suite, which pull request 12 fixes by naming scoreViewMapTile. The 10k cell import test of RSET-012 fails the same job and is not part of this task.
+- TEST-033 (the axe scan of a route does not depend on test order). One full web run is green and ci run 43859683421 on main failed on an axe color-contrast violation on `/tasks/:id/disagreements`, so it waits for a green run after that is understood.
+- TEST-008 (visual regression for UI). `ci-ok` is a required check on `main`. Run CI with `update_goldens` and commit the baselines once, after the train merges.
+- TEST-015 (cross-browser matrix). Run `gh workflow run browsers --ref main` after the train merges, because the workflow is not on `main` yet.
+- TEST-036 (display panel Undo tests repeat the key gesture when the Undo window is missed). Two of three ci runs on `main` are clean, one more is needed.
+
+Waits for something else, nothing for you now:
+
+- MLEVAL-007 (browser parity tests) is being finished by an agent under decision 107, once the read-only key of decision 132 exists.
+- FOUND-040 (the edge Worker and the dev bucket under make dev) is being finished by an agent under decision 112.
+
+- IAM-021 (lock screen) and SHELL-012 (account menu). The expired sign-in still returns to the slide rather than the object, and SHELL-014 (lock the screen from the account menu) builds the manual lock item.
+- FOUND-009 (local development environment). A cold run on a new machine is owed, and FOUND-040 (the edge Worker and dev bucket under `make dev`) covers the viewer part.
+- SEC-005 (data residency enforcement). Job scheduling is enforced, and pinning storage, the database and Modal functions moved to OPS-020 (region pinning).
+- SEC-008 (de-identified projects). No webhook receiver exists to test that path, and file-name slide labels go to SEC-028 (labels in de-identified projects).
+- SEC-013 (secrets management in all environments). Rerun the master key rotation in a drill environment under ADR 0331 (no staging environment).
+- VIEW-038 (custom WebGPU engine route) waits for VIEW-073 (ID labels and compute culling on that route), and the ID labels golden is skipped there.
+- AITUM-008 (the tumor map runs as a job and the API serves it). The job, route and tables are done, and the real opener and runner are AITUM-010.
+- OPS-010 (tenant provisioning automation). The real Zitadel adapter, the command line entry point and a drill environment run are left.
+- OPS-018 (SLI events from the workers, a realtime SLI and traces). Spans are still not exported.
+- PILOT-004 (pilot data onboarding). It needs the real pilot sample and a drill environment for the dry run.
+- TEST-019 (application performance on main paths). Open p95 of 3037 ms and decision p95 of 242 ms are over budget, and CMU-1 through the edge and a production build are still TODO.
+- EXP-008 (moderated test support) runs ten stand-in pilot tasks, because the kit's usability test plan is not in this repository. TODO: paste the kit's ten pilot tasks into `docs/design/` or edit them into the study page's task set JSON, which needs no deploy.
 
 ## Notes, no decision needed
 

@@ -89,6 +89,8 @@ def config_values(
         "STORAGE_ACCESS_KEY_ID": local["R2_ACCESS_KEY_ID"],
         "STORAGE_SECRET_ACCESS_KEY": local["R2_SECRET_ACCESS_KEY"],
     }
+    if target.storage_prefix:
+        values["STORAGE_KEY_PREFIX"] = target.storage_prefix
     return values | {name: local[name] for name in PASSED_THROUGH if local.get(name)}
 
 
@@ -146,7 +148,7 @@ def bootstrap(
         keys = generated_keys(make)
         password = make()
         pooled = neon.owner_uri(tools.neon, project, branch, database, pooled=True)
-        write_worker_secrets(tools, target.wrangler_env, worker_secrets(keys, local))
+        write_worker_secrets(tools, target.wrangler_target, worker_secrets(keys, local))
         statements = (
             neon.create_role_statements(database.name, password)
             if CREATE_ROLE in planned

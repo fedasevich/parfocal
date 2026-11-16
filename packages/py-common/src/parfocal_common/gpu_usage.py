@@ -5,7 +5,6 @@ from sqlalchemy import (
     Column,
     DateTime,
     Float,
-    ForeignKeyConstraint,
     Identity,
     Index,
     String,
@@ -18,7 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_common.data_classes import OPERATIONAL
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key
 from parfocal_common.jobs import StepRun, jobs
 from parfocal_common.model_runs import model_runs
 
@@ -44,7 +43,7 @@ gpu_usage = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
-    ForeignKeyConstraint(["job_id"], ["jobs.id"], ondelete="CASCADE"),
+    tenant_foreign_key("job_id", "jobs", ondelete="CASCADE"),
     Index("ix_gpu_usage_tenant_id_recorded_at", "tenant_id", "recorded_at"),
 )
 

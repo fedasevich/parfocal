@@ -3,14 +3,25 @@ import {
   blankedBytes,
   type Capability,
   overlapsRestricted,
-  signingKey,
   verifyCapability,
+  verifyingKeys,
 } from "#capability.ts";
 
 export type TileEnv = {
   readonly SLIDES: R2Bucket;
   readonly TILE_TOKEN_KEY: string;
+  readonly STORAGE_PREFIX?: string;
 };
+
+const PREFIXED_ROOTS = ["t/", "ops/"];
+const PREVIEW_PREFIX = /^previews\/pr-[1-9][0-9]{0,6}\/$/;
+
+export function storedKey(prefix: string | undefined, key: string): string {
+  if (!prefix || !PREFIXED_ROOTS.some((root) => key.startsWith(root))) return key;
+  if (!PREVIEW_PREFIX.test(prefix))
+    throw new Error("STORAGE_PREFIX must look like previews/pr-12/");
+  return `${prefix}${key}`;
+}
 
 export type Clock = () => number;
 
@@ -27,29 +38,21 @@ export const consoleTileLog: TileLog = ({ tenant, slide }) => {
   console.log(JSON.stringify({ tenant, slide }));
 };
 
+type Signed = { readonly size: number; readonly etag?: string };
+
 type Span = { readonly offset: number; readonly length?: number } | { readonly suffix: number };
 
 const TILES_PREFIX = "/tiles/";
 const FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/;
 const CACHE_ORIGIN = "https://tile-range-cache.invalid/";
-const CACHED_FOR_SECONDS = 86_400;
+const SIZED_CACHE_SECONDS = 86_400;
+const UNSIZED_CACHE_SECONDS = 600;
 const BASE_HEADERS = {
   "Cache-Control": "private, max-age=3600",
   "Cross-Origin-Resource-Policy": "same-origin",
   "X-Content-Type-Options": "nosniff",
 };
-
-const keys = new Map<string, Promise<CryptoKey>>();
-
-function keyFor(secret: string): Promise<CryptoKey> {
-  let key = keys.get(secret);
-  if (key === undefined) {
-    key = signingKey(secret);
-    keys.set(secret, key);
-  }
-  return key;
-}
 
 export function problem(status: number, code: string, title: string): Response {
   return Response.json(
@@ -108,9 +111,9 @@ function bounds(span: Span | null, size: number): readonly [number, number] | nu
   return [span.offset, Math.min(size, span.offset + (span.length ?? size))];
 }
 
-function slideKey(capability: Capability, name: string): string {
+function slideKey(capability: Capability, name: string, prefix: string | undefined): string {
   const folder = capability.folder ?? `t/${capability.tenant}/s/${capability.slide}/`;
-  return `${folder}${name}`;
+  return storedKey(prefix, `${folder}${name}`);
 }
 
 function objectHeaders(object: R2Object): Headers {
@@ -125,14 +128,23 @@ function timing(entries: readonly (readonly [string, number])[]): string {
   return entries.map(([name, ms]) => `${name};dur=${ms}`).join(", ");
 }
 
-function cacheKey(key: string, span: Span | null): Request | null {
-  if (span === null) {
-    return new Request(`${CACHE_ORIGIN}${key}`);
+function cacheKey(key: string, span: Span | null, signed: Signed | null): Request | null {
+  const query = new URLSearchParams();
+  if (signed !== null) {
+    query.set("size", String(signed.size));
   }
-  if ("suffix" in span || span.length === undefined) {
-    return null;
+  if (signed?.etag !== undefined) {
+    query.set("etag", signed.etag);
   }
-  return new Request(`${CACHE_ORIGIN}${key}?offset=${span.offset}&length=${span.length}`);
+  if (span !== null) {
+    if ("suffix" in span || span.length === undefined) {
+      return null;
+    }
+    query.set("offset", String(span.offset));
+    query.set("length", String(span.length));
+  }
+  const search = query.size === 0 ? "" : `?${query.toString()}`;
+  return new Request(`${CACHE_ORIGIN}${key}${search}`);
 }
 
 function answer(stored: Response, span: Span | null, outcome: string, ms: number): Response {
@@ -159,30 +171,36 @@ async function serveCached(
   env: TileEnv,
   key: string,
   span: Span | null,
-  signedSize: number | null,
+  signed: Signed | null,
   cache: RangeCache,
 ) {
-  const lookup = cacheKey(key, span);
+  const lookup = cacheKey(key, span, signed);
   if (lookup === null) {
-    return serveFromBucket(env, key, span, signedSize);
+    return serveFromBucket(env, key, span, signed?.size ?? null);
   }
   const started = Date.now();
   const hit = await cache.store.match(lookup);
   const looked = Date.now() - started;
   if (hit !== undefined) {
-    if (signedSize !== null && Number(hit.headers.get("X-Object-Size")) !== signedSize) {
+    if (signed !== null && Number(hit.headers.get("X-Object-Size")) !== signed.size) {
       await hit.body?.cancel();
       return sizeMismatch();
     }
     return answer(hit, span, "hit", looked);
   }
-  const fresh = await serveFromBucket(env, key, span, signedSize, [["cache", looked]]);
+  const fresh = await serveFromBucket(env, key, span, signed?.size ?? null, [["cache", looked]]);
   if (fresh.status !== 200 && fresh.status !== 206) {
     return fresh;
   }
+  if (signed?.etag !== undefined && fresh.headers.get("ETag") !== `"${signed.etag}"`) {
+    const headers = new Headers(fresh.headers);
+    headers.append("Server-Timing", "cache;desc=etag-mismatch");
+    return new Response(fresh.body, { status: fresh.status, headers });
+  }
   const [mine, theirs] = (fresh.body as ReadableStream).tee();
+  const maxAge = signed === null ? UNSIZED_CACHE_SECONDS : SIZED_CACHE_SECONDS;
   const stored = new Headers({
-    "Cache-Control": `public, max-age=${CACHED_FOR_SECONDS}`,
+    "Cache-Control": `public, max-age=${maxAge}`,
     "Content-Length": fresh.headers.get("Content-Length") ?? "0",
     "Content-Type": fresh.headers.get("Content-Type") ?? "application/octet-stream",
     ETag: fresh.headers.get("ETag") ?? "",
@@ -206,14 +224,14 @@ async function serve(
   env: TileEnv,
   key: string,
   span: Span | null,
-  signedSize: number | null,
+  signed: Signed | null,
   cache: RangeCache | undefined,
 ) {
   if (request.method === "GET" && cache !== undefined) {
-    return serveCached(env, key, span, signedSize, cache);
+    return serveCached(env, key, span, signed, cache);
   }
   if (request.method === "GET") {
-    return serveFromBucket(env, key, span, signedSize);
+    return serveFromBucket(env, key, span, signed?.size ?? null);
   }
   if (request.method === "HEAD") {
     const object = await env.SLIDES.head(key);
@@ -280,7 +298,7 @@ export async function handleTiles(
   if (token === null) {
     return problem(401, "tile-token-missing", "A tile request needs a capability token");
   }
-  const access = await verifyCapability(token, await keyFor(env.TILE_TOKEN_KEY), now());
+  const access = await verifyCapability(token, await verifyingKeys(env.TILE_TOKEN_KEY), now());
   if (!access.ok) {
     return access.reason === "expired"
       ? problem(401, "tile-token-expired", "The capability token has expired")
@@ -295,7 +313,7 @@ export async function handleTiles(
   if (span === "invalid") {
     return problem(416, "range-not-satisfiable", "Only one byte range is served per request");
   }
-  const key = slideKey(capability, name);
+  const key = slideKey(capability, name, env.STORAGE_PREFIX);
   if (request.method !== "GET" || name !== capability.original) {
     return serve(request, env, key, span, null, cache);
   }
@@ -310,7 +328,11 @@ export async function handleTiles(
     return problem(403, "range-restricted", "These bytes hold a label or macro image");
   }
   const checked = span === null || end === start ? span : { offset: start, length: end - start };
-  const served = await serve(request, env, key, checked, capability.size, cache);
+  const signed = {
+    size: capability.size,
+    ...(capability.etag === undefined ? {} : { etag: capability.etag }),
+  };
+  const served = await serve(request, env, key, checked, signed, cache);
   return withBlanks(served, capability.blank ?? [], start, end);
 }
 

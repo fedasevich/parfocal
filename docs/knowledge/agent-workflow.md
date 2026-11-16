@@ -65,7 +65,7 @@ Advice from Fable on 2026-11-02, accepted by the owner. Since 2026-11-13 the pro
 3. An open task that a path or slice task depends on.
 4. Else the highest "unblocks" count from `board.py ready --agent-only`, the smaller `Size` winning a tie.
 
-`Idea:` tasks stay in the backlog but come last. At most one task that adds a migration runs at a time.
+`Idea:` tasks and tasks marked `(moved)` or `(dropped)` stay in the backlog but are filtered out: `board.py counts`, `brief` and `ready` leave them out of every total, `ready --ideas` lists them, and the board shows them only with "Show ideas" ticked. The owner picks an idea before an agent builds it. At most one task that adds a migration runs at a time.
 
 ## Parallel runs
 
@@ -78,6 +78,7 @@ How many agents and which model:
 - In such a run prefer tasks that close an epic or a milestone: run `board.py counts` and pick the last open tasks of the nearest complete epics.
 - At most one task that adds a migration runs at a time. Never run two tasks that touch the same screen or fake API store, such as the bell and mentions, at once. Hold the second until the first merges.
 - Pick tasks by [Picking the next task](#picking-the-next-task), quick wins and high "unblocks" counts first.
+- Do a follow-up in the same agent or the very next one (owner, 2026-11-15). When a hand-back leaves a small gap, send it back to that agent with SendMessage while it still holds the context. When the gap becomes a new backlog task, give it to the next agent the lead starts, ahead of the usual order.
 
 Stopping:
 

@@ -7,6 +7,7 @@ import time
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Annotated, Protocol, cast
 
 import httpx2
@@ -15,7 +16,9 @@ from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_api.settings import ApiSettings
-from parfocal_api.token_keys import decoded_key, usable_secret
+from parfocal_api.token_keys import decoded_key, usable_keys
+from parfocal_common.alerting import SliName
+from parfocal_common.sli_store import SliEmitter
 
 PUBLISH_HEADER = "X-Room-Signature"
 MAX_PUBLISH_ROOMS = 100
@@ -58,6 +61,7 @@ class EdgeRealtime:
     url: str
     secret: str
     http: httpx2.AsyncClient
+    sli: SliEmitter | None = None
 
     async def send(self, action: str, body: object) -> None:
         text = compact(body)
@@ -65,13 +69,24 @@ class EdgeRealtime:
             PUBLISH_HEADER: sign_publish(self.secret, int(time.time()), text),
             "Content-Type": "application/json",
         }
+        started = time.perf_counter()
+        ok = False
         try:
             response = await self.http.post(
                 f"{self.url}/rt-internal/{action}", content=text, headers=headers
             )
             response.raise_for_status()
+            ok = True
         except httpx2.HTTPError as error:
             logger.warning("realtime %s failed: %s", action, type(error).__name__)
+        if self.sli is not None:
+            self.sli.observe(
+                SliName.REALTIME,
+                ok=ok,
+                duration=timedelta(seconds=time.perf_counter() - started),
+                attributes={"action": action},
+            )
+            await self.sli.flush_if_due()
 
     async def publish(self, tenant_id: uuid.UUID, rooms: Sequence[str], event: RoomEvent) -> None:
         wire = event.wire()
@@ -123,11 +138,15 @@ class RealtimeSettings(BaseSettings):
     realtime_internal_url: AnyHttpUrl | None = None
 
 
-def realtime_for(settings: ApiSettings | RealtimeSettings, http: httpx2.AsyncClient) -> Realtime:
-    secret = usable_secret(settings.room_token_key)
-    if secret is None or settings.realtime_internal_url is None:
+def realtime_for(
+    settings: ApiSettings | RealtimeSettings,
+    http: httpx2.AsyncClient,
+    sli: SliEmitter | None = None,
+) -> Realtime:
+    keys = usable_keys(settings.room_token_key)
+    if keys is None or settings.realtime_internal_url is None:
         return NoRealtime()
-    return EdgeRealtime(str(settings.realtime_internal_url).rstrip("/"), secret, http)
+    return EdgeRealtime(str(settings.realtime_internal_url).rstrip("/"), keys[0], http, sli)
 
 
 def realtime_of(request: Request) -> Realtime:

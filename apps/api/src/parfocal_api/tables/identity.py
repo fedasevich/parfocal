@@ -19,7 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from parfocal_api.tables.base import (
     ADMIN_RIGHTS_CHECK,
@@ -40,7 +40,7 @@ from parfocal_api.tables.base import (
     timestamps,
 )
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 organisations = Table(
     "organisations",
@@ -219,6 +219,34 @@ users = Table(
     CheckConstraint("(quiet_from IS NULL) = (quiet_until IS NULL)", name="quiet_hours"),
 )
 
+linked_subjects = Table(
+    "linked_subjects",
+    metadata,
+    Column("subject", String(200), primary_key=True, info=PERSONAL),
+    Column(
+        "user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "sso_tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+)
+
 memberships = Table(
     "memberships",
     metadata,
@@ -343,6 +371,7 @@ service_accounts = Table(
     Column("disabled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("tenant_id", "name"),
+    tenant_unique(),
     CheckConstraint(SERVICE_SCOPES_CHECK, name="scopes"),
 )
 
@@ -367,11 +396,11 @@ api_tokens = Table(
     Column(
         "service_account_id",
         Uuid[uuid.UUID](),
-        ForeignKey("service_accounts.id"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("service_account_id", "service_accounts"),
     Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
     Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
@@ -410,11 +439,11 @@ invitations = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id"),
         nullable=True,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
     Column("accepted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
@@ -452,4 +481,39 @@ session_policies = Table(
     CheckConstraint("idle_lock_minutes BETWEEN 1 AND 240", name="idle_lock_minutes"),
     CheckConstraint("session_hours BETWEEN 1 AND 24", name="session_hours"),
     CheckConstraint("emergency_hours BETWEEN 1 AND 24", name="emergency_hours"),
+)
+
+sso_connections = Table(
+    "sso_connections",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("idp_organisation_id", String(64), nullable=False, unique=True, info=OPERATIONAL),
+    Column("idp_id", String(64), nullable=False, info=OPERATIONAL),
+    Column("email_domains", ARRAY(String(253)), nullable=False, info=OPERATIONAL),
+    Column("default_role", String(30), nullable=True, info=OPERATIONAL),
+    Column(
+        "group_roles",
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "domain_proofs",
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        info=OPERATIONAL,
+    ),
+    *timestamps(),
+    CheckConstraint(
+        "default_role IS NULL OR default_role IN ('researcher', 'reviewer')", name="default_role"
+    ),
+    CheckConstraint("cardinality(email_domains) > 0", name="email_domains"),
 )

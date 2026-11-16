@@ -21,6 +21,7 @@ from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from link_support import Site
 from pypdf import PdfReader
 from sqlalchemy import func, insert, select, text, update
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
@@ -60,6 +61,7 @@ from parfocal_api.tables import (
     lab_model_projects,
     lab_models,
     legal_holds,
+    linked_subjects,
     memberships,
     model_tiers,
     notification_mutes,
@@ -94,6 +96,7 @@ from parfocal_api.tables import (
     slide_counters,
     slide_coverage,
     slides,
+    sso_connections,
     stage_throughput,
     study_template_versions,
     study_templates,
@@ -110,6 +113,14 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
 from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, scoped_transaction
+from parfocal_common.embedding_cache import (
+    EMBEDDING_BYTES,
+    SERVER_ENCODER,
+    EmbeddingManifest,
+    bitset,
+    manifest_key,
+)
+from parfocal_common.embedding_cache import tile_key as embedding_tile_key
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import (
     MODEL_STAGE,
@@ -123,6 +134,7 @@ from parfocal_common.model_runs import (
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_common.warm_gate import WarmGate
 from parfocal_ingest.tissue import TissueMask
 
 pytestmark = pytest.mark.db
@@ -252,7 +264,13 @@ CASE_TABLES = {
     "case_requests",
     "emergency_grants",
 }
-AUTH_TABLES = {"platform_operators", "auth_logins", "sessions", "rate_counters"}
+AUTH_TABLES = {
+    "platform_operators",
+    "auth_logins",
+    "sessions",
+    "rate_counters",
+    "linked_subjects",
+}
 
 
 async def seed_audit_people(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -348,6 +366,29 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
     await connection.execute(
         insert(session_policies).values(
             tenant_id=seeded.tenant_id, idle_lock_minutes=20, session_hours=10
+        )
+    )
+
+
+async def seed_sso_connections(connection: AsyncConnection, seeded: Seeded) -> None:
+    organisation = f"idp-org-{uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(sso_connections).values(
+            tenant_id=seeded.tenant_id,
+            idp_organisation_id=organisation,
+            idp_id=f"idp-{uuid.uuid4().hex[:12]}",
+            email_domains=[f"sso-{uuid.uuid4().hex[:10]}.example.test"],
+        )
+    )
+    seeded.markers.add(organisation)
+
+
+async def seed_linked_subjects(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(linked_subjects).values(
+            subject=f"sso-subject-{uuid.uuid4().hex[:12]}",
+            user_id=seeded.ids["user"],
+            sso_tenant_id=seeded.tenant_id,
         )
     )
 
@@ -543,6 +584,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             f"{slide_prefix(seeded.tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
             TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
             "image/png",
+        )
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            manifest_key(seeded.tenant_id, case.loose_slide_id),
+            EmbeddingManifest(
+                SERVER_ENCODER, 0, 1.0, 512, 4096, 2048, 8, 4, bitset(8, 4, {(0, 0)})
+            ).render(),
+            "application/json",
+        )
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            embedding_tile_key(seeded.tenant_id, case.loose_slide_id, 0, 0),
+            str(seeded.tenant_id).encode().ljust(EMBEDDING_BYTES, b"\0"),
+            "application/octet-stream",
         )
     set_name = f"Model {uuid.uuid4().hex[:8]}"
     set_id = await connection.scalar(
@@ -1041,6 +1094,10 @@ def upload_name(seeded: Seeded) -> str:
     return f"Isolation {seeded.tenant_id}.svs"
 
 
+def sent_name(seeded: Seeded) -> str:
+    return f"Sent {seeded.tenant_id}.svs"
+
+
 def upload_content(seeded: Seeded) -> bytes:
     return f"part of {seeded.tenant_id}".encode()
 
@@ -1072,6 +1129,25 @@ async def seed_uploads(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.update({str(seeded.ids["upload"]), stored.headers["etag"].strip('"')})
+    sent_id = uuid.uuid4()
+    await connection.execute(
+        insert(uploads).values(
+            id=sent_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            created_by_user_id=seeded.ids["user"],
+            file_name=sent_name(seeded),
+            size_bytes=len(content),
+            object_key=f"t/{seeded.tenant_id}/quarantine/{sent_id}/sent.svs",
+            storage_upload_id=f"sent-{sent_id}",
+            part_bytes=TEST_PART_BYTES,
+            part_count=1,
+            kind="result",
+            status="completed",
+            closed_at=func.now(),
+        )
+    )
+    seeded.markers.add(str(sent_id))
 
 
 async def seed_deleted_projects(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -1486,6 +1562,8 @@ SEEDERS: dict[str, Seeder] = {
     "legal_holds": seed_legal_holds,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
+    "sso_connections": seed_sso_connections,
+    "linked_subjects": seed_linked_subjects,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
@@ -1527,6 +1605,13 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: (
             f"/api/uploads/open?project_id={a.ids['project']}&name={upload_name(a)}"
+            f"&size={len(upload_content(a))}"
+        ),
+    ),
+    "findSentUploads": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/uploads/sent?project_id={a.ids['project']}&name={sent_name(a)}"
             f"&size={len(upload_content(a))}"
         ),
     ),
@@ -1699,6 +1784,12 @@ GET_ROUTES = {
     ),
     "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
     "getSlideTissue": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tissue"),
+    "getSlideEmbeddings": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/embeddings"
+    ),
+    "getSlideEmbeddingTile": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/embeddings/0/0"
+    ),
     "getSlideCoverage": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/coverage"),
     "getRoomAccess": Route(Exposure.TENANT, lambda a: f"/api/rooms/slide:{a.ids['slide']}/access"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),
@@ -2182,3 +2273,373 @@ def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded
         assert attempt.status_code == 404, attempt.text
     pending = api(a.member(admin_rights=True)).get("/api/tenant/access-requests").json()
     assert str(a.ids["access_request"]) in [item["id"] for item in pending]
+
+
+class CountingPools:
+    def __init__(self) -> None:
+        self.spawned = 0
+        self.called = 0
+
+    def spawn(self, function_name: str, call: dict[str, object]) -> None:
+        self.spawned += 1
+
+    def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        self.called += 1
+        return {}
+
+
+def test_another_workspace_cannot_warm_the_embedder_for_a_slide(
+    api: ApiAs, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    pools = CountingPools()
+    api.app.state.warm_gate = WarmGate(pools)
+    path = f"/api/slides/{a.ids['slide']}/embeddings/warm"
+    try:
+        refused = api(b.member()).post(path, json={"device": "slow"})
+        assert refused.status_code == 404, refused.text
+        assert pools.spawned == 0
+        warmed = api(a.member()).post(path, json={"device": "slow"})
+        assert warmed.status_code == 204, warmed.text
+        assert pools.spawned == 1
+    finally:
+        del api.app.state.warm_gate
+
+
+def test_another_workspace_cannot_map_a_view_of_a_slide(
+    api: ApiAs, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    pools = CountingPools()
+    api.app.state.warm_gate = WarmGate(pools)
+    path = f"/api/slides/{a.ids['slide']}/view-map/0/0"
+    try:
+        refused = api(b.member()).post(path)
+        assert refused.status_code == 404, refused.text
+        assert pools.called == 0
+    finally:
+        del api.app.state.warm_gate
+
+
+KEY_COLUMNS = (
+    "(SELECT string_agg(a.attname::text, ',' ORDER BY k.ord) FROM unnest({keys}) "
+    "WITH ORDINALITY k(n, ord) JOIN pg_attribute a ON a.attrelid = {table} AND a.attnum = k.n)"
+)
+KEYS_BETWEEN_TENANT_TABLES = (
+    "SELECT c.conname, c.conrelid::regclass::text, c.confrelid::regclass::text, "
+    + KEY_COLUMNS.format(keys="c.conkey", table="c.conrelid")
+    + ", "
+    + KEY_COLUMNS.format(keys="c.confkey", table="c.confrelid")
+    + " FROM pg_constraint c WHERE c.contype = 'f' "
+    "AND c.connamespace = 'public'::regnamespace AND c.confrelid <> 'tenants'::regclass "
+    "AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = c.conrelid "
+    "AND a.attname = 'tenant_id') "
+    "AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = c.confrelid "
+    "AND a.attname = 'tenant_id') ORDER BY 1"
+)
+INSERTABLE_COLUMNS = (
+    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' "
+    "AND table_name = :table AND is_generated = 'NEVER' "
+    "AND coalesce(identity_generation, '') <> 'ALWAYS' ORDER BY ordinal_position"
+)
+
+
+@dataclass(frozen=True)
+class TenantKey:
+    name: str
+    child: str
+    parent: str
+    column: str
+
+
+def keys_between_tenant_tables(owner: str) -> list[tuple[str, str, str, list[str], list[str]]]:
+    return [
+        (str(name), str(child), str(parent), names_of(columns), names_of(referred))
+        for name, child, parent, columns, referred in query(owner, KEYS_BETWEEN_TENANT_TABLES)
+    ]
+
+
+def names_of(joined: object) -> list[str]:
+    return str(joined).split(",")
+
+
+def tenant_keys(owner: str) -> list[TenantKey]:
+    return [
+        TenantKey(name, child, parent, columns[0])
+        for name, child, parent, columns, referred in keys_between_tenant_tables(owner)
+        if len(columns) == 2
+        and columns[0] != "project_id"
+        and columns[1] == "tenant_id"
+        and referred == ["id", "tenant_id"]
+    ]
+
+
+CHANGED_IN_A_COPY = {
+    "annotation_versions": {"version": "version + 1000"},
+    "api_tokens": {"token_hash": "sha256(token_hash)"},
+    "clinical_report_versions": {"number": "number + 1000", "reason": "'probe'"},
+    "evaluation_versions": {"number": "number + 1000"},
+    "job_steps": {"ordinal": "ordinal + 1000"},
+    "painted_map_versions": {"version": "version + 1000"},
+    "specimens": {"letter": "'ZZ'"},
+    "study_template_versions": {"version": "version + 1000"},
+    "uploads": {"object_key": "object_key || '.probe'"},
+}
+CHECKED_WITH_THE_KEY = {
+    ("uploads", "created_by_service_id"): {"created_by_user_id": "NULL"},
+    ("uploads", "job_id"): {"status": "'completed'", "closed_at": "coalesce(closed_at, now())"},
+}
+REFUSED_BEFORE_THE_KEY = {
+    "result_chunks": "is not importing",
+    "result_objects": "is not importing",
+}
+
+
+def copy_pointing_at(key: TenantKey, columns: list[str]) -> str:
+    changes = CHANGED_IN_A_COPY.get(key.child, {}) | CHECKED_WITH_THE_KEY.get(
+        (key.child, key.column), {}
+    )
+    values = [
+        ":parent"
+        if column == key.column
+        else "gen_random_uuid()"
+        if column == "id"
+        else changes.get(column, column)
+        for column in columns
+    ]
+    return (
+        f"INSERT INTO {key.child} ({', '.join(columns)}) "
+        f"SELECT {', '.join(values)} FROM {key.child} ORDER BY {key.column} IS NULL LIMIT 1"
+    )
+
+
+def move_pointing_at(key: TenantKey) -> str:
+    return (
+        f"UPDATE {key.child} SET {key.column} = :parent WHERE ctid = "
+        f"(SELECT ctid FROM {key.child} ORDER BY {key.column} IS NULL LIMIT 1)"
+    )
+
+
+def refused_by_its_key(key: TenantKey, refusal: str) -> bool:
+    before = REFUSED_BEFORE_THE_KEY.get(key.child)
+    return f'violates foreign key constraint "{key.name}"' in refusal or (
+        before is not None and before in refusal
+    )
+
+
+async def write_pointing_across(
+    app: str, key: TenantKey, scope: DatabaseScope, parent: object, statement: str
+) -> str:
+    engine = create_async_engine(async_database_url(app))
+    try:
+        async with engine.connect() as connection:
+            await connection.execute(SET_SCOPE, scope.parameters())
+            columns = [
+                str(row[0])
+                for row in await connection.execute(text(INSERTABLE_COLUMNS), {"table": key.child})
+            ]
+            sql = copy_pointing_at(key, columns) if statement == "insert" else move_pointing_at(key)
+            written = await connection.execute(text(sql), {"parent": parent})
+            return f"{statement} of {written.rowcount} rows accepted"
+    except DBAPIError as error:
+        return str(error.orig)
+    finally:
+        await engine.dispose()
+
+
+def refusal_of(app: str, key: TenantKey, scope: DatabaseScope, parent: object) -> str:
+    refusal = asyncio.run(write_pointing_across(app, key, scope, parent, "insert"))
+    if refused_by_its_key(key, refusal) or "accepted" in refusal:
+        return refusal
+    return asyncio.run(write_pointing_across(app, key, scope, parent, "update"))
+
+
+def test_every_key_between_workspace_tables_carries_the_workspace(database: str) -> None:
+    owner = with_database(OWNER_URL, database)
+    without_the_workspace = [
+        (name, columns, referred)
+        for name, _, _, columns, referred in keys_between_tenant_tables(owner)
+        if "tenant_id" not in columns or referred[columns.index("tenant_id")] != "tenant_id"
+    ]
+    assert without_the_workspace == []
+
+
+def test_a_row_cannot_point_at_a_parent_in_another_workspace(
+    database: str, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    owner = with_database(OWNER_URL, database)
+    app = with_database(APP_URL, database)
+    scope = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
+    keys = tenant_keys(owner)
+    assert len(keys) >= 35
+    accepted: list[str] = []
+    for key in keys:
+        parent = query(
+            owner, f"SELECT id FROM {key.parent} WHERE tenant_id = '{a.tenant_id}' LIMIT 1"
+        )[0][0]
+        refusal = refusal_of(app, key, scope, parent)
+        if not refused_by_its_key(key, refusal):
+            accepted.append(f"{key.name}: {refusal}")
+    assert not accepted, "\n".join(accepted)
+
+
+@dataclass(frozen=True)
+class CompositeKey:
+    name: str
+    child: str
+    parent: str
+    columns: tuple[str, ...]
+    referred: tuple[str, ...]
+
+
+def composite_keys(owner: str) -> list[CompositeKey]:
+    return [
+        CompositeKey(
+            name,
+            child,
+            parent,
+            tuple(column for column in columns if column != "tenant_id"),
+            tuple(column for column in referred if column != "tenant_id"),
+        )
+        for name, child, parent, columns, referred in keys_between_tenant_tables(owner)
+        if len([column for column in columns if column != "tenant_id"]) >= 2
+    ]
+
+
+CONSTRAINTS_BESIDE = (
+    "SELECT c.conname FROM pg_constraint c, pg_constraint k "
+    "WHERE k.conname = :name AND k.conrelid = CAST(:table AS regclass) "
+    "AND c.conrelid = k.conrelid AND c.oid <> k.oid AND c.contype IN ('c', 'f', 'p', 'u', 'x') "
+    "AND (c.contype IN ('c', 'f') OR c.conindid <> k.conindid)"
+)
+UNIQUE_INDEXES_BESIDE = (
+    "SELECT i.indexrelid::regclass::text FROM pg_index i, pg_constraint k "
+    "WHERE k.conname = :name AND k.conrelid = CAST(:table AS regclass) "
+    "AND i.indrelid = k.conrelid AND i.indisunique AND i.indexrelid <> k.conindid "
+    "AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid "
+    "AND c.conrelid = i.indrelid)"
+)
+COLUMN_TYPES = (
+    "SELECT attname, format_type(atttypid, atttypmod) FROM pg_attribute "
+    "WHERE attrelid = CAST(:table AS regclass) AND attnum > 0 AND NOT attisdropped"
+)
+
+
+def all_set(columns: tuple[str, ...]) -> str:
+    return " AND ".join(f"{column} IS NOT NULL" for column in columns)
+
+
+def foreign_tuple(owner: str, key: CompositeKey, tenant_id: object) -> tuple[object, ...]:
+    own = query(
+        owner,
+        f"SELECT {', '.join(key.columns)} FROM {key.child} "
+        f"WHERE tenant_id = '{tenant_id}' AND {all_set(key.columns)} LIMIT 1",
+    )
+    if own:
+        return own[0]
+    return query(
+        owner,
+        f"SELECT {', '.join(key.referred)} FROM {key.parent} "
+        f"WHERE tenant_id = '{tenant_id}' AND {all_set(key.referred)} LIMIT 1",
+    )[0]
+
+
+def composite_copy(key: CompositeKey, columns: list[str], types: dict[str, str]) -> str:
+    values = [
+        f"CAST(:k{key.columns.index(column)} AS {types[column]})"
+        if column in key.columns
+        else "gen_random_uuid()"
+        if column == "id"
+        else column
+        for column in columns
+    ]
+    return (
+        f"INSERT INTO {key.child} ({', '.join(columns)}) "
+        f"SELECT {', '.join(values)} FROM {key.child} LIMIT 1"
+    )
+
+
+async def leave_only_the_key(connection: AsyncConnection, key: CompositeKey) -> None:
+    where = {"table": key.child, "name": key.name}
+    for (constraint,) in (await connection.execute(text(CONSTRAINTS_BESIDE), where)).all():
+        await connection.execute(
+            text(f'ALTER TABLE {key.child} DROP CONSTRAINT IF EXISTS "{constraint}" CASCADE')
+        )
+    for (index,) in (await connection.execute(text(UNIQUE_INDEXES_BESIDE), where)).all():
+        await connection.execute(text(f"DROP INDEX {index}"))
+    await connection.execute(text(f"ALTER TABLE {key.child} DISABLE TRIGGER USER"))
+    await connection.execute(text(f"GRANT INSERT ON {key.child} TO parfocal_app"))
+
+
+async def insert_across(
+    owner: str, key: CompositeKey, scope: DatabaseScope, values: tuple[object, ...]
+) -> str:
+    engine = create_async_engine(async_database_url(owner))
+    try:
+        async with engine.connect() as connection:
+            transaction = await connection.begin()
+            try:
+                await leave_only_the_key(connection, key)
+                types = {
+                    str(column): str(kind)
+                    for column, kind in await connection.execute(
+                        text(COLUMN_TYPES), {"table": key.child}
+                    )
+                }
+                columns = [
+                    str(row[0])
+                    for row in await connection.execute(
+                        text(INSERTABLE_COLUMNS), {"table": key.child}
+                    )
+                ]
+                await connection.execute(text("SET LOCAL ROLE parfocal_app"))
+                await connection.execute(SET_SCOPE, scope.parameters())
+                written = await connection.execute(
+                    text(composite_copy(key, columns, types)),
+                    {f"k{index}": value for index, value in enumerate(values)},
+                )
+                return f"insert of {written.rowcount} rows accepted"
+            finally:
+                await transaction.rollback()
+    except DBAPIError as error:
+        return str(error.orig)
+    finally:
+        await engine.dispose()
+
+
+async def seen_as_the_app(owner: str, scope: DatabaseScope, tenant_id: object) -> tuple[str, int]:
+    engine = create_async_engine(async_database_url(owner))
+    try:
+        async with engine.connect() as connection, connection.begin():
+            await connection.execute(text("SET LOCAL ROLE parfocal_app"))
+            await connection.execute(SET_SCOPE, scope.parameters())
+            role = (await connection.execute(text("SELECT current_user"))).scalar_one()
+            hidden = (
+                await connection.execute(
+                    text("SELECT count(*) FROM slides WHERE tenant_id = :tenant"),
+                    {"tenant": tenant_id},
+                )
+            ).scalar_one()
+            return str(role), int(hidden)
+    finally:
+        await engine.dispose()
+
+
+def test_a_row_cannot_name_a_parent_pair_in_another_workspace(
+    database: str, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    owner = with_database(OWNER_URL, database)
+    scope = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
+    assert asyncio.run(seen_as_the_app(owner, scope, a.tenant_id)) == ("parfocal_app", 0)
+    keys = composite_keys(owner)
+    assert len(keys) == 46
+    accepted: list[str] = []
+    for key in keys:
+        refusal = asyncio.run(
+            insert_across(owner, key, scope, foreign_tuple(owner, key, a.tenant_id))
+        )
+        if f'violates foreign key constraint "{key.name}"' not in refusal:
+            accepted.append(f"{key.name}: {refusal}")
+    assert not accepted, "\n".join(accepted)

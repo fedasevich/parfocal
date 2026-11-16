@@ -15,14 +15,53 @@ environment(root) := {"module": {"environment": [{
 	"dev_mode": false,
 }]}}
 
-zone := {"locals": [{"zone_settings": {
-	"always_use_https": "on",
-	"min_tls_version": "1.2",
-	"tls_1_3": "on",
-	"ssl": "strict",
-}}]}
+zone := {"locals": [
+	{"zone_settings": {
+		"always_use_https": "on",
+		"min_tls_version": "1.2",
+		"tls_1_3": "on",
+		"ssl": "strict",
+	}},
+	{"strict_transport_security": {
+		"enabled": true,
+		"max_age": 31536000,
+		"include_subdomains": true,
+		"preload": false,
+		"nosniff": true,
+	}},
+]}
 
-bucket := {"resource": {"cloudflare_r2_bucket": {"slides": [{"lifecycle": [{"prevent_destroy": true}]}]}}}
+tier_rule := {
+	"id": "tier-old-tenant-objects",
+	"conditions": {"prefix": "t/"},
+	"storage_class_transitions": [{
+		"condition": {"type": "Age", "max_age": "${var.tier_after_days * 86400}"},
+		"storage_class": "InfrequentAccess",
+	}],
+}
+
+bucket_only := {"resource": {"cloudflare_r2_bucket": {"slides": [{"lifecycle": [{"prevent_destroy": true}]}]}}}
+
+lifecycle(rule) := json.patch(bucket_only, [{
+	"op": "add",
+	"path": "/resource/cloudflare_r2_bucket_lifecycle",
+	"value": {"uploads": [{"rules": [rule]}]},
+}])
+
+lock_rule := {
+	"id": "keep-tenant-objects",
+	"enabled": true,
+	"prefix": "t/",
+	"condition": {"type": "Age", "max_age_seconds": "${var.locked_days * 86400}"},
+}
+
+locked(contents, rule) := json.patch(contents, [{
+	"op": "add",
+	"path": "/resource/cloudflare_r2_bucket_lock",
+	"value": {"recovery": [{"rules": [rule]}]},
+}])
+
+bucket := locked(lifecycle(tier_rule), lock_rule)
 
 good := [
 	{"path": "global/versions.tf", "contents": backend("global")},
@@ -99,4 +138,69 @@ test_wrong_environment_name_fails if {
 test_weak_tls_zone_setting_fails if {
 	contents := json.patch(zone, [{"op": "replace", "path": "/locals/0/zone_settings/ssl", "value": "flexible"}])
 	denied(with_file("global/zone.tf", contents), "zone setting ssl")
+}
+
+test_old_tls_minimum_fails if {
+	contents := json.patch(zone, [{"op": "replace", "path": "/locals/0/zone_settings/min_tls_version", "value": "1.0"}])
+	denied(with_file("global/zone.tf", contents), "zone setting min_tls_version")
+}
+
+test_missing_hsts_fails if {
+	contents := json.patch(zone, [{"op": "remove", "path": "/locals/1"}])
+	denied(with_file("global/zone.tf", contents), "zone HSTS")
+}
+
+test_short_hsts_fails if {
+	contents := json.patch(zone, [{"op": "replace", "path": "/locals/1/strict_transport_security/max_age", "value": 86400}])
+	denied(with_file("global/zone.tf", contents), "zone HSTS")
+}
+
+test_hsts_without_subdomains_fails if {
+	contents := json.patch(zone, [{"op": "replace", "path": "/locals/1/strict_transport_security/include_subdomains", "value": false}])
+	denied(with_file("global/zone.tf", contents), "zone HSTS")
+}
+
+in_module(contents) := with_file("modules/environment/main.tf", contents)
+
+test_missing_tier_rule_fails if {
+	denied(in_module(bucket_only), "moves old tenant objects to Infrequent Access")
+}
+
+test_delete_transition_fails if {
+	rule := object.union(tier_rule, {"delete_objects_transition": {"condition": {"type": "Age", "max_age": 86400}}})
+	denied(in_module(lifecycle(rule)), "deletes objects")
+}
+
+test_empty_lifecycle_prefix_fails if {
+	rule := object.union(tier_rule, {"conditions": {"prefix": ""}})
+	denied(in_module(lifecycle(rule)), "must keep the prefix t/")
+}
+
+test_fixtures_lifecycle_prefix_fails if {
+	rule := object.union(tier_rule, {"conditions": {"prefix": "fixtures/"}})
+	denied(in_module(lifecycle(rule)), "must keep the prefix t/")
+}
+
+test_unknown_storage_class_fails if {
+	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/storage_class", "value": "Glacier"}])
+	denied(in_module(lifecycle(rule)), "unknown storage class")
+}
+
+test_missing_bucket_lock_fails if {
+	denied(in_module(lifecycle(tier_rule)), "must keep an enabled R2 bucket lock")
+}
+
+test_disabled_bucket_lock_fails if {
+	rule := object.union(lock_rule, {"enabled": false})
+	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
+}
+
+test_bucket_lock_on_another_prefix_fails if {
+	rule := object.union(lock_rule, {"prefix": "fixtures/"})
+	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
+}
+
+test_tier_age_below_minimum_fails if {
+	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/condition/max_age", "value": 86400}])
+	denied(in_module(lifecycle(rule)), "30 day minimum storage duration")
 }

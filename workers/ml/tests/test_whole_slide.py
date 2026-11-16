@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -167,3 +168,52 @@ async def test_a_killed_job_resumes_to_the_same_chunks(ordering: Ordering):
     assert len(resumed.windows) == ran
     assert store.objects == expected.objects
     assert progress.counted == len(tiles)
+
+
+class OverlappingDetector(FakeDetector):
+    def __init__(self) -> None:
+        super().__init__()
+        self.active = 0
+        self.most = 0
+
+    async def detect(self, window: Window) -> Sequence[Cell]:
+        self.active += 1
+        self.most = max(self.most, self.active)
+        await asyncio.sleep(0)
+        cells = await super().detect(window)
+        await asyncio.sleep(0)
+        self.active -= 1
+        return cells
+
+
+@dataclass
+class OrderedProgress(MemoryProgress):
+    order: list[int] = field(default_factory=list[int])
+
+    async def mark(self, tile: Tile, objects: int) -> None:
+        self.order.append(tile.index)
+        await super().mark(tile, objects)
+
+
+async def test_looking_one_tile_ahead_stores_the_same_chunks_in_order():
+    expected = await uninterrupted()
+    whole = plan()
+    store, progress, detector = MemoryStore(), OrderedProgress(), OverlappingDetector()
+    ran = await run_tiles(whole, whole.tiles, detector, store, PREFIX, progress, ahead=1)
+    assert ran == len(whole.tiles)
+    assert detector.most == 2
+    assert store.objects == expected.objects
+    assert progress.order == [tile.index for tile in whole.tiles]
+
+
+async def test_a_stopped_lookahead_resumes_to_the_same_chunks():
+    expected = await uninterrupted()
+    whole = plan()
+    store = MemoryStore()
+    progress = MemoryProgress(stop_after=len(whole.tiles) // 2)
+    with pytest.raises(JobStoppedError):
+        await run_tiles(whole, whole.tiles, OverlappingDetector(), store, PREFIX, progress, ahead=1)
+    assert 0 < len(store.objects) < len(whole.tiles)
+    progress.stop_after = None
+    await run_tiles(whole, whole.tiles, OverlappingDetector(), store, PREFIX, progress, ahead=1)
+    assert store.objects == expected.objects

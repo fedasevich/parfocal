@@ -16,6 +16,7 @@ EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 MAX_PRESIGN_SECONDS = 7 * 24 * 3600
 LIST_PAGE_LIMIT = 1000
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024
+PREFIXED_ROOTS = ("t/", "ops/")
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,7 @@ class StorageLocation:
     bucket: str
     access_key_id: str
     secret_access_key: str
+    key_prefix: str = ""
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,12 @@ class Downloaded:
 
 @dataclass(frozen=True)
 class CompletedObject:
+    etag: str
+
+
+@dataclass(frozen=True)
+class StoredObject:
+    size: int
     etag: str
 
 
@@ -120,8 +128,21 @@ def host_of(endpoint: str) -> str:
     return urlsplit(endpoint).netloc
 
 
+def stored_key(location: StorageLocation, key: str) -> str:
+    if location.key_prefix and key.startswith(PREFIXED_ROOTS):
+        return f"{location.key_prefix}{key}"
+    return key
+
+
+def visible_key(location: StorageLocation, key: str) -> str:
+    if location.key_prefix and key.startswith(location.key_prefix):
+        return key.removeprefix(location.key_prefix)
+    return key
+
+
 def object_path(location: StorageLocation, key: str) -> str:
-    return f"/{location.bucket}/{key}" if key else f"/{location.bucket}"
+    stored = stored_key(location, key)
+    return f"/{location.bucket}/{stored}" if stored else f"/{location.bucket}"
 
 
 def presign(
@@ -346,13 +367,20 @@ class ObjectStore:
         )
 
     async def head_object(self, key: str) -> int | None:
+        stored = await self.stat_object(key)
+        return None if stored is None else stored.size
+
+    async def stat_object(self, key: str) -> StoredObject | None:
         url, headers = self.signed_request("HEAD", key, None, b"")
         response = await self.http.request("HEAD", url, headers=headers)
         if response.status_code == 404:
             return None
         if response.status_code >= 300:
             raise StorageError(response.status_code, "head-failed")
-        return int(response.headers.get("content-length", "0"))
+        return StoredObject(
+            size=int(response.headers.get("content-length", "0")),
+            etag=unquote_etag(response.headers.get("etag", "")),
+        )
 
     async def delete_object(self, key: str) -> None:
         await self.send("DELETE", key)
@@ -385,7 +413,7 @@ class ObjectStore:
         if size <= 0:
             raise ValueError("Only a file with bytes can be copied")
         upload_id = await self.create_multipart_upload(target)
-        copy_source = uri_encode(f"/{self.location.bucket}/{source}", keep_slash=True)
+        copy_source = uri_encode(object_path(self.location, source), keep_slash=True)
         parts: list[StoredPart] = []
         try:
             for index, start in enumerate(range(0, size, part_bytes), start=1):
@@ -410,11 +438,18 @@ class ObjectStore:
         keys: list[str] = []
         token: str | None = None
         while True:
-            query = {"list-type": "2", "prefix": prefix, "max-keys": str(LIST_PAGE_LIMIT)}
+            query = {
+                "list-type": "2",
+                "prefix": stored_key(self.location, prefix),
+                "max-keys": str(LIST_PAGE_LIMIT),
+            }
             if token:
                 query["continuation-token"] = token
             root = parse((await self.send("GET", "", query)).content)
-            keys.extend(child_text(item, "Key") or "" for item in children(root, "Contents"))
+            keys.extend(
+                visible_key(self.location, child_text(item, "Key") or "")
+                for item in children(root, "Contents")
+            )
             token = child_text(root, "NextContinuationToken")
             if (child_text(root, "IsTruncated") or "false").lower() != "true" or not token:
                 return keys

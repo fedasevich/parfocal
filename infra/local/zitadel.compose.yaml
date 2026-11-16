@@ -18,7 +18,7 @@ services:
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
-      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:${PARFOCAL_MAILPIT_PORT:-8025}:8025"
 
   zitadel:
     image: ghcr.io/zitadel/zitadel:v4.20.3
@@ -27,7 +27,7 @@ services:
     environment:
       ZITADEL_PORT: 8080
       ZITADEL_EXTERNALDOMAIN: localhost
-      ZITADEL_EXTERNALPORT: 8089
+      ZITADEL_EXTERNALPORT: ${PARFOCAL_ZITADEL_PORT:-8089}
       ZITADEL_EXTERNALSECURE: false
       ZITADEL_TLS_ENABLED: false
       ZITADEL_DATABASE_POSTGRES_DSN: postgresql://postgres@zitadel-db:5432/zitadel?sslmode=disable
@@ -48,9 +48,9 @@ services:
       ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE: "2099-01-01T00:00:00Z"
       ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH: /zitadel/bootstrap/login-client.pat
     ports:
-      - "127.0.0.1:8089:8080"
+      - "127.0.0.1:${PARFOCAL_ZITADEL_PORT:-8089}:8080"
     volumes:
-      - ../../.zitadel:/zitadel/bootstrap:rw
+      - ${PARFOCAL_ZITADEL_STATE:-../../.zitadel}:/zitadel/bootstrap:rw
     healthcheck:
       test: ["CMD", "/app/zitadel", "ready"]
       interval: 5s

@@ -20,10 +20,13 @@ pnpm fixtures all             # everything, about 25 GB
 | `big` | Whole scanned slides at native magnification, 0.3 to 3.9 GB each |
 | `huge` | `Hamamatsu-1.ndpi`, 6.9 GB |
 | `camelyon` | CAMELYON16 `tumor_009.tif` (a training slide), `test_001.tif` and both annotation XML files |
+| `tumor-eval` | The CAMELYON16 test slides the tumor map evaluation of MLEVAL-005 runs on, about 3.3 GB: `test_001` (large deposits), `test_065` and `test_013` (only small deposits) with their outlines, and `test_062` (no metastases). Never fetched in CI |
 
 Files land in `~/.cache/parfocal/fixtures`, or `$XDG_CACHE_HOME/parfocal/fixtures`, or `$PARFOCAL_FIXTURES_DIR` when set. Downloads go to a `.part` file first, resume with range requests after a dropped connection and are renamed only after the SHA-256 matches. A `.sha256` file next to each fixture records that it was verified, so later runs skip hashing. Run the command again to resume anything that failed.
 
 To use slides that are already on disk, set `PARFOCAL_FIXTURES_LOCAL` in the root `.env` to one or more folders separated by `:`. A file there with the right size and SHA-256 is symlinked into the cache instead of downloaded, and the command prints `linked`. A copy that fails the check is skipped and the file is downloaded.
+
+To download from the shared copy in R2 instead of the upstream sites, set `PARFOCAL_FIXTURES_R2_ENDPOINT` to the account's S3 endpoint and `PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID` and `PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY` to the read-only fixtures key, the `fixtures_access_key_id` and `fixtures_secret_access_key` outputs of `infra/tofu/tofu.sh dev`. Each file is fetched from `parfocal-dev/fixtures/` first and from its upstream URL when R2 refuses.
 
 The sources are the [OpenSlide test data](https://openslide.cs.cmu.edu/download/openslide-testdata/), whose `index.json` publishes a SHA-256 per file, and the [CAMELYON16 bucket](https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/README.md) on AWS Open Data, which publishes MD5 sums. The CAMELYON16 SHA-256 values were computed after the files matched those MD5 sums.
 

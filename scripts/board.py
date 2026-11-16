@@ -561,9 +561,9 @@ def command_ready(args: argparse.Namespace) -> int:
             continue
         if args.size and task.size != args.size.upper():
             continue
-        if args.agent_only and (
-            task.needs or task.title.startswith("Idea:") or PARKED.search(task.title)
-        ):
+        if is_idea(task) and not args.ideas:
+            continue
+        if args.agent_only and task.needs:
             continue
         picked.append(task)
     if args.size or args.agent_only:
@@ -689,19 +689,21 @@ def command_brief(_: argparse.Namespace) -> int:
         print("\nBoard:")
         for task in active:
             print(f"  {task.id}  {task.active.status if task.active else ''}  {task.title}")
-    ready = sum(task.status == "ready" for task in board.tasks.values())
+    ready = sum(task.status == "ready" and not is_idea(task) for task in board.tasks.values())
     print(f"\n{ready} tasks are ready. Run board.py ready to list them.")
     return 0
 
 
+def is_idea(task: Task) -> bool:
+    return not task.done and bool(task.title.startswith("Idea:") or PARKED.search(task.title))
+
+
 def tally(tasks: list[Task]) -> str:
-    ticked = sum(task.done for task in tasks)
-    parked = sum(
-        not task.done and bool(task.title.startswith("Idea:") or PARKED.search(task.title))
-        for task in tasks
-    )
-    aside = f", {parked} of the open ones parked or ideas" if parked else ""
-    return f"{ticked} of {len(tasks)} ticked{aside}"
+    ideas = sum(is_idea(task) for task in tasks)
+    counted = [task for task in tasks if not is_idea(task)]
+    ticked = sum(task.done for task in counted)
+    aside = f", {ideas} ideas kept aside" if ideas else ""
+    return f"{ticked} of {len(counted)} ticked, {len(counted) - ticked} left{aside}"
 
 
 def gate_epics(milestone: dict[str, str], epics: list[Epic]) -> list[str]:
@@ -718,7 +720,8 @@ def count_lines(board: Board) -> list[str]:
     for task in board.tasks.values():
         by_epic.setdefault(task.epic, []).append(task)
     everything = list(board.tasks.values())
-    lines = [f"{len(everything)} tasks in {len(board.epics)} epics, {tally(everything)}", ""]
+    counted = [task for task in everything if not is_idea(task)]
+    lines = [f"{len(counted)} tasks in {len(board.epics)} epics, {tally(everything)}", ""]
     lines.append("Milestones, counted over the epics each gate names:")
     for milestone in board.milestones:
         named = gate_epics(milestone, board.epics)
@@ -781,7 +784,8 @@ def parser() -> argparse.ArgumentParser:
     ready.add_argument("--epic")
     ready.add_argument("--milestone")
     ready.add_argument("--size", choices=[*SIZES, *(s.lower() for s in SIZES)])
-    ready.add_argument("--agent-only", action="store_true", help="skip Needs and Idea tasks")
+    ready.add_argument("--agent-only", action="store_true", help="skip Needs tasks")
+    ready.add_argument("--ideas", action="store_true", help="also list ideas and parked tasks")
     ready.set_defaults(run=command_ready)
 
     show = commands.add_parser("show", help="print a task with its trees, docs and log")

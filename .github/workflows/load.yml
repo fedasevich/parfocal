@@ -1,0 +1,66 @@
+name: load
+
+run-name: ${{ format('load {0} on {1}', inputs.scenarios, inputs.origin) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: Origin that serves the API, tiles and rooms
+        type: string
+        default: https://app.parfocal.eu
+      scenarios:
+        description: Comma-separated scenarios among api, tiles and room
+        type: string
+        default: api,tiles,room
+      users:
+        description: Users per scenario, at most 2 on a cloud origin
+        type: number
+        default: 1
+      seconds:
+        description: Seconds per scenario, at most 60 on a cloud origin
+        type: number
+        default: 30
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load
+  cancel-in-progress: false
+
+jobs:
+  load:
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 15
+    env:
+      LOAD_ORIGIN: ${{ inputs.origin }}
+      LOAD_SCENARIOS: ${{ inputs.scenarios }}
+      LOAD_USERS: ${{ inputs.users }}
+      LOAD_SECONDS: ${{ inputs.seconds }}
+      PARFOCAL_LOAD_TOKEN: ${{ secrets.PARFOCAL_LOAD_TOKEN }}
+      PARFOCAL_LOAD_SESSION: ${{ secrets.PARFOCAL_LOAD_SESSION }}
+      PARFOCAL_LOAD_SLIDES: ${{ vars.PARFOCAL_LOAD_SLIDES }}
+      PARFOCAL_LOAD_ROOM: ${{ vars.PARFOCAL_LOAD_ROOM }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+      - if: ${{ env.PARFOCAL_LOAD_TOKEN == '' }}
+        run: echo "No PARFOCAL_LOAD_TOKEN, so api checks only /api/health and tiles is skipped" >> "$GITHUB_STEP_SUMMARY"
+      - if: ${{ env.PARFOCAL_LOAD_SESSION == '' }}
+        run: echo "No PARFOCAL_LOAD_SESSION, so room is skipped" >> "$GITHUB_STEP_SUMMARY"
+      - name: Run the scenarios
+        run: >-
+          PYTHONPATH=scripts uv run --locked --group load python scripts/load/run.py
+          --origin "$LOAD_ORIGIN" --scenarios "$LOAD_SCENARIOS"
+          --users "$LOAD_USERS" --seconds "$LOAD_SECONDS" --out out/load
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: load-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/load
+          retention-days: 30
+          if-no-files-found: warn

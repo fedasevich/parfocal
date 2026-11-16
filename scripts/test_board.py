@@ -323,16 +323,16 @@ class BoardTest(unittest.TestCase):
         self.assertEqual(
             count_lines(load(self.root)),
             [
-                "6 tasks in 2 epics, 1 of 6 ticked, 1 of the open ones parked or ideas",
+                "5 tasks in 2 epics, 1 of 5 ticked, 4 left, 1 ideas kept aside",
                 "",
                 "Milestones, counted over the epics each gate names:",
-                "  M0 Stack decided  1 of 3 ticked  (STACK)",
+                "  M0 Stack decided  1 of 3 ticked, 2 left  (STACK)",
                 "  MA Annotation path  its gate names no epic",
-                "  M1 Walking skeleton  0 of 3 ticked, 1 of the open ones parked or ideas  (SKEL)",
+                "  M1 Walking skeleton  0 of 2 ticked, 2 left, 1 ideas kept aside  (SKEL)",
                 "",
                 "Epics:",
-                "  STACK  1 of 3 ticked  M0",
-                "  SKEL  0 of 3 ticked, 1 of the open ones parked or ideas  M0 to M1",
+                "  STACK  1 of 3 ticked, 2 left  M0",
+                "  SKEL  0 of 2 ticked, 2 left, 1 ideas kept aside  M0 to M1",
             ],
         )
 

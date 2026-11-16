@@ -36,4 +36,4 @@ The port reproduces the POC: 7 areas, 8.1 mm against 8.1 mm, and the same 6.3, 1
 
 ## Follow-ups
 
-TODO: the per-deposit size error and stray areas on CAMELYON16 test slides. That needs tumor maps for test slides, which no one has stored. The slides are in the dev bucket since INGEST-028 (upload protocol check on R2), but making a map needs a GPU run of the tumor model, which MLEVAL-005 (tumor map evaluation) will bring. `evaluate_areas` is the harness for it, and the ±10% in `tumor_areas.toml` should then be replaced by the measured error.
+Done in [the tumor area sizes result](2026-11-16-tumor-area-sizes-on-three-test-slides.md), which replaced the ±10% with the measured range. The original note: the per-deposit size error and stray areas on CAMELYON16 test slides. That needs tumor maps for test slides, which no one has stored. The slides are in the dev bucket since INGEST-028 (upload protocol check on R2), but making a map needs a GPU run of the tumor model, which MLEVAL-005 (tumor map evaluation) will bring. `evaluate_areas` is the harness for it, and the ±10% in `tumor_areas.toml` should then be replaced by the measured error.

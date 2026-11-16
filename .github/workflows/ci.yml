@@ -23,7 +23,7 @@ env:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: read
@@ -66,7 +66,7 @@ jobs:
 
   lint:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -94,7 +94,7 @@ jobs:
 
   docs:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -106,7 +106,7 @@ jobs:
 
   typecheck:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -118,7 +118,7 @@ jobs:
 
   test:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -157,7 +157,7 @@ jobs:
   db:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -180,7 +180,7 @@ jobs:
   formats:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -206,7 +206,7 @@ jobs:
   camelyon:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -231,7 +231,7 @@ jobs:
   e2e:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -251,6 +251,7 @@ jobs:
           tofu_version: 1.13.x
           tofu_wrapper: false
       - run: bash infra/local/zitadel-up.sh
+      - run: docker pull --platform linux/amd64 kristophjunge/test-saml-idp:1.15
       - name: Write the local settings
         run: |
           umask 077
@@ -261,6 +262,7 @@ jobs:
             echo "PUBLIC_ORIGIN=http://localhost:5173"
             echo "SESSION_KEY=$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
             echo "MASTER_KEYS=ci:$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+            grep '^STORAGE_' .env.example
           } > .env
       - run: pnpm test:e2e
       - if: always()
@@ -280,11 +282,18 @@ jobs:
         run: docker compose logs
       - if: failure()
         run: docker compose -f infra/local/zitadel.compose.yaml logs zitadel
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-failures
+          path: apps/e2e/test-results
+          retention-days: 7
+          if-no-files-found: ignore
 
   browser:
     needs: changes
     if: needs.changes.outputs.code == 'true' || (github.event_name == 'workflow_dispatch' && inputs.update_goldens)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -365,7 +374,7 @@ jobs:
   bundle-report:
     needs: changes
     if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -389,7 +398,7 @@ jobs:
 
   dependency-scan:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -406,9 +415,51 @@ jobs:
       - if: always()
         run: cat "$RUNNER_TEMP/vulnerability-report.md" >> "$GITHUB_STEP_SUMMARY" || true
 
+  images:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PARFOCAL_API_IMAGE: parfocal-api:ci
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: 0.13.8
+      - name: Check that the Modal image locks match uv.lock
+        run: uv run --frozen --package parfocal-deploy python -m parfocal_deploy.image_locks
+      - name: Resolve the Modal image locks for linux/amd64 on Python 3.14
+        run: |
+          uv venv --python 3.14 "$RUNNER_TEMP/locks"
+          for lock in workers/deploy/locks/*.txt; do
+            uv pip install --dry-run --python "$RUNNER_TEMP/locks" --python-platform x86_64-manylinux_2_28 --require-hashes --no-deps -r "$lock"
+          done
+      - name: Build the API image
+        run: docker build -f apps/api/Dockerfile -t "$PARFOCAL_API_IMAGE" .
+      - uses: ./.github/actions/install-trivy
+      - name: Scan the API image and write its SBOM
+        run: node scripts/osv-scan.ts image "$PARFOCAL_API_IMAGE" "$RUNNER_TEMP/api-sbom.cdx.json"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: api-image-sbom
+          path: ${{ runner.temp }}/api-sbom.cdx.json
+          retention-days: 90
+          if-no-files-found: ignore
+      - name: Start the API container on an empty database
+        run: docker compose --profile api up -d --wait --wait-timeout 180 --no-build
+      - name: Ask the API container for its health
+        run: curl -fsS http://127.0.0.1:8000/api/health
+      - if: failure()
+        run: docker compose --profile api logs
+
   ci-ok:
     if: always()
-    needs: [changes, lint, docs, typecheck, test, db, formats, e2e, browser, dependency-scan]
-    runs-on: ubuntu-latest
+    needs: [changes, lint, docs, typecheck, test, db, formats, e2e, browser, dependency-scan, images]
+    runs-on: ubuntu-24.04
     steps:
       - run: test "${{ needs.changes.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}" = "true"

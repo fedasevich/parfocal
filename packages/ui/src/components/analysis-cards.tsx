@@ -18,7 +18,9 @@ import {
   type RankedArea,
 } from "@parfocal/ui/lib/ai-state";
 import {
-  aiSizeError,
+  clampToScale,
+  likelySizeHigh,
+  likelySizeLow,
   macroMm,
   microMm,
   type StagingCategory,
@@ -48,8 +50,6 @@ const categoryShort: Record<StagingCategory, string> = lazyText(() => ({
 }));
 
 const formatMm = (mm: number) => `${mm.toFixed(mm < 1 ? 2 : 1)} mm`;
-
-const clampToScale = (mm: number) => Math.min(scaleMax, Math.max(scaleMin, mm));
 
 const areaWord = (count: number) => `${count} ${count === 1 ? "area" : "areas"}`;
 
@@ -189,8 +189,8 @@ function ClusterHero({ state }: { state: ClusterState }) {
       range={{
         min: scaleMin,
         max: scaleMax,
-        low: measured ? point : clampToScale(state.size * (1 - aiSizeError)),
-        high: measured ? point : clampToScale(state.size * (1 + aiSizeError)),
+        low: measured ? point : likelySizeLow(state.size),
+        high: measured ? point : likelySizeHigh(state.size),
         point,
         cuts: [microMm, macroMm],
         ...scaleMarks(state),
@@ -472,8 +472,8 @@ function StagingCards({
                 range={{
                   min: scaleMin,
                   max: scaleMax,
-                  low: clampToScale(state.size * (1 - aiSizeError)),
-                  high: clampToScale(state.size * (1 + aiSizeError)),
+                  low: likelySizeLow(state.size),
+                  high: likelySizeHigh(state.size),
                   point: clampToScale(state.size),
                   cuts: [microMm, macroMm],
                   ...scaleMarks(state),

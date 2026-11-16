@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.14.*"
 
 [manifest]
@@ -1546,6 +1546,23 @@ wheels = [
 ]
 
 [[package]]
+name = "onnxruntime-gpu"
+version = "1.31.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "flatbuffers" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "protobuf" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fd/56/23015d5deaf361d85eacf5db7d9c2d60552c728f5c1884dbf279a3e42d19/onnxruntime_gpu-1.31.1-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:52a9ec263f331678e8fcb4f71a6fa44e5f901f0aac0b61fbe5a61517f2b4cc7d", size = 255572322, upload-time = "2026-10-26T19:10:53.757Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/c3/bbe65316ebffcb49dbd08366936ecd15084798855c21250cc161220fb57b/onnxruntime_gpu-1.31.1-cp314-cp314-manylinux_2_34_aarch64.whl", hash = "sha256:7cf960bcfa6b27b96ee39c87fa859275991cc6dbb7af379cd5449fcd0970010c", size = 212360465, upload-time = "2026-10-26T18:52:32.364Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/e6/3bbf305c9123c6596e441ea510a21ba2ab2ea8e7276a9dab09c771182962/onnxruntime_gpu-1.31.1-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:bfe1bb15168f7dcc76e970eff8f07615adb87a128d53bc9f00d8def2c3dbf1b6", size = 255570599, upload-time = "2026-10-26T19:11:04.989Z" },
+    { url = "https://files.pythonhosted.org/packages/68/44/fc918aad8bf0cc27b076af761370797597ef2a442827d57d70a6940b5e3a/onnxruntime_gpu-1.31.1-cp314-cp314t-manylinux_2_34_aarch64.whl", hash = "sha256:f9b578f6be39aa93611724b2a26f55d76a8a265415146e5be50ce41612a9d19a", size = 212364086, upload-time = "2026-10-26T18:52:44.123Z" },
+]
+
+[[package]]
 name = "opencv-python-headless"
 version = "5.0.0.93"
 source = { registry = "https://pypi.org/simple" }
@@ -1634,6 +1651,11 @@ pdf = [
     { name = "typst" },
 ]
 
+[package.dev-dependencies]
+serve = [
+    { name = "uvicorn" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.20,<1.21" },
@@ -1645,6 +1667,9 @@ requires-dist = [
     { name = "typst", marker = "extra == 'pdf'", specifier = ">=0.15,<0.16" },
 ]
 provides-extras = ["pdf"]
+
+[package.metadata.requires-dev]
+serve = [{ name = "uvicorn", specifier = ">=0.54,<0.55" }]
 
 [[package]]
 name = "parfocal-common"
@@ -1754,6 +1779,20 @@ export = [
 onnx = [
     { name = "onnxruntime" },
 ]
+pool = [
+    { name = "openslide-bin" },
+    { name = "openslide-python" },
+]
+tumor = [
+    { name = "onnxruntime" },
+    { name = "openslide-bin" },
+    { name = "openslide-python" },
+]
+
+[package.dev-dependencies]
+gpu = [
+    { name = "onnxruntime-gpu", marker = "sys_platform == 'linux'" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1763,6 +1802,11 @@ requires-dist = [
     { name = "onnx-ir", marker = "extra == 'export'" },
     { name = "onnxruntime", marker = "extra == 'export'", specifier = "==1.31.1" },
     { name = "onnxruntime", marker = "extra == 'onnx'", specifier = "==1.31.1" },
+    { name = "onnxruntime", marker = "extra == 'tumor'", specifier = "==1.31.1" },
+    { name = "openslide-bin", marker = "extra == 'pool'", specifier = ">=4.0.1,<5" },
+    { name = "openslide-bin", marker = "extra == 'tumor'", specifier = ">=4.0.1,<5" },
+    { name = "openslide-python", marker = "extra == 'pool'", specifier = ">=1.4.6,<2" },
+    { name = "openslide-python", marker = "extra == 'tumor'", specifier = ">=1.4.6,<2" },
     { name = "parfocal-common", editable = "packages/py-common" },
     { name = "pillow", specifier = ">=13.0.0" },
     { name = "scikit-image", specifier = ">=0.26.0" },
@@ -1771,7 +1815,10 @@ requires-dist = [
     { name = "torch", marker = "extra == 'export'", specifier = ">=2.15,<2.16" },
     { name = "torchvision", marker = "extra == 'export'" },
 ]
-provides-extras = ["onnx", "export"]
+provides-extras = ["onnx", "tumor", "pool", "export"]
+
+[package.metadata.requires-dev]
+gpu = [{ name = "onnxruntime-gpu", marker = "sys_platform == 'linux'", specifier = "==1.31.1" }]
 
 [[package]]
 name = "pathlib-abc"

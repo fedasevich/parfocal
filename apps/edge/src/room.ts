@@ -1,4 +1,5 @@
-import { roomKey, verifyRoomToken } from "#room-token.ts";
+import { verifyingKeys } from "#capability.ts";
+import { verifyRoomToken } from "#room-token.ts";
 import { problem } from "#tiles.ts";
 
 export type Seat = {
@@ -426,7 +427,11 @@ export class Room {
 
   private async renew(socket: WebSocket, token: string): Promise<void> {
     const seat = this.seatOf(socket);
-    const access = await verifyRoomToken(token, await roomKey(this.env.ROOM_TOKEN_KEY), this.now());
+    const access = await verifyRoomToken(
+      token,
+      await verifyingKeys(this.env.ROOM_TOKEN_KEY),
+      this.now(),
+    );
     if (
       !access.ok ||
       access.grant.tenant !== seat.tenant ||

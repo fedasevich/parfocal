@@ -35,6 +35,26 @@ variable "dev_mode" {
   }
 }
 
+variable "tier_after_days" {
+  type    = number
+  default = 90
+
+  validation {
+    condition     = var.tier_after_days >= 30 && floor(var.tier_after_days) == var.tier_after_days
+    error_message = "Tenant objects move to Infrequent Access after at least 30 whole days, its minimum storage duration."
+  }
+}
+
+variable "locked_days" {
+  type    = number
+  default = 7
+
+  validation {
+    condition     = var.locked_days >= 1 && floor(var.locked_days) == var.locked_days
+    error_message = "Tenant objects stay locked against delete and overwrite for at least one whole day, so a mistaken delete can be undone."
+  }
+}
+
 variable "cloudflare_account_id" {
   type = string
 }

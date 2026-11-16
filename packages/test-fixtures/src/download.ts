@@ -12,6 +12,7 @@ export type DownloadResult = "cached" | "linked" | "downloaded";
 export type DownloadOptions = {
   attempts?: number;
   localDirs?: readonly string[];
+  mirrorUrl?: ((fixture: RemoteFixture) => string) | undefined;
 };
 
 export class ChecksumError extends Error {}
@@ -55,22 +56,38 @@ async function linkLocalCopy(fixture: RemoteFixture, target: string, localDirs: 
   return false;
 }
 
-async function fetchInto(fixture: RemoteFixture, part: string) {
+async function openSource(sources: readonly string[], offset: number) {
+  const failures: string[] = [];
+  for (const source of sources) {
+    const unsigned = source.split("?")[0];
+    const response = await fetch(source, {
+      headers: offset > 0 ? { range: `bytes=${offset}-` } : {},
+    }).catch((error: unknown) => {
+      failures.push(`GET ${unsigned}: ${error instanceof Error ? error.message : String(error)}`);
+      return undefined;
+    });
+    if (response === undefined) continue;
+    if (response.ok && response.body !== null) {
+      return { body: response.body, partial: response.status === 206 };
+    }
+    await response.body?.cancel();
+    failures.push(`GET ${unsigned}: HTTP ${response.status}`);
+  }
+  throw new Error(failures.join(", then "));
+}
+
+async function fetchInto(fixture: RemoteFixture, part: string, mirror?: string) {
   let offset = (await sizeOf(part)) ?? 0;
   if (offset > fixture.bytes) {
     await rm(part);
     offset = 0;
   }
   if (offset === fixture.bytes) return;
-  const response = await fetch(fixture.url, {
-    headers: offset > 0 ? { range: `bytes=${offset}-` } : {},
-  });
-  if (!response.ok || response.body === null) {
-    throw new Error(`GET ${fixture.url}: HTTP ${response.status}`);
-  }
-  const append = offset > 0 && response.status === 206;
+  const sources = mirror === undefined ? [fixture.url] : [mirror, fixture.url];
+  const { body, partial } = await openSource(sources, offset);
+  const append = offset > 0 && partial;
   await pipeline(
-    Readable.fromWeb(response.body as ReadableStream<Uint8Array>),
+    Readable.fromWeb(body as ReadableStream<Uint8Array>),
     createWriteStream(part, { flags: append ? "a" : "w" }),
   );
 }
@@ -100,7 +117,7 @@ export async function downloadFixture(
   const attempts = options.attempts ?? 5;
   for (let attempt = 1; ; attempt++) {
     try {
-      await fetchInto(fixture, part);
+      await fetchInto(fixture, part, options.mirrorUrl?.(fixture));
       if ((await sizeOf(part)) === fixture.bytes) break;
     } catch (error) {
       if (attempt >= attempts) throw error;

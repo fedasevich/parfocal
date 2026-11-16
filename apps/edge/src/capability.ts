@@ -5,6 +5,7 @@ export type Capability = {
   readonly slide: string;
   readonly original: string;
   readonly size: number;
+  readonly etag?: string;
   readonly restricted: readonly ByteRange[];
   readonly blank?: readonly ByteRange[];
   readonly expires: number;
@@ -17,6 +18,7 @@ export type CapabilityCheck =
 
 const TOKEN_VERSION = 1;
 const SPACE = 0x20;
+const STORED_ETAG = /^[A-Za-z0-9-]{1,80}$/;
 const SHARED_FOLDER = /^samples\/camelyon16\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/$/;
 const encoder = new TextEncoder();
 
@@ -69,6 +71,41 @@ export async function signingKey(secret: string): Promise<CryptoKey> {
   ]);
 }
 
+export type VerifyingKeys = CryptoKey | readonly CryptoKey[];
+
+const KEY_SEPARATOR = ",";
+const keyLists = new Map<string, Promise<readonly CryptoKey[]>>();
+
+async function importedKeys(secrets: string): Promise<readonly CryptoKey[]> {
+  const listed = secrets
+    .split(KEY_SEPARATOR)
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
+  if (listed.length === 0) throw new WeakSigningKeyError();
+  return Promise.all(listed.map((secret) => signingKey(secret)));
+}
+
+export function verifyingKeys(secrets: string): Promise<readonly CryptoKey[]> {
+  let keys = keyLists.get(secrets);
+  if (keys === undefined) {
+    keys = importedKeys(secrets);
+    keyLists.set(secrets, keys);
+  }
+  return keys;
+}
+
+export async function signedByAny(
+  keys: VerifyingKeys,
+  signature: BufferSource,
+  data: BufferSource,
+): Promise<boolean> {
+  const listed: readonly CryptoKey[] = Array.isArray(keys) ? keys : [keys as CryptoKey];
+  for (const key of listed) {
+    if (await crypto.subtle.verify("HMAC", key, signature, data)) return true;
+  }
+  return false;
+}
+
 function isRange(value: unknown): value is ByteRange {
   return (
     Array.isArray(value) &&
@@ -82,7 +119,7 @@ function capabilityOf(claims: unknown): Capability | null {
   if (typeof claims !== "object" || claims === null) {
     return null;
   }
-  const { v, t, s, o, n, d, b, e, p } = claims as Record<string, unknown>;
+  const { v, t, s, o, n, g, d, b, e, p } = claims as Record<string, unknown>;
   if (
     v !== TOKEN_VERSION ||
     typeof t !== "string" ||
@@ -90,6 +127,7 @@ function capabilityOf(claims: unknown): Capability | null {
     typeof o !== "string" ||
     !Number.isSafeInteger(n) ||
     (n as number) < 0 ||
+    (g !== undefined && (typeof g !== "string" || !STORED_ETAG.test(g))) ||
     !Number.isSafeInteger(e) ||
     !Array.isArray(d) ||
     !d.every(isRange) ||
@@ -103,6 +141,7 @@ function capabilityOf(claims: unknown): Capability | null {
     slide: s,
     original: o,
     size: n as number,
+    ...(g === undefined ? {} : { etag: g }),
     restricted: d,
     ...(b === undefined ? {} : { blank: b }),
     expires: e as number,
@@ -112,7 +151,7 @@ function capabilityOf(claims: unknown): Capability | null {
 
 export async function verifyCapability(
   token: string,
-  key: CryptoKey,
+  keys: VerifyingKeys,
   nowSeconds: number,
 ): Promise<CapabilityCheck> {
   const parts = token.split(".");
@@ -125,8 +164,7 @@ export async function verifyCapability(
   if (signatureBytes === null || payloadBytes === null) {
     return { ok: false, reason: "malformed" };
   }
-  const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload));
-  if (!valid) {
+  if (!(await signedByAny(keys, signatureBytes, encoder.encode(payload)))) {
     return { ok: false, reason: "bad-signature" };
   }
   let claims: unknown;
@@ -152,6 +190,7 @@ export async function signCapability(capability: Capability, key: CryptoKey): Pr
       : { b: capability.blank }),
     d: capability.restricted,
     e: capability.expires,
+    ...(capability.etag === undefined ? {} : { g: capability.etag }),
     n: capability.size,
     o: capability.original,
     ...(capability.folder === undefined ? {} : { p: capability.folder }),

@@ -6,7 +6,16 @@ import time
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
-from load.target import TargetRefusedError, target_from_env
+from load.target import (
+    ALLOW_ENV,
+    LIFT_ENV,
+    LoadRefusedError,
+    TargetRefusedError,
+    check_cloud_load,
+    checked_target,
+    is_cloud,
+    target_from_env,
+)
 from locust import FastHttpUser, between, events, task
 from locust.env import Environment
 from locust.exception import StopUser
@@ -39,11 +48,19 @@ def bearer() -> dict[str, str]:
 @events.init.add_listener
 def refuse_unsafe_targets(environment: Environment, **_: Any) -> None:
     try:
-        target_from_env("API_URL", environment.host)
-        for name in ("TILES_URL", "REALTIME_URL"):
+        targets = [checked_target(environment.host, os.environ.get(ALLOW_ENV))]
+        for name in ("API_URL", "TILES_URL", "REALTIME_URL"):
             if setting(name):
-                target_from_env(f"PARFOCAL_LOAD_{name}", None)
-    except TargetRefusedError as refused:
+                targets.append(target_from_env(f"PARFOCAL_LOAD_{name}", None))
+        options = environment.parsed_options
+        if options and any(is_cloud(url) for url in targets):
+            check_cloud_load(
+                options.num_users or 1,
+                options.run_time,
+                options.headless,
+                bool(os.environ.get(LIFT_ENV)),
+            )
+    except (TargetRefusedError, LoadRefusedError) as refused:
         sys.stderr.write(f"{refused}\n")
         sys.exit(2)
 
@@ -53,7 +70,7 @@ class ApiUser(FastHttpUser):
 
     def on_start(self) -> None:
         if not setting("TOKEN"):
-            raise StopUser
+            self.tasks = [ApiUser.health]
 
     @task(1)
     def health(self) -> None:
@@ -81,6 +98,8 @@ class TileUser(FastHttpUser):
         if not self.slides:
             raise StopUser
         self.tiles = target_from_env("PARFOCAL_LOAD_TILES_URL", self.host)
+        if not setting("TOKEN") and is_cloud(self.tiles):
+            raise StopUser
         self.previous: dict[str, str] = {}
 
     def access(self, slide: str) -> tuple[str, dict[str, str]]:
@@ -139,12 +158,16 @@ def socket_origin(url: str) -> str:
 
 
 def signed_room_token(room: str) -> str:
-    from parfocal_api.tile_access import sign_capability
-
-    key = os.environ.get("ROOM_TOKEN_KEY", "")
     tenant = setting("TENANT")
     user = setting("USER")
-    if not key or not tenant or not user:
+    if not os.environ.get("ROOM_TOKEN_KEY") or not tenant or not user:
+        raise StopUser
+
+    from parfocal_api.tile_access import sign_capability
+    from parfocal_api.token_keys import listed_keys
+
+    key = next(iter(listed_keys(os.environ.get("ROOM_TOKEN_KEY", ""))), "")
+    if not key:
         raise StopUser
     claims = {
         "v": ROOM_TOKEN_VERSION,

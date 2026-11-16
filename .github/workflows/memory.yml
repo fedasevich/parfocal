@@ -22,7 +22,7 @@ env:
 
 jobs:
   viewer:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7
@@ -44,7 +44,7 @@ jobs:
           MEMORY_LONG_VISITS: ${{ inputs.long_visits || '100' }}
       - name: Renderer switches over CMU-1.svs
         if: always()
-        run: pnpm --filter @parfocal/viewer-engine exec playwright test route-switch
+        run: pnpm --filter @parfocal/viewer-engine exec playwright test route-switch --output=test-results/route-switch
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
           ROUTE_SWITCHES: "40"
@@ -60,7 +60,7 @@ jobs:
           if-no-files-found: ignore
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7

@@ -120,7 +120,7 @@ class Edge {
   now = NOW;
   readonly env: RoomEnv;
 
-  constructor() {
+  constructor(key = SECRET) {
     const namespace = {
       idFromName: (name: string) => name,
       get: (name: string) => ({
@@ -130,7 +130,7 @@ class Edge {
     };
     this.env = {
       ROOMS: namespace as unknown as DurableObjectNamespace,
-      ROOM_TOKEN_KEY: SECRET,
+      ROOM_TOKEN_KEY: key,
     };
   }
 
@@ -347,6 +347,35 @@ describe("joining a room", () => {
     assert.equal(plain.status, 426);
     assert.equal((await edge.connect("case:1", null)).status, 404);
     assert.equal(edge.rooms.size, 0);
+  });
+});
+
+describe("a room key overlap window", () => {
+  const NEW_SECRET = btoa("n".repeat(32));
+
+  test("a token and a publish signed with the previous key pass while it is listed", async () => {
+    const edge = new Edge(`${NEW_SECRET},${SECRET}`);
+    const anna = await edge.join({});
+    const response = await edge.publish(TENANT, [SLIDE]);
+    assert.equal(response.status, 200, await response.clone().text());
+    assert.equal(anna.events().length, 1);
+  });
+
+  test("a token and a publish signed with the previous key fail once it is removed", async () => {
+    const edge = new Edge(NEW_SECRET);
+    const refused = await edge.connect(SLIDE, `${ROOM_PROTOCOL}, ${await edge.token()}`);
+    assert.equal(refused.status, 401);
+    assert.equal(await problemCode(refused), "room-token-invalid");
+    assert.equal((await edge.publish(TENANT, [SLIDE])).status, 401);
+  });
+
+  test("an expired token signed with the previous key still reads as expired", async () => {
+    const edge = new Edge(`${NEW_SECRET},${SECRET}`);
+    const expired = await edge.connect(
+      SLIDE,
+      `${ROOM_PROTOCOL}, ${await edge.token({ expires: NOW })}`,
+    );
+    assert.equal(await problemCode(expired), "room-token-expired");
   });
 });
 

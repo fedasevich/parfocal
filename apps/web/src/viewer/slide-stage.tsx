@@ -84,6 +84,8 @@ import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
 import { useSavedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
+import { appFrameReporter } from "../telemetry/frame-monitor.ts";
+import { useFrameMonitor } from "../telemetry/use-frame-monitor.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
@@ -581,7 +583,21 @@ function OpenedSlide({
             : { ...previous, route: viewport.route(), shownRoute: viewport.shownRoute() },
         );
       };
-      const unprovide = provideDebug({ getRoute: () => viewport.shownRoute() });
+      const unprovide = provideDebug({
+        getRoute: () => viewport.shownRoute(),
+        jumpTo: async ({ x, y, magnification }) => {
+          const micronsPerPixel = viewport.engine.getSlide()?.micronsPerPixel ?? null;
+          if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
+          const started = performance.now();
+          viewport.engine.setCamera({
+            x,
+            y,
+            zoom: engine.zoomForMagnification(micronsPerPixel, magnification),
+          });
+          await viewport.liveRoute()?.whenIdle();
+          return performance.now() - started;
+        },
+      });
       dispose = () => {
         window.removeEventListener(navigationEvent, followNavigation);
         unprovide();
@@ -745,6 +761,8 @@ function OpenedSlide({
     session?.engine.setSlideBrightness(brightness);
   }, [session, brightness]);
 
+  useFrameMonitor(hostNode, session?.shownRoute, appFrameReporter);
+
   return (
     <EscProvider value={escRegistry}>
       <div
@@ -906,7 +924,12 @@ function OpenedSlide({
               choices={heatmapChoices}
             />
             {workspace === "annotate" ? null : (
-              <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+              <ViewMapLayer
+                engine={session.engine}
+                stage={hostNode}
+                slideId={slideId}
+                projectId={projectId}
+              />
             )}
             {workspace === "annotate" ? null : (
               <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />

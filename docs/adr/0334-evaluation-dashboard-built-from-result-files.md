@@ -23,4 +23,4 @@ Option 3. The generator is `python -m parfocal_ml.dashboard` (`pnpm --filter @pa
 
 - A new evaluation result needs a few lines in `series.toml` to join a trend, and the dashboard is rebuilt by hand after it. A test checks that the committed series still resolve against the committed results.
 - An evaluation command that writes JSON can feed a series directly once its output is committed next to the series file.
-- TODO: rebuild the dashboard when MLEVAL-005 (tumor map evaluation) records its first result.
+- The dashboard was rebuilt when MLEVAL-005 (tumor map evaluation) recorded its first result on 2026-11-16, which it lists under its runs. TODO: add a tumor map FROC series once a second dated run exists, since a series needs two dates.

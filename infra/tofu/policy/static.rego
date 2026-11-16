@@ -119,3 +119,78 @@ zone_setting(setting, value) if {
 	some block in file.contents.locals
 	block.zone_settings[setting] == value
 }
+
+deny contains msg if {
+	not strict_transport_security
+	msg := sprintf("the global root must turn on zone HSTS for subdomains with a max age of at least %d seconds", [allowed.minimum_hsts_seconds])
+}
+
+strict_transport_security if {
+	some file in input
+	root_of(file.path) == "global"
+	some block in file.contents.locals
+	hsts := block.strict_transport_security
+	hsts.enabled == true
+	hsts.include_subdomains == true
+	hsts.max_age >= allowed.minimum_hsts_seconds
+}
+
+lifecycle_rules contains [file.path, rule] if {
+	some file in input
+	some _, blocks in file.contents.resource.cloudflare_r2_bucket_lifecycle
+	some block in blocks
+	some rule in block.rules
+}
+
+deny contains msg if {
+	some [path, rule] in lifecycle_rules
+	rule.delete_objects_transition
+	msg := sprintf("%s lifecycle rule %s deletes objects, which no rule may do to slides", [path, rule.id])
+}
+
+deny contains msg if {
+	some [path, rule] in lifecycle_rules
+	rule.conditions.prefix != allowed.lifecycle_prefix
+	msg := sprintf("%s lifecycle rule %s must keep the prefix %s, so fixtures and other keys stay out", [path, rule.id, allowed.lifecycle_prefix])
+}
+
+deny contains msg if {
+	some [path, rule] in lifecycle_rules
+	some transition in rule.storage_class_transitions
+	not transition.storage_class in allowed.storage_classes
+	msg := sprintf("%s lifecycle rule %s moves objects to an unknown storage class", [path, rule.id])
+}
+
+deny contains msg if {
+	some [path, rule] in lifecycle_rules
+	some transition in rule.storage_class_transitions
+	is_number(transition.condition.max_age)
+	transition.condition.max_age < allowed.minimum_tier_age_seconds
+	msg := sprintf("%s lifecycle rule %s tiers objects younger than the 30 day minimum storage duration", [path, rule.id])
+}
+
+deny contains msg if {
+	not tiers_old_objects
+	msg := "the environment module must keep a lifecycle rule that moves old tenant objects to Infrequent Access"
+}
+
+deny contains msg if {
+	not locks_tenant_objects
+	msg := "the environment module must keep an enabled R2 bucket lock on the prefix t/, the recovery rule for deleted or overwritten slides"
+}
+
+locks_tenant_objects if {
+	some file in input
+	startswith(file.path, "modules/environment/")
+	some _, blocks in file.contents.resource.cloudflare_r2_bucket_lock
+	some block in blocks
+	some rule in block.rules
+	rule.enabled == true
+	rule.prefix == allowed.lifecycle_prefix
+}
+
+tiers_old_objects if {
+	some [path, rule] in lifecycle_rules
+	startswith(path, "modules/environment/")
+	count(rule.storage_class_transitions) > 0
+}

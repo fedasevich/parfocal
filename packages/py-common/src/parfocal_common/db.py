@@ -4,7 +4,15 @@ from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import DateTime, MetaData, Uuid, func, text
+from sqlalchemy import (
+    DateTime,
+    ForeignKeyConstraint,
+    MetaData,
+    UniqueConstraint,
+    Uuid,
+    func,
+    text,
+)
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -28,6 +36,21 @@ NAMING_CONVENTION = {
 }
 
 metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+def tenant_foreign_key(
+    column: str, parent: str, ondelete: str | None = None, name: str | None = None
+) -> ForeignKeyConstraint:
+    return ForeignKeyConstraint(
+        [column, "tenant_id"],
+        [f"{parent}.id", f"{parent}.tenant_id"],
+        ondelete=ondelete,
+        name=name,
+    )
+
+
+def tenant_unique(*columns: str) -> UniqueConstraint:
+    return UniqueConstraint(*(columns or ("id",)), "tenant_id")
 
 
 class Base(DeclarativeBase):

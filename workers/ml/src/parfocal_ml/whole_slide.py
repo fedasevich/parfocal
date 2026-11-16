@@ -1,4 +1,6 @@
+import asyncio
 import math
+from collections import deque
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any, Protocol
@@ -183,20 +185,35 @@ async def run_tiles(
     store: ResultStore,
     prefix: str,
     progress: Progress,
+    ahead: int = 0,
 ) -> int:
     await progress.total(len(tiles))
     done = await progress.done()
-    ran = 0
-    for tile in tiles:
-        if tile.index in done:
-            continue
-        if await progress.should_stop():
-            raise JobStoppedError
-        cells = await detector.detect(plan.window_of(tile))
-        data, count = tile_chunk(tile, cells, detector.classes)
+    running: deque[tuple[Tile, asyncio.Task[Sequence[Cell]]]] = deque()
+
+    async def finish() -> None:
+        tile, task = running.popleft()
+        data, count = tile_chunk(tile, await task, detector.classes)
         await store.put(tile_key(prefix, tile.index), data)
         await progress.mark(tile, count)
-        ran += 1
+
+    ran = 0
+    try:
+        for tile in tiles:
+            if tile.index in done:
+                continue
+            if await progress.should_stop():
+                raise JobStoppedError
+            running.append((tile, asyncio.ensure_future(detector.detect(plan.window_of(tile)))))
+            if len(running) > ahead:
+                await finish()
+                ran += 1
+        while running:
+            await finish()
+            ran += 1
+    finally:
+        for _, task in running:
+            task.cancel()
     return ran
 
 

@@ -243,6 +243,10 @@ OPERATIONS: dict[str, Operation] = {
     "listModelRuns": Operation(
         lambda c, s: c.get(f"/api/projects/{s.project}/model-runs"), member_reads
     ),
+    "startTumorMap": Operation(
+        lambda c, s: c.post(f"/api/projects/{s.project}/slides/{s.slide}/tumor-maps"),
+        runs_models,
+    ),
 }
 
 ROLES: list[tuple[Role, ProjectRole | None]] = [

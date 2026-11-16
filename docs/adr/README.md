@@ -303,3 +303,27 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0336](0336-flag-targeting-rules-and-posthog-over-http.md) | Flags target by workspace, role and user in one shared file, and PostHog answers over plain HTTP | Accepted | 2026-11-15 |
 | [0337](0337-ui-visual-baselines-per-story-theme-and-density.md) | UI visual regression compares every story in both themes and densities with committed baselines from the Linux runner | Accepted | 2026-11-15 |
 | [0338](0338-layout-experiments-split-only-unchosen-production-users.md) | Layout experiments split only production users who have not chosen, and pinned means bottom right | Accepted | 2026-11-15 |
+| [0339](0339-container-images-install-from-uv-lock.md) | Container images install from uv.lock, through exported lock files for Modal | Accepted | 2026-11-15 |
+| [0340](0340-slos-and-alerts-as-code-routed-by-email.md) | SLOs and alert rules live in code, burn by two windows and reach on-call by email | Accepted | 2026-11-15 |
+| [0341](0341-old-tenant-objects-tier-to-infrequent-access-and-budgets-live-in-a-cost-report.md) | Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report | Accepted | 2026-11-15 |
+| [0342](0342-make-dev-signs-in-through-the-local-zitadel.md) | make dev signs in through the local Zitadel by default | Accepted | 2026-11-15 |
+| [0343](0343-sli-counts-in-the-slide-bucket-and-otlp-logs-over-http.md) | SLI counts and alert state live in the slide bucket, and telemetry leaves as OTLP logs over plain HTTP | Accepted | 2026-11-15 |
+| [0344](0344-workers-and-realtime-write-their-own-sli-counts.md) | Workers and realtime write their own SLI counts, and only automatic whole-slide runs are pre-reads | Accepted | 2026-11-15 |
+| [0345](0345-job-claims-respect-the-tenant-region.md) | Job claims respect the tenant region behind one switch | Accepted | 2026-11-16 |
+| [0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) | Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile | Accepted | 2026-11-16 |
+| [0347](0347-per-workspace-saml-sso-through-zitadel.md) | Per-workspace SAML sign-in through the workspace's Zitadel organisation | Accepted | 2026-11-16 |
+| [0348](0348-a-modal-environment-and-a-tenant-key-prefix-per-preview.md) | A Modal environment and a tenant key prefix per preview | Accepted | 2026-11-16 |
+| [0349](0349-nucleus-detector-and-typer-per-tier.md) | PathoSAM AIS stays the nucleus detector and HoVer-NeXt the typer in every server tier, because no newer model has a held-out number here | Proposed | 2026-11-16 |
+| [0350](0350-load-tests-run-against-production-under-a-tiny-cap.md) | Load tests run against production under a tiny cap, on demand from a workflow or one command | Accepted | 2026-11-16 |
+| [0351](0351-the-v1-tumor-model-stays-the-monai-camelyon-resnet18.md) | The MONAI CAMELYON ResNet18 stays the v1 tumor model, and a foundation-model probe replaces it only after it passes the same test-slide evaluation | Accepted | 2026-11-16 |
+| [0352](0352-sso-links-an-existing-account-by-verified-email.md) | SSO links an existing account by verified email | Accepted | 2026-11-16 |
+| [0353](0353-main-path-budgets-are-a-p95-after-a-warm-up.md) | Main path budgets for the thesis are a 95th percentile after a warm-up, CI keeps the fastest of several | Accepted | 2026-11-16 |
+| [0354](0354-the-api-warms-the-embedder-with-the-modal-sdk.md) | The API warms the embedder with the Modal SDK | Accepted | 2026-11-16 |
+| [0355](0355-the-tumor-map-job-shares-the-detector-good-pool.md) | The tumor map job shares the detector-good T4 pool and stops at 4,000 tiles | Accepted | 2026-11-16 |
+| [0356](0356-the-tumor-map-worker-runs-the-resnet18-as-onnx-on-a-downloaded-original.md) | The tumor map worker runs the ResNet18 as ONNX and reads a downloaded original through OpenSlide | Accepted | 2026-11-16 |
+| [0357](0357-the-view-map-calls-the-interactive-lane.md) | The view map asks the interactive lane for one view tile at a time | Accepted | 2026-11-16 |
+| [0358](0358-the-tumor-map-pool-runs-cuda-13-and-reuses-the-api-secrets.md) | The tumor map pool runs onnxruntime-gpu on a CUDA 13 cuDNN base and reuses the API's database and storage secrets | Accepted | 2026-11-16 |
+| [0359](0359-find-more-like-these.md) | Find more like these is a no-go on PathoSAM tokens, and waits for a typed fixture or a concept model | Accepted | 2026-11-16 |
+| [0360](0360-a-durable-object-counts-logins-per-address-strictly.md) | A Durable Object counts logins per client address strictly, behind the approximate binding | Accepted | 2026-11-16 |
+| [0361](0361-interactive-encoder-and-decoder-per-tier.md) | PathoSAM ViT-B stays the interactive encoder in every tier, with the window decoder for clicks and the int8 AIS decoder for regions, because no smaller or newer SAM has a better held-out number here | Accepted | 2026-11-16 |
+| [0362](0362-fast-tier-auto-tool-without-webgpu-is-deferred.md) | The Fast tier auto tool without WebGPU is deferred, with InstanSeg brightfield nuclei as the named candidate, because it misses its quality bar on the one set it did not train on and its post-processing is not yet in the browser | Accepted | 2026-11-16 |

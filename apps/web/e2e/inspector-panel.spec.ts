@@ -105,6 +105,27 @@ test("the arrow keys resize the focused handle", async ({ page }) => {
   await expect.poll(() => widthOf(page)).toBe(320);
 });
 
+test("the hide while panning checkbox has a 24 pixel hit area that nothing covers", async ({
+  page,
+}) => {
+  await openViewer(page);
+  const checkbox = page.getByLabel("Hide while panning");
+  const box = await checkbox.boundingBox();
+  if (!box) throw new Error("no checkbox");
+  expect(box.width).toBeGreaterThanOrEqual(24);
+  expect(box.height).toBeGreaterThanOrEqual(24);
+  const covered = await checkbox.evaluate((input) => {
+    const rect = input.getBoundingClientRect();
+    return [
+      [rect.left + 1, rect.top + 1],
+      [rect.right - 1, rect.top + 1],
+      [rect.left + 1, rect.bottom - 1],
+      [rect.right - 1, rect.bottom - 1],
+    ].some(([x, y]) => document.elementFromPoint(x ?? 0, y ?? 0) !== input);
+  });
+  expect(covered).toBe(false);
+});
+
 test("hide while panning fades the panel only during a drag on the slide", async ({ page }) => {
   await openViewer(page);
   await page.getByLabel("Hide while panning").click();

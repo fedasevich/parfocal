@@ -536,13 +536,13 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-025.
   Size: L.
 
-- [ ] FOUND-027 · Refresh the tooling pins
+- [x] FOUND-027 · Refresh the tooling pins
   [The tooling re-check](results/2026-11-03-tooling-recheck.md) found Ruff 0.17 and uv 0.13 outside the ranges in `pyproject.toml` and the exact JavaScript pins (pnpm, Turborepo, Biome, Oxlint, oxlint-tsgolint, Lefthook, commitlint, Playwright) behind by minor or patch releases. Raise them together, widen `uv_build` to 0.13, fix what new Biome and Ruff rules report, and keep TypeScript on 7.
   Done when the lockfiles carry the new versions and `pnpm verify` and the golden-image suite are green.
   Depends on FOUND-000.
   Size: S.
 
-- [ ] FOUND-028 · CI runner image for Ubuntu 26.04
+- [x] FOUND-028 · CI runner image for Ubuntu 26.04
   GitHub moves `ubuntu-latest` from Ubuntu 24.04 to 26.04 between 2026-10-19 and 2026-11-19, and every CI job uses `ubuntu-latest`. Run the workflows once on `ubuntu-26.04`, then either move to it explicitly or pin `ubuntu-24.04` until the golden-image suite passes on 26.04, so the image changes only on purpose.
   Done when every job names an explicit Ubuntu version and CI is green on it.
   Depends on FOUND-000.
@@ -553,7 +553,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the budget check passes with at least 10,000 bytes spare and the E2E suite stays green.
   Size: S.
 
-- [ ] FOUND-030 · Bundle analyzer report
+- [x] FOUND-030 · Bundle analyzer report
   Nobody can see what each chunk of `apps/web` holds, so a heavy import into the first page shows up only when the budget in `perf-budgets.json` fails. Add a build mode that writes a treemap and a JSON summary of every chunk with its modules and gzip size, and upload both as a CI artifact on each pull request.
   Done when one command builds the report locally, CI attaches it to pull requests, and the summary names the largest modules of the first-page chunk.
   Size: S.
@@ -590,10 +590,16 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
   Size: M.
 
-- [ ] FOUND-039 · Split the full viewer behind a view-model hook
+- [x] FOUND-039 · Split the full viewer behind a view-model hook
   FOUND-036 cut `apps/web/src/screens/viewer/full-viewer.tsx` from 2,131 to 1,870 lines, but `ViewerBody` is still one component of about 1,700 lines whose blocks share 20 to 50 locals each, so moving parts out safely needs a view-model hook that owns the viewer state and hands each panel only what it reads. Keep behaviour identical and take the file out of the exceptions of `scripts/guard_file_length.py`.
   Done when the file is under 1,200 lines, it is no longer an exception, and the viewer specs stay green.
   Depends on FOUND-036.
+  Size: M.
+
+- [ ] FOUND-040 · The edge Worker and the dev bucket under make dev
+  FOUND-009 made `make dev` start the stack and sign in through the local Zitadel, but the Vite dev server does not yet run the edge Worker and its Durable Objects through the Cloudflare Vite plugin, and there is no remote binding to the `parfocal-dev` R2 bucket, so no slide opens in the viewer under `make dev`.
+  Done when `make dev` opens a slide in the viewer through the edge Worker, the README says how, and the dev check signs in and draws a tile.
+  Depends on FOUND-009.
   Size: M.
 
 - [x] FOUND-037 · Docs memory that cannot go stale
@@ -685,9 +691,9 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when STACK-023 and STACK-028 are confirmed or revised in an ADR.
   Both confirmed in [ADR 0041](adr/0041-identity-and-authorization-rechecked.md).
 
-- [ ] IAM-001 · IdP deployment and configuration
-  Organisation setup in Zitadel Cloud, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), MFA policy (TOTP and WebAuthn).
-  Done when the IdP config is code (exported realm or Terraform provider) and recreated from scratch in CI.
+- [x] IAM-001 · IdP deployment and configuration
+  The Zitadel config as an OpenTofu module: the project, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and the login policy with TOTP and WebAuthn. Staging is dropped ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment), so the module is proved on the local Zitadel that `make dev` starts (FOUND-009, local development environment). Applying it to the production organisation is out of scope and belongs to OPS-001 (base infrastructure as code).
+  Done when `infra/tofu/idp-scratch/run.sh` applies the module from scratch to that local container twice, with an empty second plan and `check.py` passing each time, and the `idp` CI job runs it by starting that container.
   Depends on STACK-028.
   Size: L.
 
@@ -743,6 +749,18 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   SAML or OIDC federation per tenant through the IdP, with just-in-time provisioning and role mapping.
   Done when an E2E test logs in through a test SAML IdP.
   Size: L.
+
+- [ ] IAM-028 · SSO from the sign-in screen and the SSO spec in CI
+  IAM-012 (per-organisation SSO) built SAML sign-in through `/api/auth/sso?domain=`, but the web sign-in page has no SSO entry, the CI job for `apps/e2e/tests/sso.spec.ts` lacks the `STORAGE_*` settings its tenant setup needs, rerunning `connect-saml` on a connected workspace is untested, and a person who already has a password account under the same email is not linked.
+  Done when the sign-in screen offers "Sign in with your organisation" that asks for the work email domain, the SSO spec passes in CI, a test reruns `connect-saml` without duplicating the connection, and a test links an existing password account by verified email.
+  Depends on IAM-012.
+  Size: M.
+
+- [ ] IAM-029 · Prove the SSO email domain by DNS
+  IAM-028 (SSO from the sign-in screen) links an existing account when the workspace's email domain matches, and ADR 0352 (SSO links an existing account by verified email) leaves proving that the workspace owns the domain as a TODO. A workspace admin adds a DNS TXT record with a token, and the API checks it before `connect-saml` routes or links anyone for that domain.
+  Done when tests show an unproven domain neither routes `/api/auth/sso` nor links an account, a proven one does, a lookup failure keeps the last proof, and the ADR's TODO is answered.
+  Depends on IAM-028.
+  Size: S.
 
 - [ ] IAM-013 · SCIM provisioning
   Done when a SCIM test client creates, updates and deactivates users.
@@ -857,7 +875,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on STACK-037. Search is decided in [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md).
 
 - [ ] SEC-005 · Data residency enforcement
-  Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Since 2026-11-16 this task builds the rule in the job claim behind a switch ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch), and OPS-020 (pin storage, database and Modal functions per region) pins the cloud resources.
   Done when a test fails if a job for an EU tenant is scheduled on a non-EU queue.
   Size: L.
 
@@ -908,9 +926,9 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an automated scan of a full E2E run's telemetry finds no seeded patient names. The scan reads the console and file exporter output, because non-production environments do not export ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Size: M.
 
-- [ ] SEC-011 · Security headers and CSP
+- [x] SEC-011 · Security headers and CSP
   Strict CSP with nonces, COOP same-origin, COEP credentialless, CORP, Referrer-Policy, Permissions-Policy allowing WebHID and gamepad only where needed.
-  Done when a header test runs against production and the ONNX WASM threads and module workers still work.
+  Done when a header test runs against production after each deploy, through the production smoke step `workers/deploy/src/parfocal_deploy/smoke.py` (there is no staging, [ADR 0331](adr/0331-no-staging-environment.md), no staging environment), and the ONNX WASM threads and module workers still work.
   Refs doc 14.
   Size: M.
 
@@ -1001,9 +1019,27 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-026.
   Size: L.
 
+- [ ] SEC-048 · Rotation commands for the keys secret
+  Bootstrap writes the Modal secret `parfocal-api-keys` only when it is missing and then generates every key in it, so deleting it to rotate one value makes every tenant's encrypted fields unreadable ([knowledge/secrets.md](knowledge/secrets.md)). Add a deploy command that changes one value and keeps the rest: prepend a master key, retire one after `key_rotation check-retire` passes, replace the session or a token key in the secret and the Worker together, and reset the `parfocal_app` password with the new `DATABASE_URL`.
+  Done when tests against fakes show each command keeps every other value, refuses to drop a master key that still wraps tenant keys, and never passes a secret as a command argument.
+  Depends on SEC-013.
+  Size: M.
+
+- [x] SEC-049 · An overlap window for session and token keys
+  `SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each hold one key, so rotating the first signs everyone out and rotating the others breaks open viewers for up to 10 minutes. Accept a list, newest first, sign with the first and verify with any, in the API and in the Worker.
+  Done when API and Worker tests show a token or session sealed with the previous key still opens while it is listed and stops once it is removed.
+  Depends on SEC-013.
+  Size: M.
+
+- [x] SEC-050 · The per-person rate limit fits a real viewer session
+  TEST-019 (application performance on main paths) hit HTTP 429 from one person after about four rounds of opening slides, jumping and deciding, under the default `rate_limit_person_per_minute` of 600. Count the API requests a busy viewer session really makes per minute (opening slides, panning with annotations and overlays, deciding through a worklist), and set the limit, or exempt the read routes that the viewer calls per viewport, so one person never meets the limit while a script that floods the API still does.
+  Done when a test replays a recorded busy session's request rate without a 429, a flood test still gets 429, and the chosen limit and its measured basis are in a result file.
+  Depends on TEST-019.
+  Size: S.
+
 - [ ] SEC-027 · Edge limits per IP
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
-  Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
+  Done when a local test shows a login flood from one address answered with 429 while another address signs in, and an on-demand check against production, a tiny login burst from one address that stops at the first 429 (there is no staging, [ADR 0331](adr/0331-no-staging-environment.md)), ends with a 429.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
   Size: M.
 
@@ -1027,10 +1063,16 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a database probe as `parfocal_app` fails to move or revive an API token under the auth scope and fails to change the person's own email under a member scope, and the join routes pass their tests without the platform flag in the write transaction.
   Size: M.
 
-- [ ] SEC-035 · Foreign keys to tenant tables carry the tenant
+- [x] SEC-035 · Foreign keys to tenant tables carry the tenant
   About sixty foreign keys to tenant tables leave out `tenant_id`, and foreign key checks ignore row-level security, so a row in one workspace can name a parent in another when a route skips the parent check ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), suspicion 2). Eight sampled insert paths all check the parent first, the others were not read. Add `UNIQUE (id, tenant_id)` to the parents that lack it and make the single-column keys composite, starting with `resume_states`, `display_choices`, `display_presets`, `lab_model_projects` and `threads`, whose rows a client names directly.
   Done when a database probe as `parfocal_app` fails to insert a child that names a parent of another workspace for every key in the review's list, and the db tests pass.
   Depends on FOUND-035.
+  Size: M.
+
+- [x] SEC-046 · Composite foreign keys to tenant tables carry the tenant
+  SEC-035 made every single-column key between workspace tables include `tenant_id`, but 44 composite keys of the form `(x_id, project_id)` or `(task_id, slide_id)` still leave it out, so a row can still name a parent pair in another workspace when a route skips the parent check. The list is in `docs/knowledge/database.md`.
+  Done when the SEC-035 probe as `parfocal_app` also covers every composite key and fails each cross-workspace insert, the guard test rejects a new composite key without `tenant_id`, and the db tests pass.
+  Depends on SEC-035.
   Size: M.
 
 - [x] SEC-036 · A removed person cannot rejoin a room
@@ -1289,10 +1331,10 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 ---
 
-- [ ] INGEST-029 · Shared test slides bucket
-  The owner's public test slides, such as the OpenSlide and Camelyon sets, are uploaded once under a `fixtures/` prefix of `parfocal-dev`, and CI and production read them there with a read-only R2 key limited to that bucket, so nothing copies them around. The owner chose `parfocal-dev` over a bucket of its own on 2026-11-02, knowing that a mistake with a dev write key could delete them, so no test or cleanup ever deletes under `fixtures/` and the manifest's SHA-256 shows a damaged copy. No slide with patient data goes there. The read-only key goes through `infra/tofu`, and creating it needs the owner's yes in chat with the plan and cost.
+- [x] INGEST-029 · Shared test slides bucket
+  The owner's public test slides, such as the OpenSlide and Camelyon sets, are uploaded once under a `fixtures/` prefix of `parfocal-dev`, and CI and production read them there with a read-only R2 key limited to that bucket, so nothing copies them around. The owner chose `parfocal-dev` over a bucket of its own on 2026-11-02, knowing that a mistake with a dev write key could delete them, so no test or cleanup ever deletes under `fixtures/` and the manifest's SHA-256 shows a damaged copy. No slide with patient data goes there. The read-only key goes through `infra/tofu` as an additive write under the standing yes of ADR 0151 (standing approval within $30 a month), so it needs no question when the plan only adds it.
   Done when `parfocal-dev/fixtures/` holds the manifest's fixtures with matching SHA-256, `pnpm fixtures` can read from it, the read-only key is refused a write, and the R2 storage cost is logged.
-  Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).
+  Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).
   Size: L.
 
 - [x] INGEST-030 · Name the OME-TIFF reader after tifffile
@@ -1317,6 +1359,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Short-lived capability tokens minted by the API, scoped to tenant and slide, verified by the edge Worker without a database call ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and refreshed before expiry without interrupting the viewer.
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
   The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, ). Ingest records the byte ranges of the label and macro pages and the edge refuses any range that overlaps them, so the stored original keeps the bytes and SHA-256 of the upload, as the owner chose on 2026-11-02.
+
+- [ ] TILES-009 · A rewritten original never comes from a stale cache
+  TILES-002 caches tile ranges at the edge keyed on the original's signed size, so an original rewritten at the same size is served stale for up to a day. Add an optional ETag field to the tile token, have `head_object` return it, and make the Worker add it to the cache key and refuse to cache on a mismatch.
+  Done when a test shows a same-size rewrite misses the cache, and a check against real R2 confirms the S3 ETag of a multipart upload equals the Worker's `etag`.
+  Depends on TILES-002.
+  Size: S.
 
 - [ ] TILES-002 · CDN in front of slide storage
   HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.
@@ -1778,7 +1826,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 25.
   Size: M.
 
-- [ ] LAB-004 · Pan sweep benchmark and export
+- [x] LAB-004 · Pan sweep benchmark and export
   Done when the sweep runs from the drawer and exports CSV with the 16 columns the drawer lists.
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
   Size: S.
@@ -2665,7 +2713,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] REVIEW-020 · Firm staging answers on a validation set
+- [x] REVIEW-020 · Firm staging answers on a validation set
   Run the node staging of REVIEW-003 on labelled small clusters and confirm that a firm count (its range cannot cross 200) is never on the wrong side of the pathologist's count, as POC doc 33 found for the tumor share on PanNuke.
   Done when a result file records the clusters, the firm share and every wrong firm answer, and a test replays the fixture.
   Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
@@ -3017,7 +3065,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on MEAS-005.
   Size: S.
 
-- [ ] MEAS-006 · Measure as a step of the area
+- [x] MEAS-006 · Measure as a step of the area
   "Measure" in the area panel opens the ruler at a magnification where the whole area fits, already drawn along the area's long axis for the doctor to adjust. The panel compares the value with the AI size (within the evaluated range is normal, outside it asks for a check), the value replaces the AI size in the panel, the area list and the size scale, and the largest measurement feeds MEAS-004.
   Done when E2E measures the lead area, the hero settles, and a unit test computes the pre-drawn line from an area outline.
   Depends on MEAS-001, AITUM-003. Refs mock 8, kit W21, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -3378,7 +3426,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
 
 Models run on demand as model runs that create result sets (JOBS) and nothing runs on arrival ([ADR 0053](adr/0053-ai-results-review-direction.md)). Tiers stay for the interactive tools in Annotate.
 
-- [ ] AIP-000 · Research check
+- [x] AIP-000 · Research check
   Re-check doc 20's ranked list against the current literature (nucleus segmentation and typing models, pathology foundation models, promptable segmentation) and confirm STACK-022, STACK-027 and STACK-031.
   Done when an ADR lists the v1 model line-up per tier and its licence status.
   Size: M.
@@ -3418,7 +3466,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs docs 17, 19.
   Size: L.
 
-- [ ] AIP-007 · Interactive priority gate
+- [x] AIP-007 · Interactive priority gate
   Interactive requests (embeddings, region passes) run in their own Modal function, pre-warmed when a slow device activates the tool, so they never queue behind job tiles ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a load test meets STACK-027's target while a whole-slide job runs.
   Size: L.
@@ -3500,6 +3548,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-002.
   Size: M.
 
+- [ ] AIP-021 · Pre-warm trigger from a slow device through the API
+  AIP-007 (priority gate) built `parfocal_ml.priority_gate`: interactive kinds run only in the `embedder` pool, job kinds never do, and `InteractiveGate.activate` sends at most one throttled `warm` call per 240 s. Nothing calls it yet. The web needs a slow-device check when the segmentation tool opens, the API needs a route that calls the gate under a member's rights, and the API needs a Modal client, which is an ADR choice (Modal SDK in the API image or a call through the ML app). The `embed` runner in the Modal entry also needs the real PathoSAM weights. Also count other tenants' runs on the shared GPU in `queue_minutes` without leaking them, which `jobs.md` left to AIP-007.
+  Done when an API test shows a slow device's activation sends one warm call through a fake Modal client and a fast device's sends none, a web test shows the tool open calls the route only on a slow device, and the queue estimate counts other tenants' runs as one number.
+  Depends on AIP-007.
+  Size: M.
+
 ---
 
 ## 22 AISEG · Interactive segmentation
@@ -3551,7 +3605,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-004. Refs doc 14.
   Size: S.
 
-- [ ] AISEG-008 · Server embedding service
+- [x] AISEG-008 · Server embedding service
   The server encodes with the larger encoder and returns a float16 embedding per tile, cached over the tissue mask. The browser runs only the decoder.
   Done when tests confirm the browser uses server embeddings when present and falls back to local encoding.
   Refs doc 20 §2.10.
@@ -3579,13 +3633,13 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm patches are read at the right level for each preset.
   Size: S.
 
-- [ ] AISEG-013 · Fast tier in the browser without a GPU
+- [x] AISEG-013 · Fast tier in the browser without a GPU
   A small instance model (InstanSeg or StarDist exported to ONNX) as the default auto tool when WebGPU is missing.
   Done when the WASM path segments a 512 px tile in under 1 s on the CI CPU runner, or an ADR defers it.
   Refs doc 20 §2.4.
   Size: L.
 
-- [ ] AISEG-014 · Find more like these (exemplar prompting)
+- [x] AISEG-014 · Find more like these (exemplar prompting)
   Spike only: select a few cells and find similar objects in the view.
   Done when an ADR records feasibility and quality, with a go or no-go.
   Refs doc 20 §2.9.
@@ -3599,7 +3653,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-012. Refs docs 10, 11, 14, 15.
   Size: M.
 
-- [ ] AISEG-016 · Prompt-pass fallback for the auto region tool
+- [x] AISEG-016 · Prompt-pass fallback for the auto region tool
   When the AIS decoder cannot load, seed from the stain, decode in batches strongest first, accept masks with stability 0.8 or more and overlap tiles by 96 px. Best quality adds the residual pass and the five-prompt ensemble.
   Done when a TNBC fixture test is within 0.01 PQ of the POC's stain-seed contour row and the tool falls back when the AIS graph fails.
   Depends on AISEG-010, AISEG-015. Refs docs 15, 26.
@@ -3628,9 +3682,27 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a unit test shows a request made after the worker stopped answered by a fresh worker, and a request waiting at a `messageerror` rejected.
   Size: S.
 
+- [ ] AISEG-021 · InstanSeg post-processing in the browser
+  Port InstanSeg's seed peaks, per-seed pixel classifier and overlap merging to TypeScript or a second small graph, on top of the network graph from `parfocal_ml.instanseg`, and add a CI job that fetches the 15 MB `brightfield_nuclei.zip` by checksum and runs `bench:instanseg`. Wire it as the auto tool without WebGPU only if decision 134 allows. Rules in ADR 0362 (Fast tier auto tool without WebGPU is deferred).
+  Done when the exported path scores within 0.01 PQ of the TorchScript 0.712 on the 50 TNBC images, and a CI run shows the whole path segmenting a 512 px tile in under 1 s on WebAssembly at the app's thread count.
+  Depends on AISEG-013.
+  Size: L.
+
+- [ ] AISEG-022 · Best quality for the auto region tool
+  Decision 118 (whether the auto region tool can run in best quality) lets the outline tier setting choose best quality for the auto layer too, with the residual pass and the five-prompt ensemble of AISEG-016 (prompt-pass fallback), instead of fixing it to fast.
+  Done when a unit test shows the auto layer follows the outline tier setting in both tiers and a browser test runs the auto layer once in best quality on a fixture tile.
+  Depends on AISEG-016.
+  Size: S.
+
+- [ ] AISEG-023 · Find more like these on typed PanNuke nuclei
+  Decision 130 (a typed fixture run for "find more like these") asks to measure exemplar ranking where cell types exist. Fetch PanNuke (CC BY-NC-SA 4.0, kept in the dataset cache and never committed), run the auto region tool's nuclei on its tiles, pick a few exemplars of one type and rank the rest by exemplar similarity as AISEG-014 (find more like these) does.
+  Done when a result file records precision at 10 and 50 per cell type against PanNuke's labels, compared with a random ranking.
+  Depends on AISEG-014, MLEVAL-010.
+  Size: M.
+
 ## 23 AINUC · Whole-slide nuclei, typing and confidence
 
-- [ ] AINUC-000 · Research check
+- [x] AINUC-000 · Research check
   Pick the detector and typer per tier from current models (PathoSAM AIS, HoVer-NeXt, CellViT++, NuLite, InstanSeg) under the STACK-031 licence policy.
   Done when an ADR names them with MLEVAL numbers and the confidence display table of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) is rerun for the chosen typer.
   Size: M.
@@ -3693,12 +3765,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-001, AINUC-002, AINUC-013, JOBS-004.
   Size: M.
 
-- [ ] AINUC-011 · Throughput target
-  Done when the job processes a CAMELYON16 slide on the chosen GPU in under one hour (POC laptop estimate: ten hours), recorded in a result file from an on-demand run ([ADR 0011](adr/0011-hosted-ci-only.md)).
+- [x] AINUC-011 · Throughput target
+  Done when the job processes a CAMELYON16 slide on one L4 and the time is recorded in a result file from an on-demand run ([ADR 0011](adr/0011-hosted-ci-only.md)). Decision 135 (how the nucleus job gets under one hour) dropped the one-hour target on 2026-11-16, because quality and use of the Modal GPUs come before time, so the job keeps its full tile core and reference.
   Refs doc 20 §2.5.
   Size: L.
 
-- [ ] AINUC-012 · Tumor cell count per area
+- [x] AINUC-012 · Tumor cell count per area
   Count tumor-typed nuclei inside an area outline, with the expected-mistakes range from calibrated probabilities, for clusters at or under 0.2 mm where 200 cells decide between isolated tumor cells and a micrometastasis. Uses the 64 px tumor map cells or nuclei, never the coarse 256 px map, for clusters this small.
   Done when unit tests count seeded nuclei inside outlines with the range, and an evaluation against a pathologist's counts on small clusters is recorded as a result file or the gap is filed as a TODO.
   Depends on AINUC-006, AITUM-003. Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -3718,15 +3790,21 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
   Size: S.
 
+- [ ] AINUC-015 · Score newer nucleus models on the Mac
+  Decision 123 (newer nucleus models) allows downloading InstanSeg and the PathoSAM ViT-L decoder to score them against the kept PathoSAM AIS and HoVer-Net line-up. Check each file size and the peak memory of one inference before any full run, and keep a run under about 8 GB of RAM on the 24 GB Mac, one ML run at a time. The aim is the best model the thesis can run, not the fastest.
+  Done when a result file scores both candidates and the kept line-up on TNBC and NuInsSeg with the same metrics as AINUC-000 (nuclei detector and typer research check), with CryoNuSeg added once MLEVAL-010 (loaders for datasets behind a sign-in) has its archive, and records each model's file size and peak RAM.
+  Depends on AINUC-000.
+  Size: M.
+
 ## 24 AITUM · Tumor and region maps
 
-- [ ] AITUM-000 · Research check
+- [x] AITUM-000 · Research check
   Compare the MONAI CAMELYON ResNet18 bundle with foundation-model linear probes (UNI2, Virchow2, H-optimus, Prov-GigaPath) on CAMELYON16 test slides, under the licence policy.
   Done when an ADR picks the v1 tumor model and lists the evaluation.
   Refs doc 20 §2.6.
   Size: L.
 
-- [ ] AITUM-001 · Tumor map job
+- [x] AITUM-001 · Tumor map job
   Fully convolutional inference over the tissue mask, probability grid stored as a raster pyramid.
   Done when a CAMELYON16 test slide scores within the expected FROC range in MLEVAL.
   Size: L.
@@ -3736,7 +3814,36 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when golden tests cover colormaps and threshold.
   Size: S.
 
-- [ ] AITUM-003 · Areas from the tumor map
+- [ ] AITUM-008 · The tumor map runs as a job and the API serves it
+  AITUM-001 (tumor map job) built `parfocal_ml.tumor_map`, which maps a slide over the tissue mask and writes the heatmap format the API already serves plus three pyramid levels, but nothing starts it. Add it as a job kind in the job system with its GPU pool and cost cap, start it from the API under a member's rights, store the map with the slide, and give the "Map this view" panel of AITUM-004 (view-scoped map on demand) the server scorer it waits for.
+  Done when an API test starts a tumor map job and reads the stored map back through the heatmap route, a worker test runs the job end to end with a stand-in model on a small fixture, and the routes are in the permission and tenant isolation tables.
+  Depends on AITUM-001.
+  Size: M.
+
+- [ ] AITUM-009 · Map this view asks the server for its tiles
+  The "Map this view" panel of AITUM-004 (view-scoped map on demand) still has only the fake scorer. One view tile (256 px cells, 16 by 16) is 2 by 2 job tiles of AITUM-008 (tumor map job and route), both anchored at the slide origin, so a view tile is an aligned box of the job's grid halved twice. The API has no synchronous path to a GPU pool yet, so choose between a box job the panel polls and a call on the interactive lane, and record it as an ADR. A box map must not be stored as a ready heatmap result set, because that hides the panel.
+  Done when an API test asks for one view tile with a stand-in scorer and gets the 256 cell bytes, and a web test shows the panel using the server scorer outside the fake API.
+  Depends on AITUM-008.
+  Size: M.
+
+- [ ] AITUM-010 · The tumor map job reads stored slides and runs the tumor model in its pool
+  AITUM-008 (tumor map job and route) takes a slide opener and a scorer as seams, and the GPU pool entry has no runner for the `tumor-map` kind yet. Open a stored slide's level 0 regions and thumbnail from the object store, run the MONAI ResNet18 of ADR 0351 (the v1 tumor model) in the detector-good T4 pool, and start the claim loop for the kind.
+  Done when a worker test runs the job on a stored small fixture slide through the real opener, and a Modal stand-in test on CPU runs one tumor map call in the pool.
+  Depends on AITUM-008.
+  Size: M.
+
+- [ ] AITUM-011 · The tumor map pool is ready to deploy
+  AITUM-010 (stored slides and the tumor model in the pool) runs the tumor map locally, but the pool image lacks `onnxruntime-gpu`, OpenSlide and a cuDNN base, the `camelyon-tumor` ONNX artifact is only in a local cache, the pool has no secrets for the object store, and nothing spawns the pool call when a map is queued. Lock the pool image, publish the artifact with its SHA-256 where the other model artifacts live, wire the secrets, and spawn the call on enqueue. ADR 0356 (the tumor map worker runs the ResNet18 as ONNX) records the runtime.
+  Done when the image lock and a spawn-on-enqueue test pass, the published artifact's SHA-256 matches the local export, and the runbook says what the first deploy after the train merges will start. Publishing the artifact is an additive production write under ADR 0151 (standing approval within $30 a month), and the deploy itself waits for the merge.
+  Depends on AITUM-010.
+  Size: M.
+- [ ] AITUM-012 · The interactive pool answers view map calls
+  AITUM-009 (Map this view asks the server for its tiles) sends a `view-map` call to the embedder pool, which accepts the kind but has no runner, so on the real API every "Map this view" click ends in "This view could not be mapped". Give the embedder pool entry a `view-map` runner that calls `parfocal_ml.view_map.answer_view_tile` with the stored slide opener and the ResNet18 of AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool), and measure one view tile's time on the T4.
+  Done when a Modal stand-in test on CPU answers one view tile through the pool entry with 256 cell bytes, and a result file holds the T4 time of one view tile.
+  Depends on AITUM-009, AITUM-010.
+  Size: S.
+
+- [x] AITUM-003 · Areas from the tumor map
   Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
   Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
   Refs doc 36, [`poc/src/segment/tumor-areas.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/tumor-areas.ts), [`poc/scripts/tumor-areas.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tumor-areas.mjs), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -3761,6 +3868,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   AITUM-005 stores painted maps as versioned `.pfmap` tile files ([ADR 0332](adr/0332-painted-maps-as-whole-versions-of-one-tile-file.md), painted maps as whole versions of one tile file), but nothing in the viewer paints one yet. Let the brush paint into and erase from a painted map on the view map tile grid, save it with the version check, list and open versions, and export it. Add fake API handlers for the painted map routes, and cover `painted_maps` and `painted_map_versions` in the retention purge.
   Done when component tests paint, save, reopen and export a map, an E2E spec paints and reloads, and a retention test purges both tables.
   Depends on AITUM-005.
+  Size: M.
+
+- [ ] AITUM-013 · Anyone who can read a slide maps a view
+  Decision 129 (who may map a view of a slide on the server) chose that everyone who can read the slide gets every AI tool. Open the view map route of AITUM-009 (Map this view asks the server for its tiles) to anyone with read access and count the GPU seconds per person, as the run limits of the other AI routes do. Amend ADR 0357 with a new ADR.
+  Done when API tests show a reviewer who can read the slide maps a view, a person without read access gets a 403, and the GPU seconds land on the person who asked.
+  Depends on AITUM-009.
+  Size: S.
+
+- [ ] AITUM-014 · A foundation model probe for the tumor map
+  Decision 125 (gated foundation models) chose H-optimus-0 (Apache-2.0, about 1.1B parameters). Once the owner accepts its terms on Hugging Face and puts a read token in `.env`, download the weights, check their size and peak RAM first, and compare a tumor probe on its features with the MONAI ResNet18 on CAMELYON16 test slides. The probe needs training, which decision 136 (training a probe) asks about first.
+  Done when a result file compares FROC and per-slide numbers of both on the same test slides.
+  Depends on AITUM-000.
   Size: M.
 
 ---
@@ -3862,7 +3981,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness reproduces doc 29's HoVer-NeXt numbers on the same fold.
   Result: [typing and calibration reproduction](results/2026-10-18-typing-calibration-reproduction.md).
 
-- [ ] MLEVAL-005 · Tumor map evaluation
+- [x] MLEVAL-005 · Tumor map evaluation
   FROC and Dice on CAMELYON16 test slides.
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.
@@ -4247,14 +4366,14 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
-- [ ] OPS-003 · Environments
+- [x] OPS-003 · Environments
   Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, and production from `main`, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   There is no staging environment ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment).
   Done when a pull request gets a working preview URL and closing it deletes its branch, environment and prefix.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
-- [ ] OPS-004 · Database operations
+- [x] OPS-004 · Database operations
   Migrations in deploy, Neon's pooler, autovacuum tuning for annotation tables, a Neon read replica for reporting.
   Done when a load test with bulk annotation inserts keeps p95 API latency under budget.
   Size: L.
@@ -4269,6 +4388,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Traces, metrics, logs, dashboards for API, workers, GPU, ingest, tiles, realtime, plus frontend real-user monitoring of viewer frame times. Export is on only in production, where these tests run ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when dashboards exist and a synthetic error appears in alerting.
   Size: L.
+
+- [ ] OPS-018 · SLI events from the workers, a realtime SLI and traces
+  OPS-006 (observability stack) counts API requests and edge tile fetches in the slide bucket and reads ingest and pre-read times from job rows, but the ingest and GPU workers send no SLI events of their own, realtime has no SLI, requests go out as log records rather than spans and metrics, and hand-started model runs count as pre-reads.
+  Done when the ingest and GPU workers and realtime write SLI counts the alert cycle reads, only pre-reads count toward the pre-read SLO, and a test on fakes covers each.
+  Depends on OPS-006.
+  Size: M.
 
 - [ ] OPS-007 · Alerting and on-call
   SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. A security alert fires on any audit event whose actor and target workspaces differ, as the first tabletop exercise asked ([tabletop-exercise.md](compliance/tabletop-exercise.md)). Fault-injection tests in a drill environment switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
@@ -4286,6 +4411,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when cost dashboards exist and lifecycle rules are tested in a drill environment.
   Account-level caps and alerts were set on 2026-10-31 under [ADR 0115](adr/0115-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
   Size: M.
+
+- [x] OPS-019 · A Zitadel adapter and a command for tenant provisioning
+  OPS-010 provisions and deprovisions a tenant against local Postgres, MinIO and a fake identity provider in `apps/api/src/parfocal_api/tenant_provisioning.py`. A real Zitadel adapter and a command-line entry point are still missing.
+  Done when the command provisions and deprovisions a tenant against the local Zitadel from FOUND-009 (make dev) in a test, and its runbook names the drill environment run.
+  Depends on OPS-010.
+  Size: S.
 
 - [ ] OPS-010 · Tenant provisioning automation
   Create a tenant with region, IdP organisation, buckets, keys and defaults in one command.
@@ -4327,6 +4458,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   OPS-015 (make draft calls safe in production) lists every draft operation with a priority. Once the UI of an area is finished on the fake, switch that area in one change: build its routes so they return what each draft's Zod schema says, regenerate the client, delete its drafts and fake branches, and run its `@real` specs on the local stack ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches). Start with review, then annotate, then projects and upload, until no screen the showcase seed shows calls a draft. Split one task per area when the first one starts.
   Done when, for each area, API tests cover each new route, its `@real` specs pass on the real API, its count in TEST-038 (draft call ratchet) is zero, and the seeded production app shows no "not available yet" on its screens.
   Depends on OPS-015, TEST-026, TEST-040. Size: L.
+- [ ] OPS-020 · Pin storage, database and Modal functions per region
+  SEC-005 (data residency enforcement) makes every job claim respect the tenant region once `PARFOCAL_RESIDENCY=enforced` is set ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch). Before the switch goes on, deploy the ingest function and the GPU pools with a Modal `region` per tenant region, give EU tenants an R2 bucket in the EU jurisdiction with their objects copied, move or add a Neon project in an EU region, and pin Durable Objects to the EU jurisdiction. Each step raises spend or replaces production resources, so each is asked of the owner. This is the PHI trigger of [ADR 0003](adr/0003-pilot-platform-architecture.md) (pilot platform architecture).
+  Done when production runs with the switch on, a worker in each region logs its `MODAL_REGION`, and an EU tenant's slide, rows and GPU work stay in the EU as checked from each provider's console.
+  Depends on SEC-005. Size: L.
 
 ---
 
@@ -4336,7 +4471,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-012 is confirmed and the test pyramid with ownership per level is written as an ADR.
   Size: S.
 
-- [ ] TEST-001 · Unit test setup for TS and Python
+- [x] TEST-001 · Unit test setup for TS and Python
   Done when both run in CI with coverage reports and a minimum coverage gate per package.
   Size: M.
 
@@ -4367,7 +4502,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TILES-006.
   Size: M.
 
-- [ ] TEST-007 · Memory and leak suite
+- [x] TEST-007 · Memory and leak suite
   Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots. Includes `CMU-1.svs` from the `formats` fixture group, which VIEW-030 left untested ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)).
   Done when the 20-slide test runs nightly on hosted runners with software rendering and a pass threshold.
   Size: M.
@@ -4417,7 +4552,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   No real PHI in any fixture, generated patient names marked as synthetic.
   Done when a scanner flags non-synthetic names in fixtures.
 
-- [ ] TEST-017 · Flaky test management
+- [x] TEST-017 · Flaky test management
   Quarantine with an issue link and an expiry date.
   Done when quarantined tests are reported weekly.
   Size: S.
@@ -4534,7 +4669,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when `pnpm verify` prints the draft count per area and the total, a test checks the count against a fixture folder, and `knowledge/draft-calls.md` points to the script.
   Size: S.
 
-- [ ] TEST-039 · Local Zitadel for the end-to-end suite
+- [x] TEST-039 · Local Zitadel for the end-to-end suite
   The CI `e2e` job signs in at the production Zitadel instance with a test user, which touches production on every run and gets worse once sign-up specs create users. `infra/tofu/idp-scratch` already boots Zitadel in Docker and applies the production `zitadel-identity` module with no credential. Turn it into a compose profile that stays up, point `apps/e2e` and the CI job at it, and seed the test user there. Start with a short spike, because sign-in through the app's own screens on the Zitadel session API ([ADR 0294](adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md), native sign-up and sign-in) is untried on the container.
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
@@ -4554,6 +4689,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when two CI runs in a row are green in every web shard with no retry needed, and each fix names its cause in the log.
   Depends on FOUND-026.
   Size: M.
+
+- [x] TEST-045 · The full viewer passes its accessibility check while visiting areas
+  The full viewer spec where G then n visits each area fails axe's target-size rule on the "Hide while panning" checkbox. It fails on the train branch with and without load, so it is a real defect and not a flake. Give the checkbox a hit area of at least 24 by 24 CSS pixels, or the spacing the rule accepts, without changing the panel's layout in Storybook.
+  Done when `apps/web/e2e/full-viewer.spec.ts` passes three times in a row and a component test or story checks the checkbox's hit area.
+  Size: S.
 
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
@@ -4614,6 +4754,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   In-app feedback with screenshot (PHI-blurred) routed to the team.
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
+
+- [x] PILOT-009 · A bulk import rerun never sends a slide twice
+  PILOT-004's `--cases-from-names` rerun skips slides already in their case, but a rerun while files are still processing would send them again. The run now fails and warns, and the runbook says to wait.
+  Done when a test reruns the import while slides are still processing and no slide or result is sent twice.
+  Depends on PILOT-004.
+  Size: S.
 
 - [ ] PILOT-008 · Owner walkthrough of the whole app
   A guided walkthrough for the owner on production that visits every screen and flow built so far, so the owner can try each one and list fixes and dislikes. The point is to see the UX of everything possible, not only the main paths, so the script covers every variant a user can meet: each role, state, option and setting, the loading, empty and error states, long and short data, keyboard paths, and the edge cases such as a huge slide, a failed job or a refused action. It is a written script in `docs/knowledge/` with one step per screen or flow, in the order a user meets them: sign up and setup, the sample project, Home and My work, upload with AI results, the slide view with decisions and the opinion form, guided review, navigation aids and measurement, Annotate with its tools, model runs on a selection and the whole slide, threads and live updates, compare, notifications, the disagreement queue and sign-off, the evaluation report and exports, settings, the palette and the admin page. Each step names the URL, the seeded account and data to use, what to do and what should happen, and leaves room for the owner's notes. It runs over the TEST-020 showcase seed (every feature over the real fixture slides), which resets staging between runs. Agents run the script first and fix what is plainly broken before handing it over. The owner's notes become backlog tasks, one per fix, grouped by screen.

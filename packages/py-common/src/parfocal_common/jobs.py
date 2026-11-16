@@ -23,9 +23,11 @@ from sqlalchemy import (
     String,
     Table,
     Uuid,
+    column,
     func,
     insert,
     select,
+    table,
     text,
     update,
 )
@@ -33,7 +35,15 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_common.data_classes import OPERATIONAL
-from parfocal_common.db import DatabaseScope, metadata, require_row_security, scoped_transaction
+from parfocal_common.db import (
+    DatabaseScope,
+    metadata,
+    require_row_security,
+    scoped_transaction,
+    tenant_foreign_key,
+    tenant_unique,
+)
+from parfocal_common.residency import UNPINNED, Placement
 from parfocal_common.stage_throughput import RunLabels, StageSample, record_throughput
 
 logger = logging.getLogger("parfocal.jobs")
@@ -116,6 +126,7 @@ jobs = Table(
     timestamp("created_at", nullable=False),
     timestamp("finished_at"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    tenant_unique(),
     CheckConstraint(JOB_STATUS_CHECK, name="status"),
     CheckConstraint("(status = 'paused') = (pause_reason IS NOT NULL)", name="pause_reason"),
     Index(
@@ -138,9 +149,10 @@ job_steps = Table(
     Column("result", JSONB, nullable=True, info=OPERATIONAL),
     timestamp("started_at"),
     timestamp("finished_at"),
-    ForeignKeyConstraint(["job_id"], ["jobs.id"], ondelete="CASCADE"),
+    tenant_foreign_key("job_id", "jobs", ondelete="CASCADE"),
     CheckConstraint("status IN ('pending', 'running', 'done', 'failed')", name="status"),
     CheckConstraint("units_total IS NULL OR units_total >= 0", name="units_total"),
+    tenant_unique("job_id", "ordinal"),
 )
 
 job_units = Table(
@@ -155,10 +167,15 @@ job_units = Table(
     Column("seq", BigInteger, Identity(always=True), nullable=False, info=OPERATIONAL),
     Column("result", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     ForeignKeyConstraint(
-        ["job_id", "ordinal"], ["job_steps.job_id", "job_steps.ordinal"], ondelete="CASCADE"
+        ["job_id", "ordinal", "tenant_id"],
+        ["job_steps.job_id", "job_steps.ordinal", "job_steps.tenant_id"],
+        ondelete="CASCADE",
     ),
     Index("ix_job_units_job_id_seq", "job_id", "seq"),
 )
+
+
+tenant_regions = table("tenants", column("id"), column("region"))
 
 
 async def holds(connection: AsyncConnection, job_id: uuid.UUID, worker: str) -> bool:
@@ -307,10 +324,18 @@ async def claim(
     worker: str,
     kinds: Mapping[str, Workflow],
     tenant_id: uuid.UUID | None = None,
+    *,
+    placement: Placement = UNPINNED,
 ) -> tuple[Claimed, Workflow] | None:
     mine = jobs.c.kind.in_(list(kinds))
     if tenant_id is not None:
         mine = mine & (jobs.c.tenant_id == tenant_id)
+    if placement.enforced:
+        mine = mine & jobs.c.tenant_id.in_(
+            select(tenant_regions.c.id).where(
+                tenant_regions.c.region.in_(sorted(placement.tenant_regions()))
+            )
+        )
     async with scoped_transaction(engine, PLATFORM) as connection:
         await connection.execute(
             update(jobs)
@@ -647,6 +672,28 @@ async def tell_finished(on_finished: JobFinished, job: Claimed) -> None:
         )
 
 
+async def drive_job(
+    engine: AsyncEngine,
+    job: Claimed,
+    workflow: Workflow,
+    worker: str,
+    labels: RunLabels | None,
+) -> JobStatus | None:
+    heartbeat = asyncio.create_task(renew(engine, job, worker, workflow.lease_seconds))
+    try:
+        for ordinal, step in enumerate(workflow.steps):
+            if not await still_held(engine, job, worker):
+                await finish(engine, job, worker, JobStatus.CANCELLED)
+                return None
+            if not await run_step(engine, job, step, ordinal, worker, labels):
+                return None
+        return await finish(engine, job, worker, JobStatus.DONE)
+    finally:
+        heartbeat.cancel()
+        with suppress(asyncio.CancelledError):
+            await heartbeat
+
+
 async def run_job(
     engine: AsyncEngine,
     job: Claimed,
@@ -654,22 +701,13 @@ async def run_job(
     worker: str,
     labels: RunLabels | None = None,
     on_finished: JobFinished | None = None,
+    on_settled: JobFinished | None = None,
 ) -> None:
-    heartbeat = asyncio.create_task(renew(engine, job, worker, workflow.lease_seconds))
-    try:
-        for ordinal, step in enumerate(workflow.steps):
-            if not await still_held(engine, job, worker):
-                await finish(engine, job, worker, JobStatus.CANCELLED)
-                return
-            if not await run_step(engine, job, step, ordinal, worker, labels):
-                return
-        final = await finish(engine, job, worker, JobStatus.DONE)
-    finally:
-        heartbeat.cancel()
-        with suppress(asyncio.CancelledError):
-            await heartbeat
+    final = await drive_job(engine, job, workflow, worker, labels)
     if final is JobStatus.DONE and on_finished is not None:
         await tell_finished(on_finished, job)
+    if on_settled is not None:
+        await tell_finished(on_settled, job)
 
 
 async def work(
@@ -680,20 +718,23 @@ async def work(
     poll_seconds: float = 1.0,
     tenant_id: uuid.UUID | None = None,
     on_finished: JobFinished | None = None,
+    on_settled: JobFinished | None = None,
+    *,
+    placement: Placement = UNPINNED,
 ) -> int:
     await require_row_security(engine)
     kinds = {workflow.kind: workflow for workflow in workflows}
     finished = 0
     idle = 0.0
     while idle_exit_seconds is None or idle < idle_exit_seconds:
-        claimed = await claim(engine, worker, kinds, tenant_id)
+        claimed = await claim(engine, worker, kinds, tenant_id, placement=placement)
         if claimed is None:
             await asyncio.sleep(poll_seconds)
             idle += poll_seconds
             continue
         idle = 0.0
         job, workflow = claimed
-        await run_job(engine, job, workflow, worker, on_finished=on_finished)
+        await run_job(engine, job, workflow, worker, on_finished=on_finished, on_settled=on_settled)
         finished += 1
     return finished
 

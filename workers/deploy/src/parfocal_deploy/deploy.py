@@ -9,6 +9,7 @@ from parfocal_deploy import migrations, neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.environments import Environment, environment
 from parfocal_deploy.modal_app import APP_NAME, SECRETS, WEB_FUNCTION
+from parfocal_deploy.smoke import SmokeCheckError, smoke_check
 from parfocal_deploy.tools import (
     MODAL,
     WRANGLER,
@@ -43,10 +44,6 @@ MIGRATE = (
     "head",
 )
 BUILD_WEB = ("pnpm", "--filter", "@parfocal/web", "build")
-ISOLATION_HEADERS = {
-    "cross-origin-opener-policy": "same-origin",
-    "cross-origin-embedder-policy": "credentialless",
-}
 
 WebUrl = Callable[[Environment], str]
 
@@ -65,45 +62,30 @@ class NotBootstrappedError(Exception):
         )
 
 
-class SmokeCheckError(Exception):
-    pass
-
-
-def modal_commands(target: Environment) -> list[Command]:
+def modal_commands(target: Environment, modules: Sequence[str] = MODAL_MODULES) -> list[Command]:
     return [
         Command((*MODAL, "deploy", "-e", target.modal_environment, "-m", module))
-        for module in MODAL_MODULES
+        for module in modules
     ]
 
 
 def edge_commands(target: Environment, account: str, api_origin: str) -> list[Command]:
+    prefix = ("--var", f"STORAGE_PREFIX:{target.storage_prefix}") if target.storage_prefix else ()
     return [
         Command(BUILD_WEB, {"PARFOCAL_PUBLIC_APP_ENV": target.app_env}),
         Command(
             (
                 *WRANGLER,
                 "deploy",
-                "--env",
-                target.wrangler_env,
+                *target.wrangler_target,
                 "--var",
                 f"API_ORIGIN:{api_origin}",
                 "--var",
                 f"UPLOAD_ORIGIN:{storage_endpoint(account)}",
+                *prefix,
             )
         ),
     ]
-
-
-def smoke_check(target: Environment, tools: Tools) -> None:
-    status, _ = tools.fetch(f"{target.origin}/api/health")
-    if status != 200:
-        raise SmokeCheckError(f"{target.origin}/api/health answered {status}")
-    status, headers = tools.fetch(f"{target.origin}/")
-    wrong = [name for name, value in ISOLATION_HEADERS.items() if headers.get(name) != value]
-    if status != 200 or wrong:
-        raise SmokeCheckError(
-            f"{target.origin}/ answered {status}, wrong headers {', '.join(wrong)}"
-        )
 
 
 def modal_web_url(target: Environment) -> str:
@@ -137,6 +119,7 @@ def deploy(
     migrate: bool = True,
     allow_destructive: Collection[str] = (),
     versions: Path = migrations.VERSIONS,
+    modules: Sequence[str] = MODAL_MODULES,
 ) -> None:
     settings = required(local, CI_SETTINGS)
     found = modal_secret_names(tools, target.modal_environment)
@@ -150,11 +133,11 @@ def deploy(
         direct = neon.owner_uri(tools.neon, project, branch, database, pooled=False)
         migrations.check(migrations.current_revision(tools, direct), allow_destructive, versions)
         tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
-    for command in modal_commands(target):
+    for command in modal_commands(target, modules):
         tools.run(command.argv, None, command.extra)
     for command in edge_commands(target, settings["CLOUDFLARE_ACCOUNT_ID"], web_url(target)):
         tools.run(command.argv, None, command.extra)
-    smoke_check(target, tools)
+    smoke_check(target.origin, tools.fetch)
 
 
 def main() -> None:

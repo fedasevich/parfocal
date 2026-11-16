@@ -25,8 +25,11 @@ def test_every_dataset_names_its_role_licence_source_and_citation() -> None:
         "tnbc": Role.HELD_OUT,
         "nuinsseg": Role.HELD_OUT,
         "cryonuseg": Role.HELD_OUT,
-        "monuseg": Role.REFERENCE,
-        "pannuke": Role.REFERENCE,
+        "monuseg-train": Role.REFERENCE,
+        "monuseg-test": Role.REFERENCE,
+        "pannuke-fold1": Role.REFERENCE,
+        "pannuke-fold2": Role.REFERENCE,
+        "pannuke-fold3": Role.REFERENCE,
         "lizard": Role.NATIVE_20X,
         "camelyon16": Role.TUMOR_MAP,
     }
@@ -46,11 +49,11 @@ def test_an_archive_with_the_wrong_size_or_checksum_is_refused(tmp_path: Path) -
         verify(path, Archive("data.zip", "https://example.test", "0" * 32, 8))
 
 
-def test_a_dataset_without_a_public_download_says_where_to_get_it() -> None:
-    with pytest.raises(ManualDownloadError, match="grand-challenge"):
-        fetch(REGISTRY["monuseg"])
-    with pytest.raises(ManualDownloadError):
-        next(samples("lizard"))
+def test_a_dataset_without_a_public_download_says_where_to_get_it(tmp_path: Path) -> None:
+    with pytest.raises(ManualDownloadError, match=r"opendata\.aws"):
+        fetch(REGISTRY["camelyon16"])
+    with pytest.raises(ManualDownloadError, match="kaggle"):
+        next(samples("cryonuseg", tmp_path))
 
 
 @pytest.mark.skipif(not cached("tnbc"), reason="TNBC is not in the dataset cache")

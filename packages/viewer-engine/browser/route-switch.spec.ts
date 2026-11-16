@@ -122,7 +122,10 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
     `${switches} renderer switches over ${slideFile}, all routes`,
     samples.map((sample) => ({ visit: sample.round, heapBytes: sample.heapBytes })),
     warmUpSwitches - 1,
-    { maxGrowth: null, maxSlopeBytesPerVisit: null },
+    {
+      maxGrowth: process.env.ROUTE_SWITCHES === undefined ? null : 0.4,
+      maxSlopeBytesPerVisit: null,
+    },
   );
   writeFileSync(join(reportDir, "route-switch.trend.json"), `${JSON.stringify(trend, null, 2)}\n`);
 
@@ -136,6 +139,7 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
   expect(samples.map((sample) => sample.decks)).toEqual(
     samples.map((sample) => (sample.report.route === "custom-webgpu" ? 0 : 1)),
   );
+  expect(trend.check.failures).toEqual([]);
   expect(growth).toBeLessThanOrEqual(heapBudget);
   expect(decksAfter).toBe(0);
   expect(canvases).toBe(0);

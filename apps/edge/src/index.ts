@@ -4,7 +4,15 @@ import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
 import { withSecurityHeaders } from "#security-headers.ts";
-import { handleTiles, isTilesPath, problem, type TileEnv } from "#tiles.ts";
+import { createTileSliCounter, flushTileSli, type SliBucket } from "#sli.ts";
+import {
+  handleTiles,
+  isTilesPath,
+  problem,
+  type RangeCache,
+  storedKey,
+  type TileEnv,
+} from "#tiles.ts";
 
 export const packageName = "@parfocal/edge";
 
@@ -15,6 +23,7 @@ export { Room } from "#room.ts";
 export const DATA_PATH_PREFIXES = ["/tiles/", "/data/", "/models/"] as const;
 
 const seconds = () => Math.floor(Date.now() / 1000);
+const tileSli = createTileSliCounter(() => Date.now());
 
 export function isDataPath(pathname: string): boolean {
   return DATA_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -27,17 +36,27 @@ export type AppEnv = {
 
 export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv & ApiEnv;
 
+export function sliBucket(env: TileEnv): SliBucket {
+  return {
+    put: (key, body, options) => env.SLIDES.put(storedKey(env.STORAGE_PREFIX, key), body, options),
+  };
+}
+
 export default {
-  async fetch(request: Request, env: EdgeEnv): Promise<Response> {
-    return withSecurityHeaders(request, await answer(request, env), {
+  async fetch(request: Request, env: EdgeEnv, context?: ExecutionContext): Promise<Response> {
+    return withSecurityHeaders(request, await answer(request, env, context), {
       uploadOrigin: env.UPLOAD_ORIGIN,
     });
   },
 } satisfies ExportedHandler<EdgeEnv>;
 
-async function answer(request: Request, env: EdgeEnv): Promise<Response> {
+async function answer(
+  request: Request,
+  env: EdgeEnv,
+  context?: ExecutionContext,
+): Promise<Response> {
   try {
-    return (await guard(request, env)) ?? (await route(request, env));
+    return (await guard(request, env)) ?? (await route(request, env, context));
   } catch (error) {
     console.error(
       JSON.stringify({
@@ -51,10 +70,14 @@ async function answer(request: Request, env: EdgeEnv): Promise<Response> {
   }
 }
 
-function route(request: Request, env: EdgeEnv): Promise<Response> | Response {
+function route(
+  request: Request,
+  env: EdgeEnv,
+  context?: ExecutionContext,
+): Promise<Response> | Response {
   const { pathname } = new URL(request.url);
   if (isTilesPath(pathname)) {
-    return handleTiles(request, env, seconds);
+    return measuredTiles(request, env, context);
   }
   if (isRealtimePath(pathname)) {
     return handleRealtime(request, env, seconds);
@@ -67,4 +90,26 @@ function route(request: Request, env: EdgeEnv): Promise<Response> | Response {
   }
   if (env.ASSETS) return env.ASSETS.fetch(request);
   return new Response(null, { status: 404 });
+}
+
+function rangeCache(context?: ExecutionContext): RangeCache | undefined {
+  if (context === undefined || typeof caches === "undefined") return undefined;
+  return { store: caches.default, keep: (work) => context.waitUntil(work) };
+}
+
+async function measuredTiles(
+  request: Request,
+  env: EdgeEnv,
+  context?: ExecutionContext,
+): Promise<Response> {
+  const started = Date.now();
+  let status = 500;
+  try {
+    const response = await handleTiles(request, env, seconds, undefined, rangeCache(context));
+    status = response.status;
+    return response;
+  } finally {
+    tileSli.observe(status, Date.now() - started);
+    if (tileSli.due()) context?.waitUntil(flushTileSli(tileSli, sliBucket(env), () => Date.now()));
+  }
 }

@@ -10,6 +10,7 @@ locals {
     min_tls_version  = "1.2"
     tls_1_3          = "on"
     ssl              = "strict"
+    http3            = "on"
   }
 }
 
@@ -18,4 +19,22 @@ resource "cloudflare_zone_setting" "main" {
   zone_id    = data.cloudflare_zone.main.zone_id
   setting_id = each.key
   value      = each.value
+}
+
+locals {
+  strict_transport_security = {
+    enabled            = true
+    max_age            = 31536000
+    include_subdomains = true
+    preload            = false
+    nosniff            = true
+  }
+}
+
+resource "cloudflare_zone_setting" "hsts" {
+  zone_id    = data.cloudflare_zone.main.zone_id
+  setting_id = "security_header"
+  value = {
+    strict_transport_security = local.strict_transport_security
+  }
 }

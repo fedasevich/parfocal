@@ -26,7 +26,7 @@ The next login shows an account picker with the previous user. Choosing it asks 
 
 Login creates the `users` row on first sign-in and later only refreshes its email, which it stores only when the ID token says `email_verified` is true, so a profile edited in the app is never overwritten by the IdP. The session's `active_tenant_id` starts at the user's last workspace if they are still a member, or their only workspace, and `PUT /api/me/workspace` changes it. `authenticate` returns a `MemberPrincipal` only while the membership exists.
 
-`SESSION_KEY` is 32 random bytes in URL-safe base64. Changing it signs everyone out and has no other effect.
+`SESSION_KEY` is 32 random bytes in URL-safe base64, or a comma-separated list of them, newest first. The first seals and any opens, so prepending a new key signs nobody out, and removing the old one signs out only sessions not refreshed since ([knowledge/secrets.md](secrets.md#session-and-token-key-overlap)).
 
 ## Running the login end to end
 
@@ -40,7 +40,7 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 
 `infra/tofu/modules/zitadel-identity` holds the project, one confidential OIDC app per environment, the organisation's login, password and lockout policies and optional test users. It takes an organisation id and has no provider block, so a root calls it once per organisation. The values and their reasons are in the three IAM-001 (identity provider deployment and configuration) ADRs on the module, the separate organisations and the sign-in factors.
 
-`bash infra/tofu/idp-scratch/run.sh` proves the module on an empty Zitadel. It needs Docker and OpenTofu and no credential, takes about two minutes, and removes its containers and local state when it ends. It applies, requires an empty second plan, reads the result back with `check.py`, destroys, and does the same once more. The `idp` workflow runs it on every change to the module or the scratch root.
+`bash infra/tofu/idp-scratch/run.sh` proves the module on an empty Zitadel, the same `infra/local/zitadel.compose.yaml` container that `make dev` starts, under its own compose project and ports (`IDP_SCRATCH_PROJECT`, `IDP_SCRATCH_PORT`, `IDP_SCRATCH_MAILPIT_PORT`). It needs Docker and OpenTofu and no credential, takes about two minutes, and removes its containers and local state when it ends. It applies, requires an empty second plan, reads the result back with `check.py`, wipes the container, and does the same once more on a new instance. The `idp` workflow runs it on every change to the module or the scratch root.
 
 - Every Zitadel resource in the module carries `org_id`. Without it each plan wants a replacement, which would rotate the client secrets.
 - The test user depends on the password policy. Created before it, Zitadel checks the password against the instance default and refuses one without a symbol. The scratch run uses a lowercase hex password so a wrong order fails every time.
@@ -48,6 +48,20 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 - For a bogus authorization code, Zitadel's token endpoint answers `invalid_request` when the client secret is right and `invalid_client` when it is wrong. `check.py` uses that to prove a secret without a browser.
 - The self-hosted image needs `ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false` to run without the separate login container.
 - Moving the live apps into the module needs `moved` blocks. Deleting `zitadel.tf` without them destroys the production app.
+
+## Per-workspace SAML sign-in
+
+[ADR 0347](../adr/0347-per-workspace-saml-sso-through-zitadel.md) (per-workspace SAML sign-in) has the design. `tenant_command connect-saml` configures the workspace's Zitadel organisation and `sso_connections`, `/api/auth/sso?domain=` starts the flow, and `parfocal_api.sso` turns the token into a membership. Lessons from the spike on Zitadel v4.20.3:
+
+- The hosted login (version 1) takes SAML responses at `{issuer}/ui/login/login/externalidp/saml/acs`. The `/idps/<id>/saml/acs` address in the SP metadata belongs to the version 2 intent flow and answers `Errors.Intent.NotStarted`. The SP entity id is `{issuer}/idps/<id>/saml/metadata`.
+- An IdP that sends a transient NameID, like SimpleSAMLphp, needs `transientMappingAttributeName`, or the login stops with `Errors.Intent.MissingSingleMappingAttribute`.
+- A custom login policy with zero check lifetimes sends the browser back to the IdP forever.
+- Without an Action that sets the profile, auto-creation stops at a registration form. Metadata written with `api.v1.user.appendMetadata` arrives in the ID token as base64url JSON under `urn:zitadel:iam:user:metadata`.
+- User names are unique across the instance unless the organisation's domain policy sets `userLoginMustBeDomain`, so without it a second organisation cannot auto-create a user name that exists elsewhere (`unique_constraints_pkey` in the Zitadel log). `connect-saml` sets that policy through `/admin/v1/orgs/<id>/policies/domain`, and [ADR 0352](../adr/0352-sso-links-an-existing-account-by-verified-email.md) (SSO links an existing account by verified email) joins the two Zitadel users in our database.
+- Organisation IdPs are listed by `/management/v1/idps/templates/_search`. The older `/management/v1/idps/_search` returns none of them.
+- The sign-in screen's "Sign in with your organisation" takes a domain or a work email and sends the browser to `/api/auth/sso`. An unknown domain comes back to `/sign-in?sso=none` with the return path kept.
+- A domain routes and links only once proven. `connect-saml` prints a `TXT _parfocal-sso.<domain>` record for the workspace to add, and `prove-sso-domains TENANT` checks it over DNS over HTTPS. A failed lookup keeps the last proof, and an answer without the token withdraws it (ADR 0352 amendment).
+- `apps/e2e/tests/sso.spec.ts` runs the test IdP on `PARFOCAL_SAML_IDP_PORT` (default 8091) and provisions and deprovisions its own workspace. CI pulls the amd64 image before the tests.
 
 ## Row-level security skips rows silently
 

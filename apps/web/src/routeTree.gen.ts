@@ -22,6 +22,7 @@ import { Route as SearchRouteImport } from "./routes/search.tsx";
 import { Route as SetupRouteImport } from "./routes/setup.tsx";
 import { Route as SignInRouteImport } from "./routes/sign-in.tsx";
 import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
+import { Route as StudyRouteImport } from "./routes/study.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
 import { Route as InvitationsTokenRouteImport } from "./routes/invitations.$token.tsx";
@@ -120,6 +121,11 @@ const SignInRoute = SignInRouteImport.update({
 const SignUpRoute = SignUpRouteImport.update({
   id: "/sign-up",
   path: "/sign-up",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const StudyRoute = StudyRouteImport.update({
+  id: "/study",
+  path: "/study",
   getParentRoute: () => rootRouteImport,
 } as any);
 const TeamRoute = TeamRouteImport.update({
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
+  "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/issue-pages/$kind": typeof IssuePagesKindRoute;
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
+  "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/issue-pages/$kind": typeof IssuePagesKindRoute;
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   "/setup": typeof SetupRoute;
   "/sign-in": typeof SignInRoute;
   "/sign-up": typeof SignUpRoute;
+  "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/issue-pages/$kind": typeof IssuePagesKindRoute;
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | "/setup"
     | "/sign-in"
     | "/sign-up"
+    | "/study"
     | "/team"
     | "/invitations/$token"
     | "/issue-pages/$kind"
@@ -520,6 +530,7 @@ export interface FileRouteTypes {
     | "/setup"
     | "/sign-in"
     | "/sign-up"
+    | "/study"
     | "/team"
     | "/invitations/$token"
     | "/issue-pages/$kind"
@@ -569,6 +580,7 @@ export interface FileRouteTypes {
     | "/setup"
     | "/sign-in"
     | "/sign-up"
+    | "/study"
     | "/team"
     | "/invitations/$token"
     | "/issue-pages/$kind"
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   SetupRoute: typeof SetupRoute;
   SignInRoute: typeof SignInRoute;
   SignUpRoute: typeof SignUpRoute;
+  StudyRoute: typeof StudyRoute;
   TeamRoute: typeof TeamRoute;
   InvitationsTokenRoute: typeof InvitationsTokenRoute;
   IssuePagesKindRoute: typeof IssuePagesKindRoute;
@@ -746,6 +759,13 @@ declare module "@tanstack/react-router" {
       path: "/sign-up";
       fullPath: "/sign-up";
       preLoaderRoute: typeof SignUpRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/study": {
+      id: "/study";
+      path: "/study";
+      fullPath: "/study";
+      preLoaderRoute: typeof StudyRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/team": {
@@ -1003,6 +1023,7 @@ const rootRouteChildren: RootRouteChildren = {
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  StudyRoute: StudyRoute,
   TeamRoute: TeamRoute,
   InvitationsTokenRoute: InvitationsTokenRoute,
   IssuePagesKindRoute: IssuePagesKindRoute,

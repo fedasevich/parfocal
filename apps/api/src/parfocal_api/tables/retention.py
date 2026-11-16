@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.result_imports import ResultFormat, UploadKind
 
@@ -97,10 +97,10 @@ uploads = Table(
     Column(
         "created_by_service_id",
         Uuid[uuid.UUID](),
-        ForeignKey("service_accounts.id"),
         nullable=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("created_by_service_id", "service_accounts"),
     Column("file_name", String(255), nullable=False, info=PHI),
     Column("size_bytes", BigInteger, nullable=False, info=OPERATIONAL),
     Column("last_modified_ms", BigInteger, nullable=True, info=OPERATIONAL),
@@ -110,7 +110,8 @@ uploads = Table(
     Column("part_count", Integer, nullable=False, info=OPERATIONAL),
     Column("status", String(10), nullable=False, server_default="open", info=OPERATIONAL),
     Column("etag", String(80), nullable=True, info=OPERATIONAL),
-    Column("job_id", Uuid[uuid.UUID](), ForeignKey("jobs.id"), nullable=True, info=OPERATIONAL),
+    Column("job_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    tenant_foreign_key("job_id", "jobs"),
     Column(
         "last_activity_at",
         DateTime(timezone=True),
@@ -132,14 +133,21 @@ uploads = Table(
     UniqueConstraint("id", "project_id"),
     UniqueConstraint("result_set_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
     ForeignKeyConstraint(
-        ["slide_id", "project_id"], ["slides.id", "slides.project_id"], use_alter=True
+        ["case_id", "project_id", "tenant_id"], ["cases.id", "cases.project_id", "cases.tenant_id"]
     ),
-    ForeignKeyConstraint(["slide_upload_id", "project_id"], ["uploads.id", "uploads.project_id"]),
     ForeignKeyConstraint(
-        ["result_set_id", "project_id"],
-        ["result_sets.id", "result_sets.project_id"],
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
+        use_alter=True,
+    ),
+    ForeignKeyConstraint(
+        ["slide_upload_id", "project_id", "tenant_id"],
+        ["uploads.id", "uploads.project_id", "uploads.tenant_id"],
+    ),
+    ForeignKeyConstraint(
+        ["result_set_id", "project_id", "tenant_id"],
+        ["result_sets.id", "result_sets.project_id", "result_sets.tenant_id"],
         use_alter=True,
     ),
     one_of("status", UploadStatus),
@@ -188,4 +196,5 @@ uploads = Table(
         "last_activity_at",
         postgresql_where=text("status = 'open'"),
     ),
+    tenant_unique("id", "project_id"),
 )

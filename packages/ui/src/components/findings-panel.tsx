@@ -33,6 +33,7 @@ import {
   nextStagingStep,
   type StagingPanelArea,
   type StagingStep,
+  sizeCheck,
   stagingSteps,
   stepBack,
   zoneNumbers,
@@ -413,6 +414,42 @@ function CellFindings({
   );
 }
 
+function SizeNote({ area, onMeasure }: { area: StagingPanelArea; onMeasure: () => void }) {
+  const check = sizeCheck(area);
+  if (check === null) return null;
+  const low = formatAreaMm(area.low);
+  const high = formatAreaMm(area.high);
+  if (check === "within") {
+    return (
+      <span data-slot="size-check" data-check={check} className="text-caption text-fg-dim">
+        <Trans>
+          Within the AI's likely range, {low} to {high}.
+        </Trans>
+      </span>
+    );
+  }
+  return (
+    <div data-slot="size-check" data-check={check} className="grid gap-2" role="status">
+      <span className="text-body-sm text-warn">
+        {check === "above" ? (
+          <Trans>
+            Larger than the AI's likely range of {low} to {high}. Check the line runs across the
+            widest part of the area.
+          </Trans>
+        ) : (
+          <Trans>
+            Smaller than the AI's likely range of {low} to {high}. Check the line runs across the
+            widest part of the area.
+          </Trans>
+        )}
+      </span>
+      <Button size="sm" onClick={onMeasure}>
+        <Trans>Check the line</Trans>
+      </Button>
+    </div>
+  );
+}
+
 type AreaStepsProps = {
   area: StagingPanelArea;
   number: number;
@@ -477,6 +514,9 @@ function AreaSteps({ area, number, onCall, onMeasure, onCount }: AreaStepsProps)
             title={step.title}
             done={step.done}
             answer={step.answer}
+            doneNote={
+              step.name === "size" ? <SizeNote area={area} onMeasure={onMeasure} /> : undefined
+            }
             data-step={step.name}
           >
             {bodies[step.name](step)}

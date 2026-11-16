@@ -135,6 +135,7 @@ export function SmartLayer({
       const slide = latest.current.engine.getSlide();
       const context: SmartServicesContext = {
         slide: { width: slide?.width ?? 0, height: slide?.height ?? 0 },
+        slideId,
         open: latest.current.openRequest,
       };
       services.current = latest.current.loader(context);

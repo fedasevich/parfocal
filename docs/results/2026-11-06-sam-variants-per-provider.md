@@ -65,7 +65,7 @@ The same gate run kept the encoder numbers of the [export result](2026-11-06-pat
 
 - The provider split of [ADR 0148](../adr/0148-browser-ml-runtime-onnxruntime-web.md) (browser models on onnxruntime-web 1.31.1) holds with the graphs this repository exports. Run 1 matches the 1.1 to 1.3 s and 28 to 33 ms of the runtime spike. Run 2 is about 40 percent slower on encode, which follows the load from the other agents, not the graphs, because the graphs were the same bytes.
 - Neither quantised AIS decoder is faster. On WebGPU the int8 weight-only graph costs 1 to 8 percent more and on WebAssembly 10 to 13 percent more, and the uint8 dynamic graph costs 7 to 12 percent more on WebAssembly. The likely cause is that onnxruntime keeps `DequantizeLinear` out of constant folding to preserve the QDQ form, so the weights are dequantised on every run. Not measured.
-- The int8 weight-only graph is a quarter of the fp32 download (11.1 MB against 44.2 MB) at a mean foreground IoU of 0.9994, and it is the only quantised AIS graph that runs on both providers. The trade of download against run time is recorded in ADR XXXX (PathoSAM graph per execution provider).
+- The int8 weight-only graph is a quarter of the fp32 download (11.1 MB against 44.2 MB) at a mean foreground IoU of 0.9994, and it is the only quantised AIS graph that runs on both providers. The trade of download against run time is recorded in [ADR 0250](../adr/0250-sam-graph-per-execution-provider.md) (PathoSAM graph per execution provider).
 - The first click decode after an encode still costs 110 ms on WebGPU in run 2, so the warm-up click of ADR 0148 stays.
 - Assumption: a pseudo-random input times the same as a slide patch, because the graphs have no data-dependent control flow.
 

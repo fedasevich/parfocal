@@ -1,3 +1,4 @@
+import importlib
 import inspect
 from pathlib import Path
 
@@ -6,18 +7,20 @@ import pytest
 
 from parfocal_common.repository import repository_root
 from parfocal_deploy import modal_app
+from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
+    FUNCTION_SECRETS,
     FUNCTIONS,
     INGEST_FUNCTION,
     INGEST_OPTIONS,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
+    SECRETS,
     WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
     app,
-    requirements,
 )
 from parfocal_ingest.settings import (
     INGEST_MEMORY_LIMIT_MIB,
@@ -57,18 +60,38 @@ def test_the_parse_sandbox_blocks_the_network_and_carries_no_secret() -> None:
     assert "block_network" in inspect.signature(modal.App.function).parameters
 
 
+def test_secrets_are_attached_per_function_and_not_to_the_app(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    built: list[dict[str, object]] = []
+    real_app = modal.App
+
+    def recording_app(*_arguments: object, **options: object) -> modal.App:
+        built.append(options)
+        return real_app(APP_NAME)
+
+    assert sorted(FUNCTION_SECRETS) == sorted(FUNCTIONS)
+    assert all(FUNCTION_SECRETS[name] == SECRETS for name in FUNCTIONS)
+    monkeypatch.setattr(modal, "App", recording_app)
+    try:
+        importlib.reload(modal_app)
+    finally:
+        monkeypatch.undo()
+        importlib.reload(modal_app)
+    assert built
+    assert all("secrets" not in options for options in built)
+
+
 def test_the_app_deploys_no_cron() -> None:
     assert "schedule" not in WEB_OPTIONS
     assert "schedule" not in INGEST_OPTIONS
     assert MAX_DEPLOYED_CRONS == 5
 
 
-def test_the_image_installs_what_the_packages_declare_and_no_workspace_package() -> None:
-    found = requirements()
-    assert any(requirement.startswith("fastapi") for requirement in found)
-    assert any(requirement.startswith("asyncpg") for requirement in found)
-    assert any(requirement.startswith("openslide-python") for requirement in found)
-    assert not any(requirement.startswith("parfocal-") for requirement in found)
+def test_the_image_installs_the_app_lock_and_no_workspace_package() -> None:
+    found = pinned(committed(APP_LOCK))
+    assert {"fastapi", "asyncpg", "openslide-python", "typst"} <= set(found)
+    assert not any(name.startswith("parfocal-") for name in found)
 
 
 def test_the_web_function_refuses_requests_without_the_proxy_token() -> None:
@@ -102,3 +125,21 @@ def test_no_deployed_module_climbs_a_fixed_number_of_folders_at_import() -> None
         if ".parents[" in path.read_text()
     ]
     assert offenders == []
+
+
+def test_the_served_api_warms_the_deployed_embedder_through_modal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi import FastAPI
+
+    import parfocal_api.app
+    from parfocal_common.warm_gate import EMBEDDER_FUNCTION, GPU_POOL_APP, ModalPools, WarmGate
+
+    monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    served = modal_app.serve()
+    gate = served.state.warm_gate
+    assert isinstance(gate, WarmGate)
+    assert isinstance(gate.pools, ModalPools)
+    assert (gate.pools.app_name, gate.function_name) == (GPU_POOL_APP, EMBEDDER_FUNCTION)
+    assert gate.pools.environment is None
+    assert served.state.gpu_pools is gate.pools

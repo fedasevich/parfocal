@@ -1,5 +1,7 @@
 export type DebugCamera = { x: number; y: number; scale: number };
 
+export type DebugJump = { x: number; y: number; magnification: number };
+
 export type ParfocalHandle = {
   state?: unknown;
   getStats?: () => unknown;
@@ -7,6 +9,7 @@ export type ParfocalHandle = {
   getCamera?: () => DebugCamera | null;
   setCamera?: (camera: DebugCamera) => void;
   getRoute?: () => string;
+  jumpTo?: (target: DebugJump) => Promise<number>;
   getLod?: () => number;
   editor?: unknown;
   segmenter?: unknown;
@@ -41,6 +44,7 @@ export const parfocalMembers = [
   "getSample",
   "getCamera",
   "setCamera",
+  "jumpTo",
   "getRoute",
   "getLod",
   "editor",

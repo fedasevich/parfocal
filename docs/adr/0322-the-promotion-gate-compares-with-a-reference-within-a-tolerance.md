@@ -25,4 +25,4 @@ Option 2, in `parfocal_common.promotion_gate` so the API and the ML worker share
 
 - Promoting needs a measured report from a run on the benchmark. The endpoint takes the numbers, it does not run the evaluation itself.
 - A tolerance of 0.01 lets a slightly worse model pass when it is cheaper or faster. A stricter rule is one constant to change.
-- TODO: add the tumor map threshold when MLEVAL-005 records its size error and FROC on CAMELYON16 test slides.
+- MLEVAL-005 (tumor map evaluation) measured the tumor map on 2026-11-16, and the gate's tumor map baseline is FROC 0.7222 and Dice 0.8986 pooled over CAMELYON16 `test_001`, `test_065` and `test_013`, each with the 0.01 tolerance ([result](../results/2026-11-16-tumor-map-evaluation-on-three-test-slides.md)). TODO: add size error once it is scored per lesion instead of per outline polygon.

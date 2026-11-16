@@ -15,6 +15,9 @@ dependencies = [
 [project.optional-dependencies]
 pdf = ["typst>=0.15,<0.16"]
 
+[dependency-groups]
+serve = ["uvicorn>=0.54,<0.55"]
+
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]
 build-backend = "uv_build"
@@ -25,4 +28,4 @@ parfocal-common = { workspace = true }
 [tool.basedpyright]
 typeCheckingMode = "strict"
 pythonVersion = "3.14"
-extraPaths = ["tests", "../../workers/ingest/tests"]
+extraPaths = ["tests", "../../workers/ingest/tests", "../../workers/ml/tests"]

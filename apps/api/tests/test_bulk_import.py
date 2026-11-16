@@ -9,9 +9,40 @@ from fixture_support import fixture_path
 from upload_support import Lab, run_worker, start_upload
 from workspace_support import make_case, owner
 
-from parfocal_api.bulk_import import Outcome, import_folder, main, read_manifest, wait_for
+from parfocal_api.bulk_import import (
+    Outcome,
+    dropped_files,
+    import_folder,
+    import_named,
+    main,
+    printed,
+    read_manifest,
+    wait_for,
+)
 
 CASES = [f"S26-{number}" for number in range(201, 206)]
+REGIONS = (
+    Path(__file__).resolve().parents[3]
+    / "workers"
+    / "ingest"
+    / "tests"
+    / "fixtures"
+    / "results"
+    / "regions.geojson"
+)
+
+
+def pilot_folder(root: Path) -> Path:
+    source = fixture_path("synthetic-jpeg.tiff")
+    folder = root / "pilot"
+    (folder / "S26-301").mkdir(parents=True)
+    shutil.copy(source, folder / "S26-301" / "A1_HE.tiff")
+    shutil.copy(REGIONS, folder / "S26-301" / "A1_HE.geojson")
+    shutil.copy(source, folder / "S26-302_B1.tiff")
+    shutil.copy(REGIONS, folder / "S26-302_B1.geojson")
+    (folder / ".DS_Store").write_bytes(b"x")
+    (folder / "manifest.csv").write_text("file,case\n")
+    return folder
 
 
 def slide_folder(root: Path) -> tuple[Path, str]:
@@ -29,6 +60,10 @@ def slide_folder(root: Path) -> tuple[Path, str]:
         shutil.copy(source, folder / relative)
         lines.append(f"{relative.as_posix()},{case}")
     return folder, "\n".join(lines) + "\n"
+
+
+def uploads_in(database: str, project: uuid.UUID) -> object:
+    return owner(database, f"SELECT count(*) FROM uploads WHERE project_id = '{project}'")[0][0]
 
 
 def test_the_manifest_names_every_row_it_cannot_use(tmp_path: Path) -> None:
@@ -105,6 +140,9 @@ def test_twenty_fixture_slides_land_in_five_cases(
         assert (report.cases_created, report.cases_existing) == (4, 1)
         outcomes = [item.outcome for item in report.files]
         assert outcomes == [Outcome.RESUMED] + [Outcome.UPLOADED] * 19
+        pending = import_folder(api(lab.lead), storage, lab.project, folder, manifest)
+        assert {item.outcome for item in pending.files} == {Outcome.ALREADY_SENT}
+        assert uploads_in(database, lab.project) == 20
 
         run_worker(database, lab.tenant_id, tmp_path / "work")
         wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0)
@@ -138,3 +176,114 @@ def test_twenty_fixture_slides_land_in_five_cases(
     assert owner(database, f"SELECT count(*) FROM slides WHERE project_id = '{lab.project}'") == [
         (20,)
     ]
+
+
+def test_hidden_files_and_the_manifest_are_not_dropped(tmp_path: Path) -> None:
+    folder = pilot_folder(tmp_path)
+    assert [path.relative_to(folder).as_posix() for path in dropped_files(folder)] == [
+        "S26-301/A1_HE.geojson",
+        "S26-301/A1_HE.tiff",
+        "S26-302_B1.geojson",
+        "S26-302_B1.tiff",
+    ]
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures("storage")
+def test_a_file_without_a_case_or_a_slide_stops_the_named_import(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    folder = pilot_folder(tmp_path)
+    shutil.copy(fixture_path("synthetic-jpeg.tiff"), folder / "overview.tiff")
+    shutil.copy(REGIONS, folder / "stray.geojson")
+    (folder / "notes.txt").write_text("x")
+    with httpx2.Client(timeout=30) as storage:
+        report = import_named(api(lab.lead), storage, lab.project, folder)
+    assert not report.ok
+    assert sorted((item.column, item.message) for item in report.problems) == [
+        ("pilot/notes.txt", "Neither a slide nor a result"),
+        ("pilot/overview.tiff", "No case number in its folder or file name"),
+        ("pilot/stray.geojson", "The result matches no slide"),
+    ]
+    assert owner(database, f"SELECT count(*) FROM cases WHERE project_id = '{lab.project}'") == [
+        (0,)
+    ]
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures("storage")
+def test_slides_and_results_land_in_cases_named_by_their_folders_and_files(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    folder = pilot_folder(tmp_path)
+    with httpx2.Client(timeout=30) as storage:
+        checked = import_named(api(lab.lead), storage, lab.project, folder, dry_run=True)
+        assert (checked.ok, checked.cases_created, checked.cases_existing) == (True, 2, 0)
+        assert sorted((item.file, item.case, item.outcome) for item in checked.files) == [
+            ("pilot/S26-301/A1_HE.geojson", "pilot/S26-301/A1_HE.tiff", Outcome.PLANNED),
+            ("pilot/S26-301/A1_HE.tiff", "S26-301", Outcome.PLANNED),
+            ("pilot/S26-302_B1.geojson", "pilot/S26-302_B1.tiff", Outcome.PLANNED),
+            ("pilot/S26-302_B1.tiff", "S26-302", Outcome.PLANNED),
+        ]
+        assert owner(
+            database, f"SELECT count(*) FROM cases WHERE project_id = '{lab.project}'"
+        ) == [(0,)]
+
+        report = import_named(api(lab.lead), storage, lab.project, folder)
+        assert {item.outcome for item in report.files} == {Outcome.UPLOADED}
+        wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0)
+        assert (report.ok, report.unfinished) == (False, 4)
+        assert "sends nothing twice" in printed(report)
+
+        processing = import_named(api(lab.lead), storage, lab.project, folder)
+        assert [item.outcome for item in processing.files] == [Outcome.ALREADY_SENT] * 4
+        assert {item.upload_id for item in processing.files} == {
+            item.upload_id for item in report.files
+        }
+        assert uploads_in(database, lab.project) == 4
+
+        run_worker(database, lab.tenant_id, tmp_path / "work")
+        wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0, import_as_is=True)
+        importing = import_named(api(lab.lead), storage, lab.project, folder)
+        assert sorted(item.outcome for item in importing.files) == sorted(
+            [Outcome.ALREADY_IN_CASE] * 2 + [Outcome.ALREADY_SENT] * 2
+        )
+        assert uploads_in(database, lab.project) == 4
+
+        run_worker(database, lab.tenant_id, tmp_path / "work")
+        wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0, import_as_is=True)
+        assert report.ok, report
+        assert {item.status for item in report.files} == {"ready"}
+
+        placed = owner(
+            database,
+            "SELECT c.label, s.label, count(r.id) FROM slides s "
+            "JOIN cases c ON c.id = s.case_id "
+            "LEFT JOIN result_sets r ON r.slide_id = s.id AND r.deleted_at IS NULL "
+            f"WHERE s.project_id = '{lab.project}' AND s.published_at IS NOT NULL "
+            "GROUP BY c.label, s.label ORDER BY c.label",
+        )
+        assert placed == [("S26-301", "A1_HE", 1), ("S26-302", "S26-302_B1", 1)]
+
+        again = import_named(api(lab.lead), storage, lab.project, folder)
+    assert (again.ok, again.cases_created, again.cases_existing) == (True, 0, 2)
+    assert sorted(item.outcome for item in again.files) == sorted(
+        [Outcome.ALREADY_IN_CASE] * 2 + [Outcome.ALREADY_IMPORTED] * 2
+    )
+    assert uploads_in(database, lab.project) == 4
+
+    owner(database, "UPDATE slides SET deleted_at = now() WHERE label = 'S26-302_B1'")
+    owner(
+        database,
+        "UPDATE result_sets SET deleted_at = now() FROM slides "
+        "WHERE slides.id = result_sets.slide_id AND slides.label = 'A1_HE'",
+    )
+    with httpx2.Client(timeout=30) as storage:
+        deleted = import_named(api(lab.lead), storage, lab.project, folder)
+    assert sorted((item.file, item.outcome) for item in deleted.files) == [
+        ("pilot/S26-301/A1_HE.geojson", Outcome.UPLOADED),
+        ("pilot/S26-301/A1_HE.tiff", Outcome.ALREADY_IN_CASE),
+        ("pilot/S26-302_B1.geojson", Outcome.UPLOADED),
+        ("pilot/S26-302_B1.tiff", Outcome.UPLOADED),
+    ]
+    assert uploads_in(database, lab.project) == 7

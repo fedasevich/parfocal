@@ -23,9 +23,12 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | Background jobs, workflows, claims and the kill test | [jobs.md](jobs.md) |
 | Identifying slide formats at ingest and the formats CI job | [slide-formats.md](slide-formats.md) |
 | Resumable uploads to R2 with Uppy, R2 and MinIO differences, and the upload spike | [uploads.md](uploads.md) |
+| The runbook for importing a pilot lab's slides and AI results with the bulk import command | [pilot-onboarding.md](pilot-onboarding.md) |
 | Load tests with Locust, the target guard and the local smoke run | [load-tests.md](load-tests.md) |
 | Reading imported AI result files and keeping IDs across sets | [results.md](results.md) |
 | Evaluation metrics from decisions and reviewed layers | [evaluation.md](evaluation.md) |
 | shadcn components, kit tokens in Tailwind, Storybook and the axe suite | [frontend-ui.md](frontend-ui.md) |
 | Deploy definitions, the one-time bootstrap and what the first production deploy needs | [deploy.md](deploy.md) |
 | The nightly memory and leak suite, its budgets and the thresholds still to set | [memory-suite.md](memory-suite.md) |
+| Where each runtime secret lives, the secret scanner and how to rotate every secret | [secrets.md](secrets.md) |
+| How to provision and deprovision a tenant with the command, and the drill run | [tenant-provisioning.md](tenant-provisioning.md) |

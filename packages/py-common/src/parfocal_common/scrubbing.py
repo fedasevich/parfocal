@@ -51,6 +51,15 @@ ALLOWED_FIELDS = frozenset(
         "item_eight",
         "item_nine",
         "item_ten",
+        "ok",
+        "renderer",
+        "frames",
+        "p50_ms",
+        "p95_ms",
+        "long_frames",
+        "slo",
+        "good_permille",
+        "burn_tenths",
     }
 )
 

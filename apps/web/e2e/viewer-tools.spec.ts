@@ -182,7 +182,7 @@ test("the ruler adds M1, and Remove takes it away with Undo", async ({ page }) =
   await page.goto(hrefOf(links, "Smart minimap · Reading at 10x"));
   await page.getByRole("button", { name: "Measure (L)" }).click();
   await expect(page).toHaveURL(/tool=ruler/);
-  await expect(page.getByText("8.00 mm").first()).toBeVisible();
+  await expect(page.getByText("7.70 mm").first()).toBeVisible();
   await page.getByRole("button", { name: "Remove M1" }).click();
   await expect(page).not.toHaveURL(/tool=ruler/);
   await page.getByRole("button", { name: "Undo" }).click();

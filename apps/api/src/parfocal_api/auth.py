@@ -7,6 +7,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, cast
+from urllib.parse import urlencode
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -33,6 +34,12 @@ from parfocal_api.problems import (
     UnauthenticatedError,
 )
 from parfocal_api.rate_limits import RateLimits, seconds_to_wait
+from parfocal_api.sso import (
+    connection_for_domain,
+    linked_subject,
+    provision_member,
+    sso_connection_of,
+)
 from parfocal_api.tables import (
     AVATAR_COLOURS,
     DEFAULT_IDLE_LOCK_MINUTES,
@@ -48,7 +55,7 @@ from parfocal_api.tables import (
     sessions,
     users,
 )
-from parfocal_api.token_keys import decoded_key
+from parfocal_api.token_keys import decoded_key, listed_keys
 from parfocal_api.zitadel_login import ZitadelLogin
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
@@ -73,23 +80,36 @@ class SessionKeyError(ValueError):
         super().__init__("SESSION_KEY must be 32 bytes encoded as URL-safe base64")
 
 
+def session_aead(key: str) -> AESGCM:
+    try:
+        raw = decoded_key(key)
+    except ValueError as error:
+        raise SessionKeyError from error
+    if len(raw) != 32:
+        raise SessionKeyError
+    return AESGCM(raw)
+
+
 class SessionCipher:
-    def __init__(self, key: str) -> None:
-        try:
-            raw = decoded_key(key)
-        except ValueError as error:
-            raise SessionKeyError from error
-        if len(raw) != 32:
+    def __init__(self, keys: str) -> None:
+        listed = listed_keys(keys)
+        if not listed:
             raise SessionKeyError
-        self._aead = AESGCM(raw)
+        self._aeads = [session_aead(key) for key in listed]
 
     def seal(self, value: dict[str, Any]) -> bytes:
         nonce = secrets.token_bytes(12)
-        return nonce + self._aead.encrypt(nonce, json.dumps(value).encode(), None)
+        return nonce + self._aeads[0].encrypt(nonce, json.dumps(value).encode(), None)
 
     def open(self, sealed: bytes) -> dict[str, Any]:
-        opened: dict[str, Any] = json.loads(self._aead.decrypt(sealed[:12], sealed[12:], None))
-        return opened
+        for aead in self._aeads:
+            try:
+                plain = aead.decrypt(sealed[:12], sealed[12:], None)
+            except InvalidTag:
+                continue
+            opened: dict[str, Any] = json.loads(plain)
+            return opened
+        raise InvalidTag
 
 
 @dataclass(frozen=True)
@@ -350,6 +370,7 @@ def avatar_colour_of(subject: str) -> int:
 
 
 SEEDED_SUBJECT_PREFIX = "seed:"
+NO_SSO_CONNECTION_PATH = "/sign-in"
 
 
 async def adopt_seeded_user(connection: AsyncConnection, subject: str, email: str) -> None:
@@ -362,12 +383,24 @@ async def adopt_seeded_user(connection: AsyncConnection, subject: str, email: st
         )
 
 
-async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> uuid.UUID | None:
-    subject = str(claims["sub"])
+@dataclass(frozen=True)
+class SignedIn:
+    subject: str
+    tenant_id: uuid.UUID | None
+
+
+async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> SignedIn:
+    token_subject = str(claims["sub"])
     email = claims.get("email") if claims.get("email_verified") is True else None
+    sso = await sso_connection_of(connection, claims)
+    if sso is not None and email is not None and not sso.vouches_for(str(email)):
+        email = None
     name = str(claims.get("name") or email or "New user")
     if email is not None:
-        await adopt_seeded_user(connection, subject, str(email))
+        await adopt_seeded_user(connection, token_subject, str(email))
+    subject = await linked_subject(
+        connection, token_subject, sso, None if email is None else str(email)
+    )
     user_id = await connection.scalar(
         upsert(users)
         .values(
@@ -387,19 +420,24 @@ async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> u
         AuditTarget.PERSON,
         person=subject,
     )
+    if sso is not None:
+        assert isinstance(user_id, uuid.UUID)
+        provisioned = await provision_member(connection, sso, user_id, subject, claims)
+        if provisioned is not None:
+            return SignedIn(subject, provisioned)
     last_tenant = await connection.scalar(
         select(memberships.c.tenant_id)
         .join(users, users.c.id == memberships.c.user_id)
         .where(users.c.id == user_id, memberships.c.tenant_id == users.c.last_tenant_id)
     )
     if last_tenant is not None:
-        return last_tenant
+        return SignedIn(subject, last_tenant)
     tenant_ids = (
         await connection.scalars(
             select(memberships.c.tenant_id).where(memberships.c.user_id == user_id).limit(2)
         )
     ).all()
-    return tenant_ids[0] if len(tenant_ids) == 1 else None
+    return SignedIn(subject, tenant_ids[0] if len(tenant_ids) == 1 else None)
 
 
 def set_cookie(response: Response, name: str, value: str, max_age: int, same_site: str) -> None:
@@ -438,19 +476,20 @@ async def open_session(
     session_id = secrets.token_urlsafe(32)
     previous = request.cookies.get(SESSION_COOKIE)
     async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        signed_in = await sign_in_user(connection, claims)
         if previous:
             await connection.execute(
                 delete(sessions).where(
                     sessions.c.id_hash == digest(previous),
-                    sessions.c.subject == str(claims["sub"]),
+                    sessions.c.subject == signed_in.subject,
                 )
             )
-        active_tenant_id = await sign_in_user(connection, claims)
+        active_tenant_id = signed_in.tenant_id
         limits = await session_limits(connection, active_tenant_id)
         await connection.execute(
             insert(sessions).values(
                 id_hash=digest(session_id),
-                subject=str(claims["sub"]),
+                subject=signed_in.subject,
                 tokens=auth.cipher.seal(sealed_tokens(tokens, claims)),
                 access_expires_at=now() + timedelta(seconds=tokens.expires_in),
                 expires_at=now() + limits.lifetime,
@@ -464,9 +503,11 @@ async def open_session(
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.get("/login", include_in_schema=False)
-async def start_login(
-    request: Request, return_to: str = "/", reauth: bool = False
+async def redirect_to_identity(
+    request: Request,
+    return_to: str,
+    prompt: str | None = None,
+    extra_scopes: tuple[str, ...] = (),
 ) -> RedirectResponse:
     state = auth_state(request)
     login_state = secrets.token_urlsafe(32)
@@ -486,11 +527,28 @@ async def start_login(
             )
         )
     url = await state.identity.authorization_url(
-        login_state, nonce, code_challenge(verifier), prompt="login" if reauth else None
+        login_state, nonce, code_challenge(verifier), prompt=prompt, extra_scopes=extra_scopes
     )
     response = RedirectResponse(url, status_code=302)
     set_cookie(response, LOGIN_COOKIE, binding, int(LOGIN_LIFETIME.total_seconds()), "lax")
     return response
+
+
+@router.get("/login", include_in_schema=False)
+async def start_login(
+    request: Request, return_to: str = "/", reauth: bool = False
+) -> RedirectResponse:
+    return await redirect_to_identity(request, return_to, prompt="login" if reauth else None)
+
+
+@router.get("/sso", include_in_schema=False)
+async def start_sso_login(request: Request, domain: str, return_to: str = "/") -> RedirectResponse:
+    async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as connection:
+        sso = await connection_for_domain(connection, domain)
+    if sso is None:
+        query = urlencode({"sso": "none", "return_to": return_to})
+        return RedirectResponse(f"{NO_SSO_CONNECTION_PATH}?{query}", status_code=302)
+    return await redirect_to_identity(request, return_to, extra_scopes=sso.scopes())
 
 
 @router.get("/callback", include_in_schema=False)

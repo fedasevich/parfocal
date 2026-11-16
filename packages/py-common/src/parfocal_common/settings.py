@@ -1,11 +1,13 @@
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, PositiveFloat, SecretStr
+from pydantic import AnyHttpUrl, PositiveFloat, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_common.object_store import StorageLocation
+from parfocal_common.transport import require_https
 
 
 class AppEnv(StrEnum):
@@ -40,6 +42,9 @@ LOCAL_BACKENDS = Backends(
 )
 
 
+ENCRYPTED_TRANSPORT_ENVIRONMENTS = frozenset({AppEnv.STAGING, AppEnv.PROD})
+
+
 def default_backends(app_env: AppEnv) -> Backends:
     if app_env is AppEnv.PROD:
         return PRODUCTION_BACKENDS
@@ -65,6 +70,13 @@ class ServiceSettings(BaseSettings):
     flag_backend: FlagBackend | None = None
     flag_file: str = "flags.json"
     email_outbox: str = ".outbox/email.jsonl"
+    alert_page_email: str = "security@parfocal.eu"
+    alert_ticket_email: str = "security@parfocal.eu"
+    otlp_endpoint: str | None = None
+    otlp_headers: SecretStr | None = None
+
+    def encrypted_transport(self) -> bool:
+        return self.app_env in ENCRYPTED_TRANSPORT_ENVIRONMENTS
 
     def backends(self) -> Backends:
         defaults = default_backends(self.app_env)
@@ -77,15 +89,55 @@ class ServiceSettings(BaseSettings):
         )
 
 
+LOCAL_STORAGE_SECRET = "parfocal-local-secret"
+
+
+class LocalSecretInProductionError(ValueError):
+    def __init__(self, name: str) -> None:
+        super().__init__(f"{name} is the local development value, set it from the secret store")
+
+
+class StorageKeyPrefixError(ValueError):
+    def __init__(self, prefix: str) -> None:
+        super().__init__(
+            f"STORAGE_KEY_PREFIX {prefix!r} is not a preview prefix such as previews/pr-12/, "
+            "and production never takes one"
+        )
+
+
+PREVIEW_KEY_PREFIX = re.compile(r"previews/pr-[1-9][0-9]{0,6}/")
+
+
 class StorageSettings(ServiceSettings):
     storage_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:9000")
     storage_region: str = "auto"
     storage_bucket: str = "parfocal-local"
+    storage_key_prefix: str = ""
     storage_access_key_id: str = "parfocal"
-    storage_secret_access_key: SecretStr = SecretStr("parfocal-local-secret")
+    storage_secret_access_key: SecretStr = SecretStr(LOCAL_STORAGE_SECRET)
     link_trusted_origins: list[str] = []
     link_read_seconds: PositiveFloat = 30.0
     link_fetch_seconds: PositiveFloat = 3600.0
+
+    @model_validator(mode="after")
+    def no_local_secret_in_production(self) -> StorageSettings:
+        local = self.storage_secret_access_key.get_secret_value() == LOCAL_STORAGE_SECRET
+        if self.app_env is AppEnv.PROD and local:
+            raise LocalSecretInProductionError("STORAGE_SECRET_ACCESS_KEY")
+        return self
+
+    @model_validator(mode="after")
+    def only_previews_take_a_key_prefix(self) -> StorageSettings:
+        prefix = self.storage_key_prefix
+        if prefix and (self.app_env is AppEnv.PROD or PREVIEW_KEY_PREFIX.fullmatch(prefix) is None):
+            raise StorageKeyPrefixError(prefix)
+        return self
+
+    @model_validator(mode="after")
+    def storage_over_tls(self) -> StorageSettings:
+        if self.encrypted_transport():
+            require_https("STORAGE_ENDPOINT", self.storage_endpoint)
+        return self
 
     def storage(self) -> StorageLocation:
         return StorageLocation(
@@ -94,6 +146,7 @@ class StorageSettings(ServiceSettings):
             bucket=self.storage_bucket,
             access_key_id=self.storage_access_key_id,
             secret_access_key=self.storage_secret_access_key.get_secret_value(),
+            key_prefix=self.storage_key_prefix,
         )
 
 

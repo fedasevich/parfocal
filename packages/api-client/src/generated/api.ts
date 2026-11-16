@@ -1777,6 +1777,13 @@ export interface DeletedProject {
   deleted_at: string;
 }
 
+export type Device = (typeof Device)[keyof typeof Device];
+
+export const Device = {
+  fast: "fast",
+  slow: "slow",
+} as const;
+
 export type DisagreementReasonsWidth =
   (typeof DisagreementReasonsWidth)[keyof typeof DisagreementReasonsWidth];
 
@@ -1963,6 +1970,10 @@ export interface EmailSchedule {
    * @maxLength 60
    */
   time_zone?: string;
+}
+
+export interface EmbedderWarm {
+  device: Device;
 }
 
 export interface EmergencyGrant {
@@ -2302,6 +2313,36 @@ export interface FormVersion {
   project_id: string;
   version: number;
   created_at: string;
+}
+
+/**
+ * @minimum 0
+ * @maximum 60000
+ */
+export type FrameMs = number;
+
+export type FrameSummaryRenderer = (typeof FrameSummaryRenderer)[keyof typeof FrameSummaryRenderer];
+
+export const FrameSummaryRenderer = {
+  viv: "viv",
+  "deck-webgpu": "deck-webgpu",
+  "custom-webgpu": "custom-webgpu",
+} as const;
+
+export interface FrameSummary {
+  renderer: FrameSummaryRenderer;
+  /**
+   * @minimum 1
+   * @maximum 1000000
+   */
+  frames: number;
+  p50_ms: FrameMs;
+  p95_ms: FrameMs;
+  /**
+   * @minimum 0
+   * @maximum 1000000
+   */
+  long_frames: number;
 }
 
 /**
@@ -5382,6 +5423,22 @@ export interface SlideDetailsChange {
   label?: string | null;
 }
 
+export interface SlideEmbeddings {
+  slide_id: string;
+  encoder: string;
+  dtype: string;
+  dims: number[];
+  level: number;
+  downsample: number;
+  tile: number;
+  level_width: number;
+  level_height: number;
+  columns: number;
+  rows: number;
+  tiles: string;
+  tile_count: number;
+}
+
 export interface SlideMove {
   case_id: string;
   /**
@@ -5882,6 +5939,13 @@ export interface TrackRecord {
   typers: TyperRecord[];
 }
 
+export interface TumorMapJob {
+  job_id: string;
+  result_set_id: string;
+  slide_id: string;
+  status: JobStatus;
+}
+
 export interface UploadMetadata {
   project_id: string;
   case_id?: string | null;
@@ -6091,6 +6155,20 @@ export type GetResultsSchema200 = { [key: string]: unknown };
 export type GetResultsTemplate200 = { [key: string]: unknown };
 
 export type FindOpenUploadParams = {
+  project_id: string;
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * @minimum 1
+   */
+  size: number;
+  last_modified?: number | null;
+};
+
+export type FindSentUploadsParams = {
   project_id: string;
   /**
    * @minLength 1
@@ -7044,6 +7122,313 @@ export const useEndMaintenance = <TError = Problem, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof endMaintenance>>, TError, void, TContext> => {
   return useMutation(getEndMaintenanceMutationOptions(options), queryClient);
+};
+
+export type raiseSyntheticErrorResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type raiseSyntheticErrorResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type raiseSyntheticErrorResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type raiseSyntheticErrorResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type raiseSyntheticErrorResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type raiseSyntheticErrorResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type raiseSyntheticErrorResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type raiseSyntheticErrorResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type raiseSyntheticErrorResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type raiseSyntheticErrorResponseSuccess = raiseSyntheticErrorResponse204 & {
+  headers: Headers;
+};
+export type raiseSyntheticErrorResponseError = (
+  | raiseSyntheticErrorResponse400
+  | raiseSyntheticErrorResponse401
+  | raiseSyntheticErrorResponse403
+  | raiseSyntheticErrorResponse404
+  | raiseSyntheticErrorResponse409
+  | raiseSyntheticErrorResponse422
+  | raiseSyntheticErrorResponse429
+  | raiseSyntheticErrorResponse500
+) & {
+  headers: Headers;
+};
+
+export type raiseSyntheticErrorResponse =
+  | raiseSyntheticErrorResponseSuccess
+  | raiseSyntheticErrorResponseError;
+
+export const getRaiseSyntheticErrorUrl = () => {
+  return `/api/platform/drills/synthetic-error`;
+};
+
+/**
+ * @summary Raise Synthetic Error
+ */
+export const raiseSyntheticError = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<raiseSyntheticErrorResponse> => {
+  return apiFetch<raiseSyntheticErrorResponse>(getRaiseSyntheticErrorUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRaiseSyntheticErrorMutationKey = () => ["raiseSyntheticError"] as const;
+
+export const getRaiseSyntheticErrorMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof raiseSyntheticError>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof raiseSyntheticError>>, TError, void, TContext> => {
+  const mutationKey = getRaiseSyntheticErrorMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof raiseSyntheticError>>,
+    void
+  > = () => {
+    return raiseSyntheticError(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RaiseSyntheticErrorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof raiseSyntheticError>>
+>;
+
+export type RaiseSyntheticErrorMutationError = Problem;
+
+/**
+ * @summary Raise Synthetic Error
+ */
+export const useRaiseSyntheticError = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof raiseSyntheticError>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof raiseSyntheticError>>, TError, void, TContext> => {
+  return useMutation(getRaiseSyntheticErrorMutationOptions(options), queryClient);
+};
+
+export type reportViewerFramesResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type reportViewerFramesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reportViewerFramesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reportViewerFramesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reportViewerFramesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reportViewerFramesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reportViewerFramesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reportViewerFramesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reportViewerFramesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reportViewerFramesResponseSuccess = reportViewerFramesResponse204 & {
+  headers: Headers;
+};
+export type reportViewerFramesResponseError = (
+  | reportViewerFramesResponse400
+  | reportViewerFramesResponse401
+  | reportViewerFramesResponse403
+  | reportViewerFramesResponse404
+  | reportViewerFramesResponse409
+  | reportViewerFramesResponse422
+  | reportViewerFramesResponse429
+  | reportViewerFramesResponse500
+) & {
+  headers: Headers;
+};
+
+export type reportViewerFramesResponse =
+  | reportViewerFramesResponseSuccess
+  | reportViewerFramesResponseError;
+
+export const getReportViewerFramesUrl = () => {
+  return `/api/telemetry/frames`;
+};
+
+/**
+ * @summary Report Viewer Frames
+ */
+export const reportViewerFrames = async (
+  frameSummary: FrameSummary,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reportViewerFramesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<reportViewerFramesResponse>(getReportViewerFramesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(frameSummary),
+  });
+};
+
+export const getReportViewerFramesMutationKey = () => ["reportViewerFrames"] as const;
+
+export const getReportViewerFramesMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reportViewerFrames>>,
+    TError,
+    ReportViewerFramesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reportViewerFrames>>,
+  TError,
+  ReportViewerFramesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReportViewerFramesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reportViewerFrames>>,
+    ReportViewerFramesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return reportViewerFrames(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReportViewerFramesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reportViewerFrames>>
+>;
+export type ReportViewerFramesMutationBody = FrameSummary;
+export type ReportViewerFramesMutationError = Problem;
+export type ReportViewerFramesMutationVariables = { data: FrameSummary };
+
+/**
+ * @summary Report Viewer Frames
+ */
+export const useReportViewerFrames = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reportViewerFrames>>,
+      TError,
+      ReportViewerFramesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reportViewerFrames>>,
+  TError,
+  ReportViewerFramesMutationVariables,
+  TContext
+> => {
+  return useMutation(getReportViewerFramesMutationOptions(options), queryClient);
 };
 
 export type getSessionResponse200 = {
@@ -16343,6 +16728,150 @@ export function useListProjectModels<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type startTumorMapResponse201 = {
+  data: TumorMapJob;
+  status: 201;
+};
+
+export type startTumorMapResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startTumorMapResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startTumorMapResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startTumorMapResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startTumorMapResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startTumorMapResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startTumorMapResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startTumorMapResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startTumorMapResponseSuccess = startTumorMapResponse201 & {
+  headers: Headers;
+};
+export type startTumorMapResponseError = (
+  | startTumorMapResponse400
+  | startTumorMapResponse401
+  | startTumorMapResponse403
+  | startTumorMapResponse404
+  | startTumorMapResponse409
+  | startTumorMapResponse422
+  | startTumorMapResponse429
+  | startTumorMapResponse500
+) & {
+  headers: Headers;
+};
+
+export type startTumorMapResponse = startTumorMapResponseSuccess | startTumorMapResponseError;
+
+export const getStartTumorMapUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/tumor-maps`;
+};
+
+/**
+ * @summary Start Tumor Map
+ */
+export const startTumorMap = async (
+  projectId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startTumorMapResponse> => {
+  return apiFetch<startTumorMapResponse>(getStartTumorMapUrl(projectId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getStartTumorMapMutationKey = () => ["startTumorMap"] as const;
+
+export const getStartTumorMapMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startTumorMap>>,
+    TError,
+    StartTumorMapMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startTumorMap>>,
+  TError,
+  StartTumorMapMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartTumorMapMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startTumorMap>>,
+    StartTumorMapMutationVariables
+  > = (props) => {
+    const { projectId, slideId } = props ?? {};
+
+    return startTumorMap(projectId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartTumorMapMutationResult = NonNullable<Awaited<ReturnType<typeof startTumorMap>>>;
+
+export type StartTumorMapMutationError = Problem;
+export type StartTumorMapMutationVariables = { projectId: string; slideId: string };
+
+/**
+ * @summary Start Tumor Map
+ */
+export const useStartTumorMap = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startTumorMap>>,
+      TError,
+      StartTumorMapMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startTumorMap>>,
+  TError,
+  StartTumorMapMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartTumorMapMutationOptions(options), queryClient);
+};
 
 export type listModelTiersResponse200 = {
   data: TierMapping[];
@@ -26239,6 +26768,202 @@ export function useFindOpenUpload<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getFindOpenUploadQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type findSentUploadsResponse200 = {
+  data: UploadState[];
+  status: 200;
+};
+
+export type findSentUploadsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type findSentUploadsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type findSentUploadsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type findSentUploadsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type findSentUploadsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type findSentUploadsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type findSentUploadsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type findSentUploadsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type findSentUploadsResponseSuccess = findSentUploadsResponse200 & {
+  headers: Headers;
+};
+export type findSentUploadsResponseError = (
+  | findSentUploadsResponse400
+  | findSentUploadsResponse401
+  | findSentUploadsResponse403
+  | findSentUploadsResponse404
+  | findSentUploadsResponse409
+  | findSentUploadsResponse422
+  | findSentUploadsResponse429
+  | findSentUploadsResponse500
+) & {
+  headers: Headers;
+};
+
+export type findSentUploadsResponse = findSentUploadsResponseSuccess | findSentUploadsResponseError;
+
+export const getFindSentUploadsUrl = (params: FindSentUploadsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/sent?${stringifiedParams}`
+    : `/api/uploads/sent`;
+};
+
+/**
+ * @summary Find Sent Uploads
+ */
+export const findSentUploads = async (
+  params: FindSentUploadsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<findSentUploadsResponse> => {
+  return apiFetch<findSentUploadsResponse>(getFindSentUploadsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getFindSentUploadsQueryKey = (params?: FindSentUploadsParams) => {
+  return [`/api/uploads/sent`, ...(params ? [params] : [])] as const;
+};
+
+export const getFindSentUploadsQueryOptions = <
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getFindSentUploadsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof findSentUploads>>> = ({ signal }) =>
+    findSentUploads(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof findSentUploads>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FindSentUploadsQueryResult = NonNullable<Awaited<ReturnType<typeof findSentUploads>>>;
+export type FindSentUploadsQueryError = Problem;
+
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findSentUploads>>,
+          TError,
+          Awaited<ReturnType<typeof findSentUploads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findSentUploads>>,
+          TError,
+          Awaited<ReturnType<typeof findSentUploads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Find Sent Uploads
+ */
+
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFindSentUploadsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -67136,6 +67861,742 @@ export function useGetSlideTissue<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getSlideEmbeddingsResponse200 = {
+  data: SlideEmbeddings;
+  status: 200;
+};
+
+export type getSlideEmbeddingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideEmbeddingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideEmbeddingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideEmbeddingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideEmbeddingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideEmbeddingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideEmbeddingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideEmbeddingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideEmbeddingsResponseSuccess = getSlideEmbeddingsResponse200 & {
+  headers: Headers;
+};
+export type getSlideEmbeddingsResponseError = (
+  | getSlideEmbeddingsResponse400
+  | getSlideEmbeddingsResponse401
+  | getSlideEmbeddingsResponse403
+  | getSlideEmbeddingsResponse404
+  | getSlideEmbeddingsResponse409
+  | getSlideEmbeddingsResponse422
+  | getSlideEmbeddingsResponse429
+  | getSlideEmbeddingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideEmbeddingsResponse =
+  | getSlideEmbeddingsResponseSuccess
+  | getSlideEmbeddingsResponseError;
+
+export const getGetSlideEmbeddingsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/embeddings`;
+};
+
+/**
+ * @summary Get Slide Embeddings
+ */
+export const getSlideEmbeddings = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideEmbeddingsResponse> => {
+  return apiFetch<getSlideEmbeddingsResponse>(getGetSlideEmbeddingsUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideEmbeddingsQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/embeddings`] as const;
+};
+
+export const getGetSlideEmbeddingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideEmbeddingsQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideEmbeddings>>> = ({ signal }) =>
+    getSlideEmbeddings(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideEmbeddingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideEmbeddings>>
+>;
+export type GetSlideEmbeddingsQueryError = Problem;
+
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddings>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddings>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Embeddings
+ */
+
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideEmbeddingsQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSlideEmbeddingTileResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getSlideEmbeddingTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideEmbeddingTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideEmbeddingTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideEmbeddingTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideEmbeddingTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideEmbeddingTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideEmbeddingTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideEmbeddingTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideEmbeddingTileResponseSuccess = getSlideEmbeddingTileResponse200 & {
+  headers: Headers;
+};
+export type getSlideEmbeddingTileResponseError = (
+  | getSlideEmbeddingTileResponse400
+  | getSlideEmbeddingTileResponse401
+  | getSlideEmbeddingTileResponse403
+  | getSlideEmbeddingTileResponse404
+  | getSlideEmbeddingTileResponse409
+  | getSlideEmbeddingTileResponse422
+  | getSlideEmbeddingTileResponse429
+  | getSlideEmbeddingTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideEmbeddingTileResponse =
+  | getSlideEmbeddingTileResponseSuccess
+  | getSlideEmbeddingTileResponseError;
+
+export const getGetSlideEmbeddingTileUrl = (slideId: string, column: number, row: number) => {
+  return `/api/slides/${slideId}/embeddings/${column}/${row}`;
+};
+
+/**
+ * @summary Get Slide Embedding Tile
+ */
+export const getSlideEmbeddingTile = async (
+  slideId: string,
+  column: number,
+  row: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideEmbeddingTileResponse> => {
+  return apiFetch<getSlideEmbeddingTileResponse>(
+    getGetSlideEmbeddingTileUrl(slideId, column, row),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetSlideEmbeddingTileQueryKey = (slideId: string, column: number, row: number) => {
+  return [`/api/slides/${slideId}/embeddings/${column}/${row}`] as const;
+};
+
+export const getGetSlideEmbeddingTileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideEmbeddingTileQueryKey(slideId, column, row);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideEmbeddingTile>>> = ({ signal }) =>
+    getSlideEmbeddingTile(slideId, column, row, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      column !== null &&
+      column !== undefined &&
+      row !== null &&
+      row !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideEmbeddingTileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideEmbeddingTile>>
+>;
+export type GetSlideEmbeddingTileQueryError = Problem;
+
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Embedding Tile
+ */
+
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideEmbeddingTileQueryOptions(slideId, column, row, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type warmSlideEmbedderResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type warmSlideEmbedderResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type warmSlideEmbedderResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type warmSlideEmbedderResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type warmSlideEmbedderResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type warmSlideEmbedderResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type warmSlideEmbedderResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type warmSlideEmbedderResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type warmSlideEmbedderResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type warmSlideEmbedderResponseSuccess = warmSlideEmbedderResponse204 & {
+  headers: Headers;
+};
+export type warmSlideEmbedderResponseError = (
+  | warmSlideEmbedderResponse400
+  | warmSlideEmbedderResponse401
+  | warmSlideEmbedderResponse403
+  | warmSlideEmbedderResponse404
+  | warmSlideEmbedderResponse409
+  | warmSlideEmbedderResponse422
+  | warmSlideEmbedderResponse429
+  | warmSlideEmbedderResponse500
+) & {
+  headers: Headers;
+};
+
+export type warmSlideEmbedderResponse =
+  | warmSlideEmbedderResponseSuccess
+  | warmSlideEmbedderResponseError;
+
+export const getWarmSlideEmbedderUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/embeddings/warm`;
+};
+
+/**
+ * @summary Warm Slide Embedder
+ */
+export const warmSlideEmbedder = async (
+  slideId: string,
+  embedderWarm: EmbedderWarm,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<warmSlideEmbedderResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<warmSlideEmbedderResponse>(getWarmSlideEmbedderUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(embedderWarm),
+  });
+};
+
+export const getWarmSlideEmbedderMutationKey = () => ["warmSlideEmbedder"] as const;
+
+export const getWarmSlideEmbedderMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof warmSlideEmbedder>>,
+    TError,
+    WarmSlideEmbedderMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof warmSlideEmbedder>>,
+  TError,
+  WarmSlideEmbedderMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWarmSlideEmbedderMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof warmSlideEmbedder>>,
+    WarmSlideEmbedderMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return warmSlideEmbedder(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WarmSlideEmbedderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof warmSlideEmbedder>>
+>;
+export type WarmSlideEmbedderMutationBody = EmbedderWarm;
+export type WarmSlideEmbedderMutationError = Problem;
+export type WarmSlideEmbedderMutationVariables = { slideId: string; data: EmbedderWarm };
+
+/**
+ * @summary Warm Slide Embedder
+ */
+export const useWarmSlideEmbedder = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof warmSlideEmbedder>>,
+      TError,
+      WarmSlideEmbedderMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof warmSlideEmbedder>>,
+  TError,
+  WarmSlideEmbedderMutationVariables,
+  TContext
+> => {
+  return useMutation(getWarmSlideEmbedderMutationOptions(options), queryClient);
+};
+
+export type scoreViewMapTileResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type scoreViewMapTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type scoreViewMapTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type scoreViewMapTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type scoreViewMapTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type scoreViewMapTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type scoreViewMapTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type scoreViewMapTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type scoreViewMapTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type scoreViewMapTileResponseSuccess = scoreViewMapTileResponse200 & {
+  headers: Headers;
+};
+export type scoreViewMapTileResponseError = (
+  | scoreViewMapTileResponse400
+  | scoreViewMapTileResponse401
+  | scoreViewMapTileResponse403
+  | scoreViewMapTileResponse404
+  | scoreViewMapTileResponse409
+  | scoreViewMapTileResponse422
+  | scoreViewMapTileResponse429
+  | scoreViewMapTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type scoreViewMapTileResponse =
+  | scoreViewMapTileResponseSuccess
+  | scoreViewMapTileResponseError;
+
+export const getScoreViewMapTileUrl = (slideId: string, column: number, row: number) => {
+  return `/api/slides/${slideId}/view-map/${column}/${row}`;
+};
+
+/**
+ * @summary Score View Map Tile
+ */
+export const scoreViewMapTile = async (
+  slideId: string,
+  column: number,
+  row: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<scoreViewMapTileResponse> => {
+  return apiFetch<scoreViewMapTileResponse>(getScoreViewMapTileUrl(slideId, column, row), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getScoreViewMapTileMutationKey = () => ["scoreViewMapTile"] as const;
+
+export const getScoreViewMapTileMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scoreViewMapTile>>,
+    TError,
+    ScoreViewMapTileMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof scoreViewMapTile>>,
+  TError,
+  ScoreViewMapTileMutationVariables,
+  TContext
+> => {
+  const mutationKey = getScoreViewMapTileMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof scoreViewMapTile>>,
+    ScoreViewMapTileMutationVariables
+  > = (props) => {
+    const { slideId, column, row } = props ?? {};
+
+    return scoreViewMapTile(slideId, column, row, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ScoreViewMapTileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof scoreViewMapTile>>
+>;
+
+export type ScoreViewMapTileMutationError = Problem;
+export type ScoreViewMapTileMutationVariables = { slideId: string; column: number; row: number };
+
+/**
+ * @summary Score View Map Tile
+ */
+export const useScoreViewMapTile = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof scoreViewMapTile>>,
+      TError,
+      ScoreViewMapTileMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof scoreViewMapTile>>,
+  TError,
+  ScoreViewMapTileMutationVariables,
+  TContext
+> => {
+  return useMutation(getScoreViewMapTileMutationOptions(options), queryClient);
+};
 
 export type listSlideAreasResponse200 = {
   data: SlideArea[];

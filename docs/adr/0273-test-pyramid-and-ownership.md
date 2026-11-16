@@ -2,6 +2,7 @@
 
 - Date: 2026-11-09
 - Status: Accepted
+- Amended by [ADR 0350](0350-load-tests-run-against-production-under-a-tiny-cap.md) (load tests against production under a tiny cap), which replaces "against staging, never against production" for load tests, since staging is gone
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: TEST-000 (testing research check). Confirms STACK-012 (frontend testing stack) and sets the owner of each level for the remaining TEST tasks.
 

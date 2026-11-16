@@ -13,8 +13,16 @@
     "run_worker_first": true
   },
   "r2_buckets": [{ "binding": "SLIDES", "bucket_name": "parfocal-dev" }],
-  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOMS", "class_name": "Room" },
+      { "name": "LOGIN_COUNTER", "class_name": "LoginCounter" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Room"] },
+    { "tag": "v2", "new_sqlite_classes": ["LoginCounter"] }
+  ],
   "ratelimits": [
     { "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
     { "name": "UPLOAD_LIMIT", "namespace_id": "1002", "simple": { "limit": 120, "period": 60 } },
@@ -32,7 +40,12 @@
       "workers_dev": false,
       "routes": [{ "pattern": "app.parfocal.eu", "custom_domain": true }],
       "r2_buckets": [{ "binding": "SLIDES", "bucket_name": "parfocal-dev" }],
-      "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+      "durable_objects": {
+        "bindings": [
+          { "name": "ROOMS", "class_name": "Room" },
+          { "name": "LOGIN_COUNTER", "class_name": "LoginCounter" }
+        ]
+      },
       "ratelimits": [
         { "name": "LOGIN_LIMIT", "namespace_id": "2001", "simple": { "limit": 10, "period": 60 } },
         {
@@ -54,7 +67,12 @@
       "workers_dev": false,
       "routes": [{ "pattern": "staging.parfocal.eu", "custom_domain": true }],
       "r2_buckets": [{ "binding": "SLIDES", "bucket_name": "parfocal-staging" }],
-      "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+      "durable_objects": {
+        "bindings": [
+          { "name": "ROOMS", "class_name": "Room" },
+          { "name": "LOGIN_COUNTER", "class_name": "LoginCounter" }
+        ]
+      },
       "ratelimits": [
         { "name": "LOGIN_LIMIT", "namespace_id": "3001", "simple": { "limit": 10, "period": 60 } },
         {

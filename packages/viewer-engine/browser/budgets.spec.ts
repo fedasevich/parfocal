@@ -259,3 +259,56 @@ for (const slide of slides) {
     });
   }
 }
+
+const mainPathRuns = Number(process.env["PARFOCAL_MAIN_PATH_RUNS"] ?? 0);
+const mainPathRttMs = 50;
+
+function nearestRank(values: readonly number[], share: number): number {
+  const ordered = [...values].sort((a, b) => a - b);
+  return ordered[Math.max(0, Math.ceil(ordered.length * share) - 1)] ?? Number.NaN;
+}
+
+function median(values: readonly number[]): number {
+  const ordered = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(ordered.length / 2);
+  const upper = ordered[middle] ?? Number.NaN;
+  return ordered.length % 2 === 1 ? upper : ((ordered[middle - 1] ?? Number.NaN) + upper) / 2;
+}
+
+test("CMU-1.svs open and jump after a warm-up, median and p95 for the main path budgets", async ({
+  page,
+  browser,
+}) => {
+  test.skip(mainPathRuns === 0, "set PARFOCAL_MAIN_PATH_RUNS to a count");
+  test.setTimeout(120_000 + mainPathRuns * 30_000);
+  const slide = slides[0];
+  if (slide === undefined || served === null) throw new Error("The slide server is not running");
+  await page.setContent("<!doctype html><html><body></body></html>");
+  await assertGpuMode(page);
+  const proxy = await startLatencyProxy({ target: served.origin, rttMs: mainPathRttMs });
+  const samples: Sample[] = [];
+  try {
+    await sample(page, browser, proxy.url, slide, false);
+    for (let round = 0; round < mainPathRuns; round++) {
+      samples.push(await sample(page, browser, proxy.url, slide, false));
+    }
+  } finally {
+    await proxy.close();
+  }
+  const summary = (phase: "fitted" | "jump") => {
+    const ms = samples.map((entry) => entry[phase].ms);
+    return { ms, median: median(ms), p95: nearestRank(ms, 0.95) };
+  };
+  const fitted = summary("fitted");
+  const jump = summary("jump");
+  console.log(
+    JSON.stringify({ slide: slide.file, rttMs: mainPathRttMs, runs: mainPathRuns, fitted, jump }),
+  );
+  expect(fitted.ms.length).toBe(mainPathRuns);
+  for (const [id, p95] of [
+    ["app.open-fitted-p95-ms", fitted.p95],
+    ["app.jump-sharp-p95-ms", jump.p95],
+  ] as const) {
+    test.info().annotations.push({ type: "main-path", description: `${id} ${p95.toFixed(0)} ms` });
+  }
+});

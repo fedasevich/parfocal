@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
 class AnchorKind(StrEnum):
@@ -70,9 +70,15 @@ threads = Table(
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
     ),
-    ForeignKeyConstraint(["result_set_id"], ["result_sets.id"]),
+    tenant_foreign_key("result_set_id", "result_sets"),
+    tenant_unique(),
     Index("ix_threads_task_id_slide_id", "task_id", "slide_id"),
     Index(
         "ix_threads_project_id_slide_id_taskless",
@@ -98,11 +104,11 @@ thread_messages = Table(
     Column(
         "thread_id",
         Uuid[uuid.UUID](),
-        ForeignKey("threads.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("thread_id", "threads", ondelete="CASCADE"),
     Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
     Column("body", String(4000), nullable=False, info=PHI),
     Column(
@@ -121,10 +127,10 @@ slide_coverage = Table(
     Column(
         "slide_id",
         Uuid[uuid.UUID](),
-        ForeignKey("slides.id", ondelete="CASCADE"),
         primary_key=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("slide_id", "slides", ondelete="CASCADE"),
     Column(
         "user_id",
         Uuid[uuid.UUID](),
@@ -154,17 +160,17 @@ resume_states = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id", ondelete="CASCADE"),
         nullable=False,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks", ondelete="CASCADE"),
     Column(
         "slide_id",
         Uuid[uuid.UUID](),
-        ForeignKey("slides.id", ondelete="CASCADE"),
         nullable=False,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("slide_id", "slides", ondelete="CASCADE"),
     Column("mode", String(10), nullable=False, info=PERSONAL),
     Column("object_id", String(40), nullable=True, info=PERSONAL),
     Column("camera", JSONB(none_as_null=True), nullable=True, info=PERSONAL),
@@ -199,11 +205,11 @@ report_links = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks", ondelete="CASCADE"),
     Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
     Column(
         "created_by_user_id",

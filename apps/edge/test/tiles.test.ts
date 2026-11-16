@@ -7,11 +7,13 @@ import {
   signCapability,
   signingKey,
   verifyCapability,
+  WeakSigningKeyError,
 } from "../src/capability.ts";
 import {
   consoleTileLog,
   handleTiles,
   type RangeCache,
+  storedKey,
   type TileEnv,
   type TileRead,
 } from "../src/tiles.ts";
@@ -164,6 +166,37 @@ describe("capability tokens", () => {
     const decision = await verifyCapability(vector.token, await signingKey(SECRET), claims.e - 1);
     assert.ok(decision.ok);
     assert.equal(decision.capability.tenant, claims.t);
+  });
+
+  test("the API and the edge sign a stored ETag to the same token", async () => {
+    const tagged = JSON.parse(
+      readFileSync(`${import.meta.dirname}/capability-etag-vector.json`, "utf8"),
+    ) as { token: string; claims: Vector["claims"] & { g: string } };
+    const { claims } = tagged;
+    const signed = await signCapability(
+      {
+        tenant: claims.t,
+        slide: claims.s,
+        original: claims.o,
+        size: claims.n,
+        etag: claims.g,
+        restricted: claims.d,
+        expires: claims.e,
+      },
+      await signingKey(SECRET),
+    );
+    assert.equal(signed, tagged.token);
+    const decision = await verifyCapability(tagged.token, await signingKey(SECRET), claims.e - 1);
+    assert.ok(decision.ok);
+    assert.equal(decision.capability.etag, claims.g);
+  });
+
+  test("a token whose ETag is not a stored ETag is malformed", async () => {
+    const token = await tokenFor({ etag: 'a"b' });
+    assert.deepEqual(await verifyCapability(token, await signingKey(SECRET), NOW), {
+      ok: false,
+      reason: "malformed",
+    });
   });
 
   test("a token is refused once it expires", async () => {
@@ -606,7 +639,7 @@ describe("the byte range cache", () => {
     assert.equal(cache.puts.length, 0);
   });
 
-  test("a cached range is refused for a token signed for another size", async () => {
+  test("a token signed for another size misses the cache and is refused by the bucket", async () => {
     const bucket = lab();
     const cache = new FakeCache();
     const first = await cachedRequest(bucket, cache, ORIGINAL, await tokenFor(), "bytes=0-99");
@@ -614,7 +647,22 @@ describe("the byte range cache", () => {
     const other = await tokenFor({ size: 4000, restricted: [] });
     const response = await cachedRequest(bucket, cache, ORIGINAL, other, "bytes=0-99");
     assert.equal(response.status, 409);
-    assert.equal(bucket.reads.length, 1);
+    assert.equal(bucket.reads.length, 2);
+    assert.equal(cache.puts.length, 1);
+  });
+
+  test("the original is keyed by its signed size and kept a day, other files ten minutes", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    await (await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=0-99")).arrayBuffer();
+    await (await cachedRequest(bucket, cache, `/tiles/${SLIDE}/levels.json`, token)).arrayBuffer();
+    const [original = "", levels = ""] = cache.puts;
+    assert.match(original, new RegExp(`\\?size=${SIZE}&offset=0&length=100$`));
+    assert.match(levels, /levels\.json$/);
+    const kept = (url: string) => cache.entries.get(url)?.headers.get("Cache-Control");
+    assert.equal(kept(original), "public, max-age=86400");
+    assert.equal(kept(levels), "public, max-age=600");
   });
 
   test("a cached range is blanked for a token that blanks it and clear for one that does not", async () => {
@@ -679,5 +727,58 @@ describe("the same-origin data path", () => {
     assert.equal(response.status, 206);
     assert.equal(response.headers.get("Access-Control-Allow-Origin"), null);
     assert.equal(response.headers.get("Cross-Origin-Resource-Policy"), "same-origin");
+  });
+});
+
+describe("a tile key overlap window", () => {
+  function readWith(key: string, token: string): Promise<Response> {
+    const env = { SLIDES: lab() as unknown as R2Bucket, TILE_TOKEN_KEY: key } satisfies TileEnv;
+    return handleTiles(
+      new Request(`https://parfocal.test${ORIGINAL}`, {
+        headers: { Authorization: `Bearer ${token}`, Range: "bytes=0-9" },
+      }),
+      env,
+      () => NOW,
+      () => undefined,
+    );
+  }
+
+  test("a token signed with the previous key opens while it is listed and stops once removed", async () => {
+    const previous = await tokenFor({}, SECRET);
+    const current = await tokenFor({}, OTHER_SECRET);
+    assert.equal((await readWith(`${OTHER_SECRET},${SECRET}`, previous)).status, 206);
+    assert.equal((await readWith(`${OTHER_SECRET}, ${SECRET}`, current)).status, 206);
+    const removed = await readWith(OTHER_SECRET, previous);
+    assert.equal(removed.status, 401);
+    assert.equal(await code(removed), "tile-token-invalid");
+  });
+
+  test("an expired token signed with the previous key still reads as expired", async () => {
+    const expired = await tokenFor({ expires: NOW }, SECRET);
+    const response = await readWith(`${OTHER_SECRET},${SECRET}`, expired);
+    assert.equal(await code(response), "tile-token-expired");
+  });
+
+  test("a weak key anywhere in the list is refused", async () => {
+    await assert.rejects(readWith(`${SECRET},change-me`, await tokenFor()), WeakSigningKeyError);
+  });
+});
+
+describe("preview storage prefix", () => {
+  test("a preview reads tenant objects under its own prefix and fixtures where they are", () => {
+    assert.equal(storedKey("previews/pr-7/", "t/a/s/b/tile.jpg"), "previews/pr-7/t/a/s/b/tile.jpg");
+    assert.equal(storedKey("previews/pr-7/", "fixtures/CMU-1.svs"), "fixtures/CMU-1.svs");
+    assert.equal(
+      storedKey("previews/pr-7/", "ops/sli/batches/1.json"),
+      "previews/pr-7/ops/sli/batches/1.json",
+    );
+    assert.equal(storedKey(undefined, "t/a/s/b/tile.jpg"), "t/a/s/b/tile.jpg");
+    assert.equal(storedKey("", "t/a/s/b/tile.jpg"), "t/a/s/b/tile.jpg");
+  });
+
+  test("a prefix that is not a preview prefix is refused", () => {
+    for (const prefix of ["fixtures/", "previews/", "previews/pr-7", "../", "t/"]) {
+      assert.throws(() => storedKey(prefix, "t/a/s/b/tile.jpg"));
+    }
   });
 });

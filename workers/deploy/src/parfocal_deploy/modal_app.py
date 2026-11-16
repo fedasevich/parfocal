@@ -5,12 +5,9 @@ from typing import Any
 import modal
 
 from parfocal_common.repository import repository_root
-from parfocal_ingest.settings import (
-    INGEST_MEMORY_LIMIT_MIB,
-    INGEST_MEMORY_MIB,
-    PARSE_MEMORY_MIB,
-    PARSE_SECONDS,
-)
+from parfocal_deploy.image_locks import APP_LOCK
+from parfocal_deploy.parse_sandbox import PARSE_SANDBOX_OPTIONS
+from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 
 APP_NAME = "parfocal-api"
 WEB_FUNCTION = "web"
@@ -19,6 +16,7 @@ KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
 SECRETS = (KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET)
+FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {WEB_FUNCTION: SECRETS, INGEST_FUNCTION: SECRETS}
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
 PROJECTS = ("packages/py-common", "apps/api", "workers/ingest")
@@ -26,6 +24,7 @@ SOURCES = ("parfocal_common", "parfocal_api", "parfocal_ingest", "parfocal_deplo
 WORKSPACE_PREFIX = "parfocal-"
 INGEST_IDLE_EXIT_SECONDS = 30.0
 MAX_DEPLOYED_CRONS = 5
+PARSE_LAUNCHER = "parfocal_deploy.parse_sandbox:ingest_launcher"
 
 WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
 WEB_OPTIONS: dict[str, Any] = {
@@ -44,11 +43,7 @@ INGEST_OPTIONS: dict[str, Any] = {
     "scaledown_window": 60,
     "timeout": 3600,
 }
-PARSE_SANDBOX_OPTIONS: dict[str, Any] = {
-    "block_network": True,
-    "memory": (PARSE_MEMORY_MIB, PARSE_MEMORY_MIB),
-    "timeout": int(PARSE_SECONDS),
-}
+__all__ = ["PARSE_SANDBOX_OPTIONS"]
 
 
 def project_requirements(project: Path) -> list[str]:
@@ -63,45 +58,46 @@ def project_requirements(project: Path) -> list[str]:
     ]
 
 
-def requirements(repository: Path = REPOSITORY) -> list[str]:
-    found = {
-        requirement
-        for project in PROJECTS
-        for requirement in project_requirements(repository / project)
-    }
-    return sorted(found)
-
-
 def app_image() -> modal.Image:
     base = modal.Image.debian_slim(python_version=PYTHON_VERSION)
     if not modal.is_local():
         return base
-    return base.uv_pip_install(*requirements()).add_local_python_source(
-        *SOURCES, ignore=["**/__pycache__/**"]
+    return APP_LOCK.install(base).add_local_python_source(
+        *SOURCES, copy=True, ignore=["**/__pycache__/**"]
     )
 
 
 def serve() -> Any:
     from parfocal_api.app import create_app
+    from parfocal_common.warm_gate import ModalPools, WarmGate
 
-    return create_app()
+    app = create_app()
+    pools = ModalPools()
+    app.state.gpu_pools = pools
+    app.state.warm_gate = WarmGate(pools)
+    return app
 
 
 def run_ingest() -> None:
     import asyncio
+    import os
     import sys
 
     from parfocal_ingest.__main__ import main
 
+    os.environ.setdefault("INGEST_PARSE_LAUNCHER", PARSE_LAUNCHER)
     sys.argv = ["parfocal_ingest", "--idle-exit", str(INGEST_IDLE_EXIT_SECONDS)]
     asyncio.run(main())
 
 
-app = modal.App(
-    APP_NAME,
-    image=app_image(),
-    secrets=[modal.Secret.from_name(name) for name in SECRETS],
+def secrets_of(function: str) -> list[modal.Secret]:
+    return [modal.Secret.from_name(name) for name in FUNCTION_SECRETS[function]]
+
+
+IMAGE = app_image()
+app = modal.App(APP_NAME, image=IMAGE)
+web = app.function(**WEB_OPTIONS, secrets=secrets_of(WEB_FUNCTION))(
+    modal.asgi_app(**WEB_ENDPOINT)(serve)
 )
-web = app.function(**WEB_OPTIONS)(modal.asgi_app(**WEB_ENDPOINT)(serve))
-ingest = app.function(**INGEST_OPTIONS)(run_ingest)
+ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
 FUNCTIONS: dict[str, modal.Function] = {WEB_FUNCTION: web, INGEST_FUNCTION: ingest}

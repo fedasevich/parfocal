@@ -246,7 +246,7 @@ def test_promotion_compares_with_a_given_reference_and_every_task_of_the_model(
     )
 
 
-def test_only_an_operator_promotes_and_an_unmeasured_task_is_refused(
+def test_only_an_operator_promotes_and_a_missing_metric_is_refused(
     api: ApiAs, database: str
 ) -> None:
     workspace = make_workspace(database, {"researcher": Role.RESEARCHER})
@@ -261,6 +261,4 @@ def test_only_an_operator_promotes_and_an_unmeasured_task_is_refused(
     )
     tumor = ok(api(OPERATOR).post(promotion(name), json=body))
     assert tumor["status"] == "candidate"
-    assert tumor["evaluation"]["reports"][0]["refused"] == [
-        "no tumor map threshold is measured yet"
-    ]
+    assert tumor["evaluation"]["reports"][0]["refused"] == ["dice was not measured"]

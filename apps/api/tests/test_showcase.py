@@ -150,6 +150,19 @@ async def test_the_owner_is_an_admin_with_a_placeholder_subject(seeded: str) -> 
     assert not any(name.startswith("Showcase") for name in projects)
 
 
+async def test_the_owner_can_open_the_format_gallery(seeded: str) -> None:
+    await run_seed(seeded)
+    rows = await run_sql(
+        seeded,
+        "SELECT p.name, pm.role FROM project_members pm "
+        "JOIN projects p ON p.id = pm.project_id "
+        "JOIN users u ON u.id = pm.user_id WHERE u.email = 'owner@example.test'",
+    )
+    assert {(str(name), str(role)) for name, role in rows} == {
+        (workspace.gallery, "owner") for workspace in WORKSPACES
+    }
+
+
 async def test_seeded_people_are_fake(seeded: str) -> None:
     await run_seed(seeded)
     people = await run_sql(seeded, "SELECT subject, coalesce(email, '') FROM users")
@@ -166,7 +179,7 @@ async def test_the_owner_takes_over_the_seeded_account_on_first_sign_in(seeded: 
     engine = create_engine(seeded)
     try:
         async with scoped_transaction(engine, DatabaseScope(auth=True)) as connection:
-            assert await sign_in_user(connection, claims) == tenant_id
+            assert (await sign_in_user(connection, claims)).tenant_id == tenant_id
     finally:
         await engine.dispose()
     await run_seed(seeded, "adopt@example.test")
