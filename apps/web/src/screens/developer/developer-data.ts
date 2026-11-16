@@ -227,7 +227,7 @@ export const debugHandle: [string, string][] = [
   ["state", "App state"],
   ["getStats()", "The HUD numbers"],
   ["getSample()", "The open sample"],
-  ["getCamera(), setCamera(c)", "Where the view is"],
+  ["getCamera(), setCamera(c), jumpTo(t)", "Where the view is"],
   ["getRoute()", "Active renderer"],
   ["getLod()", "Level of detail now"],
   ["editor", "Annotation editor"],
