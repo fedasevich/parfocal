@@ -37,6 +37,7 @@ from parfocal_ingest.isolation import (
     JobScope,
     JobTokens,
     ParseLimits,
+    launcher_of,
     output_folder,
     parse_isolated,
     read_output,
@@ -94,6 +95,7 @@ def resources_from_environment() -> Resources:
             memory_mib=settings.ingest_parse_memory_mib,
             seconds=settings.ingest_parse_seconds,
             user=settings.ingest_parse_user,
+            launcher=launcher_of(settings.ingest_parse_launcher),
         ),
     )
 
