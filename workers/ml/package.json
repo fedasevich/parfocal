@@ -18,6 +18,7 @@
     "dashboard": "cd ../.. && uv run --package parfocal-ml python -m parfocal_ml.dashboard",
     "export:instanseg": "uv run --package parfocal-ml --extra export python -m parfocal_ml.instanseg --export",
     "bench:instanseg": "uv run --package parfocal-ml --extra export python -m parfocal_ml.instanseg",
+    "bench:nucleus-lineup": "uv run --package parfocal-ml --extra export python -m parfocal_ml.nucleus_lineup",
     "bench:interactive": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.interactive"
   },
   "dependencies": {

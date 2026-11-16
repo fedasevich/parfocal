@@ -42,6 +42,16 @@ AIS = Checkpoint(
     sha256="be91d6272ab2f5cdfeeee5c0b7eb6c864f860072739e246408b7212600849f4b",
     size=44143988,
 )
+SAM_VIT_L = Checkpoint(
+    file="vit_l_histopathology.pt",
+    sha256="9e65d8f4e4ea7fbdd249521a93292d5e149b656f6fd108878eae35baaf331440",
+    size=1249494242,
+)
+AIS_VIT_L = Checkpoint(
+    file="vit_l_histopathology_decoder.pt",
+    sha256="7ec0da1e1915bbe8140803dffae6dcbfe0ae850cdd20612f66806442bf81662c",
+    size=44143988,
+)
 
 
 @dataclass(frozen=True)

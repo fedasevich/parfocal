@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-16
 
+- AINUC-015 (score newer nucleus models on the Mac). Downloaded PathoSAM ViT-L encoder (1,249,494,242 bytes) and AIS decoder (44,143,988 bytes), xxh128 equal to the micro-sam registry. New parfocal_ml.nucleus_lineup scores detectors on the POC held-out fixtures with the AINUC-000 scorer. Pooled PQ on TNBC, NuInsSeg every tenth and CryoNuSeg: ViT-B stored 0.828, 0.524, 0.483. ViT-L 0.854, 0.554, 0.481. InstanSeg 0.712 and 0.694 in its training data, 0.439 on CryoNuSeg. HoVer-Net stored 0.512, 0.000, 0.190. Peak RAM ViT-L 9.0 GB on a full run, 6.3 GB for one image, InstanSeg 1.3 GB. Neither candidate clears the bar fixed before the runs. Stopped at the owner's 13:40 checkpoint before the same-path ViT-B rerun. Resume: pnpm --filter @parfocal/ml bench:nucleus-lineup -- --model pathosam-vit-b --dataset tnbc, then nuinsseg and cryonuseg, and update the result file. No cloud cost, all on the Mac.
 - AINUC-011 Decision 135 Other: no one-hour target, quality and use of Modal GPUs come first. The measured 2.56 hours on one L4 before the tissue skip stands as the recorded time.
 - AIP-000 Decision 47 answered and ADR 0202 accepted, so the lead ticks it.
 - OPS-003 Decision 122 option A: previews stay off until the first real user, pull requests are tested locally. Built and tested with fakes.
