@@ -3752,7 +3752,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 20 §2.5.
   Size: L.
 
-- [ ] AINUC-012 · Tumor cell count per area
+- [x] AINUC-012 · Tumor cell count per area
   Count tumor-typed nuclei inside an area outline, with the expected-mistakes range from calibrated probabilities, for clusters at or under 0.2 mm where 200 cells decide between isolated tumor cells and a micrometastasis. Uses the 64 px tumor map cells or nuclei, never the coarse 256 px map, for clusters this small.
   Done when unit tests count seeded nuclei inside outlines with the range, and an evaluation against a pathologist's counts on small clusters is recorded as a result file or the gap is filed as a TODO.
   Depends on AINUC-006, AITUM-003. Refs doc 36, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
