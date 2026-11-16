@@ -6,7 +6,9 @@ import hmac
 import json
 import os
 import secrets
+import shutil
 import signal
+import stat
 import sys
 import uuid
 from collections.abc import Awaitable, Callable, Mapping, Sequence
@@ -20,12 +22,22 @@ from parfocal_ingest import isolated_child
 from parfocal_ingest.isolated_child import TOKEN_VARIABLE
 from parfocal_ingest.settings import PARSE_MEMORY_MIB, PARSE_SECONDS
 
-__all__ = ["JobScope", "JobTokens", "ParseLimits", "ParseNotStartedError", "parse_isolated"]
+__all__ = [
+    "JobScope",
+    "JobTokens",
+    "ParseLimits",
+    "ParseNotStartedError",
+    "output_folder",
+    "parse_isolated",
+    "read_output",
+    "required_output",
+]
 
 CHILD_SCRIPT = isolated_child.__file__
 MAX_MESSAGE_BYTES = 1024 * 1024
 MIB = 1024 * 1024
 KIB = 1024
+OUTPUT_LIMIT_BYTES = 1024 * MIB
 
 type Fetcher = Callable[[str], Awaitable[Path]]
 
@@ -115,6 +127,44 @@ def child_environment(token: str, work_dir: Path) -> dict[str, str]:
         "TMPDIR": str(work_dir),
         "PATH": os.defpath,
     }
+
+
+def output_folder(work_dir: Path, name: str) -> Path:
+    folder = work_dir / "outputs" / name
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    return folder
+
+
+def read_output(folder: Path, name: str, limit: int = OUTPUT_LIMIT_BYTES) -> bytes | None:
+    if not name or name in {".", ".."} or "/" in name:
+        raise ValueError(name)
+    try:
+        directory = os.open(folder, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except OSError:
+        raise StepFailedError(Refusal.UNREADABLE) from None
+    try:
+        handle = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        raise StepFailedError(Refusal.UNREADABLE) from None
+    finally:
+        os.close(directory)
+    with os.fdopen(handle, "rb") as file:
+        if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+            raise StepFailedError(Refusal.UNREADABLE)
+        data = file.read(limit + 1)
+    if len(data) > limit:
+        raise StepFailedError(Failure.PARSE_TOO_LARGE)
+    return data
+
+
+def required_output(folder: Path, name: str) -> bytes:
+    data = read_output(folder, name)
+    if data is None:
+        raise StepFailedError(Refusal.UNREADABLE)
+    return data
 
 
 def proc_resident_bytes(statm: Path) -> int | None:
