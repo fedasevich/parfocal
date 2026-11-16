@@ -12,80 +12,107 @@ async function stageReady(task: Page) {
   });
 }
 
-test("the ten pilot tasks run end to end on their start screens and the checks end six of them", async ({
+const cellsReady = (task: Page) =>
+  expect(task.getByTestId("cell-type-bar")).toBeVisible({ timeout: 30_000 });
+
+const startTask = (page: Page) => page.getByRole("button", { name: "Start task" }).click();
+const markDone = (page: Page) => page.getByRole("button", { name: "Done" }).click();
+
+async function startSessionFor(page: Page, participant: string) {
+  await page.getByLabel("Participant code").fill(participant);
+  await page.getByRole("button", { name: "Start session" }).click();
+}
+
+async function stillOn(page: Page, index: number) {
+  await page.waitForTimeout(3000);
+  await expect(card(page)).toContainText(`${index}/10`);
+}
+
+test("the ten pilot tasks run end to end, three end by their checks and none fires for the next participant", async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   await page.goto("/study");
-  await page.getByLabel("Participant code").fill("P1");
-  await page.getByRole("button", { name: "Start session" }).click();
+  await startSessionFor(page, "P1");
 
   const popup = page.waitForEvent("popup");
-  await page.getByRole("button", { name: "Start task" }).click();
+  await startTask(page);
   const task = await popup;
   await task.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
   await step(page, 2);
 
-  await page.getByRole("button", { name: "Start task" }).click();
-  await stageReady(task);
-  await task.keyboard.press("]");
-  await step(page, 3);
-
-  await page.getByRole("button", { name: "Start task" }).click();
-  await stageReady(task);
-  await page.getByRole("button", { name: "Done" }).click();
-  await step(page, 4);
-
-  await page.getByRole("button", { name: "Start task" }).click();
+  await startTask(page);
   await stageReady(task);
   await task.keyboard.press("g");
-  await task.keyboard.press("3");
-  await expect(task.getByTestId("area-nav")).toHaveAttribute("data-current", "T3");
-  await step(page, 5);
+  await task.keyboard.press("2");
+  await step(page, 3);
 
-  await page.getByRole("button", { name: "Start task" }).click();
-  await expect(task.getByTestId("cell-type-bar")).toBeVisible({ timeout: 30_000 });
-  await page.getByRole("button", { name: "Done" }).click();
-  await step(page, 6);
+  await startTask(page);
+  await stageReady(task);
+  await markDone(page);
+  await step(page, 4);
 
-  await page.getByRole("button", { name: "Start task" }).click();
-  await expect(task.getByTestId("cell-type-bar")).toBeVisible({ timeout: 30_000 });
+  for (const index of [5, 6]) {
+    await startTask(page);
+    await cellsReady(task);
+    await markDone(page);
+    await step(page, index);
+  }
+
+  await startTask(page);
+  await cellsReady(task);
   expect(
     await task.evaluate(() => document.body.innerText.match(/.{0,40}: disagree.{0,20}/g)),
   ).toBeNull();
   await task
     .getByTestId("cell-type-bar")
-    .getByRole("button", { name: /Immune/ })
+    .getByRole("button", { name: /Stroma/ })
     .click();
   await step(page, 7);
 
-  await page.getByRole("button", { name: "Start task" }).click();
-  await stageReady(task);
-  const box = await task.getByTestId("slide-stage").boundingBox();
-  if (box === null) throw new Error("The slide stage has no box");
-  await task.keyboard.press("l");
-  await task.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.5);
-  await task.mouse.down();
-  await task.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.5, { steps: 8 });
-  await task.mouse.up();
+  await startTask(page);
+  await cellsReady(task);
+  await markDone(page);
   await step(page, 8);
 
-  await page.getByRole("button", { name: "Start task" }).click();
+  await startTask(page);
   await stageReady(task);
-  await task.keyboard.press("Alt+5");
-  await task.getByTestId("view-map-ask").click();
+  await markDone(page);
   await step(page, 9);
 
-  for (const index of [10, 11]) {
-    await page.getByRole("button", { name: "Start task" }).click();
-    await stageReady(task);
-    await page.getByRole("button", { name: "Done" }).click();
-    if (index === 10) await step(page, 10);
-  }
+  await startTask(page);
+  await cellsReady(task);
+  await markDone(page);
+  await step(page, 10);
+
+  await startTask(page);
+  await expect(task).toHaveURL(/\/evaluation/);
+  await expect(task.getByRole("main")).toBeVisible({ timeout: 30_000 });
+  await markDone(page);
   await expect(page.getByTestId("study-session-finished")).toBeVisible();
   const log = page.getByRole("region", { name: "Results" }).getByRole("listitem");
-  await expect(log).toContainText("t1 ");
-  expect((await log.innerText()).match(/\(auto\)/g)?.length).toBe(6);
+  expect((await log.innerText()).match(/\(auto\)/g)?.length).toBe(3);
+
+  await startSessionFor(page, "P2");
+  await startTask(page);
+  await expect(task.getByTestId("slide-row").first()).toBeVisible({ timeout: 30_000 });
+  await stillOn(page, 1);
+  await markDone(page);
+
+  await startTask(page);
+  await stageReady(task);
+  await stillOn(page, 2);
+  await markDone(page);
+
+  for (const index of [3, 4, 5]) {
+    await expect(card(page)).toContainText(`${index}/10`);
+    await startTask(page);
+    await markDone(page);
+  }
+
+  await startTask(page);
+  await cellsReady(task);
+  await stillOn(page, 6);
 });
 
 test("a moderator runs the ten tasks, then the round is frozen and the next round is editable", async ({

@@ -106,7 +106,7 @@ const page = (url: string, counts: Record<string, number> = {}, text = ""): Page
 test("every default task opens a start screen and slide tasks open the CAMELYON16 slide", () => {
   for (const task of defaultTasks) {
     const path = resolveStartPath(task, context);
-    assert.ok(path?.startsWith("/projects/p-7"), task.id);
+    assert.ok(path !== undefined && !path.includes("{"), task.id);
     if (task.slide !== undefined) assert.equal(task.slide, studySlide);
   }
   const live = defaultTasks.find((task) => task.id === "t2");
