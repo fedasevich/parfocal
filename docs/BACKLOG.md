@@ -4654,7 +4654,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the check asserts a ratio or a read count, passes ten runs in a row under a parallel verify, and still fails when the sidecar is ignored.
   Size: S.
 
-- [ ] TEST-044 · Web specs green on the built app
+- [x] TEST-044 · Web specs green on the built app
   FOUND-026 moved the apps/web suite to a built app, and the first CI run on it (8c148200) failed in all three web shards: measure.spec.ts:49 (Measure shows only on a slide), the Guided and Full viewer switch at :213, the follow-view camera within 300 ms at :93, an accessibility check on the slide page, and a sign-out timing spec that sends slide, area and cell times. Session-lock, smart-hover, autosave and run-stream also failed after a reload on the dev server, where a viewer open takes 5 to 6 s on software graphics.
   Done when two CI runs in a row are green in every web shard with no retry needed, and each fix names its cause in the log.
   Depends on FOUND-026.

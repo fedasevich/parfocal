@@ -89,8 +89,11 @@ export function TeamScreen({
   const state = teamState(search, team);
   const people = usePeople();
   const me = okData(useGetMe().data)?.user_id;
-  const workload = useListReviewerWorkload().data?.data ?? [];
-  const availability = okData(useListAvailability().data) ?? [];
+  const workloadQuery = useListReviewerWorkload();
+  const availabilityQuery = useListAvailability();
+  const workload = workloadQuery.data?.data ?? [];
+  const availability = okData(availabilityQuery.data) ?? [];
+  const peopleSettled = !workloadQuery.isPending && !availabilityQuery.isPending;
   const [modal, setModal] = useState<Modal | null>(null);
   const [asking, setAsking] = useState(false);
   const [shown, setShown] = useState<Shown | null>(null);
@@ -119,9 +122,9 @@ export function TeamScreen({
       )
       .sort((a, b) => a.open_tasks - b.open_tasks)[0]?.user_id ?? null;
 
-  const sceneKey = team ? `${state.scene ?? ""}|${team.as_of}` : null;
+  const sceneKey = team && peopleSettled ? `${state.scene ?? ""}|${team.as_of}` : null;
   useEffect(() => {
-    if (!team || sceneKey === seeded) return;
+    if (!team || sceneKey === null || sceneKey === seeded) return;
     setSeeded(sceneKey);
     const first = team.open.find((task) => task.id === state.task) ?? team.open[0];
     const behind = rowOf(first, state.focus ?? "") ?? (first ? mostBehind(first) : undefined);
