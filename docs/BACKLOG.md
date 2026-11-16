@@ -3639,7 +3639,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 20 §2.4.
   Size: L.
 
-- [ ] AISEG-014 · Find more like these (exemplar prompting)
+- [x] AISEG-014 · Find more like these (exemplar prompting)
   Spike only: select a few cells and find similar objects in the view.
   Done when an ADR records feasibility and quality, with a go or no-go.
   Refs doc 20 §2.9.
