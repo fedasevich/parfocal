@@ -1,16 +1,21 @@
 import itertools
+import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
 
 from parfocal_ml.datasets import Sample, samples
 from parfocal_ml.instanseg import (
+    dump_tiles,
     export_network,
+    file_segmenter,
     full_size,
     model_dir,
     model_input,
     normalise,
+    post_process_settings,
     rings_of,
     run,
     torch_segmenter,
@@ -65,6 +70,47 @@ def test_a_perfect_segmenter_scores_full_pq():
     assert result.summary.precision == 1
     assert result.summary.pq > 0.85
     assert len(rings_of(labels)) == 3
+
+
+def test_dumped_tiles_come_back_as_labels_in_order(tmp_path: Path):
+    labels = disc_labels(128, [(30, 30, 12), (90, 80, 14)])
+    rgb = np.full((128, 128, 3), 200, np.uint8)
+    rgb[labels > 0] = 60
+    tiles = [
+        Sample(name=f"tile-{index}", rgb=rgb, labels=labels, ignore=None, group=None)
+        for index in range(2)
+    ]
+    assert dump_tiles(tiles, tmp_path, 0.25) == 2
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    assert manifest["micronsPerPixel"] == 0.25
+    first = manifest["tiles"][0]
+    assert (first["height"], first["width"], first["modelHeight"], first["modelWidth"]) == (
+        128,
+        128,
+        64,
+        64,
+    )
+    assert (tmp_path / first["file"]).stat().st_size == 128 * 128 * 3
+    for tile in manifest["tiles"]:
+        labels[::2, ::2].astype("<i4").tofile(tmp_path / tile["labels"])
+    result = run(file_segmenter(tmp_path), tiles, 0.25)
+    assert result.images == 2
+    assert result.summary.recall == 1
+    with pytest.raises(ValueError, match="the model input is"):
+        file_segmenter(tmp_path)(np.zeros((1, 3, 32, 32), np.float32))
+
+
+@pytest.mark.weights
+def test_the_post_processing_settings_hold_the_pixel_classifier():
+    folder = model_dir()
+    if not (folder / "instanseg.pt").exists():
+        pytest.skip(f"instanseg.pt not in {folder}")
+    settings: Any = post_process_settings(folder)
+    shapes = [(len(layer["weights"]), len(layer["weights"][0])) for layer in settings["classifier"]]
+    assert shapes == [(5, 4), (5, 5), (1, 5)]
+    assert settings["maskThreshold"] == pytest.approx(0.53)
+    assert settings["peakDistance"] == 5
+    assert settings["windowSize"] == 32
 
 
 @pytest.mark.weights

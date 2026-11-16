@@ -108,6 +108,68 @@ def export_network(folder: Path, target: Path) -> None:
     )
 
 
+def post_process_settings(folder: Path) -> dict[str, object]:
+    import torch
+
+    model = torch.jit.load(str(folder / "instanseg.pt"), map_location="cpu").eval()
+    classifier = model.pixel_classifier
+    layers = [classifier.fc1, classifier.fc2, classifier.fc3]
+    return {
+        "classifier": [
+            {"weights": layer.weight.detach().tolist(), "bias": layer.bias.detach().tolist()}
+            for layer in layers
+        ],
+        "maskThreshold": float(model.default_mask_threshold),
+        "peakDistance": int(model.default_peak_distance),
+        "seedThreshold": float(model.default_seed_threshold),
+        "overlapThreshold": float(model.default_overlap_threshold),
+        "windowSize": int(model.default_window_size),
+    }
+
+
+def export_post_process(folder: Path, target: Path) -> None:
+    target.write_text(json.dumps(post_process_settings(folder), indent=2) + "\n")
+
+
+def dump_tiles(images: Iterable[Sample], folder: Path, microns_per_pixel: float) -> int:
+    folder.mkdir(parents=True, exist_ok=True)
+    manifest: list[dict[str, object]] = []
+    for index, sample in enumerate(images):
+        rgb = np.ascontiguousarray(sample.rgb[..., :3])
+        file = f"{index:03d}.rgb"
+        (folder / file).write_bytes(rgb.tobytes())
+        pixels = model_input(rgb, microns_per_pixel)
+        manifest.append(
+            {
+                "name": sample.name,
+                "file": file,
+                "labels": f"{index:03d}.labels.i32",
+                "height": int(rgb.shape[0]),
+                "width": int(rgb.shape[1]),
+                "modelHeight": int(pixels.shape[2]),
+                "modelWidth": int(pixels.shape[3]),
+            }
+        )
+    document = {"micronsPerPixel": microns_per_pixel, "tiles": manifest}
+    (folder / "manifest.json").write_text(json.dumps(document, indent=2) + "\n")
+    return len(manifest)
+
+
+def file_segmenter(folder: Path) -> Segmenter:
+    tiles = json.loads((folder / "manifest.json").read_text())["tiles"]
+    position = itertools.count()
+
+    def segment(pixels: NDArray[np.float32]) -> NDArray[np.int32]:
+        tile = tiles[next(position)]
+        shape = (int(tile["modelHeight"]), int(tile["modelWidth"]))
+        if shape != pixels.shape[2:]:
+            raise ValueError(f"{tile['labels']} is {shape}, the model input is {pixels.shape}")
+        labels = np.fromfile(folder / tile["labels"], dtype="<i4")
+        return labels.reshape(shape).astype(np.int32)
+
+    return segment
+
+
 def run(segment: Segmenter, images: Iterable[Sample], microns_per_pixel: float) -> InstanSegRun:
     scores: list[ImageScore] = []
     sides: list[int] = []
@@ -134,25 +196,37 @@ def main() -> int:
     parser.add_argument("--model", type=Path, default=model_dir())
     parser.add_argument("--out", type=Path, default=cache_dir() / "instanseg")
     parser.add_argument("--export", action="store_true")
+    parser.add_argument("--dump-tiles", type=Path, default=None)
+    parser.add_argument("--labels-from", type=Path, default=None)
     arguments = parser.parse_args()
     if arguments.export:
         export_network(arguments.model, arguments.model / "instanseg-fcn.onnx")
+        export_post_process(arguments.model, arguments.model / "instanseg-postprocess.json")
         return 0
     images = itertools.islice(samples(arguments.dataset), arguments.images)
-    result = run(
-        torch_segmenter(arguments.model, arguments.threads),
-        images,
-        arguments.microns_per_pixel or DATASET_MICRONS_PER_PIXEL[arguments.dataset],
+    microns_per_pixel = arguments.microns_per_pixel or DATASET_MICRONS_PER_PIXEL[arguments.dataset]
+    if arguments.dump_tiles:
+        count = dump_tiles(images, arguments.dump_tiles, microns_per_pixel)
+        print(f"wrote {count} tiles to {arguments.dump_tiles}")
+        return 0
+    segmenter = (
+        file_segmenter(arguments.labels_from)
+        if arguments.labels_from
+        else torch_segmenter(arguments.model, arguments.threads)
     )
+    result = run(segmenter, images, microns_per_pixel)
+    engine = "exported" if arguments.labels_from else "torchscript"
     report = {
         "dataset": arguments.dataset,
+        "engine": engine,
         "weights": f"{RELEASE}/{WEIGHTS}",
         "machine": platform.platform(),
         "median_segment_ms": float(np.median(result.segment_ms)),
         **asdict(result),
     }
     arguments.out.mkdir(parents=True, exist_ok=True)
-    name = f"{arguments.dataset}-{result.input_side[0]}.json"
+    suffix = "-exported" if arguments.labels_from else ""
+    name = f"{arguments.dataset}-{result.input_side[0]}{suffix}.json"
     (arguments.out / name).write_text(json.dumps(report, indent=2))
     hidden = ("segment_ms", "input_side")
     summary = {key: value for key, value in report.items() if key not in hidden}
