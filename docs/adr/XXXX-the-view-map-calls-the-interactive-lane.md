@@ -18,7 +18,7 @@ The "Map this view" panel asks a scorer for one view tile at a time, 16 by 16 ce
 
 Option 2. `view-map` is an interactive lane kind, so the embedder pool accepts it and the batch pools refuse it. `WarmGate.request` in `parfocal_common.warm_gate` makes the blocking call and marks the gate touched, so a slow device's warm is not sent again right after a view map has woken the pool. The API runs the call in a thread.
 
-`parfocal_common.view_maps` holds the call and the reply, which is raw `uint8` cells in row order, width times height bytes, 256 for a whole tile and fewer at the slide's right and bottom edges. `parfocal_ml.view_map.answer_view_tile` opens the slide, boxes the job grid with `tumor_map.map_slide`, keeps `stored_values` and halves twice with `tumor_map.halve`, the same maximum the stored pyramid uses. A view tile therefore equals the matching part of a full map's second pyramid level. The pool entry has no `view-map` runner yet, as it has none for `embed`. Loading the tumor model in the embedder pool comes with the real slide opener and model of AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool).
+`parfocal_common.view_maps` holds the call and the reply, which is raw `uint8` cells in row order, width times height bytes, 256 for a whole tile and fewer at the slide's right and bottom edges. `parfocal_ml.view_map.answer_view_tile` opens the slide, boxes the job grid with `tumor_map.map_slide`, keeps `stored_values` and halves twice with `tumor_map.halve`, the same maximum the stored pyramid uses. A view tile therefore equals the matching part of a full map's second pyramid level. The pool entry has no `view-map` runner yet, as it has none for `embed`. AITUM-011 (the interactive pool answers view map calls) adds it with the real slide opener and model of AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool).
 
 The route needs `run-models` and a project the person controls, the same rights as starting a tumor map, because each tile spends GPU time. It answers 404 for a slide the person cannot read or whose AI is hidden from them, refuses a hidden tumor model, answers 404 `view-tile-outside` for a tile past the slide's edge, and answers 409 `model-offline` when the pool fails or sends no cells of the right size. Every scored tile writes a `view-map.scored` audit event.
 
@@ -26,7 +26,10 @@ The web uses the server scorer whenever the fake API is off and shows the panel 
 
 ## Consequences
 
-- The embedder pool has one T4 container. A view map and a segmentation embed for another person queue behind each other there. If that slows segmentation, the view map needs a pool of its own and an owner decision, because the hourly cap of ADR 0355 has no room.
+- The embedder pool has one T4 container. A view map and a segmentation embed for another person queue behind each other there. If that slows segmentation, the view map needs a pool of its own and an owner decision, because the 5 USD hourly cap that ADR 0355 (the tumor map job shares the detector-good pool) works within has no room.
+- The embedder pool entry has no `view-map` runner yet. Until AITUM-011 (the interactive pool answers view map calls) adds it, every project owner on the real API sees the panel and each click ends in "This view could not be mapped".
+- The route holds its tenant database connection and one thread while it waits for the pool, and the call has no timeout of its own. Many slow tiles at once could use up the API's connection pool.
+- The fake API still shows the panel to reviewers, while the server refuses them. Who may map a view is open decision XXX (who may map a view of a slide on the server) in `docs/decisions.md`.
 - A cold embedder start, up to about a minute, lands on the first tile. The panel shows "Mapping this view" until it ends.
 - One view tile scores 4 job tiles. At the 0.34 s a tile measured on a laptop GPU that is about 1.4 s, above the 1 s interactive target. The T4 time is not measured (TODO).
 - Each ask can send up to 64 tile calls, one after another. Nothing caps the GPU seconds of view maps per person yet (TODO if the bill shows it).

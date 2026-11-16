@@ -3802,6 +3802,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-008.
   Size: M.
 
+- [ ] AITUM-011 · The interactive pool answers view map calls
+  AITUM-009 (Map this view asks the server for its tiles) sends a `view-map` call to the embedder pool, which accepts the kind but has no runner, so on the real API every "Map this view" click ends in "This view could not be mapped". Give the embedder pool entry a `view-map` runner that calls `parfocal_ml.view_map.answer_view_tile` with the stored slide opener and the ResNet18 of AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool), and measure one view tile's time on the T4.
+  Done when a Modal stand-in test on CPU answers one view tile through the pool entry with 256 cell bytes, and a result file holds the T4 time of one view tile.
+  Depends on AITUM-009, AITUM-010.
+  Size: S.
+
 - [x] AITUM-003 · Areas from the tumor map
   Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
   Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
