@@ -309,6 +309,7 @@ WRITE_ROUTES: dict[str, Write] = {
     "chooseHowToImport": Write(body=constant({"score_default": "none"}), owner=CONFLICT),
     "leaveResultOut": Write(owner=CONFLICT),
     "pairUploadWithSlide": Write(body=lambda a: {"slide_id": str(a.ids["slide"])}, owner=CONFLICT),
+    "warmSlideEmbedder": Write(body=constant({"device": "slow"})),
     "updateProject": Write(body=constant({"name": "Renamed"})),
     "deleteProject": Write(body=constant({"name": "Renamed"}), owner=BAD_REQUEST),
     "archiveProject": Write(),
