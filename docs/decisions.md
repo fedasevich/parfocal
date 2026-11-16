@@ -269,7 +269,7 @@ AISEG-016 (prompt-pass fallback) added the five-prompt ensemble for best quality
 
 Your choice:
 
-### 119. Which role wins when a person's SSO groups map to both roles
+### 121. Which role wins when a person's SSO groups map to both roles
 
 IAM-012 (per-organisation SSO) maps a customer IdP's groups to our two roles ([ADR 0347](adr/0347-per-workspace-saml-sso-through-zitadel.md), per-workspace SAML sign-in). When one person's groups map to both, the code gives researcher.
 
