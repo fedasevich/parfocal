@@ -1,20 +1,27 @@
 import asyncio
 import json
+import multiprocessing
 import os
+import socket
 import statistics
 import time
+from collections.abc import Generator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
+from multiprocessing.process import BaseProcess
 from pathlib import Path
 from typing import Any
 
 import httpx2
 import pytest
+import uvicorn
 from db_support import OWNER_URL, api_settings, query, with_database
 from test_annotations import Studio, circle, studio
 
 from parfocal_api.app import create_app
 from parfocal_api.auth import authenticate
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.settings import ApiSettings
 
 pytestmark = pytest.mark.db
 
@@ -35,6 +42,14 @@ SPACING = 20
 VIEWPORT = 400
 NO_RATE_LIMIT = 1_000_000
 ANNOTATION_TABLES = ("annotations", "annotation_versions")
+SERVER_START_S = 60
+LONG_LOAD_SECONDS = os.environ.get("PARFOCAL_LONG_LOAD_S")
+LONG_BATCH = 1_000
+LONG_BATCH_PAUSE_S = 4
+LONG_EDIT_PAUSE_S = 0.05
+LONG_READERS = 2
+LONG_READ_PAUSE_S = 0.1
+LONG_SAMPLE_S = 10
 
 
 @dataclass
@@ -116,23 +131,39 @@ async def read(
         turn += 1
 
 
-async def run_load(database: str, s: Studio, principal: MemberPrincipal) -> Timings:
-    settings = api_settings(database).model_copy(
-        update={
-            "rate_limit_person_per_minute": NO_RATE_LIMIT,
-            "rate_limit_tenant_per_minute": NO_RATE_LIMIT,
-        }
-    )
+def serve(settings: ApiSettings, principal: MemberPrincipal, port: int) -> None:
     app = create_app(settings)
 
     async def acting() -> MemberPrincipal:
         return principal
 
     app.dependency_overrides[authenticate] = acting
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning", access_log=False)
+
+
+def free_port() -> int:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
+async def until_up(client: httpx2.AsyncClient, server: BaseProcess) -> None:
+    deadline = time.monotonic() + SERVER_START_S
+    while time.monotonic() < deadline:
+        assert server.is_alive(), "The API server exited before it answered"
+        try:
+            if (await client.get("/api/health")).status_code == 200:
+                return
+        except httpx2.TransportError:
+            pass
+        await asyncio.sleep(0.2)
+    raise TimeoutError("The API server did not answer in time")
+
+
+async def run_load(base_url: str, s: Studio, server: BaseProcess) -> Timings:
     timings = Timings()
-    async with httpx2.AsyncClient(
-        transport=httpx2.ASGITransport(app=app), base_url="https://testserver", timeout=120
-    ) as client:
+    async with httpx2.AsyncClient(base_url=base_url, timeout=120) as client:
+        await until_up(client, server)
         seeded = await client.post(
             f"{s.path}/bulk", json={"annotations": drafts(s, 0, SEEDED_SHAPES)}
         )
@@ -149,8 +180,34 @@ async def run_load(database: str, s: Studio, principal: MemberPrincipal) -> Timi
             writers(),
             *(read(client, s, r, known, writing, timings) for r in range(READERS)),
         )
-    await app.state.engine.dispose()
     return timings
+
+
+@contextmanager
+def own_server(database: str, s: Studio) -> Generator[tuple[str, BaseProcess]]:
+    settings = api_settings(database).model_copy(
+        update={
+            "rate_limit_person_per_minute": NO_RATE_LIMIT,
+            "rate_limit_tenant_per_minute": NO_RATE_LIMIT,
+        }
+    )
+    port = free_port()
+    server = multiprocessing.get_context("spawn").Process(
+        target=serve, args=(settings, s.people["owner"], port), daemon=True
+    )
+    server.start()
+    try:
+        yield f"http://127.0.0.1:{port}", server
+    finally:
+        server.terminate()
+        server.join(10)
+        if server.is_alive():
+            server.kill()
+
+
+def load_in_own_server(database: str, s: Studio) -> Timings:
+    with own_server(database, s) as (base_url, server):
+        return asyncio.run(run_load(base_url, s, server))
 
 
 def table_health(database: str) -> list[tuple[object, ...]]:
@@ -159,17 +216,98 @@ def table_health(database: str) -> list[tuple[object, ...]]:
         with_database(OWNER_URL, database),
         "SELECT s.relname, s.n_live_tup, s.n_dead_tup, s.n_ins_since_vacuum, "
         "s.autovacuum_count, s.autoanalyze_count, "
-        "coalesce(array_to_string(c.reloptions, ','), '') "
+        "coalesce(array_to_string(c.reloptions, ','), ''), "
+        "s.n_mod_since_analyze, s.last_autovacuum, s.last_autoanalyze "
         "FROM pg_stat_user_tables s JOIN pg_class c ON c.oid = s.relid "
         f"WHERE s.relname IN ({names}) ORDER BY s.relname",
     )
+
+
+async def paced_writes(
+    client: httpx2.AsyncClient, s: Studio, until: float, timings: Timings
+) -> None:
+    start = SEEDED_SHAPES
+    while time.monotonic() < until:
+        began = time.perf_counter()
+        response = await client.post(
+            f"{s.path}/bulk", json={"annotations": drafts(s, start, LONG_BATCH)}
+        )
+        timings.batches.append((time.perf_counter() - began) * 1000)
+        if response.status_code != 201:
+            timings.failures.append(f"bulk {response.status_code} {response.text[:200]}")
+        start += LONG_BATCH
+        await asyncio.sleep(LONG_BATCH_PAUSE_S)
+
+
+async def paced_edits(
+    client: httpx2.AsyncClient, s: Studio, ids: list[str], until: float, timings: Timings
+) -> None:
+    versions = dict.fromkeys(ids, 1)
+    turn = 0
+    while time.monotonic() < until:
+        target = ids[turn % len(ids)]
+        response = await client.patch(
+            f"{s.path}/{target}", json={"version": versions[target], "class_id": str(s.class_id)}
+        )
+        if response.status_code == 200:
+            versions[target] = response.json()["version"]
+        else:
+            timings.failures.append(f"edit {response.status_code} {response.text[:200]}")
+        turn += 1
+        await asyncio.sleep(LONG_EDIT_PAUSE_S)
+
+
+async def paced_reads(
+    client: httpx2.AsyncClient, s: Studio, reader: int, until: float, timings: Timings
+) -> None:
+    turn = 0
+    while time.monotonic() < until:
+        x = (reader * 7 + turn * 3) % 5 * VIEWPORT
+        y = (reader * 5 + turn * 7) % 5 * VIEWPORT
+        began = time.perf_counter()
+        response = await client.get(s.path, params={"bbox": [x, y, x + VIEWPORT, y + VIEWPORT]})
+        timings.reads.append((time.perf_counter() - began) * 1000)
+        if response.status_code != 200:
+            timings.failures.append(f"read {response.status_code} {response.text[:200]}")
+        turn += 1
+        await asyncio.sleep(LONG_READ_PAUSE_S)
+
+
+async def sample_health(database: str, until: float, samples: list[dict[str, object]]) -> None:
+    started = time.monotonic()
+    while time.monotonic() < until:
+        rows = await asyncio.to_thread(table_health, database)
+        samples.append({"t_s": round(time.monotonic() - started), "tables": rows})
+        await asyncio.sleep(LONG_SAMPLE_S)
+
+
+async def run_long_load(
+    base_url: str, s: Studio, server: BaseProcess, database: str, seconds: float
+) -> tuple[Timings, list[dict[str, object]]]:
+    timings = Timings()
+    samples: list[dict[str, object]] = []
+    async with httpx2.AsyncClient(base_url=base_url, timeout=120) as client:
+        await until_up(client, server)
+        seeded = await client.post(
+            f"{s.path}/bulk", json={"annotations": drafts(s, 0, SEEDED_SHAPES)}
+        )
+        assert seeded.status_code == 201, seeded.text[:500]
+        ids = [str(ref["id"]) for ref in seeded.json()]
+        until = time.monotonic() + seconds
+        await asyncio.gather(
+            paced_writes(client, s, until, timings),
+            paced_edits(client, s, ids, until, timings),
+            *(paced_reads(client, s, r, until, timings) for r in range(LONG_READERS)),
+            sample_health(database, until + LONG_SAMPLE_S, samples),
+        )
+    return timings, samples
 
 
 def test_reads_stay_under_the_p95_budget_while_bulk_inserts_run(database: str) -> None:
     s = studio(database)
     load_before = os.getloadavg()
     started = time.perf_counter()
-    timings = asyncio.run(run_load(database, s, s.people["owner"]))
+    timings = load_in_own_server(database, s)
     wall = time.perf_counter() - started
     load_after = os.getloadavg()
     assert timings.failures == [], timings.failures[:5]
@@ -216,3 +354,38 @@ def test_annotation_tables_carry_the_tuned_autovacuum_settings(database: str) ->
             "autovacuum_vacuum_insert_scale_factor=0.05",
             "autovacuum_analyze_scale_factor=0.01",
         }, table
+
+
+@pytest.mark.skipif(LONG_LOAD_SECONDS is None, reason="Set PARFOCAL_LONG_LOAD_S to run it")
+def test_autovacuum_keeps_up_during_a_long_mixed_load(database: str) -> None:
+    s = studio(database)
+    seconds = float(LONG_LOAD_SECONDS or 0)
+    load_before = os.getloadavg()
+    with own_server(database, s) as (base_url, server):
+        timings, samples = asyncio.run(run_long_load(base_url, s, server, database, seconds))
+    assert timings.failures == [], timings.failures[:5]
+    settings = query(
+        with_database(OWNER_URL, database),
+        "SELECT name, setting FROM pg_settings WHERE name IN ('autovacuum_naptime', "
+        "'autovacuum_vacuum_threshold', 'autovacuum_vacuum_insert_threshold', "
+        "'autovacuum_analyze_threshold') ORDER BY name",
+    )
+    print(
+        json.dumps(
+            {
+                "seconds": seconds,
+                "reads": len(timings.reads),
+                "read_p50_ms": round(statistics.median(timings.reads), 1),
+                "read_p95_ms": round(percentile(timings.reads, 0.95), 1),
+                "batches": len(timings.batches),
+                "batch_p50_ms": round(statistics.median(timings.batches), 1),
+                "load_before": [round(v, 2) for v in load_before],
+                "load_after": [round(v, 2) for v in os.getloadavg()],
+                "settings": [list(row) for row in settings],
+                "samples": samples,
+            },
+            default=str,
+        )
+    )
+    final = {str(row[0]): row for row in table_health(database)}
+    assert all(int(str(final[table][4])) > 0 for table in ANNOTATION_TABLES), final

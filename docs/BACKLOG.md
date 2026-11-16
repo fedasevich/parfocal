@@ -4284,7 +4284,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
-- [ ] OPS-004 · Database operations
+- [x] OPS-004 · Database operations
   Migrations in deploy, Neon's pooler, autovacuum tuning for annotation tables, a Neon read replica for reporting.
   Done when a load test with bulk annotation inserts keeps p95 API latency under budget.
   Size: L.
