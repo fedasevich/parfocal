@@ -750,6 +750,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an E2E test logs in through a test SAML IdP.
   Size: L.
 
+- [ ] IAM-028 · SSO from the sign-in screen and the SSO spec in CI
+  IAM-012 (per-organisation SSO) built SAML sign-in through `/api/auth/sso?domain=`, but the web sign-in page has no SSO entry, the CI job for `apps/e2e/tests/sso.spec.ts` lacks the `STORAGE_*` settings its tenant setup needs, rerunning `connect-saml` on a connected workspace is untested, and a person who already has a password account under the same email is not linked.
+  Done when the sign-in screen offers "Sign in with your organisation" that asks for the work email domain, the SSO spec passes in CI, a test reruns `connect-saml` without duplicating the connection, and a test links an existing password account by verified email.
+  Depends on IAM-012.
+  Size: M.
+
 - [ ] IAM-013 · SCIM provisioning
   Done when a SCIM test client creates, updates and deactivates users.
   Depends on IAM-012.
