@@ -143,3 +143,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-16 | [PanNuke and MoNuSeg load from their official archives, and the checksums of all three PanNuke folds match Warwick's ETags](2026-11-16-signed-in-dataset-loaders.md) | MLEVAL-010 | baseline |
 | 2026-11-16 | [Production already serves every SEC-011 security header, with a fresh CSP nonce per request](2026-11-16-security-headers-on-production.md) | SEC-011 | check |
 | 2026-11-16 | [30 logins from one address in 23 s got no 429 from the production edge Worker, though the limit binding is live](2026-11-16-edge-rate-limits-production-check.md) | SEC-027 | check |
+| 2026-11-16 | [Generic MobileSAM scores 0.573 on a TNBC click and 0.791 on an exact box against 0.852 and 0.863 for PathoSAM ViT-B, with an encoder six times faster on the CPU](2026-11-16-mobilesam-on-tnbc.md) | AISEG-000 | ML evaluation |

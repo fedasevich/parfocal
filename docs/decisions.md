@@ -398,6 +398,16 @@ MLEVAL-010 (loaders for datasets behind a sign-in) loads PanNuke and MoNuSeg fro
 Your choice:
 
 ### 132. How the read-only fixtures key gets created
+### 133. Whether to fine-tune a small SAM on pathology for a fast interactive tier
+
+AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier and left Fast empty in [ADR XXXX](adr/XXXX-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier). Generic MobileSAM encodes six times faster on the CPU but scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology was found ([result](results/2026-11-16-mobilesam-on-tnbc.md)). The ViT-L download is already asked in decisions 117 and 123.
+
+- **A. No fine-tune for now. Devices without WebGPU use a server embedding once decision 117 is taken, and Fast stays empty (recommended).**
+- B. Add a task that fine-tunes MobileSAM or EdgeSAM on PathoSAM's public training sets on a Modal GPU, cost `TODO` and counted against the $30 month.
+
+Your choice:
+
+## The review column, what each task waits for
 
 INGEST-029 (shared test slides bucket) declares the read-only R2 key as the account token `parfocal-fixtures-read` in `infra/tofu/dev/fixtures.tf`, limited to object reads in `parfocal-dev`. The plan stops at a 403 because the agent token `parfocal-agent-dev-staging` may not read or create API tokens. All 33 public fixtures are already in R2 and `pnpm fixtures` reads them with any key that can read the bucket. The `dev` plan also shows two changes waiting from other tasks, the tiering lifecycle rule and the 7-day bucket lock on `t/`, so the token would need a targeted apply until those are applied.
 
