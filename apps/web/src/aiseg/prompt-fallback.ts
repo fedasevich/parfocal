@@ -35,14 +35,22 @@ export function samBatchDecoder(sam: PromptSam, id: string, frame: SamFrame): Ba
       const best = bestMask(outcome.outputs);
       const logits = fittedLogits(best.logits, frame);
       const mask = new Uint8Array(patch.width * patch.height);
+      const patchLogits = new Float32Array(mask.length);
       for (let py = 0; py < patch.height; py++) {
         const my = Math.min(fittedHeight - 1, Math.floor((py + 0.5) * scale));
         for (let px = 0; px < patch.width; px++) {
           const mx = Math.min(fittedWidth - 1, Math.floor((px + 0.5) * scale));
-          if ((logits[my * fittedWidth + mx] ?? 0) > 0) mask[py * patch.width + px] = 1;
+          const value = logits[my * fittedWidth + mx] ?? 0;
+          patchLogits[py * patch.width + px] = value;
+          if (value > 0) mask[py * patch.width + px] = 1;
         }
       }
-      results.push({ mask, score: best.score, stability: stabilityScore(logits) });
+      results.push({
+        mask,
+        score: best.score,
+        stability: stabilityScore(logits),
+        logits: patchLogits,
+      });
     }
     return results;
   };

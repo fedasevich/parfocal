@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   type BatchDecoder,
+  dropDuplicates,
+  ensemblePoints,
+  maskBounds,
   type PatchImage,
   type PromptMask,
   promptPass,
@@ -133,11 +136,100 @@ describe("prompt pass", () => {
     assert.equal(outcome.decodes, 1);
   });
 
+  it("averages five prompts per nucleus in best quality and keeps the averaged outline", async () => {
+    const prompted: Seed[] = [];
+    const shifted: BatchDecoder = (seeds) => {
+      prompted.push(...seeds);
+      return Promise.resolve(
+        seeds.map((seed): PromptMask => {
+          const disc = discs.find((candidate) => inDisc(candidate, seed[0], seed[1]));
+          if (disc === undefined) return { mask: null, score: 0, stability: 0 };
+          const logits = new Float32Array(size * size);
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const reach = disc.r + 2 - Math.hypot(x - seed[0], y - seed[1]) * 0.25;
+              const inside = Math.hypot(x - disc.x, y - disc.y) - reach;
+              logits[y * size + x] = -inside * 4;
+            }
+          }
+          const mask = new Uint8Array(size * size);
+          logits.forEach((value, p) => {
+            if (value > 0) mask[p] = 1;
+          });
+          return { mask, score: 0.9, stability: 0.95, logits };
+        }),
+      );
+    };
+    const fast = await promptPass(image(), shifted, { ...options, batch: 16 });
+    const best = await promptPass(image(), shifted, { ...options, batch: 16, ensemble: 4 });
+    assert.equal(best.nuclei.length, discs.length);
+    assert.equal(best.decodes - fast.decodes, discs.length * 5);
+    for (const nucleus of best.nuclei) {
+      const disc = discs.find((candidate) => inDisc(candidate, nucleus.seed[0], nucleus.seed[1]));
+      assert.ok(disc !== undefined);
+      const before = fast.nuclei.find(
+        (other) => other.seed[0] === nucleus.seed[0] && other.seed[1] === nucleus.seed[1],
+      );
+      assert.equal(before?.stability, 0.95);
+      assert.ok(nucleus.stability > 0.8 && nucleus.stability < 0.95);
+    }
+  });
+
+  it("picks four points inside the mask around its centre plus the seed", () => {
+    const mask = new Uint8Array(size * size);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++)
+        if (inDisc({ x: 60, y: 60, r: 10 }, x, y)) mask[y * size + x] = 1;
+    }
+    const area = mask.reduce((sum, value) => sum + value, 0);
+    const nucleus = {
+      mask,
+      area,
+      seed: [58, 61] as Seed,
+      score: 1,
+      stability: 1,
+      bounds: maskBounds(mask, size),
+    };
+    const points = ensemblePoints(nucleus, size, 4);
+    assert.equal(points.length, 5);
+    assert.deepEqual(points.at(-1), [58, 61]);
+    for (const [x, y] of points) assert.equal(mask[y * size + x], 1);
+  });
+
+  it("drops the less confident of two masks that overlap at IoU over 0.5", () => {
+    const disc = (cx: number) => {
+      const mask = new Uint8Array(size * size);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++)
+          if (inDisc({ x: cx, y: 60, r: 10 }, x, y)) mask[y * size + x] = 1;
+      }
+      return mask;
+    };
+    const nucleus = (cx: number, score: number) => {
+      const mask = disc(cx);
+      return {
+        mask,
+        area: mask.reduce((sum, value) => sum + value, 0),
+        seed: [cx, 60] as Seed,
+        score,
+        stability: 1,
+        bounds: maskBounds(mask, size),
+      };
+    };
+    const kept = dropDuplicates([nucleus(60, 0.5), nucleus(62, 0.9), nucleus(90, 0.4)], size);
+    assert.deepEqual(
+      kept.map((item) => item.seed[0]),
+      [62, 90],
+    );
+  });
+
   it("scales seeds and areas with the pixel size and adds the residual pass in best quality", () => {
     const fast = promptPassOptionsFor(0.5, "fast");
     const best = promptPassOptionsFor(0.25, "best");
     assert.equal(fast.residual, false);
     assert.equal(best.residual, true);
+    assert.equal(fast.ensemble, 0);
+    assert.equal(best.ensemble, 4);
     assert.equal(best.seedRadius, 14);
     assert.ok(fast.maxArea < best.maxArea);
     assert.equal(best.minStability, 0.8);
