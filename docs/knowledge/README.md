@@ -31,3 +31,4 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | Deploy definitions, the one-time bootstrap and what the first production deploy needs | [deploy.md](deploy.md) |
 | The nightly memory and leak suite, its budgets and the thresholds still to set | [memory-suite.md](memory-suite.md) |
 | Where each runtime secret lives, the secret scanner and how to rotate every secret | [secrets.md](secrets.md) |
+| How to provision and deprovision a tenant with the command, and the drill run | [tenant-provisioning.md](tenant-provisioning.md) |

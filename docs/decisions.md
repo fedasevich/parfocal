@@ -240,6 +240,16 @@ R2 has no object versioning that this repository relies on, so SEC-014 (backups 
 
 Your choice:
 
+### 116. Which Zitadel the tenant provisioning drill uses
+
+OPS-019 (Zitadel adapter and tenant command) provisions and deprovisions a tenant against the local Zitadel from `make dev`. The drill environment run in its runbook needs a Zitadel admin token, and production has none for this.
+
+- **A. A throwaway local Zitadel inside the drill environment. Nothing touches the production instance and it costs nothing (recommended).**
+- B. A provisioning service user with its own token on the production instance, made for the drill and deleted after it.
+- C. Postpone the drill until OPS-014 (preparing production for the first real user).
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
