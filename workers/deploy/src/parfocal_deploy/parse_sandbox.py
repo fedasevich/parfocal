@@ -53,6 +53,8 @@ class Sandbox(Protocol):
 
     async def entries(self, remote: Path) -> list[RemoteEntry]: ...
 
+    async def exit_code(self) -> int | None: ...
+
     async def terminate(self) -> None: ...
 
 
@@ -127,8 +129,15 @@ class SandboxChild:
         try:
             code = await asyncio.wait_for(self.process.wait(), EXIT_WAIT_SECONDS)
         except Exception:
+            code = None
+        if code in KILLED_EXIT_CODES:
+            return True
+        try:
+            return await asyncio.wait_for(self.sandbox.exit_code(), EXIT_WAIT_SECONDS) in (
+                KILLED_EXIT_CODES
+            )
+        except Exception:
             return False
-        return code in KILLED_EXIT_CODES
 
     async def deliver(self, path: Path) -> Path:
         if path not in self.delivered:
@@ -228,6 +237,9 @@ class ModalSandbox:
             )
             for entry in found
         ]
+
+    async def exit_code(self) -> int | None:
+        return await self.sandbox.poll.aio()
 
     async def terminate(self) -> None:
         await self.sandbox.terminate.aio()

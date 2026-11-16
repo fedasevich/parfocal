@@ -37,6 +37,7 @@ Boundary, the same in both runs:
 | Run 3, scan, validate, derive | clean, 3 levels, a 6,750 byte thumbnail copied back |
 | Run 3, `patch_slide` | rows returned and a 210,875 byte patch zip copied back |
 | Run 3, 512 MiB under a 256 MiB cap through `parse_isolated` | `unreadable`, not `parse-too-large` |
+| Run 5 (`ap-W7p3MsPPAS2REIGS2q1UEz`), the same after the runner also reads the sandbox's own exit code | `parse-too-large` |
 | Run 3, 10 s deadline | `parse-too-slow` after 10.4 s |
 | Run 3, missing parser | `ParseNotStartedError` |
 | Run 3, sandboxes of the app still listed at the end | one, not yet exited, and none after the app stopped |
@@ -60,19 +61,18 @@ Timings in seconds:
 | `derive_upload`, all in | | | 2.181 |
 | `patch_slide`, all in | | | 2.849 |
 
-Cost as Modal's billing report showed it the same day: $0.00857 for run 1, $0.00882 for run 2, and $0.00055 for a first run that failed in its own probe script. TODO: runs 3 and a fourth run that failed on a wrong probe GeoJSON (`ap-nyZZgOs6jIjLJYKpzTHX1P`) were not in the report yet.
+Cost as Modal's billing report showed it the same day: $0.00857 for run 1, $0.00882 for run 2, and $0.00055 for a first run that failed in its own probe script. TODO: runs 3 and 5 and a fourth run that failed on a wrong probe GeoJSON (`ap-nyZZgOs6jIjLJYKpzTHX1P`) were not in the report yet.
 
 ## Interpretation
 
 - The sandbox is the kernel-level boundary the ADR wanted. A raw socket fails without the Python audit hook, and the sandbox holds no secret.
 - The ingest workflow calls `parsed` once in each of five steps (identify, scan, validate, index, derive), so one slide starts five sandboxes. A container start was 2.2 to 3.3 s in these runs. The all-in step times of 2.2 to 6.9 s also hold the parse itself, so they are an upper bound on the start-up share.
 - Copying 100 MiB in took 0.46 to 3.99 s across three runs, so the rate varies by almost ten times. Real slides are often 1 to 3 GiB and were not measured, so their transfer time is `TODO`.
-- An out-of-memory kill through the conversation ends as `unreadable`. The bare exec reports 137, but the runner sees no 137 when the cap kills the child mid-parse. The memory is still capped, only the failure message differs.
+- When the cap kills a child mid-parse, the exec's own wait reports no 137, but the sandbox's exit code does. The runner now checks both, and run 5 ended as `parse-too-large`.
 - A per-job Volume uploads at a similar rate but would carry the file once for all five steps. Copying into each sandbox carries it five times. The runner uses `copy_from_local` now because it needs no new resource and no clean-up. It copies each fetched file once per sandbox.
 
 ## Follow-ups
 
 - ADR 0325 (isolated parsing of uploaded files) is updated with these answers.
 - TODO: measure a real 1 GiB slide through the whole ingest in the sandbox. If the five copies dominate, switch to one per-job Volume or one sandbox per job.
-- TODO: find what the exec reports when the memory cap kills a child mid-parse, and map it to `parse-too-large`.
 - Production was not touched. The sandbox reaches the `ingest` function at the next deploy of `parfocal_deploy.modal_app`.

@@ -58,8 +58,11 @@ def listed_in(remote: Path) -> list[RemoteEntry]:
 
 
 class FakeSandbox:
-    def __init__(self, listed: Sequence[RemoteEntry] | None = None) -> None:
+    def __init__(
+        self, listed: Sequence[RemoteEntry] | None = None, exit_code: int | None = None
+    ) -> None:
         self.listed = listed
+        self.code = exit_code
         self.copied_in: list[Path] = []
         self.copied_out: list[Path] = []
         self.made: list[Path] = []
@@ -94,6 +97,9 @@ class FakeSandbox:
         if self.listed is not None:
             return list(self.listed)
         return await asyncio.to_thread(listed_in, remote)
+
+    async def exit_code(self) -> int | None:
+        return self.code
 
     async def terminate(self) -> None:
         if self.process is not None and self.process.returncode is None:
@@ -208,9 +214,50 @@ async def test_an_overlong_reply_line_ends_the_conversation(tmp_path: Path) -> N
 
 async def test_a_child_killed_by_the_memory_limit_counts_as_too_large(tmp_path: Path) -> None:
     killed = SandboxChild(FakeSandbox(), FakeExit(137), tmp_path)
+    sandbox_killed = SandboxChild(FakeSandbox(exit_code=137), LostExit(), tmp_path)
     crashed = SandboxChild(FakeSandbox(), FakeExit(1), tmp_path)
     assert await killed.killed_for_memory()
+    assert await sandbox_killed.killed_for_memory()
     assert not await crashed.killed_for_memory()
+
+
+class LostExit(FakeExit):
+    def __init__(self) -> None:
+        super().__init__(0)
+
+    async def wait(self) -> int:
+        raise ConnectionError
+
+
+class MemoryKilledSandbox(FakeSandbox):
+    async def exec(
+        self, command: Sequence[str], environment: Mapping[str, str], work_dir: Path
+    ) -> LocalProcess:
+        process = await super().exec(command, environment, work_dir)
+        self.code = 137
+        return process
+
+
+async def test_a_parse_killed_by_the_sandbox_memory_cap_ends_as_too_large(tmp_path: Path) -> None:
+    sandbox = MemoryKilledSandbox()
+
+    async def fetcher(_key: str) -> Path:
+        assert sandbox.process is not None
+        sandbox.process.kill()
+        await sandbox.process.wait()
+        return tmp_path / "never"
+
+    with pytest.raises(StepFailedError) as raised:
+        await parse_isolated(
+            "parfocal_ingest.parse_jobs:identify_upload",
+            {"key": UPLOAD_KEY, "name": "slide.tiff"},
+            SCOPE,
+            fetcher,
+            tmp_path / "work",
+            ParseLimits(launcher=launcher_with(sandbox)),
+        )
+    assert raised.value.code == Failure.PARSE_TOO_LARGE
+    assert sandbox.terminated
 
 
 def test_the_ingest_function_parses_in_the_sandbox() -> None:
