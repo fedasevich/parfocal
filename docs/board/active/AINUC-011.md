@@ -1,4 +1,4 @@
 status: in-progress
 by: claude parallel run
 since: 2026-11-16
-note: 1024 px windows fail the reference. Next: 3 by 3 windows per tile or tissue skip or fp16, checked against the reference before a GPU run
+note: Tissue skip and lookahead built, 11,448 windows still over an hour. Waiting on decision 135 (smaller nucleus tile core or looser reference), then one L4 run on dev with skip, ahead=1 and 4 CPUs
