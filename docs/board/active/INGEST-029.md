@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-16
-note: blocked on decision 132, the agent token cannot create the read-only key, then apply only the token and prove a write is refused
+note: Fixtures uploaded and pnpm fixtures reads R2, the read-only key waits for decision 132 because the agent token cannot create API tokens
