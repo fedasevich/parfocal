@@ -62,7 +62,7 @@ jobs:
           cache-key: preview
       - id: create
         run: |
-          url="$(pnpm --silent --filter @parfocal/deploy run preview create --pr "${PR_NUMBER}" | tail -n 1)"
+          url="$(pnpm --silent --filter @parfocal/deploy run preview create --pr "${PR_NUMBER}" | tee /dev/stderr | tail -n 1)"
           echo "url=${url}" >> "${GITHUB_OUTPUT}"
       - env:
           GH_TOKEN: ${{ github.token }}

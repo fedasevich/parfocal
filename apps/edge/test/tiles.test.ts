@@ -768,6 +768,10 @@ describe("preview storage prefix", () => {
   test("a preview reads tenant objects under its own prefix and fixtures where they are", () => {
     assert.equal(storedKey("previews/pr-7/", "t/a/s/b/tile.jpg"), "previews/pr-7/t/a/s/b/tile.jpg");
     assert.equal(storedKey("previews/pr-7/", "fixtures/CMU-1.svs"), "fixtures/CMU-1.svs");
+    assert.equal(
+      storedKey("previews/pr-7/", "ops/sli/batches/1.json"),
+      "previews/pr-7/ops/sli/batches/1.json",
+    );
     assert.equal(storedKey(undefined, "t/a/s/b/tile.jpg"), "t/a/s/b/tile.jpg");
     assert.equal(storedKey("", "t/a/s/b/tile.jpg"), "t/a/s/b/tile.jpg");
   });

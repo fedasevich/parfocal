@@ -13,11 +13,11 @@ export type TileEnv = {
   readonly STORAGE_PREFIX?: string;
 };
 
-const TENANT_ROOT = "t/";
+const PREFIXED_ROOTS = ["t/", "ops/"];
 const PREVIEW_PREFIX = /^previews\/pr-[1-9][0-9]{0,6}\/$/;
 
 export function storedKey(prefix: string | undefined, key: string): string {
-  if (!prefix || !key.startsWith(TENANT_ROOT)) return key;
+  if (!prefix || !PREFIXED_ROOTS.some((root) => key.startsWith(root))) return key;
   if (!PREVIEW_PREFIX.test(prefix))
     throw new Error("STORAGE_PREFIX must look like previews/pr-12/");
   return `${prefix}${key}`;

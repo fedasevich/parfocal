@@ -15,12 +15,13 @@ from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import bootstrap, new_key, storage_endpoint
 from parfocal_deploy.deploy import WebUrl, deploy, modal_web_url
 from parfocal_deploy.environments import Environment
-from parfocal_deploy.modal_app import LOGIN_SECRET
+from parfocal_deploy.modal_app import KEYS_SECRET, LOGIN_SECRET
 from parfocal_deploy.reset import SEED
 from parfocal_deploy.tools import (
     MODAL,
     Tools,
     fetch,
+    modal_secret_names,
     read,
     required,
     run,
@@ -305,14 +306,21 @@ def create(
         now or datetime.now(UTC),
     )
     ensure_modal_environment(tools, number)
+    if fresh:
+        forget_keys_of_an_old_branch(tools, number)
     bootstrap(target, tools, local, preview_outputs(settings), reset=True, make=make)
     write_modal_secret(
         tools, target.modal_environment, LOGIN_SECRET, login_values(settings), overwrite=True
     )
     deploy(target, tools, local, web_url, modules=PREVIEW_MODULES)
-    if fresh:
-        seed(target, tools, settings)
+    seed(target, tools, settings)
     return target
+
+
+def forget_keys_of_an_old_branch(tools: Tools, number: int) -> None:
+    environment = guard_modal_environment(names(number).modal_environment, number)
+    if KEYS_SECRET in modal_secret_names(tools, environment):
+        tools.run([*MODAL, "secret", "delete", KEYS_SECRET, "-e", environment, "--yes"], None, None)
 
 
 def delete_worker(cloudflare: Cloudflare, account: str, number: int) -> bool:

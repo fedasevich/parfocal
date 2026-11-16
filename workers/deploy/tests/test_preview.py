@@ -121,6 +121,11 @@ class Cloud:
             self.environments.remove(name)
             self.secrets.pop(name, None)
             self.deleted.append(f"modal:{name}")
+        if "secret" in argv and "delete" in argv:
+            name = argv[argv.index("delete") + 1]
+            environment = argv[argv.index("-e") + 1]
+            assert environment.startswith("pr-")
+            del self.secrets[environment][name]
         if "secret" in argv and "create" in argv:
             name = argv[argv.index("create") + 1]
             environment = argv[argv.index("-e") + 1]
@@ -254,7 +259,27 @@ def test_a_new_preview_gets_a_branch_environment_secrets_deploy_and_seed() -> No
     assert seed_extra["APP_ENV"] == "preview"
 
 
-def test_a_push_to_an_open_preview_moves_the_expiry_keeps_the_keys_and_skips_the_seed() -> None:
+def test_a_branch_that_expired_gets_a_new_role_and_new_keys_on_the_next_push() -> None:
+    cloud = Cloud()
+    created(cloud, 7)
+    first_keys = cloud.secrets["pr-7"][KEYS_SECRET]
+    cloud.branches = [branch for branch in cloud.branches if branch["name"] != "pr-7"]
+    cloud.roles.clear()
+    cloud.commands.clear()
+    create(
+        7,
+        cloud.tools(),
+        LOCAL,
+        web_url=lambda _: "https://api.modal.example",
+        make=lambda: "z" * 43,
+        now=NOW,
+    )
+    assert neon.APP_ROLE in cloud.roles
+    assert cloud.secrets["pr-7"][KEYS_SECRET] != first_keys
+    assert any(line.endswith(f"secret delete {KEYS_SECRET} -e pr-7 --yes") for line in lines(cloud))
+
+
+def test_a_push_to_an_open_preview_moves_the_expiry_keeps_the_keys_and_seeds_again() -> None:
     cloud = Cloud()
     created(cloud, 7)
     first_keys = cloud.secrets["pr-7"][KEYS_SECRET]
@@ -270,8 +295,9 @@ def test_a_push_to_an_open_preview_moves_the_expiry_keeps_the_keys_and_skips_the
     )
     assert [call[0] for call in cloud.neon_calls if call[0] in {"POST", "PATCH"}] == ["PATCH"]
     assert cloud.secrets["pr-7"][KEYS_SECRET] == first_keys
-    assert not any("parfocal_api.showcase" in argv for argv, _ in cloud.commands)
+    assert any("parfocal_api.showcase" in argv for argv, _ in cloud.commands)
     assert not any("environment create" in line for line in lines(cloud))
+    assert not any("secret delete" in line for line in lines(cloud))
 
 
 def test_a_sixth_preview_is_refused_before_anything_is_created() -> None:

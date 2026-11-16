@@ -16,7 +16,7 @@ EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 MAX_PRESIGN_SECONDS = 7 * 24 * 3600
 LIST_PAGE_LIMIT = 1000
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024
-TENANT_ROOT = "t/"
+PREFIXED_ROOTS = ("t/", "ops/")
 
 
 @dataclass(frozen=True)
@@ -129,7 +129,7 @@ def host_of(endpoint: str) -> str:
 
 
 def stored_key(location: StorageLocation, key: str) -> str:
-    if location.key_prefix and key.startswith(TENANT_ROOT):
+    if location.key_prefix and key.startswith(PREFIXED_ROOTS):
         return f"{location.key_prefix}{key}"
     return key
 

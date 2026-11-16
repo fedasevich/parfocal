@@ -4,8 +4,15 @@ import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
 import { withSecurityHeaders } from "#security-headers.ts";
-import { createTileSliCounter, flushTileSli } from "#sli.ts";
-import { handleTiles, isTilesPath, problem, type RangeCache, type TileEnv } from "#tiles.ts";
+import { createTileSliCounter, flushTileSli, type SliBucket } from "#sli.ts";
+import {
+  handleTiles,
+  isTilesPath,
+  problem,
+  type RangeCache,
+  storedKey,
+  type TileEnv,
+} from "#tiles.ts";
 
 export const packageName = "@parfocal/edge";
 
@@ -28,6 +35,12 @@ export type AppEnv = {
 };
 
 export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv & ApiEnv;
+
+export function sliBucket(env: TileEnv): SliBucket {
+  return {
+    put: (key, body, options) => env.SLIDES.put(storedKey(env.STORAGE_PREFIX, key), body, options),
+  };
+}
 
 export default {
   async fetch(request: Request, env: EdgeEnv, context?: ExecutionContext): Promise<Response> {
@@ -97,6 +110,6 @@ async function measuredTiles(
     return response;
   } finally {
     tileSli.observe(status, Date.now() - started);
-    if (tileSli.due()) context?.waitUntil(flushTileSli(tileSli, env.SLIDES, () => Date.now()));
+    if (tileSli.due()) context?.waitUntil(flushTileSli(tileSli, sliBucket(env), () => Date.now()));
   }
 }

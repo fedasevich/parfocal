@@ -22,6 +22,10 @@ def test_a_preview_writes_tenant_keys_under_its_prefix_and_reads_fixtures_where_
     when = datetime(2026, 11, 16, tzinfo=UTC)
     tenant = presign(PREVIEW, "PUT", "t/a/quarantine/u/x.svs", {}, 900, when)
     fixture = presign(PREVIEW, "GET", "fixtures/CMU-1.svs", {}, 900, when)
+    alerting = presign(PREVIEW, "PUT", "ops/alerting/state.json", {}, 900, when)
+    assert alerting.startswith(
+        "http://127.0.0.1:9000/bucket/previews/pr-7/ops/alerting/state.json?"
+    )
     assert tenant.startswith("http://127.0.0.1:9000/bucket/previews/pr-7/t/a/quarantine/u/x.svs?")
     assert fixture.startswith("http://127.0.0.1:9000/bucket/fixtures/CMU-1.svs?")
 

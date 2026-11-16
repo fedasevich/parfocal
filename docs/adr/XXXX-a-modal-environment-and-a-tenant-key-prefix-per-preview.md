@@ -25,12 +25,15 @@ Option B and option D.
 - A preview is the Worker `parfocal-edge-pr-<n>` deployed from the top-level Wrangler config with `--name`, never with `--env production`, whose route is `app.parfocal.eu`. It lives at `https://parfocal-edge-pr-<n>.<subdomain>.workers.dev`.
 - The API runs in Modal environment `pr-<n>` with the usual app and secret names. Only `parfocal_deploy.modal_app` is deployed, not the ML pool, and it has no cron.
 - The Neon branch `pr-<n>` is made in the project named by the `preview` GitHub environment from the branch in `PREVIEW_NEON_PARENT`, or the project's default branch, with `expires_at` 7 days ahead that each push moves. A new branch is migrated and seeded with the showcase data.
-- `STORAGE_KEY_PREFIX` on the API and `STORAGE_PREFIX` on the Worker must match `previews/pr-<n>/`, production refuses any prefix, and only keys under `t/` are moved.
+- `STORAGE_KEY_PREFIX` on the API and `STORAGE_PREFIX` on the Worker must match `previews/pr-<n>/`, production refuses any prefix, and only keys under `t/` and `ops/` are moved.
 - Every name comes from the pull request number in one function. Each delete checks the exact name again and refuses `main`, `dev`, `fixtures/`, `previews/`, another pull request's name and any Neon branch marked default or protected.
 - Both workflows run only when the repository variable `PREVIEWS` is `true`, only for pull requests from this repository, and never through `pull_request_target`. The teardown runs from the default branch, so it is reviewed code. More than 5 previews at once are refused.
 
 ## Consequences
 
 - Closing a pull request deletes the Worker, the Modal environment with its apps and secrets, the Neon branch and the objects under `previews/pr-<n>/`. A nightly sweep removes what a missed close left, and it does nothing when it cannot list open pull requests.
-- Preview SLI batches written by the Worker still go to the shared SLI prefix. TODO: move them under the preview prefix if they ever disturb production counts.
+- Keys under `ops/` (SLI batches and alert state) move with the prefix too, so a preview never writes where production reads. Every other root, such as `fixtures/`, is read where it is.
+- A pull request whose migration drops or rewrites data fails its preview, because the migration check of the deploy refuses it there as it does in production.
+- A new branch whose Modal environment still holds keys from an expired branch gets new keys and a new app role. The showcase seed runs on every push, because it skips workspaces that exist.
+- Not built yet: the R2 lifecycle rule on `previews/` that ADR 0050 lists as a backstop, and the bucket CORS origin for `https://parfocal-edge-pr-*.<subdomain>.workers.dev`, without which uploads from a preview fail. Both are OpenTofu changes for the owner to apply before turning `PREVIEWS` on.
 - TODO: confirm that deleting the Worker also removes its Durable Object storage, the flags `modal environment delete --yes` and `gh pr comment --create-if-none`, and the Zitadel glob redirect of ADR 0050, on the first real preview run.
