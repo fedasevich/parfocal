@@ -10,7 +10,7 @@ from guard_destructive import refusal
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "guard_destructive.py"
 
-KNOWN_REFUSED_SCRIPTS = {"infra/tofu/idp-scratch/run.sh"}
+KNOWN_REFUSED_SCRIPTS: set[str] = set()
 
 REFUSED_TOOLS = (
     "mcp__neon__delete_project",

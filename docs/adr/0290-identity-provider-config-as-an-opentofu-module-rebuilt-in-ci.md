@@ -38,3 +38,13 @@ One run failed before the fix it led to. Zitadel refused the test user's passwor
 - The workflow has not run on GitHub yet, because this branch was not pushed. The first run after the merge is the proof for "recreated in CI".
 - The workflow is not part of `ci-ok`. Adding it there is the lead's call.
 - OPS-001 calls the module from its roots and deletes `zitadel.tf` only together with the `moved` blocks, or the production app would be destroyed.
+
+## Amendment of 2026-11-16
+
+[ADR 0331](0331-no-staging-environment.md) (no staging environment) dropped staging for good, so IAM-001 (identity provider configuration as code) no longer waits for a staging organisation and its scope ends at the local proof.
+
+- `run.sh` starts the same container that `make dev` starts, `infra/local/zitadel.compose.yaml`, under its own compose project, ports and bootstrap folder (`IDP_SCRATCH_PROJECT`, `IDP_SCRATCH_PORT`, `IDP_SCRATCH_MAILPIT_PORT`, defaults `parfocal-idp-scratch`, 8189 and 8125). The duplicate `idp-scratch/compose.yaml` is gone.
+- The second pass starts from an empty container instead of `tofu destroy`. The run applies, requires an empty plan and checks, wipes the container and its volumes, then applies, plans and checks again on a new instance. Agents can now run it, because it no longer holds a command the destructive guard refuses.
+- The scratch root's third app is `prod` at `https://app.parfocal.eu` instead of `staging`, which keeps one app with development mode off.
+- Applying the module to the production organisation stays out of IAM-001. OPS-001 (base infrastructure as code) owns that, with the `moved` blocks above. The consequences that name the staging plan or the login E2E against staging now mean the local login E2E of TEST-039 (end-to-end tests against a local Zitadel) and the production plan.
+- Measured on 2026-11-16 on the owner's Mac with OpenTofu 1.13: one full run passed, 9 resources added and "No changes" on each pass, all checks passed both times.

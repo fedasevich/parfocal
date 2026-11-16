@@ -50,7 +50,7 @@ services:
     ports:
       - "127.0.0.1:${PARFOCAL_ZITADEL_PORT:-8089}:8080"
     volumes:
-      - ../../.zitadel:/zitadel/bootstrap:rw
+      - ${PARFOCAL_ZITADEL_STATE:-../../.zitadel}:/zitadel/bootstrap:rw
     healthcheck:
       test: ["CMD", "/app/zitadel", "ready"]
       interval: 5s
