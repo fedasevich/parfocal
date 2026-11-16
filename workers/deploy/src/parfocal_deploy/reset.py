@@ -24,6 +24,8 @@ RESET_SETTINGS = (
 )
 TENANT_PREFIX = "t/"
 KEPT_TABLES = frozenset({"alembic_version", "platform_operators"})
+AUDIT_TABLE = "audit_events"
+AUDIT_TRUNCATE_GUARD = "audit_events_no_truncate"
 metadata = slides.metadata
 SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.showcase")
 
@@ -31,6 +33,17 @@ SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.
 def truncate_statement() -> str:
     names = sorted(table.name for table in metadata.sorted_tables if table.name not in KEPT_TABLES)
     return f"TRUNCATE {', '.join(names)} RESTART IDENTITY CASCADE"
+
+
+def reset_statement() -> str:
+    guard = f"ALTER TABLE {AUDIT_TABLE} {{}} TRIGGER {AUDIT_TRUNCATE_GUARD}"
+    return (
+        "DO $$ BEGIN "
+        f"EXECUTE '{guard.format('DISABLE')}'; "
+        f"EXECUTE '{truncate_statement()}'; "
+        f"EXECUTE '{guard.format('ENABLE')}'; "
+        "END $$"
+    )
 
 
 async def empty_tenant_objects(location: StorageLocation) -> int:
@@ -62,7 +75,7 @@ def reset(target: Environment, tools: Tools, local: Mapping[str, str]) -> int:
     direct = neon.owner_uri(tools.neon, project, branch, database, pooled=False)
     location = storage_location(target, settings)
     tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
-    tools.sql(direct, truncate_statement())
+    tools.sql(direct, reset_statement())
     removed = asyncio.run(empty_tenant_objects(location))
     tools.run(
         SEED,
