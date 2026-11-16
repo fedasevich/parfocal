@@ -128,3 +128,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-15 | [make dev takes a clean checkout to the logged-in home screen in 62 s with warm Docker, pnpm and uv caches](2026-11-15-make-dev-cold-start.md) | FOUND-009 | baseline |
 | 2026-11-15 | [The production Worker serves repeated tile ranges from the edge cache, measured locally behind the latency proxy](2026-11-15-tile-range-cache-local.md) | TILES-002 | baseline |
 | 2026-11-15 | [Annotation reads while two writers bulk insert 20,000 cells sit on the 250 ms p95 target, 191 to 356 ms at a load average near 4, so the target is not met reliably yet](2026-11-15-annotation-load-test.md) | OPS-004 | load test |
+| 2026-11-16 | [The prompt-pass fallback scores PQ 0.796 on all 50 TNBC images, 0.033 above the POC's stain-seed row](2026-11-16-prompt-fallback-on-tnbc.md) | AISEG-016 | ML evaluation |
