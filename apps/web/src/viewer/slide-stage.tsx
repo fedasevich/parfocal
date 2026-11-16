@@ -583,7 +583,21 @@ function OpenedSlide({
             : { ...previous, route: viewport.route(), shownRoute: viewport.shownRoute() },
         );
       };
-      const unprovide = provideDebug({ getRoute: () => viewport.shownRoute() });
+      const unprovide = provideDebug({
+        getRoute: () => viewport.shownRoute(),
+        jumpTo: async ({ x, y, magnification }) => {
+          const micronsPerPixel = viewport.engine.getSlide()?.micronsPerPixel ?? null;
+          if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
+          const started = performance.now();
+          viewport.engine.setCamera({
+            x,
+            y,
+            zoom: engine.zoomForMagnification(micronsPerPixel, magnification),
+          });
+          await viewport.liveRoute()?.whenIdle();
+          return performance.now() - started;
+        },
+      });
       dispose = () => {
         window.removeEventListener(navigationEvent, followNavigation);
         unprovide();

@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-16
-note: Open, jump and decision still need a run against the local stack with sign-in and the real API
+note: Local stack numbers recorded. Left: open and jump on CMU-1.svs through the edge Worker, decision on a production build
