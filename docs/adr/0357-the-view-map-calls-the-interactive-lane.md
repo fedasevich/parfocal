@@ -27,7 +27,8 @@ The web uses the server scorer whenever the fake API is off and shows the panel 
 ## Consequences
 
 - The embedder pool has one T4 container. A view map and a segmentation embed for another person queue behind each other there. If that slows segmentation, the view map needs a pool of its own and an owner decision, because the 5 USD hourly cap that ADR 0355 (the tumor map job shares the detector-good pool) works within has no room.
-- The embedder pool entry has no `view-map` runner yet. Until AITUM-012 (the interactive pool answers view map calls) adds it, every project owner on the real API sees the panel and each click ends in "This view could not be mapped".
+- AITUM-012 (the interactive pool answers view map calls) gave the embedder pool its `view-map` runner, `parfocal_ml.view_map_worker`. Each container fetches the ResNet18 once and keeps the last slide it downloaded, and one lock lets one tile score at a time. Until the pool is deployed with storage secrets on the embedder function, each click on the real API still ends in "This view could not be mapped". The first tile of a large slide downloads the whole slide inside the embedder's 60 s timeout, which may not be enough (TODO after the first T4 run).
+- One view tile took a median of 5.5 s on an Apple M4 CPU ([result](../results/2026-11-16-view-tile-time.md)).
 - The route holds its tenant database connection and one thread while it waits for the pool, and the call has no timeout of its own. Many slow tiles at once could use up the API's connection pool.
 - The fake API still shows the panel to reviewers, while the server refuses them. Who may map a view is open decision 129 (who may map a view of a slide on the server) in `docs/decisions.md`.
 - A cold embedder start, up to about a minute, lands on the first tile. The panel shows "Mapping this view" until it ends.

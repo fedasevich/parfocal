@@ -50,6 +50,7 @@ def pool_image() -> modal.Image:
 
 type Runner = Callable[[Mapping[str, object]], Mapping[str, object]]
 TUMOR_MAP_FAMILY = Family.DETECTOR_GOOD
+VIEW_MAP_FAMILY = Family.EMBEDDER
 
 
 def tumor_map_runner(pool: PoolLimits) -> Runner:
@@ -63,9 +64,17 @@ def tumor_map_runner(pool: PoolLimits) -> Runner:
     return run
 
 
+def view_map_runner(call: Mapping[str, object]) -> Mapping[str, object]:
+    from parfocal_ml.view_map_worker import answer_view_map
+
+    return answer_view_map(call)
+
+
 def default_runners(pool: PoolLimits) -> dict[str, Runner]:
     if pool.family is TUMOR_MAP_FAMILY:
         return {Kind.TUMOR_MAP: tumor_map_runner(pool)}
+    if pool.family is VIEW_MAP_FAMILY:
+        return {Kind.VIEW_MAP: view_map_runner}
     return {}
 
 
