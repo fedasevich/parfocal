@@ -284,6 +284,9 @@ OPS-004 (database operations) planned a Neon read replica so reporting queries d
 
 - **A. Wait. Add the replica only when reporting queries show up in the slow query list or push reads past the target (recommended).**
 - B. Add a scale-to-zero replica now.
+
+Your choice:
+
 ### 121. Which role wins when a person's SSO groups map to both roles
 
 IAM-012 (per-organisation SSO) maps a customer IdP's groups to our two roles ([ADR 0347](adr/0347-per-workspace-saml-sso-through-zitadel.md), per-workspace SAML sign-in). When one person's groups map to both, the code gives researcher.
