@@ -3542,6 +3542,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-002.
   Size: M.
 
+- [ ] AIP-021 · Pre-warm trigger from a slow device through the API
+  AIP-007 (priority gate) built `parfocal_ml.priority_gate`: interactive kinds run only in the `embedder` pool, job kinds never do, and `InteractiveGate.activate` sends at most one throttled `warm` call per 240 s. Nothing calls it yet. The web needs a slow-device check when the segmentation tool opens, the API needs a route that calls the gate under a member's rights, and the API needs a Modal client, which is an ADR choice (Modal SDK in the API image or a call through the ML app). The `embed` runner in the Modal entry also needs the real PathoSAM weights. Also count other tenants' runs on the shared GPU in `queue_minutes` without leaking them, which `jobs.md` left to AIP-007.
+  Done when an API test shows a slow device's activation sends one warm call through a fake Modal client and a fast device's sends none, a web test shows the tool open calls the route only on a slow device, and the queue estimate counts other tenants' runs as one number.
+  Depends on AIP-007.
+  Size: M.
+
 ---
 
 ## 22 AISEG · Interactive segmentation
