@@ -36,6 +36,7 @@ class SsoConnection:
     idp_organisation_id: str
     idp_id: str
     email_domains: tuple[str, ...]
+    proven_domains: frozenset[str]
     default_role: Role | None
     group_roles: dict[str, Role]
 
@@ -47,7 +48,7 @@ class SsoConnection:
         )
 
     def vouches_for(self, email: str) -> bool:
-        return domain_of(email) in self.email_domains
+        return domain_of(email) in self.proven_domains
 
     def role_for(self, groups: list[str]) -> Role | None:
         granted = {self.group_roles[group] for group in groups if group in self.group_roles}
@@ -61,12 +62,22 @@ def domain_of(email: str) -> str:
     return email.rpartition("@")[2].strip().lower()
 
 
+def proven_domains_of(proofs: dict[str, Any]) -> frozenset[str]:
+    return frozenset(
+        domain.lower()
+        for domain, proof in proofs.items()
+        if isinstance(proof, dict) and cast("dict[str, object]", proof).get("proven_at")
+    )
+
+
 def connection_of(row: Any) -> SsoConnection:
+    domains = tuple(domain.lower() for domain in row.email_domains)
     return SsoConnection(
         tenant_id=row.tenant_id,
         idp_organisation_id=row.idp_organisation_id,
         idp_id=row.idp_id,
-        email_domains=tuple(domain.lower() for domain in row.email_domains),
+        email_domains=domains,
+        proven_domains=proven_domains_of(row.domain_proofs).intersection(domains),
         default_role=Role(row.default_role) if row.default_role else None,
         group_roles={str(group): Role(role) for group, role in row.group_roles.items()},
     )
@@ -86,12 +97,14 @@ async def connection_for_organisation(
 
 
 async def connection_for_domain(connection: AsyncConnection, domain: str) -> SsoConnection | None:
+    wanted = domain_of(domain)
     rows = (
-        await connection.execute(
-            select(sso_connections).where(using_domain(domain_of(domain))).limit(2)
-        )
+        await connection.execute(select(sso_connections).where(using_domain(wanted)).limit(2))
     ).all()
-    return connection_of(rows[0]) if len(rows) == 1 else None
+    if len(rows) != 1:
+        return None
+    found = connection_of(rows[0])
+    return found if wanted in found.proven_domains else None
 
 
 def using_domain(domain: str) -> ColumnElement[bool]:

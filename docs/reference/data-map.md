@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `phi` | 48 |
 | `personal` | 95 |
 | `secret` | 11 |
-| `operational` | 801 |
+| `operational` | 802 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1183,6 +1183,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `email_domains` | operational |
 | `default_role` | operational |
 | `group_roles` | operational |
+| `domain_proofs` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

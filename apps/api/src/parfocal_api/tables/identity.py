@@ -504,6 +504,13 @@ sso_connections = Table(
         server_default=text("'{}'::jsonb"),
         info=OPERATIONAL,
     ),
+    Column(
+        "domain_proofs",
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        info=OPERATIONAL,
+    ),
     *timestamps(),
     CheckConstraint(
         "default_role IS NULL OR default_role IN ('researcher', 'reviewer')", name="default_role"

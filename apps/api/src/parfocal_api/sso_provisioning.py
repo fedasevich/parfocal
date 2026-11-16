@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from parfocal_api.sso import GROUPS_KEY, domain_of, using_domain
+from parfocal_api.sso_domains import DomainProof, issued_proofs, proofs_of
 from parfocal_api.tables import Role, sso_connections, tenants
 from parfocal_api.tenant_provisioning import idp_organisation_name
 from parfocal_api.zitadel_directory import ZitadelDirectory
@@ -67,6 +68,7 @@ class SamlConnection:
     tenant_id: uuid.UUID
     idp_organisation_id: str
     idp_id: str
+    proofs: tuple[DomainProof, ...] = ()
 
 
 def after_login_script(attributes: SamlAttributes) -> str:
@@ -130,9 +132,15 @@ async def connect_saml(
         ).one_or_none()
         if tenant is None:
             raise LookupError(f"No tenant {request.tenant_id}")
-        existing = await connection.scalar(
-            select(sso_connections.c.idp_id).where(sso_connections.c.tenant_id == request.tenant_id)
-        )
+        current = (
+            await connection.execute(
+                select(sso_connections.c.idp_id, sso_connections.c.domain_proofs).where(
+                    sso_connections.c.tenant_id == request.tenant_id
+                )
+            )
+        ).one_or_none()
+        existing = None if current is None else str(current.idp_id)
+        proofs = issued_proofs({} if current is None else current.domain_proofs, domains)
         for domain in domains:
             taken = await connection.scalar(
                 select(sso_connections.c.tenant_id).where(
@@ -163,6 +171,7 @@ async def connect_saml(
         "email_domains": list(domains),
         "default_role": request.default_role.value if request.default_role else None,
         "group_roles": {group: role.value for group, role in request.group_roles.items()},
+        "domain_proofs": proofs,
     }
     async with scoped_transaction(engine, PLATFORM) as connection:
         await connection.execute(
@@ -170,4 +179,4 @@ async def connect_saml(
             .values(tenant_id=request.tenant_id, **values)
             .on_conflict_do_update(index_elements=[sso_connections.c.tenant_id], set_=values)
         )
-    return SamlConnection(request.tenant_id, organisation_id, idp_id)
+    return SamlConnection(request.tenant_id, organisation_id, idp_id, proofs_of(proofs))

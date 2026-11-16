@@ -7,6 +7,7 @@ from pathlib import Path
 import httpx2
 from pydantic import HttpUrl, PostgresDsn, SecretStr, model_validator
 
+from parfocal_api.sso_domains import DnsOverHttps, DomainProof, prove_sso_domains
 from parfocal_api.sso_provisioning import SamlAttributes, SamlConnectionRequest, connect_saml
 from parfocal_api.tables import Plan, Region, Role, TenantKind
 from parfocal_api.tenant_provisioning import TenantRequest, deprovision, provision
@@ -58,7 +59,20 @@ def parser() -> argparse.ArgumentParser:
     saml.add_argument("--given-name-attribute", default="")
     saml.add_argument("--family-name-attribute", default="")
     saml.add_argument("--subject-attribute", default="")
+    prove = actions.add_parser(
+        "prove-sso-domains", help="Check the DNS TXT records that prove a tenant's SSO domains"
+    )
+    prove.add_argument("tenant_id", type=uuid.UUID)
     return commands
+
+
+def proof_lines(proofs: tuple[DomainProof, ...]) -> list[str]:
+    return [
+        f"{proof.domain} {'proven' if proof.proven else 'not proven'}"
+        + (f" ({proof.lookup})" if proof.lookup else "")
+        + f" TXT {proof.record} {proof.value}"
+        for proof in proofs
+    ]
 
 
 def group_roles(pairs: list[str]) -> dict[str, Role]:
@@ -117,10 +131,14 @@ async def run(settings: ProvisioningSettings, arguments: argparse.Namespace) -> 
                 return str(created.tenant_id)
             if arguments.action == "connect-saml":
                 connected = await connect_saml(engine, directory, saml_request(arguments))
-                return (
+                summary = (
                     f"{connected.tenant_id} idp_organisation_id={connected.idp_organisation_id} "
                     f"idp_id={connected.idp_id}"
                 )
+                return "\n".join([summary, *proof_lines(connected.proofs)])
+            if arguments.action == "prove-sso-domains":
+                proofs = await prove_sso_domains(engine, DnsOverHttps(http), arguments.tenant_id)
+                return "\n".join(proof_lines(proofs))
             removed = await deprovision(engine, store, directory, arguments.tenant_id)
             return (
                 f"{removed.tenant_id} objects_removed={removed.objects_removed} "
