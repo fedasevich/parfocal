@@ -180,6 +180,11 @@ test("a large area is worked in two steps, in order", async ({ page }) => {
   await steps(page).nth(1).getByRole("button", { name: "Measure it" }).click();
   await expect(steps(page).nth(1)).toContainText("6.4 mm");
   await expect(steps(page).nth(1)).toHaveAttribute("data-done", "true");
+  await expect(steps(page).nth(1).locator("[data-slot=size-check]")).toHaveAttribute(
+    "data-check",
+    "within",
+  );
+  await expect(steps(page).nth(1)).toContainText("Within the AI's likely range, 4.8 mm to 7.1 mm.");
 });
 
 test("a cluster near 0.2 mm asks for the tumor cell count as a third step", async ({ page }) => {

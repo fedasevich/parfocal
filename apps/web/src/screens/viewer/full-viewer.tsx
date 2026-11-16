@@ -108,9 +108,9 @@ function ViewerBody(props: BodyProps) {
     decidedRegions,
     drawing,
     firstOpenCell,
-    firstRegion,
     inspector,
     measurement,
+    measures,
     minimapSetting,
     navigator,
     notNucleus,
@@ -251,7 +251,15 @@ function ViewerBody(props: BodyProps) {
             }
           />
         ) : measurement ? (
-          <MeasureCanvas measurement={measurement} regionSize={firstRegion?.size_mm ?? 0} />
+          <MeasureCanvas
+            across={measurement.across}
+            mm={measurement.mm}
+            line={measurement.line}
+            outline={measurement.outline}
+            outlines={still.outlines}
+            outlineFrame={still.frame}
+            onLine={(line) => measures.setLine(measurement.across, line)}
+          />
         ) : (
           <div className="flex min-h-0 flex-1">
             <SlideStill

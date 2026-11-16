@@ -70,7 +70,6 @@ import { useDisplayChoice, useShiftPresetKeys } from "../review/use-display-choi
 import { useOpinionDraft } from "../review/use-opinion-draft.ts";
 import { usePagedReview } from "../review/use-paged-review.ts";
 import type { ListFilter } from "../review/viewer-frame.tsx";
-import { measuredSize } from "../viewer-tools/measure-canvas.tsx";
 import type { ScreenRect } from "../viewer-tools/minimap-placement.ts";
 import { usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { scatteredCells, viewerFindingsLayout } from "./findings-data.ts";
@@ -83,6 +82,7 @@ import {
   retypedCells,
 } from "./slide-learner.ts";
 import { swipeStart } from "./swipe-split.ts";
+import { useAreaMeasures } from "./use-area-measures.ts";
 import { emptyLearnerView, useSlideLearner } from "./use-slide-learner.ts";
 import type { BodyProps } from "./viewer-model-types.ts";
 import { isNavigatorScene, type LayerView, type ViewerTab, viewerSetup } from "./viewer-scenes.ts";
@@ -228,10 +228,9 @@ export function useViewerState(props: BodyProps) {
   const { answers: opinion, change: changeOpinion } = useOpinionDraft(session);
   const firstOpenCell = cells.find((cell) => !answer(cell.object))?.object ?? cells[0]?.object;
   const firstRegion = regions[0];
-  const measurement =
-    measuring && firstRegion
-      ? { object: "M1", mm: measuredSize(firstRegion.size_mm ?? 0), across: firstRegion.object }
-      : null;
+  const measureAcross = measuring ? (search.across ?? firstRegion?.object ?? null) : null;
+  const measures = useAreaMeasures(regions, session.slideSize, measureAcross);
+  const measurement = measures.current;
   const foundSoFar = (object: string) => !running || (progress?.found.includes(object) ?? false);
   const stagingAreas = regions
     .filter((region) => foundSoFar(region.object))
@@ -240,7 +239,7 @@ export function useViewerState(props: BodyProps) {
       size: region.size_mm ?? 0,
       probability: region.score,
       call: answer(region.object)?.value ?? null,
-      measured: measurement?.across === region.object ? measurement.mm : null,
+      measured: measures.mmOf(region.object),
     }));
   const selected =
     search.object ??
@@ -686,6 +685,7 @@ export function useViewerState(props: BodyProps) {
     firstOpenCell,
     firstRegion,
     measurement,
+    measures,
     stagingAreas,
     selected,
     tab,

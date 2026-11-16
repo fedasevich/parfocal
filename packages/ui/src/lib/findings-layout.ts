@@ -168,3 +168,12 @@ export function stagingSteps(area: StagingPanelArea): StagingStep[] {
 
 export const nextStagingStep = (area: StagingPanelArea): StagingStepName | null =>
   stagingSteps(area).find((step) => !step.done)?.name ?? null;
+
+export type SizeCheck = "within" | "below" | "above";
+
+export function sizeCheck(area: StagingPanelArea): SizeCheck | null {
+  if (area.measured == null) return null;
+  if (area.measured < area.low) return "below";
+  if (area.measured > area.high) return "above";
+  return "within";
+}

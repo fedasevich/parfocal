@@ -5,12 +5,7 @@ import { pathPoints, placeMinimap } from "../src/screens/viewer-tools/minimap-pl
 import { pickSlide, swapSlides } from "../src/screens/viewer-tools/pane-slides.ts";
 import { tissueShareOnScreen } from "../src/screens/viewer-tools/tissue-share.ts";
 import { cropCentre } from "../src/screens/viewer-tools/tool-geometry.ts";
-import {
-  measuredSize,
-  rulerEnds,
-  toOverview,
-  viewportOf,
-} from "../src/screens/viewer-tools/tool-maths.ts";
+import { toOverview, viewportOf } from "../src/screens/viewer-tools/tool-maths.ts";
 
 const canvas = { width: 1048, height: 856 };
 const box = { width: 208, height: 301 };
@@ -57,12 +52,6 @@ test("the 10x and 40x stills map their centre onto the crop centre of the overvi
   assert.deepEqual(toOverview("hpf", [800, 500]), cropCentre.hpf);
   const view = viewportOf("mid", { x: 800, y: 500, scale: 1 }, { width: 1600, height: 1000 });
   assert.ok(view[2] > 100 && view[2] < 120);
-});
-
-test("the ruler crosses T1 along its longer side and reads 8.00 mm", () => {
-  const [from, to] = rulerEnds("T1");
-  assert.equal(from[0], to[0]);
-  assert.equal(measuredSize(7.7), 8);
 });
 
 test("path points read the mock's M and L path", () => {
