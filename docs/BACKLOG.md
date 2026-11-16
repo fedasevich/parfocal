@@ -4637,7 +4637,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the hidden panel test passes when run alone and asserts the accessible name of the tab.
   Size: S.
 
-- [x] TEST-033 · The axe scan of a route does not depend on test order
+- [ ] TEST-033 · The axe scan of a route does not depend on test order
   `apps/web/e2e/a11y.ts` scans each route once per worker, in the state the first test to finish there left it, and the web specs run fully parallel. A violation that shows only in another state of the route, such as the hidden side panel of TEST-032 (the floating side panel tab is named by what it shows), stays unseen until the order changes and then turns an unrelated run red.
   Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
   Size: M.

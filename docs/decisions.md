@@ -213,8 +213,9 @@ Waits for a decision:
 Waits for a green CI run:
 
 - FOUND-015 (container images). The images job is green. The Done line wants the Modal images built in CI, which only deploy.yml does, and decision 96 pauses it. Accept the lock resolution as the proof (ADR 0339) or add a Modal build step.
-- IAM-012 (per-organisation SSO), IAM-028 (SSO from the sign-in screen) and IAM-029 (SSO domain proof by DNS). The SSO spec passes in the e2e job of pull request 12 and fails on the train head at the sign-in screen button. They wait for the train to carry pull request 12 and for its e2e job to pass.
-- AITUM-009 (Map this view asks the server for its tiles). It waits for a green db job, which needs the tenant isolation suite fix of pull request 12 and a fix for the 10k cell import test of RSET-012.
+- IAM-012 (per-organisation SSO), IAM-028 (SSO from the sign-in screen) and IAM-029 (SSO domain proof by DNS). The sign-in screen test of the SSO spec is intermittent, with three passes and two failures across the train and pull request 12 runs. Pull request 12 adds an `e2e-failures` artifact to find the cause. Tick all three after a few green e2e jobs in a row.
+- AITUM-009 (Map this view asks the server for its tiles). It waits for a db job that passes the tenant isolation suite, which pull request 12 fixes by naming scoreViewMapTile. The 10k cell import test of RSET-012 fails the same job and is not part of this task.
+- TEST-033 (the axe scan of a route does not depend on test order). One full web run is green and ci run 43859683421 on main failed on an axe color-contrast violation on `/tasks/:id/disagreements`, so it waits for a green run after that is understood.
 - TEST-008 (visual regression for UI). `ci-ok` is a required check on `main`. Run CI with `update_goldens` and commit the baselines once, after the train merges.
 - TEST-015 (cross-browser matrix). Run `gh workflow run browsers --ref main` after the train merges, because the workflow is not on `main` yet.
 - TEST-036 (display panel Undo tests repeat the key gesture when the Undo window is missed). Two of three ci runs on `main` are clean, one more is needed.
