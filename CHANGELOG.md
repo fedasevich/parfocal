@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.3.1 (2026-11-16)
+
+### Fixes
+
+- TEST-020: Lift the audit truncate guard inside the reset's one truncate statement
+
+### Tests
+
+- OPS-016: Let the smoke sign-in check pass when the heading and the email field both show
+
 ## v0.3.0 (2026-11-16)
 
 ### Features
