@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decision 136 (whether a linear probe on frozen foundation model features counts as training) below, and clicking save on the Cloudflare page for decision 132 (the read-only fixtures key) when the lead opens it.
+1. Click Approve on the production deploy of the next tag when the lead starts it, as decision 137 (how production gets past the migration squash) describes.
 2. When convenient, the Hugging Face token of decision 125 (gated foundation models) and the two Kaggle downloads of decision 131 (CryoNuSeg and Lizard).
 3. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 4. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
@@ -160,18 +160,8 @@ Your choice: a
 - Decision 133 (a small SAM fine-tune), option A with your note. Nothing is trained or fine-tuned in the thesis.
 - Decision 134 (InstanSeg as the auto tool without WebGPU), option A.
 - Decision 135 (the nucleus job under one hour), Other. Time is not a target, quality and use of the Modal GPUs come first. AINUC-011 (throughput target) is ticked on the measured 2.56 hours on one L4.
-
-## Open decisions from 2026-11-16
-
-### 136. Whether a linear probe on frozen foundation model features counts as training
-
-Your answer to decision 133 says nothing is trained or fine-tuned in the thesis. AITUM-014 (a foundation model probe for the tumor map) keeps H-optimus-0 frozen, but a small linear classifier on its features has to be fitted on CAMELYON16 training slides, which is training in a narrow sense. Without it the foundation model cannot make a tumor map at all.
-
-- **A. Allow a linear probe on frozen features, since the foundation model itself is never changed (recommended).**
-- B. No probe. Drop AITUM-014 and keep the pretrained MONAI ResNet18 as the only tumor map.
-- Other.
-
-Your choice: a
+- Decision 136 (whether a linear probe on frozen foundation model features counts as training), option A. AITUM-014 (a foundation model probe for the tumor map) may fit a linear probe on frozen H-optimus-0 features.
+- Decision 137 (how production gets past the migration squash), asked in chat on 2026-11-16 and answered "Recreate the database". Production was at revision 0110 from v0.2.0, and FOUND-035 (squash the migrations into one baseline) replaced that chain with a baseline at 0115, so the next deploy could not migrate it. The database `neondb` is dropped and recreated under ADR 0293 (production only until the first real user), the next tag is deployed onto the empty database and the "Reset production" workflow seeds it. The owner's test data in production is lost.
 
 ## The review column, what each task waits for
 
