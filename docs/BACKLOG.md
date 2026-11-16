@@ -4654,6 +4654,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on FOUND-026.
   Size: M.
 
+- [ ] TEST-045 · The full viewer passes its accessibility check while visiting areas
+  The full viewer spec where G then n visits each area fails axe's target-size rule on the "Hide while panning" checkbox. It fails on the train branch with and without load, so it is a real defect and not a flake. Give the checkbox a hit area of at least 24 by 24 CSS pixels, or the spacing the rule accepts, without changing the panel's layout in Storybook.
+  Done when `apps/web/e2e/full-viewer.spec.ts` passes three times in a row and a component test or story checks the checkbox's hit area.
+  Size: S.
+
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
   Done when the 6 specs in `apps/e2e` pass against the API container locally and in one CI job with no secrets, and an upload is ingested with no manual ingest call.
