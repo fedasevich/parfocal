@@ -141,3 +141,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-16 | [Three exemplar nuclei and PathoSAM tokens find nuclei at PQ 0.754 on 39 TNBC images, 0.087 below prompting every true centroid](2026-11-16-exemplar-search-on-tnbc.md) | AISEG-014 | spike |
 | 2026-11-16 | [Firm staging answers were never on the wrong side of 200 tumor cells on 86 PanNuke clusters, with one view or eight, though only 10 firm answers came within 50 cells of 200](2026-11-16-firm-staging-answers-pannuke.md) | REVIEW-020 | ML evaluation |
 | 2026-11-16 | [PanNuke and MoNuSeg load from their official archives, and the checksums of all three PanNuke folds match Warwick's ETags](2026-11-16-signed-in-dataset-loaders.md) | MLEVAL-010 | baseline |
+| 2026-11-16 | [30 logins from one address in 23 s got no 429 from the production edge Worker, though the limit binding is live](2026-11-16-edge-rate-limits-production-check.md) | SEC-027 | check |

@@ -1039,7 +1039,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 - [ ] SEC-027 · Edge limits per IP
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
-  Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
+  Done when a local test shows a login flood from one address answered with 429 while another address signs in, and an on-demand check against production, a tiny login burst from one address that stops at the first 429 (there is no staging, [ADR 0331](adr/0331-no-staging-environment.md)), ends with a 429.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
   Size: M.
 
