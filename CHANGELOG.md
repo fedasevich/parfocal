@@ -2,6 +2,794 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.3.0 (2026-11-16)
+
+### Features
+
+- OPS-002: Run local dev and CI on Postgres 18 with PostGIS 3.6
+- OPS-005: Deploy main behind a switch with a migration check and rollback by redeploy
+- TEST-039: Run the e2e suite against a local Zitadel with Mailpit
+- STACK-020: Keep Neon in aws-us-east-1 after measuring latency from Modal
+- STACK-019: Set API latency and Modal cold-start budgets from production measurements
+- STACK-033: Add local flag and experiment layer with exposure event
+- FOUND-024: Rename the old review word to decision and guard against new uses
+- EVAL-015: Export patches and label masks as a job
+- COLLAB-016: Batch colleagues' changes on a shared layer behind a changes marker
+- SEC-042: Fail closed on a missing limit binding and match limits on a normalised path
+- ANN-010: Add the brush tool that paints and erases a heatmap layer with Clipper2
+- COLLAB-010: Share a live camera on the slide room and let others follow it
+- TASK-008: Gate slide submit on open objects and required questions
+- VIEW-028: Draw many nuclei as a density texture, dots or outlines by their size on screen
+- REVIEW-002: Add the findings panel with cell findings and node staging layouts
+- REVIEW-002: Wire the findings panel into the full viewer with its data adapters
+- VIEW-013: Read NDPI natively from the restart index with 64-bit offsets
+- VIEW-036: Add the renderer route interface and switching inside the engine
+- VIEW-029: Cull overlay nuclei to a grid window around the view
+- VIEW-013: Open NDPI from the slide index and test the real slides above 4 GB
+- NAV-013: Feed the selected shapes or the focused AI area to zoom to selection
+- I18N-001: Add Lingui setup, pseudo locale test and raw JSX string lint
+- COLLAB-011: Relay a live shared cursor on the slide room for follow and compare
+- VIEW-017: Read OME-Zarr JPEG chunks and index absent inner chunks of shards
+- VIEW-014: Register Ventana BIF, pass its stitching to the app and add the Viv goldens
+- INGEST-015: Convert to OME-Zarr 0.5 only on a fired trigger, with JPEG or zstd chunks
+- VIEW-016: Open the Argos plane in focus, read Philips scale and check both readers agree
+- COLLAB-010: Hide sharing and following while the reader is blinded
+- COLLAB-011: Share my cursor from compare
+- DS-011: Add timed toast and overlay state stories with focus and Esc tests
+- DS-012: Add inspector primitive stories with mock 6 data and range bar tests
+- DS-039: Add five animated loader proposals story
+- DS-039: Add the Reticle Loader and replace the loading texts
+- DS-001: Add the token specimen story and its browser spec
+- SEC-040: Keep an unsubmitted blinded reviewer out of presence and the shared camera
+- VIEW-014: Refuse a BIF only when its frame overlap is unknown, in ingest and the viewer
+- RSET-013: Store imported heatmaps, rank guesses by tissue share and sweep waiting results
+- INGEST-022: Show per-file problems with their fixes in the upload wizard
+- INGEST-022: Zip an MRXS slide with its data folder and test every problem zone
+- SHELL-011: Pop out the minimap into a synced second window (untested)
+- SHELL-011: Pop out the side panel into the synced second window (untested)
+- SHELL-011: Mount the real side panel in the pop-out and sync selection (untested)
+- SHELL-011: Carry the scene into the pop-out and fix minimap drag in it
+- VIEW-069: Refuse a BIF with several scan areas with its own message
+- DS-002: Add colour measurement check for tokens and wire it into CI (untested)
+- DS-002: Add sampled H&E pixels, regression baselines and the colour check result
+- RSET-006: Add a result set from the viewer with a cyan preview and offset and scale fixes
+- HOME-007: Add launchpad activity card with filters and live refresh (untested)
+- HOME-007: Add activity feed component, story and specs (untested)
+- I18N-004: Convert viewer, review, annotate and compare strings to Lingui (untested)
+- I18N-004: Extract the catalogue and fix typecheck, loading text and pseudo spec
+- I18N-004: Merge main and re-extract the catalogue
+- CASES-026: Store the clinical note sealed per case, untested
+- CASES-026: Add the clinical note field for owners and regenerate the client
+- INGEST-015: Convert JPEG 2000 slides losslessly and keep the source's own levels
+- INGEST-015: Measure lossless codecs for converted JPEG 2000 slides and keep zstd 3
+- AIP-002: Add a code model registry with licence fields, untested
+- AIP-002: Generate the registry client and type the temperature default
+- AISEG-009: Add the embedding window decoder and its crop logic, untested
+- AISEG-009: Fix the patch edge window test and keep torch tests out of basedpyright
+- AISEG-009: Turn on the window decoder after it decodes in 14 to 17 ms in Chrome
+- RSET-014: Draw imported heatmaps on the slide and let the uploader pick a scale guess
+- RSET-014: Update the heatmap storage ADR for the viewer layer and level choice
+- AINUC-013: Stream a whole-slide run into sealed blocks per lineage, untested
+- AINUC-013: Rebuild one block per frame and trace main-thread tasks, untested
+- AINUC-013: Serve finished run tiles and stream a run onto the annotate slide, untested
+- AINUC-013: Show the run panel only for a live run and keep streamed blocks compact
+- AINUC-013: Measure the streamed run on the real GPU and record the frame gaps
+- AINUC-013: Warm the nuclei overlay shaders once a slide settles in the Viv route
+- AINUC-013: Describe when the Viv route warms the nuclei shaders
+- AILEARN-002: Add the browser per-slide type learner and its worker, untested
+- AILEARN-002: Measure the per-slide learner at 14 points over the typer after 200 corrections
+- JOBS-007: Run a model on a selection or the view in Annotate and join it to the task
+- JOBS-007: Clear streamed cells after the join and place the run panel in the side stack
+- AINUC-010: Start, cancel and reload a nuclei run from the app (untested)
+- AINUC-010: Selection scope, role-gated options and a finished-tiles map (untested)
+- AINUC-010: Type the selection polygon and look past newer runs when loading the last
+- AINUC-010: Keep fake stream runs across a reload and echo their scope
+- AILEARN-003: Show the learner's changed cells as a findings zone with undo all and forget
+- AILEARN-003: Feed the learner pooled SAM embeddings in paged mode and none without them
+- JOBS-007: Fold task runs into Find nuclei, gate on run rights and seal finished run results
+- AILEARN-008: Give the review viewer's learner lazy SAM embeddings from cell outlines
+- VIEW-037: Add the deck.gl 9.4 WebGPU route behind a lazy loader with goldens and switch memory
+- VIEW-037: Match Viv outlines on the WebGPU route and restore the old route on a failed start
+- INGEST-014: Measure JPEG 2000 browser decode and keep JPEG 2000 slides native
+- AILEARN-005: Recalibrate each training round on held-out slides before promotion
+- AILEARN-005: Measure a round that starts from the typer and require every served view count
+- AILEARN-009: Share one SAM worker between the learner and smart select
+- AILEARN-007: Show corrections per hundred nuclei per month on the lab dashboard
+- VIEW-070: Draw dashed AI proposals in WGSL on the deck.gl WebGPU route
+- VIEW-017: Read OME-Zarr stores converted from a real slide with JPEG and zstd chunks
+- VIEW-055: Match JPEG 2000 coarse levels to the stored codestream in the reader check
+- VIEW-055: Cut coarse Aperio JPEG reference windows from the stored tiles
+- VIEW-040: Enforce per-format viewer budgets in CI and record frame and GPU time on the Mac
+- AIP-020: Register models at run time with licences and line-up parts in a table
+- AILEARN-004: Train typer head rounds per tenant with a gated latest pointer and rollback
+- AILEARN-010: Collect pooled features of reviewed nuclei per slide for training rounds
+- FOUND-026: Run the web browser suite against a built app with vite preview
+- SEC-031: Refuse destructive cloud tools and commands in a PreToolUse guard
+- AILEARN-011: Pool reviewed nuclei on the server like the browser and re-pool reshapes
+- MLEVAL-006: Gate model promotion on per-task thresholds and store the report
+- VIEW-071: Pick the renderer route per slide and measure deck.gl WebGPU on the M4
+- VIEW-038: Add the custom WebGPU route drawn from a render worker
+- SEC-026: Parse uploaded slides in an isolated child with a scoped job token and limits
+- AITUM-006: Export a stored heatmap as a tiled TIFF pyramid and re-import it
+- AIP-012: Add a CPU patch service with LRU tile cache and sparse skipping
+- VIEW-039: Add the renderer head-to-head benchmark and its first Mac GPU result
+- VIEW-073: Draw ID labels on the custom WebGPU route and guard the buffer size
+- VIEW-073: Recover the custom WebGPU route after a lost device
+- I18N-005: Convert remaining web app screens to Lingui (untested)
+- I18N-005: Translate account menu entries and add pseudo-locale cases (untested)
+- I18N-005: Add Lingui to the shared UI, convert it and drop the baseline list (untested)
+- I18N-005: Merge fragmented messages and translate data strings in screens (untested)
+- I18N-005: Translate icon labels and palette groups and extract the catalogues
+- I18N-005: Translate more module-level labels, settings sections and the extracted catalogues
+- I18N-005: Keep English text in route chunks and bring the first page under budget
+- I18N-005: Translate module-level labels with lazy text and the palette entries
+- I18N-005: Merge main, convert the new learner and heatmap strings and re-extract
+- I18N-005: Merge the lead and re-extract the catalogues
+- FOUND-035: Squash the migrations into one baseline at revision 0115
+- DEV-003: Add gamepad input through a shared camera-input seam
+- DEV-003: Route gamepad button intents to the keyboard handlers
+- DEV-004: Add SpaceMouse input over WebHID through the camera-input seam
+- DEV-009: Pen and touch separation, finger pans and never draws
+- DEV-009: Wire pen erase and double tap tool swap, gate pin and select
+- AITUM-004: Score a tumor map for the current view on demand and extend it as the user pans
+- AITUM-005: Store, version and export painted maps
+- OPS-011: Add the maintenance switch to the API
+- OPS-011: Add the maintenance banner, status endpoint client and ADR 0329
+- TEST-001: Add unit test coverage reports and a line coverage gate per package
+- SEC-008: Keep labels, macros and case IDs out of de-identified projects
+- SEC-008: Add de-identified project ADR and isolation write probe
+- SEC-028: Blank identifying text and barcodes in originals at the edge
+- MLEVAL-009: Build the evaluation dashboard from committed result files
+- OPS-016: Add a read-only browser smoke that runs after every production deploy
+- TEST-007: Add the nightly memory and leak suite with CMU-1.svs and heap snapshots
+- AITUM-007: Paint a map with the brush, save, reopen and export it
+- TEST-008: Add UI visual regression over every story in both themes and densities
+- EXP-001: Add flag targeting by workspace, role and user with a kill switch
+- EXP-004: Add tools layout and minimap motion experiments with analysis query
+- TEST-015: Add a nightly Chromium, Firefox and WebKit viewer matrix
+- EXP-008: Add study mode with scripted tasks, timing and frozen rounds
+- FOUND-015: Build the API image and install the Modal images from uv.lock
+- SEC-013: Add a secret inventory test, a master key rotation command and a local drill
+- OPS-007: Add SLO burn alerts, on-call email routing and a cross-workspace audit watch
+- OPS-009: Tier old tenant objects to Infrequent Access and report costs against budgets
+- FOUND-009: Add make dev from a clean checkout to the logged-in home screen
+- PILOT-004: Import slides and AI results with cases from names, rehearse and add a runbook
+- SEC-048: Add rotation commands that change one value of the keys secret
+- FOUND-040: Run the edge Worker with a remote parfocal-dev binding under make dev
+- SEC-049: Accept a newest-first key list for session, tile and room keys
+- SEC-049: Make rotate replace-key keep the previous key and add drop-old-keys
+- PILOT-009: Recognise uploads still processing so a bulk import rerun sends nothing twice
+- OPS-006: Keep SLI counts and alert state in object storage across cold starts
+- OPS-006: Count tile fetches at the edge into SLI batches
+- OPS-006: Export scrubbed telemetry as OTLP logs when production selects otlp
+- OPS-006: Report viewer frame times from production by beacon while the reader pans
+- OPS-006: Generate the Grafana overview dashboard from the SLOs and emitted events
+- SEC-014: Add a restore check with integrity fingerprints and a monthly workflow
+- SEC-014: Lock tenant objects in the slide buckets and restore earlier object versions
+- AISEG-016: Fall back to a stain-seeded prompt pass when the AIS decoder fails
+- OPS-010: Provision and deprovision a tenant in one call each
+- TILES-002: Serve tile ranges from the edge cache with a size-versioned key and HTTP/3
+- OPS-018: Count worker jobs and realtime sends as SLIs, and only automatic runs as pre-reads
+- OPS-004: Tune annotation autovacuum and load test reads during bulk inserts
+- OPS-019: Add a Zitadel adapter and a command for tenant provisioning
+- TILES-009: Sign the original's ETag into the tile token and the edge cache key
+- EXP-008: Open the CAMELYON16 slide per study task and end tasks by automatic checks
+- SEC-005: Job claims respect the tenant region behind a residency switch
+- AISEG-008: Serve float16 server embeddings per tissue tile and adopt them in the browser
+- AISEG-016: Add the five-prompt ensemble, duplicate drop and a TNBC prompt-pass bench
+- SEC-002: Enforce TLS for internal traffic, add zone HSTS and record the TLS scan
+- SEC-045: Run the index and derive steps in the parse process
+- SEC-045: Read slides for patch export in the parse process
+- SEC-045: Parse result files and heatmaps in the parse process
+- SEC-045: Hand the job folder to the parse user and move Modal secrets onto functions
+- OPS-004: Load test the API in its own server and hold reads to the 250 ms p95 target
+- IAM-012: Sign in through a workspace's SAML IdP with just-in-time membership
+- OPS-003: Add preview create, teardown and nightly sweep per pull request
+- OPS-003: Keep preview tenant objects under their own prefix and budget previews
+- AINUC-000: Keep PathoSAM AIS and HoVer-NeXt per tier and replay the confidence checks
+- SEC-045: Run uploaded-file parses in a network-blocked Modal sandbox
+- SEC-045: Pass declared inputs into the parse sandbox and record the Modal probe
+- TEST-010: Run the load scenarios against production under a tiny cap
+- IAM-028: Sign in with your organisation, link password accounts and rerun connect-saml
+- AIP-007: Route interactive calls to the embedder pool behind a throttled warm call
+- IAM-029: Prove the SSO email domain by a DNS TXT record
+- AITUM-001: Add the tumor map job with a stored pyramid and a lesion FROC port
+- AIP-021: Warm the embedder from a slow device through the API
+- MLEVAL-005: Add the tumor map evaluation over CAMELYON16 test slides and gate on it
+- AITUM-008: Run the tumor map as a job and serve it through the heatmap route
+- AITUM-003: Score tumor area sizes per grown lesion and set the measured likely range
+- AITUM-010: Read stored slides and run the ONNX tumor ResNet18 in the detector-good pool
+- AITUM-009: Map this view asks the interactive lane for its tiles
+- AITUM-012: Answer view map calls in the embedder pool with the ResNet18
+- AITUM-011: Lock the CUDA 13 tumor map pool, wire its secrets and spawn it on enqueue
+- SEC-050: Raise the per-person rate limit to 1500 from a recorded busy viewer session
+- AINUC-012: Count tumor nuclei per area with the expected-mistakes range
+- AISEG-014: Measure exemplar search on TNBC and record a no-go
+- REVIEW-020: Check firm staging counts against 86 labelled PanNuke clusters
+- MEAS-006: Measure an area with a pre-drawn ruler along its long axis
+- MLEVAL-010: Load PanNuke and MoNuSeg from pinned archives, CryoNuSeg and Lizard from synthetic
+- SEC-011: Check the security headers on production in the deploy smoke step
+- SEC-027: Count logins per address strictly in a Durable Object behind the binding
+- INGEST-029: Read fixtures from R2 first and declare the read-only key
+- AISEG-013: Measure InstanSeg for the Fast tier and defer it by ADR
+- AISEG-021: Port InstanSeg post-processing to the browser with a CI timing job
+- AINUC-011: Skip nucleus windows without tissue and look one tile ahead
+- BOARD: Filter ideas out of the board and its counts
+- AINUC-015: Score PathoSAM ViT-L and InstanSeg against the kept nucleus detector
+- TEST-007: Set the memory slope and growth budgets from the first hosted run
+- FOUND-040: Draw a CAMELYON16 slide through the edge Worker under make dev
+
+### Fixes
+
+- IAM-027: Declare the sign-up, my jobs and checklist routes as open in the permission test
+- OPS-005: Say that a rollback needs the deploy switch off and list what the check misses
+- STACK-020: Replace pooled database connections that Neon closed while suspended
+- TASK-016: Let adding a run to a signed-off annotate slide carry its reason
+- TASK-019: Keep the shared fake slide unchanged while the annotate task offers a run to add
+- COLLAB-016: Open the fake colleague channel only in the browser so node tests exit
+- ANN-010: Load Clipper2 lazily the first time the brush tool is used
+- COLLAB-010: Drop a sharer only on presence.left and move the test camera by wheel
+- SEC-034: Narrow the token, user identity and join-route database escape hatches
+- REVIEW-002: Order staging areas largest first so the role header holds in any input order
+- REVIEW-002: Name the focus leave button by its Esc key and tolerate a missing list link
+- VIEW-013: Report a failed NDPI directory walk as an NDPI error
+- IAM-026: Save no mail domain on a new workspace
+- VIEW-014: Inflate the gzipped BIF sidecar the edge sends without a content encoding
+- TASK-008: Count a deleted AI object as checked before submit
+- INGEST-015: Refuse slides the fired trigger does not cover and state the lossy bound as open
+- IAM-026: Keep the status of ADR 0265 plain and note the change by ADR 0303 in its text
+- SEC-015: Move opentelemetry-api to 1.45.2 and fast-xml-parser to 5.12 for two new advisories
+- EVAL-015: Probe startPatchExport in the tenant isolation write suite
+- FOUND-024: Rename the NOT NULL constraints Postgres 18 names after the table in migration 0111
+- TASK-008: Expect the second decision the submit gate needs when a used result set is deleted
+- OPS-002: Pin the NOT NULL constraint names Postgres 18 stores in the naming test
+- I18N-001: Ask for the language setting only inside the signed-in area
+- REVIEW-016: Draw the focus ring on the Tumor, Not tumor and Unsure buttons
+- COLLAB-010: Move the leader in five wheel steps so a slow renderer still shares enough views
+- PILOT-001: Keep the settings dialog non-modal while the tour runs
+- TEST-039: Wait for the signed-out redirect to sign-in before logging in again
+- TEST-017: Stop the blinded check from refetching a missing first read in a loop
+- COLLAB-010: Measure follow lag only on leader moves made after the follower is in step
+- TEST-035: Pass one globals parameter in the small modal spec so the addon never runs axe
+- TEST-030: Wait for the table story to draw before the first Tab press
+- TEST-033: Scan each route once per visible page state, not once per route
+- INGEST-015: Fall back on broken JPEG 2000 tiles and pin the YCbCr tables
+- TEST-017: Expect no decision on a deleted AI object in the result set and note tests
+- COLLAB-010: Time each follow leg and shrink the stage to cut software GL frame cost
+- COLLAB-010: Send an overdue shared camera on the next change instead of its late timer
+- TEST-017,SHELL-011: Fold the side panel pop-out into the Hide while panning row
+- TEST-017: Skip the nuclei shader warm-up on software GL and clear the hover toggle
+- VIEW-072: Start dashed rings mid first edge so each edge is drawn once
+- VIEW-072: Regenerate the agreement and cutoff goldens for mid edge dashed rings
+- VIEW-072: Patch the dashed ring change into the Linux stack golden
+- TEST-017: Open the streaming slide by address in the run stream spec to save a page load
+- TEST-017: Keep vector overlays whose content is unchanged instead of rebuilding them
+- TEST-017: Seed a corrected cell for AI corrections and settle the minimap box
+- SEC-031: Catch continuations, runner flags and flag values, allow tofu plan
+- TEST-017: Probe the model registry platform writes in the tenant isolation suite
+- TEST-017: Set the jump longest task budgets from the hosted runner numbers
+- TEST-017: Hold each counted canvas until its WebGL context is lost in the memory spec
+- VIEW-071: Draw closed rings as open paths on WebGPU so translucent outlines match Viv
+- TEST-017: Bring each popout window to front before driving its pointer
+- VIEW-038: Assert heap growth per route and pick the nearest sampler in device pixels
+- SEC-026: Start the parse child by path, keep uploads when it fails to start, test real readers
+- VIEW-073: Blend a translucent outline once per ring on the custom WebGPU route
+- TEST-044: Fix web specs that fail on the built app
+- TEST-044: Drop the raw JSX strings baseline check that I18N-005 retired
+- DEV-009: Let a finger tap select shapes but never drag them
+- EXP-004: Ship the layout experiments switched off until the owner starts them
+- TEST-044: Let the migration check pass function bodies and match the sidecar budget to TEST-043
+- FOUND-015: Compare image locks by pins and hashes and close the scan waits
+- SEC-035: Make every single-column key between tenant tables carry the tenant
+- SEC-013: Pass the betterleaks config by name in the pre-commit hook
+- OPS-007: Alert on stalled work, widen the audit watch and skip removed targets
+- PILOT-004: Fail a bulk import that ends with files in flight and warn against a rerun
+- SEC-048: Report a refused retire cleanly and test the rotate command line
+- SEC-046: Make every composite key between tenant tables carry the tenant
+- SEC-049: Keep every listed key on replace and drop old keys at the Worker first
+- SEC-049: Sign load-test room tokens with the first listed key and close threat row X5
+- PILOT-009: Send a file again when its ready slide or result set was deleted
+- OPS-006: Prove the alert cycle on Postgres and declare the new operations
+- SEC-014: Keep the database password off the tool command line and ask about the dump location
+- OPS-019: Skip the live test when the local Zitadel is down and pin local settings
+- EXP-008: Restore the stand-in study tasks and keep only checks that match them
+- IAM-012: Keep SSO roles on plain sign-in and refresh the data map
+- OPS-003: Renew keys of an expired preview branch and keep ops keys under the prefix
+- SEC-045: End a parse killed by the sandbox memory cap as too large
+- TEST-010: Cap every load target URL and correct the production run cost
+- OPS-004: Give the bulk insert read budget the headroom its 250 ms limit needs
+- AIP-021: Warm only from real services and name other workspaces in the estimate
+- AIP-021: Renumber the shared queue migration to 0126 after 0125 SSO domain proofs
+- AIP-021: Mark the warm route as a write and skip the stand-in timing under load
+- AITUM-008: Refuse a tumor map while its model is offline and mark unmeasured figures
+- TEST-019: Type the main paths spec's browser globals locally
+- AITUM-003: Score sizes per annotated piece so FROC growing does not chain deposits
+- AITUM-010: Refuse misaligned slides, clean failed opens and run the ResNet18 through the pool
+- OPS-018: Count only this test's open runs in the pre-read check
+- AIP-021: Probe warmSlideEmbedder in the write isolation suite
+- OPS-006: Declare the drill and frame telemetry writes in the write isolation suite
+- IAM-012: Seed sso_connections in the tenant isolation suite
+- IAM-028: Seed linked_subjects and check tenant scopes cannot read it
+- SEC-050: Base the rate limit on a full recorded minute and raise it to 3000
+- TEST-045: Keep the minimap from covering the Hide while panning checkbox
+- TEST-044: Seed the team scenes after workload loads and let axe wait for animations to settle
+- TEST-007: Keep the slide switch reports when the route switch run starts
+- FOUND-040: Store the sample ranges once and point the README at the live viewer
+
+### Refactoring
+
+- FOUND-036: Split the table models into a package by domain
+- FOUND-036: Split the large web screens and guard source file length
+- FOUND-039: Split the full viewer behind a view-model hook
+
+### Docs
+
+- IAM-027: Note that old Modal containers can serve after a deploy
+- TEST-040: Plan whole-app testing on a local Docker stack
+- TEST-040: Trim the local stack to the API container
+- OPS-017: Build the UI on fakes first and switch each area to the real API
+- NAV-012: Tick zoom to selection and case header details after decisions 48a and 40a
+- OPS-002: Log and tick after merge
+- OPS-005: Log and tick after merge
+- OPS-005: List ADR 0297 and ask the owner about deploys from main
+- TEST-039: Log and tick after merge
+- OPS-002: Tick Postgres 18 and the database choice now that staging is cut
+- STACK-019: Tick the web framework and record the Neon region in the docs
+- STACK-033: Log and tick after merge
+- STACK-033: List ADR 0296 in the index
+- OPS-014: Hold bringing back staging until the first real user
+- ANN-012: Tick the class taxonomy task that moved to project classes
+- MEAS-000: Confirm sentinel node deposit categories and pN (sn) wording from published texts
+- MEAS-000: Number the ADR from the merge
+- MEAS-000: Log and tick after merge
+- TASK-019: Give the add-a-run reason task its own ID instead of a second TASK-016
+- TASK-019: Log and tick after merge
+- FOUND-024: Log and tick after merge
+- GUIDE-014: Tick after the decision rename and drop the old word from the knowledge index
+- EVAL-015: Log and tick after merge
+- FOUND-024: Renumber the decisions table ADR to 0300 and fix the ADR index
+- PROTO-010: Make the React app the design source
+- PROTO-010: Log and tick after merge
+- COLLAB-016: Log and tick after merge
+- ANN-019: Retire the canvas overlay task after the move to deck.gl
+- SEC-042: Log and tick after merge
+- ANN-010: Log and tick after merge
+- SEC-034: Log and tick after merge
+- TASK-008: Log and tick after merge
+- TASK-008: Ask whether a deleted AI object counts as checked
+- VIEW-028: Log and tick after merge
+- COLLAB-010: Log and tick after merge
+- OPS: Record the lead wrap-up and next steps
+- REVIEW-002: Log and tick after merge
+- VIEW-013: Log and tick after merge
+- VIEW-013: Keep in progress until real-slide tests land
+- VIEW-036: Add the route switch memory result and a knowledge entry
+- REVIEW-002: Log and tick after merge
+- VIEW-029: Log and tick after merge
+- VIEW-013: Record the measured request counts for the NDPI index open
+- VIEW-013: Log and tick after merge
+- VIEW-036: Log and tick after merge
+- NAV-013: Log and tick after merge
+- I18N-001: Record scope and hand back at the usage limit
+- IAM-026: Log and tick after merge
+- COLLAB-011: Log and tick after merge
+- FOUND-022: Log and tick after merge
+- I18N-001: Log and tick after merge
+- I18N-001: Log the lead wrap-up
+- FOUND-022: Record the owner's answers, the Fable run rules and a review checklist
+- VIEW-017: Record the JPEG chunk layout and the IDR and golden results
+- TASK-008: Log the deleted AI object change after merge
+- FOUND-022: Keep Fable for truly heavy tasks only
+- VIEW-014: Log and tick after merge
+- VIEW-017: Number the ADR from the merge
+- VIEW-017: Log and tick after merge
+- OPS-005: Log the CI repair after the parallel merges
+- COLLAB-011: Log decisions 98 and 99 after merge and ask decision 102
+- VIEW-016: Log and tick after merge
+- DS-011: Log and tick after merge
+- DS-012: Log and tick after merge
+- DS-039: Log and tick after merge
+- DS-039: Ask decision 103, which loader
+- INGEST-015: Number the ADR from the merge
+- INGEST-015: Log and tick after merge
+- INGEST-015: Ask decision 104, conversion quality
+- FOUND-022: Log the day run wrap-up and update the review checklist
+- TEST-017: Record the remaining red CI jobs for the next session
+- FOUND-022: Record the owner's answers to decisions 100 to 104 and the review ticks
+- FOUND-022: Apply the owner's answers and retire the review checklist
+- TILES-000: Check tile delivery choice against Cloudflare sources
+- FOUND-022: Point the owner at the built trace recorder page
+- TILES-000: Log and tick after merge
+- DS-039: Log and tick after merge
+- TEST-017: Log the CI fix after merge
+- RSET-005: Tick on its backend and split the leftovers into RSET-013
+- DS-001: Log and tick after merge
+- SEC-040: Log and tick after merge
+- VIEW-029: Log after merge
+- VIEW-014: Name the several scan areas refusal in the BIF overlap ADR
+- VIEW-014: Log after merge
+- VIEW-014: Index ADR 0307 and add VIEW-069 for BIFs with several scan areas
+- COLLAB-010: Log after merge
+- VIEW-069: Make the several scan areas task research first
+- RSET-014: Add heatmaps on the slide as the RSET-013 follow-up
+- TEST-038: Log after merge
+- RSET-013: Renumber the heatmap ADR to 0308
+- RSET-013: Log after merge
+- TEST-035: Say that Storybook keeps the last globals parameter, as a probe showed
+- TEST-035: Log after merge
+- TEST-030: Tick the Tab order fix and move TEST-033 to review
+- INGEST-022: Log after merge
+- VIEW-069: Ask decision 105, older Ventana archives with several scan areas
+- SHELL-011: Log after merge
+- VIEW-069: Research how common BIFs with several scan areas are
+- VIEW-069: Log after merge
+- DS-002: Log after merge
+- VIEW-014: Fix the ADR 0164 status line and index ADR 0308
+- HOME-007: Log after merge
+- I18N-004: Log after merge
+- CASES-026: Number the ADR from the merge
+- CASES-026: Log after merge
+- INGEST-015: Leave the ADR number to the merge
+- INGEST-015: Number the ADR from the merge
+- INGEST-015: Fix the ADR 0306 status line
+- INGEST-015: Log after merge
+- CASES-026: Ask decision 106, who reads the sealed clinical note
+- AIP-002: Log after merge
+- AIP-020: Add runtime model registration as the AIP-002 follow-up
+- TASK-008: Log after merge
+- AISEG-009: Number the ADR from the merge
+- AISEG-009: Log after merge
+- RSET-006: Log after merge
+- COLLAB-010: Log after merge
+- MLEVAL-007: Log after merge
+- MLEVAL-007: Ask decision 107, model files for the parity test in CI
+- AILEARN-002: Number the ADR from the merge
+- AILEARN-002: Log after merge
+- AINUC-013: Number the ADR from the merge
+- AINUC-013: Log after merge
+- RSET-014: Log after merge
+- TEST-042: Add retries for real-slide test downloads
+- TEST-042: Log after merge
+- AILEARN-003: Log after merge
+- SHELL-011: Log after merge
+- AILEARN-008: Add real embeddings for the learner in the review viewer
+- AINUC-010: Log after merge
+- VIEW-037: Record the deck.gl WebGPU route decision and its golden and memory numbers
+- VIEW-037: Mark which switch run measured the committed code
+- JOBS-007: Ask decision 108, experts running models on task slides
+- VIEW-037: Add WebGPU dashes and the route picker as follow-ups
+- VIEW-037: Number the ADR from the merge
+- VIEW-037: Log after merge
+- AILEARN-008: Log after merge
+- AILEARN-009: Add one shared SAM worker as the AILEARN-008 follow-up
+- AINUC-013: Log after merge
+- JOBS-007: Log after merge
+- AILEARN-009: Log after merge
+- AILEARN-005: Index ADR 0315
+- AILEARN-005: Log after merge
+- AILEARN-007: Log after merge
+- INGEST-014: Number the ADR from the merge
+- INGEST-014: Log after merge
+- VIEW-070: Record the measured dash variant and the tesselator probe
+- VIEW-017: Log after merge
+- VIEW-070: Log after merge
+- VIEW-037: Tick after VIEW-070 and add the dashed ring follow-up
+- AINUC-013: Log after merge
+- VIEW-055: Leave the ADR unnumbered and correct three claims
+- TEST-017: Log after merge
+- VIEW-040: Number the ADR from the merge
+- VIEW-040: Log after merge
+- VIEW-017: Number the OME-Zarr JPEG chunks ADR row
+- VIEW-055: Number the ADR from the merge
+- VIEW-055: Log after merge
+- TEST-017: Log after merge
+- TEST-017: Log after merge
+- AILEARN-004: Number the ADR from the merge
+- AILEARN-004: Log after merge
+- AILEARN-004: Add the pooled feature collection follow-up
+- AILEARN-010: Number the ADR from the merge
+- AILEARN-010: Log after merge
+- AILEARN-010: Add the server pooling follow-up
+- VIEW-040: Number the ADR links outside docs
+- AIP-020: Number the ADR from the merge
+- AIP-020: Log after merge
+- VIEW-072: Log after merge
+- AILEARN-011: Number the server pooling ADR 0323 and index it
+- MLEVAL-006: Index the promotion gate ADR
+- MLEVAL-006: Log after merge
+- AILEARN-004: Tick after the MLEVAL-006 promotion gate
+- AILEARN-011: Order the ADR index rows
+- AILEARN-011: Log after merge
+- SEC-031: Log after merge
+- SEC-031: Ask which Cloudflare token .env holds
+- VIEW-071: Log after merge
+- VIEW-052: Log after merge
+- VIEW-052: Ask for five unlocked minutes on the Mac
+- TEST-017: Log after merge
+- FOUND-026: Number the ADR from the merge
+- FOUND-026: Log after merge
+- SEC-026: Number the ADR from the merge
+- SEC-026: Log after merge
+- SEC-026: Add the remaining parse isolation follow-up
+- VIEW-038: Number the ADR from the merge
+- VIEW-038: Log after merge
+- VIEW-038: Add the custom WebGPU route follow-up
+- FOUND-027: Log after merge
+- TEST-017: Log after merge
+- VIEW-073: Say the repeated first edge is inferred from the golden
+- none: Number the ADR from the merge
+- VIEW-073: Log after merge
+- VIEW-039: Log after merge
+- AIP-012: Log after merge
+- AITUM-006: Log after merge
+- TEST-017: Add the sidecar timing and built-app web spec tasks
+- FOUND-002: Consolidate the docs
+- I18N-005: Log after merge
+- TEST-043: Log after merge
+- TEST-044: Log the built app spec fixes
+- FOUND-035: Log and tick the migration baseline
+- DEV-003: Log and tick gamepad support
+- DEV-004: Log and tick SpaceMouse over WebHID
+- AITUM-004: Number ADR 0329 and log the view-scoped map
+- OPS-011: Log maintenance mode
+- OPS-011: Check maintenance mode in local dev, not staging
+- OPS-014: Drop staging for good and prepare production for the first real user instead
+- OPS-014: Update the hold note for no staging
+- AITUM-005: Number ADR 0332, log painted maps and add the brush task
+- TEST-001: Log coverage gates
+- TEST-028: Log the accuracy command
+- SEC-008: Log de-identified projects
+- MLEVAL-009: Number ADR 0334 and log the evaluation dashboard
+- OPS-016: Log the deploy browser smoke and ask for its account
+- SEC-028: Log and tick identifying text blanking
+- TEST-007: Log the memory suite
+- AITUM-007: Log painting a map with the brush
+- EXP-001: Number ADR 0336, log and tick flag targeting
+- TEST-008: Log visual regression
+- EXP-004: Log and tick layout experiments
+- FOUND-036: Log and tick the file split and add the full viewer split
+- TEST-044: Update the docs front page after the cloud run
+- TEST-044: Log the green PR run and tick the tasks it confirmed
+- FOUND-028: Log and tick after merge
+- TEST-015: Log and tick after merge
+- EXP-008: Note hand-back
+- EXP-008: Log and tick after merge
+- EXP-008: Keep in progress until the kit tasks and slides are in
+- FOUND-039: Log after merge
+- FOUND-015: Log after merge
+- SEC-035: Log after merge and add SEC-046 for the composite keys
+- SEC-013: Renumber the new tasks to SEC-048 and SEC-049
+- OPS-007: Renumber the ADR to 0340
+- SEC-013: Log SEC-013 and OPS-007 after merge
+- OPS-009: Renumber the ADR to 0341
+- OPS-009: Finish renumbering the ADR to 0341
+- OPS-009: Log after merge and index ADR 0340
+- FOUND-009: Number the ADR from the merge
+- FOUND-009: Log after merge, keep in review and add FOUND-040 and PILOT-009
+- PILOT-004: Log after merge
+- FOUND-040: Run follow-ups in the same or the very next agent
+- SEC-048: Log after merge
+- SEC-046: Log after merge
+- FOUND-040: Log that parfocal-dev holds no Camelyon samples
+- FOUND-040: Log the partial merge and ask decision 112
+- OPS-006: Record ADR 0342, the alert cycle schedule question and move to review
+- OPS-006: Renumber the ADR to 0343 and the decision to 113
+- OPS-006: Log SEC-049, PILOT-009 and OPS-006 after merge
+- OPS-004: Log the batch after the reset and add TILES-009 and OPS-019
+- OPS-019: Log and tick after merge
+- OPS-019: Add the provisioning drill decision and the runbook row
+- TILES-009: Move to review after merge
+- EXP-008: Keep in progress until the replaced stand-in tasks are restored
+- SEC-005: Number the ADR from the merge
+- SEC-005: Log and tick after merge
+- AISEG-008: Renumber the server embeddings ADR to 0346
+- AISEG-016: Record the prompt-pass fallback at PQ 0.796 on TNBC
+- AISEG-016: Log and tick after merge
+- SEC-002: Renumber the HSTS preload decision to 119
+- SEC-002: Restore the choice line of decision 118
+- SEC-045: Log and tick after merge
+- OPS-004: Record the bulk CPU probe and ask when to add a Neon read replica
+- OPS-004: Renumber the read replica decision to 120
+- OPS-004: Restore the choice line of decision 119
+- IAM-012: Renumber the SSO role decision to 121
+- IAM-012: Restore the choice line of decision 120
+- IAM-028: Add the SSO sign-in entry and CI follow-up and claim it
+- OPS-003: Number the ADR from the merge
+- OPS-003: Log and tick after merge
+- AINUC-000: Use the measured ViT-B for the Best detector and soften unread paper claims
+- AINUC-000: Renumber the ADR to 0349 and the decision to 123
+- AINUC-000: Renumber the ADR to 0349 and the decision to 123
+- AINUC-000: Restore the choice line of decision 122
+- SEC-045: Number the ADR from the merge
+- SEC-045: Resolve the results index after the merge
+- SEC-045: Log and tick after merge
+- TEST-010: Renumber the load token decision to 124
+- $ID: Restore decision choice lines
+- TEST-010: Number the ADR from the merge
+- AITUM-000: Keep the MONAI ResNet18 as the v1 tumor model and set the probe evaluation
+- AITUM-000: Align the tumor probe evaluation with MLEVAL-005 and the promotion gate
+- AITUM-000: Number the foundation model decision 125
+- $ID: Restore decision choice lines
+- AITUM-000: Number the ADR from the merge
+- AITUM-000: Fill in ADR numbers and add the load test secrets to the inventory
+- IAM-028: Number the ADR from the merge
+- IAM-028: Fill in the ADR number in the log
+- IAM-029: Add the SSO domain proof follow-up and claim it
+- AIP-007: Number the embedder capacity decision 126
+- $ID: Restore decision choice lines
+- AITUM-001: Number the FROC range decision 127
+- AITUM-001: Restore decision choice lines
+- AITUM-008: Add the tumor map job wiring follow-up and claim it
+- TEST-019: Narrow the model run and decision findings to what was measured
+- TEST-019: Number the ADR from the merge
+- AIP-021: Number the ADR from the merge
+- AIP-021: Log and tick after merge
+- AITUM-008: Number the ADR from the merge
+- AITUM-008: Fill in ADR numbers 0354 and 0355
+- TEST-019: Log and tick after merge
+- AITUM-003: Number the size range decision 128
+- AITUM-010: Number the ADR from the merge
+- AITUM-010: Fill in ADR 0356 in the log
+- AITUM-011: Add the tumor map pool deploy follow-up and claim it
+- AITUM-009: Add the view map runner task and the open permission question
+- AITUM-009: Renumber the view map runner task to AITUM-012 and the decision to 129
+- AITUM-009: Number the ADR from the merge
+- AITUM-009: Fill in ADR 0357
+- TEST-043: Log the train db test sweep
+- SEC-050: Add the rate limit follow-up from TEST-019 and claim it
+- AITUM-011: Number the ADR from the merge
+- AITUM-011: Fill in ADR 0358 in the log
+- SEC-050: Log and tick after merge
+- AISEG-014: Number the cell kinds decision 130
+- AISEG-014: Number the ADR from the merge
+- AISEG-014: Fill in ADR 0359
+- REVIEW-020: Correct the closest firm staging answer to 18 cells
+- TEST-045: Add the full viewer accessibility fix and claim it
+- TEST-045: Log and tick after merge
+- MLEVAL-010: Number the dataset access decision 131
+- MLEVAL-010: Log and tick after merge
+- SEC-027: Rescope the edge limit check to production and record a burst with no 429
+- SEC-027: Number the ADR from the merge
+- SEC-027: Fill in ADR 0360
+- TEST-044: Refresh the review column and the SKEL-001 status
+- INGEST-029: Log and tick after merge
+- AISEG-000: Pick the interactive encoder and decoder per tier, MobileSAM measured on TNBC
+- AISEG-000: Tighten sources, scripts and the fine-tune decision
+- AISEG-000: Measure the fp32 PathoSAM encoder for the Best interactive tier
+- AISEG-000: Number the small SAM fine-tune decision 133
+- AISEG-000: Restore decision choice lines
+- AISEG-000: Number the ADR from the merge
+- AISEG-000: Log and tick after merge
+- AISEG-013: Pin InstanSeg checksums and soften the TNBC training claim
+- AISEG-013: Number the InstanSeg accuracy decision 134
+- AISEG-013: Number the ADR from the merge
+- AISEG-013: Fill in ADR 0362
+- AINUC-011: Note the next step on the board
+- TEST-044: Log the first ci run with no retries
+- TEST-044: Tick after two clean ci runs in a row
+- decisions: Record the owner's answers of 2026-11-16
+- INGEST-029: Create the read-only fixtures key and prove it cannot write
+- decisions: Record the owner's answer to decision 136
+- TEST-007: Tick nine review tasks on real CI runs and note what the rest still wait for
+- TEST-033: Put the axe scan back in review and correct the SSO and view map notes
+- decisions: Record decisions 136 and 137 and log the merges and the database recreation
+
+### Tests
+
+- IAM-027: List the sign-up and sign-in operations in the tenant isolation checks
+- VIEW-029: Check the camera view rectangle and name what is still unverified
+- VIEW-013: Add the NDPI Viv goldens and the browser decode check
+- VIEW-013: Fix the NDPI test types and record the reader agreement on real slides
+- VIEW-016: Add Viv goldens, the uncompressed Huron wheel zoom budget and the result file
+- VIEW-029: Add a one command Mac GPU timing for the overlay budgets
+- TEST-038: Count draft calls per area in verify (untested)
+- RSET-014: Seed a stored heatmap in the permission and tenant matrices
+- MLEVAL-007: Compare browser PathoSAM graphs with PyTorch on fixed TNBC patches
+- TEST-042: Retry dropped range reads in real-slide tests
+- AINUC-013: Skip the frame count check on software GL
+- AINUC-013: Hold the main-thread task to 100 ms on software GL
+- VIEW-052: Add opt-in hidden tab spec for headed Chrome on the real GPU
+- VIEW-073: Time the custom WebGPU route's render pass on the Mac GPU
+- TEST-043: Compare the sidecar open with the walk instead of a fixed 1000 ms
+- TEST-028: Fail the ml accuracy run on a missing weight or dataset
+- SEC-028: Expect the neutral slide label in the default de-identified project
+- DEV-009: Fix the pen, view map and painted map specs found by the first ci run
+- SEC-013: Drive the key rotation command and mark untried rotation steps
+- AISEG-016: Put a stained nucleus 4 px from the tile seam and narrow the result's claims
+- IAM-001: Rebuild the Zitadel module from scratch on the make dev container
+- SKEL-001: Check TLS, health and isolation headers after every deploy
+- AIP-007: Record the priority gate load test and add the pre-warm trigger task
+- IAM-029: Read the newest session in the SSO spec so reruns pass
+- TEST-019: Fix the six main path budgets before measuring
+- TEST-019: Measure six main paths with median and p95 and check the CPU-side ones in CI
+- TEST-019: Measure open, jump and decision against the local stack with real sign-in
+- MEAS-006: Check the likely size range in tests, log and tick the task
+- AINUC-011: Measure the nucleus job on one L4 in Modal dev, projected 2.56 hours
+- AINUC-011: Show native 1024 px nucleus windows fail the detector reference
+- SEC-014: Run the restore check and object recovery tests in the db job
+- SEC-014: Set the deploy worker coverage minimum to its unit-only coverage
+- AITUM-012: List the view map route among the probes the tenant suite finds elsewhere
+- TEST-019: Time the import worker with /usr/bin/time only on macOS
+- EXP-008: Give the ten task moderator spec 90 seconds on slow runners
+- TEST-001: Set each package coverage minimum a few points under the ci run
+- AITUM-009: Name the view map tile write in the tenant isolation suite
+- IAM-028: Reload the sign-in screen until it renders after the IdP container starts
+
+### Build and CI
+
+- FOUND-028: Pin every job to ubuntu-24.04 and guard against ubuntu-latest
+- TEST-015: Pin the browser matrix to ubuntu-24.04
+- IAM-028: Upload the end-to-end traces and screenshots when a spec fails
+
+### Other
+
+- FOUND-024: Claim FOUND-024 OPS-005 TEST-039 for the parallel run
+- STACK-019: Claim STACK-019 STACK-020 STACK-033 for the parallel run
+- COLLAB-016: Merge main
+- SEC-034: Merge main
+- COLLAB-010: Merge main
+- VIEW-029: Merge main
+- VIEW-036: Merge main
+- VIEW-013: Merge main
+- VIEW-036: Merge main
+- NAV-013: Merge main
+- FOUND-022: Remove the mock comparison from the shot script and agent docs
+- COLLAB-011: Merge main and renumber the shared cursor ADR to 0304
+- FOUND-022: Merge main
+- I18N-001: Merge main
+- I18N-001: Refresh the raw JSX string baseline after merging main
+- TASK-008: Merge main
+- VIEW-014: Merge main and number the BIF decision 101
+- VIEW-017: Merge main
+- Leave the board to the lead
+- COLLAB-011: Merge main
+- TEST-017: Merge main
+- VIEW-016: Merge main
+- Merge main
+- TEST-039: Merge main
+- DS-039: Merge main
+- INGEST-015: Merge main
+- FOUND-027: Refresh tooling pins and fix what the new Biome and Oxlint rules report
+- TEST-044: Claim twenty tasks for a cloud parallel run
+- CASE-012: Drop case states and swap the run's ideas for planned tasks
+- AITUM-005: Merge the lead branch and renumber the painted maps migration to 0117
+- AISEG-016: Release the POC-bound tasks and claim AITUM-007 and EXP-004
+- FOUND-015: Claim FOUND-015 FOUND-039 SEC-035 EXP-008 TEST-015 FOUND-028 for the parallel run
+- SEC-013: Claim SEC-013 PILOT-004 OPS-007 for the parallel run
+- SEC-046: Claim SEC-046 FOUND-009 OPS-009 for the parallel run
+- SEC-048: Claim SEC-048 SEC-049 OPS-006 for the parallel run
+- SEC-048: Claim SEC-048 and SEC-049 on top of SEC-013 in review
+- FOUND-040: Claim FOUND-040 and PILOT-009 as follow-ups
+- OPS-018: Add OPS-018 and claim six tasks after the weekly reset
+- TILES-009: Claim TILES-009 and OPS-019 for the parallel run
+- AISEG-008: Claim AISEG-008 for the parallel run
+- SEC-005: Claim SEC-005 for the parallel run
+- SEC-002: Claim SEC-002 and IAM-001 for the parallel run
+- IAM-012: Claim IAM-012 and SEC-045 for the parallel run
+- SKEL-001: Claim SKEL-001 for the parallel run
+- OPS-003: Claim OPS-003 for the parallel run
+- AINUC-000: Claim AINUC-000 for the parallel run
+- AITUM-000: Claim AITUM-000 for the parallel run
+- AIP-007: Claim AIP-007 for the parallel run
+- TEST-019: Claim TEST-019 for the parallel run
+- AITUM-001: Claim AITUM-001 for the parallel run
+- AIP-021: Claim AIP-021 for the parallel run
+- MLEVAL-005: Claim MLEVAL-005 for the parallel run
+- TEST-019: Continue the full stack runs
+- AITUM-010: Claim AITUM-003 and AITUM-010 for the parallel run
+- AITUM-009: Claim AITUM-009 for the parallel run
+- AITUM-012: Claim AITUM-012 for the parallel run
+- AINUC-012: Claim AINUC-012, MEAS-006 and AISEG-014 for the parallel run
+- REVIEW-020: Claim REVIEW-020 for the parallel run
+- AISEG-000: Claim AISEG-000 and MLEVAL-010 for the parallel run
+- SEC-011: Claim SEC-011 and SEC-027 for the parallel run
+- LAB-004: Claim LAB-004 now that LAB-001 is done
+- LAB-004: Tick the pan sweep benchmark, already built and tested
+- INGEST-029: Claim INGEST-029 for the parallel run
+- AISEG-013: Claim AISEG-013 for the parallel run
+- AISEG-021: Claim AISEG-021 for the parallel run
+- AINUC-011: Claim AINUC-011 for the parallel run
+
 ## v0.2.0 (2026-11-13)
 
 ### Features
