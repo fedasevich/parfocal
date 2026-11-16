@@ -28,5 +28,5 @@ The `load` workflow (`.github/workflows/load.yml`) is `workflow_dispatch` only, 
 ## Consequences
 
 - A run at the cap against production made 53 health reads and cost about $0.002 of Modal time, the container's idle tail included ([result](../results/2026-11-16-load-scenarios-on-production.md)). Log every production run and its cost as ADR 0151 (standing approval within $30 a month) asks.
-- The tile and room scenarios need a read-only service token, a few slide ids and a member session in the repository secrets before they measure production. That is decision 123 (a production token and session for the load workflow) in `docs/decisions.md`.
+- The tile and room scenarios need a read-only service token, a few slide ids and a member session in the repository secrets before they measure production. That is decision 124 (a production token and session for the load workflow) in `docs/decisions.md`.
 - OPS-012 sets `PARFOCAL_LOAD_LIFT_LIMITS` for its soak runs and must check the month's budget first. After OPS-014 production holds real data, and heavier runs move to the drill environment that ADR 0331 describes.

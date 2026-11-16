@@ -37,7 +37,7 @@ Service tokens are rate limited per principal and the Worker limits `/tiles/` pe
 
 A production run with no secrets: `pnpm load:run --origin https://app.parfocal.eu --users 2 --seconds 60`. The API scales to zero, so the first request after a quiet spell takes about 8 s. Wake it with one `curl` of `/api/health` first, or read the max column as the cold start. On 2026-11-16 it made 53 health reads at 230 ms p50 and 690 ms p95 for about $0.002 of Modal time ([result](../results/2026-11-16-load-scenarios-on-production.md)).
 
-The workflow reads the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. None exist yet, which is decision 123 (a production token and session for the load workflow).
+The workflow reads the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. None exist yet, which is decision 124 (a production token and session for the load workflow).
 
 A local run with a token, keeping to a few users for under 30 seconds on the shared Mac. Put the token lines in a script, since worktree agents run one plain command per call:
 
