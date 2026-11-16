@@ -15,8 +15,8 @@ const warmUpVisits = cycle.length;
 const slideSwitches = 20;
 const longSessionVisits = Number(process.env.MEMORY_LONG_VISITS ?? 100);
 
-const switchBudget: HeapBudget = { maxGrowth: 0.1, maxSlopeBytesPerVisit: null };
-const longSessionBudget: HeapBudget = { maxGrowth: 0.1, maxSlopeBytesPerVisit: null };
+const switchBudget: HeapBudget = { maxGrowth: 0.1, maxSlopeBytesPerVisit: 10 * 1024 };
+const longSessionBudget: HeapBudget = { maxGrowth: 0.1, maxSlopeBytesPerVisit: 10 * 1024 };
 
 test.beforeEach(() => {
   skipUnlessCached("CMU-1.svs");

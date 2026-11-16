@@ -72,6 +72,6 @@
     "vite": "8.3.3"
   },
   "coverage": {
-    "lines": 40
+    "lines": 90
   }
 }

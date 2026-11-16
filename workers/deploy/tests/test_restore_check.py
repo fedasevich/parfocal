@@ -19,6 +19,8 @@ from parfocal_deploy.restore_check import (
     with_database,
 )
 
+pytestmark = pytest.mark.db
+
 OWNER_URL = os.environ.get(
     "PARFOCAL_TEST_OWNER_URL", "postgresql://parfocal@localhost:5432/parfocal"
 )
@@ -29,6 +31,7 @@ create table decisions (
     slide_id bigint not null references slides (id),
     choice text not null check (choice in ('agree', 'disagree', 'unsure'))
 );
+
 create index decisions_slide on decisions (slide_id);
 insert into slides select n, 'slide ' || n, 'HE' from generate_series(1, 50) n;
 insert into decisions select n, 1 + n % 50, 'agree' from generate_series(1, 200) n;

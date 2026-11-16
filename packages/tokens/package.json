@@ -23,6 +23,6 @@
     "@parfocal/typescript-config": "workspace:*"
   },
   "coverage": {
-    "lines": 40
+    "lines": 95
   }
 }

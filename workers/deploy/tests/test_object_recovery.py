@@ -12,6 +12,8 @@ from parfocal_deploy.object_recovery import (
     versions,
 )
 
+pytestmark = pytest.mark.db
+
 KEY = "t/one/slides/two/original.svs"
 
 

@@ -156,7 +156,7 @@ Your choice: a
 - Decision 129 (who may map a view), option B with your note that everyone gets all AI tools. AITUM-013 (anyone who can read a slide maps a view) opens the route and counts GPU seconds per person. Decision 108 above still keeps whole-slide runs on annotate tasks to the "run models" right, as you chose there.
 - Decision 130 (a typed fixture run for "find more like these"), option B. AISEG-023 (find more like these on typed PanNuke nuclei) measures it.
 - Decision 131 (CryoNuSeg and Lizard), option A. When you have a minute, sign in to Kaggle and download the two zips into the paths listed under "The review column" below.
-- Decision 132 (the read-only fixtures key), option A. The lead opens the Cloudflare dashboard page with the permission filled in, and you only click save.
+- Decision 132 (the read-only fixtures key), option A. At your request the lead added "Account API Tokens Write" to `parfocal-tofu`, applied only the token `parfocal-fixtures-read` (1 added, 0 changed, 0 destroyed), put it in `.env`, and proved it lists `parfocal-dev` and is refused a write. INGEST-029 (shared test slides bucket) is ticked.
 - Decision 133 (a small SAM fine-tune), option A with your note. Nothing is trained or fine-tuned in the thesis.
 - Decision 134 (InstanSeg as the auto tool without WebGPU), option A.
 - Decision 135 (the nucleus job under one hour), Other. Time is not a target, quality and use of the Modal GPUs come first. AINUC-011 (throughput target) is ticked on the measured 2.56 hours on one L4.
@@ -171,7 +171,7 @@ Your answer to decision 133 says nothing is trained or fine-tuned in the thesis.
 - B. No probe. Drop AITUM-014 and keep the pretrained MONAI ResNet18 as the only tumor map.
 - Other.
 
-Your choice:
+Your choice: a
 
 ## The review column, what each task waits for
 
@@ -212,22 +212,13 @@ Waits for a decision:
 
 Waits for a green CI run:
 
-- FOUND-015 (container images). The images job and the Modal builds need a GitHub run.
-- FOUND-027 (refresh the tooling pins). It needs a green golden-image run on the hosted runner after the Playwright 1.65 bump.
-- FOUND-028 (CI runner image for Ubuntu 26.04). A trial run on `ubuntu-26.04` is still owed.
-- FOUND-030 (bundle analyzer report). The first pull request run must show the bundle report attached.
-- IAM-001 (identity provider as code, now rescoped to the local Zitadel). It needs the first green `idp` workflow run.
-- IAM-012 (per-organisation SSO) and IAM-028 (SSO from the sign-in screen). Both wait for the SSO end-to-end spec to pass in CI.
-- IAM-029 (prove the SSO email domain by DNS). The changed SSO spec still needs a run on the local Zitadel stack.
-- AITUM-009 (Map this view asks the server for its tiles). Its checks are met, and it waits for the train merge and CI.
-- TEST-001 (unit test setup for TS and Python). Raise the 13 placeholder minimums after the first CI run and check the test job time.
-- TEST-007 (memory and leak suite). Set the three budgets from the first nightly memory run on `main`.
-- TEST-008 (visual regression for UI). Run CI with `update_goldens`, commit the baselines and confirm `ci-ok` is a required check on `main`.
-- TEST-015 (cross-browser matrix). Four checks pass locally on all three browsers, and the first nightly run on GitHub is owed.
-- TEST-017 (flaky test management). It needs a green CI run at the same runtime and one manual run of the flaky-report workflow.
-- TEST-033 (the axe scan of a route does not depend on test order). It needs a green full web browser run, since the scan now covers states the old one skipped.
-- TEST-036 (display panel Undo tests repeat the key gesture when the Undo window is missed). It needs three CI runs on `main`.
-- TEST-039 (local Zitadel for the end-to-end suite). It needs the first green end-to-end job on `main`.
+- FOUND-015 (container images). The images job is green. The Done line wants the Modal images built in CI, which only deploy.yml does, and decision 96 pauses it. Accept the lock resolution as the proof (ADR 0339) or add a Modal build step.
+- IAM-012 (per-organisation SSO), IAM-028 (SSO from the sign-in screen) and IAM-029 (SSO domain proof by DNS). The sign-in screen test of the SSO spec is intermittent, with three passes and two failures across the train and pull request 12 runs. Pull request 12 adds an `e2e-failures` artifact to find the cause. Tick all three after a few green e2e jobs in a row.
+- AITUM-009 (Map this view asks the server for its tiles). It waits for a db job that passes the tenant isolation suite, which pull request 12 fixes by naming scoreViewMapTile. The 10k cell import test of RSET-012 fails the same job and is not part of this task.
+- TEST-033 (the axe scan of a route does not depend on test order). One full web run is green and ci run 43859683421 on main failed on an axe color-contrast violation on `/tasks/:id/disagreements`, so it waits for a green run after that is understood.
+- TEST-008 (visual regression for UI). `ci-ok` is a required check on `main`. Run CI with `update_goldens` and commit the baselines once, after the train merges.
+- TEST-015 (cross-browser matrix). Run `gh workflow run browsers --ref main` after the train merges, because the workflow is not on `main` yet.
+- TEST-036 (display panel Undo tests repeat the key gesture when the Undo window is missed). Two of three ci runs on `main` are clean, one more is needed.
 
 Waits for something else, nothing for you now:
 

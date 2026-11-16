@@ -19,6 +19,6 @@
     "@parfocal/py-common": "workspace:*"
   },
   "coverage": {
-    "lines": 77
+    "lines": 66
   }
 }

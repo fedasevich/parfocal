@@ -40,7 +40,8 @@ export default defineConfig({
     baseURL: origin,
     channel: "chrome",
     headless: true,
-    trace: process.env.CI ? "off" : "retain-on-failure",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
   webServer: [
     {
