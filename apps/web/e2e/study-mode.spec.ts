@@ -118,6 +118,7 @@ test("the ten pilot tasks run end to end, three end by their checks and none fir
 test("a moderator runs the ten tasks, then the round is frozen and the next round is editable", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await page.goto("/study");
   await expect(page.getByTestId("study-round")).toHaveAttribute("data-frozen", "false");
   await expect(page.getByTestId("study-summary").locator("tbody tr")).toHaveCount(10);

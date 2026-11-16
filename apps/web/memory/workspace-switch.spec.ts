@@ -12,7 +12,7 @@ import { type CDPSession, expect, type Page, test } from "@playwright/test";
 const reportDir = fileURLToPath(new URL("../test-results/memory-reports", import.meta.url));
 const warmUpRounds = 2;
 const rounds = Number(process.env.MEMORY_WORKSPACE_ROUNDS ?? 20);
-const budget: HeapBudget = { maxGrowth: null, maxSlopeBytesPerVisit: null };
+const budget: HeapBudget = { maxGrowth: 0.4, maxSlopeBytesPerVisit: null };
 
 const home = "Fakultní nemocnice Vltava";
 const lab = "Charles University AI Lab";

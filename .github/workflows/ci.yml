@@ -282,6 +282,13 @@ jobs:
         run: docker compose logs
       - if: failure()
         run: docker compose -f infra/local/zitadel.compose.yaml logs zitadel
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-failures
+          path: apps/e2e/test-results
+          retention-days: 7
+          if-no-files-found: ignore
 
   browser:
     needs: changes
