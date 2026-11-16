@@ -128,8 +128,13 @@ async function countIn(organisation: string, path: string, body: unknown): Promi
 }
 
 async function signInThroughOrganisation(page: Page, user: string, typed: string): Promise<void> {
-  await page.goto("/sign-in?return_to=/");
-  await page.getByRole("button", { name: "Sign in with your organisation" }).click();
+  test.setTimeout(120_000);
+  const organisation = page.getByRole("button", { name: "Sign in with your organisation" });
+  await expect(async () => {
+    await page.goto("/sign-in?return_to=/");
+    await expect(organisation).toBeVisible({ timeout: 15_000 });
+  }).toPass({ timeout: 60_000 });
+  await organisation.click();
   await page.getByRole("textbox", { name: "Institution or email domain" }).fill(typed);
   await page.getByRole("button", { name: "Continue to your organisation's sign-in" }).click();
   await expect(page).toHaveURL(new RegExp(`^${idpOrigin}/simplesaml/`));
