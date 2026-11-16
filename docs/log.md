@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-16
 
+- TEST-045 the inspector dock sits above the sliding minimap, so axe no longer sees the Hide while panning checkbox as obscured, full-viewer and inspector-panel specs passed three runs in a row.
 - TEST-045 The minimap slid over the Hide while panning checkbox mid-transition, which axe read as an obscured target. The inspector dock now sits above the minimap (z-4). The inspector panel spec checks the 24 pixel hit area and that nothing covers it.
 - REVIEW-020 (firm staging answers on a validation set) correction: the closest firm answer to 200 was 18 cells away (true count 182, range high 176.4), not 22. The result file now says so.
 - REVIEW-020 (firm staging answers on a validation set) done. parfocal_ml.staging_validation stages 86 PanNuke fold 3 clusters (whole images of one tissue gathered to 300, 400, 500, 600 and 800 nuclei) through area_count.count_members and node_staging.stage_node, using the POC's cached HoVer-NeXt outputs. 71 firm answers with one view and with 8 views, none on the wrong side of 200 true tumor cells, 10 of them within 50 of 200, the closest 22 cells away. A 54 KB fixture (workers/ml/tests/fixtures/staging-validation-pannuke.npz, PanNuke CC BY-NC-SA 4.0) is replayed by test_staging_validation.py. Result in docs/results/2026-11-16-firm-staging-answers-pannuke.md. No cloud run, no cost.
