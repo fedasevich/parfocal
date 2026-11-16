@@ -60,5 +60,5 @@ Run 1 calibrated the depth in each container under a load average of 14.6, so th
 ## Follow-ups
 
 - AIP-021 (pre-warm trigger from a slow device through the API) wires the trigger: the web's slow-device check, an API route and the Modal client that the API lacks, plus the real `embed` runner.
-- Decision XXX in `docs/decisions.md` asks whether one embedder container is enough. A second one would take the worst case of all pools to 5.35 USD an hour, over the 5 USD cap that `validate_pools` enforces.
+- Decision 126 in `docs/decisions.md` asks whether one embedder container is enough. A second one would take the worst case of all pools to 5.35 USD an hour, over the 5 USD cap that `validate_pools` enforces.
 - TODO: rerun on Modal with the real encoder once AIP-021 lands.

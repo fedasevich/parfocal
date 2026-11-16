@@ -315,7 +315,7 @@ AINUC-000 (nuclei detector and typer research check) kept PathoSAM AIS and HoVer
 
 Your choice:
 
-### XXX. Whether one interactive embedder container is enough
+### 126. Whether one interactive embedder container is enough
 
 AIP-007 (interactive priority gate) runs interactive embeddings in their own `embedder` pool with one container. In a local load test with a stand-in model, one or two people sending embeddings back to back while a whole-slide job ran stayed under 1 s, and four did not (worst call 1.37 s), because one GPU serves them one at a time ([result](results/2026-11-16-interactive-priority-gate-load-test.md)). A second container would take the worst case of all pools to 5.35 USD an hour, over the 5 USD hourly cap the pool check enforces, so it needs your yes.
 
