@@ -1,4 +1,4 @@
-# XXXX. The tumor map worker runs the ResNet18 as ONNX and reads a downloaded original through OpenSlide
+# 0356. The tumor map worker runs the ResNet18 as ONNX and reads a downloaded original through OpenSlide
 
 - Date: 2026-11-16
 - Status: Accepted

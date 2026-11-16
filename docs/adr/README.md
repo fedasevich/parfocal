@@ -320,3 +320,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0353](0353-main-path-budgets-are-a-p95-after-a-warm-up.md) | Main path budgets for the thesis are a 95th percentile after a warm-up, CI keeps the fastest of several | Accepted | 2026-11-16 |
 | [0354](0354-the-api-warms-the-embedder-with-the-modal-sdk.md) | The API warms the embedder with the Modal SDK | Accepted | 2026-11-16 |
 | [0355](0355-the-tumor-map-job-shares-the-detector-good-pool.md) | The tumor map job shares the detector-good T4 pool and stops at 4,000 tiles | Accepted | 2026-11-16 |
+| [0356](0356-the-tumor-map-worker-runs-the-resnet18-as-onnx-on-a-downloaded-original.md) | The tumor map worker runs the ResNet18 as ONNX and reads a downloaded original through OpenSlide | Accepted | 2026-11-16 |
