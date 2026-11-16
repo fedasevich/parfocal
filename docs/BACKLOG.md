@@ -1331,7 +1331,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 ---
 
-- [ ] INGEST-029 · Shared test slides bucket
+- [x] INGEST-029 · Shared test slides bucket
   The owner's public test slides, such as the OpenSlide and Camelyon sets, are uploaded once under a `fixtures/` prefix of `parfocal-dev`, and CI and production read them there with a read-only R2 key limited to that bucket, so nothing copies them around. The owner chose `parfocal-dev` over a bucket of its own on 2026-11-02, knowing that a mistake with a dev write key could delete them, so no test or cleanup ever deletes under `fixtures/` and the manifest's SHA-256 shows a damaged copy. No slide with patient data goes there. The read-only key goes through `infra/tofu` as an additive write under the standing yes of ADR 0151 (standing approval within $30 a month), so it needs no question when the plan only adds it.
   Done when `parfocal-dev/fixtures/` holds the manifest's fixtures with matching SHA-256, `pnpm fixtures` can read from it, the read-only key is refused a write, and the R2 storage cost is logged.
   Depends on INGEST-028. Refs [ADR 0115](adr/0115-production-access-and-spend-caps.md), [ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md), [knowledge/test-fixtures.md](knowledge/test-fixtures.md).

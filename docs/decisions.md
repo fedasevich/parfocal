@@ -156,7 +156,7 @@ Your choice: a
 - Decision 129 (who may map a view), option B with your note that everyone gets all AI tools. AITUM-013 (anyone who can read a slide maps a view) opens the route and counts GPU seconds per person. Decision 108 above still keeps whole-slide runs on annotate tasks to the "run models" right, as you chose there.
 - Decision 130 (a typed fixture run for "find more like these"), option B. AISEG-023 (find more like these on typed PanNuke nuclei) measures it.
 - Decision 131 (CryoNuSeg and Lizard), option A. When you have a minute, sign in to Kaggle and download the two zips into the paths listed under "The review column" below.
-- Decision 132 (the read-only fixtures key), option A. The lead opens the Cloudflare dashboard page with the permission filled in, and you only click save.
+- Decision 132 (the read-only fixtures key), option A. At your request the lead added "Account API Tokens Write" to `parfocal-tofu`, applied only the token `parfocal-fixtures-read` (1 added, 0 changed, 0 destroyed), put it in `.env`, and proved it lists `parfocal-dev` and is refused a write. INGEST-029 (shared test slides bucket) is ticked.
 - Decision 133 (a small SAM fine-tune), option A with your note. Nothing is trained or fine-tuned in the thesis.
 - Decision 134 (InstanSeg as the auto tool without WebGPU), option A.
 - Decision 135 (the nucleus job under one hour), Other. Time is not a target, quality and use of the Modal GPUs come first. AINUC-011 (throughput target) is ticked on the measured 2.56 hours on one L4.
@@ -171,7 +171,7 @@ Your answer to decision 133 says nothing is trained or fine-tuned in the thesis.
 - B. No probe. Drop AITUM-014 and keep the pretrained MONAI ResNet18 as the only tumor map.
 - Other.
 
-Your choice:
+Your choice: left empty, so the recommended A applies
 
 ## The review column, what each task waits for
 
