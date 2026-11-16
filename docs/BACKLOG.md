@@ -3426,7 +3426,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
 
 Models run on demand as model runs that create result sets (JOBS) and nothing runs on arrival ([ADR 0053](adr/0053-ai-results-review-direction.md)). Tiers stay for the interactive tools in Annotate.
 
-- [ ] AIP-000 · Research check
+- [x] AIP-000 · Research check
   Re-check doc 20's ranked list against the current literature (nucleus segmentation and typing models, pathology foundation models, promptable segmentation) and confirm STACK-022, STACK-027 and STACK-031.
   Done when an ADR lists the v1 model line-up per tier and its licence status.
   Size: M.
@@ -3466,7 +3466,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs docs 17, 19.
   Size: L.
 
-- [ ] AIP-007 · Interactive priority gate
+- [x] AIP-007 · Interactive priority gate
   Interactive requests (embeddings, region passes) run in their own Modal function, pre-warmed when a slow device activates the tool, so they never queue behind job tiles ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when a load test meets STACK-027's target while a whole-slide job runs.
   Size: L.
@@ -3688,6 +3688,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-013.
   Size: L.
 
+- [ ] AISEG-022 · Best quality for the auto region tool
+  Decision 118 (whether the auto region tool can run in best quality) lets the outline tier setting choose best quality for the auto layer too, with the residual pass and the five-prompt ensemble of AISEG-016 (prompt-pass fallback), instead of fixing it to fast.
+  Done when a unit test shows the auto layer follows the outline tier setting in both tiers and a browser test runs the auto layer once in best quality on a fixture tile.
+  Depends on AISEG-016.
+  Size: S.
+
+- [ ] AISEG-023 · Find more like these on typed PanNuke nuclei
+  Decision 130 (a typed fixture run for "find more like these") asks to measure exemplar ranking where cell types exist. Fetch PanNuke (CC BY-NC-SA 4.0, kept in the dataset cache and never committed), run the auto region tool's nuclei on its tiles, pick a few exemplars of one type and rank the rest by exemplar similarity as AISEG-014 (find more like these) does.
+  Done when a result file records precision at 10 and 50 per cell type against PanNuke's labels, compared with a random ranking.
+  Depends on AISEG-014, MLEVAL-010.
+  Size: M.
+
 ## 23 AINUC · Whole-slide nuclei, typing and confidence
 
 - [x] AINUC-000 · Research check
@@ -3753,8 +3765,8 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-001, AINUC-002, AINUC-013, JOBS-004.
   Size: M.
 
-- [ ] AINUC-011 · Throughput target
-  Done when the job processes a CAMELYON16 slide on the chosen GPU in under one hour (POC laptop estimate: ten hours), recorded in a result file from an on-demand run ([ADR 0011](adr/0011-hosted-ci-only.md)).
+- [x] AINUC-011 · Throughput target
+  Done when the job processes a CAMELYON16 slide on one L4 and the time is recorded in a result file from an on-demand run ([ADR 0011](adr/0011-hosted-ci-only.md)). Decision 135 (how the nucleus job gets under one hour) dropped the one-hour target on 2026-11-16, because quality and use of the Modal GPUs come before time, so the job keeps its full tile core and reference.
   Refs doc 20 §2.5.
   Size: L.
 
@@ -3778,15 +3790,21 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
   Size: S.
 
+- [ ] AINUC-015 · Score newer nucleus models on the Mac
+  Decision 123 (newer nucleus models) allows downloading InstanSeg and the PathoSAM ViT-L decoder to score them against the kept PathoSAM AIS and HoVer-Net line-up. Check each file size and the peak memory of one inference before any full run, and keep a run under about 8 GB of RAM on the 24 GB Mac, one ML run at a time. The aim is the best model the thesis can run, not the fastest.
+  Done when a result file scores both candidates and the kept line-up on TNBC and NuInsSeg with the same metrics as AINUC-000 (nuclei detector and typer research check), with CryoNuSeg added once MLEVAL-010 (loaders for datasets behind a sign-in) has its archive, and records each model's file size and peak RAM.
+  Depends on AINUC-000.
+  Size: M.
+
 ## 24 AITUM · Tumor and region maps
 
-- [ ] AITUM-000 · Research check
+- [x] AITUM-000 · Research check
   Compare the MONAI CAMELYON ResNet18 bundle with foundation-model linear probes (UNI2, Virchow2, H-optimus, Prov-GigaPath) on CAMELYON16 test slides, under the licence policy.
   Done when an ADR picks the v1 tumor model and lists the evaluation.
   Refs doc 20 §2.6.
   Size: L.
 
-- [ ] AITUM-001 · Tumor map job
+- [x] AITUM-001 · Tumor map job
   Fully convolutional inference over the tissue mask, probability grid stored as a raster pyramid.
   Done when a CAMELYON16 test slide scores within the expected FROC range in MLEVAL.
   Size: L.
@@ -3850,6 +3868,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   AITUM-005 stores painted maps as versioned `.pfmap` tile files ([ADR 0332](adr/0332-painted-maps-as-whole-versions-of-one-tile-file.md), painted maps as whole versions of one tile file), but nothing in the viewer paints one yet. Let the brush paint into and erase from a painted map on the view map tile grid, save it with the version check, list and open versions, and export it. Add fake API handlers for the painted map routes, and cover `painted_maps` and `painted_map_versions` in the retention purge.
   Done when component tests paint, save, reopen and export a map, an E2E spec paints and reloads, and a retention test purges both tables.
   Depends on AITUM-005.
+  Size: M.
+
+- [ ] AITUM-013 · Anyone who can read a slide maps a view
+  Decision 129 (who may map a view of a slide on the server) chose that everyone who can read the slide gets every AI tool. Open the view map route of AITUM-009 (Map this view asks the server for its tiles) to anyone with read access and count the GPU seconds per person, as the run limits of the other AI routes do. Amend ADR 0357 with a new ADR.
+  Done when API tests show a reviewer who can read the slide maps a view, a person without read access gets a 403, and the GPU seconds land on the person who asked.
+  Depends on AITUM-009.
+  Size: S.
+
+- [ ] AITUM-014 · A foundation model probe for the tumor map
+  Decision 125 (gated foundation models) chose H-optimus-0 (Apache-2.0, about 1.1B parameters). Once the owner accepts its terms on Hugging Face and puts a read token in `.env`, download the weights, check their size and peak RAM first, and compare a tumor probe on its features with the MONAI ResNet18 on CAMELYON16 test slides. The probe needs training, which decision 136 (training a probe) asks about first.
+  Done when a result file compares FROC and per-slide numbers of both on the same test slides.
+  Depends on AITUM-000.
   Size: M.
 
 ---
@@ -4336,7 +4366,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
-- [ ] OPS-003 · Environments
+- [x] OPS-003 · Environments
   Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, and production from `main`, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   There is no staging environment ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment).
   Done when a pull request gets a working preview URL and closing it deletes its branch, environment and prefix.
