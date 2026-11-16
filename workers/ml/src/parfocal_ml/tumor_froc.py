@@ -88,6 +88,8 @@ def tumor_mask(
 
 
 def lesions_of(mask: NDArray[np.bool_], cell_um: float) -> Lesions:
+    if not mask.any():
+        return Lesions(np.zeros(mask.shape, np.int32), frozenset())
     grow = GROW_UM / (cell_um * 2)
     distance = cast("NDArray[np.float64]", ndimage.distance_transform_edt(~mask))
     near = cast("NDArray[np.bool_]", ndimage.binary_fill_holes(distance < grow))

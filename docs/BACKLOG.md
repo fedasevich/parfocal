@@ -3916,7 +3916,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness reproduces doc 29's HoVer-NeXt numbers on the same fold.
   Result: [typing and calibration reproduction](results/2026-10-18-typing-calibration-reproduction.md).
 
-- [ ] MLEVAL-005 · Tumor map evaluation
+- [x] MLEVAL-005 · Tumor map evaluation
   FROC and Dice on CAMELYON16 test slides.
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.

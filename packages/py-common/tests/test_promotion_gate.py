@@ -33,9 +33,17 @@ def test_a_typer_over_the_ece_cap_or_below_its_reference_is_refused() -> None:
     assert below.refused == ("accuracy 0.8 is below the served 0.81 less 0.0",)
 
 
-def test_a_missing_metric_and_an_unmeasured_task_are_refused() -> None:
+def test_a_missing_metric_is_refused() -> None:
     assert gate({"pq": 0.83}, THRESHOLDS[DETECTOR]).refused == ("f1 was not measured",)
-    assert not gate({}, THRESHOLDS[TUMOR_MAP]).passed
+    assert gate({"froc": 0.75}, THRESHOLDS[TUMOR_MAP]).refused == ("dice was not measured",)
+
+
+def test_a_tumor_map_may_fall_below_the_three_slide_baseline_by_the_tolerance_only() -> None:
+    thresholds = THRESHOLDS[TUMOR_MAP]
+    assert gate({"froc": 0.7122, "dice": 0.8886}, thresholds).passed
+    assert gate({"froc": 0.7121, "dice": 0.95}, thresholds).refused == (
+        "froc 0.7121 is below the reference 0.7222 less 0.01",
+    )
 
 
 def test_a_model_passes_only_when_every_gated_task_passes() -> None:

@@ -44,6 +44,12 @@ def test_a_lesion_narrower_than_isolated_cells_is_left_out_of_the_count():
     assert lesions.labels[20, 20] in lesions.isolated
 
 
+def test_a_slide_without_tumour_has_no_lesions_at_all():
+    lesions = lesions_of(np.zeros((50, 50), bool), CELL_UM)
+    assert lesions.labels.max() == 0
+    assert lesions.counted == 0
+
+
 def test_deposits_closer_than_the_grown_distance_become_one_lesion():
     mask = np.zeros((100, 200), bool)
     mask[40:60, 40:60] = True

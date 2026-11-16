@@ -17,7 +17,7 @@ import {
 const manifest = loadManifest();
 
 test("every group has fixtures and the default group stays small", () => {
-  for (const group of ["small", "formats", "viewer", "big", "huge", "camelyon"]) {
+  for (const group of ["small", "formats", "viewer", "big", "huge", "camelyon", "tumor-eval"]) {
     assert.ok(selectFixtures(manifest, [group]).length > 0, group);
   }
   const small = selectFixtures(manifest, defaultGroups);
