@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from pydantic import SecretStr
+from pydantic import AnyHttpUrl, SecretStr
 
 from parfocal_common.local_bucket import NotLocalError, ensure_local_bucket
 from parfocal_common.settings import AppEnv, StorageSettings
@@ -10,7 +10,9 @@ from parfocal_common.settings import AppEnv, StorageSettings
 @pytest.mark.parametrize("app_env", [AppEnv.PREVIEW, AppEnv.STAGING, AppEnv.PROD])
 def test_no_bucket_is_made_outside_dev_and_test(app_env: AppEnv) -> None:
     settings = StorageSettings(
-        app_env=app_env, storage_secret_access_key=SecretStr("storage-secret-from-the-store")
+        app_env=app_env,
+        storage_endpoint=AnyHttpUrl("https://account.r2.cloudflarestorage.com"),
+        storage_secret_access_key=SecretStr("storage-secret-from-the-store"),
     )
     with pytest.raises(NotLocalError):
         asyncio.run(ensure_local_bucket(settings))

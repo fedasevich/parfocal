@@ -33,3 +33,5 @@ strict_zone_settings := {
 	"tls_1_3": "on",
 	"ssl": "strict",
 }
+
+minimum_hsts_seconds := 31536000

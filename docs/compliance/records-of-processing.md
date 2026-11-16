@@ -42,7 +42,7 @@ See [subprocessors.md](subprocessors.md#transfers-outside-the-eea). The pilot tr
 
 ## Security measures
 
-Summarised from [controls.md](controls.md): row level security per tenant (IAM-004), patient identifiers sealed per tenant key (SEC-004), a hash chained audit log (SEC-003), encryption in transit and at rest (SEC-002), PHI scrubbing of logs and telemetry (ADR 0040), retention with legal hold (SEC-006), access export and erasure (SEC-007), rate limits (SEC-027) and security headers (SEC-011).
+Summarised from [controls.md](controls.md): row level security per tenant (IAM-004), patient identifiers sealed per tenant key (SEC-004), a hash chained audit log (SEC-003), encryption in transit and at rest (SEC-002, listed per store in [encryption.md](encryption.md)), PHI scrubbing of logs and telemetry (ADR 0040), retention with legal hold (SEC-006), access export and erasure (SEC-007), rate limits (SEC-027) and security headers (SEC-011).
 
 ## Keeping this record current
 

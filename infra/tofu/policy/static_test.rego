@@ -15,12 +15,21 @@ environment(root) := {"module": {"environment": [{
 	"dev_mode": false,
 }]}}
 
-zone := {"locals": [{"zone_settings": {
-	"always_use_https": "on",
-	"min_tls_version": "1.2",
-	"tls_1_3": "on",
-	"ssl": "strict",
-}}]}
+zone := {"locals": [
+	{"zone_settings": {
+		"always_use_https": "on",
+		"min_tls_version": "1.2",
+		"tls_1_3": "on",
+		"ssl": "strict",
+	}},
+	{"strict_transport_security": {
+		"enabled": true,
+		"max_age": 31536000,
+		"include_subdomains": true,
+		"preload": false,
+		"nosniff": true,
+	}},
+]}
 
 tier_rule := {
 	"id": "tier-old-tenant-objects",
@@ -129,6 +138,26 @@ test_wrong_environment_name_fails if {
 test_weak_tls_zone_setting_fails if {
 	contents := json.patch(zone, [{"op": "replace", "path": "/locals/0/zone_settings/ssl", "value": "flexible"}])
 	denied(with_file("global/zone.tf", contents), "zone setting ssl")
+}
+
+test_old_tls_minimum_fails if {
+	contents := json.patch(zone, [{"op": "replace", "path": "/locals/0/zone_settings/min_tls_version", "value": "1.0"}])
+	denied(with_file("global/zone.tf", contents), "zone setting min_tls_version")
+}
+
+test_missing_hsts_fails if {
+	contents := json.patch(zone, [{"op": "remove", "path": "/locals/1"}])
+	denied(with_file("global/zone.tf", contents), "zone HSTS")
+}
+
+test_short_hsts_fails if {
+	contents := json.patch(zone, [{"op": "replace", "path": "/locals/1/strict_transport_security/max_age", "value": 86400}])
+	denied(with_file("global/zone.tf", contents), "zone HSTS")
+}
+
+test_hsts_without_subdomains_fails if {
+	contents := json.patch(zone, [{"op": "replace", "path": "/locals/1/strict_transport_security/include_subdomains", "value": false}])
+	denied(with_file("global/zone.tf", contents), "zone HSTS")
 }
 
 in_module(contents) := with_file("modules/environment/main.tf", contents)

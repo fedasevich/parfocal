@@ -6,6 +6,7 @@ from pydantic import AnyHttpUrl, PositiveFloat, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_common.object_store import StorageLocation
+from parfocal_common.transport import require_https
 
 
 class AppEnv(StrEnum):
@@ -40,6 +41,9 @@ LOCAL_BACKENDS = Backends(
 )
 
 
+ENCRYPTED_TRANSPORT_ENVIRONMENTS = frozenset({AppEnv.STAGING, AppEnv.PROD})
+
+
 def default_backends(app_env: AppEnv) -> Backends:
     if app_env is AppEnv.PROD:
         return PRODUCTION_BACKENDS
@@ -69,6 +73,9 @@ class ServiceSettings(BaseSettings):
     alert_ticket_email: str = "security@parfocal.eu"
     otlp_endpoint: str | None = None
     otlp_headers: SecretStr | None = None
+
+    def encrypted_transport(self) -> bool:
+        return self.app_env in ENCRYPTED_TRANSPORT_ENVIRONMENTS
 
     def backends(self) -> Backends:
         defaults = default_backends(self.app_env)
@@ -104,6 +111,12 @@ class StorageSettings(ServiceSettings):
         local = self.storage_secret_access_key.get_secret_value() == LOCAL_STORAGE_SECRET
         if self.app_env is AppEnv.PROD and local:
             raise LocalSecretInProductionError("STORAGE_SECRET_ACCESS_KEY")
+        return self
+
+    @model_validator(mode="after")
+    def storage_over_tls(self) -> StorageSettings:
+        if self.encrypted_transport():
+            require_https("STORAGE_ENDPOINT", self.storage_endpoint)
         return self
 
     def storage(self) -> StorageLocation:

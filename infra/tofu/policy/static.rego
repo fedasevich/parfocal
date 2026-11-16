@@ -120,6 +120,21 @@ zone_setting(setting, value) if {
 	block.zone_settings[setting] == value
 }
 
+deny contains msg if {
+	not strict_transport_security
+	msg := sprintf("the global root must turn on zone HSTS for subdomains with a max age of at least %d seconds", [allowed.minimum_hsts_seconds])
+}
+
+strict_transport_security if {
+	some file in input
+	root_of(file.path) == "global"
+	some block in file.contents.locals
+	hsts := block.strict_transport_security
+	hsts.enabled == true
+	hsts.include_subdomains == true
+	hsts.max_age >= allowed.minimum_hsts_seconds
+}
+
 lifecycle_rules contains [file.path, rule] if {
 	some file in input
 	some _, blocks in file.contents.resource.cloudflare_r2_bucket_lifecycle
