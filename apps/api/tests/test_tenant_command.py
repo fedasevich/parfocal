@@ -135,6 +135,10 @@ def zitadel() -> dict[str, str]:
         pytest.skip("Run make dev or infra/local/zitadel-up.sh for the local Zitadel")
     if urlparse(found["ZITADEL_ISSUER"]).hostname != "localhost":
         pytest.fail("The command test deletes organisations, so it runs only on a local Zitadel")
+    try:
+        httpx2.get(f"{found['ZITADEL_ISSUER']}/debug/healthz", timeout=2)
+    except httpx2.HTTPError:
+        pytest.skip("The local Zitadel in .zitadel/e2e.env is not running")
     return found
 
 

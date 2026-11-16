@@ -6,15 +6,16 @@ How to provision and deprovision a tenant with one command each. The logic is OP
 
 - `provision` finds or creates the organisation row, creates the tenant, seeds the built-in study templates, makes the tenant's data keys, writes the audit events, makes sure the bucket exists and finds or creates the Zitadel organisation `parfocal-<slug>`. It prints the tenant id.
 - `deprovision TENANT_ID` suspends the tenant, deletes the Zitadel organisation `parfocal-<slug>` with its users, deletes every object under `t/<tenant id>/`, shreds the tenant's data keys and writes `tenant.deprovisioned`. It prints what it removed. A second run removes nothing and still succeeds. Shredding the keys cannot be undone, so the tenant's encrypted identifiers are gone for good.
-- The command reads `DATABASE_URL`, `MASTER_KEYS`, `ZITADEL_ISSUER`, `ZITADEL_ADMIN_TOKEN` and the `STORAGE_*` settings from the environment. `ZITADEL_ADMIN_TOKEN` belongs to the command only, never to the running API, because it can delete any organisation.
+- The command reads `APP_ENV`, `DATABASE_URL`, `MASTER_KEYS`, `ZITADEL_ISSUER`, `ZITADEL_ADMIN_TOKEN` and the `STORAGE_*` settings from the environment. `ZITADEL_ADMIN_TOKEN` belongs to the command only, never to the running API, because it can delete any organisation.
 - A Zitadel or unknown-tenant error exits with status 1 and never prints the token.
 
 ## Local run
 
-`make dev` or `bash infra/local/zitadel-up.sh` writes `.zitadel/e2e.env` with the local issuer and its admin token.
+`make dev` or `bash infra/local/zitadel-up.sh` writes `.zitadel/e2e.env` with the local issuer and its admin token. `.env` may hold cloud values, so the block below sets the local database and MinIO the way `scripts/dev.sh` does, which keeps the run away from the `parfocal-dev` bucket.
 
 ```
 set -a; . ./.env; . .zitadel/e2e.env; set +a
+export APP_ENV=dev DATABASE_URL=postgresql://parfocal_app@localhost:6432/parfocal STORAGE_ENDPOINT=http://127.0.0.1:9000
 uv run --package parfocal-api python -m parfocal_api.tenant_command provision \
   --organisation-slug lab --organisation-name "Lab" --slug lab-research --name "Lab research" --kind research
 uv run --package parfocal-api python -m parfocal_api.tenant_command deprovision <tenant id>
