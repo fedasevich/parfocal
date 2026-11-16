@@ -1,6 +1,6 @@
 import type { ReviewObject } from "@parfocal/api-client";
 import type { FindingsCell, FindingsPanelZone } from "@parfocal/ui/components/findings-panel";
-import { aiSizeError, scaleMax, scaleMin } from "@parfocal/ui/lib/analysis-parts";
+import { likelySizeHigh, likelySizeLow } from "@parfocal/ui/lib/analysis-parts";
 import { type AreaCount, callOf } from "@parfocal/ui/lib/area-call";
 import {
   CHANGED_ZONE_ID,
@@ -115,8 +115,6 @@ export function viewerFindingsLayout(
   return findingsLayoutFor(template) === "node-staging" && areaCount > 0 ? "node-staging" : null;
 }
 
-const clampToScale = (mm: number) => Math.min(scaleMax, Math.max(scaleMin, mm));
-
 export type ViewerArea = {
   object: string;
   size: number;
@@ -128,8 +126,8 @@ export function stagingPanelAreas(areas: readonly ViewerArea[]): StagingPanelAre
   return areas.map((area) => ({
     id: area.object,
     size: area.size,
-    low: clampToScale(area.size * (1 - aiSizeError)),
-    high: clampToScale(area.size * (1 + aiSizeError)),
+    low: likelySizeLow(area.size),
+    high: likelySizeHigh(area.size),
     call: callOf(area.call ?? undefined),
     measured: area.measured,
   }));

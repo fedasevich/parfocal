@@ -25,6 +25,7 @@ const slideSearch = z.object({
     ])
     .optional(),
   tool: z.enum(stayTools).optional(),
+  across: z.string().optional(),
   focus: z.boolean().optional(),
   peek: z.boolean().optional(),
   tab: z.enum(viewerTabs).optional(),

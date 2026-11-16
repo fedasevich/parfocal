@@ -43,24 +43,6 @@ export function areaExtent(object: string): MapRect {
   return [box[0] - pad, box[1] - pad, box[2] - box[0] + 2 * pad, box[3] - box[1] + 2 * pad];
 }
 
-export type Measurement = { object: string; mm: number; across: string };
-
-export const measuredSize = (size: number) => Number((size * 1.04).toFixed(1));
-
-export function rulerEnds(across: string): [[number, number], [number, number]] {
-  const box = regionShapes[across]?.box ?? [0, 0, 0, 0];
-  const [cx, cy] = boxCentre(box);
-  return box[2] - box[0] >= box[3] - box[1]
-    ? [
-        [box[0], cy],
-        [box[2], cy],
-      ]
-    : [
-        [cx, box[1]],
-        [cx, box[3]],
-      ];
-}
-
 const clamp = (value: number, low: number, high: number) =>
   low > high ? (low + high) / 2 : Math.min(high, Math.max(low, value));
 

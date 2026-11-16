@@ -338,6 +338,7 @@ type StepBlockProps = Omit<React.ComponentProps<"div">, "title"> & {
   title: React.ReactNode;
   done?: boolean;
   answer?: React.ReactNode;
+  doneNote?: React.ReactNode;
 };
 
 function StepBlock({
@@ -345,6 +346,7 @@ function StepBlock({
   title,
   done = false,
   answer,
+  doneNote,
   className,
   children,
   ...props
@@ -367,7 +369,7 @@ function StepBlock({
         </span>
         {done && answer ? <span className="ml-auto font-normal text-fg-dim">{answer}</span> : null}
       </div>
-      {done ? null : children}
+      {done ? doneNote : children}
     </div>
   );
 }

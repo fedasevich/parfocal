@@ -916,7 +916,7 @@ msgstr ""
 
 #. placeholder {0}: cut.mm
 #. placeholder {0}: formatMm(deposit.sizeMm)
-#. placeholder {0}: measurement.mm.toFixed(2)
+#. placeholder {0}: mm.toFixed(2)
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: ../../packages/ui/src/components/inspector.tsx
 #: src/screens/viewer-tools/measure-canvas.tsx
@@ -4659,6 +4659,10 @@ msgstr ""
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr ""
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Check the line"
+msgstr ""
+
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Check your email"
 msgstr ""
@@ -6314,6 +6318,10 @@ msgstr ""
 #. placeholder {0}: item.text
 #: src/screens/home/announcements.tsx
 msgid "End announcement: {0}"
+msgstr ""
+
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "End of the ruler"
 msgstr ""
 
 #. placeholder {0}: item.text
@@ -8324,6 +8332,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Large"
+msgstr ""
+
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Larger than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
@@ -14404,6 +14416,10 @@ msgstr ""
 msgid "Small tumor cluster, about {0}"
 msgstr ""
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Smaller than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Smallest outline"
 msgstr ""
@@ -14592,6 +14608,10 @@ msgstr ""
 
 #: src/study/study-screen.tsx
 msgid "Start next round"
+msgstr ""
+
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "Start of the ruler"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
@@ -17321,6 +17341,10 @@ msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Withdraw the request"
+msgstr ""
+
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Within the AI's likely range, {low} to {high}."
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx

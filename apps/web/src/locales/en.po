@@ -918,7 +918,7 @@ msgstr "{0} min"
 
 #. placeholder {0}: cut.mm
 #. placeholder {0}: formatMm(deposit.sizeMm)
-#. placeholder {0}: measurement.mm.toFixed(2)
+#. placeholder {0}: mm.toFixed(2)
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: ../../packages/ui/src/components/inspector.tsx
 #: src/screens/viewer-tools/measure-canvas.tsx
@@ -4661,6 +4661,10 @@ msgstr "Check the address first."
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr "Check the address to list what is there. Nothing is fetched yet."
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Check the line"
+msgstr "Check the line"
+
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Check your email"
 msgstr "Check your email"
@@ -6320,6 +6324,10 @@ msgstr "End"
 #: src/screens/home/announcements.tsx
 msgid "End announcement: {0}"
 msgstr "End announcement: {0}"
+
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "End of the ruler"
+msgstr "End of the ruler"
 
 #. placeholder {0}: item.text
 #: src/screens/admin/workspace-settings.tsx
@@ -8330,6 +8338,10 @@ msgstr "Language of labels"
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Large"
 msgstr "Large"
+
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Larger than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
+msgstr "Larger than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Largest deposit"
@@ -14413,6 +14425,10 @@ msgstr "Small cluster, about {0}"
 msgid "Small tumor cluster, about {0}"
 msgstr "Small tumor cluster, about {0}"
 
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Smaller than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
+msgstr "Smaller than the AI's likely range of {low} to {high}. Check the line runs across the widest part of the area."
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Smallest outline"
 msgstr "Smallest outline"
@@ -14602,6 +14618,10 @@ msgstr "Start in guided review"
 #: src/study/study-screen.tsx
 msgid "Start next round"
 msgstr "Start next round"
+
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "Start of the ruler"
+msgstr "Start of the ruler"
 
 #: ../../packages/ui/src/components/report-editor.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
@@ -17331,6 +17351,10 @@ msgstr "With graph"
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Withdraw the request"
 msgstr "Withdraw the request"
+
+#: ../../packages/ui/src/components/findings-panel.tsx
+msgid "Within the AI's likely range, {low} to {high}."
+msgstr "Within the AI's likely range, {low} to {high}."
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx

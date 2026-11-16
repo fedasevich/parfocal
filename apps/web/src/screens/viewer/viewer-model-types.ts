@@ -11,6 +11,7 @@ export type ViewerSearch = CameraSearch & {
   tab?: ViewerTab | undefined;
   modal?: "preset" | undefined;
   tool?: StayTool | undefined;
+  across?: string | undefined;
   peek?: boolean | undefined;
   focus?: boolean | undefined;
 };

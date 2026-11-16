@@ -102,6 +102,7 @@ export function useViewerPanels(
     learnerView,
     leaveComment,
     measurement,
+    measures,
     modelWarnings,
     navigate,
     netOff,
@@ -259,7 +260,10 @@ export function useViewerPanels(
             current={selected ?? null}
             onPickArea={areaNav.goTo}
             onCall={callArea}
-            onMeasure={() => onSearch({ tool: "ruler" })}
+            onMeasure={(id) => {
+              measures.open(id);
+              onSearch({ tool: "ruler", across: id, object: id });
+            }}
             onCount={() => pick(firstOpenCell)}
             warnings={modelWarnings}
           />
@@ -290,7 +294,7 @@ export function useViewerPanels(
             note: item.note,
           }))}
           onOpenCells={() => pick(firstOpenCell)}
-          measurements={measurement ? [measurement] : []}
+          measurements={measures.measurements}
         />
       </>
     );
@@ -302,11 +306,16 @@ export function useViewerPanels(
       {...measurement}
       onClose={() => onSearch({ object: "" })}
       onRemove={() => {
-        onSearch({ tool: undefined, object: undefined });
+        const { across, line, object } = measurement;
+        measures.remove(across);
+        onSearch({ tool: undefined, across: undefined, object: undefined });
         setToast({
           id: Date.now(),
-          text: `${measurement.object} removed`,
-          undo: () => onSearch({ tool: "ruler", object: measurement.object }),
+          text: `${object} removed`,
+          undo: () => {
+            measures.setLine(across, line);
+            onSearch({ tool: "ruler", across, object });
+          },
         });
       }}
     />
