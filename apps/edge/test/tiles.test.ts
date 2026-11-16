@@ -13,6 +13,7 @@ import {
   consoleTileLog,
   handleTiles,
   type RangeCache,
+  storedKey,
   type TileEnv,
   type TileRead,
 } from "../src/tiles.ts";
@@ -760,5 +761,24 @@ describe("a tile key overlap window", () => {
 
   test("a weak key anywhere in the list is refused", async () => {
     await assert.rejects(readWith(`${SECRET},change-me`, await tokenFor()), WeakSigningKeyError);
+  });
+});
+
+describe("preview storage prefix", () => {
+  test("a preview reads tenant objects under its own prefix and fixtures where they are", () => {
+    assert.equal(storedKey("previews/pr-7/", "t/a/s/b/tile.jpg"), "previews/pr-7/t/a/s/b/tile.jpg");
+    assert.equal(storedKey("previews/pr-7/", "fixtures/CMU-1.svs"), "fixtures/CMU-1.svs");
+    assert.equal(
+      storedKey("previews/pr-7/", "ops/sli/batches/1.json"),
+      "previews/pr-7/ops/sli/batches/1.json",
+    );
+    assert.equal(storedKey(undefined, "t/a/s/b/tile.jpg"), "t/a/s/b/tile.jpg");
+    assert.equal(storedKey("", "t/a/s/b/tile.jpg"), "t/a/s/b/tile.jpg");
+  });
+
+  test("a prefix that is not a preview prefix is refused", () => {
+    for (const prefix of ["fixtures/", "previews/", "previews/pr-7", "../", "t/"]) {
+      assert.throws(() => storedKey(prefix, "t/a/s/b/tile.jpg"));
+    }
   });
 });

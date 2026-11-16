@@ -135,7 +135,7 @@ def drop_old_keys(store: KeysStore, tools: Tools, target: Environment, name: str
 
 def write_both(store: KeysStore, tools: Tools, target: Environment, name: str, value: str) -> None:
     if name in SHARED_TOKEN_KEYS:
-        write_worker_secrets(tools, target.wrangler_env, {name: value})
+        write_worker_secrets(tools, target.wrangler_target, {name: value})
     store.merge({name: value})
 
 

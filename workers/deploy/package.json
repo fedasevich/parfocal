@@ -9,7 +9,8 @@
     "smoke": "uv run --package parfocal-deploy python -m parfocal_deploy.smoke",
     "bootstrap": "uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap",
     "rotate": "uv run --package parfocal-deploy python -m parfocal_deploy.rotate",
-    "costs": "uv run --package parfocal-deploy python -m parfocal_deploy.costs"
+    "costs": "uv run --package parfocal-deploy python -m parfocal_deploy.costs",
+    "preview": "uv run --package parfocal-deploy python -m parfocal_deploy.preview"
   },
   "dependencies": {
     "@parfocal/api": "workspace:*",

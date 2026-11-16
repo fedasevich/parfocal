@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.request
 from collections import defaultdict
@@ -30,6 +31,7 @@ BUDGETS: dict[str, dict[Service, Decimal]] = {
     "production": {Service.MODAL: Decimal(20), Service.R2: Decimal(3)},
     "dev": {Service.MODAL: Decimal(3)},
     "drill": {Service.MODAL: Decimal(2), Service.R2: Decimal("0.5")},
+    "preview": {Service.MODAL: Decimal("1.5")},
 }
 
 MODAL_ENVIRONMENTS = {"main": "production", "dev": "dev"}
@@ -39,6 +41,7 @@ BUCKETS = {
     "parfocal-tfstate": "production",
 }
 DRILL_PREFIX = "drill"
+PREVIEW_ENVIRONMENT = re.compile(r"pr-[1-9][0-9]*")
 
 
 class Status(StrEnum):
@@ -76,6 +79,8 @@ R2Reader = Callable[[], dict[str, int]]
 def environment_of_modal(name: str) -> str:
     if name.startswith(DRILL_PREFIX):
         return "drill"
+    if PREVIEW_ENVIRONMENT.fullmatch(name):
+        return "preview"
     return MODAL_ENVIRONMENTS.get(name, UNBUDGETED)
 
 
