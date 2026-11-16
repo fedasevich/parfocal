@@ -1,7 +1,7 @@
-# XXXX. Job claims respect the tenant region behind one switch
+# 0345. Job claims respect the tenant region behind one switch
 
 - Date: 2026-11-16
-- Status: Proposed
+- Status: Accepted
 - Deciders: Claude (SEC-005 agent)
 - Backlog: SEC-005 (data residency enforcement), OPS-020 (pin storage, database and Modal functions per region)
 

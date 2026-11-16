@@ -863,7 +863,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on STACK-037. Search is decided in [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md).
 
 - [ ] SEC-005 · Data residency enforcement
-  Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Since 2026-11-16 this task builds the rule in the job claim behind a switch ([ADR XXXX](adr/XXXX-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch), and OPS-020 (pin storage, database and Modal functions per region) pins the cloud resources.
+  Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Since 2026-11-16 this task builds the rule in the job claim behind a switch ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch), and OPS-020 (pin storage, database and Modal functions per region) pins the cloud resources.
   Done when a test fails if a job for an EU tenant is scheduled on a non-EU queue.
   Size: L.
 
@@ -4370,7 +4370,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when, for each area, API tests cover each new route, its `@real` specs pass on the real API, its count in TEST-038 (draft call ratchet) is zero, and the seeded production app shows no "not available yet" on its screens.
   Depends on OPS-015, TEST-026, TEST-040. Size: L.
 - [ ] OPS-020 · Pin storage, database and Modal functions per region
-  SEC-005 (data residency enforcement) makes every job claim respect the tenant region once `PARFOCAL_RESIDENCY=enforced` is set ([ADR XXXX](adr/XXXX-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch). Before the switch goes on, deploy the ingest function and the GPU pools with a Modal `region` per tenant region, give EU tenants an R2 bucket in the EU jurisdiction with their objects copied, move or add a Neon project in an EU region, and pin Durable Objects to the EU jurisdiction. Each step raises spend or replaces production resources, so each is asked of the owner. This is the PHI trigger of [ADR 0003](adr/0003-pilot-platform-architecture.md) (pilot platform architecture).
+  SEC-005 (data residency enforcement) makes every job claim respect the tenant region once `PARFOCAL_RESIDENCY=enforced` is set ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch). Before the switch goes on, deploy the ingest function and the GPU pools with a Modal `region` per tenant region, give EU tenants an R2 bucket in the EU jurisdiction with their objects copied, move or add a Neon project in an EU region, and pin Durable Objects to the EU jurisdiction. Each step raises spend or replaces production resources, so each is asked of the owner. This is the PHI trigger of [ADR 0003](adr/0003-pilot-platform-architecture.md) (pilot platform architecture).
   Done when production runs with the switch on, a worker in each region logs its `MODAL_REGION`, and an EU tenant's slide, rows and GPU work stay in the EU as checked from each provider's console.
   Depends on SEC-005. Size: L.
 
