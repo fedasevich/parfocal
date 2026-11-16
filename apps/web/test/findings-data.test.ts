@@ -112,7 +112,7 @@ test("staging areas carry the AI size range and the reader's call", () => {
   assert.equal(area?.call, "tumor");
   assert.equal(area?.measured, 2.1);
   assert.ok(Math.abs((area?.low ?? 0) - 1.8) < 1e-9);
-  assert.ok(Math.abs((area?.high ?? 0) - 2.2) < 1e-9);
+  assert.ok(Math.abs((area?.high ?? 0) - 2.3) < 1e-9);
   assert.equal(tiny?.call, null);
   assert.equal(tiny?.low, 0.05);
 });

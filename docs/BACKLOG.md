@@ -3065,7 +3065,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on MEAS-005.
   Size: S.
 
-- [ ] MEAS-006 · Measure as a step of the area
+- [x] MEAS-006 · Measure as a step of the area
   "Measure" in the area panel opens the ruler at a magnification where the whole area fits, already drawn along the area's long axis for the doctor to adjust. The panel compares the value with the AI size (within the evaluated range is normal, outside it asks for a check), the value replaces the AI size in the panel, the area list and the size scale, and the largest measurement feeds MEAS-004.
   Done when E2E measures the lead area, the hero settles, and a unit test computes the pre-drawn line from an area outline.
   Depends on MEAS-001, AITUM-003. Refs mock 8, kit W21, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
