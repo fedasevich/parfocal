@@ -55,6 +55,15 @@ export function edgeDevOverrides(
   };
 }
 
+export function customizeEdgeWorker(
+  worker: { r2_buckets: Bucket[] },
+  env: Record<string, string | undefined>,
+): Omit<EdgeDevOverrides, "r2_buckets"> {
+  const { r2_buckets, ...rest } = edgeDevOverrides(worker.r2_buckets, env);
+  worker.r2_buckets = r2_buckets;
+  return rest;
+}
+
 export async function edgeWorker(
   on: boolean,
   env: Record<string, string | undefined>,
@@ -65,6 +74,6 @@ export async function edgeWorker(
     configPath: edgeConfig,
     inspectorPort: false,
     persistState: false,
-    config: (worker) => edgeDevOverrides(worker.r2_buckets, env),
+    config: (worker) => customizeEdgeWorker(worker, env),
   });
 }

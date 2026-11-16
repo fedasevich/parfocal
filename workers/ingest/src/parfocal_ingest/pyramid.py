@@ -189,10 +189,9 @@ def photometric_name(page: tifffile.TiffPage) -> str:
 
 def stored_level(level: tifffile.TiffPageSeries) -> Stored:
     page = level.keyframe
-    shape, axes = level.shape, level.axes
     return Stored(
-        width=shape[axes.index("X")],
-        height=shape[axes.index("Y")],
+        width=int(page.tags.valueof("ImageWidth", page.imagewidth)),
+        height=int(page.tags.valueof("ImageLength", page.imagelength)),
         tile_width=page.tilewidth or None,
         tile_height=page.tilelength or None,
         compression=compression_name(page),

@@ -223,10 +223,9 @@ Waits for a green CI run:
 Waits for something else, nothing for you now:
 
 - MLEVAL-007 (browser parity tests) is being finished by an agent under decision 107, once the read-only key of decision 132 exists.
-- FOUND-040 (the edge Worker and the dev bucket under make dev) is being finished by an agent under decision 112.
 
 - IAM-021 (lock screen) and SHELL-012 (account menu). The expired sign-in still returns to the slide rather than the object, and SHELL-014 (lock the screen from the account menu) builds the manual lock item.
-- FOUND-009 (local development environment). A cold run on a new machine is owed, and FOUND-040 (the edge Worker and dev bucket under `make dev`) covers the viewer part.
+- FOUND-009 (local development environment). A cold run on a new machine is owed. The viewer part is done by FOUND-040 (the edge Worker and dev bucket under `make dev`), whose dev check draws the CAMELYON16 slide `test_065`.
 - SEC-005 (data residency enforcement). Job scheduling is enforced, and pinning storage, the database and Modal functions moved to OPS-020 (region pinning).
 - SEC-008 (de-identified projects). No webhook receiver exists to test that path, and file-name slide labels go to SEC-028 (labels in de-identified projects).
 - SEC-013 (secrets management in all environments). Rerun the master key rotation in a drill environment under ADR 0331 (no staging environment).

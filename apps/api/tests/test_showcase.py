@@ -1,3 +1,4 @@
+import json
 import uuid
 from collections.abc import Iterator
 from pathlib import Path
@@ -8,7 +9,15 @@ from sqlalchemy import select
 
 from parfocal_api.auth import sign_in_user
 from parfocal_api.review_states import State, states_of, task_of
-from parfocal_api.showcase import FIXTURES_MANIFEST, FORMAT_GALLERY, RESULT_FILES, WORKSPACES, seed
+from parfocal_api.showcase import (
+    FIXTURES_MANIFEST,
+    FORMAT_GALLERY,
+    GALLERY_TOUR,
+    RESULT_FILES,
+    VIEWER_SAMPLE,
+    WORKSPACES,
+    seed,
+)
 from parfocal_api.tables import (
     DecisionStyle,
     DecisionValue,
@@ -48,8 +57,16 @@ SUFFIX_FORMATS = {
 
 
 class EmptyStore:
+    def __init__(self) -> None:
+        self.written: dict[str, bytes] = {}
+
     async def get_object(self, key: str) -> bytes:
         raise StorageError(404, "NoSuchKey")
+
+    async def put_new_object(self, key: str, body: bytes, content_type: str) -> None:
+        if key in self.written:
+            raise StorageError(412, "PreconditionFailed")
+        self.written[key] = body
 
 
 class UnusedResults:
@@ -63,8 +80,11 @@ def seeded() -> Iterator[str]:
         yield with_database(OWNER_URL, name)
 
 
-async def run_seed(url: str, owner_email: str | None = "owner@example.test") -> uuid.UUID:
-    tenant_ids = await seed(url, EmptyStore(), UnusedResults(), owner_email)  # type: ignore[arg-type]
+async def run_seed(
+    url: str, owner_email: str | None = "owner@example.test", store: EmptyStore | None = None
+) -> uuid.UUID:
+    used = store if store is not None else EmptyStore()
+    tenant_ids = await seed(url, used, UnusedResults(), owner_email)  # type: ignore[arg-type]
     return tenant_ids[0]
 
 
@@ -161,6 +181,45 @@ async def test_the_owner_can_open_the_format_gallery(seeded: str) -> None:
     assert {(str(name), str(role)) for name, role in rows} == {
         (workspace.gallery, "owner") for workspace in WORKSPACES
     }
+
+
+async def test_the_owner_reviews_a_gallery_tour_that_opens_on_the_camelyon_sample(
+    seeded: str,
+) -> None:
+    store = EmptyStore()
+    await run_seed(seeded, store=store)
+    rows = await run_sql(
+        seeded,
+        "SELECT p.name, t.kind, s.label, s.original_key, ts.position "
+        "FROM review_tasks t JOIN projects p ON p.id = t.project_id "
+        "JOIN review_task_slides ts ON ts.task_id = t.id JOIN slides s ON s.id = ts.slide_id "
+        f"WHERE t.name = '{GALLERY_TOUR}' ORDER BY p.name, ts.position",
+    )
+    first = {
+        str(name): (str(label), str(key)) for name, _, label, key, position in rows if position == 0
+    }
+    assert first == {
+        workspace.gallery: (VIEWER_SAMPLE, f"samples/camelyon16/{VIEWER_SAMPLE}/original.tif")
+        for workspace in WORKSPACES
+    }
+    assert {str(kind) for _, kind, _, _, _ in rows} == {"review"}
+    assert len(rows) == len(WORKSPACES) * (len(FORMAT_GALLERY) + 1)
+    assigned = await run_sql(
+        seeded,
+        "SELECT DISTINCT u.email FROM review_assignments a JOIN review_tasks t ON t.id = a.task_id "
+        f"JOIN users u ON u.id = a.user_id WHERE t.name = '{GALLERY_TOUR}'",
+    )
+    assert [str(email) for (email,) in assigned] == ["owner@example.test"]
+
+
+async def test_the_sample_restricted_ranges_are_stored_once_and_kept(seeded: str) -> None:
+    store = EmptyStore()
+    await run_seed(seeded, store=store)
+    await run_seed(seeded, store=store)
+    ranges = json.loads(store.written[f"samples/camelyon16/{VIEWER_SAMPLE}/restricted-ranges.json"])
+    assert ranges["ranges"] == []
+    assert ranges["identifying"]
+    assert ranges["barcode"]
 
 
 async def test_seeded_people_are_fake(seeded: str) -> None:

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { edgeDevFor, edgeDevOverrides, edgeWorkerPaths } from "../vite/edge-dev.ts";
+import {
+  customizeEdgeWorker,
+  edgeDevFor,
+  edgeDevOverrides,
+  edgeWorkerPaths,
+} from "../vite/edge-dev.ts";
 
 const serve = { command: "serve", isPreview: false } as const;
 const keys = { TILE_TOKEN_KEY: "tile", ROOM_TOKEN_KEY: "room" };
@@ -31,4 +36,14 @@ test("the dev Worker reads the real bucket remotely and gets the API's token key
 
 test("the dev Worker needs both token keys", () => {
   assert.throws(() => edgeDevOverrides([], { TILE_TOKEN_KEY: "tile" }), /needs ROOM_TOKEN_KEY/);
+});
+
+test("the bucket binding is replaced in place, because the plugin concatenates returned arrays", () => {
+  const worker = { r2_buckets: [{ binding: "SLIDES", bucket_name: "parfocal-dev" }] };
+  const returned = customizeEdgeWorker(worker, keys);
+  assert.deepEqual(worker.r2_buckets, [
+    { binding: "SLIDES", bucket_name: "parfocal-dev", remote: true },
+  ]);
+  assert.equal("r2_buckets" in returned, false);
+  assert.deepEqual(returned.vars, keys);
 });
