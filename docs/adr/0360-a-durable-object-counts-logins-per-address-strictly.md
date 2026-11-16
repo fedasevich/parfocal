@@ -1,4 +1,4 @@
-# XXXX. A Durable Object counts logins per client address strictly, behind the approximate binding
+# 0360. A Durable Object counts logins per client address strictly, behind the approximate binding
 
 - Date: 2026-11-16
 - Status: Accepted
