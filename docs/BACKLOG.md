@@ -4654,7 +4654,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on FOUND-026.
   Size: M.
 
-- [ ] TEST-045 · The full viewer passes its accessibility check while visiting areas
+- [x] TEST-045 · The full viewer passes its accessibility check while visiting areas
   The full viewer spec where G then n visits each area fails axe's target-size rule on the "Hide while panning" checkbox. It fails on the train branch with and without load, so it is a real defect and not a flake. Give the checkbox a hit area of at least 24 by 24 CSS pixels, or the spacing the rule accepts, without changing the panel's layout in Storybook.
   Done when `apps/web/e2e/full-viewer.spec.ts` passes three times in a row and a component test or story checks the checkbox's hit area.
   Size: S.
