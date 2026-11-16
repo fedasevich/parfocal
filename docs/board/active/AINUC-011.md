@@ -1,4 +1,4 @@
 status: in-progress
 by: claude parallel run
 since: 2026-11-16
-note: Measured 2.56 h projected on L4, over target. Next: 1024 px windows and overlapped post-processing, then rerun
+note: 1024 px windows fail the reference. Next: 3 by 3 windows per tile or tissue skip or fp16, checked against the reference before a GPU run
