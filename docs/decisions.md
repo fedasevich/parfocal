@@ -322,6 +322,13 @@ TEST-010 (load test tooling) added the `load` workflow, which runs the Locust sc
 - **A. An agent mints a read-only service token in your test workspace and you add it with two slide ids, leaving rooms for later, because a session cookie expires (recommended).**
 - B. Add all four, including a session cookie you copy from the browser after signing in.
 - C. Keep the workflow health-only until OPS-012 (load and soak testing).
+### 125. Whether to sign in for gated foundation models to test a better tumor map
+
+AITUM-000 (tumor map research check) kept the MONAI CAMELYON ResNet18 as the tumor model in ADR XXXX (the v1 tumor model and its evaluation), because no foundation-model probe could be measured. H-optimus-0, UNI2-h, Virchow2 and Prov-GigaPath all sit behind a Hugging Face access form, which needs your account, and UNI2-h and Virchow2 also need an institutional email and allow only non-commercial research.
+
+- **A. Accept the H-optimus-0 terms on your Hugging Face account and put a read token in `.env`, so a follow-up task downloads its weights (about 1.1B parameters, file size not stated) and the CAMELYON16 training slides it needs (size `TODO`, the disk is short), trains its probe and scores it on test slides on the Mac (recommended, Apache-2.0 and the only one that allows deployed use).**
+- B. Also request UNI2-h and Virchow2 with an institutional email, for a thesis comparison only.
+- C. No sign-in. The ResNet18 stays until a permissive model needs no form.
 
 Your choice:
 
