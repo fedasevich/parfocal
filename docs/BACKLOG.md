@@ -3629,7 +3629,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-012. Refs docs 10, 11, 14, 15.
   Size: M.
 
-- [ ] AISEG-016 · Prompt-pass fallback for the auto region tool
+- [x] AISEG-016 · Prompt-pass fallback for the auto region tool
   When the AIS decoder cannot load, seed from the stain, decode in batches strongest first, accept masks with stability 0.8 or more and overlap tiles by 96 px. Best quality adds the residual pass and the five-prompt ensemble.
   Done when a TNBC fixture test is within 0.01 PQ of the POC's stain-seed contour row and the tool falls back when the AIS graph fails.
   Depends on AISEG-010, AISEG-015. Refs docs 15, 26.

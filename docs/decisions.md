@@ -260,6 +260,15 @@ AISEG-008 (server embedding service) built the cache, the API and the browser si
 
 Your choice:
 
+### 118. Whether the auto region tool can run in best quality
+
+AISEG-016 (prompt-pass fallback) added the five-prompt ensemble for best quality. On five TNBC images it adds 0.005 PQ for 3.7 times the decodes, but the auto layer always asks for fast quality, so best quality cannot be reached from the screen.
+
+- **A. Leave the auto layer on fast. The gain is small and the cost is almost four times the decoding (recommended).**
+- B. Let the outline tier setting choose best quality.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
