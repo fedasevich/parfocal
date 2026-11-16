@@ -146,6 +146,7 @@ async def connect_saml(
     organisation_id = await directory.find_organisation(organisation_name)
     if organisation_id is None:
         raise NoIdpOrganisationError(organisation_name)
+    await directory.keep_user_names_in_organisation(organisation_id)
     await directory.grant_project(
         request.project_organisation_id, request.project_id, organisation_id
     )

@@ -179,7 +179,7 @@ async def test_the_owner_takes_over_the_seeded_account_on_first_sign_in(seeded: 
     engine = create_engine(seeded)
     try:
         async with scoped_transaction(engine, DatabaseScope(auth=True)) as connection:
-            assert await sign_in_user(connection, claims) == tenant_id
+            assert (await sign_in_user(connection, claims)).tenant_id == tenant_id
     finally:
         await engine.dispose()
     await run_seed(seeded, "adopt@example.test")

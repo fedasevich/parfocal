@@ -41,6 +41,7 @@ class AuditAction(StrEnum):
     MEMBER_ADMIN_RIGHTS_REMOVED = "member.admin-rights-removed"
     USER_SIGNED_IN = "user.signed-in"
     USER_SIGNED_OUT = "user.signed-out"
+    USER_SSO_LINKED = "user.sso-linked"
     SESSIONS_ENDED = "user.sessions-ended"
     PROFILE_CHANGED = "user.profile-changed"
     SESSION_POLICY_CHANGED = "tenant.session-policy-changed"

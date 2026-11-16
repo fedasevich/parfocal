@@ -5,12 +5,20 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, cast
 
-from sqlalchemy import ColumnElement, any_, literal, select, update
+from sqlalchemy import ColumnElement, any_, func, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, record
-from parfocal_api.tables import ActorKind, Role, memberships, sso_connections
+from parfocal_api.tables import (
+    ActorKind,
+    Role,
+    linked_subjects,
+    memberships,
+    platform_operators,
+    sso_connections,
+    users,
+)
 from parfocal_common.db import SET_SCOPE, DatabaseScope
 
 RESOURCE_OWNER_CLAIM = "urn:zitadel:iam:user:resourceowner:id"
@@ -115,6 +123,56 @@ async def sso_connection_of(
     if not isinstance(organisation, str):
         return None
     return await connection_for_organisation(connection, organisation)
+
+
+async def linked_subject(
+    connection: AsyncConnection, subject: str, sso: SsoConnection | None, email: str | None
+) -> str:
+    linked = await connection.scalar(
+        select(users.c.subject)
+        .join(linked_subjects, linked_subjects.c.user_id == users.c.id)
+        .where(linked_subjects.c.subject == subject)
+    )
+    if linked is not None:
+        return str(linked)
+    if sso is None or email is None or not sso.vouches_for(email):
+        return subject
+    if await connection.scalar(select(users.c.id).where(users.c.subject == subject)) is not None:
+        return subject
+    matches = (
+        await connection.execute(
+            select(users.c.id, users.c.subject)
+            .where(
+                func.lower(users.c.email) == email.lower(),
+                users.c.subject.not_in(select(platform_operators.c.subject)),
+            )
+            .limit(2)
+        )
+    ).all()
+    if len(matches) != 1:
+        return subject
+    account = matches[0]
+    await connection.execute(
+        insert(linked_subjects).values(
+            subject=subject, user_id=account.id, sso_tenant_id=sso.tenant_id
+        )
+    )
+    await connection.execute(
+        SET_SCOPE, DatabaseScope(tenant_id=sso.tenant_id, auth=True).parameters()
+    )
+    try:
+        await record(
+            connection,
+            Actor(ActorKind.USER, str(account.subject)),
+            AuditAction.USER_SSO_LINKED,
+            AuditTarget.PERSON,
+            person=str(account.subject),
+            tenant_id=sso.tenant_id,
+            details=SSO_SOURCE,
+        )
+    finally:
+        await connection.execute(SET_SCOPE, AUTH_ONLY.parameters())
+    return str(account.subject)
 
 
 async def provision_member(

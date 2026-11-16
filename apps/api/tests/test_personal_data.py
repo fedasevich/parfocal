@@ -93,6 +93,12 @@ def test_an_erased_person_keeps_their_work_under_a_former_member(api: ApiAs, dat
         "now() + interval '1 hour', now() + interval '1 day')",
     )
     owner(database, f"INSERT INTO audit_people (subject) VALUES ('{first.subject}')")
+    owner(
+        database,
+        "INSERT INTO linked_subjects (subject, user_id, sso_tenant_id) "
+        f"SELECT 'sso-{first.user_id}', '{first.user_id}', tenant_id FROM memberships "
+        f"WHERE user_id = '{first.user_id}' LIMIT 1",
+    )
     erased = api(OPERATOR).post(f"/api/platform/users/{first.user_id}/erase")
     assert erased.status_code == 200, erased.text
     assert erased.json() == {
@@ -107,6 +113,9 @@ def test_an_erased_person_keeps_their_work_under_a_former_member(api: ApiAs, dat
     )
     assert (name, initials, email) == ("Former member", "FM", None)
     assert str(subject).startswith("erased:")
+    assert owner(
+        database, f"SELECT count(*) FROM linked_subjects WHERE user_id = '{first.user_id}'"
+    ) == [(0,)]
     assert owner(
         database, f"SELECT count(*) FROM audit_people WHERE subject = '{first.subject}'"
     ) == [(0,)]

@@ -9,6 +9,7 @@ import { loginUrl, passwordSignInAvailable } from "../session/sign-in-redirect.t
 const signInSearch = z.object({
   scene: z.enum(onboardingScenes.signin).optional(),
   return_to: z.string().optional(),
+  sso: z.literal("none").optional(),
 });
 
 export const Route = createFileRoute("/sign-in")({
@@ -25,9 +26,12 @@ function SignIn() {
   const navigate = Route.useNavigate();
   return (
     <SignInScreen
-      scene={search.scene ?? "email"}
+      scene={search.scene ?? (search.sso === "none" ? "sso" : "email")}
       returnTo={safeReturnPath(search.return_to)}
-      change={(scene) => void navigate({ search: (previous) => ({ ...previous, scene }) })}
+      ssoUnknown={search.sso === "none"}
+      change={(scene) =>
+        void navigate({ search: (previous) => ({ ...previous, scene, sso: undefined }) })
+      }
     />
   );
 }

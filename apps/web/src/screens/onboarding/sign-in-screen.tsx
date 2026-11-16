@@ -29,9 +29,10 @@ type Props = {
   scene: SignInScene;
   change: (scene: SignInScene) => void;
   returnTo: string | null;
+  ssoUnknown?: boolean;
 };
 
-export function SignInScreen({ scene, change, returnTo }: Props) {
+export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Props) {
   const options = useSignInOptions(returnTo);
   const me = okData(useGetMe().data);
   const goTo = useGoTo();
@@ -52,7 +53,18 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
   };
   const landOnLink = () => void goTo(link?.path ?? destinations.home());
   const toast = (text: string) => show(text);
-  const flow: Flow = { options, workspace, email, setEmail, returnTo, scene, change, land, toast };
+  const flow: Flow = {
+    options,
+    workspace,
+    email,
+    setEmail,
+    returnTo,
+    scene,
+    change,
+    land,
+    toast,
+    ssoUnknown,
+  };
 
   if (scene === "lock" || scene === "lockkey") {
     return (

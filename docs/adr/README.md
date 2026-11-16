@@ -312,3 +312,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0345](0345-job-claims-respect-the-tenant-region.md) | Job claims respect the tenant region behind one switch | Accepted | 2026-11-16 |
 | [0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) | Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile | Accepted | 2026-11-16 |
 | [0347](0347-per-workspace-saml-sso-through-zitadel.md) | Per-workspace SAML sign-in through the workspace's Zitadel organisation | Accepted | 2026-11-16 |
+| [XXXX](XXXX-sso-links-an-existing-account-by-verified-email.md) | SSO links an existing account by verified email | Accepted | 2026-11-16 |

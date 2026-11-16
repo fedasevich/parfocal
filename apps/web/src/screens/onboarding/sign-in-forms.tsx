@@ -43,9 +43,12 @@ import {
   clock,
   codeLength,
   defaultResendSeconds,
+  emailDomain,
   flagsOf,
   institutionFor,
   matchingInstitutions,
+  organisationDomain,
+  organisationSignInUrl,
   type PasswordFlag,
 } from "./sign-in-rules.ts";
 
@@ -59,6 +62,7 @@ export type Flow = {
   change: (scene: SignInScene) => void;
   land: (session: SignInSession) => void;
   toast: (text: string) => void;
+  ssoUnknown: boolean;
 };
 
 function EmailField({ flow }: { flow: Flow }) {
@@ -202,7 +206,7 @@ export function EmailForm({ flow }: { flow: Flow }) {
       {methods?.sso !== false && matched === undefined ? (
         <Button size="lg" block onClick={() => flow.change("sso")}>
           <Icon name="shield" />
-          <Trans>Use single sign-on instead</Trans>
+          <Trans>Sign in with your organisation</Trans>
         </Button>
       ) : null}
       {methods?.link === false ? null : (
@@ -313,7 +317,7 @@ export function SsoForm({ flow }: { flow: Flow }) {
   const { t } = useLingui();
 
   const institutions = flow.options?.institutions ?? [];
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => emailDomain(flow.email));
   const [picked, setPicked] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const sso = useStartSso(handled);
@@ -322,8 +326,12 @@ export function SsoForm({ flow }: { flow: Flow }) {
     institutions.find((item) => item.workspace_id === picked) ??
     institutionFor(flow.email, institutions) ??
     listed[0];
+  const domain = organisationDomain(text) ?? organisationDomain(flow.email);
   const go = () => {
-    if (chosen === undefined) return;
+    if (chosen === undefined) {
+      if (domain !== null) window.location.assign(organisationSignInUrl(domain, flow.returnTo));
+      return;
+    }
     setFailure(null);
     sso.mutate(
       { data: { workspace_id: chosen.workspace_id, return_to: flow.returnTo } },
@@ -369,9 +377,10 @@ export function SsoForm({ flow }: { flow: Flow }) {
           />
         ))}
       </div>
-      {failure === null ? null : (
+      {failure === null && !flow.ssoUnknown ? null : (
         <Banner inline tone="bad" icon="warn">
-          {failure}
+          {failure ??
+            t`No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email.`}
         </Banner>
       )}
       <Button
@@ -379,9 +388,13 @@ export function SsoForm({ flow }: { flow: Flow }) {
         size="lg"
         block
         onClick={go}
-        disabled={chosen === undefined || sso.isPending}
+        disabled={(chosen === undefined && domain === null) || sso.isPending}
       >
-        <Trans>Continue to {chosen?.short_name ?? t`your institution`} sign-in</Trans>
+        {chosen === undefined ? (
+          <Trans>Continue to your organisation's sign-in</Trans>
+        ) : (
+          <Trans>Continue to {chosen.short_name} sign-in</Trans>
+        )}
       </Button>
       <AuthFoot>
         <Trans>Not listed? Your admin can connect it in</Trans> <AdminSecurityLink />

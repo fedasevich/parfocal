@@ -251,6 +251,7 @@ jobs:
           tofu_version: 1.13.x
           tofu_wrapper: false
       - run: bash infra/local/zitadel-up.sh
+      - run: docker pull --platform linux/amd64 kristophjunge/test-saml-idp:1.15
       - name: Write the local settings
         run: |
           umask 077
@@ -261,6 +262,7 @@ jobs:
             echo "PUBLIC_ORIGIN=http://localhost:5173"
             echo "SESSION_KEY=$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
             echo "MASTER_KEYS=ci:$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+            grep '^STORAGE_' .env.example
           } > .env
       - run: pnpm test:e2e
       - if: always()
