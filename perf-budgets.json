@@ -756,7 +756,7 @@
       "check": "workers/ml/tests/test_whole_slide_main_path.py",
       "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md",
-      "todo": "Over budget: the work around the model took 6.1 to 18.2 s/mm2 on a shared Apple M4. Measure again on a quiet machine and with PathoSAM on a GPU before changing the budget."
+      "todo": "Over budget: the run took 6.1 to 18.2 s/mm2 on a shared Apple M4, and the stand-in's own maps were only 15 percent of a tile. Profile the worker code around the model, then measure again on a quiet machine and with PathoSAM on a GPU before changing the budget."
     },
     {
       "id": "app.decision-next-object-p95-ms",
