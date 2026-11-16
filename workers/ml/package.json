@@ -16,7 +16,7 @@
     "bench:prompt-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.prompt_region",
     "bench:exemplar-search": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.exemplar_search",
     "dashboard": "cd ../.. && uv run --package parfocal-ml python -m parfocal_ml.dashboard",
-    "export:instanseg": "uv run --package parfocal-ml --extra export python -m parfocal_ml.instanseg --export ~/.cache/parfocal/models/instanseg/v0.1.1/instanseg-fcn.onnx",
+    "export:instanseg": "uv run --package parfocal-ml --extra export python -m parfocal_ml.instanseg --export",
     "bench:instanseg": "uv run --package parfocal-ml --extra export python -m parfocal_ml.instanseg",
     "bench:interactive": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.interactive"
   },

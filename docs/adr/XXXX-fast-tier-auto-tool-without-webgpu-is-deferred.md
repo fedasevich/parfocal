@@ -3,7 +3,7 @@
 - Date: 2026-11-16
 - Status: Accepted
 - Deciders: Yurii Fedas, proposed by the agent doing AISEG-013 (fast tier in the browser without a GPU)
-- Backlog: AISEG-013. Fills in the Fast region row that [ADR 0361](0361-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier) left to this task. Touches [ADR 0202](0202-v1-model-line-up-per-tier.md) (v1 model line-up per tier) and [ADR 0349](0349-nucleus-detector-and-typer-per-tier.md) (nucleus detector and typer per tier), which named InstanSeg as unmeasured
+- Backlog: AISEG-013. Settles the Fast region row that [ADR 0361](0361-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier) left to this task. Touches [ADR 0202](0202-v1-model-line-up-per-tier.md) (v1 model line-up per tier) and [ADR 0349](0349-nucleus-detector-and-typer-per-tier.md) (nucleus detector and typer per tier), which named InstanSeg as unmeasured
 
 ## Context
 
@@ -15,7 +15,7 @@ All from the [InstanSeg result](../results/2026-11-16-instanseg-on-tnbc-and-wasm
 
 | Measure | InstanSeg | Reference |
 |---|---|---|
-| TNBC PQ, 50 images (in its training data) | 0.712 | WebGPU AIS pass 0.828, prompt fallback 0.796 |
+| TNBC PQ, 50 images (tnbc_2018 is listed among its training sets, same images and split not checked) | 0.712 | WebGPU AIS pass 0.828, prompt fallback 0.796 |
 | MoNuSeg test PQ, 14 images (not in its training data) | 0.663 | No fair PathoSAM number, it trained on MoNuSeg |
 | Network of one 512 px tile on WebAssembly, M4, one thread | 689 ms | PathoSAM encode 5,300 to 5,900 ms |
 | Same at the app's thread count (10 on the M4) | 226 ms | |
@@ -28,7 +28,7 @@ StarDist `2D_versatile_he` was not run. It trained on MoNuSeg and TNBC per ADR 0
 
 ## Options considered
 
-1. Ship InstanSeg now as the default auto tool without WebGPU. Its network is 8 to 25 times faster than the PathoSAM encode on WebAssembly, but 0.12 PQ below the WebGPU pass on TNBC and below the bar on MoNuSeg, and the post-processing does not exist in the browser yet.
+1. Ship InstanSeg now as the default auto tool without WebGPU. Its network is 8 to 26 times faster than the PathoSAM encode on WebAssembly, but 0.12 PQ below the WebGPU pass on TNBC and below the bar on MoNuSeg, and the post-processing does not exist in the browser yet.
 2. Defer. Fast keeps no auto region model, InstanSeg is the named candidate, and a follow-up task ports the post-processing, runs CI and asks the owner whether 0.66 to 0.71 PQ is acceptable as a default.
 3. Run the PathoSAM AIS pass on WebAssembly as the Fast auto tool. It keeps PQ 0.828 but takes several seconds per tile, which the task rules out.
 

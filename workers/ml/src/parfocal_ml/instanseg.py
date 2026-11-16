@@ -15,6 +15,7 @@ from PIL import Image
 
 from parfocal_ml.datasets import Sample, cache_dir, samples
 from parfocal_ml.exemplar_search import ring_of
+from parfocal_ml.sam_contract import models_dir
 from parfocal_ml.scoring import ImageScore, Summary, score_image, summarise
 
 MODEL_MICRONS_PER_PIXEL = 0.5
@@ -36,7 +37,7 @@ class InstanSegRun:
 
 
 def model_dir() -> Path:
-    return Path.home() / ".cache" / "parfocal" / "models" / "instanseg" / RELEASE.rsplit("_", 1)[-1]
+    return models_dir() / "instanseg" / RELEASE.rsplit("_", 1)[-1]
 
 
 def normalise(rgb: NDArray[np.uint8]) -> NDArray[np.float32]:
@@ -132,10 +133,10 @@ def main() -> int:
     parser.add_argument("--microns-per-pixel", type=float, default=None)
     parser.add_argument("--model", type=Path, default=model_dir())
     parser.add_argument("--out", type=Path, default=cache_dir() / "instanseg")
-    parser.add_argument("--export", type=Path, default=None)
+    parser.add_argument("--export", action="store_true")
     arguments = parser.parse_args()
     if arguments.export:
-        export_network(arguments.model, arguments.export)
+        export_network(arguments.model, arguments.model / "instanseg-fcn.onnx")
         return 0
     images = itertools.islice(samples(arguments.dataset), arguments.images)
     result = run(
