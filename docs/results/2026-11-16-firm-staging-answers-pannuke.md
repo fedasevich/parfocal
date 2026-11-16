@@ -5,7 +5,7 @@
 - Kind: ML evaluation
 - Commit: the REVIEW-020 commit that adds this file
 - Environment: Apple M4, 24 GB, macOS 15 (Darwin 24.6), Python 3.14 through uv, numpy. No model runs and no GPU. Other agents shared the machine
-- Data: the POC's cached HoVer-NeXt outputs on PanNuke (`poc/server/fixtures/pannuke/hovernext-{train,test}.views.f32` and `.labels.u8`, `fold3-nuclei.npz`), the same files POC doc 33 and the [confidence display replay](2026-11-16-confidence-display-replay-hovernext.md) used. Temperature fitted on fold 1, 17,278 nuclei. Test: every fifth image of fold 3, 12,928 nuclei with true types. PanNuke is CC BY-NC-SA 4.0 (Gamper et al., Warwick TIA). Public data, no PHI
+- Data: the POC's cached HoVer-NeXt outputs on PanNuke (`poc/server/fixtures/pannuke/hovernext-{train,test}.views.f32` and `.labels.u8`, `fold3-nuclei.npz`), the same files POC doc 33 (showing type confidence to a doctor) and the [confidence display replay](2026-11-16-confidence-display-replay-hovernext.md) used. Temperature fitted on fold 1, 17,278 nuclei. Test: every fifth image of fold 3, 12,928 nuclei with true types. PanNuke is CC BY-NC-SA 4.0 (Gamper et al., Warwick TIA). Public data, no PHI
 
 ## Question
 
@@ -66,8 +66,8 @@ There is no wrong firm answer to list. The 10 firm answers near 200, one view, a
 ## Interpretation
 
 - The ADR 0086 count rule holds on this set. No firm answer was on the wrong side of 200 with either view count, so firm staging answers can stay on.
-- The evidence near the cutoff is thin. Only 10 firm answers had a true count within 50 of 200, the closest 22 cells away (178 and 224). The other 61 firm answers prove little, since their counts are far from 200. The range missed the true count in about a quarter of clusters, four of them among the 10 near firm answers (182 above a high of 176.4, 245 above 237.7, and 224 just under lows of 224.8 and 225.3), so the margin is the range's width, not its coverage.
-- Clusters of different sizes reuse the same images, so the 86 are not independent. The 32 at N 300 are.
+- The evidence near the cutoff is thin. Only 10 firm answers had a true count within 50 of 200, the closest 18 cells away (182), then 22 (178) and 24 (224). The other 61 firm answers prove little, since their counts are far from 200. The range missed the true count in about a quarter of clusters, four of them among the 10 near firm answers (182 above a high of 176.4, 245 above 237.7, and 224 just under lows of 224.8 and 225.3). So the tightest evidence is a firm answer right by 18 cells while its range was off by about 6, and what kept it right was the distance to 200, not the range's coverage.
+- Clusters of different sizes reuse the same images, so the 86 are not independent. The 32 at N 300 do not overlap, though they share tissues.
 - The one point count on the wrong side cannot be a firm cluster, since a firm range holds its point count on the right side, so the range kept that cluster open.
 - Checking the most contested cells settled every open cluster, all on the right side, after about a sixth of their cells, in line with doc 33's 12 of 16.
 - Limits. These are true outlines, so missed and extra detections are not tested. The clusters are stitched from 64 µm images, not real deposits of 0.2 mm or less, and they are about 43% tumor, more mixed than a real cluster, which widens the high end. The true count is the PanNuke label, not a pathologist counting on a slide. A rerun on the Parfocal typer runner's outputs on PathoSAM outlines is the next check, with the same command once AINUC-002 (typer runner) writes them.
