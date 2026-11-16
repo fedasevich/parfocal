@@ -1,10 +1,12 @@
 import base64
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Path, Response
+from fastapi import APIRouter, Depends, Path, Response
 from pydantic import BaseModel
 
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
+from parfocal_api.gpu_warm import warm_for, warm_gate_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
 from parfocal_api.slide_coverage import readable_slide
@@ -19,6 +21,7 @@ from parfocal_common.embedding_cache import (
     tile_key,
 )
 from parfocal_common.object_store import StorageError
+from parfocal_common.warm_gate import Device, WarmGate
 
 EMBEDDING_HEADERS = {"Cache-Control": "private, max-age=3600"}
 
@@ -37,6 +40,10 @@ class SlideEmbeddings(BaseModel):
     rows: int
     tiles: str
     tile_count: int
+
+
+class EmbedderWarm(BaseModel):
+    device: Device
 
 
 class EmbeddingsMissingError(NotFoundError):
@@ -115,3 +122,21 @@ async def get_slide_embedding_tile(
     if len(body) != EMBEDDING_BYTES:
         raise EmbeddingTileMissingError
     return Response(body, media_type=EMBEDDING_CONTENT_TYPE, headers=EMBEDDING_HEADERS)
+
+
+@router.post(
+    "/warm",
+    operation_id="warmSlideEmbedder",
+    status_code=204,
+    **require(Permission.SEE_SLIDES, write=True),
+)
+async def warm_slide_embedder(
+    slide_id: uuid.UUID,
+    body: EmbedderWarm,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    gate: Annotated[WarmGate, Depends(warm_gate_of)],
+) -> Response:
+    await readable_slide(connection, principal, slide_id)
+    await warm_for(gate, body.device)
+    return Response(status_code=204)
