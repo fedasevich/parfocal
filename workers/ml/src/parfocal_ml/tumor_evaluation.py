@@ -3,10 +3,11 @@ import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
+from skimage import measure
 
 from parfocal_ml.tumor_areas import Point, TumorArea, area_labels, find_tumor_areas, outline_mm
 from parfocal_ml.tumor_froc import (
@@ -65,7 +66,11 @@ class SlideEvaluation:
 
     @property
     def deposits_missed(self) -> int:
-        return sum(1 for d in self.deposits if d.found_mm is None)
+        return sum(1 for d in self.deposits if d.found_mm is None and not d.merged)
+
+    @property
+    def deposits_merged(self) -> int:
+        return sum(1 for d in self.deposits if d.merged)
 
     def as_json(self) -> dict[str, Any]:
         single = froc([self.hits]) if self.hits.lesions else None
@@ -91,11 +96,13 @@ class SlideEvaluation:
                     "found_mm": d.found_mm,
                     "areas": d.areas,
                     "isolated": d.isolated,
+                    "merged": d.merged,
                 }
                 for d in self.deposits
             ],
             "size_errors_mm": list(self.size_errors_mm),
             "deposits_missed": self.deposits_missed,
+            "deposits_merged": self.deposits_merged,
             "stray_areas": self.stray_areas,
         }
 
@@ -106,6 +113,7 @@ class LesionSize:
     found_mm: float | None
     areas: int
     isolated: bool
+    merged: bool = False
 
     @property
     def error_mm(self) -> float | None:
@@ -122,15 +130,19 @@ class LesionMatch:
     stray: tuple[TumorArea, ...]
 
 
-def lesion_outlines(
-    groups: dict[str, list[NDArray[np.float64]]], lesions: Lesions, cell: float
+def deposit_labels(mask: Mask) -> NDArray[np.int32]:
+    return cast("NDArray[np.int32]", measure.label(mask, connectivity=2)).astype(np.int32)
+
+
+def deposit_outlines(
+    groups: dict[str, list[NDArray[np.float64]]], deposits: NDArray[np.int32], cell: float
 ) -> dict[int, list[Point]]:
     merged: dict[int, list[Point]] = {}
     for name, found in groups.items():
         if name not in TUMOR_GROUPS:
             continue
         for points in found:
-            inside = lesions.labels[filled([points], lesions.labels.shape, cell)]
+            inside = deposits[filled([points], deposits.shape, cell)]
             inside = inside[inside > 0]
             if inside.size:
                 label = int(np.bincount(inside).argmax())
@@ -138,30 +150,43 @@ def lesion_outlines(
     return merged
 
 
-def match_lesions(
+def match_deposits(
     areas: Sequence[TumorArea],
     area_cells: NDArray[np.int32],
+    deposits: NDArray[np.int32],
     lesions: Lesions,
     outlines: dict[int, list[Point]],
     um_per_px: float,
 ) -> LesionMatch:
-    by_label = {area.label: area for area in areas}
-    used: set[int] = set()
-    deposits: list[LesionSize] = []
+    credited: dict[int, list[TumorArea]] = {}
+    touched: set[int] = set()
+    for area in areas:
+        under = deposits[area_cells == area.label]
+        under = under[under > 0]
+        if under.size:
+            credited.setdefault(int(np.bincount(under).argmax()), []).append(area)
+            touched.update(np.unique(under).tolist())
+    used = {area.label for found in credited.values() for area in found}
+    sizes: list[LesionSize] = []
     for label in sorted(outlines, key=lambda key: -outline_mm(outlines[key], um_per_px)):
-        touched = set(np.unique(area_cells[lesions.labels == label]).tolist()) & by_label.keys()
-        used |= touched
-        found = max((by_label[key].longest_mm for key in touched), default=None)
-        deposits.append(
+        own = credited.get(label, [])
+        lesion = int(lesions.labels[deposits == label].max())
+        sizes.append(
             LesionSize(
                 outline_mm(outlines[label], um_per_px),
-                found,
-                len(touched),
-                label in lesions.isolated,
+                max((area.longest_mm for area in own), default=None),
+                len(own),
+                lesion in lesions.isolated,
+                merged=not own and label in touched,
             )
         )
-    stray = tuple(area for area in areas if area.label not in used)
-    return LesionMatch(tuple(deposits), stray)
+    lesion_cells = lesions.labels > 0
+    stray = tuple(
+        area
+        for area in areas
+        if area.label not in used and not (lesion_cells & (area_cells == area.label)).any()
+    )
+    return LesionMatch(tuple(sizes), stray)
 
 
 def evaluate_slide(
@@ -179,8 +204,9 @@ def evaluate_slide(
     um_per_px = cell_um / CELL
     areas = find_tumor_areas(probability, (0, 0, width * CELL, height * CELL), um_per_px)
     area_cells, _ = area_labels(probability)
-    matched = match_lesions(
-        areas, area_cells, lesions, lesion_outlines(groups, lesions, CELL), um_per_px
+    deposits = deposit_labels(mask)
+    matched = match_deposits(
+        areas, area_cells, deposits, lesions, deposit_outlines(groups, deposits, CELL), um_per_px
     )
     return SlideEvaluation(
         name=name,
@@ -224,6 +250,7 @@ def summary(slides: Sequence[SlideEvaluation]) -> dict[str, Any]:
         "median_abs_size_error_mm": float(np.median(np.abs(errors))) if errors else None,
         "deposits_measured": len(errors),
         "deposits_missed": sum(s.deposits_missed for s in annotated),
+        "deposits_merged": sum(s.deposits_merged for s in annotated),
         "truth_over_found": (
             [float(min(ratios)), float(max(ratios))]
             if (ratios := [r for s in annotated for d in s.deposits if (r := d.truth_over_found)])

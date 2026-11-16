@@ -1,4 +1,4 @@
 [likely_size]
 below = 0.10
-above = 0.54
-source = "docs/results/2026-11-16-tumor-area-sizes-on-three-test-slides.md: true size over found size ran from 0.905 to 1.533 over 7 deposits matched on CAMELYON16 test_001, test_013 and test_065, rounded outward."
+above = 0.15
+source = "docs/results/2026-11-16-tumor-area-sizes-on-three-test-slides.md: true size over found size ran from 0.905 to 1.144 over 8 deposits matched on CAMELYON16 test_001, test_013 and test_065, rounded outward."

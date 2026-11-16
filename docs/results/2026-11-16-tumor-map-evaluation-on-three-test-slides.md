@@ -81,6 +81,6 @@ Areas: 33 outlines were matched with a pad of one cell. 5 outlines touched no li
 ## Follow-ups
 
 - The promotion gate's tumor map entry now uses these numbers as its baseline, FROC 0.7222 and Dice 0.8986 on the same three slides, with ADR 0322's tolerance of 0.01, as ADR 0351 (the v1 tumor model stays the MONAI CAMELYON ResNet18) says.
-- Size error is now scored per grown lesion with cell matching in [the tumor area sizes result](2026-11-16-tumor-area-sizes-on-three-test-slides.md), median 0.010 mm over 7 matched deposits. TODO: add it to the gate.
+- Size error is now scored per annotated piece with cell matching in [the tumor area sizes result](2026-11-16-tumor-area-sizes-on-three-test-slides.md), median 0.010 mm over 8 matched deposits. TODO: add it to the gate.
 - TODO: a second centre 0 slide and a macro slide from centre 0 would make the reference less one-scanner. The `tumor-eval` group is where they go.
 - The new slide files were deleted after the run to save disk. The XML outlines and the cached maps in `~/.cache/parfocal/tumor-maps` (9.1 MB) are kept. `pnpm fixtures tumor-eval` fetches the slides again (3.3 GB with `test_001`).

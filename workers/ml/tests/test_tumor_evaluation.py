@@ -177,3 +177,18 @@ def test_the_summary_keeps_the_spread_of_true_over_found_size(tmp_path):
     assert high == pytest.approx(2.0)
     assert report["deposits_missed"] == 0
     assert report["stray_areas_on_annotated"] == 0
+
+
+def test_an_area_over_two_deposits_is_credited_to_the_one_it_covers_most(tmp_path):
+    xml = outline_xml(tmp_path / "merged.xml", [(40, 40, 70, 60), (73, 40, 76, 43)])
+    probability = np.zeros((200, 200), np.float32)
+    probability[40:61, 40:77] = 0.99
+    result = evaluate_slide("merged", probability, xml)
+    large, small = result.deposits
+    assert large.areas == 1
+    assert not large.merged
+    assert small.found_mm is None
+    assert small.merged
+    assert result.deposits_missed == 0
+    assert result.deposits_merged == 1
+    assert result.stray_areas == 0

@@ -357,13 +357,13 @@ MLEVAL-005 (tumor map evaluation) has now run three annotated test slides and on
 
 Your choice:
 
-### XXX. Whether one split deposit should set the likely size range of tumor areas
+### XXX. Whether the likely size range of tumor areas stays a measured percentage
 
-AITUM-003 (areas from the tumor map) shows each area with a likely size range, which now comes from the measured size error on three CAMELYON16 test slides ([result](results/2026-11-16-tumor-area-sizes-on-three-test-slides.md)). Six of the seven matched deposits were within 0.03 mm of their true size. The seventh, a 3.94 mm deposit on `test_001`, is split by the map into five areas and the largest is 2.57 mm. True size over listed size ran from 0.905 to 1.533, so the range is now 0.90 to 1.54 times the listed size. Without that deposit it would be 0.90 to 1.15, and more areas would show a range that crosses the 0.2 mm or 2 mm category line.
+AITUM-003 (areas from the tumor map) shows each area with a likely size range, which now comes from the measured size error on three CAMELYON16 test slides ([result](results/2026-11-16-tumor-area-sizes-on-three-test-slides.md)). All 8 matched deposits were within 0.05 mm of their true size, and true size over listed size ran from 0.905 to 1.144, so the range is now 0.90 to 1.15 times the listed size. Both ends come from deposits under 0.13 mm whose errors are under one 15.6 µm grid cell. Micro and macro deposits alone stay within 0.98 to 1.07. A percentage is widest where the grid is coarsest, so near the 0.2 mm line it shows about 0.18 to 0.23 mm.
 
-- **A. Keep 0.90 to 1.54, because a split macro deposit is the case where an understated size matters most, and narrow it when the area rule merges split pieces (recommended).**
-- B. Use 0.90 to 1.15 and flag split deposits separately once the area rule can detect them.
-- C. Keep the old ±10% until a wider run with more macro slides.
+- **A. Keep the measured 0.90 to 1.15 and update it after a wider run with a centre 0 macro slide (recommended).**
+- B. Use about 0.98 to 1.07 from micro and macro deposits, plus a fixed margin of one grid cell, so small areas get an honest absolute range.
+- C. Go back to the old ±10% until the wider run.
 
 Your choice:
 
