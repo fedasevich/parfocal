@@ -102,6 +102,7 @@ from parfocal_api import (
     tile_access,
     track_record,
     training_exports,
+    tumor_maps,
     uploads,
     users,
     workspace_access,
@@ -228,6 +229,7 @@ def create_app(
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)
     app.include_router(model_runs.router)
+    app.include_router(tumor_maps.router)
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)
     app.include_router(model_registry.router)

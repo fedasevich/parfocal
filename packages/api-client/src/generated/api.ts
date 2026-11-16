@@ -5939,6 +5939,13 @@ export interface TrackRecord {
   typers: TyperRecord[];
 }
 
+export interface TumorMapJob {
+  job_id: string;
+  result_set_id: string;
+  slide_id: string;
+  status: JobStatus;
+}
+
 export interface UploadMetadata {
   project_id: string;
   case_id?: string | null;
@@ -16721,6 +16728,150 @@ export function useListProjectModels<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type startTumorMapResponse201 = {
+  data: TumorMapJob;
+  status: 201;
+};
+
+export type startTumorMapResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startTumorMapResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startTumorMapResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startTumorMapResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startTumorMapResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startTumorMapResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startTumorMapResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startTumorMapResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startTumorMapResponseSuccess = startTumorMapResponse201 & {
+  headers: Headers;
+};
+export type startTumorMapResponseError = (
+  | startTumorMapResponse400
+  | startTumorMapResponse401
+  | startTumorMapResponse403
+  | startTumorMapResponse404
+  | startTumorMapResponse409
+  | startTumorMapResponse422
+  | startTumorMapResponse429
+  | startTumorMapResponse500
+) & {
+  headers: Headers;
+};
+
+export type startTumorMapResponse = startTumorMapResponseSuccess | startTumorMapResponseError;
+
+export const getStartTumorMapUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/tumor-maps`;
+};
+
+/**
+ * @summary Start Tumor Map
+ */
+export const startTumorMap = async (
+  projectId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startTumorMapResponse> => {
+  return apiFetch<startTumorMapResponse>(getStartTumorMapUrl(projectId, slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getStartTumorMapMutationKey = () => ["startTumorMap"] as const;
+
+export const getStartTumorMapMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startTumorMap>>,
+    TError,
+    StartTumorMapMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startTumorMap>>,
+  TError,
+  StartTumorMapMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartTumorMapMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startTumorMap>>,
+    StartTumorMapMutationVariables
+  > = (props) => {
+    const { projectId, slideId } = props ?? {};
+
+    return startTumorMap(projectId, slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartTumorMapMutationResult = NonNullable<Awaited<ReturnType<typeof startTumorMap>>>;
+
+export type StartTumorMapMutationError = Problem;
+export type StartTumorMapMutationVariables = { projectId: string; slideId: string };
+
+/**
+ * @summary Start Tumor Map
+ */
+export const useStartTumorMap = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startTumorMap>>,
+      TError,
+      StartTumorMapMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startTumorMap>>,
+  TError,
+  StartTumorMapMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartTumorMapMutationOptions(options), queryClient);
+};
 
 export type listModelTiersResponse200 = {
   data: TierMapping[];

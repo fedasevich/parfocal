@@ -10,8 +10,10 @@ from parfocal_api.model_runs import require_run_reading
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
 from parfocal_api.projects import visible
+from parfocal_api.tumor_maps import require_map_reading
 from parfocal_common.jobs import JobStatus, StepStatus, job_steps, job_units, jobs
 from parfocal_common.model_runs import KIND as MODEL_RUN
+from parfocal_common.tumor_maps import KIND as TUMOR_MAP
 
 
 class JobStep(BaseModel):
@@ -59,6 +61,8 @@ async def get_project_job(
         raise NotFoundError("Job not found")
     if row.kind == MODEL_RUN:
         await require_run_reading(connection, principal, project_id, job_id)
+    if row.kind == TUMOR_MAP:
+        await require_map_reading(connection, principal, project_id, job_id)
     units = (
         select(func.count())
         .where(job_units.c.job_id == job_steps.c.job_id, job_units.c.ordinal == job_steps.c.ordinal)

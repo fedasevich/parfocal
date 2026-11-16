@@ -355,6 +355,7 @@ WRITE_ROUTES: dict[str, Write] = {
         owner=BAD_REQUEST,
     ),
     "cancelModelRun": Write(),
+    "startTumorMap": Write(),
     "resumeModelRun": Write(owner=CONFLICT),
     "retryModelRun": Write(owner=CONFLICT),
     "publishOpinionForm": Write(
