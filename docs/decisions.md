@@ -269,6 +269,15 @@ AISEG-016 (prompt-pass fallback) added the five-prompt ensemble for best quality
 
 Your choice:
 
+### 119. When to add a Neon read replica for reporting
+
+OPS-004 (database operations) planned a Neon read replica so reporting queries do not slow annotation work. No reporting load exists yet, and annotation reads already stay at 126 to 146 ms at p95 against the 250 ms target during bulk inserts. A replica is a second compute that bills while it runs, so it needs your yes under ADR 0151 (standing approval within $30 a month).
+
+- **A. Wait. Add the replica only when reporting queries show up in the slow query list or push reads past the target (recommended).**
+- B. Add a scale-to-zero replica now.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
