@@ -1,4 +1,4 @@
-# XXXX. SSO links an existing account by verified email
+# 0352. SSO links an existing account by verified email
 
 - Date: 2026-11-16
 - Status: Accepted

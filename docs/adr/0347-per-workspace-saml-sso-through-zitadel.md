@@ -29,6 +29,6 @@ IAM-012 asks for SAML or OIDC federation per tenant with just-in-time provisioni
 
 - The E2E test `apps/e2e/tests/sso.spec.ts` signs a user in through `kristophjunge/test-saml-idp:1.15` (amd64 only, emulated on Apple silicon) and checks the mapped role. It passed twice on 2026-11-16 on a local stack.
 - Actions version 1 run only with the hosted login version 1. If production moves to login version 2, the Action has to become an Actions version 2 target. `TODO`: check which login Zitadel Cloud serves to the production organisation before the first customer connection.
-- Zitadel user names are unique across the instance. A person who signed up with a password under the same email could not be auto-created in the workspace organisation. [ADR XXXX](XXXX-sso-links-an-existing-account-by-verified-email.md) (SSO links an existing account by verified email) fixes this.
+- Zitadel user names are unique across the instance. A person who signed up with a password under the same email could not be auto-created in the workspace organisation. [ADR 0352](0352-sso-links-an-existing-account-by-verified-email.md) (SSO links an existing account by verified email) fixes this.
 - OIDC federation fits the same table and command with Zitadel's generic OIDC IdP, but it was not built or tested here.
 - The web sign-in page offers "Sign in with your organisation", which sends the typed domain to `/api/auth/sso` (IAM-028).
