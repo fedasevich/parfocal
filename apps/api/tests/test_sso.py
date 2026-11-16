@@ -148,6 +148,17 @@ def test_a_changed_group_changes_the_role_on_the_next_login(browser: Browser) ->
     ) == [("reviewer", "researcher")]
 
 
+def test_a_plain_login_without_groups_keeps_the_mapped_role(browser: Browser) -> None:
+    tenant_id, organisation, domain = make_connection(
+        browser, default_role="researcher", group_roles={"pathologists": "reviewer"}
+    )
+    as_sso_user(browser, organisation, f"gil@{domain}", ["pathologists"])
+    sso_login(browser, domain)
+    browser.idp.claim_overrides = {RESOURCE_OWNER_CLAIM: organisation, "email": f"gil@{domain}"}
+    assert browser.login().status_code == 200
+    assert membership_of(browser, tenant_id) == [("reviewer", False)]
+
+
 def test_an_email_outside_the_workspace_domains_is_not_trusted(browser: Browser) -> None:
     tenant_id, organisation, domain = make_connection(browser)
     as_sso_user(browser, organisation, "owner@parfocal.eu", [])

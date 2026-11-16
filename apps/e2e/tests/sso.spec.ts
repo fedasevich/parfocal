@@ -78,6 +78,12 @@ async function parfocalProjectId(): Promise<string> {
 test.describe("per-workspace SSO", () => {
   test.beforeAll(async () => {
     test.setTimeout(240_000);
+    const stale = sql(
+      `SELECT tenant_id FROM sso_connections WHERE '${domain}' = ANY(email_domains)`,
+    );
+    for (const leftover of stale.split("\n").filter(Boolean)) {
+      tenantCommand("deprovision", leftover);
+    }
     workdir = mkdtempSync(join(tmpdir(), "parfocal-sso-"));
     startIdp("http://placeholder.invalid/metadata");
     const metadataFile = join(workdir, "idp-metadata.xml");

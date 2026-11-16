@@ -269,6 +269,15 @@ AISEG-016 (prompt-pass fallback) added the five-prompt ensemble for best quality
 
 Your choice:
 
+### 119. Which role wins when a person's SSO groups map to both roles
+
+IAM-012 (per-organisation SSO) maps a customer IdP's groups to our two roles ([ADR 0347](adr/0347-per-workspace-saml-sso-through-zitadel.md), per-workspace SAML sign-in). When one person's groups map to both, the code gives researcher.
+
+- **A. Researcher wins, because it is the role that can do more and the customer put the person in that group (recommended, built).**
+- B. Reviewer wins, so a mapping mistake gives less access.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

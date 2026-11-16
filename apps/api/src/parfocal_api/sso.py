@@ -124,6 +124,8 @@ async def provision_member(
     subject: str,
     claims: dict[str, Any],
 ) -> uuid.UUID | None:
+    if METADATA_CLAIM not in claims:
+        return None
     role = sso.role_for(groups_of(claims))
     if role is None:
         return None
