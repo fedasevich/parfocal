@@ -55,6 +55,14 @@ export function startSamWorker(scope: SamWorkerScope, dependencies: SamWorkerDep
       });
       return;
     }
+    if (message.type === "adopt") {
+      const { requestId, id, embedding } = message;
+      withEngine(requestId, async (active) => {
+        const encoded = await active.adopt(id, embedding);
+        scope.postMessage({ type: "encoded", requestId, encoded }, []);
+      });
+      return;
+    }
     if (message.type === "prompt") {
       const { requestId, id, prompt } = message;
       withEngine(requestId, async (active) => {

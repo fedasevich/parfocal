@@ -309,3 +309,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0342](0342-make-dev-signs-in-through-the-local-zitadel.md) | make dev signs in through the local Zitadel by default | Accepted | 2026-11-15 |
 | [0343](0343-sli-counts-in-the-slide-bucket-and-otlp-logs-over-http.md) | SLI counts and alert state live in the slide bucket, and telemetry leaves as OTLP logs over plain HTTP | Accepted | 2026-11-15 |
 | [0344](0344-workers-and-realtime-write-their-own-sli-counts.md) | Workers and realtime write their own SLI counts, and only automatic whole-slide runs are pre-reads | Accepted | 2026-11-15 |
+| [0345](0345-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) | Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile | Accepted | 2026-11-16 |

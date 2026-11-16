@@ -88,6 +88,7 @@ from parfocal_api import (
     slide_copies,
     slide_coverage,
     slide_details,
+    slide_embeddings,
     slide_moves,
     slide_tissue,
     study_templates,
@@ -334,6 +335,7 @@ def create_app(
     app.include_router(security_contact.router)
     app.include_router(slide_coverage.router)
     app.include_router(slide_tissue.router)
+    app.include_router(slide_embeddings.router)
     app.include_router(slide_areas.router)
 
     return app

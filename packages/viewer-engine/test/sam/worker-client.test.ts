@@ -154,6 +154,20 @@ describe("inference worker client", () => {
     client.close();
   });
 
+  it("adopts an outside embedding across the message boundary and prompts on it", async () => {
+    const runtime = new FakeRuntime();
+    const { worker } = linkedWorker(runtime);
+    const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });
+    await client.ready;
+    const adopted = await client.adopt("tile-a", new Float32Array(256 * 64 * 64));
+    assert.equal(adopted.id, "tile-a");
+    const answer = await client.prompt("tile-a", { points: [{ x: 5, y: 6, positive: true }] });
+    assert.equal(answer.status, "answer");
+    assert.equal(runtime.session(samGraphs.encoderQ4).feedsSeen.length, 0);
+    await assert.rejects(client.adopt("tile-b", new Float32Array(3)), SamWorkerError);
+    client.close();
+  });
+
   it("rejects a request for an unknown embedding with the worker message", async () => {
     const { worker } = linkedWorker(new FakeRuntime());
     const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });

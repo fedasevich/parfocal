@@ -90,6 +90,14 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells, packed
 from parfocal_common.db import async_database_url, metadata
+from parfocal_common.embedding_cache import (
+    EMBEDDING_BYTES,
+    SERVER_ENCODER,
+    EmbeddingManifest,
+    bitset,
+    manifest_key,
+)
+from parfocal_common.embedding_cache import tile_key as embedding_tile_key
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.jobs import enqueue
 from parfocal_common.model_runs import (
@@ -818,6 +826,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
     "getSlideTissue": lambda w: Call("GET", f"/api/slides/{w.slide}/tissue"),
+    "getSlideEmbeddings": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings"),
+    "getSlideEmbeddingTile": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings/0/0"),
     "recordSlideCoverage": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/coverage",
@@ -2281,6 +2291,18 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     f"{slide_prefix(tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
                     TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
                     "image/png",
+                )
+                await store.put_object(
+                    manifest_key(tenant_id, case.loose_slide_id),
+                    EmbeddingManifest(
+                        SERVER_ENCODER, 0, 1.0, 512, 4096, 2048, 8, 4, bitset(8, 4, {(0, 0)})
+                    ).render(),
+                    "application/json",
+                )
+                await store.put_object(
+                    embedding_tile_key(tenant_id, case.loose_slide_id, 0, 0),
+                    bytes(EMBEDDING_BYTES),
+                    "application/octet-stream",
                 )
                 patch_job = await seed_patch_job(
                     connection, store, tenant_id, case.project_id, signed_annotate_task

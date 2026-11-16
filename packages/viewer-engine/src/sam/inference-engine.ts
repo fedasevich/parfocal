@@ -84,6 +84,7 @@ export interface InferenceEngineOptions {
 export interface InferenceEngine {
   init(): Promise<SamReady>;
   encode(id: string, pixels: Float32Array): Promise<SamEncoded>;
+  adopt(id: string, embedding: Float32Array): Promise<SamEncoded>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
   pool(id: string, outlines: readonly Float32Array[]): Float32Array[];
@@ -426,6 +427,20 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
           throw new Error("The encoder gave no image embedding");
         }
         const evicted = keepEmbedding(id, embedding);
+        return { id, ms: performance.now() - started, evicted };
+      });
+    },
+
+    adopt(id, embedding) {
+      return inRun(async () => {
+        await ready();
+        if (embedding.length !== embeddingValues) {
+          throw new RangeError(
+            `An adopted embedding must hold ${samEmbeddingDims.join(" x ")} values`,
+          );
+        }
+        const started = performance.now();
+        const evicted = keepEmbedding(id, runtime.tensor(embedding, samEmbeddingDims));
         return { id, ms: performance.now() - started, evicted };
       });
     },

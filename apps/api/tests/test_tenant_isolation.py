@@ -111,6 +111,14 @@ from parfocal_api.tables import (
 )
 from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
 from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, scoped_transaction
+from parfocal_common.embedding_cache import (
+    EMBEDDING_BYTES,
+    SERVER_ENCODER,
+    EmbeddingManifest,
+    bitset,
+    manifest_key,
+)
+from parfocal_common.embedding_cache import tile_key as embedding_tile_key
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import (
     MODEL_STAGE,
@@ -544,6 +552,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             f"{slide_prefix(seeded.tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
             TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
             "image/png",
+        )
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            manifest_key(seeded.tenant_id, case.loose_slide_id),
+            EmbeddingManifest(
+                SERVER_ENCODER, 0, 1.0, 512, 4096, 2048, 8, 4, bitset(8, 4, {(0, 0)})
+            ).render(),
+            "application/json",
+        )
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            embedding_tile_key(seeded.tenant_id, case.loose_slide_id, 0, 0),
+            str(seeded.tenant_id).encode().ljust(EMBEDDING_BYTES, b"\0"),
+            "application/octet-stream",
         )
     set_name = f"Model {uuid.uuid4().hex[:8]}"
     set_id = await connection.scalar(
@@ -1730,6 +1750,12 @@ GET_ROUTES = {
     ),
     "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
     "getSlideTissue": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tissue"),
+    "getSlideEmbeddings": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/embeddings"
+    ),
+    "getSlideEmbeddingTile": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/embeddings/0/0"
+    ),
     "getSlideCoverage": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/coverage"),
     "getRoomAccess": Route(Exposure.TENANT, lambda a: f"/api/rooms/slide:{a.ids['slide']}/access"),
     "listCases": Route(Exposure.TENANT, lambda _: "/api/cases"),

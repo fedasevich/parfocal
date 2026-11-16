@@ -415,3 +415,36 @@ describe("inference engine embeddings", () => {
     await assert.rejects(engine.prompt("view-a", click), EngineNotReadyError);
   });
 });
+
+describe("inference engine adopted embeddings", () => {
+  const embeddingCount = 256 * 64 * 64;
+
+  it("decodes a prompt on an adopted embedding without running the encoder", async () => {
+    const { runtime, engine } = build();
+    await engine.init();
+    const encoderRuns = runtime.session(samGraphs.encoderQ4).feedsSeen.length;
+    const adopted = await engine.adopt("tile-a", new Float32Array(embeddingCount).fill(0.25));
+    assert.deepEqual(adopted.evicted, []);
+    assert.equal(engine.hasEmbedding("tile-a"), true);
+    const outcome = await engine.prompt("tile-a", click);
+    assert.equal(outcome.status, "answer");
+    assert.equal(runtime.session(samGraphs.encoderQ4).feedsSeen.length, encoderRuns);
+    const fed = runtime.session(decoderGraph).feedsSeen.at(-1)?.["image_embeddings"];
+    assert.deepEqual(fed?.dims, [1, 256, 64, 64]);
+    assert.equal(fed?.data[0], 0.25);
+  });
+
+  it("evicts the oldest embedding when an adopted one overfills the cache", async () => {
+    const { engine } = build({ capacity: 1 });
+    await started(engine, "view-a");
+    const adopted = await engine.adopt("tile-a", new Float32Array(embeddingCount));
+    assert.deepEqual(adopted.evicted, ["view-a"]);
+    assert.equal(engine.hasEmbedding("view-a"), false);
+  });
+
+  it("refuses an embedding of the wrong size", async () => {
+    const { engine } = build();
+    await engine.init();
+    await assert.rejects(engine.adopt("tile-a", new Float32Array(12)), RangeError);
+  });
+});

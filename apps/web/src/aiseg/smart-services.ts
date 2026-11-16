@@ -4,6 +4,12 @@ import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { createPresetPatchReader } from "./patch-reader.ts";
 import type { RegionSam } from "./region-pass.ts";
 import { type PresetPatchPlan, planPresetPatch, type ScalePresetId } from "./scale-presets.ts";
+import {
+  createServerEmbeddings,
+  httpEmbeddingTransport,
+  withServerEmbeddings,
+  withServerTiles,
+} from "./server-embeddings.ts";
 import type { SmartReader, SmartSam } from "./smart-session.ts";
 
 export interface SmartServices {
@@ -19,6 +25,7 @@ export type SmartOpenRequest = Awaited<
 
 export interface SmartServicesContext {
   readonly slide: { readonly width: number; readonly height: number };
+  readonly slideId?: string;
   readonly open: () => Promise<SmartOpenRequest>;
 }
 
@@ -52,14 +59,18 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
     request,
     cache: engine.createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
   });
-  const sam = engine.createSamClient({ modelsUrl: modelsUrl() });
-  const reader = createPresetPatchReader(inner);
+  const local = engine.createSamClient({ modelsUrl: modelsUrl() });
+  const server = createServerEmbeddings(httpEmbeddingTransport());
+  const sam = withServerEmbeddings(local, server);
+  const presets = createPresetPatchReader(inner);
+  const reader =
+    context.slideId === undefined ? presets : withServerTiles(presets, server, context.slideId);
   return {
     reader,
     sam,
     plan: (preset) => reader.plan(preset),
     close: () => {
-      sam.close();
+      local.close();
       inner.close();
     },
   };

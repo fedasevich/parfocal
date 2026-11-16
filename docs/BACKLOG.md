@@ -3581,7 +3581,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-004. Refs doc 14.
   Size: S.
 
-- [ ] AISEG-008 · Server embedding service
+- [x] AISEG-008 · Server embedding service
   The server encodes with the larger encoder and returns a float16 embedding per tile, cached over the tissue mask. The browser runs only the decoder.
   Done when tests confirm the browser uses server embeddings when present and falls back to local encoding.
   Refs doc 20 §2.10.
