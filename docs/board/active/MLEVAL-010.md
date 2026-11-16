@@ -1,4 +1,4 @@
 status: review
 by: claude parallel run
 since: 2026-11-16
-note: CryoNuSeg and Lizard still need a real-archive check, see decision 131
+note: PanNuke and MoNuSeg pinned and loaded, CryoNuSeg and Lizard pass on synthetic archives and wait for decision 131
