@@ -1031,7 +1031,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-013.
   Size: M.
 
-- [ ] SEC-050 · The per-person rate limit fits a real viewer session
+- [x] SEC-050 · The per-person rate limit fits a real viewer session
   TEST-019 (application performance on main paths) hit HTTP 429 from one person after about four rounds of opening slides, jumping and deciding, under the default `rate_limit_person_per_minute` of 600. Count the API requests a busy viewer session really makes per minute (opening slides, panning with annotations and overlays, deciding through a worklist), and set the limit, or exempt the read routes that the viewer calls per viewport, so one person never meets the limit while a script that floods the API still does.
   Done when a test replays a recorded busy session's request rate without a 429, a flood test still gets 429, and the chosen limit and its measured basis are in a result file.
   Depends on TEST-019.
