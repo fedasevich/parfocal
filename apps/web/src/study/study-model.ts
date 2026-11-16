@@ -1,11 +1,36 @@
 import { z } from "zod";
 
+const validPattern = (pattern: string) => {
+  try {
+    new RegExp(pattern);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const taskCheckSchema = z
+  .object({
+    path: z.string().min(1).refine(validPattern, { message: "check.path is not a valid pattern" }),
+    selector: z.string().min(1),
+    text: z.string().min(1).refine(validPattern, { message: "check.text is not a valid pattern" }),
+    minCount: z.number().int().positive(),
+  })
+  .partial()
+  .refine((check) => check.path ?? check.selector ?? check.text, {
+    message: "A check needs a path, a selector or a text",
+  });
+
+export type TaskCheck = z.infer<typeof taskCheckSchema>;
+
 export const studyTaskSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   instruction: z.string().min(1),
+  slide: z.string().min(1).optional(),
   startPath: z.string().startsWith("/").optional(),
   targetSeconds: z.number().int().positive().optional(),
+  check: taskCheckSchema.optional(),
 });
 
 export type StudyTask = z.infer<typeof studyTaskSchema>;
@@ -24,6 +49,7 @@ export type TaskResult = {
   startedAt: number;
   endedAt: number;
   outcome: Outcome;
+  auto?: boolean | undefined;
 };
 
 export type StudySession = {
@@ -38,69 +64,155 @@ export type Round = { number: number; tasks: StudyTask[] };
 
 export type StudyState = { rounds: Round[]; sessions: StudySession[] };
 
+export const studySlide = "tumor_044";
+
+const liveSlide = "/projects/{project}/slides/{slide}/live?task={task}&as=DH";
+const cellFindings = "/projects/{taskProject}/slides/{taskSlide}?task={task}&object=T1·C145";
+const areaNav = '[data-testid="area-nav"]';
+
 export const defaultTasks: StudyTask[] = [
   {
     id: "t1",
     title: "Open the slide",
-    instruction: "Open the tumor_009 slide from the worklist.",
-    startPath: "/",
+    instruction: `Open the ${studySlide} slide from the project's slides.`,
+    slide: studySlide,
+    startPath: "/projects/{project}?tab=slides",
     targetSeconds: 30,
+    check: {
+      path: "/slides/{slide}/live",
+      selector: '[data-testid="slide-stage"][data-state="ready"]',
+    },
   },
   {
     id: "t2",
-    title: "Find the tumor",
-    instruction: "Move the slide to the area you think holds tumor and zoom in on it.",
+    title: "Go to the largest tumor area",
+    instruction: "Go to the largest area the AI marked as tumor.",
+    slide: studySlide,
+    startPath: liveSlide,
     targetSeconds: 60,
+    check: { selector: `${areaNav}[data-current="T1"]` },
   },
   {
     id: "t3",
     title: "Read the AI result",
-    instruction: "Say in your own words what the coloured overlay shows.",
+    instruction: "Say in your own words what the AI found on this slide.",
+    slide: studySlide,
+    startPath: liveSlide,
     targetSeconds: 45,
   },
   {
     id: "t4",
-    title: "Open the least sure zone",
-    instruction: "Open the zone where the AI is least sure.",
-    targetSeconds: 45,
+    title: "Zoom in on the smallest area",
+    instruction: "Look closely at the smallest area the AI marked, the isolated tumor cells.",
+    slide: studySlide,
+    startPath: liveSlide,
+    targetSeconds: 60,
+    check: { selector: `${areaNav}[data-visited~="T3"]` },
   },
   {
     id: "t5",
     title: "Answer four unsure cells",
-    instruction: "Mark four cells as unsure and give a reason for each.",
+    instruction: "Answer any four cells the AI is unsure about.",
+    startPath: cellFindings,
     targetSeconds: 120,
   },
   {
     id: "t6",
     title: "Change a lymphocyte",
-    instruction: "Find a cell you can see is a lymphocyte and change the AI label to match.",
+    instruction: "Find a cell you can see is a lymphocyte and change its type to an immune cell.",
+    startPath: cellFindings,
     targetSeconds: 60,
+    check: { text: ": disagree" },
   },
   {
     id: "t7",
-    title: "Compare two results",
-    instruction: "Put two AI results side by side and tell which one you trust more.",
+    title: "Measure the largest area",
+    instruction: "Measure the length of the largest tumor area.",
+    slide: studySlide,
+    startPath: liveSlide,
     targetSeconds: 90,
+    check: { selector: '[data-testid="measurement-row"]' },
   },
   {
     id: "t8",
-    title: "Leave a comment",
-    instruction: "Leave a comment on a region and mention a colleague.",
-    targetSeconds: 60,
+    title: "Map this view",
+    instruction: "Ask the AI to map the part of the slide you are looking at.",
+    slide: studySlide,
+    startPath: liveSlide,
+    targetSeconds: 45,
+    check: { selector: '[data-testid="view-map"][data-phase="ready"]' },
   },
   {
     id: "t9",
-    title: "Finish the slide",
-    instruction: "Submit your review of this slide.",
-    targetSeconds: 45,
+    title: "Leave a comment",
+    instruction: "Leave a comment on the largest area for a colleague.",
+    slide: studySlide,
+    startPath: liveSlide,
+    targetSeconds: 60,
   },
   {
     id: "t10",
-    title: "Find the report",
-    instruction: "Find the report and say what it counts.",
+    title: "Finish the slide",
+    instruction: "Give your decision on this slide and submit it.",
+    slide: studySlide,
+    startPath: liveSlide,
     targetSeconds: 60,
   },
 ];
+
+export type StudyContext = {
+  slides: { id: string; label: string; project: { id: string } }[];
+  resume: { projectId: string; slideId: string; taskId: string } | null;
+};
+
+const fillTokens = (template: string, task: StudyTask, context: StudyContext) => {
+  const slide = context.slides.find((row) => row.label === task.slide);
+  const values: Record<string, string | undefined> = {
+    project: slide?.project.id,
+    slide: slide?.id,
+    task: context.resume?.taskId,
+    taskProject: context.resume?.projectId,
+    taskSlide: context.resume?.slideId,
+  };
+  let missing = false;
+  const filled = template.replace(/\{(\w+)\}/g, (token, name: string) => {
+    const value = values[name];
+    if (value === undefined) missing = true;
+    return value ?? token;
+  });
+  return missing ? undefined : filled;
+};
+
+export const resolveStartPath = (task: StudyTask, context: StudyContext): string | undefined =>
+  task.startPath === undefined ? undefined : fillTokens(task.startPath, task, context);
+
+export type PageProbe = {
+  url: string;
+  count: (selector: string) => number;
+  text: () => string;
+};
+
+export function checkMet(task: StudyTask, context: StudyContext, page: PageProbe): boolean {
+  const { check } = task;
+  if (check === undefined) return false;
+  const minCount = check.minCount ?? 1;
+  if (check.path !== undefined) {
+    const path = fillTokens(check.path, task, context);
+    if (path === undefined || !new RegExp(path).test(page.url)) return false;
+  }
+  if (check.selector !== undefined) {
+    try {
+      if (page.count(check.selector) < minCount) return false;
+    } catch {
+      return false;
+    }
+  }
+  if (check.text !== undefined) {
+    const matches = page.text().match(new RegExp(check.text, "g"))?.length ?? 0;
+    if (matches < minCount) return false;
+  }
+  return true;
+}
 
 export const initialState = (): StudyState => ({
   rounds: [{ number: 1, tasks: defaultTasks }],
@@ -244,6 +356,7 @@ const stateSchema = z.object({
           startedAt: z.number(),
           endedAt: z.number(),
           outcome: z.enum(["done", "gave-up", "skipped"]),
+          auto: z.boolean().optional(),
         }),
       ),
     }),

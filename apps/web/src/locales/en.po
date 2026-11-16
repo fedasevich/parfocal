@@ -6327,6 +6327,10 @@ msgstr "End: {0}"
 msgid "Ended {0}"
 msgstr "Ended {0}"
 
+#: src/study/study-screen.tsx
+msgid "Ends by itself when the task screen shows the goal."
+msgstr "Ends by itself when the task screen shows the goal."
+
 #: src/screens/settings/settings-screen.tsx
 msgid "English"
 msgstr "English"
