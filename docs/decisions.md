@@ -357,6 +357,16 @@ MLEVAL-005 (tumor map evaluation) has now run three annotated test slides and on
 
 Your choice:
 
+### XXX. Whether one split deposit should set the likely size range of tumor areas
+
+AITUM-003 (areas from the tumor map) shows each area with a likely size range, which now comes from the measured size error on three CAMELYON16 test slides ([result](results/2026-11-16-tumor-area-sizes-on-three-test-slides.md)). Six of the seven matched deposits were within 0.03 mm of their true size. The seventh, a 3.94 mm deposit on `test_001`, is split by the map into five areas and the largest is 2.57 mm. True size over listed size ran from 0.905 to 1.533, so the range is now 0.90 to 1.54 times the listed size. Without that deposit it would be 0.90 to 1.15, and more areas would show a range that crosses the 0.2 mm or 2 mm category line.
+
+- **A. Keep 0.90 to 1.54, because a split macro deposit is the case where an understated size matters most, and narrow it when the area rule merges split pieces (recommended).**
+- B. Use 0.90 to 1.15 and flag split deposits separately once the area rule can detect them.
+- C. Keep the old ±10% until a wider run with more macro slides.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

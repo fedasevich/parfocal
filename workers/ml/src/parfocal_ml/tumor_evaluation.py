@@ -8,14 +8,16 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from parfocal_ml.tumor_areas import evaluate_areas, find_tumor_areas
+from parfocal_ml.tumor_areas import Point, TumorArea, area_labels, find_tumor_areas, outline_mm
 from parfocal_ml.tumor_froc import (
     BUNDLE_SPACING_UM,
     FALSE_POSITIVE_RATES,
     TUMOR_GROUPS,
+    Lesions,
     SlideHits,
     annotation_polygons,
     detections,
+    filled,
     froc,
     lesions_of,
     slide_hits,
@@ -54,9 +56,16 @@ class SlideEvaluation:
     lesions_isolated: int
     detections: int
     cells: CellCounts
-    size_errors_mm: tuple[float, ...]
-    deposits_missed: int
+    deposits: tuple[LesionSize, ...]
     stray_areas: int
+
+    @property
+    def size_errors_mm(self) -> tuple[float, ...]:
+        return tuple(d.error_mm for d in self.deposits if d.error_mm is not None)
+
+    @property
+    def deposits_missed(self) -> int:
+        return sum(1 for d in self.deposits if d.found_mm is None)
 
     def as_json(self) -> dict[str, Any]:
         single = froc([self.hits]) if self.hits.lesions else None
@@ -76,19 +85,83 @@ class SlideEvaluation:
             "sensitivity": self.cells.sensitivity,
             "called_cells": self.cells.called,
             "tumor_cells": self.cells.truth,
+            "deposits": [
+                {
+                    "truth_mm": d.truth_mm,
+                    "found_mm": d.found_mm,
+                    "areas": d.areas,
+                    "isolated": d.isolated,
+                }
+                for d in self.deposits
+            ],
             "size_errors_mm": list(self.size_errors_mm),
             "deposits_missed": self.deposits_missed,
             "stray_areas": self.stray_areas,
         }
 
 
-def tumor_outlines(groups: dict[str, list[NDArray[np.float64]]]) -> list[list[tuple[float, float]]]:
-    return [
-        [(float(x), float(y)) for x, y in points]
-        for name, found in groups.items()
-        if name in TUMOR_GROUPS
-        for points in found
-    ]
+@dataclass(frozen=True)
+class LesionSize:
+    truth_mm: float
+    found_mm: float | None
+    areas: int
+    isolated: bool
+
+    @property
+    def error_mm(self) -> float | None:
+        return None if self.found_mm is None else self.found_mm - self.truth_mm
+
+    @property
+    def truth_over_found(self) -> float | None:
+        return self.truth_mm / self.found_mm if self.found_mm else None
+
+
+@dataclass(frozen=True)
+class LesionMatch:
+    deposits: tuple[LesionSize, ...]
+    stray: tuple[TumorArea, ...]
+
+
+def lesion_outlines(
+    groups: dict[str, list[NDArray[np.float64]]], lesions: Lesions, cell: float
+) -> dict[int, list[Point]]:
+    merged: dict[int, list[Point]] = {}
+    for name, found in groups.items():
+        if name not in TUMOR_GROUPS:
+            continue
+        for points in found:
+            inside = lesions.labels[filled([points], lesions.labels.shape, cell)]
+            inside = inside[inside > 0]
+            if inside.size:
+                label = int(np.bincount(inside).argmax())
+                merged.setdefault(label, []).extend((float(x), float(y)) for x, y in points)
+    return merged
+
+
+def match_lesions(
+    areas: Sequence[TumorArea],
+    area_cells: NDArray[np.int32],
+    lesions: Lesions,
+    outlines: dict[int, list[Point]],
+    um_per_px: float,
+) -> LesionMatch:
+    by_label = {area.label: area for area in areas}
+    used: set[int] = set()
+    deposits: list[LesionSize] = []
+    for label in sorted(outlines, key=lambda key: -outline_mm(outlines[key], um_per_px)):
+        touched = set(np.unique(area_cells[lesions.labels == label]).tolist()) & by_label.keys()
+        used |= touched
+        found = max((by_label[key].longest_mm for key in touched), default=None)
+        deposits.append(
+            LesionSize(
+                outline_mm(outlines[label], um_per_px),
+                found,
+                len(touched),
+                label in lesions.isolated,
+            )
+        )
+    stray = tuple(area for area in areas if area.label not in used)
+    return LesionMatch(tuple(deposits), stray)
 
 
 def evaluate_slide(
@@ -105,8 +178,10 @@ def evaluate_slide(
     height, width = probability.shape
     um_per_px = cell_um / CELL
     areas = find_tumor_areas(probability, (0, 0, width * CELL, height * CELL), um_per_px)
-    matched = evaluate_areas(areas, tumor_outlines(groups), um_per_px, CELL)
-    errors = tuple(d.error_mm for d in matched.deposits if d.error_mm is not None)
+    area_cells, _ = area_labels(probability)
+    matched = match_lesions(
+        areas, area_cells, lesions, lesion_outlines(groups, lesions, CELL), um_per_px
+    )
     return SlideEvaluation(
         name=name,
         annotated=bool(mask.any()),
@@ -115,8 +190,7 @@ def evaluate_slide(
         lesions_isolated=len(lesions.isolated),
         detections=len(found),
         cells=CellCounts(int(called.sum()), int(mask.sum()), int((called & mask).sum())),
-        size_errors_mm=errors,
-        deposits_missed=sum(1 for d in matched.deposits if d.found_mm is None),
+        deposits=matched.deposits,
         stray_areas=len(matched.stray),
     )
 
@@ -147,7 +221,15 @@ def summary(slides: Sequence[SlideEvaluation]) -> dict[str, Any]:
         "dice": counts.dice,
         "mean_slide_dice": float(np.mean(per_slide)) if per_slide else None,
         "mean_abs_size_error_mm": float(np.mean(np.abs(errors))) if errors else None,
+        "median_abs_size_error_mm": float(np.median(np.abs(errors))) if errors else None,
         "deposits_measured": len(errors),
+        "deposits_missed": sum(s.deposits_missed for s in annotated),
+        "truth_over_found": (
+            [float(min(ratios)), float(max(ratios))]
+            if (ratios := [r for s in annotated for d in s.deposits if (r := d.truth_over_found)])
+            else None
+        ),
+        "stray_areas_on_annotated": sum(s.stray_areas for s in annotated),
         "false_positives_on_normal": sum(len(s.hits.false_positives) for s in normal),
         "stray_areas_on_normal": sum(s.stray_areas for s in normal),
     }
