@@ -180,7 +180,7 @@
       "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/annotations/test_001.xml",
       "sha256": "b487308cb057d064891d082a3f088aa0a7cc260a95e9879c141bf8244ff29e67",
       "bytes": 281405,
-      "groups": ["small", "camelyon"]
+      "groups": ["small", "camelyon", "tumor-eval"]
     },
     {
       "file": "tumor_009.tif",
@@ -194,7 +194,42 @@
       "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/images/test_001.tif",
       "sha256": "eda774b4f9f44eba0aead16a5fdf27a9452b7769f569b553d330ff7fc6719f0e",
       "bytes": 1142160268,
-      "groups": ["camelyon"]
+      "groups": ["camelyon", "tumor-eval"]
+    },
+    {
+      "file": "test_065.tif",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/images/test_065.tif",
+      "sha256": "a5335d5a9de6237d2f16f29cdcc1e2dc7d84dc6eaf45af32ea222703a1fd024f",
+      "bytes": 448272450,
+      "groups": ["tumor-eval"]
+    },
+    {
+      "file": "test_065.xml",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/annotations/test_065.xml",
+      "sha256": "1f56d40b61f8c1443470eb26b1b6de4702aa72f5397143aaac563a9b8de74bbf",
+      "bytes": 8771,
+      "groups": ["tumor-eval"]
+    },
+    {
+      "file": "test_013.tif",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/images/test_013.tif",
+      "sha256": "13cb6bf8b7d9f0efeaa7f25e2807decfae0f4ad08e9fcbc8c3f499542f0c6a94",
+      "bytes": 1212648208,
+      "groups": ["tumor-eval"]
+    },
+    {
+      "file": "test_013.xml",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/annotations/test_013.xml",
+      "sha256": "8ac77a06e153e89548eb8a2618d44ea35c081642097e36d0fbdc2c40068959f2",
+      "bytes": 2847,
+      "groups": ["tumor-eval"]
+    },
+    {
+      "file": "test_062.tif",
+      "url": "https://camelyon-dataset.s3.amazonaws.com/CAMELYON16/images/test_062.tif",
+      "sha256": "1c619c1bf9642a3e8b52ecdf75f0a117d91768d81081b22b040997290613cc63",
+      "bytes": 477513231,
+      "groups": ["tumor-eval"]
     }
   ],
   "synthetic": [

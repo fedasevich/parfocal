@@ -349,9 +349,11 @@ Your choice:
 
 AITUM-001 (tumor map job) is done when a CAMELYON16 test slide scores within the expected FROC range, but no range is written anywhere. The bundle reports 0.72 over 48 slides, and the best 2016 entry 0.807 (0.732 to 0.889). The new job scored 1.0 on `test_001`, the only test slide on the Mac, with all three counted lesions found and 28 false positives below them ([result](results/2026-11-16-tumor-map-job-on-test-001.md)). One slide moves in steps of a third, so it is a smoke check, not a measure.
 
-- **A. Tick AITUM-001 now on "at or above the bundle's 0.72 on `test_001`", and let MLEVAL-005 (tumor map evaluation) set the real gate over at least three test slides, one without metastases (recommended).**
-- B. Keep AITUM-001 in review until MLEVAL-005 runs at least three test slides, which first needs two more test slides downloaded (about 1 to 3 GB each).
-- C. Set a per-slide floor now, such as 0.6, and tick on that.
+MLEVAL-005 (tumor map evaluation) has now run three annotated test slides and one normal slide ([result](results/2026-11-16-tumor-map-evaluation-on-three-test-slides.md)). Pooled over `test_001` (large deposits), `test_065` and `test_013` (only small deposits), FROC is 0.722 on 6 counted lesions, the same as MONAI's own functions and as the bundle's 0.72. Per slide it is 1.000, 0.500 and 0.500. All six lesions are found, and FROC is lost to false positives that score as high as the small lesions (66 on the three slides, 26 on the normal `test_062`). Pooled Dice at 0.5 is 0.899, but 0.61 and 0.42 on the two small-deposit slides. The promotion gate now uses FROC 0.7222 and Dice 0.8986 on these slides as the baseline with ADR 0322's 0.01 tolerance (a candidate may fall below the reference by at most 0.01), as ADR 0351 (the v1 tumor model) said it would.
+
+- **A. Tick AITUM-001, since the job scores the bundle's 0.72 pooled over three test slides, and keep the per-slide numbers above as the expected range: 1.0 on large deposits and about 0.5 on slides with only small ones (recommended).**
+- B. Tick AITUM-001 only after a wider run, for example ten test slides with two from centre 0, because six lesions move FROC by about 0.03 each.
+- C. Set a per-slide floor now, such as 0.5 on any annotated slide, and tick on that.
 
 Your choice:
 

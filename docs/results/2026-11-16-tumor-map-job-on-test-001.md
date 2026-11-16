@@ -68,6 +68,6 @@ Cell AUC 0.980 over 292,679 cells, 25,822 of them tumour.
 
 ## Follow-ups
 
-- TODO: the expected per-slide FROC range is undefined. MLEVAL-005 (tumor map evaluation) should set it over at least three test slides, one without metastases, as ADR 0351 says. Decision 127 asks how to judge AITUM-001 until then.
+- MLEVAL-005 (tumor map evaluation) measured three annotated test slides and one normal slide, pooled FROC 0.722 ([result](2026-11-16-tumor-map-evaluation-on-three-test-slides.md)). Decision 127 asks which range counts.
 - TODO: wiring the job into the job system and an API route, and the server scorer that AITUM-004's "Map this view" panel waits for, are not built here.
-- TODO: test slides other than `test_001` are not on the Mac.
+- `pnpm fixtures tumor-eval` fetches the evaluation's test slides.

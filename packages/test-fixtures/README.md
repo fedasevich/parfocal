@@ -20,6 +20,7 @@ pnpm fixtures all             # everything, about 25 GB
 | `big` | Whole scanned slides at native magnification, 0.3 to 3.9 GB each |
 | `huge` | `Hamamatsu-1.ndpi`, 6.9 GB |
 | `camelyon` | CAMELYON16 `tumor_009.tif` (a training slide), `test_001.tif` and both annotation XML files |
+| `tumor-eval` | The CAMELYON16 test slides the tumor map evaluation of MLEVAL-005 runs on, about 3.3 GB: `test_001` (large deposits), `test_065` and `test_013` (only small deposits) with their outlines, and `test_062` (no metastases). Never fetched in CI |
 
 Files land in `~/.cache/parfocal/fixtures`, or `$XDG_CACHE_HOME/parfocal/fixtures`, or `$PARFOCAL_FIXTURES_DIR` when set. Downloads go to a `.part` file first, resume with range requests after a dropped connection and are renamed only after the SHA-256 matches. A `.sha256` file next to each fixture records that it was verified, so later runs skip hashing. Run the command again to resume anything that failed.
 

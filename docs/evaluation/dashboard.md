@@ -1,6 +1,6 @@
 # Evaluation dashboard
 
-Built by `python -m parfocal_ml.dashboard` from 9 ML evaluation result files in [docs/results](../results/README.md). Every value is read from a committed result file or a stored evaluation output. The charts are in [dashboard.html](dashboard.html).
+Built by `python -m parfocal_ml.dashboard` from 14 ML evaluation result files in [docs/results](../results/README.md). Every value is read from a committed result file or a stored evaluation output. The charts are in [dashboard.html](dashboard.html).
 
 ## Automatic segmentation PQ on all 50 TNBC images
 
@@ -61,3 +61,8 @@ Share of nuclei typed right. The last date is a stand-in training round on its m
 | 2026-11-06 | [Smart select accuracy smoke on 78 TNBC nuclei in Chrome](../results/2026-11-06-smart-select-accuracy-smoke.md) | AISEG-005 (smart select tool) |
 | 2026-11-08 | [the auto region pass scores PQ 0.828 on all 50 TNBC images and a warm four tile pass takes 12.2 s on WebGPU](../results/2026-11-08-auto-region-pass-on-tnbc.md) | AISEG-010 (auto region tool) |
 | 2026-11-15 | [two stand-in typer rounds on PanNuke keep an ECE of 0.077 and 0.089 with the old temperature and reach 0.015 and 0.019 after refitting on held-out slides](../results/2026-11-15-recalibration-after-a-round.md) | AILEARN-005 (recalibration after each round) |
+| 2026-11-16 | [the confidence display checks of ADR 0194 replay exactly for HoVer-NeXt with one view and hold with 8 views, where fewer open regions settle](../results/2026-11-16-confidence-display-replay-hovernext.md) | AINUC-000 (nuclei detector and typer research check) |
+| 2026-11-16 | [the MONAI tumor model on 400 patches of test_001, a CAMELYON16 test slide](../results/2026-11-16-monai-tumor-patches-on-test-001.md) | AITUM-000 (tumor map research check) |
+| 2026-11-16 | [the prompt-pass fallback scores PQ 0.796 on all 50 TNBC images, 0.033 above the POC's stain-seed row](../results/2026-11-16-prompt-fallback-on-tnbc.md) | AISEG-016 (prompt-pass fallback for the auto region tool) |
+| 2026-11-16 | [the tumor map evaluation on three annotated CAMELYON16 test slides and one normal slide](../results/2026-11-16-tumor-map-evaluation-on-three-test-slides.md) | MLEVAL-005 (tumor map evaluation) |
+| 2026-11-16 | [the tumor map job on the whole of test_001, a CAMELYON16 test slide](../results/2026-11-16-tumor-map-job-on-test-001.md) | AITUM-001 (tumor map job) |
