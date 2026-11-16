@@ -2713,7 +2713,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] REVIEW-020 · Firm staging answers on a validation set
+- [x] REVIEW-020 · Firm staging answers on a validation set
   Run the node staging of REVIEW-003 on labelled small clusters and confirm that a firm count (its range cannot cross 200) is never on the wrong side of the pathologist's count, as POC doc 33 found for the tumor share on PanNuke.
   Done when a result file records the clusters, the firm share and every wrong firm answer, and a test replays the fixture.
   Depends on REVIEW-003, AINUC-012. Split from REVIEW-003 by [ADR 0086](adr/0086-node-staging-rules.md).
