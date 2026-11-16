@@ -675,6 +675,20 @@ export {
   withOverlayState,
 } from "./overlay/overlay.ts";
 export {
+  decodePaintedMap,
+  encodePaintedMap,
+  PaintedMapFormatError,
+  type PaintedMapMode,
+  type PaintedMapStroke,
+  paintedCellCount,
+  paintedMapFormat,
+  paintedMapFullValue,
+  paintedMapHeaderBytes,
+  paintedMapMagic,
+  paintedMapTileHeaderBytes,
+  paintViewMap,
+} from "./overlay/painted-map.ts";
+export {
   createPinAtlas,
   type PinAtlas,
   type PinIconBox,
@@ -713,6 +727,30 @@ export type {
   VectorOverlay,
   VectorStyle,
 } from "./overlay/types.ts";
+export {
+  askViewMap,
+  createViewMap,
+  planViewMap,
+  type ViewMap,
+  type ViewMapAskOptions,
+  type ViewMapLayout,
+  type ViewMapPlan,
+  type ViewMapScorer,
+  type ViewMapTile,
+  type ViewMapTileKey,
+  type ViewMapTileRequest,
+  viewMapCell,
+  viewMapCoveredArea,
+  viewMapGrid,
+  viewMapLayout,
+  viewMapMaxTilesPerAsk,
+  viewMapTileCells,
+  viewMapTileId,
+  viewMapTileRequest,
+  viewMapTileSize,
+  viewMapTilesIn,
+  withViewMapTile,
+} from "./overlay/view-map.ts";
 export {
   isOverlayKind,
   type OverlayKind,

@@ -15,6 +15,7 @@ import type {
   SmartServicesContext,
   SmartServicesLoader,
 } from "../aiseg/smart-services.ts";
+import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
@@ -197,7 +198,13 @@ export function AutoLayer({
     }
     let current: Press | null = null;
     const down = (event: PointerEvent) => {
-      if (event.button !== 0 || current !== null || controller.current !== null) return;
+      if (
+        fingerPans(event) ||
+        event.button !== 0 ||
+        current !== null ||
+        controller.current !== null
+      )
+        return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);

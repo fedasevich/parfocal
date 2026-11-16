@@ -11,6 +11,7 @@ import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/
 import { mapExtent, pointerDistance } from "@parfocal/ui/lib/minimap-machine";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useArm } from "../../flags/use-arm.ts";
 import { openPopout, useMainPopoutSync } from "../../popout/popout-channel.ts";
 import type { Pin } from "../review/comment-pin.ts";
 import { cellShapes, overviewSize, regionShapes } from "../review/slide-geometry.ts";
@@ -24,7 +25,7 @@ import {
 import { lookUrl } from "../thumbnails.ts";
 import { mmBetween } from "./edge-cues.ts";
 import { minimapContent } from "./minimap-content.ts";
-import { placeMinimap, type ScreenRect } from "./minimap-placement.ts";
+import { pinnedMinimap, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
 import { viewerSpots } from "./minimap-scenes.ts";
 import { type AreaMark, MinimapAreas } from "./slide-maps.tsx";
 import { tissueShareOnScreen } from "./tissue-share.ts";
@@ -113,7 +114,11 @@ export function ViewerMinimap({
     openThread,
     cellsPanel,
   });
-  const fresh = placeMinimap(size, sized, spots.hot, spots.blocked);
+  const motion = useArm("minimap_motion");
+  const fresh =
+    motion === "pinned"
+      ? pinnedMinimap(size, sized)
+      : placeMinimap(size, sized, spots.hot, spots.blocked);
   const place = useHeldCorner(fresh, camera);
 
   const [host, setHost] = useState<HTMLElement | null>(null);
@@ -191,6 +196,7 @@ export function ViewerMinimap({
     <SmartMinimap
       ref={attach}
       data-corner={place.corner}
+      data-motion={motion}
       data-mode={minimap.mode}
       size={minimap.size}
       image={overviewImage}

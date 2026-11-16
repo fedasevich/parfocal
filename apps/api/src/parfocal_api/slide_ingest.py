@@ -9,11 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, record
+from parfocal_api.deidentified import NEUTRAL_LABEL
 from parfocal_api.notification_catalogue import TargetKind
 from parfocal_api.notifications import notify
 from parfocal_api.result_imports import queue_waiting_results
 from parfocal_api.retention import SYSTEM
-from parfocal_api.tables import NotificationKind, slides, uploads
+from parfocal_api.tables import NotificationKind, PrivacyMode, projects, slides, uploads
 from parfocal_common.ingest import failure_message
 
 LABEL_LENGTH = 200
@@ -52,7 +53,16 @@ def label_of(file_name: str) -> str:
     lowered = name.lower()
     double = next((suffix for suffix in DOUBLE_SUFFIXES if lowered.endswith(suffix)), None)
     stem = name[: -len(double)] if double else PurePosixPath(name).stem
-    return (stem.strip() or "Slide")[:LABEL_STEM_LENGTH]
+    return (stem.strip() or NEUTRAL_LABEL)[:LABEL_STEM_LENGTH]
+
+
+async def label_stem(connection: AsyncConnection, upload: Any) -> str:
+    mode = await connection.scalar(
+        select(projects.c.privacy_mode).where(projects.c.id == upload.project_id)
+    )
+    if mode is None or PrivacyMode(mode) is not PrivacyMode.CLINICAL:
+        return NEUTRAL_LABEL
+    return label_of(upload.file_name)
 
 
 async def taken_labels(
@@ -87,7 +97,7 @@ async def published_slide(connection: AsyncConnection, upload_id: uuid.UUID) -> 
 
 
 async def insert_slide(connection: AsyncConnection, upload: Any, facts: SlideFacts) -> None:
-    stem = label_of(upload.file_name)
+    stem = await label_stem(connection, upload)
     for _ in range(LABEL_ATTEMPTS):
         label = free_label(
             stem, await taken_labels(connection, upload.project_id, upload.case_id, stem)

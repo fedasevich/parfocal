@@ -103,12 +103,16 @@ import type {
   OpinionAnswers,
   OpinionForm,
   Organisation,
+  PaintedMap,
+  PaintedMapContent,
+  PaintedMapVersion,
   Pairings,
   PasswordSignInAvailability,
   PatchExportStarted,
   PatientData,
   PendingAccessRequest,
   PersonalData,
+  PlatformStatus,
   PointGeometry,
   PolygonGeometry,
   Preference,
@@ -156,6 +160,7 @@ import type {
   SiteValidation,
   Skip,
   SlideArea,
+  SlideCopies,
   SlideCoverage,
   SlideDetail,
   SlideFigure,
@@ -277,6 +282,7 @@ import {
   Role,
   Rule,
   ServiceScope,
+  ServiceStatus,
   Serving,
   Sex,
   SignOffRule,
@@ -311,6 +317,60 @@ export const getGetHealthResponseMock = (
   overrideResponse: Partial<Extract<Health, object>> = {},
 ): Health => ({
   status: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getGetPlatformStatusResponseMock = (
+  overrideResponse: Partial<Extract<PlatformStatus, object>> = {},
+): PlatformStatus => ({
+  status: faker.helpers.arrayElement(Object.values(ServiceStatus)),
+  maintenance: faker.helpers.arrayElement([
+    {
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      expected_end_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getStartMaintenanceResponseMock = (
+  overrideResponse: Partial<Extract<PlatformStatus, object>> = {},
+): PlatformStatus => ({
+  status: faker.helpers.arrayElement(Object.values(ServiceStatus)),
+  maintenance: faker.helpers.arrayElement([
+    {
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      expected_end_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getEndMaintenanceResponseMock = (
+  overrideResponse: Partial<Extract<PlatformStatus, object>> = {},
+): PlatformStatus => ({
+  status: faker.helpers.arrayElement(Object.values(ServiceStatus)),
+  maintenance: faker.helpers.arrayElement([
+    {
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      expected_end_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -5084,6 +5144,23 @@ export const getMoveSlideResponseMock = (
   ...overrideResponse,
 });
 
+export const getCopySlidesResponseMock = (
+  overrideResponse: Partial<Extract<SlideCopies, object>> = {},
+): SlideCopies => ({
+  copies: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      source_slide_id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      case_label: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getListAnnotationsResponseMock = (): Annotation[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     id: faker.string.uuid(),
@@ -5219,6 +5296,75 @@ export const getListAnnotationHistoryResponseMock = (): AnnotationVersion[] =>
       null,
     ]),
   }));
+
+export const getListPaintedMapsResponseMock = (): PaintedMap[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    slide_id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    cell: faker.number.int(),
+    tile_cells: faker.number.int(),
+    painted_cells: faker.number.int(),
+    created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getCreatePaintedMapResponseMock = (
+  overrideResponse: Partial<Extract<PaintedMap, object>> = {},
+): PaintedMap => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.number.int(),
+  cell: faker.number.int(),
+  tile_cells: faker.number.int(),
+  painted_cells: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getSavePaintedMapResponseMock = (
+  overrideResponse: Partial<Extract<PaintedMap, object>> = {},
+): PaintedMap => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.number.int(),
+  cell: faker.number.int(),
+  tile_cells: faker.number.int(),
+  painted_cells: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListPaintedMapVersionsResponseMock = (): PaintedMapVersion[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    version: faker.number.int(),
+    painted_cells: faker.number.int(),
+    saved_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    saved_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getGetPaintedMapVersionResponseMock = (
+  overrideResponse: Partial<Extract<PaintedMapContent, object>> = {},
+): PaintedMapContent => ({
+  version: faker.number.int(),
+  painted_cells: faker.number.int(),
+  saved_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  saved_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  painted_map_id: faker.string.uuid(),
+  content: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getExportPaintedMapResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getCreateResultSetResponseMock = (
   overrideResponse: Partial<Extract<ResultSetDetail, object>> = {},
@@ -16401,6 +16547,78 @@ export const getGetHealthMockHandler = (
   );
 };
 
+export const getGetPlatformStatusMockHandler = (
+  overrideResponse?:
+    | PlatformStatus
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PlatformStatus> | PlatformStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/status",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetPlatformStatusResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStartMaintenanceMockHandler = (
+  overrideResponse?:
+    | PlatformStatus
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<PlatformStatus> | PlatformStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/platform/maintenance",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartMaintenanceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getEndMaintenanceMockHandler = (
+  overrideResponse?:
+    | PlatformStatus
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<PlatformStatus> | PlatformStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/platform/maintenance",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEndMaintenanceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetSessionMockHandler = (
   overrideResponse?:
     | Session
@@ -18236,6 +18454,30 @@ export const getMoveSlideMockHandler = (
   );
 };
 
+export const getCopySlidesMockHandler = (
+  overrideResponse?:
+    | SlideCopies
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SlideCopies> | SlideCopies),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slide-copies",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCopySlidesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListAnnotationsMockHandler = (
   overrideResponse?:
     | Annotation[]
@@ -18410,6 +18652,146 @@ export const getListAnnotationHistoryMockHandler = (
           : getListAnnotationHistoryResponseMock(),
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getListPaintedMapsMockHandler = (
+  overrideResponse?:
+    | PaintedMap[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PaintedMap[]> | PaintedMap[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPaintedMapsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreatePaintedMapMockHandler = (
+  overrideResponse?:
+    | PaintedMap
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PaintedMap> | PaintedMap),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/painted-maps",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreatePaintedMapResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSavePaintedMapMockHandler = (
+  overrideResponse?:
+    | PaintedMap
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PaintedMap> | PaintedMap),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSavePaintedMapResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListPaintedMapVersionsMockHandler = (
+  overrideResponse?:
+    | PaintedMapVersion[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PaintedMapVersion[]> | PaintedMapVersion[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId/versions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPaintedMapVersionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetPaintedMapVersionMockHandler = (
+  overrideResponse?:
+    | PaintedMapContent
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PaintedMapContent> | PaintedMapContent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId/versions/:version",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetPaintedMapVersionResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getExportPaintedMapMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId/versions/:version/file",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getExportPaintedMapResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
     },
     options,
   );
@@ -23947,6 +24329,9 @@ export const getListSlideAreasMockHandler = (
 };
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
+  getGetPlatformStatusMockHandler(),
+  getStartMaintenanceMockHandler(),
+  getEndMaintenanceMockHandler(),
   getGetSessionMockHandler(),
   getGetPasswordSignInMockHandler(),
   getCreateAccountMockHandler(),
@@ -24028,6 +24413,7 @@ export const getParfocalAPIMock = () => [
   getReorderCaseSlidesMockHandler(),
   getSetCaseClinicalNoteMockHandler(),
   getMoveSlideMockHandler(),
+  getCopySlidesMockHandler(),
   getListAnnotationsMockHandler(),
   getCreateAnnotationMockHandler(),
   getCreateAnnotationsMockHandler(),
@@ -24036,6 +24422,12 @@ export const getParfocalAPIMock = () => [
   getDeleteAnnotationMockHandler(),
   getRestoreAnnotationMockHandler(),
   getListAnnotationHistoryMockHandler(),
+  getListPaintedMapsMockHandler(),
+  getCreatePaintedMapMockHandler(),
+  getSavePaintedMapMockHandler(),
+  getListPaintedMapVersionsMockHandler(),
+  getGetPaintedMapVersionMockHandler(),
+  getExportPaintedMapMockHandler(),
   getCreateResultSetMockHandler(),
   getListSlideResultSetsMockHandler(),
   getListProjectResultSetsMockHandler(),

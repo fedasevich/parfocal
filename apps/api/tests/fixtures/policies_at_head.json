@@ -37,6 +37,8 @@
     "notifications",
     "opinion_forms",
     "opinions",
+    "painted_map_versions",
+    "painted_maps",
     "patients",
     "personal_settings",
     "project_classes",
@@ -170,6 +172,24 @@
     [
       "jobs",
       "platform_claims",
+      "*",
+      true,
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      []
+    ],
+    [
+      "maintenance",
+      "platform_read",
+      "r",
+      true,
+      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR true)",
+      null,
+      []
+    ],
+    [
+      "maintenance",
+      "platform_write",
       "*",
       true,
       "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",

@@ -52,5 +52,15 @@ def restricted_ranges(path: Path) -> list[ByteRange]:
     return whole if found is None else found
 
 
-def ranges_document(ranges: list[ByteRange]) -> bytes:
-    return json.dumps({"ranges": [list(span) for span in ranges]}).encode()
+def ranges_document(
+    ranges: list[ByteRange],
+    identifying: Iterable[ByteRange] = (),
+    barcode: Iterable[ByteRange] = (),
+) -> bytes:
+    return json.dumps(
+        {
+            "ranges": [list(span) for span in ranges],
+            "identifying": [list(span) for span in identifying],
+            "barcode": [list(span) for span in barcode],
+        }
+    ).encode()

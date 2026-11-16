@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { fingerPans, isPenErase } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
@@ -68,7 +69,13 @@ export function BrushLayer({
     });
     const toSlide = (event: PointerEvent): Point => slideAt(latest.current.engine, stage, event);
     const down = (event: PointerEvent) => {
-      if (event.button !== 0 || drawing !== null || pan.held()) return;
+      if (
+        fingerPans(event) ||
+        (event.button !== 0 && !isPenErase(event)) ||
+        drawing !== null ||
+        pan.held()
+      )
+        return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);

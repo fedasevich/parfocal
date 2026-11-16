@@ -20,6 +20,10 @@ DESTRUCTIVE_SQL = re.compile(
     re.IGNORECASE,
 )
 ROLLED_BACK_FUNCTION = "downgrade"
+STORED_ROUTINE_BODY = re.compile(
+    r"\bCREATE\s+(?:OR\s+REPLACE\s+)?(?:FUNCTION|PROCEDURE)\b.*?\bAS\s+(\$\w*\$).*?\1",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 @dataclass(frozen=True)
@@ -102,7 +106,7 @@ def findings(tree: ast.Module) -> tuple[str, ...]:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             found.extend(
                 " ".join(match.group(0).split()).upper()
-                for match in DESTRUCTIVE_SQL.finditer(node.value)
+                for match in DESTRUCTIVE_SQL.finditer(STORED_ROUTINE_BODY.sub(" ", node.value))
             )
     return tuple(dict.fromkeys(found))
 

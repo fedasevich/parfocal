@@ -5,7 +5,7 @@ import json
 import shutil
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -13,6 +13,8 @@ from typing import Any
 import httpx2
 from sqlalchemy import select
 
+from parfocal_api.deidentified import held_privacy, keeps_restricted_images
+from parfocal_api.restricted_images import delete_restricted_images
 from parfocal_api.slide_ingest import SlideFacts, publish_slide, record_refusal, upload_of
 from parfocal_api.tables import UploadStatus, job_steps
 from parfocal_common.ingest import (
@@ -32,11 +34,11 @@ from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.settings import load_settings
 from parfocal_ingest.associated import associated_images
 from parfocal_ingest.identify import Format, Identified, Refusal
+from parfocal_ingest.identifying_text import ranges_file
 from parfocal_ingest.isolation import JobScope, JobTokens, ParseLimits, parse_isolated
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.parse_jobs import READER_ERRORS, unpacked_in
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
-from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
 from parfocal_ingest.thumbnail import previews
 from parfocal_ingest.tile_index import index_document, tile_index
@@ -296,14 +298,17 @@ async def derive(context: Context) -> Mapping[str, Any]:
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_TISSUE)
     if UNIT_RESTRICTED not in done:
-        for image in await asyncio.to_thread(associated_images, path, found):
-            key = restricted_key(tenant_id, slide_id, RestrictedImage(image.kind.value))
-            await context.store.put_object(key, image.data, image.media_type)
+        async with step.transaction() as connection:
+            mode = await held_privacy(connection, context.upload.row.project_id)
+        if keeps_restricted_images(mode):
+            for image in await asyncio.to_thread(associated_images, path, found):
+                key = restricted_key(tenant_id, slide_id, RestrictedImage(image.kind.value))
+                await context.store.put_object(key, image.data, image.media_type)
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_RESTRICTED)
-    ranges = await asyncio.to_thread(restricted_ranges, context.local)
+    ranges = await asyncio.to_thread(ranges_file, context.local)
     await context.store.put_object(
-        restricted_ranges_key(tenant_id, slide_id), ranges_document(ranges), "application/json"
+        restricted_ranges_key(tenant_id, slide_id), ranges, "application/json"
     )
     present = [
         image.value
@@ -342,7 +347,12 @@ async def publish(context: Context) -> Mapping[str, Any]:
         restricted_images=results["derive"]["restricted"],
     )
     async with context.step.transaction() as connection:
+        kept = keeps_restricted_images(await held_privacy(connection, upload.row.project_id))
+        if not kept:
+            facts = replace(facts, restricted_images=[])
         published = await publish_slide(connection, upload.row, facts)
+    if not kept:
+        await delete_restricted_images(context.store, upload.tenant_id, slide_id)
     await context.store.delete_object(upload.object_key)
     shutil.rmtree(context.folder, ignore_errors=True)
     return {"slide_id": str(slide_id), "published": published}

@@ -14,6 +14,7 @@ import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
 import { checklistHandlers, draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
+import { paintedMapHandlers } from "./painted-map-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
 import { reportLinkHandlers } from "./report-link-handlers.ts";
 import { reportPreviewHandlers } from "./report-preview-handlers.ts";
@@ -24,6 +25,7 @@ import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
 import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
 import { signUpHandlers } from "./sign-up-handlers.ts";
+import { statusHandlers } from "./status-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
@@ -40,6 +42,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
   if (scope === "drafts") return draftHandlers();
   faker.seed(fakeDataSeed);
   return [
+    ...statusHandlers(),
     ...runStreamHandlers(),
     ...draftHandlers(),
     ...signUpHandlers(),
@@ -69,6 +72,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...coverageHandlers(),
     ...tissueHandlers(),
     ...annotationHandlers(),
+    ...paintedMapHandlers(),
     ...sharedLayerHandlers(),
     ...resumeHandlers(),
     ...reportLinkHandlers(),
@@ -130,6 +134,7 @@ export {
   resetJobsState,
   setFakeJobsScene,
 } from "./jobs-scene.ts";
+export { paintedMapHandlers, resetFakePaintedMaps } from "./painted-map-handlers.ts";
 export { resetFakeProfile } from "./profile-changes.ts";
 export {
   projectSlideRows,
@@ -193,6 +198,7 @@ export {
   toAnnotateSlideStatus,
   toSharedAiObjects,
 } from "./shared-layer-handlers.ts";
+export { setFakeMaintenance } from "./status-handlers.ts";
 export { teamReviewerStatus, toTeamWorkload } from "./team-handlers.ts";
 export {
   defaultFakeTeamScene,

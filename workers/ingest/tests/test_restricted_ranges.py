@@ -60,4 +60,8 @@ def test_touching_ranges_merge_and_gaps_stay() -> None:
 
 
 def test_the_document_lists_the_ranges() -> None:
-    assert json.loads(ranges_document([(1, 2)])) == {"ranges": [[1, 2]]}
+    assert json.loads(ranges_document([(1, 2)])) == {
+        "ranges": [[1, 2]],
+        "identifying": [],
+        "barcode": [],
+    }

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "typecheck": "uv run --package parfocal-deploy basedpyright",
-    "test": "uv run --package parfocal-deploy pytest tests -q",
+    "test": "uv run --package parfocal-deploy pytest tests -q --cov=parfocal_deploy --cov-report=lcov:coverage.lcov",
     "deploy": "uv run --package parfocal-deploy python -m parfocal_deploy.deploy",
     "bootstrap": "uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap"
   },
@@ -13,5 +13,8 @@
     "@parfocal/ingest": "workspace:*",
     "@parfocal/ml": "workspace:*",
     "@parfocal/py-common": "workspace:*"
+  },
+  "coverage": {
+    "lines": 77
   }
 }

@@ -187,7 +187,8 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   await page.goto(`/projects/${projectId}?tab=slides`);
   const row = page.getByTestId("slide-row");
   await expect(row).toHaveCount(1);
-  await expect(row).toContainText("CMU-1-Small-Region");
+  await expect(row).toContainText("Slide");
+  await expect(row).not.toContainText("CMU-1-Small-Region");
   await expect(row.getByTitle(/GeoJSON import/)).toHaveText("GeoJSON");
   await row.getByTitle(/GeoJSON import/).click();
   await expect(page.getByTestId("result-sets")).toContainText("GeoJSON import");

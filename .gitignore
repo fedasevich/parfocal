@@ -27,6 +27,7 @@ out/
 storybook-static/
 
 coverage/
+coverage.lcov
 .nyc_output/
 test-results/
 playwright-report/

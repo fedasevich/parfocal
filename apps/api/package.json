@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "typecheck": "uv run --package parfocal-api basedpyright",
-    "test": "uv run --package parfocal-api pytest tests -q"
+    "test": "uv run --package parfocal-api pytest tests -q --cov=parfocal_api --cov-report=lcov:coverage.lcov"
   },
   "dependencies": {
     "@parfocal/py-common": "workspace:*"
+  },
+  "coverage": {
+    "lines": 30
   }
 }

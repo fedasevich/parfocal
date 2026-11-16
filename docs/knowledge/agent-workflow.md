@@ -133,6 +133,7 @@ Review is for what only the owner can give. A task "waiting for a green CI run o
 - Commit headers are at most 100 characters, or commitlint fails the commit.
 - `.claude/settings.json` sets `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` to 25, so a session compacts at about 250k of its 1M window. A long lead run keeps its state in the run plan and heartbeat, so compaction loses nothing.
 - Pipe long output through `tail`, `head -50` or `grep`. Never print whole generated files, lockfiles or full diffs. Use `git diff --stat` first.
+- Before ticking a task that changes `workers/ml` or a model graph, the lead runs `pnpm --filter @parfocal/ml test:accuracy` on the owner's Mac, one such run at a time because of the Mac's memory. It runs every `workers/ml` test, the `weights` ones included, with `PARFOCAL_REQUIRE_WEIGHTS=1`, so a missing weight, ONNX graph, dataset or POC cache fails instead of skipping. CI has none of these files, so this run is the only check of the accuracy numbers. Source: TEST-028 (model accuracy tests that cannot be skipped unseen).
 
 ## Screenshots
 

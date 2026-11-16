@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import gzip
 import io
 import json
@@ -40,6 +41,7 @@ from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     BuiltInTemplate,
+    PrivacyMode,
     Role,
     adjudication_objects,
     adjudications,
@@ -59,6 +61,8 @@ from parfocal_api.tables import (
     memberships,
     opinions,
     organisations,
+    painted_map_versions,
+    painted_maps,
     project_classes,
     project_members,
     projects,
@@ -105,6 +109,7 @@ from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
     "getHealth": "public",
+    "getPlatformStatus": "public",
     "getSharedReport": "public",
     **dict.fromkeys(
         (
@@ -143,6 +148,8 @@ OPEN_OPERATIONS = {
     "createOrganisation": "platform",
     "registerModel": "platform",
     "promoteRegisteredModel": "platform",
+    "startMaintenance": "platform",
+    "endMaintenance": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
     "listTenants": "platform",
@@ -280,6 +287,7 @@ class Workspace:
     doomed_slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
     accepted_offer: uuid.UUID = field(default_factory=uuid.uuid4)
     declined_offer: uuid.UUID = field(default_factory=uuid.uuid4)
+    painted_map: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @property
     def slide_threads(self) -> str:
@@ -293,6 +301,10 @@ class Workspace:
     def annotations(self) -> str:
         return f"/api/slides/{self.slide}/annotations"
 
+    @property
+    def painted_maps(self) -> str:
+        return f"/api/slides/{self.slide}/painted-maps"
+
 
 @dataclass(frozen=True)
 class Call:
@@ -303,6 +315,7 @@ class Call:
 
 SAMPLE_NAME = "Matrix sample"
 SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [9, 0], [9, 9], [0, 9], [0, 0]]]}
+EMPTY_PAINTED_MAP = "UEZQTQEAEAAAAQAAABAAAAAIAAAAAAAA"
 NEEDS_A_TASK = frozenset(
     {
         "createCaseReport",
@@ -316,6 +329,8 @@ NEEDS_A_TASK = frozenset(
         "amendCaseReport",
         "createAnnotation",
         "createAnnotations",
+        "createPaintedMap",
+        "savePaintedMap",
         "changeAnnotation",
         "deleteAnnotation",
         "restoreAnnotation",
@@ -510,6 +525,26 @@ async def seed_case_reports(
             project_id=project_id,
             case_id=case_id,
             label="Matrix move slide",
+        )
+    )
+    copy_target = await seed_project(
+        connection, tenant_id, PrivacyMode.DE_IDENTIFIED, named("copy-target")
+    )
+    await connection.execute(
+        insert(project_members).values(
+            tenant_id=tenant_id, project_id=copy_target, user_id=lead, role="owner"
+        )
+    )
+    await connection.execute(
+        insert(slides).values(
+            id=named("copy-slide"),
+            tenant_id=tenant_id,
+            project_id=project_id,
+            case_id=case_id,
+            label="Matrix copy slide",
+            original_key=f"t/{tenant_id}/s/{named('copy-slide')}/original.svs",
+            file_bytes=10,
+            published_at=func.now(),
         )
     )
     await connection.execute(
@@ -803,6 +838,16 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "restoreAnnotation": lambda w: Call(
         "POST", f"{w.annotations}/{w.deleted_annotation}/restore", {"version": 2}
+    ),
+    "listPaintedMaps": lambda w: Call("GET", w.painted_maps),
+    "listPaintedMapVersions": lambda w: Call("GET", f"{w.painted_maps}/{w.painted_map}/versions"),
+    "getPaintedMapVersion": lambda w: Call("GET", f"{w.painted_maps}/{w.painted_map}/versions/1"),
+    "exportPaintedMap": lambda w: Call("GET", f"{w.painted_maps}/{w.painted_map}/versions/1/file"),
+    "createPaintedMap": lambda w: Call(
+        "POST", w.painted_maps, {"name": "Matrix map", "content": EMPTY_PAINTED_MAP}
+    ),
+    "savePaintedMap": lambda w: Call(
+        "PUT", f"{w.painted_maps}/{w.painted_map}", {"version": 1, "content": EMPTY_PAINTED_MAP}
     ),
     "listSlideResultSets": lambda w: Call("GET", f"/api/slides/{w.slide}/result-sets"),
     "listSlideAreas": lambda w: Call("GET", f"/api/slides/{w.slide}/areas"),
@@ -1183,6 +1228,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
             "case_id": str(seeded(w, "report-fresh")),
             "reason": "Barcode read against the wrong case",
         },
+    ),
+    "copySlides": lambda w: Call(
+        "POST",
+        f"/api/projects/{seeded(w, 'copy-target')}/slide-copies",
+        {"slide_ids": [str(seeded(w, "copy-slide"))]},
     ),
     "reorderCaseSlides": lambda w: Call(
         "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
@@ -2163,6 +2213,28 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 .where(slides.c.id == case.loose_slide_id)
                 .values(restricted_images=[RestrictedImage.LABEL.value], width=4096, height=2048)
             )
+            painted_map = uuid.uuid5(tenant_id, "painted-map")
+            await connection.execute(
+                insert(painted_maps).values(
+                    id=painted_map,
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    slide_id=case.loose_slide_id,
+                    name="Matrix map",
+                    cell=256,
+                    tile_cells=16,
+                    painted_cells=0,
+                )
+            )
+            await connection.execute(
+                insert(painted_map_versions).values(
+                    tenant_id=tenant_id,
+                    painted_map_id=painted_map,
+                    version=1,
+                    content=base64.b64decode(EMPTY_PAINTED_MAP),
+                    painted_cells=0,
+                )
+            )
             async with httpx2.AsyncClient(timeout=30) as http:
                 store = ObjectStore(TEST_STORAGE, http)
                 matrix_cells = build_cells(
@@ -2293,6 +2365,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             doomed_thread,
             *uploads_made,
             display_preset=kept_preset,
+            painted_map=painted_map,
             accepted_offer=accepted_offer,
             declined_offer=declined_offer,
             doomed_preset=doomed_preset,

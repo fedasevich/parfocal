@@ -10,7 +10,15 @@ export function useTaskRun(kind: TaskKind, id: string, area: Area) {
     if (id === "") return;
     taskTimer.start(kind, id);
     taskTimer.areaEntered();
+    const hidden = () => taskTimer.areaLeft(area);
+    const shown = (event: PageTransitionEvent) => {
+      if (event.persisted) taskTimer.areaEntered();
+    };
+    window.addEventListener("pagehide", hidden);
+    window.addEventListener("pageshow", shown);
     return () => {
+      window.removeEventListener("pagehide", hidden);
+      window.removeEventListener("pageshow", shown);
       taskTimer.areaLeft(area);
       taskTimer.abandon(kind, id);
     };

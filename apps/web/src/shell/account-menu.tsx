@@ -28,9 +28,8 @@ const openHelp = () => window.dispatchEvent(new Event("help"));
 
 export const logOutUrl = "/api/auth/logout";
 
-type EntryText = ReturnType<typeof useLingui>["t"];
-
-function entriesFor(t: EntryText) {
+function useEntries() {
+  const { t } = useLingui();
   return [
     { icon: "gear", label: t`Settings`, href: destinations.settings("display"), keys: "⌘," },
     {
@@ -97,7 +96,7 @@ function ViewAs({ current }: { current: string | undefined }) {
 }
 
 export function AccountMenu({ me, person }: { me: Me | undefined; person: PersonInfo }) {
-  const { t } = useLingui();
+  const entries = useEntries();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const initialsOnly = useShell((state) => state.initialsOnly);
   const goTo = useGoTo();
@@ -126,7 +125,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
       onThemeChange={chooseTheme}
       initialsOnly={initialsOnly}
       onInitialsOnlyChange={(value) => shellStore.setState({ initialsOnly: value })}
-      entries={entriesFor(t).map(({ href, action, ...entry }) => ({
+      entries={entries.map(({ href, action, ...entry }) => ({
         ...entry,
         ...(href ? { onSelect: () => void goTo(href) } : {}),
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),

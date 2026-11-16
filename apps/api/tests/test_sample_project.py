@@ -141,7 +141,9 @@ def stored_sample(label: str) -> SampleFile:
 
     async def put(store: ObjectStore) -> None:
         await store.put_object(
-            f"{folder}restricted-ranges.json", b'{"ranges": []}', "application/json"
+            f"{folder}restricted-ranges.json",
+            b'{"ranges": [], "identifying": [], "barcode": []}',
+            "application/json",
         )
         await store.put_object(
             facts_key(label), facts.model_dump_json().encode(), "application/json"

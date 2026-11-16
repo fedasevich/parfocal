@@ -1,6 +1,6 @@
 # Data map
 
-Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnpm data-map:doc`. Classify a column where it is declared, never on this page. [ADR 0028](../adr/0028-data-classes-on-columns.md) explains the classes.
+Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm data-map:doc`. Classify a column where it is declared, never on this page. [ADR 0028](../adr/0028-data-classes-on-columns.md) explains the classes.
 
 | Class | Meaning |
 |---|---|
@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 47 |
-| `personal` | 91 |
+| `phi` | 48 |
+| `personal` | 93 |
 | `secret` | 11 |
-| `operational` | 769 |
+| `operational` | 791 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -485,6 +485,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `created_at` | operational |
 | `updated_at` | operational |
 
+## maintenance
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `message` | operational |
+| `started_at` | operational |
+| `expected_end_at` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## memberships
 
 | Column | Class |
@@ -614,6 +625,35 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `id` | operational |
 | `slug` | operational |
 | `name` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## painted_map_versions
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `painted_map_id` | operational |
+| `version` | operational |
+| `content` | operational |
+| `painted_cells` | operational |
+| `saved_by_user_id` | personal |
+| `saved_at` | operational |
+
+## painted_maps
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `slide_id` | operational |
+| `name` | phi |
+| `version` | operational |
+| `cell` | operational |
+| `tile_cells` | operational |
+| `painted_cells` | operational |
+| `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 

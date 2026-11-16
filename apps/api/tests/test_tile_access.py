@@ -102,7 +102,7 @@ def lab(database: str, storage: StorageLocation) -> Iterator[Lab]:
     owner(database, f"UPDATE slides SET format = 'generic-tiff' WHERE id = '{slide}'")
     bare = stored_slide(database, workspace.tenant_id, project, "A2")
     unstored = make_slide(database, workspace.tenant_id, project, "A3")
-    body = json.dumps({"ranges": RANGES}).encode()
+    body = json.dumps({"ranges": RANGES, "identifying": [], "barcode": []}).encode()
     key = restricted_ranges_key(workspace.tenant_id, slide)
     with_store(lambda store: store.put_object(key, body, "application/json"))
     with api_as(database) as api:

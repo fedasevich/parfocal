@@ -140,7 +140,37 @@ def test_the_real_migrations_form_one_chain_and_the_latest_only_adds() -> None:
     newest = migrations.head(revisions)
     assert newest is not None
     oldest = min(revisions)
-    assert [step.revision for step in migrations.pending(revisions, oldest)][-1] == newest.revision
-    assert len(migrations.pending(revisions, oldest)) == len(revisions) - 1
-    assert revisions["0110"].findings == ()
+    assert revisions[oldest].down_revision is None
+    later = [step.revision for step in migrations.pending(revisions, oldest)]
+    assert later == sorted(set(revisions) - {oldest})
+    assert newest.revision == (later or [oldest])[-1]
+    assert revisions[oldest].findings == ()
+    assert newest.findings == ()
     assert migrations.VERSIONS == REPOSITORY / "apps/api/migrations/versions"
+
+
+def test_a_function_body_that_deletes_is_not_run_by_the_migration() -> None:
+    body = (
+        "def upgrade() -> None:\n"
+        '    op.execute("""CREATE OR REPLACE FUNCTION purge() RETURNS void\n'
+        "    LANGUAGE sql AS $$ DELETE FROM slides WHERE stain IS NULL $$\n"
+        '    """)\n'
+    )
+    assert findings(body) == ()
+
+
+def test_a_do_block_that_deletes_is_still_found() -> None:
+    body = (
+        "def upgrade() -> None:\n"
+        '    op.execute("DO $$ BEGIN DELETE FROM slides WHERE stain IS NULL; END $$")\n'
+    )
+    assert findings(body) == ("DELETE FROM",)
+
+
+def test_sql_after_a_function_body_is_still_found() -> None:
+    body = (
+        "def upgrade() -> None:\n"
+        '    op.execute("CREATE FUNCTION f() RETURNS void LANGUAGE sql AS $body$ SELECT 1 $body$;'
+        ' TRUNCATE slides")\n'
+    )
+    assert findings(body) == ("TRUNCATE",)

@@ -497,8 +497,8 @@
     },
     {
       "id": "viewer.sidecar-open-ms",
-      "measures": "Opening an 11-level spread BigTIFF with its tile index sidecar and reading the coarsest tile, fastest of three runs",
-      "kind": "ms",
+      "measures": "Opening an 11-level spread BigTIFF with its tile index sidecar and reading the coarsest tile, fastest of three runs. Since TEST-043 CI checks only that the sidecar open takes at most half the time and half the requests of the walk it replaces, and logs the time, so this number is read from that log by hand",
+      "kind": "manual",
       "unit": "ms",
       "baseline": 346,
       "limit": 1000,

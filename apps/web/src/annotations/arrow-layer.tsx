@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import {
   minimumDragScreenPixels,
@@ -96,7 +97,7 @@ export function ArrowLayer({ engine, stage, active, document: doc, onApply }: Ar
     };
 
     const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
+      if (fingerPans(event) || event.button !== 0) return;
       event.stopImmediatePropagation();
       event.preventDefault();
       capturePointer(stage, event.pointerId);

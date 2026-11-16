@@ -28,3 +28,4 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | Evaluation metrics from decisions and reviewed layers | [evaluation.md](evaluation.md) |
 | shadcn components, kit tokens in Tailwind, Storybook and the axe suite | [frontend-ui.md](frontend-ui.md) |
 | Deploy definitions, the one-time bootstrap and what the first production deploy needs | [deploy.md](deploy.md) |
+| The nightly memory and leak suite, its budgets and the thresholds still to set | [memory-suite.md](memory-suite.md) |

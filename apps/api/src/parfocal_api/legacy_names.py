@@ -1,7 +1,5 @@
 from parfocal_api.audit import AuditAction
 
-OLD_REVIEW_TABLE = "verdicts"
-
 OLD_AUDIT_ACTIONS: dict[str, str] = {
     "review.verdict-set": AuditAction.REVIEW_OBJECT_DECIDED,
     "review.verdict-cleared": AuditAction.REVIEW_OBJECT_DECISION_CLEARED,

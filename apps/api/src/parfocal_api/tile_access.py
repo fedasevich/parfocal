@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import json
 import uuid
-from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
 from typing import Annotated, Any, cast
@@ -17,6 +17,7 @@ from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
+from parfocal_api.restricted_images import sees_restricted
 from parfocal_api.tables import PrivacyMode, projects, slides
 from parfocal_api.token_keys import decoded_key, usable_secret
 from parfocal_api.uploads import Settings
@@ -102,19 +103,44 @@ def continues_an_open(
     return same and claims["e"] + REFRESH_GRACE_SECONDS >= now
 
 
-def parsed_ranges(body: bytes) -> list[ByteRange]:
-    ranges = json.loads(body)["ranges"]
-    return [(int(start), int(end)) for start, end in ranges]
+@dataclass(frozen=True)
+class SlideRanges:
+    closed: list[ByteRange]
+    identifying: list[ByteRange] | None
+    barcode: list[ByteRange] | None
+
+    def served(
+        self, file_bytes: int, identifying: bool, barcode: bool
+    ) -> tuple[list[ByteRange], list[ByteRange]]:
+        wanted = [
+            spans
+            for spans, needed in ((self.identifying, identifying), (self.barcode, barcode))
+            if needed
+        ]
+        if any(spans is None for spans in wanted):
+            return [(0, file_bytes)], []
+        return self.closed, sorted(span for spans in wanted for span in spans or [])
 
 
-async def restricted_ranges(
-    store: ObjectStore, folder: str, file_bytes: int
-) -> Sequence[ByteRange]:
+def spans_of(value: Any) -> list[ByteRange]:
+    return [(int(start), int(end)) for start, end in value]
+
+
+def parsed_ranges(body: bytes) -> SlideRanges:
+    document = json.loads(body)
+    return SlideRanges(
+        spans_of(document["ranges"]),
+        spans_of(document["identifying"]) if "identifying" in document else None,
+        spans_of(document["barcode"]) if "barcode" in document else None,
+    )
+
+
+async def restricted_ranges(store: ObjectStore, folder: str, file_bytes: int) -> SlideRanges:
     try:
         return parsed_ranges(await store.get_object(f"{folder}{RESTRICTED_RANGES_NAME}"))
     except StorageError as error:
         if error.status == 404:
-            return [(0, file_bytes)]
+            return SlideRanges([(0, file_bytes)], [], [])
         raise
 
 
@@ -144,13 +170,9 @@ async def get_tile_access(
     ).one_or_none()
     if row is None:
         raise NotFoundError("Slide not found")
+    mode = PrivacyMode(row.privacy_mode)
     await require_slide_reading(
-        connection,
-        principal,
-        row.project_id,
-        PrivacyMode(row.privacy_mode),
-        slide_id,
-        "Slide not found",
+        connection, principal, row.project_id, mode, slide_id, "Slide not found"
     )
     if row.original_key is None or row.file_bytes is None:
         raise SlideFileNotFoundError
@@ -176,16 +198,21 @@ async def get_tile_access(
             tenant_id=row.tenant_id,
         )
     folder = folder_of(row.original_key)
-    ranges = await restricted_ranges(store, folder, row.file_bytes)
+    labels = await sees_restricted(connection, principal, row.project_id, mode)
+    closed, blank = (await restricted_ranges(store, folder, row.file_bytes)).served(
+        row.file_bytes, mode is not PrivacyMode.CLINICAL, not labels
+    )
     expires = now + TOKEN_SECONDS
     original = PurePosixPath(row.original_key).name
     claims = {
         **viewer,
         "o": original,
         "n": row.file_bytes,
-        "d": [list(span) for span in ranges],
+        "d": [list(span) for span in closed],
         "e": expires,
     }
+    if blank:
+        claims["b"] = [list(span) for span in blank]
     if folder != slide_prefix(row.tenant_id, slide_id):
         claims["p"] = folder
     return TileAccess(

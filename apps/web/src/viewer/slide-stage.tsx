@@ -52,9 +52,14 @@ import {
   useSavedAnnotations,
 } from "../annotations/use-saved-annotations.ts";
 import { provideDebug } from "../debug-handle.ts";
+import { createCameraInput } from "../devices/camera-input.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
+import { bindGamepadWhenConnected, deviceIntentEvent } from "../devices/gamepad-source.ts";
+import { dispatchIntentKey, steppedPreset } from "../devices/intent-keys.ts";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
+import { createPenDoubleTap, createToolHistory } from "../devices/pen-touch.ts";
+import { bindSpaceMouse, type HidLike, hasWebHid } from "../devices/spacemouse-source.ts";
 import { applyMainCalibration, mainCalibration } from "../devices/stage-calibration.ts";
 import { bindTrackpadListeners } from "../devices/trackpad-listeners.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
@@ -67,8 +72,10 @@ import { registerStageEngine } from "../presence/stage-engines.ts";
 import { AddResultSet } from "../results/add-result-set.tsx";
 import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
 import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
+import { PaintedMapLayer } from "../results/painted-map-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
+import { ViewMapLayer } from "../results/view-map-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
@@ -641,6 +648,24 @@ function OpenedSlide({
     return session.engine.subscribeCamera(mark);
   }, [session, hostNode]);
 
+  const toolHistory = useRef(createToolHistory<ViewerTool>(restingTool));
+  useEffect(() => {
+    toolHistory.current.select(tool);
+  }, [tool]);
+
+  useEffect(() => {
+    const surface = hostNode?.parentElement;
+    if (!surface) return;
+    const doubleTap = createPenDoubleTap();
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType !== "pen" || event.button !== 0 || event.buttons > 1) return;
+      const twice = doubleTap.tap({ at: event.timeStamp, x: event.clientX, y: event.clientY });
+      if (twice) setTool(toolHistory.current.swap());
+    };
+    surface.addEventListener("pointerdown", onDown, true);
+    return () => surface.removeEventListener("pointerdown", onDown, true);
+  }, [hostNode]);
+
   useEffect(() => {
     const surface = hostNode?.parentElement;
     if (session === null || !hostNode || !surface) return;
@@ -656,6 +681,65 @@ function OpenedSlide({
       },
     });
   }, [session, hostNode, chosenDevice, workspace]);
+
+  useEffect(() => {
+    if (session === null || typeof navigator === "undefined" || !("getGamepads" in navigator)) {
+      return;
+    }
+    const input = createCameraInput({
+      device: () => legendDeviceOf(chosenDevice),
+      context: () => (workspace === "annotate" ? "annotate" : "review"),
+      calibration: mainCalibration,
+      camera: session.engine,
+      onIntent: (intent) => {
+        if (intent.kind === "presetStep") {
+          const spacing = session.engine.getSlide()?.micronsPerPixel ?? null;
+          const current = session.module.effectiveMagnification(
+            session.engine.getCamera().zoom,
+            spacing,
+          );
+          if (current !== null) {
+            session.engine.zoomToMagnification(steppedPreset(current, intent.step));
+          }
+          return;
+        }
+        if (dispatchIntentKey(intent, window)) return;
+        window.dispatchEvent(new CustomEvent(deviceIntentEvent, { detail: intent }));
+      },
+    });
+    return bindGamepadWhenConnected(
+      input,
+      {
+        getPads: () => navigator.getGamepads(),
+        frames: {
+          request: (cb) => requestAnimationFrame(cb),
+          cancel: (id) => cancelAnimationFrame(id),
+        },
+        now: () => performance.now(),
+        focused: () => document.hasFocus() && document.visibilityState === "visible",
+      },
+      window,
+    );
+  }, [session, chosenDevice, workspace]);
+
+  useEffect(() => {
+    if (session === null || typeof navigator === "undefined" || !hasWebHid(navigator)) return;
+    const input = createCameraInput({
+      device: () => legendDeviceOf(chosenDevice),
+      context: () => (workspace === "annotate" ? "annotate" : "review"),
+      calibration: mainCalibration,
+      camera: session.engine,
+      onIntent: (intent) => {
+        window.dispatchEvent(new CustomEvent(deviceIntentEvent, { detail: intent }));
+      },
+    });
+    return bindSpaceMouse(input, {
+      hid: (navigator as unknown as { hid: HidLike }).hid,
+      now: () => performance.now(),
+      focused: () => document.hasFocus() && document.visibilityState === "visible",
+      rotation: () => readDeviceSettings().spaceMouseRotation === true,
+    });
+  }, [session, chosenDevice, workspace]);
 
   useEffect(() => {
     session?.engine.setSlideBrightness(brightness);
@@ -821,6 +905,12 @@ function OpenedSlide({
               slideId={slideId}
               choices={heatmapChoices}
             />
+            {workspace === "annotate" ? null : (
+              <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+            )}
+            {workspace === "annotate" ? null : (
+              <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+            )}
             {workspace === "annotate" ? (
               <RunStreamLayer
                 key={slideId}

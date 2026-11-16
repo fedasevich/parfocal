@@ -145,10 +145,11 @@ export function InspectorDock({
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 overflow-hidden [&>aside]:w-full!">{children}</div>
-        <div className="flex items-center gap-2 border-t border-l border-line bg-chrome px-3 py-1.5 text-caption text-fg-dim">
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+        <div className="flex items-center gap-2 border-t border-l border-line bg-chrome px-3 py-0.5 text-caption text-fg-dim">
+          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-1">
             <input
               type="checkbox"
+              className="m-0 size-6 shrink-0 cursor-pointer accent-(--accent-fill)"
               checked={layout.hideWhilePanning}
               onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
             />
