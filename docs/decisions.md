@@ -332,6 +332,9 @@ AITUM-000 (tumor map research check) kept the MONAI CAMELYON ResNet18 as the tum
 - **A. Accept the H-optimus-0 terms on your Hugging Face account and put a read token in `.env`, so a follow-up task downloads its weights (about 1.1B parameters, file size not stated) and the CAMELYON16 training slides it needs (size `TODO`, the disk is short), trains its probe and scores it on test slides on the Mac (recommended, Apache-2.0 and the only one that allows deployed use).**
 - B. Also request UNI2-h and Virchow2 with an institutional email, for a thesis comparison only.
 - C. No sign-in. The ResNet18 stays until a permissive model needs no form.
+
+Your choice:
+
 ### 126. Whether one interactive embedder container is enough
 
 AIP-007 (interactive priority gate) runs interactive embeddings in their own `embedder` pool with one container. In a local load test with a stand-in model, one or two people sending embeddings back to back while a whole-slide job ran stayed under 1 s, and four did not (worst call 1.37 s), because one GPU serves them one at a time ([result](results/2026-11-16-interactive-priority-gate-load-test.md)). A second container would take the worst case of all pools to 5.35 USD an hour, over the 5 USD hourly cap the pool check enforces, so it needs your yes.
