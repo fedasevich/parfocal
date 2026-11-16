@@ -6,10 +6,12 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
+from starlette.concurrency import run_in_threadpool
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.gpu_warm import gpu_pools_of
 from parfocal_api.hidden_models import refuse_hidden
 from parfocal_api.model_catalogue import BY_NAME
 from parfocal_api.model_runs import (
@@ -33,7 +35,9 @@ from parfocal_common.tumor_maps import (
     TumorMapInput,
     enqueue_tumor_map,
     input_of,
+    wake_tumor_map_pool,
 )
+from parfocal_common.warm_gate import Pools
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -79,6 +83,7 @@ async def start_tumor_map(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     probe: Annotated[WorkerProbe, Depends(probe_of)],
+    pools: Annotated[Pools, Depends(gpu_pools_of)],
 ) -> TumorMapJob:
     project = await visible(connection, principal, project_id)
     await require_controlling(connection, principal, project_id, project.archived_at is not None)
@@ -115,6 +120,7 @@ async def start_tumor_map(
             "model": f"{MODEL}@{MODEL_VERSION}",
         },
     )
+    await run_in_threadpool(wake_tumor_map_pool, pools)
     return TumorMapJob(
         job_id=job_id, result_set_id=set_id, slide_id=slide_id, status=JobStatus.QUEUED
     )

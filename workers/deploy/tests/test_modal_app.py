@@ -142,3 +142,4 @@ def test_the_served_api_warms_the_deployed_embedder_through_modal(
     assert isinstance(gate.pools, ModalPools)
     assert (gate.pools.app_name, gate.function_name) == (GPU_POOL_APP, EMBEDDER_FUNCTION)
     assert gate.pools.environment is None
+    assert served.state.gpu_pools is gate.pools

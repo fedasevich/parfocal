@@ -1,9 +1,10 @@
 import logging
+from typing import cast
 
 from fastapi import Request
 from starlette.concurrency import run_in_threadpool
 
-from parfocal_common.warm_gate import Device, Warm, WarmGate
+from parfocal_common.warm_gate import Device, Pools, Warm, WarmGate
 
 logger = logging.getLogger("parfocal.api.gpu_warm")
 
@@ -14,6 +15,11 @@ class NoGpuPools:
 
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
         return {}
+
+
+def gpu_pools_of(request: Request) -> Pools:
+    pools = getattr(request.app.state, "gpu_pools", None)
+    return NoGpuPools() if pools is None else cast("Pools", pools)
 
 
 def warm_gate_of(request: Request) -> WarmGate:

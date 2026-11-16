@@ -15,6 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 onnx = ["onnxruntime==1.31.1"]
 tumor = ["onnxruntime==1.31.1", "openslide-bin>=4.0.1,<5", "openslide-python>=1.4.6,<2"]
+pool = ["openslide-bin>=4.0.1,<5", "openslide-python>=1.4.6,<2"]
 export = [
     "onnx>=1.23.2,<1.24",
     "onnx-ir",
@@ -23,6 +24,9 @@ export = [
     "torch>=2.15,<2.16",
     "torchvision",
 ]
+
+[dependency-groups]
+gpu = ["onnxruntime-gpu==1.31.1; sys_platform == 'linux'"]
 
 [build-system]
 requires = ["uv_build>=0.13,<0.14"]

@@ -19,9 +19,13 @@ from parfocal_ml.priority_gate import Kind, check_lane
 APP_NAME = "parfocal-gpu-pool"
 PYTHON_VERSION = "3.14"
 CUDA_BASE = (
-    "nvidia/cuda:12.9.1-runtime-ubuntu24.04"
-    "@sha256:1287141d283b8f06f45681b56a48a85791398c615888b1f96bfb9fc981392d98"
+    "nvidia/cuda:13.3.1-cudnn-runtime-ubuntu24.04"
+    "@sha256:2c9730db1d78ce3a7503a2f4ff2d64add3e7d1a47d57da504376192dda335242"
 )
+DATABASE_SECRET = "parfocal-api-keys"
+STORAGE_SECRET = "parfocal-api-config"
+TUMOR_MAP_SECRETS = (DATABASE_SECRET, STORAGE_SECRET)
+VIEW_MAP_SECRETS = (STORAGE_SECRET,)
 LOCK_PATH = "workers/deploy/locks/ml.txt"
 UV_VERSION = "0.13.8"
 LOCKED_INSTALL_OPTIONS = "--require-hashes --no-deps"
@@ -70,6 +74,14 @@ def view_map_runner(call: Mapping[str, object]) -> Mapping[str, object]:
     return answer_view_map(call)
 
 
+def secret_names(pool: PoolLimits) -> tuple[str, ...]:
+    if pool.family is TUMOR_MAP_FAMILY:
+        return TUMOR_MAP_SECRETS
+    if pool.family is VIEW_MAP_FAMILY:
+        return VIEW_MAP_SECRETS
+    return ()
+
+
 def default_runners(pool: PoolLimits) -> dict[str, Runner]:
     if pool.family is TUMOR_MAP_FAMILY:
         return {Kind.TUMOR_MAP: tumor_map_runner(pool)}
@@ -108,7 +120,10 @@ def build_app(
     functions: dict[str, modal.Function] = {}
     for pool in pools:
         entry = modal.concurrent(**concurrency_options(pool))(pool_entry(pool))
-        functions[pool.function_name] = app.function(**function_options(pool))(entry)
+        secrets = [modal.Secret.from_name(name) for name in secret_names(pool)]
+        functions[pool.function_name] = app.function(**function_options(pool), secrets=secrets)(
+            entry
+        )
     return app, functions
 
 

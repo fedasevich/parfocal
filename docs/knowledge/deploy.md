@@ -93,6 +93,17 @@ Nothing was deployed by OPS-002. The lead runs the first deploy with the owner, 
 4. A choice of email, error and analytics backends, because `APP_ENV=prod` refuses to start without real keys or an explicit override.
 5. One bootstrap run, then the `Deploy` workflow.
 
+## The tumor map pool's first deploy
+
+AITUM-011 (the tumor map pool is ready to deploy) left the pool ready and undeployed, because the train branch it was built on carried other unmerged work. The first `Deploy` run after that branch merges does this, with no extra step:
+
+1. `modal deploy -m parfocal_ml.modal_pool` rebuilds the shared pool image on `nvidia/cuda:13.3.1-cudnn-runtime-ubuntu24.04` pinned by digest, with `onnxruntime-gpu` 1.31.1 and OpenSlide from `workers/deploy/locks/ml.txt`. Modal's hosts run CUDA Driver API 13.3, so the tag must not pass 13.3. Every pool cold-starts on the bigger image afterwards.
+2. The `detector_good` function starts reading the secrets `parfocal-api-keys` and `parfocal-api-config`, and the `embedder` function, for view maps, reads `parfocal-api-config` alone. Bootstrap already writes both ([ADR XXXX](../adr/XXXX-the-tumor-map-pool-runs-cuda-13-and-reuses-the-api-secrets.md), the tumor map pool runs CUDA 13 and reuses the API secrets).
+3. The `web` function spawns `detector_good` with `{"kind": "tumor-map"}` each time someone starts a tumor map. Nothing runs before that, and the container exits 30 s after the queue empties.
+4. The first call fetches `models/camelyon-tumor/v1.0/model.onnx` from `parfocal-dev`, published on 2026-11-16 and checked against the local export ([result](../results/2026-11-16-camelyon-tumor-artifact-published.md)).
+
+After the deploy, start one map on a small SVS from the app and read `modal app logs parfocal-gpu-pool`. A `NoCudaError` means the image has no working CUDA provider, so the job fails instead of scoring on the CPU while the T4 is billed. TODO: the T4 cold start with this image, its seconds per tile and its GPU memory are not measured yet. Log the first run's cost.
+
 ## The shared bucket
 
 The deployed app reads and writes the existing bucket `parfocal-dev`, the only slide store until OPS-014 (prepare production for the first real user) moves production to `parfocal-prod`. `slide_bucket` in `environments.py` is the single setting to change. Local runs use MinIO and the bucket `parfocal-local` by default, so they stay off the deployed objects. Two things do reach `parfocal-dev` from a Mac: checks that use the `R2_*` settings, and `wrangler dev --remote` with the top-level binding. Give such checks their own key prefix and delete what they wrote.

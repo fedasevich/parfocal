@@ -28,7 +28,8 @@ from parfocal_ml.tumor_map_job import tumor_map_workflow
 WEIGHTS_NAME = "model.onnx"
 LOCAL_WEIGHTS = "camelyon-tumor.onnx"
 INPUT_NAME = "pixels"
-PROVIDERS = ("CUDAExecutionProvider", "CPUExecutionProvider")
+CUDA_PROVIDER = "CUDAExecutionProvider"
+PROVIDERS = (CUDA_PROVIDER, "CPUExecutionProvider")
 DEFAULT_IDLE_EXIT_SECONDS = 30.0
 DEFAULT_POLL_SECONDS = 1.0
 STORAGE_TIMEOUT_SECONDS = 60.0
@@ -39,14 +40,24 @@ def local_weights(folder: Path | None = None) -> Path | None:
     return path if path.is_file() else None
 
 
+class NoCudaError(RuntimeError):
+    pass
+
+
+def refuse_cpu_on_a_gpu(providers: tuple[str, ...], gpu: str | None) -> None:
+    if gpu is not None and CUDA_PROVIDER not in providers:
+        raise NoCudaError(f"the {gpu} pool runs the tumor model on {', '.join(providers)}")
+
+
 class OnnxTumorScorer:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, gpu: str | None = None) -> None:
         import onnxruntime as ort
 
         available = set(ort.get_available_providers())
         chosen = [provider for provider in PROVIDERS if provider in available]
         self.session = ort.InferenceSession(str(path), providers=chosen)
         self.providers = tuple(self.session.get_providers())
+        refuse_cpu_on_a_gpu(self.providers, gpu)
 
     def score(self, rgb: Rgb) -> NDArray[np.float32]:
         scaled = rgb.astype(np.float32) / 127.5 - 1.0
@@ -110,10 +121,12 @@ async def drained_from_storage(
         )
 
 
-async def fetched_scorer(storage: ObjectStore, folder: Path) -> OnnxTumorScorer:
+async def fetched_scorer(
+    storage: ObjectStore, folder: Path, gpu: str | None = None
+) -> OnnxTumorScorer:
     weights = folder / WEIGHTS_NAME
     await ModelArtifacts(storage).fetch(MODEL, MODEL_VERSION, WEIGHTS_NAME, weights)
-    return OnnxTumorScorer(weights)
+    return OnnxTumorScorer(weights, gpu)
 
 
 async def drained_from_environment(call: Mapping[str, object], gpu: str | None) -> int:
@@ -123,7 +136,7 @@ async def drained_from_environment(call: Mapping[str, object], gpu: str | None) 
         async with httpx2.AsyncClient(timeout=STORAGE_TIMEOUT_SECONDS) as http:
             storage = ObjectStore(location, http)
             with tempfile.TemporaryDirectory() as folder:
-                scorer = await fetched_scorer(storage, Path(folder))
+                scorer = await fetched_scorer(storage, Path(folder), gpu)
                 return await drained_from_storage(engine, storage, scorer, call, gpu)
     finally:
         await engine.dispose()

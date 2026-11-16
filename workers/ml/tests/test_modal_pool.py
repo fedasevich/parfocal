@@ -4,18 +4,24 @@ from dataclasses import replace
 
 import pytest
 
-from parfocal_ml.gpu_pool import POOLS, PoolLimitError, cpu_stand_in
+from parfocal_common.tumor_maps import POOL_FUNCTION, drain_call, wake_tumor_map_pool
+from parfocal_ml.gpu_pool import POOLS, Family, PoolLimitError, cpu_stand_in
 from parfocal_ml.modal_pool import (
     APP_NAME,
+    DATABASE_SECRET,
+    STORAGE_SECRET,
+    TUMOR_MAP_SECRETS,
+    VIEW_MAP_SECRETS,
     app,
     build_app,
     default_runners,
     pool_entry,
     pool_functions,
+    secret_names,
 )
-from parfocal_ml.priority_gate import Kind
+from parfocal_ml.priority_gate import Kind, accepts
 from parfocal_ml.tumor_map_job import POOL_FAMILY
-from parfocal_ml.tumor_map_worker import Drain, drain_of
+from parfocal_ml.tumor_map_worker import Drain, NoCudaError, drain_of, refuse_cpu_on_a_gpu
 
 
 def test_the_app_registers_one_function_per_family() -> None:
@@ -63,3 +69,46 @@ def test_a_drain_call_reads_its_idle_exit_poll_and_tenant() -> None:
     call = {"idle_exit_seconds": 2, "poll_seconds": 0.5, "tenant_id": str(tenant)}
     assert drain_of(call) == Drain(2.0, 0.5, tenant)
     assert drain_of({"idle_exit_seconds": "soon"}) == Drain()
+
+
+def test_the_api_wakes_the_pool_that_runs_tumor_maps_with_a_call_it_accepts() -> None:
+    pool = next(pool for pool in POOLS if pool.family is POOL_FAMILY)
+    assert pool.function_name == POOL_FUNCTION
+    assert drain_call()["kind"] == Kind.TUMOR_MAP
+    assert accepts(pool, str(drain_call()["kind"]))
+    assert drain_of(drain_call()) == Drain()
+
+
+def test_the_tumor_map_pool_reads_the_database_and_the_view_map_pool_only_storage() -> None:
+    held = {pool.family: secret_names(pool) for pool in POOLS if secret_names(pool)}
+    assert held == {POOL_FAMILY: TUMOR_MAP_SECRETS, Family.EMBEDDER: VIEW_MAP_SECRETS}
+    assert VIEW_MAP_SECRETS == (STORAGE_SECRET,)
+    assert DATABASE_SECRET in TUMOR_MAP_SECRETS
+
+
+class Pools:
+    def __init__(self, fails: bool) -> None:
+        self.fails = fails
+        self.spawned: list[tuple[str, dict[str, object]]] = []
+
+    def spawn(self, function_name: str, call: dict[str, object]) -> None:
+        self.spawned.append((function_name, call))
+        if self.fails:
+            raise ConnectionError("the pool app is not deployed")
+
+    def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        raise AssertionError("waking never waits for a reply")
+
+
+def test_waking_the_pool_reports_a_failed_spawn_instead_of_raising() -> None:
+    working, broken = Pools(fails=False), Pools(fails=True)
+    assert wake_tumor_map_pool(working)
+    assert not wake_tumor_map_pool(broken)
+    assert working.spawned == broken.spawned == [(POOL_FUNCTION, {"kind": "tumor-map"})]
+
+
+def test_a_gpu_pool_refuses_to_score_on_the_cpu() -> None:
+    refuse_cpu_on_a_gpu(("CUDAExecutionProvider", "CPUExecutionProvider"), "T4")
+    refuse_cpu_on_a_gpu(("CPUExecutionProvider",), None)
+    with pytest.raises(NoCudaError, match="T4"):
+        refuse_cpu_on_a_gpu(("CPUExecutionProvider",), "T4")

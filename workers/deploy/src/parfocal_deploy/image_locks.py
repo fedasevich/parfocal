@@ -25,11 +25,13 @@ class ImageLock:
     path: str
     packages: tuple[str, ...]
     extras: tuple[str, ...] = ()
+    groups: tuple[str, ...] = ()
 
     def export_command(self) -> list[str]:
         selected = [flag for package in self.packages for flag in ("--package", package)]
         extras = [flag for extra in self.extras for flag in ("--extra", extra)]
-        return ["uv", "export", *EXPORT_FLAGS, *selected, *extras]
+        groups = [flag for group in self.groups for flag in ("--group", group)]
+        return ["uv", "export", *EXPORT_FLAGS, *selected, *extras, *groups]
 
     def install(self, base: modal.Image, repository: Path = REPOSITORY) -> modal.Image:
         return base.uv_pip_install(
@@ -42,7 +44,9 @@ class ImageLock:
 APP_LOCK = ImageLock(
     "workers/deploy/locks/app.txt", ("parfocal-api", "parfocal-ingest"), extras=("pdf",)
 )
-ML_LOCK = ImageLock("workers/deploy/locks/ml.txt", ("parfocal-ml",))
+ML_LOCK = ImageLock(
+    "workers/deploy/locks/ml.txt", ("parfocal-ml",), extras=("pool",), groups=("gpu",)
+)
 LOCKS = (APP_LOCK, ML_LOCK)
 
 

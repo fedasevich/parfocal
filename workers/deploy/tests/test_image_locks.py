@@ -19,7 +19,7 @@ from parfocal_deploy.image_locks import (
     pinned,
     stale,
 )
-from parfocal_deploy.modal_app import PROJECTS, project_requirements
+from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, PROJECTS, project_requirements
 from parfocal_ml import modal_pool
 
 
@@ -68,6 +68,23 @@ def test_the_ml_image_reads_the_ml_lock_with_the_same_installer() -> None:
     assert modal_pool.LOCKED_INSTALL_OPTIONS == LOCKED_INSTALL_OPTIONS
     assert "@sha256:" in modal_pool.CUDA_BASE
     assert "torch" not in pinned(committed(ML_LOCK))
+
+
+def test_the_ml_image_runs_the_tumor_model_on_cuda_and_reads_slides_with_openslide() -> None:
+    locked = pinned(committed(ML_LOCK))
+    assert {"onnxruntime-gpu", "openslide-bin", "openslide-python"} <= set(locked)
+    assert "onnxruntime" not in locked
+    assert (ML_LOCK.extras, ML_LOCK.groups) == (("pool",), ("gpu",))
+    assert ML_LOCK.export_command()[-4:] == ["--extra", "pool", "--group", "gpu"]
+    runtime = locked["onnxruntime-gpu"]
+    assert f"onnxruntime-gpu=={runtime} ; sys_platform == 'linux'" in committed(ML_LOCK)
+    assert "-cudnn-runtime-" in modal_pool.CUDA_BASE
+    assert modal_pool.CUDA_BASE.startswith("nvidia/cuda:13.")
+
+
+def test_the_tumor_map_pool_reads_the_secrets_bootstrap_writes() -> None:
+    assert modal_pool.DATABASE_SECRET == KEYS_SECRET
+    assert modal_pool.STORAGE_SECRET == CONFIG_SECRET
 
 
 def test_the_check_command_fails_on_drift(monkeypatch: pytest.MonkeyPatch) -> None:

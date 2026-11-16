@@ -1,3 +1,4 @@
+import logging
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -6,8 +7,12 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_common.jobs import Claimed, Step, StepFunction, StepRun, Workflow, enqueue
+from parfocal_common.warm_gate import Pools
+
+logger = logging.getLogger("parfocal.tumor_maps")
 
 KIND = "tumor-map"
+POOL_FUNCTION = "detector_good"
 SCORED = "map-scored"
 STORED = "map-stored"
 STEPS = (SCORED, STORED)
@@ -70,3 +75,16 @@ async def enqueue_tumor_map(
     job_input: TumorMapInput,
 ) -> uuid.UUID:
     return await enqueue(connection, PLAN, tenant_id, project_id, job_input.described())
+
+
+def drain_call() -> dict[str, object]:
+    return {"kind": KIND}
+
+
+def wake_tumor_map_pool(pools: Pools) -> bool:
+    try:
+        pools.spawn(POOL_FUNCTION, drain_call())
+    except Exception as error:
+        logger.warning("tumor map pool spawn failed: %s", type(error).__name__)
+        return False
+    return True

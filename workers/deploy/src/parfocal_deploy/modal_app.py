@@ -72,7 +72,9 @@ def serve() -> Any:
     from parfocal_common.warm_gate import ModalPools, WarmGate
 
     app = create_app()
-    app.state.warm_gate = WarmGate(ModalPools())
+    pools = ModalPools()
+    app.state.gpu_pools = pools
+    app.state.warm_gate = WarmGate(pools)
     return app
 
 
