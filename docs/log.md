@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-16
 
+- SEC-014 The restore check and object recovery tests need Postgres and MinIO, so they are marked db and run in the db job. The deploy worker's unit line coverage without them is 70.36 percent, so its minimum moved from 77 to 70, since the db job does not feed the coverage gate.
 - INGEST-029 Production touch 2026-11-16 at the owner's request in chat: the lead added the Account API Tokens Write permission to the parfocal-tofu token in the dashboard, then a targeted tofu apply of the dev root created only cloudflare_account_token.fixtures_reader (parfocal-fixtures-read, 1 added, 0 changed, 0 destroyed, cost 0). Its two outputs went into the owner's .env as PARFOCAL_FIXTURES_R2_*. Listing parfocal-dev/fixtures/ with it returned 200 and a PUT to tmp/ returned 403 AccessDenied, so nothing was written. CI wiring of the key is left for a later task.
 - AINUC-011 Decision 135 Other: no one-hour target, quality and use of Modal GPUs come first. The measured 2.56 hours on one L4 before the tissue skip stands as the recorded time.
 - AIP-000 Decision 47 answered and ADR 0202 accepted, so the lead ticks it.
