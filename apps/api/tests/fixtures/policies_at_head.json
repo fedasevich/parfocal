@@ -65,6 +65,7 @@
     "slide_coverage",
     "slides",
     "specimens",
+    "sso_connections",
     "stage_throughput",
     "study_template_versions",
     "study_templates",
@@ -311,6 +312,24 @@
       true,
       "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
       "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      []
+    ],
+    [
+      "sso_connections",
+      "platform_read",
+      "r",
+      true,
+      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text))",
+      null,
+      []
+    ],
+    [
+      "sso_connections",
+      "platform_write",
+      "*",
+      true,
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
       []
     ],
     [

@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Protocol
 
-from sqlalchemy import func, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, record
@@ -15,6 +15,7 @@ from parfocal_api.tables import (
     TenantKind,
     TenantStatus,
     organisations,
+    sso_connections,
     tenants,
 )
 from parfocal_common.db import DatabaseScope, scoped_transaction
@@ -136,6 +137,9 @@ async def deprovision(
                 suspended_at=func.coalesce(tenants.c.suspended_at, func.now()),
             )
             .returning(tenants.c.slug)
+        )
+        await connection.execute(
+            delete(sso_connections).where(sso_connections.c.tenant_id == tenant_id)
         )
     if slug is None:
         raise LookupError(f"tenant {tenant_id} does not exist")
