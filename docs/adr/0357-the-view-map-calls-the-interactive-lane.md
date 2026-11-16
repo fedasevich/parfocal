@@ -1,4 +1,4 @@
-# XXXX. The view map asks the interactive lane for one view tile at a time
+# 0357. The view map asks the interactive lane for one view tile at a time
 
 - Date: 2026-11-16
 - Status: Accepted
