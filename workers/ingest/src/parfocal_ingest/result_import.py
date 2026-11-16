@@ -59,6 +59,7 @@ from parfocal_common.result_imports import (
     source_key,
 )
 from parfocal_common.result_store import MissingObjectError, ObjectResultStore
+from parfocal_ingest import result_wire
 from parfocal_ingest.cell_import import (
     NAME_LENGTH,
     CellCollector,
@@ -78,10 +79,10 @@ from parfocal_ingest.import_checks import (
     TissueCells,
     accepted_guess,
     heatmap_problems,
-    heatmap_values,
     problems_of,
     stored_values,
 )
+from parfocal_ingest.isolation import JobScope, output_folder, parse_isolated
 from parfocal_ingest.json_stream import JsonArray
 from parfocal_ingest.matching import Known, Matching, cell_distance, match_regions, pair_centres
 from parfocal_ingest.results import (
@@ -646,9 +647,48 @@ async def store_heatmap(context: Context, values: NDArray[Any], guess: Guess) ->
     return {"result_set_id": str(set_id), "heatmap": facts, "notices": []}
 
 
-async def check_heatmap(context: Context, path: Path, setting: Setting) -> Mapping[str, Any]:
+async def isolated(context: Context, parser: str, arguments: Mapping[str, Any]) -> Path:
+    row = context.upload.row
+    out = await asyncio.to_thread(output_folder, context.folder, "parse")
+
+    async def fetcher(_key: str) -> Path:
+        return await fetch(context)
+
+    try:
+        await parse_isolated(
+            f"{result_wire.__name__}:{parser}",
+            {"key": row.object_key, "out": str(out), **arguments},
+            JobScope(row.tenant_id, None, (row.object_key,)),
+            fetcher,
+            context.folder,
+            context.resources.parse_limits,
+            context.resources.parse_tokens,
+        )
+    except StepFailedError as failure:
+        raise StepFailedError(result_wire.wire_unreadable(failure.code)) from None
+    return out
+
+
+async def isolated_read(context: Context, setting: Setting) -> tuple[Parsed, Tally]:
+    arguments = {
+        "format": context.upload.row.result_format,
+        "frame": msgspec.to_builtins(setting.frame),
+        "choices": msgspec.to_builtins(setting.choices),
+    }
+    out = await isolated(context, "parse_results", arguments)
+    facts, shapes, cells = await asyncio.to_thread(result_wire.read_parse, out)
+    model = Model(facts.model.name, facts.model.version, facts.model.run_at)
+    parsed = Parsed(
+        facts.format, shapes, cells, facts.skipped, facts.unreadable, model, facts.declared_classes
+    )
+    facts.tally.frame = setting.frame
+    return parsed, facts.tally
+
+
+async def check_heatmap(context: Context, setting: Setting) -> Mapping[str, Any]:
     upload = context.upload.row
-    values = await asyncio.to_thread(heatmap_values, path, upload.file_name)
+    out = await isolated(context, "parse_heatmap", {"file_name": upload.file_name})
+    values = await asyncio.to_thread(result_wire.heatmap_from, out)
     if upload.import_choices is not None:
         level = cast("dict[str, Any]", upload.import_choices).get("heatmap_level")
         guess = accepted_guess(upload.import_problems, level)
@@ -665,12 +705,9 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         return {"result_set_id": str(upload.result_set_id), "notices": []}
     async with context.step.transaction() as connection:
         setting = await setting_of(connection, upload)
-    path = await fetch(context)
     if upload.result_format == ResultFormat.HEATMAP:
-        return await check_heatmap(context, path, setting)
-    parsed, tally = await asyncio.to_thread(
-        read_checked, path, upload.result_format, setting.frame, setting.choices
-    )
+        return await check_heatmap(context, setting)
+    parsed, tally = await isolated_read(context, setting)
     objects_to_import(parsed)
     if tally.all_outside:
         raise StepFailedError(ImportFailure.OUTSIDE_SLIDE)
