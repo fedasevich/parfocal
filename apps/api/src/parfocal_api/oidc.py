@@ -70,13 +70,18 @@ class OidcClient:
         return self._discovery
 
     async def authorization_url(
-        self, state: str, nonce: str, code_challenge: str, prompt: str | None = None
+        self,
+        state: str,
+        nonce: str,
+        code_challenge: str,
+        prompt: str | None = None,
+        extra_scopes: tuple[str, ...] = (),
     ) -> str:
         parameters = {
             "client_id": self.client_id,
             "redirect_uri": self.redirect_uri,
             "response_type": "code",
-            "scope": SCOPES,
+            "scope": " ".join((SCOPES, *extra_scopes)),
             "state": state,
             "nonce": nonce,
             "code_challenge": code_challenge,

@@ -33,6 +33,7 @@ from parfocal_api.problems import (
     UnauthenticatedError,
 )
 from parfocal_api.rate_limits import RateLimits, seconds_to_wait
+from parfocal_api.sso import connection_for_domain, provision_member, sso_connection_of
 from parfocal_api.tables import (
     AVATAR_COLOURS,
     DEFAULT_IDLE_LOCK_MINUTES,
@@ -363,6 +364,7 @@ def avatar_colour_of(subject: str) -> int:
 
 
 SEEDED_SUBJECT_PREFIX = "seed:"
+NO_SSO_CONNECTION_PATH = "/sign-in?sso=none"
 
 
 async def adopt_seeded_user(connection: AsyncConnection, subject: str, email: str) -> None:
@@ -378,6 +380,9 @@ async def adopt_seeded_user(connection: AsyncConnection, subject: str, email: st
 async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> uuid.UUID | None:
     subject = str(claims["sub"])
     email = claims.get("email") if claims.get("email_verified") is True else None
+    sso = await sso_connection_of(connection, claims)
+    if sso is not None and email is not None and not sso.vouches_for(str(email)):
+        email = None
     name = str(claims.get("name") or email or "New user")
     if email is not None:
         await adopt_seeded_user(connection, subject, str(email))
@@ -400,6 +405,11 @@ async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> u
         AuditTarget.PERSON,
         person=subject,
     )
+    if sso is not None:
+        assert isinstance(user_id, uuid.UUID)
+        provisioned = await provision_member(connection, sso, user_id, subject, claims)
+        if provisioned is not None:
+            return provisioned
     last_tenant = await connection.scalar(
         select(memberships.c.tenant_id)
         .join(users, users.c.id == memberships.c.user_id)
@@ -477,9 +487,11 @@ async def open_session(
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.get("/login", include_in_schema=False)
-async def start_login(
-    request: Request, return_to: str = "/", reauth: bool = False
+async def redirect_to_identity(
+    request: Request,
+    return_to: str,
+    prompt: str | None = None,
+    extra_scopes: tuple[str, ...] = (),
 ) -> RedirectResponse:
     state = auth_state(request)
     login_state = secrets.token_urlsafe(32)
@@ -499,11 +511,27 @@ async def start_login(
             )
         )
     url = await state.identity.authorization_url(
-        login_state, nonce, code_challenge(verifier), prompt="login" if reauth else None
+        login_state, nonce, code_challenge(verifier), prompt=prompt, extra_scopes=extra_scopes
     )
     response = RedirectResponse(url, status_code=302)
     set_cookie(response, LOGIN_COOKIE, binding, int(LOGIN_LIFETIME.total_seconds()), "lax")
     return response
+
+
+@router.get("/login", include_in_schema=False)
+async def start_login(
+    request: Request, return_to: str = "/", reauth: bool = False
+) -> RedirectResponse:
+    return await redirect_to_identity(request, return_to, prompt="login" if reauth else None)
+
+
+@router.get("/sso", include_in_schema=False)
+async def start_sso_login(request: Request, domain: str, return_to: str = "/") -> RedirectResponse:
+    async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as connection:
+        sso = await connection_for_domain(connection, domain)
+    if sso is None:
+        return RedirectResponse(NO_SSO_CONNECTION_PATH, status_code=302)
+    return await redirect_to_identity(request, return_to, extra_scopes=sso.scopes())
 
 
 @router.get("/callback", include_in_schema=False)

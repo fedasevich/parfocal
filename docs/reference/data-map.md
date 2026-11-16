@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `phi` | 48 |
 | `personal` | 93 |
 | `secret` | 11 |
-| `operational` | 791 |
+| `operational` | 799 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1163,6 +1163,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
+
+## sso_connections
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `idp_organisation_id` | operational |
+| `idp_id` | operational |
+| `email_domains` | operational |
+| `default_role` | operational |
+| `group_roles` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## stage_throughput
 

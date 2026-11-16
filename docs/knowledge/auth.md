@@ -49,6 +49,17 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 - The self-hosted image needs `ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false` to run without the separate login container.
 - Moving the live apps into the module needs `moved` blocks. Deleting `zitadel.tf` without them destroys the production app.
 
+## Per-workspace SAML sign-in
+
+[ADR 0347](../adr/0347-per-workspace-saml-sso-through-zitadel.md) (per-workspace SAML sign-in) has the design. `tenant_command connect-saml` configures the workspace's Zitadel organisation and `sso_connections`, `/api/auth/sso?domain=` starts the flow, and `parfocal_api.sso` turns the token into a membership. Lessons from the spike on Zitadel v4.20.3:
+
+- The hosted login (version 1) takes SAML responses at `{issuer}/ui/login/login/externalidp/saml/acs`. The `/idps/<id>/saml/acs` address in the SP metadata belongs to the version 2 intent flow and answers `Errors.Intent.NotStarted`. The SP entity id is `{issuer}/idps/<id>/saml/metadata`.
+- An IdP that sends a transient NameID, like SimpleSAMLphp, needs `transientMappingAttributeName`, or the login stops with `Errors.Intent.MissingSingleMappingAttribute`.
+- A custom login policy with zero check lifetimes sends the browser back to the IdP forever.
+- Without an Action that sets the profile, auto-creation stops at a registration form. Metadata written with `api.v1.user.appendMetadata` arrives in the ID token as base64url JSON under `urn:zitadel:iam:user:metadata`.
+- User names are unique across the instance, so a second organisation cannot auto-create a user name that exists elsewhere (`unique_constraints_pkey` in the Zitadel log).
+- `apps/e2e/tests/sso.spec.ts` runs the test IdP on `PARFOCAL_SAML_IDP_PORT` (default 8091) and provisions and deprovisions its own workspace.
+
 ## Row-level security skips rows silently
 
 An `UPDATE` that row-level security filters out changes nothing and raises nothing, so a route can answer 200 while nothing was written. Workspace settings that members may change belong in a tenant-owned table such as `session_policies`, never in `tenants`, which only the platform scope writes. Tests should read a change back. Source: IAM-009 log entry.

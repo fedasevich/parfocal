@@ -19,7 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from parfocal_api.tables.base import (
     ADMIN_RIGHTS_CHECK,
@@ -453,4 +453,32 @@ session_policies = Table(
     CheckConstraint("idle_lock_minutes BETWEEN 1 AND 240", name="idle_lock_minutes"),
     CheckConstraint("session_hours BETWEEN 1 AND 24", name="session_hours"),
     CheckConstraint("emergency_hours BETWEEN 1 AND 24", name="emergency_hours"),
+)
+
+sso_connections = Table(
+    "sso_connections",
+    metadata,
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column("idp_organisation_id", String(64), nullable=False, unique=True, info=OPERATIONAL),
+    Column("idp_id", String(64), nullable=False, info=OPERATIONAL),
+    Column("email_domains", ARRAY(String(253)), nullable=False, info=OPERATIONAL),
+    Column("default_role", String(30), nullable=True, info=OPERATIONAL),
+    Column(
+        "group_roles",
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        info=OPERATIONAL,
+    ),
+    *timestamps(),
+    CheckConstraint(
+        "default_role IS NULL OR default_role IN ('researcher', 'reviewer')", name="default_role"
+    ),
+    CheckConstraint("cardinality(email_domains) > 0", name="email_domains"),
 )
