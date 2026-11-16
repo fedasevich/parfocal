@@ -33,10 +33,10 @@ test("single sign-on comes first when the email domain matches and moves down wh
   await page.goto("/sign-in");
   const sso = page.getByRole("button", { name: "Continue with FN Vltava single sign-on" });
   await expect(sso).toBeVisible();
-  await expect(page.getByRole("button", { name: "Use single sign-on instead" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sign in with your organisation" })).toHaveCount(0);
   await typeEmail(page, outsideEmail);
   await expect(sso).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Use single sign-on instead" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in with your organisation" })).toBeVisible();
   await typeEmail(page, "lenka@FNVltava.example");
   await sso.click();
   await expect(page).toHaveURL(slideUrl);
@@ -47,7 +47,7 @@ test("an email outside every institution picks one by hand and goes through sing
 }) => {
   await page.goto("/sign-in");
   await typeEmail(page, outsideEmail);
-  await page.getByRole("button", { name: "Use single sign-on instead" }).click();
+  await page.getByRole("button", { name: "Sign in with your organisation" }).click();
   await expect(page.getByRole("heading", { name: "Continue with your institution" })).toBeVisible();
   await expect(page.getByText("Matches your email")).toHaveCount(0);
   await page.getByRole("textbox", { name: "Institution or email domain" }).fill("cuni");

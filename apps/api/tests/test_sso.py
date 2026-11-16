@@ -82,9 +82,11 @@ def test_sso_sends_the_browser_straight_to_the_workspace_idp(browser: Browser) -
 
 
 def test_an_unknown_domain_goes_back_to_sign_in(browser: Browser) -> None:
-    started = browser.client.get("/api/auth/sso", params={"domain": "nobody.example.test"})
+    started = browser.client.get(
+        "/api/auth/sso", params={"domain": "nobody.example.test", "return_to": "/projects"}
+    )
     assert started.status_code == 302
-    assert started.headers["location"] == "/sign-in?sso=none"
+    assert started.headers["location"] == "/sign-in?sso=none&return_to=%2Fprojects"
 
 
 def test_the_first_sso_login_makes_a_member_with_the_mapped_role(browser: Browser) -> None:
@@ -190,3 +192,63 @@ def test_groups_are_read_from_the_metadata_claim(
     claims: dict[str, object], groups: list[str]
 ) -> None:
     assert groups_of(claims) == groups
+
+
+def password_account(browser: Browser, email: str, verified: bool = True) -> str:
+    subject = f"password-{uuid.uuid4().hex[:10]}"
+    browser.idp.subject = subject
+    browser.idp.claim_overrides = {"email": email, "email_verified": verified}
+    assert browser.login().status_code == 200
+    browser.client.cookies.clear()
+    browser.idp.subject = f"sso-{uuid.uuid4().hex[:10]}"
+    return subject
+
+
+def session_subject(browser: Browser) -> object:
+    return browser.session().json()["subject"]
+
+
+def test_a_password_account_with_the_same_verified_email_is_linked(browser: Browser) -> None:
+    tenant_id, organisation, domain = make_connection(browser)
+    email = f"lin@{domain}"
+    account = password_account(browser, email.upper())
+    sso_subject = browser.idp.subject
+    as_sso_user(browser, organisation, email, [])
+    assert sso_login(browser, domain).status_code == 200
+    assert session_subject(browser) == account
+    assert browser.sql(f"SELECT count(*) FROM users WHERE lower(email) = '{email}'") == [(1,)]
+    assert browser.sql(
+        "SELECT m.role FROM memberships m JOIN users u ON u.id = m.user_id "
+        f"WHERE u.subject = '{account}' AND m.tenant_id = '{tenant_id}'"
+    ) == [("researcher",)]
+    assert browser.sql(
+        f"SELECT sso_tenant_id::text FROM linked_subjects WHERE subject = '{sso_subject}'"
+    ) == [(tenant_id,)]
+    assert browser.sql(
+        "SELECT details::jsonb->>'source' FROM audit_events "
+        f"WHERE tenant_id = '{tenant_id}' AND action = 'user.sso-linked'"
+    ) == [("sso",)]
+    browser.client.cookies.clear()
+    browser.idp.claim_overrides = {RESOURCE_OWNER_CLAIM: organisation, "email_verified": False}
+    assert sso_login(browser, domain).status_code == 200
+    assert session_subject(browser) == account
+
+
+def test_an_account_whose_email_was_never_verified_is_not_linked(browser: Browser) -> None:
+    _, organisation, domain = make_connection(browser)
+    email = f"una@{domain}"
+    account = password_account(browser, email, verified=False)
+    as_sso_user(browser, organisation, email, [])
+    assert sso_login(browser, domain).status_code == 200
+    assert session_subject(browser) == browser.idp.subject
+    assert session_subject(browser) != account
+
+
+def test_an_email_outside_the_workspace_domains_links_nothing(browser: Browser) -> None:
+    _, organisation, domain = make_connection(browser)
+    email = f"out-{uuid.uuid4().hex[:6]}@parfocal.test"
+    password_account(browser, email)
+    as_sso_user(browser, organisation, email, [])
+    assert sso_login(browser, domain).status_code == 200
+    assert session_subject(browser) == browser.idp.subject
+    assert browser.sql(f"SELECT count(*) FROM users WHERE lower(email) = '{email}'") == [(1,)]

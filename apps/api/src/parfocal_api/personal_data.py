@@ -44,6 +44,7 @@ from parfocal_api.tables import (
     audit_people,
     cases,
     legal_holds,
+    linked_subjects,
     memberships,
     patients,
     result_sets,
@@ -74,6 +75,7 @@ EXPORTED_ELSEWHERE = {
 NOT_EXPORTED = {
     "platform_operators": "operators are Parfocal staff accounts outside any workspace",
     "rate_counters": "counters live for five minutes and hold only an id",
+    "linked_subjects": "identity provider ids that sign in as the same person, deleted on erasure",
 }
 
 
@@ -465,6 +467,7 @@ async def erase_person(
             title=None,
         )
     )
+    await connection.execute(delete(linked_subjects).where(linked_subjects.c.user_id == user_id))
     await connection.execute(
         update(memberships).where(memberships.c.user_id == user_id).values(availability_note=None)
     )

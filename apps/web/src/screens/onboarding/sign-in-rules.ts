@@ -26,6 +26,19 @@ export function emailDomain(email: string): string {
         .toLowerCase();
 }
 
+const domainPattern = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+
+export function organisationDomain(typed: string): string | null {
+  const text = typed.trim().toLowerCase();
+  const domain = text.includes("@") ? emailDomain(text) : text;
+  return domainPattern.test(domain) ? domain : null;
+}
+
+export function organisationSignInUrl(domain: string, returnTo: string | null): string {
+  const query = new URLSearchParams({ domain, return_to: returnTo ?? "/" });
+  return `/api/auth/sso?${query.toString()}`;
+}
+
 export function institutionFor(
   email: string,
   institutions: Institution[],

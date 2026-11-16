@@ -51,6 +51,7 @@ export function auditParams(filter: AuditFilter, today: Date): ListAuditEventsPa
 const auditLabels: Record<string, string> = {
   "user.signed-in": "Signed in",
   "user.signed-out": "Signed out",
+  "user.sso-linked": "Linked their organisation sign-in",
   "user.sessions-ended": "Ended their sessions",
   "user.profile-changed": "Changed their profile",
   "member.added": "Added a member",

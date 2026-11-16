@@ -5339,9 +5339,13 @@ msgstr ""
 msgid "Continue reviewing, your tasks, asks and mentions"
 msgstr ""
 
-#. placeholder {0}: chosen?.short_name ?? t`your institution`
+#. placeholder {0}: chosen.short_name
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Continue to {0} sign-in"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Continue to your organisation's sign-in"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -9766,6 +9770,10 @@ msgstr ""
 msgid "No other task to compare"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
+msgstr ""
+
 #: src/screens/project/settings-tab.tsx
 msgid "No patient fields anywhere. Names are removed from file metadata and labels on upload."
 msgstr ""
@@ -13929,6 +13937,10 @@ msgstr ""
 msgid "Sign in with the code"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in with your organisation"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -16705,10 +16717,6 @@ msgstr ""
 msgid "Use my password instead"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Use single sign-on instead"
-msgstr ""
-
 #: src/screens/upload/result-problems.tsx
 msgid "Use this choice"
 msgstr ""
@@ -17596,10 +17604,6 @@ msgstr ""
 #. placeholder {0}: roles[role].effect
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Your home keeps a short checklist until each part has been tried once. {0}"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "your institution"
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx

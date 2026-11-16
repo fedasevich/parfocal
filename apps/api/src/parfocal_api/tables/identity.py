@@ -219,6 +219,34 @@ users = Table(
     CheckConstraint("(quiet_from IS NULL) = (quiet_until IS NULL)", name="quiet_hours"),
 )
 
+linked_subjects = Table(
+    "linked_subjects",
+    metadata,
+    Column("subject", String(200), primary_key=True, info=PERSONAL),
+    Column(
+        "user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "sso_tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+)
+
 memberships = Table(
     "memberships",
     metadata,

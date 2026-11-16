@@ -180,6 +180,15 @@
       []
     ],
     [
+      "linked_subjects",
+      "auth_or_platform",
+      "*",
+      true,
+      "((COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text))",
+      "((COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text))",
+      []
+    ],
+    [
       "maintenance",
       "platform_read",
       "r",

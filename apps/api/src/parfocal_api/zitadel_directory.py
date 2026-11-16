@@ -107,6 +107,20 @@ class ZitadelDirectory:
         if response.status_code not in {200, 409}:
             raise self.refuse(response, "grant the project")
 
+    async def keep_user_names_in_organisation(self, organisation_id: str) -> None:
+        policy = {
+            "userLoginMustBeDomain": True,
+            "validateOrgDomains": False,
+            "smtpSenderAddressMatchesInstanceDomain": False,
+        }
+        path = f"/admin/v1/orgs/{organisation_id}/policies/domain"
+        created = await self.call("POST", path, policy)
+        if created.status_code == 200:
+            return
+        changed = await self.call("PUT", path, policy)
+        if changed.status_code not in {200, 400}:
+            raise self.refuse(changed, "keep user names inside the organisation")
+
     async def save_saml_idp(
         self, organisation_id: str, idp_id: str | None, settings: dict[str, Any]
     ) -> str:
