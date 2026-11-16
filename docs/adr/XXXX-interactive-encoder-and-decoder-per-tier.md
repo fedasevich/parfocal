@@ -20,6 +20,7 @@ TNBC (50 images, 3,466 prompted nuclei) is the only held-out set run here. CryoN
 | Model and graphs | Click IoU | Exact box IoU | Loose box IoU | Three clicks | Source |
 |---|---|---|---|---|---|
 | PathoSAM ViT-B, uint8 encoder, full decoder | 0.852 | 0.863 | 0.817 | 0.881 | [interactive protocol](../results/2026-11-06-interactive-protocol-on-tnbc.md) |
+| PathoSAM ViT-B, fp32 encoder, full decoder | 0.854 | 0.864 | 0.818 | 0.882 | [small SAM result](../results/2026-11-16-mobilesam-on-tnbc.md) |
 | MobileSAM (ViT-Tiny, generic, not fine-tuned on pathology), fp32 | 0.573 | 0.791 | 0.765 | 0.726 | [small SAM result](../results/2026-11-16-mobilesam-on-tnbc.md) |
 
 Graph agreement and speed for PathoSAM ViT-B.
@@ -63,7 +64,7 @@ Option 2, the same shape as ADR 0349 gave the detector.
 
 | Work | Tier | Encoder | Decoder | Runs on | Evidence |
 |---|---|---|---|---|---|
-| Click and box | Best | PathoSAM ViT-B fp32 | 32 token window decoder, the full decoder at the window edge | Encoder on the server T4, decoder in the browser | fp32 matches PyTorch at mean IoU 0.9999. TNBC click 0.852 and exact box 0.863 with uint8. The fp32 encoder has not run the TNBC harness, `TODO` |
+| Click and box | Best | PathoSAM ViT-B fp32 | 32 token window decoder, the full decoder at the window edge | Encoder on the server T4, decoder in the browser | fp32 matches PyTorch at mean IoU 0.9999. TNBC click 0.854 and exact box 0.864, 0.001 to 0.002 over uint8 |
 | Click and box | Good | PathoSAM ViT-B, 4-bit on WebGPU and uint8 on WebAssembly, as ADR 0250 loads them | As Best | Browser | TNBC click 0.852 and box 0.863 with uint8. 4-bit agrees with PyTorch at 0.961 |
 | Click and box | Fast | None | | | Generic MobileSAM scores 0.573 on a TNBC click, 0.279 below PathoSAM, though its CPU encode is 370 ms against 2,165 ms |
 | Region (auto tool) | Best and Good | The tier's encoder above | int8 weight-only AIS decoder, prompt pass as fallback | As above | TNBC PQ 0.8284 with uint8 and 0.8243 with 4-bit. Fallback 0.7959 |
@@ -72,7 +73,7 @@ Option 2, the same shape as ADR 0349 gave the detector.
 
 Rules that follow.
 
-1. PathoSAM ViT-L returns to Best when a ViT-L export beats ViT-B's TNBC realistic click of 0.852 and exact box of 0.863 on the same harness, and its embedding still fits the float16 tile of [ADR 0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) (server embeddings are float16 tiles).
+1. PathoSAM ViT-L returns to Best when a ViT-L export beats the fp32 ViT-B's TNBC realistic click of 0.854 and exact box of 0.864 on the same harness, and its embedding still fits the float16 tile of [ADR 0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) (server embeddings are float16 tiles).
 2. A small SAM enters Fast when it is fine-tuned on PathoSAM's public training sets and reaches within 0.03 of ViT-B on a TNBC click and box, while encoding a 1024 px tile on WebAssembly in under 1 s. That is a training run on a GPU, outside this task.
 3. SAM 2 Hiera-L is not added. Its only gain is 0.016 on loose boxes, and one encoder per tier keeps one embedding per tile.
 4. Every new candidate runs `pnpm --filter @parfocal/ml bench:interactive` on TNBC first, and on CryoNuSeg and NuInsSeg once the harness handles their labels.

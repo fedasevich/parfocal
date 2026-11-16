@@ -75,31 +75,32 @@ print(json.dumps(report, indent=2))
 
 ## Results
 
-Mean IoU per nucleus on all 50 TNBC images.
+Mean IoU per nucleus on all 50 TNBC images. The uint8 column is the run of the [interactive protocol result](2026-11-06-interactive-protocol-on-tnbc.md). The fp32 column ran the same day as MobileSAM with `uv run --package parfocal-ml --extra onnx python -m parfocal_ml.interactive --encoder pathosam.encoder.onnx --out SCRATCH`.
 
-| Prompt | Nuclei | PathoSAM ViT-B, uint8 encoder | MobileSAM, fp32 | Standard error | Difference |
-|---|---|---|---|---|---|
-| Ideal click | 3,466 | 0.8529 | 0.5744 | 0.0053 | -0.279 |
-| Realistic click | 3,466 | 0.8522 | 0.5733 | 0.0053 | -0.279 |
-| Exact box | 3,466 | 0.8632 | 0.7910 | 0.0016 | -0.072 |
-| Loose box | 3,466 | 0.8169 | 0.7652 | 0.0020 | -0.052 |
-| Two clicks | 856 | 0.8745 | 0.6757 | 0.0095 | -0.199 |
-| Three clicks | 856 | 0.8806 | 0.7258 | 0.0085 | -0.155 |
+| Prompt | Nuclei | PathoSAM ViT-B, uint8 | PathoSAM ViT-B, fp32 | MobileSAM, fp32 | MobileSAM standard error | MobileSAM against PathoSAM uint8 |
+|---|---|---|---|---|---|---|
+| Ideal click | 3,466 | 0.8529 | 0.8540 | 0.5744 | 0.0053 | -0.279 |
+| Realistic click | 3,466 | 0.8522 | 0.8544 | 0.5733 | 0.0053 | -0.279 |
+| Exact box | 3,466 | 0.8632 | 0.8642 | 0.7910 | 0.0016 | -0.072 |
+| Loose box | 3,466 | 0.8169 | 0.8181 | 0.7652 | 0.0020 | -0.052 |
+| Two clicks | 856 | 0.8745 | 0.8751 | 0.6757 | 0.0095 | -0.199 |
+| Three clicks | 856 | 0.8806 | 0.8821 | 0.7258 | 0.0085 | -0.155 |
 
-| Metric | PathoSAM ViT-B | MobileSAM |
-|---|---|---|
-| Realistic clicks at IoU 0.75 or better | 88.95% | 45.67% |
-| NoC@85, mean (never in 20) | 3.098 (3.97%) | 9.52 (31.54%) |
-| NoC@90, mean (never in 20) | 7.563 (18.57%) | 16.17 (70.56%) |
-| Median encode, CPU | 2,165 ms (uint8) | 370 ms (fp32) |
-| Median decode, CPU | 21.1 ms | 24.2 ms |
+| Metric | PathoSAM ViT-B, uint8 | PathoSAM ViT-B, fp32 | MobileSAM, fp32 |
+|---|---|---|---|
+| Realistic clicks at IoU 0.75 or better | 88.95% | 89.04% | 45.67% |
+| NoC@85, mean (never in 20) | 3.098 (3.97%) | 3.136 (4.67%) | 9.52 (31.54%) |
+| NoC@90, mean (never in 20) | 7.563 (18.57%) | 7.519 (18.81%) | 16.17 (70.56%) |
+| Median encode, CPU | 2,165 ms | 2,372 ms | 370 ms |
+| Median decode, CPU | 21.1 ms | 23.2 ms | 24.2 ms |
 
-The MobileSAM encoder graph is 28.0 MB. The run took 2,258 s for 27,055 decodes, more than PathoSAM's 20,288 because more refinement trajectories ran to the 20 click cap.
+The MobileSAM encoder graph is 28.0 MB. Its run took 2,258 s for 27,055 decodes, more than PathoSAM's 20,288 (fp32: 20,248 in 1,154 s) because more refinement trajectories ran to the 20 click cap.
 
 ## Interpretation
 
 - Generic MobileSAM is not a Fast tier model. It loses 0.28 on a click and 0.07 on an exact box, the same pattern POC doc 26 found for SAM 2 Hiera-L and SlimSAM-77: a generic SAM finds a nucleus from a box but not from one point on a small object.
-- Its encoder is about six times faster than PathoSAM's uint8 ViT-B on the same CPU, so the speed case for a small SAM holds. Part of that gap may come from fp32 against dynamic uint8 kernels, which was not measured separately.
+- Its encoder is about six times faster than PathoSAM ViT-B on the same CPU, 370 ms against 2,372 ms with both in fp32, so the speed case for a small SAM holds.
+- The fp32 PathoSAM encoder, which the Best tier would run on the server, adds 0.001 to 0.002 over uint8 on every prompt, about one standard error. The quantisation costs almost nothing on TNBC.
 - The box gap is small enough that a fine-tune on PathoSAM's public training sets could plausibly close it, but the click gap is what the smart select tool depends on. Whether a fine-tune closes 0.28 is unmeasured.
 
 ## Follow-ups
