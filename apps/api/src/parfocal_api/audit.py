@@ -81,6 +81,7 @@ class AuditAction(StrEnum):
     MODEL_RUN_CANCELLED = "model-run.cancelled"
     MODEL_RUN_RESUMED = "model-run.resumed"
     MODEL_RUN_RETRIED = "model-run.retried"
+    TUMOR_MAP_STARTED = "tumor-map.started"
     UPLOAD_REFUSED = "upload.refused"
     UPLOAD_PAIRED = "upload.paired"
     SLIDE_PUBLISHED = "slide.published"

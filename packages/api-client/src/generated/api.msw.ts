@@ -189,6 +189,7 @@ import type {
   TierMapping,
   TileAccess,
   TrackRecord,
+  TumorMapJob,
   UploadedPart,
   UploadState,
   Validation,
@@ -4031,6 +4032,16 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
     serving: faker.helpers.arrayElement(Object.values(Serving)),
   }));
+
+export const getStartTumorMapResponseMock = (
+  overrideResponse: Partial<Extract<TumorMapJob, object>> = {},
+): TumorMapJob => ({
+  job_id: faker.string.uuid(),
+  result_set_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  status: faker.helpers.arrayElement(Object.values(JobStatus)),
+  ...overrideResponse,
+});
 
 export const getListModelTiersResponseMock = (): TierMapping[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -17938,6 +17949,30 @@ export const getListProjectModelsMockHandler = (
   );
 };
 
+export const getStartTumorMapMockHandler = (
+  overrideResponse?:
+    | TumorMapJob
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<TumorMapJob> | TumorMapJob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/tumor-maps",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartTumorMapResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListModelTiersMockHandler = (
   overrideResponse?:
     | TierMapping[]
@@ -24568,6 +24603,7 @@ export const getParfocalAPIMock = () => [
   getResumeModelRunMockHandler(),
   getRetryModelRunMockHandler(),
   getListProjectModelsMockHandler(),
+  getStartTumorMapMockHandler(),
   getListModelTiersMockHandler(),
   getSetModelTierMockHandler(),
   getResetModelTierMockHandler(),

@@ -117,6 +117,18 @@ def pooled(scores: NDArray[np.floating[Any]], rows: int, columns: int) -> Grid:
     return kept.reshape(rows, 2, columns, 2).mean(axis=(1, 3))
 
 
+def tile_cells(tissue: Mask, left: int, top: int) -> tuple[slice, slice]:
+    rows, columns = tissue.shape
+    return slice(top, min(rows, top + TILE_CELLS)), slice(left, min(columns, left + TILE_CELLS))
+
+
+def score_tile(reader: RegionReader, scorer: Scorer, tissue: Mask, left: int, top: int) -> Grid:
+    rgb = reader.read(left * CELL - MARGIN, top * CELL - MARGIN, TILE_SIDE, TILE_SIDE)
+    on = tissue[tile_cells(tissue, left, top)]
+    cells = pooled(np.asarray(scorer.score(rgb)), *on.shape)
+    return np.where(on, cells, 0).astype(np.float32)
+
+
 def map_slide(
     reader: RegionReader,
     scorer: Scorer,
@@ -126,19 +138,13 @@ def map_slide(
     on_tile: Callable[[int, int], None] | None = None,
 ) -> TumorMap:
     started = time.perf_counter()
-    rows, columns = tissue.shape
-    probability = np.zeros((rows, columns), np.float32)
+    probability = np.zeros(tissue.shape, np.float32)
     tiles = planned_tiles(tissue, box)
     scored = 0
     for left, top in tiles:
         if should_stop is not None and should_stop():
             break
-        rgb = reader.read(left * CELL - MARGIN, top * CELL - MARGIN, TILE_SIDE, TILE_SIDE)
-        height = min(TILE_CELLS, rows - top)
-        width = min(TILE_CELLS, columns - left)
-        cells = pooled(np.asarray(scorer.score(rgb)), height, width)
-        on = tissue[top : top + height, left : left + width]
-        probability[top : top + height, left : left + width] = np.where(on, cells, 0)
+        probability[tile_cells(tissue, left, top)] = score_tile(reader, scorer, tissue, left, top)
         scored += 1
         if on_tile is not None:
             on_tile(scored, len(tiles))

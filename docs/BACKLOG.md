@@ -3790,6 +3790,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-001.
   Size: M.
 
+- [ ] AITUM-009 · Map this view asks the server for its tiles
+  The "Map this view" panel of AITUM-004 (view-scoped map on demand) still has only the fake scorer. One view tile (256 px cells, 16 by 16) is 2 by 2 job tiles of AITUM-008 (tumor map job and route), both anchored at the slide origin, so a view tile is an aligned box of the job's grid halved twice. The API has no synchronous path to a GPU pool yet, so choose between a box job the panel polls and a call on the interactive lane, and record it as an ADR. A box map must not be stored as a ready heatmap result set, because that hides the panel.
+  Done when an API test asks for one view tile with a stand-in scorer and gets the 256 cell bytes, and a web test shows the panel using the server scorer outside the fake API.
+  Depends on AITUM-008.
+  Size: M.
+
+- [ ] AITUM-010 · The tumor map job reads stored slides and runs the tumor model in its pool
+  AITUM-008 (tumor map job and route) takes a slide opener and a scorer as seams, and the GPU pool entry has no runner for the `tumor-map` kind yet. Open a stored slide's level 0 regions and thumbnail from the object store, run the MONAI ResNet18 of ADR 0351 (the v1 tumor model) in the detector-good T4 pool, and start the claim loop for the kind.
+  Done when a worker test runs the job on a stored small fixture slide through the real opener, and a Modal stand-in test on CPU runs one tumor map call in the pool.
+  Depends on AITUM-008.
+  Size: M.
+
 - [ ] AITUM-003 · Areas from the tumor map
   Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
   Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
