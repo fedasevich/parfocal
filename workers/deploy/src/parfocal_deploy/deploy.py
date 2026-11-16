@@ -9,6 +9,7 @@ from parfocal_deploy import migrations, neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.environments import Environment, environment
 from parfocal_deploy.modal_app import APP_NAME, SECRETS, WEB_FUNCTION
+from parfocal_deploy.smoke import SmokeCheckError, smoke_check
 from parfocal_deploy.tools import (
     MODAL,
     WRANGLER,
@@ -43,10 +44,6 @@ MIGRATE = (
     "head",
 )
 BUILD_WEB = ("pnpm", "--filter", "@parfocal/web", "build")
-ISOLATION_HEADERS = {
-    "cross-origin-opener-policy": "same-origin",
-    "cross-origin-embedder-policy": "credentialless",
-}
 
 WebUrl = Callable[[Environment], str]
 
@@ -63,10 +60,6 @@ class NotBootstrappedError(Exception):
             f"the Modal environment {target.modal_environment} has no secret {', '.join(names)}. "
             f"Run pnpm --filter @parfocal/deploy bootstrap --env {target.name} once"
         )
-
-
-class SmokeCheckError(Exception):
-    pass
 
 
 def modal_commands(target: Environment) -> list[Command]:
@@ -92,18 +85,6 @@ def edge_commands(target: Environment, account: str, api_origin: str) -> list[Co
             )
         ),
     ]
-
-
-def smoke_check(target: Environment, tools: Tools) -> None:
-    status, _ = tools.fetch(f"{target.origin}/api/health")
-    if status != 200:
-        raise SmokeCheckError(f"{target.origin}/api/health answered {status}")
-    status, headers = tools.fetch(f"{target.origin}/")
-    wrong = [name for name, value in ISOLATION_HEADERS.items() if headers.get(name) != value]
-    if status != 200 or wrong:
-        raise SmokeCheckError(
-            f"{target.origin}/ answered {status}, wrong headers {', '.join(wrong)}"
-        )
 
 
 def modal_web_url(target: Environment) -> str:
@@ -154,7 +135,7 @@ def deploy(
         tools.run(command.argv, None, command.extra)
     for command in edge_commands(target, settings["CLOUDFLARE_ACCOUNT_ID"], web_url(target)):
         tools.run(command.argv, None, command.extra)
-    smoke_check(target, tools)
+    smoke_check(target.origin, tools.fetch)
 
 
 def main() -> None:

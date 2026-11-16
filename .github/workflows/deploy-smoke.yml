@@ -42,10 +42,14 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: deploy-smoke
+      - name: TLS, health and isolation headers
+        run: pnpm --filter @parfocal/deploy run smoke --origin "${PARFOCAL_SMOKE_URL}"
       - run: google-chrome --version
+        if: ${{ !cancelled() }}
       - if: ${{ env.PARFOCAL_SMOKE_EMAIL == '' || env.PARFOCAL_SMOKE_PASSWORD == '' }}
         run: echo "The signed-in smoke was skipped because the smoke account is not set up yet" >> "$GITHUB_STEP_SUMMARY"
       - run: pnpm --filter @parfocal/web run smoke
+        if: ${{ !cancelled() }}
       - if: always()
         uses: actions/upload-artifact@v7
         with:

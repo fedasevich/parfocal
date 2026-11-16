@@ -18,15 +18,14 @@ from parfocal_deploy.bootstrap import (
     steps,
 )
 from parfocal_deploy.deploy import (
-    ISOLATION_HEADERS,
     NotBootstrappedError,
-    SmokeCheckError,
     deploy,
     is_head_of,
     revisions,
 )
 from parfocal_deploy.environments import ENVIRONMENTS, UnknownEnvironmentError, environment
 from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET
+from parfocal_deploy.smoke import ISOLATION_HEADERS, SmokeCheckError
 from parfocal_deploy.tools import REPOSITORY, MissingSettingsError, Read, Tools
 
 PRODUCTION = environment("production")
@@ -115,7 +114,9 @@ class Cloud:
             self.modal_secrets[name] = json.loads(path.read_text())
 
     def fetch(self, url: str) -> tuple[int, Mapping[str, str]]:
-        return (self.health, {}) if url.endswith("/api/health") else (200, self.headers)
+        if url.endswith("/api/health"):
+            return self.health, {**self.headers, "content-type": "application/json"}
+        return 200, {**self.headers, "strict-transport-security": "max-age=31536000"}
 
     def tools(self) -> Tools:
         return Tools(run=self.run, read=self.read, sql=self.sql, neon=self.neon, fetch=self.fetch)
