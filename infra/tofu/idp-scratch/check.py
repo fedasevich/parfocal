@@ -7,7 +7,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-BASE = f"http://localhost:{os.environ.get('IDP_SCRATCH_PORT', '8089')}"
+BASE = f"http://localhost:{os.environ.get('IDP_SCRATCH_PORT', '8189')}"
 TOKEN = os.environ["IDP_SCRATCH_TOKEN"]
 PASSWORD = os.environ["IDP_SCRATCH_PASSWORD"]
 TEST_USER = "e2e-pathologist@parfocal.eu"
@@ -17,7 +17,7 @@ EXPECTED_APPS = {
         "https://parfocal-edge-pr-*.example.workers.dev/api/auth/callback",
         True,
     ),
-    "parfocal-api-staging": ("https://staging.parfocal.eu/api/auth/callback", False),
+    "parfocal-api-prod": ("https://app.parfocal.eu/api/auth/callback", False),
 }
 
 failures: list[str] = []
@@ -139,7 +139,7 @@ def check_project(org_id: str, project_id: str) -> None:
 
 
 def check_clients(client_ids: dict, client_secrets: dict) -> None:
-    expect("client environments", sorted(client_ids), ["dev", "preview", "staging"])
+    expect("client environments", sorted(client_ids), ["dev", "preview", "prod"])
     for env, client_id in client_ids.items():
         form = {
             "grant_type": "authorization_code",

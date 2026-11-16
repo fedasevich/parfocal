@@ -692,8 +692,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Both confirmed in [ADR 0041](adr/0041-identity-and-authorization-rechecked.md).
 
 - [ ] IAM-001 · IdP deployment and configuration
-  Organisation setup in Zitadel Cloud, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), MFA policy (TOTP and WebAuthn).
-  Done when the IdP config is code (exported realm or Terraform provider) and recreated from scratch in CI.
+  The Zitadel config as an OpenTofu module: the project, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and the login policy with TOTP and WebAuthn. Staging is dropped ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment), so the module is proved on the local Zitadel that `make dev` starts (FOUND-009, local development environment). Applying it to the production organisation is out of scope and belongs to OPS-001 (base infrastructure as code).
+  Done when `infra/tofu/idp-scratch/run.sh` applies the module from scratch to that local container twice, with an empty second plan and `check.py` passing each time, and the `idp` CI job runs it by starting that container.
   Depends on STACK-028.
   Size: L.
 
