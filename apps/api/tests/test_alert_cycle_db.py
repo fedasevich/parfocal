@@ -66,9 +66,13 @@ def test_only_automatic_whole_slide_runs_count_as_pre_reads(database: str) -> No
     person = workspace.people["owner"].user_id
     slide_scope = RunSettings(RunScopeKind.SLIDE, None, "matrix-detector", "1")
 
+    def open_runs(rows: list[JobRow]) -> list[JobRow]:
+        return [row for row in rows if row.kind == MODEL_RUN]
+
     async def go() -> tuple[list[JobRow], list[SettledJob | None]]:
         engine = create_engine(async_database_url(with_database(APP_URL, database)))
         try:
+            earlier = open_runs(await job_rows(engine))
             async with tenant_transaction(engine, workspace.tenant_id) as connection:
                 runs = [
                     await enqueue_model_run(
@@ -82,7 +86,7 @@ def test_only_automatic_whole_slide_runs_count_as_pre_reads(database: str) -> No
                     )
                     for started_by in (None, person)
                 ]
-            open_rows = await job_rows(engine)
+            open_rows = [row for row in open_runs(await job_rows(engine)) if row not in earlier]
             async with tenant_transaction(engine, workspace.tenant_id) as connection:
                 await connection.execute(
                     jobs.update()
@@ -100,7 +104,7 @@ def test_only_automatic_whole_slide_runs_count_as_pre_reads(database: str) -> No
             await engine.dispose()
 
     open_rows, (automatic, by_hand) = asyncio.run(go())
-    assert [row.kind for row in open_rows if row.kind == MODEL_RUN] == [MODEL_RUN]
+    assert [row.kind for row in open_rows] == [MODEL_RUN]
     assert automatic is not None
     assert automatic.counted
     assert automatic.status == "failed"
