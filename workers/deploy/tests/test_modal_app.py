@@ -17,6 +17,7 @@ from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
+    BACKFILL_FUNCTION,
     EVENTS_FUNCTION,
     EVENTS_LINGER_MINUTES,
     EVENTS_OPTIONS,
@@ -55,7 +56,9 @@ from parfocal_ml.gpu_pool import POOLS
 
 def test_the_app_registers_the_web_and_ingest_functions() -> None:
     assert app.name == APP_NAME
-    assert sorted(FUNCTIONS) == sorted([WEB_FUNCTION, INGEST_FUNCTION, EVENTS_FUNCTION])
+    assert sorted(FUNCTIONS) == sorted(
+        [WEB_FUNCTION, INGEST_FUNCTION, EVENTS_FUNCTION, BACKFILL_FUNCTION]
+    )
     assert all(function.app is app for function in FUNCTIONS.values())
 
 

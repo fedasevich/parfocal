@@ -17,6 +17,7 @@ APP_NAME = "parfocal-api"
 WEB_FUNCTION = "web"
 INGEST_FUNCTION = "ingest"
 EVENTS_FUNCTION = "events"
+BACKFILL_FUNCTION = "backfill_thumbnails"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
@@ -25,6 +26,7 @@ FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
     WEB_FUNCTION: SECRETS,
     INGEST_FUNCTION: SECRETS,
     EVENTS_FUNCTION: SECRETS,
+    BACKFILL_FUNCTION: SECRETS,
 }
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
@@ -149,6 +151,12 @@ def run_ingest() -> None:
     asyncio.run(main())
 
 
+def run_thumbnail_backfill() -> None:
+    from parfocal_ingest.thumbnail_backfill import main
+
+    main()
+
+
 def sweep_remote_caches() -> None:
     import asyncio
 
@@ -223,8 +231,15 @@ web = app.function(**WEB_OPTIONS, image=web_image(IMAGE), secrets=secrets_of(WEB
 )
 ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
 events = app.function(**EVENTS_OPTIONS, secrets=secrets_of(EVENTS_FUNCTION))(run_events)
+backfill_thumbnails = app.function(
+    name=BACKFILL_FUNCTION,
+    memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
+    timeout=3600,
+    secrets=secrets_of(BACKFILL_FUNCTION),
+)(run_thumbnail_backfill)
 FUNCTIONS: dict[str, modal.Function] = {
     WEB_FUNCTION: web,
     INGEST_FUNCTION: ingest,
     EVENTS_FUNCTION: events,
+    BACKFILL_FUNCTION: backfill_thumbnails,
 }

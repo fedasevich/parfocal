@@ -151,3 +151,26 @@ def test_a_person_who_cannot_read_the_slide_gets_no_thumbnail(lab: Lab) -> None:
     response = lab.api(lab.people["unassigned"]).get(f"/api/slides/{lab.slide}/thumbnail")
     assert response.status_code == 404, response.text
     assert response.json()["code"] != "thumbnail-missing"
+
+
+SAMPLE_FOLDER = "samples/camelyon16/thumbnail_lab/"
+
+
+@pytest.mark.db
+def test_a_seeded_slide_gets_the_thumbnail_stored_beside_its_original(
+    lab: Lab, database: str
+) -> None:
+    seeded = make_slide(database, lab.tenant, join_target(database, lab), "T3")
+    owner(
+        database,
+        f"UPDATE slides SET original_key = '{SAMPLE_FOLDER}original.svs' WHERE id = '{seeded}'",
+    )
+    put_object(f"{SAMPLE_FOLDER}thumbnail.jpg", THUMBNAIL)
+    response = lab.api(lab.people["owner"]).get(f"/api/slides/{seeded}/thumbnail")
+    assert response.status_code == 200, response.text
+    assert response.content == THUMBNAIL
+
+
+def join_target(database: str, lab: Lab) -> uuid.UUID:
+    rows = owner(database, f"SELECT project_id FROM slides WHERE id = '{lab.slide}'")
+    return uuid.UUID(str(rows[0][0]))
