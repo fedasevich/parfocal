@@ -1057,7 +1057,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on TEST-019.
   Size: S.
 
-- [ ] SEC-027 · Edge limits per IP
+- [x] SEC-027 · Edge limits per IP
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
   Done when a local test shows a login flood from one address answered with 429 while another address signs in, and an on-demand check against production, a tiny login burst from one address that stops at the first 429 (there is no staging, [ADR 0331](adr/0331-no-staging-environment.md)), ends with a 429.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
@@ -4580,7 +4580,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Production went live with v0.1.5, and the web app still calls draft operations from `packages/api-client/src/draft` that only the fake backend answers, so screens 404, toast or hang on Loading. Write an inventory in `knowledge/` of every draft operation, the screen that calls it, whether the real API has an equivalent and a priority. When the fake API is off, a draft call answering 404 or 405 becomes one recognisable "not available yet" error: queries give the screen an empty or notice state without a retry or toast, a mutation shows one "Not available yet" toast, and a shared notice covers screens that are draft only. Build the real `GET /api/me/jobs` and `GET /api/me/checklist` from stored data and move them from draft to the generated client. The other drafts stay listed in the inventory.
   Done when unit tests cover the 404 path, API tests cover both new routes, and the home page in production no longer calls a missing route.
   Size: M.
-- [ ] OPS-016 · A real browser checks the deployed app after every deploy
+- [x] OPS-016 · A real browser checks the deployed app after every deploy
   v0.1.4 shipped a home page that showed a broken screen to a signed-out visitor instead of the sign-in, because every check ran on the fake backend and the deploy smoke only fetches URLs. After each production deploy, a headless browser opens app.parfocal.eu signed out and expects the Zitadel sign-in, then signs in as a dedicated smoke account whose password is a GitHub environment secret, opens home, a workspace, a case and the viewer, and fails the run on a console error, a failed `/api` call or a visible error screen. The smoke account and its secret are created only after the owner's yes.
   Done when the deploy workflow runs it, a deliberately broken build fails it in a test run, and its screenshots are kept as run artifacts.
   Depends on OPS-002. Size: M.
@@ -5733,7 +5733,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on REMOTE-000. Refs mock: upload/events.
   Size: M.
 
-- [ ] REMOTE-005 · The event delivery sweep runs in production
+- [x] REMOTE-005 · The event delivery sweep runs in production
   REMOTE-003 (events out) writes project events to an outbox, but nothing in production runs `python -m parfocal_api.event_delivery`, so events stay pending. Run the sweep on a Modal schedule that scales to zero between runs, and record events that happen while a target is paused so they can be replayed.
   Done when a deployed schedule delivers a test event to a fake receiver set up for the check, a paused target's events are kept and replayable, and the schedule's cost is in `knowledge/platform.md`.
   Depends on REMOTE-003. Size: S.

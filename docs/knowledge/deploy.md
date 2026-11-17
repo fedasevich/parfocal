@@ -39,7 +39,7 @@ OPS-016 (a real browser checks the deployed app) adds the job `browser-smoke` to
 - It is read-only. Every `/api` request that is not GET, HEAD or OPTIONS is aborted and fails the run, except `/api/auth/`, which signing in needs. Signing in itself may still record a session or a sign-in event.
 - Screenshots of every step land in `apps/web/test-results/smoke` and are uploaded as the run artifact `deploy-smoke-<run>-<attempt>`, kept 30 days.
 - It needs the environment variable `PARFOCAL_SMOKE_EMAIL` and the secret `PARFOCAL_SMOKE_PASSWORD` in the GitHub environment `production`. Without them the signed-in test is skipped and the run summary says so. TODO: the smoke account, with view rights on one workspace that holds a case with a slide, is made only after the owner's yes.
-- Run it by hand with `gh workflow run deploy-smoke.yml -f url=<address>`, which also serves a test run against a deliberately broken build. `apps/web/e2e/deploy-smoke-selftest.spec.ts` proves in CI that the same watch fails a broken page and passes a healthy one.
+- Run it by hand with `gh workflow run deploy-smoke.yml -f url=<address>`, which also serves a test run against a deliberately broken build. The logged broken-build run (2026-11-18) served a broken page and a healthy page from two throwaway local Node servers and ran `PARFOCAL_SMOKE_URL=http://localhost:<port> pnpm --filter @parfocal/web run smoke`. The broken one failed and the healthy one passed. `apps/web/e2e/deploy-smoke-selftest.spec.ts` proves in CI that the same watch fails a broken page and passes a healthy one.
 
 ## Main to production
 

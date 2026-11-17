@@ -374,7 +374,7 @@ async def test_seeded_people_are_fake(seeded: str) -> None:
     assert await values(seeded, "SELECT count(*) FROM slides WHERE barcode IS NOT NULL") == {"0"}
 
 
-async def test_a_viewer_email_gets_a_read_only_seat_on_the_first_gallery_project(
+async def test_a_viewer_email_gets_a_read_only_seat_on_every_project_of_every_workspace(
     seeded: str,
 ) -> None:
     for _ in range(2):
@@ -390,15 +390,19 @@ async def test_a_viewer_email_gets_a_read_only_seat_on_the_first_gallery_project
         "SELECT t.slug, m.role, m.admin_rights, p.name, pm.role FROM users u "
         "JOIN memberships m ON m.user_id = u.id JOIN tenants t ON t.id = m.tenant_id "
         "JOIN project_members pm ON pm.user_id = u.id JOIN projects p ON p.id = pm.project_id "
-        "WHERE u.email = 'smoke-walk@example.test'",
+        "WHERE u.email = 'smoke-walk@example.test' AND p.tenant_id = t.id",
     )
-    assert seats == [(WORKSPACES[0].slug, "reviewer", False, WORKSPACES[0].gallery, "viewer")]
+    assert {slug for slug, *_ in seats} == {workspace.slug for workspace in WORKSPACES}
+    assert {(role, admin, seat) for _, role, admin, _, seat in seats} == {
+        ("reviewer", False, "viewer")
+    }
+    assert len(seats) == len(set(seats))
     memberships_held = await run_sql(
         seeded,
         "SELECT count(*) FROM memberships m JOIN users u ON u.id = m.user_id "
         "WHERE u.email = 'smoke-walk@example.test'",
     )
-    assert memberships_held == [(1,)]
+    assert memberships_held == [(len(WORKSPACES),)]
 
 
 def test_viewer_emails_split_on_commas_and_semicolons() -> None:
@@ -707,3 +711,39 @@ async def test_the_owner_has_an_annotate_task(seeded: str) -> None:
     kinds = await values(seeded, f"SELECT kind FROM review_tasks WHERE id = '{task}'")
     assert kinds == {"annotate"}
     assert len(slide_ids) == 2
+
+
+async def test_a_listed_viewer_can_see_every_project_without_admin_rights(seeded: str) -> None:
+    for _ in range(2):
+        await seed(
+            seeded,
+            EmptyStore(),  # type: ignore[arg-type]
+            RESULTS,  # type: ignore[arg-type]
+            "owner@example.test",
+            viewer_emails=viewer_emails_of(" Watcher@Example.test ,"),
+        )
+    members = await run_sql(
+        seeded,
+        "SELECT u.subject, m.role, m.admin_rights FROM users u "
+        "JOIN memberships m ON m.user_id = u.id WHERE u.email = 'watcher@example.test'",
+    )
+    assert [(str(s), str(r), a) for s, r, a in members] == [
+        ("seed:watcher@example.test", "reviewer", False)
+    ] * len(WORKSPACES)
+    assert await values(
+        seeded,
+        "SELECT t.slug FROM users u JOIN tenants t ON t.id = u.last_tenant_id "
+        "WHERE u.email = 'watcher@example.test'",
+    ) == {WORKSPACES[-1].slug}
+    roles = await values(
+        seeded,
+        "SELECT pm.role FROM project_members pm JOIN users u ON u.id = pm.user_id "
+        "WHERE u.email = 'watcher@example.test'",
+    )
+    assert roles == {"viewer"}
+    covered = await values(
+        seeded,
+        "SELECT count(*) FROM project_members pm JOIN users u ON u.id = pm.user_id "
+        "WHERE u.email = 'watcher@example.test'",
+    )
+    assert covered == {str(3 * len(WORKSPACES))}

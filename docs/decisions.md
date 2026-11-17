@@ -290,7 +290,7 @@ Waits for a deploy of the train after PR 9 and PR 10 merge:
 - AIP-021 (pre-warm trigger from a slow device through the API). It needs a warm call against the deployed GPU pool with the real PathoSAM weights.
 - AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool) and AITUM-011 (the tumor map pool is ready to deploy). The pool is ready and the artifact is published, so the deploy comes with the train merge.
 - AITUM-012 (the interactive pool answers view map calls). The T4 time of one view tile is measured after the pool deploy.
-- OPS-009 (storage lifecycle and cost controls). A `policy.sh` plan and an additive apply for dev and prod, then the R2 lifecycle drill and a first live cost report.
+- OPS-009 (storage lifecycle and cost controls). The lifecycle rules and bucket lock are applied to dev and prod (2026-11-18). Left: give the Cloudflare token the account analytics read permission, then a first live cost report. Modal's `workspace_billing_report` call in `costs.py` is also deprecated and wants `Workspace.billing.report()`. The 90 day Infrequent Access check on an old object is still to be done once objects age.
 - TEST-020 (showcase seed over every feature and the real fixture slides). It waits for the next production deploy.
 
 Waits for a decision:
