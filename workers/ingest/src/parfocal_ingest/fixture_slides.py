@@ -16,11 +16,12 @@ from parfocal_common.ingest import (
     fixture_folder,
     fixture_original_key,
 )
+from parfocal_common.jobs import StepFailedError
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.repository import repository_root
 from parfocal_common.settings import load_settings
 from parfocal_ingest.identify import Identified
-from parfocal_ingest.parse_jobs import identify_file, unpacked_in
+from parfocal_ingest.parse_jobs import READER_ERRORS, identify_file, unpacked_in
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
 from parfocal_ingest.sample_files import (
     DerivedFile,
@@ -166,7 +167,10 @@ async def send_fixtures(
         if local is None:
             outcomes.append(Outcome(name, "missing locally"))
             continue
-        outcomes.append(await send_fixture(store, name, local, dry_run=dry_run))
+        try:
+            outcomes.append(await send_fixture(store, name, local, dry_run=dry_run))
+        except (NotASampleSlideError, StepFailedError, *READER_ERRORS) as error:
+            outcomes.append(Outcome(name, f"failed: {type(error).__name__} {error}"))
     return outcomes
 
 

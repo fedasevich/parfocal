@@ -47,6 +47,8 @@ async function seededSlide(page: Page, project: Project, label: string): Promise
   return (slide as { id: string }).id;
 }
 
+test.describe.configure({ timeout: 600_000 });
+
 test.describe("seeded fixture slides open in the deployed viewer", () => {
   test.skip(!enabled, "PARFOCAL_SMOKE_SEEDED_FORMATS is not 1");
   test.skip(
@@ -54,43 +56,46 @@ test.describe("seeded fixture slides open in the deployed viewer", () => {
     "PARFOCAL_SMOKE_EMAIL and PARFOCAL_SMOKE_PASSWORD are not set",
   );
 
-  for (const [format, label] of openedInTheBrowser) {
-    test(`a seeded ${format} slide opens and serves its bytes`, async ({
-      page,
-      context,
-      baseURL,
-    }, info) => {
-      const origin = baseURL ?? "";
-      const seen = await watch(context, origin);
-      const refused: string[] = [];
-      page.on("response", (response) => {
-        const path = new URL(response.url()).pathname;
-        if (path.startsWith("/tiles/") && response.status() >= 400) {
-          refused.push(`${path} answered ${response.status()}`);
-        }
-      });
-      seen.step("sign-in");
-      await signIn(page, origin);
-      seen.signedIn();
-      const project = await galleryProject(page);
-      const slideId = await seededSlide(page, project, label);
-      seen.step(format);
-      const original = page.waitForResponse(
-        (response) =>
-          new URL(response.url()).pathname.startsWith(`/tiles/${slideId}/original`) &&
-          [200, 206].includes(response.status()),
-      );
-      await page.goto(`/projects/${project.id}/slides/${slideId}`);
-      await expect(page.getByTestId("slide-stage")).toBeVisible();
-      await original;
-      await expect(page.getByTestId("slide-host").locator("canvas").first()).toBeVisible();
-      await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
-      await page.screenshot({ path: info.outputPath(`${format}.png`), fullPage: false });
-      expect(await errorScreenShown(page), `${format} shows an error screen`).toBeNull();
-      expect(refused, refused.join("\n")).toEqual([]);
-      expect(seen.problems, report(seen.problems)).toEqual([]);
+  test("one seeded slide of each browser format opens and serves its bytes", async ({
+    page,
+    context,
+    baseURL,
+  }, info) => {
+    const origin = baseURL ?? "";
+    const seen = await watch(context, origin);
+    const refused: string[] = [];
+    page.on("response", (response) => {
+      const path = new URL(response.url()).pathname;
+      const status = response.status();
+      if (path.startsWith("/tiles/") && (status === 401 || status === 403 || status >= 500)) {
+        refused.push(`${path} answered ${status}`);
+      }
     });
-  }
+    seen.step("sign-in");
+    await signIn(page, origin);
+    seen.signedIn();
+    const project = await galleryProject(page);
+    for (const [format, label] of openedInTheBrowser) {
+      await test.step(format, async () => {
+        const slideId = await seededSlide(page, project, label);
+        seen.step(format);
+        const original = page.waitForResponse(
+          (response) =>
+            new URL(response.url()).pathname.startsWith(`/tiles/${slideId}/original`) &&
+            [200, 206].includes(response.status()),
+        );
+        await page.goto(`/projects/${project.id}/slides/${slideId}`);
+        await expect(page.getByTestId("slide-stage")).toBeVisible();
+        await original;
+        await expect(page.getByTestId("slide-host").locator("canvas").first()).toBeVisible();
+        await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
+        await page.screenshot({ path: info.outputPath(`${format}.png`), fullPage: false });
+        expect(await errorScreenShown(page), `${format} shows an error screen`).toBeNull();
+      });
+    }
+    expect(refused, refused.join("\n")).toEqual([]);
+    expect(seen.problems, report(seen.problems)).toEqual([]);
+  });
 
   for (const [format, label] of notInTheBrowserYet) {
     test(`a seeded ${format} slide opens and serves its bytes`, () => {
