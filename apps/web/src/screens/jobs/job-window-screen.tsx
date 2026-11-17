@@ -23,7 +23,7 @@ import { now } from "../../clock.ts";
 import { resumedMessage, useJobsTray, useResumeJob } from "../../shell/jobs-tray.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   cancellableRuns,
   canOpenSlide,
@@ -184,7 +184,7 @@ function JobWindowBody({
               percent={slidePercent(run)}
               valueText={slideValueText(run)}
               tone={slideTone(run)}
-              thumbnail={lookUrl("overview")}
+              thumbnail={slideThumbUrl(run.slide_id)}
               stepsDone={Math.min(stepsDone(run), steps.length)}
               stepsTotal={steps.length}
               open={open[run.id] ?? false}

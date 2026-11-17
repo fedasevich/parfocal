@@ -25,11 +25,7 @@ export function Thumb({ className }: { className?: string }) {
   return (
     <i
       aria-hidden="true"
-      className={cn(
-        "h-7 w-10 flex-none rounded-sm border border-line bg-cover bg-center",
-        className,
-      )}
-      style={{ backgroundImage: "url(/mock-assets/overview.jpg)" }}
+      className={cn("h-7 w-10 flex-none rounded-sm border border-line bg-surf-section", className)}
     />
   );
 }
@@ -152,19 +148,15 @@ export function SlideOverlay({
       className="relative block overflow-hidden rounded-md border border-line bg-white"
       style={{ height, width }}
     >
-      <span
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url(/mock-assets/overview.jpg)" }}
-      />
+      <span className="absolute inset-0 bg-surf-section" />
       {kind === "regions" ? (
         <span className="absolute inset-[22%_30%_28%_24%] rounded-[40%] border-2 border-dashed border-[#22d3ee] bg-[rgb(34_211_238/0.18)]" />
       ) : (
         <span
           className={cn(
-            "absolute bg-cover bg-center opacity-80",
-            kind === "off" ? "top-0 left-0 h-1/4 w-1/4" : "inset-0 opacity-70",
+            "absolute bg-accent-soft",
+            kind === "off" ? "top-0 left-0 h-1/4 w-1/4" : "inset-0",
           )}
-          style={{ backgroundImage: "url(/mock-assets/tumor-heat.png)" }}
         />
       )}
     </span>

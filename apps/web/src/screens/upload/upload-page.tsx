@@ -22,8 +22,8 @@ import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useNavigate } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { useOpenJobsTray } from "../../shell/jobs-tray.tsx";
+import { useLocalToast } from "../local-toast.tsx";
 import { okData } from "../placeholder.tsx";
-import { useMockToast } from "../project/mock-toast.tsx";
 import { ProjectPage } from "../project/project-page.tsx";
 import { CheckStep } from "./check-step.tsx";
 import { FilesStep } from "./files-step.tsx";
@@ -82,7 +82,7 @@ function UploadFlow({
   const { t } = useLingui();
 
   const navigate = useNavigate();
-  const toast = useMockToast();
+  const toast = useLocalToast();
   useOpenJobsTray(scene === "tray");
   const [state, setState] = useState<UploadState & { maxStep: number }>(() => ({
     ...stateForScene(scene, batch),

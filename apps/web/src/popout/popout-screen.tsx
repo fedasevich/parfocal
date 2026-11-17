@@ -2,16 +2,18 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
 import type { MapRect } from "@parfocal/ui/lib/minimap-box";
 import { overviewSize } from "../screens/review/slide-geometry.ts";
-import { lookUrl } from "../screens/thumbnails.ts";
+import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
 import { FullViewer, type ViewerSearch } from "../screens/viewer/full-viewer.tsx";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePopoutState } from "./popout-channel.ts";
 
-const overviewImage = {
-  src: lookUrl("overview"),
-  width: overviewSize.width,
-  height: overviewSize.height,
-};
+function overviewImageOf(slideId: string) {
+  return {
+    src: slideThumbUrl(slideId),
+    width: overviewSize.width,
+    height: overviewSize.height,
+  };
+}
 
 const slideExtent: MapRect = [0, 0, overviewSize.width, overviewSize.height];
 
@@ -69,14 +71,14 @@ export function PopoutScreen({
       >
         {viewport === null ? t`Waiting for the main window` : t`Following the main window`}
       </p>
-      {viewport === null ? null : (
+      {viewport === null || search.slide === undefined ? null : (
         <>
           <p className="mt-2 text-body" data-testid="popout-readout">
             {t`${magnification.toFixed(1)}× at ${Math.round(viewport[0])}, ${Math.round(viewport[1])}`}
           </p>
           <SmartMinimap
             size="full"
-            image={overviewImage}
+            image={overviewImageOf(search.slide)}
             extent={slideExtent}
             viewport={viewport}
             title={t`Whole slide`}

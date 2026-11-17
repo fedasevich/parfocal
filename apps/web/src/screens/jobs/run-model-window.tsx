@@ -21,7 +21,6 @@ import { useState } from "react";
 import { now } from "../../clock.ts";
 import { formatDayMonth } from "../format.ts";
 import { okData } from "../placeholder.tsx";
-import { lookUrl } from "../thumbnails.ts";
 import { runEstimate } from "./model.ts";
 import { modelGroups, runBlockers, slideItems, startingSlides } from "./run-model-parts.ts";
 
@@ -101,7 +100,7 @@ function RunModelForm({
   const queryClient = useQueryClient();
   const start = useStartModelRuns();
   const model = models.find((item) => item.id === modelId);
-  const items = slideItems(slides, setNames, model, lookUrl("overview"));
+  const items = slideItems(slides, setNames, model);
   const again = picked.some((id) => items.find((item) => item.id === id)?.end);
   const blockers = runBlockers(picked.length, model);
   const estimate = model ? runEstimate(model, picked.length, now()) : null;

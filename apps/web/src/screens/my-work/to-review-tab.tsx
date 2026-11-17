@@ -31,6 +31,7 @@ import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useSlideProgress } from "../slide-progress.ts";
+import { SlideThumb } from "../slide-thumb.tsx";
 import {
   Callout,
   PreviewPanel,
@@ -64,10 +65,10 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
       data-vt-source=""
       className="grid grid-cols-[180px_1fr_auto] items-center gap-4.5 rounded-[14px] border border-accent bg-accent-soft p-4"
     >
-      <i
-        aria-hidden="true"
-        className="block h-27.5 rounded-[10px] bg-cover bg-center"
-        style={{ backgroundImage: "url(/mock-assets/overview.jpg)" }}
+      <SlideThumb
+        slideId={resume.slide_id}
+        file={resume.slide_label}
+        className="block h-27.5 w-full rounded-[10px] bg-surf-section"
       />
       <div className="grid gap-1.5">
         <SectionLabel>
@@ -264,6 +265,7 @@ function TaskPreview({
     void goTo(here ? continuePath(task, here) : destinations.guided(task.id, slideId));
   return (
     <PreviewPanel
+      slideId={slideId}
       title={here ? `${here.slide_label}` : task.code}
       subtitle={task.project.name}
       progress={progress}
@@ -304,6 +306,7 @@ function AdjudicationPreview({ item, onClose }: { item: MyAdjudication; onClose:
   const goTo = useGoTo();
   return (
     <PreviewPanel
+      slideId={item.slide_id}
       title={item.slide_label}
       subtitle={item.project.name}
       facts={[
