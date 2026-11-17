@@ -65,11 +65,11 @@ export function usePagedReview(classNames: readonly string[]): PagedReview | nul
     let closed = false;
     let live: PagedCells | null = null;
     void (async () => {
-      const [engine, generator] = await Promise.all([
+      const [engine, probe] = await Promise.all([
         import("../../viewer/viewer-engine.ts"),
-        import("@parfocal/api-client/fake/paged-cell-source"),
+        import("../../fake-api/paged-probe-source.ts"),
       ]);
-      const paged = await engine.PagedCells.open(generator.pagedCellSource({ cells: count }));
+      const paged = await engine.PagedCells.open(await probe.pagedProbeSource(count));
       if (closed) {
         paged.close();
         return;

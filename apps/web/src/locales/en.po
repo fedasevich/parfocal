@@ -2401,11 +2401,8 @@ msgstr "<0>Run a model</0> on the picked slides, or pick another result set."
 msgid "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 msgstr "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 
-#: src/screens/review/guided-review.tsx
-msgid "<0>Signed off 15 Oct.</0> Changes need an amendment."
-msgstr "<0>Signed off 15 Oct.</0> Changes need an amendment."
-
 #: src/routes/issue-pages.$kind.tsx
+#: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
 msgid "<0>Signed off.</0> Changes need an amendment."
 msgstr "<0>Signed off.</0> Changes need an amendment."
@@ -7692,6 +7689,11 @@ msgstr "Hidden with it"
 #: src/screens/upload/files-step.tsx
 msgid "Hide"
 msgstr "Hide"
+
+#. placeholder {0}: set.name
+#: src/viewer/stage-result-cells.tsx
+msgid "Hide {0}"
+msgstr "Hide {0}"
 
 #: src/annotations/layers-panel.tsx
 msgid "Hide overlays"
@@ -14083,8 +14085,10 @@ msgstr "Show"
 
 #. placeholder {0}: model.name
 #. placeholder {0}: row.name
+#. placeholder {0}: set.name
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/sections.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Show {0}"
 msgstr "Show {0}"
 

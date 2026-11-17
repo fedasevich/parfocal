@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { GuidedReview } from "./guided-review.tsx";
 import { useReviewSession } from "./review-data.ts";
 
@@ -94,7 +94,7 @@ function NextSlideCard({ taskId, slideId }: SlideSubmittedProps) {
     next === null
       ? undefined
       : {
-          thumbUrl: lookUrl("overview"),
+          thumbUrl: slideThumbUrl(next.id),
           eyebrow: `Next · slide ${position + 1} of ${session.neighbours?.total}`,
           name: `${next.label} · ${nextSlide?.stain ?? ""}${next.case_label ? ` · case ${next.case_label}` : ""}`,
           meta: `${regions} regions, ${cells} cells · about ${minutes} min`,

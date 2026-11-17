@@ -878,7 +878,7 @@ function GuidedBody({
       }
     >
       <Trans>
-        <b>Signed off 15 Oct.</b> Changes need an amendment.
+        <b>Signed off.</b> Changes need an amendment.
       </Trans>
     </Banner>
   ) : submitted && !behind ? (
