@@ -13,8 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.tables import ResultStatus, result_sets, review_order
+from parfocal_common.cell_chunks import ChunkError
 from parfocal_common.cell_crops import CROP_MICRONS, CROP_SIDE, crop_folder, crop_key
-from parfocal_common.chunk_store import CellSummary, ChunkError, read_summary
+from parfocal_common.chunk_store import CellSummary, read_summary
 from parfocal_common.jobs import StepFailedError
 from parfocal_common.object_ids import Letter
 from parfocal_common.object_store import ObjectStore
