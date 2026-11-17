@@ -79,9 +79,57 @@ Queries per call from the test client on the compose Postgres, measured by `test
 
 Before the change a first version of the same test measured home at 41 (owner) and 53 (reviewer) queries and review tasks at 28 with four tasks and four projects, against 14, 20 and 7 with one task and one project.
 
-## After, deployed
+## After, deployed v0.10.0
 
-TODO after the lead deploys this branch: ten warm calls each of `/api/me/home`, `/api/me/notification-preferences` and `/api/me/review-tasks` with `time_starttransfer` and Server-Timing, and the log lines grouped by `container` and `cloud`.
+The owner's browser after two loads: `/api/me/home` 26 queries and 449 ms of database time (was 59 and 2,429 ms), `/api/me/notification-preferences` 10 and 228 ms (was 29 and 926 ms), `/api/me/review-tasks` 11 and 319 ms (was 32 and 835 ms).
+
+Curl from the owner's Mac at about 15:30 UTC with a scratch session for the seeded `seed:ada@showcase.invalid`, minted by a scratch Modal run in `main` with the app's own session key (4 hours, `amr` with `mfa`). Calls in a row on one kept-alive connection:
+
+| Route | First byte (s) | Server-Timing `app` (ms) | `sql` (ms) | Queries, transactions |
+|---|---|---|---|---|
+| `/api/me`, 8 calls | 0.68, 0.45, 0.45, 0.43, 0.43, 0.52, 0.35, 0.47 | 273, 215, 218, 219, 219, 144, 138, 146 | 99 to 117 | 6 (7 on the first), 2 |
+| `/api/me/home`, 6 calls | 1.11, 0.79, 0.67, 0.53, 0.52, 0.40 | 406, 523, 455, 403, 406, 289 | 243 to 474 | 17, 2 |
+| `/api/me/slides`, 1 call | 1.40 | 1,181 | 1,079 | 70, 2 |
+
+`/api/me/slides` (the slides page) still reads per slide and is the next N+1 to batch.
+
+## The per-request floor
+
+Every signed-in call ran 9 statements before this change when the member signed in with a password only. The deployed log shows `/api/me` at 9 queries for the owner and at 6 for the scratch session, which carries `mfa`. The 9 are the session check's scope and read, 3 statements for the workspace's two factor setting, the rate counter upsert, then the handler's scope and the workspace status. [ADR 0393](../adr/0393-the-session-check-reads-the-two-factor-setting-and-counts-in-batches.md) (the session check reads the two factor setting and counts in batches) joins the setting into the one read and writes rate counts in batches. `test_session_check_queries.py` on the compose Postgres pins `/api/tenant` for a password-only member at 5 statements in 2 transactions on warm calls and 6 on the first call of a minute. On a fast container at 17 to 25 ms a statement that is about 80 to 100 ms less per call, an estimate, not measured. Not deployed.
+
+Left for the floor: the check and the handler still run in 2 transactions, which costs `BEGIN`, `COMMIT` and a scope statement more, about 40 to 110 ms on the deployed `/api/me` (`db` minus `sql`).
+
+## Where the time outside the handler goes
+
+Modal's own request lines (`modal app logs --source system`) give `duration` at Modal's entry and `execution` in the container, 1,819 requests from 11:58 to 15:18 UTC:
+
+- Warm containers: the gap between the two is 79 ms at the median and 200 ms at the 90th percentile.
+- New containers: the first requests wait 1.0 to 2.8 s at Modal's entry while the container starts (`…4SQ1AR` 1,399 to 1,509 ms, `…X60NPR` 1,420 to 1,430 ms, `…BFVH0R` 1,110 to 2,151 ms, `…M4SXSR` 2,580 to 3,245 ms). Some of them restored the memory snapshot and some created it, which is what the first containers after a deploy do. `…5VQRRR` and `…4SQ1AR` both created it after the v0.10.0 image build, so the owner's 2 s sample was partly a deploy effect. The first execution adds 0.7 to 1.3 s outside the database, for example 1,763 ms with 426 ms of database time on `…4SQ1AR`.
+- New containers start inside one page load. `…4SQ1AR` began creating its snapshot at 15:16:04 UTC, and 14 requests finished on `…5VQRRR` at 15:16:06, above the `target_inputs` of 8.
+
+From the Mac, `/api/health` through the edge answers in 0.15 to 0.18 s on a kept-alive connection. A new connection adds 0.1 to 0.5 s of TCP and TLS on the Mac's network.
+
+So the 2 s calls with 0.3 to 0.5 s of database time are new containers, started by a deploy, by a page burst or after 5 idle minutes. The change raises `max_inputs` to 20 and `target_inputs` to 16 and the pool overflow to 30, so one page load fits in one container. Not deployed.
+
+## The slide open of test_065
+
+`test_065` is a Philips TIFF of 77,824 by 53,760 pixels in 9 levels, 428 MiB. Curl from the Mac:
+
+| Step | First byte (s) |
+|---|---|
+| `tile-access` | 0.81, 1.08, 1.12 (`app` 372 to 497 ms, 11 queries) |
+| `levels.json` | 0.29 |
+| 64 KiB ranges of `original.tif` | 0.23 to 0.37 |
+
+The viewer reads the TIFF in 1 MiB blocks and follows the directory chain one directory at a time (`pixel-source/tiff/directory.ts` awaits `getImageCount` and then `getImage` for each directory). A script that walks the chain the same way, on a new TLS connection per block where a browser would reuse one, through the edge read 9 blocks one after another (blocks 0, 294, 295, 386, 387, 416, 424, 426 and 427):
+
+| Run | Walk (s) | Per block (s) | Edge cache |
+|---|---|---|---|
+| First | 4.84 | 1.27, 1.18, 0.64, 0.20, 0.23, 0.33, 0.31, 0.38, 0.31 | not read |
+| Second | 4.18 | 1.73, 0.52, 0.34, … | not read |
+| Third | 2.61 | 0.19 to 0.43 | hit on all 9, 9 to 31 ms in the Worker |
+
+The Worker's range cache works. The biggest wait is the serial directory walk, 2.6 to 4.8 s from the Mac before the first tile, on top of `tile-access`. Writing each level's directory offset into `levels.json` at ingest would let the viewer read all 9 blocks at once. That is an ingest, backfill and viewer change, so it is a new backlog task, not done here. The browser's own waterfall was not read, so client work and the tiles after the walk are not measured. The 4 to 6 s measured here (`tile-access`, `levels.json` and the walk) do not explain the more than 10 s the owner saw on their own.
 
 ## What this means
 
@@ -90,5 +138,6 @@ TODO after the lead deploys this branch: ten warm calls each of `/api/me/home`, 
 
 ## Not covered
 
-- The slide open path. `/api/slides/{slide_id}/tile-access` took 0.47 to 1.01 s with 11 to 14 queries in the same logs, so it is not the 10 s wait. The rest of the path (`levels.json`, the range reads of `original.tif` through the edge Worker) needs a signed-in browser and stays open in OPS-033.
+- The slide open in a browser. The curl and script numbers above cover the network path only.
 - The cloud of the slow containers, which had stopped before this reading.
+- The deployed effect of ADR 0393 and the new concurrency. TODO after the lead deploys: ten warm calls of `/api/me` and `/api/tenant` with Server-Timing, and the first-request gaps of new containers in Modal's system lines.

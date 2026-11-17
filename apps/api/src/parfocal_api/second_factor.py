@@ -38,6 +38,10 @@ async def requires_two_factors(connection: AsyncConnection, tenant_id: uuid.UUID
         select(workspace_settings.c["values"]).where(workspace_settings.c.tenant_id == tenant_id)
     )
     await connection.execute(SET_SCOPE, DatabaseScope(auth=True).parameters())
+    return two_factors_in(stored)
+
+
+def two_factors_in(stored: object) -> bool:
     return (
         isinstance(stored, dict) and cast("dict[str, object]", stored).get(TWO_FACTOR_KEY) is True
     )

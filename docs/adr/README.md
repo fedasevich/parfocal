@@ -353,4 +353,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0390](0390-app-parfocal-eu-is-a-development-environment.md) | app.parfocal.eu is a development environment until the owner says it is production | Accepted | 2026-11-17 |
 | [0391](0391-the-session-check-reads-in-one-statement-and-counts-in-the-same-transaction.md) | The session check reads in one statement and counts in the same transaction | Accepted | 2026-11-17 |
 | [0392](0392-a-deployed-seed-refuses-to-fall-back-to-the-flat-fixtures-folder.md) | A deployed seed refuses to fall back to the flat fixtures folder, and Reset production publishes the fixture folders first | Accepted | 2026-11-17 |
+| [0393](0393-the-session-check-reads-the-two-factor-setting-and-counts-in-batches.md) | The session check reads the two factor setting in its one statement and counts calls in batches | Accepted | 2026-11-17 |
 | [XXXX](XXXX-passkeys-on-the-app-origin-through-zitadel-session-api.md) | Passkeys belong to the app origin and go through Zitadel's session API | Accepted | 2026-11-17 |

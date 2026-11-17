@@ -84,7 +84,7 @@ def test_the_reset_publishes_the_fixture_folders_before_it_empties_anything(
 
     monkeypatch.setattr(reset_module, "empty_tenant_objects", emptied)
     tools = Tools(run=ran, read=lambda _: "", sql=statement, neon=None, fetch=lambda _: (200, {}))  # type: ignore[arg-type]
-    settings = dict.fromkeys(RESET_SETTINGS, "x")
+    settings: dict[str, str] = dict.fromkeys(RESET_SETTINGS, "x")
     reset_module.reset(environment("production"), tools, settings)
     assert steps == [
         MIGRATE[-1],
