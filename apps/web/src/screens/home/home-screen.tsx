@@ -44,7 +44,8 @@ import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useSlideProgress } from "../slide-progress.ts";
-import { coverTile, lookUrl } from "../thumbnails.ts";
+import { SlideThumb } from "../slide-thumb.tsx";
+import { lookUrl } from "../thumbnails.ts";
 import { ActivityCard } from "./activity-card.tsx";
 import { Announcements } from "./announcements.tsx";
 import { DotRow, SideCard } from "./cards.tsx";
@@ -255,12 +256,16 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
       className="cursor-pointer overflow-hidden rounded-xl border border-line bg-chrome p-0 text-left hover:border-accent"
     >
       <div aria-hidden="true" className="grid grid-cols-5 gap-1.5 px-2.5 pt-2.5">
-        {shown.map((slide, index) => (
+        {shown.map((slide) => (
           <span
             key={slide.id}
-            className="relative aspect-square overflow-hidden rounded-lg bg-[#f4f1ee] bg-no-repeat"
-            style={coverTile(project.code, index)}
+            className="relative aspect-square overflow-hidden rounded-lg bg-surf-section"
           >
+            <SlideThumb
+              slideId={slide.id}
+              file={slide.label}
+              className="absolute inset-0 size-full"
+            />
             <i
               className={`absolute right-1.25 bottom-1.25 size-2.25 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,.9)] ${slide.reviewed ? "bg-decision-agree" : "bg-[rgba(120,120,120,.85)]"}`}
             />

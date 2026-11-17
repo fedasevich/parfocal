@@ -43,6 +43,21 @@ export function noteCoverageAnswer(slideId: string, error: unknown, at: number =
   }
 }
 
+const tissueAnswers = new Map<string, Promise<SlideTissue | null>>();
+
+export function storedTissue(slideId: string): Promise<SlideTissue | null> {
+  const known = tissueAnswers.get(slideId);
+  if (known !== undefined) return known;
+  const asked = getSlideTissue(slideId)
+    .then((response) => (response.status === 200 ? response.data : null))
+    .catch((error: unknown) => {
+      if (!(error instanceof ApiError && error.status === 404)) tissueAnswers.delete(slideId);
+      return null;
+    });
+  tissueAnswers.set(slideId, asked);
+  return asked;
+}
+
 function rasterOf(
   module: ViewerModule,
   grid: CoverageGrid,
@@ -113,9 +128,9 @@ export function useSlideCoverage(
     };
     document.addEventListener("visibilitychange", flushWhenHidden);
     let cancelled = false;
-    getSlideTissue(slideId)
-      .then((response) => {
-        const stored = response.status === 200 ? tissueOf(module, grid, response.data) : null;
+    storedTissue(slideId)
+      .then((answer) => {
+        const stored = answer === null ? null : tissueOf(module, grid, answer);
         if (cancelled || stored === null) return;
         tissue = stored;
         tracker.setTissue(stored);

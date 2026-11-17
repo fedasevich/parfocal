@@ -1,4 +1,16 @@
-import { ApiError, getGetPlatformStatusQueryKey, isDraftNotAvailable } from "@parfocal/api-client";
+import {
+  ApiError,
+  getGetMeQueryKey,
+  getGetMyAvailabilityQueryKey,
+  getGetMyHomeQueryKey,
+  getGetPlatformStatusQueryKey,
+  getGetSessionPolicyQueryKey,
+  getListMyAdjudicationsQueryKey,
+  getListMyReviewTasksQueryKey,
+  getListProjectsQueryKey,
+  getListTenantMembersQueryKey,
+  isDraftNotAvailable,
+} from "@parfocal/api-client";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isSessionLocked, needsSecondFactor } from "./session/lock-rules.ts";
 import { isMaintenanceError } from "./shell/maintenance-notice.ts";
@@ -54,5 +66,23 @@ export function createQueryClient(
       },
     },
   });
+  for (const queryKey of shellQueryKeys()) {
+    client.setQueryDefaults(queryKey, { staleTime: shellStaleMs });
+  }
   return client;
+}
+
+const shellStaleMs = 5 * 60_000;
+
+function shellQueryKeys() {
+  return [
+    getGetMeQueryKey(),
+    getListProjectsQueryKey(),
+    getGetMyHomeQueryKey(),
+    getListMyReviewTasksQueryKey(),
+    getListMyAdjudicationsQueryKey(),
+    getListTenantMembersQueryKey(),
+    getGetSessionPolicyQueryKey(),
+    getGetMyAvailabilityQueryKey(),
+  ];
 }

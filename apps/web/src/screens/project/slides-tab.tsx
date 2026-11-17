@@ -38,6 +38,7 @@ import { Fragment, type ReactNode, useState } from "react";
 import { useFormat } from "../../format.ts";
 import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx";
 import { okData } from "../placeholder.tsx";
+import { SlideThumb } from "../slide-thumb.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
 import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
@@ -434,10 +435,10 @@ function SlideRow({
       >
         <TableCell>
           <span className="inline-flex items-center gap-3">
-            <i
-              aria-hidden="true"
-              className="h-7.5 w-11 flex-none rounded-md border border-line bg-cover bg-center"
-              style={{ backgroundImage: "url(/mock-assets/overview.jpg)" }}
+            <SlideThumb
+              slideId={slide.id}
+              file={slide.file}
+              className="h-7.5 w-11 flex-none overflow-hidden rounded-md border border-line"
             />
             <span className="grid min-w-0 gap-0.5">
               <b className="font-semibold text-fg">{slideTitle(slide)}</b>

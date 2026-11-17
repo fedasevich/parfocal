@@ -80515,6 +80515,197 @@ export function useGetSlideTissue<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type getSlideThumbnailResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getSlideThumbnailResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideThumbnailResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideThumbnailResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideThumbnailResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideThumbnailResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideThumbnailResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideThumbnailResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideThumbnailResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideThumbnailResponseSuccess = getSlideThumbnailResponse200 & {
+  headers: Headers;
+};
+export type getSlideThumbnailResponseError = (
+  | getSlideThumbnailResponse400
+  | getSlideThumbnailResponse401
+  | getSlideThumbnailResponse403
+  | getSlideThumbnailResponse404
+  | getSlideThumbnailResponse409
+  | getSlideThumbnailResponse422
+  | getSlideThumbnailResponse429
+  | getSlideThumbnailResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideThumbnailResponse =
+  | getSlideThumbnailResponseSuccess
+  | getSlideThumbnailResponseError;
+
+export const getGetSlideThumbnailUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/thumbnail`;
+};
+
+/**
+ * @summary Get Slide Thumbnail
+ */
+export const getSlideThumbnail = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideThumbnailResponse> => {
+  return apiFetch<getSlideThumbnailResponse>(getGetSlideThumbnailUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideThumbnailQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/thumbnail`] as const;
+};
+
+export const getGetSlideThumbnailQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideThumbnail>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideThumbnail>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideThumbnailQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideThumbnail>>> = ({ signal }) =>
+    getSlideThumbnail(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideThumbnail>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideThumbnailQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideThumbnail>>
+>;
+export type GetSlideThumbnailQueryError = Problem;
+
+export function useGetSlideThumbnail<
+  TData = Awaited<ReturnType<typeof getSlideThumbnail>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideThumbnail>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideThumbnail>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideThumbnail>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideThumbnail<
+  TData = Awaited<ReturnType<typeof getSlideThumbnail>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideThumbnail>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideThumbnail>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideThumbnail>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideThumbnail<
+  TData = Awaited<ReturnType<typeof getSlideThumbnail>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideThumbnail>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Thumbnail
+ */
+
+export function useGetSlideThumbnail<
+  TData = Awaited<ReturnType<typeof getSlideThumbnail>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideThumbnail>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideThumbnailQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type getSlideEmbeddingsResponse200 = {
   data: SlideEmbeddings;
   status: 200;

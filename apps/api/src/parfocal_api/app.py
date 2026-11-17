@@ -107,6 +107,7 @@ from parfocal_api import (
     slide_moves,
     slide_result_stats,
     slide_threads,
+    slide_thumbnail,
     slide_tissue,
     slide_viewer,
     source_watches,
@@ -388,6 +389,7 @@ def create_app(
     app.include_router(security_contact.router)
     app.include_router(slide_coverage.router)
     app.include_router(slide_tissue.router)
+    app.include_router(slide_thumbnail.router)
     app.include_router(slide_embeddings.router)
     app.include_router(view_maps.router)
     app.include_router(outline_types.router)

@@ -129,8 +129,40 @@ export function toSlideTissue(slideId: string): SlideTissue {
   };
 }
 
+export const masklessSlidesKey = "parfocal.fake.maskless-slides";
+
+function maskless(slideId: string): boolean {
+  const stored = session()?.getItem(masklessSlidesKey);
+  if (stored === null || stored === undefined) return false;
+  return (JSON.parse(stored) as string[]).includes(slideId);
+}
+
+function thumbnailSvg(slideId: string): string {
+  const hue = Array.from(slideId.split(""), (char) => char.charCodeAt(0)).reduce(
+    (sum, code) => (sum * 31 + code) % 360,
+    7,
+  );
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">',
+    '<rect width="120" height="80" fill="#f4f1ee"/>',
+    `<ellipse cx="60" cy="40" rx="44" ry="26" fill="hsl(${hue} 45% 72%)"/>`,
+    `<ellipse cx="52" cy="36" rx="22" ry="12" fill="hsl(${hue} 50% 58%)"/>`,
+    "</svg>",
+  ].join("");
+}
+
 export const tissueHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/tissue", ({ params }) =>
-    HttpResponse.json(toSlideTissue(params.slideId)),
+    maskless(params.slideId)
+      ? HttpResponse.json(
+          { status: 404, code: "tissue-mask-missing", title: "No tissue mask" },
+          { status: 404 },
+        )
+      : HttpResponse.json(toSlideTissue(params.slideId)),
+  ),
+  http.get<{ slideId: string }>("*/api/slides/:slideId/thumbnail", ({ params }) =>
+    HttpResponse.text(thumbnailSvg(params.slideId), {
+      headers: { "Content-Type": "image/svg+xml" },
+    }),
   ),
 ];
