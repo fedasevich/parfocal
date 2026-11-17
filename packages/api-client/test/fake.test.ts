@@ -48,8 +48,8 @@ test("all answers generated, seeded and draft operations", async () => {
   assert.equal(await answers("all", "/api/me/jobs"), true);
 });
 
-test("drafts answers only draft operations and lets the rest reach the API", async () => {
-  assert.equal(await answers("drafts", "/api/me/team"), true);
+test("drafts lets every real operation reach the API once no draft is left", async () => {
+  assert.equal(await answers("drafts", "/api/me/team"), false);
   assert.equal(await answers("drafts", "/api/me/jobs"), false);
   assert.equal(await answers("drafts", "/api/me"), false);
   assert.equal(await answers("drafts", "/api/health"), false);

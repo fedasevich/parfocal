@@ -1,6 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
-import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Loader } from "@parfocal/ui/components/loader";
@@ -76,7 +75,6 @@ import { PaintedMapLayer } from "../results/painted-map-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { ViewMapLayer } from "../results/view-map-layer.tsx";
-import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
@@ -87,6 +85,7 @@ import { useToolsLayout } from "../shell/tools-layout.ts";
 import { appFrameReporter } from "../telemetry/frame-monitor.ts";
 import { useFrameMonitor } from "../telemetry/use-frame-monitor.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
+import { AreaKeys } from "./area-keys.tsx";
 import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
@@ -103,8 +102,6 @@ import { stageToolOf } from "./stage-tools.ts";
 import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
-import { TravelMinimap } from "./travel-minimap.tsx";
-import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
@@ -148,70 +145,6 @@ function ViewerKeys({
 }) {
   useViewerKeys(session.engine, session.module, selection);
   return null;
-}
-
-function AreaKeys({
-  session,
-  areas,
-  host,
-  focused,
-}: {
-  session: Session;
-  areas: readonly SlideAreaEntry[];
-  host: HTMLElement | null;
-  focused: { current: SelectionArea | null };
-}) {
-  const { t } = useLingui();
-  const nav = useEngineAreaNav(session.engine, session.module, areas, host);
-  useEffect(() => {
-    focused.current = areas.find((entry) => entry.object === nav.current)?.bounds ?? null;
-    return () => {
-      focused.current = null;
-    };
-  }, [focused, areas, nav.current]);
-  const rows = useMemo(() => areaRows(areas, () => undefined), [areas]);
-  const roles = useMemo(
-    () =>
-      new Map(
-        areaRows(areas, () => undefined).map((row) => [
-          row.object,
-          row.role ? areaRoleText[row.role] : undefined,
-        ]),
-      ),
-    [areas],
-  );
-  if (areas.length === 0) return null;
-  const targetRow = rows.find((row) => row.object === nav.travelling?.object);
-  return (
-    <>
-      {nav.travelling ? (
-        <TravelMinimap
-          engine={session.engine}
-          travel={nav.travelling}
-          label={`area ${targetRow?.number ?? ""}`.trim()}
-          host={host}
-        />
-      ) : null}
-      <section
-        aria-label={t`Areas`}
-        data-testid="area-nav"
-        data-current={nav.current ?? ""}
-        data-visited={[...nav.visited].sort().join(" ")}
-        className="absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
-      >
-        <h2 className="m-0 font-semibold text-body-sm">
-          <Trans>Areas, largest first</Trans>
-        </h2>
-        <AreaList
-          areas={areas}
-          current={nav.current}
-          visited={nav.visited}
-          roleOf={(object) => roles.get(object)}
-          onGoTo={nav.goTo}
-        />
-      </section>
-    </>
-  );
 }
 
 export type ViewedLink = {
