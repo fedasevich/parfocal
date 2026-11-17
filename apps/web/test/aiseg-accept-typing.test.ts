@@ -4,6 +4,7 @@ import { toOutlineTypes } from "@parfocal/api-client/fake";
 import {
   type OutlineTyper,
   typeAccepted,
+  typerSized,
   typingTargets,
   withTypings,
 } from "../src/aiseg/accept-typing.ts";
@@ -141,5 +142,22 @@ describe("typing one-click accepts with the server typer", () => {
     const smart = acceptedSmartRun();
     const short = toOutlineTypes("slide-1", [{ points: Array.from(square(16, 16)) }]);
     assert.equal(withTypings(smart.document, smart.shapes, short), smart.document);
+  });
+
+  it("leaves a ring too wide or too long for the typer untyped", () => {
+    const wide = new Float32Array([0, 0, 600, 0, 600, 20, 0, 20]);
+    const long = new Float32Array(4098).map((_, index) => index % 7);
+    assert.equal(typerSized(square(16, 16)), true);
+    assert.equal(typerSized(wide), false);
+    assert.equal(typerSized(long), false);
+    const doc = withSmartRun(createDocument(), 1, null, {
+      ...seeded,
+      kept: [
+        { prompts: emptyPrompts, ring: square(16, 16), confidence: 0.9 },
+        { prompts: emptyPrompts, ring: wide, confidence: 0.9 },
+      ],
+    });
+    const accepted = acceptProposals(doc);
+    assert.equal(typingTargets(accepted.document, accepted.shapes).length, 1);
   });
 });

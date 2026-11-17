@@ -1,7 +1,7 @@
 import { type OutlineTypes, type TypedOutline, typeOutlines } from "@parfocal/api-client";
 import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
 import { type AnnotationDocument, typeShape } from "../annotations/document.ts";
-import type { OutlineTyping, Shape } from "../annotations/shapes.ts";
+import { boundsOf, type OutlineTyping, type Shape } from "../annotations/shapes.ts";
 import { smartSource } from "./smart-run.ts";
 
 export const typedSources: ReadonlySet<string> = new Set([smartSource]);
@@ -11,16 +11,34 @@ export type OutlineTyper = (
   outlines: readonly { points: number[] }[],
 ) => Promise<OutlineTypes>;
 
-export const serverTyper: OutlineTyper = async (slideId, outlines) =>
-  (await typeOutlines(slideId, { outlines: [...outlines] })).data;
+export const serverTyper: OutlineTyper = async (slideId, outlines) => {
+  const response = await typeOutlines(slideId, { outlines: [...outlines] });
+  if (response.status !== 200) throw new Error("The typer did not answer");
+  return response.data;
+};
 
 export const typerBatch = 500;
+
+export const typerSpan = 512;
+
+export const typerPoints = 4096;
+
+export function typerSized(points: Float32Array): boolean {
+  const [minX, minY, maxX, maxY] = boundsOf(points);
+  return (
+    points.length >= 6 &&
+    points.length <= typerPoints &&
+    maxX - minX <= typerSpan &&
+    maxY - minY <= typerSpan
+  );
+}
 
 export type KnownClass = (classKey: string) => boolean;
 
 export function typingTargets(doc: AnnotationDocument, shapes: readonly Shape[]): Shape[] {
   return shapes.filter((shape) => {
     if (shape.provenance.kind !== "model" || shape.provenance.typing !== undefined) return false;
+    if (!typerSized(shape.points)) return false;
     const source = doc.runs.get(shape.provenance.runId)?.source;
     return source != null && typedSources.has(source);
   });
@@ -30,7 +48,7 @@ function typingOf(answer: OutlineTypes, typed: TypedOutline, confidence: number 
   return {
     typer: answer.typer,
     version: answer.version,
-    probabilities: typed.probabilities,
+    probabilities: { ...typed.probabilities },
     type: typed.type,
     alternatives: typed.alternatives,
     foreground: typed.foreground,

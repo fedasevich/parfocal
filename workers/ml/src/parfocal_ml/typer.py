@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from skimage.transform import resize
 
-from parfocal_ml.type_evaluation import VIEWER_CLASSES
+from parfocal_ml.type_evaluation import VIEWER_CLASSES, scaled
 
 TYPER_MPP = 0.25
 PANNUKE_TYPES = ("neoplastic", "inflammatory", "connective", "dead", "epithelial")
@@ -119,6 +119,7 @@ def type_nuclei(
     model: Model,
     mpp: float = TYPER_MPP,
     tissue_default: TissueDefault = "other",
+    temperature: float = 1.0,
 ) -> list[TypedNucleus]:
     if not outlines:
         return []
@@ -130,5 +131,5 @@ def type_nuclei(
             nuclei.append(typed(np.full(len(VIEWER_CLASSES), 1.0 / len(VIEWER_CLASSES)), 0.0))
             continue
         pannuke, foreground = averaged
-        nuclei.append(typed(to_viewer(pannuke, tissue_default), foreground))
+        nuclei.append(typed(scaled(to_viewer(pannuke, tissue_default), temperature), foreground))
     return nuclei

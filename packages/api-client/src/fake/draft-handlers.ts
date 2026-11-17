@@ -12,7 +12,6 @@ import { checklist, sampleProject } from "./scenario.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
-import { viewerToolsDraftOperations } from "./viewer-tools-handlers.ts";
 
 export { getGetEvaluationReportMockHandler } from "./adjudication-handlers.ts";
 export {
@@ -56,7 +55,6 @@ export {
   getListStudyTemplateReviewDefaultsMockHandler,
 } from "./task-handlers.ts";
 export { getListTeamWorkloadMockHandler } from "./team-handlers.ts";
-export { getTypeOutlinesMockHandler } from "./viewer-tools-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
@@ -86,7 +84,6 @@ export const draftOperations: DraftOperation[] = [
   ...clinicalDraftOperations,
   ...connectModelDraftOperations,
   ...adjudicationDraftOperations,
-  ...viewerToolsDraftOperations,
 ];
 
 export const checklistHandlers = (): RequestHandler[] => [

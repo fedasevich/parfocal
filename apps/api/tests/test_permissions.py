@@ -111,6 +111,7 @@ from parfocal_common.model_runs import (
     tile_key,
 )
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.outline_types import KIND as OUTLINE_TYPES_KIND
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_common.view_maps import reply_of as view_tile_reply
@@ -428,7 +429,19 @@ def link_site_serving() -> threading.Thread:
     return thread
 
 
-INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile"})
+INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines"})
+
+
+OUTLINE_TYPED: dict[str, object] = {
+    "outlines": [
+        {
+            "probabilities": {"tumor": 0.7, "stroma": 0.1, "immune": 0.1, "other": 0.1},
+            "type": "tumor",
+            "alternatives": [],
+            "foreground": 0.9,
+        }
+    ]
+}
 
 
 class BlankViewMap:
@@ -436,6 +449,8 @@ class BlankViewMap:
         return None
 
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        if call.get("kind") == OUTLINE_TYPES_KIND:
+            return OUTLINE_TYPED
         width, height = view_tile_size(4096, 2048, 0, 0)
         return view_tile_reply(bytes(width * height), width, height)
 
@@ -867,6 +882,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/slides/{w.slide}/embeddings/warm", {"device": "fast"}
     ),
     "scoreViewMapTile": lambda w: Call("POST", f"/api/slides/{w.slide}/view-map/0/0"),
+    "typeOutlines": lambda w: Call(
+        "POST",
+        f"/api/slides/{w.slide}/outline-types",
+        {"outlines": [{"points": [0, 0, 9, 0, 9, 9, 0, 9]}]},
+    ),
     "recordSlideCoverage": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/coverage",

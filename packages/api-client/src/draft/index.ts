@@ -97,4 +97,3 @@ export {
   notAvailableCode,
   setDraftsAnswered,
 } from "./support.ts";
-export * from "./type-outlines.ts";

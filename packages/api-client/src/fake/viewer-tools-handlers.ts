@@ -1,15 +1,14 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import {
-  type OutlineTypes,
-  outlineTypesDraftSchema,
-  outlineTypesSchema,
-  type TypedOutline,
-  typerClasses,
-} from "../draft/type-outlines.ts";
 import { getListAnnotationLayersMockHandler } from "../generated/api.msw.ts";
-import type { AnnotationLayers, TierMapping } from "../generated/api.ts";
+import {
+  type AnnotationLayers,
+  type OutlinesToType,
+  type OutlineTypes,
+  type TierMapping,
+  type TypedOutline,
+  TyperClass,
+} from "../generated/api.ts";
 import { liveModelTiers } from "./console-handlers.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { slideByIndex } from "./scenario.ts";
 import { layersOnA1 } from "./scenario-viewer-tools.ts";
 import { servingOf } from "./worker-outage.ts";
@@ -25,6 +24,8 @@ export const toModelTiers = (): TierMapping[] =>
 
 export const getListModelTiersMockHandler = (overrideResponse?: TierMapping[]) =>
   http.get("*/api/tenant/model-tiers", () => HttpResponse.json(overrideResponse ?? toModelTiers()));
+
+const typerClasses = Object.values(TyperClass);
 
 export const fakeTyper = { typer: "pathosam-hovernext", version: "v1.2" } as const;
 
@@ -62,41 +63,38 @@ export const fakeTypedOutline = (points: readonly number[]): TypedOutline => {
 export const toOutlineTypes = (
   slideId: string,
   outlines: readonly { points: readonly number[] }[],
-): OutlineTypes =>
-  outlineTypesSchema.parse({
-    slide_id: slideId,
-    ...fakeTyper,
-    calibrated: true,
-    outlines: outlines.map((outline) => fakeTypedOutline(outline.points)),
-  });
+): OutlineTypes => ({
+  slide_id: slideId,
+  ...fakeTyper,
+  calibrated: true,
+  outlines: outlines.map((outline) => fakeTypedOutline(outline.points)),
+});
 
-export const getTypeOutlinesMockHandler = (overrideResponse?: OutlineTypes) =>
+const maxOutlines = 500;
+
+const sendable = (body: Partial<OutlinesToType> | null): body is OutlinesToType =>
+  Array.isArray(body?.outlines) &&
+  body.outlines.length >= 1 &&
+  body.outlines.length <= maxOutlines &&
+  body.outlines.every((outline) => Array.isArray(outline.points) && outline.points.length >= 6);
+
+export const fakeTypeOutlinesHandler = (overrideResponse?: OutlineTypes) =>
   http.post<{ slideId: string }>(
     "*/api/slides/:slideId/outline-types",
     async ({ params, request }) => {
-      const parsed = outlineTypesDraftSchema.safeParse(await request.json());
-      if (!parsed.success) {
+      const body = (await request.json()) as Partial<OutlinesToType> | null;
+      if (!sendable(body)) {
         return HttpResponse.json(
-          { type: "about:blank", title: "Send one to 500 closed outlines", status: 400 },
-          { status: 400 },
+          { type: "about:blank", title: "Send one to 500 closed outlines", status: 422 },
+          { status: 422 },
         );
       }
-      return HttpResponse.json(
-        overrideResponse ?? toOutlineTypes(params.slideId, parsed.data.outlines),
-      );
+      return HttpResponse.json(overrideResponse ?? toOutlineTypes(params.slideId, body.outlines));
     },
   );
 
-export const viewerToolsDraftOperations: DraftOperation[] = [
-  {
-    operationId: "typeOutlines",
-    method: "post",
-    path: "/api/slides/{slide_id}/outline-types",
-    handler: () => getTypeOutlinesMockHandler(),
-  },
-];
-
 export const viewerToolsHandlers = (): RequestHandler[] => [
+  fakeTypeOutlinesHandler(),
   getListModelTiersMockHandler(),
   getListAnnotationLayersMockHandler(({ params }) => toAnnotationLayers(String(params.slideId))),
 ];
