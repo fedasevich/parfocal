@@ -1,4 +1,5 @@
 import uuid
+from collections import Counter
 from collections.abc import Iterable
 from datetime import date
 from typing import Any
@@ -38,3 +39,16 @@ async def tell_due_changed(connection: AsyncConnection, row: Any, due_on: date |
     await told(
         connection, row, people.all(), NotificationKind.TASK_DUE_CHANGED, {"due_on": iso(due_on)}
     )
+
+
+async def tell_assigned(
+    connection: AsyncConnection, row: Any, assignees: Iterable[uuid.UUID], due_on: date | None
+) -> None:
+    for person, slide_count in Counter(assignees).items():
+        await told(
+            connection,
+            row,
+            [person],
+            NotificationKind.TASK_ASSIGNED,
+            {"slides": slide_count, "due_on": iso(due_on)},
+        )

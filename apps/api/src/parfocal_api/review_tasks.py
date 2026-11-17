@@ -1,6 +1,5 @@
 import secrets
 import uuid
-from collections import Counter
 from collections.abc import Mapping, Sequence
 from datetime import UTC, date, datetime
 from typing import Annotated, Any, cast
@@ -45,7 +44,6 @@ from parfocal_api.review_order import Results, clear_order, store_order, stored_
 from parfocal_api.tables import (
     AnalysisTemplate,
     DecisionStyle,
-    NotificationKind,
     ProjectRole,
     ResultStatus,
     StartMode,
@@ -65,7 +63,7 @@ from parfocal_api.tables import (
     study_template_versions,
     study_templates,
 )
-from parfocal_api.task_notices import iso, tell_due_changed, told
+from parfocal_api.task_notices import tell_assigned, tell_due_changed
 from parfocal_api.taxonomy import ProjectClass, classes_of
 from parfocal_api.worklist_events import announce_worklist, task_people
 from parfocal_common.scope import Scope as SamplingScope
@@ -1003,16 +1001,9 @@ async def create_review_task(
             }
         ),
     )
-    made_row = await task_row(connection, task_id)
-    slides_per_person = Counter(user for _, user in pairs)
-    for person, slide_count in slides_per_person.items():
-        await told(
-            connection,
-            made_row,
-            [person],
-            NotificationKind.TASK_ASSIGNED,
-            {"slides": slide_count, "due_on": iso(draft.due_on)},
-        )
+    await tell_assigned(
+        connection, await task_row(connection, task_id), (user for _, user in pairs), draft.due_on
+    )
     background.add_task(deliver_after_commit, http.app, project.tenant_id)
     announce_worklist(
         background, live, project.tenant_id, await task_people(connection, task_id), task=task_id
