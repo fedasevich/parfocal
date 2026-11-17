@@ -1,7 +1,7 @@
 # 0293. Production is the only cloud environment until the first real user, and the owner's test data there may be reset
 
 - Date: 2026-11-13
-- Status: Accepted
+- Status: Accepted, changed by ADR 0390 (the deployed app is a development environment)
 - Deciders: Yurii Fedas
 - Backlog: OPS-014 (bring back staging before the first real user), added here. Changes SKEL-001 (production environment exists), SKEL-002 (log in through the IdP), SKEL-009 (CI deploys main to production), SKEL-011 (skeleton numbers from production and hosted runners), OPS-003 (environments), OPS-005 (continuous deployment), OPS-006 (observability stack), FOUND-035 (squash the migrations into one baseline) and SEC-011 (security headers and CSP). OPS-002 (deploy definitions) targets production too and is edited by its own agent.
 
