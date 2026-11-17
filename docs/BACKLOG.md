@@ -745,18 +745,18 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests cover scope enforcement and token revocation.
   Built as [ADR 0029](adr/0029-service-accounts-with-own-api-tokens.md) says.
 
-- [ ] IAM-012 · Per-organisation SSO
+- [x] IAM-012 · Per-organisation SSO
   SAML or OIDC federation per tenant through the IdP, with just-in-time provisioning and role mapping.
   Done when an E2E test logs in through a test SAML IdP.
   Size: L.
 
-- [ ] IAM-028 · SSO from the sign-in screen and the SSO spec in CI
+- [x] IAM-028 · SSO from the sign-in screen and the SSO spec in CI
   IAM-012 (per-organisation SSO) built SAML sign-in through `/api/auth/sso?domain=`, but the web sign-in page has no SSO entry, the CI job for `apps/e2e/tests/sso.spec.ts` lacks the `STORAGE_*` settings its tenant setup needs, rerunning `connect-saml` on a connected workspace is untested, and a person who already has a password account under the same email is not linked.
   Done when the sign-in screen offers "Sign in with your organisation" that asks for the work email domain, the SSO spec passes in CI, a test reruns `connect-saml` without duplicating the connection, and a test links an existing password account by verified email.
   Depends on IAM-012.
   Size: M.
 
-- [ ] IAM-029 · Prove the SSO email domain by DNS
+- [x] IAM-029 · Prove the SSO email domain by DNS
   IAM-028 (SSO from the sign-in screen) links an existing account when the workspace's email domain matches, and ADR 0352 (SSO links an existing account by verified email) leaves proving that the workspace owns the domain as a TODO. A workspace admin adds a DNS TXT record with a token, and the API checks it before `connect-saml` routes or links anyone for that domain.
   Done when tests show an unproven domain neither routes `/api/auth/sso` nor links an account, a proven one does, a lookup failure keeps the last proof, and the ADR's TODO is answered.
   Depends on IAM-028.
@@ -3820,7 +3820,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-001.
   Size: M.
 
-- [ ] AITUM-009 · Map this view asks the server for its tiles
+- [x] AITUM-009 · Map this view asks the server for its tiles
   The "Map this view" panel of AITUM-004 (view-scoped map on demand) still has only the fake scorer. One view tile (256 px cells, 16 by 16) is 2 by 2 job tiles of AITUM-008 (tumor map job and route), both anchored at the slide origin, so a view tile is an aligned box of the job's grid halved twice. The API has no synchronous path to a GPU pool yet, so choose between a box job the panel polls and a call on the interactive lane, and record it as an ADR. A box map must not be stored as a ready heatmap result set, because that hides the panel.
   Done when an API test asks for one view tile with a stand-in scorer and gets the 256 cell bytes, and a web test shows the panel using the server scorer outside the fake API.
   Depends on AITUM-008.
@@ -4653,7 +4653,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the hidden panel test passes when run alone and asserts the accessible name of the tab.
   Size: S.
 
-- [ ] TEST-033 · The axe scan of a route does not depend on test order
+- [x] TEST-033 · The axe scan of a route does not depend on test order
   `apps/web/e2e/a11y.ts` scans each route once per worker, in the state the first test to finish there left it, and the web specs run fully parallel. A violation that shows only in another state of the route, such as the hidden side panel of TEST-032 (the floating side panel tab is named by what it shows), stays unseen until the order changes and then turns an unrelated run red.
   Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
   Size: M.
@@ -4668,7 +4668,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when each has a named cause, a fix in the spec, the fixture or the component, and neither test sits in a `flaky-*` artifact for a week of main.
   Size: S.
 
-- [ ] TEST-036 · Display panel Undo tests repeat the key gesture when the Undo window is missed
+- [x] TEST-036 · Display panel Undo tests repeat the key gesture when the Undo window is missed
   "in the full viewer a preset switches with the keys and is recorded with the next decision" in `apps/web/e2e/display-panel.spec.ts` failed both attempts in the ci run on commit c82a417e: the Undo of the "Display: Tumor first" toast was detached before the click landed. The toast lives 4 seconds from the key press and the page is busy right after a preset switch, so a starved runner uses the window up. The same click sits in "Shift+3 switches to the second preset with an Undo and Shift+1 goes back". Both tests press the keys again and click again when the Undo is gone.
   Done when both tests pass locally with no retries, pass with the first Undo window forced to lapse, and stay out of the failed and retried tests of the next three ci runs on main.
   Depends on TEST-029.
