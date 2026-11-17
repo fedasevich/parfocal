@@ -16,7 +16,14 @@ from parfocal_api.blinding import user_of
 from parfocal_api.cases import keyring_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.import_sources import host_of, saved_reach, source_row
-from parfocal_api.link_imports import LinkNotFetchedError, Look, look, planned_files, start_file
+from parfocal_api.link_imports import (
+    LinkNotFetchedError,
+    Look,
+    late_results,
+    look,
+    planned_files,
+    start_file,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, NotFoundError, ProblemError
@@ -247,15 +254,22 @@ async def scan_watch(
         watch.project_id,
         watch.source_id,
     )
-    seen = set(
-        await connection.scalars(
-            select(watched_files.c.name).where(watched_files.c.watch_id == watch.id)
+    remembered = {
+        row.name: row.upload_id
+        for row in await connection.execute(
+            select(watched_files.c.name, watched_files.c.upload_id).where(
+                watched_files.c.watch_id == watch.id
+            )
         )
-    )
+    }
+    seen = set(remembered)
     fresh = [entry.path for entry in found.draft.slides if entry.path not in seen]
     fresh = fresh[:MAX_FILES_PER_SCAN]
     planned = planned_files(found, settings, set(fresh))
-    slide_uploads: dict[str, uuid.UUID] = {}
+    slide_uploads: dict[str, uuid.UUID] = {
+        name: upload for name, upload in remembered.items() if upload is not None
+    }
+    planned += late_results(found, settings, set(slide_uploads), seen)
     started = {
         item.file.name: (
             await start_file(

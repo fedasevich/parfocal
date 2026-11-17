@@ -300,6 +300,33 @@ def planned_files(look: Look, settings: Settings, names: set[str]) -> list[Plann
     return planned
 
 
+def late_results(
+    look: Look, settings: Settings, imported: set[str], seen: set[str]
+) -> list[Planned]:
+    by_name = {file.name: file for file in look.files}
+    paired = paired_results(look.draft)
+    planned: list[Planned] = []
+    for entry in look.draft.slides:
+        if entry.path not in imported:
+            continue
+        case_id = entry.case.case_id if entry.case is not None else None
+        for pairing in paired.get(entry.path, []):
+            result = by_name[pairing.path]
+            if pairing.path in seen or refusal_of(result, settings) is not None:
+                continue
+            planned.append(
+                Planned(
+                    result,
+                    UploadKind.RESULT,
+                    case_id,
+                    entry.path,
+                    pairing.certainty,
+                    pairing.rule,
+                )
+            )
+    return planned
+
+
 async def start_file(
     connection: AsyncConnection,
     actor: Actor,

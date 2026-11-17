@@ -382,11 +382,14 @@ def notices(database: str) -> list[tuple[Any, ...]]:
     )
 
 
-def check_sources(database: str, at: datetime) -> int:
+def check_sources(database: str, at: datetime, origin: str) -> int:
+    settings = api_settings(database).model_copy(update={"link_trusted_origins": [origin]})
+    keyring = MasterKeyring.from_setting(TEST_MASTER_KEYS)
+
     async def work() -> int:
-        engine = create_engine(str(api_settings(database).database_url))
+        engine = create_engine(str(settings.database_url))
         try:
-            return await notice_every_workspace(engine, at)
+            return await notice_every_workspace(engine, at, keyring, settings)
         finally:
             await engine.dispose()
 
@@ -413,7 +416,7 @@ def test_a_source_down_for_15_minutes_notifies_the_admins_once_per_outage(
     for _ in range(3):
         access(linked, team, slide_id)
     assert slide_row(database, slide_id)[5] == 3
-    assert check_sources(database, datetime.now(UTC)) == 0
+    assert check_sources(database, datetime.now(UTC), site.origin) == 0
     assert notices(database) == []
 
     failing_since(database, slide_id, datetime.now(UTC) - timedelta(minutes=16))
@@ -421,7 +424,7 @@ def test_a_source_down_for_15_minutes_notifies_the_admins_once_per_outage(
     assert notices(database) == [
         (team.admin.user_id, "source", source["id"], "Connected source down")
     ]
-    assert check_sources(database, datetime.now(UTC)) == 0
+    assert check_sources(database, datetime.now(UTC), site.origin) == 0
     access(linked, team, slide_id)
     assert len(notices(database)) == 1
 
@@ -442,7 +445,28 @@ def test_a_source_down_for_15_minutes_notifies_the_admins_once_per_outage(
     site.routes[FILE] = Served(503)
     for _ in range(3):
         access(linked, team, slide_id)
-    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=10)) == 0
-    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=20)) == 1
+    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=10), site.origin) == 0
+    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=20), site.origin) == 1
     assert len(notices(database)) == 2
-    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=40)) == 0
+    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=40), site.origin) == 0
+
+
+def test_a_source_that_answers_a_one_byte_read_gets_no_down_notice(
+    linked: ApiAs, database: str, team: Team, site: Site, tmp_path: Path
+) -> None:
+    data = fixture_path(SLIDE).read_bytes()
+    serve_slide(site, data)
+    source = save_source(linked, team, site)
+    slide_id = opened_in_place(linked, team, source["id"])
+    inspected(database, team, site, tmp_path)
+
+    site.routes[FILE] = Served(503)
+    for _ in range(3):
+        access(linked, team, slide_id)
+    failing_since(database, slide_id, datetime.now(UTC) - timedelta(minutes=16))
+    assert slide_row(database, slide_id)[5] == 3
+
+    serve_slide(site, data)
+    assert check_sources(database, datetime.now(UTC), site.origin) == 0
+    assert [row for row in notices(database) if row[2] == source["id"]] == []
+    assert slide_row(database, slide_id)[5] == 0

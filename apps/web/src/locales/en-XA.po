@@ -657,6 +657,11 @@ msgstr ""
 msgid "{0} deleted"
 msgstr ""
 
+#. placeholder {0}: task.open_disagreements
+#: src/screens/my-work/assigned-tab.tsx
+msgid "{0} disagreements"
+msgstr ""
+
 #. placeholder {0}: summary.queue.total
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} disagreements resolved"
@@ -826,6 +831,12 @@ msgstr ""
 msgid "{0} is left open. Sign-off counts it on purpose."
 msgstr ""
 
+#. placeholder {0}: task.code
+#. placeholder {1}: formatDue(day)
+#: src/screens/my-work/assigned-tab.tsx
+msgid "{0} is now due {1}. Reviewers with slides left are told."
+msgstr ""
+
 #. placeholder {0}: offer.name
 #: src/screens/admin/template-offers.tsx
 msgid "{0} is now in the library"
@@ -874,6 +885,12 @@ msgstr ""
 #. placeholder {0}: presetName(presetNames[index] ?? "task")
 #: src/screens/settings/settings-screen.tsx
 msgid "{0} is your default preset. Settings a task locks still follow the task."
+msgstr ""
+
+#. placeholder {0}: nameOf(userId)
+#. placeholder {1}: task.code
+#: src/screens/my-work/assigned-tab.tsx
+msgid "{0} joined {1} and is told by email."
 msgstr ""
 
 #. placeholder {0}: ask.display_name
@@ -2713,6 +2730,10 @@ msgstr ""
 msgid "A review task made from this template starts with these. The researcher can change each one in the task, and the report keeps the template."
 msgstr ""
 
+#: src/screens/my-work/assigned-tab.tsx
+msgid "a reviewer"
+msgstr ""
+
 #: src/screens/disagreements/send-modal.tsx
 msgid "A reviewer of {taskCode}"
 msgstr ""
@@ -3030,6 +3051,10 @@ msgstr ""
 
 #: src/screens/admin/api-section.tsx
 msgid "Add result sets to P07"
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Add reviewer"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -3644,7 +3669,7 @@ msgid "Area {0} confirmed"
 msgstr ""
 
 #: ../../packages/ui/src/components/findings-panel.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/area-keys.tsx
 msgid "Areas"
 msgstr ""
 
@@ -3653,7 +3678,7 @@ msgid "Areas join the list as they are found. The category waits until the whole
 msgstr ""
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/area-keys.tsx
 msgid "Areas, largest first"
 msgstr ""
 
@@ -4523,6 +4548,10 @@ msgstr ""
 msgid "Change Counts as on {0}?"
 msgstr ""
 
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Change due date"
+msgstr ""
+
 #. placeholder {0}: otherReport.task_code
 #. placeholder {1}: report.task_code
 #: src/screens/evaluation/report-pages.tsx
@@ -4757,6 +4786,10 @@ msgstr ""
 
 #: src/results/painted-map-layer.tsx
 msgid "Choose a saved map"
+msgstr ""
+
+#: src/screens/upload/watched-folder.tsx
+msgid "Choose a saved source"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
@@ -5297,7 +5330,7 @@ msgstr ""
 msgid "Connect your own model"
 msgstr ""
 
-#: src/screens/upload/overlays.tsx
+#: src/screens/upload/watched-folder.tsx
 msgid "Connected"
 msgstr ""
 
@@ -6154,6 +6187,7 @@ msgid "Drop to upload into {projectCode}"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
+#: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -6601,6 +6635,10 @@ msgstr ""
 msgid "Everyone reviews all"
 msgstr ""
 
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Everyone who reviews in this project is on the task."
+msgstr ""
+
 #: src/screens/home/activity-card.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Everything"
@@ -6959,7 +6997,7 @@ msgid "Fold to one line"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
-#: src/screens/upload/overlays.tsx
+#: src/screens/upload/watched-folder.tsx
 msgid "Folder"
 msgstr ""
 
@@ -7281,6 +7319,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/command-palette.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Go to"
@@ -7671,10 +7710,6 @@ msgstr ""
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "How objects draw"
-msgstr ""
-
-#: src/screens/upload/overlays.tsx
-msgid "How often"
 msgstr ""
 
 #: src/screens/new-task/modals.tsx
@@ -8827,8 +8862,9 @@ msgstr ""
 msgid "Look at the slide without AI, or ask the researcher to run the model."
 msgstr ""
 
-#: src/screens/upload/overlays.tsx
-msgid "Look for new files every"
+#. placeholder {0}: folder.every
+#: src/screens/upload/watched-folder.tsx
+msgid "Looks for new files every {0}."
 msgstr ""
 
 #: src/screens/upload/viewer-flow.tsx
@@ -9241,9 +9277,15 @@ msgstr ""
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/screens/admin/common.tsx
+#: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/project-page.tsx
 msgid "More"
+msgstr ""
+
+#. placeholder {0}: task.code
+#: src/screens/my-work/assigned-tab.tsx
+msgid "More actions for {0}"
 msgstr ""
 
 #. placeholder {0}: member.display_name
@@ -9466,7 +9508,7 @@ msgstr ""
 msgid "New comment <0/>"
 msgstr ""
 
-#: src/screens/upload/overlays.tsx
+#: src/screens/upload/watched-folder.tsx
 msgid "New files in this folder arrive in {projectCode} on their own, checked like an upload."
 msgstr ""
 
@@ -9539,7 +9581,6 @@ msgid "New shapes go to {0}"
 msgstr ""
 
 #: src/screens/admin/storage.tsx
-#: src/screens/upload/overlays.tsx
 msgid "New slides"
 msgstr ""
 
@@ -10411,14 +10452,19 @@ msgstr ""
 msgid "Nudge {0}"
 msgstr ""
 
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Nudge {behindName}"
+msgstr ""
+
 #: src/screens/team/team-screen.tsx
 msgid "Nudge all behind"
 msgstr ""
 
 #. placeholder {0}: andJoin(names)
 #. placeholder {0}: nameOf(nudging.userId) ?? "the reviewer"
-#. placeholder {0}: person(modal.userId).name
+#. placeholder {0}: nameOf(userId)
 #: src/screens/disagreements/queue-screen.tsx
+#: src/screens/my-work/assigned-tab.tsx
 #: src/screens/team/team-screen.tsx
 msgid "Nudge sent to {0}"
 msgstr ""
@@ -11453,8 +11499,16 @@ msgstr ""
 msgid "Pick a model"
 msgstr ""
 
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Pick a new due date."
+msgstr ""
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "Pick a review task to compare with."
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Pick a reviewer"
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -11525,6 +11579,10 @@ msgstr ""
 
 #: src/screens/disagreements/send-modal.tsx
 msgid "Pick who decides."
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Pick who joins the task."
 msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
@@ -12063,7 +12121,6 @@ msgid "Reason: {0}"
 msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
-#: src/screens/my-work/assigned-tab.tsx
 msgid "Reassign"
 msgstr ""
 
@@ -12071,12 +12128,8 @@ msgstr ""
 msgid "Reassign {count} slides"
 msgstr ""
 
-#. placeholder {0}: people(behindmost)?.name ?? "a reviewer"
-#: src/screens/my-work/assigned-tab.tsx
-msgid "Reassign from {0}"
-msgstr ""
-
 #: ../../packages/ui/src/components/team.tsx
+#: src/screens/my-work/assigned-tab.tsx
 msgid "Reassign slides"
 msgstr ""
 
@@ -12491,7 +12544,6 @@ msgstr ""
 msgid "Result file"
 msgstr ""
 
-#: src/screens/upload/overlays.tsx
 #: src/screens/upload/result-problems.tsx
 msgid "Result files"
 msgstr ""
@@ -12688,6 +12740,7 @@ msgstr ""
 #: src/screens/admin/people.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/my-work/all-slides-tab.tsx
+#: src/screens/my-work/assigned-tab.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/project/settings-tab.tsx
 #: src/screens/team/team-screen.tsx
@@ -12777,6 +12830,10 @@ msgstr ""
 
 #: src/screens/new-task/check-step.tsx
 msgid "Reviewers submit each slide without a form, and the report leaves the opinion block out."
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "Reviewers with slides left are told by email."
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
@@ -14484,6 +14541,10 @@ msgstr ""
 msgid "Source status"
 msgstr ""
 
+#: src/screens/upload/watched-folder.tsx
+msgid "Source to watch"
+msgstr ""
+
 #: src/screens/admin/storage.tsx
 msgid "Sources"
 msgstr ""
@@ -15623,6 +15684,10 @@ msgstr ""
 msgid "The reviewed layer, as you edit it"
 msgstr ""
 
+#: src/screens/my-work/assigned-tab.tsx
+msgid "the reviewer"
+msgstr ""
+
 #: src/screens/admin/decision-preset.tsx
 msgid "The reviewer picks the class without seeing the AI's, then Parfocal compares."
 msgstr ""
@@ -15831,6 +15896,10 @@ msgstr ""
 msgid "The walkthrough follows the map from upload to the co-signed clinical report. Play all runs the chapters in order, and each chapter also starts on its own."
 msgstr ""
 
+#: src/screens/upload/watched-folder.tsx
+msgid "The watched folder could not be changed."
+msgstr ""
+
 #: src/screens/review/slide-still.tsx
 msgid "The whole slide"
 msgstr ""
@@ -15884,6 +15953,10 @@ msgstr ""
 
 #: src/screens/admin/people.tsx
 msgid "They get a one-step sign-up."
+msgstr ""
+
+#: src/screens/my-work/assigned-tab.tsx
+msgid "They get every slide of the task and an email."
 msgstr ""
 
 #: src/screens/admin/join-settings.tsx
@@ -16983,10 +17056,11 @@ msgid "was refused"
 msgstr ""
 
 #: src/screens/upload/overlays.tsx
+#: src/screens/upload/watched-folder.tsx
 msgid "Watched folder"
 msgstr ""
 
-#: src/screens/upload/overlays.tsx
+#: src/screens/upload/watched-folder.tsx
 msgid "Watched folder on"
 msgstr ""
 

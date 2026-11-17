@@ -393,7 +393,7 @@ export const projectImports = {
     address: "s3://fnvltava-ai/outputs/sentinel/",
     slides: "Read in place",
     results: "Pair by name, then slide ID",
-    every: "10 minutes",
+    every: "1 hour",
     on: true,
   },
   webhook: {

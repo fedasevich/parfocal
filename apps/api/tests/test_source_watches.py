@@ -29,6 +29,16 @@ SOURCES = "/api/tenant/import-sources"
 SLIDE = "CMU-1-Small-Region.svs"
 BROKEN = "broken-scan.svs"
 EARLIER = "already-there.svs"
+RESULT = "CMU-1-Small-Region.geojson"
+REGIONS = (
+    Path(__file__).resolve().parents[3]
+    / "workers"
+    / "ingest"
+    / "tests"
+    / "fixtures"
+    / "results"
+    / "regions.geojson"
+).read_bytes()
 STORAGE_ORIGIN = TEST_STORAGE.endpoint.split("://", 1)[1]
 
 
@@ -177,3 +187,27 @@ def test_a_watch_needs_a_source_that_answers(linked: ApiAs, team: Team) -> None:
         f"/api/projects/{team.project}/watch", json={"source_id": str(uuid.uuid4())}
     )
     assert missing.status_code == 404
+
+
+def test_a_result_file_that_arrives_a_scan_after_its_slide_is_imported_onto_it(
+    linked: ApiAs, database: str, team: Team
+) -> None:
+    prefix = f"watched-{uuid.uuid4().hex[:8]}/"
+    source = bucket_source(linked, team, prefix)
+    path = f"/api/projects/{team.project}/watch"
+    assert linked(team.admin).put(path, json={"source_id": source["id"]}).status_code == 200
+
+    drop(f"{prefix}{SLIDE}", fixture_path(SLIDE).read_bytes())
+    assert scan(linked, database) == 1
+    [(slide_upload, _)] = arrivals(database, team).values()
+
+    drop(f"{prefix}{RESULT}", REGIONS)
+    assert scan(linked, database) == 1
+    assert set(arrivals(database, team)) == {SLIDE, RESULT}
+    [row] = query(
+        with_database(OWNER_URL, database),
+        "SELECT kind, slide_upload_id, created_by_user_id FROM uploads"
+        f" WHERE project_id = '{team.project}' AND file_name = '{RESULT}'",
+    )
+    assert row == ("result", slide_upload, team.admin.user_id)
+    assert scan(linked, database) == 0

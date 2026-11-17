@@ -120,6 +120,24 @@ export function CheckRow({ tone, children }: { tone: "ok" | "warn"; children: Re
   );
 }
 
+export function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <span className="text-body-sm font-semibold text-fg">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+export function ReadOnly({ value, end }: { value: string; end?: ReactNode }) {
+  return (
+    <div className="flex min-h-8 items-center gap-2 rounded-ctl border border-line-strong bg-surf-field px-2.5">
+      <span className="min-w-0 flex-1 truncate font-mono text-body-sm text-fg">{value}</span>
+      {end}
+    </div>
+  );
+}
+
 export function SlideOverlay({
   kind,
   height = 160,
