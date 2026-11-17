@@ -2221,6 +2221,16 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Take the display name from the identity provider's profile at sign-in when the stored one is a seeded placeholder, place the tour card so it covers no panel, tick checklist items from what the person actually did, make the slide position and the reviewed count read from one source, and show no time estimate until at least one slide is reviewed.
   Done when unit tests cover the name choice and the estimate rule, and a browser test on Home finds the Activity panel unobscured with the tour card shown and the sample project item ticked after opening it.
   Size: M.
+- [ ] SHELL-022 · The shell uses the right icons, a status dropdown, one full screen loader and skeletons that fit each page
+  The owner's review of app.parfocal.eu on 2026-11-17 found the Settings entry in the account menu and Project settings in the project menu drawn with a sun instead of a gear, the account menu's availability row toggling between Available and Away without showing which statuses exist, the slide row's "File into a case" and "Open" buttons stacked and overlapping, and screens loading with a small loader or blank space instead of the app's main loader or a skeleton of the page.
+  Use a gear for every settings entry, make availability a dropdown that lists each status with its meaning, lay the slide row's actions out in one row that never overlaps, show the main reticle loader full screen when a whole page loads, and give every list, table, card grid and side panel a skeleton shaped like its content, outside the viewer stage, which VIEW-074 owns.
+  Done when a guard test finds no `sun` icon on a settings entry, a browser test picks Busy from the availability dropdown, the slide row buttons do not overlap at 1280 and 1920 px wide, and a browser test with a delayed API finds a skeleton or the full screen loader on every top-level route before data arrives.
+  Size: M.
+- [ ] SHELL-023 · A screen's explanatory notes show once and stay findable afterwards
+  On 2026-11-17 the owner asked that the helper sentences printed on screens, such as "Team shows you as away, so tasks can be reassigned" and the viewer's tool hint bars, show once and then hide, and asked Fable where they should live afterwards. The viewer already shows hint bars once per tool per device (`apps/web/src/annotations/hints-once.ts`).
+  Apply Fable's recommendation recorded in the log to every such note outside the settings screens, which SET-015 owns: one show-once mechanism, one place the note lives afterwards, a way to reset all hints, and warnings and irreversible actions kept always visible.
+  Done when a unit test covers the seen state and the reset, and a browser test sees a note the first time, not the second time, and finds it again in its afterwards place.
+  Depends on SHELL-022. Size: M.
 
 ---
 
@@ -4085,6 +4095,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when API tests cover the update, its audit event and a refused empty name, and a browser test edits the name and finds it after a reload.
   Depends on SET-010.
   Size: S.
+- [ ] SET-015 · Settings show previews for layout choices and one scope legend instead of a label per row
+  The owner's review of app.parfocal.eu on 2026-11-17 found choices such as Tools (left rail or bottom dock) offered as two words with a long sentence under them, where the mock showed small preview pictures of each layout, and every row repeating its scope (Personal, This computer) under it although the page has a legend on the left.
+  Give every layout and appearance choice a small SVG preview of what it looks like, as the frozen mock does, show each row's scope as one icon that the legend explains, and make each row's explanatory sentence show once as SHELL-023 (notes show once and stay findable) and Fable's recommendation in the log describe.
+  Done when every layout choice in Settings has a preview, no row prints its scope as text, and a browser test checks both on the Settings page.
+  Size: M.
 
 - [x] SET-003 · Display section
   Theme, slide brightness, density, patient names, lengths, magnification label, language (English only, shown disabled). Theme and initials only can also be changed from the account menu (SHELL-012).
@@ -4790,6 +4805,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Extend the showcase seed so the owner's workspace holds a demo project where every fixture slide that opens has a regions result and a cells result, one review task assigned to the owner ready in guided review with objects to decide, one annotate task, one task half done and one submitted with a report, and the hint bubbles match what is on screen. Run the Reset production workflow against the dev app (ADR 0390, the deployed app is dev), then walk the whole flow in the deployed app: open My work, decide objects, submit, see the report, and log the walk.
   Done when the seed tests cover the new states, and the log records a walk on app.parfocal.eu from My work through a submitted review to its report with no error screen and no endless loader.
   Depends on OPS-029, TEST-020. Size: M.
+- [ ] TEST-047 · The demo seed carries real model results made on the owner's Mac
+  On 2026-11-17 the owner asked that the seeded demo hold real AI results instead of drawn shapes, made by running the project's models locally on small crops of the fixture slides, so the deployed app looks the way it will with real data.
+  Run the cell and region models the ML worker already wraps (for example the InstanSeg cells model and the tumour region model) on CPU or the Mac's GPU over small crops of a few fixture slides that open in the deployed viewer, store the outputs as result files in the project's import formats, and make the showcase seed import them instead of `showcase_shapes.py` where real results exist. Keep the run small enough for a 24 GB Mac and record the timings.
+  Done when a result file reports which models ran on which crops with the times, the seed tests pass with the real result files, and after the next reset the demo project shows the real cells and regions in the deployed viewer.
+  Depends on TEST-046. Size: M.
 
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
