@@ -60,7 +60,7 @@ export function UploadPage(props: UploadPageProps) {
   const { t } = useLingui();
 
   const project = okData(useGetProject(props.projectId).data);
-  const batch = useGetUploadBatch(props.projectId).data?.data;
+  const batch = okData(useGetUploadBatch(props.projectId).data);
   if (project === undefined || batch === undefined) {
     return (
       <main className="grid flex-1 place-items-center p-8">

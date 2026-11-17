@@ -547,6 +547,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             slide_id=case.loose_slide_id,
             kind="roi",
             number=1,
+            class_id=class_id,
             geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
             created_by_user_id=seeded.ids["user"],
         )
@@ -1912,6 +1913,24 @@ GET_ROUTES = {
         ),
     ),
     "listSlideThreads": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/threads"),
+    "getProjectOverview": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/overview"
+    ),
+    "listProjectSlides": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/slides"
+    ),
+    "getProjectScopeOptions": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/scope-options"
+    ),
+    "getReviewTaskDefaults": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks/defaults"
+    ),
+    "getProjectImports": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/imports"
+    ),
+    "getUploadBatch": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/upload-batch"
+    ),
     "listThreadComments": Route(
         Exposure.TENANT, lambda a: f"/api/threads/{a.ids['thread']}/comments"
     ),

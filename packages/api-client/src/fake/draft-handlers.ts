@@ -5,7 +5,6 @@ import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
-import { projectDraftOperations } from "./project-handlers.ts";
 import { checklist, sampleProject } from "./scenario.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
@@ -18,7 +17,6 @@ export {
   getGetSecuritySettingsMockHandler,
   getGetStorageUsageMockHandler,
   getListWebhooksMockHandler,
-  getRequestProjectAccessMockHandler,
 } from "./admin-handlers.ts";
 export {
   getCosignClinicalReportMockHandler,
@@ -28,14 +26,6 @@ export {
 } from "./clinical-handlers.ts";
 export { getMoveModelRunMockHandler } from "./job-handlers.ts";
 export {
-  getGetProjectImportsMockHandler,
-  getGetProjectOverviewMockHandler,
-  getGetUploadBatchMockHandler,
-} from "./project-handlers.ts";
-export {
-  getGetProjectScopeOptionsMockHandler,
-  getGetReviewTaskDefaultsMockHandler,
-  getListProjectSlidesMockHandler,
   getListReviewerWorkloadMockHandler,
   getListStudyTemplateReviewDefaultsMockHandler,
 } from "./task-handlers.ts";
@@ -62,7 +52,6 @@ export const toChecklist = (): Checklist => ({
 export const draftOperations: DraftOperation[] = [
   ...jobDraftOperations,
   ...taskDraftOperations,
-  ...projectDraftOperations,
   ...teamDraftOperations,
   ...adminDraftOperations,
   ...clinicalDraftOperations,

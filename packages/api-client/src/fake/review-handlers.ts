@@ -62,7 +62,6 @@ import type {
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import {
   addedOn,
   addObject,

@@ -17,6 +17,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import { type ReactNode, useState } from "react";
+import { okData } from "../placeholder.tsx";
 import { FileList } from "./parts.tsx";
 
 type ImportsTab = "watch" | "hook" | "out" | "api";
@@ -263,7 +264,7 @@ export function ImportsModal({
 }) {
   const { t } = useLingui();
 
-  const imports = useGetProjectImports(projectId).data?.data;
+  const imports = okData(useGetProjectImports(projectId).data);
   const [tab, setTab] = useState<ImportsTab>("watch");
   return (
     <Dialog open onOpenChange={(open) => (open ? undefined : onClose())}>

@@ -3400,6 +3400,866 @@
         "x-permission-write": true
       }
     },
+    "/api/projects/{project_id}/overview": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Project Overview",
+        "operationId": "getProjectOverview",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOverview"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/projects/{project_id}/slides": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Project Slides",
+        "operationId": "listProjectSlides",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectSlide"
+                  },
+                  "title": "Response Listprojectslides"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/projects/{project_id}/scope-options": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Project Scope Options",
+        "operationId": "getProjectScopeOptions",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectScopeOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases"
+      }
+    },
+    "/api/projects/{project_id}/review-tasks/defaults": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Review Task Defaults",
+        "operationId": "getReviewTaskDefaults",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewTaskDefaults"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases"
+      }
+    },
+    "/api/projects/{project_id}/access-requests": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Request Project Access",
+        "operationId": "requestProjectAccess",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAccessRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides"
+      }
+    },
+    "/api/projects/{project_id}/imports": {
+      "get": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Get Project Imports",
+        "operationId": "getProjectImports",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectImports"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides"
+      }
+    },
+    "/api/projects/{project_id}/upload-batch": {
+      "get": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Get Upload Batch",
+        "operationId": "getUploadBatch",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides"
+      }
+    },
     "/api/projects/sample": {
       "post": {
         "tags": [
@@ -16752,7 +17612,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Pairings"
+                  "$ref": "#/components/schemas/parfocal_api__result_pairing__Pairings"
                 }
               }
             }
@@ -51338,6 +52198,39 @@
           "methods"
         ]
       },
+      "Arrival": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "code": {
+            "type": "integer",
+            "title": "Code"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "event",
+          "file",
+          "code",
+          "result"
+        ],
+        "title": "Arrival"
+      },
       "Asked": {
         "type": "string",
         "enum": [
@@ -51661,6 +52554,132 @@
         ],
         "title": "BandRecord"
       },
+      "BatchDone": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "first_ids": {
+            "type": "string",
+            "title": "First Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutes",
+          "first_ids"
+        ],
+        "title": "BatchDone"
+      },
+      "BatchFailure": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "failure_class": {
+            "type": "string",
+            "enum": [
+              "transient",
+              "permanent"
+            ],
+            "title": "Failure Class"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "message",
+          "failure_class"
+        ],
+        "title": "BatchFailure"
+      },
+      "BatchProgress": {
+        "properties": {
+          "percent": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "tiles",
+              "accent"
+            ],
+            "title": "Tone"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "percent",
+          "tone",
+          "text"
+        ],
+        "title": "BatchProgress"
+      },
+      "BatchStep": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "detail"
+        ],
+        "title": "BatchStep"
+      },
+      "BatchStorage": {
+        "properties": {
+          "needed_gb": {
+            "type": "number",
+            "title": "Needed Gb"
+          },
+          "left_gb": {
+            "type": "number",
+            "title": "Left Gb"
+          },
+          "allowance_gb": {
+            "type": "number",
+            "title": "Allowance Gb"
+          },
+          "trimmed_gb": {
+            "type": "number",
+            "title": "Trimmed Gb"
+          },
+          "trimmed_slides": {
+            "type": "integer",
+            "title": "Trimmed Slides"
+          }
+        },
+        "type": "object",
+        "required": [
+          "needed_gb",
+          "left_gb",
+          "allowance_gb",
+          "trimmed_gb",
+          "trimmed_slides"
+        ],
+        "title": "BatchStorage"
+      },
       "BlockClassName": {
         "type": "string",
         "maxLength": 80,
@@ -51930,6 +52949,30 @@
           "label"
         ],
         "title": "CaseDraft"
+      },
+      "CaseGroup": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "specimen": {
+            "type": "string",
+            "title": "Specimen"
+          },
+          "slide_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slide Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "specimen",
+          "slide_count"
+        ],
+        "title": "CaseGroup"
       },
       "CaseImport": {
         "properties": {
@@ -54878,6 +55921,25 @@
         "maxLength": 1024,
         "minLength": 1
       },
+      "Duplicate": {
+        "properties": {
+          "slide": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slide"
+          },
+          "uploaded_on": {
+            "type": "string",
+            "title": "Uploaded On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide",
+          "uploaded_on"
+        ],
+        "title": "Duplicate"
+      },
       "EditDraft": {
         "properties": {
           "class_id": {
@@ -55400,6 +56462,37 @@
         ],
         "title": "EvaluationVersionStarted"
       },
+      "EventsOut": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "last_call": {
+            "type": "integer",
+            "title": "Last Call"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/OutgoingEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "last_call",
+          "events",
+          "on"
+        ],
+        "title": "EventsOut"
+      },
       "ExpertChanges": {
         "properties": {
           "title": {
@@ -55622,6 +56715,24 @@
         ],
         "title": "ExportedEvent"
       },
+      "ExtraResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "detail"
+        ],
+        "title": "ExtraResult"
+      },
       "ExtraScopes": {
         "items": {
           "$ref": "#/components/schemas/Scope"
@@ -55814,6 +56925,29 @@
         ],
         "title": "FirstRead"
       },
+      "FolderEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "depth": {
+            "type": "number",
+            "title": "Depth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "note",
+          "depth"
+        ],
+        "title": "FolderEntry"
+      },
       "FormChange": {
         "properties": {
           "questions": {
@@ -55856,6 +56990,54 @@
           "created_at"
         ],
         "title": "FormVersion"
+      },
+      "FormatCheck": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/FormatFinding"
+            },
+            "type": "array",
+            "title": "Findings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "detail",
+          "findings"
+        ],
+        "title": "FormatCheck"
+      },
+      "FormatFinding": {
+        "properties": {
+          "tone": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warn"
+            ],
+            "title": "Tone"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tone",
+          "text"
+        ],
+        "title": "FormatFinding"
       },
       "FrameMs": {
         "type": "number",
@@ -56382,6 +57564,35 @@
         "type": "object",
         "title": "ImportChoices"
       },
+      "ImportFailure": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "slide_label": {
+            "type": "string",
+            "title": "Slide Label"
+          },
+          "objects": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Objects"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "slide_label",
+          "objects",
+          "reason"
+        ],
+        "title": "ImportFailure"
+      },
       "ImportProblem": {
         "properties": {
           "code": {
@@ -56653,6 +57864,37 @@
           "sources"
         ],
         "title": "ImportSources"
+      },
+      "ImportWebhook": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "secret_end": {
+            "type": "string",
+            "title": "Secret End"
+          },
+          "abilities": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookAbility"
+            },
+            "type": "array",
+            "title": "Abilities"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "secret_end",
+          "abilities",
+          "on"
+        ],
+        "title": "ImportWebhook"
       },
       "InboxCounts": {
         "properties": {
@@ -58009,6 +59251,24 @@
         "type": "string",
         "maxLength": 200,
         "minLength": 1
+      },
+      "LastArrival": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "what": {
+            "type": "string",
+            "title": "What"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "what"
+        ],
+        "title": "LastArrival"
       },
       "Laterality": {
         "type": "string",
@@ -60457,6 +61717,36 @@
         ],
         "title": "NewCaseReportDeposit"
       },
+      "NewClass": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cells": {
+            "type": "number",
+            "title": "Cells"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "cells",
+          "to"
+        ],
+        "title": "NewClass"
+      },
       "NewPatient": {
         "properties": {
           "name": {
@@ -61195,6 +62485,29 @@
         ],
         "title": "Outcome"
       },
+      "OutgoingEvent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "text",
+          "on"
+        ],
+        "title": "OutgoingEvent"
+      },
       "OutlineCell": {
         "properties": {
           "x": {
@@ -61564,6 +62877,44 @@
         ],
         "title": "PairedSlide"
       },
+      "Pairing": {
+        "properties": {
+          "slide": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide"
+          },
+          "how": {
+            "type": "string",
+            "title": "How"
+          },
+          "warn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide",
+          "how",
+          "warn"
+        ],
+        "title": "Pairing"
+      },
       "PairingRequest": {
         "properties": {
           "project_id": {
@@ -61603,38 +62954,6 @@
           "files"
         ],
         "title": "PairingRequest"
-      },
-      "Pairings": {
-        "properties": {
-          "slides": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Slides"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/ResultPairing"
-            },
-            "type": "array",
-            "title": "Results"
-          },
-          "others": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Others"
-          }
-        },
-        "type": "object",
-        "required": [
-          "slides",
-          "results",
-          "others"
-        ],
-        "title": "Pairings"
       },
       "PasswordSignIn": {
         "properties": {
@@ -62551,6 +63870,29 @@
         ],
         "title": "Problem"
       },
+      "ProblemLine": {
+        "properties": {
+          "line": {
+            "type": "string",
+            "title": "Line"
+          },
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "object",
+          "error"
+        ],
+        "title": "ProblemLine"
+      },
       "ProfileChange": {
         "properties": {
           "display_name": {
@@ -62752,6 +64094,44 @@
         ],
         "title": "Project"
       },
+      "ProjectAccessRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Id"
+          },
+          "asked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Asked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "user_id",
+          "owner_id",
+          "asked_at"
+        ],
+        "title": "ProjectAccessRequest"
+      },
       "ProjectChange": {
         "properties": {
           "name": {
@@ -62929,6 +64309,55 @@
         ],
         "title": "ProjectDraft"
       },
+      "ProjectImports": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "watched_folder": {
+            "$ref": "#/components/schemas/WatchedFolder"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/ImportWebhook"
+          },
+          "events_out": {
+            "$ref": "#/components/schemas/EventsOut"
+          },
+          "token": {
+            "$ref": "#/components/schemas/TokenEnd"
+          },
+          "last_arrival": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastArrival"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "arrivals": {
+            "items": {
+              "$ref": "#/components/schemas/Arrival"
+            },
+            "type": "array",
+            "title": "Arrivals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "watched_folder",
+          "webhook",
+          "events_out",
+          "token",
+          "last_arrival",
+          "arrivals"
+        ],
+        "title": "ProjectImports"
+      },
       "ProjectLabModel": {
         "properties": {
           "id": {
@@ -63091,6 +64520,107 @@
         "maxLength": 120,
         "minLength": 1
       },
+      "ProjectOverview": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "cases": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cases"
+          },
+          "slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides"
+          },
+          "result_sets": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Result Sets"
+          },
+          "objects": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Objects"
+          },
+          "reviewed_percent": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Reviewed Percent"
+          },
+          "needs_review": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Needs Review"
+          },
+          "no_results": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "No Results"
+          },
+          "case_groups": {
+            "items": {
+              "$ref": "#/components/schemas/CaseGroup"
+            },
+            "type": "array",
+            "title": "Case Groups"
+          },
+          "slide_files": {
+            "items": {
+              "$ref": "#/components/schemas/SlideFile"
+            },
+            "type": "array",
+            "title": "Slide Files"
+          },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/ProjectStorage"
+          },
+          "import_failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "cases",
+          "slides",
+          "result_sets",
+          "objects",
+          "reviewed_percent",
+          "needs_review",
+          "no_results",
+          "case_groups",
+          "slide_files",
+          "study_template_id",
+          "storage",
+          "import_failure"
+        ],
+        "title": "ProjectOverview"
+      },
       "ProjectRef": {
         "properties": {
           "id": {
@@ -63123,6 +64653,101 @@
           "viewer"
         ],
         "title": "ProjectRole"
+      },
+      "ProjectScopeOptions": {
+        "properties": {
+          "rois": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeRoi"
+            },
+            "type": "array",
+            "title": "Rois"
+          },
+          "unsure_zones": {
+            "items": {
+              "$ref": "#/components/schemas/UnsureZone"
+            },
+            "type": "array",
+            "title": "Unsure Zones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rois",
+          "unsure_zones"
+        ],
+        "title": "ProjectScopeOptions"
+      },
+      "ProjectSlide": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "stain": {
+            "type": "string",
+            "title": "Stain"
+          },
+          "case": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlideCase"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result_set_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Result Set Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "stain",
+          "case",
+          "result_set_ids"
+        ],
+        "title": "ProjectSlide"
+      },
+      "ProjectStorage": {
+        "properties": {
+          "used_gb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Used Gb"
+          },
+          "allowance_gb": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowance Gb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "used_gb",
+          "allowance_gb"
+        ],
+        "title": "ProjectStorage"
       },
       "PromotionRequest": {
         "properties": {
@@ -64668,6 +66293,82 @@
         ],
         "title": "ResultPairing"
       },
+      "ResultPreview": {
+        "properties": {
+          "slide_label": {
+            "type": "string",
+            "title": "Slide Label"
+          },
+          "case_label": {
+            "type": "string",
+            "title": "Case Label"
+          },
+          "beside": {
+            "type": "string",
+            "title": "Beside"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "scale": {
+            "type": "number",
+            "title": "Scale"
+          },
+          "shift": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Shift"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_label",
+          "case_label",
+          "beside",
+          "file",
+          "detail",
+          "model",
+          "version",
+          "checks",
+          "level",
+          "scale",
+          "shift"
+        ],
+        "title": "ResultPreview"
+      },
       "ResultSet": {
         "properties": {
           "id": {
@@ -66152,6 +67853,81 @@
         ],
         "title": "ReviewTask"
       },
+      "ReviewTaskDefaults": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/SetName"
+            },
+            "type": "array",
+            "title": "Names"
+          },
+          "slide_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Slide Ids"
+          },
+          "result_set_id": {
+            "type": "string",
+            "title": "Result Set Id"
+          },
+          "reviewer_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Reviewer Ids"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Due On"
+          },
+          "reminder_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Reminder Days"
+          },
+          "study_template_id": {
+            "type": "string",
+            "title": "Study Template Id"
+          },
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "task_id",
+          "names",
+          "slide_ids",
+          "result_set_id",
+          "reviewer_ids",
+          "due_on",
+          "reminder_days",
+          "study_template_id",
+          "today"
+        ],
+        "title": "ReviewTaskDefaults"
+      },
       "ReviewTaskDetail": {
         "properties": {
           "id": {
@@ -67090,6 +68866,24 @@
         ],
         "title": "RunStage"
       },
+      "RunningStep": {
+        "properties": {
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "percent",
+          "text"
+        ],
+        "title": "RunningStep"
+      },
       "SampleProject": {
         "properties": {
           "id": {
@@ -67296,6 +69090,24 @@
           "kind"
         ],
         "title": "Scope"
+      },
+      "ScopeRoi": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "ScopeRoi"
       },
       "Score": {
         "type": "integer",
@@ -67852,6 +69664,25 @@
           "locked"
         ],
         "title": "SessionSummary"
+      },
+      "SetName": {
+        "properties": {
+          "result_set_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Set Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result_set_id",
+          "name"
+        ],
+        "title": "SetName"
       },
       "SetRef": {
         "properties": {
@@ -68840,6 +70671,30 @@
         ],
         "title": "SlideArea"
       },
+      "SlideCase": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "specimen": {
+            "type": "string",
+            "title": "Specimen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "specimen"
+        ],
+        "title": "SlideCase"
+      },
       "SlideChanges": {
         "properties": {
           "slide_id": {
@@ -69419,6 +71274,42 @@
           "kind"
         ],
         "title": "SlideFigure"
+      },
+      "SlideFile": {
+        "properties": {
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "stain": {
+            "type": "string",
+            "title": "Stain"
+          },
+          "remote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_id",
+          "file",
+          "stain",
+          "remote"
+        ],
+        "title": "SlideFile"
       },
       "SlideMove": {
         "properties": {
@@ -70390,6 +72281,29 @@
         "type": "string",
         "maxLength": 120,
         "minLength": 1
+      },
+      "SourceOutage": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "waiting": {
+            "type": "integer",
+            "title": "Waiting"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "at",
+          "waiting"
+        ],
+        "title": "SourceOutage"
       },
       "SourceResult": {
         "properties": {
@@ -72838,6 +74752,19 @@
         "maximum": 365.0,
         "minimum": 1.0
       },
+      "TokenEnd": {
+        "properties": {
+          "end": {
+            "type": "string",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "end"
+        ],
+        "title": "TokenEnd"
+      },
       "TokenRequest": {
         "properties": {
           "expires_in_days": {
@@ -73066,6 +74993,210 @@
         ],
         "title": "UncheckedExport"
       },
+      "UnsureZone": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "cells_per_slide": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cells Per Slide"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "cells_per_slide"
+        ],
+        "title": "UnsureZone"
+      },
+      "UploadBatch": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/UploadBatchSlide"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/UploadBatchResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "folder_tree": {
+            "items": {
+              "$ref": "#/components/schemas/FolderEntry"
+            },
+            "type": "array",
+            "title": "Folder Tree"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/UploadProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "new_classes": {
+            "items": {
+              "$ref": "#/components/schemas/NewClass"
+            },
+            "type": "array",
+            "title": "New Classes"
+          },
+          "unscored_rows": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unscored Rows"
+          },
+          "duplicate": {
+            "$ref": "#/components/schemas/Duplicate"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/BatchStorage"
+          },
+          "source_outage": {
+            "$ref": "#/components/schemas/SourceOutage"
+          },
+          "done": {
+            "$ref": "#/components/schemas/BatchDone"
+          },
+          "result_preview": {
+            "$ref": "#/components/schemas/ResultPreview"
+          },
+          "format_check": {
+            "$ref": "#/components/schemas/FormatCheck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "slides",
+          "results",
+          "folder_tree",
+          "problems",
+          "new_classes",
+          "unscored_rows",
+          "duplicate",
+          "storage",
+          "source_outage",
+          "done",
+          "result_preview",
+          "format_check"
+        ],
+        "title": "UploadBatch"
+      },
+      "UploadBatchResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "pairings": {
+            "$ref": "#/components/schemas/parfocal_api__project_uploads__Pairings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "detail",
+          "pairings"
+        ],
+        "title": "UploadBatchResult"
+      },
+      "UploadBatchSlide": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "size_gb": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Size Gb"
+          },
+          "case_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Label"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/BatchStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "steps_done": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Steps Done"
+          },
+          "running": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunningStep"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress": {
+            "$ref": "#/components/schemas/BatchProgress"
+          },
+          "extra_result": {
+            "$ref": "#/components/schemas/ExtraResult"
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "format",
+          "size_gb",
+          "case_label",
+          "steps",
+          "steps_done",
+          "running",
+          "progress",
+          "extra_result"
+        ],
+        "title": "UploadBatchSlide"
+      },
       "UploadDraft": {
         "properties": {
           "filename": {
@@ -73203,6 +75334,58 @@
           "size"
         ],
         "title": "UploadMetadata"
+      },
+      "UploadProblem": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "read-error",
+              "scale",
+              "new-classes"
+            ],
+            "title": "Kind"
+          },
+          "result": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Result"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "fix": {
+            "type": "string",
+            "title": "Fix"
+          },
+          "fixed": {
+            "type": "string",
+            "title": "Fixed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "result",
+          "title",
+          "text",
+          "lines",
+          "fix",
+          "fixed"
+        ],
+        "title": "UploadProblem"
       },
       "UploadState": {
         "properties": {
@@ -73584,6 +75767,57 @@
           "cell-typing"
         ],
         "title": "ViewerPart"
+      },
+      "WatchedFolder": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "slides": {
+            "type": "string",
+            "title": "Slides"
+          },
+          "results": {
+            "type": "string",
+            "title": "Results"
+          },
+          "every": {
+            "type": "string",
+            "title": "Every"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "slides",
+          "results",
+          "every",
+          "on"
+        ],
+        "title": "WatchedFolder"
+      },
+      "WebhookAbility": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "on"
+        ],
+        "title": "WebhookAbility"
       },
       "Week": {
         "properties": {
@@ -74051,10 +76285,62 @@
         "maxLength": 80,
         "minLength": 1
       },
+      "parfocal_api__project_uploads__Pairings": {
+        "properties": {
+          "auto": {
+            "$ref": "#/components/schemas/Pairing"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Pairing"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Pairing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "auto",
+          "name",
+          "id"
+        ],
+        "title": "Pairings"
+      },
       "parfocal_api__projects__Colour": {
         "type": "integer",
         "maximum": 11.0,
         "minimum": 0.0
+      },
+      "parfocal_api__result_pairing__Pairings": {
+        "properties": {
+          "slides": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ResultPairing"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "others": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Others"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slides",
+          "results",
+          "others"
+        ],
+        "title": "Pairings"
       },
       "parfocal_api__result_sets__Name": {
         "type": "string",

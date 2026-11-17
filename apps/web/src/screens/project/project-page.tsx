@@ -69,7 +69,7 @@ export function ProjectPage({
 
   const project = okData(useGetProject(projectId).data);
   const format = useFormat();
-  const overview = useGetProjectOverview(projectId).data?.data;
+  const overview = okData(useGetProjectOverview(projectId).data);
   const tasks = okData(useListReviewTasks(projectId).data) ?? [];
   const people = usePeople();
   const navigate = useNavigate();
