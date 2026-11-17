@@ -20,6 +20,7 @@ from parfocal_common.envelope import (
     encrypt,
     new_data_key,
 )
+from parfocal_common.sealed_fields import field_context
 from parfocal_common.structured_logging import register_sensitive
 
 INDEX_BYTES = 16
@@ -157,7 +158,7 @@ def blind(keys: TenantKeys, field: str, value: str) -> bytes:
 
 
 def context(keys: TenantKeys, table: str, row_id: uuid.UUID, field: str) -> bytes:
-    return f"{table}.{field}:{keys.tenant_id}:{row_id}".encode()
+    return field_context(table, keys.tenant_id, row_id, field)
 
 
 def seal_field(

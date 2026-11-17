@@ -3,7 +3,7 @@ import io
 import json
 import threading
 from collections.abc import Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
@@ -232,3 +232,16 @@ async def test_a_private_address_is_never_called(lab: FakeLab) -> None:
         await detector.detect(Window(0, 0, 512, 512))
     assert failed.value.code.startswith("lab-model-")
     assert lab.bodies == []
+
+
+async def test_a_mapped_region_is_kept_for_its_tile_and_clipped_to_it(lab: FakeLab) -> None:
+    detector, _ = detector_for(lab, [])
+    detector.spec = replace(detector.spec, class_map={**detector.spec.class_map, "tumor": "Tumor"})
+    window = Window(512, 0, 64, 512)
+    cells = await detector.detect(window)
+    assert len(cells) == 3
+    [region] = detector.take_regions(window)
+    assert region.class_index == 0
+    assert (min(region.ring[0::2]), max(region.ring[0::2])) == (512, 576)
+    assert detector.take_regions(window) == []
+    assert detector.regions_left_out == 0

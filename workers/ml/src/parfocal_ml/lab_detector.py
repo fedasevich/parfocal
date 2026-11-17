@@ -77,6 +77,12 @@ def clipped(ring: Sequence[tuple[float, float]], window: Window) -> list[float]:
     return flat
 
 
+@dataclass(frozen=True)
+class Region:
+    class_index: int
+    ring: list[float]
+
+
 @dataclass
 class LabDetector:
     spec: LabModelSpec
@@ -88,6 +94,7 @@ class LabDetector:
     regions_left_out: int = 0
     classes_left_out: int = 0
     classes: int = field(init=False)
+    regions: dict[Window, list[Region]] = field(default_factory=dict[Window, list[Region]])
 
     def __post_init__(self) -> None:
         self.classes = len(self.spec.classes)
@@ -121,10 +128,18 @@ class LabDetector:
         elif identity != self.answered:
             raise StepFailedError(CHANGED)
 
-    def cell_of(self, item: SentObject, window: Window) -> Cell | None:
-        if item.kind != "cell":
+    def region_of(self, item: SentObject, window: Window) -> Region | None:
+        index = self.spec.class_index(item.name)
+        ring = clipped(item.ring, window)
+        if index is None or len(ring) < 6:
             self.regions_left_out += 1
             return None
+        return Region(index, ring)
+
+    def take_regions(self, window: Window) -> list[Region]:
+        return self.regions.pop(window, [])
+
+    def cell_of(self, item: SentObject, window: Window) -> Cell | None:
         index = self.spec.class_index(item.name)
         if index is None:
             self.classes_left_out += 1
@@ -143,5 +158,7 @@ class LabDetector:
         tile = SentTile(await asyncio.to_thread(png_of, rgb, size), (window.x, window.y))
         answer = await self.answer_for(tile)
         self.check_identity(answer)
-        cells = (self.cell_of(item, window) for item in answer.objects)
+        cells = [self.cell_of(item, window) for item in answer.objects if item.kind == "cell"]
+        regions = [self.region_of(item, window) for item in answer.objects if item.kind != "cell"]
+        self.regions[window] = [region for region in regions if region is not None]
         return [cell for cell in cells if cell is not None]
