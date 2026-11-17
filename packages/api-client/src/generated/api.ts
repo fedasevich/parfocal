@@ -4825,6 +4825,26 @@ export interface QueuedObjectUpdate {
   note?: ParfocalApiDisagreementQueueNote | null;
 }
 
+export interface SlideInPlace {
+  name: string;
+  slide_id: string;
+  job_id: string;
+}
+
+export interface ReadInPlace {
+  opened: SlideInPlace[];
+  left_out: string[];
+}
+
+export interface ReadInPlaceRequest {
+  source_id: string;
+  /**
+   * @minItems 1
+   * @items.maxLength 255
+   */
+  names: string[];
+}
+
 export type ReassignWhat = (typeof ReassignWhat)[keyof typeof ReassignWhat];
 
 export const ReassignWhat = {
@@ -6548,6 +6568,13 @@ export interface TierMapping {
   serving?: Serving;
 }
 
+export type TileAccessStorage = (typeof TileAccessStorage)[keyof typeof TileAccessStorage];
+
+export const TileAccessStorage = {
+  uploaded: "uploaded",
+  remote: "remote",
+} as const;
+
 export interface TileAccess {
   token: string;
   expires_at: string;
@@ -6555,6 +6582,8 @@ export interface TileAccess {
   base_path: string;
   original: string;
   format: string | null;
+  storage?: TileAccessStorage;
+  offline?: boolean;
 }
 
 export interface TokenRequest {
@@ -32334,6 +32363,364 @@ export const useDeleteImportSource = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getDeleteImportSourceMutationOptions(options), queryClient);
 };
+
+export type readInPlaceResponse202 = {
+  data: ReadInPlace;
+  status: 202;
+};
+
+export type readInPlaceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type readInPlaceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type readInPlaceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type readInPlaceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type readInPlaceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type readInPlaceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type readInPlaceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type readInPlaceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type readInPlaceResponseSuccess = readInPlaceResponse202 & {
+  headers: Headers;
+};
+export type readInPlaceResponseError = (
+  | readInPlaceResponse400
+  | readInPlaceResponse401
+  | readInPlaceResponse403
+  | readInPlaceResponse404
+  | readInPlaceResponse409
+  | readInPlaceResponse422
+  | readInPlaceResponse429
+  | readInPlaceResponse500
+) & {
+  headers: Headers;
+};
+
+export type readInPlaceResponse = readInPlaceResponseSuccess | readInPlaceResponseError;
+
+export const getReadInPlaceUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/remote-slides`;
+};
+
+/**
+ * @summary Read In Place
+ */
+export const readInPlace = async (
+  projectId: string,
+  readInPlaceRequest: ReadInPlaceRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<readInPlaceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<readInPlaceResponse>(getReadInPlaceUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(readInPlaceRequest),
+  });
+};
+
+export const getReadInPlaceMutationKey = () => ["readInPlace"] as const;
+
+export const getReadInPlaceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof readInPlace>>,
+    TError,
+    ReadInPlaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof readInPlace>>,
+  TError,
+  ReadInPlaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReadInPlaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof readInPlace>>,
+    ReadInPlaceMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return readInPlace(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReadInPlaceMutationResult = NonNullable<Awaited<ReturnType<typeof readInPlace>>>;
+export type ReadInPlaceMutationBody = ReadInPlaceRequest;
+export type ReadInPlaceMutationError = Problem;
+export type ReadInPlaceMutationVariables = { projectId: string; data: ReadInPlaceRequest };
+
+/**
+ * @summary Read In Place
+ */
+export const useReadInPlace = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof readInPlace>>,
+      TError,
+      ReadInPlaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof readInPlace>>,
+  TError,
+  ReadInPlaceMutationVariables,
+  TContext
+> => {
+  return useMutation(getReadInPlaceMutationOptions(options), queryClient);
+};
+
+export type getRemoteTileResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type getRemoteTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getRemoteTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getRemoteTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getRemoteTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getRemoteTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getRemoteTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getRemoteTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getRemoteTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getRemoteTileResponseSuccess = getRemoteTileResponse200 & {
+  headers: Headers;
+};
+export type getRemoteTileResponseError = (
+  | getRemoteTileResponse400
+  | getRemoteTileResponse401
+  | getRemoteTileResponse403
+  | getRemoteTileResponse404
+  | getRemoteTileResponse409
+  | getRemoteTileResponse422
+  | getRemoteTileResponse429
+  | getRemoteTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type getRemoteTileResponse = getRemoteTileResponseSuccess | getRemoteTileResponseError;
+
+export const getGetRemoteTileUrl = (slideId: string, name: string) => {
+  return `/api/remote-tiles/${slideId}/${name}`;
+};
+
+/**
+ * @summary Get Remote Tile
+ */
+export const getRemoteTile = async (
+  slideId: string,
+  name: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getRemoteTileResponse> => {
+  return apiFetch<getRemoteTileResponse>(getGetRemoteTileUrl(slideId, name), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRemoteTileQueryKey = (slideId: string, name: string) => {
+  return [`/api/remote-tiles/${slideId}/${name}`] as const;
+};
+
+export const getGetRemoteTileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRemoteTileQueryKey(slideId, name);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRemoteTile>>> = ({ signal }) =>
+    getRemoteTile(slideId, name, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined && name !== null && name !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetRemoteTileQueryResult = NonNullable<Awaited<ReturnType<typeof getRemoteTile>>>;
+export type GetRemoteTileQueryError = Problem;
+
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRemoteTile>>,
+          TError,
+          Awaited<ReturnType<typeof getRemoteTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRemoteTile>>,
+          TError,
+          Awaited<ReturnType<typeof getRemoteTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Remote Tile
+ */
+
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRemoteTileQueryOptions(slideId, name, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type createReviewTaskResponse201 = {
   data: ReviewTaskDetail;

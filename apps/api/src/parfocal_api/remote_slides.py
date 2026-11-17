@@ -240,7 +240,7 @@ async def read_through(
     return body
 
 
-@public_router.get("/{slide_id}/{name}", operation_id="getRemoteTile")
+@public_router.get("/{slide_id}/{name}", operation_id="getRemoteTile", response_class=Response)
 async def get_remote_tile(
     slide_id: uuid.UUID,
     name: str,

@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 
 | Class | Columns |
 |---|---|
-| `phi` | 48 |
-| `personal` | 95 |
-| `secret` | 11 |
-| `operational` | 802 |
+| `phi` | 49 |
+| `personal` | 97 |
+| `secret` | 12 |
+| `operational` | 818 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -372,6 +372,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_at` | operational |
 | `updated_at` | operational |
 
+## import_sources
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `kind` | operational |
+| `address` | operational |
+| `region` | operational |
+| `header_name` | operational |
+| `credential_ciphertext` | secret |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## invitations
 
 | Column | Class |
@@ -442,6 +458,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `lab_model_id` | operational |
 | `project_id` | operational |
 | `tenant_id` | operational |
+| `tiles_confirmed_at` | operational |
+| `tiles_confirmed_by_user_id` | personal |
 
 ## lab_models
 
@@ -1151,6 +1169,13 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `original_key` | operational |
 | `restricted_images` | operational |
 | `published_at` | operational |
+| `storage` | operational |
+| `source_id` | operational |
+| `remote_path` | phi |
+| `remote_etag` | operational |
+| `remote_failures` | operational |
+| `remote_failing_since` | operational |
+| `remote_read_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |

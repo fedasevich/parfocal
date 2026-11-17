@@ -133,6 +133,7 @@ import type {
   Question,
   QueuedObject,
   QueueRow,
+  ReadInPlace,
   Reassignment,
   RegionMetrics,
   RegistryEntry,
@@ -6533,6 +6534,22 @@ export const getChangeImportSourceResponseMock = (
   ...overrideResponse,
 });
 
+export const getReadInPlaceResponseMock = (
+  overrideResponse: Partial<Extract<ReadInPlace, object>> = {},
+): ReadInPlace => ({
+  opened: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_id: faker.string.uuid(),
+      job_id: faker.string.uuid(),
+    }),
+  ),
+  left_out: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
 export const getCreateReviewTaskResponseMock = (
   overrideResponse: Partial<Extract<ReviewTaskDetail, object>> = {},
 ): ReviewTaskDetail => ({
@@ -8783,6 +8800,8 @@ export const getGetTileAccessResponseMock = (
   base_path: faker.string.alpha({ length: { min: 10, max: 20 } }),
   original: faker.string.alpha({ length: { min: 10, max: 20 } }),
   format: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  storage: faker.helpers.arrayElement(["uploaded", "remote"] as const),
+  offline: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -20814,6 +20833,49 @@ export const getDeleteImportSourceMockHandler = (
   );
 };
 
+export const getReadInPlaceMockHandler = (
+  overrideResponse?:
+    | ReadInPlace
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReadInPlace> | ReadInPlace),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/remote-slides",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReadInPlaceResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetRemoteTileMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/remote-tiles/:slideId/:name",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 200 });
+    },
+    options,
+  );
+};
+
 export const getCreateReviewTaskMockHandler = (
   overrideResponse?:
     | ReviewTaskDetail
@@ -26267,6 +26329,8 @@ export const getParfocalAPIMock = () => [
   getSaveImportSourceMockHandler(),
   getChangeImportSourceMockHandler(),
   getDeleteImportSourceMockHandler(),
+  getReadInPlaceMockHandler(),
+  getGetRemoteTileMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),
