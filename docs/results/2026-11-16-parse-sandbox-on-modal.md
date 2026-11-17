@@ -74,5 +74,5 @@ Cost as Modal's billing report showed it the same day: $0.00857 for run 1, $0.00
 ## Follow-ups
 
 - ADR 0325 (isolated parsing of uploaded files) is updated with these answers.
-- TODO: measure a real 1 GiB slide through the whole ingest in the sandbox. If the five copies dominate, switch to one per-job Volume or one sandbox per job.
+- Measured on a real 1.1 GB slide in [a later result](2026-11-18-parse-sandbox-real-slide.md) (the five parse steps on `test_001.tif` in the sandbox). The five copies dominate, and SEC-051 (carry a slide into the parse sandbox once per job) follows.
 - Production was not touched. The sandbox reaches the `ingest` function at the next deploy of `parfocal_deploy.modal_app`.
