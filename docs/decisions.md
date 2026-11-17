@@ -149,6 +149,17 @@ IAM-025 (ask for a second factor at sign-in when a workspace requires it) refuse
 
 Your choice: 
 
+### 140. Moving production's API and database to Europe, and keeping one API container warm
+
+The night run measured production on 2026-11-17 ([result](results/2026-11-17-production-latency.md)). A warm `/api/health` costs the app under 1 ms but 140 to 570 ms in your browser, because Cloudflare in Amsterdam calls Modal and Neon in the US. A cold start costs 5.7 s. The code causes (one request per container, an R2 write on the request path, uncached assets) are fixed and go out with the next deploy. Two setting changes remain, each a production change that moves money between budget lines within the $30.
+
+- **A. Move Modal to region `eu` and make a new Neon project in an EU region, reseeded under ADR 0293 (production only until the first real user), and keep one API container warm on weekdays 08:00 to 18:00 (recommended).** About 110 ms less per call and no cold start in working hours. About $2.20 a month for the warm hours plus 15% more on Modal compute. The old US Neon project is deleted only after your separate yes.
+- B. Only the weekday warm container, about $2.20 a month.
+- C. Neither for now.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
