@@ -1,12 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { AdjudicatorView } from "../screens/disagreements/adjudicator-view.tsx";
 import { type QueueScene, QueueScreen } from "../screens/disagreements/queue-screen.tsx";
-import { mockScenes } from "../screens/scenes.ts";
-
-const disagreementsSearch = z.object({
-  scene: z.enum(mockScenes.disagree).optional(),
-});
+import { disagreementsSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/tasks/$taskId/disagreements")({
   validateSearch: disagreementsSearch,

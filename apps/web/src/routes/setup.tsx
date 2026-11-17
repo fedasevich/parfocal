@@ -1,12 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { onboardingScenes } from "../screens/onboarding/scenes.ts";
 import { SetupScreen } from "../screens/onboarding/setup-screen.tsx";
-
-const setupSearch = z.object({
-  step: z.enum(onboardingScenes.setup).optional(),
-  scene: z.enum(onboardingScenes.setup).optional(),
-});
+import { setupSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/setup")({
   validateSearch: setupSearch,

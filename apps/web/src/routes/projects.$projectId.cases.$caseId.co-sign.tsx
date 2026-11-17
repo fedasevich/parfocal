@@ -1,11 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { CosignScreen } from "../screens/clinical-report/cosign-screen.tsx";
-import { mockScenes } from "../screens/scenes.ts";
-
-const coSignSearch = z.object({
-  scene: z.enum(mockScenes.cosign).optional(),
-});
+import { coSignSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/cases/$caseId/co-sign")({
   validateSearch: coSignSearch,

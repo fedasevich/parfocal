@@ -1,16 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { mockScenes } from "../screens/scenes.ts";
 import { TeamScreen } from "../screens/team/team-screen.tsx";
-
-const teamSearch = z.object({
-  scene: z.enum(mockScenes.team).optional(),
-  tab: z.enum(["open", "done"]).optional(),
-  project: z.string().optional(),
-  reviewer: z.string().optional(),
-  task: z.string().optional(),
-  focus: z.string().optional(),
-});
+import { teamSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/team")({
   validateSearch: teamSearch,

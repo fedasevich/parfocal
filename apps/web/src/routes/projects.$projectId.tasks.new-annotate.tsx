@@ -1,12 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { NewAnnotateTask } from "../screens/annotate-task/new-annotate-task.tsx";
-import { annotateStepKeys, presetKeys } from "../screens/annotate-task/step-keys.ts";
-
-const newAnnotateSearch = z.object({
-  step: z.enum(annotateStepKeys).optional(),
-  preset: z.enum(presetKeys).optional(),
-});
+import { newAnnotateSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/tasks/new-annotate")({
   validateSearch: newAnnotateSearch,

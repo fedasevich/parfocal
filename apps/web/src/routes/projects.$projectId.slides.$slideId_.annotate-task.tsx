@@ -1,18 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { AnnotateTaskView } from "../screens/annotate-task/annotate-task-view.tsx";
-import { taskScenes } from "../screens/annotate-task/scene-list.ts";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
-
-const sceneKeys = taskScenes.map((item) => item.scene) as [
-  (typeof taskScenes)[number]["scene"],
-  ...(typeof taskScenes)[number]["scene"][],
-];
-
-const annotateTaskSearch = z.object({
-  task: z.string().optional(),
-  scene: z.enum(sceneKeys).optional(),
-});
+import { annotateTaskSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/annotate-task")({
   validateSearch: annotateTaskSearch,

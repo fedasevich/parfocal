@@ -3,16 +3,11 @@ import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 import { HomeScreen } from "../screens/home/home-screen.tsx";
 import { okData } from "../screens/placeholder.tsx";
-import { mockScenes } from "../screens/scenes.ts";
 import { queryOfScene, settingsSectionKeys } from "../screens/settings/sections.ts";
 import { SettingsScreen } from "../screens/settings/settings-screen.tsx";
+import { settingsSearch } from "../search/route-searches.ts";
 
 const sectionSchema = z.enum(settingsSectionKeys);
-
-const settingsSearch = z.object({
-  scene: z.enum(mockScenes.settings).optional(),
-  q: z.string().optional(),
-});
 
 export const Route = createFileRoute("/settings/$section")({
   params: {

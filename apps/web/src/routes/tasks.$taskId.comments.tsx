@@ -1,11 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { CommentsOnIds } from "../screens/review/comments-on-ids.tsx";
-
-const commentsSearch = z.object({
-  slide: z.string().optional(),
-  thread: z.string().optional(),
-});
+import { commentsSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/tasks/$taskId/comments")({
   validateSearch: commentsSearch,

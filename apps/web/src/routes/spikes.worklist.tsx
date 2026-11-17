@@ -1,13 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { z } from "zod";
 import { worklistRows } from "../screens/worklist-spike/rows.ts";
 import { WorklistSpike } from "../screens/worklist-spike/worklist-spike.tsx";
-
-const worklistSearch = z.object({
-  rows: z.number().int().min(0).max(50_000).optional(),
-  mode: z.enum(["virtual", "plain"]).optional(),
-});
+import { worklistSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/spikes/worklist")({
   validateSearch: worklistSearch,

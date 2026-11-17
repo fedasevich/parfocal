@@ -1,12 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { InviteScreen } from "../screens/onboarding/invite-screen.tsx";
-import { onboardingScenes } from "../screens/onboarding/scenes.ts";
-
-const inviteSearch = z.object({
-  token: z.string().min(1).default("rt14-simona"),
-  scene: z.enum(onboardingScenes.invite).optional(),
-});
+import { inviteSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/invite")({
   validateSearch: inviteSearch,

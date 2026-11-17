@@ -1,11 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { EvaluationScreen } from "../screens/evaluation/evaluation-screen.tsx";
-import { mockScenes } from "../screens/scenes.ts";
-
-const evaluationSearch = z.object({
-  scene: z.enum(mockScenes.evaluation).optional(),
-});
+import { evaluationSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/tasks/$taskId/evaluation")({
   validateSearch: evaluationSearch,

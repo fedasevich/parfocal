@@ -1,14 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { mockScenes } from "../screens/scenes.ts";
 import { AnnotateView } from "../screens/viewer-tools/annotate-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
-
-const annotateSearch = z.object({
-  task: z.string().optional(),
-  scene: z.enum(mockScenes.annotate).optional(),
-  tool: z.enum(["smart"]).optional(),
-});
+import { annotateSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/annotate")({
   validateSearch: annotateSearch,
