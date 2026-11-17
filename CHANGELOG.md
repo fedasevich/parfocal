@@ -2,6 +2,20 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.13.0 (2026-11-17)
+
+### Features
+
+- TEST-049: Seed a viewer seat for the browser smoke account
+
+### Performance
+
+- TILES-011: Ask for tile access and the session at route start and fill the set buttons
+
+### Docs
+
+- TILES-010: Log the deployed slide open numbers
+
 ## v0.12.2 (2026-11-17)
 
 ### Performance
