@@ -21,6 +21,7 @@ export = [
     "onnx-ir",
     "onnxruntime==1.31.1",
     "segment-anything==1.0",
+    "timm>=1.0,<2",
     "torch>=2.15,<2.16",
     "torchvision",
 ]
