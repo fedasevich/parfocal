@@ -2089,6 +2089,8 @@ GET_ROUTES = {
     ),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
+    "listTeamWorkload": Route(Exposure.TENANT, lambda _: "/api/me/team"),
+    "listReviewerWorkload": Route(Exposure.TENANT, lambda _: "/api/tenant/workload"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
     "getMyEmailSchedule": Route(Exposure.PUBLIC, lambda _: "/api/me/email-schedule"),
     "getMyDisplay": Route(

@@ -142,7 +142,7 @@ export function useTaskData(projectId: string): {
   const templateDefaults = okData(queries.templateDefaults.data);
   const members = okData(queries.members.data);
   const availability = okData(queries.availability.data) ?? [];
-  const workload = queries.workload.data?.data;
+  const workload = okData(queries.workload.data);
   const scopeOptions = okData(queries.scopeOptions.data);
   if (
     !project ||

@@ -154,6 +154,7 @@ import type {
   ReviewEdit,
   ReviewedLayer,
   ReviewerAgreement,
+  ReviewerWorkload,
   ReviewObjects,
   ReviewOrder,
   ReviewTask,
@@ -205,6 +206,7 @@ import type {
   TaskReportLayout,
   TaskSlide,
   TaskStates,
+  TeamWorkload,
   Template,
   TemplateOffer,
   Tenant,
@@ -338,6 +340,7 @@ import {
   TaskSplit,
   TaskStatus,
   TaxonomyTemplate,
+  TeamReviewerStatus,
   TemplateOfferStatus,
   TenantKind,
   TenantStatus,
@@ -17226,6 +17229,93 @@ export const getSetMyAvailabilityResponseMock = (
   ...overrideResponse,
 });
 
+export const getListTeamWorkloadResponseMock = (
+  overrideResponse: Partial<Extract<TeamWorkload, object>> = {},
+): TeamWorkload => ({
+  as_of: faker.date.past().toISOString().slice(0, 19) + "Z",
+  open: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    project: {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    slides: faker.number.int({ min: 0 }),
+    split: faker.helpers.arrayElement(["all", "even"] as const),
+    sent_on: faker.date.past().toISOString().slice(0, 10),
+    due_on: faker.date.past().toISOString().slice(0, 10),
+    signed_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+    reviewers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        slides_done: faker.number.int({ min: 0 }),
+        slides_assigned: faker.number.int({ min: 0 }),
+        status: faker.helpers.arrayElement(Object.values(TeamReviewerStatus)),
+        minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+        away_until: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 10),
+          null,
+        ]),
+        assigned_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        last_decision_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        nudged_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+      }),
+    ),
+  })),
+  done: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    project: {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    slides: faker.number.int({ min: 0 }),
+    split: faker.helpers.arrayElement(["all", "even"] as const),
+    sent_on: faker.date.past().toISOString().slice(0, 10),
+    due_on: faker.date.past().toISOString().slice(0, 10),
+    signed_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+    reviewers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        slides_done: faker.number.int({ min: 0 }),
+        slides_assigned: faker.number.int({ min: 0 }),
+        status: faker.helpers.arrayElement(Object.values(TeamReviewerStatus)),
+        minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+        away_until: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 10),
+          null,
+        ]),
+        assigned_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        last_decision_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        nudged_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+      }),
+    ),
+  })),
+  ...overrideResponse,
+});
+
+export const getListReviewerWorkloadResponseMock = (): ReviewerWorkload[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    user_id: faker.string.uuid(),
+    open_tasks: faker.number.int({ min: 0 }),
+  }));
+
 export const getListAvailabilityResponseMock = (): MemberAvailability[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     user_id: faker.string.uuid(),
@@ -25565,6 +25655,54 @@ export const getSetMyAvailabilityMockHandler = (
   );
 };
 
+export const getListTeamWorkloadMockHandler = (
+  overrideResponse?:
+    | TeamWorkload
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TeamWorkload> | TeamWorkload),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/team",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListTeamWorkloadResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListReviewerWorkloadMockHandler = (
+  overrideResponse?:
+    | ReviewerWorkload[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReviewerWorkload[]> | ReviewerWorkload[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/workload",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListReviewerWorkloadResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListAvailabilityMockHandler = (
   overrideResponse?:
     | MemberAvailability[]
@@ -27214,6 +27352,8 @@ export const getParfocalAPIMock = () => [
   getRequestEmergencyAccessMockHandler(),
   getGetMyAvailabilityMockHandler(),
   getSetMyAvailabilityMockHandler(),
+  getListTeamWorkloadMockHandler(),
+  getListReviewerWorkloadMockHandler(),
   getListAvailabilityMockHandler(),
   getListOrganisationsMockHandler(),
   getCreateOrganisationMockHandler(),

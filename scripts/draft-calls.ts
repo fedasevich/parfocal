@@ -18,22 +18,27 @@ const operationsByArea: Record<string, string[]> = {
     "returnCosignRequest",
   ],
   models: [],
-  team: ["listTeamWorkload", "listReviewerWorkload"],
+  team: [],
   admin: ["getAdminOverview", "getStorageUsage", "getSecuritySettings", "listWebhooks"],
   "sign-in": ["getInvitePreview"],
 };
 
-const areaOf = new Map<string, string>(
-  Object.entries(operationsByArea).flatMap(([area, operations]) =>
-    operations.map((operation): [string, string] => [operation, area]),
-  ),
-);
+const areaMap = (areas: Record<string, string[]>) =>
+  new Map<string, string>(
+    Object.entries(areas).flatMap(([area, operations]) =>
+      operations.map((operation): [string, string] => [operation, area]),
+    ),
+  );
 
 const declaration = /defineDraft(?:Query|Mutation)\(\s*"([^"]+)"/g;
 
 export type DraftCount = { areas: Record<string, string[]>; total: number };
 
-export function countDraftCalls(folder: string = draftFolder): DraftCount {
+export function countDraftCalls(
+  folder: string = draftFolder,
+  known: Record<string, string[]> = operationsByArea,
+): DraftCount {
+  const areaOf = areaMap(known);
   const areas: Record<string, string[]> = {};
   for (const name of readdirSync(folder).sort()) {
     const source = readFileSync(join(folder, name), "utf8");

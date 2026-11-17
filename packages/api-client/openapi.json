@@ -43151,6 +43151,229 @@
         }
       }
     },
+    "/api/me/team": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "List Team Workload",
+        "operationId": "listTeamWorkload",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamWorkload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/workload": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "List Reviewer Workload",
+        "operationId": "listReviewerWorkload",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewerWorkload"
+                  },
+                  "type": "array",
+                  "title": "Response Listreviewerworkload"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "see-people"
+      }
+    },
     "/api/tenant/availability": {
       "get": {
         "tags": [
@@ -68918,6 +69141,26 @@
         ],
         "title": "ReviewerState"
       },
+      "ReviewerWorkload": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "open_tasks": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Open Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "open_tasks"
+        ],
+        "title": "ReviewerWorkload"
+      },
       "Reviews": {
         "properties": {
           "slides": {
@@ -74373,6 +74616,235 @@
           "pannuke"
         ],
         "title": "TaxonomyTemplate"
+      },
+      "TeamProject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "TeamProject"
+      },
+      "TeamReviewer": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "slides_done": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides Done"
+          },
+          "slides_assigned": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides Assigned"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TeamReviewerStatus"
+          },
+          "minutes_left": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes Left"
+          },
+          "away_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Until"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Assigned At"
+          },
+          "last_decision_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Decision At"
+          },
+          "nudged_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudged At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "slides_done",
+          "slides_assigned",
+          "status",
+          "minutes_left",
+          "away_until",
+          "assigned_at",
+          "last_decision_at",
+          "nudged_at"
+        ],
+        "title": "TeamReviewer"
+      },
+      "TeamReviewerStatus": {
+        "type": "string",
+        "enum": [
+          "on-track",
+          "behind",
+          "not-started",
+          "away",
+          "done"
+        ],
+        "title": "TeamReviewerStatus"
+      },
+      "TeamTask": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "project": {
+            "$ref": "#/components/schemas/TeamProject"
+          },
+          "slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides"
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "all",
+              "even"
+            ],
+            "title": "Split"
+          },
+          "sent_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent On"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Due On"
+          },
+          "signed_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed On"
+          },
+          "reviewers": {
+            "items": {
+              "$ref": "#/components/schemas/TeamReviewer"
+            },
+            "type": "array",
+            "title": "Reviewers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "project",
+          "slides",
+          "split",
+          "sent_on",
+          "due_on",
+          "signed_on",
+          "reviewers"
+        ],
+        "title": "TeamTask"
+      },
+      "TeamWorkload": {
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of"
+          },
+          "open": {
+            "items": {
+              "$ref": "#/components/schemas/TeamTask"
+            },
+            "type": "array",
+            "title": "Open"
+          },
+          "done": {
+            "items": {
+              "$ref": "#/components/schemas/TeamTask"
+            },
+            "type": "array",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of",
+          "open",
+          "done"
+        ],
+        "title": "TeamWorkload"
       },
       "Template": {
         "properties": {

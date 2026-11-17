@@ -106,6 +106,7 @@ from parfocal_api import (
     task_report_layout,
     task_runs,
     taxonomy,
+    team_workload,
     template_offers,
     template_review_defaults,
     tenants,
@@ -345,6 +346,8 @@ def create_app(
     app.include_router(case_imports.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)
+    app.include_router(team_workload.me_router)
+    app.include_router(team_workload.tenant_router)
     app.include_router(availability.team_router)
     app.include_router(tenants.platform)
     app.include_router(tenants.tenant)

@@ -1,11 +1,11 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type ReviewerWorkload, reviewerWorkloadSchema } from "../draft/list-reviewer-workload.ts";
 import {
   getCreateReviewTaskMockHandler,
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
   getListAvailabilityMockHandler,
   getListProjectSlidesMockHandler,
+  getListReviewerWorkloadMockHandler,
   getListStudyTemplateReviewDefaultsMockHandler,
   getListStudyTemplatesMockHandler,
 } from "../generated/api.msw.ts";
@@ -13,6 +13,7 @@ import type {
   MemberAvailability,
   ProjectScopeOptions,
   ProjectSlide,
+  ReviewerWorkload,
   ReviewTaskDefaults,
   ReviewTaskDetail,
   ScopeKindKey,
@@ -30,7 +31,6 @@ import {
   toDecisionSettings,
 } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { toAnnotateReviewTask } from "./project-handlers.ts";
 import { people, projectByCode, projects, reviewTasks } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
@@ -103,9 +103,7 @@ export const toProjectScopeOptions = (): ProjectScopeOptions => ({
 });
 
 export const toReviewerWorkload = (): ReviewerWorkload[] =>
-  taskReviewers.map((item) =>
-    reviewerWorkloadSchema.parse({ user_id: people[item.key].id, open_tasks: item.openTasks }),
-  );
+  taskReviewers.map((item) => ({ user_id: people[item.key].id, open_tasks: item.openTasks }));
 
 const scopeKeysOf = (kind: string): ScopeKindKey[] =>
   kind === "all-regions"
@@ -251,20 +249,6 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   })),
 });
 
-export const getListReviewerWorkloadMockHandler = (overrideResponse?: ReviewerWorkload[]) =>
-  http.get("*/api/tenant/workload", () =>
-    HttpResponse.json(overrideResponse ?? toReviewerWorkload()),
-  );
-
-export const taskDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listReviewerWorkload",
-    method: "get",
-    path: "/api/tenant/workload",
-    handler: () => getListReviewerWorkloadMockHandler(),
-  },
-];
-
 const problem = (status: number, code: string, title: string) =>
   HttpResponse.json({ type: "about:blank", title, status, code }, { status });
 
@@ -298,6 +282,7 @@ const changeTask = http.patch<{ taskId: string }>(
 
 export function taskHandlers(): RequestHandler[] {
   return [
+    getListReviewerWorkloadMockHandler(() => toReviewerWorkload()),
     changeTask,
     getListStudyTemplatesMockHandler(() => listedStudyTemplates()),
     getListStudyTemplateReviewDefaultsMockHandler(() => toStudyTemplateReviewDefaults()),

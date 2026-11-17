@@ -6022,6 +6022,12 @@ export interface ReviewerState {
   submitted_at: string | null;
 }
 
+export interface ReviewerWorkload {
+  user_id: string;
+  /** @minimum 0 */
+  open_tasks: number;
+}
+
 export interface Reviews {
   slides: number;
   submitted: number;
@@ -6874,6 +6880,63 @@ export interface TaskStates {
 export interface TaxonomyChange {
   /** @maxItems 9 */
   classes: ClassDraft[];
+}
+
+export interface TeamProject {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export type TeamReviewerStatus = (typeof TeamReviewerStatus)[keyof typeof TeamReviewerStatus];
+
+export const TeamReviewerStatus = {
+  "on-track": "on-track",
+  behind: "behind",
+  "not-started": "not-started",
+  away: "away",
+  done: "done",
+} as const;
+
+export interface TeamReviewer {
+  user_id: string;
+  /** @minimum 0 */
+  slides_done: number;
+  /** @minimum 0 */
+  slides_assigned: number;
+  status: TeamReviewerStatus;
+  minutes_left: number | null;
+  away_until: string | null;
+  assigned_at: string;
+  last_decision_at: string | null;
+  nudged_at: string | null;
+}
+
+export type TeamTaskSplit = (typeof TeamTaskSplit)[keyof typeof TeamTaskSplit];
+
+export const TeamTaskSplit = {
+  all: "all",
+  even: "even",
+} as const;
+
+export interface TeamTask {
+  id: string;
+  code: string;
+  name: string;
+  project: TeamProject;
+  /** @minimum 0 */
+  slides: number;
+  split: TeamTaskSplit;
+  sent_on: string;
+  due_on: string;
+  signed_on: string | null;
+  reviewers: TeamReviewer[];
+}
+
+export interface TeamWorkload {
+  as_of: string;
+  open: TeamTask[];
+  done: TeamTask[];
 }
 
 export interface TemplateClass {
@@ -66356,6 +66419,372 @@ export const useSetMyAvailability = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getSetMyAvailabilityMutationOptions(options), queryClient);
 };
+
+export type listTeamWorkloadResponse200 = {
+  data: TeamWorkload;
+  status: 200;
+};
+
+export type listTeamWorkloadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listTeamWorkloadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listTeamWorkloadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listTeamWorkloadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listTeamWorkloadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listTeamWorkloadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listTeamWorkloadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listTeamWorkloadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listTeamWorkloadResponseSuccess = listTeamWorkloadResponse200 & {
+  headers: Headers;
+};
+export type listTeamWorkloadResponseError = (
+  | listTeamWorkloadResponse400
+  | listTeamWorkloadResponse401
+  | listTeamWorkloadResponse403
+  | listTeamWorkloadResponse404
+  | listTeamWorkloadResponse409
+  | listTeamWorkloadResponse422
+  | listTeamWorkloadResponse429
+  | listTeamWorkloadResponse500
+) & {
+  headers: Headers;
+};
+
+export type listTeamWorkloadResponse =
+  | listTeamWorkloadResponseSuccess
+  | listTeamWorkloadResponseError;
+
+export const getListTeamWorkloadUrl = () => {
+  return `/api/me/team`;
+};
+
+/**
+ * @summary List Team Workload
+ */
+export const listTeamWorkload = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listTeamWorkloadResponse> => {
+  return apiFetch<listTeamWorkloadResponse>(getListTeamWorkloadUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTeamWorkloadQueryKey = () => {
+  return [`/api/me/team`] as const;
+};
+
+export const getListTeamWorkloadQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTeamWorkload>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTeamWorkload>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTeamWorkloadQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTeamWorkload>>> = ({ signal }) =>
+    listTeamWorkload({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTeamWorkload>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTeamWorkloadQueryResult = NonNullable<Awaited<ReturnType<typeof listTeamWorkload>>>;
+export type ListTeamWorkloadQueryError = Problem;
+
+export function useListTeamWorkload<
+  TData = Awaited<ReturnType<typeof listTeamWorkload>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTeamWorkload>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTeamWorkload>>,
+          TError,
+          Awaited<ReturnType<typeof listTeamWorkload>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTeamWorkload<
+  TData = Awaited<ReturnType<typeof listTeamWorkload>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTeamWorkload>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTeamWorkload>>,
+          TError,
+          Awaited<ReturnType<typeof listTeamWorkload>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTeamWorkload<
+  TData = Awaited<ReturnType<typeof listTeamWorkload>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTeamWorkload>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Team Workload
+ */
+
+export function useListTeamWorkload<
+  TData = Awaited<ReturnType<typeof listTeamWorkload>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTeamWorkload>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTeamWorkloadQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listReviewerWorkloadResponse200 = {
+  data: ReviewerWorkload[];
+  status: 200;
+};
+
+export type listReviewerWorkloadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listReviewerWorkloadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listReviewerWorkloadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listReviewerWorkloadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listReviewerWorkloadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listReviewerWorkloadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listReviewerWorkloadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listReviewerWorkloadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listReviewerWorkloadResponseSuccess = listReviewerWorkloadResponse200 & {
+  headers: Headers;
+};
+export type listReviewerWorkloadResponseError = (
+  | listReviewerWorkloadResponse400
+  | listReviewerWorkloadResponse401
+  | listReviewerWorkloadResponse403
+  | listReviewerWorkloadResponse404
+  | listReviewerWorkloadResponse409
+  | listReviewerWorkloadResponse422
+  | listReviewerWorkloadResponse429
+  | listReviewerWorkloadResponse500
+) & {
+  headers: Headers;
+};
+
+export type listReviewerWorkloadResponse =
+  | listReviewerWorkloadResponseSuccess
+  | listReviewerWorkloadResponseError;
+
+export const getListReviewerWorkloadUrl = () => {
+  return `/api/tenant/workload`;
+};
+
+/**
+ * @summary List Reviewer Workload
+ */
+export const listReviewerWorkload = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listReviewerWorkloadResponse> => {
+  return apiFetch<listReviewerWorkloadResponse>(getListReviewerWorkloadUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListReviewerWorkloadQueryKey = () => {
+  return [`/api/tenant/workload`] as const;
+};
+
+export const getListReviewerWorkloadQueryOptions = <
+  TData = Awaited<ReturnType<typeof listReviewerWorkload>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewerWorkload>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListReviewerWorkloadQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewerWorkload>>> = ({ signal }) =>
+    listReviewerWorkload({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listReviewerWorkload>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListReviewerWorkloadQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listReviewerWorkload>>
+>;
+export type ListReviewerWorkloadQueryError = Problem;
+
+export function useListReviewerWorkload<
+  TData = Awaited<ReturnType<typeof listReviewerWorkload>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewerWorkload>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewerWorkload>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewerWorkload>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewerWorkload<
+  TData = Awaited<ReturnType<typeof listReviewerWorkload>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewerWorkload>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewerWorkload>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewerWorkload>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewerWorkload<
+  TData = Awaited<ReturnType<typeof listReviewerWorkload>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewerWorkload>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Reviewer Workload
+ */
+
+export function useListReviewerWorkload<
+  TData = Awaited<ReturnType<typeof listReviewerWorkload>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewerWorkload>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListReviewerWorkloadQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type listAvailabilityResponse200 = {
   data: MemberAvailability[];

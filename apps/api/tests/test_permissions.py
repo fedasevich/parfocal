@@ -190,6 +190,7 @@ OPEN_OPERATIONS = {
     "getMyHome": "member",
     "getMyChecklist": "member",
     "listMyJobs": "member",
+    "listTeamWorkload": "member",
     "setMyResume": "own-assignment",
     "exportMyPersonalData": "signed-in",
     "getNotificationTarget": "own-notification",
@@ -1393,6 +1394,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT", f"/api/cases/{w.case}/clinical-note", {"note": "Fake note for a test"}
     ),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
+    "listReviewerWorkload": lambda _: Call("GET", "/api/tenant/workload"),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
     ),
@@ -1496,6 +1498,7 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getRegisteredModel": lambda _: Call("GET", "/api/model-registry/hovernet/v0.9"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "listMyJobs": lambda _: Call("GET", "/api/me/jobs"),
+    "listTeamWorkload": lambda _: Call("GET", "/api/me/team"),
     "getMyChecklist": lambda _: Call("GET", "/api/me/checklist"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),

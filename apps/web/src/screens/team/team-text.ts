@@ -42,6 +42,7 @@ export function reviewerDetail(row: TeamReviewer, asOf: string): string {
   if (row.status === "done") return `all ${row.slides_assigned} submitted`;
   if (row.status === "away") return row.away_until ? `until ${formatDue(row.away_until)}` : "";
   if (row.status === "behind") {
+    if (row.minutes_left === null) return `${plural(left, "slide")} left`;
     return `${plural(left, "slide")} left · about ${durationText(row.minutes_left)}`;
   }
   const sinceAssigned = (new Date(asOf).getTime() - new Date(row.assigned_at).getTime()) / 60000;
