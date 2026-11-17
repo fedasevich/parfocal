@@ -1357,6 +1357,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-025.
   Size: S.
 
+- [ ] INGEST-032 · Every slide on the deployed app has a thumbnail
+  Slide previews fail on app.parfocal.eu because `getSlideThumbnail` reads `thumbnail.jpg` only under the slide's own folder, while seeded slides keep their derived files in the shared sample folder next to the original. The thumbnail endpoint finds the folder the way tile access does, new uploads and the seed always store a thumbnail, and a one-off backfill writes the missing thumbnails for existing slides.
+  Done when an API test returns the thumbnail of a slide whose original lives in a sample folder, a test shows the seed leaves no slide without a readable thumbnail, and every slide on the deployed app returns 200 from its thumbnail URL.
+  Depends on INGEST-010.
+  Size: M.
+
 ## 06 TILES · Tile delivery
 
 - [x] TILES-000 · Research check for tile delivery
