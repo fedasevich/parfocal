@@ -197,3 +197,34 @@ test("a tool's tooltip carries its hint once the hint was seen", async ({ page }
     "Click to pin a thread. Enter posts",
   );
 });
+
+const cellsSlide = "00000000-0000-4000-8005-000000000007";
+
+test("outlined cells draw on the real stage and the type bar decides the current cell", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}`);
+  await ready(page);
+  await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-objects", "3");
+  const list = page.getByTestId("stage-review-objects");
+  const row = list.locator('[data-testid="stage-review-object"][data-object="C2"]');
+  await row.getByRole("button", { name: /C2/ }).click();
+  const bar = page.getByTestId("cell-type-bar");
+  await expect(bar).toHaveAttribute("aria-label", "Type for C2");
+  await bar.getByRole("button", { name: /Stroma/ }).click();
+  await expect(row).toHaveAttribute("data-decision", "disagree");
+  await expect(bar).toHaveAttribute("data-chosen", "Stroma");
+  await page.keyboard.press("k");
+  await expect(row).toHaveAttribute("data-decision", "agree");
+  await expect(bar).toHaveAttribute("data-chosen", "keep");
+});
+
+test("guided review on outlined cells moves to the next cell after a type", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${cellsSlide}`);
+  await ready(page);
+  const card = page.getByTestId("stage-review-objects");
+  await expect(card).toHaveAttribute("data-current", "C1");
+  await expect(page.getByTestId("cell-type-bar")).toHaveAttribute("aria-label", "Type for C1");
+  await page.keyboard.press("x");
+  await expect(card).toHaveAttribute("data-current", "C2");
+});

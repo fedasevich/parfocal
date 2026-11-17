@@ -64,10 +64,31 @@ const engineClassOf = (name: string) =>
 
 type Placeable = {
   readonly object: string;
+  readonly kind?: string;
   readonly class_name: string;
   readonly score: number;
   readonly outline?: number[] | null;
 };
+
+export function outlineCentre(
+  outline: readonly number[] | null | undefined,
+): { x: number; y: number; radius: number } | null {
+  const area = outlineArea(outline);
+  if (area === null) return null;
+  return { x: area.x + area.width / 2, y: area.y + area.height / 2, radius: area.width / 4 };
+}
+
+export function slideToScreen(
+  point: { x: number; y: number },
+  camera: { x: number; y: number; zoom: number },
+  size: { width: number; height: number },
+) {
+  const scale = 2 ** camera.zoom;
+  return {
+    x: (point.x - camera.x) * scale + size.width / 2,
+    y: (point.y - camera.y) * scale + size.height / 2,
+  };
+}
 
 export function placedObjects(objects: readonly Placeable[]) {
   return objects.flatMap((item) =>
@@ -75,7 +96,7 @@ export function placedObjects(objects: readonly Placeable[]) {
       ? [
           {
             id: item.object,
-            kind: "region" as const,
+            kind: item.kind === "cell" ? ("cell" as const) : ("region" as const),
             ring: item.outline,
             className: engineClassOf(item.class_name),
             score: item.score,

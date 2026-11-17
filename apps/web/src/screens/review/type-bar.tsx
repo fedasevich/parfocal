@@ -17,6 +17,7 @@ type TypeBarProps = {
   object: string;
   centre: Point;
   scale: number;
+  radius?: number | undefined;
   size: { width: number; height: number };
   chosen: TypeId | undefined;
   onChoose: (option: TypeOption) => void;
@@ -27,6 +28,7 @@ export function TypeBar({
   object,
   centre,
   scale,
+  radius,
   size,
   chosen,
   onChoose,
@@ -34,14 +36,15 @@ export function TypeBar({
 }: TypeBarProps) {
   const { t } = useLingui();
   const width = Math.min(size.width - 24, typeOptions.length * buttonWidth + 16);
-  const box = placeBar(centre, ringRadius * scale, { width, height: barHeight }, size);
+  const box = placeBar(centre, radius ?? ringRadius * scale, { width, height: barHeight }, size);
   return (
     <div
       role="toolbar"
       aria-label={t`Type for ${object}`}
       data-testid="cell-type-bar"
+      data-chosen={chosen ?? ""}
       title={disabledReason}
-      className="absolute z-4 flex items-center gap-1 rounded-zone border border-line bg-chrome p-1 shadow-pop"
+      className="pointer-events-auto absolute z-4 flex items-center gap-1 rounded-zone border border-line bg-chrome p-1 shadow-pop"
       style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
     >
       {typeOptions.map((option) => (

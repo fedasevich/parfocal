@@ -1802,6 +1802,16 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Make every screen that shows a slide (full viewer in and out of a task, guided review, annotate, annotate task, compare) draw it through the one engine stage with the mock's frame around it, so pan, zoom, tools, overlays and the minimap act on the real slide. A slide that cannot open shows the stage's "format cannot be opened" notice, never a stand-in picture. Remove the prototype stills and mock assets from every production path, keep them only for Storybook and the fake API if needed, and make every visible control either work or not be shown. Fix the oversized checkbox.
   Done when a guard test fails on any `lookUrl`, `coverTile` or `/mock-assets/` use outside Storybook and the fake API, browser tests pan, zoom, use the select, ruler and comment tools and decide an object on the real stage in the full viewer, guided review and annotate task, the viewer golden images pass, and a walk on the deployed app opens a review task's slide with real tiles.
   Size: L.
+- [ ] VIEW-075 · The rest of the viewer runs on the engine stage
+  VIEW-074 put the full viewer, guided review, annotate and annotate task on the one engine stage, but cells and the cell type bar, compare, focus mode, coach marks and writing decision notes still live only in the prototype screens, and 21 files stay on the STILL_TO_REPLACE list in `apps/web/test/no-prototype-in-production.test.ts`. The deployed seed now holds real InstanSeg cells on test_065, CMU-1-Small-Region and Philips-4.
+  Bring cells and the cell type bar, compare, focus mode, coach marks and decision notes onto the engine stage, in that order, clear STILL_TO_REPLACE and delete `screens/thumbnails.ts`.
+  Done when the engine viewer draws the seeded cells with a working cell type bar, compare, focus and decision notes act on the real stage in browser tests, STILL_TO_REPLACE is empty and the viewer golden images pass.
+  Depends on VIEW-074. Size: L.
+- [ ] VIEW-076 · Every cell of a result set draws on the engine stage
+  The engine stage draws only the cells a review task picked, through their outlines in the review objects. The seed holds 2,038, 1,418 and 5,719 InstanSeg cells on test_065, CMU-1-Small-Region and Philips-4, and no route serves a result set's cell chunks to the browser, only the cell summary (centre, size, class and score per cell). The cells grid also needs a real crop source before it can come back, because its tiles drew the prototype photo.
+  Add a cell chunk route, draw a result set's cells through the engine's paged cells on the stage in and out of a task with a show and hide switch per set, and build the cells grid from real crops.
+  Done when the deployed app shows the seeded cells on the three slides on Viv within the VIEW-029 budget, and a browser test shows, hides and pages cells and picks one from the grid.
+  Depends on VIEW-075. Size: L.
 
 - [x] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
