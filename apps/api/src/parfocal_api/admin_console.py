@@ -1,11 +1,14 @@
 import uuid
+from datetime import datetime
 from typing import Literal
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import ColumnClause, Uuid, func, literal_column, select
+from sqlalchemy import ColumnClause, ColumnElement, Uuid, func, literal_column, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.audit import AuditAction, AuditTarget
 from parfocal_api.auth import auth_state
 from parfocal_api.context import TenantConnection
 from parfocal_api.hidden_models import hidden_names
@@ -13,15 +16,23 @@ from parfocal_api.model_area import running_now
 from parfocal_api.model_catalogue import CATALOGUE
 from parfocal_api.permissions import Permission, require, sign_out_right
 from parfocal_api.projects import code_of
+from parfocal_api.remote_reads import OFFLINE_AFTER_FAILURES
 from parfocal_api.tables import (
+    AttemptOutcome,
     PrivacyMode,
     ProjectRole,
     Role,
+    SlideStorage,
+    audit_events,
+    event_attempts,
+    event_outbox,
+    event_targets,
     import_sources,
     invitations,
     lab_models,
     memberships,
     project_members,
+    project_webhooks,
     projects,
     slides,
     sso_connections,
@@ -53,6 +64,7 @@ class StoragePart(BaseModel):
     kind: str
     label: str
     tb: float = Field(ge=0)
+    bytes: int = Field(ge=0)
 
 
 class StorageProjectRef(BaseModel):
@@ -65,6 +77,7 @@ class ProjectStorage(BaseModel):
     project: StorageProjectRef
     colour: int = Field(ge=0)
     gb: float = Field(ge=0)
+    bytes: int = Field(ge=0)
     cap_gb: float | None = Field(ge=0)
 
 
@@ -83,14 +96,19 @@ class StorageSource(BaseModel):
     access: str
     address: str
     new_slides: Literal["copied", "in-place"]
-    health: Literal["answering", "expiring"]
+    health: Literal["answering", "expiring", "unreachable", "unused"]
     first_tile_ms: int | None = Field(ge=0)
     expires_in_days: int | None = Field(ge=0)
+    slides_in_place: int = Field(ge=0)
+    last_read_at: datetime | None
 
 
 class StorageUsage(BaseModel):
     total_tb: float = Field(ge=0)
+    total_bytes: int = Field(ge=0)
+    capacity_tb: float | None = Field(ge=0)
     in_place_tb: float = Field(ge=0)
+    in_place_bytes: int = Field(ge=0)
     parts: list[StoragePart]
     by_project: list[ProjectStorage]
     rules: list[StorageRule]
@@ -122,11 +140,15 @@ class Webhook(BaseModel):
     events: list[str]
     calls_today: int = Field(ge=0)
     rejected_today: int = Field(ge=0)
+    project: StorageProjectRef | None = None
+    address: str | None = None
+    paused: bool = False
 
 
 router = APIRouter(prefix="/api/tenant", tags=["tenant"])
 
 IN_THIS_TENANT: ColumnClause[uuid.UUID] = literal_column(CURRENT_TENANT, Uuid())
+INCOMING_EVENTS = ("slide", "results")
 READ_ONLY_RULE = StorageRule(
     key="read-only-keys",
     label="Read-only keys only",
@@ -140,11 +162,66 @@ def terabytes(size: int) -> float:
     return round(size / TERABYTE, 3)
 
 
-async def stored_bytes(connection: AsyncConnection) -> int:
-    total = await connection.scalar(
-        select(func.coalesce(func.sum(slides.c.file_bytes), 0)).where(slides.c.deleted_at.is_(None))
+LIVE_SLIDES = slides.c.deleted_at.is_(None)
+COPIED = slides.c.storage != SlideStorage.REMOTE
+IN_PLACE = slides.c.storage == SlideStorage.REMOTE
+
+
+def bytes_where(condition: ColumnElement[bool]) -> ColumnElement[int]:
+    return func.coalesce(func.sum(slides.c.file_bytes).filter(condition), 0)
+
+
+async def slide_bytes(connection: AsyncConnection) -> tuple[int, int]:
+    row = (
+        await connection.execute(
+            select(bytes_where(COPIED), bytes_where(IN_PLACE)).where(LIVE_SLIDES)
+        )
+    ).one()
+    return int(row[0]), int(row[1])
+
+
+def today() -> ColumnElement[datetime]:
+    return func.date_trunc("day", func.now())
+
+
+async def incoming_counts(connection: AsyncConnection) -> dict[uuid.UUID, tuple[int, int]]:
+    rows = await connection.execute(
+        select(
+            audit_events.c.target_id,
+            func.count(),
+            func.count().filter(audit_events.c.action == AuditAction.WEBHOOK_REJECTED),
+        )
+        .where(
+            audit_events.c.tenant_id == IN_THIS_TENANT,
+            audit_events.c.target_type == AuditTarget.WEBHOOK,
+            audit_events.c.action.in_([AuditAction.WEBHOOK_CALLED, AuditAction.WEBHOOK_REJECTED]),
+            audit_events.c.occurred_at >= today(),
+        )
+        .group_by(audit_events.c.target_id)
     )
-    return int(total or 0)
+    return {row[0]: (int(row[1]), int(row[2])) for row in rows}
+
+
+async def outgoing_counts(connection: AsyncConnection) -> dict[uuid.UUID, tuple[int, int]]:
+    rows = await connection.execute(
+        select(
+            event_outbox.c.target_id,
+            func.count(),
+            func.count().filter(event_attempts.c.outcome != AttemptOutcome.DELIVERED),
+        )
+        .join(event_outbox, event_outbox.c.id == event_attempts.c.event_id)
+        .where(event_attempts.c.created_at >= today())
+        .group_by(event_outbox.c.target_id)
+    )
+    return {row[0]: (int(row[1]), int(row[2])) for row in rows}
+
+
+async def webhook_totals(connection: AsyncConnection) -> tuple[int, int]:
+    counts = [
+        *(await incoming_counts(connection)).values(),
+        *(await outgoing_counts(connection)).values(),
+    ]
+    return sum(calls for calls, _ in counts), sum(rejected for _, rejected in counts)
 
 
 async def sign_out_people(connection: AsyncConnection) -> list[uuid.UUID]:
@@ -196,6 +273,8 @@ async def get_admin_overview(connection: TenantConnection) -> AdminOverview:
             invitations.c.expires_at > func.now(),
         )
     )
+    copied, in_place = await slide_bytes(connection)
+    calls, rejected = await webhook_totals(connection)
     return AdminOverview(
         people=seats[0],
         researchers=seats[1],
@@ -206,62 +285,98 @@ async def get_admin_overview(connection: TenantConnection) -> AdminOverview:
         invites_waiting=int(waiting or 0),
         models=await model_count(connection),
         runs_now=len(await running_now(connection)),
-        stored_tb=terabytes(await stored_bytes(connection)),
+        stored_tb=terabytes(copied),
         capacity_tb=None,
-        in_place_tb=0,
-        webhook_calls_today=0,
-        webhook_rejected_today=0,
+        in_place_tb=terabytes(in_place),
+        webhook_calls_today=calls,
+        webhook_rejected_today=rejected,
     )
 
 
 @router.get("/storage", operation_id="getStorageUsage", **require(Permission.INTEGRATIONS))
 async def get_storage_usage(connection: TenantConnection) -> StorageUsage:
-    stored = await stored_bytes(connection)
+    copied, in_place = await slide_bytes(connection)
+    size = bytes_where(COPIED)
     rows = await connection.execute(
         select(
             projects.c.id,
             projects.c.number,
             projects.c.name,
             projects.c.colour,
-            func.coalesce(func.sum(slides.c.file_bytes), 0).label("size"),
+            size.label("size"),
         )
-        .outerjoin(slides, (slides.c.project_id == projects.c.id) & slides.c.deleted_at.is_(None))
+        .outerjoin(slides, (slides.c.project_id == projects.c.id) & LIVE_SLIDES)
         .where(projects.c.deleted_at.is_(None))
         .group_by(projects.c.id)
-        .order_by(func.coalesce(func.sum(slides.c.file_bytes), 0).desc(), projects.c.number)
-    )
-    sources = await connection.execute(
-        select(import_sources).order_by(import_sources.c.created_at, import_sources.c.id)
+        .order_by(size.desc(), projects.c.number)
     )
     return StorageUsage(
-        total_tb=terabytes(stored),
-        in_place_tb=0,
-        parts=[StoragePart(kind="copied-slides", label="Copied slides", tb=terabytes(stored))],
+        total_tb=terabytes(copied),
+        total_bytes=copied,
+        capacity_tb=None,
+        in_place_tb=terabytes(in_place),
+        in_place_bytes=in_place,
+        parts=[
+            StoragePart(
+                kind="copied-slides", label="Copied slides", tb=terabytes(copied), bytes=copied
+            )
+        ],
         by_project=[
             ProjectStorage(
                 project=StorageProjectRef(id=row.id, code=code_of(row.number), name=row.name),
                 colour=max(0, row.colour),
                 gb=round(int(row.size) / GIGABYTE, 1),
+                bytes=int(row.size),
                 cap_gb=None,
             )
             for row in rows
         ],
         rules=[READ_ONLY_RULE],
-        sources=[
-            StorageSource(
-                id=source.id,
-                name=source.name,
-                kind="https" if source.kind == "https" else "s3",
-                access="Read-only key" if source.credential_ciphertext is not None else "No key",
-                address=source.address,
-                new_slides="copied",
-                health="answering",
-                first_tile_ms=None,
-                expires_in_days=None,
-            )
-            for source in sources
-        ],
+        sources=await storage_sources(connection),
     )
+
+
+def source_health(
+    slides_in_place: int, worst_failures: int
+) -> Literal["answering", "unreachable", "unused"]:
+    if slides_in_place == 0:
+        return "unused"
+    return "unreachable" if worst_failures >= OFFLINE_AFTER_FAILURES else "answering"
+
+
+async def storage_sources(connection: AsyncConnection) -> list[StorageSource]:
+    reads = (
+        select(
+            slides.c.source_id,
+            func.count().label("in_place"),
+            func.max(slides.c.remote_failures).label("failures"),
+            func.max(slides.c.remote_read_at).label("read_at"),
+        )
+        .where(LIVE_SLIDES, IN_PLACE)
+        .group_by(slides.c.source_id)
+        .subquery()
+    )
+    rows = await connection.execute(
+        select(import_sources, reads.c.in_place, reads.c.failures, reads.c.read_at)
+        .outerjoin(reads, reads.c.source_id == import_sources.c.id)
+        .order_by(import_sources.c.created_at, import_sources.c.id)
+    )
+    return [
+        StorageSource(
+            id=row.id,
+            name=row.name,
+            kind="https" if row.kind == "https" else "s3",
+            access="Read-only key" if row.credential_ciphertext is not None else "No key",
+            address=row.address,
+            new_slides="in-place" if row.in_place else "copied",
+            health=source_health(int(row.in_place or 0), int(row.failures or 0)),
+            first_tile_ms=None,
+            expires_in_days=None,
+            slides_in_place=int(row.in_place or 0),
+            last_read_at=row.read_at,
+        )
+        for row in rows
+    ]
 
 
 @router.get(
@@ -304,6 +419,68 @@ async def get_security_settings(request: Request, connection: TenantConnection) 
     )
 
 
+def host_of(address: str) -> str:
+    return urlsplit(address).hostname or address
+
+
 @router.get("/webhooks", operation_id="listWebhooks", **require(Permission.INTEGRATIONS))
-async def list_webhooks() -> list[Webhook]:
-    return []
+async def list_webhooks(connection: TenantConnection) -> list[Webhook]:
+    incoming = await incoming_counts(connection)
+    outgoing = await outgoing_counts(connection)
+    hooks = await connection.execute(
+        select(
+            project_webhooks.c.id,
+            projects.c.id.label("project_id"),
+            projects.c.number,
+            projects.c.name,
+        )
+        .join(projects, projects.c.id == project_webhooks.c.project_id)
+        .where(projects.c.deleted_at.is_(None))
+        .order_by(projects.c.number)
+    )
+    targets = await connection.execute(
+        select(
+            event_targets.c.id,
+            event_targets.c.address,
+            event_targets.c.events,
+            event_targets.c.paused_at,
+            projects.c.id.label("project_id"),
+            projects.c.number,
+            projects.c.name,
+        )
+        .join(projects, projects.c.id == event_targets.c.project_id)
+        .where(projects.c.deleted_at.is_(None))
+        .order_by(projects.c.number, event_targets.c.created_at, event_targets.c.id)
+    )
+    return [
+        *(
+            Webhook(
+                id=hook.id,
+                name=f"Into {hook.name}",
+                direction="incoming",
+                events=list(INCOMING_EVENTS),
+                calls_today=incoming.get(hook.id, (0, 0))[0],
+                rejected_today=incoming.get(hook.id, (0, 0))[1],
+                project=StorageProjectRef(
+                    id=hook.project_id, code=code_of(hook.number), name=hook.name
+                ),
+            )
+            for hook in hooks
+        ),
+        *(
+            Webhook(
+                id=target.id,
+                name=host_of(str(target.address)),
+                direction="outgoing",
+                events=sorted(target.events),
+                calls_today=outgoing.get(target.id, (0, 0))[0],
+                rejected_today=outgoing.get(target.id, (0, 0))[1],
+                project=StorageProjectRef(
+                    id=target.project_id, code=code_of(target.number), name=target.name
+                ),
+                address=target.address,
+                paused=target.paused_at is not None,
+            )
+            for target in targets
+        ),
+    ]

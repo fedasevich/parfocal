@@ -286,6 +286,32 @@ export const Storage: Story = {
   ),
 };
 
+export const StorageStates: Story = {
+  render: () => (
+    <div className="grid w-140 gap-6">
+      <StorageBar
+        data-testid="empty"
+        totalTb={null}
+        parts={[{ label: "Copied slides", tb: 0, colour: "var(--st-1)" }]}
+      />
+      <StorageBar
+        data-testid="nearly-full"
+        totalTb={5}
+        parts={[
+          { label: "Copied slides", tb: 3.9, colour: "var(--st-1)" },
+          { label: "Tile cache for remote slides", tb: 0.4, colour: "var(--st-2)" },
+          { label: "Results and reviews", tb: 0.3, colour: "var(--st-3)" },
+        ]}
+      />
+      <StorageBar
+        data-testid="no-capacity"
+        totalTb={null}
+        parts={[{ label: "Copied slides", tb: 0.007, colour: "var(--st-1)" }]}
+      />
+    </div>
+  ),
+};
+
 export const SettingsAndRows: Story = {
   render: () => (
     <div className="grid w-140 gap-4">

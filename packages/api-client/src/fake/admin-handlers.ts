@@ -4,6 +4,7 @@ import {
   getAskToJoinWorkspaceMockHandler,
   getChangeMemberRoleMockHandler,
   getCreateInvitationMockHandler,
+  getCreateServiceAccountMockHandler,
   getExportAuditEventsMockHandler,
   getGetAdminOverviewMockHandler,
   getGetCurrentTenantMockHandler,
@@ -11,6 +12,7 @@ import {
   getGetSessionPolicyMockHandler,
   getGetStorageUsageMockHandler,
   getInviteTaskReviewerMockHandler,
+  getIssueApiTokenMockHandler,
   getJoinWorkspaceMockHandler,
   getListAiModelsMockHandler,
   getListAuditEventsMockHandler,
@@ -21,6 +23,7 @@ import {
   getListWebhooksMockHandler,
   getRequestProjectAccessMockHandler,
   getResendInvitationMockHandler,
+  getRevokeApiTokenMockHandler,
   getRevokeInvitationMockHandler,
   getSetMemberAdminRightsMockHandler,
 } from "../generated/api.msw.ts";
@@ -28,10 +31,12 @@ import type {
   AcceptedInvitation,
   AdminOverview,
   AiModels,
+  ApiToken,
   AuditExport,
   Invitation,
   InvitationDraft,
   InvitePreview,
+  IssuedToken,
   JoinableWorkspace,
   Member,
   MemberActivity,
@@ -39,6 +44,7 @@ import type {
   ProjectAccessRequest,
   SecuritySettings,
   ServiceAccount,
+  ServiceAccountDraft,
   SessionPolicy,
   StorageUsage,
   TaskInvitationDraft,
@@ -92,11 +98,17 @@ const created: Invitation[] = [];
 const withdrawn = new Set<string>();
 
 const recordedAudit: NamedAuditEvent[] = [];
+const addedAccounts: ServiceAccount[] = [];
+const addedTokens = new Map<string, ApiToken[]>();
+const revokedTokens = new Set<string>();
 
 export const resetAdminActions = () => {
   created.length = 0;
   withdrawn.clear();
   recordedAudit.length = 0;
+  addedAccounts.length = 0;
+  addedTokens.clear();
+  revokedTokens.clear();
   resetStudyTemplates();
   resetWorkspaceJoin();
 };
@@ -159,7 +171,7 @@ export const toAdminOverview = (): AdminOverview => ({
   models: toAiModels().models.filter((model) => model.shown).length,
   runs_now: runningNow.length,
   stored_tb: Math.round(storage.parts.reduce((sum, part) => sum + part.tb, 0) * 10) / 10,
-  capacity_tb: storage.totalTb,
+  capacity_tb: storage.capacityTb,
   in_place_tb: storage.inPlaceTb,
   webhook_calls_today: webhooks[0]?.callsToday ?? 0,
   webhook_rejected_today: webhooks.reduce((sum, hook) => sum + hook.rejectedToday, 0),
@@ -209,29 +221,41 @@ export const toAiModels = (): AiModels => ({
   })),
 });
 
-export const toStorageUsage = (): StorageUsage => ({
-  total_tb: storage.totalTb,
-  in_place_tb: storage.inPlaceTb,
-  parts: storage.parts,
-  by_project: storage.byProject.map((row) => ({
-    project: ref(row.code),
-    colour: projectByCode(row.code).colour,
-    gb: row.gb,
-    cap_gb: row.capGb,
-  })),
-  rules: storage.rules,
-  sources: sources.map((source) => ({
-    id: source.id,
-    name: source.name,
-    kind: source.kind,
-    access: source.access,
-    address: source.address,
-    new_slides: source.newSlides,
-    health: source.health,
-    first_tile_ms: source.firstTileMs,
-    expires_in_days: source.expiresInDays,
-  })),
-});
+const TERABYTE = 1e12;
+const GIGABYTE = 1e9;
+
+export const toStorageUsage = (): StorageUsage => {
+  const used = storage.parts.reduce((sum, part) => sum + part.tb, 0);
+  return {
+    total_tb: Math.round(used * 1000) / 1000,
+    total_bytes: Math.round(used * TERABYTE),
+    capacity_tb: storage.capacityTb,
+    in_place_tb: storage.inPlaceTb,
+    in_place_bytes: Math.round(storage.inPlaceTb * TERABYTE),
+    parts: storage.parts.map((part) => ({ ...part, bytes: Math.round(part.tb * TERABYTE) })),
+    by_project: storage.byProject.map((row) => ({
+      project: ref(row.code),
+      colour: projectByCode(row.code).colour,
+      gb: row.gb,
+      bytes: Math.round(row.gb * GIGABYTE),
+      cap_gb: row.capGb,
+    })),
+    rules: storage.rules,
+    sources: sources.map((source) => ({
+      id: source.id,
+      name: source.name,
+      kind: source.kind,
+      access: source.access,
+      address: source.address,
+      new_slides: source.newSlides,
+      health: source.health,
+      first_tile_ms: source.firstTileMs,
+      expires_in_days: source.expiresInDays,
+      slides_in_place: source.slidesInPlace,
+      last_read_at: source.slidesInPlace > 0 ? "2026-10-15T10:40:00+02:00" : null,
+    })),
+  };
+};
 
 export const toWebhooks = (): Webhook[] =>
   webhooks.map((hook) => ({
@@ -241,6 +265,9 @@ export const toWebhooks = (): Webhook[] =>
     events: hook.events,
     calls_today: hook.callsToday,
     rejected_today: hook.rejectedToday,
+    project: ref(hook.project),
+    address: hook.address,
+    paused: hook.paused,
   }));
 
 export const toSecuritySettings = (): SecuritySettings => ({
@@ -439,23 +466,45 @@ const toAuditExport = (url: string): AuditExport => {
   };
 };
 
+const withRevoked = (token: ApiToken): ApiToken =>
+  revokedTokens.has(token.id) ? { ...token, revoked_at: token.revoked_at ?? scenarioNow } : token;
+
 const toServiceAccounts = (): ServiceAccount[] =>
-  serviceAccounts.map((account) => ({
-    id: account.id,
-    name: account.name,
-    scopes: account.scopes,
-    disabled_at: null,
-    created_at: "2026-09-10T09:00:00+02:00",
-    tokens: [
-      {
-        id: account.tokenId,
-        created_at: "2026-09-10T09:00:00+02:00",
-        expires_at: "2027-09-10T09:00:00+02:00",
-        revoked_at: null,
-        last_used_at: account.lastUsedAt,
-      },
-    ],
+  [
+    ...serviceAccounts.map((account) => ({
+      id: account.id,
+      name: account.name,
+      scopes: account.scopes,
+      disabled_at: null,
+      created_at: "2026-09-10T09:00:00+02:00",
+      tokens: [
+        {
+          id: account.tokenId,
+          created_at: "2026-09-10T09:00:00+02:00",
+          expires_at: "2027-09-10T09:00:00+02:00",
+          revoked_at: null,
+          last_used_at: account.lastUsedAt,
+        },
+      ],
+    })),
+    ...addedAccounts,
+  ].map((account) => ({
+    ...account,
+    tokens: [...account.tokens, ...(addedTokens.get(account.id) ?? [])].map(withRevoked),
   }));
+
+const newFakeId = (block: number) =>
+  `00000000-0000-4000-80${block}-${String(100 + addedAccounts.length + addedTokens.size + revokedTokens.size).padStart(12, "0")}`;
+
+const issueFakeToken = (accountId: string, days: number): IssuedToken => {
+  const id = newFakeId(91);
+  const expires = new Date(Date.parse(scenarioNow) + days * 86_400_000).toISOString();
+  addedTokens.set(accountId, [
+    ...(addedTokens.get(accountId) ?? []),
+    { id, created_at: scenarioNow, expires_at: expires, revoked_at: null, last_used_at: null },
+  ]);
+  return { id, token: `pf_fake${id.replaceAll("-", "").slice(-20)}`, expires_at: expires };
+};
 
 const toSessionPolicy = (): SessionPolicy => ({
   tenant_id: tenant.id,
@@ -569,6 +618,31 @@ export function adminHandlers(): RequestHandler[] {
     getListAuditEventsMockHandler(({ request }) => filteredAuditEvents(request.url)),
     getExportAuditEventsMockHandler(({ request }) => toAuditExport(request.url)),
     getListServiceAccountsMockHandler(() => toServiceAccounts()),
+    getCreateServiceAccountMockHandler(async ({ request }) => {
+      const body = (await request.json()) as ServiceAccountDraft;
+      const account: ServiceAccount = {
+        id: newFakeId(90),
+        name: body.name.trim(),
+        scopes: [...body.scopes].sort(),
+        disabled_at: null,
+        created_at: scenarioNow,
+        tokens: [],
+      };
+      addedAccounts.push(account);
+      const token = issueFakeToken(account.id, body.expires_in_days ?? 90);
+      recordAudit("service-account.created", "service-account", account.id, account.name);
+      return {
+        account: toServiceAccounts().find((one) => one.id === account.id) ?? account,
+        token,
+      };
+    }),
+    getIssueApiTokenMockHandler(async ({ request, params }) => {
+      const body = (await request.json()) as { expires_in_days?: number };
+      return issueFakeToken(String(params.accountId), body.expires_in_days ?? 90);
+    }),
+    getRevokeApiTokenMockHandler(({ params }) => {
+      revokedTokens.add(String(params.tokenId));
+    }),
     getGetSessionPolicyMockHandler(() => toSessionPolicy()),
     getGetCurrentTenantMockHandler(() => toTenant()),
     getSetMemberAdminRightsMockHandler(async ({ request }) => {

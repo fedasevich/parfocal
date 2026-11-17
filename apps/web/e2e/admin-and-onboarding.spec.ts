@@ -53,7 +53,7 @@ const scenes: { path: string; heading: string; shows: string }[] = [
   { path: "/admin?scene=models", heading: "AI models", shows: "Running now" },
   { path: "/admin?scene=templates", heading: "Report templates", shows: "Study templates" },
   { path: "/admin?scene=storage", heading: "Storage and sources", shows: "Rules for sources" },
-  { path: "/admin?scene=api", heading: "API and webhooks", shows: "pf_live_…3f9a" },
+  { path: "/admin?scene=api", heading: "API and webhooks", shows: "Add result sets to P07" },
   {
     path: "/admin?scene=audit",
     heading: "Audit log",

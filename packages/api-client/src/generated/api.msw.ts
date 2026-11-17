@@ -3954,11 +3954,18 @@ export const getGetStorageUsageResponseMock = (
   overrideResponse: Partial<Extract<StorageUsage, object>> = {},
 ): StorageUsage => ({
   total_tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  total_bytes: faker.number.int({ min: 0 }),
+  capacity_tb: faker.helpers.arrayElement([
+    faker.number.float({ min: 0, fractionDigits: 2 }),
+    null,
+  ]),
   in_place_tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  in_place_bytes: faker.number.int({ min: 0 }),
   parts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     kind: faker.string.alpha({ length: { min: 10, max: 20 } }),
     label: faker.string.alpha({ length: { min: 10, max: 20 } }),
     tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+    bytes: faker.number.int({ min: 0 }),
   })),
   by_project: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -3969,6 +3976,7 @@ export const getGetStorageUsageResponseMock = (
       },
       colour: faker.number.int({ min: 0 }),
       gb: faker.number.float({ min: 0, fractionDigits: 2 }),
+      bytes: faker.number.int({ min: 0 }),
       cap_gb: faker.helpers.arrayElement([faker.number.float({ min: 0, fractionDigits: 2 }), null]),
     }),
   ),
@@ -3987,9 +3995,19 @@ export const getGetStorageUsageResponseMock = (
       access: faker.string.alpha({ length: { min: 10, max: 20 } }),
       address: faker.string.alpha({ length: { min: 10, max: 20 } }),
       new_slides: faker.helpers.arrayElement(["copied", "in-place"] as const),
-      health: faker.helpers.arrayElement(["answering", "expiring"] as const),
+      health: faker.helpers.arrayElement([
+        "answering",
+        "expiring",
+        "unreachable",
+        "unused",
+      ] as const),
       first_tile_ms: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
       expires_in_days: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+      slides_in_place: faker.number.int({ min: 0 }),
+      last_read_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -4024,6 +4042,19 @@ export const getListWebhooksResponseMock = (): Webhook[] =>
     ),
     calls_today: faker.number.int({ min: 0 }),
     rejected_today: faker.number.int({ min: 0 }),
+    project: faker.helpers.arrayElement([
+      {
+        id: faker.string.uuid(),
+        code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      null,
+    ]),
+    address: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    paused: faker.datatype.boolean(),
   }));
 
 export const getGetInvitePreviewResponseMock = (

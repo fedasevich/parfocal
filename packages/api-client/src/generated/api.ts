@@ -7173,6 +7173,8 @@ export interface StoragePart {
   label: string;
   /** @minimum 0 */
   tb: number;
+  /** @minimum 0 */
+  bytes: number;
 }
 
 export interface StorageProjectRef {
@@ -7211,6 +7213,8 @@ export type StorageSourceHealth = (typeof StorageSourceHealth)[keyof typeof Stor
 export const StorageSourceHealth = {
   answering: "answering",
   expiring: "expiring",
+  unreachable: "unreachable",
+  unused: "unused",
 } as const;
 
 export interface StorageSource {
@@ -7223,6 +7227,9 @@ export interface StorageSource {
   health: StorageSourceHealth;
   first_tile_ms: number | null;
   expires_in_days: number | null;
+  /** @minimum 0 */
+  slides_in_place: number;
+  last_read_at: string | null;
 }
 
 export interface ParfocalApiAdminConsoleProjectStorage {
@@ -7231,6 +7238,8 @@ export interface ParfocalApiAdminConsoleProjectStorage {
   colour: number;
   /** @minimum 0 */
   gb: number;
+  /** @minimum 0 */
+  bytes: number;
   cap_gb: number | null;
 }
 
@@ -7238,7 +7247,12 @@ export interface StorageUsage {
   /** @minimum 0 */
   total_tb: number;
   /** @minimum 0 */
+  total_bytes: number;
+  capacity_tb: number | null;
+  /** @minimum 0 */
   in_place_tb: number;
+  /** @minimum 0 */
+  in_place_bytes: number;
   parts: StoragePart[];
   by_project: ParfocalApiAdminConsoleProjectStorage[];
   rules: StorageRule[];
@@ -7877,6 +7891,9 @@ export interface Webhook {
   calls_today: number;
   /** @minimum 0 */
   rejected_today: number;
+  project?: StorageProjectRef | null;
+  address?: string | null;
+  paused?: boolean;
 }
 
 export interface WebhookAnswer {

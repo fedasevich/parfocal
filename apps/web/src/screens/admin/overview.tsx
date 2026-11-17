@@ -19,6 +19,7 @@ import { okData } from "../placeholder.tsx";
 import { auditLabel, auditParams, defaultAuditFilter } from "./audit-model.ts";
 import { ModelStatus, TextLink, tb } from "./common.tsx";
 import { storageParts } from "./storage.tsx";
+import { barTotalTb, sourceState } from "./storage-model.ts";
 
 const quietActions = new Set(["slide.opened", "decision.changed-after-sign-off"]);
 
@@ -155,7 +156,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
           }
         >
           {storage ? (
-            <StorageBar size="sm" totalTb={storage.total_tb} parts={storageParts(storage)} />
+            <StorageBar size="sm" totalTb={barTotalTb(storage)} parts={storageParts(storage)} />
           ) : null}
           <div>
             {(storage?.sources ?? []).map((source) => (
@@ -175,15 +176,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
                   title={source.name}
                   sub={source.access}
                 />
-                {source.health === "expiring" ? (
-                  <StatusTag tone="warn">
-                    <Trans>Expires in {source.expires_in_days} days</Trans>
-                  </StatusTag>
-                ) : (
-                  <StatusTag tone="ok">
-                    <Trans>Answering</Trans>
-                  </StatusTag>
-                )}
+                <StatusTag tone={sourceState(source).tone}>{sourceState(source).text}</StatusTag>
               </SummaryRow>
             ))}
           </div>
