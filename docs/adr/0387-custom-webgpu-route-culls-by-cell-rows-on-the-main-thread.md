@@ -1,4 +1,4 @@
-# XXXX. The custom WebGPU route culls by cell rows on the main thread and reuses the Viv level of detail tiers
+# 0387. The custom WebGPU route culls by cell rows on the main thread and reuses the Viv level of detail tiers
 
 - Date: 2026-11-17
 - Status: Accepted
