@@ -33,7 +33,21 @@ Rounds count the longest chain of reads after levels.json in which each read sta
 
 At the roughly 400 ms a round took deployed, three fewer rounds should save about 1.2 s after levels.json. That is inferred from the owner's numbers, not measured.
 
+## Deployed follow-up: test_065 still walked the chain
+
+After v0.13.4 and a `backfill_level_directories` run, test_065 still opened with 10 strictly serial ranges after levels.json. Its `samples/camelyon16/test_065/levels.json` in parfocal-dev-eu (1,731 bytes, about 400 gzipped, matching the 709 bytes transferred with headers) had no `ifdOffset`, `littleEndian` or `bigTiff`, so the engine rightly walked the chain. The folder was made by hand for FOUND-040 (the edge Worker and the dev bucket under make dev) and holds only `original.tif`, `levels.json` and `restricted-ranges.json`. The backfill needs `tile-index.json` to know which directory belongs to which level, so it skipped this slide silently, both for TILES-010 and TILES-012.
+
+The backfill now builds the tile index from the stored original through ranged reads when `tile-index.json` is missing (tifffile over `RangedFile`, any TIFF-family format, Philips included), writes the table only when every level's size matches, and counts that outcome as `stored-from-original`. The Modal function now returns the counts instead of None. It does not store the derived tile index.
+
+On the local copy of test_065 (a Philips BigTIFF, 9 levels, level 0's TileOffsets and TileByteCounts 127,680 bytes each) the table the backfill writes equals the one the test's own directory walker makes. The latency proxy test, which now includes test_065 when the fixture is downloaded, at 100 ms round trip, fastest of three:
+
+| Fixture | Walk the chain | Offsets only | Primed |
+|---|---|---|---|
+| CAMELYON16 test_065 | 1,812 ms, 16 rounds, 19 requests | 663 ms, 5 rounds, 19 requests | 348 ms, 2 rounds, 12 requests |
+
+The backfill must run again on Modal main after the next deploy for test_065 to take the primed path.
+
 ## Not covered
 
-- The deployed open. TODO after the next deploy and a `backfill_level_directories` run: the owner's browser waterfall of test_065 from a fresh navigation.
+- The deployed open. TODO after the next deploy and a second `backfill_level_directories` run: the owner's browser waterfall of test_065 from a fresh navigation.
 - A real Philips slide. The fixture is uncompressed and has no JPEGTables, and a real one may place its directories elsewhere in the file.

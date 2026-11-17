@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.13.6 (2026-11-17)
+
+### Fixes
+
+- TILES-012: Locate a slide's levels from its original when the tile index is missing
+
+### Docs
+
+- OPS-034: Log the deployed query counts
+
 ## v0.13.5 (2026-11-17)
 
 ### Performance

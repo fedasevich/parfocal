@@ -166,10 +166,10 @@ def run_thumbnail_backfill() -> None:
     main()
 
 
-def run_level_directories_backfill() -> None:
+def run_level_directories_backfill() -> dict[str, int]:
     from parfocal_ingest.level_directories_backfill import main
 
-    main()
+    return main()
 
 
 def sweep_remote_caches() -> None:
