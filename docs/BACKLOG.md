@@ -6395,6 +6395,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Read every value from the real API, keep fakes only behind the fake API's own entry, use real dates and people, and show an honest empty state where the API has nothing. Remove each fixed file from the guard's list.
   Done when none of these files is in the guard's list, the clinical report and search screens print no fixed date or name, and their unit and browser tests pass.
   Size: M.
+- [ ] PROTO-027 · The prototype scene harness is not reachable in the deployed app
+  PROTO-025 (main screens show real data and real images) found that `?scene=` still switches production screens into prototype scenes, for example `/projects/$projectId/upload?scene=X` renders the upload mock with its "Mock only" tag and "Jump to the end" button. About 108 route lines read a scene.
+  Let scenes run only in the fake API build and Storybook, ignore the `scene` search value in the deployed app, and remove the mock-only controls from production paths. Extend `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates) so a production route that reads a scene fails it.
+  Done when a browser test against the production build opens a screen with `?scene=` and sees the real screen, and the guard covers scenes.
+  Depends on VIEW-074, PROTO-026. Size: M.
 
 ---
 
