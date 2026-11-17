@@ -141,6 +141,19 @@ def test_everyone_reviews_every_slide_of_the_named_slides_and_cases(
     assert [row[0] for row in audited] == ["task.created"]
 
 
+def test_creating_a_task_puts_it_in_every_reviewer_bell_and_in_assigned_by_me(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    assert create(api, s).status_code == 201
+    for label in ("first", "second", "third"):
+        listed = api(s.people[label]).get("/api/me/notifications").json()["notifications"]
+        assert [item["kind"] for item in listed] == ["task-assigned"]
+        assert listed[0]["payload"]["slides"] == 4
+    assigned = api(s.people["owner"]).get("/api/me/assigned-tasks").json()
+    assert [task["code"] for task in assigned] == ["RT-1"]
+
+
 def test_a_task_carries_the_analysis_template_of_its_project(api: ApiAs, database: str) -> None:
     s = study(database)
     task = create(api, s).json()

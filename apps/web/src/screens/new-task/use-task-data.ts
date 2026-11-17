@@ -1,5 +1,4 @@
 import {
-  type ResultSet,
   type StudyTemplateSummary,
   useGetMySettingLayers,
   useGetProject,
@@ -21,7 +20,6 @@ import {
   type DecisionKindKey,
   preselectedTemplate,
   type ReminderKey,
-  type ResultSetChoice,
   reminderChoices,
   type SlideChoice,
   type SlideGroup,
@@ -29,6 +27,7 @@ import {
   type TaskData,
   type TemplateChoice,
 } from "./model.ts";
+import { groupResultSets, templateFor } from "./result-sets.ts";
 
 const studyKinds: Record<string, string> = {
   "regions-and-cells": "Regions and cells",
@@ -59,24 +58,6 @@ function presetDecision(
   }
   const style = toReviewStyle(template.presets.decision);
   return { kind: kindKeys[style.kind], agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo };
-}
-
-const resultSetKeys = ["cam", "sam"] as const;
-
-function toResultSet(set: ResultSet, index: number): ResultSetChoice {
-  const brand = set.name.split(" ")[0] ?? set.name;
-  const version = set.model_version ?? "";
-  const date = shortDate(set.produced_at ?? set.created_at);
-  return {
-    id: set.id,
-    key: resultSetKeys[index] ?? "sam",
-    label: `${set.name} ${version}`.trim(),
-    short: `${brand} ${version}`.trim(),
-    detail:
-      set.source === "import"
-        ? `Imported ${date} from ${set.source_file ?? "a file"}`
-        : `Run here ${date}`,
-  };
 }
 
 function toGroups(
@@ -157,11 +138,13 @@ export function useTaskData(projectId: string): {
   ) {
     return { data: undefined, pending, failed };
   }
+  const grouped = groupResultSets(resultSets);
+  const groupedSetId = (id: string) => grouped.groupOf.get(id) ?? id;
   const slides: SlideChoice[] = projectSlides.map((slide) => ({
     id: slide.id,
     name: slide.case ? `${slide.label} · ${slide.stain}` : slide.label,
     caseLabel: slide.case?.label ?? null,
-    sets: slide.result_set_ids,
+    sets: [...new Set(slide.result_set_ids.map(groupedSetId))],
   }));
   const { groups, pool } = toGroups(slides, defaults.slide_ids);
   for (const group of groups) {
@@ -227,13 +210,23 @@ export function useTaskData(projectId: string): {
     slides,
     groups,
     pool,
-    resultSets: resultSets.map(toResultSet),
-    names: Object.fromEntries(defaults.names.map((item) => [item.result_set_id, item.name])),
+    resultSets: grouped.choices,
+    names: Object.fromEntries(
+      defaults.names.map((item) => [groupedSetId(item.result_set_id), item.name]),
+    ),
     templates: choices,
-    defaultTemplateId: preselectedTemplate(
-      defaults.study_template_id,
-      typeof workspaceDefault === "string" ? workspaceDefault : null,
+    defaultTemplateId: templateFor(
       choices,
+      preselectedTemplate(
+        defaults.study_template_id,
+        typeof workspaceDefault === "string" ? workspaceDefault : null,
+        choices,
+      ),
+      grouped.choices.find((set) => set.id === groupedSetId(defaults.result_set_id))?.objects ?? {
+        regions: true,
+        cells: true,
+        zones: true,
+      },
     ),
     people,
     rois: scopeOptions.rois,
@@ -243,7 +236,7 @@ export function useTaskData(projectId: string): {
     })),
     forms: templateDefaults.opinion_forms,
     defaults: {
-      resultSetId: defaults.result_set_id,
+      resultSetId: groupedSetId(defaults.result_set_id),
       reviewerIds: defaults.reviewer_ids,
       due: defaults.due_on,
       reminders: reminderOf(defaults.reminder_days),

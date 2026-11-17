@@ -50,6 +50,7 @@ import {
   taskToday,
   unsureZones,
 } from "./scenario-task.ts";
+import { recordSentTask } from "./sent-tasks.ts";
 import { mergedStudyTemplates, studyTemplateHandlers } from "./study-template-store.ts";
 import { toReviewTaskDetail } from "./work-handlers.ts";
 
@@ -315,8 +316,11 @@ export function taskHandlers(): RequestHandler[] {
     getListProjectSlidesMockHandler(({ params }) => toProjectSlides(String(params.projectId))),
     getGetReviewTaskDefaultsMockHandler(() => toReviewTaskDefaults()),
     getGetProjectScopeOptionsMockHandler(() => toProjectScopeOptions()),
-    getCreateReviewTaskMockHandler(async ({ request, params }) =>
-      toCreatedTask(String(params["projectId"]), (await request.json()) as TaskDraft),
-    ),
+    getCreateReviewTaskMockHandler(async ({ request, params }) => {
+      const draft = (await request.json()) as TaskDraft;
+      const created = toCreatedTask(String(params["projectId"]), draft);
+      recordSentTask({ id: created.id, code: created.code, projectId: created.project_id }, draft);
+      return created;
+    }),
   ];
 }
