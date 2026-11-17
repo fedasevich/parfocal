@@ -23,10 +23,16 @@ export function liveSlideList(input: {
 }): LiveSlideList {
   const byId = new Map(input.slides.map((slide) => [slide.id, slide]));
   const pick = (ids: readonly string[]) =>
-    ids.flatMap((id) => {
-      const row = byId.get(id);
-      return row === undefined ? [] : [row];
-    });
+    ids.map(
+      (id, index): LiveSlideRow =>
+        byId.get(id) ?? {
+          id,
+          label: `Slide ${index + 1}`,
+          case_id: null,
+          status: "",
+          result_sets: [],
+        },
+    );
   const scoped: [LiveSlideScope, readonly LiveSlideRow[]] =
     input.taskSlideIds !== undefined && input.taskSlideIds.length > 0
       ? ["task", pick(input.taskSlideIds)]
@@ -36,4 +42,12 @@ export function liveSlideList(input: {
   const [scope, slides] = scoped;
   const index = slides.findIndex((slide) => slide.id === input.slideId);
   return { scope, slides, position: index + 1, total: slides.length };
+}
+
+export function withNeighbours(
+  list: LiveSlideList,
+  neighbours: { readonly position: number; readonly total: number } | undefined,
+): LiveSlideList {
+  if (neighbours === undefined || list.scope === "case" || neighbours.total === 0) return list;
+  return { ...list, position: neighbours.position, total: neighbours.total };
 }

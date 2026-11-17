@@ -17,7 +17,9 @@ export function slideDoneCounts(session: ReviewSession): SlideDoneCounts {
   return { ...counts, added: session.added.length };
 }
 
-function ReviewOpinion({ taskId, slideId }: { taskId: string; slideId: string }) {
+type OpinionProps = { taskId: string; slideId: string; onObjects: () => void };
+
+function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
   const { t } = useLingui();
   const navigate = useNavigate();
   const session = useReviewSession(taskId, slideId);
@@ -31,6 +33,7 @@ function ReviewOpinion({ taskId, slideId }: { taskId: string; slideId: string })
       id: object.object,
       text: t`${object.object} is still open`,
       goTo: t`Go to ${object.object}`,
+      onGoTo: onObjects,
     }));
   const blockers = open.length > 0 ? open : questionBlockers(questions, answers);
   return (
@@ -59,13 +62,15 @@ export function StageOpinion({
   taskId,
   slideId,
   reviewTask,
+  onObjects,
 }: {
   taskId: string | undefined;
   slideId: string;
   reviewTask: boolean;
+  onObjects: () => void;
 }) {
   if (taskId !== undefined && reviewTask)
-    return <ReviewOpinion taskId={taskId} slideId={slideId} />;
+    return <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={onObjects} />;
   return (
     <InlineState data-testid="stage-opinion" icon="info" title={<Trans>No opinion asked</Trans>}>
       <Trans>

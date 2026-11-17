@@ -1,5 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type ReviewTaskDetail, useGetMe, useListMySlides } from "@parfocal/api-client";
+import {
+  type ReviewTaskDetail,
+  useGetMe,
+  useGetSlideNeighbours,
+  useListMySlides,
+} from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
@@ -14,8 +19,10 @@ import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "../shell/account-menu.tsx";
 import { personOf } from "../shell/global-shell.tsx";
 import type { CaseLoad } from "./case-load.ts";
-import { type LiveSlideList, liveSlideList } from "./live-slides.ts";
+import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
 import type { SlideWorkspace } from "./workspace.ts";
+
+const slidePage = 200;
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
@@ -129,13 +136,25 @@ export function LiveTopBar({
   const { t } = useLingui();
   const navigate = useNavigate();
   const me = okData(useGetMe().data);
-  const projectSlides = okData(useListMySlides({ project_id: projectId }).data)?.slides ?? [];
-  const list = liveSlideList({
-    slideId,
-    slides: projectSlides,
-    taskSlideIds: task?.slides.map((slide) => slide.slide_id),
-    caseSlideIds: load?.case?.slideIds,
-  });
+  const projectSlides =
+    okData(useListMySlides({ project_id: projectId, limit: slidePage }).data)?.slides ?? [];
+  const neighbours = okData(
+    useGetSlideNeighbours(
+      slideId,
+      task === undefined
+        ? { from: "all-slides", project_id: projectId }
+        : { from: "task", task_id: task.id },
+    ).data,
+  );
+  const list = withNeighbours(
+    liveSlideList({
+      slideId,
+      slides: projectSlides,
+      taskSlideIds: task?.slides.map((slide) => slide.slide_id),
+      caseSlideIds: load?.case?.slideIds,
+    }),
+    neighbours,
+  );
   const reviewTask = task?.kind === "review";
   const title = load?.task ? `${load.task.code} ${load.task.name}` : (load?.project.name ?? "");
   const slideLabel = load?.slide?.label ?? t`Slide`;

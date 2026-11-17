@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { drawsContextBar, hintsSeen, markHintsSeen } from "../src/annotations/hints-once.ts";
-import { liveSlideList } from "../src/viewer/live-slides.ts";
+import { liveSlideList, withNeighbours } from "../src/viewer/live-slides.ts";
 import { movedWhileDown } from "../src/viewer/use-pan-hide.ts";
 
 const row = (id: string, caseId: string | null = null) => ({
@@ -24,9 +24,12 @@ test("the slide list follows the task's order when a task is open", () => {
   assert.equal(list.scope, "task");
   assert.deepEqual(
     list.slides.map((slide) => slide.id),
-    ["d", "c"],
+    ["d", "c", "missing"],
   );
-  assert.deepEqual([list.position, list.total], [2, 2]);
+  assert.equal(list.slides[2]?.label, "Slide 3");
+  assert.deepEqual([list.position, list.total], [2, 3]);
+  const counted = withNeighbours(list, { position: 7, total: 12 });
+  assert.deepEqual([counted.position, counted.total], [7, 12]);
 });
 
 test("the slide list falls back to the case and then to the project", () => {
@@ -37,6 +40,7 @@ test("the slide list falls back to the case and then to the project", () => {
     caseSlideIds: ["a", "b"],
   });
   assert.deepEqual([inCase.scope, inCase.position, inCase.total], ["case", 2, 2]);
+  assert.equal(withNeighbours(inCase, { position: 9, total: 40 }).total, 2);
   const loose = liveSlideList({ slideId: "d", slides, taskSlideIds: [], caseSlideIds: undefined });
   assert.deepEqual([loose.scope, loose.position, loose.total], ["project", 4, 4]);
   const missing = liveSlideList({

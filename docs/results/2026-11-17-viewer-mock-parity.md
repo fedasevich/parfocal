@@ -3,7 +3,7 @@
 - Date: 2026-11-17
 - Backlog: PROTO-022 (the viewers match the frozen mock again), then PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock)
 - Kind: check
-- Commit: 3d0dd477 for the inventory and the before shots, 24c92c9b for the after shots
+- Commit: 3d0dd477 for the inventory and the before shots, 24c92c9b for the after shots, ea5eb481 and its follow-up on the PROTO-023 branch for the top bar, tabs and hints
 - Environment: MacBook, macOS 15, Chrome through Playwright, 1440x900 at scale 0.5, light theme
 - Data: the fake API's sample project `00000000-0000-4000-8003-000000000007` and its fictional slide `tumor_044`, and the frozen mock's fictional demo slide. No PHI
 
@@ -47,7 +47,7 @@ Every difference below is in the live viewer.
 | 17 | Pin threads and comment popovers | Next to the pin | `.thread` next to the pin | Kept | It is the mock |
 | 18 | Smart and auto tool chips (model and scale) | Small chips at the bottom | Inside the context bar | Restored | The hover preview switch, the Outlining status and the auto region's tile progress portal into the context bar (`annotations/context-extras.tsx`), so nothing sits at the bottom of the slide |
 | 19 | Save status, live changes marker, edit conflict notice | Small notices at the canvas's top left and top centre | Toasts and the one banner | Restored as the mock shows | The save status is a quiet word in the top bar, and the live changes marker and the conflict notice sit in the one banner under the top bar (`viewer/stage-notices.tsx`). This is option A of question 144 in `docs/decisions.md` (where the save, live changes and conflict notices go), built without waiting for the answer as the lead asked. Option B would move them back onto the slide |
-| 20 | Top bar | Back to the project, slide name with facts, workspace switch, viewing now and the viewed ring | My work, task and due date, slide picker, progress, Guided, Full viewer and Annotate, Submit, account | Restored | `viewer/live-top-bar.tsx` draws My work, the task or project with its facts and due date, the slide picker over the task's, the case's or the project's slides, the viewed ring with "Slide n of m", the Guided (review tasks only), Full viewer and Annotate switch, Submit (review tasks only, opening the Opinion tab), viewing now and the account menu. The remote tag and Copy into Parfocal stay beside the progress, as ADR 0383 (remote slides served from cached byte ranges) puts them in the live viewer |
+| 20 | Top bar | Back to the project, slide name with facts, workspace switch, viewing now and the viewed ring | My work, task and due date, slide picker, progress, Guided, Full viewer and Annotate, Submit, account | Restored | `viewer/live-top-bar.tsx` draws My work, the task or project with its facts and due date, the slide picker over the task's, the case's or the project's slides, the viewed ring with "Slide n of m", the Guided (review tasks only), Full viewer and Annotate switch, Submit (review tasks only, opening the Opinion tab), viewing now and the account menu. The remote tag and Copy into Parfocal stay beside the progress, as ADR 0383 (remote slides served from cached byte ranges) puts them in the live viewer. "Slide n of m" comes from the slide neighbours call for a task or the project, and from the case's slides for a case. Not carried over from the mock: Q and E stepping through slides, the progress popover and Open report in place of Submit in a clinical project, which the full viewer has |
 | 21 | Loading label | Top left of the canvas | | Kept | SHELL-017 (route loading, skeletons and the viewer's loading label) owns it, and it shows only until the first frame |
 
 Before, the live viewer in review and in an annotate task, beside the mock's case and annotate screens:
@@ -72,7 +72,7 @@ No ADR in `docs/adr` and no result in `docs/results` justifies a card floating o
 
 The drift came from building each live feature as its own card on the stage, one task at a time, while the shared `ViewerFrame` with the mock's layout was used only by the prototype viewers. Moving the cards into one docked inspector is a change of place only. Each part stays mounted on the stage, so its keys and overlays keep working when its tab is not shown.
 
-After PROTO-023, the live viewer in review at 1440x900 and scale 0.5. It differs from the PROTO-022 after shot on 6.7% of pixels with a mean error of 5.6, all in the top bar and the inspector tabs:
+After PROTO-023, the live viewer in review at 1440x900 and scale 0.5. It differs from the PROTO-022 after shot on 6.7% of pixels with a mean error of 5.6. The diff image was not inspected:
 
 ![Live review after the top bar](2026-11-17-viewer-mock-parity/after-top-bar-review.png)
 
@@ -83,5 +83,5 @@ After PROTO-023, the live viewer in review at 1440x900 and scale 0.5. It differs
 - The Comments tab lists threads but has no Go to, because the live viewer finds pins on the slide itself through the comment tool.
 - A slide opened from the project page lands in the Annotate workspace, so Areas, Measurements and Find nuclei start behind the Objects tab there.
 - About 40 other specs that open the live viewer were not run in either change.
-- The viewer goldens in `packages/golden-images` render overlay layers in their own harness and import no app code, so neither layout change moves them. PROTO-022 saw one run pass 132, skip 2 and fail 1, the id-labels layer over CMU-1.svs. TODO check it on main.
+- The viewer goldens in `packages/golden-images` render overlay layers in their own harness and import no app code, so neither layout change moves them. PROTO-022 saw one run pass 132, skip 2 and fail 1, the id-labels layer over CMU-1.svs. PROTO-023's run with one worker gave the same, with 19 tests not run after that failure. TODO check it on main.
 - Browser specs: PROTO-022 updated `device-legend`, `outline-modes`, `painted-map`, `view-map`, `count-markers`, `measurement-list`, `area-nav-live` and `zoom-to-selection` and added `viewer-mock-layout.spec.ts`. PROTO-023 added three tests to `viewer-mock-layout.spec.ts` (picker, progress, four tabs kept across a reload and a workspace switch, hide while panning, the save status and chips placement), renamed the Review choice to Full viewer in `workspaces.spec.ts` and checked in `context-bar.spec.ts` that a hint-only bar shows once.

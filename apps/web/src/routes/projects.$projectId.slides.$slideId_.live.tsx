@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { liveSearch } from "../search/route-searches.ts";
 import { LiveTopBar } from "../viewer/live-top-bar.tsx";
@@ -42,6 +43,7 @@ function LiveSlide() {
   const [banner, setBanner] = useState<HTMLElement | null>(null);
   const [status, setStatus] = useState<HTMLElement | null>(null);
   const notices = useMemo(() => ({ banner, status }), [banner, status]);
+  const [, setLayout] = useInspectorLayout();
   const storageNote = storage?.slideId === slideId ? storage.note : null;
   const closePeek = useCallback(() => setPeek(false), []);
   const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent };
@@ -78,7 +80,12 @@ function LiveSlide() {
       />
     ),
     opinion: (
-      <StageOpinion taskId={task} slideId={slideId} reviewTask={taskDetail?.kind === "review"} />
+      <StageOpinion
+        taskId={task}
+        slideId={slideId}
+        reviewTask={taskDetail?.kind === "review"}
+        onObjects={() => showTab("objects")}
+      />
     ),
   };
   return (
@@ -91,7 +98,10 @@ function LiveSlide() {
         workspace={workspace}
         onWorkspace={switchTo}
         onOpenSlide={openSlide}
-        onSubmit={() => showTab("opinion")}
+        onSubmit={() => {
+          setLayout({ hidden: false });
+          showTab("opinion");
+        }}
         percent={percent}
         onPeek={() => setPeek(true)}
         statusRef={setStatus}
