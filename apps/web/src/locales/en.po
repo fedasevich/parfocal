@@ -2653,6 +2653,10 @@ msgstr "A model that runs somewhere else can still bring its results in as files
 msgid "A new code is on its way. The old one stops working"
 msgstr "A new code is on its way. The old one stops working"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "A new code is on its way. The old one stops working."
+msgstr "A new code is on its way. The old one stops working."
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "A new draft, Evaluation v2, copied from v1"
 msgstr "A new draft, Evaluation v2, copied from v1"
@@ -3962,6 +3966,10 @@ msgstr "Back to My work. Every edit is saved"
 msgid "Back to Parfocal"
 msgstr "Back to Parfocal"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Back to sign in"
+msgstr "Back to sign in"
+
 #: src/screens/review/object-card.tsx
 msgid "Back to the answers"
 msgstr "Back to the answers"
@@ -4620,6 +4628,10 @@ msgstr "Change it"
 msgid "Change the {0} slide"
 msgstr "Change the {0} slide"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Change the address"
+msgstr "Change the address"
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Change the slide on this side"
 msgstr "Change the slide on this side"
@@ -4832,6 +4844,10 @@ msgstr "Choose a GeoJSON file. You see it on the slide in cyan before anything i
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Choose a model"
 msgstr "Choose a model"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Choose a new password"
+msgstr "Choose a new password"
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose a result file"
@@ -5524,11 +5540,20 @@ msgstr "Could not create the account."
 msgid "Could not load {label}."
 msgstr "Could not load {label}."
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Could not remove the passkey. Try again."
+msgstr "Could not remove the passkey. Try again."
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Could not reset the password."
+msgstr "Could not reset the password."
+
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Could not save the passkey. Try again."
 msgstr "Could not save the passkey. Try again."
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not send the code."
 msgstr "Could not send the code."
@@ -6419,6 +6444,10 @@ msgstr "Email"
 msgid "Email domain"
 msgstr "Email domain"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Email me a code"
+msgstr "Email me a code"
+
 #: src/screens/admin/audit.tsx
 msgid "Emergency"
 msgstr "Emergency"
@@ -6493,6 +6522,10 @@ msgstr "Enter posts, Shift+Enter adds a line"
 msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
 msgstr "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
+msgstr "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
+
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter the size."
 msgstr "Enter the size."
@@ -6500,6 +6533,10 @@ msgstr "Enter the size."
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter your password."
 msgstr "Enter your password."
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Enter your work email, then ask for a code."
+msgstr "Enter your work email, then ask for a code."
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Enter your work email, then choose Sign in with a passkey."
@@ -7221,6 +7258,10 @@ msgstr "Forget"
 #: src/screens/developer/developer-screen.tsx
 msgid "Forget learned"
 msgstr "Forget learned"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Forgot your password?"
+msgstr "Forgot your password?"
 
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "Format"
@@ -9677,6 +9718,10 @@ msgstr "New link"
 msgid "New map"
 msgstr "New map"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "New password"
+msgstr "New password"
+
 #: src/annotations/pin-layer.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "New pinned thread"
@@ -11495,6 +11540,10 @@ msgid "Participant code"
 msgstr "Participant code"
 
 #: src/screens/settings/settings-screen.tsx
+msgid "Passkey removed. It no longer signs you in"
+msgstr "Passkey removed. It no longer signs you in"
+
+#: src/screens/settings/settings-screen.tsx
 msgid "Passkey saved. Next time sign in with it instead of your password"
 msgstr "Passkey saved. Next time sign in with it instead of your password"
 
@@ -12484,6 +12533,7 @@ msgstr "remote"
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/measure/measurement-list.tsx
 #: src/screens/admin/workspace-settings.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Remove"
 msgstr "Remove"
 
@@ -12522,6 +12572,11 @@ msgstr "Remove from this upload"
 #: src/screens/upload/check-step.tsx
 msgid "Remove the 4 largest slides from this upload"
 msgstr "Remove the 4 largest slides from this upload"
+
+#. placeholder {0}: item.name
+#: src/screens/settings/settings-screen.tsx
+msgid "Remove the passkey {0}"
+msgstr "Remove the passkey {0}"
 
 #: src/screens/developer/bench-section.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -12676,10 +12731,12 @@ msgid "Resend"
 msgstr "Resend"
 
 #. placeholder {0}: clock(secondsLeft)
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend in {0}"
 msgstr "Resend in {0}"
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend the code"
 msgstr "Resend the code"
@@ -12706,6 +12763,10 @@ msgstr "Reset alignment"
 msgid "Reset all"
 msgstr "Reset all"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Reset code"
+msgstr "Reset code"
+
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Reset to 100%"
 msgstr "Reset to 100%"
@@ -12717,6 +12778,10 @@ msgstr "Reset to the task default"
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Reset to the template"
 msgstr "Reset to the template"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Reset your password"
+msgstr "Reset your password"
 
 #: ../../packages/ui/src/components/bottom-sheet.tsx
 msgid "Resize the panel"
@@ -13860,6 +13925,10 @@ msgstr "Set by your lab for everyone"
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Set for this block only."
 msgstr "Set for this block only."
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Set password and sign in"
+msgstr "Set password and sign in"
 
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Set up"
@@ -17343,6 +17412,10 @@ msgstr "Watershed"
 msgid "Ways to show results"
 msgstr "Ways to show results"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "We email a {codeLength}-digit code to the address on your account."
+msgstr "We email a {codeLength}-digit code to the address on your account."
+
 #: src/feedback/feedback-dialog.tsx
 msgid "We read every message. Nothing else from this screen was sent."
 msgstr "We read every message. Nothing else from this screen was sent."
@@ -17753,6 +17826,7 @@ msgstr "Word"
 msgid "Words"
 msgstr "Words"
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Work email"

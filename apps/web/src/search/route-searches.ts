@@ -217,6 +217,8 @@ export const signInSearch = lenientSearch({
     "sso",
     "passkey",
     "passkeyqr",
+    "forgot",
+    "reset",
     "lock",
     "lockkey",
   ]),

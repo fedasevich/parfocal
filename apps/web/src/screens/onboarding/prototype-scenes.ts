@@ -6,6 +6,8 @@ const signInNotes = {
   sso: "Sign in with your organisation",
   passkey: "Passkey, the browser asks",
   passkeyqr: "Passkey on a phone or key",
+  forgot: "Forgot password, ask for a code",
+  reset: "Forgot password, code and new password",
   lock: "Locked after inactivity",
   lockkey: "Unlock with a passkey",
   expired: "Issue · session expired",
