@@ -87,6 +87,7 @@ SCREEN_ROWS: dict[str, tuple[object, object, object]] = {
     "shortcut_single_letter": (True, False, "on"),
     "shortcut_by_position": (True, False, 0),
     "shortcut_whole_slide_key": ("both", "tap", "double"),
+    "hints_seen": ([], ["settings.tools", "settings.theme"], [""]),
 }
 
 
