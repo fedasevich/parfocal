@@ -181,3 +181,19 @@ test("hide while panning takes the whole side panel away during a drag and bring
   await page.mouse.up();
   await expect.poll(width).toBeGreaterThan(200);
 });
+
+test("a tool's tooltip carries its hint once the hint was seen", async ({ page }) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&workspace=annotate`);
+  const stage = await ready(page);
+  const comment = page.locator('[data-slot="tool-rail-button"][data-tool="comment"]');
+  await comment.click();
+  await expect(stage).toHaveAttribute("data-tool", "comment");
+  await expect(page.getByText("Click to pin a thread").first()).toBeVisible();
+  await comment.click();
+  await expect(stage).not.toHaveAttribute("data-tool", "comment");
+  await page.mouse.move(0, 0);
+  await comment.hover();
+  await expect(page.locator('[data-slot="tool-rail-hint"]')).toHaveText(
+    "Click to pin a thread. Enter posts",
+  );
+});

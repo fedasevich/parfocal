@@ -36,6 +36,7 @@ export type EngineViewerProps = {
   start?: StageStart | undefined;
   object?: string | undefined;
   guided?: boolean;
+  tool?: string | undefined;
   onOpenSlide: (slideId: string) => void;
   onWorkspace: (workspace: SlideWorkspace) => void;
   onTab?: ((tab: ViewerTab) => void) | undefined;
@@ -50,6 +51,7 @@ export function EngineViewer({
   start,
   object,
   guided = false,
+  tool,
   onOpenSlide,
   onWorkspace,
   onTab: onRouteTab,
@@ -103,7 +105,7 @@ export function EngineViewer({
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
       <StageMinimap engine={session.engine} slideId={slideId} />
-      <StageToolLink armTool={session.armTool} link={toolLink} />
+      <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       {reviewTask === null ? null : (
         <StageReviewObjects
           engine={session.engine}

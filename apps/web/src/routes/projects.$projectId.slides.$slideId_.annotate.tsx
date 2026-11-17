@@ -22,6 +22,7 @@ function AnnotateWorkspace() {
         slideId={slideId}
         task={search.task}
         workspace="annotate"
+        tool={search.tool}
         onOpenSlide={(next) =>
           void navigate({
             to: "/projects/$projectId/slides/$slideId/annotate",

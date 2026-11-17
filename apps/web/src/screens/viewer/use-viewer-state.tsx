@@ -403,7 +403,7 @@ export function useViewerState(props: BodyProps) {
     }
     onSearch({
       tool: route.tool,
-      ...(route.tool === "ruler" ? { object: undefined, scene: undefined } : {}),
+      ...(route.tool === "ruler" ? { object: undefined, scene: "objects" } : {}),
       ...(route.tab ? { tab: route.tab } : {}),
     });
   };

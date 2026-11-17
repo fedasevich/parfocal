@@ -54,6 +54,7 @@ import { DeviceLegend } from "../devices/device-legend.tsx";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
 import { createPenDoubleTap, createToolHistory } from "../devices/pen-touch.ts";
 import { applyMainCalibration } from "../devices/stage-calibration.ts";
+import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -106,6 +107,7 @@ import { ThreadFocus } from "./thread-focus.tsx";
 import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
+import { toolHintText } from "./tool-hint-text.ts";
 import { usePanelKey, usePanHide } from "./use-pan-hide.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
@@ -283,6 +285,7 @@ function OpenedSlide({
   const setup = workspaceSetups[workspace];
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
+  const hintsSeen = useHintsSeen();
   const [addingResults, setAddingResults] = useState(false);
   const heatmapChoices = useHeatmapChoices();
   const [resultPreview, setResultPreview] = useState<{
@@ -668,9 +671,11 @@ function OpenedSlide({
 
   const railButtons = (item: (typeof setup.rail)[number][number]) => {
     const stageTool = stageToolOf(item.tool);
+    const hint = hintsSeen.seen.has(toolHintId(item.tool)) ? toolHintText(item.tool) : undefined;
     return (
       <ToolRailButton
         key={item.tool}
+        {...(hint === undefined ? {} : { hint })}
         icon={item.icon}
         label={item.label}
         tipSide={toolsLayout === "dock" ? "top" : "right"}
