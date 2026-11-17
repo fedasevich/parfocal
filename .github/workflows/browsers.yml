@@ -28,7 +28,9 @@ jobs:
       - name: Install Firefox and WebKit with their system libraries
         run: pnpm --filter @parfocal/viewer-engine exec playwright install --with-deps firefox webkit
       - name: Viewer on Chromium, Firefox and WebKit
-        run: pnpm --filter @parfocal/viewer-engine test:browsers
+        env:
+          BROWSERS_FIREFOX_HEADED: "1"
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" pnpm --filter @parfocal/viewer-engine test:browsers
       - if: always()
         run: node packages/viewer-engine/browser-matrix/summary.ts packages/viewer-engine/test-results/browser-matrix.json >> "$GITHUB_STEP_SUMMARY"
       - if: always()

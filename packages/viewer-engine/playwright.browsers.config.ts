@@ -4,6 +4,13 @@ import base from "./playwright.config.ts";
 
 const viewport = { width: 1280, height: 720 };
 
+const FIREFOX_SOFTWARE_WEBGL_PREFS = {
+  "webgl.force-enabled": true,
+  "webgl.disabled": false,
+  "webgl.enable-webgl2": true,
+  "webgl.disable-fail-if-major-performance-caveat": true,
+};
+
 export default defineConfig({
   ...base,
   use: { headless: true },
@@ -25,7 +32,13 @@ export default defineConfig({
     },
     {
       name: "firefox",
-      use: { ...devices["Desktop Firefox"], viewport, deviceScaleFactor: 1 },
+      use: {
+        ...devices["Desktop Firefox"],
+        viewport,
+        deviceScaleFactor: 1,
+        headless: process.env["BROWSERS_FIREFOX_HEADED"] !== "1",
+        launchOptions: { firefoxUserPrefs: FIREFOX_SOFTWARE_WEBGL_PREFS },
+      },
     },
     {
       name: "webkit",

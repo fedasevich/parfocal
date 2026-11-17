@@ -127,7 +127,8 @@ async function show(display: readonly ChannelDisplay[]): Promise<ChannelsShown> 
   if (deck === null || levels === null || source === null) throw new Error("No slide is open");
   const [base] = source.levels;
   const canvas = deck.getCanvas();
-  if (base === undefined || canvas === null) throw new Error("The slide has no levels");
+  if (base === undefined) throw new Error("The slide has no levels");
+  if (canvas === null) throw new Error("The deck has no canvas, so WebGL2 did not start");
   const scale = Math.min(canvas.clientWidth / base.width, canvas.clientHeight / base.height);
   deck.setProps({
     viewState: { target: [base.width / 2, base.height / 2, 0], zoom: Math.log2(scale) },

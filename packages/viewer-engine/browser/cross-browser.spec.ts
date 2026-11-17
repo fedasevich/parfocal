@@ -19,7 +19,12 @@ const anchor = { x: 620, y: 260 };
 test("the browser offers WebGL2 and reports its WebGPU support", async ({ page, browserName }) => {
   await page.goto(harnessUrl("/app/input.html"));
   const support = await page.evaluate(async () => {
-    const gl = document.createElement("canvas").getContext("webgl2");
+    const canvas = document.createElement("canvas");
+    let creationError = "";
+    canvas.addEventListener("webglcontextcreationerror", (event) => {
+      creationError = (event as WebGLContextEvent).statusMessage;
+    });
+    const gl = canvas.getContext("webgl2");
     const info = gl?.getExtension("WEBGL_debug_renderer_info");
     const gpu =
       "gpu" in navigator
@@ -28,6 +33,7 @@ test("the browser offers WebGL2 and reports its WebGPU support", async ({ page, 
     const adapter = gpu === null ? null : await gpu.requestAdapter().catch(() => null);
     return {
       webgl2: gl !== null,
+      creationError,
       renderer: gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "unknown",
       maxTextureSize: gl ? Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)) : 0,
       floatTextures: gl ? gl.getExtension("EXT_color_buffer_float") !== null : false,
