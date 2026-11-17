@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import uuid
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
@@ -159,6 +160,24 @@ async def restricted_ranges(store: ObjectStore, folder: str, file_bytes: int) ->
         raise
 
 
+async def uploaded_reads(
+    store: ObjectStore, original_key: str, file_bytes: int
+) -> tuple[SlideRanges, str | None]:
+    ranges, stored = await asyncio.gather(
+        restricted_ranges(store, folder_of(original_key), file_bytes),
+        store.stat_object(original_key),
+    )
+    return ranges, stored.etag if stored is not None and stored.etag else None
+
+
+async def settled(early: asyncio.Task[Any] | None) -> None:
+    if early is None:
+        return
+    early.cancel()
+    with suppress(BaseException):
+        await early
+
+
 @router.get("", operation_id="getTileAccess", **require(Permission.SEE_SLIDES))
 async def get_tile_access(
     slide_id: uuid.UUID,
@@ -191,6 +210,43 @@ async def get_tile_access(
     ).one_or_none()
     if row is None:
         raise NotFoundError("Slide not found")
+    early = (
+        asyncio.create_task(uploaded_reads(store, row.original_key, row.file_bytes))
+        if row.storage != SlideStorage.REMOTE
+        and row.original_key is not None
+        and row.file_bytes is not None
+        else None
+    )
+    try:
+        return await signed_access(
+            slide_id,
+            request,
+            response,
+            principal,
+            connection,
+            store,
+            settings,
+            previous_tile_token,
+            row,
+            early,
+        )
+    except BaseException:
+        await settled(early)
+        raise
+
+
+async def signed_access(
+    slide_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    store: ObjectStore,
+    settings: Settings,
+    previous_tile_token: str | None,
+    row: Any,
+    early: asyncio.Task[tuple[SlideRanges, str | None]] | None,
+) -> TileAccess:
     mode = PrivacyMode(row.privacy_mode)
     await require_slide_reading(
         connection, principal, row.project_id, mode, slide_id, "Slide not found"
@@ -236,15 +292,12 @@ async def get_tile_access(
         original = served_name(row.remote_path)
         etag = row.remote_etag
         ranges = await restricted_ranges(store, folder, row.file_bytes)
-    elif original_key is None:
+    elif original_key is None or early is None:
         raise SlideFileNotFoundError
     else:
         folder = folder_of(original_key)
         original = PurePosixPath(original_key).name
-        ranges, stored = await asyncio.gather(
-            restricted_ranges(store, folder, row.file_bytes), store.stat_object(original_key)
-        )
-        etag = stored.etag if stored is not None and stored.etag else None
+        ranges, etag = await early
     labels = await sees_restricted(connection, principal, row.project_id, mode)
     closed, blank = ranges.served(row.file_bytes, mode is not PrivacyMode.CLINICAL, not labels)
     expires = now + TOKEN_SECONDS
