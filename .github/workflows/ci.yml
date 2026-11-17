@@ -244,26 +244,12 @@ jobs:
           path: ~/.cache/parfocal/fixtures
           key: fixtures-small-${{ steps.fixtures.outputs.key }}
       - run: pnpm fixtures small
-      - run: docker compose up -d --wait
-      - run: pnpm db:migrate
       - uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: 1.13.x
           tofu_wrapper: false
-      - run: bash infra/local/zitadel-up.sh
+      - run: pnpm stack:up
       - run: docker pull --platform linux/amd64 kristophjunge/test-saml-idp:1.15
-      - name: Write the local settings
-        run: |
-          umask 077
-          {
-            echo "APP_ENV=test"
-            echo "PARFOCAL_PUBLIC_APP_ENV=test"
-            echo "DATABASE_URL=postgresql://parfocal_app@localhost:6432/parfocal"
-            echo "PUBLIC_ORIGIN=http://localhost:5173"
-            echo "SESSION_KEY=$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
-            echo "MASTER_KEYS=ci:$(python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
-            grep '^STORAGE_' .env.example
-          } > .env
       - run: pnpm test:e2e
       - if: always()
         run: |
@@ -279,9 +265,9 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
       - if: failure()
-        run: docker compose logs
+        run: docker compose -f compose.yaml -f infra/local/stack.compose.yaml logs
       - if: failure()
-        run: docker compose -f infra/local/zitadel.compose.yaml logs zitadel
+        run: docker compose -p parfocal-zitadel -f infra/local/zitadel.compose.yaml logs zitadel
       - if: failure()
         uses: actions/upload-artifact@v7
         with:

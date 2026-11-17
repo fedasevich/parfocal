@@ -1,0 +1,65 @@
+x-stack-env: &stack-env
+  APP_ENV: test
+  DATABASE_URL: postgresql://parfocal_app@pooler:5432/parfocal
+  SESSION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+  MASTER_KEYS: stack:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE
+  TILE_TOKEN_KEY: AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=
+  STORAGE_BUCKET: parfocal-local
+
+services:
+  server:
+    image: ${PARFOCAL_API_IMAGE:-parfocal-api:local}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - path: .zitadel/e2e.env
+        required: true
+    environment:
+      <<: *stack-env
+      MIGRATION_DATABASE_URL: postgresql://parfocal@postgres:5432/parfocal
+      PUBLIC_ORIGIN: http://localhost:${PARFOCAL_WEB_PORT:-5173}
+      STORAGE_ENDPOINT: http://127.0.0.1:${PARFOCAL_STORAGE_PORT:-9000}
+      EMAIL_BACKEND: file
+      EMAIL_OUTBOX: /outbox/e2e-email.jsonl
+    ports: ["${PARFOCAL_API_PORT:-8000}:8000"]
+    volumes:
+      - ./.outbox:/outbox
+    networks: [default, identity]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pooler:
+        condition: service_started
+      storage:
+        condition: service_healthy
+
+  loopback:
+    image: alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    network_mode: service:server
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        socat TCP-LISTEN:${PARFOCAL_ZITADEL_PORT:-8089},bind=127.0.0.1,fork,reuseaddr TCP:zitadel:8080 &
+        exec socat TCP-LISTEN:${PARFOCAL_STORAGE_PORT:-9000},bind=127.0.0.1,fork,reuseaddr TCP:storage:9000
+    depends_on:
+      server:
+        condition: service_started
+
+  ingest:
+    image: ${PARFOCAL_INGEST_IMAGE:-parfocal-ingest:local}
+    build:
+      context: .
+      dockerfile: workers/ingest/Dockerfile
+    command: ["--poll", "0.5"]
+    environment:
+      <<: *stack-env
+      STORAGE_ENDPOINT: http://storage:9000
+    depends_on:
+      server:
+        condition: service_healthy
+
+networks:
+  identity:
+    name: ${PARFOCAL_ZITADEL_PROJECT:-parfocal-zitadel}_default
+    external: true

@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from idp_support import CLIENT_ID, CLIENT_SECRET, ISSUER, ORIGIN, FakeIdp, Grant
 from pydantic import SecretStr
 
+from parfocal_api import password_login
 from parfocal_api.app import create_app
 from parfocal_api.auth import SESSION_COOKIE
 from parfocal_api.oidc import OidcClient
@@ -39,6 +40,7 @@ class FakeZitadel:
     sessions: dict[str, tuple[str, str]] = field(default_factory=dict[str, tuple[str, str]])
     auth_requests: dict[str, str] = field(default_factory=dict[str, str])
     codes_sent: list[str] = field(default_factory=list[str])
+    unseen_checks: int = 0
 
     def add_user(self, email: str, password: str, *, verified: bool) -> str:
         user_id = f"user-{secrets.token_hex(4)}"
@@ -109,6 +111,9 @@ class FakeZitadel:
 
     def check(self, body: dict[str, Any]) -> httpx2.Response:
         user_id = body["checks"]["user"]["userId"]
+        if self.unseen_checks > 0:
+            self.unseen_checks -= 1
+            return httpx2.Response(404, json={"code": 5, "message": "User could not be found"})
         user = self.users.get(user_id)
         if user is None or body["checks"]["password"]["password"] != user.password:
             return httpx2.Response(400, json={"code": 3, "message": "Password invalid"})
@@ -225,6 +230,24 @@ def test_sign_up_sends_a_code_and_confirming_it_signs_in(visitor: Visitor) -> No
     assert SESSION_COOKIE in visitor.client.cookies
     assert visitor.zitadel.users[user_id].verified
     assert signed_in_subject(visitor) == user_id
+
+
+def test_sign_up_waits_until_zitadel_can_find_the_new_user(visitor: Visitor) -> None:
+    visitor.zitadel.unseen_checks = 2
+    sent = visitor.sign_up()
+    assert sent.status_code == 200, sent.text
+    assert visitor.zitadel.unseen_checks == 0
+    assert len(visitor.zitadel.sessions) == 1
+
+
+def test_sign_up_gives_up_when_zitadel_never_finds_the_new_user(
+    visitor: Visitor, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(password_login, "NEW_USER_WAITS", (0.0, 0.0))
+    visitor.zitadel.unseen_checks = 100
+    sent = visitor.sign_up()
+    assert sent.status_code == 502
+    assert sent.json()["code"] == "identity-unavailable"
 
 
 def test_a_wrong_code_is_refused_and_a_new_one_can_be_sent(visitor: Visitor) -> None:

@@ -9,6 +9,7 @@
 !packages/py-common/pyproject.toml
 !packages/py-common/src
 !workers/ingest/pyproject.toml
+!workers/ingest/src
 !workers/ml/pyproject.toml
 !workers/deploy/pyproject.toml
 **/__pycache__

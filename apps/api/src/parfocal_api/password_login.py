@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import re
 import secrets
@@ -34,6 +35,7 @@ from parfocal_api.zitadel_login import (
     CheckedSession,
     LoginClientError,
     PasswordRejectedError,
+    UserNotFoundError,
     WrongCodeError,
     WrongPasswordError,
     ZitadelLogin,
@@ -45,6 +47,7 @@ SIGN_UP_MINUTES = 30
 RESEND_SECONDS = 60
 MIN_PASSWORD_LENGTH = 12
 ATTEMPTS_PER_MINUTE = 10
+NEW_USER_WAITS = (0.1, 0.2, 0.4, 0.8, 1.6)
 SETUP_AFTER_SIGN_UP = "/setup?step=role"
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
@@ -252,6 +255,15 @@ async def get_password_sign_in(request: Request) -> PasswordSignInAvailability:
     return PasswordSignInAvailability(available=auth_state(request).login is not None)
 
 
+async def new_user_session(login: ZitadelLogin, user_id: str, password: str) -> CheckedSession:
+    for wait in NEW_USER_WAITS:
+        try:
+            return await login.check_password(user_id, password)
+        except UserNotFoundError:
+            await asyncio.sleep(wait)
+    return await login.check_password(user_id, password)
+
+
 @router.post("/sign-up", operation_id="createAccount", response_model=AccountCodeSent)
 async def create_account(
     account: NewAccount, request: Request, response: Response
@@ -278,7 +290,7 @@ async def create_account(
             user_id = found.user_id
         else:
             user_id = await login.create_user(account.name, email, account.password)
-            session = await login.check_password(user_id, account.password)
+            session = await new_user_session(login, user_id, account.password)
     except AccountExistsError as error:
         raise AccountTakenError from error
     except PasswordRejectedError:

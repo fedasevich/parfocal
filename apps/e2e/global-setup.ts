@@ -2,6 +2,10 @@ import type { FullConfig } from "@playwright/test";
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const origin = String(config.projects[0]?.use.baseURL);
+  const health = await fetch(`${origin}/api/health`).catch(() => undefined);
+  if (!health?.ok) {
+    throw new Error("The API container does not answer. Run pnpm stack:up first.");
+  }
   const login = await fetch(`${origin}/api/auth/login?return_to=/`, { redirect: "manual" });
   const target = new URL(login.headers.get("location") ?? "", origin);
   if (target.hostname !== "localhost") {
