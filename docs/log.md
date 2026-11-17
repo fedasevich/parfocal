@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- VIEW-075 Whole slide minimap falls back to the slide's smallest pyramid level (SlideViewport.overview, read through the pixel source, 8 bit only, smallest level at most 4,096 px a side) while /api/slides/:id/thumbnail answers 404. Fake API gains parfocal.fake.thumbless-slides for the spec. A slide whose smallest level is larger shows an empty minimap as before. Not checked on the deployed app. Left: focus mode, coach marks, decision notes, then VIEW-076 (cell chunk route and class names).
 - 2026-11-17 The first page grew to 366757 gzip bytes with today's passkey, hint and skeleton merges, 757 over the 366000 limit. The limit is now 372000. A trim belongs with the speed task.
 - 2026-11-17 Ran backfill_thumbnails on Modal main against parfocal-dev after the EU reseed, owner asked for previews. Home thumbnails 5 of 5 load. Cost TODO.
 - SHELL-025 Fixed six walk faults: activity rows named by kind, no double separator on Home resume line, one 16 min per slide estimate on My work and Team, result set names wrap, one Reviews entry per person with a task count, in-place storage line hidden at zero. verify-changed failed only on web.first-page-gzip-bytes (366599 over 366000), not measured against main.
