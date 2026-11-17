@@ -2,8 +2,10 @@ import { expect, type Page, type TestInfo, test } from "@playwright/test";
 import { appSignIn, email, hostedLoginName, password, readJson, signIn } from "./session.ts";
 import { errorScreenShown, report, type Watch, watch } from "./watch.ts";
 
-type Listed = { id: string; label?: string };
-type CaseDetail = { id: string; label: string; slides: { id: string }[] };
+type Listed = { id: string };
+type SlidePage = { slides: { id: string; label: string }[] };
+
+const openableLabel = "CMU-1-Small-Region.svs";
 
 async function settle(page: Page) {
   await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
@@ -55,16 +57,12 @@ test("a signed-in person opens home, a workspace, a case and the viewer", async 
   if (project === undefined) return;
   await visit(page, seen, info, "workspace", `/projects/${project.id}`);
 
-  const cases = await readJson<Listed[]>(page, `/api/cases?project_id=${project.id}`);
-  const first = cases[0];
-  expect(first, "the smoke workspace holds at least one case").toBeDefined();
-  if (first === undefined) return;
-  const detail = await readJson<CaseDetail>(page, `/api/cases/${first.id}`);
-  await expect(page.getByText(detail.label, { exact: true }).first()).toBeVisible();
-  await visit(page, seen, info, "case", null);
-
-  const slide = detail.slides[0];
-  expect(slide, "the smoke case holds at least one slide").toBeDefined();
+  const listed = await readJson<SlidePage>(
+    page,
+    `/api/me/slides?project_id=${project.id}&limit=50`,
+  );
+  const slide = listed.slides.find((found) => found.label === openableLabel) ?? listed.slides[0];
+  expect(slide, "the smoke workspace holds at least one slide").toBeDefined();
   if (slide === undefined) return;
   seen.step("viewer");
   await page.goto(`/projects/${project.id}/slides/${slide.id}`);

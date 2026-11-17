@@ -32,6 +32,7 @@ import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
 import {
+  dotJoin,
   formatDue,
   formatLongDay,
   formatWeekday,
@@ -84,7 +85,7 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
           <b className="text-title-sm font-semibold text-fg">{resume.task_name}</b>
         </div>
         <span className="text-body text-fg" data-phi="">
-          {resume.slide_label} · {resume.case_label} · {resume.project.name}
+          {dotJoin([resume.slide_label, resume.case_label, resume.project.name])}
         </span>
         <span className="flex flex-wrap items-center gap-2 text-body-sm text-fg-dim">
           <Trans>
@@ -127,13 +128,7 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
   );
 }
 
-function SampleHero({
-  sample,
-  firstProjectId,
-}: {
-  sample: NonNullable<Checklist["sample_project"]>;
-  firstProjectId: string;
-}) {
+function SampleHero({ sample }: { sample: NonNullable<Checklist["sample_project"]> }) {
   const goTo = useGoTo();
   return (
     <div className="grid overflow-hidden rounded-[14px] border border-line bg-chrome">
@@ -156,7 +151,7 @@ function SampleHero({
               Review the first slide <Keycap keys="↵" />
             </Trans>
           </Button>
-          <Button onClick={() => void goTo(destinations.project(firstProjectId))}>
+          <Button onClick={() => void goTo(destinations.project(sample.id))}>
             <Trans>Open the project</Trans>
           </Button>
         </div>
@@ -624,7 +619,7 @@ export function HomeScreen() {
         {home.resume ? (
           <ResumeHero resume={home.resume} />
         ) : firstWeek && checklist?.sample_project ? (
-          <SampleHero sample={checklist.sample_project} firstProjectId={firstProjectId} />
+          <SampleHero sample={checklist.sample_project} />
         ) : (
           <p className="text-body-sm text-fg-dim">
             <Trans>Nothing in progress. Start something</Trans>{" "}

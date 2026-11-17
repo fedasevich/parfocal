@@ -111,6 +111,26 @@ export const typeAnswers: DecisionAnswer[] = [
   { raw: "unsure", label: "Not sure", key: "U", action: "dunsure", countsAs: "unsure" as const },
 ];
 
+export function storedType(
+  style: ReviewStyle,
+  cell: ReviewObject,
+  classes: ProjectClass[],
+  stored:
+    | { answer: string; reasons: readonly string[]; reason_class_id: string | null }
+    | undefined,
+): TypeId | undefined {
+  if (stored === undefined) return undefined;
+  return typeOptions.find((option) => {
+    const choice = typeChoice(style, option, cell, classes);
+    const reasons = choice.draft?.reasons ?? [];
+    return (
+      choice.raw === stored.answer &&
+      reasons.join() === stored.reasons.join() &&
+      (choice.draft?.reason_class_id ?? null) === (stored.reason_class_id ?? null)
+    );
+  })?.id;
+}
+
 export function chosenType(
   style: ReviewStyle,
   cell: ReviewObject,

@@ -26,10 +26,10 @@ test("a slide link carries project, task, camera and selected object and survive
 }) => {
   const seen = engineRequests(page);
   await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&x=0.25&y=0.75&z=6&object=T5`);
-  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.getByTestId("slide-stage")).toBeVisible();
   expect(seen.length).toBeGreaterThan(0);
   await page.reload();
-  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.getByTestId("slide-stage")).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/projects/${p07}/slides/${a1}\\?`));
   const search = searchOf(page);
   expect(search.get("task")).toBe(rt14);

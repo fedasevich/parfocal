@@ -1,13 +1,16 @@
 import logging
+import os
 import re
 import time
 from typing import Any
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from parfocal_common.db_timing import timed_database
 from parfocal_common.structured_logging import log_context
 
 REQUEST_ID_HEADER = b"x-request-id"
+SERVER_TIMING_HEADER = b"server-timing"
 VALID_REQUEST_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 
 logger = logging.getLogger("parfocal.api.requests")
@@ -37,7 +40,7 @@ class RequestLogging:
             return
         started = time.perf_counter()
         status = 500
-        with log_context(incoming_request_id(scope)) as context:
+        with log_context(incoming_request_id(scope)) as context, timed_database() as timing:
             request_id = context.request_id.encode("latin-1")
 
             async def send_with_id(message: Message) -> None:
@@ -47,9 +50,17 @@ class RequestLogging:
                     headers = [
                         (name, value)
                         for name, value in message.get("headers", [])
-                        if name != REQUEST_ID_HEADER
+                        if name not in (REQUEST_ID_HEADER, SERVER_TIMING_HEADER)
                     ]
-                    message = {**message, "headers": [*headers, (REQUEST_ID_HEADER, request_id)]}
+                    server_timing = timing.server_timing(time.perf_counter() - started)
+                    message = {
+                        **message,
+                        "headers": [
+                            *headers,
+                            (REQUEST_ID_HEADER, request_id),
+                            (SERVER_TIMING_HEADER, server_timing.encode("latin-1")),
+                        ],
+                    }
                 await send(message)
 
             try:
@@ -62,5 +73,12 @@ class RequestLogging:
                         "route": route_of(scope),
                         "status_code": status,
                         "duration_ms": round((time.perf_counter() - started) * 1000, 1),
+                        "db_ms": round(timing.transaction_seconds * 1000, 1),
+                        "sql_ms": round(timing.query_seconds * 1000, 1),
+                        "queries": timing.queries,
+                        "transactions": timing.transactions,
+                        "region": os.environ.get("MODAL_REGION"),
+                        "cloud": os.environ.get("MODAL_CLOUD_PROVIDER"),
+                        "container": os.environ.get("MODAL_TASK_ID"),
                     },
                 )

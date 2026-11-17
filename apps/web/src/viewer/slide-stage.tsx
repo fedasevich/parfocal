@@ -54,6 +54,7 @@ import { DeviceLegend } from "../devices/device-legend.tsx";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
 import { createPenDoubleTap, createToolHistory } from "../devices/pen-touch.ts";
 import { applyMainCalibration } from "../devices/stage-calibration.ts";
+import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -98,14 +99,15 @@ import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
-import { StageInspector, type StageInspectorLink } from "./stage-inspector.tsx";
+import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import { stageToolOf } from "./stage-tools.ts";
 import { ThreadFocus } from "./thread-focus.tsx";
-import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
+import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
+import { toolHintText } from "./tool-hint-text.ts";
 import { usePanelKey, usePanHide } from "./use-pan-hide.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
@@ -137,6 +139,7 @@ const LabLayer = lazy(() => import("./lab-layer.tsx"));
 type Session = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
+  readonly overview: StageSession["overview"];
   readonly open: SmartServicesContext["open"];
   readonly route: VivRoute | null;
   readonly shownRoute: EngineRouteId;
@@ -195,8 +198,10 @@ export function SlideStage({
   onOpenSlide,
   onStorage,
   inspector,
+  bare = false,
 }: {
   inspector: StageInspectorLink;
+  bare?: boolean;
   slideId: string;
   projectId?: string;
   taskId?: string;
@@ -227,6 +232,7 @@ export function SlideStage({
       onOpenSlide={onOpenSlide}
       onStorage={onStorage}
       inspector={inspector}
+      bare={bare}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -247,8 +253,10 @@ function OpenedSlide({
   onStorage,
   onRetry,
   inspector,
+  bare,
 }: {
   inspector: StageInspectorLink;
+  bare: boolean;
   slideId: string;
   projectId: string | undefined;
   taskId: string | undefined;
@@ -283,6 +291,7 @@ function OpenedSlide({
   const setup = workspaceSetups[workspace];
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
+  const hintsSeen = useHintsSeen();
   const [addingResults, setAddingResults] = useState(false);
   const heatmapChoices = useHeatmapChoices();
   const [resultPreview, setResultPreview] = useState<{
@@ -502,10 +511,14 @@ function OpenedSlide({
     const fail = (error: unknown) => {
       if (!disposed) setPhase({ state: "failed", failure: describeOpenFailure(error) });
     };
+    let early: Promise<Grant> | null = firstGrant(slideId);
+    early.catch(() => {});
     void loadViewerEngine().then((engine) => {
       if (disposed) return;
       const access = engine.createSlideAccess(async (previous) => {
-        const grant = await grantFor(slideId, previous);
+        const pending = previous === null ? early : null;
+        early = null;
+        const grant = await (pending ?? grantFor(slideId, previous));
         if (!disposed) storageNote.current?.({ storage: grant.storage, offline: grant.offline });
         return grant;
       });
@@ -609,6 +622,7 @@ function OpenedSlide({
           setSession({
             engine: viewport.engine,
             module: engine,
+            overview: viewport.overview,
             open,
             route: viewport.route(),
             shownRoute: viewport.shownRoute(),
@@ -668,9 +682,11 @@ function OpenedSlide({
 
   const railButtons = (item: (typeof setup.rail)[number][number]) => {
     const stageTool = stageToolOf(item.tool);
+    const hint = hintsSeen.seen.has(toolHintId(item.tool)) ? toolHintText(item.tool) : undefined;
     return (
       <ToolRailButton
         key={item.tool}
+        {...(hint === undefined ? {} : { hint })}
         icon={item.icon}
         label={item.label}
         tipSide={toolsLayout === "dock" ? "top" : "right"}
@@ -701,7 +717,7 @@ function OpenedSlide({
       <InspectorSlotsProvider value={slots}>
         <ContextExtrasHost>
           <div data-slot="viewer-body" className="relative flex size-full min-h-0 bg-chrome">
-            {toolsLayout === "dock" ? null : (
+            {bare || toolsLayout === "dock" ? null : (
               <ToolRail className="justify-between">
                 <div className="grid gap-1">
                   {setup.rail.map((group) => (
@@ -715,6 +731,7 @@ function OpenedSlide({
             )}
             <div
               data-testid="slide-stage"
+              data-vt-target=""
               data-state={phase.state}
               data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
               data-renderer-route={session?.shownRoute}
@@ -947,7 +964,7 @@ function OpenedSlide({
                       }
                     />
                   ) : null}
-                  {toolsLayout === "dock" ? (
+                  {!bare && toolsLayout === "dock" ? (
                     <div
                       data-slot="stage-tools"
                       className="absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
@@ -1072,6 +1089,9 @@ function OpenedSlide({
               {session ? (
                 <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
               ) : null}
+              {session && inspector.extras
+                ? inspector.extras({ ...session, armTool: (next) => setTool(stageToolOf(next)) })
+                : null}
               {session ? (
                 <ThreadFocus
                   engine={session.engine}
@@ -1132,17 +1152,19 @@ function OpenedSlide({
                 </div>
               ) : null}
             </div>
-            <StageInspector
-              key={workspace}
-              layout={inspectorLayout}
-              onLayout={setInspectorLayout}
-              tab={tab}
-              onTab={inspector.onTab}
-              panning={panning}
-              comments={inspector.comments}
-              opinion={inspector.opinion}
-              onSlot={placeSlot}
-            />
+            {bare ? null : (
+              <StageInspector
+                key={workspace}
+                layout={inspectorLayout}
+                onLayout={setInspectorLayout}
+                tab={tab}
+                onTab={inspector.onTab}
+                panning={panning}
+                comments={inspector.comments}
+                opinion={inspector.opinion}
+                onSlot={placeSlot}
+              />
+            )}
           </div>
         </ContextExtrasHost>
       </InspectorSlotsProvider>

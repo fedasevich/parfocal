@@ -14,6 +14,7 @@ from parfocal_api.blinding import ai_hidden_on, sees_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.display import reviewed_task, usable_on
 from parfocal_api.display_settings import FIELD_OF, display_of
+from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.review_order import Results, order_state, temperature_of
@@ -170,6 +171,7 @@ async def region_claims(
                 func.ST_XMax(result_objects.c.geometry) - func.ST_XMin(result_objects.c.geometry),
                 func.ST_YMax(result_objects.c.geometry) - func.ST_YMin(result_objects.c.geometry),
             ).label("across"),
+            func.ST_AsGeoJSON(result_objects.c.geometry).label("shape"),
         ).where(
             result_objects.c.result_set_id == set_id,
             result_objects.c.kind == "region",
@@ -184,6 +186,7 @@ async def region_claims(
             score=share(certainty_of(row.class_index, row.score, row.probabilities, temperature)),
             size_mm=None if mm is None else round(float(row.across) * mm, 3),
             other_class=None if other is None else names.get(other),
+            outline=outline_of(row.shape),
         )
     return claims
 

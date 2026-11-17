@@ -8,6 +8,7 @@ from parfocal_api.settings import ApiSettings
 
 LOGIN_CLIENT_HEADER = "x-zitadel-login-client"
 SESSION_LIFETIME = "1800s"
+PASSKEY_READY = "AUTH_FACTOR_STATE_READY"
 
 
 class LoginClientError(Exception):
@@ -42,10 +43,32 @@ class FoundUser:
     verified: bool
 
 
+class PasskeyRejectedError(LoginClientError):
+    pass
+
+
 @dataclass(frozen=True)
 class CheckedSession:
     session_id: str
     session_token: str
+
+
+@dataclass(frozen=True)
+class PasskeyRegistration:
+    passkey_id: str
+    options: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class PasskeyChallenge:
+    session: CheckedSession
+    options: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class SavedPasskey:
+    passkey_id: str
+    name: str
 
 
 def split_name(name: str) -> tuple[str, str]:
@@ -70,6 +93,8 @@ class ZitadelLogin:
     token: str
     organization_id: str | None
     http: httpx2.AsyncClient
+    rp_id: str = "localhost"
+    app_origin: str = "http://localhost:5173"
 
     def headers(self) -> dict[str, str]:
         return {"authorization": f"Bearer {self.token}", "accept": "application/json"}
@@ -141,6 +166,48 @@ class ZitadelLogin:
         if response.status_code >= 300:
             raise LoginClientError(f"verifying an email answered {response.status_code}")
 
+    async def request_password_reset(self, user_id: str) -> None:
+        query = "scene=reset&user_id={{.UserID}}&code={{.Code}}"
+        template = f"{self.app_origin}/sign-in?{query}"
+        await self.ok(
+            "POST", f"/v2/users/{user_id}/password_reset", {"sendLink": {"urlTemplate": template}}
+        )
+
+    async def user_by_id(self, user_id: str) -> FoundUser | None:
+        response = await self.call("GET", f"/v2/users/{user_id}", {})
+        if response.status_code == 404:
+            return None
+        if response.status_code >= 300:
+            raise LoginClientError(f"reading a user answered {response.status_code}")
+        user: dict[str, Any] = response.json().get("user", {})
+        if "human" not in user:
+            return None
+        email_state = user["human"].get("email", {})
+        return FoundUser(str(user["userId"]), bool(email_state.get("isVerified", False)))
+
+    async def set_password(self, user_id: str, code: str, password: str) -> None:
+        response = await self.call(
+            "POST",
+            f"/v2/users/{user_id}/password",
+            {
+                "newPassword": {"password": password, "changeRequired": False},
+                "verificationCode": code,
+            },
+        )
+        if response.status_code == 400 and "code" not in zitadel_message(response).lower():
+            raise PasswordRejectedError(zitadel_message(response))
+        if 400 <= response.status_code < 500:
+            raise WrongCodeError
+        if response.status_code >= 300:
+            raise LoginClientError(f"setting a password answered {response.status_code}")
+
+    async def remove_passkey(self, user_id: str, passkey_id: str) -> None:
+        response = await self.call("DELETE", f"/v2/users/{user_id}/passkeys/{passkey_id}", {})
+        if response.status_code == 404:
+            raise PasskeyRejectedError
+        if response.status_code >= 300:
+            raise LoginClientError(f"removing a passkey answered {response.status_code}")
+
     async def check_password(self, user_id: str, password: str) -> CheckedSession:
         response = await self.call(
             "POST",
@@ -158,6 +225,81 @@ class ZitadelLogin:
             raise LoginClientError(f"creating a session answered {response.status_code}")
         payload = response.json()
         return CheckedSession(str(payload["sessionId"]), str(payload["sessionToken"]))
+
+    async def start_passkey_registration(self, user_id: str) -> PasskeyRegistration:
+        link = await self.ok(
+            "POST", f"/v2/users/{user_id}/passkeys/registration_link", {"returnCode": {}}
+        )
+        payload = await self.ok(
+            "POST",
+            f"/v2/users/{user_id}/passkeys",
+            {
+                "code": link["code"],
+                "domain": self.rp_id,
+                "authenticator": "PASSKEY_AUTHENTICATOR_UNSPECIFIED",
+            },
+        )
+        return PasskeyRegistration(
+            str(payload["passkeyId"]),
+            dict(payload["publicKeyCredentialCreationOptions"]["publicKey"]),
+        )
+
+    async def finish_passkey_registration(
+        self, user_id: str, passkey_id: str, credential: dict[str, Any], name: str
+    ) -> None:
+        response = await self.call(
+            "POST",
+            f"/v2/users/{user_id}/passkeys/{passkey_id}",
+            {"publicKeyCredential": credential, "passkeyName": name},
+        )
+        if 400 <= response.status_code < 500:
+            raise PasskeyRejectedError
+        if response.status_code >= 300:
+            raise LoginClientError(f"saving a passkey answered {response.status_code}")
+
+    async def passkeys(self, user_id: str) -> list[SavedPasskey]:
+        payload = await self.ok("POST", f"/v2/users/{user_id}/passkeys/_search", {})
+        return [
+            SavedPasskey(str(item["id"]), str(item.get("name", "")))
+            for item in payload.get("result", [])
+            if item.get("state") == PASSKEY_READY
+        ]
+
+    async def passkey_challenge(self, user_id: str) -> PasskeyChallenge:
+        response = await self.call(
+            "POST",
+            "/v2/sessions",
+            {
+                "checks": {"user": {"userId": user_id}},
+                "challenges": {
+                    "webAuthN": {
+                        "domain": self.rp_id,
+                        "userVerificationRequirement": "USER_VERIFICATION_REQUIREMENT_REQUIRED",
+                    }
+                },
+                "lifetime": SESSION_LIFETIME,
+            },
+        )
+        if response.status_code >= 300:
+            raise LoginClientError(f"a passkey challenge answered {response.status_code}")
+        payload = response.json()
+        options = payload["challenges"]["webAuthN"]["publicKeyCredentialRequestOptions"]
+        return PasskeyChallenge(
+            CheckedSession(str(payload["sessionId"]), str(payload["sessionToken"])),
+            dict(options["publicKey"]),
+        )
+
+    async def check_passkey(self, session_id: str, assertion: dict[str, Any]) -> CheckedSession:
+        response = await self.call(
+            "PATCH",
+            f"/v2/sessions/{session_id}",
+            {"checks": {"webAuthN": {"credentialAssertionData": assertion}}},
+        )
+        if 400 <= response.status_code < 500:
+            raise PasskeyRejectedError
+        if response.status_code >= 300:
+            raise LoginClientError(f"checking a passkey answered {response.status_code}")
+        return CheckedSession(session_id, str(response.json()["sessionToken"]))
 
     async def start_auth_request(self, authorization_url: str) -> str:
         try:
@@ -200,4 +342,6 @@ def login_client(settings: ApiSettings, http: httpx2.AsyncClient) -> ZitadelLogi
         token=settings.zitadel_login_token.get_secret_value(),
         organization_id=settings.zitadel_organization_id,
         http=http,
+        rp_id=settings.public_origin.host or "localhost",
+        app_origin=str(settings.public_origin).rstrip("/"),
     )

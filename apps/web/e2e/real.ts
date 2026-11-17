@@ -9,9 +9,26 @@ export const area = {
   annotate: "@annotate",
   signOff: "@sign-off",
   team: "@team",
+  project: "@project",
+  viewer: "@viewer",
+  models: "@models",
+  reports: "@reports",
+  admin: "@admin",
 } as const;
 
-export const switchedAreas: readonly string[] = [area.login, area.upload, area.review];
+export const switchedAreas: readonly string[] = [
+  area.login,
+  area.upload,
+  area.review,
+  area.annotate,
+  area.signOff,
+  area.team,
+  area.project,
+  area.viewer,
+  area.models,
+  area.reports,
+  area.admin,
+];
 
 export const realTags = (tag: (typeof area)[keyof typeof area]) => ({ tag: ["@real", tag] });
 
@@ -34,6 +51,13 @@ export async function signIn(page: Page, returnTo: string): Promise<void> {
   await page.getByRole("textbox", { name: "Work email" }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const later = page.getByRole("button", { name: "Not now", exact: true });
+  await expect
+    .poll(async () => (await later.isVisible()) || new URL(page.url()).pathname !== "/sign-in", {
+      timeout: 30_000,
+    })
+    .toBe(true);
+  if (await later.isVisible()) await later.click();
   await expect
     .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
     .toBe(returnTo.split("?")[0]);
@@ -135,6 +159,7 @@ export async function storageStandIn(page: Page, storage: string): Promise<void>
 interface TaskRow {
   id: string;
   kind: string;
+  name: string;
   slide_count: number;
 }
 
@@ -145,43 +170,113 @@ interface TaskDetail {
   slides: { slide_id: string }[];
 }
 
+interface ProjectRow {
+  id: string;
+  my_role: string | null;
+  archived_at: string | null;
+  privacy_mode: string;
+}
+
+interface TaskStates {
+  signed_off_at: string | null;
+  slides: { state: string }[];
+}
+
 export interface TaskOnSlide {
   project: string;
   task: string;
   slide: string;
 }
 
-const slideOf = (detail: TaskDetail) => detail.slides[0]?.slide_id ?? "";
+const OWN_TASK = "Real API check";
 
-export async function sampleTask(page: Page, kind: "review" | "annotate"): Promise<TaskOnSlide> {
-  const project = (await ok<{ id: string }>(page, "POST", "/api/projects/sample")).id;
-  const listed = await ok<TaskRow[]>(page, "GET", `/api/projects/${project}/review-tasks`);
-  const row = listed.find((task) => task.kind === kind && task.slide_count > 0);
-  let task = row?.id;
-  if (task === undefined) {
-    const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
-    const reviewing = listed.find((candidate) => candidate.slide_count > 0);
-    expect(reviewing, "the sample project has a task with slides").toBeDefined();
-    const source = await ok<TaskDetail>(page, "GET", `/api/review-tasks/${reviewing?.id ?? ""}`);
-    const created = await ok<{ id: string }>(
-      page,
-      "POST",
-      `/api/projects/${project}/review-tasks`,
-      {
-        name: "Real API annotate check",
-        kind,
-        slide_ids: [slideOf(source)],
-        result_sets: [],
-        reviewer_ids: [me],
-        split: "everyone",
-        scope: { kind: "whole-slide" },
-        blinded: false,
-      },
-    );
-    task = created.id;
+async function hasTiles(page: Page, slide: string): Promise<boolean> {
+  return (await call(page, "GET", `/api/slides/${slide}/tile-access`)).status === 200;
+}
+
+async function openProjects(page: Page): Promise<ProjectRow[]> {
+  const projects = await ok<ProjectRow[]>(page, "GET", "/api/projects");
+  return projects.filter((row) => row.archived_at === null && row.privacy_mode !== "clinical");
+}
+
+interface FoundSlide {
+  project: string;
+  slide: string;
+  resultSet: string;
+}
+
+async function slideWithTiles(page: Page): Promise<FoundSlide> {
+  const projects = (await openProjects(page)).filter((row) => row.my_role === "owner");
+  for (const project of projects) {
+    const slides = await ok<{ id: string }[]>(page, "GET", `/api/projects/${project.id}/slides`);
+    for (const slide of slides) {
+      if (!(await hasTiles(page, slide.id))) continue;
+      const sets = await ok<{ id: string; status: string }[]>(
+        page,
+        "GET",
+        `/api/slides/${slide.id}/result-sets`,
+      );
+      const ready = sets.find((set) => set.status === "ready");
+      if (ready !== undefined) return { project: project.id, slide: slide.id, resultSet: ready.id };
+    }
   }
+  throw new Error("No slide in a project the user owns has a file the viewer can open");
+}
+
+async function createTask(
+  page: Page,
+  found: FoundSlide,
+  kind: "review" | "annotate",
+  name: string,
+): Promise<string> {
+  const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
+  const sets = kind === "review" ? [{ slide_id: found.slide, result_set_id: found.resultSet }] : [];
+  const created = await ok<{ id: string }>(
+    page,
+    "POST",
+    `/api/projects/${found.project}/review-tasks`,
+    {
+      name,
+      kind,
+      slide_ids: [found.slide],
+      result_sets: sets,
+      reviewer_ids: [me],
+      split: "everyone",
+      scope: { kind: kind === "review" ? "all-regions" : "whole-slide" },
+      blinded: false,
+    },
+  );
+  return created.id;
+}
+
+export async function viewableTask(
+  page: Page,
+  kind: "review" | "annotate",
+  fresh = false,
+): Promise<TaskOnSlide> {
+  const found = await slideWithTiles(page);
+  const { project, slide } = found;
+  const name = fresh ? `${OWN_TASK} ${kind} ${Date.now()}` : `${OWN_TASK} ${kind}`;
+  const listed = await ok<TaskRow[]>(page, "GET", `/api/projects/${project}/review-tasks`);
+  const existing = listed.find((task) => task.name === name && task.kind === kind);
+  const task = existing?.id ?? (await createTask(page, found, kind, name));
   const detail = await ok<TaskDetail>(page, "GET", `/api/review-tasks/${task}`);
-  const slide = slideOf(detail);
-  expect(slide, "the task has a slide").not.toBe("");
-  return { project: detail.project_id, task, slide };
+  return { project: detail.project_id, task, slide: detail.slides[0]?.slide_id ?? slide };
+}
+
+export async function taskWithEveryReviewIn(page: Page): Promise<string> {
+  const found = await slideWithTiles(page);
+  const { slide } = found;
+  const task = await createTask(page, found, "review", `${OWN_TASK} sign-off ${Date.now()}`);
+  const base = `/api/review-tasks/${task}/slides/${slide}`;
+  const { objects } = await ok<{ objects: { object: string }[] }>(page, "GET", `${base}/objects`);
+  for (const { object } of objects) {
+    await ok(page, "PUT", `${base}/decisions/${object}`, { answer: "5" });
+  }
+  await ok(page, "PUT", `${base}/opinion`, { answers: { acceptable: 4 } });
+  await ok(page, "POST", `${base}/submit`);
+  const states = await ok<TaskStates>(page, "GET", `/api/review-tasks/${task}/states`);
+  expect(states.signed_off_at).toBeNull();
+  expect(states.slides.every(({ state }) => state === "submitted")).toBe(true);
+  return task;
 }

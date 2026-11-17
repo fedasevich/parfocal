@@ -111,6 +111,18 @@ class EmailCodeResend(BaseModel):
     email: Text
 
 
+class PasswordResetRequest(BaseModel):
+    email: Text
+
+
+class PasswordReset(BaseModel):
+    email: Text | None = None
+    user_id: Annotated[str, StringConstraints(max_length=64)] | None = None
+    code: Annotated[str, StringConstraints(max_length=32)]
+    password: Text
+    return_to: Text | None = None
+
+
 class PasswordSignIn(BaseModel):
     email: Text
     password: Text
@@ -355,3 +367,58 @@ async def sign_in_with_password(
         raise EmailUnverifiedError
     await finish_login(request, auth, login, session, response)
     return SignInLanding(return_to=safe_return_path(attempt.return_to or "/"))
+
+
+@router.post("/password-reset", operation_id="requestPasswordReset")
+async def request_password_reset(reset: PasswordResetRequest, request: Request) -> AccountCodeSent:
+    auth = auth_state(request)
+    login = login_of(auth)
+    email = reset.email.strip()
+    await throttle(auth, "reset", email)
+    try:
+        found = await login.find_user(email)
+        if found is not None:
+            await login.request_password_reset(found.user_id)
+    except LoginClientError as error:
+        raise IdentityUnavailableError from error
+    return code_sent(email)
+
+
+@router.post("/password-reset/confirm", operation_id="resetPassword", response_model=SignInLanding)
+async def reset_password(
+    reset: PasswordReset, request: Request, response: Response
+) -> SignInLanding | JSONResponse:
+    auth = auth_state(request)
+    login = login_of(auth)
+    email = (reset.email or "").strip()
+    user_id = (reset.user_id or "").strip()
+    await throttle(auth, "reset-confirm", email or user_id)
+    if len(reset.password) < MIN_PASSWORD_LENGTH:
+        return problem_response(
+            422,
+            "invalid-account",
+            "Check the highlighted details",
+            errors=[
+                FieldError(
+                    location=["body", "password"],
+                    message=f"Use at least {MIN_PASSWORD_LENGTH} characters",
+                    code="too-short",
+                )
+            ],
+        )
+    try:
+        found = await login.user_by_id(user_id) if user_id else await login.find_user(email)
+        if found is None:
+            raise InvalidCodeError
+        await login.set_password(found.user_id, reset.code.strip(), reset.password)
+        session = await login.check_password(found.user_id, reset.password)
+    except PasswordRejectedError:
+        return rejected_password()
+    except WrongCodeError as error:
+        raise InvalidCodeError from error
+    except (LoginClientError, WrongPasswordError) as error:
+        raise IdentityUnavailableError from error
+    if not found.verified:
+        raise EmailUnverifiedError
+    await finish_login(request, auth, login, session, response)
+    return SignInLanding(return_to=safe_return_path(reset.return_to or "/"))

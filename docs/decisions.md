@@ -153,12 +153,24 @@ Your choice:
 
 The night run measured production on 2026-11-17 ([result](results/2026-11-17-production-latency.md)). A warm `/api/health` costs the app under 1 ms but 140 to 570 ms in your browser, because Cloudflare in Amsterdam calls Modal and Neon in the US. A cold start costs 5.7 s. The code causes (one request per container, an R2 write on the request path, uncached assets) are fixed and go out with the next deploy. Two setting changes remain, each a production change that moves money between budget lines within the $30.
 
-- **A. Move Modal to region `eu` and make a new Neon project in an EU region, reseeded under ADR 0293 (production only until the first real user), and keep one API container warm on weekdays 08:00 to 18:00 (recommended).** About 110 ms less per call and no cold start in working hours. About $2.20 a month for the warm hours plus 15% more on Modal compute. The old US Neon project is deleted only after your separate yes.
+OPS-030 (a warm API call answers in under 300 ms) found on 2026-11-17 that the API is not next to the database at all ([result](results/2026-11-17-warm-api-round-trips.md)). With no region pin Modal ran one API container on Azure `eu-west` and one on Azure `us-west`, while Neon is in AWS `us-east-1`. A connect to Neon took 89 ms and 60 ms from them, and a signed-in call makes an estimated 20 to 40 database round trips, which is why `/api/me` takes 2.4 s and home 7.5 s. Code cuts remove an estimated third of them. Only putting both in one region gets a warm call under 300 ms. The API (`parfocal-api`) cost $0.145 of Modal compute from 1 to 17 November, about $0.26 a month. A broad region pin costs 1.15 times and a narrow one 1.75 times, so pinning it adds about $0.04 or $0.19 a month at today's use. A broad `us` pin is not enough, because it can still land in `us-west`, 60 ms away.
+
+- **A0. Pin the Modal functions that use the database to a narrow region beside Neon `us-east-1`, such as `us-east`, now (recommended).** Every round trip drops from 60 to 90 ms to a few ms, about $0.19 a month more at today's use. Calls from Europe still cross the Atlantic once, about 110 ms. TODO: confirm on Modal's region page that `us-east` is the right name and that it is billed at the narrow rate.
+- **A. Move Modal to region `eu` and make a new Neon project in an EU region, reseeded under ADR 0293 (production only until the first real user), and keep one API container warm on weekdays 08:00 to 18:00.** About 110 ms less on the trip from Europe to the API, and with both in the EU the database round trips stay short as in A0 and no cold start in working hours. About $2.20 a month for the warm hours plus 15% more on Modal compute. The old US Neon project is deleted only after your separate yes.
 - B. Only the weekday warm container, about $2.20 a month.
 - C. Neither for now.
 - Other.
 
-Your choice: 
+Prices and facts for four ways to place the servers, read from the vendors on 2026-11-17, are in [server region options](results/2026-11-17-server-region-options.md). It recommends option A without the warm container, entering Modal at Dublin, over A0, because the EU pin is cheaper (1.15 times against 1.75) and the move is cheap only while the database can be reseeded.
+
+Your choice: A without the warm container, the EU move (owner in chat, 2026-11-17). The web function goes to `eu` entering at Dublin, a new Neon project in Frankfurt is reseeded, and the old US project is deleted only after a separate yes.
+
+OPS-031 (move the API and database to the EU) created the Frankfurt project `parfocal-eu` (`still-field-25034761`) on 2026-11-17 ([result](results/2026-11-17-eu-move.md)). Three things wait for you:
+
+- TODO: the reseed stopped with HTTP 404 because the `NEON_API_KEY` secret in the GitHub environment `production` cannot reach the new project. Please make a Neon API key for the organisation "Vercel: fedasevich's projects" that reaches both projects and replace that secret with it, or say an agent may do so. Until then production stays on the US database.
+- Pinning `ingest` and `events` to `eu` beside the new database, about $0.07 a month: your yes (in chat, 2026-11-17), done in v0.12.0.
+- Copying the slides into a new bucket in the R2 `eu` jurisdiction: your yes (in chat, 2026-11-17). OPS-032 (slides in an EU jurisdiction bucket) made `parfocal-dev-eu` with its own app key `parfocal-app-eu`, copied every object, and production reads and writes it from v0.12.0. Storage while both buckets exist is 34.3 GB more, about $0.51 a month. The old bucket `parfocal-dev` stays, for local development, previews and the fixture token, until your separate yes.
+- TODO for you: you said yes to deleting the old US Neon project `soft-pine-86468744`, but the SEC-031 hook (hard stops for destructive agent actions) lets only you run it. Nothing points at it any more: production has run on Frankfurt `still-field-25034761` since 2026-11-17 14:20 UTC, and the slides moved to `parfocal-dev-eu` at 16:46 UTC. Delete it in the Neon console (organisation "Vercel: fedasevich's projects", project `parfocal`, Settings, Delete project), or from your terminal run `neonctl projects delete soft-pine-86468744`. It costs nothing, and Neon can recover it for 7 days. The old bucket `parfocal-dev` stays as the rollback until you also decide to empty it. Earlier note: deleting the old US Neon project `soft-pine-86468744` waits for your separate yes. The Modal secret `parfocal-api-database-us` keeps its connection URL until then. It is only a partial rollback, because the reseed empties `t/` in the bucket, so the US rows will point at slides that are gone.
 
 ### 141. How fast a person turned off in the customer's directory loses access
 
@@ -201,6 +213,19 @@ PROTO-022 (the viewers match the frozen mock again) docked every card of the liv
 - Other.
 
 PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) built option A to follow the mock, so B means moving them back.
+
+Your choice: 
+
+### 145. Whether the API keeps one container warm so the first call after idle stays under 3 s
+
+OPS-028 (the API answers its first call after idle in under 3 s) moved the API's imports and startup into a Modal memory snapshot. The app's own startup now takes 0.1 to 0.6 s, but a restored cold start still took 2.18, 6.39 and 3.99 s, because Modal needs 1 to 2 s to place a container and 1.3 to 3.6 s to restore it ([result](results/2026-11-17-api-cold-start.md)). After each deploy the first several cold starts also build new snapshots and take 2.7 to 15 s. Only a warm container removes this.
+
+- A. Keep `min_containers` at 0 and accept 2 to 6 s on the first call after 5 idle minutes, with no cost.
+- B. Set `min_containers` to 1 for the web function during working hours only, through a schedule. TODO: cost measured after a week.
+- C. Set `min_containers` to 1 all the time. An estimate from Modal's list prices for 0.125 core and 512 MiB is about $7 a month of the $30 budget. TODO: confirm on the Modal usage page.
+- Other.
+
+No recommendation, because it trades budget against the first call.
 
 Your choice: 
 

@@ -37,6 +37,7 @@ BUDGETS: dict[str, dict[Service, Decimal]] = {
 MODAL_ENVIRONMENTS = {"main": "production", "dev": "dev"}
 BUCKETS = {
     "parfocal-dev": "production",
+    "parfocal-dev-eu": "production",
     "parfocal-prod": "production",
     "parfocal-tfstate": "production",
 }

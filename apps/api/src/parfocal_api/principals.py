@@ -1,5 +1,5 @@
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from parfocal_api.tables import Role
 from parfocal_common.db import DatabaseScope
@@ -18,6 +18,7 @@ class MemberPrincipal:
     user_id: uuid.UUID
     role: Role
     admin_rights: bool = False
+    tenant_status: str | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)

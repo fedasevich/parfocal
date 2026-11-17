@@ -10,8 +10,14 @@ import {
   type RemoteSourceOptions,
 } from "geotiff";
 import { locatesEveryDirectory, tileOffsets } from "../tile-index.ts";
-import { type SlideIndexLevel, type SlideIndexPage, UnsupportedCodecError } from "../types.ts";
+import {
+  type SlideIndex,
+  type SlideIndexLevel,
+  type SlideIndexPage,
+  UnsupportedCodecError,
+} from "../types.ts";
 import { jpeg2000Compressions, registerJpeg2000Decoders } from "./jpeg2000/register.ts";
+import { primedTiff } from "./primed-tiff.ts";
 
 export const TIFF_BLOCK_SIZE = 1024 * 1024;
 
@@ -64,8 +70,11 @@ export async function openTiff(
   url: URL,
   signal?: AbortSignal,
   fetcher?: typeof globalThis.fetch,
+  index?: SlideIndex,
 ): Promise<GeoTIFF> {
   registerJpeg2000Decoders();
+  const primed = primedTiff(url, index, fetcher, signal);
+  if (primed !== null) return primed;
   const options: RemoteSourceOptions & { blockSize: number } = { blockSize: TIFF_BLOCK_SIZE };
   const tiff =
     fetcher === undefined

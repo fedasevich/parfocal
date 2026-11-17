@@ -1,5 +1,16 @@
 export const onboardingScenes = {
-  signin: ["email", "sso", "passkey", "passkeyqr", "lock", "lockkey", "expired", "noaccess"],
+  signin: [
+    "email",
+    "sso",
+    "forgot",
+    "reset",
+    "passkey",
+    "passkeyqr",
+    "lock",
+    "lockkey",
+    "expired",
+    "noaccess",
+  ],
   signup: ["form", "verify"],
   invite: ["landing", "account"],
   setup: ["role", "workspace", "project", "device", "done"],

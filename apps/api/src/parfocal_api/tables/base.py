@@ -52,10 +52,12 @@ class SignOutRight(StrEnum):
 class Availability(StrEnum):
     AVAILABLE = "available"
     AWAY = "away"
+    BUSY = "busy"
 
 
 AVAILABILITY_CHECK = (
     "availability = 'away'"
+    " OR (availability = 'busy' AND available_again_at IS NULL)"
     " OR (availability = 'available' AND available_again_at IS NULL AND availability_note IS NULL)"
 )
 

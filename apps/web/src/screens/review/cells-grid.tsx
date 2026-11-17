@@ -3,7 +3,7 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { CellsPanel } from "@parfocal/ui/components/cells-panel";
 import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
 import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
-import { lookUrl } from "../thumbnails.ts";
+import { cellCropUrl } from "../cell-crop-url.ts";
 import { reviewTyper } from "./ai-wording.ts";
 import type { Answer } from "./review-state.ts";
 import { cellShapes, hpfSize } from "./slide-geometry.ts";
@@ -41,7 +41,23 @@ export function CellOutline({ object, white = false }: { object: string; white?:
   );
 }
 
+export function CropRing({ white = false }: { white?: boolean }) {
+  return (
+    <svg aria-hidden="true" className="absolute inset-0 size-full" viewBox="0 0 40 40">
+      <circle
+        cx="20"
+        cy="20"
+        r="9"
+        fill="none"
+        stroke={white ? "#ffffff" : "var(--c-tumor)"}
+        strokeWidth={1.5}
+      />
+    </svg>
+  );
+}
+
 type CellsGridProps = {
+  slideId: string;
   cells: ReviewObject[];
   current: string | undefined;
   answer: (object: string) => Answer | undefined;
@@ -60,6 +76,7 @@ type CellsGridProps = {
 };
 
 export function CellsGrid({
+  slideId,
   cells,
   current,
   answer,
@@ -102,7 +119,7 @@ export function CellsGrid({
           <GalleryTile
             key={cell.object}
             size={40}
-            image={lookUrl("hpf")}
+            image={cellCropUrl(slideId, cell.number)}
             objectId={cell.object}
             label={t`${cell.class_name.toLowerCase()} cell`}
             state={cell.object === current ? "current" : value ? "done" : "to-check"}
@@ -116,10 +133,12 @@ export function CellsGrid({
             }}
             flagged={flagged}
             onFlagAction={flagged && onNotNucleus ? () => onNotNucleus(cell.object) : undefined}
-            outline={<CellOutline object={cell.object} white={claimHidden} />}
+            outline={<CropRing white={claimHidden} />}
             data-vt-source=""
+            data-crop={cell.number}
             onClick={() => onPick(cell.object)}
-            {...cropStyle(cell.object)}
+            imagePosition="center"
+            imageSize="cover"
           />
         );
       })}

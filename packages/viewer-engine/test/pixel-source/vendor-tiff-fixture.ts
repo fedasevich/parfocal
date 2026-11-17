@@ -5,6 +5,7 @@ export interface PlainPage {
   readonly pixelsPerCentimetre: number;
   readonly sample: (x: number, y: number) => readonly [number, number, number];
   readonly metadata?: string;
+  readonly description?: string;
 }
 
 const tag = {
@@ -13,6 +14,7 @@ const tag = {
   bitsPerSample: 258,
   compression: 259,
   photometric: 262,
+  imageDescription: 270,
   samplesPerPixel: 277,
   xResolution: 282,
   yResolution: 283,
@@ -93,6 +95,15 @@ function entriesOf(page: PlainPage, offsets: readonly number[]): Entry[] {
     { tag: tag.bitsPerSample, type: type.short, values: [8, 8, 8] },
     { tag: tag.compression, type: type.short, values: [uncompressed] },
     { tag: tag.photometric, type: type.short, values: [rgb] },
+    ...(page.description === undefined
+      ? []
+      : [
+          {
+            tag: tag.imageDescription,
+            type: type.ascii,
+            values: [...new TextEncoder().encode(page.description), 0],
+          },
+        ]),
     { tag: tag.samplesPerPixel, type: type.short, values: [3] },
     { tag: tag.xResolution, type: type.rational, values: [page.pixelsPerCentimetre, 1] },
     { tag: tag.yResolution, type: type.rational, values: [page.pixelsPerCentimetre, 1] },

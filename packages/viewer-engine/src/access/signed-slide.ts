@@ -2,10 +2,12 @@ import { TILE_INDEX_FILE } from "../pixel-source/tile-index.ts";
 import type {
   MicronsPerPixel,
   OpenRequest,
+  RestrictedRange,
   SlideFormatId,
   SlideIndex,
   SlideIndexLevel,
   SlideStitching,
+  TagValueRange,
 } from "../pixel-source/types.ts";
 import { slideFormatIds, UnsupportedFormatError } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
@@ -62,16 +64,35 @@ export class SlideHasSeveralScanAreasError extends Error {
   }
 }
 
+export interface LevelDirectory {
+  readonly page: number;
+  readonly subIfd: number | null;
+  readonly ifdOffset: number;
+  readonly ifdBytes?: number;
+  readonly valueRanges?: readonly TagValueRange[];
+}
+
+export interface LocatedDirectory extends LevelDirectory {
+  readonly siblings: readonly LevelDirectory[];
+}
+
 export interface LevelTableLevel {
   readonly downsample: number;
   readonly width: number;
   readonly height: number;
   readonly stored: { readonly width: number; readonly height: number };
+  readonly directory?: LocatedDirectory;
+}
+
+export interface TiffHeaderFacts {
+  readonly littleEndian: boolean;
+  readonly bigTiff: boolean;
 }
 
 export interface LevelTable {
   readonly levels: readonly LevelTableLevel[];
   readonly micronsPerPixel: MicronsPerPixel | null;
+  readonly header: TiffHeaderFacts | null;
 }
 
 function record(value: unknown, what: string): Record<string, unknown> {
@@ -92,29 +113,84 @@ function optionalMicrons(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function wholeNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function valueRangesOf(value: unknown): TagValueRange[] | null {
+  if (!Array.isArray(value)) return null;
+  const ranges = value.filter(
+    (range: unknown): range is TagValueRange =>
+      Array.isArray(range) &&
+      range.length === 3 &&
+      range.every(wholeNumber) &&
+      Number(range[2]) > 0,
+  );
+  return ranges.length === value.length ? ranges : null;
+}
+
+function directoryOf(value: unknown): LevelDirectory | null {
+  if (typeof value !== "object" || value === null) return null;
+  const entry = value as Record<string, unknown>;
+  const { page, subIfd, ifdOffset, ifdBytes } = entry;
+  if (!wholeNumber(page) || !wholeNumber(ifdOffset) || ifdOffset === 0) return null;
+  if (subIfd !== null && subIfd !== undefined && !wholeNumber(subIfd)) return null;
+  const located = { page, subIfd: subIfd ?? null, ifdOffset };
+  const valueRanges = valueRangesOf(entry["valueRanges"]);
+  if (!wholeNumber(ifdBytes) || ifdBytes === 0 || valueRanges === null) return located;
+  return { ...located, ifdBytes, valueRanges };
+}
+
+function headerOf(table: Record<string, unknown>): TiffHeaderFacts | null {
+  const { littleEndian, bigTiff } = table;
+  if (typeof littleEndian !== "boolean" || typeof bigTiff !== "boolean") return null;
+  return { littleEndian, bigTiff };
+}
+
+function locatedLevel(level: Record<string, unknown>): LocatedDirectory | null {
+  const directory = directoryOf(level);
+  const rawSiblings = level["siblings"] ?? [];
+  if (directory === null || !Array.isArray(rawSiblings)) return null;
+  const siblings = rawSiblings.map(directoryOf);
+  if (siblings.some((sibling) => sibling === null)) return null;
+  return { ...directory, siblings: siblings as LevelDirectory[] };
+}
+
 export function parseLevelTable(document: unknown): LevelTable {
   const table = record(document, "table");
   const rawLevels = table["levels"];
   if (!Array.isArray(rawLevels) || rawLevels.length === 0) {
     throw new LevelTableError("The level table lists no levels");
   }
-  const levels = rawLevels.map((raw): LevelTableLevel => {
+  const parsed = rawLevels.map((raw) => {
     const level = record(raw, "level");
     const stored = record(level["stored"], "stored size");
     return {
-      downsample: positive(level["downsample"], "downsample"),
-      width: positive(level["width"], "width"),
-      height: positive(level["height"], "height"),
-      stored: {
-        width: positive(stored["width"], "stored width"),
-        height: positive(stored["height"], "stored height"),
+      level: {
+        downsample: positive(level["downsample"], "downsample"),
+        width: positive(level["width"], "width"),
+        height: positive(level["height"], "height"),
+        stored: {
+          width: positive(stored["width"], "stored width"),
+          height: positive(stored["height"], "stored height"),
+        },
       },
+      directory: locatedLevel(level),
     };
   });
+  const everyLocated = parsed.every(({ directory }) => directory !== null);
+  const levels = parsed.map(
+    ({ level, directory }): LevelTableLevel =>
+      everyLocated && directory !== null ? { ...level, directory } : level,
+  );
   const scale = table["scale"] === undefined ? {} : record(table["scale"], "scale");
   const x = optionalMicrons(scale["mpp_x"]);
   const y = optionalMicrons(scale["mpp_y"]);
-  return { levels, micronsPerPixel: x === null || y === null ? null : { x, y } };
+  return {
+    levels,
+    micronsPerPixel: x === null || y === null ? null : { x, y },
+    header: headerOf(table),
+  };
 }
 
 export function slideIndexFromLevelTable(table: LevelTable, formatId: SlideFormatId): SlideIndex {
@@ -123,11 +199,13 @@ export function slideIndexFromLevelTable(table: LevelTable, formatId: SlideForma
     downsample: level.downsample,
     width: level.width,
     height: level.height,
+    ...(level.directory === undefined ? {} : level.directory),
   }));
   return {
     formatId,
     levels,
     ...(table.micronsPerPixel === null ? {} : { micronsPerPixel: table.micronsPerPixel }),
+    ...(table.header ?? {}),
   };
 }
 
@@ -247,12 +325,37 @@ export async function signedOpenRequest(options: SignedSlideOptions): Promise<Op
       ? await withFrameStitching(table, new URL(TILE_INDEX_FILE, directory).href, options)
       : table;
   const url = new URL(encodeURIComponent(original), directory).href;
+  const restricted = restrictedRangesOf(await access.token(), original);
   return {
     formatId,
     url,
     index,
     fetch: (input, init) => access.fetch(requestUrl(input), init, fetcher),
+    ...(restricted.length === 0 ? {} : { restricted }),
   };
+}
+
+function isByteRange(value: unknown): value is RestrictedRange {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((part) => Number.isSafeInteger(part) && part >= 0) &&
+    value[0] < value[1]
+  );
+}
+
+export function restrictedRangesOf(token: string, original: string): RestrictedRange[] {
+  const [payload = ""] = token.split(".");
+  try {
+    const text = atob(payload.replaceAll("-", "+").replaceAll("_", "/"));
+    const json = new TextDecoder().decode(Uint8Array.from(text, (char) => char.charCodeAt(0)));
+    const claims = JSON.parse(json) as Record<string, unknown>;
+    const ranges = claims["d"];
+    if (claims["o"] !== original || !Array.isArray(ranges)) return [];
+    return ranges.every(isByteRange) ? ranges : [];
+  } catch {
+    return [];
+  }
 }
 
 export interface TileGrant {

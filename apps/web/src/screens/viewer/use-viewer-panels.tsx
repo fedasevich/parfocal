@@ -24,7 +24,7 @@ import { ReviewTop } from "../review/review-top.tsx";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import { overviewTissue } from "../review/tissue-mask.ts";
 import { AiSays, ObjectList, ObjectsSummary } from "../review/viewer-frame.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { CalibrationBlock, TrackRecordBlock } from "./ai-record-blocks.tsx";
 import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import {
@@ -195,7 +195,7 @@ export function useViewerPanels(
         {findingsLayout === "cell-findings" ? (
           <FindingsPanel
             layout="cell-findings"
-            image={lookUrl("hpf")}
+            image={slideThumbUrl(session.slideId)}
             slide={{
               label: t`Cells on ${slideLabel}`,
               classes: numberLineOf(cells, decidedObject, classColor, (cell) =>
@@ -270,7 +270,7 @@ export function useViewerPanels(
         ) : (
           <ModelWarningsBlock warnings={modelWarnings} />
         )}
-        <AiSays setName={t`${setName}, imported 12 Oct`} objects={objects} />
+        <AiSays setName={setName} objects={objects} />
         <TrackRecordBlock
           enabled={personalSettings?.inspector_track_record ?? true}
           lines={trackRecordLines(trackRecord, typer?.name ?? "")}
@@ -508,7 +508,7 @@ export function useViewerPanels(
       submitLabel={failed ? t`Try again` : t`Submit`}
       failed={failed}
       warning={threadsWarning}
-      {...(readOnly ? { lockedReason: t`Signed off 15 Oct. Changes need an amendment.` } : {})}
+      {...(readOnly ? { lockedReason: t`Signed off. Changes need an amendment.` } : {})}
       onSubmit={submit}
       onAnswerChange={changeOpinion}
     />

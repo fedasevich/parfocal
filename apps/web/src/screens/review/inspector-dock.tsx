@@ -123,10 +123,10 @@ export function InspectorDock({
       data-hidden-while-panning={panning ? "true" : undefined}
       className={cn(
         "relative isolate z-4 flex min-h-0 shrink-0",
-        panning && "pointer-events-none opacity-0",
+        panning && "pointer-events-none overflow-hidden opacity-0",
         collapsed && "opacity-50",
       )}
-      style={{ width: collapsed ? 0 : width }}
+      style={{ width: collapsed || panning ? 0 : width }}
     >
       <hr
         aria-orientation="vertical"
@@ -146,13 +146,22 @@ export function InspectorDock({
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 overflow-hidden [&>aside]:w-full!">{children}</div>
         <div className="flex items-center gap-2 border-t border-l border-line bg-chrome px-3 py-0.5 text-caption text-fg-dim">
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-1">
-            <input
-              type="checkbox"
-              className="m-0 size-6 shrink-0 cursor-pointer accent-(--accent-fill)"
-              checked={layout.hideWhilePanning}
-              onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
-            />
+          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-0.5">
+            <span className="relative grid size-6 shrink-0 place-items-center">
+              <input
+                type="checkbox"
+                data-testid="hide-while-panning"
+                className="peer absolute inset-0 z-10 m-0 size-6 cursor-pointer opacity-0"
+                checked={layout.hideWhilePanning}
+                onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
+              />
+              <span
+                aria-hidden="true"
+                className="grid size-3.5 place-items-center rounded-[3px] border border-line-strong bg-chrome text-white peer-checked:border-(--accent-fill) peer-checked:bg-(--accent-fill) peer-focus-visible:outline-2 peer-focus-visible:outline-accent"
+              >
+                {layout.hideWhilePanning ? <Icon name="check" size="xs" /> : null}
+              </span>
+            </span>
             <Trans>Hide while panning</Trans>
           </label>
           <button

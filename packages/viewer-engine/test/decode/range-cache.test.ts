@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createRangeCache } from "../../src/index.ts";
+import { createRangeCache, rangeCacheFor } from "../../src/index.ts";
 
 const blockSize = 16;
 const url = "https://slides.example/slide.tiff";
@@ -14,7 +14,10 @@ interface Seen {
   readonly signal: AbortSignal | null;
 }
 
-function fakeServer(file: Uint8Array, options: { gate?: Promise<void> } = {}) {
+function fakeServer(
+  file: Uint8Array,
+  options: { gate?: Promise<void>; restricted?: readonly (readonly [number, number])[] } = {},
+) {
   const seen: Seen[] = [];
   const fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const range = new Headers(init?.headers).get("range");
@@ -24,6 +27,11 @@ function fakeServer(file: Uint8Array, options: { gate?: Promise<void> } = {}) {
     const match = /^bytes=(\d+)-(\d+)$/.exec(range);
     if (match === null) return new Response(null, { status: 400 });
     const start = Number(match[1]);
+    const stop = Math.min(Number(match[2]) + 1, file.length);
+    const closed = options.restricted ?? [];
+    if (closed.some(([from, to]) => start < to && from < stop)) {
+      return new Response(null, { status: 403 });
+    }
     if (start >= file.length) {
       return new Response(null, {
         status: 416,
@@ -188,5 +196,82 @@ describe("the shared range cache", () => {
     assert.deepEqual(b.bytes, file);
     assert.notEqual(a.bytes.buffer, b.bytes.buffer);
     assert.equal(server.seen.length, 1);
+  });
+
+  it("asks for the exact range when a block would reach into bytes the edge refuses", async () => {
+    const file = fileOf(100);
+    const server = fakeServer(file, { restricted: [[40, 60]] });
+    const cache = createRangeCache({ blockSize, fetch: server.fetch });
+    const before = await cache.get(url, "bytes=33-39");
+    assert.equal(before.status, 206);
+    assert.deepEqual(before.bytes, file.slice(33, 40));
+    const after = await cache.get(url, "bytes=60-70");
+    assert.deepEqual(after.bytes, file.slice(60, 71));
+    const again = await cache.get(url, "bytes=34-38");
+    assert.deepEqual(again.bytes, file.slice(34, 39));
+    const label = await cache.get(url, "bytes=45-50");
+    assert.equal(label.status, 403);
+    assert.deepEqual(
+      server.seen.map(({ range }) => range),
+      ["bytes=32-47", "bytes=33-39", "bytes=48-79", "bytes=60-70", "bytes=34-38", "bytes=45-50"],
+    );
+  });
+
+  it("reads blocks around the ranges it was told the edge refuses, never asking for one", async () => {
+    const file = fileOf(100);
+    const closed = [[40, 60]] as const;
+    const server = fakeServer(file, { restricted: closed });
+    const cache = createRangeCache({
+      blockSize,
+      fetch: server.fetch,
+      restricted: { [url]: closed },
+    });
+    const before = await cache.get(url, "bytes=33-39");
+    assert.deepEqual(before.bytes, file.slice(33, 40));
+    const after = await cache.get(url, "bytes=60-70");
+    assert.deepEqual(after.bytes, file.slice(60, 71));
+    const again = await cache.get(url, "bytes=34-38");
+    assert.deepEqual(again.bytes, file.slice(34, 39));
+    assert.deepEqual(
+      server.seen.map(({ range }) => range),
+      ["bytes=32-39", "bytes=60-79"],
+    );
+    const label = await cache.get(url, "bytes=45-50");
+    assert.equal(label.status, 403);
+  });
+
+  it("skips a refused tail and clips the run at the end of the file", async () => {
+    const file = fileOf(100);
+    const closed = [[90, 100]] as const;
+    const server = fakeServer(file, { restricted: closed });
+    const cache = rangeCacheFor({ url, fetch: server.fetch, restricted: closed }, { blockSize });
+    const near = await cache.get(url, "bytes=82-89");
+    assert.equal(near.status, 206);
+    assert.deepEqual(near.bytes, file.slice(82, 90));
+    assert.equal(near.contentRange, "bytes 82-89/100");
+    assert.deepEqual(
+      server.seen.map(({ range }) => range),
+      ["bytes=80-89"],
+    );
+  });
+
+  it("splits one run into the allowed gaps and fetches them together", async () => {
+    const file = fileOf(100);
+    const closed = [
+      [20, 24],
+      [50, 52],
+    ] as const;
+    const server = fakeServer(file, { restricted: closed });
+    const cache = rangeCacheFor({ url, fetch: server.fetch, restricted: closed }, { blockSize });
+    const first = await cache.get(url, "bytes=10-19");
+    const second = await cache.get(url, "bytes=24-49");
+    const third = await cache.get(url, "bytes=52-63");
+    assert.deepEqual(first.bytes, file.slice(10, 20));
+    assert.deepEqual(second.bytes, file.slice(24, 50));
+    assert.deepEqual(third.bytes, file.slice(52, 64));
+    assert.deepEqual(
+      server.seen.map(({ range }) => range),
+      ["bytes=0-19", "bytes=24-31", "bytes=32-49", "bytes=52-63"],
+    );
   });
 });

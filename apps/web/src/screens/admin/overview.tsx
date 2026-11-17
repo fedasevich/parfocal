@@ -9,6 +9,7 @@ import {
 import { NameCell, StatStrip, StorageBar, SummaryRow } from "@parfocal/ui/components/admin";
 import { Icon } from "@parfocal/ui/components/icon";
 import { AvatarStack, Person } from "@parfocal/ui/components/person";
+import { SkeletonCards } from "@parfocal/ui/components/skeleton";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { now } from "../../clock.ts";
@@ -20,6 +21,7 @@ import { auditLabel, auditParams, defaultAuditFilter } from "./audit-model.ts";
 import { ModelStatus, TextLink, tb } from "./common.tsx";
 import { storageParts } from "./storage.tsx";
 import { barTotalTb, sourceState } from "./storage-model.ts";
+import { inPlaceSize } from "./storage-size.ts";
 
 const quietActions = new Set(["slide.opened", "decision.changed-after-sign-off"]);
 
@@ -51,7 +53,10 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
   const storage = okData(useGetStorageUsage().data);
   const events = okData(useListAuditEvents(auditParams(defaultAuditFilter, now())).data) ?? [];
   const personOf = usePeople();
-  if (overview === undefined) return null;
+  if (overview === undefined) {
+    return <SkeletonCards label={t`Loading the overview`} cards={6} />;
+  }
+  const inPlace = inPlaceSize(overview.in_place_tb);
   const researchersShown = members.slice(0, 6).map(toPersonInfo);
   return (
     <>
@@ -71,7 +76,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
             value: tb(overview.stored_tb),
             label:
               overview.capacity_tb === null ? t`Stored` : t`Stored, of ${tb(overview.capacity_tb)}`,
-            detail: t`${tb(overview.in_place_tb)} more read in place`,
+            detail: inPlace === null ? undefined : t`${inPlace} more read in place`,
           },
           {
             value: overview.webhook_calls_today,

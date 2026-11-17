@@ -214,6 +214,18 @@ def test_deleting_hides_the_set_and_is_audited(api: ApiAs, database: str) -> Non
     assert [row[0] for row in actions] == ["result-set.created", "result-set.deleted"]
 
 
+def test_a_set_with_no_objects_deletes_without_a_confirm(api: ApiAs, database: str) -> None:
+    lb = lab(database)
+    client = api(lb.people["owner"])
+    set_id = client.post(lb.sets, json=DRAFT).json()["id"]
+    shown = client.get(f"/api/result-sets/{set_id}").json()
+    assert (shown["region_count"], shown["cell_count"]) == (0, 0)
+    deleted = client.delete(f"/api/result-sets/{set_id}")
+    assert (deleted.status_code, deleted.json()) == (200, {"tasks": 0, "decisions": 0})
+    assert client.get(lb.sets).json() == []
+    assert client.get(f"/api/result-sets/{set_id}").status_code == 404
+
+
 def test_only_owners_and_upload_accounts_add_sets(api: ApiAs, database: str) -> None:
     lb = lab(database)
     set_id = api(lb.people["owner"]).post(lb.sets, json=DRAFT).json()["id"]

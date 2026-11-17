@@ -74,6 +74,13 @@ export {
 } from "./prefetch.ts";
 export { type PixelRendererRouteOptions, pixelRendererRoutes } from "./renderer-routes.ts";
 export {
+  OVERVIEW_MAX_SIDE,
+  readSlideOverview,
+  rgbToRgba,
+  type SlideOverview,
+  smallestLevel,
+} from "./slide-overview.ts";
+export {
   mountSlideViewport,
   type SlideViewport,
   type SlideViewportOptions,

@@ -39,6 +39,7 @@ def test_review_objects_follow_the_order_with_the_ai_call(api: ApiAs, database: 
     assert by_id["T3"]["kind"] == "region"
     assert by_id["T3"]["number"] == 3
     assert 0 <= by_id["T3"]["score"] <= 1
+    assert len(by_id["T3"]["outline"]) >= 6
     assert by_id["C1"]["kind"] == "cell"
     assert len(by_id["C1"]["outline"]) >= 6
     assert by_id["C2"]["score"] == pytest.approx(155 / 255, abs=0.01)

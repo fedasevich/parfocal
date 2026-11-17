@@ -278,6 +278,36 @@ def refuse_curl(args: list[str], _env: dict[str, str]) -> str | None:
     return None
 
 
+OWNED_PROJECTS = frozenset({"parfocal-zitadel"})
+OWNED_VOLUME = re.compile(r"^parfocal-zitadel_")
+
+
+def compose_project(args: list[str], env: dict[str, str]) -> str:
+    chosen = env.get("COMPOSE_PROJECT_NAME", "parfocal")
+    for index, arg in enumerate(args):
+        if arg in ("-p", "--project-name") and index + 1 < len(args):
+            chosen = args[index + 1]
+        elif arg.startswith("--project-name="):
+            chosen = arg.partition("=")[2]
+    return chosen
+
+
+def refuse_docker(args: list[str], env: dict[str, str]) -> str | None:
+    plain = positional(args)
+    removes_volumes = any(arg in ("-v", "--volumes") for arg in args)
+    if plain[:1] == ["compose"] and "down" in plain and removes_volumes:
+        project = compose_project(args, env)
+        if project in OWNED_PROJECTS:
+            return f"docker compose down -v deletes the owner's {project} volumes"
+    if plain[:2] == ["volume", "prune"] or (plain[:2] == ["system", "prune"] and removes_volumes):
+        return "docker prune deletes the owner's local volumes"
+    if plain[:2] in (["volume", "rm"], ["volume", "remove"]):
+        owned = [name for name in plain[2:] if OWNED_VOLUME.match(name)]
+        if owned:
+            return f"docker volume rm deletes the owner's volume {owned[0]}"
+    return None
+
+
 Rule = Callable[[list[str], dict[str, str]], str | None]
 
 PROGRAMS: dict[str, Rule] = {
@@ -293,6 +323,7 @@ PROGRAMS: dict[str, Rule] = {
     "rclone": refuse_rclone,
     "gh": refuse_gh,
     "curl": refuse_curl,
+    "docker": refuse_docker,
 }
 
 

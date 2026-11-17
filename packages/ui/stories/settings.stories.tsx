@@ -13,6 +13,7 @@ import {
   PerformanceHud,
 } from "../src/components/developer-drawer.tsx";
 import { SegmentedControl } from "../src/components/segmented-control.tsx";
+import { PreviewOption } from "../src/components/setting-preview.tsx";
 import {
   SettingScope,
   SettingsDialog,
@@ -113,6 +114,35 @@ export const Scopes: Story = {
       <SettingScope scope="personal" />
       <SettingScope scope="device" />
       <SettingScope scope="lab" />
+    </div>
+  ),
+};
+
+export const Previews: Story = {
+  render: () => (
+    <div className="grid w-[520px] gap-4 bg-chrome p-4">
+      <SegmentedControl
+        fill
+        aria-label="Tools"
+        defaultValue="rail"
+        options={[
+          { value: "rail", label: <PreviewOption kind="tools" option="rail" label="Left rail" /> },
+          {
+            value: "dock",
+            label: <PreviewOption kind="tools" option="dock" label="Bottom dock" />,
+          },
+        ]}
+      />
+      <SettingsRows>
+        <SettingsRow
+          label="Tools"
+          scope="personal"
+          note="The bottom dock gives the slide its full height."
+          noteHidden
+        >
+          <Switch aria-label="Tools" />
+        </SettingsRow>
+      </SettingsRows>
     </div>
   ),
 };

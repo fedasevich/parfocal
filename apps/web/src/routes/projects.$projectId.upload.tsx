@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LivePage } from "../screens/upload/live-page.tsx";
 import { UploadPage } from "../screens/upload/upload-page.tsx";
 import { uploadSearch } from "../search/route-searches.ts";
+import { sceneHarnessOn } from "../search/scene-harness.ts";
 
 export const Route = createFileRoute("/projects/$projectId/upload")({
   validateSearch: uploadSearch,
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/projects/$projectId/upload")({
 function UploadRoute() {
   const { projectId } = Route.useParams();
   const search = Route.useSearch();
-  if (search.scene === undefined || search.flow === "live") {
+  if (!sceneHarnessOn() || search.scene === undefined || search.flow === "live") {
     return <LivePage projectId={projectId} scene={search.scene} />;
   }
   const scene = search.scene;

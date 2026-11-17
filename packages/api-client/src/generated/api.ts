@@ -950,6 +950,7 @@ export type Availability = (typeof Availability)[keyof typeof Availability];
 export const Availability = {
   available: "available",
   away: "away",
+  busy: "busy",
 } as const;
 
 /**
@@ -5048,6 +5049,16 @@ export interface NewClass {
   to: string | null;
 }
 
+export type NewPasskeyCredential = { [key: string]: unknown };
+
+export interface NewPasskey {
+  /** @maxLength 64 */
+  passkey: string;
+  /** @maxLength 64 */
+  name?: string;
+  credential: NewPasskeyCredential;
+}
+
 export interface NewWebhookSecret {
   url: string;
   has_old_secret: boolean;
@@ -5360,6 +5371,46 @@ export interface PairingRequest {
    * @maxItems 5000
    */
   files: DroppedFile[];
+}
+
+export type PasskeyCreationOptions = { [key: string]: unknown };
+
+export interface PasskeyCreation {
+  passkey: string;
+  options: PasskeyCreationOptions;
+}
+
+export type PasskeyRequestOptions = { [key: string]: unknown };
+
+export interface PasskeyRequest {
+  options: PasskeyRequestOptions;
+}
+
+export type PasskeySignInFinishCredential = { [key: string]: unknown };
+
+export interface PasskeySignInFinish {
+  credential: PasskeySignInFinishCredential;
+  return_to?: string | null;
+}
+
+export interface PasskeySignInStart {
+  /** @maxLength 320 */
+  email: string;
+}
+
+export interface PasswordReset {
+  email?: string | null;
+  user_id?: string | null;
+  /** @maxLength 32 */
+  code: string;
+  /** @maxLength 320 */
+  password: string;
+  return_to?: string | null;
+}
+
+export interface PasswordResetRequest {
+  /** @maxLength 320 */
+  email: string;
 }
 
 export interface PasswordSignIn {
@@ -6053,6 +6104,13 @@ export const ResultFormat = {
   heatmap: "heatmap",
 } as const;
 
+export type ResultObjectKind = (typeof ResultObjectKind)[keyof typeof ResultObjectKind];
+
+export const ResultObjectKind = {
+  region: "region",
+  zone: "zone",
+} as const;
+
 export type Rule = (typeof Rule)[keyof typeof Rule];
 
 export const Rule = {
@@ -6126,6 +6184,7 @@ export interface ResultSet {
 export interface ResultSetClass {
   position: number;
   source_name: string;
+  name: string;
   class_id: string | null;
   object_count: number;
 }
@@ -6542,6 +6601,11 @@ export interface SavedEventTarget {
   secret: string;
 }
 
+export interface SavedPasskeySummary {
+  id: string;
+  name: string;
+}
+
 export interface SchemaProblem {
   line: number;
   path: string;
@@ -6696,6 +6760,19 @@ export interface SetRef {
   id: string;
   name: string;
   status: ResultStatus;
+}
+
+export interface SetRegion {
+  number: number;
+  kind: ResultObjectKind;
+  class_index: number | null;
+  score: number | null;
+  outline: number[];
+}
+
+export interface SetRegions {
+  regions: SetRegion[];
+  truncated: boolean;
 }
 
 export type SharedAiObjectKind = (typeof SharedAiObjectKind)[keyof typeof SharedAiObjectKind];
@@ -7082,7 +7159,7 @@ export interface SlideThreadCreate {
 export interface SlideTissue {
   slide_id: string;
   grid: CoverageGrid;
-  tissue: string;
+  tissue: string | null;
   tissue_cells: number;
 }
 
@@ -7971,7 +8048,7 @@ export interface WorkspaceDraft {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 54 */
+  /** @maxItems 55 */
   locked?: string[];
 }
 
@@ -8054,6 +8131,18 @@ export type DeleteAnnotationParams = {
 
 export type DeleteResultSetParams = {
   confirm?: boolean;
+};
+
+export type ListResultSetRegionsParams = {
+  left?: number | null;
+  top?: number | null;
+  right?: number | null;
+  bottom?: number | null;
+  /**
+   * @minimum 1
+   * @maximum 2000
+   */
+  limit?: number;
 };
 
 export type GetResultsSchema200 = { [key: string]: unknown };
@@ -10359,6 +10448,1300 @@ export const useSignInWithPassword = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSignInWithPasswordMutationOptions(options), queryClient);
+};
+
+export type requestPasswordResetResponse200 = {
+  data: AccountCodeSent;
+  status: 200;
+};
+
+export type requestPasswordResetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type requestPasswordResetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type requestPasswordResetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type requestPasswordResetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type requestPasswordResetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type requestPasswordResetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type requestPasswordResetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type requestPasswordResetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type requestPasswordResetResponseSuccess = requestPasswordResetResponse200 & {
+  headers: Headers;
+};
+export type requestPasswordResetResponseError = (
+  | requestPasswordResetResponse400
+  | requestPasswordResetResponse401
+  | requestPasswordResetResponse403
+  | requestPasswordResetResponse404
+  | requestPasswordResetResponse409
+  | requestPasswordResetResponse422
+  | requestPasswordResetResponse429
+  | requestPasswordResetResponse500
+) & {
+  headers: Headers;
+};
+
+export type requestPasswordResetResponse =
+  | requestPasswordResetResponseSuccess
+  | requestPasswordResetResponseError;
+
+export const getRequestPasswordResetUrl = () => {
+  return `/api/auth/password-reset`;
+};
+
+/**
+ * @summary Request Password Reset
+ */
+export const requestPasswordReset = async (
+  passwordResetRequest: PasswordResetRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<requestPasswordResetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<requestPasswordResetResponse>(getRequestPasswordResetUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(passwordResetRequest),
+  });
+};
+
+export const getRequestPasswordResetMutationKey = () => ["requestPasswordReset"] as const;
+
+export const getRequestPasswordResetMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestPasswordReset>>,
+    TError,
+    RequestPasswordResetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestPasswordReset>>,
+  TError,
+  RequestPasswordResetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRequestPasswordResetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestPasswordReset>>,
+    RequestPasswordResetMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return requestPasswordReset(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestPasswordResetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestPasswordReset>>
+>;
+export type RequestPasswordResetMutationBody = PasswordResetRequest;
+export type RequestPasswordResetMutationError = Problem;
+export type RequestPasswordResetMutationVariables = { data: PasswordResetRequest };
+
+/**
+ * @summary Request Password Reset
+ */
+export const useRequestPasswordReset = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof requestPasswordReset>>,
+      TError,
+      RequestPasswordResetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof requestPasswordReset>>,
+  TError,
+  RequestPasswordResetMutationVariables,
+  TContext
+> => {
+  return useMutation(getRequestPasswordResetMutationOptions(options), queryClient);
+};
+
+export type resetPasswordResponse200 = {
+  data: SignInLanding;
+  status: 200;
+};
+
+export type resetPasswordResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resetPasswordResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resetPasswordResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resetPasswordResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resetPasswordResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resetPasswordResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resetPasswordResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resetPasswordResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resetPasswordResponseSuccess = resetPasswordResponse200 & {
+  headers: Headers;
+};
+export type resetPasswordResponseError = (
+  | resetPasswordResponse400
+  | resetPasswordResponse401
+  | resetPasswordResponse403
+  | resetPasswordResponse404
+  | resetPasswordResponse409
+  | resetPasswordResponse422
+  | resetPasswordResponse429
+  | resetPasswordResponse500
+) & {
+  headers: Headers;
+};
+
+export type resetPasswordResponse = resetPasswordResponseSuccess | resetPasswordResponseError;
+
+export const getResetPasswordUrl = () => {
+  return `/api/auth/password-reset/confirm`;
+};
+
+/**
+ * @summary Reset Password
+ */
+export const resetPassword = async (
+  passwordReset: PasswordReset,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resetPasswordResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<resetPasswordResponse>(getResetPasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(passwordReset),
+  });
+};
+
+export const getResetPasswordMutationKey = () => ["resetPassword"] as const;
+
+export const getResetPasswordMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetPassword>>,
+    TError,
+    ResetPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetPassword>>,
+  TError,
+  ResetPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResetPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetPassword>>,
+    ResetPasswordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return resetPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>;
+export type ResetPasswordMutationBody = PasswordReset;
+export type ResetPasswordMutationError = Problem;
+export type ResetPasswordMutationVariables = { data: PasswordReset };
+
+/**
+ * @summary Reset Password
+ */
+export const useResetPassword = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resetPassword>>,
+      TError,
+      ResetPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resetPassword>>,
+  TError,
+  ResetPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getResetPasswordMutationOptions(options), queryClient);
+};
+
+export type listPasskeysResponse200 = {
+  data: SavedPasskeySummary[];
+  status: 200;
+};
+
+export type listPasskeysResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listPasskeysResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listPasskeysResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listPasskeysResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listPasskeysResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listPasskeysResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listPasskeysResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listPasskeysResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listPasskeysResponseSuccess = listPasskeysResponse200 & {
+  headers: Headers;
+};
+export type listPasskeysResponseError = (
+  | listPasskeysResponse400
+  | listPasskeysResponse401
+  | listPasskeysResponse403
+  | listPasskeysResponse404
+  | listPasskeysResponse409
+  | listPasskeysResponse422
+  | listPasskeysResponse429
+  | listPasskeysResponse500
+) & {
+  headers: Headers;
+};
+
+export type listPasskeysResponse = listPasskeysResponseSuccess | listPasskeysResponseError;
+
+export const getListPasskeysUrl = () => {
+  return `/api/auth/passkeys`;
+};
+
+/**
+ * @summary List Passkeys
+ */
+export const listPasskeys = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listPasskeysResponse> => {
+  return apiFetch<listPasskeysResponse>(getListPasskeysUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPasskeysQueryKey = () => {
+  return [`/api/auth/passkeys`] as const;
+};
+
+export const getListPasskeysQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPasskeys>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPasskeys>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPasskeysQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPasskeys>>> = ({ signal }) =>
+    listPasskeys({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPasskeys>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListPasskeysQueryResult = NonNullable<Awaited<ReturnType<typeof listPasskeys>>>;
+export type ListPasskeysQueryError = Problem;
+
+export function useListPasskeys<TData = Awaited<ReturnType<typeof listPasskeys>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPasskeys>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPasskeys>>,
+          TError,
+          Awaited<ReturnType<typeof listPasskeys>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPasskeys<TData = Awaited<ReturnType<typeof listPasskeys>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPasskeys>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPasskeys>>,
+          TError,
+          Awaited<ReturnType<typeof listPasskeys>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPasskeys<TData = Awaited<ReturnType<typeof listPasskeys>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPasskeys>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Passkeys
+ */
+
+export function useListPasskeys<TData = Awaited<ReturnType<typeof listPasskeys>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPasskeys>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPasskeysQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type savePasskeyResponse200 = {
+  data: SavedPasskeySummary;
+  status: 200;
+};
+
+export type savePasskeyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type savePasskeyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type savePasskeyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type savePasskeyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type savePasskeyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type savePasskeyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type savePasskeyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type savePasskeyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type savePasskeyResponseSuccess = savePasskeyResponse200 & {
+  headers: Headers;
+};
+export type savePasskeyResponseError = (
+  | savePasskeyResponse400
+  | savePasskeyResponse401
+  | savePasskeyResponse403
+  | savePasskeyResponse404
+  | savePasskeyResponse409
+  | savePasskeyResponse422
+  | savePasskeyResponse429
+  | savePasskeyResponse500
+) & {
+  headers: Headers;
+};
+
+export type savePasskeyResponse = savePasskeyResponseSuccess | savePasskeyResponseError;
+
+export const getSavePasskeyUrl = () => {
+  return `/api/auth/passkeys`;
+};
+
+/**
+ * @summary Save Passkey
+ */
+export const savePasskey = async (
+  newPasskey: NewPasskey,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<savePasskeyResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<savePasskeyResponse>(getSavePasskeyUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(newPasskey),
+  });
+};
+
+export const getSavePasskeyMutationKey = () => ["savePasskey"] as const;
+
+export const getSavePasskeyMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof savePasskey>>,
+    TError,
+    SavePasskeyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof savePasskey>>,
+  TError,
+  SavePasskeyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSavePasskeyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof savePasskey>>,
+    SavePasskeyMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return savePasskey(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SavePasskeyMutationResult = NonNullable<Awaited<ReturnType<typeof savePasskey>>>;
+export type SavePasskeyMutationBody = NewPasskey;
+export type SavePasskeyMutationError = Problem;
+export type SavePasskeyMutationVariables = { data: NewPasskey };
+
+/**
+ * @summary Save Passkey
+ */
+export const useSavePasskey = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof savePasskey>>,
+      TError,
+      SavePasskeyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof savePasskey>>,
+  TError,
+  SavePasskeyMutationVariables,
+  TContext
+> => {
+  return useMutation(getSavePasskeyMutationOptions(options), queryClient);
+};
+
+export type startPasskeyRegistrationResponse200 = {
+  data: PasskeyCreation;
+  status: 200;
+};
+
+export type startPasskeyRegistrationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startPasskeyRegistrationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startPasskeyRegistrationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startPasskeyRegistrationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startPasskeyRegistrationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startPasskeyRegistrationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startPasskeyRegistrationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startPasskeyRegistrationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startPasskeyRegistrationResponseSuccess = startPasskeyRegistrationResponse200 & {
+  headers: Headers;
+};
+export type startPasskeyRegistrationResponseError = (
+  | startPasskeyRegistrationResponse400
+  | startPasskeyRegistrationResponse401
+  | startPasskeyRegistrationResponse403
+  | startPasskeyRegistrationResponse404
+  | startPasskeyRegistrationResponse409
+  | startPasskeyRegistrationResponse422
+  | startPasskeyRegistrationResponse429
+  | startPasskeyRegistrationResponse500
+) & {
+  headers: Headers;
+};
+
+export type startPasskeyRegistrationResponse =
+  | startPasskeyRegistrationResponseSuccess
+  | startPasskeyRegistrationResponseError;
+
+export const getStartPasskeyRegistrationUrl = () => {
+  return `/api/auth/passkeys/registration`;
+};
+
+/**
+ * @summary Start Passkey Registration
+ */
+export const startPasskeyRegistration = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startPasskeyRegistrationResponse> => {
+  return apiFetch<startPasskeyRegistrationResponse>(getStartPasskeyRegistrationUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getStartPasskeyRegistrationMutationKey = () => ["startPasskeyRegistration"] as const;
+
+export const getStartPasskeyRegistrationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startPasskeyRegistration>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startPasskeyRegistration>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getStartPasskeyRegistrationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startPasskeyRegistration>>,
+    void
+  > = () => {
+    return startPasskeyRegistration(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartPasskeyRegistrationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof startPasskeyRegistration>>
+>;
+
+export type StartPasskeyRegistrationMutationError = Problem;
+
+/**
+ * @summary Start Passkey Registration
+ */
+export const useStartPasskeyRegistration = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startPasskeyRegistration>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startPasskeyRegistration>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getStartPasskeyRegistrationMutationOptions(options), queryClient);
+};
+
+export type removePasskeyResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removePasskeyResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type removePasskeyResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type removePasskeyResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type removePasskeyResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type removePasskeyResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type removePasskeyResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type removePasskeyResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type removePasskeyResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type removePasskeyResponseSuccess = removePasskeyResponse204 & {
+  headers: Headers;
+};
+export type removePasskeyResponseError = (
+  | removePasskeyResponse400
+  | removePasskeyResponse401
+  | removePasskeyResponse403
+  | removePasskeyResponse404
+  | removePasskeyResponse409
+  | removePasskeyResponse422
+  | removePasskeyResponse429
+  | removePasskeyResponse500
+) & {
+  headers: Headers;
+};
+
+export type removePasskeyResponse = removePasskeyResponseSuccess | removePasskeyResponseError;
+
+export const getRemovePasskeyUrl = (passkeyId: string) => {
+  return `/api/auth/passkeys/${passkeyId}`;
+};
+
+/**
+ * @summary Remove Passkey
+ */
+export const removePasskey = async (
+  passkeyId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<removePasskeyResponse> => {
+  return apiFetch<removePasskeyResponse>(getRemovePasskeyUrl(passkeyId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemovePasskeyMutationKey = () => ["removePasskey"] as const;
+
+export const getRemovePasskeyMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removePasskey>>,
+    TError,
+    RemovePasskeyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removePasskey>>,
+  TError,
+  RemovePasskeyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemovePasskeyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removePasskey>>,
+    RemovePasskeyMutationVariables
+  > = (props) => {
+    const { passkeyId } = props ?? {};
+
+    return removePasskey(passkeyId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemovePasskeyMutationResult = NonNullable<Awaited<ReturnType<typeof removePasskey>>>;
+
+export type RemovePasskeyMutationError = Problem;
+export type RemovePasskeyMutationVariables = { passkeyId: string };
+
+/**
+ * @summary Remove Passkey
+ */
+export const useRemovePasskey = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removePasskey>>,
+      TError,
+      RemovePasskeyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removePasskey>>,
+  TError,
+  RemovePasskeyMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemovePasskeyMutationOptions(options), queryClient);
+};
+
+export type startPasskeySignInResponse200 = {
+  data: PasskeyRequest;
+  status: 200;
+};
+
+export type startPasskeySignInResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startPasskeySignInResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startPasskeySignInResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startPasskeySignInResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startPasskeySignInResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startPasskeySignInResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startPasskeySignInResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startPasskeySignInResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startPasskeySignInResponseSuccess = startPasskeySignInResponse200 & {
+  headers: Headers;
+};
+export type startPasskeySignInResponseError = (
+  | startPasskeySignInResponse400
+  | startPasskeySignInResponse401
+  | startPasskeySignInResponse403
+  | startPasskeySignInResponse404
+  | startPasskeySignInResponse409
+  | startPasskeySignInResponse422
+  | startPasskeySignInResponse429
+  | startPasskeySignInResponse500
+) & {
+  headers: Headers;
+};
+
+export type startPasskeySignInResponse =
+  | startPasskeySignInResponseSuccess
+  | startPasskeySignInResponseError;
+
+export const getStartPasskeySignInUrl = () => {
+  return `/api/auth/passkey-sign-in`;
+};
+
+/**
+ * @summary Start Passkey Sign In
+ */
+export const startPasskeySignIn = async (
+  passkeySignInStart: PasskeySignInStart,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startPasskeySignInResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<startPasskeySignInResponse>(getStartPasskeySignInUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(passkeySignInStart),
+  });
+};
+
+export const getStartPasskeySignInMutationKey = () => ["startPasskeySignIn"] as const;
+
+export const getStartPasskeySignInMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startPasskeySignIn>>,
+    TError,
+    StartPasskeySignInMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startPasskeySignIn>>,
+  TError,
+  StartPasskeySignInMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartPasskeySignInMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startPasskeySignIn>>,
+    StartPasskeySignInMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return startPasskeySignIn(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartPasskeySignInMutationResult = NonNullable<
+  Awaited<ReturnType<typeof startPasskeySignIn>>
+>;
+export type StartPasskeySignInMutationBody = PasskeySignInStart;
+export type StartPasskeySignInMutationError = Problem;
+export type StartPasskeySignInMutationVariables = { data: PasskeySignInStart };
+
+/**
+ * @summary Start Passkey Sign In
+ */
+export const useStartPasskeySignIn = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startPasskeySignIn>>,
+      TError,
+      StartPasskeySignInMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startPasskeySignIn>>,
+  TError,
+  StartPasskeySignInMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartPasskeySignInMutationOptions(options), queryClient);
+};
+
+export type finishPasskeySignInResponse200 = {
+  data: SignInLanding;
+  status: 200;
+};
+
+export type finishPasskeySignInResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type finishPasskeySignInResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type finishPasskeySignInResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type finishPasskeySignInResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type finishPasskeySignInResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type finishPasskeySignInResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type finishPasskeySignInResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type finishPasskeySignInResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type finishPasskeySignInResponseSuccess = finishPasskeySignInResponse200 & {
+  headers: Headers;
+};
+export type finishPasskeySignInResponseError = (
+  | finishPasskeySignInResponse400
+  | finishPasskeySignInResponse401
+  | finishPasskeySignInResponse403
+  | finishPasskeySignInResponse404
+  | finishPasskeySignInResponse409
+  | finishPasskeySignInResponse422
+  | finishPasskeySignInResponse429
+  | finishPasskeySignInResponse500
+) & {
+  headers: Headers;
+};
+
+export type finishPasskeySignInResponse =
+  | finishPasskeySignInResponseSuccess
+  | finishPasskeySignInResponseError;
+
+export const getFinishPasskeySignInUrl = () => {
+  return `/api/auth/passkey-sign-in/finish`;
+};
+
+/**
+ * @summary Finish Passkey Sign In
+ */
+export const finishPasskeySignIn = async (
+  passkeySignInFinish: PasskeySignInFinish,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<finishPasskeySignInResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<finishPasskeySignInResponse>(getFinishPasskeySignInUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(passkeySignInFinish),
+  });
+};
+
+export const getFinishPasskeySignInMutationKey = () => ["finishPasskeySignIn"] as const;
+
+export const getFinishPasskeySignInMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof finishPasskeySignIn>>,
+    TError,
+    FinishPasskeySignInMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof finishPasskeySignIn>>,
+  TError,
+  FinishPasskeySignInMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFinishPasskeySignInMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof finishPasskeySignIn>>,
+    FinishPasskeySignInMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return finishPasskeySignIn(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FinishPasskeySignInMutationResult = NonNullable<
+  Awaited<ReturnType<typeof finishPasskeySignIn>>
+>;
+export type FinishPasskeySignInMutationBody = PasskeySignInFinish;
+export type FinishPasskeySignInMutationError = Problem;
+export type FinishPasskeySignInMutationVariables = { data: PasskeySignInFinish };
+
+/**
+ * @summary Finish Passkey Sign In
+ */
+export const useFinishPasskeySignIn = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof finishPasskeySignIn>>,
+      TError,
+      FinishPasskeySignInMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof finishPasskeySignIn>>,
+  TError,
+  FinishPasskeySignInMutationVariables,
+  TContext
+> => {
+  return useMutation(getFinishPasskeySignInMutationOptions(options), queryClient);
 };
 
 export type listSessionsResponse200 = {
@@ -31890,6 +33273,413 @@ export function useGetCellSummary<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetCellSummaryQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getCellChunkResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getCellChunkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCellChunkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCellChunkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCellChunkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCellChunkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCellChunkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCellChunkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCellChunkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCellChunkResponseSuccess = getCellChunkResponse200 & {
+  headers: Headers;
+};
+export type getCellChunkResponseError = (
+  | getCellChunkResponse400
+  | getCellChunkResponse401
+  | getCellChunkResponse403
+  | getCellChunkResponse404
+  | getCellChunkResponse409
+  | getCellChunkResponse422
+  | getCellChunkResponse429
+  | getCellChunkResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCellChunkResponse = getCellChunkResponseSuccess | getCellChunkResponseError;
+
+export const getGetCellChunkUrl = (resultSetId: string, chunk: number) => {
+  return `/api/result-sets/${resultSetId}/cell-chunks/${chunk}`;
+};
+
+/**
+ * @summary Get Cell Chunk
+ */
+export const getCellChunk = async (
+  resultSetId: string,
+  chunk: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCellChunkResponse> => {
+  return apiFetch<getCellChunkResponse>(getGetCellChunkUrl(resultSetId, chunk), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCellChunkQueryKey = (resultSetId: string, chunk: number) => {
+  return [`/api/result-sets/${resultSetId}/cell-chunks/${chunk}`] as const;
+};
+
+export const getGetCellChunkQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCellChunk>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCellChunkQueryKey(resultSetId, chunk);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCellChunk>>> = ({ signal }) =>
+    getCellChunk(resultSetId, chunk, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      resultSetId !== null && resultSetId !== undefined && chunk !== null && chunk !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCellChunkQueryResult = NonNullable<Awaited<ReturnType<typeof getCellChunk>>>;
+export type GetCellChunkQueryError = Problem;
+
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellChunk>>,
+          TError,
+          Awaited<ReturnType<typeof getCellChunk>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellChunk>>,
+          TError,
+          Awaited<ReturnType<typeof getCellChunk>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Cell Chunk
+ */
+
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCellChunkQueryOptions(resultSetId, chunk, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listResultSetRegionsResponse200 = {
+  data: SetRegions;
+  status: 200;
+};
+
+export type listResultSetRegionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listResultSetRegionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listResultSetRegionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listResultSetRegionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listResultSetRegionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listResultSetRegionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listResultSetRegionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listResultSetRegionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listResultSetRegionsResponseSuccess = listResultSetRegionsResponse200 & {
+  headers: Headers;
+};
+export type listResultSetRegionsResponseError = (
+  | listResultSetRegionsResponse400
+  | listResultSetRegionsResponse401
+  | listResultSetRegionsResponse403
+  | listResultSetRegionsResponse404
+  | listResultSetRegionsResponse409
+  | listResultSetRegionsResponse422
+  | listResultSetRegionsResponse429
+  | listResultSetRegionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listResultSetRegionsResponse =
+  | listResultSetRegionsResponseSuccess
+  | listResultSetRegionsResponseError;
+
+export const getListResultSetRegionsUrl = (
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/result-sets/${resultSetId}/regions?${stringifiedParams}`
+    : `/api/result-sets/${resultSetId}/regions`;
+};
+
+/**
+ * @summary List Result Set Regions
+ */
+export const listResultSetRegions = async (
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listResultSetRegionsResponse> => {
+  return apiFetch<listResultSetRegionsResponse>(getListResultSetRegionsUrl(resultSetId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListResultSetRegionsQueryKey = (
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+) => {
+  return [`/api/result-sets/${resultSetId}/regions`, ...(params ? [params] : [])] as const;
+};
+
+export const getListResultSetRegionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListResultSetRegionsQueryKey(resultSetId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listResultSetRegions>>> = ({ signal }) =>
+    listResultSetRegions(resultSetId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListResultSetRegionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listResultSetRegions>>
+>;
+export type ListResultSetRegionsQueryError = Problem;
+
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params: undefined | ListResultSetRegionsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listResultSetRegions>>,
+          TError,
+          Awaited<ReturnType<typeof listResultSetRegions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listResultSetRegions>>,
+          TError,
+          Awaited<ReturnType<typeof listResultSetRegions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Result Set Regions
+ */
+
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListResultSetRegionsQueryOptions(resultSetId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -80698,6 +82488,187 @@ export function useGetSlideThumbnail<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetSlideThumbnailQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getCellCropResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getCellCropResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCellCropResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCellCropResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCellCropResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCellCropResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCellCropResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCellCropResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCellCropResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCellCropResponseSuccess = getCellCropResponse200 & {
+  headers: Headers;
+};
+export type getCellCropResponseError = (
+  | getCellCropResponse400
+  | getCellCropResponse401
+  | getCellCropResponse403
+  | getCellCropResponse404
+  | getCellCropResponse409
+  | getCellCropResponse422
+  | getCellCropResponse429
+  | getCellCropResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCellCropResponse = getCellCropResponseSuccess | getCellCropResponseError;
+
+export const getGetCellCropUrl = (slideId: string, number: number) => {
+  return `/api/slides/${slideId}/cell-crops/${number}`;
+};
+
+/**
+ * @summary Get Cell Crop
+ */
+export const getCellCrop = async (
+  slideId: string,
+  number: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCellCropResponse> => {
+  return apiFetch<getCellCropResponse>(getGetCellCropUrl(slideId, number), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCellCropQueryKey = (slideId: string, number: number) => {
+  return [`/api/slides/${slideId}/cell-crops/${number}`] as const;
+};
+
+export const getGetCellCropQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCellCrop>>,
+  TError = Problem,
+>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCellCropQueryKey(slideId, number);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCellCrop>>> = ({ signal }) =>
+    getCellCrop(slideId, number, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined && number !== null && number !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCellCropQueryResult = NonNullable<Awaited<ReturnType<typeof getCellCrop>>>;
+export type GetCellCropQueryError = Problem;
+
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellCrop>>,
+          TError,
+          Awaited<ReturnType<typeof getCellCrop>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellCrop>>,
+          TError,
+          Awaited<ReturnType<typeof getCellCrop>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Cell Crop
+ */
+
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCellCropQueryOptions(slideId, number, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

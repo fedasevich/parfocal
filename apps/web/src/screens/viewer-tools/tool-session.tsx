@@ -14,6 +14,7 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import type { SlideCounts } from "../review/review-top.tsx";
+import { SlidePicture } from "../review/slide-picture.tsx";
 import { type PagedReview, usePagedReview } from "../review/use-paged-review.ts";
 
 export type ToolSession = {
@@ -46,9 +47,11 @@ export function WithToolSession({
   const taskId = task ?? home?.resume?.task_id;
   if (taskId === undefined) return <SlideLoader />;
   return (
-    <SessionLoader projectId={projectId} slideId={slideId} taskId={taskId}>
-      {children}
-    </SessionLoader>
+    <SlidePicture slideId={slideId}>
+      <SessionLoader projectId={projectId} slideId={slideId} taskId={taskId}>
+        {children}
+      </SessionLoader>
+    </SlidePicture>
   );
 }
 

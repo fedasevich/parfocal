@@ -7,7 +7,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import exists, func, or_, select, tuple_
+from sqlalchemy import Select, exists, func, or_, select, tuple_, union
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -17,7 +17,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import readable_slide
 from parfocal_api.projects import code_of as project_code
-from parfocal_api.review_states import State, TaskStates, states_of, task_of
+from parfocal_api.review_states import State, TaskStates, states_of, states_of_many, tasks_of
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
     ResultSource,
@@ -25,11 +25,15 @@ from parfocal_api.tables import (
     SlideStorage,
     StartMode,
     TaskScope,
+    annotations,
     cases,
+    opinions,
     projects,
     result_sets,
     review_assignments,
     review_decisions,
+    review_edits,
+    review_skips,
     review_task_slides,
     review_tasks,
     slides,
@@ -167,10 +171,74 @@ def worked_on(states: TaskStates, user_id: uuid.UUID) -> bool:
     )
 
 
+async def my_assignments(
+    connection: AsyncConnection, me: uuid.UUID, task_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[tuple[uuid.UUID, bool, bool]]]:
+    worked = union(
+        *(
+            select(table.c.task_id, table.c.slide_id).where(
+                user_column == me, table.c.task_id.in_(task_ids)
+            )
+            for table, user_column in (
+                (review_edits, review_edits.c.user_id),
+                (annotations, annotations.c.created_by_user_id),
+                (review_decisions, review_decisions.c.user_id),
+                (review_skips, review_skips.c.user_id),
+                (opinions, opinions.c.user_id),
+            )
+        )
+    ).subquery()
+    has_work = (
+        select(worked.c.slide_id)
+        .where(
+            worked.c.task_id == review_assignments.c.task_id,
+            worked.c.slide_id == review_assignments.c.slide_id,
+        )
+        .exists()
+    )
+    found: dict[uuid.UUID, list[tuple[uuid.UUID, bool, bool]]] = {}
+    for row in await connection.execute(
+        select(
+            review_assignments.c.task_id,
+            review_assignments.c.slide_id,
+            review_assignments.c.submitted_at.is_not(None).label("submitted"),
+            has_work.label("has_work"),
+        )
+        .join(
+            review_task_slides,
+            (review_task_slides.c.task_id == review_assignments.c.task_id)
+            & (review_task_slides.c.slide_id == review_assignments.c.slide_id),
+        )
+        .where(
+            review_assignments.c.user_id == me,
+            review_assignments.c.released_at.is_(None),
+            review_assignments.c.task_id.in_(task_ids),
+        )
+        .order_by(review_assignments.c.task_id, review_task_slides.c.position)
+    ):
+        found.setdefault(row.task_id, []).append((row.slide_id, row.submitted, row.has_work))
+    return found
+
+
+type Assigned = dict[uuid.UUID, list[tuple[uuid.UUID, bool, bool]]]
+
+
 async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[MyTask]:
+    return (await my_review_tasks_with_slides(connection, me))[0]
+
+
+async def my_review_tasks_with_slides(
+    connection: AsyncConnection, me: uuid.UUID
+) -> tuple[list[MyTask], Assigned]:
+    my_decisions = (
+        select(func.count())
+        .where(review_decisions.c.task_id == review_tasks.c.id, review_decisions.c.user_id == me)
+        .scalar_subquery()
+        .label("my_decisions")
+    )
     rows = (
         await connection.execute(
-            select(*TASK_COLUMNS)
+            select(*TASK_COLUMNS, my_decisions)
             .join(projects, projects.c.id == review_tasks.c.project_id)
             .where(
                 review_tasks.c.archived_at.is_(None),
@@ -184,32 +252,18 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
             )
         )
     ).all()
-    counted = dict(
-        (
-            await connection.execute(
-                select(review_decisions.c.task_id, func.count())
-                .where(
-                    review_decisions.c.user_id == me,
-                    review_decisions.c.task_id.in_([row.id for row in rows]),
-                )
-                .group_by(review_decisions.c.task_id)
-            )
-        ).all()
-    )
+    if not rows:
+        return [], {}
+    assigned = await my_assignments(connection, me, [row.id for row in rows])
     tasks: list[MyTask] = []
     for row in rows:
-        states = await states_of(connection, row)
-        mine = [
-            (slide.slide_id, reviewer.submitted_at is not None)
-            for slide in states.slides
-            for reviewer in slide.reviewers
-            if reviewer.user_id == me
-        ]
+        mine = [(slide, done) for slide, done, _ in assigned.get(row.id, [])]
+        worked = any(work and not done for _, done, work in assigned.get(row.id, []))
         submitted = sum(done for _, done in mine)
         status = reviewer_status(
             submitted,
             len(mine),
-            worked_on(states, me) or bool(counted.get(row.id)),
+            worked or row.my_decisions > 0,
             row.signed_off_at is not None,
         )
         tasks.append(
@@ -224,16 +278,17 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
                 start_mode=StartMode(row.start_mode),
                 slides_submitted=submitted,
                 slides_assigned=len(mine),
-                decisions=int(counted.get(row.id, 0)),
+                decisions=int(row.my_decisions),
                 status=status,
                 next_slide_id=next((slide for slide, done in mine if not done), None),
                 created_by_user_id=row.created_by_user_id,
             )
         )
-    return sorted(
+    ordered = sorted(
         tasks,
         key=lambda task: (MY_ORDER.index(task.status), task.due_on or date.max, task.code),
     )
+    return ordered, assigned
 
 
 @router.get("/review-tasks", operation_id="listMyReviewTasks", **require(Permission.SEE_SLIDES))
@@ -359,13 +414,18 @@ async def describe(
         .order_by(review_tasks.c.created_at)
     ):
         tasks_by_slide.setdefault(item.slide_id, []).append(item)
+    wanted = list(
+        {task.id for found in tasks_by_slide.values() for task in found}.difference(cache)
+    )
+    if wanted:
+        cache.update(await states_of_many(connection, await tasks_of(connection, wanted)))
     described: list[SlideRow] = []
     for row in rows:
         reviews: list[SlideReview] = []
         status = without_tasks(sets.get(row.id, []), sources)
         for task in tasks_by_slide.get(row.id, []):
             if task.id not in cache:
-                cache[task.id] = await states_of(connection, await task_of(connection, task.id))
+                continue
             for slide in cache[task.id].slides:
                 if slide.slide_id != row.id:
                     continue
@@ -396,20 +456,14 @@ async def describe(
     return described
 
 
-@router.get("/slides", operation_id="listMySlides", **require(Permission.SEE_SLIDES))
-async def list_my_slides(
+def slides_statement(
     principal: CurrentPrincipal,
-    connection: TenantConnection,
-    project_id: uuid.UUID | None = None,
-    status: State | None = None,
-    result_set: Annotated[str | None, Query(max_length=120)] = None,
-    reviewer_id: uuid.UUID | None = None,
-    storage: SlideStorage | None = None,
-    q: Annotated[str | None, Query(max_length=100)] = None,
-    cursor: str | None = None,
-    limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
-) -> SlidePage:
-    member_of(principal)
+    project_id: uuid.UUID | None,
+    result_set: str | None,
+    reviewer_id: uuid.UUID | None,
+    storage: SlideStorage | None,
+    q: str | None,
+) -> Select[*tuple[Any, ...]]:
     statement = (
         select(
             slides.c.id,
@@ -455,6 +509,24 @@ async def list_my_slides(
         statement = statement.where(
             or_(slides.c.label.ilike(pattern), cases.c.label.ilike(pattern))
         )
+    return statement
+
+
+@router.get("/slides", operation_id="listMySlides", **require(Permission.SEE_SLIDES))
+async def list_my_slides(
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    project_id: uuid.UUID | None = None,
+    status: State | None = None,
+    result_set: Annotated[str | None, Query(max_length=120)] = None,
+    reviewer_id: uuid.UUID | None = None,
+    storage: SlideStorage | None = None,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    cursor: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
+) -> SlidePage:
+    member_of(principal)
+    statement = slides_statement(principal, project_id, result_set, reviewer_id, storage, q)
     after = decode_cursor(cursor) if cursor else None
     found: list[SlideRow] = []
     cache: dict[uuid.UUID, TaskStates] = {}

@@ -1,12 +1,24 @@
 import asyncio
 import os
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import httpx2
 import pytest
 
 from parfocal_api.showcase import FORMAT_GALLERY
 from parfocal_common.object_store import ObjectStore, StorageLocation
-from parfocal_deploy.reset import KEPT_TABLES, empty_tenant_objects, metadata, truncate_statement
+from parfocal_deploy import reset as reset_module
+from parfocal_deploy.deploy import MIGRATE
+from parfocal_deploy.environments import environment
+from parfocal_deploy.reset import (
+    KEPT_TABLES,
+    RESET_SETTINGS,
+    empty_tenant_objects,
+    metadata,
+    truncate_statement,
+)
+from parfocal_deploy.tools import Tools
 from parfocal_ingest.identify import Format
 
 RESET_STORAGE = StorageLocation(
@@ -45,6 +57,42 @@ def test_the_reset_removes_tenant_objects_and_leaves_fixtures_untouched() -> Non
     removed, left = asyncio.run(stored_keys_after_reset())
     assert removed == len(TENANT_KEYS)
     assert left == sorted(KEPT_KEYS)
+
+
+def test_the_reset_publishes_the_fixture_folders_before_it_empties_anything(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    steps: list[str] = []
+    monkeypatch.setattr(reset_module.neon, "ensure_branch", lambda *_: "branch")
+    monkeypatch.setattr(reset_module.neon, "first_database", lambda *_: "database")
+    monkeypatch.setattr(reset_module.neon, "owner_uri", lambda *_, **__: "postgres://direct")
+
+    async def emptied(_: StorageLocation) -> int:
+        steps.append("empty objects")
+        return 0
+
+    def ran(argv: Sequence[str], _: str | None, extra: Mapping[str, str] | None) -> None:
+        steps.append(argv[-1])
+        assert extra is not None
+        if argv[-1] != "head":
+            assert extra["STORAGE_BUCKET"] == environment("production").slide_bucket
+            assert extra["APP_ENV"] == "prod"
+
+    def statement(_: str, sql: str) -> list[Any]:
+        steps.append("truncate" if "TRUNCATE" in sql else sql)
+        return []
+
+    monkeypatch.setattr(reset_module, "empty_tenant_objects", emptied)
+    tools = Tools(run=ran, read=lambda _: "", sql=statement, neon=None, fetch=lambda _: (200, {}))  # type: ignore[arg-type]
+    settings: dict[str, str] = dict.fromkeys(RESET_SETTINGS, "x")
+    reset_module.reset(environment("production"), tools, settings)
+    assert steps == [
+        MIGRATE[-1],
+        "parfocal_ingest.fixture_slides",
+        "truncate",
+        "empty objects",
+        "parfocal_api.showcase",
+    ]
 
 
 def test_the_truncate_keeps_migrations_and_operators() -> None:

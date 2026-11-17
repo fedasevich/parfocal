@@ -5,7 +5,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy import delete, exists, func, insert, select, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -156,44 +156,53 @@ class LookingAgainError(ConflictError):
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}/disagreements", tags=["review-tasks"])
 
-type Key = tuple[uuid.UUID, str, int]
+type TaskKey = tuple[uuid.UUID, uuid.UUID, str, int]
+type Complete = dict[tuple[uuid.UUID, uuid.UUID], tuple[set[uuid.UUID], datetime]]
 
 
-async def complete_slides(
-    connection: AsyncConnection, task_id: uuid.UUID
-) -> dict[uuid.UUID, tuple[set[uuid.UUID], datetime]]:
-    reviewers: dict[uuid.UUID, set[uuid.UUID]] = {}
-    last: dict[uuid.UUID, datetime] = {}
-    pending: set[uuid.UUID] = set()
-    for slide_id, user_id, submitted_at in await connection.execute(
+async def complete_slides(connection: AsyncConnection, task_ids: list[uuid.UUID]) -> Complete:
+    reviewers: dict[tuple[uuid.UUID, uuid.UUID], set[uuid.UUID]] = {}
+    last: dict[tuple[uuid.UUID, uuid.UUID], datetime] = {}
+    pending: set[tuple[uuid.UUID, uuid.UUID]] = set()
+    for task_id, slide_id, user_id, submitted_at in await connection.execute(
         select(
+            review_assignments.c.task_id,
             review_assignments.c.slide_id,
             review_assignments.c.user_id,
             review_assignments.c.submitted_at,
-        ).where(review_assignments.c.task_id == task_id, review_assignments.c.released_at.is_(None))
+        ).where(
+            review_assignments.c.task_id.in_(task_ids), review_assignments.c.released_at.is_(None)
+        )
     ):
-        reviewers.setdefault(slide_id, set()).add(user_id)
+        pair = (task_id, slide_id)
+        reviewers.setdefault(pair, set()).add(user_id)
         if submitted_at is None:
-            pending.add(slide_id)
+            pending.add(pair)
         else:
-            last[slide_id] = max(submitted_at, last.get(slide_id, submitted_at))
-    return {
-        slide: (people, last[slide]) for slide, people in reviewers.items() if slide not in pending
-    }
+            last[pair] = max(submitted_at, last.get(pair, submitted_at))
+    return {pair: (people, last[pair]) for pair, people in reviewers.items() if pair not in pending}
 
 
-async def last_redrawn(connection: AsyncConnection, task_id: uuid.UUID) -> dict[Key, datetime]:
+async def last_redrawn(
+    connection: AsyncConnection, task_ids: list[uuid.UUID]
+) -> dict[TaskKey, datetime]:
     rows = await connection.execute(
         select(
+            review_edits.c.task_id,
             review_edits.c.slide_id,
             review_edits.c.kind,
             review_edits.c.number,
             func.max(review_edits.c.updated_at),
         )
-        .where(review_edits.c.task_id == task_id, review_edits.c.geometry.is_not(None))
-        .group_by(review_edits.c.slide_id, review_edits.c.kind, review_edits.c.number)
+        .where(review_edits.c.task_id.in_(task_ids), review_edits.c.geometry.is_not(None))
+        .group_by(
+            review_edits.c.task_id,
+            review_edits.c.slide_id,
+            review_edits.c.kind,
+            review_edits.c.number,
+        )
     )
-    return {(slide_id, kind, number): at for slide_id, kind, number, at in rows}
+    return {(task_id, slide_id, kind, number): at for task_id, slide_id, kind, number, at in rows}
 
 
 def decision_of(row: Any) -> QueueDecision | None:
@@ -215,20 +224,23 @@ def edited_after(redrawn: datetime | None, decided: datetime, settled: datetime 
     return settled is None or redrawn > settled
 
 
-async def sent_objects(connection: AsyncConnection, task_id: uuid.UUID) -> dict[Key, Adjudication]:
+async def sent_objects(
+    connection: AsyncConnection, task_ids: list[uuid.UUID]
+) -> dict[TaskKey, Adjudication]:
     rows = await connection.execute(
         select(
+            adjudication_objects.c.task_id.label("object_task_id"),
             adjudication_objects.c.slide_id,
             adjudication_objects.c.kind,
             adjudication_objects.c.number,
             adjudications,
         )
         .join(adjudications, adjudications.c.id == adjudication_objects.c.adjudication_id)
-        .where(adjudication_objects.c.task_id == task_id)
+        .where(adjudication_objects.c.task_id.in_(task_ids))
         .order_by(adjudications.c.sent_at, adjudications.c.id)
     )
     return {
-        (row.slide_id, row.kind, row.number): Adjudication(
+        (row.object_task_id, row.slide_id, row.kind, row.number): Adjudication(
             id=row.id,
             adjudicator_user_id=row.adjudicator_user_id,
             note=row.note,
@@ -241,48 +253,110 @@ async def sent_objects(connection: AsyncConnection, task_id: uuid.UUID) -> dict[
 
 
 async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[QueuedObject]:
-    complete = await complete_slides(connection, task_id)
+    return (await queues_of(connection, [task_id]))[task_id]
+
+
+def queued_why(rows: list[Any]) -> Why | None:
+    second_look = {
+        row.user_id
+        for row in rows
+        if row.value == DecisionValue.UNSURE and DecisionReason.NEED_SECOND_LOOK in row.reasons
+    }
+    return why_queued({row.user_id: row.value for row in rows}, second_look)
+
+
+async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> int:
+    pending = review_assignments.alias("pending")
+    reviewer = review_assignments.alias("reviewer")
+    rows = await connection.execute(
+        select(
+            review_decisions.c.task_id,
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
+            review_decisions.c.user_id,
+            review_decisions.c.value,
+            review_decisions.c.reasons,
+            review_decisions.c.reopened_at,
+            disagreement_decisions.c.value.label("chosen_value"),
+            disagreement_decisions.c.left_open,
+        )
+        .outerjoin(
+            disagreement_decisions,
+            (disagreement_decisions.c.task_id == review_decisions.c.task_id)
+            & (disagreement_decisions.c.slide_id == review_decisions.c.slide_id)
+            & (disagreement_decisions.c.kind == review_decisions.c.kind)
+            & (disagreement_decisions.c.number == review_decisions.c.number),
+        )
+        .where(
+            review_decisions.c.task_id.in_(task_ids),
+            exists().where(
+                reviewer.c.task_id == review_decisions.c.task_id,
+                reviewer.c.slide_id == review_decisions.c.slide_id,
+                reviewer.c.user_id == review_decisions.c.user_id,
+                reviewer.c.released_at.is_(None),
+            ),
+            ~exists().where(
+                pending.c.task_id == review_decisions.c.task_id,
+                pending.c.slide_id == review_decisions.c.slide_id,
+                pending.c.released_at.is_(None),
+                pending.c.submitted_at.is_(None),
+            ),
+        )
+    )
+    grouped: dict[TaskKey, list[Any]] = {}
+    for row in rows:
+        grouped.setdefault((row.task_id, row.slide_id, row.kind, row.number), []).append(row)
+    return sum(
+        counts_as_open(
+            looking_again=any(row.reopened_at is not None for row in found),
+            decided=found[0].chosen_value is not None,
+            left_open=bool(found[0].left_open),
+        )
+        for found in grouped.values()
+        if queued_why(found) is not None
+    )
+
+
+async def queues_of(
+    connection: AsyncConnection, task_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[QueuedObject]]:
+    queues: dict[uuid.UUID, list[QueuedObject]] = {task_id: [] for task_id in task_ids}
+    complete = await complete_slides(connection, task_ids)
     if not complete:
-        return []
-    grouped: dict[Key, list[Any]] = {}
+        return queues
+    grouped: dict[TaskKey, list[Any]] = {}
     for row in await connection.execute(
         select(review_decisions)
-        .where(
-            review_decisions.c.task_id == task_id, review_decisions.c.slide_id.in_(list(complete))
-        )
+        .where(tuple_(review_decisions.c.task_id, review_decisions.c.slide_id).in_(list(complete)))
         .order_by(
+            review_decisions.c.task_id,
             review_decisions.c.slide_id,
             review_decisions.c.kind,
             review_decisions.c.number,
             review_decisions.c.user_id,
         )
     ):
-        if row.user_id in complete[row.slide_id][0]:
-            grouped.setdefault((row.slide_id, row.kind, row.number), []).append(row)
+        if row.user_id in complete[(row.task_id, row.slide_id)][0]:
+            grouped.setdefault((row.task_id, row.slide_id, row.kind, row.number), []).append(row)
     decided = {
-        (row.slide_id, row.kind, row.number): row
+        (row.task_id, row.slide_id, row.kind, row.number): row
         for row in await connection.execute(
-            select(disagreement_decisions).where(disagreement_decisions.c.task_id == task_id)
+            select(disagreement_decisions).where(disagreement_decisions.c.task_id.in_(task_ids))
         )
     }
-    redrawn = await last_redrawn(connection, task_id)
-    sent = await sent_objects(connection, task_id)
-    queued: list[QueuedObject] = []
+    redrawn = await last_redrawn(connection, task_ids)
+    sent = await sent_objects(connection, task_ids)
     for key, rows in grouped.items():
-        slide_id, kind, number = key
-        second_look = {
-            row.user_id
-            for row in rows
-            if row.value == DecisionValue.UNSURE and DecisionReason.NEED_SECOND_LOOK in row.reasons
-        }
-        why = why_queued({row.user_id: row.value for row in rows}, second_look)
+        task_id, slide_id, kind, number = key
+        why = queued_why(rows)
         if why is None:
             continue
         object_kind = AnnotationKind(kind)
         letter = Letter.REGION if object_kind is AnnotationKind.REGION else Letter.CELL
         choice = decided.get(key)
         looking_again = any(row.reopened_at is not None for row in rows)
-        queued.append(
+        queues[task_id].append(
             QueuedObject(
                 slide_id=slide_id,
                 object=ObjectId(letter, number).text(ascii=True),
@@ -306,18 +380,26 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
                 edited_after_decisions=not looking_again
                 and edited_after(
                     redrawn.get(key),
-                    complete[slide_id][1],
+                    complete[(task_id, slide_id)][1],
                     choice.edits_settled_at if choice else None,
                 ),
                 looking_again=looking_again,
                 adjudication=sent.get(key),
             )
         )
-    return queued
+    return queues
+
+
+def counts_as_open(*, looking_again: bool, decided: bool, left_open: bool) -> bool:
+    return looking_again or (not decided and not left_open)
 
 
 def is_open(item: QueuedObject) -> bool:
-    return item.looking_again or (item.decision is None and not item.left_open)
+    return counts_as_open(
+        looking_again=item.looking_again,
+        decided=item.decision is not None,
+        left_open=item.left_open,
+    )
 
 
 def open_by_slide(queue: list[QueuedObject]) -> dict[uuid.UUID, int]:

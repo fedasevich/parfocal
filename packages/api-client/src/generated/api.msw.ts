@@ -129,6 +129,8 @@ import type {
   PaintedMapContent,
   PaintedMapVersion,
   ParfocalApiResultPairingPairings,
+  PasskeyCreation,
+  PasskeyRequest,
   PasswordSignInAvailability,
   PatchExportStarted,
   PatientData,
@@ -177,6 +179,7 @@ import type {
   RoomAccess,
   RunAreas,
   SavedEventTarget,
+  SavedPasskeySummary,
   ScaleQuestion,
   SearchResults,
   SecurityContact,
@@ -186,6 +189,7 @@ import type {
   Session,
   SessionPolicy,
   SessionSummary,
+  SetRegions,
   SharedAiObjects,
   SharedLayer,
   SharedReport,
@@ -335,6 +339,7 @@ import {
   RegionOutput,
   RestrictedImage,
   ResultFormat,
+  ResultObjectKind,
   ResultSource,
   ResultStatus,
   ResumeMode,
@@ -480,6 +485,55 @@ export const getResendEmailCodeResponseMock = (
 });
 
 export const getSignInWithPasswordResponseMock = (
+  overrideResponse: Partial<Extract<SignInLanding, object>> = {},
+): SignInLanding => ({
+  return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getRequestPasswordResetResponseMock = (
+  overrideResponse: Partial<Extract<AccountCodeSent, object>> = {},
+): AccountCodeSent => ({
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_minutes: faker.number.int(),
+  resend_seconds: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getResetPasswordResponseMock = (
+  overrideResponse: Partial<Extract<SignInLanding, object>> = {},
+): SignInLanding => ({
+  return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListPasskeysResponseMock = (): SavedPasskeySummary[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  }));
+
+export const getSavePasskeyResponseMock = (
+  overrideResponse: Partial<Extract<SavedPasskeySummary, object>> = {},
+): SavedPasskeySummary => ({
+  id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getStartPasskeyRegistrationResponseMock = (
+  overrideResponse: Partial<Extract<PasskeyCreation, object>> = {},
+): PasskeyCreation => ({
+  passkey: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  options: {},
+  ...overrideResponse,
+});
+
+export const getStartPasskeySignInResponseMock = (
+  overrideResponse: Partial<Extract<PasskeyRequest, object>> = {},
+): PasskeyRequest => ({ options: {}, ...overrideResponse });
+
+export const getFinishPasskeySignInResponseMock = (
   overrideResponse: Partial<Extract<SignInLanding, object>> = {},
 ): SignInLanding => ({
   return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -6695,6 +6749,7 @@ export const getCreateResultSetResponseMock = (
     () => ({
       position: faker.number.int(),
       source_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
       class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       object_count: faker.number.int(),
     }),
@@ -6798,6 +6853,7 @@ export const getGetResultSetResponseMock = (
     () => ({
       position: faker.number.int(),
       source_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
       class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       object_count: faker.number.int(),
     }),
@@ -6815,6 +6871,27 @@ export const getDeleteResultSetResponseMock = (
 
 export const getGetCellSummaryResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getGetCellChunkResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getListResultSetRegionsResponseMock = (
+  overrideResponse: Partial<Extract<SetRegions, object>> = {},
+): SetRegions => ({
+  regions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      kind: faker.helpers.arrayElement(Object.values(ResultObjectKind)),
+      class_index: faker.helpers.arrayElement([faker.number.int(), null]),
+      score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  truncated: faker.datatype.boolean(),
+  ...overrideResponse,
+});
 
 export const getGetHeatmapResponseMock = (
   overrideResponse: Partial<Extract<HeatmapFacts, object>> = {},
@@ -19004,12 +19081,15 @@ export const getGetSlideTissueResponseMock = (
     columns: faker.number.int({ min: 1, max: 1024 }),
     rows: faker.number.int({ min: 1, max: 1024 }),
   },
-  tissue: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tissue: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   tissue_cells: faker.number.int(),
   ...overrideResponse,
 });
 
 export const getGetSlideThumbnailResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getGetCellCropResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getGetSlideEmbeddingsResponseMock = (
@@ -19341,6 +19421,193 @@ export const getSignInWithPasswordMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getSignInWithPasswordResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRequestPasswordResetMockHandler = (
+  overrideResponse?:
+    | AccountCodeSent
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AccountCodeSent> | AccountCodeSent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/password-reset",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRequestPasswordResetResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResetPasswordMockHandler = (
+  overrideResponse?:
+    | SignInLanding
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SignInLanding> | SignInLanding),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/password-reset/confirm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResetPasswordResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListPasskeysMockHandler = (
+  overrideResponse?:
+    | SavedPasskeySummary[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SavedPasskeySummary[]> | SavedPasskeySummary[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/auth/passkeys",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPasskeysResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSavePasskeyMockHandler = (
+  overrideResponse?:
+    | SavedPasskeySummary
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SavedPasskeySummary> | SavedPasskeySummary),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSavePasskeyResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStartPasskeyRegistrationMockHandler = (
+  overrideResponse?:
+    | PasskeyCreation
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyCreation> | PasskeyCreation),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys/registration",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartPasskeyRegistrationResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRemovePasskeyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/auth/passkeys/:passkeyId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getStartPasskeySignInMockHandler = (
+  overrideResponse?:
+    | PasskeyRequest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyRequest> | PasskeyRequest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkey-sign-in",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartPasskeySignInResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getFinishPasskeySignInMockHandler = (
+  overrideResponse?:
+    | SignInLanding
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SignInLanding> | SignInLanding),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkey-sign-in/finish",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getFinishPasskeySignInResponseMock(),
         { status: 200 },
       );
     },
@@ -22124,6 +22391,52 @@ export const getGetCellSummaryMockHandler = (
         status: 200,
         headers: { "Content-Type": "application/octet-stream" },
       });
+    },
+    options,
+  );
+};
+
+export const getGetCellChunkMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/cell-chunks/:chunk",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCellChunkResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
+export const getListResultSetRegionsMockHandler = (
+  overrideResponse?:
+    | SetRegions
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SetRegions> | SetRegions),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/regions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListResultSetRegionsResponseMock(),
+        { status: 200 },
+      );
     },
     options,
   );
@@ -28355,6 +28668,30 @@ export const getGetSlideThumbnailMockHandler = (
   );
 };
 
+export const getGetCellCropMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/cell-crops/:number",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCellCropResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    },
+    options,
+  );
+};
+
 export const getGetSlideEmbeddingsMockHandler = (
   overrideResponse?:
     | SlideEmbeddings
@@ -28504,6 +28841,14 @@ export const getParfocalAPIMock = () => [
   getConfirmEmailMockHandler(),
   getResendEmailCodeMockHandler(),
   getSignInWithPasswordMockHandler(),
+  getRequestPasswordResetMockHandler(),
+  getResetPasswordMockHandler(),
+  getListPasskeysMockHandler(),
+  getSavePasskeyMockHandler(),
+  getStartPasskeyRegistrationMockHandler(),
+  getRemovePasskeyMockHandler(),
+  getStartPasskeySignInMockHandler(),
+  getFinishPasskeySignInMockHandler(),
   getListSessionsMockHandler(),
   getRecordActivityMockHandler(),
   getLockSessionMockHandler(),
@@ -28626,6 +28971,8 @@ export const getParfocalAPIMock = () => [
   getGetResultSetMockHandler(),
   getDeleteResultSetMockHandler(),
   getGetCellSummaryMockHandler(),
+  getGetCellChunkMockHandler(),
+  getListResultSetRegionsMockHandler(),
   getGetHeatmapMockHandler(),
   getGetHeatmapGridMockHandler(),
   getGetResultsSchemaMockHandler(),
@@ -28898,6 +29245,7 @@ export const getParfocalAPIMock = () => [
   getRecordSlideCoverageMockHandler(),
   getGetSlideTissueMockHandler(),
   getGetSlideThumbnailMockHandler(),
+  getGetCellCropMockHandler(),
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),

@@ -54,6 +54,53 @@ const posted = (page: Page, path: RegExp, method: string) =>
     (response) => response.request().method() === method && path.test(response.url()),
   );
 
+const LIVE_TASK = "Team live check";
+
+interface Listed {
+  id: string;
+  name: string;
+  slide_count: number;
+}
+
+async function arrangeOtherReviewers(page: Page): Promise<void> {
+  const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
+  const projects = await ok<{ id: string; name: string; my_role: string | null }[]>(
+    page,
+    "GET",
+    "/api/projects",
+  );
+  const owned = projects.find((project) => project.my_role === "owner");
+  expect(owned, "the signed-in researcher owns a project").toBeDefined();
+  const projectId = owned?.id ?? "";
+  const members = await ok<{ user_id: string; role: string }[]>(page, "GET", "/api/tenant/members");
+  const reviewers = members.filter((member) => member.role === "reviewer" && member.user_id !== me);
+  expect(reviewers.length, "the workspace has two reviewers besides me").toBeGreaterThanOrEqual(2);
+  for (const reviewer of reviewers.slice(0, 2)) {
+    await ok(page, "PUT", `/api/projects/${projectId}/members/${reviewer.user_id}`, {
+      role: "reviewer",
+    });
+  }
+  const listed = await ok<Listed[]>(page, "GET", `/api/projects/${projectId}/review-tasks`);
+  if (listed.some((task) => task.name === LIVE_TASK)) return;
+  const source = listed.find((task) => task.slide_count > 0);
+  expect(source, "the project has a task with slides").toBeDefined();
+  const detail = await ok<{ slides: { slide_id: string }[] }>(
+    page,
+    "GET",
+    `/api/review-tasks/${source?.id ?? ""}`,
+  );
+  await ok(page, "POST", `/api/projects/${projectId}/review-tasks`, {
+    name: LIVE_TASK,
+    kind: "annotate",
+    slide_ids: detail.slides.slice(0, 2).map((slide) => slide.slide_id),
+    result_sets: [],
+    reviewer_ids: [reviewers[0]?.user_id],
+    split: "everyone",
+    scope: { kind: "whole-slide" },
+    blinded: false,
+  });
+}
+
 const toast = (page: Page) => page.locator('[data-slot="toast"]');
 
 test(
@@ -61,11 +108,15 @@ test(
   realTags(area.team),
   async ({ page }) => {
     await signIn(page, "/my-work");
+    await arrangeOtherReviewers(page);
+    const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
     const assigned = await ok<Assigned[]>(page, "GET", "/api/me/assigned-tasks");
     const task = assigned.find(
       (candidate) =>
         (candidate.status === "in-review" || candidate.status === "not-started") &&
-        candidate.reviewers.some((row) => row.slides_submitted < row.slides_assigned),
+        candidate.reviewers.some(
+          (row) => row.user_id !== me && row.slides_submitted < row.slides_assigned,
+        ),
     );
     test.skip(task === undefined, "No task of mine has a reviewer with slides left");
     if (task === undefined) return;
@@ -91,10 +142,18 @@ test(
 
 test("a nudge and a reassign from Team are stored", realTags(area.team), async ({ page }) => {
   await signIn(page, "/team");
+  await arrangeOtherReviewers(page);
+  const myId = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
   const open = (await team(page)).open;
   const pick = open
     .flatMap((task) => task.reviewers.map((row, index) => ({ task, row, index })))
-    .find(({ row }) => row.status !== "done" && row.status !== "away" && row.nudged_at === null);
+    .find(
+      ({ row }) =>
+        row.user_id !== myId &&
+        row.status !== "done" &&
+        row.status !== "away" &&
+        row.nudged_at === null,
+    );
   test.skip(pick === undefined, "No open task has a reviewer to nudge");
   if (pick === undefined) return;
   const { task, row, index } = pick;
@@ -113,9 +172,8 @@ test("a nudge and a reassign from Team are stored", realTags(area.team), async (
 
   const project = await ok<Project>(page, "GET", `/api/projects/${task.project.id}`);
   const members = await ok<Member[]>(page, "GET", "/api/tenant/members");
-  const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
   const load = await ok<{ user_id: string }[]>(page, "GET", "/api/tenant/workload");
-  const onTask = new Set([me, ...task.reviewers.map((item) => item.user_id)]);
+  const onTask = new Set([myId, ...task.reviewers.map((item) => item.user_id)]);
   const target = project.members.find(
     (member) =>
       (member.role === "owner" || member.role === "reviewer") &&

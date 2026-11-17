@@ -42,7 +42,7 @@ for (const layout of ["Left rail", "Bottom dock"] as const) {
   test(`Review lays the tools out as ${layout}`, async ({ page }) => {
     await chooseTools(page, layout);
     const path = await hrefOf(page, "Full viewer · Objects tab");
-    await page.goto(`${path}?task=${reviewTask}`);
+    await page.goto(`${path}?task=${reviewTask}&scene=objects`);
     await expect(page.getByTestId("full-viewer")).toBeVisible({ timeout: 45_000 });
     const viewer = page.getByTestId("full-viewer");
     await expect(viewer).toHaveAttribute("data-tools", layout === "Left rail" ? "rail" : "dock");
@@ -63,7 +63,7 @@ for (const layout of ["Left rail", "Bottom dock"] as const) {
   test(`Annotate lays the tools out as ${layout}`, async ({ page }) => {
     await chooseTools(page, layout);
     const path = await hrefOf(page, "Annotate workspace · Auto region");
-    await page.goto(path);
+    await page.goto(`${path}?scene=auto`);
     await expect(page.getByTestId("full-viewer")).toBeVisible({ timeout: 45_000 });
     const rail = await boxOf(page, '[data-slot="tool-rail"]');
     const context = await boxOf(page, '[data-slot="context-bar"]');

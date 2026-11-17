@@ -2,6 +2,463 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.6 (2026-11-17)
+
+### Performance
+
+- OPS-030: Batch the home reads and carry the workspace status in the session check
+
+### Other
+
+- OPS-030: Drop the GCP cloud pin Modal refuses
+
+## v0.17.5 (2026-11-17)
+
+### Performance
+
+- OPS-030: Pin the web function to GCP in eu-west
+
+### Docs
+
+- OPS-030: Record that Modal cannot pin Azure and the per-cloud eu-west numbers
+- OPS-030: Log the eu-west numbers per cloud
+
+## v0.17.4 (2026-11-17)
+
+### Performance
+
+- OPS-030: Pin the web function to narrow Modal region eu-west beside Frankfurt
+
+### Docs
+
+- TEST-037: Tick after the deployed seeded-formats smoke passes
+- OPS-030: Log the slow container region
+
+## v0.17.3 (2026-11-17)
+
+### Fixes
+
+- TEST-037: Answer a missing tissue mask with 200 and a null mask
+
+### Docs
+
+- VIEW-074: Log guard and golden passes and the deployed checklist for VIEW-074 and VIEW-076
+- SEC-042: Tick after the deployed check shows the API origin refuses the Worker bypass
+
+### Other
+
+- SEC-042: Merge main
+
+## v0.17.2 (2026-11-17)
+
+### Fixes
+
+- TILES-012: Read each NDPI directory exactly so its guess never reaches the macro bytes
+
+### Docs
+
+- TILES-012: Log the v0.17.1 checks
+- OPS-017: Tick after the deployed walk shows no unfinished areas
+
+### Tests
+
+- OPS-017: Run annotate and sign-off specs on the real stack with their own tasks and tiles
+
+### Other
+
+- OPS-017: Merge main
+
+## v0.17.1 (2026-11-17)
+
+### Fixes
+
+- TASK-007: Refuse deleting the owner's local Zitadel volume in the destructive guard
+- TILES-012: Read around the token's label and macro ranges so the edge refuses nothing
+
+### Performance
+
+- OPS-030: Read projects in batches and neighbours as ids only, list slow routes
+
+### Docs
+
+- TASK-007: Log the local Zitadel volume loss and the new guard
+- OPS-030: Log the warm medians from the browser
+
+### Tests
+
+- TASK-007: Run the nudge and reassign specs on the real stack and tick the task
+- OPS-017: Add @real specs for five more areas and skip the passkey prompt
+
+### Other
+
+- TASK-007: Merge main
+
+## v0.17.0 (2026-11-17)
+
+### Features
+
+- IAM-034: Open the app's reset screen from the reset email link
+
+### Fixes
+
+- IAM-034: Accept the letters in Zitadel codes and log the live proof
+- INGEST-032: Cut Ventana BIF thumbnails from a coarse level and report backfill counts
+- INGEST-032: Seed every case slide from a real shared fixture
+- SHELL-020: Stop the viewer saving a hint on exit, make the first-week sample checklist true
+- OPS-028: Let the startup timing fields through the log scrubber and record after numbers
+- TILES-012: Keep slide reads out of the label and macro bytes the edge refuses
+- OPS-028: Allow the startup timing fields in web telemetry too
+
+### Tests
+
+- VIEW-078: Type the crop job's store factory as an object store class
+- VIEW-078: Open a fresh task's cells grid with every tile answered by the crop route
+
+## v0.16.0 (2026-11-17)
+
+### Features
+
+- VIEW-078: Queue a crop job when a review order is written
+
+### Performance
+
+- OPS-028: Snapshot the database driver and HTTP stack and log web startup phases
+
+### Docs
+
+- VIEW-078: Add the review claim file
+
+### Build and CI
+
+- TEST-020: Run the seeded formats smoke spec in the deploy browser smoke
+
+## v0.15.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Cut cell crops in the parse sandbox and serve them per slide
+- VIEW-075: Show stored cell crops in a cells grid on the engine stage
+
+### Docs
+
+- OPS-033: Add deployed v0.13.5 numbers and close the task
+- OPS-033: Release the claim file
+- TILES-012: Tick after the deployed waterfall shows two rounds
+- IAM-033: Prove reset email delivery on the deployed app, tick IAM-032 and IAM-033
+- TEST-019: Triage the review queue, tick 15 tasks and note what the rest still needs
+- VIEW-075: Log real cell crops, add VIEW-078 and move to review
+
+## v0.14.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Draw each compare pane on the engine stage with the real slide
+
+### Docs
+
+- VIEW-075: Log compare on the engine stage and move to review
+- TILES-012: Log the backfill run after the fix
+
+### Tests
+
+- VIEW-075: Check the compare canvas fills its turned host, keep the task in progress
+
+## v0.13.6 (2026-11-17)
+
+### Fixes
+
+- TILES-012: Locate a slide's levels from its original when the tile index is missing
+
+### Docs
+
+- OPS-034: Log the deployed query counts
+
+## v0.13.5 (2026-11-17)
+
+### Performance
+
+- OPS-034: Load review states for the my slides page in batches
+
+### Docs
+
+- TILES-012: Log the deployed slide open numbers
+
+### Other
+
+- OPS-034: Merge origin/main
+
+## v0.13.4 (2026-11-17)
+
+### Performance
+
+- TILES-012: Read a located slide's directories and tile tables in one round
+
+### Refactoring
+
+- TEST-049: Move the demo result sets and decisions out of the showcase seed
+
+### Tests
+
+- TILES-012: Pin the parallel reads and the primed source's network fallbacks
+
+### Other
+
+- TILES-012: Merge main
+
+## v0.13.3 (2026-11-17)
+
+### Fixes
+
+- TEST-050: Repair three web tests left failing after the engine viewer move
+- VIEW-077: Focus mode opens with no error responses from the fake API
+
+### Docs
+
+- TEST-049: Tick after the deployed smoke passes
+
+## v0.13.2 (2026-11-17)
+
+### Fixes
+
+- TEST-049: Smoke watcher skips requests a navigation aborts
+
+## v0.13.1 (2026-11-17)
+
+### Fixes
+
+- TEST-049: Smoke walk opens a project slide instead of a case
+
+### Docs
+
+- TEST-049: Number the ADR from the merge
+- TEST-049: Log the smoke walk fix and the TILES-011 numbers
+
+## v0.13.0 (2026-11-17)
+
+### Features
+
+- TEST-049: Seed a viewer seat for the browser smoke account
+
+### Performance
+
+- TILES-011: Ask for tile access and the session at route start and fill the set buttons
+
+### Docs
+
+- TILES-010: Log the deployed slide open numbers
+
+## v0.12.2 (2026-11-17)
+
+### Performance
+
+- TILES-010: Record every directory offset in levels.json and read them at once
+- TILES-010: Ask for tile access before the viewer code loads
+- TILES-010: Cut tile-access to seven queries and read storage beside the checks
+
+### Docs
+
+- TILES-010: Record the slide open numbers with directory offsets
+
+### Tests
+
+- TILES-010: Pin parallel directory reads and split the tile-access time
+
+## v0.12.1 (2026-11-17)
+
+### Docs
+
+- OPS-032: Log the switch to the eu bucket and move it to review
+- OPS-032: Tick after the deployed check
+- OPS-031: Ask the owner to delete the old US Neon project
+
+## v0.12.0 (2026-11-17)
+
+### Features
+
+- OPS-031: Pin the ingest and events functions to the eu region
+- OPS-032: Add the parfocal-dev-eu bucket in the R2 eu jurisdiction
+- OPS-032: Point production storage at the eu bucket with its own app key
+- VIEW-076: Serve cell chunks and regions and draw whole result sets on the stage
+- IAM-033: Reset a forgotten password and remove a passkey from the app
+- VIEW-076: Colour result set classes from the project list with a stable fallback and legend
+- VIEW-076: Show save notices in focus mode, open notes with Shift+N and bind the focus key
+- VIEW-076: Page a result set's regions by the viewport and keep them by number
+
+### Fixes
+
+- OPS-033: Allow the cloud and container fields in web telemetry too
+
+### Refactoring
+
+- VIEW-075: Show real slide thumbnails in review tops and keep the paged probe fake-only
+- VIEW-075: Move the prototype annotate task scenes under fake-api
+- VIEW-075: Draw the slide's own thumbnail in prototype viewers and delete thumbnails.ts
+
+### Docs
+
+- OPS-032: Log the eu copy and the locked t/ objects, add the bucket to platform
+- OPS-033: Log the v0.11.0 numbers
+
+### Tests
+
+- VIEW-076: List use-paged-review on STILL_TO_REPLACE and log the step
+- VIEW-075: Check the cell view still without a prototype picture and log the cleanup
+
+## v0.11.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Run focus mode on the engine stage
+- VIEW-075: Show the guided coach marks on the engine stage
+- VIEW-075: Write decision notes with reasons on the engine stage
+
+### Fixes
+
+- VIEW-075: Keep a note's reasons when it is edited on the stage
+
+### Performance
+
+- OPS-033: Read the two factor setting in the session statement and count in batches
+
+### Docs
+
+- OPS-033: Log the deployed numbers
+- VIEW-075: Log focus, coach marks and notes on the engine
+- OPS-033: Tighten the cold container and slide walk readings and note the migration order
+
+## v0.10.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Fall back to the slide's smallest level for the minimap
+
+### Fixes
+
+- TEST-048: Publish fixture folders before a reset and refuse the fixtures fallback when deployed
+
+### Performance
+
+- OPS-033: Batch home and my-work reads and ping only idle pool connections
+
+### Docs
+
+- VIEW-075: Log the minimap fallback and the next steps
+- IAM-032: List the passkey cookie and storage keys in the storage policy
+- OPS-033: Record query counts and the slow container reading
+
+## v0.9.0 (2026-11-17)
+
+### Features
+
+- SHELL-024: Let a member set their status to Busy
+- PROTO-027: Keep prototype scenes out of the deployed build
+- VIEW-075: Draw review cells and the cell type bar on the engine stage
+- VIEW-075: Draw AI region outlines and every result set cell on the engine stage
+
+### Fixes
+
+- SHELL-025: Fix six faults found in the walk after the EU move
+
+### Docs
+
+- OPS-031: Log the EU cutover
+- INGEST-032: Log the thumbnail backfill after the reseed
+- SHELL-025: Log the budget change
+
+### Tests
+
+- IAM-032: Expect the passkeys row in the Privacy section
+
+### Other
+
+- SHELL-025: Raise the first page budget to 372 KB after the passkey, hint and skeleton work
+
+## v0.8.0 (2026-11-17)
+
+### Features
+
+- VIEW-074: Show seen tool hints in tooltips and the shortcuts sheet, arm a routed tool
+
+### Fixes
+
+- VIEW-074: Remember the resume point on the stage and keep prototype tool specs in their scene
+- VIEW-074: Keep prototype viewer steps, compare exits and the study cell link in their scene
+
+### Docs
+
+- VIEW-074: Log the tool hints, scene pins and the specs that fail on main too
+- VIEW-074: Move to review after merge and tick SHELL-023
+
+## v0.7.0 (2026-11-17)
+
+### Features
+
+- SHELL-023: Keep one-time hints in one store and reset them from the palette
+- OPS-031: Pin the web function to the EU with a Dublin entry and record the move
+- IAM-032: Save passkeys and sign in with them on the app's own origin
+
+### Fixes
+
+- PROJ-013: Open New project over the current page and delete a result set
+
+### Docs
+
+- OPS-031: Keep the Frankfurt URL in Modal and list the owner's three questions
+
+## v0.6.0 (2026-11-17)
+
+### Features
+
+- VIEW-074: Draw the full viewer and guided review on the one engine stage
+- VIEW-074: Put annotate routes on the engine stage and pin prototype specs to their scene
+- VIEW-074: Ask for the first read before the engine viewer shows the AI
+- VIEW-074: Show decision notes and object threads on the engine stage
+- TEST-047: Seed real InstanSeg cells and tumour map regions on three fixture slides
+- SET-015: Show layout previews in Settings and each row's scope as an icon
+- SET-015: Show each setting's explanation once, then behind its label
+
+### Fixes
+
+- VIEW-074: Keep prototype links inside their scenes and point continue specs at the stage
+- VIEW-074: Add the stage minimap, arm the comment tool from New comment, hide the whole panel
+- OPS-030: Allow the Server-Timing fields in web telemetry too
+- SHELL-022: Draw the gear as a toothed cog so settings entries no longer look like a sun
+- SHELL-022: Keep the slide row's file and open buttons in one row
+- SHELL-022: Make availability a dropdown that lists each status with its meaning
+- SHELL-022: Show the reticle loader full screen and skeletons shaped like each page
+- INGEST-032: Find thumbnails beside the original and backfill missing ones
+
+### Docs
+
+- VIEW-074: Log the engine stage move and what is left
+- OPS-030: Compare server region options with prices
+- SHELL-022: Log the shell fixes and add SHELL-024 for the Busy status
+- SHELL-022: Tick after merge
+- TEST-047: Log the merge
+- SET-015: Log and tick after merge
+- OPS-030: Record the owner's choice of the EU move
+- INGEST-032: Log the thumbnail backfill on Modal
+- INGEST-032: Log the merge
+
+## v0.5.1 (2026-11-17)
+
+### Performance
+
+- OPS-030: Add Server-Timing with database time, queries and transactions
+- OPS-030: Check the session in one read and count in the same transaction
+
+### Docs
+
+- SHELL-023: Log Fable's recommendation for one-time notes
+- OPS-030: Count the three round trips of the pool ping
+- OPS-030: Log the merge and local database tests
+
+### Other
+
+- OPS-030: Add and claim OPS-030, warm API calls under 300 ms
+- SHELL-022: Add SHELL-022, SHELL-023, SET-015 and TEST-047 from the owner's review
+- OPS-030: Note the next step on the board
+
 ## v0.5.0 (2026-11-17)
 
 ### Features

@@ -1,0 +1,38 @@
+{
+  "slide": "CMU-1-Small-Region.svs",
+  "dimensions": [
+    2220,
+    2967
+  ],
+  "mpp": 0.499,
+  "machine": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+  "torch": "2.15.0",
+  "cells": {
+    "crop_px": [
+      0,
+      960,
+      2048,
+      2967
+    ],
+    "weights": "instanseg_models_v0.1.1/brightfield_nuclei",
+    "count": 1418,
+    "by_class": {
+      "Immune": 197,
+      "Tumor": 64,
+      "Stroma": 919,
+      "Other": 238
+    },
+    "input_side": [
+      2003,
+      2044
+    ],
+    "segment_s": 63.18551216699416,
+    "rings_s": 4.531921415997203,
+    "typer_windows": 13,
+    "typer_window_px": 513,
+    "typer_s": 88.84586620802293
+  },
+  "bytes": {
+    "cells.geojson": 517758
+  }
+}

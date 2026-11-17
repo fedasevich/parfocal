@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { commentDraftId, keepDraft, readDraft } from "../src/session/kept-drafts.ts";
-import { nextAvailability, presenceOf, shownPerson } from "../src/shell/account-presence.ts";
+import {
+  availabilityChange,
+  presenceChoices,
+  presenceOf,
+  shownPerson,
+} from "../src/shell/account-presence.ts";
 import { shellStore } from "../src/shell/shell-store.ts";
 
 const at = new Date("2026-11-03T10:00:00+01:00");
@@ -14,14 +19,30 @@ test("availability reads as available, away, or available again once the end has
   assert.deepEqual([away.key, away.label, away.hint], ["away", "Away", "Teaching"]);
   const until = presenceOf({ ...mine, status: "away", until: "2026-11-04T15:00:00+01:00" }, at);
   assert.match(until.label, /^Away until 4 Nov/);
+  const busy = presenceOf({ ...mine, status: "busy" }, at);
+  assert.deepEqual([busy.key, busy.label, busy.tone], ["busy", "Busy", "bg-warn"]);
   const passed = presenceOf({ ...mine, status: "away", until: "2026-11-02T15:00:00+01:00" }, at);
   assert.equal(passed.key, "available");
 });
 
-test("the status row switches between available and away", () => {
-  assert.deepEqual(nextAvailability({ ...mine, status: "available" }, at), { status: "away" });
-  assert.deepEqual(nextAvailability({ ...mine, status: "away" }, at), { status: "available" });
-  assert.deepEqual(nextAvailability(undefined, at), { status: "away" });
+test("the status dropdown lists every status and changes only to a different one", () => {
+  assert.deepEqual(
+    presenceChoices.map((choice) => choice.key),
+    ["available", "busy", "away"],
+  );
+  assert.ok(presenceChoices.every((choice) => choice.hint.length > 0));
+  assert.deepEqual(availabilityChange("away", { ...mine, status: "available" }, at), {
+    status: "away",
+  });
+  assert.deepEqual(availabilityChange("available", { ...mine, status: "away" }, at), {
+    status: "available",
+  });
+  assert.deepEqual(availabilityChange("busy", { ...mine, status: "available" }, at), {
+    status: "busy",
+  });
+  assert.equal(availabilityChange("busy", { ...mine, status: "busy" }, at), null);
+  assert.equal(availabilityChange("available", undefined, at), null);
+  assert.equal(availabilityChange("away", { ...mine, status: "away" }, at), null);
 });
 
 test("initials only swaps the name for the initials and keeps the rest", () => {

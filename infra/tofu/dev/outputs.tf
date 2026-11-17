@@ -6,6 +6,10 @@ output "slide_bucket" {
   value = module.environment.slide_bucket
 }
 
+output "slide_bucket_eu" {
+  value = module.environment.slide_bucket_eu
+}
+
 output "fixtures_access_key_id" {
   value     = cloudflare_account_token.fixtures_reader.id
   sensitive = true

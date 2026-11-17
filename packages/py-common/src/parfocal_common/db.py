@@ -1,8 +1,10 @@
+import time
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     DateTime,
@@ -10,13 +12,16 @@ from sqlalchemy import (
     MetaData,
     UniqueConstraint,
     Uuid,
+    event,
     func,
     text,
 )
+from sqlalchemy.exc import DisconnectionError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from parfocal_common.data_classes import OPERATIONAL
+from parfocal_common.db_timing import time_queries, timed_transaction
 
 TENANT_SETTING = "app.tenant_id"
 PLATFORM_SETTING = "app.platform"
@@ -120,16 +125,41 @@ def async_database_url(url: str) -> str:
 
 
 POOL_SIZE = 10
-POOL_OVERFLOW = 10
+POOL_OVERFLOW = 30
+PING_AFTER_IDLE_SECONDS = 30.0
+LAST_USED = "parfocal_last_used"
+
+
+def mark_used(_: Any, record: Any, *__: Any) -> None:
+    record.info[LAST_USED] = time.monotonic()
+
+
+def ping_when_idle(engine: AsyncEngine) -> Callable[..., None]:
+    def ping(dbapi_connection: Any, record: Any, _: Any) -> None:
+        last_used = record.info.get(LAST_USED)
+        if last_used is not None and time.monotonic() - last_used < PING_AFTER_IDLE_SECONDS:
+            return
+        try:
+            engine.dialect.do_ping(dbapi_connection)
+        except Exception as error:
+            raise DisconnectionError from error
+        record.info[LAST_USED] = time.monotonic()
+
+    return ping
 
 
 def create_engine(url: str) -> AsyncEngine:
-    return create_async_engine(
+    engine = create_async_engine(
         async_database_url(url),
-        pool_pre_ping=True,
         pool_size=POOL_SIZE,
         max_overflow=POOL_OVERFLOW,
     )
+    pool = engine.sync_engine.pool
+    event.listen(pool, "connect", mark_used)
+    event.listen(pool, "checkin", mark_used)
+    event.listen(pool, "checkout", ping_when_idle(engine))
+    time_queries(engine.sync_engine)
+    return engine
 
 
 async def require_row_security(engine: AsyncEngine) -> None:
@@ -143,9 +173,10 @@ async def require_row_security(engine: AsyncEngine) -> None:
 async def scoped_transaction(
     engine: AsyncEngine, scope: DatabaseScope
 ) -> AsyncGenerator[AsyncConnection]:
-    async with engine.begin() as connection:
-        await connection.execute(SET_SCOPE, scope.parameters())
-        yield connection
+    with timed_transaction():
+        async with engine.begin() as connection:
+            await connection.execute(SET_SCOPE, scope.parameters())
+            yield connection
 
 
 def tenant_transaction(

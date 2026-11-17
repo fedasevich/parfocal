@@ -19,7 +19,7 @@ const lead = (page: Page) => page.locator("[data-slot=lead-area]");
 test("a sentinel task takes all three area calls, hands the category over and lists unsure areas before submit", async ({
   page,
 }) => {
-  await page.goto(`/tasks/${rt16}/guided?slide=${a1}`);
+  await page.goto(`/tasks/${rt16}/guided?slide=${a1}&scene=region`);
   await expect(lead(page)).toHaveText("T1 sets the category");
   await expect(page.getByText("Can't change the category", { exact: true })).toBeVisible();
 
@@ -50,7 +50,7 @@ test("a sentinel task takes all three area calls, hands the category over and li
 });
 
 test("a task without the sentinel template keeps the generic decisions", async ({ page }) => {
-  await page.goto(`/tasks/00000000-0000-4000-8007-000000000014/guided?slide=${a1}`);
+  await page.goto(`/tasks/00000000-0000-4000-8007-000000000014/guided?slide=${a1}&scene=region`);
   await expect(page.getByRole("group", { name: "Your answer on T5" })).toBeVisible();
   await expect(lead(page)).toHaveCount(0);
 });

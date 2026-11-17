@@ -182,7 +182,7 @@ function CellsBody({
                 counts={counts}
                 added={session.added.map((item) => item.object)}
               />
-              <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
+              <AiSays setName={setName} objects={objects} />
               <ObjectList
                 objects={objects}
                 counts={counts}
@@ -259,6 +259,7 @@ function CellsBody({
           <>
             {shut ? null : (
               <CellsGrid
+                slideId={session.slideId}
                 className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
                 cells={cells}
                 current={current}

@@ -9,7 +9,7 @@ import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useState } from "react";
 import { usePeople } from "../people.ts";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { countWord } from "./decision-style.ts";
 import { DisplayTab } from "./display-tab.tsx";
 import { ObjectThread } from "./object-comments.tsx";
@@ -86,7 +86,7 @@ function CommentsBody({
                 counts={counts}
                 added={session.added.map((item) => item.object)}
               />
-              <AiSays setName="CAMELYON v1.0, imported 12 Oct" objects={session.objects} />
+              <AiSays setName="CAMELYON v1.0" objects={session.objects} />
             </>
           ),
         },
@@ -155,7 +155,7 @@ function CommentsBody({
     >
       <div
         className="relative min-w-0 flex-1 overflow-hidden bg-cover bg-center"
-        style={{ backgroundImage: `url(${lookUrl("mid")})` }}
+        style={{ backgroundImage: `url(${slideThumbUrl(session.slideId)})` }}
       >
         <span className="absolute top-[38%] left-[42%] inline-flex items-center">
           {me ? (
@@ -208,7 +208,7 @@ function CommentsBody({
           <div
             aria-hidden="true"
             className="h-60 rounded-md bg-white bg-cover bg-center"
-            style={{ backgroundImage: `url(${lookUrl("overview")})` }}
+            style={{ backgroundImage: `url(${slideThumbUrl(session.slideId)})` }}
           />
           <span className="flex justify-between text-caption text-fg-dim">
             <span>{anchor}</span>

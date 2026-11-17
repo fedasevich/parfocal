@@ -42,14 +42,14 @@ test("the shared cursor sits on the same point of both panes, follows rotation a
       y: Math.round(left.height * 0.6),
     });
   const there = await crosshairIn(page, "right");
-  expect(Math.abs(there.x - Math.round(left.width * 0.7))).toBeLessThanOrEqual(1);
+  expect(Math.abs(there.x - Math.round(left.width * 0.3))).toBeLessThanOrEqual(1);
   expect(Math.abs(there.y - Math.round(left.height * 0.6))).toBeLessThanOrEqual(1);
 
   await page.getByRole("button", { name: "Rotate left pane right" }).click();
   await expect(page.getByTestId("rotation-right")).toHaveText("15°");
   const turnedLeft = await crosshairIn(page, "left");
   const turnedRight = await crosshairIn(page, "right");
-  expect(Math.abs(turnedLeft.x + turnedRight.x - Math.round(left.width))).toBeLessThanOrEqual(1);
+  expect(Math.abs(turnedLeft.x - turnedRight.x)).toBeLessThanOrEqual(1);
   expect(Math.abs(turnedLeft.y - turnedRight.y)).toBeLessThanOrEqual(1);
 
   await page.getByRole("switch", { name: "Linked" }).click();
@@ -58,8 +58,7 @@ test("the shared cursor sits on the same point of both panes, follows rotation a
   const apartRight = await crosshairIn(page, "right");
   const apartLeft = await crosshairIn(page, "left");
   expect(
-    Math.abs(apartRight.x + apartLeft.x - Math.round(left.width)) +
-      Math.abs(apartRight.y - apartLeft.y),
+    Math.abs(apartRight.x - apartLeft.x) + Math.abs(apartRight.y - apartLeft.y),
   ).toBeGreaterThan(2);
 
   await page.getByRole("switch", { name: "Shared cursor" }).click();

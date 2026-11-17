@@ -49,7 +49,7 @@ export function toolPrototypeLinks(projectId: string, taskId: string, slideId: s
       link: linkOptions({
         to: "/projects/$projectId/slides/$slideId",
         params,
-        search: { task: taskId, tool: "ruler" },
+        search: { task: taskId, tool: "ruler", scene: "objects" },
       }),
     },
     ...annotateScenes.map(({ scene, label, note }) => ({
@@ -89,7 +89,7 @@ export function toolPrototypeLinks(projectId: string, taskId: string, slideId: s
       link: linkOptions({
         to: "/projects/$projectId/slides/$slideId",
         params,
-        search: { task: taskId, object: "T5", peek: true },
+        search: { task: taskId, object: "T5", peek: true, scene: "objects" },
       }),
     },
   ];

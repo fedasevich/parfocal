@@ -1,5 +1,12 @@
 import type { Checklist } from "@parfocal/api-client";
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
+import {
+  checklistHintId,
+  checklistHintPrefix,
+  noteHintsSeen,
+  readGuestHints,
+  useHintsSeen,
+} from "../../hints/hints-seen.ts";
 import { destinations } from "../../shell/destinations.ts";
 
 export type Step = Checklist["steps"][number];
@@ -11,26 +18,17 @@ export type TriedStore = {
   subscribe: (listener: () => void) => () => void;
 };
 
-const triedStorageKey = "parfocal.checklist-tried";
+const stepKeyOf = (id: string): StepKey | undefined =>
+  id.startsWith(checklistHintPrefix)
+    ? (id.slice(checklistHintPrefix.length) as StepKey)
+    : undefined;
 
-function savedTried(): StepKey[] {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(triedStorageKey) ?? "[]");
-    return Array.isArray(parsed)
-      ? parsed.filter((key): key is StepKey => typeof key === "string")
-      : [];
-  } catch {
-    return [];
-  }
-}
+const triedFrom = (ids: Iterable<string>): StepKey[] =>
+  [...ids].flatMap((id) => stepKeyOf(id) ?? []);
 
-function saveTried(tried: ReadonlySet<StepKey>) {
-  try {
-    localStorage.setItem(triedStorageKey, JSON.stringify([...tried]));
-  } catch {
-    return;
-  }
-}
+const savedTried = (): StepKey[] => triedFrom(readGuestHints());
+
+const saveTried = (tried: ReadonlySet<StepKey>) => noteHintsSeen([...tried].map(checklistHintId));
 
 export function createTriedStore(
   initial: readonly StepKey[] = [],
@@ -57,8 +55,11 @@ export const triedStore = createTriedStore(savedTried(), saveTried);
 
 export const markTried = (key: StepKey) => triedStore.mark(key);
 
-export const useTried = (store: TriedStore = triedStore) =>
-  useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
+export function useTried(store: TriedStore = triedStore): ReadonlySet<StepKey> {
+  const local = useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
+  const { seen } = useHintsSeen();
+  return useMemo(() => new Set([...local, ...triedFrom(seen)]), [local, seen]);
+}
 
 export const stepsWithTried = (steps: Step[], tried: ReadonlySet<StepKey>): Step[] =>
   steps.map((step) => (step.done || !tried.has(step.key) ? step : { ...step, done: true }));

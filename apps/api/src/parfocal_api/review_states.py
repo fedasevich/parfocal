@@ -15,7 +15,13 @@ from parfocal_api.blinding import first_read_open
 from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_notes import tell_mentioned_on_slide
-from parfocal_api.disagreements import left_open_count, open_by_slide, open_count, queue_of
+from parfocal_api.disagreements import (
+    left_open_count,
+    open_by_slide,
+    open_count,
+    queue_of,
+    queues_of,
+)
 from parfocal_api.evaluation_versions import (
     SignOffConfirmation,
     VersionDraft,
@@ -273,65 +279,114 @@ async def task_of(connection: AsyncConnection, task_id: uuid.UUID) -> Any:
 
 
 async def assignment_rows(connection: AsyncConnection, task_id: uuid.UUID) -> list[Any]:
+    return (await assignment_rows_of(connection, [task_id])).get(task_id, [])
+
+
+async def assignment_rows_of(
+    connection: AsyncConnection, task_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[Any]]:
     worked = (
-        select(review_edits.c.slide_id, review_edits.c.user_id)
-        .where(review_edits.c.task_id == task_id)
+        select(review_edits.c.task_id, review_edits.c.slide_id, review_edits.c.user_id)
+        .where(review_edits.c.task_id.in_(task_ids))
         .union(
-            select(annotations.c.slide_id, annotations.c.created_by_user_id).where(
-                annotations.c.task_id == task_id
+            select(
+                annotations.c.task_id, annotations.c.slide_id, annotations.c.created_by_user_id
+            ).where(annotations.c.task_id.in_(task_ids)),
+            select(
+                review_decisions.c.task_id, review_decisions.c.slide_id, review_decisions.c.user_id
+            ).where(review_decisions.c.task_id.in_(task_ids)),
+            select(review_skips.c.task_id, review_skips.c.slide_id, review_skips.c.user_id).where(
+                review_skips.c.task_id.in_(task_ids)
             ),
-            select(review_decisions.c.slide_id, review_decisions.c.user_id).where(
-                review_decisions.c.task_id == task_id
+            select(opinions.c.task_id, opinions.c.slide_id, opinions.c.user_id).where(
+                opinions.c.task_id.in_(task_ids)
             ),
-            select(review_skips.c.slide_id, review_skips.c.user_id).where(
-                review_skips.c.task_id == task_id
-            ),
-            select(opinions.c.slide_id, opinions.c.user_id).where(opinions.c.task_id == task_id),
         )
         .subquery()
     )
     has_work = (
         select(worked.c.slide_id)
         .where(
+            worked.c.task_id == review_assignments.c.task_id,
             worked.c.slide_id == review_assignments.c.slide_id,
             worked.c.user_id == review_assignments.c.user_id,
         )
         .exists()
     )
-    rows = await connection.execute(
+    found: dict[uuid.UUID, list[Any]] = {}
+    for row in await connection.execute(
         select(
+            review_assignments.c.task_id,
             review_assignments.c.slide_id,
             review_assignments.c.user_id,
             review_assignments.c.submitted_at,
             has_work.label("has_work"),
         )
-        .where(review_assignments.c.task_id == task_id, review_assignments.c.released_at.is_(None))
+        .where(
+            review_assignments.c.task_id.in_(task_ids), review_assignments.c.released_at.is_(None)
+        )
         .order_by(review_assignments.c.assigned_at, review_assignments.c.user_id)
+    ):
+        found.setdefault(row.task_id, []).append(row)
+    return found
+
+
+async def tasks_of(connection: AsyncConnection, task_ids: list[uuid.UUID]) -> list[Any]:
+    rows = await connection.execute(
+        select(review_tasks, projects.c.archived_at.label("project_archived_at"))
+        .join(projects, projects.c.id == review_tasks.c.project_id)
+        .where(review_tasks.c.id.in_(task_ids), review_tasks.c.archived_at.is_(None))
     )
     return list(rows.all())
 
 
 async def states_of(connection: AsyncConnection, task: Any) -> TaskStates:
-    annotating = task.kind == TaskKind.ANNOTATE
-    slide_rows = (
-        await connection.execute(
-            select(
-                review_task_slides.c.slide_id,
-                review_task_slides.c.signed_off_at,
-                result_sets.c.status,
-                result_sets.c.source,
-                ingested(),
-            )
-            .join(slides, slides.c.id == review_task_slides.c.slide_id)
-            .outerjoin(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
-            .where(review_task_slides.c.task_id == task.id)
-            .order_by(review_task_slides.c.position)
+    return (await states_of_many(connection, [task]))[task.id]
+
+
+async def states_of_many(
+    connection: AsyncConnection, tasks: list[Any]
+) -> dict[uuid.UUID, TaskStates]:
+    if not tasks:
+        return {}
+    task_ids = [task.id for task in tasks]
+    slide_rows: dict[uuid.UUID, list[Any]] = {}
+    for row in await connection.execute(
+        select(
+            review_task_slides.c.task_id,
+            review_task_slides.c.slide_id,
+            review_task_slides.c.signed_off_at,
+            result_sets.c.status,
+            result_sets.c.source,
+            ingested(),
         )
-    ).all()
-    queue = [] if annotating else await queue_of(connection, task.id)
+        .join(slides, slides.c.id == review_task_slides.c.slide_id)
+        .outerjoin(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
+        .where(review_task_slides.c.task_id.in_(task_ids))
+        .order_by(review_task_slides.c.task_id, review_task_slides.c.position)
+    ):
+        slide_rows.setdefault(row.task_id, []).append(row)
+    reviewing = [task.id for task in tasks if task.kind != TaskKind.ANNOTATE]
+    queues = await queues_of(connection, reviewing) if reviewing else {}
+    assignments = await assignment_rows_of(connection, task_ids)
+    return {
+        task.id: task_states(
+            task,
+            slide_rows.get(task.id, []),
+            queues.get(task.id, []),
+            assignments.get(task.id, []),
+        )
+        for task in tasks
+    }
+
+
+def task_states(
+    task: Any, slide_rows: list[Any], queue: list[Any], assignment_list: list[Any]
+) -> TaskStates:
+    annotating = task.kind == TaskKind.ANNOTATE
     open_disagreements = open_by_slide(queue)
     by_slide: dict[uuid.UUID, list[Any]] = {}
-    for row in await assignment_rows(connection, task.id):
+    for row in assignment_list:
         by_slide.setdefault(row.slide_id, []).append(row)
     states: list[SlideState] = []
     for slide in slide_rows:

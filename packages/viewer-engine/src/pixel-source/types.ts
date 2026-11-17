@@ -137,11 +137,15 @@ export interface SlideIndexPage {
   readonly page: number;
   readonly subIfd?: number | null;
   readonly ifdOffset?: number;
+  readonly ifdBytes?: number;
+  readonly valueRanges?: readonly TagValueRange[];
   readonly tileOffsetGaps?: readonly number[];
   readonly tileByteCounts?: readonly number[];
 }
 
 export type TileRun = readonly [start: number, length: number];
+
+export type TagValueRange = readonly [tag: number, offset: number, length: number];
 
 export interface SlideIndexLevel extends Omit<SlideIndexPage, "page"> {
   readonly page?: number;
@@ -190,12 +194,15 @@ export interface SlideIndex {
   readonly overviewLevels?: OverviewLevelsRef;
 }
 
+export type RestrictedRange = readonly [start: number, end: number];
+
 export interface OpenRequest {
   readonly formatId: SlideFormatId;
   readonly url: string | URL;
   readonly baseUrl?: string | URL;
   readonly index?: SlideIndex;
   readonly fetch?: typeof globalThis.fetch;
+  readonly restricted?: readonly RestrictedRange[];
   readonly signal?: AbortSignal;
   readonly nativeJpeg?: "off" | "unvalidated" | NativeTileDecoder;
 }

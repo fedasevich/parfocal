@@ -60,6 +60,11 @@ ALLOWED_TOOLS = (
 )
 
 REFUSED_COMMANDS = (
+    "docker compose -p parfocal-zitadel -f infra/local/zitadel.compose.yaml down -v",
+    "docker compose --project-name=parfocal-zitadel down --volumes",
+    "docker volume rm parfocal-zitadel_zitadel-db",
+    "docker volume prune -f",
+    "docker system prune -a --volumes",
     "tofu destroy",
     "tofu -chdir=infra/tofu/prod destroy -auto-approve",
     "tofu apply -destroy",
@@ -103,6 +108,10 @@ REFUSED_COMMANDS = (
 )
 
 ALLOWED_COMMANDS = (
+    "docker compose -p af72 -f compose.yaml down -v",
+    "docker compose -p parfocal-zitadel -f infra/local/zitadel.compose.yaml down",
+    "docker volume rm af72_postgres18-data",
+    "docker ps -a",
     "git merge --no-ff worktree-agent-a",
     "git push origin main",
     "git branch -D worktree-agent-a",

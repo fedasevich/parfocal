@@ -1,11 +1,18 @@
 import type { AvailabilityChange, MemberAvailability } from "@parfocal/api-client";
-import type { PersonInfo } from "@parfocal/ui/components/person";
+import type { PersonInfo, Presence } from "@parfocal/ui/components/person";
 
 export type AccountPresenceView = {
-  key: "available" | "away";
+  key: "available" | "busy" | "away";
   label: string;
   hint: string;
   tone: string;
+};
+
+const busyView: AccountPresenceView = {
+  key: "busy",
+  label: "Busy",
+  hint: "Reachable, but not taking new review tasks right now",
+  tone: "bg-warn",
 };
 
 const dayAndTime = new Intl.DateTimeFormat("en-GB", {
@@ -23,6 +30,7 @@ export function presenceOf(
   availability: MemberAvailability | undefined,
   now: Date,
 ): AccountPresenceView {
+  if (availability?.status === "busy") return busyView;
   if (!availability || !isAway(availability, now)) {
     return {
       key: "available",
@@ -41,11 +49,29 @@ export function presenceOf(
   };
 }
 
-export function nextAvailability(
+export const presenceChoices: readonly AccountPresenceView[] = [
+  {
+    key: "available",
+    label: "Available",
+    hint: "Researchers can give you review tasks",
+    tone: "bg-ok",
+  },
+  busyView,
+  {
+    key: "away",
+    label: "Away",
+    hint: "Team shows you as away, so tasks can be reassigned",
+    tone: "bg-fg-faint",
+  },
+];
+
+export function availabilityChange(
+  key: Presence,
   availability: MemberAvailability | undefined,
   now: Date,
-): AvailabilityChange {
-  return isAway(availability, now) ? { status: "available" } : { status: "away" };
+): AvailabilityChange | null {
+  if (presenceOf(availability, now).key === key) return null;
+  return { status: key };
 }
 
 export function shownPerson(person: PersonInfo, initialsOnly: boolean): PersonInfo {

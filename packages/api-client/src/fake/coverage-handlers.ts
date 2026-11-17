@@ -1,5 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { CoverageBatch, CoverageGrid, SlideCoverage, SlideTissue } from "../generated/api.ts";
+import { slides } from "./scenario.ts";
 
 const storageKey = "parfocal.fake.coverage";
 
@@ -72,6 +73,16 @@ export function recordFakeCoverage(
   return toSlideCoverage(next);
 }
 
+const unseenGrid: CoverageGrid = { cell: 64, columns: 16, rows: 12 };
+
+const unseenCoverage = (slideId: string): SlideCoverage => ({
+  slide_id: slideId,
+  grid: unseenGrid,
+  seen: base64Of(Array.from({ length: 24 }, () => 0)),
+  seen_cells: 0,
+  updated_at: null,
+});
+
 const notMeasured = () =>
   HttpResponse.json(
     {
@@ -86,7 +97,10 @@ const notMeasured = () =>
 export const coverageHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/coverage", ({ params }) => {
     const stored = readStore()[params.slideId];
-    return stored ? HttpResponse.json(toSlideCoverage(stored)) : notMeasured();
+    if (stored) return HttpResponse.json(toSlideCoverage(stored));
+    return slides.some((slide) => slide.id === params.slideId)
+      ? HttpResponse.json(unseenCoverage(params.slideId))
+      : notMeasured();
   }),
   http.post<{ slideId: string }, CoverageBatch>(
     "*/api/slides/:slideId/coverage",
@@ -137,6 +151,14 @@ function maskless(slideId: string): boolean {
   return (JSON.parse(stored) as string[]).includes(slideId);
 }
 
+export const thumblessSlidesKey = "parfocal.fake.thumbless-slides";
+
+function thumbless(slideId: string): boolean {
+  const stored = session()?.getItem(thumblessSlidesKey);
+  if (stored === null || stored === undefined) return false;
+  return (JSON.parse(stored) as string[]).includes(slideId);
+}
+
 function thumbnailSvg(slideId: string): string {
   const hue = Array.from(slideId.split(""), (char) => char.charCodeAt(0)).reduce(
     (sum, code) => (sum * 31 + code) % 360,
@@ -151,18 +173,42 @@ function thumbnailSvg(slideId: string): string {
   ].join("");
 }
 
+function cellCropSvg(number: number): string {
+  const hue = (number * 47) % 360;
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">',
+    '<rect width="64" height="64" fill="#f3e6ef"/>',
+    `<circle cx="32" cy="32" r="13" fill="hsl(${hue} 40% 42%)"/>`,
+    "</svg>",
+  ].join("");
+}
+
 export const tissueHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/tissue", ({ params }) =>
     maskless(params.slideId)
-      ? HttpResponse.json(
-          { status: 404, code: "tissue-mask-missing", title: "No tissue mask" },
-          { status: 404 },
-        )
+      ? HttpResponse.json({
+          slide_id: params.slideId,
+          grid: fakeTissueGrid,
+          tissue: null,
+          tissue_cells: 0,
+        } satisfies SlideTissue)
       : HttpResponse.json(toSlideTissue(params.slideId)),
   ),
   http.get<{ slideId: string }>("*/api/slides/:slideId/thumbnail", ({ params }) =>
-    HttpResponse.text(thumbnailSvg(params.slideId), {
-      headers: { "Content-Type": "image/svg+xml" },
-    }),
+    thumbless(params.slideId)
+      ? HttpResponse.json(
+          { status: 404, code: "thumbnail-missing", title: "No thumbnail yet" },
+          { status: 404 },
+        )
+      : HttpResponse.text(thumbnailSvg(params.slideId), {
+          headers: { "Content-Type": "image/svg+xml" },
+        }),
+  ),
+  http.get<{ slideId: string; number: string }>(
+    "*/api/slides/:slideId/cell-crops/:number",
+    ({ params }) =>
+      HttpResponse.text(cellCropSvg(Number(params.number)), {
+        headers: { "Content-Type": "image/svg+xml" },
+      }),
   ),
 ];

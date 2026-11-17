@@ -68,6 +68,36 @@ def test_away_until_reads_as_available_after_its_end(api: ApiAs, database: str) 
     assert status_of(api, reviewer) == available(reviewer)
 
 
+def test_busy_with_a_note_reads_back_and_goes_back_to_available(api: ApiAs, database: str) -> None:
+    reviewer = team(database).people["reviewer"]
+    response = set_status(api, reviewer, status="busy", note="Reading slides")
+    assert response.status_code == 200
+    expected = {
+        "user_id": str(reviewer.user_id),
+        "status": "busy",
+        "until": None,
+        "note": "Reading slides",
+    }
+    assert response.json() == expected
+    assert status_of(api, reviewer) == expected
+    assert set_status(api, reviewer, status="available").json() == available(reviewer)
+
+
+def test_the_check_refuses_an_end_on_busy(api: ApiAs, database: str) -> None:
+    reviewer = team(database).people["reviewer"]
+    with pytest.raises(Exception, match="ck_memberships_availability"):
+        owner(
+            database,
+            "UPDATE memberships SET availability = 'busy', "
+            f"available_again_at = now() + interval '1 hour' WHERE user_id = '{reviewer.user_id}'",
+        )
+    owner(
+        database,
+        f"UPDATE memberships SET availability = 'busy' WHERE user_id = '{reviewer.user_id}'",
+    )
+    assert status_of(api, reviewer)["status"] == "busy"
+
+
 def test_back_to_available(api: ApiAs, database: str) -> None:
     reviewer = team(database).people["reviewer"]
     set_status(api, reviewer, status="away", until=later(hours=1))
@@ -80,6 +110,7 @@ def test_back_to_available(api: ApiAs, database: str) -> None:
         {"status": "away", "until": "PAST"},
         {"status": "available", "until": "HOUR"},
         {"status": "available", "note": "Here"},
+        {"status": "busy", "until": "HOUR"},
     ],
 )
 def test_invalid_statuses_are_refused(api: ApiAs, database: str, body: dict[str, str]) -> None:
@@ -92,7 +123,7 @@ def test_invalid_statuses_are_refused(api: ApiAs, database: str, body: dict[str,
     assert status_of(api, reviewer) == available(reviewer)
 
 
-@pytest.mark.parametrize("body", [{"status": "busy"}, {"status": "away", "note": "x" * 201}])
+@pytest.mark.parametrize("body", [{"status": "elsewhere"}, {"status": "away", "note": "x" * 201}])
 def test_unknown_statuses_and_long_notes_are_refused(
     api: ApiAs, database: str, body: dict[str, str]
 ) -> None:

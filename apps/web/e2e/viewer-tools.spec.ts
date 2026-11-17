@@ -28,7 +28,7 @@ const hrefOf = (links: { name: string; href: string }[], name: string) => {
 async function plainViewer(page: Page) {
   const links = await toolLinks(page);
   const plain = new URL(hrefOf(links, "Smart minimap · Reading at 10x"), "http://localhost");
-  plain.searchParams.delete("scene");
+  plain.searchParams.set("scene", "objects");
   await page.goto(`${plain.pathname}${plain.search}`);
   await expect(page.getByTitle("Progress on this slide and in the whole task")).toBeVisible({
     timeout: 20_000,
@@ -50,7 +50,7 @@ const shows: Record<string, string> = {
   "Annotate workspace · Choosing a model": "Model for outlining nuclei",
   "Compare slides · Slides picked": "Slides on screen",
   "Compare slides · Picking the right side": "Show on the right",
-  "Focus mode": "T5 · Tumor region",
+  "Focus mode": "AI score 52%. Still open.",
   "Whole-slide peek": "26% of tissue seen",
 };
 
@@ -70,6 +70,11 @@ for (const part of parts) {
     for (const { name, href } of inPart(links, part)) {
       await page.goto(href);
       await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
+      if (name === "Focus mode") {
+        await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+          timeout: 30_000,
+        });
+      }
       await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
     }
     expect(errors).toEqual([]);
@@ -224,10 +229,41 @@ test("focus mode answers from the keys and the key in the pill brings the interf
   await page.goto(hrefOf(links, "Focus mode"));
   await expect(page.getByTestId("focus-mode")).toBeVisible();
   await expect(page.getByRole("banner")).toHaveCount(0);
-  await page.getByRole("button", { name: /agree/ }).first().click();
-  await expect(page.getByText("Decided. Press a key again to change it.")).toBeVisible();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+  const card = page.locator('[data-slot="focus-card"]');
+  await expect(card).toContainText("T5");
+  const put = page.waitForRequest(
+    (request) => request.method() === "PUT" && request.url().includes("/decisions/T5"),
+  );
+  await card.getByRole("button", { name: /agree/ }).first().click();
+  await put;
+  await expect(card.getByText(/Decided\. Press a key again to change it\./)).toBeVisible();
   await page.getByRole("button", { name: "Show the interface" }).click();
-  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.getByTestId("focus-mode")).toHaveCount(0);
+  await expect(page.getByTestId("stage-review-objects")).toBeVisible();
+  expect(new URL(page.url()).searchParams.get("focus")).toBeNull();
+});
+
+test("in focus mode Shift+N on a decided object opens its note editor with the interface back", async ({
+  page,
+}) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Focus mode"));
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+  await expect(page.getByTestId("focus-notices")).toBeAttached();
+  const card = page.locator('[data-slot="focus-card"]');
+  await expect(card).toContainText("T5");
+  await page.keyboard.press("Shift+N");
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
+  await card.getByRole("button", { name: /agree/ }).first().click();
+  await expect(card.getByText(/Decided\. Press a key again to change it\./)).toBeVisible();
+  await page.keyboard.press("Shift+N");
+  await expect(page.getByTestId("focus-mode")).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Note on your decision for T5" })).toBeFocused();
 });
 
 test("the focus key hides the top bar, rail and inspector and brings them back", async ({
@@ -238,7 +274,9 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   const viewer = new URL(hrefOf(links, "Focus mode"), "http://localhost");
   viewer.searchParams.delete("focus");
   await page.goto(`${viewer.pathname}${viewer.search}`);
-  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
   await expect(page.locator("header")).toBeVisible();
   await expect(page.locator('[data-slot="tool-rail"]')).toBeVisible();
   await expect(page.locator('[data-slot="side-panel"]')).toBeVisible();
@@ -258,7 +296,7 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   expect(await chromeShare(page)).toBe(0);
 
   await page.keyboard.press("Control+Backslash");
-  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  await expect(page.getByTestId("focus-mode")).toHaveCount(0);
   await expect(page.locator("header")).toBeVisible();
   await expect(page.locator('[data-slot="side-panel"]')).toBeVisible();
 });

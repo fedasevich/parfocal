@@ -18,31 +18,29 @@ from parfocal_api.audit import actor_of
 from parfocal_api.auth import SEEDED_OWNER_NAME, SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.decision_styles import DecisionSettings
-from parfocal_api.opinions import OpinionChange, save_opinion
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.projects import ProjectDraft, create_project
 from parfocal_api.realtime import NoRealtime
 from parfocal_api.result_sets import (
-    ChunkRow,
     RegionRow,
     ResultSetDraft,
-    add_chunks,
     add_regions,
-    cells_per_class,
     fail,
     finish,
     insert_result_set,
 )
-from parfocal_api.review_decisions import ReviewDecisionDraft, save_decision
-from parfocal_api.review_objects import list_review_objects
-from parfocal_api.review_order import cancel_order_jobs, stored_seeds
-from parfocal_api.review_order_job import order_one_slide
-from parfocal_api.review_states import submit_slide_review
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
-from parfocal_api.sample_files import SampleFile, stored_facts, stored_sample_file
-from parfocal_api.sample_project import SAMPLE_SLIDES, square
+from parfocal_api.sample_files import SampleFile, stored_facts
+from parfocal_api.sample_project import square
 from parfocal_api.seed_request import seed_request
-from parfocal_api.showcase_shapes import CELL_CLASSES, demo_cells, demo_regions
+from parfocal_api.showcase_demo import (
+    DemoSets,
+    add_demo_sets,
+    built_in_templates,
+    decide_all,
+    order_now,
+)
+from parfocal_api.showcase_samples import SamplePool, sample_pool
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -67,12 +65,10 @@ from parfocal_api.tables import (
     review_task_slides,
     review_tasks,
     slides,
-    study_templates,
     tenants,
     users,
     workspace_settings,
 )
-from parfocal_common.chunk_store import build_cells, write_cells
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.ingest import (
     RESTRICTED_RANGES_NAME,
@@ -92,6 +88,16 @@ PLACEHOLDER_PREFIX = SEEDED_SUBJECT_PREFIX
 INERT_JOB_KIND = "showcase"
 FIXTURE_PREFIX = "fixtures/"
 FIXTURES_MANIFEST = repository_root(__file__) / "packages/test-fixtures/fixtures.json"
+DEPLOYED_ENVS = frozenset({AppEnv.STAGING, AppEnv.PROD})
+
+
+class MissingFixtureFoldersError(RuntimeError):
+    def __init__(self, files: list[str]) -> None:
+        super().__init__(
+            f"{len(files)} format gallery slides have no published fixture-slides folder, "
+            f"run python -m parfocal_ingest.fixture_slides first: {', '.join(files)}"
+        )
+        self.files = files
 
 
 @dataclass(frozen=True)
@@ -163,7 +169,7 @@ FORMAT_GALLERY = (
     GallerySlide("CMU-1-JP2K-33005.svs", "aperio-svs", "jpeg2000-rgb"),
     GallerySlide("CMU-1.ndpi", "hamamatsu-ndpi", "tiff"),
     GallerySlide("Leica-1.scn", "leica-scn", "bigtiff"),
-    GallerySlide("Ventana-1.bif", "ventana-bif", "bigtiff"),
+    GallerySlide("OS-1.bif", "ventana-bif", "bigtiff"),
     GallerySlide("Philips-4.tiff", "philips-tiff", "bigtiff"),
     GallerySlide("Huron-1-40x.tif", "huron-tiff", "bigtiff"),
     GallerySlide("Argos-1.avs", "argos-avs", "bigtiff"),
@@ -198,9 +204,6 @@ SUBMITTED = "Submitted review"
 ANNOTATE_DEMO = "Tumour outline practice"
 DEMO_TASKS = (GALLERY_TOUR, CELL_TOUR, HALF_DONE, SUBMITTED, ANNOTATE_DEMO)
 CELLS_CHECKED = 12
-DEMO_WIDTH = 32000
-DEMO_HEIGHT = 24000
-DEMO_OPINION = {"acceptable": 4}
 OWNER_SUBJECT = f"{PLACEHOLDER_PREFIX}owner"
 ALREADY_STORED = 412
 
@@ -215,6 +218,13 @@ class Seeded:
 def fixture_facts(manifest: Path = FIXTURES_MANIFEST) -> dict[str, Mapping[str, Any]]:
     listed = json.loads(manifest.read_text())
     return {entry["file"]: entry for entry in [*listed["remote"], *listed["synthetic"]]}
+
+
+SEEDED_VIEWER_NAME = "Smoke Viewer"
+
+
+def viewer_emails_of(text: str) -> list[str]:
+    return [item.strip() for item in text.replace(";", ",").split(",") if item.strip()]
 
 
 def placeholder_subject(email: str) -> str:
@@ -326,24 +336,26 @@ async def add_owner(connection: AsyncConnection, tenant_id: uuid.UUID, email: st
     )
 
 
-def viewer_emails_of(listed: str) -> list[str]:
-    return [email.strip().lower() for email in listed.split(",") if email.strip()]
-
-
 async def add_viewer(connection: AsyncConnection, tenant_id: uuid.UUID, email: str) -> uuid.UUID:
+    address = email.strip().lower()
     signed_in = await connection.scalar(
-        select(users.c.subject).where(func.lower(users.c.email) == email).limit(1)
+        select(users.c.subject).where(func.lower(users.c.email) == address).limit(1)
     )
-    user_id = await add_member(
+    return await add_member(
         connection,
         tenant_id,
-        signed_in or placeholder_subject(email),
-        "Workspace viewer",
-        "WV",
+        signed_in or placeholder_subject(address),
+        SEEDED_VIEWER_NAME,
+        "SV",
         Role.REVIEWER,
         admin_rights=False,
-        email=email,
+        email=address,
     )
+
+
+async def seat_viewer_on_projects(
+    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID
+) -> None:
     project_ids = await connection.scalars(
         select(projects.c.id).where(projects.c.tenant_id == tenant_id)
     )
@@ -358,7 +370,6 @@ async def add_viewer(connection: AsyncConnection, tenant_id: uuid.UUID, email: s
             )
             .on_conflict_do_nothing()
         )
-    return user_id
 
 
 def principal_of(seeded: Seeded, key: str, role: Role, admin_rights: bool) -> MemberPrincipal:
@@ -617,14 +628,14 @@ async def seed_states(
     principal: MemberPrincipal,
     results: ResultStore,
     project_id: uuid.UUID,
-    sample: SampleFile | None,
+    pool: SamplePool,
     job_ids: Mapping[JobStatus, uuid.UUID],
 ) -> None:
     sets: dict[uuid.UUID, uuid.UUID] = {}
     named: dict[str, uuid.UUID] = {}
     for index, state in enumerate(STATE_SLIDES):
         slide = await add_slide(
-            connection, seeded, project_id, f"Case {state}", sample_facts(sample)
+            connection, seeded, project_id, f"Case {state}", sample_facts(pool.next())
         )
         named[state] = slide.id
         sets[slide.id] = await ready_set(
@@ -727,11 +738,11 @@ async def seed_styles(
     principal: MemberPrincipal,
     results: ResultStore,
     project_id: uuid.UUID,
-    sample: SampleFile | None,
+    pool: SamplePool,
 ) -> None:
     for style in DecisionStyle:
         slide = await add_slide(
-            connection, seeded, project_id, f"Case {style} style", sample_facts(sample)
+            connection, seeded, project_id, f"Case {style} style", sample_facts(pool.next())
         )
         set_id = await ready_set(connection, principal, slide, "regions.parfocal.json")
         task_id = await review_task(
@@ -755,7 +766,9 @@ async def seed_styles(
                 DecisionValue.DISAGREE,
                 [DecisionReason.BOUNDARY_OFF],
             )
-    slide = await add_slide(connection, seeded, project_id, "Case annotate", sample_facts(sample))
+    slide = await add_slide(
+        connection, seeded, project_id, "Case annotate", sample_facts(pool.next())
+    )
     await review_task(
         connection,
         principal,
@@ -788,125 +801,6 @@ async def seed_gallery(
         await add_slide(
             connection, seeded, project.id, slide.file, gallery_facts(slide, manifest, stored)
         )
-
-
-@dataclass
-class DemoSets:
-    regions: dict[uuid.UUID, uuid.UUID | None]
-    cells: dict[uuid.UUID, uuid.UUID | None]
-
-
-async def built_in_templates(
-    connection: AsyncConnection, tenant_id: uuid.UUID
-) -> dict[BuiltInTemplate, uuid.UUID]:
-    rows = await connection.execute(
-        select(study_templates.c.built_in, study_templates.c.id).where(
-            study_templates.c.tenant_id == tenant_id, study_templates.c.built_in.is_not(None)
-        )
-    )
-    return {BuiltInTemplate(built_in): template_id for built_in, template_id in rows}
-
-
-async def add_demo_sets(
-    connection: AsyncConnection,
-    principal: MemberPrincipal,
-    results: ResultStore,
-    slide_id: uuid.UUID,
-    demo: DemoSets,
-) -> None:
-    slide = (
-        await connection.execute(
-            select(slides.c.id, slides.c.project_id, slides.c.width, slides.c.height).where(
-                slides.c.id == slide_id
-            )
-        )
-    ).one()
-    width, height = slide.width or DEMO_WIDTH, slide.height or DEMO_HEIGHT
-    regions_id = await insert_result_set(
-        connection,
-        principal.tenant_id,
-        slide,
-        ResultSetDraft(
-            name="Tumour detector v1",
-            model_version="v1.0",
-            classes=["Tumor"],
-            source_file="regions.parfocal.json",
-        ),
-        ResultSource.IMPORT,
-        actor_of(principal),
-        principal.user_id,
-    )
-    await add_regions(connection, regions_id, demo_regions(width, height))
-    await finish(connection, regions_id)
-    cells_id = await insert_result_set(
-        connection,
-        principal.tenant_id,
-        slide,
-        ResultSetDraft(
-            name="Cell typer v1",
-            model_version="v1.0",
-            classes=list(CELL_CLASSES),
-            source_file="cells.geojson",
-        ),
-        ResultSource.IMPORT,
-        actor_of(principal),
-        principal.user_id,
-    )
-    built = build_cells(
-        principal.tenant_id,
-        slide_id,
-        cells_id,
-        demo_cells(width, height),
-        len(CELL_CLASSES),
-    )
-    entries = await write_cells(results, built)
-    await add_chunks(connection, cells_id, [ChunkRow.of(entry) for entry in entries])
-    await finish(connection, cells_id, cells_per_class(entries))
-    demo.regions[slide_id] = regions_id
-    demo.cells[slide_id] = cells_id
-
-
-async def order_now(
-    connection: AsyncConnection,
-    results: ResultStore,
-    task_id: uuid.UUID,
-    slide_ids: list[uuid.UUID],
-) -> None:
-    seeds = await stored_seeds(connection, task_id, slide_ids)
-    for slide_id, seed in seeds.items():
-        await order_one_slide(connection, results, task_id, slide_id, seed)
-    await cancel_order_jobs(connection, task_id)
-
-
-async def decide_all(
-    connection: AsyncConnection,
-    principal: MemberPrincipal,
-    results: ResultStore,
-    task_id: uuid.UUID,
-    slide_ids: list[uuid.UUID],
-    *,
-    submit: bool,
-) -> None:
-    for slide_id in slide_ids:
-        listed = await list_review_objects(task_id, slide_id, principal, connection, results)
-        for position, found in enumerate(listed.objects):
-            draft = (
-                ReviewDecisionDraft(
-                    value=DecisionValue.DISAGREE, reasons=[DecisionReason.BOUNDARY_OFF]
-                )
-                if position == len(listed.objects) - 1
-                else ReviewDecisionDraft(value=DecisionValue.AGREE)
-            )
-            await save_decision(
-                task_id, slide_id, found.object, draft, principal, connection, results
-            )
-        await save_opinion(
-            task_id, slide_id, OpinionChange(answers=DEMO_OPINION), principal, connection
-        )
-        if submit:
-            await submit_slide_review(
-                task_id, slide_id, principal, connection, BackgroundTasks(), NoRealtime()
-            )
 
 
 async def seed_gallery_tour(
@@ -1070,8 +964,7 @@ async def seed_projects(
     manifest: Mapping[str, Mapping[str, Any]],
 ) -> None:
     principal = principal_of(seeded, "ada", Role.RESEARCHER, True)
-    samples = [await stored_sample_file(store, label) for label in SAMPLE_SLIDES]
-    sample = next((found for found in samples if found is not None), None)
+    pool = await sample_pool(store, [slide.file for slide in FORMAT_GALLERY])
     detection = (await built_in_templates(connection, seeded.tenant_id))[BuiltInTemplate.DETECTION]
     for mode in PrivacyMode:
         project = await create_project(
@@ -1100,8 +993,8 @@ async def seed_projects(
         )
         if mode is PrivacyMode.DE_IDENTIFIED:
             job_ids = await add_jobs(connection, seeded, project.id)
-            await seed_states(connection, seeded, principal, results, project.id, sample, job_ids)
-            await seed_styles(connection, seeded, principal, results, project.id, sample)
+            await seed_states(connection, seeded, principal, results, project.id, pool, job_ids)
+            await seed_styles(connection, seeded, principal, results, project.id, pool)
     await seed_gallery(connection, seeded, principal, store, manifest, workspace.gallery)
 
 
@@ -1111,8 +1004,12 @@ async def seed(
     results: ResultStore,
     owner_email: str | None,
     manifest: Mapping[str, Mapping[str, Any]] | None = None,
+    *,
     viewer_emails: Sequence[str] = (),
+    require_fixture_folders: bool = False,
 ) -> list[uuid.UUID]:
+    if require_fixture_folders and (missing := await unpublished_gallery(store)):
+        raise MissingFixtureFoldersError(missing)
     engine = create_engine(database_url)
     try:
         async with scoped_transaction(
@@ -1162,12 +1059,24 @@ async def seed(
         for email in viewer_emails:
             for tenant_id in tenant_ids:
                 async with scoped_transaction(
-                    engine, DatabaseScope(tenant_id=tenant_id, auth=True)
+                    engine, DatabaseScope(platform=True, auth=True)
                 ) as connection:
-                    await add_viewer(connection, tenant_id, email)
+                    viewer = await add_viewer(connection, tenant_id, email)
+                async with scoped_transaction(
+                    engine, DatabaseScope(tenant_id=tenant_id, user_id=viewer)
+                ) as connection:
+                    await seat_viewer_on_projects(connection, tenant_id, viewer)
         return tenant_ids
     finally:
         await engine.dispose()
+
+
+async def unpublished_gallery(store: ObjectStore) -> list[str]:
+    return [
+        slide.file
+        for slide in FORMAT_GALLERY
+        if await stored_facts(store, fixture_folder(slide.file)) is None
+    ]
 
 
 async def people_of(engine: Any, tenant_id: uuid.UUID) -> dict[str, uuid.UUID]:
@@ -1197,6 +1106,7 @@ async def main() -> None:
             ObjectResultStore(store),
             os.environ.get("SEED_OWNER_EMAIL") or None,
             viewer_emails=viewer_emails_of(os.environ.get("SEED_VIEWER_EMAILS", "")),
+            require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
         )
     print(f"seeded {len(tenant_ids)} ČVUT workspaces")
 

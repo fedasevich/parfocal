@@ -1,8 +1,10 @@
 import importlib
+import logging
 import os
 import time
 import tomllib
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +16,15 @@ from parfocal_deploy.parse_sandbox import PARSE_SANDBOX_OPTIONS
 from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 
 APP_NAME = "parfocal-api"
-WEB_FUNCTION = "web"
+WEB_FUNCTION = "web-eu"
+WEB_REGION = "eu-west"
+WORKER_REGION = "eu"
+WEB_ROUTING_REGION = "eu-west"
 INGEST_FUNCTION = "ingest"
 EVENTS_FUNCTION = "events"
+BACKFILL_FUNCTION = "backfill_thumbnails"
+CROPS_BACKFILL_FUNCTION = "backfill_cell_crops"
+LEVELS_BACKFILL_FUNCTION = "backfill_level_directories"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
@@ -25,6 +33,9 @@ FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
     WEB_FUNCTION: SECRETS,
     INGEST_FUNCTION: SECRETS,
     EVENTS_FUNCTION: SECRETS,
+    BACKFILL_FUNCTION: SECRETS,
+    CROPS_BACKFILL_FUNCTION: SECRETS,
+    LEVELS_BACKFILL_FUNCTION: SECRETS,
 }
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
@@ -40,12 +51,23 @@ WEB_PRELOAD = (
     "parfocal_api.event_emit",
     "parfocal_common.jobs",
     "parfocal_common.warm_gate",
+    "sqlalchemy.dialects.postgresql.asyncpg",
+    "asyncpg",
+    "httpcore2",
+    "h11",
+    "truststore",
+    "anyio._backends._asyncio",
+    "encodings.idna",
+    "concurrent.futures.thread",
 )
+STARTUP_LOGGER = "parfocal.api.startup"
 
 WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
-WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 10, "target_inputs": 8}
+WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 20, "target_inputs": 16}
 WEB_OPTIONS: dict[str, Any] = {
     "name": WEB_FUNCTION,
+    "region": WEB_REGION,
+    "routing_region": WEB_ROUTING_REGION,
     "memory": (512, 2048),
     "min_containers": 0,
     "max_containers": 4,
@@ -64,10 +86,12 @@ INGEST_DRAINED_KINDS = frozenset(
         "remote-copy",
         "review-order",
         "patch-export",
+        "cell-crops",
     }
 )
 INGEST_OPTIONS: dict[str, Any] = {
     "name": INGEST_FUNCTION,
+    "region": WORKER_REGION,
     "memory": (INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
     "schedule": modal.Period(minutes=INGEST_PERIOD_MINUTES),
     "min_containers": 0,
@@ -80,6 +104,7 @@ EVENTS_LINGER_MINUTES = 35
 EVENTS_SPAWN_GAP_SECONDS = 600.0
 EVENTS_OPTIONS: dict[str, Any] = {
     "name": EVENTS_FUNCTION,
+    "region": WORKER_REGION,
     "schedule": modal.Period(minutes=EVENTS_PERIOD_MINUTES),
     "min_containers": 0,
     "max_containers": 1,
@@ -122,7 +147,27 @@ def preload(
             load(module)
 
 
+def elapsed_ms(started: float) -> float:
+    return round((time.perf_counter() - started) * 1000, 1)
+
+
+def timed_lifespan(
+    lifespan: Callable[[Any], AbstractAsyncContextManager[Any]],
+) -> Callable[[Any], AbstractAsyncContextManager[Any]]:
+    @asynccontextmanager
+    async def timed(app: Any) -> AsyncIterator[Any]:
+        started = time.perf_counter()
+        async with lifespan(app) as state:
+            logging.getLogger(STARTUP_LOGGER).info(
+                "web ready", extra={"lifespan_ms": elapsed_ms(started)}
+            )
+            yield state
+
+    return timed
+
+
 def serve() -> Any:
+    started = time.perf_counter()
     import parfocal_api.app
     from parfocal_api.event_emit import set_waker
     from parfocal_common.jobs import set_job_waker
@@ -130,10 +175,16 @@ def serve() -> Any:
 
     set_waker(spawn_events())
     set_job_waker(spawn_ingest())
+    created = time.perf_counter()
     app = parfocal_api.app.create_app()
     pools = ModalPools()
     app.state.gpu_pools = pools
     app.state.warm_gate = WarmGate(pools)
+    app.router.lifespan_context = timed_lifespan(app.router.lifespan_context)
+    logging.getLogger(STARTUP_LOGGER).info(
+        "web app created",
+        extra={"serve_ms": elapsed_ms(started), "create_app_ms": elapsed_ms(created)},
+    )
     return app
 
 
@@ -147,6 +198,24 @@ def run_ingest() -> None:
     os.environ.setdefault("INGEST_PARSE_LAUNCHER", PARSE_LAUNCHER)
     sys.argv = ["parfocal_ingest", "--idle-exit", str(INGEST_IDLE_EXIT_SECONDS)]
     asyncio.run(main())
+
+
+def run_thumbnail_backfill() -> list[str]:
+    from parfocal_ingest.thumbnail_backfill import main
+
+    return main()
+
+
+def run_cell_crops_backfill() -> None:
+    from parfocal_ingest.cell_crops_backfill import main
+
+    main()
+
+
+def run_level_directories_backfill() -> dict[str, int]:
+    from parfocal_ingest.level_directories_backfill import main
+
+    return main()
 
 
 def sweep_remote_caches() -> None:
@@ -223,8 +292,28 @@ web = app.function(**WEB_OPTIONS, image=web_image(IMAGE), secrets=secrets_of(WEB
 )
 ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
 events = app.function(**EVENTS_OPTIONS, secrets=secrets_of(EVENTS_FUNCTION))(run_events)
+backfill_thumbnails = app.function(
+    name=BACKFILL_FUNCTION,
+    memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
+    timeout=3600,
+    secrets=secrets_of(BACKFILL_FUNCTION),
+)(run_thumbnail_backfill)
+backfill_cell_crops = app.function(
+    name=CROPS_BACKFILL_FUNCTION,
+    memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
+    timeout=3600,
+    secrets=secrets_of(CROPS_BACKFILL_FUNCTION),
+)(run_cell_crops_backfill)
+backfill_level_directories = app.function(
+    name=LEVELS_BACKFILL_FUNCTION,
+    timeout=3600,
+    secrets=secrets_of(LEVELS_BACKFILL_FUNCTION),
+)(run_level_directories_backfill)
 FUNCTIONS: dict[str, modal.Function] = {
     WEB_FUNCTION: web,
     INGEST_FUNCTION: ingest,
     EVENTS_FUNCTION: events,
+    BACKFILL_FUNCTION: backfill_thumbnails,
+    CROPS_BACKFILL_FUNCTION: backfill_cell_crops,
+    LEVELS_BACKFILL_FUNCTION: backfill_level_directories,
 }

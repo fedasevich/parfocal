@@ -174,7 +174,7 @@ test("searching for zoom keeps the zoom rows and the shortcuts", () => {
   assert.equal(sectionOfScene("conflict"), "shortcuts");
 });
 
-test("the Privacy section lists initials, lock after, patient banner and other devices", () => {
+test("the Privacy section lists initials, lock after, patient banner, passkeys and other devices", () => {
   assert.deepEqual(
     matchingRows("privacy", "").map((item) => [item.key, item.scope]),
     [
@@ -182,6 +182,7 @@ test("the Privacy section lists initials, lock after, patient banner and other d
       ["analytics", "personal"],
       ["lockAfter", "lab"],
       ["patientBanner", "lab"],
+      ["passkeys", "personal"],
       ["otherDevices", "personal"],
     ],
   );

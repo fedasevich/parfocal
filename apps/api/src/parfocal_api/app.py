@@ -24,6 +24,7 @@ from parfocal_api import (
     case_imports,
     case_sorting,
     cases,
+    cell_crops,
     checklist,
     clinical_notes,
     clinical_report_views,
@@ -65,6 +66,7 @@ from parfocal_api import (
     outline_types,
     own_workspaces,
     painted_maps,
+    passkeys,
     password_login,
     patch_exports,
     personal_data,
@@ -243,6 +245,7 @@ def create_app(
     app.include_router(rum_router)
     app.include_router(auth.router)
     app.include_router(password_login.router)
+    app.include_router(passkeys.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
     app.include_router(project_overview.router)
@@ -390,6 +393,7 @@ def create_app(
     app.include_router(slide_coverage.router)
     app.include_router(slide_tissue.router)
     app.include_router(slide_thumbnail.router)
+    app.include_router(cell_crops.router)
     app.include_router(slide_embeddings.router)
     app.include_router(view_maps.router)
     app.include_router(outline_types.router)

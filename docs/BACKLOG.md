@@ -473,7 +473,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   On hold since 2026-10-08. The owner does not need licence checks or dependency update automation for now. Notes for when it resumes are in the log entry of that date.
   Size: M.
 
-- [ ] FOUND-015 · Container images
+- [x] FOUND-015 · Container images
   Modal image definitions for the API, ingest and ML (CUDA base) functions with pinned versions, plus a multi-stage Dockerfile for the API so it can run on another host ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The web app is static assets on Cloudflare. Non-root, pinned digests, SBOM output. The Dockerfile and the Modal image both install from `uv.lock`, because `app_image()` in `workers/deploy/src/parfocal_deploy/modal_app.py` installs the version ranges from `pyproject.toml`, so production can run versions no test saw.
   Done when the API image and the Modal images build in CI, a container scan of the API image reports no critical vulnerabilities, the API container migrates an empty compose database on start and answers `/api/health`, and a test fails when the Modal requirement list differs from the lock.
   Size: M.
@@ -493,7 +493,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when component tests cover each error kind and an axe check passes.
   Depends on FOUND-012 and the final UI shell.
 
-- [ ] FOUND-018 · Contract check and image builds in CI
+- [x] FOUND-018 · Contract check and image builds in CI
   Split from FOUND-007. Add the web, API and Modal image builds as jobs that `ci-ok` requires. The API contract test and the generated-client check already run in the `test` job since FOUND-008.
   The image build job reuses the API image build of the TEST-040 (API container under the end-to-end suite) job instead of building a second time.
   Done when a pull request that changes the API schema without regenerating the client fails, and image builds run on every pull request.
@@ -618,7 +618,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 The thinnest end-to-end slice. Every piece is minimal and later epics deepen it. The point is to prove the stack, the deployment and the test pipeline together before breadth.
 
-- [ ] SKEL-001 · Production environment exists
+- [x] SKEL-001 · Production environment exists
   Minimal infrastructure from OPS-001 to OPS-004 with one tenant. Production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
   Done when `https://app.<domain>` serves the web app and `/api/health` over TLS with COOP and COEP headers.
   Depends on OPS-001, OPS-002.
@@ -851,6 +851,18 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   The sign-up and sign-in screens run against draft auth calls that only the fake backend answers, so in production nobody can create an account from the app ([ADR 0267](adr/0267-sign-up-and-setup-flow.md), the sign-up and setup flow, says the screens swap their calls without a redesign). The API creates the person in Zitadel through its user API, Zitadel or the app's mail sends the six-digit code, confirming it verifies the email, and the person lands signed in on the first setup step. Sign-in with a password from the app's own screen goes through Zitadel's session API and finishes the OIDC request, so the BFF cookie stays as [ADR 0025](adr/0025-zitadel-bff-login.md) (Zitadel login through the BFF) built it. The service user and its key for production are created only after the owner's yes.
   Done when API tests cover create, code check, resend, an existing account and a wrong password against a faked Zitadel, an E2E signs up and reaches setup, and a manual run against the real Zitadel creates an account from app.parfocal.eu.
   Depends on IAM-002, ONB-002. Size: L.
+- [x] IAM-032 · Passkeys and sign-in emails work on the deployed app
+  The owner reported on 2026-11-17 that passkeys do not work on app.parfocal.eu and that he still types a password. Adding a passkey after sign-in or in settings saves it in the macOS or iCloud Keychain with the right relying party for app.parfocal.eu, the sign-in page offers a saved passkey through the browser's autofill (`autocomplete="username webauthn"`), and verification, password reset and passkey setup emails are sent from the deployed app.
+  Done when unit and API tests cover passkey registration and passkey sign-in against a faked Zitadel, a Playwright spec with a virtual authenticator adds a passkey and signs in with it, and the Zitadel and Resend settings that send the emails are recorded.
+  Depends on IAM-023, IAM-027. Size: M.
+- [x] IAM-033 · Reset a forgotten password and manage passkeys from the app
+  IAM-027 (real sign-up and sign-in from the app's own screens) dropped Forgot password from the app's sign-in page, so a person who forgets the password has no way back without the hosted Zitadel page. The app asks Zitadel for a reset code (`POST /v2/users/{id}/password_reset` with a returned or emailed code, sent through the Resend SMTP provider), takes the code and a new password on its own screen and signs in. Settings also lists saved passkeys with their device names and removes one, and an email can send a passkey setup link for another device.
+  Done when API tests against a faked Zitadel cover the reset request, a wrong code and a new password, an E2E resets a password and removes a passkey, and one reset email sent from app.parfocal.eu to an agent test mailbox shows as delivered in Resend.
+  Depends on IAM-032. Size: M.
+- [ ] IAM-034 · The reset email link opens the app's reset screen
+  The password reset email from app.parfocal.eu has a Reset password button that opens Zitadel's hosted page (`/ui/v2/login/password/set`) instead of the app's own reset screen, where the six-character code from the same email works. Ask Zitadel for a link with a URL template that points to the app and opens the reset scene with the code filled in (the person's address is not in the template, so the link also needs a way to find the address, such as the user ID the template can carry).
+  Done when API tests against a faked Zitadel check the URL template, a web test opens the link and lands on the reset screen with the code filled in, and a reset email from app.parfocal.eu shows a link to the app origin.
+  Depends on IAM-033. Size: S.
 
 ---
 
@@ -1027,7 +1039,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-026.
   Size: L.
 
-- [ ] SEC-048 · Rotation commands for the keys secret
+- [x] SEC-048 · Rotation commands for the keys secret
   Bootstrap writes the Modal secret `parfocal-api-keys` only when it is missing and then generates every key in it, so deleting it to rotate one value makes every tenant's encrypted fields unreadable ([knowledge/secrets.md](knowledge/secrets.md)). Add a deploy command that changes one value and keeps the rest: prepend a master key, retire one after `key_rotation check-retire` passes, replace the session or a token key in the secret and the Worker together, and reset the `parfocal_app` password with the new `DATABASE_URL`.
   Done when tests against fakes show each command keeps every other value, refuses to drop a master key that still wraps tenant keys, and never passes a secret as a command argument.
   Depends on SEC-013.
@@ -1113,7 +1125,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an edge test with a token whose size is smaller than the object shows no closed range read for the three ranges in the review, and a negative size is refused.
   Size: S.
 
-- [ ] SEC-042 · The edge limits and the bot check guard the real API path
+- [x] SEC-042 · The edge limits and the bot check guard the real API path
   The Worker has no `/api` branch and no API origin, so the login and upload limits and the Turnstile check run on paths it answers with the app page, while the API would be reached at its own address with no edge limit ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S1). The limits also fail open when a binding is absent, and the login match is exact. Decide the route with the staging slice: proxy `/api` through the Worker with a secret header that the API requires, fail closed outside local runs, and normalise the path before matching.
   Done when a Worker test shows `/api/health` forwarded to the API origin, the deployed check shows the API address refusing a request that skipped the Worker, and a missing limit binding answers 503 outside local runs.
   Depends on OPS-002.
@@ -1357,6 +1369,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-025.
   Size: S.
 
+- [ ] INGEST-032 · Every slide on the deployed app has a thumbnail
+  Slide previews fail on app.parfocal.eu because `getSlideThumbnail` reads `thumbnail.jpg` only under the slide's own folder, while seeded slides keep their derived files in the shared sample folder next to the original. The thumbnail endpoint finds the folder the way tile access does, new uploads and the seed always store a thumbnail, and a one-off backfill writes the missing thumbnails for existing slides.
+  Done when an API test returns the thumbnail of a slide whose original lives in a sample folder, a test shows the seed leaves no slide without a readable thumbnail, and every slide on the deployed app returns 200 from its thumbnail URL.
+  Depends on INGEST-010.
+  Size: M.
+
 ## 06 TILES · Tile delivery
 
 - [x] TILES-000 · Research check for tile delivery
@@ -1373,6 +1391,24 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when a test shows a same-size rewrite misses the cache, and a check against real R2 confirms the S3 ETag of a multipart upload equals the Worker's `etag`.
   Depends on TILES-002.
   Size: S.
+
+- [x] TILES-010 · A slide opens in under 3 s: the directory offsets come with levels.json
+  OPS-033 (home under 500 ms and a slide opens in under 3 s) measured test_065 on the deployed app: tile-access 0.8 to 1.1 s, levels.json 0.29 s, then 9 TIFF directory blocks read one after another, 2.6 s warm and 4.8 s cold. Ingest records every directory offset and size in levels.json so the viewer reads all directories at once, tile-access starts before the viewer code loads and runs fewer queries, and a backfill writes the offsets for the slides already stored.
+  Done when engine tests show an indexed open reads the directories in parallel with no chain walk, Viv golden and engine tests still pass, the backfill is tested, and a result file holds the before and after numbers.
+  Depends on OPS-033.
+  Size: M.
+
+- [x] TILES-011 · A slide opens in under 3 s from navigation
+  On v0.12.2 the owner opened test_065 from a fresh navigation: tile-access done at 3.87 s, levels.json at 4.09 s and the 10 original.tif ranges at 6.15 s, so the app boot and the calls before tile-access are now the larger part. The route loader asks for tile access before the viewer code and the session check finish, the viewer waits on as few API calls as it can, and the original's ranges are checked to run in parallel. The per-set Hide and Show buttons at the bottom left of the stage are clipped and get room.
+  Done when a Playwright check shows tile-access starts before the viewer chunk arrives and the set buttons sit fully inside the stage, Viv golden tests still pass, and a result file holds the before and after numbers.
+  Depends on TILES-010.
+  Size: M.
+
+- [x] TILES-012 · The slide's ranges arrive in two rounds after levels.json
+  TILES-011 (a slide opens in under 3 s from navigation) found that a located open reads levels.json, then the TIFF header, then all directories at once, then a re-read of the last directory, then the tile byte count arrays, then the first tile, five rounds after levels.json at about 400 ms each deployed. Carry the header facts in levels.json, drop the re-read, and ask for the byte counts with the directories.
+  Done when the latency proxy test shows a located open in at most three rounds after levels.json, a Philips fixture included, and Viv golden and engine tests still pass.
+  Depends on TILES-011.
+  Size: M.
 
 - [ ] TILES-002 · CDN in front of slide storage
   HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.
@@ -1788,6 +1824,27 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Make every screen that shows a slide (full viewer in and out of a task, guided review, annotate, annotate task, compare) draw it through the one engine stage with the mock's frame around it, so pan, zoom, tools, overlays and the minimap act on the real slide. A slide that cannot open shows the stage's "format cannot be opened" notice, never a stand-in picture. Remove the prototype stills and mock assets from every production path, keep them only for Storybook and the fake API if needed, and make every visible control either work or not be shown. Fix the oversized checkbox.
   Done when a guard test fails on any `lookUrl`, `coverTile` or `/mock-assets/` use outside Storybook and the fake API, browser tests pan, zoom, use the select, ruler and comment tools and decide an object on the real stage in the full viewer, guided review and annotate task, the viewer golden images pass, and a walk on the deployed app opens a review task's slide with real tiles.
   Size: L.
+- [ ] VIEW-075 · The rest of the viewer runs on the engine stage
+  VIEW-074 put the full viewer, guided review, annotate and annotate task on the one engine stage, but cells and the cell type bar, compare, focus mode, coach marks and writing decision notes still live only in the prototype screens, and 21 files stay on the STILL_TO_REPLACE list in `apps/web/test/no-prototype-in-production.test.ts`. The deployed seed now holds real InstanSeg cells on test_065, CMU-1-Small-Region and Philips-4.
+  Bring cells and the cell type bar, compare, focus mode, coach marks and decision notes onto the engine stage, in that order, clear STILL_TO_REPLACE and delete `screens/thumbnails.ts`.
+  Done when the engine viewer draws a task's cells and AI regions with a working cell type bar, the whole slide minimap falls back to the slide's own lowest level while the thumbnail is missing, compare, focus and decision notes act on the real stage in browser tests, STILL_TO_REPLACE is empty and the viewer golden images pass.
+  Depends on VIEW-074. Size: L.
+- [ ] VIEW-076 · Every cell of a result set draws on the engine stage
+  VIEW-075 draws every cell of a ready result set as a dot at its centre, coloured by score, from the cell summary route (centre, size, class index and score per cell), and a task's picked cells and AI regions as outlines from the review objects. The seed holds 2,038, 1,418 and 5,719 InstanSeg cells on test_065, CMU-1-Small-Region and Philips-4. No route serves a result set's cell chunks, so whole-set cells have no outlines, and none names a set's class indexes, so they cannot be coloured by class. AI regions outside a task are not drawn either. The cells grid needs a real crop source before it can come back, because its tiles drew the prototype photo.
+  Add a cell chunk route and the set's class names, draw a result set's cells and regions through the engine's paged cells (`PagedCells`, `httpCellSource`) in and out of a task with a show and hide switch per set, and build the cells grid from real crops.
+  Done when the deployed app shows the seeded cells as outlines coloured by class on the three slides on Viv within the VIEW-029 budget, and a browser test shows, hides and pages cells and picks one from the grid.
+  Depends on VIEW-074. Size: L.
+
+- [x] VIEW-077 · Focus mode opens without error responses from the fake API
+  Opening the viewer with `focus=true` makes the engine viewer get 403 twice (hidden AI results) and 409 once (a slide with no measured size) before its first read, and TEST-050 (repair three web tests after the engine viewer move) made `apps/web/e2e/viewer-tools.spec.ts` allow exactly those three. The 403s are a fake API fault: the slide's result set list hides the first-read-only set by the task in the page address, but the set detail, cell summary, cell chunk and region routes hid it for any page, so a page of another task asked for a set the list had just offered. The real API answers both from the same per-person state, so the deployed app does not see it (found by reading `blinding.py` and the list SQL, not by signing in). The 409 is the coverage read: the fake refused every slide nobody had covered yet, while the real API answers an empty bitset for a measured slide and 409 only when the slide has no stored size, which the web has no field for, so the app keeps its single read and its ten minute pause.
+  Done when the fake offers and hides the first-read-only set by the same rule on all its routes, a scenario slide nobody has looked at reads back empty coverage, `viewer-tools.spec.ts` no longer allows any HTTP error on the Focus mode scene, and the API client coverage test passes.
+  Size: S.
+
+- [x] VIEW-078 · A new review task's cells get crops when its order is written
+  VIEW-075 cuts cell crops in the parse sandbox after a result import and in the `backfill_cell_crops` Modal function, choosing the cells in every stored review order of the slide first and then the twelve best scored cells of each class, at most 240 a slide. A task created after the import has its order written later, so its cells show the grid without pictures until the backfill runs again, and seeded sets get crops only from the backfill.
+  Cut the missing crops of a slide when its review order is written, in the ingest worker after the order job and for orders the API writes directly, with the same cap and the same sandbox.
+  Done when a worker test writes an order for cells without crops and finds their crops stored under the slide, and a browser test opens the cells grid of a fresh task with every tile answered by the crop route.
+  Depends on VIEW-075. Size: M.
 
 - [x] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
@@ -2211,15 +2268,35 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Make every route's search schema fall back to its default, or drop the key, when a value is unknown or malformed, with one shared helper rather than a catch on each field. Drop the invite route's demo token default, so a missing token shows the invalid invite notice.
   Done when a unit test runs every route's search schema against an unknown value for each enum key and none throws, and a browser test opens a project with an unknown tab and sees the slides tab.
   Size: S.
-- [ ] SHELL-020 · Screens stop repeating calls they do not need and show slide thumbnails
+- [x] SHELL-020 · Screens stop repeating calls they do not need and show slide thumbnails
   The production click-through on 2026-11-17 found the viewer asking for `/api/slides/{id}/model-runs` every 5 s for as long as it is open, `/api/slides/{id}/tissue` answering 404, and the shell asking all 22 of its calls again after leaving the viewer, as if it remounted. Project cards on Home and the slide list show blank tiles, and the app never asks for a thumbnail.
   Poll model runs only while one is queued or running and stop when none is, treat a 404 tissue answer as no tissue mask and do not ask again, keep the shell mounted or its queries cached across the viewer route, and request and show slide thumbnails on Home cards and in the slide list, falling back to a neutral tile with the format name when the API has none.
   Done when a browser test counts no model-runs call in 30 s on a slide with no running run, one tissue call for a slide without a mask, no repeat of the shell's calls on leaving the viewer, and a thumbnail image on a Home card and a slide row.
   Size: M.
-- [ ] SHELL-021 · Home and My work tell the truth about the person and their progress
+- [x] SHELL-021 · Home and My work tell the truth about the person and their progress
   The production click-through on 2026-11-17 found the owner named "Workspace owner", a seeded name the account adopted instead of the Zitadel profile name, so Team reads "Workspace owner (you)". The "New here?" tour card covers the Activity panel and clips it. The checklist item "Open the sample project" stays unticked after opening it. My work shows "Slide 2 of 13" beside "0 of 13 slides" and "about 3 h 28 min left" before anything is reviewed.
   Take the display name from the identity provider's profile at sign-in when the stored one is a seeded placeholder, place the tour card so it covers no panel, tick checklist items from what the person actually did, make the slide position and the reviewed count read from one source, and show no time estimate until at least one slide is reviewed.
   Done when unit tests cover the name choice and the estimate rule, and a browser test on Home finds the Activity panel unobscured with the tour card shown and the sample project item ticked after opening it.
+  Size: M.
+- [x] SHELL-022 · The shell uses the right icons, a status dropdown, one full screen loader and skeletons that fit each page
+  The owner's review of app.parfocal.eu on 2026-11-17 found the Settings entry in the account menu and Project settings in the project menu drawn with a sun instead of a gear, the account menu's availability row toggling between Available and Away without showing which statuses exist, the slide row's "File into a case" and "Open" buttons stacked and overlapping, and screens loading with a small loader or blank space instead of the app's main loader or a skeleton of the page.
+  Use a gear for every settings entry, make availability a dropdown that lists each status with its meaning, lay the slide row's actions out in one row that never overlaps, show the main reticle loader full screen when a whole page loads, and give every list, table, card grid and side panel a skeleton shaped like its content, outside the viewer stage, which VIEW-074 owns.
+  Done when a guard test finds no `sun` icon on a settings entry, a browser test picks Busy from the availability dropdown, the slide row buttons do not overlap at 1280 and 1920 px wide, and a browser test with a delayed API finds a skeleton or the full screen loader on every top-level route before data arrives.
+  Size: M.
+- [x] SHELL-023 · A screen's explanatory notes show once and stay findable afterwards
+  On 2026-11-17 the owner asked that the helper sentences printed on screens, such as "Team shows you as away, so tasks can be reassigned" and the viewer's tool hint bars, show once and then hide, and asked Fable where they should live afterwards. The viewer already shows hint bars once per tool per device (`apps/web/src/annotations/hints-once.ts`).
+  Apply Fable's recommendation recorded in the log to every such note outside the settings screens, which SET-015 owns: one show-once mechanism, one place the note lives afterwards, a way to reset all hints, and warnings and irreversible actions kept always visible.
+  Done when a unit test covers the seen state and the reset, and a browser test sees a note the first time, not the second time, and finds it again in its afterwards place.
+  Depends on SHELL-022. Size: M.
+- [x] SHELL-024 · A member can set their status to Busy
+  SHELL-022 (the account menu's status dropdown) lists only Available and Away, because the API and the `memberships` availability check know only those two. The owner's review asked for every status the avatar dot can show, and the dot already draws Busy.
+  Add `busy` to the availability enum, a migration that widens the memberships availability check so Busy takes no end and an optional note, the regenerated client and fake handler, and a Busy row with its meaning in the dropdown. Team and the new task form keep treating only Away as absent.
+  Done when an API test sets and reads Busy and the check refuses an end on Busy, and a browser test picks Busy from the availability dropdown and sees the avatar dot turn Busy.
+  Depends on SHELL-022. Size: S.
+- [x] SHELL-025 · Fixes from the walk after the EU move
+  A walk of app.parfocal.eu on 2026-11-17 found six faults. The Home Activity panel shows rows with no text. The Home "Start here" row prints a double separator when a part is empty. Review task progress differs between My work, its list and Team. The viewer's Result sets names are clipped. The project slides Reviews column repeats one person per task. The admin overview prints "0 TB more read in place".
+  Fix each with one source of truth or by dropping empty parts, and give each fix a unit or browser test.
+  Done when each of the six has a test that fails before and passes after.
   Size: M.
 
 ---
@@ -3592,7 +3669,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-002.
   Size: M.
 
-- [ ] AIP-021 · Pre-warm trigger from a slow device through the API
+- [x] AIP-021 · Pre-warm trigger from a slow device through the API
   AIP-007 (priority gate) built `parfocal_ml.priority_gate`: interactive kinds run only in the `embedder` pool, job kinds never do, and `InteractiveGate.activate` sends at most one throttled `warm` call per 240 s. Nothing calls it yet. The web needs a slow-device check when the segmentation tool opens, the API needs a route that calls the gate under a member's rights, and the API needs a Modal client, which is an ADR choice (Modal SDK in the API image or a call through the ML app). The `embed` runner in the Modal entry also needs the real PathoSAM weights. Also count other tenants' runs on the shared GPU in `queue_minutes` without leaking them, which `jobs.md` left to AIP-007.
   Done when an API test shows a slow device's activation sends one warm call through a fake Modal client and a fast device's sends none, a web test shows the tool open calls the route only on a slow device, and the queue estimate counts other tenants' runs as one number.
   Depends on AIP-007.
@@ -3870,13 +3947,13 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-008.
   Size: M.
 
-- [ ] AITUM-010 · The tumor map job reads stored slides and runs the tumor model in its pool
+- [x] AITUM-010 · The tumor map job reads stored slides and runs the tumor model in its pool
   AITUM-008 (tumor map job and route) takes a slide opener and a scorer as seams, and the GPU pool entry has no runner for the `tumor-map` kind yet. Open a stored slide's level 0 regions and thumbnail from the object store, run the MONAI ResNet18 of ADR 0351 (the v1 tumor model) in the detector-good T4 pool, and start the claim loop for the kind.
   Done when a worker test runs the job on a stored small fixture slide through the real opener, and a Modal stand-in test on CPU runs one tumor map call in the pool.
   Depends on AITUM-008.
   Size: M.
 
-- [ ] AITUM-011 · The tumor map pool is ready to deploy
+- [x] AITUM-011 · The tumor map pool is ready to deploy
   AITUM-010 (stored slides and the tumor model in the pool) runs the tumor map locally, but the pool image lacks `onnxruntime-gpu`, OpenSlide and a cuDNN base, the `camelyon-tumor` ONNX artifact is only in a local cache, the pool has no secrets for the object store, and nothing spawns the pool call when a map is queued. Lock the pool image, publish the artifact with its SHA-256 where the other model artifacts live, wire the secrets, and spawn the call on enqueue. ADR 0356 (the tumor map worker runs the ResNet18 as ONNX) records the runtime.
   Done when the image lock and a spawn-on-enqueue test pass, the published artifact's SHA-256 matches the local export, and the runbook says what the first deploy after the train merges will start. Publishing the artifact is an additive production write under ADR 0151 (standing approval within $30 a month), and the deploy itself waits for the merge.
   Depends on AITUM-010.
@@ -4085,6 +4162,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when API tests cover the update, its audit event and a refused empty name, and a browser test edits the name and finds it after a reload.
   Depends on SET-010.
   Size: S.
+- [x] SET-015 · Settings show previews for layout choices and one scope legend instead of a label per row
+  The owner's review of app.parfocal.eu on 2026-11-17 found choices such as Tools (left rail or bottom dock) offered as two words with a long sentence under them, where the mock showed small preview pictures of each layout, and every row repeating its scope (Personal, This computer) under it although the page has a legend on the left.
+  Give every layout and appearance choice a small SVG preview of what it looks like, as the frozen mock does, show each row's scope as one icon that the legend explains, and make each row's explanatory sentence show once as SHELL-023 (notes show once and stay findable) and Fable's recommendation in the log describe.
+  Done when every layout choice in Settings has a preview, no row prints its scope as text, and a browser test checks both on the Settings page.
+  Size: M.
 
 - [x] SET-003 · Display section
   Theme, slide brightness, density, patient names, lengths, magnification label, language (English only, shown disabled). Theme and initials only can also be changed from the account menu (SHELL-012).
@@ -4502,7 +4584,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   v0.1.4 shipped a home page that showed a broken screen to a signed-out visitor instead of the sign-in, because every check ran on the fake backend and the deploy smoke only fetches URLs. After each production deploy, a headless browser opens app.parfocal.eu signed out and expects the Zitadel sign-in, then signs in as a dedicated smoke account whose password is a GitHub environment secret, opens home, a workspace, a case and the viewer, and fails the run on a console error, a failed `/api` call or a visible error screen. The smoke account and its secret are created only after the owner's yes.
   Done when the deploy workflow runs it, a deliberately broken build fails it in a test run, and its screenshots are kept as run artifacts.
   Depends on OPS-002. Size: M.
-- [ ] OPS-017 · Switch each area from the fake to the real API
+- [x] OPS-017 · Switch each area from the fake to the real API
   OPS-015 (make draft calls safe in production) lists every draft operation with a priority. Once the UI of an area is finished on the fake, switch that area in one change: build its routes so they return what each draft's Zod schema says, regenerate the client, delete its drafts and fake branches, and run its `@real` specs on the local stack ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches). Start with review, then annotate, then projects and upload, until no screen the showcase seed shows calls a draft. Split one task per area when the first one starts.
   Done when, for each area, API tests cover each new route, its `@real` specs pass on the real API, its count in TEST-038 (draft call ratchet) is zero, and the seeded production app shows no "not available yet" on its screens.
   Depends on OPS-015, TEST-026, TEST-040. Size: L.
@@ -4553,6 +4635,24 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Add a Server-Timing header with database time, query count and handler time to every API answer, measure the slow routes on the deployed app, find where Modal runs and where Neon runs, and cut the time at no added monthly cost: fewer round trips per request (one transaction for the session check where safe, batched or joined queries, no N+1), pool settings, and moving Modal next to Neon if region selection costs nothing extra on the current plan. Record the before and after numbers in a result file.
   Done when a result file reports Server-Timing for the ten slowest routes before and after, measured on the deployed app, and warm `/api/me`, `/api/projects` and `/api/me/home` each answer in under 300 ms at the median of ten calls.
   Size: M.
+- [x] OPS-031 · Move the API and database to the EU
+  Decision 140 (moving production's API and database to Europe) chose option A without the warm container. Create a Neon project in Frankfurt (`aws-eu-central-1`) on the Free plan with the same roles and pooler setup, run the migrations and reseed it under [ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md) (the deployed app is dev). Deploy the Modal web function under a new name with `region="eu"` and `routing_region="eu-west"`, point the edge `API_ORIGIN`, the Modal secrets and the GitHub production environment at the new function and database, and leave ingest, events and GPU functions unpinned. A slice of OPS-020 (pin storage, database and Modal functions per region) without the R2 EU jurisdiction or GPU parts. The old US Neon project is deleted only after the owner's separate yes.
+  Done when a warm signed-in call measured from Europe is in the result file, the web function logs an EU `MODAL_REGION`, and the app reads and writes a Neon database in Frankfurt.
+  Size: M.
+- [x] OPS-032 · Slides in an EU jurisdiction bucket
+  The bucket `parfocal-dev` holds the deployed app's slides with only the best-effort `eeur` hint, and a jurisdiction cannot be added to an existing bucket ([server region options](results/2026-11-17-server-region-options.md)). Create a bucket in the `eu` jurisdiction through OpenTofu, copy the objects, point the Worker binding (`jurisdiction: "eu"`), the S3 endpoint `<account>.eu.r2.cloudflarestorage.com` and bootstrap's config at it, and keep the old bucket until the owner's separate yes. While both exist storage costs about $0.43 a month more, so ask the owner before the copy.
+  Done when the deployed app reads and writes slides in the EU bucket, `wrangler r2 bucket info` shows the `eu` jurisdiction, and a deploy test covers the binding and the endpoint.
+  Size: M.
+- [x] OPS-033 · Home under 500 ms and a slide opens in under 3 s on the deployed app
+  After OPS-031 (the API and database moved to the EU), a walk of app.parfocal.eu on 2026-11-17 measured `/api/me/home` at 2.4 s with 59 queries, `/api/me/notification-preferences` at 29 queries and `/api/me/review-tasks` at 32, most calls at 9 to 12 queries in 2 transactions, one web container about 7 times slower than the other on `/api/status`, and a slide that showed "Loading the slide" for more than 10 s. Batch the N+1 reads in those three routes, drop the pool pre-ping round trips if safe with Neon's suspend, log the container's region and cloud in the request log line to explain the slow container, and profile the slide open path from tile access to `levels.json` to the first tiles and fix its biggest wait.
+  Done when db tests pin the query counts of the three routes to a handful each, the request log line carries the region, and a result file has before and after numbers from curl and Server-Timing.
+  Depends on: OPS-031.
+  Size: M.
+- [x] OPS-034 · My slides page reads its review states in batches
+  `/api/me/slides` measured about 70 queries for one page on app.parfocal.eu because the page loaded the full review state of every task one task at a time (the task row, its slides, its disagreement queue and its assignments). The page now loads the states of all the tasks it touches together, so the count no longer grows with the number of tasks.
+  Done when a db test pins `/api/me/slides` for 50 slides under 12 queries however many tasks the page touches, and the slides, sessions and review state tests still pass.
+  Depends on: OPS-033.
+  Size: S.
 
 ---
 
@@ -4658,7 +4758,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on ONB-007, TEST-012.
   Size: L.
 
-- [ ] TEST-019 · Application performance on main paths
+- [x] TEST-019 · Application performance on main paths
   The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md), tasks the thesis assignment adds). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a decision to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
   Done when the scripts run locally against the full stack, a result file records the numbers with the machine, browser, data and method, and CI runs the CPU-side paths against their budgets.
   Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
@@ -4749,7 +4849,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-029.
   Size: S.
 
-- [ ] TEST-037 · Seeded fixture slides open in the deployed viewer
+- [x] TEST-037 · Seeded fixture slides open in the deployed viewer
   TEST-020 (showcase seed and the Reset production workflow) seeds 12 slides that point at the public fixtures in `parfocal-dev/fixtures/`, but the deployed viewer cannot open them. The edge accepts a shared folder only under `samples/camelyon16/` (`apps/edge/src/capability.ts`), and the fixtures have no derived files beside them. Let the edge sign a read of the fixture folders the seed uses, add their derived files next to `fixtures/` once, and add ome-tiff to the seeded formats.
   Done when an E2E test on production opens one seeded slide of each format, and the reset test still proves `fixtures/` is untouched.
   Depends on TEST-020.
@@ -4790,6 +4890,26 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Extend the showcase seed so the owner's workspace holds a demo project where every fixture slide that opens has a regions result and a cells result, one review task assigned to the owner ready in guided review with objects to decide, one annotate task, one task half done and one submitted with a report, and the hint bubbles match what is on screen. Run the Reset production workflow against the dev app (ADR 0390, the deployed app is dev), then walk the whole flow in the deployed app: open My work, decide objects, submit, see the report, and log the walk.
   Done when the seed tests cover the new states, and the log records a walk on app.parfocal.eu from My work through a submitted review to its report with no error screen and no endless loader.
   Depends on OPS-029, TEST-020. Size: M.
+- [ ] TEST-047 · The demo seed carries real model results made on the owner's Mac
+  On 2026-11-17 the owner asked that the seeded demo hold real AI results instead of drawn shapes, made by running the project's models locally on small crops of the fixture slides, so the deployed app looks the way it will with real data.
+  Run the cell and region models the ML worker already wraps (for example the InstanSeg cells model and the tumour region model) on CPU or the Mac's GPU over small crops of a few fixture slides that open in the deployed viewer, store the outputs as result files in the project's import formats, and make the showcase seed import them instead of `showcase_shapes.py` where real results exist. Keep the run small enough for a 24 GB Mac and record the timings.
+  Done when a result file reports which models ran on which crops with the times, the seed tests pass with the real result files, and after the next reset the demo project shows the real cells and regions in the deployed viewer.
+  Depends on TEST-046. Size: M.
+
+- [x] TEST-048 · Format gallery slides open on the deployed app
+  On 2026-11-17 the 39 Format gallery slides on app.parfocal.eu, such as Argos-1.avs in "Scanner format comparison", showed "You cannot open this slide". No deploy or reset step ever ran the TEST-037 publisher (seeded fixture slides get their own folders), so the seed fell back to `fixtures/<file>`, the API signed the folder `fixtures/` and the edge refused it as malformed. Make Reset production publish the `fixture-slides/` folders before it empties anything, make a deployed seed fail loudly instead of falling back, publish the folders once and point the existing rows at them.
+  Done when a test proves every seeded `original_key` yields a folder the edge's shared-folder rule accepts, the reset test proves the publish runs before the truncate, and the tile of a gallery slide on app.parfocal.eu answers 206.
+  Depends on TEST-037. Size: S.
+
+- [x] TEST-049 · The browser smoke passes on every production deploy
+  The browser-smoke job of the deploy workflow failed on every production deploy with 403 on GET /api/projects, because the smoke account smoke-walk@parfocal.eu had no workspace membership and every reset wipes the app tables. Make the showcase seed give each address in the repository variable SEED_VIEWER_EMAILS a reviewer seat with a viewer seat on the first gallery project of the first workspace, additively and on every reset, pass the variable through the Reset production workflow, add the same rows to the current Frankfurt database with an additive insert, and keep the smoke walk to reads.
+  Done when a seed test shows the viewer seat is created once and read-only on repeated seeds, and the next production deploy's browser-smoke job passes without a reset.
+  Depends on TEST-020. Size: S.
+
+- [x] TEST-050 · Three web tests left failing after the viewer moved to the engine
+  After VIEW-075 (the rest of the viewer runs on the engine stage) three web tests failed: the four-pane compare accessibility spec on the rotation reset buttons (axe target size under 24 pixels), the viewer tools spec that expects the Focus mode link to show the prototype card text, and `onboarding-scenes.test.ts`, whose inventory check still dropped the forgot and reset sign-in scenes that IAM-033 (reset a forgotten password) brought back and listed them in a different order than the inventory.
+  Done when `compare-layouts.spec.ts`, `viewer-tools.spec.ts` part 1 and `onboarding-scenes.test.ts` pass.
+  Size: S.
 
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
@@ -4938,6 +5058,11 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
 - [x] PROJ-012 · Removing a class that stored work uses is refused, not a crash
   `PUT /api/projects/{id}/classes` checked only task annotations before it deleted a class, so a class used by a person's own annotation, an imported result set, a review edit, a skip or a decision broke a foreign key and answered 500. The write isolation suite of SEC-043 (every write route is sent as another workspace) found it when the owner of a seeded project replaced its class list. Check every column that points at a class without a cascade.
   Done when an API test removes a class that a person's own annotation uses and gets 409 `class-in-use`, and a test pins the list of columns the check reads.
+  Size: S.
+- [x] PROJ-013 · New project opens its drawer anywhere and an empty result layer can be deleted
+  On 2026-11-17 the owner found on app.parfocal.eu that the New project button sends them to the first project in the list instead of opening the create drawer, and that the result sets tab of a project has no way to delete an empty result layer.
+  Open the create-project drawer over the current page wherever the button is (projects list, home, palette) with no navigation to any project, and go to the new project after creating. Give an empty result layer or set a visible delete action with a confirm, and let the API allow it. A layer with results keeps its current rules.
+  Done when unit tests cover both, API tests with `uv run pytest -m db` cover deleting an empty layer, and one Playwright spec for each bug passes.
   Size: S.
 
 ---
@@ -5113,7 +5238,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, IAM-007, NOTIF-004.
   Size: M.
 
-- [ ] TASK-007 · Nudge, reassign and change a task
+- [x] TASK-007 · Nudge, reassign and change a task
   The researcher nudges reviewers who are behind with a message, reassigns slides, adds a reviewer and changes the due date, each audited and notified. Reassigning moves a reviewer's slides that are not started by default, or every slide, and then the decisions already given stay with the first reviewer's name and the new reviewer starts fresh on those slides. A reassign never goes to the same person.
   Done when API tests cover each action, both ways of reassigning with the decisions kept under the first reviewer, and a refused reassign to the same person, and E2E nudges from Assigned by me and from Team (TEAM-007).
   Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)). Refs mock: team/nudge, mock: team/reassign, mock: team/partial, doc 44.
@@ -6400,7 +6525,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Read every value from the real API, keep fakes only behind the fake API's own entry, use real dates and people, and show an honest empty state where the API has nothing. Remove each fixed file from the guard's list.
   Done when none of these files is in the guard's list, the clinical report and search screens print no fixed date or name, and their unit and browser tests pass.
   Size: M.
-- [ ] PROTO-027 · The prototype scene harness is not reachable in the deployed app
+- [x] PROTO-027 · The prototype scene harness is not reachable in the deployed app
   PROTO-025 (main screens show real data and real images) found that `?scene=` still switches production screens into prototype scenes, for example `/projects/$projectId/upload?scene=X` renders the upload mock with its "Mock only" tag and "Jump to the end" button. About 108 route lines read a scene.
   Let scenes run only in the fake API build and Storybook, ignore the `scene` search value in the deployed app, and remove the mock-only controls from production paths. Extend `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates) so a production route that reads a scene fails it.
   Done when a browser test against the production build opens a screen with `?scene=` and sees the real screen, and the guard covers scenes.

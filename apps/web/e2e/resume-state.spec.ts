@@ -23,9 +23,10 @@ test("closing the browser mid-review resumes guided review at the same object", 
   const before = await freshBrowser(browser, baseURL);
   const page = await before.newPage();
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&object=T2`);
-  await expect(page.getByText(/The AI says T2 is/)).toBeVisible();
-  await page.getByRole("button", { name: /Skip for now|Next/ }).click();
-  await expect(page.getByText(/The AI says T3 is/)).toBeVisible();
+  const card = page.getByTestId("stage-review-objects");
+  await expect(card).toHaveAttribute("data-current", "T2", { timeout: 20_000 });
+  await card.getByRole("button", { name: "Next" }).click();
+  await expect(card).toHaveAttribute("data-current", "T3");
   await expect.poll(() => stored(page)).toContain('"object_id":"T3"');
   const state = await before.storageState();
   await before.close();
@@ -35,7 +36,9 @@ test("closing the browser mid-review resumes guided review at the same object", 
   await again.goto("/");
   await again.getByRole("button", { name: "Continue ↵" }).click();
   await expect(again).toHaveURL(new RegExp(`/tasks/${rt14}/guided\\?.*object=T3`));
-  await expect(again.getByText(/The AI says T3 is/)).toBeVisible();
+  await expect(again.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T3", {
+    timeout: 20_000,
+  });
   await after.close();
 });
 

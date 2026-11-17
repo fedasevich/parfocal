@@ -26,32 +26,33 @@ import {
   toggleLinked,
   unlinkViews,
 } from "@parfocal/viewer-engine";
-import {
-  type CSSProperties,
-  Fragment,
-  type PointerEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Fragment, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { LiveCursor } from "../../presence/live-cursor.tsx";
-import { cursorSender, pointOfShare, shareOfPoint } from "../../presence/shared-cursor.ts";
+import { cursorSender } from "../../presence/shared-cursor.ts";
 import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
+import { type StillDrawChoices, StillEngine } from "../../viewer/still-engine.tsx";
+import type { StillFrame } from "../../viewer/still-frame.ts";
+import { useWebglAvailable } from "../../viewer/webgl.ts";
 import { okData } from "../placeholder.tsx";
-import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
+import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
+import {
+  overviewCentre,
+  overviewOfShare,
+  shareOfOverview,
+  slideExtentOf,
+  turnedHost,
+} from "./compare-frame.ts";
 import {
   assignSlides,
   type CompareLayout,
   gridOf,
   isCompareLayout,
-  layerSideOf,
   layoutOptions,
   paneName,
   paneSides,
@@ -77,29 +78,27 @@ import { type PaneSlideIds, pickSlide, swapSlides } from "./pane-slides.ts";
 import { reviewRail } from "./rails.ts";
 import { pairKeyOf, savedOffsetOf, useSavedAlignments } from "./saved-alignments.ts";
 import { grayPixelsOf } from "./thumbnail-pixels.ts";
-import { midEdge } from "./tool-geometry.ts";
-import { coverHome } from "./tool-maths.ts";
 import type { ToolSession } from "./tool-session.tsx";
 
-const stainFilter = "grayscale(1) sepia(.85) hue-rotate(-12deg) saturate(1.5) brightness(1.02)";
+type CompareSlide = PaneSlide & { id: string; ihc: boolean; note: string };
 
-type CompareSlide = PaneSlide & { id: string; ihc: boolean; flip: boolean; note: string };
+const plainSlide: StillDrawChoices = {
+  draw: "outline",
+  width: "normal",
+  opacity: 1,
+  colorBy: "class",
+  cutoff: 0,
+  confidence: "all",
+};
 
-function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): CompareSlide {
+function toCompareSlide(slide: ProjectSlide, currentId: string): CompareSlide {
   const ihc = slide.stain !== "H&E";
-  const flip = !ihc && index % 2 === 1;
   return {
     key: slide.id,
     id: slide.id,
     name: `${slide.label} · ${slide.stain}`,
     ihc,
-    flip,
-    simulated: ihc,
-    thumb: {
-      backgroundImage: `url(${lookUrl("overview")})`,
-      ...(ihc ? { filter: stainFilter } : {}),
-      ...(flip ? { transform: "scaleX(-1)" } : {}),
-    },
+    thumb: { backgroundImage: `url(${slideThumbUrl(slide.id)})` },
     note:
       slide.id === currentId
         ? "The slide you were reading"
@@ -116,7 +115,7 @@ type CompareViewProps = {
   scene: SceneOf<"compare">;
   rightSlideId?: string | undefined;
   onLeave: (change: {
-    scene?: undefined;
+    scene?: "objects";
     tab?: "objects" | "display" | "comments" | "opinion";
   }) => void;
 };
@@ -127,7 +126,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const all = okData(useListProjectSlides(projectId).data) ?? [];
   const caseSlides = all
     .filter((slide) => slide.case?.label === session.caseLabel)
-    .map((slide, index) => toCompareSlide(slide, index, session.slideId));
+    .map((slide) => toCompareSlide(slide, session.slideId));
   const [chosen, setChosen] = useState<Partial<Record<PaneSide, string | null | undefined>>>({
     left: null,
     right: rightSlideId ?? null,
@@ -141,6 +140,9 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     Partial<Record<PaneSide, { camera: Camera; width: number; height: number }>>
   >({});
   const [layout, setLayout] = useState<CompareLayout>("side");
+  const webgl = useWebglAvailable();
+  const [frames, setFrames] = useState<Partial<Record<PaneSide, StillFrame>>>({});
+  const frameOn = (side: PaneSide | undefined) => (side === undefined ? undefined : frames[side]);
   const [layers, setLayers] = useState([
     { key: "outline", name: "Tumor map outline", left: true, right: false },
     { key: "measurements", name: "Measurements", left: true, right: false },
@@ -195,15 +197,25 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const lineUp = async () => {
     setAlignment("working");
     try {
-      const url = lookUrl("mid");
-      const [from, to] = await Promise.all([grayPixelsOf(url), grayPixelsOf(url)]);
+      if (ids.left === undefined || ids.right === undefined) {
+        setAlignment("none");
+        return;
+      }
+      const [from, to] = await Promise.all([
+        grayPixelsOf(slideThumbUrl(ids.left)),
+        grayPixelsOf(slideThumbUrl(ids.right)),
+      ]);
       const found = registerThumbnails(from, to);
       if (found === null) {
         setAlignment("none");
         return;
       }
-      const centre = link.views.left ?? { x: midSize.width / 2, y: midSize.height / 2 };
-      const offset = offsetFromRegistration(found, midSize, centre);
+      const centre = link.views.left ?? overviewCentre;
+      const extent = slideExtentOf(frameOn("left"));
+      const offset = offsetFromRegistration(found, extent.size, {
+        x: centre.x - extent.left,
+        y: centre.y - extent.top,
+      });
       setLink((state) => alignWithOffset(state, linkReference, "right", offset));
       setAlignment("done");
     } catch {
@@ -271,19 +283,19 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     zoom: Math.log2(camera.scale),
     rotation: rotationOf(side),
   });
-  const onPaneMove = (side: PaneSide, flip: boolean, event: PointerEvent<HTMLElement>) => {
+  const onPaneMove = (side: PaneSide, event: PointerEvent<HTMLElement>) => {
     const last = shown.current[side];
     if ((!cursor && !sendingCursor) || last === undefined) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const point = pointOfScreen(
-      viewOn(side, last.camera),
-      last,
-      { x: event.clientX - rect.left, y: event.clientY - rect.top },
-      flip,
-    );
+    const point = pointOfScreen(viewOn(side, last.camera), last, {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
     if (cursor) setCursorAt({ side, point });
     if (sendingCursor && homeSide !== undefined) {
-      sender.move(shareOfPoint(pointOnHome(point, side, homeSide, link.offsets), midSize));
+      sender.move(
+        shareOfOverview(pointOnHome(point, side, homeSide, link.offsets), frameOn(homeSide)),
+      );
     }
   };
   const cursorOn = (side: PaneSide, camera: Camera, box: { width: number; height: number }) => {
@@ -306,18 +318,15 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       <>
         <Crosshair x={at.x} y={at.y} />
         {liveCursors.map((live) => {
-          const carried = pointOnPane(pointOfShare(live.at, midSize), homeSide, side, link.offsets);
+          const carried = pointOnPane(
+            overviewOfShare(live.at, frameOn(homeSide)),
+            homeSide,
+            side,
+            link.offsets,
+          );
           if (carried === null) return null;
           const spot = screenOfPoint(own, box, carried);
-          return (
-            <LiveCursor
-              key={live.user}
-              x={spot.x}
-              y={spot.y}
-              user={live.user}
-              mirrored={slideOn(side)?.flip === true}
-            />
-          );
+          return <LiveCursor key={live.user} x={spot.x} y={spot.y} user={live.user} />;
         })}
       </>
     );
@@ -326,24 +335,44 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const pane = (side: PaneSide) => {
     const slide = slideOn(side);
     if (slide === undefined) return null;
-    const outline = layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
-    const wrapper: CSSProperties = {
-      ...(slide.ihc ? { filter: stainFilter } : {}),
-      ...(slide.flip ? { transform: "scaleX(-1)" } : {}),
-    };
+    const rotation = rotationOf(side);
     return (
       <section
         data-pane={side}
         className="relative flex min-h-0 min-w-0 overflow-hidden"
         aria-label={`${paneName[side][0]?.toUpperCase()}${paneName[side].slice(1)}: ${slide.name}`}
-        onPointerMove={(event) => onPaneMove(side, slide.flip, event)}
+        onPointerMove={(event) => onPaneMove(side, event)}
       >
-        <div className="absolute inset-0 flex" style={wrapper}>
+        <div className="absolute inset-0 flex">
           <SlideStill
             view={{ kind: "whole" }}
-            look="mid"
-            homeOf={coverHome(midSize, [760, 520])}
-            rotation={rotationOf(side)}
+            rotation={rotation}
+            backdrop={
+              webgl
+                ? ({ camera, size, onReady, onTiles }) => (
+                    <div
+                      data-testid="engine-turn"
+                      data-rotation={rotation}
+                      className="pointer-events-none absolute"
+                      style={turnedHost(rotation, size)}
+                    >
+                      <StillEngine
+                        key={slide.id}
+                        slideId={slide.id}
+                        camera={camera}
+                        objects={null}
+                        choices={plainSlide}
+                        hiddenClasses={noClasses}
+                        onReady={(ready) => {
+                          onReady(ready);
+                          setFrames((known) => frameKept(known, side, ready?.frame));
+                        }}
+                        onTiles={onTiles}
+                      />
+                    </div>
+                  )
+                : undefined
+            }
             overlay={({ camera, size }) => (
               <>
                 {cursorOn(side, camera, size)}
@@ -355,7 +384,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   <button
                     type="button"
                     aria-label={t`Rotate ${paneName[side]} pane left`}
-                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    className="min-h-6 min-w-6 rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { by: -rotationStep })}
                   >
                     ↺
@@ -366,7 +395,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   <button
                     type="button"
                     aria-label={t`Rotate ${paneName[side]} pane right`}
-                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    className="min-h-6 min-w-6 rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { by: rotationStep })}
                   >
                     ↻
@@ -374,7 +403,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   <button
                     type="button"
                     aria-label={t`Reset ${paneName[side]} pane rotation to 0°`}
-                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    className="min-h-6 min-w-6 rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { to: 0 })}
                   >
                     0°
@@ -388,11 +417,6 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             bare
             minimap={false}
             hint={false}
-            underlay={() =>
-              outline ? (
-                <path d={midEdge} fill="none" stroke="var(--c-tumor)" strokeWidth={3} />
-              ) : null
-            }
           />
         </div>
         <PaneHeader
@@ -521,11 +545,11 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       tool="select"
       railGroups={reviewRail}
       onToolChange={(tool) => {
-        if (tool === "select") onLeave({ scene: undefined });
+        if (tool === "select") onLeave({ scene: "objects" });
       }}
       onCompare={() => setPicking("right")}
       tab="objects"
-      onTabChange={(tab) => onLeave({ scene: undefined, tab: tab as "display" })}
+      onTabChange={(tab) => onLeave({ scene: "objects", tab: tab as "display" })}
       scene={scene}
       tabs={[
         { value: "objects", label: "Objects", count: counts.total, body },
@@ -571,4 +595,16 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       </div>
     </ViewerFrame>
   );
+}
+
+const noClasses: ReadonlySet<string> = new Set();
+
+function frameKept(
+  known: Partial<Record<PaneSide, StillFrame>>,
+  side: PaneSide,
+  frame: StillFrame | undefined,
+): Partial<Record<PaneSide, StillFrame>> {
+  if (known[side] === frame) return known;
+  const { [side]: _gone, ...rest } = known;
+  return frame === undefined ? rest : { ...rest, [side]: frame };
 }

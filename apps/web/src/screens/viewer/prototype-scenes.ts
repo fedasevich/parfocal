@@ -74,7 +74,7 @@ export function viewerPrototypeLinks(
       link: linkOptions({
         to: "/projects/$projectId/slides/$slideId",
         params,
-        search: { task: taskId, object: findingsObjects[scene] },
+        search: { task: taskId, scene: "objects", object: findingsObjects[scene] },
       }),
     })),
     ...layersScenes.map(({ scene, label, note }) => ({

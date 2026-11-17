@@ -8,6 +8,7 @@ import {
   parseDay,
   plural,
 } from "../format.ts";
+import { minutesLeft } from "../my-work/review-progress.ts";
 
 const dayOf = (at: string) => parseDay(at.slice(0, 10));
 
@@ -42,8 +43,9 @@ export function reviewerDetail(row: TeamReviewer, asOf: string): string {
   if (row.status === "done") return `all ${row.slides_assigned} submitted`;
   if (row.status === "away") return row.away_until ? `until ${formatDue(row.away_until)}` : "";
   if (row.status === "behind") {
-    if (row.minutes_left === null) return `${plural(left, "slide")} left`;
-    return `${plural(left, "slide")} left · about ${durationText(row.minutes_left)}`;
+    const minutes = minutesLeft(row.slides_done, row.slides_assigned);
+    if (minutes === null) return `${plural(left, "slide")} left`;
+    return `${plural(left, "slide")} left · about ${durationText(minutes)}`;
   }
   const sinceAssigned = (new Date(asOf).getTime() - new Date(row.assigned_at).getTime()) / 60000;
   if (row.slides_done === 0 && sinceAssigned <= justNowMinutes) return "told just now";

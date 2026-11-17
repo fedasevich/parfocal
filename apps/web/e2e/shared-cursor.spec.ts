@@ -133,20 +133,7 @@ test("a sharer's cursor shows in a compare pane and a compare user's cursor reac
   await expect(inPane).toHaveCount(1, { timeout: 5000 });
   await expect(inPane).toHaveAttribute("aria-label", /^Anna .* points here$/);
   await expect(simona.getByTestId("shared-cursor")).toHaveCount(2);
-  const flipped = simona.locator('[data-pane] > div[style*="scaleX(-1)"]');
-  const change = simona.locator('[data-pane="right"] button[aria-haspopup="listbox"]');
-  const options = simona
-    .getByRole("listbox", { name: "Slide for the right side" })
-    .getByRole("option");
-  await change.click();
-  const choices = await options.count();
-  await change.click();
-  for (let index = 0; index < choices && (await flipped.count()) === 0; index += 1) {
-    await change.click();
-    const swaps = /swaps the panes/.test((await options.nth(index).textContent()) ?? "");
-    await (swaps ? change : options.nth(index)).click();
-  }
-  await expect(flipped.getByTestId("shared-cursor")).toHaveCount(1);
+  await expect(simona.locator('[data-pane="right"]').getByTestId("shared-cursor")).toHaveCount(1);
   expect(await readsForward(simona)).toEqual([1, 1]);
 
   await simona.bringToFront();

@@ -81,7 +81,10 @@ test("a note written in guided review shows in the Comments tab and the adjudica
   await page.keyboard.press("Enter");
   await expect(page.getByText("Folded edge, ask")).toBeVisible();
 
-  await goInApp(page, `/projects/${p07}/slides/${a1}?task=${rt14}&object=T5&tab=comments`);
+  await goInApp(
+    page,
+    `/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects&object=T5&tab=comments`,
+  );
   const notes = page.getByRole("region", { name: "Decision notes on T5" });
   await expect(notes).toContainText("Note on decision: Disagree");
   await expect(notes).toContainText("Folded edge, ask @Daniel Hruška");

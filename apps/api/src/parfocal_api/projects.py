@@ -207,17 +207,13 @@ async def owned(connection: AsyncConnection, principal: Principal, project_id: u
     raise OwnersOnlyError
 
 
-async def project_of(
-    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID
-) -> Project:
-    row = await row_of(connection, project_id)
-    members = await connection.execute(
-        select(project_members.c.user_id, project_members.c.role, project_members.c.sign_out)
-        .where(project_members.c.project_id == project_id)
-        .order_by(project_members.c.role, project_members.c.user_id)
-    )
+def project_from(principal: Principal, row: Any, member_rows: list[Any]) -> Project:
     privacy_mode = PrivacyMode(row.privacy_mode)
     template = AnalysisTemplate(row.template)
+    my_role = None
+    if isinstance(principal, MemberPrincipal):
+        mine = [m.role for m in member_rows if m.user_id == principal.user_id]
+        my_role = ProjectRole(mine[0]) if mine else None
     return Project(
         id=row.id,
         code=code_of(row.number),
@@ -240,16 +236,65 @@ async def project_of(
         archived_at=row.archived_at,
         created_at=row.created_at,
         sample=row.sample,
-        my_role=await role_in(connection, principal, project_id),
+        my_role=my_role,
         members=[
             ProjectMember(
                 user_id=m.user_id,
                 role=ProjectRole(m.role),
                 sign_out=sign_out_right(privacy_mode, ProjectRole(m.role), m.sign_out),
             )
-            for m in members
+            for m in member_rows
         ],
     )
+
+
+async def members_of(
+    connection: AsyncConnection, project_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[Any]]:
+    grouped: dict[uuid.UUID, list[Any]] = {project_id: [] for project_id in project_ids}
+    rows = await connection.execute(
+        select(
+            project_members.c.project_id,
+            project_members.c.user_id,
+            project_members.c.role,
+            project_members.c.sign_out,
+        )
+        .where(project_members.c.project_id.in_(project_ids))
+        .order_by(project_members.c.role, project_members.c.user_id)
+    )
+    for member in rows:
+        grouped[member.project_id].append(member)
+    return grouped
+
+
+async def project_of(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    row: Any | None = None,
+) -> Project:
+    found = row if row is not None else await row_of(connection, project_id)
+    members = await members_of(connection, [project_id])
+    return project_from(principal, found, members[project_id])
+
+
+async def projects_of(
+    connection: AsyncConnection, principal: Principal, project_ids: list[uuid.UUID]
+) -> list[Project]:
+    if not project_ids:
+        return []
+    rows = {
+        row.id: row
+        for row in await connection.execute(
+            select(projects).where(projects.c.id.in_(project_ids), IN_THIS_TENANT, LIVE)
+        )
+    }
+    members = await members_of(connection, list(rows))
+    return [
+        project_from(principal, rows[project_id], members[project_id])
+        for project_id in project_ids
+        if project_id in rows
+    ]
 
 
 async def audit(
@@ -355,7 +400,7 @@ async def list_projects(
             & (project_members.c.user_id == principal.user_id),
         )
     ids = await connection.scalars(statement.order_by(projects.c.number))
-    return [await project_of(connection, principal, project_id) for project_id in ids]
+    return await projects_of(connection, principal, list(ids))
 
 
 @router.get("/deleted", operation_id="listDeletedProjects", **require(Permission.CREATE_CASES))
@@ -399,8 +444,8 @@ async def list_deleted_projects(
 async def get_project(
     project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> Project:
-    await visible(connection, principal, project_id)
-    return await project_of(connection, principal, project_id)
+    row = await visible(connection, principal, project_id)
+    return await project_of(connection, principal, project_id, row)
 
 
 async def require_live_template(connection: AsyncConnection, template_id: uuid.UUID) -> None:

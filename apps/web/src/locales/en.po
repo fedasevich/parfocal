@@ -120,6 +120,7 @@ msgid " in {projectCode}"
 msgstr " in {projectCode}"
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid " or $1"
 msgstr " or $1"
 
@@ -297,6 +298,12 @@ msgstr "{0, plural, one {# reviewer} other {# reviewers}}"
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "{0} - offline"
 msgstr "{0} - offline"
+
+#. placeholder {0}: object.object
+#. placeholder {1}: object.class_name
+#: src/viewer/stage-focus.tsx
+msgid "{0} · {1}"
+msgstr "{0} · {1}"
 
 #. placeholder {0}: kindLabel(offer.study_kind)
 #. placeholder {1}: offer.blocks.length
@@ -980,11 +987,6 @@ msgstr "{0} mm across. Decided. Press a key again to change it."
 msgid "{0} mm across. Still open."
 msgstr "{0} mm across. Still open."
 
-#. placeholder {0}: tb(overview.in_place_tb)
-#: src/screens/admin/overview.tsx
-msgid "{0} more read in place"
-msgstr "{0} more read in place"
-
 #. placeholder {0}: plural(toFix, "file")
 #. placeholder {1}: toFix === 1 ? "s" : ""
 #: src/screens/upload/live-wizard.tsx
@@ -1230,11 +1232,6 @@ msgstr "{0} on {1} measured {2} with the ruler"
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "{0} on the {side}"
 msgstr "{0} on the {side}"
-
-#. placeholder {0}: visible.length
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "{0} on the slide"
-msgstr "{0} on the slide"
 
 #. placeholder {0}: person.openTasks
 #. placeholder {1}: person.openTasks > 1 ? "s" : ""
@@ -1942,6 +1939,10 @@ msgstr "{id} added. {0}"
 msgid "{id} added. It is the largest now and sets the category."
 msgstr "{id} added. It is the largest now and sets the category."
 
+#: src/screens/admin/overview.tsx
+msgid "{inPlace} more read in place"
+msgstr "{inPlace} more read in place"
+
 #: src/routes/issue-states.tsx
 msgid "{issueStateCount} states, grouped by flow. Each one is a scene of its own screen, and Show opens that screen in that state with its fix ready to try. Back to the index sits above the frame."
 msgstr "{issueStateCount} states, grouped by flow. Each one is a scene of its own screen, and Show opens that screen in that state with its fix ready to try. Back to the index sits above the frame."
@@ -2104,10 +2105,6 @@ msgstr "{senderFirst} sees your changes and the note."
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
 msgstr "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
-
-#: src/screens/viewer/use-viewer-panels.tsx
-msgid "{setName}, imported 12 Oct"
-msgstr "{setName}, imported 12 Oct"
 
 #. placeholder {0}: changedCount ? t`your ${changedCount} changed key${changedCount > 1 ? "s" : ""}` : t`the default keys`
 #: src/screens/settings/shortcuts-section.tsx
@@ -2399,12 +2396,9 @@ msgstr "<0>Run a model</0> on the picked slides, or pick another result set."
 msgid "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 msgstr "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 
+#: src/routes/issue-pages.$kind.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
-msgid "<0>Signed off 15 Oct.</0> Changes need an amendment."
-msgstr "<0>Signed off 15 Oct.</0> Changes need an amendment."
-
-#: src/routes/issue-pages.$kind.tsx
 msgid "<0>Signed off.</0> Changes need an amendment."
 msgstr "<0>Signed off.</0> Changes need an amendment."
 
@@ -2650,6 +2644,10 @@ msgstr "A model that runs somewhere else can still bring its results in as files
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "A new code is on its way. The old one stops working"
 msgstr "A new code is on its way. The old one stops working"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "A new code is on its way. The old one stops working."
+msgstr "A new code is on its way. The old one stops working."
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "A new draft, Evaluation v2, copied from v1"
@@ -2968,12 +2966,17 @@ msgstr "Add a layer"
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-object-notes.tsx
 msgid "Add a note"
 msgstr "Add a note"
 
 #: src/screens/review/object-card.tsx
 msgid "Add a note, type @ to mention someone"
 msgstr "Add a note, type @ to mention someone"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Add a passkey"
+msgstr "Add a passkey"
 
 #. placeholder {0}: stemOf(slide.path)
 #: src/screens/upload/live-wizard.tsx
@@ -3291,6 +3294,15 @@ msgstr "AI is checked least sure first, and experts draw what it missed."
 msgid "AI models"
 msgstr "AI models"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects"
+msgstr "AI objects"
+
+#. placeholder {0}: objects.length
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects · {0}"
+msgstr "AI objects · {0}"
+
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr "AI only, reviewer disagreed"
@@ -3302,14 +3314,6 @@ msgstr "AI order"
 #: src/viewer/annotate-task-panel.tsx
 msgid "AI result"
 msgstr "AI result"
-
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "AI result hidden"
-msgstr "AI result hidden"
-
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "AI result on · {resultName}"
-msgstr "AI result on · {resultName}"
 
 #: src/screens/new-task/steps.tsx
 msgid "AI result to check"
@@ -3336,6 +3340,14 @@ msgstr "AI says: {0}"
 #: src/screens/new-task/modals.tsx
 msgid "AI says: <0>Tumor, 91% sure</0>"
 msgstr "AI says: <0>Tumor, 91% sure</0>"
+
+#: src/viewer/stage-focus.tsx
+msgid "AI score {score}%. Decided. Press a key again to change it."
+msgstr "AI score {score}%. Decided. Press a key again to change it."
+
+#: src/viewer/stage-focus.tsx
+msgid "AI score {score}%. Still open."
+msgstr "AI score {score}%. Still open."
 
 #: src/results/add-result-set.tsx
 #: src/screens/upload/viewer-flow.tsx
@@ -3368,6 +3380,10 @@ msgstr "All actions"
 #: src/flow-map/walk-bar.tsx
 msgid "All chapters"
 msgstr "All chapters"
+
+#: src/viewer/stage-object-notes.tsx
+msgid "All comments on this slide"
+msgstr "All comments on this slide"
 
 #: src/screens/my-work/to-review-tab.tsx
 msgid "All decided"
@@ -3535,7 +3551,6 @@ msgstr "Annotate"
 msgid "Annotate by hand"
 msgstr "Annotate by hand"
 
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Annotate task"
 msgstr "Annotate task"
@@ -3596,6 +3611,10 @@ msgstr "Answer it"
 #: src/screens/review/guided-review.tsx
 msgid "Answer with one of the buttons, or press {answerKeyList}."
 msgstr "Answer with one of the buttons, or press {answerKeyList}."
+
+#: src/viewer/stage-coach.tsx
+msgid "Answer with one of the buttons, or press {keyList}."
+msgstr "Answer with one of the buttons, or press {keyList}."
 
 #: src/study/study-screen.tsx
 msgid "Answered"
@@ -3929,6 +3948,10 @@ msgstr "Back to My work. Every edit is saved"
 #: src/screens/admin/admin-shell.tsx
 msgid "Back to Parfocal"
 msgstr "Back to Parfocal"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Back to sign in"
+msgstr "Back to sign in"
 
 #: src/screens/review/object-card.tsx
 msgid "Back to the answers"
@@ -4588,6 +4611,10 @@ msgstr "Change it"
 msgid "Change the {0} slide"
 msgstr "Change the {0} slide"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Change the address"
+msgstr "Change the address"
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Change the slide on this side"
 msgstr "Change the slide on this side"
@@ -4714,10 +4741,6 @@ msgstr "Check inside areas I draw"
 msgid "Check nothing"
 msgstr "Check nothing"
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Check progress"
-msgstr "Check progress"
-
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Check that the whole link was copied, or ask the person who shared it for a new one."
 msgstr "Check that the whole link was copied, or ask the person who shared it for a new one."
@@ -4729,6 +4752,10 @@ msgstr "Check the address first."
 #: src/screens/upload/files-step.tsx
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr "Check the address to list what is there. Nothing is fetched yet."
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Check the code from your email, then enter a new password."
+msgstr "Check the code from your email, then enter a new password."
 
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Check the line"
@@ -4752,8 +4779,8 @@ msgid "Checked by you"
 msgstr "Checked by you"
 
 #: src/screens/admin/admin-screen.tsx
-msgid "Checking your access…"
-msgstr "Checking your access…"
+msgid "Checking your access"
+msgstr "Checking your access"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Checking your password…"
@@ -4800,6 +4827,10 @@ msgstr "Choose a GeoJSON file. You see it on the slide in cyan before anything i
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Choose a model"
 msgstr "Choose a model"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Choose a new password"
+msgstr "Choose a new password"
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose a result file"
@@ -5289,8 +5320,6 @@ msgid "Confirm"
 msgstr "Confirm"
 
 #. placeholder {0}: selectedAi.object
-#. placeholder {0}: selectedObject?.id
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Confirm {0}"
 msgstr "Confirm {0}"
@@ -5492,9 +5521,27 @@ msgstr "Could not create the account."
 msgid "Could not load {label}."
 msgstr "Could not load {label}."
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Could not remove the passkey. Try again."
+msgstr "Could not remove the passkey. Try again."
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Could not reset the password."
+msgstr "Could not reset the password."
+
+#: src/screens/onboarding/sign-in-forms.tsx
+#: src/screens/settings/settings-screen.tsx
+msgid "Could not save the passkey. Try again."
+msgstr "Could not save the passkey. Try again."
+
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not send the code."
 msgstr "Could not send the code."
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Could not sign in with a passkey. Try again."
+msgstr "Could not sign in with a passkey. Try again."
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Could not sign in. Try again."
@@ -5851,20 +5898,35 @@ msgid "Defaults that suit most cell models. The test reads the server's own valu
 msgstr "Defaults that suit most cell models. The test reads the server's own values when it has them."
 
 #: src/annotations/pin-layer.tsx
-#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/screens/project/slides-tab.tsx
 #: src/viewer/guided-check.tsx
 msgid "Delete"
 msgstr "Delete"
 
 #. placeholder {0}: selectedAi.object
+#. placeholder {0}: set.name
+#: src/screens/project/slides-tab.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Delete {0}"
 msgstr "Delete {0}"
+
+#. placeholder {0}: set.name
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete {0}?"
+msgstr "Delete {0}?"
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete anyway"
+msgstr "Delete anyway"
 
 #: src/screens/project/project-delete-dialog.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Delete project"
 msgstr "Delete project"
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete result set"
+msgstr "Delete result set"
 
 #: src/viewer/slide-stage.tsx
 msgid "Delete shape"
@@ -6138,6 +6200,10 @@ msgstr "Draft. Not for clinical use until it is signed."
 msgid "Drag one onto the page, or click it to add it after the selected block."
 msgstr "Drag one onto the page, or click it to add it after the selected block."
 
+#: src/viewer/stage-coach.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom."
+msgstr "Drag to move around. Scroll or use + and − to zoom."
+
 #: src/screens/review/guided-review.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
 msgstr "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
@@ -6358,6 +6424,10 @@ msgstr "Email"
 msgid "Email domain"
 msgstr "Email domain"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Email me a code"
+msgstr "Email me a code"
+
 #: src/screens/admin/audit.tsx
 msgid "Emergency"
 msgstr "Emergency"
@@ -6429,8 +6499,12 @@ msgid "Enter posts, Shift+Enter adds a line"
 msgstr "Enter posts, Shift+Enter adds a line"
 
 #: src/screens/onboarding/sign-up-screen.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
-msgstr "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>"
+msgstr "Enter the {codeLength}-character code we sent to <0>{email}</0>"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>, then a new password."
+msgstr "Enter the {codeLength}-character code we sent to <0>{email}</0>, then a new password."
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter the size."
@@ -6439,6 +6513,14 @@ msgstr "Enter the size."
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter your password."
 msgstr "Enter your password."
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Enter your work email, then ask for a code."
+msgstr "Enter your work email, then ask for a code."
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Enter your work email, then choose Sign in with a passkey."
+msgstr "Enter your work email, then choose Sign in with a passkey."
 
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/result-problems.tsx
@@ -6577,6 +6659,10 @@ msgstr "Every file reads cleanly and lines up with its slide. Nothing needs you.
 #: src/screens/upload/check-step.tsx
 msgid "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
 msgstr "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Every hint shows again, once, under its setting."
+msgstr "Every hint shows again, once, under its setting."
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Every object is decided, left open or with the adjudicator"
@@ -7153,6 +7239,10 @@ msgstr "Forget"
 msgid "Forget learned"
 msgstr "Forget learned"
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Forgot your password?"
+msgstr "Forgot your password?"
+
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "Format"
 msgstr "Format"
@@ -7454,6 +7544,7 @@ msgid "Good"
 msgstr "Good"
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "Got it, start"
 msgstr "Got it, start"
 
@@ -7582,6 +7673,11 @@ msgstr "Hidden with it"
 msgid "Hide"
 msgstr "Hide"
 
+#. placeholder {0}: set.name
+#: src/viewer/stage-result-cells.tsx
+msgid "Hide {0}"
+msgstr "Hide {0}"
+
 #: src/annotations/layers-panel.tsx
 msgid "Hide overlays"
 msgstr "Hide overlays"
@@ -7594,6 +7690,10 @@ msgstr "Hide overlays (A)"
 #: src/screens/project/settings-tab.tsx
 msgid "Hide the AI for a first read"
 msgstr "Hide the AI for a first read"
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Hide the cells grid"
+msgstr "Hide the cells grid"
 
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
@@ -7716,6 +7816,10 @@ msgstr "How do you move around a slide?"
 #: src/screens/project/task-settings-drawer.tsx
 msgid "How each answer counts toward agree, not sure and disagree in the evaluation."
 msgstr "How each answer counts toward agree, not sure and disagree in the evaluation."
+
+#: src/viewer/stage-review-objects.tsx
+msgid "How guided review works"
+msgstr "How guided review works"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/how-step.tsx
@@ -8128,6 +8232,10 @@ msgstr "It goes on A1 only. Every result set records its file, model and version
 #: src/screens/admin/api-section.tsx
 msgid "It is shown once. Parfocal keeps only a fingerprint of it."
 msgstr "It is shown once. Parfocal keeps only a fingerprint of it."
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "It leaves this slide and the viewer. The delete is kept in the audit log."
+msgstr "It leaves this slide and the viewer. The delete is kept in the audit log."
 
 #: src/screens/onboarding/invite-screen.tsx
 msgid "It may have expired, been used or been withdrawn. Ask the person who invited you to send a new one."
@@ -8719,6 +8827,18 @@ msgstr "Loading {label}"
 msgid "Loading {productName}"
 msgstr "Loading {productName}"
 
+#: src/screens/admin/join-settings.tsx
+msgid "Loading join settings"
+msgstr "Loading join settings"
+
+#: src/screens/admin/sections.tsx
+msgid "Loading models"
+msgstr "Loading models"
+
+#: src/screens/admin/retention.tsx
+msgid "Loading retention"
+msgstr "Loading retention"
+
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
 msgstr "Loading sharper tiles · 12 left"
@@ -8726,6 +8846,14 @@ msgstr "Loading sharper tiles · 12 left"
 #: src/screens/project/slides-tab.tsx
 msgid "Loading slides"
 msgstr "Loading slides"
+
+#: src/screens/admin/storage.tsx
+msgid "Loading storage"
+msgstr "Loading storage"
+
+#: src/screens/project/tasks-tab.tsx
+msgid "Loading tasks"
+msgstr "Loading tasks"
 
 #: src/screens/team/team-screen.tsx
 msgid "Loading Team"
@@ -8739,6 +8867,10 @@ msgstr "Loading the check order"
 msgid "Loading the messages"
 msgstr "Loading the messages"
 
+#: src/screens/admin/overview.tsx
+msgid "Loading the overview"
+msgstr "Loading the overview"
+
 #: src/screens/project/project-page.tsx
 msgid "Loading the project"
 msgstr "Loading the project"
@@ -8747,15 +8879,21 @@ msgstr "Loading the project"
 msgid "Loading the report"
 msgstr "Loading the report"
 
-#: src/screens/review/guided-review.tsx
+#: src/routes/tasks.$taskId.cells.tsx
+#: src/routes/tasks.$taskId.guided.tsx
+#: src/screens/review/guided-gate.tsx
+#: src/viewer/first-read-guard.tsx
 msgid "Loading the review"
 msgstr "Loading the review"
+
+#: src/screens/admin/workspace-settings.tsx
+msgid "Loading the security contact"
+msgstr "Loading the security contact"
 
 #: src/screens/admin/connect-model.tsx
 msgid "Loading the server details"
 msgstr "Loading the server details"
 
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/comments-on-ids.tsx
 #: src/screens/viewer-tools/tool-session.tsx
@@ -9569,6 +9707,10 @@ msgstr "New link"
 msgid "New map"
 msgstr "New map"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "New password"
+msgstr "New password"
+
 #: src/annotations/pin-layer.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "New pinned thread"
@@ -9659,6 +9801,7 @@ msgstr "New workspace"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Next"
 msgstr "Next"
 
@@ -10067,6 +10210,10 @@ msgstr "None added yet."
 msgid "None picked"
 msgstr "None picked"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "None saved"
+msgstr "None saved"
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/my-work/all-slides-tab.tsx
@@ -10148,6 +10295,7 @@ msgid "Not matched yet"
 msgstr "Not matched yet"
 
 #: src/help/tour-host.tsx
+#: src/screens/onboarding/sign-in-forms.tsx
 #: src/shell/survey-prompt.tsx
 msgid "Not now"
 msgstr "Not now"
@@ -10284,6 +10432,10 @@ msgstr "Note to them <0>optional</0>"
 msgid "Note, optional"
 msgstr "Note, optional"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Notes and comments"
+msgstr "Notes and comments"
+
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"
 msgstr "nothing"
@@ -10354,10 +10506,6 @@ msgstr "Nothing is running."
 #: src/screens/new-task/modals.tsx
 msgid "Nothing is saved. Reviewers get this card for every object."
 msgstr "Nothing is saved. Reviewers get this card for every object."
-
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Nothing is shown. Turn the AI result on."
-msgstr "Nothing is shown. Turn the AI result on."
 
 #. placeholder {0}: filterWord[shown as Exclude<ListFilter, "all">]
 #: src/screens/review/viewer-frame.tsx
@@ -10543,6 +10691,13 @@ msgstr "Object"
 msgid "object {0}"
 msgstr "object {0}"
 
+#. placeholder {0}: index + 1
+#. placeholder {1}: objects.length
+#. placeholder {2}: decided.size
+#: src/viewer/stage-review-objects.tsx
+msgid "Object {0} of {1} · {2} decided"
+msgstr "Object {0} of {1} · {2} decided"
+
 #. placeholder {0}: deposit.objectId
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "object <0>{0}</0>"
@@ -10566,7 +10721,6 @@ msgid "Objective detents"
 msgstr "Objective detents"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -10821,6 +10975,7 @@ msgstr "Opacity"
 #: src/screens/review/viewer-frame.tsx
 #: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer/object-table.tsx
+#: src/viewer/stage-focus.tsx
 msgid "open"
 msgstr "open"
 
@@ -11368,6 +11523,18 @@ msgstr "Parfocal's models are always here. Connect your lab's own models next to
 msgid "Participant code"
 msgstr "Participant code"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Passkey removed. It no longer signs you in"
+msgstr "Passkey removed. It no longer signs you in"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Passkey saved. Next time sign in with it instead of your password"
+msgstr "Passkey saved. Next time sign in with it instead of your password"
+
+#: src/shell/palette-labels.tsx
+msgid "Passkeys"
+msgstr "Passkeys"
+
 #: ../../packages/ui/src/components/auth.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -11515,7 +11682,6 @@ msgstr "People with two factors"
 msgid "People, models, storage and templates. Adds no access to project data."
 msgstr "People, models, storage and templates. Adds no access to project data."
 
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/viewer/object-table.tsx
 msgid "Per class"
 msgstr "Per class"
@@ -11900,6 +12066,7 @@ msgstr "Preview the report"
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Previous"
 msgstr "Previous"
 
@@ -12349,6 +12516,7 @@ msgstr "remote"
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/measure/measurement-list.tsx
 #: src/screens/admin/workspace-settings.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Remove"
 msgstr "Remove"
 
@@ -12387,6 +12555,11 @@ msgstr "Remove from this upload"
 #: src/screens/upload/check-step.tsx
 msgid "Remove the 4 largest slides from this upload"
 msgstr "Remove the 4 largest slides from this upload"
+
+#. placeholder {0}: item.name
+#: src/screens/settings/settings-screen.tsx
+msgid "Remove the passkey {0}"
+msgstr "Remove the passkey {0}"
 
 #: src/screens/developer/bench-section.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -12541,10 +12714,12 @@ msgid "Resend"
 msgstr "Resend"
 
 #. placeholder {0}: clock(secondsLeft)
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend in {0}"
 msgstr "Resend in {0}"
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend the code"
 msgstr "Resend the code"
@@ -12571,6 +12746,10 @@ msgstr "Reset alignment"
 msgid "Reset all"
 msgstr "Reset all"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Reset code"
+msgstr "Reset code"
+
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Reset to 100%"
 msgstr "Reset to 100%"
@@ -12582,6 +12761,10 @@ msgstr "Reset to the task default"
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Reset to the template"
 msgstr "Reset to the template"
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Reset your password"
+msgstr "Reset your password"
 
 #: ../../packages/ui/src/components/bottom-sheet.tsx
 msgid "Resize the panel"
@@ -13261,6 +13444,14 @@ msgstr "Samples"
 msgid "Save"
 msgstr "Save"
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Save a passkey"
+msgstr "Save a passkey"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Save a passkey in your iCloud Keychain or password manager. Next time you sign in with Touch ID, your phone or a security key."
+msgstr "Save a passkey in your iCloud Keychain or password manager. Next time you sign in with Touch ID, your phone or a security key."
+
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "Save a preset"
 msgstr "Save a preset"
@@ -13362,10 +13553,6 @@ msgstr "Scattered unsure cells"
 msgid "Scope"
 msgstr "Scope"
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Scope: all AI objects, least sure first"
-msgstr "Scope: all AI objects, least sure first"
-
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/viewer/viewer-canvas-parts.tsx
@@ -13440,8 +13627,8 @@ msgid "Search, or press a key to see what it does"
 msgstr "Search, or press a key to see what it does"
 
 #: src/screens/search/search-screen.tsx
-msgid "Searching…"
-msgstr "Searching…"
+msgid "Searching"
+msgstr "Searching"
 
 #: src/session/second-factor-screen.tsx
 msgid "Second factor needed"
@@ -13718,6 +13905,10 @@ msgstr "Set by your lab for everyone"
 msgid "Set for this block only."
 msgstr "Set for this block only."
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Set password and sign in"
+msgstr "Set password and sign in"
+
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Set up"
 msgstr "Set up"
@@ -13871,8 +14062,10 @@ msgstr "Show"
 
 #. placeholder {0}: model.name
 #. placeholder {0}: row.name
+#. placeholder {0}: set.name
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/sections.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Show {0}"
 msgstr "Show {0}"
 
@@ -13883,6 +14076,11 @@ msgstr "Show activity"
 #: src/screens/upload/viewer-flow.tsx
 msgid "Show after adding"
 msgstr "Show after adding"
+
+#: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
+msgid "Show all hints again"
+msgstr "Show all hints again"
 
 #: src/screens/upload/overlays.tsx
 msgid "Show an example call"
@@ -13940,6 +14138,10 @@ msgstr "Show the AI result"
 msgid "Show the cells"
 msgstr "Show the cells"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Show the cells grid"
+msgstr "Show the cells grid"
+
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"
 msgstr "Show the cells panel"
@@ -13957,6 +14159,7 @@ msgid "Show the ID tags on the slide"
 msgstr "Show the ID tags on the slide"
 
 #: src/screens/viewer-tools/focus-view.tsx
+#: src/viewer/stage-focus.tsx
 msgid "Show the interface"
 msgstr "Show the interface"
 
@@ -13994,6 +14197,10 @@ msgstr "Show the title"
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "Show threads"
 msgstr "Show threads"
+
+#: src/viewer/stage-focus.tsx
+msgid "show UI"
+msgstr "show UI"
 
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
@@ -14087,6 +14294,10 @@ msgstr "Sign in with a passkey"
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Sign in with your organisation"
 msgstr "Sign in with your organisation"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in without a password next time"
+msgstr "Sign in without a password next time"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
@@ -14219,10 +14430,6 @@ msgstr "Signed off"
 msgid "Signed off {signedOn}"
 msgstr "Signed off {signedOn}"
 
-#: src/screens/viewer/use-viewer-panels.tsx
-msgid "Signed off 15 Oct. Changes need an amendment."
-msgstr "Signed off 15 Oct. Changes need an amendment."
-
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Signed off by: ____________  Date: ________"
 msgstr "Signed off by: ____________  Date: ________"
@@ -14230,6 +14437,10 @@ msgstr "Signed off by: ____________  Date: ________"
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "Signed off. Ask the researcher to amend."
 msgstr "Signed off. Ask the researcher to amend."
+
+#: src/screens/viewer/use-viewer-panels.tsx
+msgid "Signed off. Changes need an amendment."
+msgstr "Signed off. Changes need an amendment."
 
 #. placeholder {0}: signature.at
 #. placeholder {1}: name(signature.by)
@@ -15310,6 +15521,7 @@ msgid "The AI found no tumor areas on this slide. Look at all the tissue at {sca
 msgstr "The AI found no tumor areas on this slide. Look at all the tissue at {scanMagnification}×, one field at a time in reading order, before you decide."
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "The AI found this. It is outlined in white."
 msgstr "The AI found this. It is outlined in white."
 
@@ -15354,7 +15566,7 @@ msgstr "The AI sizes it at {0}, between {1} and {2}. Measure across the widest p
 msgid "The AI stays hidden until your first read"
 msgstr "The AI stays hidden until your first read"
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "The AI stays hidden until your first read is confirmed. Try again in a moment."
 msgstr "The AI stays hidden until your first read is confirmed. Try again in a moment."
 
@@ -15612,6 +15824,10 @@ msgstr "The next object comes after an answer"
 #: src/screens/review/guided-review.tsx
 msgid "The next object comes by itself. The dots take you back to any of them."
 msgstr "The next object comes by itself. The dots take you back to any of them."
+
+#: src/viewer/stage-coach.tsx
+msgid "The next open object comes by itself. Previous and Next take you back to any of them."
+msgstr "The next open object comes by itself. Previous and Next take you back to any of them."
 
 #: src/routes/prototype.tsx
 msgid "The nine chapters from upload to the co-signed clinical report"
@@ -16183,10 +16399,6 @@ msgstr "This slide cannot be read"
 msgid "This slide could not be prepared"
 msgstr "This slide could not be prepared"
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "This slide has no objects."
-msgstr "This slide has no objects."
-
 #: src/screens/upload/server-check.tsx
 msgid "This slide is already in the project"
 msgstr "This slide is already in the project"
@@ -16496,7 +16708,7 @@ msgstr "True positives"
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
@@ -17181,6 +17393,10 @@ msgstr "Watershed"
 msgid "Ways to show results"
 msgstr "Ways to show results"
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "We email a {codeLength}-character code to the address on your account."
+msgstr "We email a {codeLength}-character code to the address on your account."
+
 #: src/feedback/feedback-dialog.tsx
 msgid "We read every message. Nothing else from this screen was sent."
 msgstr "We read every message. Nothing else from this screen was sent."
@@ -17488,10 +17704,6 @@ msgstr "Who is reviewing what · {0}"
 msgid "Who is told"
 msgstr "Who is told"
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Who made it"
-msgstr "Who made it"
-
 #: src/screens/new-task/reviewers-step.tsx
 msgid "Who reviews"
 msgstr "Who reviews"
@@ -17503,6 +17715,7 @@ msgstr "Who reviews"
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/stage-minimap.tsx
 #: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr "Whole slide"
@@ -17590,6 +17803,7 @@ msgstr "Word"
 msgid "Words"
 msgstr "Words"
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Work email"
@@ -17811,6 +18025,7 @@ msgstr "Your alignment is kept for this pair of slides. Clear puts the panes bac
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr "Your answer on {0}"
 
@@ -17855,7 +18070,7 @@ msgstr "Your endpoint"
 msgid "Your files stay as they are. Check your connection and press the upload button again."
 msgstr "Your files stay as they are. Check your connection and press the upload button again."
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "Your first read could not be checked"
 msgstr "Your first read could not be checked"
 

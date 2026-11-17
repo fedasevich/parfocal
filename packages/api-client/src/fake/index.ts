@@ -13,6 +13,7 @@ import { consoleHandlers } from "./console-handlers.ts";
 import { correctionsHandlers } from "./corrections-handlers.ts";
 import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
+import { deletedResultSetHandlers } from "./deleted-result-sets.ts";
 import { checklistHandlers, draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { paintedMapHandlers } from "./painted-map-handlers.ts";
@@ -67,6 +68,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...clinicalReportHandlers(),
     ...createdRecordHandlers(),
     ...uploadHandlers(),
+    ...deletedResultSetHandlers(),
     ...settingsHandlers(),
     ...correctionsHandlers(),
     ...consoleHandlers(),

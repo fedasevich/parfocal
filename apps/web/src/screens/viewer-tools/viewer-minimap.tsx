@@ -15,6 +15,7 @@ import { useArm } from "../../flags/use-arm.ts";
 import { openPopout, useMainPopoutSync } from "../../popout/popout-channel.ts";
 import type { Pin } from "../review/comment-pin.ts";
 import { cellShapes, overviewSize, regionShapes } from "../review/slide-geometry.ts";
+import { useOverviewImage } from "../review/slide-picture.tsx";
 import {
   type Camera,
   imageOf,
@@ -22,7 +23,6 @@ import {
   type StillView,
   shapeKey,
 } from "../review/slide-still.tsx";
-import { lookUrl } from "../thumbnails.ts";
 import { mmBetween } from "./edge-cues.ts";
 import { minimapContent } from "./minimap-content.ts";
 import { pinnedMinimap, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
@@ -32,12 +32,6 @@ import { tissueShareOnScreen } from "./tissue-share.ts";
 import { seenTrail } from "./tool-geometry.ts";
 import { boxCentre, fromOverview, viewportOf } from "./tool-maths.ts";
 import { useHeldCorner } from "./use-held-corner.tsx";
-
-const overviewImage = {
-  src: lookUrl("overview"),
-  width: overviewSize.width,
-  height: overviewSize.height,
-};
 
 const slideExtent: MapRect = [0, 0, overviewSize.width, overviewSize.height];
 
@@ -78,6 +72,7 @@ export function ViewerMinimap({
   onPopOut: () => void;
   onMoveView: (camera: Camera) => void;
 }) {
+  const overviewImage = useOverviewImage();
   const viewport = viewportOf(imageOf(view), camera, size);
   const tissueShare = tissueShareOnScreen(viewport);
   const magnification = magnificationOf(view, camera);

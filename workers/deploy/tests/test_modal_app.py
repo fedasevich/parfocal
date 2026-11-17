@@ -17,6 +17,8 @@ from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
+    BACKFILL_FUNCTION,
+    CROPS_BACKFILL_FUNCTION,
     EVENTS_FUNCTION,
     EVENTS_LINGER_MINUTES,
     EVENTS_OPTIONS,
@@ -30,6 +32,7 @@ from parfocal_deploy.modal_app import (
     INGEST_OPTIONS,
     INGEST_PERIOD_MINUTES,
     INGEST_SPAWN_GAP_SECONDS,
+    LEVELS_BACKFILL_FUNCTION,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
     PRELOAD_VARIABLE,
@@ -39,6 +42,9 @@ from parfocal_deploy.modal_app import (
     WEB_FUNCTION,
     WEB_OPTIONS,
     WEB_PRELOAD,
+    WEB_REGION,
+    WEB_ROUTING_REGION,
+    WORKER_REGION,
     EventSpawner,
     IngestSpawner,
     app,
@@ -55,7 +61,16 @@ from parfocal_ml.gpu_pool import POOLS
 
 def test_the_app_registers_the_web_and_ingest_functions() -> None:
     assert app.name == APP_NAME
-    assert sorted(FUNCTIONS) == sorted([WEB_FUNCTION, INGEST_FUNCTION, EVENTS_FUNCTION])
+    assert sorted(FUNCTIONS) == sorted(
+        [
+            WEB_FUNCTION,
+            INGEST_FUNCTION,
+            EVENTS_FUNCTION,
+            BACKFILL_FUNCTION,
+            CROPS_BACKFILL_FUNCTION,
+            LEVELS_BACKFILL_FUNCTION,
+        ]
+    )
     assert all(function.app is app for function in FUNCTIONS.values())
 
 
@@ -72,6 +87,21 @@ def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
     assert all(pool.min_containers == 0 for pool in POOLS)
 
 
+def test_only_the_web_function_is_pinned_narrow_and_enters_at_dublin() -> None:
+    assert (WEB_REGION, WEB_ROUTING_REGION) == ("eu-west", "eu-west")
+    assert WEB_OPTIONS["region"] == WEB_REGION
+    assert WEB_OPTIONS["routing_region"] == WEB_ROUTING_REGION
+    assert "cloud" not in WEB_OPTIONS
+    for options in (INGEST_OPTIONS, EVENTS_OPTIONS):
+        assert "routing_region" not in options
+
+
+def test_ingest_and_events_run_in_the_eu_beside_the_database() -> None:
+    assert WORKER_REGION == "eu"
+    for options in (INGEST_OPTIONS, EVENTS_OPTIONS):
+        assert options["region"] == WORKER_REGION
+
+
 def test_only_the_web_function_restores_from_a_memory_snapshot() -> None:
     assert WEB_OPTIONS["enable_memory_snapshot"] is True
     assert "enable_memory_snapshot" not in INGEST_OPTIONS
@@ -85,6 +115,38 @@ def test_the_web_container_imports_the_api_before_its_snapshot() -> None:
     assert "parfocal_api.app" in WEB_PRELOAD
     for module in WEB_PRELOAD:
         importlib.import_module(module)
+
+
+def test_the_snapshot_holds_the_database_driver_and_http_stack_the_app_loads_at_startup() -> None:
+    for module in ("sqlalchemy.dialects.postgresql.asyncpg", "asyncpg", "httpcore2", "truststore"):
+        assert module in WEB_PRELOAD
+
+
+def test_the_served_api_logs_how_long_startup_took(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    from fastapi import FastAPI
+
+    import parfocal_api.app
+
+    monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    monkeypatch.setattr(parfocal_common.jobs, "JOB_WAKERS", [no_job_wake])
+    caplog.set_level("INFO", logger=modal_app.STARTUP_LOGGER)
+    app = modal_app.serve()
+
+    async def start_and_stop() -> None:
+        async with app.router.lifespan_context(app):
+            pass
+
+    asyncio.run(start_and_stop())
+    created, ready = caplog.records
+    assert created.getMessage() == "web app created"
+    assert created.__dict__["create_app_ms"] <= created.__dict__["serve_ms"]
+    assert ready.getMessage() == "web ready"
+    assert ready.__dict__["lifespan_ms"] >= 0
+    from parfocal_common.scrubbing import ALLOWED_FIELDS
+
+    assert {"serve_ms", "create_app_ms", "lifespan_ms"} <= ALLOWED_FIELDS
 
 
 def test_other_containers_and_local_runs_skip_the_api_preload() -> None:

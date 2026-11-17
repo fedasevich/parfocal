@@ -2,6 +2,7 @@ import asyncio
 import gzip
 import io
 import re
+import struct
 import uuid
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
@@ -169,10 +170,9 @@ def pyramid_in(handle: BinaryIO, identified: Identified) -> Pyramid | None:
         return pyramid(Reader.TIFFFILE, levels, scale, plane_count(series), skipped)
 
 
-def tiles_in(handle: BinaryIO, identified: Identified, found: Pyramid) -> bytes | None:
+def tiles_in(handle: BinaryIO, identified: Identified, found: Pyramid) -> dict[str, Any] | None:
     handle.seek(0)
-    tiles = tile_index(handle, identified, found)
-    return None if tiles is None else gzip.compress(index_document(tiles), mtime=0)
+    return tile_index(handle, identified, found)
 
 
 def inspected(source: RangedFile, name: str) -> Inspected | str:
@@ -188,11 +188,13 @@ def inspected(source: RangedFile, name: str) -> Inspected | str:
         if levels is None:
             return REMOTE_FORMAT
         tiles = tiles_in(handle, found, levels)
-    except tifffile.TiffFileError, ValueError, OSError, IndexError:
+        table = level_table(levels, handle, tiles)
+    except tifffile.TiffFileError, ValueError, OSError, IndexError, struct.error:
         return REMOTE_FORMAT
     handle.seek(0)
     ranges = ranges_file_of(handle, source.size, PurePosixPath(name).suffix)
-    return Inspected(found.format, found.variant, levels, level_table(levels), tiles, ranges)
+    packed = None if tiles is None else gzip.compress(index_document(tiles), mtime=0)
+    return Inspected(found.format, found.variant, levels, table, packed, ranges)
 
 
 def reader_of(

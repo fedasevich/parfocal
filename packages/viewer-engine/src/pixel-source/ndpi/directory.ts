@@ -33,7 +33,7 @@ const highWord = 2 ** 32;
 const maxDirectories = 256;
 const maxEntries = 4096;
 const entryBytes = 12;
-const directoryGuess = 2 + 64 * 16 + 8;
+const entryCountBytes = 2;
 const restartChunk = 1 << 20;
 
 const tags = {
@@ -120,15 +120,14 @@ async function readDirectory(
   offset: number,
   signal?: AbortSignal,
 ): Promise<{ entries: Map<number, Entry>; next: number }> {
-  let bytes = await read(offset, directoryGuess, signal);
-  if (bytes.length < 2) throw new NdpiFormatError(`No directory at byte ${offset}`);
-  const count = viewOf(bytes).getUint16(0, true);
+  const head = await read(offset, entryCountBytes, signal);
+  if (head.length < entryCountBytes) throw new NdpiFormatError(`No directory at byte ${offset}`);
+  const count = viewOf(head).getUint16(0, true);
   if (count < 1 || count > maxEntries) {
     throw new NdpiFormatError(`The directory at byte ${offset} lists ${count} entries`);
   }
-  const needed = 2 + count * (entryBytes + 4) + 8;
-  if (bytes.length < needed) bytes = await readExactly(read, offset, needed, signal);
-  const view = viewOf(bytes);
+  const needed = entryCountBytes + count * (entryBytes + 4) + 8;
+  const view = viewOf(await readExactly(read, offset, needed, signal));
   const nextAt = 2 + count * entryBytes;
   const highAt = nextAt + 8;
   const entries = new Map<number, Entry>();

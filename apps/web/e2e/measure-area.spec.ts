@@ -11,7 +11,7 @@ const leadArea = (page: Page) => page.locator("[data-slot=findings-area]").first
 test("measuring the lead area pre-draws the ruler, replaces the AI size and settles the hero", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${outlined}?task=${rt14}`);
+  await page.goto(`/projects/${p07}/slides/${outlined}?task=${rt14}&scene=objects`);
   const staging = page.locator("[data-slot=staging-cards]");
   await expect(staging).toHaveAttribute("data-phase", "open", { timeout: 20_000 });
   await expect(page.locator("[data-slot=findings-panel]")).toHaveAttribute(

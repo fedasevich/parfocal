@@ -8,10 +8,15 @@ const fixture = fileURLToPath(
 
 const levelTable = {
   levels: [
-    { downsample: 1, width: 1024, height: 768, stored: { width: 1024, height: 768 } },
-    { downsample: 2, width: 512, height: 384, stored: { width: 512, height: 384 } },
-    { downsample: 4, width: 256, height: 192, stored: { width: 256, height: 192 } },
-  ],
+    { downsample: 1, width: 1024, height: 768, page: 0, ifdOffset: 8, ifdBytes: 246 },
+    { downsample: 2, width: 512, height: 384, page: 1, ifdOffset: 55_848, ifdBytes: 234 },
+    { downsample: 4, width: 256, height: 192, page: 2, ifdOffset: 79_190, ifdBytes: 234 },
+  ].map((level) => ({
+    ...level,
+    stored: { width: level.width, height: level.height },
+    subIfd: null,
+    siblings: [],
+  })),
   scale: { mpp_x: 0.5, mpp_y: 0.5 },
 };
 
@@ -19,7 +24,7 @@ export const slideFileName = "slide.tiff";
 export const unavailablePrefix = "missing-";
 
 const tilePath =
-  /^\/(?:tiles|api\/remote-tiles)\/([^/]+)\/(levels\.json|slide\.tiff|original\.tif)$/;
+  /^\/(?:tiles|api\/remote-tiles)\/([^/]+)\/(levels\.json|[^/]+\.(?:tiff?|svs|ndpi|scn|mrxs|bif|vsi|dcm))$/;
 
 function rangeOf(header: string | undefined, size: number): [number, number] | null {
   const match = header?.match(/^bytes=(\d*)-(\d*)$/);

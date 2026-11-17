@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import json
+import re
 import time
 import uuid
 from collections.abc import Iterator
@@ -323,3 +324,18 @@ def test_a_slide_open_shows_in_the_patients_audit_trail(lab: Lab) -> None:
     assert response.status_code == 200, response.text
     opened = [event for event in response.json() if event["action"] == "slide.opened"]
     assert [event["target_id"] for event in opened] == [str(lab.patients_slide)]
+
+
+def queries_of(response: Any) -> int:
+    found = re.search(r'queries;desc="(\d+)"', response.headers["server-timing"])
+    assert found is not None
+    return int(found.group(1))
+
+
+@pytest.mark.db
+def test_a_warm_tile_access_runs_seven_queries(lab: Lab) -> None:
+    api = lab.api(lab.people["owner"])
+    api.get(lab.path(lab.slide))
+    response = api.get(lab.path(lab.slide))
+    assert response.status_code == 200, response.text
+    assert queries_of(response) == 7

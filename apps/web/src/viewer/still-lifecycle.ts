@@ -90,10 +90,15 @@ export function runStillEngine({
     const route = viewport.route();
     if (stopped || checking || route === null) return;
     checking = true;
-    void route.whenIdle().then(() => {
-      checking = false;
-      if (!stopped) onTiles(route.failedTiles().length);
-    });
+    void route.whenIdle().then(
+      () => {
+        checking = false;
+        if (!stopped) onTiles(route.failedTiles().length);
+      },
+      () => {
+        checking = false;
+      },
+    );
   };
   const viewport = module.mountSlideViewport({
     container,

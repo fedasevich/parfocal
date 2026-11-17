@@ -16,7 +16,7 @@ import {
   type StepState,
 } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
-import { Loader } from "@parfocal/ui/components/loader";
+import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
 import { CategoryTag } from "@parfocal/ui/components/tag";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useNavigate } from "@tanstack/react-router";
@@ -63,8 +63,8 @@ export function UploadPage(props: UploadPageProps) {
   const batch = okData(useGetUploadBatch(props.projectId).data);
   if (project === undefined || batch === undefined) {
     return (
-      <main className="grid flex-1 place-items-center p-8">
-        <Loader label={t`Loading the upload`} />
+      <main className="mx-auto w-full max-w-3xl flex-1 p-8">
+        <SkeletonPanel label={t`Loading the upload`} sections={4} />
       </main>
     );
   }

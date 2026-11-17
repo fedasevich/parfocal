@@ -18,7 +18,12 @@ import { openFeedback } from "../feedback/feedback-state.ts";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { lockRequestEvent } from "../session/lock-rules.ts";
-import { nextAvailability, presenceOf, shownPerson } from "./account-presence.ts";
+import {
+  availabilityChange,
+  presenceChoices,
+  presenceOf,
+  shownPerson,
+} from "./account-presence.ts";
 import { destinations } from "./destinations.ts";
 import type { PersonaKey } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
@@ -121,7 +126,11 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
       person={shownPerson(person, initialsOnly)}
       organisation={workspace?.organisation_name ?? workspace?.name}
       presence={presenceOf(availability, now())}
-      onNextPresence={() => setAvailability.mutate({ data: nextAvailability(availability, now()) })}
+      statuses={presenceChoices}
+      onPresenceChange={(key) => {
+        const change = availabilityChange(key, availability, now());
+        if (change) setAvailability.mutate({ data: change });
+      }}
       presenceBusy={setAvailability.isPending}
       theme={theme}
       onThemeChange={chooseTheme}

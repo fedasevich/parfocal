@@ -1,38 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { railToolOf } from "../viewer/stage-tools.ts";
-
-type HintStorage = Pick<Storage, "getItem" | "setItem">;
-
-const seenKey = "parfocal.tool-hints-seen";
-
-const browserStorage = (): HintStorage | undefined => {
-  try {
-    return window.localStorage;
-  } catch {
-    return undefined;
-  }
-};
-
-export function hintsSeen(storage: HintStorage | undefined = browserStorage()): Set<string> {
-  try {
-    const value: unknown = JSON.parse(storage?.getItem(seenKey) ?? "[]");
-    return new Set(Array.isArray(value) ? value.filter((item) => typeof item === "string") : []);
-  } catch {
-    return new Set();
-  }
-}
-
-export function markHintsSeen(
-  tool: string,
-  storage: HintStorage | undefined = browserStorage(),
-): void {
-  const seen = hintsSeen(storage);
-  if (seen.has(tool)) return;
-  seen.add(tool);
-  try {
-    storage?.setItem(seenKey, JSON.stringify([...seen]));
-  } catch {}
-}
 
 export type ContextBarNeed = {
   readonly classStrip: boolean;
@@ -46,18 +14,29 @@ export function drawsContextBar(need: ContextBarNeed): boolean {
 
 export function useHintsOnce(tool: string, hintOnly: boolean): boolean {
   const rail = railToolOf(tool);
+  const { ready, seen, markSeen } = useHintsSeen();
   const [shown, setShown] = useState<string | null>(null);
+  const seenRef = useRef(seen);
+  const markRef = useRef(markSeen);
+  const leaving = useRef(false);
+  seenRef.current = seen;
+  markRef.current = markSeen;
   useEffect(() => {
-    if (!hintOnly) {
+    leaving.current = false;
+    return () => {
+      leaving.current = true;
+    };
+  }, []);
+  useEffect(() => {
+    const id = toolHintId(rail);
+    if (!hintOnly || !ready || seenRef.current.has(id)) {
       setShown(null);
       return;
     }
-    if (hintsSeen().has(rail)) {
-      setShown((current) => (current === rail ? current : null));
-      return;
-    }
-    markHintsSeen(rail);
     setShown(rail);
-  }, [rail, hintOnly]);
+    return () => {
+      if (!leaving.current) markRef.current([id]);
+    };
+  }, [rail, hintOnly, ready]);
   return hintOnly && shown === rail;
 }

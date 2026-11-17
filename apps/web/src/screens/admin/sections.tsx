@@ -26,6 +26,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { AvatarStack, Person } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { Switch } from "@parfocal/ui/components/switch";
 import {
   Table,
@@ -341,7 +342,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
   const personOf = usePeople();
   const visibility = useModelVisibility(notify);
   const { cancelled, start } = useRunCancellation(notify);
-  if (data === undefined) return null;
+  if (data === undefined) return <SkeletonRows label={t`Loading models`} rows={4} columns={4} />;
   const parfocal = data.models.filter((model) => model.source === "parfocal");
   const lab = data.models.filter((model) => model.source === "lab");
   const running = data.running.filter((run) => !cancelled.includes(run.id));

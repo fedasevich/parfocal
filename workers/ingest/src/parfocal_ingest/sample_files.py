@@ -85,8 +85,8 @@ def derived_files(
     original: Path, readable: Path, identified: Identified, found: Pyramid
 ) -> list[DerivedFile]:
     assert identified.format is not None
-    files = [DerivedFile("levels.json", level_table(found), "application/json")]
     tiles = tile_index(readable, identified, found)
+    files = [DerivedFile("levels.json", level_table(found, readable, tiles), "application/json")]
     if tiles is not None:
         derived = overview_levels(readable, identified.format, found)
         if derived is not None:

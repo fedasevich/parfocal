@@ -2,7 +2,7 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { z } from "zod";
 import { getGetPasswordSignInMockHandler } from "../generated/api.msw.ts";
 import type { AccountCodeSent, SignInLanding } from "../generated/api.ts";
-import { passwordIssues } from "./auth-handlers.ts";
+import { landing, passwordIssues } from "./auth-handlers.ts";
 import { people } from "./scenario.ts";
 import { signInSecrets } from "./scenario-admin.ts";
 
@@ -92,9 +92,42 @@ const resendEmailCodeHandler = () =>
     return HttpResponse.json(codeSent(parsed.data.email));
   });
 
+const passwordResetRequestSchema = z.object({ email: z.string() });
+
+const passwordResetSchema = z.object({
+  email: z.string().nullable().optional(),
+  user_id: z.string().nullable().optional(),
+  code: z.string(),
+  password: z.string(),
+  return_to: z.string().nullable().optional(),
+});
+
+const requestPasswordResetHandler = () =>
+  http.post("*/api/auth/password-reset", async ({ request }) => {
+    const parsed = passwordResetRequestSchema.safeParse(await request.json());
+    if (!parsed.success) return unreadable();
+    return HttpResponse.json(codeSent(parsed.data.email.trim()));
+  });
+
+const resetPasswordHandler = () =>
+  http.post("*/api/auth/password-reset/confirm", async ({ request }) => {
+    const parsed = passwordResetSchema.safeParse(await request.json());
+    if (!parsed.success) return unreadable();
+    if (parsed.data.code !== signInSecrets.code) {
+      return problem(401, "That code is wrong or has expired", "invalid-code");
+    }
+    const issues = passwordIssues(parsed.data.password);
+    if (issues.length > 0) {
+      return problem(422, "Check the highlighted details", "invalid-account", issues);
+    }
+    return HttpResponse.json(landing(parsed.data.return_to ?? null));
+  });
+
 export const signUpHandlers = (): RequestHandler[] => [
   getGetPasswordSignInMockHandler({ available: true }),
   createAccountHandler(),
   confirmEmailHandler(),
   resendEmailCodeHandler(),
+  requestPasswordResetHandler(),
+  resetPasswordHandler(),
 ];

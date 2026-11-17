@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { drawsContextBar, hintsSeen, markHintsSeen } from "../src/annotations/hints-once.ts";
+import { drawsContextBar } from "../src/annotations/hints-once.ts";
 import { liveSlideList, withNeighbours } from "../src/viewer/live-slides.ts";
 import { movedWhileDown } from "../src/viewer/use-pan-hide.ts";
 
@@ -57,20 +57,6 @@ test("the context bar draws only for options, proposals or a first look at the h
   assert.equal(drawsContextBar({ classStrip: false, proposals: 3, hintsShown: false }), true);
   assert.equal(drawsContextBar({ classStrip: false, proposals: 0, hintsShown: true }), true);
   assert.equal(drawsContextBar({ classStrip: false, proposals: 0, hintsShown: false }), false);
-});
-
-test("a tool's hints are remembered as seen once", () => {
-  const values = new Map<string, string>();
-  const storage = {
-    getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => void values.set(key, value),
-  };
-  assert.equal(hintsSeen(storage).has("ruler"), false);
-  markHintsSeen("ruler", storage);
-  markHintsSeen("ruler", storage);
-  assert.deepEqual([...hintsSeen(storage)], ["ruler"]);
-  values.set("parfocal.tool-hints-seen", "not json");
-  assert.equal(hintsSeen(storage).size, 0);
 });
 
 test("a pan is a camera move while the pointer is down", () => {

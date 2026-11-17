@@ -3,6 +3,7 @@ import {
   getGetMeQueryKey,
   getGetMySettingLayersQueryKey,
   getListNotificationPreferencesQueryKey,
+  getListPasskeysQueryKey,
   getListSessionsQueryKey,
   type MySettingLayers,
   type NotificationKind,
@@ -14,7 +15,9 @@ import {
   useGetMySettingLayers,
   useGetSessionPolicy,
   useListNotificationPreferences,
+  useListPasskeys,
   useListSessions,
+  useRemovePasskey,
   useSetMySettingLayers,
   useSetNotificationPreferences,
   useUpdateMe,
@@ -24,6 +27,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/segmented-control";
+import { PreviewOption, type SettingPreviewKind } from "@parfocal/ui/components/setting-preview";
 import {
   SettingsDialog,
   SettingsEmpty,
@@ -39,7 +43,7 @@ import { Switch } from "@parfocal/ui/components/switch";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import type { WordingSetting } from "@parfocal/ui/lib/confidence-words";
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { now } from "../../clock.ts";
 import {
   type Calibration,
@@ -56,8 +60,10 @@ import {
 } from "../../devices/navigation.ts";
 import { type HidLike, hasWebHid, requestSpaceMouse } from "../../devices/spacemouse-source.ts";
 import { useActiveTourStep } from "../../help/tour-state.ts";
+import { useHintsSeen } from "../../hints/hints-seen.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
+import { addPasskey, PasskeyCancelledError, rememberPasskeyEmail } from "../../session/passkeys.ts";
 import { applyDensity } from "../../shell/density.ts";
 import { readDeviceSettings, writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
@@ -77,6 +83,7 @@ import { okData } from "../placeholder.tsx";
 import { FeelPreview } from "./feel-preview.tsx";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
 import {
+  hintId,
   matchCount,
   matchingRows,
   normalQuery,
@@ -86,6 +93,7 @@ import {
   type SettingsSection,
   shortcutSceneOf,
   shownSection,
+  showsOnce,
   visibleSections,
 } from "./sections.ts";
 import {
@@ -127,18 +135,24 @@ const noticeKinds: Partial<Record<RowKey, string>> = {
   noticeDue: "task-due-soon",
 };
 
-const options = (pairs: [string, string][]): SegmentOption[] =>
-  pairs.map(([value, label]) => ({ value, label }));
+const options = (pairs: [string, string][], preview?: SettingPreviewKind): SegmentOption[] =>
+  pairs.map(([value, label]) => ({
+    value,
+    label:
+      preview === undefined ? label : <PreviewOption kind={preview} option={value} label={label} />,
+  }));
 
 function Segments({
   label,
   value,
   pairs,
+  preview,
   onChange,
 }: {
   label: string;
   value: string;
   pairs: [string, string][];
+  preview?: SettingPreviewKind;
   onChange: (value: string) => void;
 }) {
   return (
@@ -147,7 +161,7 @@ function Segments({
       aria-label={label}
       value={value}
       onValueChange={(next) => onChange(String(next))}
-      options={options(pairs)}
+      options={options(pairs, preview)}
     />
   );
 }
@@ -233,6 +247,9 @@ function LoadedSettings({
   const touring = useActiveTourStep() !== null;
   const me = okData(useGetMe().data);
   const sessions = okData(useListSessions().data) ?? [];
+  const passkeys = okData(useListPasskeys().data) ?? [];
+  const [addingPasskey, setAddingPasskey] = useState(false);
+  const removePasskey = useRemovePasskey();
   const policy = okData(useGetSessionPolicy().data);
   const preferences = okData(useListNotificationPreferences().data) ?? [];
   const queryClient = useQueryClient();
@@ -244,6 +261,8 @@ function LoadedSettings({
     },
   });
   const { mutate: saveShortcutValues } = saveLayers;
+  const hints = useHintsSeen();
+  const [hintsShownAgain, setHintsShownAgain] = useState(0);
   const [picked, setPicked] = useState<Partial<SettingValues>>({});
   const values: SettingValues = {
     ...resolveSettings({ ...layers, device: readDeviceSettings() }),
@@ -380,6 +399,7 @@ function LoadedSettings({
     homeLayout: () => (
       <Segments
         label={t`Home`}
+        preview="home"
         value={values.home_layout}
         pairs={homeLayoutOptions.map((option) => [option.value, option.label])}
         onChange={(value) => {
@@ -394,6 +414,7 @@ function LoadedSettings({
     theme: () => (
       <Segments
         label={t`Theme`}
+        preview="theme"
         value={theme}
         pairs={[
           ["dark", t`Dark`],
@@ -417,6 +438,7 @@ function LoadedSettings({
     density: () => (
       <Segments
         label={t`Density`}
+        preview="density"
         value={values.density}
         pairs={[
           ["comfortable", t`Comfortable`],
@@ -455,6 +477,18 @@ function LoadedSettings({
           { value: "cs", label: "Čeština", disabled: true },
         ]}
       />
+    ),
+    hints: () => (
+      <Button
+        disabled={hints.seen.size === 0}
+        onClick={() => {
+          hints.showAllAgain();
+          setHintsShownAgain((count) => count + 1);
+          notify(t`Every hint shows again, once, under its setting.`);
+        }}
+      >
+        <Trans>Show all hints again</Trans>
+      </Button>
     ),
     patientNames: () =>
       layers.lab.locked.includes("patient_names") ? (
@@ -510,6 +544,7 @@ function LoadedSettings({
     tools: () => (
       <Segments
         label={t`Tools`}
+        preview="tools"
         value={values.tools}
         pairs={[
           ["rail", t`Left rail`],
@@ -521,6 +556,7 @@ function LoadedSettings({
     panelWidth: () => (
       <Segments
         label={t`Side panel width`}
+        preview="panelWidth"
         value={String(values.side_panel_width)}
         pairs={[
           ["300", t`Narrow`],
@@ -537,6 +573,7 @@ function LoadedSettings({
     panelMoving: () => (
       <Segments
         label={t`Panel while moving`}
+        preview="panelMoving"
         value={values.panel_while_moving}
         pairs={[
           ["pinned", t`Stays put`],
@@ -550,6 +587,7 @@ function LoadedSettings({
     minimap: () => (
       <Segments
         label={t`Minimap`}
+        preview="minimap"
         value={values.minimap}
         pairs={[
           ["useful", t`When useful`],
@@ -759,6 +797,65 @@ function LoadedSettings({
           ),
     lockAfter: () => lockAfterText(policy?.idle_lock_minutes),
     patientBanner: () => patientBannerText(layers.lab),
+    passkeys: () => (
+      <span className="inline-flex flex-wrap items-center gap-3">
+        {passkeys.length === 0 ? (
+          <span className="text-body text-fg">
+            <Trans>None saved</Trans>
+          </span>
+        ) : (
+          passkeys.map((item) => (
+            <span key={item.id} className="inline-flex items-center gap-2">
+              <span className="text-body text-fg">{item.name}</span>
+              <Button
+                size="sm"
+                aria-label={t`Remove the passkey ${item.name}`}
+                disabled={removePasskey.isPending}
+                onClick={() =>
+                  removePasskey.mutate(
+                    { passkeyId: item.id },
+                    {
+                      onSuccess: () => {
+                        notify(t`Passkey removed. It no longer signs you in`);
+                        void queryClient.invalidateQueries({
+                          queryKey: getListPasskeysQueryKey(),
+                        });
+                      },
+                      onError: () => notify(t`Could not remove the passkey. Try again.`),
+                    },
+                  )
+                }
+              >
+                <Trans>Remove</Trans>
+              </Button>
+            </span>
+          ))
+        )}
+        <Button
+          disabled={addingPasskey}
+          onClick={() => {
+            setAddingPasskey(true);
+            addPasskey().then(
+              () => {
+                setAddingPasskey(false);
+                if (me?.email) rememberPasskeyEmail(me.email);
+                notify(t`Passkey saved. Next time sign in with it instead of your password`);
+                void queryClient.invalidateQueries({ queryKey: getListPasskeysQueryKey() });
+              },
+              (error: unknown) => {
+                setAddingPasskey(false);
+                if (!(error instanceof PasskeyCancelledError)) {
+                  notify(t`Could not save the passkey. Try again.`);
+                }
+              },
+            );
+          }}
+        >
+          <Icon name="key" />
+          <Trans>Add a passkey</Trans>
+        </Button>
+      </span>
+    ),
     otherDevices: () =>
       others.length === 0 ? (
         <span className="text-body text-fg">
@@ -871,6 +968,44 @@ function LoadedSettings({
   const facts: RowKey[] = ["presetKeys", "lockAfter", "patientBanner"];
   const factIcons = { name: "user", email: "mail", role: "flag", workspace: "folder" } as const;
 
+  const sectionKey = shown?.key;
+  const [entry, setEntry] = useState({
+    key: sectionKey,
+    again: hintsShownAgain,
+    seen: hints.seen,
+  });
+  if (entry.key !== sectionKey || entry.again !== hintsShownAgain) {
+    setEntry({
+      key: sectionKey,
+      again: hintsShownAgain,
+      seen: entry.again !== hintsShownAgain ? new Set<string>() : hints.seen,
+    });
+  }
+  const notedRows =
+    sectionKey === undefined || sectionKey === "shortcuts"
+      ? []
+      : matchingRows(sectionKey, query)
+          .filter(showsOnce)
+          .map((item) => hintId(item.key));
+  const leavingNotes = useRef<string[]>([]);
+  const visiting = useRef<string | undefined>(undefined);
+  const markHintsSeen = useRef(hints.markSeen);
+  useEffect(() => {
+    leavingNotes.current = notedRows;
+    markHintsSeen.current = hints.markSeen;
+  });
+  useEffect(() => {
+    if (sectionKey === undefined) return;
+    visiting.current = sectionKey;
+    return () => {
+      const leaving = leavingNotes.current;
+      visiting.current = undefined;
+      setTimeout(() => {
+        if (visiting.current !== sectionKey) markHintsSeen.current(leaving);
+      }, 0);
+    };
+  }, [sectionKey]);
+
   const body = (() => {
     if (shown === undefined) {
       return <SettingsEmpty query={typed.trim()} onClear={() => onQuery("")} />;
@@ -909,7 +1044,13 @@ function LoadedSettings({
           <SettingsRow
             key={item.key}
             label={item.label}
-            help={help(item)}
+            {...(showsOnce(item)
+              ? {
+                  note: item.help,
+                  noteHidden: entry.seen.has(hintId(item.key)),
+                  onControlChange: () => hints.markSeen([hintId(item.key)]),
+                }
+              : { help: help(item) })}
             scope={item.scope}
             fact={facts.includes(item.key)}
           >

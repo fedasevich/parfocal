@@ -366,8 +366,16 @@ def member_of(principal: Principal) -> MemberPrincipal:
 
 
 async def preferences_of(connection: AsyncConnection, user_id: uuid.UUID) -> list[Preference]:
+    chosen = {
+        str(row.kind): Channels(in_app=row.in_app, email=row.email, realtime=row.realtime)
+        for row in await connection.execute(
+            select(notification_preferences).where(
+                IN_THIS_TENANT, notification_preferences.c.user_id == user_id
+            )
+        )
+    }
     routed = {
-        kind: (await channels_for(connection, [user_id], kind))[user_id]
+        kind: DEFAULTS[kind] if kind in MANDATORY else chosen.get(kind, DEFAULTS[kind])
         for kind in NotificationKind
     }
     return [

@@ -35,6 +35,7 @@ jobs:
       PARFOCAL_SMOKE_URL: ${{ inputs.url || 'https://app.parfocal.eu' }}
       PARFOCAL_SMOKE_EMAIL: ${{ vars.PARFOCAL_SMOKE_EMAIL }}
       PARFOCAL_SMOKE_PASSWORD: ${{ secrets.PARFOCAL_SMOKE_PASSWORD }}
+      PARFOCAL_SMOKE_SEEDED_FORMATS: "1"
     steps:
       - uses: actions/checkout@v7
         with:

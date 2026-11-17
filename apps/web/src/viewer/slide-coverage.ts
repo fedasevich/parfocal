@@ -49,7 +49,9 @@ export function storedTissue(slideId: string): Promise<SlideTissue | null> {
   const known = tissueAnswers.get(slideId);
   if (known !== undefined) return known;
   const asked = getSlideTissue(slideId)
-    .then((response) => (response.status === 200 ? response.data : null))
+    .then((response) =>
+      response.status === 200 && response.data.tissue !== null ? response.data : null,
+    )
     .catch((error: unknown) => {
       if (!(error instanceof ApiError && error.status === 404)) tissueAnswers.delete(slideId);
       return null;
@@ -72,7 +74,7 @@ function tissueOf(
   grid: CoverageGrid,
   stored: SlideTissue,
 ): TissueRaster | null {
-  if (!module.sameGrid(grid, stored.grid)) return null;
+  if (stored.tissue === null || !module.sameGrid(grid, stored.grid)) return null;
   return { grid, tissue: module.decodeBits(stored.tissue, module.bitsetBytes(grid)) };
 }
 

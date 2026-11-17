@@ -11,63 +11,38 @@ async function fullViewerUrl(page: Page, object: string) {
     .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
   const href = (await link.getAttribute("href")) ?? "";
   const url = new URL(href, "http://localhost");
-  return `${url.pathname}?task=${rt14}&object=${encodeURIComponent(object)}`;
+  return `${url.pathname}?task=${rt14}&scene=objects&object=${encodeURIComponent(object)}`;
 }
 
 const bar = (page: Page) => page.getByTestId("cell-type-bar");
 const objectInUrl = (page: Page) =>
   decodeURIComponent(new URL(page.url()).searchParams.get("object") ?? "");
 
-test("a zone is reviewed by keyboard only in focus mode and the bar never covers the cell", async ({
+const p07 = "00000000-0000-4000-8003-000000000007";
+const cellsSlide = "00000000-0000-4000-8005-000000000008";
+
+test("focus mode on the real stage types the current cell by key and the focus key brings the panel back", async ({
   page,
 }) => {
-  await page.goto(await fullViewerUrl(page, "T1·C145"));
-  await expect(page.getByRole("complementary", { name: "Side panel" })).toBeVisible();
-  await page.keyboard.press("Enter");
-  await expect(page.getByTestId("cell-focus")).toBeVisible();
+  await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}&object=C2&focus=true`);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Side panel" })).toHaveCount(0);
-  await expect(bar(page)).toBeVisible();
-  await expect(page.getByTestId("cell-locator")).toHaveAttribute("data-size", "pip");
-
-  const stage = await page.locator('[data-slot="slide-still"]').boundingBox();
-  const box = await bar(page).boundingBox();
-  expect(stage && box).toBeTruthy();
-  if (!stage || !box) return;
-  const centre = { x: stage.x + stage.width / 2, y: stage.y + stage.height / 2 };
-  const nearestX = Math.min(Math.max(centre.x, box.x), box.x + box.width);
-  const nearestY = Math.min(Math.max(centre.y, box.y), box.y + box.height);
-  expect(Math.hypot(centre.x - nearestX, centre.y - nearestY)).toBeGreaterThan(24);
-
-  const first = objectInUrl(page);
+  await expect(bar(page)).toHaveAttribute("aria-label", "Type for C2");
+  const put = page.waitForRequest(
+    (request) => request.method() === "PUT" && request.url().includes("/decisions/C2"),
+  );
   await page.keyboard.press("k");
-  await expect.poll(() => objectInUrl(page)).not.toBe(first);
-
-  const second = objectInUrl(page);
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("ArrowLeft");
-  await page.keyboard.press("ArrowUp");
-  await page.keyboard.press("ArrowDown");
-  expect(objectInUrl(page)).toContain("·");
-
-  await page.keyboard.press("Escape");
-  await expect(page.getByTestId("cell-focus")).toHaveCount(0);
+  await put;
+  await expect(bar(page)).toHaveAttribute("data-chosen", "keep");
+  await page.keyboard.press("Control+Backslash");
+  await expect(page.getByTestId("focus-mode")).toHaveCount(0);
   await expect(page.getByRole("complementary", { name: "Side panel" })).toBeVisible();
-  expect(objectInUrl(page)).toContain("·");
-  expect(second).toContain("·");
-});
-
-test("Enter in focus mode goes back and the type bar buttons decide with the mouse", async ({
-  page,
-}) => {
-  await page.goto(await fullViewerUrl(page, "T1·C145"));
-  await expect(page.getByRole("complementary", { name: "Side panel" })).toBeVisible();
-  await page.keyboard.press("Enter");
-  await expect(page.getByTestId("cell-focus")).toBeVisible();
-  const first = objectInUrl(page);
-  await bar(page).getByRole("button").first().click();
-  await expect.poll(() => objectInUrl(page)).not.toBe(first);
-  await page.keyboard.press("Enter");
-  await expect(page.getByTestId("cell-focus")).toHaveCount(0);
+  await expect(
+    page.locator('[data-testid="stage-review-object"][data-object="C2"]'),
+  ).toHaveAttribute("data-decision", "agree");
 });
 
 test("cells are answered with the mouse only on the slide", async ({ page }) => {
@@ -162,7 +137,7 @@ test("a comment pin drops on a cell with the comment tool on", async ({ page }) 
 
 test("a signed off slide shows the type bar disabled with the reason", async ({ page }) => {
   const url = await fullViewerUrl(page, "T1·C145");
-  await page.goto(`${url}&scene=signedoff`);
+  await page.goto(url.replace("scene=objects", "scene=signedoff"));
   await expect(bar(page)).toBeVisible();
   await expect(bar(page)).toHaveAttribute("title", "Signed off. Ask the researcher to amend.");
   await expect(bar(page).getByRole("button", { name: /Keep/ })).toBeDisabled();

@@ -8,7 +8,7 @@ import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { useInspectorLayout } from "./inspector-layout.ts";
 import type { ReviewSession } from "./review-data.ts";
 import { useReviewTopPopovers } from "./review-top-popovers.tsx";
@@ -71,7 +71,7 @@ export function ReviewTop({
         taskName={session.taskName}
         taskSub={session.taskSub}
         slideName={session.slideName}
-        slideThumb={lookUrl("overview")}
+        slideThumb={slideThumbUrl(session.slideId)}
         progress={nothingToDecide ? undefined : counts}
         progressTitle={position}
         progressSub={progressSub ?? (nothingToDecide ? "Nothing to decide" : timeLeft(session))}
@@ -110,21 +110,21 @@ export function ReviewTop({
             void navigate({
               to: "/projects/$projectId/slides/$slideId",
               params: { projectId, slideId: session.slideId },
-              search: { task: session.taskId, ...(object ? { object } : {}) },
+              search: { task: session.taskId, scene: "objects", ...(object ? { object } : {}) },
             });
           }
           if (next === "annotate" && projectId) {
             void navigate({
               to: "/projects/$projectId/slides/$slideId/annotate",
               params: { projectId, slideId: session.slideId },
-              search: { task: session.taskId },
+              search: { task: session.taskId, scene: "auto" },
             });
           }
           if (next === "guided") {
             void navigate({
               to: "/tasks/$taskId/guided",
               params: { taskId: session.taskId },
-              search: { slide: session.slideId, ...(object ? { object } : {}) },
+              search: { slide: session.slideId, scene: "region", ...(object ? { object } : {}) },
             });
           }
         }}

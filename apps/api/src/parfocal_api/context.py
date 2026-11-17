@@ -37,7 +37,9 @@ async def tenant_connection(
     scope = database_scope(principal)
     bind(tenant_id=scope.tenant_id, user_id=scope.user_id)
     async with scoped_transaction(engine_of(request), scope) as connection:
-        status = await connection.scalar(
+        status = (
+            principal.tenant_status if isinstance(principal, MemberPrincipal) else None
+        ) or await connection.scalar(
             select(tenants.c.status).where(tenants.c.id == scope.tenant_id)
         )
         if status is None:

@@ -17,6 +17,7 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { PitchLayout } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
+import { PasswordResetScene, type ResetLink } from "./password-reset-forms.tsx";
 import type { SignInScene } from "./scenes.ts";
 import { EmailForm, type Flow, SsoForm } from "./sign-in-forms.tsx";
 
@@ -25,11 +26,18 @@ type Props = {
   change: (scene: SignInScene) => void;
   returnTo: string | null;
   ssoUnknown?: boolean;
+  resetLink?: ResetLink | null;
 };
 
 const defaultSessionHours = 8;
 
-export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Props) {
+export function SignInScreen({
+  scene,
+  change,
+  returnTo,
+  ssoUnknown = false,
+  resetLink = null,
+}: Props) {
   const signedInScene = scene === "lock" || scene === "lockkey" || scene === "expired";
   const needsPerson = signedInScene || scene === "passkey" || scene === "passkeyqr";
   const me = okData(useGetMe({ query: { enabled: needsPerson } }).data);
@@ -107,6 +115,14 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
         lastSaved="just now"
         onSignIn={() => setSigningInAgain(true)}
       />
+    );
+  }
+
+  if (scene === "forgot" || scene === "reset") {
+    return (
+      <PitchLayout>
+        <PasswordResetScene flow={flow} scene={scene} link={resetLink} />
+      </PitchLayout>
     );
   }
 
