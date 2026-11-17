@@ -1,12 +1,14 @@
 import asyncio
+import gzip
 import io
+import re
 import uuid
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
-from typing import Any
+from typing import Any, BinaryIO
 
 import httpx2
 import tifffile
@@ -16,15 +18,29 @@ from parfocal_api.audit import AuditAction, AuditTarget, record
 from parfocal_api.remote_reads import Remote, fetch_range, source_reach
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import SlideStorage, slides
-from parfocal_common.ingest import Failure, restricted_ranges_key
+from parfocal_common.ingest import Failure, restricted_ranges_key, slide_prefix
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.link_fetch import LinkPolicy, LinkRefusal, LinkRefusedError, policy_of
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.remote_inspect import KIND, LEASE_SECONDS, STEP_NAMES
-from parfocal_ingest.identify import Format, identify
+from parfocal_ingest.identify import Format, Identified, identify
 from parfocal_ingest.identifying_text import ranges_file_of
-from parfocal_ingest.pyramid import main_series, stored_level
-from parfocal_ingest.workflow import Resources, resources_from_environment
+from parfocal_ingest.parse_jobs import LEVELS_OUTPUT, level_table
+from parfocal_ingest.pyramid import (
+    Pyramid,
+    Reader,
+    Scale,
+    ladder,
+    main_series,
+    number,
+    ome_scale,
+    plane_count,
+    pyramid,
+    scale_of,
+    stored_level,
+)
+from parfocal_ingest.tile_index import index_document, tile_index
+from parfocal_ingest.workflow import TILE_INDEX_NAME, Resources, resources_from_environment
 
 __all__ = ["REMOTE_INSPECT", "RangedFile", "remote_inspect_workflow"]
 
@@ -87,13 +103,57 @@ class RangedFile(io.RawIOBase):
 class Inspected:
     format: Format
     variant: str | None
-    width: int
-    height: int
-    level_count: int
+    pyramid: Pyramid
+    levels: bytes
+    tiles: bytes | None
     ranges: bytes
 
+    @property
+    def width(self) -> int:
+        return self.pyramid.levels[0].width
 
-def inspected(handle: RangedFile, name: str) -> Inspected | str:
+    @property
+    def height(self) -> int:
+        return self.pyramid.levels[0].height
+
+
+def svs_value(description: str, name: str) -> float | None:
+    found = re.search(rf"\|\s*{name}\s*=\s*([0-9]*\.?[0-9]+)", description)
+    return None if found is None else number(found.group(1))
+
+
+def svs_scale(description: str) -> Scale:
+    mpp = svs_value(description, "MPP")
+    return scale_of(mpp, mpp, svs_value(description, "AppMag"))
+
+
+def scale_in(tiff: tifffile.TiffFile, series: tifffile.TiffPageSeries, chosen: Format) -> Scale:
+    if chosen is Format.OME_TIFF:
+        return ome_scale(tiff, tiff.series.index(series))
+    if chosen is Format.APERIO_SVS:
+        return svs_scale(tiff.pages.first.description or "")
+    return scale_of(None, None, None)
+
+
+def pyramid_in(handle: BinaryIO, identified: Identified) -> Pyramid | None:
+    assert identified.format is not None
+    with tifffile.TiffFile(handle) as tiff:
+        series = main_series(tiff)
+        if series is None:
+            return None
+        levels, skipped = ladder([stored_level(level) for level in series.levels])
+        scale = scale_in(tiff, series, identified.format)
+        return pyramid(Reader.TIFFFILE, levels, scale, plane_count(series), skipped)
+
+
+def tiles_in(handle: BinaryIO, identified: Identified, found: Pyramid) -> bytes | None:
+    handle.seek(0)
+    tiles = tile_index(handle, identified, found)
+    return None if tiles is None else gzip.compress(index_document(tiles), mtime=0)
+
+
+def inspected(source: RangedFile, name: str) -> Inspected | str:
+    handle = io.BufferedReader(source, BLOCK_BYTES)
     found = identify(handle, name)
     if found.format is None:
         return str(found.refusal)
@@ -101,17 +161,15 @@ def inspected(handle: RangedFile, name: str) -> Inspected | str:
         return REMOTE_FORMAT
     handle.seek(0)
     try:
-        with tifffile.TiffFile(handle) as tiff:
-            series = main_series(tiff)
-            if series is None:
-                return REMOTE_FORMAT
-            base = stored_level(series.levels[0])
-            levels = len(series.levels)
+        levels = pyramid_in(handle, found)
+        if levels is None:
+            return REMOTE_FORMAT
+        tiles = tiles_in(handle, found, levels)
     except tifffile.TiffFileError, ValueError, OSError, IndexError:
         return REMOTE_FORMAT
     handle.seek(0)
-    ranges = ranges_file_of(handle, handle.size, PurePosixPath(name).suffix)
-    return Inspected(found.format, found.variant, base.width, base.height, levels, ranges)
+    ranges = ranges_file_of(handle, source.size, PurePosixPath(name).suffix)
+    return Inspected(found.format, found.variant, levels, level_table(levels), tiles, ranges)
 
 
 def reader_of(
@@ -170,6 +228,12 @@ async def inspect(step: StepRun, resources: Resources, store: ObjectStore) -> Ma
         raise StepFailedError(error.code) from error
     if isinstance(found, str):
         raise StepFailedError(found)
+    prefix = slide_prefix(row.tenant_id, row.id)
+    await store.put_object(f"{prefix}{LEVELS_OUTPUT}", found.levels, "application/json")
+    if found.tiles is not None:
+        await store.put_object(
+            f"{prefix}{TILE_INDEX_NAME}", found.tiles, "application/json", content_encoding="gzip"
+        )
     await store.put_object(
         restricted_ranges_key(row.tenant_id, row.id), found.ranges, "application/json"
     )
@@ -182,7 +246,7 @@ async def inspect(step: StepRun, resources: Resources, store: ObjectStore) -> Ma
                 variant=found.variant,
                 width=found.width,
                 height=found.height,
-                level_count=found.level_count,
+                level_count=len(found.pyramid.levels),
                 published_at=func.coalesce(slides.c.published_at, func.now()),
             )
         )
@@ -200,7 +264,11 @@ async def inspect(step: StepRun, resources: Resources, store: ObjectStore) -> Ma
                 "storage": SlideStorage.REMOTE.value,
             },
         )
-    return {"format": found.format.value, "levels": found.level_count}
+    return {
+        "format": found.format.value,
+        "levels": len(found.pyramid.levels),
+        "tile_index": found.tiles is not None,
+    }
 
 
 def inspect_step(name: str, resources: Callable[[], Resources]) -> Step:

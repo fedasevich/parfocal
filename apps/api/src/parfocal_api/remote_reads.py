@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.identifiers import load_keys
 from parfocal_api.import_sources import bucket_and_prefix, credential_of, location_of
-from parfocal_api.problems import ConflictError
+from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.tables import ImportSourceKind, SlideStorage, import_sources, slides
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.ingest import slide_prefix
@@ -34,6 +34,7 @@ READ_MARK = timedelta(hours=1)
 SIGNED_SECONDS = 300
 MAX_RANGE_BYTES = 16 * 1024 * 1024
 CACHE_FOLDER = "remote-cache/"
+SIDECARS = frozenset({"levels.json", "tile-index.json"})
 CHUNK_BYTES = 256 * 1024
 CONTENT_RANGE = re.compile(r"^bytes (\d+)-(\d+)/(\d+)$")
 SAFE_SUFFIX = re.compile(r"\.[a-z0-9]{1,10}")
@@ -182,6 +183,15 @@ async def cached(store: ObjectStore, key: str) -> bytes | None:
         if error.status == 404:
             return None
         raise
+
+
+async def sidecar(
+    store: ObjectStore, tenant_id: uuid.UUID, slide_id: uuid.UUID, name: str
+) -> bytes:
+    body = await cached(store, f"{slide_prefix(tenant_id, slide_id)}{name}")
+    if body is None:
+        raise NotFoundError("No such file")
+    return body
 
 
 def served_name(path: str) -> str:

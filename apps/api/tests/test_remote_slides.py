@@ -1,3 +1,4 @@
+import gzip
 import json
 import uuid
 from collections.abc import Iterator
@@ -23,7 +24,9 @@ from parfocal_common.db import create_engine, tenant_transaction
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.ingest import restricted_ranges_key
 from parfocal_common.object_store import ObjectStore
+from parfocal_ingest.identify import Format, Identified
 from parfocal_ingest.identifying_text import ranges_file
+from parfocal_ingest.pyramid import Pyramid, read_pyramid
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -120,6 +123,21 @@ def read(api: ApiAs, grant: dict[str, Any], first: int, last: int) -> Any:
     )
 
 
+def sidecar(api: ApiAs, grant: dict[str, Any], name: str) -> Any:
+    return api.client.get(
+        f"{grant['base_path']}{name}", headers={"Authorization": f"Bearer {grant['token']}"}
+    )
+
+
+def uploaded_levels(path: Path) -> list[dict[str, Any]]:
+    found = read_pyramid(path, Identified(Format.APERIO_SVS))
+    assert isinstance(found, Pyramid)
+    return [
+        {"downsample": level.downsample, "width": level.width, "height": level.height}
+        for level in found.levels
+    ]
+
+
 def source_reads(site: Site) -> int:
     return sum(1 for method, path, _ in site.requests if method == "GET" and path == FILE)
 
@@ -178,6 +196,22 @@ def test_a_slide_read_in_place_copies_nothing_and_opens_from_the_cache_with_the_
     offline = access(linked, team, slide_id)
     assert offline["offline"] is True
     assert read(linked, offline, 0, 4095).content == data[:4096]
+    levels = sidecar(linked, offline, "levels.json")
+    assert levels.status_code == 200, levels.text
+    table = levels.json()
+    shown = [
+        {name: level[name] for name in ("downsample", "width", "height")}
+        for level in table["levels"]
+    ]
+    assert shown == uploaded_levels(fixture_path(SLIDE))
+    assert table["scale"]["mpp_x"] == pytest.approx(0.499)
+    tiles = sidecar(linked, offline, "tile-index.json")
+    assert tiles.status_code == 200
+    body = tiles.content
+    index = json.loads(gzip.decompress(body) if body[:2] == b"\x1f\x8b" else body)
+    assert (index["formatId"], len(index["levels"])) == ("aperio-svs", len(shown))
+    assert sidecar(linked, offline, "thumbnail.webp").status_code == 401
+    assert sidecar(linked, {**offline, "token": "forged.token"}, "levels.json").status_code == 401
 
     serve_slide(site, data)
     back = read(linked, offline, 4096, 8191)

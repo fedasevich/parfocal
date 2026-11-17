@@ -27,6 +27,7 @@ from parfocal_api.problems import (
 )
 from parfocal_api.remote_reads import (
     MAX_RANGE_BYTES,
+    SIDECARS,
     Pinned,
     Remote,
     RemoteSlideChangedError,
@@ -41,6 +42,7 @@ from parfocal_api.remote_reads import (
     remote_of,
     remote_path_of,
     same_file,
+    sidecar,
     source_reach,
 )
 from parfocal_api.slide_ingest import LABEL_ATTEMPTS, free_label, label_stem, taken_labels
@@ -137,7 +139,7 @@ def grant_of(request: Request, slide_id: uuid.UUID, name: str, authorization: st
     claims = claims_under_any(keys, found.group(1))
     if claims is None or claims.get("r") != 1 or claims.get("s") != str(slide_id):
         raise TileTokenError
-    if claims.get("o") != name:
+    if claims.get("o") != name and name not in SIDECARS:
         raise TileTokenError
     if not isinstance(claims.get("e"), int) or claims["e"] < datetime.now(UTC).timestamp():
         raise TileTokenExpiredError
@@ -249,6 +251,9 @@ async def get_remote_tile(
     range_header: Annotated[str | None, Header(alias="range")] = None,
 ) -> Response:
     grant = grant_of(request, slide_id, name, authorization)
+    if name in SIDECARS:
+        body = await sidecar(store_of(request), grant.tenant_id, slide_id, name)
+        return Response(content=body, headers=BASE_HEADERS, media_type="application/json")
     start, end = wanted(range_header, grant.pinned.size)
     if overlaps(grant.restricted, start, end):
         raise RangeRestrictedError
