@@ -457,9 +457,58 @@ jobs:
       - if: failure()
         run: docker compose --profile api logs
 
+  modal-images:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: app
+            base: python:3.14.9-slim-trixie@sha256:35caba83af2fe6da9a5d922f9b0156f21d1246a48278c58a08bd253303ba42e8
+          - image: ml
+            base: nvidia/cuda:13.3.1-cudnn-runtime-ubuntu24.04@sha256:2c9730db1d78ce3a7503a2f4ff2d64add3e7d1a47d57da504376192dda335242
+    name: modal-images (${{ matrix.image }})
+    container:
+      image: ${{ matrix.base }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: 0.13.8
+      - name: Add the compilers Modal's debian_slim adds
+        if: matrix.image == 'app'
+        run: |
+          apt-get update
+          apt-get install -y gcc gfortran build-essential
+      - name: Install the image lock on its base for linux/amd64 and import the entry modules
+        env:
+          IMAGE: ${{ matrix.image }}
+          PYTHONPATH: workers/deploy/src:packages/py-common/src
+        run: uv run --no-project --python 3.14 python -m parfocal_deploy.image_check "$IMAGE"
+
+  web-build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: web-build
+      - name: Build the web app as production deploys it
+        env:
+          PARFOCAL_PUBLIC_APP_ENV: prod
+        run: pnpm --filter @parfocal/web build
+      - name: Bundle the edge Worker with the web assets without deploying
+        run: pnpm --filter @parfocal/edge exec wrangler deploy --dry-run --env production --outdir "$RUNNER_TEMP/edge"
+
   ci-ok:
     if: always()
-    needs: [changes, lint, docs, typecheck, test, db, formats, e2e, browser, dependency-scan, images]
+    needs: [changes, lint, docs, typecheck, test, db, formats, e2e, browser, dependency-scan, images, modal-images, web-build]
     runs-on: ubuntu-24.04
     steps:
       - run: test "${{ needs.changes.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}" = "true"
