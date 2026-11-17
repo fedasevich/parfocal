@@ -563,7 +563,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the bundle budget test shows the first page at least 5000 bytes under its limit and the developer and walkthrough routes still pass their browser specs.
   Size: S.
 
-- [ ] FOUND-031 · Heavy dependency and lazy loading audit
+- [x] FOUND-031 · Heavy dependency and lazy loading audit
   Every route page, admin and the form pages included, is already its own lazy chunk through TanStack Router `autoCodeSplitting` since SHELL-001 (routes and code splitting), so look below the page level. Using the FOUND-030 report, find the heaviest dependencies and the shell code the first page loads but does not show, such as dialogs, the jobs tray, the bell, the settings shortcut and section tables and rarely used Base UI parts. Move it behind `React.lazy` or dynamic imports, replace or trim the heaviest dependencies where a lighter one does the job, and lower the first-page budget in `perf-budgets.json` to the new size plus 10 KB of headroom. Write the before and after sizes in a result file and note in `knowledge/` how to repeat the audit, so it runs again at each milestone.
   Done when the first-page gzip size is smaller than before, the lowered budget passes, the result file records both sizes, and the E2E suite stays green.
   Depends on FOUND-030.
@@ -1690,7 +1690,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Every camera tunable lives in one typed profile that the controller reads live: coast decay and release speed, zoom ease, wheel and pinch rates, the per-event zoom cap, flight duration bounds, keyboard pan speed and the zoom anchor (cursor or view centre). Three presets ship. Smooth is the default with the POC's tuned values, Precise has no coasting and short eases, and Instant turns every motion into a cut. Reduced motion forces Instant. SET-006 (navigation and devices section) maps the settings onto a profile.
   Done when unit tests replay the same scripted input under each preset and check the expected differences, and switching profile mid-motion neither jumps nor leaves a motion running.
   Depends on VIEW-020. Refs [ADR 0104](adr/0104-camera-controller-motion.md), [`poc/src/camera/camera-physics.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/camera-physics.ts).
-- [ ] VIEW-046 · Objective detents on wheel zoom
+- [x] VIEW-046 · Objective detents on wheel zoom
   An optional setting, off by default. A continuous wheel or pinch zoom that crosses 5×, 10×, 20× or 40× holds there briefly, so a pathologist can land on an objective without the keyboard. The hold is released by continuing to zoom, and keyboard and preset zooms ignore it. TODO: the hold length and the zoom distance that releases it need a manual check with a mouse and a trackpad, recorded as a result file.
   Done when unit tests replay mouse and trackpad traces through each detent and check the stop and the release, and a test confirms nothing changes when the setting is off.
   Depends on VIEW-021, VIEW-045.
