@@ -11,6 +11,9 @@ from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
+    EVENTS_FUNCTION,
+    EVENTS_OPTIONS,
+    EVENTS_PERIOD_MINUTES,
     FUNCTION_SECRETS,
     FUNCTIONS,
     INGEST_FUNCTION,
@@ -35,7 +38,7 @@ from parfocal_ml.gpu_pool import POOLS
 
 def test_the_app_registers_the_web_and_ingest_functions() -> None:
     assert app.name == APP_NAME
-    assert sorted(FUNCTIONS) == sorted([WEB_FUNCTION, INGEST_FUNCTION])
+    assert sorted(FUNCTIONS) == sorted([WEB_FUNCTION, INGEST_FUNCTION, EVENTS_FUNCTION])
     assert all(function.app is app for function in FUNCTIONS.values())
 
 
@@ -45,7 +48,7 @@ def test_ingest_memory_comes_from_the_ingest_settings() -> None:
 
 
 def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
-    for options in (WEB_OPTIONS, INGEST_OPTIONS):
+    for options in (WEB_OPTIONS, INGEST_OPTIONS, EVENTS_OPTIONS):
         assert options["min_containers"] == 0
         assert "buffer_containers" not in options
         assert options["max_containers"] <= 4
@@ -84,10 +87,13 @@ def test_secrets_are_attached_per_function_and_not_to_the_app(
     assert all("secrets" not in options for options in built)
 
 
-def test_the_app_deploys_no_cron() -> None:
+def test_the_app_deploys_one_schedule_for_the_event_sweep() -> None:
     assert "schedule" not in WEB_OPTIONS
     assert "schedule" not in INGEST_OPTIONS
     assert MAX_DEPLOYED_CRONS == 5
+    assert EVENTS_PERIOD_MINUTES == 5
+    assert isinstance(EVENTS_OPTIONS["schedule"], modal.Period)
+    assert EVENTS_OPTIONS["max_containers"] == 1
 
 
 def test_the_image_installs_the_app_lock_and_no_workspace_package() -> None:

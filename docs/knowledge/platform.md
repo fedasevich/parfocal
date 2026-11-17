@@ -103,3 +103,9 @@ A per-request CSP nonce needs the Worker to rewrite `index.html`, and module wor
 ## Old Modal containers can keep serving after a deploy
 
 On 2026-11-13 the deploy of v0.2.0 finished, but four `parfocal-api` containers started during the deploy kept answering with the previous code for at least ten minutes, because steady traffic from an open tab kept them warm. New routes returned 404 with `"route": "unmatched"` in the request log. `modal container list -e main` shows them and `modal container stop -y <id>` replaced them with current ones. After a deploy that adds routes, check one new route and stop leftover containers if it 404s. Source: IAM-027 log entry.
+
+## The event sweep schedule costs about $0.25 a month in Modal
+
+The function `events` in `workers/deploy/src/parfocal_deploy/modal_app.py` runs `python -m parfocal_api.event_delivery` on `modal.Period(minutes=5)` with one container at most and no warm container ([ADR 0382](../adr/0382-events-out-lease-their-own-outbox-rows-and-name-four-events.md), events out lease their own outbox rows). Estimated on 2026-11-17, not measured. It uses the same rates as the web container, 0.125 core and 0.5 GiB, which is $0.0000000275 per second. A run that finds nothing takes about 10 seconds with the cold start, and 8,640 runs a month make 86,400 seconds, so about $0.24 of the $30. A one-minute period would cost five times that, about $1.20. Modal Starter counts it as one of the five allowed crons. Neon is the real cost. A call every 5 minutes keeps the compute awake because it suspends after 5 idle minutes, and an awake 0.25 CU compute uses about 180 CU-hours a month against the 100 on the free plan. TODO: measure Neon CU-hours after the first deployed week and lengthen the period if they pass the plan.
+
+An event that happens while a target is paused is stored as `failed` with no attempts, so the delivery log shows it and `replayEvent` sends it and un-pauses the target.

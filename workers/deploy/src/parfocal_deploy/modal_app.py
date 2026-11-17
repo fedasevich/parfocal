@@ -12,11 +12,16 @@ from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 APP_NAME = "parfocal-api"
 WEB_FUNCTION = "web"
 INGEST_FUNCTION = "ingest"
+EVENTS_FUNCTION = "events"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
 SECRETS = (KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET)
-FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {WEB_FUNCTION: SECRETS, INGEST_FUNCTION: SECRETS}
+FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
+    WEB_FUNCTION: SECRETS,
+    INGEST_FUNCTION: SECRETS,
+    EVENTS_FUNCTION: SECRETS,
+}
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
 PROJECTS = ("packages/py-common", "apps/api", "workers/ingest")
@@ -43,6 +48,14 @@ INGEST_OPTIONS: dict[str, Any] = {
     "max_containers": 2,
     "scaledown_window": 60,
     "timeout": 3600,
+}
+EVENTS_PERIOD_MINUTES = 5
+EVENTS_OPTIONS: dict[str, Any] = {
+    "name": EVENTS_FUNCTION,
+    "schedule": modal.Period(minutes=EVENTS_PERIOD_MINUTES),
+    "min_containers": 0,
+    "max_containers": 1,
+    "timeout": 600,
 }
 __all__ = ["PARSE_SANDBOX_OPTIONS"]
 
@@ -91,6 +104,12 @@ def run_ingest() -> None:
     asyncio.run(main())
 
 
+def run_events() -> None:
+    from parfocal_api.event_delivery import main
+
+    main()
+
+
 def secrets_of(function: str) -> list[modal.Secret]:
     return [modal.Secret.from_name(name) for name in FUNCTION_SECRETS[function]]
 
@@ -101,4 +120,9 @@ web = app.function(**WEB_OPTIONS, secrets=secrets_of(WEB_FUNCTION))(
     modal.concurrent(**WEB_CONCURRENCY)(modal.asgi_app(**WEB_ENDPOINT)(serve))
 )
 ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
-FUNCTIONS: dict[str, modal.Function] = {WEB_FUNCTION: web, INGEST_FUNCTION: ingest}
+events = app.function(**EVENTS_OPTIONS, secrets=secrets_of(EVENTS_FUNCTION))(run_events)
+FUNCTIONS: dict[str, modal.Function] = {
+    WEB_FUNCTION: web,
+    INGEST_FUNCTION: ingest,
+    EVENTS_FUNCTION: events,
+}

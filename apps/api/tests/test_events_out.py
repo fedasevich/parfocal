@@ -320,3 +320,26 @@ def test_five_lost_events_pause_the_target_and_open_its_delivery(
     assert (twice.status_code, twice.json()["code"]) == (409, "event-not-failed")
     site.routes["/events"] = Served(200)
     assert swept(database, site, soon()) == ["delivered"]
+
+
+@pytest.mark.db
+def test_an_event_that_happens_while_a_target_is_paused_is_kept_and_can_be_replayed(
+    linked: ApiAs, database: str, site: Site
+) -> None:
+    workspace = make_workspace(database, {"admin": Role.RESEARCHER})
+    project = make_project(database, workspace.tenant_id)
+    w = wire(linked, database, site, workspace.tenant_id, project, workspace.people["admin"])
+    owner(database, f"UPDATE event_targets SET paused_at = now() WHERE id = '{w.target}'")
+    assert emitted(database, w) == 0
+    assert swept(database, site, soon()) == []
+    assert received(site) == []
+    events = linked(w.admin).get(f"{targets(project)}/{w.target}/events").json()["events"]
+    [kept] = events
+    assert (kept["status"], kept["attempts"], kept["log"]) == ("failed", 0, [])
+    replayed = linked(w.admin).post(f"{targets(project)}/{w.target}/events/{kept['id']}/replay")
+    assert replayed.status_code == 200, replayed.text
+    assert replayed.json()["paused_at"] is None
+    assert swept(database, site, soon()) == ["delivered"]
+    [(headers, body)] = received(site)
+    assert headers["parfocal-event-id"] == kept["id"]
+    assert proven(w.secret, headers, body)
