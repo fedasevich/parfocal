@@ -6,7 +6,7 @@ import { signedOpenRequest } from "../../src/access/signed-slide.ts";
 import { TileAccess } from "../../src/access/tile-access.ts";
 import { cachedFetch } from "../../src/decode/byte-relay.ts";
 import { rangeCacheFor } from "../../src/decode/range-cache.ts";
-import { openTiffSource } from "../../src/pixel-source/index.ts";
+import { createDefaultPixelSourceRegistry } from "../../src/pixel-source/index.ts";
 import type { SlideFormatId } from "../../src/pixel-source/types.ts";
 
 type ByteRange = readonly [number, number];
@@ -73,12 +73,13 @@ for (const [name, formatId] of slides) {
         });
         assert.deepEqual(request.restricted, table.restricted);
         const bytes = rangeCacheFor(request);
-        const source = await openTiffSource({
+        const source = await createDefaultPixelSourceRegistry().open({
           ...request,
           fetch: cachedFetch(bytes),
           nativeJpeg: "off",
         });
         await source.getTile({ level: source.levels.length - 1, x: 0, y: 0 });
+        await source.getTile({ level: Math.max(0, source.levels.length - 2), x: 0, y: 0 });
         source.close();
         assert.deepEqual(
           asked.filter(({ status }) => status === 403),
