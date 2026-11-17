@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 import httpx2
@@ -157,6 +158,56 @@ class ZitadelDirectory:
         )
         if added.status_code not in {200, 409}:
             raise self.refuse(added, "add the identity provider to the login policy")
+
+    async def ensure_machine_user(self, organisation_id: str, user_name: str, name: str) -> str:
+        by_name = {"userNameQuery": {"userName": user_name, "method": "TEXT_QUERY_METHOD_EQUALS"}}
+        found = await self.org_call(
+            "POST", "/management/v1/users/_search", organisation_id, {"queries": [by_name]}
+        )
+        if found.status_code != 200:
+            raise self.refuse(found, "search users")
+        existing = [str(user["id"]) for user in found.json().get("result", [])]
+        if existing:
+            return existing[0]
+        created = await self.org_call(
+            "POST",
+            "/management/v1/users/machine",
+            organisation_id,
+            {"userName": user_name, "name": name, "accessTokenType": "ACCESS_TOKEN_TYPE_BEARER"},
+        )
+        if created.status_code != 200:
+            raise self.refuse(created, "add the machine user")
+        return str(created.json()["userId"])
+
+    async def grant_organisation_roles(
+        self, organisation_id: str, user_id: str, roles: list[str]
+    ) -> None:
+        added = await self.org_call(
+            "POST",
+            "/management/v1/orgs/me/members",
+            organisation_id,
+            {"userId": user_id, "roles": roles},
+        )
+        if added.status_code == 200:
+            return
+        changed = await self.org_call(
+            "PUT", f"/management/v1/orgs/me/members/{user_id}", organisation_id, {"roles": roles}
+        )
+        if changed.status_code not in {200, 400}:
+            raise self.refuse(changed, "make the user an organisation manager")
+
+    async def issue_personal_token(
+        self, organisation_id: str, user_id: str, expires_at: datetime
+    ) -> str:
+        response = await self.org_call(
+            "POST",
+            f"/management/v1/users/{user_id}/pats",
+            organisation_id,
+            {"expirationDate": expires_at.isoformat().replace("+00:00", "Z")},
+        )
+        if response.status_code != 200:
+            raise self.refuse(response, "issue a personal access token")
+        return str(response.json()["token"])
 
     async def run_after_external_login(self, organisation_id: str, name: str, script: str) -> None:
         action = {"name": name, "script": script, "timeout": "10s", "allowedToFail": False}

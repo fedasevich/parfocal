@@ -7,6 +7,11 @@ from pathlib import Path
 import httpx2
 from pydantic import HttpUrl, PostgresDsn, SecretStr, model_validator
 
+from parfocal_api.scim_provisioning import (
+    DEFAULT_TOKEN_DAYS,
+    ScimConnectionRequest,
+    connect_scim,
+)
 from parfocal_api.sso_domains import DnsOverHttps, DomainProof, prove_sso_domains
 from parfocal_api.sso_provisioning import SamlAttributes, SamlConnectionRequest, connect_saml
 from parfocal_api.tables import Plan, Region, Role, TenantKind
@@ -63,6 +68,11 @@ def parser() -> argparse.ArgumentParser:
         "prove-sso-domains", help="Check the DNS TXT records that prove a tenant's SSO domains"
     )
     prove.add_argument("tenant_id", type=uuid.UUID)
+    scim = actions.add_parser(
+        "connect-scim", help="Issue a SCIM token for a tenant's Zitadel organisation"
+    )
+    scim.add_argument("tenant_id", type=uuid.UUID)
+    scim.add_argument("--token-days", type=int, default=DEFAULT_TOKEN_DAYS)
     return commands
 
 
@@ -136,6 +146,22 @@ async def run(settings: ProvisioningSettings, arguments: argparse.Namespace) -> 
                     f"idp_id={connected.idp_id}"
                 )
                 return "\n".join([summary, *proof_lines(connected.proofs)])
+            if arguments.action == "connect-scim":
+                scim = await connect_scim(
+                    engine,
+                    directory,
+                    ScimConnectionRequest(
+                        arguments.tenant_id, str(settings.zitadel_issuer), arguments.token_days
+                    ),
+                )
+                return "\n".join(
+                    [
+                        f"{scim.tenant_id} scim_endpoint={scim.endpoint} "
+                        f"machine_user_id={scim.machine_user_id} "
+                        f"expires_at={scim.expires_at.isoformat()}",
+                        f"token={scim.token}",
+                    ]
+                )
             if arguments.action == "prove-sso-domains":
                 proofs = await prove_sso_domains(engine, DnsOverHttps(http), arguments.tenant_id)
                 return "\n".join(proof_lines(proofs))
