@@ -235,6 +235,7 @@ CATALOGUE: tuple[Setting, ...] = (
     switch("shortcut_by_position", True, PERSONAL),
     alignments("compare_alignments", PERSONAL),
     choice("shortcut_whole_slide_key", "both", ("both", "hold", "tap"), PERSONAL),
+    names("hints_seen", 200, PERSONAL),
 )
 
 BY_KEY: Mapping[str, Setting] = {setting.key: setting for setting in CATALOGUE}

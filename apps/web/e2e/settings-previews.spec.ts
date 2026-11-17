@@ -55,3 +55,53 @@ for (const section of ["display", "layout", "navigation"]) {
     await expect(legend).toContainText("Set by your lab");
   });
 }
+
+const toolsNote = "The bottom dock gives the slide its full height.";
+
+test("a row's explanation shows once, then lives behind the label until shown again", async ({
+  page,
+}) => {
+  await page.goto("/settings/layout");
+  const tools = dialog(page)
+    .locator('[data-slot="settings-row"]')
+    .filter({ has: page.getByRole("radiogroup", { name: "Tools", exact: true }) });
+  await expect(tools.locator('[data-slot="setting-note"]')).toContainText(toolsNote);
+  await page.reload();
+  await expect(tools.locator('[data-slot="setting-note"]')).toContainText(toolsNote);
+  await tools.getByRole("radio", { name: "Bottom dock" }).click();
+  await expect(tools.locator('[data-slot="setting-note"]')).toContainText(toolsNote);
+
+  const nav = dialog(page).getByRole("navigation", { name: "Settings sections" });
+  await nav.getByRole("button", { name: "Display" }).click();
+  await nav.getByRole("button", { name: "Layout" }).click();
+  await expect(tools.locator('[data-slot="setting-note"]')).toHaveCount(0);
+  const label = tools.locator('[data-slot="setting-note-trigger"]');
+  await expect(label).toHaveAccessibleDescription(new RegExp(toolsNote));
+  await label.hover();
+  const popover = page.locator('[data-slot="setting-note-popover"]');
+  await expect(popover).toContainText(toolsNote);
+  await page.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  await expect(dialog(page)).toBeVisible();
+
+  await page.reload();
+  await expect(label).toBeVisible();
+  await label.focus();
+  await expect(popover).toContainText(toolsNote);
+  await page.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  await expect(dialog(page)).toBeVisible();
+
+  await nav.getByRole("button", { name: "Display" }).click();
+  await dialog(page).getByRole("button", { name: "Show all hints again" }).click();
+  await nav.getByRole("button", { name: "Layout" }).click();
+  await expect(tools.locator('[data-slot="setting-note"]')).toContainText(toolsNote);
+});
+
+test("lab reasons stay under their row after the section was seen", async ({ page }) => {
+  await page.goto("/settings/ai");
+  const nav = dialog(page).getByRole("navigation", { name: "Settings sections" });
+  await nav.getByRole("button", { name: "Display" }).click();
+  await nav.getByRole("button", { name: "AI and confidence" }).click();
+  await expect(dialog(page)).toContainText("Set by your lab. Outlines scoring under it are faded");
+});

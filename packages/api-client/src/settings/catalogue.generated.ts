@@ -63,6 +63,7 @@ export type SettingValues = {
   shortcut_by_position: boolean;
   compare_alignments: Record<string, CompareAlignment>;
   shortcut_whole_slide_key: "both" | "hold" | "tap";
+  hints_seen: string[];
 };
 
 export type SettingKey = keyof SettingValues;
@@ -579,5 +580,13 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
       "hold",
       "tap"
     ]
+  },
+  "hints_seen": {
+    "kind": "names",
+    "default": [],
+    "layers": [
+      "personal"
+    ],
+    "maximum": 200
   }
 };

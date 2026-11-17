@@ -39,6 +39,7 @@ export type RowKey =
   | "lengths"
   | "magnificationLabel"
   | "language"
+  | "hints"
   | "presetKeys"
   | "presets"
   | "signature"
@@ -126,6 +127,7 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "personal",
       "Report wording follows the lab's language, not this setting.",
     ),
+    row("hints", "Hints", "personal"),
   ],
   review: [
     row("presetKeys", "Preset keys", "personal", "Switch presets while you review."),
@@ -340,6 +342,17 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
     row("workspace", "Workspace", "lab"),
   ],
 };
+
+const shownEveryTime = new Set<RowKey>([
+  "decisionCutoff",
+  "lockAfter",
+  "patientBanner",
+  "otherDevices",
+]);
+
+export const hintId = (key: RowKey) => `settings.${key}`;
+
+export const showsOnce = (item: SettingRow) => item.help !== "" && !shownEveryTime.has(item.key);
 
 const hit = (query: string, ...texts: string[]) =>
   !query || texts.some((text) => text.toLowerCase().includes(query));

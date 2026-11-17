@@ -35,6 +35,7 @@ All are set by the web app for features the user uses, hold no name or contact d
 | `parfocal.outline-mode` | localStorage | One of fade, mark-unsure or bands | Keeps how the review viewer shows AI confidence on outlines |
 | `parfocal.length-units` | localStorage | `auto` or `um` | Keeps whether lengths switch to mm automatically or always show in µm |
 | `parfocal.smart-hover-preview` | localStorage | `on` or `off` | Keeps whether smart select previews the outline under the pointer |
+| `parfocal.hints-seen` | localStorage | The names of the hints a guest has seen, such as `settings.tools` | Shows each explanation under a setting once for someone who is not signed in. Signed-in people keep the same list in their personal settings |
 | `parfocal.tool-hints-seen` | localStorage | The names of the annotation tools whose hints were shown, such as `ruler` | Shows a tool's hints in the context bar only the first time it is picked on this device |
 | `parfocal.inspector-panel` | localStorage | The opaque id of the signed-in user, the side panel width, whether it is hidden and the hide while panning option | Keeps the viewer's side panel as the person left it, and keeps people on a shared workstation apart. No name or patient data |
 | `parfocal.guided-coach` | localStorage | The opaque id of the signed-in user and whether that user has dismissed the four first-time tips in guided review | Shows the tips once per user on a shared workstation, and keeps people apart. No name or patient data |

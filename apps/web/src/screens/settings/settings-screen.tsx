@@ -40,7 +40,7 @@ import { Switch } from "@parfocal/ui/components/switch";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import type { WordingSetting } from "@parfocal/ui/lib/confidence-words";
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { now } from "../../clock.ts";
 import {
   type Calibration,
@@ -57,6 +57,7 @@ import {
 } from "../../devices/navigation.ts";
 import { type HidLike, hasWebHid, requestSpaceMouse } from "../../devices/spacemouse-source.ts";
 import { useActiveTourStep } from "../../help/tour-state.ts";
+import { useHintsSeen } from "../../hints/hints-seen.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
@@ -78,6 +79,7 @@ import { okData } from "../placeholder.tsx";
 import { FeelPreview } from "./feel-preview.tsx";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
 import {
+  hintId,
   matchCount,
   matchingRows,
   normalQuery,
@@ -87,6 +89,7 @@ import {
   type SettingsSection,
   shortcutSceneOf,
   shownSection,
+  showsOnce,
   visibleSections,
 } from "./sections.ts";
 import {
@@ -251,6 +254,8 @@ function LoadedSettings({
     },
   });
   const { mutate: saveShortcutValues } = saveLayers;
+  const hints = useHintsSeen();
+  const [hintsShownAgain, setHintsShownAgain] = useState(0);
   const [picked, setPicked] = useState<Partial<SettingValues>>({});
   const values: SettingValues = {
     ...resolveSettings({ ...layers, device: readDeviceSettings() }),
@@ -465,6 +470,18 @@ function LoadedSettings({
           { value: "cs", label: "Čeština", disabled: true },
         ]}
       />
+    ),
+    hints: () => (
+      <Button
+        disabled={hints.seen.size === 0}
+        onClick={() => {
+          hints.showAllAgain();
+          setHintsShownAgain((count) => count + 1);
+          notify(t`Every hint shows again, once, under its setting.`);
+        }}
+      >
+        <Trans>Show all hints again</Trans>
+      </Button>
     ),
     patientNames: () =>
       layers.lab.locked.includes("patient_names") ? (
@@ -885,6 +902,44 @@ function LoadedSettings({
   const facts: RowKey[] = ["presetKeys", "lockAfter", "patientBanner"];
   const factIcons = { name: "user", email: "mail", role: "flag", workspace: "folder" } as const;
 
+  const sectionKey = shown?.key;
+  const [entry, setEntry] = useState({
+    key: sectionKey,
+    again: hintsShownAgain,
+    seen: hints.seen,
+  });
+  if (entry.key !== sectionKey || entry.again !== hintsShownAgain) {
+    setEntry({
+      key: sectionKey,
+      again: hintsShownAgain,
+      seen: entry.again !== hintsShownAgain ? new Set<string>() : hints.seen,
+    });
+  }
+  const notedRows =
+    sectionKey === undefined || sectionKey === "shortcuts"
+      ? []
+      : matchingRows(sectionKey, query)
+          .filter(showsOnce)
+          .map((item) => hintId(item.key));
+  const leavingNotes = useRef<string[]>([]);
+  const visiting = useRef<string | undefined>(undefined);
+  const markHintsSeen = useRef(hints.markSeen);
+  useEffect(() => {
+    leavingNotes.current = notedRows;
+    markHintsSeen.current = hints.markSeen;
+  });
+  useEffect(() => {
+    if (sectionKey === undefined) return;
+    visiting.current = sectionKey;
+    return () => {
+      const leaving = leavingNotes.current;
+      visiting.current = undefined;
+      setTimeout(() => {
+        if (visiting.current !== sectionKey) markHintsSeen.current(leaving);
+      }, 0);
+    };
+  }, [sectionKey]);
+
   const body = (() => {
     if (shown === undefined) {
       return <SettingsEmpty query={typed.trim()} onClear={() => onQuery("")} />;
@@ -923,7 +978,13 @@ function LoadedSettings({
           <SettingsRow
             key={item.key}
             label={item.label}
-            help={help(item)}
+            {...(showsOnce(item)
+              ? {
+                  note: item.help,
+                  noteHidden: entry.seen.has(hintId(item.key)),
+                  onControlChange: () => hints.markSeen([hintId(item.key)]),
+                }
+              : { help: help(item) })}
             scope={item.scope}
             fact={facts.includes(item.key)}
           >
