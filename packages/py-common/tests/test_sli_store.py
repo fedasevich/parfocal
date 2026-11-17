@@ -64,15 +64,51 @@ def test_the_emitter_flushes_once_a_minute_has_closed_and_not_before() -> None:
     blobs = MemoryBlobs()
     emitter = SliEmitter(clock, blobs)
     emitter.observe(SliName.AVAILABILITY, ok=True)
-    asyncio.run(emitter.flush_if_due())
+
+    async def flush_soon_then_settle() -> None:
+        emitter.flush_soon_if_due()
+        await emitter.settle()
+
+    asyncio.run(flush_soon_then_settle())
     assert blobs.objects == {}
     clock.now += timedelta(seconds=61)
-    asyncio.run(emitter.flush_if_due())
+    asyncio.run(flush_soon_then_settle())
     [key] = blobs.objects
     assert key.startswith(BATCH_PREFIX)
     assert json.loads(blobs.objects[key]) == {
         "sli.api.request": {str(int(START.timestamp())): [1, 0]}
     }
+
+
+@dataclass
+class HeldBlobs(MemoryBlobs):
+    release: asyncio.Event = field(default_factory=asyncio.Event)
+
+    async def put(self, key: str, body: bytes) -> None:
+        await self.release.wait()
+        await super().put(key, body)
+
+
+def test_a_due_flush_runs_beside_the_request_and_once_at_a_time() -> None:
+    clock = FakeClock()
+    blobs = HeldBlobs()
+    emitter = SliEmitter(clock, blobs)
+
+    async def scenario() -> None:
+        emitter.observe(SliName.AVAILABILITY, ok=True)
+        clock.now += timedelta(seconds=61)
+        emitter.observe(SliName.AVAILABILITY, ok=True)
+        emitter.flush_soon_if_due()
+        emitter.flush_soon_if_due()
+        assert len(emitter.flushing) == 1
+        await asyncio.sleep(0)
+        assert blobs.objects == {}
+        blobs.release.set()
+        await emitter.settle()
+
+    asyncio.run(scenario())
+    assert len(blobs.objects) == 1
+    assert emitter.flushing == set()
 
 
 def test_an_empty_emitter_writes_nothing() -> None:

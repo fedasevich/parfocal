@@ -86,7 +86,7 @@ class EdgeRealtime:
                 duration=timedelta(seconds=time.perf_counter() - started),
                 attributes={"action": action},
             )
-            await self.sli.flush_if_due()
+            self.sli.flush_soon_if_due()
 
     async def publish(self, tenant_id: uuid.UUID, rooms: Sequence[str], event: RoomEvent) -> None:
         wire = event.wire()

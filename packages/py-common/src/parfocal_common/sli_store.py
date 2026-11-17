@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import uuid
@@ -152,6 +153,7 @@ class SliEmitter:
     blobs: Blobs | None = None
     telemetry: TelemetryExporter | None = None
     pending: SliCounts = field(default_factory=SliCounts)
+    flushing: set[asyncio.Task[None]] = field(default_factory=set[asyncio.Task[None]])
 
     def observe(
         self,
@@ -191,9 +193,15 @@ class SliEmitter:
         except Exception as error:
             logger.warning("sli batch not stored", extra={"error_type": type(error).__name__})
 
-    async def flush_if_due(self) -> None:
-        if self.due():
-            await self.flush()
+    def flush_soon_if_due(self) -> None:
+        if self.flushing or not self.due():
+            return
+        task = asyncio.get_running_loop().create_task(self.flush())
+        self.flushing.add(task)
+        task.add_done_callback(self.flushing.discard)
+
+    async def settle(self) -> None:
+        await asyncio.gather(*self.flushing)
 
 
 def alert_to_json(alert: Alert) -> dict[str, object]:

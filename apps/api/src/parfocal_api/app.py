@@ -156,6 +156,7 @@ async def checked_role_then_closed_clients(app: FastAPI) -> AsyncGenerator[None]
         await require_row_security(state.engine)
         yield
     finally:
+        await app.state.sli.settle()
         await app.state.sli.flush()
         await state.identity.http.aclose()
         storage: ObjectStore = app.state.storage

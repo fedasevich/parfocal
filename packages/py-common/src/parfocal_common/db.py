@@ -119,8 +119,17 @@ def async_database_url(url: str) -> str:
     return url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 
+POOL_SIZE = 10
+POOL_OVERFLOW = 10
+
+
 def create_engine(url: str) -> AsyncEngine:
-    return create_async_engine(async_database_url(url), pool_pre_ping=True)
+    return create_async_engine(
+        async_database_url(url),
+        pool_pre_ping=True,
+        pool_size=POOL_SIZE,
+        max_overflow=POOL_OVERFLOW,
+    )
 
 
 async def require_row_security(engine: AsyncEngine) -> None:
