@@ -8,6 +8,7 @@ import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
+import { useNoteKey } from "../screens/review/note-key.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import {
   storedType,
@@ -31,14 +32,26 @@ function ObjectOutlines({
   engine,
   module,
   objects,
+  classes,
   current,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   objects: readonly ReviewObject[];
+  classes: ReviewSession["classes"];
   current: string | null;
 }) {
-  const placed = useMemo(() => placedObjects(objects), [objects]);
+  const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
+  const projectClasses = useMemo(
+    () =>
+      (JSON.parse(classKey) as [string, string, string][]).map(([id, name, colour]) => ({
+        id,
+        name,
+        colour,
+      })),
+    [classKey],
+  );
+  const placed = useMemo(() => placedObjects(objects, projectClasses), [objects, projectClasses]);
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: overlayId, host: engine }),
     [module, engine],
@@ -112,6 +125,7 @@ export function StageReviewObjects({
   guided = false,
   focus = null,
   onComments,
+  onNote,
   onCurrent,
 }: {
   engine: ViewerEngine;
@@ -122,6 +136,7 @@ export function StageReviewObjects({
   guided?: boolean;
   focus?: { onShowUi: () => void } | null;
   onComments: (object: string) => void;
+  onNote?: (object: string) => void;
   onCurrent?: (object: string | null) => void;
 }) {
   const { t } = useLingui();
@@ -134,6 +149,9 @@ export function StageReviewObjects({
   const current =
     chosen ??
     (guided || focus !== null ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
+  useNoteKey(() => {
+    if (current !== null && decided.has(current)) onNote?.(current);
+  });
   const flyTo = (id: string | null) => {
     const area = outlineArea(objects.find((item) => item.object === id)?.outline);
     if (area !== null) void engine.flyToArea(area);
@@ -192,7 +210,13 @@ export function StageReviewObjects({
   const shown = guided ? objects.filter((item) => item.object === current) : objects;
   return (
     <>
-      <ObjectOutlines engine={engine} module={module} objects={objects} current={current} />
+      <ObjectOutlines
+        engine={engine}
+        module={module}
+        objects={objects}
+        classes={session.classes}
+        current={current}
+      />
       {coachOn && focus === null ? <StageCoachOnSlide /> : null}
       {focus === null || currentItem === undefined || typedCell !== null ? null : (
         <StageFocusCard

@@ -3,14 +3,26 @@ import {
   getGetCellChunkUrl,
   getGetCellSummaryUrl,
   type ResultSet,
+  type SetRegion,
   useGetResultSet,
+  useListProjectClasses,
   useListResultSetRegions,
   useListSlideResultSets,
 } from "@parfocal/api-client";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { okData } from "../screens/placeholder.tsx";
+import { type ClassPaint, classPaints } from "./class-paint.ts";
+import { DockCard, dockedCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
-import { chunkCells, setRegions, summaryCells, viewportRect } from "./stage-geometry.ts";
+import {
+  chunkCells,
+  mergeRegions,
+  regionBox,
+  regionPageLimit,
+  setRegions,
+  summaryCells,
+  viewportRect,
+} from "./stage-geometry.ts";
 import { httpCellSource, PagedCells, type ViewerEngine } from "./viewer-engine.ts";
 
 const sameOrigin: typeof fetch = (input, init) =>
@@ -77,13 +89,13 @@ function SetCells({
   module,
   set,
   outlines,
-  names,
+  paints,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   set: ResultSet;
   outlines: boolean;
-  names: readonly string[];
+  paints: readonly ClassPaint[];
 }) {
   const { paged, version } = usePagedCells(set.id);
   const { frame, size } = useStageSize();
@@ -103,7 +115,7 @@ function SetCells({
   const [drawn, setDrawn] = useState({ cells: 0, as: "none" });
   useEffect(() => {
     if (paged === null || version < 0) return;
-    const loaded = outlines ? chunkCells(set.id, paged, names) : [];
+    const loaded = outlines ? chunkCells(set.id, paged, paints) : [];
     const outlined = loaded.length > 0;
     const cells = outlined ? loaded : summaryCells(set.id, paged.summary);
     drawing.setChoices(
@@ -111,7 +123,7 @@ function SetCells({
     );
     drawing.setObjects(cells);
     setDrawn({ cells: cells.length, as: outlined ? "outlines" : "dots" });
-  }, [drawing, paged, version, outlines, set.id, names]);
+  }, [drawing, paged, version, outlines, set.id, paints]);
   return (
     <div
       ref={frame}
@@ -129,29 +141,91 @@ function SetRegions({
   engine,
   module,
   set,
-  names,
+  paints,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   set: ResultSet;
-  names: readonly string[];
+  paints: readonly ClassPaint[];
 }) {
-  const listed = okData(useListResultSetRegions(set.id).data);
+  const { frame, size } = useStageSize();
+  const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const paged = set.region_count > regionPageLimit;
+  const box = regionBox(viewportRect(camera, size));
+  const params = paged && size.width > 0 ? box : undefined;
+  const page = okData(
+    useListResultSetRegions(set.id, params, { query: { enabled: !paged || size.width > 0 } }).data,
+  );
+  const [kept, setKept] = useState<ReadonlyMap<number, SetRegion>>(new Map());
+  useEffect(() => {
+    if (page !== undefined) setKept((before) => mergeRegions(before, page.regions));
+  }, [page]);
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: `result-regions-${set.id}`, host: engine }),
     [module, engine, set.id],
   );
   useEffect(() => () => drawing.clear(), [drawing]);
   const regions = useMemo(
-    () => setRegions(set.id, listed?.regions ?? [], names),
-    [listed, set.id, names],
+    () => setRegions(set.id, [...kept.values()], paints),
+    [kept, set.id, paints],
   );
   useEffect(() => {
     drawing.setChoices({ draw: "outline", colorBy: "class" });
     drawing.setObjects(regions);
   }, [drawing, regions]);
   return (
-    <div hidden data-testid="result-set-regions" data-set={set.id} data-regions={regions.length} />
+    <div
+      ref={frame}
+      className="pointer-events-none invisible absolute inset-0"
+      data-testid="result-set-regions"
+      data-set={set.id}
+      data-regions={regions.length}
+      data-paged={paged}
+      data-box={params === undefined ? "" : `${box.left},${box.top},${box.right},${box.bottom}`}
+      data-truncated={page?.truncated ?? false}
+    />
+  );
+}
+
+function useSetPaints(setId: string) {
+  const detail = okData(useGetResultSet(setId).data);
+  const projectId = detail?.project_id ?? "";
+  const projectClasses = okData(
+    useListProjectClasses(projectId, { query: { enabled: projectId !== "" } }).data,
+  );
+  return useMemo(
+    () => classPaints(detail?.classes ?? [], projectClasses ?? []),
+    [detail, projectClasses],
+  );
+}
+
+function ClassLegend({ set, paints }: { set: ResultSet; paints: readonly ClassPaint[] }) {
+  const rows = paints.filter((paint): paint is ClassPaint => paint !== undefined);
+  if (rows.length === 0) return null;
+  return (
+    <DockCard section="display" order={2}>
+      <section className={dockedCard} data-testid="class-legend" data-set={set.id}>
+        <h3 className="truncate font-medium text-fg">{set.name}</h3>
+        <ul className="grid gap-1">
+          {rows.map((paint) => (
+            <li
+              key={paint.name}
+              className="flex items-center gap-2 text-fg-dim"
+              data-testid="class-legend-row"
+              data-class={paint.name}
+              data-colour={paint.hex}
+            >
+              <span
+                aria-hidden
+                className="size-3 shrink-0 rounded-[3px]"
+                style={{ background: paint.hex }}
+              />
+              <span className="truncate">{paint.name}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </DockCard>
   );
 }
 
@@ -168,17 +242,17 @@ function ResultSetLayer({
   inTask: boolean;
   shown: boolean;
 }) {
-  const classes = okData(useGetResultSet(set.id).data)?.classes;
-  const names = useMemo(() => (classes ?? []).map((item) => item.name), [classes]);
+  const paints = useSetPaints(set.id);
   if (!shown) return null;
   return (
     <>
       {(set.cell_count ?? 0) > 0 ? (
-        <SetCells engine={engine} module={module} set={set} outlines={!inTask} names={names} />
+        <SetCells engine={engine} module={module} set={set} outlines={!inTask} paints={paints} />
       ) : null}
       {!inTask && (set.region_count ?? 0) > 0 ? (
-        <SetRegions engine={engine} module={module} set={set} names={names} />
+        <SetRegions engine={engine} module={module} set={set} paints={paints} />
       ) : null}
+      {inTask ? null : <ClassLegend set={set} paints={paints} />}
     </>
   );
 }

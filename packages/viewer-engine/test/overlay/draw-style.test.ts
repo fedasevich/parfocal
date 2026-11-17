@@ -162,3 +162,27 @@ test("the current object gets its own outline, tinted by confidence when asked",
     false,
   );
 });
+
+test("an object's own class colour wins over the engine class colour, only by class", () => {
+  const own: DrawnObject = {
+    id: "P1",
+    kind: "cell",
+    ring: square(0, 0),
+    className: "other",
+    classColour: [10, 20, 30, 255],
+    score: 0.9,
+  };
+  const byClass = drawObjectOverlays({ id: "own", objects: [own], settings: defaultDrawSettings });
+  assert.deepEqual(
+    Array.from(byClass.overlays[0]?.shapes.polygons?.colors ?? []).slice(0, 4),
+    [10, 20, 30, 255],
+  );
+  const byScore = drawObjectOverlays({
+    id: "own",
+    objects: [own],
+    settings: { ...defaultDrawSettings, colourBy: "score" },
+  });
+  assert.deepEqual(Array.from(byScore.overlays[0]?.shapes.polygons?.colors ?? []).slice(0, 4), [
+    ...scoreColour(0.9),
+  ]);
+});

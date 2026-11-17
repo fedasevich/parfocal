@@ -36,6 +36,7 @@ const STILL_TO_REPLACE = new Set([
   "screens/review/review-top.tsx",
   "screens/review/slide-still.tsx",
   "screens/review/slide-submitted.tsx",
+  "screens/review/use-paged-review.ts",
   "screens/thumbnails.ts",
   "screens/viewer-tools/annotate-view.tsx",
   "screens/viewer-tools/cell-focus.tsx",

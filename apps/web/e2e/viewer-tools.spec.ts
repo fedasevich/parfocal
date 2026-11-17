@@ -241,6 +241,26 @@ test("focus mode answers from the keys and the key in the pill brings the interf
   expect(new URL(page.url()).searchParams.get("focus")).toBeNull();
 });
 
+test("in focus mode Shift+N on a decided object opens its note editor with the interface back", async ({
+  page,
+}) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Focus mode"));
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+  await expect(page.getByTestId("focus-notices")).toBeAttached();
+  const card = page.locator('[data-slot="focus-card"]');
+  await expect(card).toContainText("T5");
+  await page.keyboard.press("Shift+N");
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
+  await card.getByRole("button", { name: /agree/ }).first().click();
+  await expect(card.getByText(/Decided\. Press a key again to change it\./)).toBeVisible();
+  await page.keyboard.press("Shift+N");
+  await expect(page.getByTestId("focus-mode")).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Note on your decision for T5" })).toBeFocused();
+});
+
 test("the focus key hides the top bar, rail and inspector and brings them back", async ({
   page,
 }) => {

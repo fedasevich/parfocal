@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import type { ReviewDecision } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePeople } from "../screens/people.ts";
 import { reasonText } from "../screens/review/decision-style.ts";
 import { disagreeOptions } from "../screens/review/disagree-reasons.ts";
@@ -32,15 +32,19 @@ export const answerOfDecision = (decision: ReviewDecision): Answer => ({
   note: decision.note,
 });
 
+export type NoteRequest = { readonly object: string; readonly count: number };
+
 export function StageObjectNotes({
   taskId,
   slideId,
   object,
+  editRequest = 0,
   onAllComments,
 }: {
   taskId: string;
   slideId: string;
   object: string;
+  editRequest?: number;
   onAllComments: () => void;
 }) {
   const session = useReviewSession(taskId, slideId);
@@ -74,6 +78,12 @@ export function StageObjectNotes({
   const openNote = () => {
     if (shown) setDraft({ reasons: shown.reasons, text: shown.note ?? "" });
   };
+  const [handled, setHandled] = useState(0);
+  useEffect(() => {
+    if (editRequest <= handled || shown === undefined) return;
+    setHandled(editRequest);
+    setDraft({ reasons: shown.reasons, text: shown.note ?? "" });
+  }, [editRequest, handled, shown]);
   const saveNote = () => {
     if (shown === undefined || item === undefined || draft === null) return;
     const next = withNote(shown, draft);
