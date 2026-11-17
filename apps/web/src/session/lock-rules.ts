@@ -11,6 +11,16 @@ export function isSessionLocked(error: unknown): boolean {
   );
 }
 
+export function needsSecondFactor(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.kind === "forbidden" &&
+    error.problem?.code === "second-factor-required"
+  );
+}
+
+export const secondFactorSetupUrl = "/api/auth/second-factor";
+
 export function createActivityThrottle(intervalMs = activityIntervalMs) {
   let lastSent: number | null = null;
   return {

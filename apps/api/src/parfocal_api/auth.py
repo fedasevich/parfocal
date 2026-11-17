@@ -34,6 +34,12 @@ from parfocal_api.problems import (
     UnauthenticatedError,
 )
 from parfocal_api.rate_limits import RateLimits, seconds_to_wait
+from parfocal_api.second_factor import (
+    SecondFactorRequiredError,
+    factors_of,
+    has_second_factor,
+    requires_two_factors,
+)
 from parfocal_api.sso import (
     connection_for_domain,
     linked_subject,
@@ -67,6 +73,7 @@ REFRESH_MARGIN = timedelta(seconds=30)
 SEEN_INTERVAL = timedelta(minutes=1)
 AUTH_SCOPE = DatabaseScope(auth=True)
 API_TOKEN_PREFIX = "pf_"
+SECOND_FACTOR_SETUP_PATH = "/ui/console/users/me"
 
 
 class LoginFailedError(ProblemError):
@@ -155,12 +162,15 @@ def now() -> datetime:
     return datetime.now(UTC)
 
 
-def sealed_tokens(tokens: TokenSet, claims: dict[str, Any]) -> dict[str, Any]:
+def sealed_tokens(
+    tokens: TokenSet, claims: dict[str, Any], earlier_factors: list[str] | None = None
+) -> dict[str, Any]:
     return {
         "id_token": tokens.id_token,
         "refresh_token": tokens.refresh_token,
         "name": claims.get("name"),
         "email": claims.get("email"),
+        "amr": factors_of(claims) or earlier_factors or [],
     }
 
 
@@ -196,7 +206,7 @@ async def refresh_session(
         update(sessions)
         .where(sessions.c.id_hash == digest(session_id))
         .values(
-            tokens=state.cipher.seal(sealed_tokens(renewed, claims)),
+            tokens=state.cipher.seal(sealed_tokens(renewed, claims, factors_of(tokens))),
             access_expires_at=now() + timedelta(seconds=renewed.expires_in),
         )
     )
@@ -322,6 +332,7 @@ async def authenticate(request: Request) -> Principal:
     state = auth_state(request)
     resolved: Resolved | None = None
     locked = False
+    needs_second_factor = False
     wait: int | None = None
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
         loaded = await load_session(connection, state, session_id)
@@ -347,12 +358,24 @@ async def authenticate(request: Request) -> Principal:
                 )
             if alive:
                 resolved = await resolve(connection, str(row.subject), row.active_tenant_id)
-            if resolved is not None:
+            if (
+                resolved is not None
+                and not resolved.operator
+                and resolved.role is not None
+                and resolved.active_tenant_id is not None
+                and not has_second_factor(loaded["tokens"])
+            ):
+                needs_second_factor = await requires_two_factors(
+                    connection, resolved.active_tenant_id
+                )
+            if resolved is not None and not needs_second_factor:
                 wait = await seconds_to_wait(connection, principal_of(resolved), state.limits)
     if locked:
         raise SessionLockedError
     if resolved is None:
         raise UnauthenticatedError
+    if needs_second_factor:
+        raise SecondFactorRequiredError
     if wait is not None:
         raise TooManyRequestsError(wait)
     return principal_of(resolved)
@@ -539,6 +562,13 @@ async def start_login(
     request: Request, return_to: str = "/", reauth: bool = False
 ) -> RedirectResponse:
     return await redirect_to_identity(request, return_to, prompt="login" if reauth else None)
+
+
+@router.get("/second-factor", include_in_schema=False)
+async def set_up_second_factor(request: Request) -> RedirectResponse:
+    return RedirectResponse(
+        f"{auth_state(request).identity.issuer}{SECOND_FACTOR_SETUP_PATH}", status_code=302
+    )
 
 
 @router.get("/sso", include_in_schema=False)

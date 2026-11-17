@@ -1,6 +1,6 @@
 import { ApiError, getGetPlatformStatusQueryKey, isDraftNotAvailable } from "@parfocal/api-client";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
-import { isSessionLocked } from "./session/lock-rules.ts";
+import { isSessionLocked, needsSecondFactor } from "./session/lock-rules.ts";
 import { isMaintenanceError } from "./shell/maintenance-notice.ts";
 
 const maxRetries = 3;
@@ -22,7 +22,8 @@ export function toastsMutationError(error: unknown, handledByCaller: boolean): e
     !handledByCaller &&
     error instanceof ApiError &&
     error.kind !== "validation" &&
-    !isSessionLocked(error)
+    !isSessionLocked(error) &&
+    !needsSecondFactor(error)
   );
 }
 

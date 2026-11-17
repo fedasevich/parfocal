@@ -8811,6 +8811,7 @@ msgstr "Locks after a quiet spell for now"
 
 #: ../../packages/ui/src/components/account-menu.tsx
 #: ../../packages/ui/src/components/auth.tsx
+#: src/session/second-factor-screen.tsx
 msgid "Log out"
 msgstr "Log out"
 
@@ -13205,8 +13206,8 @@ msgid "Saved as you go. You can change it until the researcher signs off."
 msgstr "Saved as you go. You can change it until the researcher signs off."
 
 #: src/screens/admin/sections.tsx
-msgid "Saved. Sign-in does not ask for a second factor yet."
-msgstr "Saved. Sign-in does not ask for a second factor yet."
+msgid "Saved. Members without a second factor are asked to set one up and sign in again."
+msgstr "Saved. Members without a second factor are asked to set one up and sign in again."
 
 #: src/screens/admin/sections.tsx
 msgid "Saved. Two factors are no longer required for everyone."
@@ -13319,6 +13320,10 @@ msgstr "Search, or press a key to see what it does"
 #: src/screens/search/search-screen.tsx
 msgid "Searching…"
 msgstr "Searching…"
+
+#: src/session/second-factor-screen.tsx
+msgid "Second factor needed"
+msgstr "Second factor needed"
 
 #: src/popout/popout-screen.tsx
 msgid "Second monitor"
@@ -13602,9 +13607,17 @@ msgstr "Set for this block only."
 msgid "Set up"
 msgstr "Set up"
 
+#: src/session/second-factor-screen.tsx
+msgid "Set up a second factor"
+msgstr "Set up a second factor"
+
 #: src/screens/home/home-screen.tsx
 msgid "Set up a workspace"
 msgstr "Set up a workspace"
+
+#: src/session/second-factor-screen.tsx
+msgid "Set up an authenticator app or a security key in your account, then sign in again with it."
+msgstr "Set up an authenticator app or a security key in your account, then sign in again with it."
 
 #: src/screens/project/settings-tab.tsx
 msgid "Set when the project was created."
@@ -13939,6 +13952,7 @@ msgid "Sign in"
 msgstr "Sign in"
 
 #: ../../packages/ui/src/components/error-toast.tsx
+#: src/session/second-factor-screen.tsx
 msgid "Sign in again"
 msgstr "Sign in again"
 
@@ -16042,6 +16056,10 @@ msgstr "This view could not be mapped"
 #: src/screens/home/home-screen.tsx
 msgid "This week in your projects"
 msgstr "This week in your projects"
+
+#: src/session/second-factor-screen.tsx
+msgid "This workspace asks for a second factor"
+msgstr "This workspace asks for a second factor"
 
 #: src/screens/my-work/parts.tsx
 msgid "thread"

@@ -8806,6 +8806,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/account-menu.tsx
 #: ../../packages/ui/src/components/auth.tsx
+#: src/session/second-factor-screen.tsx
 msgid "Log out"
 msgstr ""
 
@@ -13196,7 +13197,7 @@ msgid "Saved as you go. You can change it until the researcher signs off."
 msgstr ""
 
 #: src/screens/admin/sections.tsx
-msgid "Saved. Sign-in does not ask for a second factor yet."
+msgid "Saved. Members without a second factor are asked to set one up and sign in again."
 msgstr ""
 
 #: src/screens/admin/sections.tsx
@@ -13309,6 +13310,10 @@ msgstr ""
 
 #: src/screens/search/search-screen.tsx
 msgid "Searching…"
+msgstr ""
+
+#: src/session/second-factor-screen.tsx
+msgid "Second factor needed"
 msgstr ""
 
 #: src/popout/popout-screen.tsx
@@ -13593,8 +13598,16 @@ msgstr ""
 msgid "Set up"
 msgstr ""
 
+#: src/session/second-factor-screen.tsx
+msgid "Set up a second factor"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 msgid "Set up a workspace"
+msgstr ""
+
+#: src/session/second-factor-screen.tsx
+msgid "Set up an authenticator app or a security key in your account, then sign in again with it."
 msgstr ""
 
 #: src/screens/project/settings-tab.tsx
@@ -13930,6 +13943,7 @@ msgid "Sign in"
 msgstr ""
 
 #: ../../packages/ui/src/components/error-toast.tsx
+#: src/session/second-factor-screen.tsx
 msgid "Sign in again"
 msgstr ""
 
@@ -16032,6 +16046,10 @@ msgstr ""
 
 #: src/screens/home/home-screen.tsx
 msgid "This week in your projects"
+msgstr ""
+
+#: src/session/second-factor-screen.tsx
+msgid "This workspace asks for a second factor"
 msgstr ""
 
 #: src/screens/my-work/parts.tsx

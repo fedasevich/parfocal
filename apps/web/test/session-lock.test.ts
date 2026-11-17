@@ -7,6 +7,7 @@ import {
   idleCheckDue,
   isSessionLocked,
   locksAt,
+  needsSecondFactor,
   reauthUrl,
 } from "../src/session/lock-rules.ts";
 
@@ -27,6 +28,19 @@ test("only a 401 with the session-locked code locks the screen", () => {
     false,
   );
   assert.equal(isSessionLocked(new Error("session-locked")), false);
+});
+
+test("only a 403 with the second-factor-required code asks for a second factor", () => {
+  const refused = new ApiError("forbidden", 403, {
+    type: "about:blank",
+    title: "This workspace asks for a second factor",
+    status: 403,
+    code: "second-factor-required",
+  });
+  assert.equal(needsSecondFactor(refused), true);
+  assert.equal(needsSecondFactor(new ApiError("forbidden", 403)), false);
+  assert.equal(needsSecondFactor(locked), false);
+  assert.equal(isSessionLocked(refused), false);
 });
 
 test("activity is sent at most once a minute", () => {
