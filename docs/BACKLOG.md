@@ -3536,7 +3536,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-005, MLEVAL-008, SEC-023. Refs kit W69, kit Flow 28.
   Size: L.
 
-- [ ] AIP-019 · Model catalogue matches the v1 line-up
+- [x] AIP-019 · Model catalogue matches the v1 line-up
   AIP-000 (research check) set the v1 line-up in [ADR 0202](adr/0202-v1-model-line-up-per-tier.md), but `model_catalogue.py` and the tier defaults of ADR 0159 still point the Good tiers at HoVer-Net, which ADR 0202 drops from v1. Bring the catalogue and the tier defaults in line once the owner accepts ADR 0202.
   Done when a test proves every tier default names a model in ADR 0202's line-up, and the catalogue lists each model's licence.
   Depends on AIP-000.
@@ -5482,6 +5482,11 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover the selection and view scopes from the Annotate workspace, and E2E runs a model on a drawn selection and fixes one of its objects.
   Depends on JOBS-001, ANN-031, AINUC-013. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), doc 19.
   Size: M.
+
+- [ ] JOBS-008 · Confirm tile sharing before a lab model joins a clinical project
+  Decision 138 (tile sharing when a lab model runs on a clinical project) chose option A. Adding a lab model to a clinical project's allowed list asks the project owner to confirm, once per model and project, that tiles of its slides will be sent to the lab model's named server. The confirmation is stored and audited, a lab model without one cannot run on that project, and removing the model clears it. [ADR 0363](adr/0363-the-model-run-contract-with-parfocal-and-lab-endpoints.md) (the model run contract with Parfocal and lab endpoints) records the contract.
+  Done when API tests show the refusal without a confirmation, the audit event on confirming and the reset on removal, and a browser test covers the confirmation dialog.
+  Depends on JOBS-000. Size: S.
 
 ## 48 REMOTE · Remote sources, webhooks and events
 

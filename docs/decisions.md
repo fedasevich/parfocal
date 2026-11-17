@@ -137,7 +137,7 @@ JOBS-000 (research check for the model run contract) recorded the contract in [A
 - B. The per-project allowed list is enough.
 - Other.
 
-Your choice: 
+Your choice: a
 
 ### 139. Whether a one-factor member can switch out of a workspace that requires a second factor
 
