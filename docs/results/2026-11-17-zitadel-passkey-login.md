@@ -17,7 +17,7 @@ Can the BFF login reach a passkey prompt on the pinned Zitadel, what does `login
 2. It opened `/oauth/v2/authorize` with `login_hint`, again in the same browser, and with `prompt=login`, pressed "Login with passwordless", exchanged the code and decoded the ID token.
 3. It turned user verification off on the virtual authenticator and pressed the button again.
 4. Read `internal/webauthn/converter.go` and `internal/command/user_human_webauthn.go` at tag v4.20.3.
-5. Ran `apps/e2e/tests/passkey.spec.ts` once on the TEST-040 stack (compose project `iam023`), then removed both projects with their volumes.
+5. Ran `apps/e2e/tests/passkey.spec.ts` on the TEST-040 stack (compose project `iam023`) twice, once before and once after the hint moved into a POST body, and removed both projects with their volumes after each run.
 
 ## Results
 
@@ -32,7 +32,7 @@ Can the BFF login reach a passkey prompt on the pinned Zitadel, what does `login
 | User verification refused | The page shows "The operation either timed out or was not allowed" and keeps "Login with passwordless" and "Login with password" |
 | E2E, cancelled window then retry from the app's sign-in page | Passed |
 | E2E, passkey sign-in to a slide deep link | Signed in to the slide path |
-| E2E, lock and unlock with a passkey | Not reached. The full viewer showed "Loading the slide" without the account menu, so the spec now waits for the profile, locks with the same `lock-screen` event the menu sends and checks the hint. Not run again |
+| E2E, lock and unlock with a passkey | First run: not reached, the full viewer showed "Loading the slide" without the account menu. Second run, at 7c3866fb, with the hint posted to the BFF and the lock sent by the same `lock-screen` event the menu sends: passed, back at the same URL with its camera, and the API container logs held no copy of the email |
 | Fake E2E, passkey unlock compares the slide's viewBox | Passed 3 times in a row. The older account menu lock spec failed 2 of 4 repeats, once with and once without the session lock change, a flake in that spec |
 
 ## Interpretation
@@ -43,4 +43,4 @@ Can the BFF login reach a passkey prompt on the pinned Zitadel, what does `login
 
 ## Follow-ups
 
-- The lock and unlock half of `passkey.spec.ts` needs one run on the stack, in the TEST-040 CI job or by the next agent.
+- None. The spec runs in the TEST-040 CI job.
