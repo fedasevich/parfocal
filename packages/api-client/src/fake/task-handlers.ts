@@ -21,6 +21,7 @@ import type {
   StudyTemplateSummary,
   TaskChange,
   TaskDraft,
+  TaskReviewerCreate,
   TemplateReviewDefaults,
 } from "../generated/api.ts";
 import { setAnnotateBlindFirst } from "./annotate-task-listing.ts";
@@ -32,7 +33,7 @@ import {
 } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import { toAnnotateReviewTask } from "./project-handlers.ts";
-import { people, projectByCode, projects, reviewTasks } from "./scenario.ts";
+import { type PersonKey, people, projectByCode, projects, reviewTasks } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
 import { annotateStubTaskId, rt13 } from "./scenario-review.ts";
 import {
@@ -263,6 +264,9 @@ const changeTask = http.patch<{ taskId: string }>(
     const task = [...reviewTasks, rt13].find((candidate) => candidate.id === params.taskId);
     if (task === undefined) return undefined;
     const body = (await request.json()) as TaskChange;
+    if (task.status === "signed" && body.due_on != null)
+      return problem(409, "task-signed-off", "This task is signed off");
+    if (body.due_on != null) task.dueOn = body.due_on;
     const after = body.decision?.counts_as;
     if (after === undefined || after === null) return HttpResponse.json(toReviewTaskDetail(task));
     if (task.status === "signed")
@@ -280,10 +284,30 @@ const changeTask = http.patch<{ taskId: string }>(
   },
 );
 
+const addReviewer = http.post<{ taskId: string }, TaskReviewerCreate>(
+  "*/api/review-tasks/:taskId/reviewers",
+  async ({ params, request }) => {
+    const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
+    if (task === undefined) return undefined;
+    if (task.status === "signed") return problem(409, "task-signed-off", "This task is signed off");
+    const body = await request.json();
+    const key = (Object.keys(people) as PersonKey[]).find(
+      (candidate) => people[candidate].id === body.user_id,
+    );
+    if (key === undefined) return problem(400, "not-a-reviewer", "This person cannot review here");
+    if (task.reviewers.includes(key))
+      return problem(409, "already-reviews-slide", "This person already reviews these slides");
+    task.reviewers.push(key);
+    task.progress[key] = 0;
+    return HttpResponse.json(toReviewTaskDetail(task), { status: 201 });
+  },
+);
+
 export function taskHandlers(): RequestHandler[] {
   return [
     getListReviewerWorkloadMockHandler(() => toReviewerWorkload()),
     changeTask,
+    addReviewer,
     getListStudyTemplatesMockHandler(() => listedStudyTemplates()),
     getListStudyTemplateReviewDefaultsMockHandler(() => toStudyTemplateReviewDefaults()),
     ...studyTemplateHandlers(toStudyTemplates),
