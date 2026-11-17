@@ -75,7 +75,7 @@ class SliMiddleware:
                 duration=timedelta(seconds=time.perf_counter() - started),
                 attributes={"route": route_of(scope), "status_code": str(status)},
             )
-            await self.emitter.flush_if_due()
+            self.emitter.flush_soon_if_due()
 
 
 @dataclass(frozen=True)

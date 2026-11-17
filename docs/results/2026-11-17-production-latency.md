@@ -1,4 +1,4 @@
-# Result: warm API calls on app.parfocal.eu spend 75 to 95 percent of their time outside the app, and one web container serves one request at a time
+# Result: warm API calls on app.parfocal.eu spend 75 to 95 percent of their time on the Cloudflare to Modal hop, one web container serves one request at a time, and the first request each minute waits for an R2 write
 
 - Date: 2026-11-17
 - Backlog: TEST-019 (application performance on main paths)
@@ -32,10 +32,12 @@ The API through the Worker. The first `/api/health` run at 01:07:31 UTC was a co
 
 | URL | Client TTFB, 5 runs | Modal duration (execution) | App `duration_ms` |
 |---|---|---|---|
-| `/api/health`, cold then warm | 5,705, 471, 483, 180, 525 | 5,240 (9.5) cold, then 26 to 35 (8 to 11) | 0.3 to 1.1 |
-| `/api/health`, warm, second set | 521, 573, 459, 165, 177 | 24 to 29 (7 to 10), one 616 (592) | 0.4 |
-| `/api/status` (one maintenance read on Neon) | 600, 531, 487, 547, 491 | 53 to 66 (24 to 36) | not logged |
-| `/api/me` (401, no session) | 1,044, 201, 209, 198, 481 | 601 (582) first, then 28 to 42 (10 to 12) | not logged |
+| `/api/health` at 01:07:31, cold then warm | 5,705, 471, 483, 180, 525 | 5,240 (9.5), 26 (8.3), 31 (9.9), 35 (10.6), 35 (8.6) | 0.3 to 1.1 |
+| `/api/health` at 01:08:29 | 521, 573, 459, 165, 177 | 616 (592), 94 (7.7), 28 (8.7), 24 (7.0), 29 (10.3) | 0.4 |
+| `/api/status` at 01:09:33, one maintenance read on Neon | 600, 531, 487, 547, 491 | 545 (523), 66 (29), 53 (25), 62 (36), 53 (24) | not logged |
+| `/api/me` at 01:09:36, 401 with no session | 1,044, 201, 209, 198, 481 | 601 (582), 28 (10), 39 (10), 36 (11), 42 (12) | not logged |
+
+Server lines were matched to the client runs by their timestamps from `modal app logs --timestamps` (Modal prints CET, one hour ahead). The first request of each set falls in a new minute, and that is the one with 480 to 590 ms of execution. At 01:11:32 the same happened again: health 497 (477), followed by 374 (8.4), a request that waited for the container while it was still busy with the one before. The client total of the first request can be shorter than Modal's duration (521 against 616), so the response leaves before Modal counts the request as done.
 
 The Modal origin directly, without the proxy token, so Modal refuses with 401 before any container: connect 105 to 125, TLS done at 211 to 233, TTFB 322 to 343 over 5 runs. One round trip from this Mac to `modal.run` is therefore about 110 ms, which points at a US ingress.
 
@@ -43,7 +45,7 @@ One curl process reusing its connection, 5 requests each, at 01:11 UTC: `/api/he
 
 8 parallel `/api/status` requests at 01:11 UTC finished at 189, 221, 248, 471, 505, 534, 564 and 598 ms. Modal logged execution of 23 to 26 ms each but duration rising from 43 to 141 ms, and `modal container list -e main` showed one container. The requests queued behind each other.
 
-Earlier logs from 00:44 UTC show the same queueing at a larger scale: `/api/me/checklist` duration 2.80 s with execution 133 ms and `/api/status` duration 2.92 s with execution 105 ms, while a second container was starting.
+Earlier logs from 00:44 UTC, from the owner's own browser, show waits at a larger scale: `/api/me/checklist` duration 2.80 s with execution 133 ms and `/api/status` duration 2.92 s with execution 105 ms. Whether they queued behind other requests or behind a container start is not visible in the logs. In the same minute a `/api/rooms/{room}/access` 401 took 756 ms of app time, which stays unexplained.
 
 Neon, read through its API: region `aws-us-east-1`, Free plan (`free_v3`), compute fixed at 0.25 CU, `suspend_timeout_seconds` 0, which means the plan default of 5 minutes and cannot be turned off on Free. The compute's `started_at` was 01:07:37 UTC, the same second as the cold container, because the API's startup checks the database role. This month so far: 9,020 compute seconds (2.5 CU-hours of the 100 included) and 35,860 active seconds.
 
@@ -51,11 +53,12 @@ Static asset headers: every hashed file under `/assets/` was served with `cache-
 
 ## Where the time goes
 
-- A warm `/api/health` costs the app under 1 ms, Modal 25 to 35 ms, and the client 140 to 570 ms. Everything else is the trip from Cloudflare in Amsterdam to Modal's ingress in the US and back, about one round trip of 110 ms when the Worker reuses a connection and about four when it opens a new one (TCP, TLS and the request). The Worker does not reuse its connection to Modal for every request, so warm calls split into a fast group near 150 to 200 ms and a slow group near 450 to 600 ms.
+- A warm `/api/health` costs the app under 1 ms, Modal 25 to 35 ms, and the client 140 to 570 ms. The rest is the trip from Cloudflare in Amsterdam to Modal's ingress in the US and back. Inferred, not observed: the fast group near 150 to 200 ms fits one round trip of about 110 ms on a reused connection, and the slow group near 450 to 600 ms fits about four round trips (TCP, TLS and the request), which suggests the Worker often opens a new connection to Modal. Cloudflare does not show this per request.
 - A warm `/api/status`, one small query, runs 24 to 36 ms inside the container, so the database is close to the container and is not the warm bottleneck.
-- The web function has no input concurrency setting, so Modal sends one request at a time to a container. The app's page loads fire several API calls at once, so they queue, and once the queue grows Modal starts another container, which costs about 5.2 s of cold start. That is the multi-second outlier pattern in the 00:44 logs and the reason one open tab kept four containers alive on 2026-11-13.
-- A cold start costs about 5.7 s at the client: 5.24 s of container start including the Neon wake, then the transatlantic hop. The first request after a minute or so of idle on a warm container took 520 to 600 ms of Modal execution while the app logged under 1 ms. That part is inside Modal's runtime, not in this code.
-- The web container has no `cpu` setting, which on Modal means 0.125 of a core. It is not the main cost today, but it makes every Python step slower under load.
+- The first request in each new minute ran 480 to 590 ms longer inside Modal while the app logged under 1 ms. `SliMiddleware` sits outside `RequestLogging` and, after every request, awaited `SliEmitter.flush_if_due()`, which writes the closed minute's SLI batch to R2 (and flushes telemetry) once a minute has passed. So the first request of each minute carried an R2 write from the US container, and because the container takes one request at a time, the next request waited for it too. The 401 for `/api/me` at 01:09:36 also spiked in a minute that had already flushed at 01:09:33. That one is not located.
+- The web function has no input concurrency setting, so Modal sends one request at a time to a container. The app's page loads fire several API calls at once, so they queue, and once the queue grows Modal may start another container, which costs about 5.2 s of cold start. It likely explains why one open tab kept four containers alive on 2026-11-13, though that is inferred.
+- A cold start costs about 5.7 s at the client: 5.24 s of container start including the Neon wake, then the transatlantic hop.
+- The web container has no `cpu` setting, which on Modal means 0.125 of a core. With up to 10 requests now sharing one container, that core and the 2,048 MiB memory ceiling are shared too, and a blocking call in one handler stalls the rest, so the `cpu` row below matters more after this change.
 - Authenticated requests could not be measured without a session. Reading `authenticate` shows 8 to 11 sequential statements in one transaction per request (session row with `FOR UPDATE`, session policy, user, operator, membership, an optional second-factor read and a rate counter upsert), before the endpoint opens its own transaction. With 24 to 36 ms for one statement plus transaction overhead in `/api/status`, that is likely 60 to 120 ms of server time per authenticated call, and the `FOR UPDATE` on the session row makes parallel calls from one browser take turns. TODO: measure with a session.
 - Static files come from Cloudflare in 70 to 150 ms, but because hashed chunks were marked `max-age=0, must-revalidate`, every repeat visit revalidated all of them.
 
@@ -65,7 +68,9 @@ Static asset headers: every hashed file under `/assets/` was served with `cache-
 - The database pool is now 10 connections plus 10 overflow, so 10 concurrent requests that each hold two connections still fit. Tested in `packages/py-common/tests/test_db_engine.py`.
 - The Worker serves files under `/assets/` that answer 200 and are not HTML with `Cache-Control: public, max-age=31536000, immutable`. The single page fallback for a missing chunk stays `no-store`. Tested in `apps/edge/test/security-headers.test.ts`.
 
-These take effect at the next deploy. TODO: repeat this run after it.
+- The SLI batch now flushes in a background task (`SliEmitter.flush_soon_if_due`), at most one at a time, so no request waits for the R2 write. Shutdown waits for it with `settle()` before the last flush. The realtime publisher uses the same call. Tested in `packages/py-common/tests/test_sli_store.py`.
+
+These take effect at the next deploy. TODO: repeat this run after it. The check is that 8 parallel `/api/status` calls show flat Modal durations on one container and that no request at the start of a minute runs 500 ms of execution.
 
 ## Production settings to consider
 
