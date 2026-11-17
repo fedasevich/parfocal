@@ -2,6 +2,22 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.7.0 (2026-11-17)
+
+### Features
+
+- SHELL-023: Keep one-time hints in one store and reset them from the palette
+- OPS-031: Pin the web function to the EU with a Dublin entry and record the move
+- IAM-032: Save passkeys and sign in with them on the app's own origin
+
+### Fixes
+
+- PROJ-013: Open New project over the current page and delete a result set
+
+### Docs
+
+- OPS-031: Keep the Frankfurt URL in Modal and list the owner's three questions
+
 ## v0.6.0 (2026-11-17)
 
 ### Features
