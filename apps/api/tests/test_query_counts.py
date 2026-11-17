@@ -90,3 +90,38 @@ def test_my_slides_reads_a_handful_of_queries_however_many_tasks_the_page_touche
     assert len(rows) == 50
     assert many == few
     assert many <= SLIDES_PAGE
+
+
+PROJECTS_PAGE = 6
+NEIGHBOURS = 5
+
+
+def test_project_list_reads_a_fixed_number_of_queries_however_many_projects_there_are(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    few = queries(api, s, "owner", "/api/projects")
+    for _ in range(5):
+        another_project(database, s)
+    many = queries(api, s, "owner", "/api/projects")
+    assert len(api(s.people["owner"]).get("/api/projects").json()) >= 6
+    assert many == few
+    assert many <= PROJECTS_PAGE
+
+
+def test_one_project_reads_no_more_queries_than_the_list(api: ApiAs, database: str) -> None:
+    s = study(database)
+    one = queries(api, s, "owner", f"/api/projects/{s.project}")
+    assert one <= PROJECTS_PAGE
+
+
+def test_neighbours_of_all_slides_reads_a_fixed_number_of_queries_however_many_slides(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    route = f"/api/slides/{s.slides[0]}/neighbours?from=all-slides"
+    few = queries(api, s, "owner", route)
+    many_slides(database, s, 30)
+    many = queries(api, s, "owner", route)
+    assert many == few
+    assert many <= NEIGHBOURS

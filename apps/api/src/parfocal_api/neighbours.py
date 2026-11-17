@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.my_work import MAX_PAGE, list_my_slides
+from parfocal_api.my_work import MAX_PAGE, list_my_slides, slides_statement
 from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, NotFoundError
@@ -107,6 +107,10 @@ async def all_slides_order(
     storage: SlideStorage | None,
     q: str | None,
 ) -> list[uuid.UUID]:
+    if status is None:
+        member_of(principal)
+        statement = slides_statement(principal, project_id, result_set, reviewer_id, storage, q)
+        return list(await connection.scalars(statement.with_only_columns(slides.c.id)))
     ordered: list[uuid.UUID] = []
     cursor: str | None = None
     while True:
