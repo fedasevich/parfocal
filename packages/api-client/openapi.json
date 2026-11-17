@@ -62274,7 +62274,8 @@
           "adjudication-requested",
           "slide-moved",
           "workspace-access-asked",
-          "template-offered"
+          "template-offered",
+          "project-access-asked"
         ],
         "title": "NotificationKind"
       },

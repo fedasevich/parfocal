@@ -179,6 +179,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         ALL,
         breaks_mute=False,
     ),
+    NotificationKind.PROJECT_ACCESS_ASKED: Entry(
+        TargetKind.PROJECT,
+        "Someone asked to join your project",
+        "A person in your workspace asked to be added to a project you own.",
+        ALL,
+        breaks_mute=False,
+    ),
 }
 DEFAULTS: Mapping[NotificationKind, Channels] = {
     kind: entry.channels for kind, entry in CATALOGUE.items()

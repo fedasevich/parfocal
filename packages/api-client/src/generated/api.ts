@@ -3151,6 +3151,7 @@ export const NotificationKind = {
   "slide-moved": "slide-moved",
   "workspace-access-asked": "workspace-access-asked",
   "template-offered": "template-offered",
+  "project-access-asked": "project-access-asked",
 } as const;
 
 export interface KindCount {
