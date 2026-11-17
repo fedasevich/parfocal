@@ -1,6 +1,6 @@
 import re
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Any, Self
 
 from fastapi import APIRouter, Request
@@ -94,6 +94,8 @@ class MemberActivity(BaseModel):
     email: str | None
     last_active_at: datetime | None
     project_codes: list[str]
+    deactivates_on: date | None
+    deactivated_at: datetime | None
 
 
 class Workspace(BaseModel):
@@ -243,7 +245,7 @@ async def own_workspaces(connection: AsyncConnection, user_id: uuid.UUID) -> lis
         )
         .join(memberships, memberships.c.tenant_id == tenants.c.id)
         .join(organisations, organisations.c.id == tenants.c.organisation_id)
-        .where(memberships.c.user_id == user_id)
+        .where(memberships.c.user_id == user_id, memberships.c.deactivated_at.is_(None))
         .order_by(organisations.c.name, tenants.c.name)
     )
     return [workspace_of(row) for row in rows]
@@ -392,7 +394,13 @@ async def list_member_activity(
     in_this_tenant = memberships.c.tenant_id == literal_column(CURRENT_TENANT)
     people = (
         await connection.execute(
-            select(users.c.id, users.c.email, users.c.subject)
+            select(
+                users.c.id,
+                users.c.email,
+                users.c.subject,
+                memberships.c.deactivates_on,
+                memberships.c.deactivated_at,
+            )
             .join(memberships, memberships.c.user_id == users.c.id)
             .where(in_this_tenant)
             .order_by(users.c.display_name)
@@ -428,6 +436,8 @@ async def list_member_activity(
             email=person.email,
             last_active_at=seen.get(person.subject),
             project_codes=projects_of.get(person.id, []),
+            deactivates_on=person.deactivates_on,
+            deactivated_at=person.deactivated_at,
         )
         for person in people
     ]

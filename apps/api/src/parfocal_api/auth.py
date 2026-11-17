@@ -305,6 +305,7 @@ def checked_session_query(session_id: str) -> Select[Any]:
             exists().where(platform_operators.c.subject == sessions.c.subject).label("operator"),
             memberships.c.role.label("member_role"),
             memberships.c.admin_rights.label("member_admin_rights"),
+            memberships.c.deactivated_at.label("member_deactivated_at"),
             workspace_settings.c["values"].label("workspace_values"),
             tenants.c.status.label("tenant_status"),
         )
@@ -337,7 +338,12 @@ class CheckedSession:
 
     def resolved(self) -> Resolved:
         row = self.row
-        if row.user_id is None or row.active_tenant_id is None or row.member_role is None:
+        if (
+            row.user_id is None
+            or row.active_tenant_id is None
+            or row.member_role is None
+            or row.member_deactivated_at is not None
+        ):
             return Resolved(str(row.subject), row.user_id, row.active_tenant_id, row.operator, None)
         return Resolved(
             str(row.subject),
@@ -592,13 +598,19 @@ async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> S
     last_tenant = await connection.scalar(
         select(memberships.c.tenant_id)
         .join(users, users.c.id == memberships.c.user_id)
-        .where(users.c.id == user_id, memberships.c.tenant_id == users.c.last_tenant_id)
+        .where(
+            users.c.id == user_id,
+            memberships.c.tenant_id == users.c.last_tenant_id,
+            memberships.c.deactivated_at.is_(None),
+        )
     )
     if last_tenant is not None:
         return SignedIn(subject, last_tenant)
     tenant_ids = (
         await connection.scalars(
-            select(memberships.c.tenant_id).where(memberships.c.user_id == user_id).limit(2)
+            select(memberships.c.tenant_id)
+            .where(memberships.c.user_id == user_id, memberships.c.deactivated_at.is_(None))
+            .limit(2)
         )
     ).all()
     return SignedIn(subject, tenant_ids[0] if len(tenant_ids) == 1 else None)

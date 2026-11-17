@@ -800,7 +800,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-010. Refs kit W49, kit W62, kit Flow 21, [ADR 0023](adr/0023-gap-review-backend-first.md).
   Size: M.
 
-- [ ] IAM-020 · Deactivation with hand-over
+- [x] IAM-020 · Deactivation with hand-over
   Deactivating a person first lists their open work: review tasks they are on, tasks they own, adjudications and open threads. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their decisions, sign-offs and audit history stay.
   Done when API tests refuse a deactivation with open work, apply one with every item moved, run a scheduled end date with a fake clock, and confirm signed-off evaluations still verify.
   Depends on IAM-014, TASK-007, ADJ-003. Refs kit W51, kit Flow 25.

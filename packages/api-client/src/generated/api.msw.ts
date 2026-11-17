@@ -46,6 +46,7 @@ import type {
   CreatedReportLink,
   CreatedServiceAccount,
   CreatedUpload,
+  Deactivation,
   DecisionNote,
   DeletedProject,
   DisagreementQueue,
@@ -120,6 +121,7 @@ import type {
   Nudge,
   ObjectResolution,
   OpenUpload,
+  OpenWork,
   Opinion,
   OpinionAnswers,
   OpinionForm,
@@ -286,6 +288,7 @@ import {
   ColourBy,
   ConfidenceBand,
   ConfidenceShown,
+  DeactivationState,
   Decision,
   DecisionKind,
   DecisionReason,
@@ -325,6 +328,7 @@ import {
   ObjectKind,
   ObjectOrder,
   ObjectState,
+  OpenWorkKind,
   Ordering,
   OriginRoute,
   Outcome,
@@ -18651,6 +18655,14 @@ export const getListMemberActivityResponseMock = (): MemberActivity[] =>
       { length: faker.number.int({ min: 1, max: 10 }) },
       (_, i) => i + 1,
     ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+    deactivates_on: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 10),
+      null,
+    ]),
+    deactivated_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
   }));
 
 export const getChangeMemberRoleResponseMock = (
@@ -18676,6 +18688,30 @@ export const getSetMemberAdminRightsResponseMock = (
   title: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   role: faker.helpers.arrayElement(Object.values(Role)),
   admin_rights: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getGetMemberOpenWorkResponseMock = (
+  overrideResponse: Partial<Extract<OpenWork, object>> = {},
+): OpenWork => ({
+  user_id: faker.string.uuid(),
+  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    kind: faker.helpers.arrayElement(Object.values(OpenWorkKind)),
+    id: faker.string.uuid(),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    count: faker.number.int(),
+  })),
+  ...overrideResponse,
+});
+
+export const getDeactivateMemberResponseMock = (
+  overrideResponse: Partial<Extract<Deactivation, object>> = {},
+): Deactivation => ({
+  user_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(DeactivationState)),
+  ends_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+  handed_over: faker.number.int(),
   ...overrideResponse,
 });
 
@@ -28072,6 +28108,71 @@ export const getSetMemberAdminRightsMockHandler = (
   );
 };
 
+export const getGetMemberOpenWorkMockHandler = (
+  overrideResponse?:
+    | OpenWork
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<OpenWork> | OpenWork),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/members/:userId/open-work",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetMemberOpenWorkResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeactivateMemberMockHandler = (
+  overrideResponse?:
+    | Deactivation
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<Deactivation> | Deactivation),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/members/:userId/deactivation",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDeactivateMemberResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCancelMemberDeactivationMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/members/:userId/deactivation",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getAddMemberMockHandler = (
   overrideResponse?:
     | Membership
@@ -29219,6 +29320,9 @@ export const getParfocalAPIMock = () => [
   getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),
   getSetMemberAdminRightsMockHandler(),
+  getGetMemberOpenWorkMockHandler(),
+  getDeactivateMemberMockHandler(),
+  getCancelMemberDeactivationMockHandler(),
   getAddMemberMockHandler(),
   getListMembersMockHandler(),
   getListAuditEventsMockHandler(),

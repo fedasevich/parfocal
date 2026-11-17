@@ -8,7 +8,7 @@ import uuid
 import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -323,6 +323,8 @@ class Workspace:
     slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
     accepted_offer: uuid.UUID = field(default_factory=uuid.uuid4)
+    leaver: uuid.UUID = field(default_factory=uuid.uuid4)
+    scheduled_leaver: uuid.UUID = field(default_factory=uuid.uuid4)
     declined_offer: uuid.UUID = field(default_factory=uuid.uuid4)
     painted_map: uuid.UUID = field(default_factory=uuid.uuid4)
 
@@ -1535,6 +1537,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "setMemberAdminRights": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.deputy}/admin-rights", {"admin_rights": True}
     ),
+    "getMemberOpenWork": lambda w: Call("GET", f"/api/tenant/members/{w.leaver}/open-work"),
+    "deactivateMember": lambda w: Call("POST", f"/api/tenant/members/{w.leaver}/deactivation", {}),
+    "cancelMemberDeactivation": lambda w: Call(
+        "DELETE", f"/api/tenant/members/{w.scheduled_leaver}/deactivation"
+    ),
     "listWorkspaceAccessRequests": lambda _: Call("GET", "/api/tenant/access-requests"),
     "approveWorkspaceAccessRequest": lambda w: Call(
         "POST", f"/api/tenant/access-requests/{seeded(w, 'access-request')}/approval"
@@ -2022,6 +2029,15 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             }
             colleague = await add_person(connection, tenant_id, f"{slug}-colleague", Role.REVIEWER)
             deputy = await add_person(connection, tenant_id, f"{slug}-deputy", Role.RESEARCHER)
+            leaver = await add_person(connection, tenant_id, f"{slug}-leaver", Role.REVIEWER)
+            scheduled_leaver = await add_person(
+                connection, tenant_id, f"{slug}-scheduled-leaver", Role.REVIEWER
+            )
+            await connection.execute(
+                update(memberships)
+                .where(memberships.c.user_id == scheduled_leaver)
+                .values(deactivates_on=date(2099, 1, 1))
+            )
             adjudicator = await add_person(
                 connection, tenant_id, f"{slug}-adjudicator", Role.REVIEWER
             )
@@ -2754,6 +2770,8 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             declinable=declinable,
             movable_run=movable_run,
             adjudicator=adjudicator,
+            leaver=leaver,
+            scheduled_leaver=scheduled_leaver,
             report_link=report_link,
             annotate_task=annotate_task,
             slide_thread=slide_thread,
