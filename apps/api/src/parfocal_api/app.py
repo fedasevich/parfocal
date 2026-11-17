@@ -61,6 +61,8 @@ from parfocal_api import (
     patch_exports,
     personal_data,
     project_jobs,
+    project_overview,
+    project_uploads,
     projects,
     report_links,
     report_preview,
@@ -228,6 +230,8 @@ def create_app(
     app.include_router(password_login.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
+    app.include_router(project_overview.router)
+    app.include_router(project_uploads.router)
     app.include_router(sample_project.router)
     app.include_router(sign_out.router)
     app.include_router(clinical_reports.router)

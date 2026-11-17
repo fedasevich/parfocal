@@ -1208,6 +1208,17 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listMentionableMembersOnSlide": lambda w: Call("GET", f"{w.slide_threads}/mentionable"),
     "getThreadOnSlide": lambda w: Call("GET", f"{w.slide_threads}/{w.slide_thread}"),
     "listSlideThreads": lambda w: Call("GET", f"/api/slides/{w.slide}/threads"),
+    "getProjectOverview": lambda w: Call("GET", f"/api/projects/{w.project}/overview"),
+    "listProjectSlides": lambda w: Call("GET", f"/api/projects/{w.project}/slides"),
+    "getProjectScopeOptions": lambda w: Call("GET", f"/api/projects/{w.project}/scope-options"),
+    "getReviewTaskDefaults": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/review-tasks/defaults"
+    ),
+    "requestProjectAccess": lambda w: Call(
+        "POST", f"/api/projects/{w.outside_project}/access-requests"
+    ),
+    "getProjectImports": lambda w: Call("GET", f"/api/projects/{w.project}/imports"),
+    "getUploadBatch": lambda w: Call("GET", f"/api/projects/{w.project}/upload-batch"),
     "listThreadComments": lambda w: Call("GET", f"/api/threads/{w.thread}/comments"),
     "getSlideAiProgress": lambda w: Call("GET", f"/api/slides/{w.slide}/ai-progress"),
     "listAnnotationLayers": lambda w: Call("GET", f"/api/slides/{w.slide}/annotation-layers"),
@@ -2226,6 +2237,14 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         "role": "owner",
                     }
                     for project in (case.project_id, spare_project, sample_project)
+                ]
+                + [
+                    {
+                        "tenant_id": tenant_id,
+                        "project_id": outside_project,
+                        "user_id": colleague,
+                        "role": "owner",
+                    }
                 ]
                 + [
                     {
