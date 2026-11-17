@@ -19,7 +19,7 @@ export function twoFactorRow(lab: LabSettings): SecuritySetting {
     key: TWO_FACTOR_KEY,
     label: "Two factors for everyone",
     detail:
-      "Saved for the workspace. Sign-in will ask every member for a second factor once that ships",
+      "Members open this workspace only after signing in with an authenticator app or a security key as well",
     on: twoFactorRequired(lab),
     locked: false,
   };

@@ -10,20 +10,23 @@ import {
   idleCheckDue,
   isSessionLocked,
   locksAt,
+  needsSecondFactor,
 } from "./lock-rules.ts";
 
 const inputEvents = ["keydown", "pointerdown", "wheel", "touchstart"] as const;
 
-function useLockedByApi(onLocked: () => void) {
+function useRefusedByApi(refused: (error: unknown) => boolean, onRefused: () => void) {
   const queryClient = useQueryClient();
-  const report = useRef(onLocked);
-  report.current = onLocked;
+  const report = useRef(onRefused);
+  report.current = onRefused;
+  const matches = useRef(refused);
+  matches.current = refused;
   useEffect(() => {
     const queries = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type === "updated" && isSessionLocked(event.query.state.error)) report.current();
+      if (event.type === "updated" && matches.current(event.query.state.error)) report.current();
     });
     const mutations = queryClient.getMutationCache().subscribe((event) => {
-      if (event.type === "updated" && isSessionLocked(event.mutation?.state.error)) {
+      if (event.type === "updated" && matches.current(event.mutation?.state.error)) {
         report.current();
       }
     });
@@ -63,26 +66,37 @@ function useActivity(active: boolean, idleMinutes: number, onLocked: () => void)
 }
 
 const LockScreen = lazy(() => import("./lock-screen.tsx"));
+const SecondFactorScreen = lazy(() => import("./second-factor-screen.tsx"));
 
 export function SessionLock({ children }: { children: ReactNode }) {
   const pathname = useLocation({ select: (location) => location.pathname });
   const guarded = locksAt(pathname);
   const [locked, setLocked] = useState(false);
+  const [secondFactor, setSecondFactor] = useState(false);
   const lock = () => {
     if (guarded) setLocked(true);
   };
+  const askForSecondFactor = () => {
+    if (guarded) setSecondFactor(true);
+  };
   const policy = okData(useGetSessionPolicy({ query: { enabled: guarded } }).data);
   const minutes = policy?.idle_lock_minutes ?? defaultIdleLockMinutes;
-  useLockedByApi(lock);
-  useActivity(guarded && !locked, minutes, lock);
+  useRefusedByApi(isSessionLocked, lock);
+  useRefusedByApi(needsSecondFactor, askForSecondFactor);
+  useActivity(guarded && !locked && !secondFactor, minutes, lock);
+  const covered = locked || secondFactor;
   return (
     <>
-      <div inert={locked} aria-hidden={locked || undefined} className="contents">
+      <div inert={covered} aria-hidden={covered || undefined} className="contents">
         {children}
       </div>
       {locked ? (
         <Suspense fallback={null}>
           <LockScreen minutes={minutes} />
+        </Suspense>
+      ) : secondFactor ? (
+        <Suspense fallback={null}>
+          <SecondFactorScreen />
         </Suspense>
       ) : null}
     </>

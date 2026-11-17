@@ -4,11 +4,19 @@ test("an admin requires two factors for everyone and reads the setting back", as
   await page.goto("/admin?section=security");
   const twoFactors = page.getByRole("switch", { name: "Two factors for everyone" });
   await expect(twoFactors).not.toBeChecked();
+  await expect(
+    page.getByText(
+      "Members open this workspace only after signing in with an authenticator app or a security key as well",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText(/once that ships/)).toHaveCount(0);
   await expect(page.getByRole("switch", { name: /single sign-on/i })).toBeDisabled();
 
   await twoFactors.click();
   await expect(
-    page.getByText("Saved. Sign-in does not ask for a second factor yet."),
+    page.getByText(
+      "Saved. Members without a second factor are asked to set one up and sign in again.",
+    ),
   ).toBeVisible();
   await expect(twoFactors).toBeChecked();
 

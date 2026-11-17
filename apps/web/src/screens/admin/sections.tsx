@@ -715,7 +715,7 @@ export function SecuritySection({ notify }: { notify: Notify }) {
           void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
           notify(
             on
-              ? t`Saved. Sign-in does not ask for a second factor yet.`
+              ? t`Saved. Members without a second factor are asked to set one up and sign in again.`
               : t`Saved. Two factors are no longer required for everyone.`,
           );
         },

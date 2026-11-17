@@ -27,6 +27,7 @@ from parfocal_api.problems import (
     UnauthenticatedError,
 )
 from parfocal_api.projects import code_of
+from parfocal_api.second_factor import check_second_factor
 from parfocal_api.tables import (
     AVATAR_COLOURS,
     ActorKind,
@@ -341,7 +342,14 @@ async def switch_workspace(
     session_id = request.cookies.get(SESSION_COOKIE)
     if not session_id:
         raise UnauthenticatedError
-    async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as auth:
+    state = auth_state(request)
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as auth:
+        sealed = await auth.scalar(
+            select(sessions.c.tokens).where(sessions.c.id_hash == digest(session_id))
+        )
+        if sealed is None:
+            raise UnauthenticatedError
+        await check_second_factor(auth, state.cipher.open(sealed), chosen.tenant_id)
         await auth.execute(
             update(sessions)
             .where(sessions.c.id_hash == digest(session_id))
