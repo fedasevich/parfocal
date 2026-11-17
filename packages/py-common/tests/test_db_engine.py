@@ -1,24 +1,19 @@
-import pytest
+from sqlalchemy import event
+from sqlalchemy.pool import AsyncAdaptedQueuePool
 
-from parfocal_common import db
 from parfocal_common.db import POOL_OVERFLOW, POOL_SIZE, create_engine
+from parfocal_common.db_timing import before_query
 
 
-def test_the_engine_keeps_a_pool_large_enough_for_parallel_requests(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    built: list[tuple[str, dict[str, object]]] = []
-
-    def recording(url: str, **options: object) -> object:
-        built.append((url, options))
-        return object()
-
-    monkeypatch.setattr(db, "create_async_engine", recording)
-    create_engine("postgresql://parfocal@localhost:5432/parfocal")
-    assert built == [
-        (
-            "postgresql+asyncpg://parfocal@localhost:5432/parfocal",
-            {"pool_pre_ping": True, "pool_size": POOL_SIZE, "max_overflow": POOL_OVERFLOW},
-        )
-    ]
+def test_the_engine_keeps_a_pool_large_enough_for_parallel_requests() -> None:
+    engine = create_engine("postgresql://parfocal@localhost:5432/parfocal")
+    assert engine.url.render_as_string() == "postgresql+asyncpg://parfocal@localhost:5432/parfocal"
+    pool = engine.pool
+    assert isinstance(pool, AsyncAdaptedQueuePool)
+    assert pool.size() == POOL_SIZE
     assert POOL_SIZE + POOL_OVERFLOW >= 20
+
+
+def test_the_engine_times_its_queries_for_server_timing() -> None:
+    engine = create_engine("postgresql://parfocal@localhost:5432/parfocal")
+    assert event.contains(engine.sync_engine, "before_cursor_execute", before_query)
