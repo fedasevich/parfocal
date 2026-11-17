@@ -1027,6 +1027,7 @@ function GuidedBody({
                     />
                   ) : (
                     <CellsGrid
+                      slideId={session.slideId}
                       className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
                       cells={cells}
                       current={currentId}

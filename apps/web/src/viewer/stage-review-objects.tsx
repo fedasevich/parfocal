@@ -21,6 +21,7 @@ import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
+import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
@@ -123,6 +124,7 @@ export function StageReviewObjects({
   slideId,
   object,
   guided = false,
+  cellsGrid = false,
   focus = null,
   onComments,
   onNote,
@@ -134,6 +136,7 @@ export function StageReviewObjects({
   slideId: string;
   object: string | undefined;
   guided?: boolean;
+  cellsGrid?: boolean;
   focus?: { onShowUi: () => void } | null;
   onComments: (object: string) => void;
   onNote?: (object: string) => void;
@@ -146,6 +149,8 @@ export function StageReviewObjects({
   const order = objects.map((item) => item.object);
   const decided = new Set(session.decisions.keys());
   const [chosen, setCurrent] = useState<string | null>(object ?? null);
+  const [gridOpen, setGridOpen] = useState(cellsGrid);
+  const hasCells = objects.some((item) => item.kind === "cell");
   const current =
     chosen ??
     (guided || focus !== null ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
@@ -227,6 +232,16 @@ export function StageReviewObjects({
           keysLive={ready}
         />
       )}
+      {gridOpen && hasCells && ready && focus === null ? (
+        <StageCellsGrid
+          session={session}
+          saves={saves}
+          slideId={slideId}
+          current={current}
+          onPick={pick}
+          onClose={() => setGridOpen(false)}
+        />
+      ) : null}
       {typedCell === null ? null : (
         <StageCellTypeBar
           engine={engine}
@@ -284,6 +299,17 @@ export function StageReviewObjects({
                 </Button>
               )}
             </div>
+          ) : null}
+          {hasCells ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="justify-self-start"
+              aria-pressed={gridOpen}
+              onClick={() => setGridOpen((open) => !open)}
+            >
+              {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
+            </Button>
           ) : null}
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {shown.map((item) => (

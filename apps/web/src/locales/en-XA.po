@@ -7682,6 +7682,10 @@ msgstr ""
 msgid "Hide the AI for a first read"
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Hide the cells grid"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
 msgstr ""
@@ -8866,6 +8870,7 @@ msgstr ""
 msgid "Loading the report"
 msgstr ""
 
+#: src/routes/tasks.$taskId.cells.tsx
 #: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
 #: src/viewer/first-read-guard.tsx
@@ -14118,6 +14123,10 @@ msgstr ""
 #: ../../packages/ui/src/components/cells-panel.tsx
 #: src/screens/review/viewer-frame.tsx
 msgid "Show the cells"
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Show the cells grid"
 msgstr ""
 
 #: ../../packages/ui/src/components/cells-panel.tsx
