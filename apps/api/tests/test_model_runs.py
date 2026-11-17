@@ -36,8 +36,8 @@ from parfocal_common.model_runs import (
 
 pytestmark = pytest.mark.db
 
-DETECTOR = {"name": "hovernet", "version": "v0.9"}
-TYPER = {"name": "pathosam-hovernext", "version": "v1.2"}
+DETECTOR = {"name": "camelyon-tumor", "version": "v1.0"}
+TYPER = {"name": "hovernet", "version": "v0.9"}
 SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [90, 0], [90, 90], [0, 90], [0, 0]]]}
 BOWTIE = {"type": "Polygon", "coordinates": [[[0, 0], [90, 90], [90, 0], [0, 90], [0, 0]]]}
 
@@ -270,7 +270,7 @@ def test_starting_a_run_queues_one_job_per_slide_with_every_stage(
         f"WHERE target_type = 'model-run' AND target_id = '{first['id']}'",
     )
     assert [row[0] for row in actions] == ["model-run.started"]
-    assert '"detector":"hovernet@v0.9"' in str(actions[0][1])
+    assert '"detector":"camelyon-tumor@v1.0"' in str(actions[0][1])
     listed = ok(api(lab.people["owner"]).get(lab.runs, params={"batch_id": first["batch_id"]}))
     assert {run["id"] for run in listed} == {run["id"] for run in runs}
     job = ok(api(lab.people["owner"]).get(f"/api/projects/{lab.project}/jobs/{first['id']}"))
@@ -434,6 +434,34 @@ def test_a_paused_run_says_why_and_resumes_where_it_stopped(
     execute(database, claim(database, lab, plan))
     assert ok(read(api, lab, run))["status"] == "done"
     assert tiles.processed == [0, 1, 2, 3]
+
+
+def test_a_paused_run_moves_to_the_parfocal_gpu_and_picks_up_where_it_stopped(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    moving = f"{lab.runs}/{run['id']}/move"
+    gpu = {"server": "Parfocal GPU"}
+
+    def owner_of() -> Any:
+        return api(lab.people["owner"])
+
+    assert problem(owner_of().post(moving, json=gpu)) == (409, "model-run-not-movable")
+    tiles = Tiles(pause_at=3)
+    plan = tiles.plan()
+    execute(database, claim(database, lab, plan))
+    assert owner_of().post(moving, json={"server": "Elsewhere"}).status_code == 422
+    assert problem(api(lab.people["viewer"]).post(moving, json=gpu)) == (
+        403,
+        "running-models-not-allowed",
+    )
+    moved = ok(owner_of().post(moving, json=gpu))
+    assert (moved["status"], moved["pause_reason"]) == ("queued", None)
+    execute(database, claim(database, lab, plan))
+    assert ok(read(api, lab, run))["status"] == "done"
+    assert tiles.processed == [0, 1, 2, 3]
+    missing = f"{lab.runs}/{uuid.uuid4()}/move"
+    assert problem(owner_of().post(missing, json=gpu)) == (404, "model-run-not-found")
 
 
 def test_cancelling_a_running_run_waits_for_the_worker_to_stop(
@@ -644,9 +672,9 @@ def test_each_slide_gets_a_new_result_set_from_its_run(api: ApiAs, database: str
         assert (mine["source"], mine["status"], mine["model_version"]) == (
             "run",
             "importing",
-            "v0.9",
+            "v1.0",
         )
-        assert mine["name"] == "HoVer-Net v0.9"
+        assert mine["name"] == "CAMELYON tumor model v1.0"
     rows = owner(
         database,
         "SELECT r.job_id FROM result_sets r "

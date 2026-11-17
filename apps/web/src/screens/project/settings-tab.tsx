@@ -99,14 +99,14 @@ export function SettingsTab({
 
   const navigate = useNavigate();
   const people = usePeople();
-  const overview = useGetProjectOverview(project.id).data?.data;
+  const overview = okData(useGetProjectOverview(project.id).data);
   const classes = okData(useListProjectClasses(project.id).data) ?? [];
   const mappings = okData(useListClassMappings(project.id).data) ?? [];
   const templates = (okData(useListStudyTemplates().data) ?? []).filter(
     (template) => template.retired_at === null,
   );
   const form = okData(useGetOpinionForm(project.id).data);
-  const imports = useGetProjectImports(project.id).data?.data;
+  const imports = okData(useGetProjectImports(project.id).data);
   const { value, change } = useProjectChange(project, toast);
   const [extra, setExtra] = useState<NewClass[]>([]);
   const [deleting, setDeleting] = useState(false);

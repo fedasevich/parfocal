@@ -836,6 +836,43 @@ async def retry_model_run(
     return await control_run(connection, principal, project_id, run_id, JobControl.RETRY)
 
 
+class ModelRunMove(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    server: Literal["Parfocal GPU"]
+
+
+class LabModelCannotMoveError(ConflictError):
+    code = "lab-model-cannot-move"
+    title = "A lab model runs only on its own server, so its run cannot move to the Parfocal GPU"
+
+
+class ModelRunNotMovableError(ConflictError):
+    code = "model-run-not-movable"
+    title = "Only a paused run can move to the Parfocal GPU"
+
+
+@router.post(
+    "/{project_id}/model-runs/{run_id}/move",
+    operation_id="moveModelRun",
+    **require(Permission.RUN_MODELS, write=True),
+)
+async def move_model_run(
+    project_id: uuid.UUID,
+    run_id: uuid.UUID,
+    change: ModelRunMove,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ModelRun:
+    row = await readable_run(connection, principal, project_id, run_id)
+    await require_controlling(connection, principal, project_id, row.archived_at is not None)
+    if latest_version(row.detector) is None:
+        raise LabModelCannotMoveError
+    if JobStatus(row.status) is not JobStatus.PAUSED:
+        raise ModelRunNotMovableError(f"The run is {row.status}")
+    return await control_run(connection, principal, project_id, run_id, JobControl.RESUME)
+
+
 def first_start() -> Any:
     return (
         select(func.min(job_steps.c.started_at))

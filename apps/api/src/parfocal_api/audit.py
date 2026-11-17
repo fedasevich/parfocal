@@ -50,6 +50,7 @@ class AuditAction(StrEnum):
     CASE_CREATED = "case.created"
     CASE_PATIENT_VIEWED = "case.patient-viewed"
     PROJECT_EMERGENCY_ACCESS = "project.emergency-access"
+    PROJECT_ACCESS_ASKED = "project.access-asked"
     PROJECT_CREATED = "project.created"
     PROJECT_CHANGED = "project.changed"
     PROJECT_PRIVACY_CHANGED = "project.privacy-changed"

@@ -10,6 +10,7 @@ import {
   setFakeView,
 } from "../src/fake/index.ts";
 import {
+  type AiModels,
   askToJoinWorkspace,
   createInvitation,
   createMyWorkspace,
@@ -25,6 +26,7 @@ import {
   listMemberActivity,
   listStudyTemplates,
   listTenantMembers,
+  type ProjectAccessRequest,
   requestProjectAccess,
   resendInvitation,
 } from "../src/index.ts";
@@ -57,7 +59,7 @@ const okBody = <Body>(response: { status: number; data: unknown }) => {
 test("the overview counts what the admin lists hold", async () => {
   const overview = (await getAdminOverview()).data;
   const invitations = okBody<unknown[]>(await listInvitations());
-  const models = (await listAiModels()).data;
+  const models = okBody<AiModels>(await listAiModels());
   assert.equal(overview.invites_waiting, invitations.length);
   assert.equal(overview.invites_waiting, 3);
   assert.equal(overview.models, models.models.filter((model) => model.shown).length);
@@ -161,7 +163,7 @@ test("study templates carry their report blocks in order", async () => {
 
 test("asking for access names the project's owner", async () => {
   const project = scenario.projectByCode("P03");
-  const asked = (await requestProjectAccess(project.id)).data;
+  const asked = okBody<ProjectAccessRequest>(await requestProjectAccess(project.id));
   assert.equal(asked.project_id, project.id);
   assert.equal(asked.owner_id, scenario.people.LM.id);
 });

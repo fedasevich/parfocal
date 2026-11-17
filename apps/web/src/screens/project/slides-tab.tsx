@@ -76,7 +76,7 @@ const headCell = "px-4 py-(--density-head-y)";
 
 export function useProjectSlides(projectId: string): ProjectSlide[] {
   const rows = okData(useListMySlides({ project_id: projectId }).data)?.slides ?? [];
-  const files = useGetProjectOverview(projectId).data?.data.slide_files ?? [];
+  const files = okData(useGetProjectOverview(projectId).data)?.slide_files ?? [];
   return rows.map((row) => {
     const file = files.find((item) => item.slide_id === row.id);
     return {
@@ -147,7 +147,7 @@ export function SlidesTab({
 
   const slides = useProjectSlides(project.id);
   const viewersOf = useProjectViewers(project.id);
-  const overview = useGetProjectOverview(project.id).data?.data;
+  const overview = okData(useGetProjectOverview(project.id).data);
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
   const navigate = useNavigate();
   const [shut, setShut] = useState<Record<string, boolean>>({});

@@ -547,6 +547,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             slide_id=case.loose_slide_id,
             kind="roi",
             number=1,
+            class_id=class_id,
             geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
             created_by_user_id=seeded.ids["user"],
         )
@@ -648,13 +649,15 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         update(result_sets).where(result_sets.c.id == set_id).values(status="ready", region_count=1)
     )
     seeded.ids["result_set"] = set_id
+    summary_name = f"Cells {uuid.uuid4().hex[:8]}"
+    seeded.markers.add(summary_name)
     summary_set = await connection.scalar(
         insert(result_sets)
         .values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
             slide_id=case.loose_slide_id,
-            name=f"Cells {uuid.uuid4().hex[:8]}",
+            name=summary_name,
             source="import",
             cell_count=1,
         )
@@ -1651,6 +1654,9 @@ GET_ROUTES = {
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
     "getPlatformStatus": Route(Exposure.PUBLIC, lambda _: "/api/status"),
     "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
+    "listStudyTemplateReviewDefaults": Route(
+        Exposure.TENANT, lambda _: "/api/study-templates/review-defaults"
+    ),
     "getStudyTemplate": Route(
         Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}"
     ),
@@ -1912,6 +1918,24 @@ GET_ROUTES = {
         ),
     ),
     "listSlideThreads": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/threads"),
+    "getProjectOverview": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/overview"
+    ),
+    "listProjectSlides": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/slides"
+    ),
+    "getProjectScopeOptions": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/scope-options"
+    ),
+    "getReviewTaskDefaults": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks/defaults"
+    ),
+    "getProjectImports": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/imports"
+    ),
+    "getUploadBatch": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/upload-batch"
+    ),
     "listThreadComments": Route(
         Exposure.TENANT, lambda a: f"/api/threads/{a.ids['thread']}/comments"
     ),
@@ -1922,7 +1946,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotation-layers"
     ),
     "getResultSetTyper": Route(
-        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}/typer"
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/typer"
     ),
     "getSlideResultStats": Route(
         Exposure.TENANT,
@@ -1985,6 +2009,9 @@ GET_ROUTES = {
     ),
     "listProjectModels": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
+    ),
+    "listProjectLabModels": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/lab-models"
     ),
     "getModelRunDefaults": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/model-runs/defaults"

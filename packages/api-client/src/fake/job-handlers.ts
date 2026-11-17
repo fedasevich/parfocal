@@ -15,7 +15,6 @@ import type {
   ProjectModel,
   RunStage,
 } from "../generated/api.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { hiddenModelHandlers, isModelHidden } from "./hidden-models.ts";
 import { fakeJobsState, updateJobsState } from "./jobs-scene.ts";
 import { people, projectByCode, projects } from "./scenario.ts";
@@ -196,7 +195,7 @@ const notFound = () =>
     { status: 404, headers: { "content-type": "application/problem+json" } },
   );
 
-export const getMoveModelRunMockHandler = () =>
+const moveRunHandler = () =>
   http.post<RunParams>("*/api/projects/:projectId/model-runs/:runId/move", ({ params }) => {
     const found = runById(params.runId);
     if (found === undefined) return notFound();
@@ -204,15 +203,6 @@ export const getMoveModelRunMockHandler = () =>
     const moved = runById(params.runId);
     return HttpResponse.json(moved ? toModelRun(moved.batch, moved.slide) : null);
   });
-
-export const jobDraftOperations: DraftOperation[] = [
-  {
-    operationId: "moveModelRun",
-    method: "post",
-    path: "/api/projects/{project_id}/model-runs/{run_id}/move",
-    handler: () => getMoveModelRunMockHandler(),
-  },
-];
 
 const cancelled = (run: ModelRun): ModelRun => ({
   ...run,
@@ -223,6 +213,7 @@ const cancelled = (run: ModelRun): ModelRun => ({
 export function jobHandlers(): RequestHandler[] {
   return [
     getGetModelRunDefaultsMockHandler(() => toModelRunDefaults()),
+    moveRunHandler(),
     ...hiddenModelHandlers(),
     getListMyJobsMockHandler(() => toMyJobs()),
     getListModelRunsMockHandler(({ params, request }) =>

@@ -12,7 +12,7 @@ from parfocal_common.model_runs import STAGES, workflow
 
 pytestmark = pytest.mark.db
 
-OTHER = {"name": "cellvit-sam", "version": "0.4.0"}
+OTHER = {"name": "hovernet", "version": "v0.9"}
 
 
 @pytest.fixture

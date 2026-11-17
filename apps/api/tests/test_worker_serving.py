@@ -55,7 +55,7 @@ def test_tiers_and_project_models_show_the_offline_worker(api: ApiAs, lab: Lab) 
 
 @pytest.mark.db
 def test_a_run_on_a_model_with_no_worker_is_refused(api: ApiAs, lab: Lab) -> None:
-    with worker_outage(api, "hovernet-pannuke"):
+    with worker_outage(api, "camelyon-tumor"):
         refused = start(api, lab)
     assert problem(refused) == (409, "model-offline")
     assert start(api, lab).status_code == 201

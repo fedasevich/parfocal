@@ -22,6 +22,13 @@ import {
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
 
+function body<Response extends { status: number; data: unknown }>(
+  response: Response,
+): Extract<Response, { status: 200 }>["data"] {
+  assert.equal(response.status, 200);
+  return (response as Extract<Response, { status: 200 }>).data;
+}
+
 before(() => {
   server.listen({ onUnhandledFrame: "error" });
   patchedFetch = globalThis.fetch;
@@ -38,7 +45,7 @@ const p07 = scenario.projectByCode("P07");
 const a1 = scenario.slideOf("P07", "S26-04812", "A1");
 
 test("the project overview reads the same counts as the scenario project", async () => {
-  const overview = (await getProjectOverview(p07.id)).data;
+  const overview = body(await getProjectOverview(p07.id));
   assert.equal(overview.slides, p07.counts.slides);
   assert.equal(overview.cases, p07.counts.cases);
   assert.equal(overview.reviewed_percent, p07.counts.reviewedPercent);
@@ -127,7 +134,7 @@ test("P07's review tasks, classes, mappings and opinion form come from the scena
 });
 
 test("the upload batch pairs its results and names three problems", async () => {
-  const batch = (await getUploadBatch(p07.id)).data;
+  const batch = body(await getUploadBatch(p07.id));
   assert.equal(batch.slides.length, 6);
   assert.equal(batch.results.length, 4);
   assert.equal(batch.results[2]?.pairings.auto.slide, null);
@@ -147,7 +154,7 @@ test("a source listing and the automatic imports answer for the project", async 
   const listing = response.data;
   assert.equal(listing.kind, "storage");
   assert.equal(listing.files.filter((file) => file.in_project).length, 1);
-  const imports = (await getProjectImports(p07.id)).data;
+  const imports = body(await getProjectImports(p07.id));
   assert.equal(imports.arrivals.length, 4);
   assert.equal(imports.webhook.on, true);
 });

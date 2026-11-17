@@ -298,6 +298,7 @@ class Workspace:
     ready_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     signed_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     patch_job: uuid.UUID = field(default_factory=uuid.uuid4)
+    movable_run: uuid.UUID = field(default_factory=uuid.uuid4)
     layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -630,6 +631,9 @@ async def seed_case_reports(
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listStudyTemplates": lambda _: Call("GET", "/api/study-templates"),
+    "listStudyTemplateReviewDefaults": lambda _: Call(
+        "GET", "/api/study-templates/review-defaults"
+    ),
     "getStudyTemplate": lambda w: Call("GET", f"/api/study-templates/{w.study_template}"),
     "listStudyTemplateVersions": lambda w: Call(
         "GET", f"/api/study-templates/{w.study_template}/versions"
@@ -743,6 +747,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "resumeModelRun": lambda w: Call(
         "POST", f"/api/projects/{w.project}/model-runs/{w.paused_run}/resume"
+    ),
+    "moveModelRun": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/model-runs/{w.movable_run}/move",
+        {"server": "Parfocal GPU"},
     ),
     "retryModelRun": lambda w: Call(
         "POST", f"/api/projects/{w.project}/model-runs/{w.failed_run}/retry"
@@ -1272,6 +1281,17 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listMentionableMembersOnSlide": lambda w: Call("GET", f"{w.slide_threads}/mentionable"),
     "getThreadOnSlide": lambda w: Call("GET", f"{w.slide_threads}/{w.slide_thread}"),
     "listSlideThreads": lambda w: Call("GET", f"/api/slides/{w.slide}/threads"),
+    "getProjectOverview": lambda w: Call("GET", f"/api/projects/{w.project}/overview"),
+    "listProjectSlides": lambda w: Call("GET", f"/api/projects/{w.project}/slides"),
+    "getProjectScopeOptions": lambda w: Call("GET", f"/api/projects/{w.project}/scope-options"),
+    "getReviewTaskDefaults": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/review-tasks/defaults"
+    ),
+    "requestProjectAccess": lambda w: Call(
+        "POST", f"/api/projects/{w.outside_project}/access-requests"
+    ),
+    "getProjectImports": lambda w: Call("GET", f"/api/projects/{w.project}/imports"),
+    "getUploadBatch": lambda w: Call("GET", f"/api/projects/{w.project}/upload-batch"),
     "listThreadComments": lambda w: Call("GET", f"/api/threads/{w.thread}/comments"),
     "getSlideAiProgress": lambda w: Call("GET", f"/api/slides/{w.slide}/ai-progress"),
     "listAnnotationLayers": lambda w: Call("GET", f"/api/slides/{w.slide}/annotation-layers"),
@@ -1536,7 +1556,7 @@ WRITES = {
     name
     for name, call in GUARDED_CALLS.items()
     if call(replace(PLACEHOLDER, invitations=[uuid.uuid4()])).method != "GET"
-} - {"offerStudyTemplate"} | {"listTemplateOffers"}
+} - {"offerStudyTemplate", "requestProjectAccess"} | {"listTemplateOffers"}
 
 
 def writes() -> set[str]:
@@ -2294,6 +2314,14 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 + [
                     {
                         "tenant_id": tenant_id,
+                        "project_id": outside_project,
+                        "user_id": deputy,
+                        "role": "owner",
+                    }
+                ]
+                + [
+                    {
+                        "tenant_id": tenant_id,
                         "project_id": case.project_id,
                         "user_id": user,
                         "role": role,
@@ -2355,7 +2383,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     tenant_id=tenant_id,
                 )
             )
-            queued_run, paused_run, failed_run = await seed_runs(
+            queued_run, paused_run, failed_run, movable_run = await seed_runs(
                 connection, tenant_id, case.project_id, case.loose_slide_id
             )
             await connection.execute(
@@ -2532,6 +2560,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             declined_offer=declined_offer,
             doomed_preset=doomed_preset,
             declinable=declinable,
+            movable_run=movable_run,
             adjudicator=adjudicator,
             report_link=report_link,
             annotate_task=annotate_task,
@@ -2579,7 +2608,7 @@ async def seed_patch_job(
 async def seed_runs(
     connection: AsyncConnection, tenant_id: uuid.UUID, project_id: uuid.UUID, slide_id: uuid.UUID
 ) -> list[uuid.UUID]:
-    settings = RunSettings(RunScopeKind.SLIDE, None, "matrix-detector", "1")
+    settings = RunSettings(RunScopeKind.SLIDE, None, "hovernet", "v0.9")
     runs = [
         await enqueue_model_run(
             connection, tenant_id, project_id, slide_id, settings, batch_id=uuid.uuid4()
@@ -2606,7 +2635,13 @@ async def seed_runs(
     await connection.execute(
         update(jobs).where(jobs.c.id == runs[2]).values(status="failed", error_code="matrix")
     )
-    return runs
+    movable = await enqueue_model_run(
+        connection, tenant_id, project_id, slide_id, settings, batch_id=uuid.uuid4()
+    )
+    await connection.execute(
+        update(jobs).where(jobs.c.id == movable).values(status="paused", pause_reason="matrix")
+    )
+    return [*runs, movable]
 
 
 async def seed_upload(

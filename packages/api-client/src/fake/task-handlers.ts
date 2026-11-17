@@ -1,29 +1,26 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import {
-  type ProjectScopeOptions,
-  projectScopeOptionsSchema,
-} from "../draft/get-project-scope-options.ts";
-import {
-  type ReviewTaskDefaults,
-  reviewTaskDefaultsSchema,
-} from "../draft/get-review-task-defaults.ts";
-import { type ProjectSlide, projectSlideSchema } from "../draft/list-project-slides.ts";
 import { type ReviewerWorkload, reviewerWorkloadSchema } from "../draft/list-reviewer-workload.ts";
 import {
-  type StudyTemplateReviewDefaults,
-  studyTemplateReviewDefaultsSchema,
-} from "../draft/list-study-template-review-defaults.ts";
-import {
   getCreateReviewTaskMockHandler,
+  getGetProjectScopeOptionsMockHandler,
+  getGetReviewTaskDefaultsMockHandler,
   getListAvailabilityMockHandler,
+  getListProjectSlidesMockHandler,
+  getListStudyTemplateReviewDefaultsMockHandler,
   getListStudyTemplatesMockHandler,
 } from "../generated/api.msw.ts";
 import type {
   MemberAvailability,
+  ProjectScopeOptions,
+  ProjectSlide,
+  ReviewTaskDefaults,
   ReviewTaskDetail,
+  ScopeKindKey,
+  StudyTemplateReviewDefaults,
   StudyTemplateSummary,
   TaskChange,
   TaskDraft,
+  TemplateReviewDefaults,
 } from "../generated/api.ts";
 import { setAnnotateBlindFirst } from "./annotate-task-listing.ts";
 import {
@@ -63,8 +60,8 @@ const isTaskProject = (projectId: string) =>
 
 export const toProjectSlides = (projectId: string): ProjectSlide[] =>
   isTaskProject(projectId)
-    ? taskSlides.map((slide) =>
-        projectSlideSchema.parse({
+    ? taskSlides.map(
+        (slide): ProjectSlide => ({
           id: slide.id,
           label: slide.label,
           stain: slide.stain,
@@ -72,7 +69,7 @@ export const toProjectSlides = (projectId: string): ProjectSlide[] =>
             slide.caseLabel === null
               ? null
               : {
-                  id: taskCaseId(slide.caseLabel),
+                  id: taskCaseId(slide.caseLabel) ?? "",
                   label: slide.caseLabel,
                   specimen: slide.specimen ?? "",
                 },
@@ -81,38 +78,36 @@ export const toProjectSlides = (projectId: string): ProjectSlide[] =>
       )
     : [];
 
-export const toReviewTaskDefaults = (): ReviewTaskDefaults =>
-  reviewTaskDefaultsSchema.parse({
-    code: newTask.code,
-    task_id: newTask.id,
-    names: (["cam", "sam"] as const).map((key) => ({
-      result_set_id: resultSetIdOf(key),
-      name: newTask.names[key],
-    })),
-    slide_ids: newTask.slideIds,
-    result_set_id: resultSetIdOf(newTask.resultSet),
-    reviewer_ids: newTask.reviewers.map((key) => people[key].id),
-    due_on: newTask.dueOn,
-    reminder_days: newTask.reminders,
-    study_template_id: newTask.studyTemplate.id,
-    today: taskToday,
-  });
+export const toReviewTaskDefaults = (): ReviewTaskDefaults => ({
+  code: newTask.code,
+  task_id: newTask.id,
+  names: (["cam", "sam"] as const).map((key) => ({
+    result_set_id: resultSetIdOf(key),
+    name: newTask.names[key],
+  })),
+  slide_ids: newTask.slideIds,
+  result_set_id: resultSetIdOf(newTask.resultSet),
+  reviewer_ids: newTask.reviewers.map((key) => people[key].id),
+  due_on: newTask.dueOn,
+  reminder_days: newTask.reminders,
+  study_template_id: newTask.studyTemplate.id,
+  today: taskToday,
+});
 
-export const toProjectScopeOptions = (): ProjectScopeOptions =>
-  projectScopeOptionsSchema.parse({
-    rois,
-    unsure_zones: unsureZones.map((zone) => ({
-      key: zone.key,
-      cells_per_slide: zone.cellsPerSlide,
-    })),
-  });
+export const toProjectScopeOptions = (): ProjectScopeOptions => ({
+  rois,
+  unsure_zones: unsureZones.map((zone) => ({
+    key: zone.key,
+    cells_per_slide: zone.cellsPerSlide,
+  })),
+});
 
 export const toReviewerWorkload = (): ReviewerWorkload[] =>
   taskReviewers.map((item) =>
     reviewerWorkloadSchema.parse({ user_id: people[item.key].id, open_tasks: item.openTasks }),
   );
 
-const scopeKeysOf = (kind: string) =>
+const scopeKeysOf = (kind: string): ScopeKindKey[] =>
   kind === "all-regions"
     ? ["regions"]
     : kind === "random-cells"
@@ -123,7 +118,7 @@ const scopeKeysOf = (kind: string) =>
           ? ["unsure"]
           : ["roi"];
 
-const reviewDefaultsOfAdded = () =>
+const reviewDefaultsOfAdded = (): TemplateReviewDefaults[] =>
   listedStudyTemplates()
     .filter((template) => !studyTemplates.some((item) => item.id === template.id))
     .map((template) => ({
@@ -144,30 +139,29 @@ const reviewDefaultsOfAdded = () =>
       opinion_form: "default",
     }));
 
-export const toStudyTemplateReviewDefaults = (): StudyTemplateReviewDefaults =>
-  studyTemplateReviewDefaultsSchema.parse({
-    templates: [
-      ...studyTemplates.map((template) => ({
-        template_id: template.id,
-        scope_kinds: template.scope,
-        scope_options: {
-          cells: 50,
-          low: 0.6,
-          rois: ["R1", "R2", "R3", "R4"],
-          unsure_zones: ["Z1", "Z2", "Z3"],
-        },
-        decision: { kind: template.decision, agree_from: 4, disagree_to: 2 },
-        display: {
-          ...displayDefault,
-          sets: { ...displayDefault.sets },
-          ...template.display,
-        },
-        opinion_form: template.form,
-      })),
-      ...reviewDefaultsOfAdded(),
-    ],
-    opinion_forms: opinionForms,
-  });
+export const toStudyTemplateReviewDefaults = (): StudyTemplateReviewDefaults => ({
+  templates: [
+    ...studyTemplates.map((template) => ({
+      template_id: template.id,
+      scope_kinds: template.scope,
+      scope_options: {
+        cells: 50,
+        low: 0.6,
+        rois: ["R1", "R2", "R3", "R4"],
+        unsure_zones: ["Z1", "Z2", "Z3"],
+      },
+      decision: { kind: template.decision, agree_from: 4, disagree_to: 2 },
+      display: {
+        ...displayDefault,
+        sets: { ...displayDefault.sets },
+        ...template.display,
+      },
+      opinion_form: template.form,
+    })),
+    ...reviewDefaultsOfAdded(),
+  ],
+  opinion_forms: opinionForms,
+});
 
 const scopeKindOf = (kinds: string[]) =>
   kinds.includes("regions")
@@ -257,63 +251,17 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   })),
 });
 
-export const getListProjectSlidesMockHandler = (overrideResponse?: ProjectSlide[]) =>
-  http.get<{ projectId: string }>("*/api/projects/:projectId/slides", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toProjectSlides(params.projectId)),
-  );
-
-export const getGetReviewTaskDefaultsMockHandler = (overrideResponse?: ReviewTaskDefaults) =>
-  http.get("*/api/projects/:projectId/review-tasks/defaults", () =>
-    HttpResponse.json(overrideResponse ?? toReviewTaskDefaults()),
-  );
-
-export const getGetProjectScopeOptionsMockHandler = (overrideResponse?: ProjectScopeOptions) =>
-  http.get("*/api/projects/:projectId/scope-options", () =>
-    HttpResponse.json(overrideResponse ?? toProjectScopeOptions()),
-  );
-
 export const getListReviewerWorkloadMockHandler = (overrideResponse?: ReviewerWorkload[]) =>
   http.get("*/api/tenant/workload", () =>
     HttpResponse.json(overrideResponse ?? toReviewerWorkload()),
   );
 
-export const getListStudyTemplateReviewDefaultsMockHandler = (
-  overrideResponse?: StudyTemplateReviewDefaults,
-) =>
-  http.get("*/api/study-templates/review-defaults", () =>
-    HttpResponse.json(overrideResponse ?? toStudyTemplateReviewDefaults()),
-  );
-
 export const taskDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listProjectSlides",
-    method: "get",
-    path: "/api/projects/{project_id}/slides",
-    handler: () => getListProjectSlidesMockHandler(),
-  },
-  {
-    operationId: "getReviewTaskDefaults",
-    method: "get",
-    path: "/api/projects/{project_id}/review-tasks/defaults",
-    handler: () => getGetReviewTaskDefaultsMockHandler(),
-  },
-  {
-    operationId: "getProjectScopeOptions",
-    method: "get",
-    path: "/api/projects/{project_id}/scope-options",
-    handler: () => getGetProjectScopeOptionsMockHandler(),
-  },
   {
     operationId: "listReviewerWorkload",
     method: "get",
     path: "/api/tenant/workload",
     handler: () => getListReviewerWorkloadMockHandler(),
-  },
-  {
-    operationId: "listStudyTemplateReviewDefaults",
-    method: "get",
-    path: "/api/study-templates/review-defaults",
-    handler: () => getListStudyTemplateReviewDefaultsMockHandler(),
   },
 ];
 
@@ -352,8 +300,12 @@ export function taskHandlers(): RequestHandler[] {
   return [
     changeTask,
     getListStudyTemplatesMockHandler(() => listedStudyTemplates()),
+    getListStudyTemplateReviewDefaultsMockHandler(() => toStudyTemplateReviewDefaults()),
     ...studyTemplateHandlers(toStudyTemplates),
     getListAvailabilityMockHandler(toAvailability()),
+    getListProjectSlidesMockHandler(({ params }) => toProjectSlides(String(params.projectId))),
+    getGetReviewTaskDefaultsMockHandler(() => toReviewTaskDefaults()),
+    getGetProjectScopeOptionsMockHandler(() => toProjectScopeOptions()),
     getCreateReviewTaskMockHandler(async ({ request, params }) =>
       toCreatedTask(String(params["projectId"]), (await request.json()) as TaskDraft),
     ),
