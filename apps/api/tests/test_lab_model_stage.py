@@ -196,6 +196,21 @@ def test_a_queued_lab_model_stage_stores_cells_and_regions_and_never_the_token(
     assert TOKEN not in caplog.text
 
 
+def test_a_refusing_endpoint_fails_the_stage_and_never_leaks_the_opened_token(
+    linked: ApiAs, lab: Lab, site: Site, database: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG)
+    run = queued(linked, lab, site)
+    site.json(INFER, {"error": TOKEN}, status=503)
+    store = MemoryStore()
+    run_stage(database, lab, site, store)
+    assert job_of(database, run) == ("failed", "lab-model-status")
+    assert len(site.requests) == 3
+    assert store.objects == {}
+    assert TOKEN not in stored_text(database, lab)
+    assert TOKEN not in caplog.text
+
+
 def test_a_project_taken_off_the_model_list_fails_the_stage_before_any_call(
     linked: ApiAs, lab: Lab, site: Site, database: str, caplog: pytest.LogCaptureFixture
 ) -> None:

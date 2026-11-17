@@ -7,13 +7,13 @@
 
 ## Context
 
-ADR 0371 left three jobs to the worker that runs model stages: read the saved lab model row, check the project list and the clinical tile confirmation again, and open the sealed token with the tenant data key. The ingest worker does this for import sources by importing `parfocal_api`. The GPU pool image ships only `parfocal_common` and `parfocal_ml`, and its locked requirements hold none of the API's dependencies. A lab answer also carries region objects, which the detector counted and dropped.
+ADR 0371 (a lab model run pins the model from its first answer) left three jobs to the worker that runs model stages: read the saved lab model row, check the project list and the clinical tile confirmation again, and open the sealed token with the tenant data key. The ingest worker does this for import sources by importing `parfocal_api`. The GPU pool image ships only `parfocal_common` and `parfocal_ml`, and its locked requirements hold none of the API's dependencies. A lab answer also carries region objects, which the detector counted and dropped.
 
 ## Decision
 
 - The stage reads `model_runs`, `lab_models`, `lab_model_projects`, `projects`, `result_sets` and `tenant_keys` with plain SQL text, as `SEAL_RESULT` already does. The GPU pool does not depend on `parfocal_api`.
 - The field context and the data key unwrap move into `parfocal_common.sealed_fields`, and the API's `context` calls the same function, so the sealing and the opening cannot drift apart. The taxonomy templates move into `parfocal_common.taxonomies` for the same reason, and `class_templates` re-exports them.
-- At stage start a saved model gone or renamed fails with `lab-model-changed`, a project off the model's list fails with `lab-model-not-allowed`, and a clinical project without a tile confirmation fails with `lab-model-tiles-unconfirmed`, all before any call. A token that cannot be opened fails with `lab-model-sealed`. The opened token is registered as sensitive at once and never enters the step result.
+- At stage start a saved model gone or renamed fails with `lab-model-changed`, a project off the model's list fails with `lab-model-not-allowed`, and a clinical project without a tile confirmation fails with `lab-model-tiles-unconfirmed`, all before any call. A token that cannot be opened fails with `lab-model-sealed`. The stage runs inside its own log context, the opened token is registered there as sensitive at once, and it never enters the step result.
 - A region whose class maps to a taxonomy class is clipped to its tile window and written to `result_objects` of the run's result set in the same transaction that marks the tile done. A resumed tile therefore never writes its regions twice. Lab tiles have no halo, so a region crossing tiles is stored as one piece per tile. A region whose clipped outline is not valid is skipped, and an unmapped region is counted in `regions_left_out`.
 - Cells and regions keep the index of their class in the model's taxonomy. The stage result lists those classes, because the run's result set has no class rows yet.
 

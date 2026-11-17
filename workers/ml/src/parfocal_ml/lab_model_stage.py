@@ -14,7 +14,7 @@ from parfocal_common.link_fetch import LinkPolicy
 from parfocal_common.model_runs import Area, mark_area
 from parfocal_common.result_store import ResultStore
 from parfocal_common.sealed_fields import open_sealed
-from parfocal_common.structured_logging import register_sensitive
+from parfocal_common.structured_logging import bind, log_context, register_sensitive
 from parfocal_common.taxonomies import TaxonomyTemplate, class_names
 from parfocal_ml.lab_detector import CHANGED, LabDetector, LabModelSpec, Region, lab_tile_core
 from parfocal_ml.nuclei import RegionReader
@@ -192,6 +192,11 @@ def lab_model_running(
     pause: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> StepFunction:
     async def run(step: StepRun) -> Mapping[str, Any]:
+        with log_context(step.job_id.hex):
+            bind(tenant_id=step.tenant_id)
+            return await stage(step)
+
+    async def stage(step: StepRun) -> Mapping[str, Any]:
         async with step.transaction() as connection:
             spec = await lab_spec_of(connection, keyring, step)
             result_set_id = await result_set_of(connection, step)
