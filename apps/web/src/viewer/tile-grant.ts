@@ -1,6 +1,11 @@
 import { getTileAccess } from "@parfocal/api-client";
 
-export type Grant = {
+export type SlideStorageNote = {
+  readonly storage: "uploaded" | "remote";
+  readonly offline: boolean;
+};
+
+export type Grant = SlideStorageNote & {
   readonly token: string;
   readonly lifetimeSeconds: number;
   readonly basePath: string;
@@ -21,5 +26,7 @@ export async function grantFor(slideId: string, previous: string | null): Promis
     basePath: access.base_path,
     original: access.original,
     format: access.format,
+    storage: access.storage ?? "uploaded",
+    offline: access.offline ?? false,
   };
 }

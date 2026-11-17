@@ -2367,6 +2367,10 @@ msgstr ""
 msgid "<0>Slow source.</0> The scanner archive answers in 2.4 s. Keep reading, the view sharpens as tiles arrive. Lower magnifications come first."
 msgstr ""
 
+#: src/viewer/remote-slide-notice.tsx
+msgid "<0>The source of this slide is not answering.</0> The slide opens from the 7-day tile cache. Places never viewed stay empty until the source is back."
+msgstr ""
+
 #. placeholder {0}: seenPercent.reading
 #: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer-tools/navigator-canvas.tsx
@@ -12050,6 +12054,10 @@ msgstr ""
 #. placeholder {0}: slide.remote
 #: src/screens/project/slides-tab.tsx
 msgid "Read in place from {0}. Nothing copied."
+msgstr ""
+
+#: src/viewer/remote-slide-notice.tsx
+msgid "Read in place from a connected source. Nothing is copied."
 msgstr ""
 
 #. placeholder {0}: tb(usage.in_place_tb)

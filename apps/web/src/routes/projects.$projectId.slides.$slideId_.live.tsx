@@ -12,7 +12,9 @@ import { okData } from "../screens/placeholder.tsx";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
+import { RemoteSlideOffline, RemoteSlideTag } from "../viewer/remote-slide-notice.tsx";
 import { SlideStage } from "../viewer/slide-stage.tsx";
+import type { SlideStorageNote } from "../viewer/tile-grant.ts";
 import { useCaseLoad } from "../viewer/use-case-load.ts";
 import { useSlideAreas } from "../viewer/use-slide-areas.ts";
 import {
@@ -67,6 +69,8 @@ function LiveSlide() {
   const loaded = useCaseLoad(projectId, slideId, task);
   const [percent, setPercent] = useState<number | null>(null);
   const [peek, setPeek] = useState(false);
+  const [storage, setStorage] = useState<{ slideId: string; note: SlideStorageNote } | null>(null);
+  const storageNote = storage?.slideId === slideId ? storage.note : null;
   const closePeek = useCallback(() => setPeek(false), []);
   const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent };
   const flagged = loaded.state === "ready" && loaded.load.resultSets.length > 0;
@@ -106,6 +110,7 @@ function LiveSlide() {
             <Trans>Slide</Trans>
           </h1>
         )}
+        <RemoteSlideTag note={storageNote} />
         <span className="flex-1" />
         <SegmentedControl
           aria-label={t`Workspace`}
@@ -120,6 +125,7 @@ function LiveSlide() {
         )}
       </header>
       {loaded.state === "ready" ? <CasePatientBanner load={loaded.load} /> : null}
+      <RemoteSlideOffline note={storageNote} />
       <div className="min-h-0 flex-1">
         <SlideStage
           key={slideId}
@@ -133,6 +139,7 @@ function LiveSlide() {
           annotateTask={annotateTask}
           layerKnown={layerKnown}
           onOpenSlide={openSlide}
+          onStorage={(note) => setStorage({ slideId, note })}
           systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />
       </div>
