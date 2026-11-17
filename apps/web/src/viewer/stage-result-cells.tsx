@@ -304,7 +304,8 @@ export function StageResultCells({
                 type="button"
                 aria-pressed={shown}
                 data-testid="result-set-toggle"
-                className="rounded-md border border-line bg-surface/90 px-2 py-1 text-left text-caption text-fg shadow-sm"
+                className="w-fit max-w-64 truncate rounded-md border border-line bg-surf-panel px-2 py-1 text-left text-caption text-fg shadow-pop"
+                title={set.name}
                 onClick={() => toggle(set.id)}
               >
                 {shown ? t`Hide ${set.name}` : t`Show ${set.name}`}

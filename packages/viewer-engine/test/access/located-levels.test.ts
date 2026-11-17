@@ -123,10 +123,16 @@ describe(`a signed open of a spread BigTIFF at ${rttMs} ms RTT`, () => {
     const fetcher = async (input: string, init: RequestInit) => {
       inFlight += 1;
       if (opening) peak = Math.max(peak, inFlight);
+      const at = performance.now() - started;
       try {
         return await fetch(input, init);
       } finally {
         inFlight -= 1;
+        if (process.env["PARFOCAL_OPEN_WATERFALL"] === "on") {
+          const range = new Headers(init.headers).get("Range") ?? "";
+          const done = Math.round(performance.now() - started);
+          console.log(`${name}\t${Math.round(at)}\t${done}\t${input.split("/").pop()}\t${range}`);
+        }
       }
     };
     const started = performance.now();

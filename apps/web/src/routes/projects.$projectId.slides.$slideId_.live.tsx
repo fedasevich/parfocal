@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { liveSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
-import { loadViewerEngine } from "../viewer/load-engine.ts";
+import { openSlideEarly } from "../viewer/load-engine.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live")({
   validateSearch: liveSearch,
-  loader: loadViewerEngine,
+  loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
   component: LiveSlide,
 });
 

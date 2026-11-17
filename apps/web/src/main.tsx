@@ -1,5 +1,5 @@
 import "@parfocal/ui/globals.css";
-import { setDraftsAnswered } from "@parfocal/api-client";
+import { getGetMeQueryOptions, setDraftsAnswered } from "@parfocal/api-client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
@@ -11,6 +11,7 @@ import { AppI18n } from "./i18n/app-i18n.tsx";
 import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
+import { locksAt } from "./session/lock-rules.ts";
 import { signedOutRedirect } from "./session/sign-in-redirect.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 import { installNameMask } from "./shell/hide-names.ts";
@@ -49,6 +50,10 @@ viewTransitions.listen();
 if (devTools && config.fakeApi !== "off") {
   const { startFakeApi } = await import("./fake-api/start.tsx");
   await startFakeApi(config.fakeApi, queryClient, router);
+}
+
+if (locksAt(window.location.pathname)) {
+  queryClient.query(getGetMeQueryOptions()).catch(() => {});
 }
 
 const container = document.getElementById("root");

@@ -3,11 +3,11 @@ import { AnnotateView } from "../screens/viewer-tools/annotate-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { annotateSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
-import { loadViewerEngine } from "../viewer/load-engine.ts";
+import { openSlideEarly } from "../viewer/load-engine.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/annotate")({
   validateSearch: annotateSearch,
-  loader: loadViewerEngine,
+  loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
   component: AnnotateWorkspace,
 });
 

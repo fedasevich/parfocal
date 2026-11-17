@@ -3,11 +3,11 @@ import { AnnotateTaskView } from "../fake-api/annotate-task/annotate-task-view.t
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { annotateTaskSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
-import { loadViewerEngine } from "../viewer/load-engine.ts";
+import { openSlideEarly } from "../viewer/load-engine.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/annotate-task")({
   validateSearch: annotateTaskSearch,
-  loader: loadViewerEngine,
+  loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
   component: AnnotateTaskWorkspace,
 });
 

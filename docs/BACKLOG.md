@@ -1394,6 +1394,18 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on OPS-033.
   Size: M.
 
+- [ ] TILES-011 · A slide opens in under 3 s from navigation
+  On v0.12.2 the owner opened test_065 from a fresh navigation: tile-access done at 3.87 s, levels.json at 4.09 s and the 10 original.tif ranges at 6.15 s, so the app boot and the calls before tile-access are now the larger part. The route loader asks for tile access before the viewer code and the session check finish, the viewer waits on as few API calls as it can, and the original's ranges are checked to run in parallel. The per-set Hide and Show buttons at the bottom left of the stage are clipped and get room.
+  Done when a Playwright check shows tile-access starts before the viewer chunk arrives and the set buttons sit fully inside the stage, Viv golden tests still pass, and a result file holds the before and after numbers.
+  Depends on TILES-010.
+  Size: M.
+
+- [ ] TILES-012 · The slide's ranges arrive in two rounds after levels.json
+  TILES-011 (a slide opens in under 3 s from navigation) found that a located open reads levels.json, then the TIFF header, then all directories at once, then a re-read of the last directory, then the tile byte count arrays, then the first tile, five rounds after levels.json at about 400 ms each deployed. Carry the header facts in levels.json, drop the re-read, and ask for the byte counts with the directories.
+  Done when the latency proxy test shows a located open in at most three rounds after levels.json, a Philips fixture included, and Viv golden and engine tests still pass.
+  Depends on TILES-011.
+  Size: M.
+
 - [ ] TILES-002 · CDN in front of slide storage
   HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.
   Done when the latency test shows warm tile fetch p95 under 60 ms in the same region.

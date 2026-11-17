@@ -7,12 +7,12 @@ import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { type SlideSearch, slideSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { FirstReadGuard } from "../viewer/first-read-guard.tsx";
-import { loadViewerEngine } from "../viewer/load-engine.ts";
+import { openSlideEarly } from "../viewer/load-engine.ts";
 import type { StageStart } from "../viewer/stage-start.tsx";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId")({
   validateSearch: slideSearch,
-  loader: loadViewerEngine,
+  loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
   component: SlideView,
 });
 
