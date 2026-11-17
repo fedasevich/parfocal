@@ -24,6 +24,13 @@ import {
   updateCaseReport,
 } from "../src/index.ts";
 
+function body<Response extends { status: number; data: unknown }>(
+  response: Response,
+): Extract<Response, { status: 200 }>["data"] {
+  assert.equal(response.status, 200);
+  return (response as Extract<Response, { status: 200 }>).data;
+}
+
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
 
@@ -45,7 +52,7 @@ const p03 = scenario.projectByCode("P03").id;
 const a1 = scenario.slideOf("P07", "S26-04812", "A1").id;
 
 test("Lenka's report of S26-04812 has the sentinel steps and her three deposits", async () => {
-  const report = (await getClinicalReport(p03, a1)).data;
+  const report = body(await getClinicalReport(p03, a1));
   assert.equal(report.case.label, "S26-04812");
   assert.deepEqual(
     report.template.steps.map((step) => step.label),
@@ -68,13 +75,13 @@ test("Lenka's report of S26-04812 has the sentinel steps and her three deposits"
 
 test("Tomáš drafts the same case with D1 at 1.6 mm", async () => {
   setFakeView({ viewer: "TB", firstWeek: false });
-  const report = (await getClinicalReport(p03, a1)).data;
+  const report = body(await getClinicalReport(p03, a1));
   assert.equal(report.author_user_id, scenario.people.TB.id);
   assert.equal(report.values.deposits[0]?.size_mm, "1.6");
 });
 
 test("the co-sign request carries Tomáš's values and the AI sizes", async () => {
-  const review = (await getCosignReview(p03, a1)).data;
+  const review = body(await getCosignReview(p03, a1));
   assert.equal(review.from_user_id, scenario.people.TB.id);
   assert.equal(review.values.deposits[0]?.size_mm, "1.6");
   assert.equal(review.ai.largest_mm, 7.7);
@@ -143,13 +150,8 @@ test("a category against the size needs its confirmation, then the report signs 
 });
 
 test("returning a co-sign request answers with its record", async () => {
-  const values = (await getClinicalReport(p03, a1)).data.values;
-  const returned = (
-    await returnCosignRequest({
-      projectId: p03,
-      slideId: a1,
-      data: { note: "Measure across the capsule.", values },
-    })
-  ).data;
+  const returned = body(
+    await returnCosignRequest(p03, a1, { note: "Measure across the capsule." }),
+  );
   assert.equal(returned.note, "Measure across the capsule.");
 });

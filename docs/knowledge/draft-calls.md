@@ -50,14 +50,11 @@ The admin console reads switched in OPS-024 too, all in `apps/api/src/parfocal_a
 
 `getInvitePreview` lives in `invite_preview.py` and keeps the draft URL. It answers without signing in, like accepting does, and looks the token up the same way. A revoked, used, expired or workspace-only invitation answers 404 `invitation-not-found`, because the invite screen shows a task. The inviter comes from the invitation's audit event, so it is null once that person is erased, and the name is the display name of a user who already has the email, or empty. `hours`, `due_on` and `invited_by` are nullable and `specialty` is always null, because nothing stores them. The fake keeps its own handler, `invitePreviewHandler`, because it answers 404 for an unknown token.
 
+The reports area switched in OPS-024 (models, reports, team and admin areas on the real API). `getEvaluationReport` lives in `apps/api/src/parfocal_api/evaluation_report.py` and keeps the draft URL. It has the same gate as the task evaluation, so a reader who does not see the whole project gets 403 `evaluation-hidden`, and it takes the version, the layout and the changes after sign-off from the same stored rows as the PDF. The round name is the task name, because tasks have no rounds, and the template blocks and format are the real report block and format models. The confusion matrix is always empty, because the evaluation gives no AI class to each cell to cross with the consensus, and the screen shows its empty state. The worst objects are the decided AI objects with the most disagreements first. `getClinicalReport`, `getCosignReview`, `cosignClinicalReport` and `returnCosignRequest` live in `clinical_report_views.py` at the draft slide URLs and find the case through the slide. They read the case report and call the existing return and sign routes, so the state, co-signer, sign out right, audit and note length rules stay in one place. The clinical history comes from the sealed clinical note through the case detail, which records the patient view, so a project reviewer without an assignment in the case gets 404 as on the case route. Neither write takes `values` any more, because report text changes only through the case report routes. The co-sign review answers 404 unless the report waits for a co-sign, and its AI part is empty, because no AI deposit size is stored and no screen reads it. The requested by field is always empty, because nothing stores it. The fake answers these operations through the generated MSW handlers.
+
 ## Remaining drafts
 
-No draft is left on the home, project, viewer, review, annotate, model run and new task paths.
-
-| Operation | Screen | Real equivalent | Priority |
-|---|---|---|---|
-| getEvaluationReport | evaluation report | partly, task evaluation | medium |
-| getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |
+No draft is left. `node scripts/draft-calls.ts` prints a total of 0 since OPS-024 (models, reports, team and admin areas on the real API) switched the reports area.
 
 ## Deleted
 

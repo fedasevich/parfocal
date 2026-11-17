@@ -1740,8 +1740,163 @@ export interface ClassProbability {
   probability: number;
 }
 
+export interface ClinicalCells {
+  agree: number;
+  of: number;
+}
+
+export interface ClinicalDeposit {
+  id: string;
+  slide: string;
+  object_id: string | null;
+  size_mm: string;
+  note: string;
+}
+
 export interface ClinicalNoteChange {
   note: string | null;
+}
+
+export interface ClinicalReportCase {
+  label: string;
+  site: string;
+  clinical_history: string;
+  received: string;
+  requested_by: string;
+  assigned_user_ids: string[];
+  examined: number | null;
+  cells: ClinicalCells | null;
+}
+
+export interface ClinicalReportStep {
+  key: CaseReportStep;
+  label: string;
+}
+
+export interface ClinicalReportTemplate {
+  key: ClinicalTemplate;
+  name: string;
+  version: string;
+  steps: ClinicalReportStep[];
+  /**
+   * @items.minItems 2
+   * @items.maxItems 2
+   */
+  standards: [string, string][];
+}
+
+export interface ClinicalReportSlide {
+  key: string;
+  id: string;
+  label: string;
+  node: number;
+  short: string;
+}
+
+export interface ClinicalReportDecision {
+  object_id: string;
+  counts_as: DecisionValue;
+  why: string;
+}
+
+export type ClinicalReportObjectMeasuredBy =
+  (typeof ClinicalReportObjectMeasuredBy)[keyof typeof ClinicalReportObjectMeasuredBy];
+
+export const ClinicalReportObjectMeasuredBy = {
+  you: "you",
+  ai: "ai",
+} as const;
+
+export type ObjectState = (typeof ObjectState)[keyof typeof ObjectState];
+
+export const ObjectState = {
+  agree: "agree",
+  disagree: "disagree",
+  open: "open",
+} as const;
+
+export interface ClinicalReportObject {
+  slide: string;
+  object_id: string;
+  size_mm: number;
+  ai_size_mm: number;
+  measured_by: ClinicalReportObjectMeasuredBy;
+  state: ObjectState;
+}
+
+export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
+
+export const ProjectRole = {
+  owner: "owner",
+  reviewer: "reviewer",
+  viewer: "viewer",
+} as const;
+
+export type SignOutRight = (typeof SignOutRight)[keyof typeof SignOutRight];
+
+export const SignOutRight = {
+  own: "own",
+  any: "any",
+  never: "never",
+} as const;
+
+export interface ClinicalReportMember {
+  user_id: string;
+  role: ProjectRole;
+  sign_out: SignOutRight;
+  covers_case: boolean;
+}
+
+export type ClinicalValuesCategory =
+  | (typeof ClinicalValuesCategory)[keyof typeof ClinicalValuesCategory]
+  | null;
+
+export const ClinicalValuesCategory = {
+  macro: "macro",
+  micro: "micro",
+  itc: "itc",
+} as const;
+
+export type ClinicalValuesExtranodal =
+  | (typeof ClinicalValuesExtranodal)[keyof typeof ClinicalValuesExtranodal]
+  | null;
+
+export const ClinicalValuesExtranodal = {
+  present: "present",
+  absent: "absent",
+  na: "na",
+} as const;
+
+export interface ClinicalValues {
+  specimen: string;
+  deposits: ClinicalDeposit[];
+  category: ClinicalValuesCategory;
+  examined: string;
+  extranodal: ClinicalValuesExtranodal;
+  diagnosis: string | null;
+  microscopic: string;
+  comment: string;
+}
+
+export interface ClinicalReport {
+  id: string;
+  project: ProjectRef;
+  case: ClinicalReportCase;
+  template: ClinicalReportTemplate;
+  slide: string;
+  slides: ClinicalReportSlide[];
+  decisions: ClinicalReportDecision[];
+  objects: ClinicalReportObject[];
+  members: ClinicalReportMember[];
+  author_user_id: string;
+  values: ClinicalValues;
+}
+
+export interface ClinicalSignature {
+  version: number;
+  signed_by_user_id: string | null;
+  reported_by_user_id: string | null;
+  signed_at: string;
 }
 
 export type Code = (typeof Code)[keyof typeof Code];
@@ -1863,6 +2018,17 @@ export interface ConfusionMatrix {
  */
 export type Content = string;
 
+export interface CosignAiDeposit {
+  slide: string;
+  object_id: string;
+  size_mm: number;
+}
+
+export interface CosignAi {
+  largest_mm: number;
+  deposits: CosignAiDeposit[];
+}
+
 export interface CosignRequest {
   id: string;
   case_id: string;
@@ -1871,6 +2037,49 @@ export interface CosignRequest {
   from_user_id: string;
   template: CaseReportTemplate;
   sent_at: string;
+}
+
+export interface CosignReturn {
+  id: string;
+  note: string;
+  returned_at: string;
+}
+
+export interface CosignReturnRequest {
+  /**
+   * @minLength 10
+   * @maxLength 300
+   */
+  note: string;
+}
+
+export interface CosignReviewTemplate {
+  name: string;
+  version: string;
+}
+
+export interface CosignReviewSlide {
+  key: string;
+  node: number;
+  short: string;
+}
+
+export interface CosignReview {
+  id: string;
+  project: ProjectRef;
+  case_label: string;
+  template: CosignReviewTemplate;
+  from_user_id: string;
+  to_user_id: string;
+  sent_at: string;
+  values: ClinicalValues;
+  slides: CosignReviewSlide[];
+  ai: CosignAi;
+  co_signer_covers_case: boolean;
+}
+
+export interface CosignSignRequest {
+  method?: ConfirmedWith;
 }
 
 /**
@@ -2599,6 +2808,426 @@ export interface EvaluationOut {
   reports: GateReportOut[];
 }
 
+export interface EvaluationReportLab {
+  name: string;
+  short: string;
+}
+
+export type HeadlineNumbersWidth = (typeof HeadlineNumbersWidth)[keyof typeof HeadlineNumbersWidth];
+
+export const HeadlineNumbersWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type HeadlineNumbersKind = (typeof HeadlineNumbersKind)[keyof typeof HeadlineNumbersKind];
+
+export const HeadlineNumbersKind = {
+  "headline-numbers": "headline-numbers",
+} as const;
+
+export interface HeadlineNumbers {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: HeadlineNumbersWidth;
+  page_break?: boolean;
+  kind: HeadlineNumbersKind;
+  /**
+   * @minItems 1
+   * @maxItems 5
+   */
+  metrics: Metric[];
+  confidence_intervals?: boolean;
+}
+
+export type RegionMetricsWidth = (typeof RegionMetricsWidth)[keyof typeof RegionMetricsWidth];
+
+export const RegionMetricsWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type RegionMetricsKind = (typeof RegionMetricsKind)[keyof typeof RegionMetricsKind];
+
+export const RegionMetricsKind = {
+  "region-metrics": "region-metrics",
+} as const;
+
+export type RegionColumn = (typeof RegionColumn)[keyof typeof RegionColumn];
+
+export const RegionColumn = {
+  sensitivity: "sensitivity",
+  precision: "precision",
+  dice: "dice",
+} as const;
+
+/**
+ * @minimum 1
+ * @maximum 500
+ */
+export type Rows = number;
+
+export interface RegionMetrics {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: RegionMetricsWidth;
+  page_break?: boolean;
+  kind: RegionMetricsKind;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  columns: RegionColumn[];
+  sort_by?: RegionColumn;
+  rows?: Rows | null;
+}
+
+export type ReviewerAgreementWidth =
+  (typeof ReviewerAgreementWidth)[keyof typeof ReviewerAgreementWidth];
+
+export const ReviewerAgreementWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ReviewerAgreementKind =
+  (typeof ReviewerAgreementKind)[keyof typeof ReviewerAgreementKind];
+
+export const ReviewerAgreementKind = {
+  "reviewer-agreement": "reviewer-agreement",
+} as const;
+
+export interface ReviewerAgreement {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ReviewerAgreementWidth;
+  page_break?: boolean;
+  kind: ReviewerAgreementKind;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  parts: AgreementPart[];
+}
+
+export type OpinionAnswersWidth = (typeof OpinionAnswersWidth)[keyof typeof OpinionAnswersWidth];
+
+export const OpinionAnswersWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type OpinionAnswersKind = (typeof OpinionAnswersKind)[keyof typeof OpinionAnswersKind];
+
+export const OpinionAnswersKind = {
+  "opinion-answers": "opinion-answers",
+} as const;
+
+/**
+ * @pattern ^[a-z][a-z0-9_]{0,39}$
+ */
+export type QuestionKey = string;
+
+export interface OpinionAnswers {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: OpinionAnswersWidth;
+  page_break?: boolean;
+  kind: OpinionAnswersKind;
+  questions?: QuestionKey[] | null;
+  style?: ChartStyle;
+}
+
+export type WorstObjectsWidth = (typeof WorstObjectsWidth)[keyof typeof WorstObjectsWidth];
+
+export const WorstObjectsWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type WorstObjectsKind = (typeof WorstObjectsKind)[keyof typeof WorstObjectsKind];
+
+export const WorstObjectsKind = {
+  "worst-objects": "worst-objects",
+} as const;
+
+export interface WorstObjects {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: WorstObjectsWidth;
+  page_break?: boolean;
+  kind: WorstObjectsKind;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  rows?: number;
+  thumbnails?: boolean;
+}
+
+export type SlideTableWidth = (typeof SlideTableWidth)[keyof typeof SlideTableWidth];
+
+export const SlideTableWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type SlideTableKind = (typeof SlideTableKind)[keyof typeof SlideTableKind];
+
+export const SlideTableKind = {
+  "slide-table": "slide-table",
+} as const;
+
+export type SlideColumn = (typeof SlideColumn)[keyof typeof SlideColumn];
+
+export const SlideColumn = {
+  objects: "objects",
+  disagreements: "disagreements",
+  time: "time",
+} as const;
+
+export interface SlideTable {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: SlideTableWidth;
+  page_break?: boolean;
+  kind: SlideTableKind;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  columns: SlideColumn[];
+  sort_by?: SlideColumn;
+}
+
+export type SlideFigureWidth = (typeof SlideFigureWidth)[keyof typeof SlideFigureWidth];
+
+export const SlideFigureWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type SlideFigureKind = (typeof SlideFigureKind)[keyof typeof SlideFigureKind];
+
+export const SlideFigureKind = {
+  "slide-figure": "slide-figure",
+} as const;
+
+/**
+ * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\+?$
+ */
+export type ObjectId = string;
+
+export type Layer = (typeof Layer)[keyof typeof Layer];
+
+export const Layer = {
+  ai: "ai",
+  reviewed: "reviewed",
+} as const;
+
+export interface SlideFigure {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: SlideFigureWidth;
+  page_break?: boolean;
+  kind: SlideFigureKind;
+  slide_id?: string | null;
+  object_id?: ObjectId | null;
+  /**
+   * @minItems 1
+   * @maxItems 2
+   */
+  layers?: Layer[];
+  /** @maxLength 500 */
+  caption?: string;
+}
+
+export type TextBlockWidth = (typeof TextBlockWidth)[keyof typeof TextBlockWidth];
+
+export const TextBlockWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type TextBlockKind = (typeof TextBlockKind)[keyof typeof TextBlockKind];
+
+export const TextBlockKind = {
+  text: "text",
+} as const;
+
+export interface TextBlock {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: TextBlockWidth;
+  page_break?: boolean;
+  kind: TextBlockKind;
+  /** @maxLength 5000 */
+  body?: string;
+}
+
+export type ExpertChangesWidth = (typeof ExpertChangesWidth)[keyof typeof ExpertChangesWidth];
+
+export const ExpertChangesWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ExpertChangesKind = (typeof ExpertChangesKind)[keyof typeof ExpertChangesKind];
+
+export const ExpertChangesKind = {
+  "ai-changes": "ai-changes",
+} as const;
+
+export interface ExpertChanges {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ExpertChangesWidth;
+  page_break?: boolean;
+  kind: ExpertChangesKind;
+  group_by?: ChangeGroup;
+  people?: boolean;
+}
+
+export type ReportBlock =
+  | HeadlineNumbers
+  | RegionMetrics
+  | ConfusionMatrix
+  | ReviewerAgreement
+  | DisagreementReasons
+  | OpinionAnswers
+  | WorstObjects
+  | SlideTable
+  | SlideFigure
+  | TextBlock
+  | Comparison
+  | ExpertChanges;
+
+/**
+ * @maxItems 40
+ */
+export type ReportBlocks = ReportBlock[];
+
+export type ReportFormatPaper = (typeof ReportFormatPaper)[keyof typeof ReportFormatPaper];
+
+export const ReportFormatPaper = {
+  a4: "a4",
+  letter: "letter",
+} as const;
+
+export type ReportFormatOrientation =
+  (typeof ReportFormatOrientation)[keyof typeof ReportFormatOrientation];
+
+export const ReportFormatOrientation = {
+  portrait: "portrait",
+  landscape: "landscape",
+} as const;
+
+export type ReportFormatTextSize = (typeof ReportFormatTextSize)[keyof typeof ReportFormatTextSize];
+
+export const ReportFormatTextSize = {
+  small: "small",
+  normal: "normal",
+  large: "large",
+} as const;
+
+export type ReportFormatPageNumbers =
+  (typeof ReportFormatPageNumbers)[keyof typeof ReportFormatPageNumbers];
+
+export const ReportFormatPageNumbers = {
+  none: "none",
+  page: "page",
+  "page-of": "page-of",
+} as const;
+
+export type ReportFormatLabelLanguage =
+  (typeof ReportFormatLabelLanguage)[keyof typeof ReportFormatLabelLanguage];
+
+export const ReportFormatLabelLanguage = {
+  en: "en",
+  cs: "cs",
+  de: "de",
+} as const;
+
+export interface ReportFormat {
+  paper?: ReportFormatPaper;
+  orientation?: ReportFormatOrientation;
+  text_size?: ReportFormatTextSize;
+  logo?: boolean;
+  title?: BlockTitle;
+  /** @maxLength 200 */
+  subtitle?: string;
+  running_header?: boolean;
+  page_numbers?: ReportFormatPageNumbers;
+  draft_watermark?: boolean;
+  signature?: boolean;
+  label_language?: ReportFormatLabelLanguage;
+  /**
+   * @minimum 0
+   * @maximum 4
+   */
+  decimals?: number;
+  /** @maxItems 3 */
+  appendices?: Appendix[];
+  /**
+   * @minItems 1
+   * @maxItems 7
+   */
+  downloads?: Download[];
+}
+
+export interface EvaluationReportTemplate {
+  id: string;
+  name: string;
+  version: number;
+  latest_version: number;
+  retired_on: string | null;
+  blocks: ReportBlocks;
+  format: ReportFormat;
+}
+
+export interface EvaluationReportDownload {
+  key: string;
+  label: string;
+}
+
+export interface EvaluationReportConfusion {
+  classes: string[];
+  counts: number[][];
+}
+
+export interface EvaluationReportAnswer {
+  user_id: string;
+  raw: DecisionValue;
+}
+
+export interface EvaluationReportWorst {
+  object: string;
+  what: string;
+  answers: EvaluationReportAnswer[];
+}
+
+export interface EvaluationReport {
+  task_id: string;
+  task_code: string;
+  round_name: string;
+  model: string;
+  project: ProjectRef;
+  lab: EvaluationReportLab;
+  slides: number;
+  objects: number;
+  reviewer_ids: string[];
+  adjudicators: number;
+  version: number;
+  signed_at: string | null;
+  signed_by_user_id: string | null;
+  template: EvaluationReportTemplate;
+  formats: EvaluationReportDownload[];
+  confusion: EvaluationReportConfusion;
+  worst: EvaluationReportWorst[];
+  opinion_question: string;
+  changes: EvaluationChange[];
+}
+
 export interface EvaluationVersionStarted {
   version: number;
   reason: string;
@@ -2678,29 +3307,6 @@ export interface EventsOut {
   last_call: number;
   events: OutgoingEvent[];
   on: boolean;
-}
-
-export type ExpertChangesWidth = (typeof ExpertChangesWidth)[keyof typeof ExpertChangesWidth];
-
-export const ExpertChangesWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type ExpertChangesKind = (typeof ExpertChangesKind)[keyof typeof ExpertChangesKind];
-
-export const ExpertChangesKind = {
-  "ai-changes": "ai-changes",
-} as const;
-
-export interface ExpertChanges {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: ExpertChangesWidth;
-  page_break?: boolean;
-  kind: ExpertChangesKind;
-  group_by?: ChangeGroup;
-  people?: boolean;
 }
 
 export type ExportKind = (typeof ExportKind)[keyof typeof ExportKind];
@@ -2929,33 +3535,6 @@ export interface FrameSummary {
  */
 export type HeaderName = string;
 
-export type HeadlineNumbersWidth = (typeof HeadlineNumbersWidth)[keyof typeof HeadlineNumbersWidth];
-
-export const HeadlineNumbersWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type HeadlineNumbersKind = (typeof HeadlineNumbersKind)[keyof typeof HeadlineNumbersKind];
-
-export const HeadlineNumbersKind = {
-  "headline-numbers": "headline-numbers",
-} as const;
-
-export interface HeadlineNumbers {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: HeadlineNumbersWidth;
-  page_break?: boolean;
-  kind: HeadlineNumbersKind;
-  /**
-   * @minItems 1
-   * @maxItems 5
-   */
-  metrics: Metric[];
-  confidence_intervals?: boolean;
-}
-
 export interface Health {
   status: string;
 }
@@ -3047,14 +3626,6 @@ export type PrivacyMode = (typeof PrivacyMode)[keyof typeof PrivacyMode];
 export const PrivacyMode = {
   "de-identified": "de-identified",
   clinical: "clinical",
-} as const;
-
-export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
-
-export const ProjectRole = {
-  owner: "owner",
-  reviewer: "reviewer",
-  viewer: "viewer",
 } as const;
 
 export interface StripSlide {
@@ -3763,13 +4334,6 @@ export interface LastArrival {
   at: string;
   what: string;
 }
-
-export type Layer = (typeof Layer)[keyof typeof Layer];
-
-export const Layer = {
-  ai: "ai",
-  reviewed: "reviewed",
-} as const;
 
 export type LayerImportContent = { [key: string]: unknown } | unknown[];
 
@@ -4509,11 +5073,6 @@ export interface NudgeCreate {
   message: NudgeMessage;
 }
 
-/**
- * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\+?$
- */
-export type ObjectId = string;
-
 export interface ObjectResolution {
   task_id: string;
   slide_id: string;
@@ -4561,34 +5120,6 @@ export interface Opinion {
   draft: boolean;
   read: Read;
   updated_at: string | null;
-}
-
-export type OpinionAnswersWidth = (typeof OpinionAnswersWidth)[keyof typeof OpinionAnswersWidth];
-
-export const OpinionAnswersWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type OpinionAnswersKind = (typeof OpinionAnswersKind)[keyof typeof OpinionAnswersKind];
-
-export const OpinionAnswersKind = {
-  "opinion-answers": "opinion-answers",
-} as const;
-
-/**
- * @pattern ^[a-z][a-z0-9_]{0,39}$
- */
-export type QuestionKey = string;
-
-export interface OpinionAnswers {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: OpinionAnswersWidth;
-  page_break?: boolean;
-  kind: OpinionAnswersKind;
-  questions?: QuestionKey[] | null;
-  style?: ChartStyle;
 }
 
 export type OpinionChangeAnswers = { [key: string]: unknown };
@@ -5071,14 +5602,6 @@ export const ViewerPart = {
   "cell-typing": "cell-typing",
 } as const;
 
-export type SignOutRight = (typeof SignOutRight)[keyof typeof SignOutRight];
-
-export const SignOutRight = {
-  own: "own",
-  any: "any",
-  never: "never",
-} as const;
-
 export interface ProjectMember {
   user_id: string;
   role: ProjectRole;
@@ -5425,48 +5948,6 @@ export const RegionOutput = {
   us: "us",
 } as const;
 
-export type RegionColumn = (typeof RegionColumn)[keyof typeof RegionColumn];
-
-export const RegionColumn = {
-  sensitivity: "sensitivity",
-  precision: "precision",
-  dice: "dice",
-} as const;
-
-export type RegionMetricsWidth = (typeof RegionMetricsWidth)[keyof typeof RegionMetricsWidth];
-
-export const RegionMetricsWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type RegionMetricsKind = (typeof RegionMetricsKind)[keyof typeof RegionMetricsKind];
-
-export const RegionMetricsKind = {
-  "region-metrics": "region-metrics",
-} as const;
-
-/**
- * @minimum 1
- * @maximum 500
- */
-export type Rows = number;
-
-export interface RegionMetrics {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: RegionMetricsWidth;
-  page_break?: boolean;
-  kind: RegionMetricsKind;
-  /**
-   * @minItems 1
-   * @maxItems 3
-   */
-  columns: RegionColumn[];
-  sort_by?: RegionColumn;
-  rows?: Rows | null;
-}
-
 export type RegistrationDraftCalibrationTemperatures = { [key: string]: number };
 
 export interface RegistrationDraft {
@@ -5521,236 +6002,6 @@ export interface RegistryEntry {
  * @items.maximum 60
  */
 export type Reminders = number[];
-
-export type ReviewerAgreementWidth =
-  (typeof ReviewerAgreementWidth)[keyof typeof ReviewerAgreementWidth];
-
-export const ReviewerAgreementWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type ReviewerAgreementKind =
-  (typeof ReviewerAgreementKind)[keyof typeof ReviewerAgreementKind];
-
-export const ReviewerAgreementKind = {
-  "reviewer-agreement": "reviewer-agreement",
-} as const;
-
-export interface ReviewerAgreement {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: ReviewerAgreementWidth;
-  page_break?: boolean;
-  kind: ReviewerAgreementKind;
-  /**
-   * @minItems 1
-   * @maxItems 3
-   */
-  parts: AgreementPart[];
-}
-
-export type WorstObjectsWidth = (typeof WorstObjectsWidth)[keyof typeof WorstObjectsWidth];
-
-export const WorstObjectsWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type WorstObjectsKind = (typeof WorstObjectsKind)[keyof typeof WorstObjectsKind];
-
-export const WorstObjectsKind = {
-  "worst-objects": "worst-objects",
-} as const;
-
-export interface WorstObjects {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: WorstObjectsWidth;
-  page_break?: boolean;
-  kind: WorstObjectsKind;
-  /**
-   * @minimum 1
-   * @maximum 100
-   */
-  rows?: number;
-  thumbnails?: boolean;
-}
-
-export type SlideTableWidth = (typeof SlideTableWidth)[keyof typeof SlideTableWidth];
-
-export const SlideTableWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type SlideTableKind = (typeof SlideTableKind)[keyof typeof SlideTableKind];
-
-export const SlideTableKind = {
-  "slide-table": "slide-table",
-} as const;
-
-export type SlideColumn = (typeof SlideColumn)[keyof typeof SlideColumn];
-
-export const SlideColumn = {
-  objects: "objects",
-  disagreements: "disagreements",
-  time: "time",
-} as const;
-
-export interface SlideTable {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: SlideTableWidth;
-  page_break?: boolean;
-  kind: SlideTableKind;
-  /**
-   * @minItems 1
-   * @maxItems 3
-   */
-  columns: SlideColumn[];
-  sort_by?: SlideColumn;
-}
-
-export type SlideFigureWidth = (typeof SlideFigureWidth)[keyof typeof SlideFigureWidth];
-
-export const SlideFigureWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type SlideFigureKind = (typeof SlideFigureKind)[keyof typeof SlideFigureKind];
-
-export const SlideFigureKind = {
-  "slide-figure": "slide-figure",
-} as const;
-
-export interface SlideFigure {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: SlideFigureWidth;
-  page_break?: boolean;
-  kind: SlideFigureKind;
-  slide_id?: string | null;
-  object_id?: ObjectId | null;
-  /**
-   * @minItems 1
-   * @maxItems 2
-   */
-  layers?: Layer[];
-  /** @maxLength 500 */
-  caption?: string;
-}
-
-export type TextBlockWidth = (typeof TextBlockWidth)[keyof typeof TextBlockWidth];
-
-export const TextBlockWidth = {
-  full: "full",
-  half: "half",
-} as const;
-
-export type TextBlockKind = (typeof TextBlockKind)[keyof typeof TextBlockKind];
-
-export const TextBlockKind = {
-  text: "text",
-} as const;
-
-export interface TextBlock {
-  title: BlockTitle;
-  show_title?: boolean;
-  width?: TextBlockWidth;
-  page_break?: boolean;
-  kind: TextBlockKind;
-  /** @maxLength 5000 */
-  body?: string;
-}
-
-export type ReportBlock =
-  | HeadlineNumbers
-  | RegionMetrics
-  | ConfusionMatrix
-  | ReviewerAgreement
-  | DisagreementReasons
-  | OpinionAnswers
-  | WorstObjects
-  | SlideTable
-  | SlideFigure
-  | TextBlock
-  | Comparison
-  | ExpertChanges;
-
-/**
- * @maxItems 40
- */
-export type ReportBlocks = ReportBlock[];
-
-export type ReportFormatPaper = (typeof ReportFormatPaper)[keyof typeof ReportFormatPaper];
-
-export const ReportFormatPaper = {
-  a4: "a4",
-  letter: "letter",
-} as const;
-
-export type ReportFormatOrientation =
-  (typeof ReportFormatOrientation)[keyof typeof ReportFormatOrientation];
-
-export const ReportFormatOrientation = {
-  portrait: "portrait",
-  landscape: "landscape",
-} as const;
-
-export type ReportFormatTextSize = (typeof ReportFormatTextSize)[keyof typeof ReportFormatTextSize];
-
-export const ReportFormatTextSize = {
-  small: "small",
-  normal: "normal",
-  large: "large",
-} as const;
-
-export type ReportFormatPageNumbers =
-  (typeof ReportFormatPageNumbers)[keyof typeof ReportFormatPageNumbers];
-
-export const ReportFormatPageNumbers = {
-  none: "none",
-  page: "page",
-  "page-of": "page-of",
-} as const;
-
-export type ReportFormatLabelLanguage =
-  (typeof ReportFormatLabelLanguage)[keyof typeof ReportFormatLabelLanguage];
-
-export const ReportFormatLabelLanguage = {
-  en: "en",
-  cs: "cs",
-  de: "de",
-} as const;
-
-export interface ReportFormat {
-  paper?: ReportFormatPaper;
-  orientation?: ReportFormatOrientation;
-  text_size?: ReportFormatTextSize;
-  logo?: boolean;
-  title?: BlockTitle;
-  /** @maxLength 200 */
-  subtitle?: string;
-  running_header?: boolean;
-  page_numbers?: ReportFormatPageNumbers;
-  draft_watermark?: boolean;
-  signature?: boolean;
-  label_language?: ReportFormatLabelLanguage;
-  /**
-   * @minimum 0
-   * @maximum 4
-   */
-  decimals?: number;
-  /** @maxItems 3 */
-  appendices?: Appendix[];
-  /**
-   * @minItems 1
-   * @maxItems 7
-   */
-  downloads?: Download[];
-}
 
 export interface ReportLink {
   id: string;
@@ -16685,6 +16936,752 @@ export function useListMyCosignRequests<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getClinicalReportResponse200 = {
+  data: ClinicalReport;
+  status: 200;
+};
+
+export type getClinicalReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getClinicalReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getClinicalReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getClinicalReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getClinicalReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getClinicalReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getClinicalReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getClinicalReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getClinicalReportResponseSuccess = getClinicalReportResponse200 & {
+  headers: Headers;
+};
+export type getClinicalReportResponseError = (
+  | getClinicalReportResponse400
+  | getClinicalReportResponse401
+  | getClinicalReportResponse403
+  | getClinicalReportResponse404
+  | getClinicalReportResponse409
+  | getClinicalReportResponse422
+  | getClinicalReportResponse429
+  | getClinicalReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type getClinicalReportResponse =
+  | getClinicalReportResponseSuccess
+  | getClinicalReportResponseError;
+
+export const getGetClinicalReportUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/clinical-report`;
+};
+
+/**
+ * @summary Get Clinical Report
+ */
+export const getClinicalReport = async (
+  projectId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getClinicalReportResponse> => {
+  return apiFetch<getClinicalReportResponse>(getGetClinicalReportUrl(projectId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetClinicalReportQueryKey = (projectId: string, slideId: string) => {
+  return [`/api/projects/${projectId}/slides/${slideId}/clinical-report`] as const;
+};
+
+export const getGetClinicalReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof getClinicalReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getClinicalReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetClinicalReportQueryKey(projectId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicalReport>>> = ({ signal }) =>
+    getClinicalReport(projectId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getClinicalReport>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetClinicalReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getClinicalReport>>
+>;
+export type GetClinicalReportQueryError = Problem;
+
+export function useGetClinicalReport<
+  TData = Awaited<ReturnType<typeof getClinicalReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getClinicalReport>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClinicalReport>>,
+          TError,
+          Awaited<ReturnType<typeof getClinicalReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetClinicalReport<
+  TData = Awaited<ReturnType<typeof getClinicalReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getClinicalReport>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClinicalReport>>,
+          TError,
+          Awaited<ReturnType<typeof getClinicalReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetClinicalReport<
+  TData = Awaited<ReturnType<typeof getClinicalReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getClinicalReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Clinical Report
+ */
+
+export function useGetClinicalReport<
+  TData = Awaited<ReturnType<typeof getClinicalReport>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getClinicalReport>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetClinicalReportQueryOptions(projectId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getCosignReviewResponse200 = {
+  data: CosignReview;
+  status: 200;
+};
+
+export type getCosignReviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCosignReviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCosignReviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCosignReviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCosignReviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCosignReviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCosignReviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCosignReviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCosignReviewResponseSuccess = getCosignReviewResponse200 & {
+  headers: Headers;
+};
+export type getCosignReviewResponseError = (
+  | getCosignReviewResponse400
+  | getCosignReviewResponse401
+  | getCosignReviewResponse403
+  | getCosignReviewResponse404
+  | getCosignReviewResponse409
+  | getCosignReviewResponse422
+  | getCosignReviewResponse429
+  | getCosignReviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCosignReviewResponse = getCosignReviewResponseSuccess | getCosignReviewResponseError;
+
+export const getGetCosignReviewUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/clinical-report/cosign-request`;
+};
+
+/**
+ * @summary Get Cosign Review
+ */
+export const getCosignReview = async (
+  projectId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCosignReviewResponse> => {
+  return apiFetch<getCosignReviewResponse>(getGetCosignReviewUrl(projectId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCosignReviewQueryKey = (projectId: string, slideId: string) => {
+  return [`/api/projects/${projectId}/slides/${slideId}/clinical-report/cosign-request`] as const;
+};
+
+export const getGetCosignReviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCosignReview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCosignReview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCosignReviewQueryKey(projectId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCosignReview>>> = ({ signal }) =>
+    getCosignReview(projectId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCosignReview>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCosignReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getCosignReview>>>;
+export type GetCosignReviewQueryError = Problem;
+
+export function useGetCosignReview<
+  TData = Awaited<ReturnType<typeof getCosignReview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCosignReview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCosignReview>>,
+          TError,
+          Awaited<ReturnType<typeof getCosignReview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCosignReview<
+  TData = Awaited<ReturnType<typeof getCosignReview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCosignReview>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCosignReview>>,
+          TError,
+          Awaited<ReturnType<typeof getCosignReview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCosignReview<
+  TData = Awaited<ReturnType<typeof getCosignReview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCosignReview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Cosign Review
+ */
+
+export function useGetCosignReview<
+  TData = Awaited<ReturnType<typeof getCosignReview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCosignReview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCosignReviewQueryOptions(projectId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type returnCosignRequestResponse200 = {
+  data: CosignReturn;
+  status: 200;
+};
+
+export type returnCosignRequestResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type returnCosignRequestResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type returnCosignRequestResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type returnCosignRequestResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type returnCosignRequestResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type returnCosignRequestResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type returnCosignRequestResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type returnCosignRequestResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type returnCosignRequestResponseSuccess = returnCosignRequestResponse200 & {
+  headers: Headers;
+};
+export type returnCosignRequestResponseError = (
+  | returnCosignRequestResponse400
+  | returnCosignRequestResponse401
+  | returnCosignRequestResponse403
+  | returnCosignRequestResponse404
+  | returnCosignRequestResponse409
+  | returnCosignRequestResponse422
+  | returnCosignRequestResponse429
+  | returnCosignRequestResponse500
+) & {
+  headers: Headers;
+};
+
+export type returnCosignRequestResponse =
+  | returnCosignRequestResponseSuccess
+  | returnCosignRequestResponseError;
+
+export const getReturnCosignRequestUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/clinical-report/cosign-request/return`;
+};
+
+/**
+ * @summary Return Cosign Request
+ */
+export const returnCosignRequest = async (
+  projectId: string,
+  slideId: string,
+  cosignReturnRequest: CosignReturnRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<returnCosignRequestResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<returnCosignRequestResponse>(getReturnCosignRequestUrl(projectId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(cosignReturnRequest),
+  });
+};
+
+export const getReturnCosignRequestMutationKey = () => ["returnCosignRequest"] as const;
+
+export const getReturnCosignRequestMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof returnCosignRequest>>,
+    TError,
+    ReturnCosignRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof returnCosignRequest>>,
+  TError,
+  ReturnCosignRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReturnCosignRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof returnCosignRequest>>,
+    ReturnCosignRequestMutationVariables
+  > = (props) => {
+    const { projectId, slideId, data } = props ?? {};
+
+    return returnCosignRequest(projectId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReturnCosignRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof returnCosignRequest>>
+>;
+export type ReturnCosignRequestMutationBody = CosignReturnRequest;
+export type ReturnCosignRequestMutationError = Problem;
+export type ReturnCosignRequestMutationVariables = {
+  projectId: string;
+  slideId: string;
+  data: CosignReturnRequest;
+};
+
+/**
+ * @summary Return Cosign Request
+ */
+export const useReturnCosignRequest = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof returnCosignRequest>>,
+      TError,
+      ReturnCosignRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof returnCosignRequest>>,
+  TError,
+  ReturnCosignRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getReturnCosignRequestMutationOptions(options), queryClient);
+};
+
+export type cosignClinicalReportResponse200 = {
+  data: ClinicalSignature;
+  status: 200;
+};
+
+export type cosignClinicalReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type cosignClinicalReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type cosignClinicalReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type cosignClinicalReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type cosignClinicalReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type cosignClinicalReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type cosignClinicalReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type cosignClinicalReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type cosignClinicalReportResponseSuccess = cosignClinicalReportResponse200 & {
+  headers: Headers;
+};
+export type cosignClinicalReportResponseError = (
+  | cosignClinicalReportResponse400
+  | cosignClinicalReportResponse401
+  | cosignClinicalReportResponse403
+  | cosignClinicalReportResponse404
+  | cosignClinicalReportResponse409
+  | cosignClinicalReportResponse422
+  | cosignClinicalReportResponse429
+  | cosignClinicalReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type cosignClinicalReportResponse =
+  | cosignClinicalReportResponseSuccess
+  | cosignClinicalReportResponseError;
+
+export const getCosignClinicalReportUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/clinical-report/cosign-request/co-sign`;
+};
+
+/**
+ * @summary Cosign Clinical Report
+ */
+export const cosignClinicalReport = async (
+  projectId: string,
+  slideId: string,
+  cosignSignRequest: CosignSignRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<cosignClinicalReportResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<cosignClinicalReportResponse>(getCosignClinicalReportUrl(projectId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(cosignSignRequest),
+  });
+};
+
+export const getCosignClinicalReportMutationKey = () => ["cosignClinicalReport"] as const;
+
+export const getCosignClinicalReportMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cosignClinicalReport>>,
+    TError,
+    CosignClinicalReportMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cosignClinicalReport>>,
+  TError,
+  CosignClinicalReportMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCosignClinicalReportMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cosignClinicalReport>>,
+    CosignClinicalReportMutationVariables
+  > = (props) => {
+    const { projectId, slideId, data } = props ?? {};
+
+    return cosignClinicalReport(projectId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CosignClinicalReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cosignClinicalReport>>
+>;
+export type CosignClinicalReportMutationBody = CosignSignRequest;
+export type CosignClinicalReportMutationError = Problem;
+export type CosignClinicalReportMutationVariables = {
+  projectId: string;
+  slideId: string;
+  data: CosignSignRequest;
+};
+
+/**
+ * @summary Cosign Clinical Report
+ */
+export const useCosignClinicalReport = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cosignClinicalReport>>,
+      TError,
+      CosignClinicalReportMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cosignClinicalReport>>,
+  TError,
+  CosignClinicalReportMutationVariables,
+  TContext
+> => {
+  return useMutation(getCosignClinicalReportMutationOptions(options), queryClient);
+};
 
 export type listProjectClassesResponse200 = {
   data: ProjectClass[];
@@ -62017,6 +63014,207 @@ export function useExportTaskEvaluation<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTaskEvaluationQueryOptions(taskId, kind, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getEvaluationReportResponse200 = {
+  data: EvaluationReport;
+  status: 200;
+};
+
+export type getEvaluationReportResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getEvaluationReportResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getEvaluationReportResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getEvaluationReportResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getEvaluationReportResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getEvaluationReportResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getEvaluationReportResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getEvaluationReportResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getEvaluationReportResponseSuccess = getEvaluationReportResponse200 & {
+  headers: Headers;
+};
+export type getEvaluationReportResponseError = (
+  | getEvaluationReportResponse400
+  | getEvaluationReportResponse401
+  | getEvaluationReportResponse403
+  | getEvaluationReportResponse404
+  | getEvaluationReportResponse409
+  | getEvaluationReportResponse422
+  | getEvaluationReportResponse429
+  | getEvaluationReportResponse500
+) & {
+  headers: Headers;
+};
+
+export type getEvaluationReportResponse =
+  | getEvaluationReportResponseSuccess
+  | getEvaluationReportResponseError;
+
+export const getGetEvaluationReportUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation-report`;
+};
+
+/**
+ * @summary Get Evaluation Report
+ */
+export const getEvaluationReport = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getEvaluationReportResponse> => {
+  return apiFetch<getEvaluationReportResponse>(getGetEvaluationReportUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetEvaluationReportQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/evaluation-report`] as const;
+};
+
+export const getGetEvaluationReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEvaluationReport>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getEvaluationReport>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEvaluationReportQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvaluationReport>>> = ({ signal }) =>
+    getEvaluationReport(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getEvaluationReport>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetEvaluationReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEvaluationReport>>
+>;
+export type GetEvaluationReportQueryError = Problem;
+
+export function useGetEvaluationReport<
+  TData = Awaited<ReturnType<typeof getEvaluationReport>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getEvaluationReport>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEvaluationReport>>,
+          TError,
+          Awaited<ReturnType<typeof getEvaluationReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEvaluationReport<
+  TData = Awaited<ReturnType<typeof getEvaluationReport>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getEvaluationReport>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEvaluationReport>>,
+          TError,
+          Awaited<ReturnType<typeof getEvaluationReport>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEvaluationReport<
+  TData = Awaited<ReturnType<typeof getEvaluationReport>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getEvaluationReport>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Evaluation Report
+ */
+
+export function useGetEvaluationReport<
+  TData = Awaited<ReturnType<typeof getEvaluationReport>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getEvaluationReport>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetEvaluationReportQueryOptions(taskId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

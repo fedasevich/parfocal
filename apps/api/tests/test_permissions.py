@@ -349,6 +349,8 @@ NEEDS_A_TASK = frozenset(
         "removeCaseReportDeposit",
         "sendCaseReportForCosign",
         "returnCaseReport",
+        "returnCosignRequest",
+        "cosignClinicalReport",
         "withdrawCaseReport",
         "signCaseReport",
         "amendCaseReport",
@@ -484,6 +486,13 @@ def seeded(w: Workspace, name: str) -> uuid.UUID:
     return uuid.uuid5(w.tenant_id, name)
 
 
+COSIGN_CASES = ("cosign-view", "cosign-return", "cosign-sign")
+
+
+def slide_report(w: Workspace, name: str) -> str:
+    return f"/api/projects/{w.project}/slides/{seeded(w, name)}/clinical-report"
+
+
 def case_report(w: Workspace, name: str | None = None) -> str:
     case = seeded(w, name) if name else w.case
     return f"/api/projects/{w.project}/cases/{case}/clinical-report"
@@ -530,6 +539,9 @@ async def seed_case_reports(
         "sent": "sent",
         "withdraw": "sent",
         "signed": "signed",
+        "cosign-view": "sent",
+        "cosign-return": "sent",
+        "cosign-sign": "sent",
     }
     await connection.execute(
         insert(cases),
@@ -542,6 +554,19 @@ async def seed_case_reports(
                 "source": "manual",
             }
             for name in states
+        ],
+    )
+    await connection.execute(
+        insert(slides),
+        [
+            {
+                "id": named(f"report-{name}-slide"),
+                "tenant_id": tenant_id,
+                "project_id": project_id,
+                "case_id": named(f"report-{name}"),
+                "label": f"Matrix {name} slide",
+            }
+            for name in COSIGN_CASES
         ],
     )
     reports = [(case_id, "draft", None, None, 0)] + [
@@ -955,6 +980,20 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         f"{case_report(w, 'report-signed')}/amendments",
         {"reason": "Matrix amendment", "change": {"comment": "Matrix"}},
     ),
+    "getClinicalReport": lambda w: Call("GET", slide_report(w, "report-slide")),
+    "getCosignReview": lambda w: Call(
+        "GET", f"{slide_report(w, 'report-cosign-view-slide')}/cosign-request"
+    ),
+    "returnCosignRequest": lambda w: Call(
+        "POST",
+        f"{slide_report(w, 'report-cosign-return-slide')}/cosign-request/return",
+        {"note": "Matrix return note"},
+    ),
+    "cosignClinicalReport": lambda w: Call(
+        "POST",
+        f"{slide_report(w, 'report-cosign-sign-slide')}/cosign-request/co-sign",
+        {"method": "sso"},
+    ),
     "getRestrictedImage": lambda w: Call("GET", f"/api/slides/{w.slide}/restricted-images/label"),
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
@@ -1134,6 +1173,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "DELETE", f"/api/projects/{w.project}/patients/{w.doomed_patient}"
     ),
     "getTaskEvaluation": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation"),
+    "getEvaluationReport": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation-report"),
     "getSignOffSummary": lambda w: Call("GET", f"/api/review-tasks/{w.task}/sign-off-summary"),
     "listEvaluationChanges": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation-changes"

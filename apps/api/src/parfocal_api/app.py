@@ -26,6 +26,7 @@ from parfocal_api import (
     cases,
     checklist,
     clinical_notes,
+    clinical_report_views,
     clinical_reports,
     decision_notes,
     disagreement_queue,
@@ -34,6 +35,7 @@ from parfocal_api import (
     emergency,
     evaluation,
     evaluation_exports,
+    evaluation_report,
     evaluation_versions,
     events_out,
     feedback,
@@ -246,6 +248,7 @@ def create_app(
     app.include_router(sign_out.router)
     app.include_router(clinical_reports.router)
     app.include_router(clinical_reports.me_router)
+    app.include_router(clinical_report_views.router)
     app.include_router(taxonomy.router)
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)
@@ -339,6 +342,7 @@ def create_app(
     app.include_router(adjudications.router)
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
+    app.include_router(evaluation_report.router)
     app.include_router(report_preview.router)
     app.include_router(task_report_layout.router)
     app.include_router(training_exports.router)
