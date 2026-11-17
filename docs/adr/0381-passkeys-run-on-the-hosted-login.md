@@ -1,4 +1,4 @@
-# XXXX. Passkeys run on Zitadel's hosted login, named by a login hint
+# 0381. Passkeys run on Zitadel's hosted login, named by a login hint
 
 - Date: 2026-11-17
 - Status: Accepted
