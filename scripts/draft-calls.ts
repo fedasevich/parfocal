@@ -34,15 +34,7 @@ const operationsByArea: Record<string, string[]> = {
   ],
   team: ["listTeamWorkload", "listReviewerWorkload"],
   admin: ["getAdminOverview", "getStorageUsage", "getSecuritySettings", "listWebhooks"],
-  "sign-in": [
-    "getInvitePreview",
-    "getSignInOptions",
-    "signInWithCode",
-    "requestSignInLink",
-    "startSso",
-    "requestPasswordReset",
-    "resetPassword",
-  ],
+  "sign-in": ["getInvitePreview"],
 };
 
 const areaOf = new Map<string, string>(

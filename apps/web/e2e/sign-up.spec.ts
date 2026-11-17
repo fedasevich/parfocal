@@ -69,12 +69,6 @@ test("changing the address goes back with the details kept, and the new address 
   await expect(page.getByText("jana@other.example")).toBeVisible();
 });
 
-test("single sign-on skips the code and opens setup", async ({ page }) => {
-  await page.goto("/sign-up");
-  await page.getByRole("button", { name: /Sign up with .* single sign-on/ }).click();
-  await expect(page).toHaveURL(/\/setup\?step=role$/);
-});
-
 test("a direct visit to the confirm step can ask for a new code", async ({ page }) => {
   await page.goto("/sign-up?scene=verify");
   await page.getByRole("button", { name: "Resend the code" }).click();

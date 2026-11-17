@@ -5,7 +5,6 @@ import {
   useConfirmEmail,
   useCreateAccount,
   useResendEmailCode,
-  useStartSso,
 } from "@parfocal/api-client";
 import {
   AuthBadge,
@@ -16,9 +15,7 @@ import {
   AuthLink,
   ChoiceTile,
   DotSeparator,
-  OrDivider,
   PasswordMeter,
-  SsoButton,
 } from "@parfocal/ui/components/auth";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
@@ -29,11 +26,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { CodeInput, handled, PasswordInput, problemText, useCountdown } from "./auth-inputs.tsx";
-import { PitchLayout, useSignInOptions, workspaceOf } from "./auth-side.tsx";
+import { PitchLayout } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
 import type { SignUpScene } from "./scenes.ts";
-import { checkPassword, clock, codeLength, institutionFor } from "./sign-in-rules.ts";
-import { setupAfterSignUp, signUpProblem, strengthLine } from "./sign-up-rules.ts";
+import { checkPassword, clock, codeLength } from "./sign-in-rules.ts";
+import { signUpProblem, strengthLine } from "./sign-up-rules.ts";
 
 type Props = { scene: SignUpScene; change: (scene: SignUpScene) => void };
 
@@ -61,7 +58,6 @@ const Failure = ({ children }: { children: ReactNode }) =>
   );
 
 export function SignUpScreen({ scene, change }: Props) {
-  const options = useSignInOptions();
   const goTo = useGoTo();
   const queryClient = useQueryClient();
   const land = (path: string) => {
@@ -76,8 +72,7 @@ export function SignUpScreen({ scene, change }: Props) {
   const [acceptedTerms, setAcceptedTerms] = useState(true);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useCountdown(0);
-  const workspace = workspaceOf(options);
-  const verifiedEmail = sentTo ?? (typedEmail.trim() || options?.email) ?? "";
+  const verifiedEmail = sentTo ?? typedEmail.trim();
   const steps = (
     <Stepper
       steps={signUpSteps(scene)}
@@ -106,7 +101,6 @@ export function SignUpScreen({ scene, change }: Props) {
     <PitchLayout>
       <FormScreen
         steps={steps}
-        workspace={workspace}
         details={{ name, email: typedEmail, password, mostly, acceptedTerms }}
         set={{
           setName,
@@ -123,7 +117,6 @@ export function SignUpScreen({ scene, change }: Props) {
           setSecondsLeft(resendSeconds);
           change("verify");
         }}
-        land={land}
         signIn={() => void goTo("/sign-in")}
       />
     </PitchLayout>
@@ -132,7 +125,6 @@ export function SignUpScreen({ scene, change }: Props) {
 
 type FormProps = {
   steps: ReactNode;
-  workspace: ReturnType<typeof workspaceOf>;
   details: {
     name: string;
     email: string;
@@ -148,23 +140,15 @@ type FormProps = {
     setAcceptedTerms: (value: boolean) => void;
   };
   onCreated: (email: string, resendSeconds: number) => void;
-  land: (path: string) => void;
   signIn: () => void;
 };
 
-function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }: FormProps) {
+function FormScreen({ steps, details, set, onCreated, signIn }: FormProps) {
   const { t } = useLingui();
 
-  const options = useSignInOptions();
   const [failure, setFailure] = useState<string | null>(null);
   const create = useCreateAccount(handled);
-  const sso = useStartSso(handled);
   const check = checkPassword(details.password, []);
-  const matched = institutionFor(details.email, options?.institutions ?? []);
-  const ssoWorkspace = matched
-    ? { name: matched.name, logo: matched.logo, colour: matched.colour }
-    : workspace;
-  const ssoName = matched?.short_name ?? workspace.name;
   const submit = () => {
     const problem = signUpProblem(details);
     setFailure(problem);
@@ -187,36 +171,12 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
       },
     );
   };
-  const continueWithSso = () => {
-    const workspaceId = matched?.workspace_id ?? options?.workspace.id;
-    if (workspaceId === undefined) return;
-    setFailure(null);
-    sso.mutate(
-      { data: { workspace_id: workspaceId, return_to: setupAfterSignUp } },
-      {
-        onSuccess: (response) => {
-          if (response.status === 200) land(response.data.return_to);
-        },
-        onError: (error) => setFailure(problemText(error, t`Single sign-on did not answer.`)),
-      },
-    );
-  };
   return (
     <AuthForm>
       {steps}
       <AuthHeading title={t`Create your Parfocal account`}>
         <Trans>Free for academic research. Your workspace can invite you later.</Trans>
       </AuthHeading>
-      {options?.methods.sso === false ? null : (
-        <>
-          <SsoButton workspace={ssoWorkspace} onClick={continueWithSso} disabled={sso.isPending}>
-            <Trans>Sign up with {ssoName} single sign-on</Trans>
-          </SsoButton>
-          <OrDivider>
-            <Trans>or with your email</Trans>
-          </OrDivider>
-        </>
-      )}
       <div className="grid grid-cols-2 gap-3">
         <AuthField label={t`Full name`}>
           <Input

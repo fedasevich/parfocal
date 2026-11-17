@@ -1,6 +1,7 @@
 import {
-  type SignInSession,
+  type SignInLanding,
   useGetMe,
+  useGetSessionPolicy,
   useListProjects,
   useListTenantMembers,
   useRequestProjectAccess,
@@ -8,63 +9,42 @@ import {
 import { LockCard, PasskeySheet } from "@parfocal/ui/components/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { defaultIdleLockMinutes } from "../../session/lock-rules.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { NoAccessPage, SessionExpiredPage } from "../../shell/issue-pages.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
-import { PitchLayout, slideImage, useSignInOptions, workspaceOf } from "./auth-side.tsx";
+import { PitchLayout, slideImage } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
 import type { SignInScene } from "./scenes.ts";
-import {
-  EmailForm,
-  type Flow,
-  ForgotForm,
-  MagicForm,
-  ResetForm,
-  SsoForm,
-} from "./sign-in-forms.tsx";
+import { EmailForm, type Flow } from "./sign-in-forms.tsx";
 
 type Props = {
   scene: SignInScene;
   change: (scene: SignInScene) => void;
   returnTo: string | null;
-  ssoUnknown?: boolean;
 };
 
-export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Props) {
-  const options = useSignInOptions(returnTo);
+const defaultSessionHours = 8;
+
+export function SignInScreen({ scene, change, returnTo }: Props) {
   const me = okData(useGetMe().data);
+  const policy = okData(useGetSessionPolicy().data);
   const goTo = useGoTo();
   const queryClient = useQueryClient();
   const [notice, show] = useNotice();
-  const workspace = workspaceOf(options);
   const [signingInAgain, setSigningInAgain] = useState(false);
   const [typedEmail, setEmail] = useState<string | null>(null);
-  const email = typedEmail ?? me?.email ?? options?.email ?? "";
-  const link = options?.deep_link ?? null;
-  const land = (session: SignInSession) => {
+  const email = typedEmail ?? me?.email ?? "";
+  const target = returnTo ?? destinations.home();
+  const land = (session: SignInLanding) => {
     void queryClient.invalidateQueries();
-    if (scene === "expired" && link?.task_id) {
-      void goTo(destinations.guided(link.task_id, link.slide_id));
-      return;
-    }
     void goTo(session.return_to);
   };
-  const landOnLink = () => void goTo(link?.path ?? destinations.home());
+  const landOnTarget = () => void goTo(target);
   const toast = (text: string) => show(text);
-  const flow: Flow = {
-    options,
-    workspace,
-    email,
-    setEmail,
-    returnTo,
-    scene,
-    change,
-    land,
-    toast,
-    ssoUnknown,
-  };
+  const flow: Flow = { email, setEmail, returnTo, change, land };
 
   if (scene === "lock" || scene === "lockkey") {
     return (
@@ -74,8 +54,8 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
       >
         <LockCard
           person={personOf(me)}
-          minutes={options?.idle_lock_minutes ?? 15}
-          onUnlock={() => link && void goTo(destinations.slide(link.project_id, link.slide_id))}
+          minutes={policy?.idle_lock_minutes ?? defaultIdleLockMinutes}
+          onUnlock={landOnTarget}
           onPasskey={() => change("lockkey")}
           onLogOut={() =>
             toast(
@@ -87,7 +67,7 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
           <PasskeySheet
             kind="touch"
             person={{ ...personOf(me), email }}
-            onContinue={() => link && void goTo(destinations.slide(link.project_id, link.slide_id))}
+            onContinue={landOnTarget}
             onCancel={() => change("lock")}
             onOther={() =>
               toast(
@@ -108,7 +88,7 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
         <PasskeySheet
           kind={scene === "passkey" ? "touch" : "qr"}
           person={{ ...personOf(me), email }}
-          onContinue={landOnLink}
+          onContinue={landOnTarget}
           onCancel={() => change("email")}
           onOther={() => change("passkeyqr")}
           onBack={() => change("passkey")}
@@ -123,23 +103,16 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
   if (scene === "expired" && !signingInAgain) {
     return (
       <SessionExpiredPage
-        hours={options?.session_hours ?? 8}
-        lastSaved={options?.last_decision ?? "just now"}
+        hours={policy?.session_hours ?? defaultSessionHours}
+        lastSaved="just now"
         onSignIn={() => setSigningInAgain(true)}
       />
     );
   }
 
-  const forms: Record<"magic" | "sso" | "forgot" | "reset", React.ReactNode> = {
-    magic: <MagicForm flow={flow} />,
-    sso: <SsoForm flow={flow} />,
-    forgot: <ForgotForm flow={flow} />,
-    reset: <ResetForm flow={flow} />,
-  };
-
   return (
     <PitchLayout>
-      {scene === "email" || scene === "expired" ? <EmailForm flow={flow} /> : forms[scene]}
+      <EmailForm flow={flow} />
       {notice}
     </PitchLayout>
   );

@@ -51,4 +51,7 @@ High priority sits on the home, project, viewer, review and annotate paths.
 | getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks, listAiModels | admin console | none | low |
 | getLabModelConnection | connect a model | none, path swallowed | low |
 | getInvitePreview | invitation page | partly, invitations | low |
-| getSignInOptions, signInWithCode, requestSignInLink, startSso, requestPasswordReset, resetPassword | sign in screens, replaced by Zitadel | Zitadel | low |
+
+## Deleted
+
+OPS-024 (models, reports, team and admin areas on the real API) deleted `getSignInOptions`, `signInWithCode`, `requestSignInLink`, `startSso`, `requestPasswordReset` and `resetPassword`, because the hosted Zitadel login does single sign-on, sign-in links and password resets. The sign-in screen lost its link, single sign-on, forgot and reset scenes, and sign-up lost its single sign-on button. The lock and expired scenes read the idle lock and session length from the real session policy, and the lock and passkey scenes land on `return_to` or home.

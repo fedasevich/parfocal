@@ -2,11 +2,7 @@ import { linkOptions } from "@tanstack/react-router";
 import { onboardingScenes } from "./scenes.ts";
 
 const signInNotes = {
-  email: "Email and password, with the deep link to RT-14",
-  magic: "Sign-in link sent, with a 6-digit code",
-  sso: "Institution single sign-on",
-  forgot: "Forgot password",
-  reset: "New password checked for length, reuse and leaks",
+  email: "Email and password",
   passkey: "Passkey, the browser asks",
   passkeyqr: "Passkey on a phone or key",
   lock: "Locked after inactivity",

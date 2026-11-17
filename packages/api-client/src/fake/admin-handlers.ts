@@ -2,7 +2,6 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-overview.ts";
 import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
 import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
-import { type SignInOptions, signInOptionsSchema } from "../draft/get-sign-in-options.ts";
 import { type StorageUsage, storageUsageSchema } from "../draft/get-storage-usage.ts";
 import { type AiModels, aiModelsSchema } from "../draft/list-ai-models.ts";
 import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
@@ -52,7 +51,6 @@ import {
   reviewTasks,
   scenarioNow,
   slideOf,
-  slides,
   workspaces,
 } from "./scenario.ts";
 import {
@@ -64,8 +62,6 @@ import {
   auditPseudonym,
   auditToday,
   canSignOut,
-  expiredSession,
-  institutions,
   invitations,
   inviteSeed,
   joinableWorkspaces,
@@ -265,8 +261,6 @@ const brandOf = (index: number) => {
   };
 };
 
-const slideTarget = /^\/projects\/([^/?#]+)\/slides\/([^/?#]+)(?:\?(.*))?$/;
-
 export const isSafeReturnPath = (value: string) =>
   value.startsWith("/") &&
   !value.startsWith("//") &&
@@ -278,51 +272,6 @@ export const defaultReturnPath = () => {
   const task = reviewTasks.find((item) => item.code === signInDeepLink.task);
   return `/projects/${projectByCode("P07").id}/slides/${slide.id}?task=${task?.id ?? ""}`;
 };
-
-const deepLinkOf = (returnTo: string | null): SignInOptions["deep_link"] => {
-  const path = returnTo === null ? defaultReturnPath() : returnTo;
-  if (!isSafeReturnPath(path)) return null;
-  const match = slideTarget.exec(path);
-  const project = projects.find((item) => item.id === match?.[1]);
-  const slide = slides.find((item) => item.id === match?.[2] && item.project === project?.code);
-  if (project === undefined || slide === undefined) return null;
-  const taskId = new URLSearchParams(match?.[3] ?? "").get("task");
-  const task = reviewTasks.find((item) => item.id === taskId);
-  return {
-    path,
-    task_id: task?.id ?? null,
-    task_code: task?.code ?? null,
-    project_id: project.id,
-    slide_id: slide.id,
-    slide_label: slide.label,
-    case_label: slide.caseLabel ?? "Standalone",
-  };
-};
-
-export const toSignInOptions = (returnTo: string | null = null): SignInOptions =>
-  signInOptionsSchema.parse({
-    workspace: (({ domain: _domain, ...rest }) => rest)(brandOf(0)),
-    email: people.LM.email,
-    institutions: institutions.map((item) => {
-      const brand = brandOf(item.workspace);
-      return {
-        workspace_id: brand.id,
-        name: brand.name,
-        short_name: workspaces[item.workspace]?.organisation ?? brand.name,
-        logo: brand.logo,
-        colour: brand.colour,
-        protocol: item.protocol,
-        domain: item.domain,
-        matches_email: item.matches,
-      };
-    }),
-    methods: { sso: true, password: true, link: true, passkey: true },
-    link_minutes: 15,
-    idle_lock_minutes: sessionPolicy.idleLockMinutes,
-    session_hours: expiredSession.hours,
-    deep_link: deepLinkOf(returnTo),
-    last_decision: expiredSession.lastDecision,
-  });
 
 export const toJoinableWorkspaces = (): JoinableWorkspace[] =>
   joinableWorkspaces.map((item) => {
@@ -681,13 +630,6 @@ export const getGetInvitePreviewMockHandler = (overrideResponse?: InvitePreview)
       : HttpResponse.json(overrideResponse ?? toInvitePreview()),
   );
 
-export const getGetSignInOptionsMockHandler = (overrideResponse?: SignInOptions) =>
-  http.get("*/api/auth/sign-in-options", ({ request }) =>
-    HttpResponse.json(
-      overrideResponse ?? toSignInOptions(new URL(request.url).searchParams.get("return_to")),
-    ),
-  );
-
 export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequest) =>
   http.post<{ projectId: string }>("*/api/projects/:projectId/access-requests", ({ params }) => {
     const project = projects.find((item) => item.id === params.projectId) ?? projects[0];
@@ -739,12 +681,6 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/invitations/{token}/preview",
     handler: () => getGetInvitePreviewMockHandler(),
-  },
-  {
-    operationId: "getSignInOptions",
-    method: "get",
-    path: "/api/auth/sign-in-options",
-    handler: () => getGetSignInOptionsMockHandler(),
   },
   {
     operationId: "requestProjectAccess",
