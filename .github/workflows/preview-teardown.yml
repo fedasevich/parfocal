@@ -1,6 +1,6 @@
 name: preview teardown
 
-run-name: ${{ github.event_name == 'pull_request' && format('teardown of #{0}', github.event.pull_request.number) || 'preview sweep' }}
+run-name: "${{ github.event_name == 'pull_request' && format('teardown of #{0}', github.event.pull_request.number) || 'preview sweep' }}"
 
 on:
   pull_request:
