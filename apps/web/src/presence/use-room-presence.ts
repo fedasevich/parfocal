@@ -1,28 +1,18 @@
-import { getRoomAccess } from "@parfocal/api-client";
 import {
   RoomClient,
   type RoomMessage,
   type RoomSignal,
-  type RoomTicket,
   type SocketLike,
 } from "@parfocal/edge/room-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readBuildConfig } from "../config.ts";
 import { openFakeRoomSocket } from "./fake-room-socket.ts";
 import { nextPresence, roomSocketUrl, type Sighting } from "./presence-state.ts";
+import { roomAccess } from "./room-access.ts";
 
 const fake = readBuildConfig().fakeApi !== "off";
 const fakeLifetimeSeconds = 300;
 const nobody: ReadonlyMap<string, Sighting> = new Map();
-
-async function roomTicket(room: string): Promise<RoomTicket | null> {
-  const response = await getRoomAccess(room);
-  if (response.status === 200) {
-    return { token: response.data.token, lifetimeSeconds: response.data.lifetime_seconds };
-  }
-  if (response.status === 403 || response.status === 404) return null;
-  throw new Error(`Room access answered ${response.status}`);
-}
 
 export function useRoomEvents(
   room: string | null,
@@ -40,7 +30,7 @@ export function useRoomEvents(
       url: roomSocketUrl(room, window.location),
       ticket: fake
         ? () => Promise.resolve({ token: me, lifetimeSeconds: fakeLifetimeSeconds })
-        : () => roomTicket(room),
+        : () => roomAccess.ticket(room),
       open: fake
         ? openFakeRoomSocket
         : (url, protocols) => new WebSocket(url, protocols) as unknown as SocketLike,

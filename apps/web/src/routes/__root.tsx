@@ -14,6 +14,7 @@ import { useAppliedLengthUnits } from "../shell/length-units-setting.ts";
 import { useAppliedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { overlaySearch } from "../shell/overlays.ts";
 import { useReadingReport } from "../shell/reading-report.ts";
+import { RouteProgress } from "../shell/route-progress.tsx";
 import { SettingsKey } from "../shell/settings-key.tsx";
 import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
@@ -51,6 +52,7 @@ function RootContent() {
   useAnalyticsConsentSync();
   return (
     <KeyBindingsProvider>
+      <RouteProgress />
       {inShell ? (
         <GlobalShell>
           <Outlet />

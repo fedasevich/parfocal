@@ -8691,6 +8691,10 @@ msgstr ""
 msgid "Loaded {0}. Left out {1}: {2}"
 msgstr ""
 
+#: src/shell/route-progress.tsx
+msgid "Loading"
+msgstr ""
+
 #: src/screens/placeholder.tsx
 msgid "Loading {label}"
 msgstr ""
@@ -8701,6 +8705,10 @@ msgstr ""
 
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
+msgstr ""
+
+#: src/screens/project/slides-tab.tsx
+msgid "Loading slides"
 msgstr ""
 
 #: src/screens/team/team-screen.tsx
@@ -8748,6 +8756,10 @@ msgstr ""
 
 #: src/screens/home/home-screen.tsx
 msgid "Loading your home"
+msgstr ""
+
+#: src/screens/my-work/my-work-screen.tsx
+msgid "Loading your work"
 msgstr ""
 
 #. placeholder {0}: group.count - group.slides.length

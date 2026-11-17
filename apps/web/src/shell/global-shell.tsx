@@ -22,6 +22,7 @@ import { destinations } from "./destinations.ts";
 import { JobsTrayProvider, ShellJobs } from "./jobs-tray.tsx";
 import { MaintenanceBanner } from "./maintenance-banner.tsx";
 import { useOverlay } from "./overlays.ts";
+import { useRoutePending } from "./route-progress.tsx";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
 import { shellStore, useShell } from "./shell-store.ts";
@@ -66,6 +67,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
     select: (matches) => matches.some((match) => foldedShellRouteIds.has(match.routeId)),
   });
   const navOpen = useShell((state) => state.navOpen);
+  const routePending = useRoutePending();
   const showSide = !folded || navOpen;
   const firstProject = projects[0]?.id ?? "";
   const slidesIn = (id: string) => homeProjects.find((project) => project.id === id)?.slides;
@@ -119,6 +121,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
     <JobsTrayProvider>
       <AppShell
         className="h-dvh"
+        pending={routePending}
         top={
           <div>
             <TopBar

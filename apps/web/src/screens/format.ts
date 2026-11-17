@@ -35,6 +35,22 @@ export function greeting(at: Date): string {
   return hour < 18 ? "Good afternoon" : "Good evening";
 }
 
+const placeholderNames = new Set(["", "new user", "workspace owner"]);
+
+const capitalised = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
+
+export function greetingName(person: {
+  readonly display_name: string;
+  readonly email: string | null;
+}): string {
+  const name = person.display_name.trim();
+  const usable = !placeholderNames.has(name.toLowerCase()) && !name.includes("@");
+  if (usable) return name.split(/\s+/)[0] ?? name;
+  const local = (person.email ?? (name.includes("@") ? name : "")).split("@")[0] ?? "";
+  const first = local.split(/[._+-]/).find((part) => part.length > 0);
+  return first === undefined ? "there" : capitalised(first);
+}
+
 const startOfDay = (at: Date) => new Date(at.getFullYear(), at.getMonth(), at.getDate());
 
 export function daysBetween(from: Date, to: Date): number {

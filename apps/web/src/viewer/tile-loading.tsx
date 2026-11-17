@@ -52,10 +52,16 @@ function useTileHint(route: VivRoute | null): Shown {
   return shown;
 }
 
-export function TileHintChip({ route }: { route: VivRoute | null }) {
+export function TileHintChip({
+  route,
+  opening = false,
+}: {
+  route: VivRoute | null;
+  opening?: boolean;
+}) {
   const router = useRouter();
   const { hint, percent } = useTileHint(route);
-  if (hint === null) return null;
+  if (hint === null || (opening && hint.kind === "opening")) return null;
   return (
     <TileHintCard
       data-testid="tile-hint"

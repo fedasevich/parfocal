@@ -1,4 +1,5 @@
 import {
+  ApiError,
   getSlideCoverage,
   getSlideTissue,
   recordSlideCoverage,
@@ -27,6 +28,20 @@ export type SlideCoverageState = {
 };
 
 type Host = { getBoundingClientRect(): { width: number; height: number } };
+
+export const coverageRefusedPauseMs = 10 * 60_000;
+
+const refusedUntil = new Map<string, number>();
+
+export function coverageRefused(slideId: string, at: number = Date.now()): boolean {
+  return (refusedUntil.get(slideId) ?? 0) > at;
+}
+
+export function noteCoverageAnswer(slideId: string, error: unknown, at: number = Date.now()): void {
+  if (error instanceof ApiError && error.status === 409) {
+    refusedUntil.set(slideId, at + coverageRefusedPauseMs);
+  }
+}
 
 function rasterOf(
   module: ViewerModule,
@@ -64,8 +79,15 @@ export function useSlideCoverage(
       grid,
       micronsPerPixel: slide.micronsPerPixel,
       send: async (cells) => {
-        const response = await recordSlideCoverage(slideId, { grid, cells: [...cells] });
-        return response.status === 200 ? rasterOf(module, grid, response.data) : null;
+        if (coverageRefused(slideId)) return null;
+        try {
+          const response = await recordSlideCoverage(slideId, { grid, cells: [...cells] });
+          return response.status === 200 ? rasterOf(module, grid, response.data) : null;
+        } catch (error) {
+          noteCoverageAnswer(slideId, error);
+          if (coverageRefused(slideId)) return null;
+          throw error;
+        }
       },
     });
     const publish = () => {
@@ -99,12 +121,16 @@ export function useSlideCoverage(
         tracker.setTissue(stored);
       })
       .catch(() => undefined);
-    getSlideCoverage(slideId)
-      .then((response) => {
-        const stored = response.status === 200 ? rasterOf(module, grid, response.data) : null;
-        if (!cancelled && stored !== null) tracker.load(stored);
+    const stored = coverageRefused(slideId)
+      ? Promise.resolve(null)
+      : getSlideCoverage(slideId).then((response) =>
+          response.status === 200 ? rasterOf(module, grid, response.data) : null,
+        );
+    stored
+      .then((raster) => {
+        if (!cancelled && raster !== null) tracker.load(raster);
       })
-      .catch(() => undefined)
+      .catch((error: unknown) => noteCoverageAnswer(slideId, error))
       .finally(() => {
         if (cancelled) return;
         loaded = true;

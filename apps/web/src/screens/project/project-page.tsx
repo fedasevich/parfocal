@@ -3,6 +3,9 @@ import {
   type Project,
   useGetProject,
   useGetProjectOverview,
+  useListCases,
+  useListMySlides,
+  useListProjectResultSets,
   useListReviewTasks,
 } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
@@ -16,8 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
-import { Loader } from "@parfocal/ui/components/loader";
 import { AvatarStack } from "@parfocal/ui/components/person";
+import { SkeletonLine, SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -72,6 +75,10 @@ export function ProjectPage({
   const format = useFormat();
   const overview = okData(useGetProjectOverview(projectId).data);
   const tasks = okData(useListReviewTasks(projectId).data) ?? [];
+  const slidesFirst = { query: { enabled: view.tab === "slides" } };
+  useListMySlides({ project_id: projectId }, slidesFirst);
+  useListCases({ project_id: projectId }, slidesFirst);
+  useListProjectResultSets(projectId, slidesFirst);
   const people = usePeople();
   const navigate = useNavigate();
   const toast = useMockToast();
@@ -83,8 +90,14 @@ export function ProjectPage({
 
   if (project === undefined) {
     return (
-      <main className="grid flex-1 place-items-center p-8">
-        <Loader label={t`Loading the project`} />
+      <main className="grid flex-1 content-start gap-4 px-8 pt-5.5 pl-7">
+        <div className="grid gap-2">
+          <SkeletonLine width="20rem" className="text-page-title" />
+          <SkeletonLine width="14rem" className="text-body-sm" />
+        </div>
+        <div className="rounded-zone border border-line bg-surf-panel">
+          <SkeletonRows label={t`Loading the project`} rows={6} columns={4} />
+        </div>
       </main>
     );
   }

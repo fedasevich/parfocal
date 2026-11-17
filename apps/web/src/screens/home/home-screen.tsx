@@ -19,9 +19,9 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { Loader } from "@parfocal/ui/components/loader";
 import { AvatarStack } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
+import { SkeletonLine, SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, type ReactNode } from "react";
@@ -30,7 +30,15 @@ import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
-import { formatDue, formatLongDay, formatWeekday, greeting, percent, plural } from "../format.ts";
+import {
+  formatDue,
+  formatLongDay,
+  formatWeekday,
+  greeting,
+  greetingName,
+  percent,
+  plural,
+} from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -452,6 +460,22 @@ function ComingUp({ tasks, projects }: { tasks: MyTask[]; projects: HomeProject[
   );
 }
 
+function HomeSkeletonBody({ label }: { label: string }) {
+  return (
+    <div
+      data-testid="home-skeleton"
+      className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6"
+    >
+      <div className="rounded-xl border border-line bg-chrome">
+        <SkeletonRows label={label} rows={4} columns={2} />
+      </div>
+      <div aria-hidden="true" className="rounded-xl border border-line bg-chrome">
+        <SkeletonRows label={label} rows={3} columns={1} />
+      </div>
+    </div>
+  );
+}
+
 function HomeWithoutData({
   firstName,
   error,
@@ -474,7 +498,7 @@ function HomeWithoutData({
         <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">{formatLongDay(now())}</p>
       </header>
       {error === null ? (
-        <Loader label={t`Loading your home`} />
+        <HomeSkeletonBody label={t`Loading your home`} />
       ) : kind === "forbidden" ? (
         <section
           aria-label={t`No workspace yet`}
@@ -537,12 +561,16 @@ export function HomeScreen() {
   });
   if (me === undefined || layersQuery.isPending) {
     return (
-      <div className="p-8">
-        <Loader label={t`Loading your home`} />
-      </div>
+      <main className="grid content-start gap-(--density-page-gap) px-8 pt-5.5 pb-4.5 pl-7">
+        <div className="grid gap-2">
+          <SkeletonLine width="18rem" className="text-page-title" />
+          <SkeletonLine width="12rem" className="text-body-sm" />
+        </div>
+        <HomeSkeletonBody label={t`Loading your home`} />
+      </main>
     );
   }
-  const firstName = me.display_name.split(" ")[0] ?? me.display_name;
+  const firstName = greetingName(me);
   if (home === undefined) {
     return (
       <HomeWithoutData

@@ -918,5 +918,7 @@ export type {
 export {
   coverageBatchLimit,
   coverageFlushMs,
+  coverageMaxBackoffMs,
+  coverageRetryMs,
   createCoverageTracker,
 } from "./seen/tracker.ts";

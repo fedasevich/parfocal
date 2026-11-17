@@ -7,6 +7,7 @@ import {
   useListMySlides,
   useListTasksAssignedByMe,
 } from "@parfocal/api-client";
+import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { useEffect } from "react";
 import { now } from "../../clock.ts";
@@ -44,13 +45,23 @@ export function MyWorkScreen({
   const { t } = useLingui();
 
   const goTo = useGoTo();
-  const tasks = okData(useListMyReviewTasks().data) ?? [];
-  const adjudications = okData(useListMyAdjudications().data) ?? [];
-  const assigned = okData(useListTasksAssignedByMe().data) ?? [];
+  const tasksQuery = useListMyReviewTasks();
+  const adjudicationsQuery = useListMyAdjudications();
+  const assignedQuery = useListTasksAssignedByMe();
+  const tasks = okData(tasksQuery.data) ?? [];
+  const adjudications = okData(adjudicationsQuery.data) ?? [];
+  const assigned = okData(assignedQuery.data) ?? [];
   const slides = okData(useListMySlides(slideQuery(state.filters, state.q)).data)?.slides ?? [];
   const me = okData(useGetMe().data);
   useWorklistLive(me?.user_id);
-  const everySlide = okData(useListMySlides().data)?.slides ?? [];
+  const everySlideQuery = useListMySlides();
+  const everySlide = okData(everySlideQuery.data)?.slides ?? [];
+  const loading =
+    state.tab === "review"
+      ? tasksQuery.isPending || adjudicationsQuery.isPending
+      : state.tab === "assigned"
+        ? assignedQuery.isPending
+        : everySlideQuery.isPending;
   const active = activeTasks(tasks);
   const resume = okData(useGetMyHome().data)?.resume ?? null;
   const hero = state.tab === "review" ? heroPath(active, resume) : undefined;
@@ -148,7 +159,12 @@ export function MyWorkScreen({
         </TabsList>
       </Tabs>
       <div className="flex min-h-0 flex-col gap-3">
-        {state.tab === "review" ? (
+        {loading ? (
+          <div className="rounded-zone border border-line bg-surf-panel">
+            <SkeletonRows label={t`Loading your work`} rows={6} columns={4} />
+          </div>
+        ) : null}
+        {loading ? null : state.tab === "review" ? (
           <ToReviewTab
             tasks={tasks}
             adjudications={adjudications}
@@ -156,10 +172,10 @@ export function MyWorkScreen({
             onSelect={(sel) => change({ sel })}
           />
         ) : null}
-        {state.tab === "assigned" ? (
+        {!loading && state.tab === "assigned" ? (
           <AssignedTab tasks={assigned} selected={state.sel} onSelect={(sel) => change({ sel })} />
         ) : null}
-        {state.tab === "all" ? (
+        {!loading && state.tab === "all" ? (
           <AllSlidesTab
             rows={slides}
             everyRow={everySlide}
