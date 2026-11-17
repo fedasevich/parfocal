@@ -23,6 +23,7 @@ test("the tour offer leaves the activity card clear and opening the sample ticks
   await expect(checklist.getByRole("button", { name: "Open the sample project" })).toBeVisible();
   await page.getByRole("button", { name: "Open the project" }).click();
   await expect(page).toHaveURL(/\/projects\//);
+  await expect(page.getByText("Sample · sentinel nodes").first()).toBeVisible();
   await page.goBack();
   await expect(checklist).toBeVisible();
   await expect(checklist.getByRole("button", { name: "Open the sample project" })).toHaveCount(0);

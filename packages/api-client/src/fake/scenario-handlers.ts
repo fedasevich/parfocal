@@ -467,6 +467,17 @@ export function scenarioHandlers(): RequestHandler[] {
       return HttpResponse.json(toProject(project));
     }),
     http.get<{ projectId: string }>("*/api/projects/:projectId", ({ params }) => {
+      if (params.projectId === sampleProject.id) {
+        const [first] = projects;
+        if (first === undefined) return projectNotFound();
+        return HttpResponse.json({
+          ...toProject(first),
+          id: sampleProject.id,
+          code: sampleProject.code,
+          name: sampleProject.name,
+          sample: true,
+        });
+      }
       const project = projectNamed(params.projectId);
       return project === undefined ? projectNotFound() : HttpResponse.json(toProject(project));
     }),

@@ -773,7 +773,7 @@ export const cosignRequests = [
 export const checklist = [
   { key: "confirm-email", label: "Confirm your email", done: true },
   { key: "join-workspace", label: "Join Fakultní nemocnice Vltava", done: true },
-  { key: "open-sample", label: "Open the sample project", done: true },
+  { key: "open-sample", label: "Open the sample project", done: false },
   { key: "guided-review", label: "Review one slide in guided review", done: false },
   { key: "comment", label: "Comment on an object ID", done: false },
   { key: "opinion", label: "Submit your first opinion form", done: false },

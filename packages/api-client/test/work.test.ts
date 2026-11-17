@@ -130,7 +130,7 @@ test("the first week shows the sample project, the checklist and no resume point
   assert.equal(first.announcements.length, 1);
   const checklist = body(await getMyChecklist());
   assert.equal(checklist.hidden, false);
-  assert.equal(checklist.steps.filter((step) => step.done).length, 3);
+  assert.equal(checklist.steps.filter((step) => step.done).length, 2);
 });
 
 test("My work's slides are the mock's seven rows with their sets and reviews", async () => {

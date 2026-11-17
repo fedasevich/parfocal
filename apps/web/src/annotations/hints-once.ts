@@ -18,8 +18,15 @@ export function useHintsOnce(tool: string, hintOnly: boolean): boolean {
   const [shown, setShown] = useState<string | null>(null);
   const seenRef = useRef(seen);
   const markRef = useRef(markSeen);
+  const leaving = useRef(false);
   seenRef.current = seen;
   markRef.current = markSeen;
+  useEffect(() => {
+    leaving.current = false;
+    return () => {
+      leaving.current = true;
+    };
+  }, []);
   useEffect(() => {
     const id = toolHintId(rail);
     if (!hintOnly || !ready || seenRef.current.has(id)) {
@@ -27,7 +34,9 @@ export function useHintsOnce(tool: string, hintOnly: boolean): boolean {
       return;
     }
     setShown(rail);
-    return () => markRef.current([id]);
+    return () => {
+      if (!leaving.current) markRef.current([id]);
+    };
   }, [rail, hintOnly, ready]);
   return hintOnly && shown === rail;
 }

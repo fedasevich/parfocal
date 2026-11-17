@@ -128,13 +128,7 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
   );
 }
 
-function SampleHero({
-  sample,
-  firstProjectId,
-}: {
-  sample: NonNullable<Checklist["sample_project"]>;
-  firstProjectId: string;
-}) {
+function SampleHero({ sample }: { sample: NonNullable<Checklist["sample_project"]> }) {
   const goTo = useGoTo();
   return (
     <div className="grid overflow-hidden rounded-[14px] border border-line bg-chrome">
@@ -157,7 +151,7 @@ function SampleHero({
               Review the first slide <Keycap keys="↵" />
             </Trans>
           </Button>
-          <Button onClick={() => void goTo(destinations.project(firstProjectId))}>
+          <Button onClick={() => void goTo(destinations.project(sample.id))}>
             <Trans>Open the project</Trans>
           </Button>
         </div>
@@ -625,7 +619,7 @@ export function HomeScreen() {
         {home.resume ? (
           <ResumeHero resume={home.resume} />
         ) : firstWeek && checklist?.sample_project ? (
-          <SampleHero sample={checklist.sample_project} firstProjectId={firstProjectId} />
+          <SampleHero sample={checklist.sample_project} />
         ) : (
           <p className="text-body-sm text-fg-dim">
             <Trans>Nothing in progress. Start something</Trans>{" "}
