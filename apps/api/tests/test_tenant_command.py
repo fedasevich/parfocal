@@ -1,16 +1,14 @@
 import asyncio
 import json
 import uuid
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx2
 import pytest
-from db_support import APP_URL, OWNER_URL, TEST_MASTER_KEYS, migrated_database, query, with_database
-from storage_support import TEST_STORAGE
+from db_support import APP_URL, OWNER_URL, query, with_database
+from zitadel_support import SCIM_USER, command, organisations_named, scim_patch, settings_for
 
 from parfocal_api.scim_provisioning import (
     SCIM_ROLES,
@@ -19,7 +17,7 @@ from parfocal_api.scim_provisioning import (
     scim_endpoint,
 )
 from parfocal_api.sso_provisioning import NoIdpOrganisationError
-from parfocal_api.tenant_command import ProvisioningSettings, main
+from parfocal_api.tenant_command import main
 from parfocal_api.zitadel_directory import (
     ACTIVE,
     AmbiguousOrganisationError,
@@ -27,15 +25,6 @@ from parfocal_api.zitadel_directory import (
     ZitadelDirectory,
 )
 from parfocal_common.db import create_engine
-
-LOCAL_ZITADEL = Path(__file__).resolve().parents[3] / ".zitadel/e2e.env"
-
-
-def local_zitadel() -> dict[str, str]:
-    if not LOCAL_ZITADEL.is_file():
-        return {}
-    lines = LOCAL_ZITADEL.read_text().splitlines()
-    return dict(line.split("=", 1) for line in lines if "=" in line)
 
 
 class FakeZitadel:
@@ -195,60 +184,6 @@ def test_the_scim_client_is_one_machine_user_per_organisation_with_a_fresh_token
         against_fake(zitadel, "wrong", refused)
 
 
-@pytest.fixture
-def zitadel() -> dict[str, str]:
-    found = local_zitadel()
-    if "ZITADEL_ADMIN_TOKEN" not in found:
-        pytest.skip("Run make dev or infra/local/zitadel-up.sh for the local Zitadel")
-    if urlparse(found["ZITADEL_ISSUER"]).hostname != "localhost":
-        pytest.fail("The command test deletes organisations, so it runs only on a local Zitadel")
-    try:
-        httpx2.get(f"{found['ZITADEL_ISSUER']}/debug/healthz", timeout=2)
-    except httpx2.HTTPError:
-        pytest.skip("The local Zitadel in .zitadel/e2e.env is not running")
-    return found
-
-
-@pytest.fixture
-def drill() -> Iterator[str]:
-    with migrated_database() as name:
-        yield name
-
-
-def settings_for(database: str, zitadel: dict[str, str]) -> ProvisioningSettings:
-    return ProvisioningSettings.model_validate(
-        {
-            "app_env": "test",
-            "database_url": with_database(APP_URL, database),
-            "master_keys": TEST_MASTER_KEYS,
-            "zitadel_issuer": zitadel["ZITADEL_ISSUER"],
-            "zitadel_admin_token": zitadel["ZITADEL_ADMIN_TOKEN"],
-            "storage_endpoint": TEST_STORAGE.endpoint,
-            "storage_region": TEST_STORAGE.region,
-            "storage_bucket": TEST_STORAGE.bucket,
-            "storage_access_key_id": TEST_STORAGE.access_key_id,
-            "storage_secret_access_key": TEST_STORAGE.secret_access_key,
-        }
-    )
-
-
-def organisations_named(zitadel: dict[str, str], name: str) -> list[str]:
-    response = httpx2.post(
-        f"{zitadel['ZITADEL_ISSUER']}/v2/organizations/_search",
-        json={"queries": [{"nameQuery": {"name": name, "method": "TEXT_QUERY_METHOD_EQUALS"}}]},
-        headers={"authorization": f"Bearer {zitadel['ZITADEL_ADMIN_TOKEN']}"},
-    )
-    response.raise_for_status()
-    return [str(o["id"]) for o in response.json().get("result", [])]
-
-
-def command(
-    argv: list[str], settings: ProvisioningSettings, capsys: pytest.CaptureFixture[str]
-) -> str:
-    main(argv, settings)
-    return capsys.readouterr().out.strip()
-
-
 @pytest.mark.db
 @pytest.mark.usefixtures("storage")
 def test_the_command_provisions_and_deprovisions_a_tenant_against_the_local_zitadel(
@@ -289,19 +224,6 @@ def test_the_command_provisions_and_deprovisions_a_tenant_against_the_local_zita
     with pytest.raises(SystemExit) as unknown:
         main(["deprovision", str(uuid.uuid4())], settings)
     assert unknown.value.code == 1
-
-
-SCIM_USER = "urn:ietf:params:scim:schemas:core:2.0:User"
-PATCH_OP = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
-
-
-def scim_patch(endpoint: str, headers: dict[str, str], user_id: str, operation: object) -> int:
-    response = httpx2.patch(
-        f"{endpoint}/Users/{user_id}",
-        headers=headers,
-        json={"schemas": [PATCH_OP], "Operations": [operation]},
-    )
-    return response.status_code
 
 
 @pytest.mark.db

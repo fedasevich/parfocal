@@ -33,3 +33,11 @@ Option 1.
 - `TODO`: a user created over SCIM and the same person's first SAML sign-in may collide. [ADR 0347](0347-per-workspace-saml-sso-through-zitadel.md) turns auto-creation on and linking off, and user names are unique per organisation, so Zitadel may refuse to auto-create the SAML user with the SCIM user's name. Turning on linking by email for the workspace's IdP is the likely fix, but it was not tried here, and it needs the SAML spec in `apps/e2e/tests/sso.spec.ts` with a SCIM-created user before the first customer uses both.
 - `TODO`: confirm that Zitadel Cloud serves `/scim/v2` to the production organisations before handing a token to a customer.
 - If a customer needs roles pushed over SCIM or an instant end to open sessions, option 2 becomes the follow-up, built as an API endpoint in front of our membership table.
+
+## Amendment 2026-11-17: SAML sign-in, a borrowed token and deactivation were tried
+
+IAM-030 (a SCIM-created person signs in through SAML without a duplicate) answered three of the points above on the local Zitadel, as [ADR XXXX](XXXX-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) (SAML sign-in links a SCIM user by email inside the workspace organisation) records.
+
+- Without linking, the first SAML sign-in of a SCIM user did not collide. Zitadel created a second user with the same email. `connect-saml` now turns on linking by email, and the person signs in as the SCIM user.
+- A token from one workspace gets 404 `membership not found` at another workspace's `/scim/v2/<organisationId>`, for listing and for creating users.
+- After deactivation a new sign-in and the next refresh are refused at once. An open session lasts until its access token expires, 12 hours on the local instance. The production value is still `TODO`.

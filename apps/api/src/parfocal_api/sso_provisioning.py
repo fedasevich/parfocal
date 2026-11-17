@@ -109,10 +109,11 @@ def saml_settings(request: SamlConnectionRequest, name: str) -> dict[str, object
         "withSignedRequest": False,
         "nameIdFormat": "SAML_NAME_ID_FORMAT_PERSISTENT",
         "providerOptions": {
-            "isLinkingAllowed": False,
+            "isLinkingAllowed": True,
             "isCreationAllowed": True,
             "isAutoCreation": True,
             "isAutoUpdate": True,
+            "autoLinking": "AUTO_LINKING_OPTION_EMAIL",
         },
     }
     if request.attributes.subject:

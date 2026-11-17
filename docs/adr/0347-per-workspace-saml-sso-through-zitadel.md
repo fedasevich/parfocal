@@ -32,3 +32,7 @@ IAM-012 asks for SAML or OIDC federation per tenant with just-in-time provisioni
 - Zitadel user names are unique across the instance. A person who signed up with a password under the same email could not be auto-created in the workspace organisation. [ADR 0352](0352-sso-links-an-existing-account-by-verified-email.md) (SSO links an existing account by verified email) fixes this.
 - OIDC federation fits the same table and command with Zitadel's generic OIDC IdP, but it was not built or tested here.
 - The web sign-in page offers "Sign in with your organisation", which sends the typed domain to `/api/auth/sso` (IAM-028).
+
+## Amendment 2026-11-17: linking by email inside the organisation
+
+IAM-030 (a SCIM-created person signs in through SAML without a duplicate) turns linking on. The IdP now has `isLinkingAllowed` and auto-linking by email, so a SAML sign-in attaches to a user with that email in the workspace's own organisation instead of creating a second one. [ADR XXXX](XXXX-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) (SAML sign-in links a SCIM user by email inside the workspace organisation) has the details and the test.
