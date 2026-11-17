@@ -18,7 +18,14 @@ from parfocal_ml.gpu_pool import (
     worst_case_hourly_usd,
 )
 
-BATCH_FAMILIES = {Family.DETECTOR_BEST, Family.DETECTOR_GOOD, Family.TYPER_BEST, Family.TYPER_GOOD}
+BATCH_FAMILIES = {
+    Family.DETECTOR_BEST,
+    Family.DETECTOR_GOOD,
+    Family.TYPER_BEST,
+    Family.TYPER_GOOD,
+    Family.LAB_MODEL,
+}
+CPU_FAMILIES = {Family.LAB_MODEL}
 
 
 def pool_for(family: Family):
@@ -44,11 +51,15 @@ def test_best_tiers_run_on_l4_and_the_rest_on_t4() -> None:
     assert pool_for(Family.DETECTOR_GOOD).gpu is Gpu.T4
     assert pool_for(Family.TYPER_GOOD).gpu is Gpu.T4
     assert pool_for(Family.EMBEDDER).gpu is Gpu.T4
-    assert {function_options(pool)["gpu"] for pool in POOLS} == {"T4", "L4"}
+    assert pool_for(Family.LAB_MODEL).gpu is None
+    assert {function_options(pool)["gpu"] for pool in POOLS} == {"T4", "L4", None}
 
 
 def test_model_gpu_memory_fits_its_card() -> None:
     for pool in POOLS:
+        if pool.family in CPU_FAMILIES:
+            assert (pool.gpu, pool.gpu_memory_budget_mib) == (None, 0)
+            continue
         assert pool.gpu is not None
         assert pool.gpu_memory_budget_mib <= GPU_MEMORY_MIB[pool.gpu]
     assert GPU_MEMORY_MIB[Gpu.T4] == 16 * 1024

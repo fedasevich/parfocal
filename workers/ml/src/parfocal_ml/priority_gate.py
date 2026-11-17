@@ -23,6 +23,7 @@ class Kind(StrEnum):
     TYPE = "type"
     EMBEDDING_CACHE = "embedding-cache"
     TUMOR_MAP = "tumor-map"
+    LAB_MODEL = "lab-model"
     VIEW_MAP = VIEW_MAP_KIND
     OUTLINE_TYPES = OUTLINE_TYPES_KIND
 
@@ -30,7 +31,9 @@ class Kind(StrEnum):
 INTERACTIVE_KINDS = frozenset(
     {Kind.WARM, Kind.EMBED, Kind.REGION_PASS, Kind.VIEW_MAP, Kind.OUTLINE_TYPES}
 )
-JOB_KINDS = frozenset({Kind.DETECT, Kind.TYPE, Kind.EMBEDDING_CACHE, Kind.TUMOR_MAP})
+JOB_KINDS = frozenset(
+    {Kind.DETECT, Kind.TYPE, Kind.EMBEDDING_CACHE, Kind.TUMOR_MAP, Kind.LAB_MODEL}
+)
 
 
 class WrongLaneError(ValueError):

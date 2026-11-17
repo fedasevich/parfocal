@@ -15,7 +15,9 @@ ADR 0371 (a lab model run pins the model from its first answer) left three jobs 
 - The field context and the data key unwrap move into `parfocal_common.sealed_fields`, and the API's `context` calls the same function, so the sealing and the opening cannot drift apart. The taxonomy templates move into `parfocal_common.taxonomies` for the same reason, and `class_templates` re-exports them.
 - At stage start a saved model gone or renamed fails with `lab-model-changed`, a project off the model's list fails with `lab-model-not-allowed`, and a clinical project without a tile confirmation fails with `lab-model-tiles-unconfirmed`, all before any call. A token that cannot be opened fails with `lab-model-sealed`. The stage runs inside its own log context, the opened token is registered there as sensitive at once, and it never enters the step result.
 - A region whose class maps to a taxonomy class is clipped to its tile window and written to `result_objects` of the run's result set in the same transaction that marks the tile done. A resumed tile therefore never writes its regions twice. Lab tiles have no halo, so a region crossing tiles is stored as one piece per tile. A region whose clipped outline is not valid is skipped, and an unmapped region is counted in `regions_left_out`.
-- Cells and regions keep the index of their class in the model's taxonomy. The stage result lists those classes, because the run's result set has no class rows yet.
+- Cells and regions keep the index of their class in the model's taxonomy. When the tiles are done the stage pins those classes in `result_set_classes`, by position, matched to the project's classes through its class mappings or by name, with the count of cells and regions of each.
+- A run started with a lab model carries `lab_model` in its job input. `claim_model_run` takes `Detectors.LAB` or `Detectors.PARFOCAL`, so a lab drain never claims a run of a Parfocal detector and the other way round. The marker sits on the job because the claim runs in the platform scope, which cannot read the tenant tables `model_runs` and `lab_models`.
+- The GPU pool app gets a `lab-model` function with no GPU, one container and the database and storage secrets, which carry `MASTER_KEYS`. It drains lab runs. Its other five stages only mark themselves done, because the lab server does the whole job, and every tile of the slide is sent, since there is no tissue pass.
 
 ## Alternatives
 
@@ -24,6 +26,7 @@ ADR 0371 (a lab model run pins the model from its first answer) left three jobs 
 
 ## Consequences
 
-- No Modal runner calls the stage yet. A drain that claims `model-run` jobs would also take runs of Parfocal detectors, which it cannot finish, so deploying it needs a claim filter on the detector first.
-- Nothing pins the run's classes in `result_set_classes` yet. The stage that adds the result set has to do it from the listed classes.
+- Nothing wakes the `lab-model` function when a lab run starts yet, and it is not deployed. Runs queued before this change carry no marker and are left to a Parfocal drain.
+- The cells are stored as tile chunks but not registered in `result_chunks`, so the sealed result set counts its regions and not its cells.
+- Sending every tile of the slide costs more lab calls than a tissue-first plan would.
 - `who_can_run` is checked only when the run starts, because the stage has no person to check.

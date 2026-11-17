@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from collections import Counter
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -7,11 +8,12 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_common.chunk_store import read_chunk
 from parfocal_common.envelope import EnvelopeError, MasterKeyring
 from parfocal_common.jobs import StepFailedError, StepFunction, StepRun
 from parfocal_common.lab_model_call import Endpoint, SignIn
 from parfocal_common.link_fetch import LinkPolicy
-from parfocal_common.model_runs import Area, mark_area
+from parfocal_common.model_runs import Area, mark_area, tile_key
 from parfocal_common.result_store import ResultStore
 from parfocal_common.sealed_fields import open_sealed
 from parfocal_common.structured_logging import bind, log_context, register_sensitive
@@ -52,6 +54,23 @@ ADD_REGION = text(
     "SELECT :tenant_id, :result_set_id, 'region', :number, shape, :class_index "
     "FROM (SELECT ST_GeomFromEWKT(:shape) AS shape) AS drawn WHERE ST_IsValid(shape) "
     "RETURNING number"
+)
+REGIONS_BY_CLASS = text(
+    "SELECT class_index, count(*) AS regions FROM result_objects "
+    "WHERE result_set_id = :result_set_id AND kind = 'region' AND class_index IS NOT NULL "
+    "GROUP BY class_index"
+)
+PIN_CLASS = text(
+    "INSERT INTO result_set_classes "
+    "(tenant_id, project_id, result_set_id, position, source_name, class_id, object_count) "
+    "SELECT result_sets.tenant_id, result_sets.project_id, result_sets.id, :position, :name, "
+    "coalesce("
+    "(SELECT class_id FROM class_mappings WHERE class_mappings.project_id = result_sets.project_id "
+    "AND class_mappings.source_name = :key), "
+    "(SELECT id FROM project_classes WHERE project_classes.project_id = result_sets.project_id "
+    "AND lower(project_classes.name) = :key ORDER BY project_classes.key LIMIT 1)), :objects "
+    "FROM result_sets WHERE result_sets.id = :result_set_id "
+    "ON CONFLICT (result_set_id, position) DO UPDATE SET object_count = EXCLUDED.object_count"
 )
 
 
@@ -177,6 +196,35 @@ class LabProgress:
         return await self.step.should_stop()
 
 
+async def cells_by_class(store: ResultStore, prefix: str, tiles: Sequence[Tile]) -> Counter[int]:
+    counted: Counter[int] = Counter()
+    for tile in tiles:
+        cells = await read_chunk(store, tile_key(prefix, tile.index))
+        counted.update(cell.class_index for cell in cells)
+    return counted
+
+
+async def pin_classes(
+    connection: AsyncConnection,
+    result_set_id: uuid.UUID,
+    classes: Sequence[str],
+    cells: Counter[int],
+) -> None:
+    rows = await connection.execute(REGIONS_BY_CLASS, {"result_set_id": result_set_id})
+    objects = cells + Counter({int(row.class_index): int(row.regions) for row in rows})
+    for position, name in enumerate(classes):
+        await connection.execute(
+            PIN_CLASS,
+            {
+                "result_set_id": result_set_id,
+                "position": position,
+                "name": name,
+                "key": name.strip().casefold(),
+                "objects": objects[position],
+            },
+        )
+
+
 async def result_set_of(connection: AsyncConnection, step: StepRun) -> uuid.UUID:
     found = await connection.scalar(RESULT_SET, {"job_id": step.job_id})
     if found is None:
@@ -206,6 +254,9 @@ def lab_model_running(
         plan = plan_tiles(slide.bounds, slide.bounds, core, 0)
         progress = LabProgress(step, plan, detector, result_set_id)
         ran = await run_tiles(plan, plan.tiles, detector, store, slide.prefix, progress)
+        cells = await cells_by_class(store, slide.prefix, plan.tiles)
+        async with step.transaction() as connection:
+            await pin_classes(connection, result_set_id, spec.classes, cells)
         return {
             "tiles": len(plan.tiles),
             "ran": ran,

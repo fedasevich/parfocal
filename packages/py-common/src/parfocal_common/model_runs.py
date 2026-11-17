@@ -20,6 +20,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.sql.elements import ColumnElement
 
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL
 from parfocal_common.db import DatabaseScope, metadata, scoped_transaction, tenant_foreign_key
@@ -31,6 +32,7 @@ from parfocal_common.jobs import (
     Workflow,
     claim,
     enqueue,
+    jobs,
     run_job,
     timestamp,
 )
@@ -47,6 +49,7 @@ STAGES = (
     "result-set-added",
 )
 MODEL_STAGE = "model-running"
+LAB_MODEL_INPUT = "lab_model"
 LEASE_SECONDS = 60.0
 TEST_TIME_VIEWS = (1, 8)
 
@@ -252,8 +255,12 @@ async def enqueue_model_run(
     batch_id: uuid.UUID,
     task_id: uuid.UUID | None = None,
     started_by: uuid.UUID | None = None,
+    lab_model: bool = False,
 ) -> uuid.UUID:
-    job_id = await enqueue(connection, PLAN, tenant_id, project_id, {"slide_id": str(slide_id)})
+    job_input: dict[str, Any] = {"slide_id": str(slide_id)}
+    if lab_model:
+        job_input[LAB_MODEL_INPUT] = True
+    job_id = await enqueue(connection, PLAN, tenant_id, project_id, job_input)
     values = asdict(settings)
     values["scope"] = dict(settings.scope) if settings.scope is not None else None
     await connection.execute(
@@ -285,6 +292,19 @@ def settings_of(row: Any) -> RunSettings:
     )
 
 
+class Detectors(StrEnum):
+    ANY = "any"
+    LAB = "lab"
+    PARFOCAL = "parfocal"
+
+
+def detectors_of(chosen: Detectors) -> ColumnElement[bool] | None:
+    if chosen is Detectors.ANY:
+        return None
+    marked = jobs.c.input.has_key(LAB_MODEL_INPUT)
+    return marked if chosen is Detectors.LAB else ~marked
+
+
 async def claim_model_run(
     engine: AsyncEngine,
     worker: str,
@@ -292,8 +312,16 @@ async def claim_model_run(
     tenant_id: uuid.UUID | None = None,
     *,
     placement: Placement = UNPINNED,
+    detectors: Detectors = Detectors.ANY,
 ) -> ClaimedRun | None:
-    claimed = await claim(engine, worker, {KIND: plan}, tenant_id, placement=placement)
+    claimed = await claim(
+        engine,
+        worker,
+        {KIND: plan},
+        tenant_id,
+        placement=placement,
+        only=detectors_of(detectors),
+    )
     if claimed is None:
         return None
     job, chosen = claimed

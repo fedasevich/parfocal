@@ -641,6 +641,7 @@ async def start_model_runs(
             batch_id=batch_id,
             task_id=draft.task_id,
             started_by=started_by(principal),
+            lab_model=latest_version(parameters.detector.name) is None,
         )
         result_set_id = await insert_result_set(
             connection,

@@ -9,24 +9,25 @@ from db_support import TEST_MASTER_KEYS, ApiAs, api_settings
 from fastapi.testclient import TestClient
 from link_support import Site, serving
 from test_lab_models import INFER, MODELS, TOKEN, draft, lab_run, lowered, square
-from test_model_runs import Lab, make_lab, ok, run_async
+from test_model_runs import Lab, make_lab, ok, run_async, started
 from workspace_support import owner
 
 from parfocal_api.app import create_app
 from parfocal_common.chunk_store import read_chunk
 from parfocal_common.envelope import MasterKeyring
-from parfocal_common.jobs import StepRun
+from parfocal_common.jobs import Workflow
 from parfocal_common.link_fetch import policy_of
 from parfocal_common.model_runs import (
     MODEL_STAGE,
-    STAGES,
+    PLAN,
+    Detectors,
     claim_model_run,
-    run_model_run,
     run_prefix,
     tile_key,
-    workflow,
 )
-from parfocal_ml.lab_model_stage import LabSlide, lab_model_running
+from parfocal_ml.lab_model_worker import drain_lab_runs, lab_run_workflow
+from parfocal_ml.tumor_map_job import SlideImage
+from parfocal_ml.tumor_map_worker import Drain
 from parfocal_ml.whole_slide import Window
 
 pytestmark = pytest.mark.db
@@ -58,9 +59,7 @@ SCANNED = (
 
 
 class FlatReader:
-    mpp = 0.25
-
-    async def read(self, window: Window, width: int, height: int) -> np.ndarray:
+    def read(self, x: int, y: int, width: int, height: int) -> np.ndarray:
         return np.full((height, width, 3), (200, 120, 170), dtype=np.uint8)
 
 
@@ -104,39 +103,34 @@ def queued(linked: ApiAs, lab: Lab, site: Site) -> dict[str, Any]:
     return run
 
 
-def stage_plan(lab: Lab, site: Site, store: MemoryStore) -> Any:
-    async def quick(step: StepRun) -> Mapping[str, Any]:
-        await step.set_total(1)
-        async with step.transaction() as connection:
-            if 0 not in await step.done_units():
-                await step.mark_unit(connection, 0)
-        return {"units": 1}
+class FakeSlides:
+    async def open(self, tenant_id: uuid.UUID, slide_id: uuid.UUID) -> SlideImage:
+        thumbnail = np.zeros((1, 1, 3), dtype=np.uint8)
+        return SlideImage(FlatReader(), thumbnail, 1.0, SLIDE.width, SLIDE.height, 0.25)
 
-    async def slide_of(step: StepRun) -> LabSlide:
-        prefix = run_prefix(lab.tenant, lab.slides[0], step.job_id)
-        return LabSlide(FlatReader(), SLIDE, prefix)
 
+def stage_plan(site: Site, store: MemoryStore) -> Workflow:
     async def no_pause(seconds: float) -> None:
         return None
 
-    running = lab_model_running(
-        slide_of,
-        MasterKeyring.from_setting(TEST_MASTER_KEYS),
-        policy_of([site.origin]),
-        store,
-        pause=no_pause,
-    )
-    return workflow({name: running if name == MODEL_STAGE else quick for name in STAGES})
+    keyring = MasterKeyring.from_setting(TEST_MASTER_KEYS)
+    return lab_run_workflow(FakeSlides(), keyring, policy_of([site.origin]), store, no_pause)
+
+
+def drained(database: str, lab: Lab, site: Site, store: MemoryStore) -> int:
+    async def no_sleep(seconds: float) -> None:
+        return None
+
+    async def go(engine: Any) -> int:
+        plan = stage_plan(site, store)
+        drain = Drain(idle_exit_seconds=1.0, poll_seconds=1.0, tenant_id=lab.tenant)
+        return await drain_lab_runs(engine, plan, "lab-worker", drain, no_sleep)
+
+    return run_async(database, go)
 
 
 def run_stage(database: str, lab: Lab, site: Site, store: MemoryStore) -> None:
-    async def go(engine: Any) -> None:
-        plan = stage_plan(lab, site, store)
-        claimed = await claim_model_run(engine, "lab-worker", plan, lab.tenant)
-        assert claimed is not None
-        await run_model_run(engine, claimed, "lab-worker", machine="test")
-
-    run_async(database, go)
+    assert drained(database, lab, site, store) == 1
 
 
 def stored_text(database: str, lab: Lab) -> str:
@@ -244,3 +238,41 @@ def test_a_saved_model_gone_since_the_start_fails_with_lab_model_changed(
     run_stage(database, lab, site, MemoryStore())
     assert job_of(database, run) == ("failed", "lab-model-changed")
     assert site.requests == []
+
+
+def test_a_lab_drain_claims_only_lab_runs_and_a_parfocal_drain_only_the_others(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    detector = {"detector": {"name": "hovernet", "version": "v0.9"}}
+    parfocal = started(linked, lab, [lab.slides[1]], parameters=detector)[0]
+    run = queued(linked, lab, site)
+
+    async def claimed_by(engine: Any, detectors: Detectors) -> str | None:
+        claimed = await claim_model_run(
+            engine, "probe-worker", PLAN, lab.tenant, detectors=detectors
+        )
+        return None if claimed is None else str(claimed.job.job_id)
+
+    assert (
+        run_async(database, lambda engine: claimed_by(engine, Detectors.PARFOCAL))
+        == (parfocal["id"])
+    )
+    owner(database, f"UPDATE jobs SET status = 'cancelled' WHERE id = '{parfocal['id']}'")
+    assert run_async(database, lambda engine: claimed_by(engine, Detectors.PARFOCAL)) is None
+    assert drained(database, lab, site, MemoryStore()) == 1
+    assert job_of(database, run) == ("done", None)
+
+
+def test_the_stage_pins_the_taxonomy_classes_with_their_counts(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    run = queued(linked, lab, site)
+    run_stage(database, lab, site, MemoryStore())
+    pinned = owner(
+        database,
+        "SELECT result_set_classes.position, result_set_classes.source_name, "
+        "result_set_classes.object_count FROM result_set_classes "
+        "JOIN result_sets ON result_sets.id = result_set_classes.result_set_id "
+        f"WHERE result_sets.job_id = '{run['id']}' ORDER BY result_set_classes.position",
+    )
+    assert pinned == [(0, "Tumor", 4), (1, "Stroma", 0), (2, "Immune", 1), (3, "Other", 0)]
