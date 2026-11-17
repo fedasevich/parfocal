@@ -20,7 +20,6 @@ WEB_FUNCTION = "web-eu"
 WEB_REGION = "eu-west"
 WORKER_REGION = "eu"
 WEB_ROUTING_REGION = "eu-west"
-WEB_CLOUD = "gcp"
 INGEST_FUNCTION = "ingest"
 EVENTS_FUNCTION = "events"
 BACKFILL_FUNCTION = "backfill_thumbnails"
@@ -69,7 +68,6 @@ WEB_OPTIONS: dict[str, Any] = {
     "name": WEB_FUNCTION,
     "region": WEB_REGION,
     "routing_region": WEB_ROUTING_REGION,
-    "cloud": WEB_CLOUD,
     "memory": (512, 2048),
     "min_containers": 0,
     "max_containers": 4,
