@@ -340,3 +340,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0377](0377-the-viewer-typer-runs-in-the-interactive-pool.md) | The viewer typer runs in the interactive pool behind the warm gate | Accepted | 2026-11-17 |
 | [0378](0378-saved-import-sources-keep-credentials-on-the-server.md) | Saved import sources keep their credentials on the server | Accepted | 2026-11-17 |
 | [0379](0379-remote-sources-read-in-place-signed-webhooks-and-at-least-once-events.md) | Remote sources are read in place through a tile cache, webhooks are signed with HMAC and events are delivered at least once | Accepted | 2026-11-17 |
+| [0380](0380-the-lab-model-stage-opens-its-token-with-plain-sql.md) | The lab model stage opens its token with plain SQL and stores regions per tile | Accepted | 2026-11-17 |

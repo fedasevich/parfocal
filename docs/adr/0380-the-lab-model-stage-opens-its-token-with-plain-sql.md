@@ -1,4 +1,4 @@
-# XXXX. The lab model stage opens its token with plain SQL and stores regions per tile
+# 0380. The lab model stage opens its token with plain SQL and stores regions per tile
 
 - Date: 2026-11-17
 - Status: Accepted
