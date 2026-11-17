@@ -1125,7 +1125,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an edge test with a token whose size is smaller than the object shows no closed range read for the three ranges in the review, and a negative size is refused.
   Size: S.
 
-- [ ] SEC-042 · The edge limits and the bot check guard the real API path
+- [x] SEC-042 · The edge limits and the bot check guard the real API path
   The Worker has no `/api` branch and no API origin, so the login and upload limits and the Turnstile check run on paths it answers with the app page, while the API would be reached at its own address with no edge limit ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S1). The limits also fail open when a binding is absent, and the login match is exact. Decide the route with the staging slice: proxy `/api` through the Worker with a secret header that the API requires, fail closed outside local runs, and normalise the path before matching.
   Done when a Worker test shows `/api/health` forwarded to the API origin, the deployed check shows the API address refusing a request that skipped the Worker, and a missing limit binding answers 503 outside local runs.
   Depends on OPS-002.
