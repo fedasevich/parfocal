@@ -1,4 +1,4 @@
-import { getSession, recordActivity, useGetSessionPolicy } from "@parfocal/api-client";
+import { getSession, lockSession, recordActivity, useGetSessionPolicy } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import {
   defaultIdleLockMinutes,
   idleCheckDue,
   isSessionLocked,
+  lockRequestEvent,
   locksAt,
   needsSecondFactor,
 } from "./lock-rules.ts";
@@ -71,11 +72,25 @@ const SecondFactorScreen = lazy(() => import("./second-factor-screen.tsx"));
 export function SessionLock({ children }: { children: ReactNode }) {
   const pathname = useLocation({ select: (location) => location.pathname });
   const guarded = locksAt(pathname);
-  const [locked, setLocked] = useState(false);
+  const [locked, setLocked] = useState<"idle" | "manual" | null>(null);
   const [secondFactor, setSecondFactor] = useState(false);
   const lock = () => {
-    if (guarded) setLocked(true);
+    if (guarded) setLocked((current) => current ?? "idle");
   };
+  const lockNow = () => {
+    if (guarded)
+      void lockSession().then(
+        () => setLocked("manual"),
+        () => undefined,
+      );
+  };
+  const lockOnRequest = useRef(lockNow);
+  lockOnRequest.current = lockNow;
+  useEffect(() => {
+    const onRequest = () => lockOnRequest.current();
+    window.addEventListener(lockRequestEvent, onRequest);
+    return () => window.removeEventListener(lockRequestEvent, onRequest);
+  }, []);
   const askForSecondFactor = () => {
     if (guarded) setSecondFactor(true);
   };
@@ -83,16 +98,16 @@ export function SessionLock({ children }: { children: ReactNode }) {
   const minutes = policy?.idle_lock_minutes ?? defaultIdleLockMinutes;
   useRefusedByApi(isSessionLocked, lock);
   useRefusedByApi(needsSecondFactor, askForSecondFactor);
-  useActivity(guarded && !locked && !secondFactor, minutes, lock);
-  const covered = locked || secondFactor;
+  useActivity(guarded && locked === null && !secondFactor, minutes, lock);
+  const covered = locked !== null || secondFactor;
   return (
     <>
       <div inert={covered} aria-hidden={covered || undefined} className="contents">
         {children}
       </div>
-      {locked ? (
+      {locked !== null ? (
         <Suspense fallback={null}>
-          <LockScreen minutes={minutes} />
+          <LockScreen minutes={minutes} reason={locked} />
         </Suspense>
       ) : secondFactor ? (
         <Suspense fallback={null}>

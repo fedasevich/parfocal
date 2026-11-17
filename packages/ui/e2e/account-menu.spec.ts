@@ -40,7 +40,13 @@ test("theme and initials only apply at once", async ({ page }) => {
   await expect(page.getByTestId("account-name")).toHaveText("Lenka Malá");
 });
 
-for (const item of ["Settings", "Keyboard shortcuts", "Profile and signature", "Log out"]) {
+for (const item of [
+  "Settings",
+  "Keyboard shortcuts",
+  "Profile and signature",
+  "Lock the screen",
+  "Log out",
+]) {
   test(`${item} runs its action and closes the menu`, async ({ page }) => {
     await page.goto(story(open));
     await page.getByRole("menuitem", { name: new RegExp(`^${item}`) }).click();
@@ -64,7 +70,7 @@ test("keyboard users reach every item in order", async ({ page }) => {
   await page.goto(story(open));
   await page.getByRole("menuitem", { name: /Available/ }).focus();
   const reached: string[] = [];
-  for (let step = 0; step < 12; step += 1) {
+  for (let step = 0; step < 14; step += 1) {
     const name = await page.evaluate(() => {
       const active = document.activeElement;
       return (active?.getAttribute("aria-label") ?? active?.textContent ?? "").trim();
@@ -79,6 +85,7 @@ test("keyboard users reach every item in order", async ({ page }) => {
     "Settings",
     "Keyboard shortcuts",
     "Profile and signature",
+    "Lock the screen",
     "Help and what's new",
     "Log out",
   ];
@@ -87,4 +94,24 @@ test("keyboard users reach every item in order", async ({ page }) => {
   expect(order).toEqual([...order].sort((left, right) => left - right));
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toBeHidden();
+});
+
+test("Lock the screen is a live item that asks for the lock", async ({ page }) => {
+  await page.goto(story(open));
+  const item = page.getByRole("menuitem", { name: /^Lock the screen/ });
+  await expect(item).not.toHaveAttribute("aria-disabled", "true");
+});
+
+test("a lock from the menu says you locked the screen", async ({ page }) => {
+  await page.goto(story("components-sign-in-and-admin--locked-by-you"));
+  const card = page.getByRole("region", { name: "Locked" });
+  await expect(card).toContainText("You locked the screen");
+  await expect(card).not.toContainText("minutes without input");
+});
+
+test("an idle lock still says how long it waited", async ({ page }) => {
+  await page.goto(story("components-sign-in-and-admin--locked"));
+  await expect(page.getByRole("region", { name: "Locked" })).toContainText(
+    "Locked after 15 minutes without input",
+  );
 });

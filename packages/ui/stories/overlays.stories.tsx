@@ -375,6 +375,7 @@ function AccountStage({
     entry("gear", "Settings", "⌘,"),
     entry("keyboard", "Keyboard shortcuts", "?"),
     entry("pen", "Profile and signature"),
+    entry("lock", "Lock the screen", "⌃⌘Q"),
     { icon: "help", label: "Help and what's new", disabledReason: "Not written yet" },
   ];
   return (

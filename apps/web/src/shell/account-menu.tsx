@@ -17,6 +17,7 @@ import { now } from "../clock.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { lockRequestEvent } from "../session/lock-rules.ts";
 import { nextAvailability, presenceOf, shownPerson } from "./account-presence.ts";
 import { destinations } from "./destinations.ts";
 import type { PersonaKey } from "./overlays.ts";
@@ -24,6 +25,7 @@ import { useGoTo } from "./router-link.tsx";
 import { shellStore, useShell } from "./shell-store.ts";
 import { readTheme, chooseTheme as storeTheme, type ThemeChoice } from "./theme.ts";
 
+const lockTheScreen = () => window.dispatchEvent(new Event(lockRequestEvent));
 const openHelp = () => window.dispatchEvent(new Event("help"));
 
 export const logOutUrl = "/api/auth/logout";
@@ -43,7 +45,7 @@ function useEntries() {
       icon: "lock",
       label: t`Lock the screen`,
       keys: "⌃⌘Q",
-      disabledReason: t`Locks after a quiet spell for now`,
+      action: "lock",
     },
     { icon: "comment", label: t`Send feedback`, action: "feedback" },
     { icon: "help", label: t`Help and what's new`, action: "help" },
@@ -51,7 +53,7 @@ function useEntries() {
     icon: IconName;
     label: string;
     href?: string;
-    action?: "feedback" | "help";
+    action?: "feedback" | "help" | "lock";
     keys?: string;
     disabledReason?: string;
   }[];
@@ -130,6 +132,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
         ...(href ? { onSelect: () => void goTo(href) } : {}),
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),
         ...(action === "help" ? { onSelect: openHelp } : {}),
+        ...(action === "lock" ? { onSelect: lockTheScreen } : {}),
       }))}
       extra={
         import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" ? (

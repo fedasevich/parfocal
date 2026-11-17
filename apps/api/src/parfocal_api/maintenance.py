@@ -25,6 +25,7 @@ MAINTENANCE_PATH = "/api/platform/maintenance"
 OPEN_DURING_MAINTENANCE = (
     "/api/auth/sign-in",
     "/api/auth/activity",
+    "/api/auth/lock",
     "/api/auth/sessions",
     MAINTENANCE_PATH,
 )

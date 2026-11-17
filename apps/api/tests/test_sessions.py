@@ -71,6 +71,21 @@ def test_activity_keeps_the_session_open(browser: Browser) -> None:
     assert session_code(browser)[0] == 200
 
 
+def test_a_person_locks_their_own_session_at_once(browser: Browser) -> None:
+    browser.login()
+    assert session_code(browser)[0] == 200
+    assert browser.client.post("/api/auth/lock").status_code == 204
+    assert session_code(browser) == (401, "session-locked")
+    assert browser.client.post("/api/auth/lock").status_code == 401
+
+
+def test_locking_one_device_leaves_the_other_open(browser: Browser, second_device: Browser) -> None:
+    browser.login()
+    second_device.login()
+    assert browser.client.post("/api/auth/lock").status_code == 204
+    assert session_code(second_device)[0] == 200
+
+
 def test_background_calls_do_not_count_as_activity(browser: Browser) -> None:
     browser.login()
     shift(browser, "active_at", 10)

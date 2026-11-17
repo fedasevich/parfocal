@@ -19,6 +19,8 @@ export function needsSecondFactor(error: unknown): boolean {
   );
 }
 
+export const lockRequestEvent = "lock-screen";
+
 export const secondFactorSetupUrl = "/api/auth/second-factor";
 
 export function createActivityThrottle(intervalMs = activityIntervalMs) {
