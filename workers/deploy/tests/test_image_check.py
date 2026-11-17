@@ -2,6 +2,7 @@ import re
 import subprocess
 from pathlib import Path
 
+import modal
 import pytest
 
 from parfocal_deploy import image_check, modal_app
@@ -12,8 +13,10 @@ from parfocal_deploy.image_check import (
     ML_IMAGE,
     PYTHON_VERSION,
     REPOSITORY,
+    ImageCheck,
     Step,
     import_script,
+    locked_version,
     main,
     steps,
 )
@@ -39,9 +42,20 @@ def test_the_check_installs_the_same_locks_with_the_same_options_as_modal() -> N
     assert PYTHON_VERSION == modal_app.PYTHON_VERSION == modal_pool.PYTHON_VERSION
 
 
+def packages_on_the_path(image: ImageCheck) -> set[str]:
+    return {
+        package.name
+        for source in image.sources
+        for package in (REPOSITORY / source).iterdir()
+        if (package / "__init__.py").is_file()
+    }
+
+
 def test_the_check_puts_every_deployed_source_on_the_path() -> None:
-    app_sources = {str(Path(source).parent) for source in APP_IMAGE.sources}
-    assert app_sources == set(modal_app.PROJECTS)
+    assert packages_on_the_path(APP_IMAGE) == set(modal_app.SOURCES)
+    assert packages_on_the_path(ML_IMAGE) == {"parfocal_common", "parfocal_ml"}
+    assert "parfocal_common.warm_gate" in APP_IMAGE.entrypoints
+    assert "parfocal_deploy.modal_app" in APP_IMAGE.entrypoints
     for image in IMAGES.values():
         for source in image.sources:
             assert (REPOSITORY / source).is_dir()
@@ -72,6 +86,22 @@ def test_the_steps_create_install_and_import_in_order(tmp_path: Path) -> None:
     assert load.pythonpath.split(":") == [str(tmp_path / source) for source in ML_IMAGE.sources]
 
 
+def test_the_app_check_adds_the_modal_client_that_modal_mounts(tmp_path: Path) -> None:
+    create, install, client, load = steps(APP_IMAGE, tmp_path / "venv")
+    assert install.argv[-1] == str(REPOSITORY / APP_IMAGE.lock)
+    assert client.argv[-1] == f"modal=={locked_version('modal')}"
+    assert client.argv[-1] == f"modal=={modal.__version__}"
+    assert create.argv[:2] == ("uv", "venv")
+    assert load.pythonpath is not None
+
+
+def test_a_package_missing_from_uv_lock_is_reported(tmp_path: Path) -> None:
+    (tmp_path / "uv.lock").write_text('[[package]]\nname = "numpy"\nversion = "2.5.4"\n')
+    assert locked_version("numpy", tmp_path) == "2.5.4"
+    with pytest.raises(LookupError):
+        locked_version("modal", tmp_path)
+
+
 def test_the_import_script_imports_each_module() -> None:
     script = import_script(("json", "this_module_does_not_exist"))
     with pytest.raises(ModuleNotFoundError):
@@ -98,7 +128,7 @@ def test_an_unknown_image_name_is_refused(capsys: pytest.CaptureFixture[str]) ->
     assert "unknown image gpu" in capsys.readouterr().err
 
 
-def test_ci_runs_each_image_on_the_base_modal_builds_it_from() -> None:
+def test_ci_runs_each_image_on_the_pinned_cuda_and_api_python_bases() -> None:
     job = modal_images_job()
     python_base = re.search(r"^FROM (python:\S+) AS runtime$", API_DOCKERFILE.read_text(), re.M)
     assert python_base is not None

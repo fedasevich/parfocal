@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import tomllib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ from parfocal_common.repository import repository_root
 REPOSITORY = repository_root(__file__)
 PYTHON_VERSION = "3.14"
 INSTALL_OPTIONS = ("--require-hashes", "--no-deps")
+MODAL_CLIENT = "modal"
 
 
 @dataclass(frozen=True)
@@ -19,13 +21,20 @@ class ImageCheck:
     lock: str
     sources: tuple[str, ...]
     entrypoints: tuple[str, ...]
+    mounts_modal_client: bool = False
 
 
 APP_IMAGE = ImageCheck(
     "app",
     "workers/deploy/locks/app.txt",
-    ("packages/py-common/src", "apps/api/src", "workers/ingest/src"),
-    ("parfocal_api.app", "parfocal_ingest.__main__"),
+    ("packages/py-common/src", "apps/api/src", "workers/ingest/src", "workers/deploy/src"),
+    (
+        "parfocal_deploy.modal_app",
+        "parfocal_api.app",
+        "parfocal_ingest.__main__",
+        "parfocal_common.warm_gate",
+    ),
+    mounts_modal_client=True,
 )
 ML_IMAGE = ImageCheck(
     "ml",
@@ -42,6 +51,14 @@ class Step:
     pythonpath: str | None = None
 
 
+def locked_version(package: str, repository: Path = REPOSITORY) -> str:
+    lock = tomllib.loads((repository / "uv.lock").read_text())
+    for entry in lock["package"]:
+        if entry["name"] == package:
+            return entry["version"]
+    raise LookupError(f"uv.lock has no {package}")
+
+
 def import_script(modules: Sequence[str]) -> str:
     listed = ", ".join(repr(module) for module in modules)
     return f"import importlib\nfor module in ({listed},):\n    importlib.import_module(module)\n"
@@ -49,20 +66,16 @@ def import_script(modules: Sequence[str]) -> str:
 
 def steps(image: ImageCheck, environment: Path, repository: Path = REPOSITORY) -> list[Step]:
     python = str(environment / "bin" / "python")
+    install = ("uv", "pip", "install", "--python", python)
+    client = (
+        [Step((*install, f"{MODAL_CLIENT}=={locked_version(MODAL_CLIENT, repository)}"))]
+        if image.mounts_modal_client
+        else []
+    )
     return [
         Step(("uv", "venv", "--python", PYTHON_VERSION, str(environment))),
-        Step(
-            (
-                "uv",
-                "pip",
-                "install",
-                "--python",
-                python,
-                *INSTALL_OPTIONS,
-                "-r",
-                str(repository / image.lock),
-            )
-        ),
+        Step((*install, *INSTALL_OPTIONS, "-r", str(repository / image.lock))),
+        *client,
         Step(
             (python, "-P", "-c", import_script(image.entrypoints)),
             os.pathsep.join(str(repository / source) for source in image.sources),
