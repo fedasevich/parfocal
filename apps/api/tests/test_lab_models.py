@@ -387,7 +387,7 @@ def lab_actions(database: str, lab: Lab) -> list[tuple[str, dict[str, Any]]]:
         "SELECT action, details::text FROM audit_events "
         f"WHERE tenant_id = '{lab.tenant}' AND action LIKE 'lab-model.%' ORDER BY seq",
     )
-    return [(action, json.loads(details)) for action, details in rows]
+    return [(str(action), json.loads(str(details))) for action, details in rows]
 
 
 def test_a_clinical_project_without_a_tile_confirmation_refuses_the_lab_model(
