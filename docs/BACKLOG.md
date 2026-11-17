@@ -1033,7 +1033,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on AIP-006, INGEST-003.
   Size: L.
 
-- [ ] SEC-045 · Isolate the remaining parse steps and run them in a Modal sandbox
+- [x] SEC-045 · Isolate the remaining parse steps and run them in a Modal sandbox
   SEC-026 isolates identify, scan and validate in a child process with an audit hook, which native reader code can bypass. The index and derive steps, result-file parsing and patch export still read files inside the worker, and the parser runs as the worker's user. Move those steps into the same child, run the child as its own user, and run parses in a network-blocked Modal sandbox with the file passed in and the app-level secrets moved off.
   Done when tests show index, derive, result parsing and patch export run in the child with the same limits, a local test shows the parse user cannot read the worker's environment, and the ADR's sandbox TODOs are answered. Deploying the sandbox is an additive production write under ADR 0151 (standing approval within $30 a month).
   Depends on SEC-026.
@@ -1056,6 +1056,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a test replays a recorded busy session's request rate without a 429, a flood test still gets 429, and the chosen limit and its measured basis are in a result file.
   Depends on TEST-019.
   Size: S.
+
+- [ ] SEC-051 · Carry a slide into the parse sandbox once per job
+  SEC-045 (isolate the remaining parse steps) starts one Modal sandbox per parse step and copies the fetched file into each. On the 1.1 GB `test_001.tif` the five copies took 81 and 90 percent of the sandboxed parse time in two runs, 63 of 77 s and 138 of 154 s, against 15 s for the same five steps as a local child ([result](results/2026-11-18-parse-sandbox-real-slide.md)). Carry the file once per job, either with one sandbox kept for the job's parse steps or with one per-job `modal.Volume` mounted read-only into each sandbox, and keep the network block, the memory cap and the per-step deadline.
+  Done when the slide probe shows the file carried once for the five steps on a real 1 GB slide, the isolation tests still pass, and ADR 0325 (isolated parsing of uploaded files) names the chosen way.
+  Depends on SEC-045.
+  Size: M.
 
 - [x] SEC-027 · Edge limits per IP
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
@@ -3911,7 +3917,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
   Size: S.
 
-- [ ] AINUC-015 · Score newer nucleus models on the Mac
+- [x] AINUC-015 · Score newer nucleus models on the Mac
   Decision 123 (newer nucleus models) allows downloading InstanSeg and the PathoSAM ViT-L decoder to score them against the kept PathoSAM AIS and HoVer-Net line-up. Check each file size and the peak memory of one inference before any full run, and keep a run under about 8 GB of RAM on the 24 GB Mac, one ML run at a time. The aim is the best model the thesis can run, not the fastest.
   Done when a result file scores both candidates and the kept line-up on TNBC and NuInsSeg with the same metrics as AINUC-000 (nuclei detector and typer research check), with CryoNuSeg added once MLEVAL-010 (loaders for datasets behind a sign-in) has its archive, and records each model's file size and peak RAM.
   Depends on AINUC-000.
@@ -5733,7 +5739,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on REMOTE-000. Refs mock: upload/events.
   Size: M.
 
-- [ ] REMOTE-005 · The event delivery sweep runs in production
+- [x] REMOTE-005 · The event delivery sweep runs in production
   REMOTE-003 (events out) writes project events to an outbox, but nothing in production runs `python -m parfocal_api.event_delivery`, so events stay pending. Run the sweep on a Modal schedule that scales to zero between runs, and record events that happen while a target is paused so they can be replayed.
   Done when a deployed schedule delivers a test event to a fake receiver set up for the check, a paused target's events are kept and replayable, and the schedule's cost is in `knowledge/platform.md`.
   Depends on REMOTE-003. Size: S.
