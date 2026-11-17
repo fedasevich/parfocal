@@ -1,0 +1,84 @@
+name: sam-parity
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - packages/viewer-engine/src/sam/**
+      - packages/viewer-engine/sam-bench/sam-parity*
+      - packages/viewer-engine/sam-bench/parity-files.*
+      - packages/viewer-engine/sam-bench/fetch-parity.ts
+      - packages/viewer-engine/sam-bench/page/sam-parity*
+      - packages/viewer-engine/sam-bench/page/parity-measures.ts
+      - packages/viewer-engine/sam-bench/global-setup.ts
+      - packages/viewer-engine/playwright.sam.config.ts
+      - packages/test-fixtures/src/**
+      - pnpm-lock.yaml
+      - .github/workflows/sam-parity.yml
+  push:
+    branches: [main]
+    paths:
+      - packages/viewer-engine/src/sam/**
+      - packages/viewer-engine/sam-bench/sam-parity*
+      - packages/viewer-engine/sam-bench/parity-files.*
+      - packages/viewer-engine/sam-bench/fetch-parity.ts
+      - packages/viewer-engine/sam-bench/page/sam-parity*
+      - packages/viewer-engine/sam-bench/page/parity-measures.ts
+      - packages/viewer-engine/sam-bench/global-setup.ts
+      - packages/viewer-engine/playwright.sam.config.ts
+      - packages/test-fixtures/src/**
+      - pnpm-lock.yaml
+      - .github/workflows/sam-parity.yml
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sam-parity-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  wasm:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: sam-parity
+      - name: Fetch the WebAssembly graphs and the PyTorch fixture from R2
+        run: pnpm --filter @parfocal/viewer-engine parity:fetch wasm
+        env:
+          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.r2.cloudflarestorage.com
+          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID }}
+          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY }}
+      - run: google-chrome --version
+      - run: nproc
+      - name: ONNX on WebAssembly against PyTorch on the fixed TNBC patches
+        run: pnpm --filter @parfocal/viewer-engine parity:sam -g "on wasm" --timeout 3000000
+        env:
+          PARFOCAL_REQUIRE_SAM_PARITY: "1"
+      - if: always()
+        name: Parity summary
+        run: >-
+          node -e "const fs=require('fs');const f='packages/viewer-engine/test-results/sam-parity/wasm.json';
+          if(!fs.existsSync(f))process.exit(0);const r=JSON.parse(fs.readFileSync(f));
+          const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+          console.log('| graph | mean IoU from PyTorch embeddings | mean IoU from browser embeddings |');
+          console.log('| --- | --- | --- |');
+          console.log('| '+r.encoder+' then decoder, '+r.clickIous.length+' clicks | | '+mean(r.clickIous).toFixed(4)+' |');
+          for(const e of r.ais)console.log('| '+e.graph+' | '+mean(e.fromTorchEmbeddings.foregroundIous).toFixed(4)+' | '+mean(e.fromBrowserEmbeddings.foregroundIous).toFixed(4)+' |');"
+          >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sam-parity-wasm
+          path: packages/viewer-engine/test-results/sam-parity
+          retention-days: 30
+          if-no-files-found: ignore

@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-18
+
+- MLEVAL-007 (browser parity tests) now has a CI job, decision 107 option A. Production touch 2026-11-18 under ADR 0151 (standing approval within $30 a month), additive only: the six PathoSAM browser graphs and the 25 PyTorch fixture files (394,073,414 bytes) were uploaded once with the dev write key to parfocal-dev/fixtures/sam-parity/onnx/ and dataset/ with If-None-Match, all 31 returned 200, nothing overwritten. Storage cost about $0.006 a month, 31 write operations inside the free tier. The read-only key parfocal-fixtures-read of decision 132 already existed, so no token was created. Its two halves were added as the GitHub repository secrets PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID and PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY (new, additive). The key reads the whole parfocal-dev bucket, not only that prefix. Graph SHA-256 matched the fixture manifest of 2026-11-15, so PyTorch was not rerun. parity-files.json pins every file, parity:fetch downloads them through the SigV4 presigner, and read back that way into empty folders the WebAssembly test passed on the Mac in 4.0 minutes with click mean IoU 0.9822 and AIS foreground IoU 0.9861, the same as before. The new sam-parity workflow runs only the WebAssembly test with PARFOCAL_REQUIRE_SAM_PARITY=1 on pull requests touching the SAM code, on main and weekly. A new workflow cannot be dispatched before it is on main, so its first runner run and numbers are TODO, and the task stays in review until that run is green.
+
 ## 2026-11-17
 
 - VIEW-076 Browser spec stage-cells-grid-pick.spec.ts added. The cells grid exists only inside a task (it lists the task's cell review objects), so the spec opens task rt14 on the cells slide, checks all 3 tiles draw from GET /api/slides/:id/cell-crops/:number with 200, then clicks C1, C2 and C3 and checks each selects (data-current, type bar) and settles on a distinct camera centre. No app fix needed. Deployed colour and GPU check still open, left in review.
