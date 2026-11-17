@@ -11,9 +11,9 @@ import {
 import { CellHud, DistanceCue, RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useState } from "react";
 import { regionShapes } from "../review/slide-geometry.ts";
+import { useOverviewImage } from "../review/slide-picture.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import type { SceneOf } from "../scenes.ts";
-import { lookUrl } from "../thumbnails.ts";
 import { cueStyle } from "./edge-cues.ts";
 import { placeMinimap } from "./minimap-placement.ts";
 import { avoidRuler, mapBoxOf, navigatorLookOf, navigatorSpots } from "./minimap-scenes.ts";
@@ -28,8 +28,6 @@ import {
 import { HeldCorner } from "./use-held-corner.tsx";
 
 export type NavigatorScene = SceneOf<"navigator">;
-
-const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
 const lookOf = navigatorLookOf;
 
@@ -55,6 +53,7 @@ export function NavigatorCanvas({
   onPopOut,
 }: NavigatorCanvasProps) {
   const { t } = useLingui();
+  const overviewImage = useOverviewImage();
   const [camera, setCamera] = useState<Camera | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const setup = lookOf(scene);

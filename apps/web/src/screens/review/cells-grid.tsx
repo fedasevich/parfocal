@@ -3,10 +3,10 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { CellsPanel } from "@parfocal/ui/components/cells-panel";
 import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
 import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
-import { lookUrl } from "../thumbnails.ts";
 import { reviewTyper } from "./ai-wording.ts";
 import type { Answer } from "./review-state.ts";
 import { cellShapes, hpfSize } from "./slide-geometry.ts";
+import { useSlidePicture } from "./slide-picture.tsx";
 
 const tile = 40;
 const zoom = 1.4;
@@ -77,6 +77,7 @@ export function CellsGrid({
   className,
 }: CellsGridProps) {
   const { t } = useLingui();
+  const picture = useSlidePicture();
   const open = cells.filter((cell) => !answer(cell.object));
   return (
     <CellsPanel
@@ -102,7 +103,7 @@ export function CellsGrid({
           <GalleryTile
             key={cell.object}
             size={40}
-            image={lookUrl("hpf")}
+            image={picture}
             objectId={cell.object}
             label={t`${cell.class_name.toLowerCase()} cell`}
             state={cell.object === current ? "current" : value ? "done" : "to-check"}

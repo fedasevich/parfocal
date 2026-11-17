@@ -8,7 +8,6 @@ import { fieldMapColor, fieldMapStops } from "../../viewer/viewer-engine.ts";
 import type { Confidence } from "../review/decision-style.ts";
 import { overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import { type Camera, type RegionStyle, type SlideTag, shapeKey } from "../review/slide-still.tsx";
-import { lookUrl } from "../thumbnails.ts";
 import { SwipeDivider } from "./swipe-divider.tsx";
 import { swipeStart } from "./swipe-split.ts";
 import type { LayerView } from "./viewer-scenes.ts";
@@ -73,11 +72,11 @@ const sureText = (score: number, confidence: Confidence) =>
   confidence === "number" ? ` ${Math.round(score * 100)}%` : "";
 
 const heatImage = (opacity: number) => (
-  <image
-    href={lookUrl("heat")}
+  <rect
     width={overviewSize.width}
     height={overviewSize.height}
-    opacity={opacity}
+    fill="var(--c-tumor)"
+    opacity={opacity * 0.15}
   />
 );
 

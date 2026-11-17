@@ -12,10 +12,10 @@ import {
 import type { StillLink } from "../../viewer/still-engine.tsx";
 import { type StillFrame, type StillShape, stillShapeOf } from "../../viewer/still-frame.ts";
 import type { SlideOutlines } from "../../viewer/use-still-objects.ts";
-import { type Look, lookUrl } from "../thumbnails.ts";
 import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
 import type { Count } from "./decision-style.ts";
 import { cellShapes, hpfSize, midSize, overviewSize, regionShapes } from "./slide-geometry.ts";
+import { useSlidePicture } from "./slide-picture.tsx";
 
 export { midSize };
 
@@ -51,7 +51,7 @@ export const readoutPerScale = { overview: 1 / 1.52, mid: 10, hpf: 25 } as const
 
 export const imageOf = (view: StillView) => (view.kind === "cell" ? "hpf" : "overview");
 
-export type StillLook = Exclude<Look, "heat">;
+export type StillLook = "overview" | "mid" | "hpf";
 
 const lookSizes: Record<StillLook, Size> = { overview: overviewSize, mid: midSize, hpf: hpfSize };
 
@@ -239,6 +239,7 @@ export function SlideStill({
   }, [camera, shown, onCameraChange]);
   const drag = useRef<{ x: number; y: number; from: Camera } | null>(null);
   const image = look ?? imageOf(view);
+  const picture = useSlidePicture();
   const full = lookSizes[image];
   const viewBox = `${shown.x - size.width / 2 / shown.scale} ${shown.y - size.height / 2 / shown.scale} ${size.width / shown.scale} ${size.height / shown.scale}`;
   const moved =
@@ -343,9 +344,9 @@ export function SlideStill({
         data-rotation={rotation}
         style={rotation === 0 ? undefined : { transform: `rotate(${rotation}deg)` }}
       >
-        {tiles === "unloaded" || viaEngine ? null : (
+        {tiles === "unloaded" || viaEngine || image !== "overview" ? null : (
           <image
-            href={lookUrl(image)}
+            href={picture}
             width={full.width}
             height={full.height}
             style={tiles === "loading" ? { filter: "blur(1.6px)" } : undefined}
@@ -541,6 +542,7 @@ function Minimap({
   slideName: string;
   shapes: Shapes;
 }) {
+  const picture = useSlidePicture();
   const width = 136;
   const k = width / overviewSize.width;
   const height = overviewSize.height * k;
@@ -566,7 +568,7 @@ function Minimap({
     <div className="absolute top-4 right-4 grid gap-1 rounded-zone border border-line bg-chrome p-1.5 shadow-pop">
       <div
         className="relative overflow-hidden rounded-md bg-white bg-cover"
-        style={{ width, height, backgroundImage: `url(${lookUrl("overview")})` }}
+        style={{ width, height, backgroundImage: `url(${picture})` }}
       >
         <span
           aria-hidden="true"

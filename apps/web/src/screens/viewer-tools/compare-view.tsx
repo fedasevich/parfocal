@@ -45,7 +45,7 @@ import { okData } from "../placeholder.tsx";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   assignSlides,
   type CompareLayout,
@@ -81,8 +81,6 @@ import { midEdge } from "./tool-geometry.ts";
 import { coverHome } from "./tool-maths.ts";
 import type { ToolSession } from "./tool-session.tsx";
 
-const stainFilter = "grayscale(1) sepia(.85) hue-rotate(-12deg) saturate(1.5) brightness(1.02)";
-
 type CompareSlide = PaneSlide & { id: string; ihc: boolean; flip: boolean; note: string };
 
 function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): CompareSlide {
@@ -96,8 +94,7 @@ function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): 
     flip,
     simulated: ihc,
     thumb: {
-      backgroundImage: `url(${lookUrl("overview")})`,
-      ...(ihc ? { filter: stainFilter } : {}),
+      backgroundImage: `url(${slideThumbUrl(slide.id)})`,
       ...(flip ? { transform: "scaleX(-1)" } : {}),
     },
     note:
@@ -195,8 +192,14 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const lineUp = async () => {
     setAlignment("working");
     try {
-      const url = lookUrl("mid");
-      const [from, to] = await Promise.all([grayPixelsOf(url), grayPixelsOf(url)]);
+      if (ids.left === undefined || ids.right === undefined) {
+        setAlignment("none");
+        return;
+      }
+      const [from, to] = await Promise.all([
+        grayPixelsOf(slideThumbUrl(ids.left)),
+        grayPixelsOf(slideThumbUrl(ids.right)),
+      ]);
       const found = registerThumbnails(from, to);
       if (found === null) {
         setAlignment("none");
@@ -327,10 +330,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const slide = slideOn(side);
     if (slide === undefined) return null;
     const outline = layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
-    const wrapper: CSSProperties = {
-      ...(slide.ihc ? { filter: stainFilter } : {}),
-      ...(slide.flip ? { transform: "scaleX(-1)" } : {}),
-    };
+    const wrapper: CSSProperties = slide.flip ? { transform: "scaleX(-1)" } : {};
     return (
       <section
         data-pane={side}

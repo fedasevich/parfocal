@@ -6,6 +6,7 @@ import { useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
 import { GuidedGate } from "../screens/review/guided-gate.tsx";
 import { GuidedReview } from "../screens/review/guided-review.tsx";
+import { SlidePicture } from "../screens/review/slide-picture.tsx";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { guidedSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
@@ -23,22 +24,24 @@ function GuidedRoute() {
   const navigate = Route.useNavigate();
   if (search.scene === undefined) return <GuidedOnStage />;
   return (
-    <GuidedReview
-      taskId={taskId}
-      slideId={search.slide ?? ""}
-      objectId={search.object}
-      camera={
-        search.x !== undefined && search.y !== undefined && search.z !== undefined
-          ? { x: search.x, y: search.y, scale: search.z }
-          : undefined
-      }
-      scene={search.scene}
-      submitted={search.submitted ?? false}
-      tab={search.tab}
-      onTabChange={(tab) =>
-        void navigate({ search: (previous) => ({ ...previous, tab }), replace: true })
-      }
-    />
+    <SlidePicture slideId={search.slide ?? ""}>
+      <GuidedReview
+        taskId={taskId}
+        slideId={search.slide ?? ""}
+        objectId={search.object}
+        camera={
+          search.x !== undefined && search.y !== undefined && search.z !== undefined
+            ? { x: search.x, y: search.y, scale: search.z }
+            : undefined
+        }
+        scene={search.scene}
+        submitted={search.submitted ?? false}
+        tab={search.tab}
+        onTabChange={(tab) =>
+          void navigate({ search: (previous) => ({ ...previous, tab }), replace: true })
+        }
+      />
+    </SlidePicture>
   );
 }
 

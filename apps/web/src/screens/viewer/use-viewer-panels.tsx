@@ -24,7 +24,7 @@ import { ReviewTop } from "../review/review-top.tsx";
 import { ThreadsTab } from "../review/threads-tab.tsx";
 import { overviewTissue } from "../review/tissue-mask.ts";
 import { AiSays, ObjectList, ObjectsSummary } from "../review/viewer-frame.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { CalibrationBlock, TrackRecordBlock } from "./ai-record-blocks.tsx";
 import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import {
@@ -195,7 +195,7 @@ export function useViewerPanels(
         {findingsLayout === "cell-findings" ? (
           <FindingsPanel
             layout="cell-findings"
-            image={lookUrl("hpf")}
+            image={slideThumbUrl(session.slideId)}
             slide={{
               label: t`Cells on ${slideLabel}`,
               classes: numberLineOf(cells, decidedObject, classColor, (cell) =>
