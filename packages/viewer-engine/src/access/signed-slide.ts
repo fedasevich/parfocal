@@ -6,6 +6,7 @@ import type {
   SlideIndex,
   SlideIndexLevel,
   SlideStitching,
+  TagValueRange,
 } from "../pixel-source/types.ts";
 import { slideFormatIds, UnsupportedFormatError } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
@@ -66,6 +67,8 @@ export interface LevelDirectory {
   readonly page: number;
   readonly subIfd: number | null;
   readonly ifdOffset: number;
+  readonly ifdBytes?: number;
+  readonly valueRanges?: readonly TagValueRange[];
 }
 
 export interface LocatedDirectory extends LevelDirectory {
@@ -80,9 +83,15 @@ export interface LevelTableLevel {
   readonly directory?: LocatedDirectory;
 }
 
+export interface TiffHeaderFacts {
+  readonly littleEndian: boolean;
+  readonly bigTiff: boolean;
+}
+
 export interface LevelTable {
   readonly levels: readonly LevelTableLevel[];
   readonly micronsPerPixel: MicronsPerPixel | null;
+  readonly header: TiffHeaderFacts | null;
 }
 
 function record(value: unknown, what: string): Record<string, unknown> {
@@ -107,13 +116,34 @@ function wholeNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0;
 }
 
+function valueRangesOf(value: unknown): TagValueRange[] | null {
+  if (!Array.isArray(value)) return null;
+  const ranges = value.filter(
+    (range: unknown): range is TagValueRange =>
+      Array.isArray(range) &&
+      range.length === 3 &&
+      range.every(wholeNumber) &&
+      Number(range[2]) > 0,
+  );
+  return ranges.length === value.length ? ranges : null;
+}
+
 function directoryOf(value: unknown): LevelDirectory | null {
   if (typeof value !== "object" || value === null) return null;
   const entry = value as Record<string, unknown>;
-  const { page, subIfd, ifdOffset } = entry;
+  const { page, subIfd, ifdOffset, ifdBytes } = entry;
   if (!wholeNumber(page) || !wholeNumber(ifdOffset) || ifdOffset === 0) return null;
   if (subIfd !== null && subIfd !== undefined && !wholeNumber(subIfd)) return null;
-  return { page, subIfd: subIfd ?? null, ifdOffset };
+  const located = { page, subIfd: subIfd ?? null, ifdOffset };
+  const valueRanges = valueRangesOf(entry["valueRanges"]);
+  if (!wholeNumber(ifdBytes) || ifdBytes === 0 || valueRanges === null) return located;
+  return { ...located, ifdBytes, valueRanges };
+}
+
+function headerOf(table: Record<string, unknown>): TiffHeaderFacts | null {
+  const { littleEndian, bigTiff } = table;
+  if (typeof littleEndian !== "boolean" || typeof bigTiff !== "boolean") return null;
+  return { littleEndian, bigTiff };
 }
 
 function locatedLevel(level: Record<string, unknown>): LocatedDirectory | null {
@@ -155,7 +185,11 @@ export function parseLevelTable(document: unknown): LevelTable {
   const scale = table["scale"] === undefined ? {} : record(table["scale"], "scale");
   const x = optionalMicrons(scale["mpp_x"]);
   const y = optionalMicrons(scale["mpp_y"]);
-  return { levels, micronsPerPixel: x === null || y === null ? null : { x, y } };
+  return {
+    levels,
+    micronsPerPixel: x === null || y === null ? null : { x, y },
+    header: headerOf(table),
+  };
 }
 
 export function slideIndexFromLevelTable(table: LevelTable, formatId: SlideFormatId): SlideIndex {
@@ -170,6 +204,7 @@ export function slideIndexFromLevelTable(table: LevelTable, formatId: SlideForma
     formatId,
     levels,
     ...(table.micronsPerPixel === null ? {} : { micronsPerPixel: table.micronsPerPixel }),
+    ...(table.header ?? {}),
   };
 }
 

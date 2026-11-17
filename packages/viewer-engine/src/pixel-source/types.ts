@@ -137,11 +137,15 @@ export interface SlideIndexPage {
   readonly page: number;
   readonly subIfd?: number | null;
   readonly ifdOffset?: number;
+  readonly ifdBytes?: number;
+  readonly valueRanges?: readonly TagValueRange[];
   readonly tileOffsetGaps?: readonly number[];
   readonly tileByteCounts?: readonly number[];
 }
 
 export type TileRun = readonly [start: number, length: number];
+
+export type TagValueRange = readonly [tag: number, offset: number, length: number];
 
 export interface SlideIndexLevel extends Omit<SlideIndexPage, "page"> {
   readonly page?: number;

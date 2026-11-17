@@ -32,6 +32,15 @@ SLIDE = "synthetic-channels-uint8.ome.tiff"
 TENANT = uuid.uuid4()
 
 
+def without_open_facts(table: bytes) -> bytes:
+    document = json.loads(table)
+    del document["littleEndian"], document["bigTiff"]
+    for level in document["levels"]:
+        for entry in [level, *level["siblings"]]:
+            del entry["valueRanges"]
+    return json.dumps(document).encode()
+
+
 def derived() -> tuple[bytes, bytes, bytes]:
     path = SYNTHETIC_FOLDER / SLIDE
     identified = identify_file(path, SLIDE)
@@ -43,7 +52,7 @@ def derived() -> tuple[bytes, bytes, bytes]:
     return level_table(found), packed, level_table(found, path, tiles)
 
 
-async def run() -> tuple[list[str], dict, dict, bytes]:
+async def run() -> tuple[list[str], dict, dict, dict, bytes]:
     plain, packed, expected = derived()
     async with httpx2.AsyncClient(timeout=60) as http:
         store = ObjectStore(STORAGE, http)
@@ -53,29 +62,38 @@ async def run() -> tuple[list[str], dict, dict, bytes]:
         uploaded = StoredSlide("t/a/s/1/", f"t/a/s/1/{SLIDE}")
         remote = StoredSlide("t/a/s/2/", None)
         bare = StoredSlide("t/a/s/3/", f"t/a/s/3/{SLIDE}")
+        earlier = StoredSlide("t/a/s/4/", f"t/a/s/4/{SLIDE}")
         for slide in (uploaded, remote, bare):
             await store.put_object(f"{slide.folder}levels.json", plain, "application/json")
-        for slide in (uploaded, remote):
+        await store.put_object(
+            f"{earlier.folder}levels.json", without_open_facts(expected), "application/json"
+        )
+        for slide in (uploaded, remote, earlier):
             await store.put_object(
                 f"{slide.folder}tile-index.json",
                 packed,
                 "application/json",
                 content_encoding="gzip",
             )
-        await store.put_object(
-            uploaded.original_key or "", (SYNTHETIC_FOLDER / SLIDE).read_bytes(), "image/tiff"
-        )
-        states = [await locate_levels(store, slide) for slide in (uploaded, uploaded, remote, bare)]
+        for slide in (uploaded, earlier):
+            await store.put_object(
+                slide.original_key or "", (SYNTHETIC_FOLDER / SLIDE).read_bytes(), "image/tiff"
+            )
+        order = (uploaded, uploaded, remote, bare, earlier, earlier)
+        states = [await locate_levels(store, slide) for slide in order]
         written = json.loads(await store.get_object(f"{uploaded.folder}levels.json"))
         remote_table = json.loads(await store.get_object(f"{remote.folder}levels.json"))
-        return states, written, remote_table, expected
+        rewritten = json.loads(await store.get_object(f"{earlier.folder}levels.json"))
+        return states, written, remote_table, rewritten, expected
 
 
 @pytest.mark.db
 def test_a_stored_table_gains_what_ingest_writes_and_keeps_it() -> None:
-    states, written, remote_table, expected = asyncio.run(run())
-    assert states == [STORED, PRESENT, STORED, SKIPPED]
+    states, written, remote_table, rewritten, expected = asyncio.run(run())
+    assert states == [STORED, PRESENT, STORED, SKIPPED, STORED, PRESENT]
     assert written == json.loads(expected)
+    assert rewritten == json.loads(expected)
+    assert remote_table["bigTiff"] is False
     assert all("ifdOffset" in level for level in remote_table["levels"])
     assert all("ifdBytes" not in level for level in remote_table["levels"])
 
