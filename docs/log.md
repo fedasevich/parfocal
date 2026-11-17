@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-18
+
+- OPS-009 (storage lifecycle and cost controls) production touch: targeted additive tofu apply on dev and prod roots (lifecycle rule tier-old-tenant-objects plus bucket lock keep-tenant-objects on t/, 1 added 1 changed 0 destroyed each, policy.sh plan passed, later plans clean, rules read back from the R2 API), cost $0. No expiry rule written, so no expiry drill. First costs report failed: the Cloudflare token lacks account analytics read, so OPS-009 stays in review and the owner step is in decisions.md.
+
 ## 2026-11-17
 
 - VIEW-076 Browser spec stage-cells-grid-pick.spec.ts added. The cells grid exists only inside a task (it lists the task's cell review objects), so the spec opens task rt14 on the cells slide, checks all 3 tiles draw from GET /api/slides/:id/cell-crops/:number with 200, then clicks C1, C2 and C3 and checks each selects (data-current, type bar) and settles on a distinct camera centre. No app fix needed. Deployed colour and GPU check still open, left in review.
