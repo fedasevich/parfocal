@@ -16,6 +16,7 @@ from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 APP_NAME = "parfocal-api"
 WEB_FUNCTION = "web-eu"
 WEB_REGION = "eu"
+WORKER_REGION = "eu"
 WEB_ROUTING_REGION = "eu-west"
 INGEST_FUNCTION = "ingest"
 EVENTS_FUNCTION = "events"
@@ -74,6 +75,7 @@ INGEST_DRAINED_KINDS = frozenset(
 )
 INGEST_OPTIONS: dict[str, Any] = {
     "name": INGEST_FUNCTION,
+    "region": WORKER_REGION,
     "memory": (INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
     "schedule": modal.Period(minutes=INGEST_PERIOD_MINUTES),
     "min_containers": 0,
@@ -86,6 +88,7 @@ EVENTS_LINGER_MINUTES = 35
 EVENTS_SPAWN_GAP_SECONDS = 600.0
 EVENTS_OPTIONS: dict[str, Any] = {
     "name": EVENTS_FUNCTION,
+    "region": WORKER_REGION,
     "schedule": modal.Period(minutes=EVENTS_PERIOD_MINUTES),
     "min_containers": 0,
     "max_containers": 1,
