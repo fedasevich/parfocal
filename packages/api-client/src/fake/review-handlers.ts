@@ -62,6 +62,7 @@ import type {
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
+import { pagedCellSource } from "./paged-cell-source.ts";
 import {
   addedOn,
   addObject,
@@ -568,6 +569,28 @@ const submittedStates = (taskId: string, slideId: string): TaskStates => ({
   ],
 });
 
+const fakeSetCells = pagedCellSource({ cells: 900, classes: 2 });
+
+const cellBytes = (bytes: Uint8Array<ArrayBuffer>, kind: string) =>
+  new HttpResponse(bytes, { headers: { "Content-Type": `application/vnd.parfocal.${kind}` } });
+
+const fakeSetRegions = [
+  {
+    number: 1,
+    kind: "region",
+    class_index: 0,
+    score: 0.92,
+    outline: [40, 40, 400, 40, 400, 300, 40, 300],
+  },
+  {
+    number: 2,
+    kind: "region",
+    class_index: 1,
+    score: 0.61,
+    outline: [500, 120, 760, 120, 700, 420],
+  },
+];
+
 const aiHidden = () =>
   problem(403, "ai-hidden", "The AI stays hidden on this slide until you record your first read");
 
@@ -588,7 +611,22 @@ export function reviewHandlers(): RequestHandler[] {
     ),
     http.get<{ resultSetId: string }>(
       "*/api/result-sets/:resultSetId/cell-summary",
-      ({ params }) => (aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined),
+      async ({ params }) =>
+        aiHiddenForResultSet(params.resultSetId)
+          ? aiHidden()
+          : cellBytes(await fakeSetCells.summary(), "cell-summary"),
+    ),
+    http.get<{ resultSetId: string; chunk: string }>(
+      "*/api/result-sets/:resultSetId/cell-chunks/:chunk",
+      async ({ params }) =>
+        aiHiddenForResultSet(params.resultSetId)
+          ? aiHidden()
+          : cellBytes(await fakeSetCells.chunk(Number(params.chunk)), "cell-chunk"),
+    ),
+    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId/regions", ({ params }) =>
+      aiHiddenForResultSet(params.resultSetId)
+        ? aiHidden()
+        : HttpResponse.json({ regions: fakeSetRegions, truncated: false }),
     ),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
       if (params.taskId === annotateStubTaskId)
