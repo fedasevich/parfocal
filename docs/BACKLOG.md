@@ -4579,6 +4579,14 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Add a Server-Timing header with database time, query count and handler time to every API answer, measure the slow routes on the deployed app, find where Modal runs and where Neon runs, and cut the time at no added monthly cost: fewer round trips per request (one transaction for the session check where safe, batched or joined queries, no N+1), pool settings, and moving Modal next to Neon if region selection costs nothing extra on the current plan. Record the before and after numbers in a result file.
   Done when a result file reports Server-Timing for the ten slowest routes before and after, measured on the deployed app, and warm `/api/me`, `/api/projects` and `/api/me/home` each answer in under 300 ms at the median of ten calls.
   Size: M.
+- [ ] OPS-031 · Move the API and database to the EU
+  Decision 140 (moving production's API and database to Europe) chose option A without the warm container. Create a Neon project in Frankfurt (`aws-eu-central-1`) on the Free plan with the same roles and pooler setup, run the migrations and reseed it under [ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md) (the deployed app is dev). Deploy the Modal web function under a new name with `region="eu"` and `routing_region="eu-west"`, point the edge `API_ORIGIN`, the Modal secrets and the GitHub production environment at the new function and database, and leave ingest, events and GPU functions unpinned. A slice of OPS-020 (pin storage, database and Modal functions per region) without the R2 EU jurisdiction or GPU parts. The old US Neon project is deleted only after the owner's separate yes.
+  Done when a warm signed-in call measured from Europe is in the result file, the web function logs an EU `MODAL_REGION`, and the app reads and writes a Neon database in Frankfurt.
+  Size: M.
+- [ ] OPS-032 · Slides in an EU jurisdiction bucket
+  The bucket `parfocal-dev` holds the deployed app's slides with only the best-effort `eeur` hint, and a jurisdiction cannot be added to an existing bucket ([server region options](results/2026-11-17-server-region-options.md)). Create a bucket in the `eu` jurisdiction through OpenTofu, copy the objects, point the Worker binding (`jurisdiction: "eu"`), the S3 endpoint `<account>.eu.r2.cloudflarestorage.com` and bootstrap's config at it, and keep the old bucket until the owner's separate yes. While both exist storage costs about $0.43 a month more, so ask the owner before the copy.
+  Done when the deployed app reads and writes slides in the EU bucket, `wrangler r2 bucket info` shows the `eu` jurisdiction, and a deploy test covers the binding and the endpoint.
+  Size: M.
 
 ---
 

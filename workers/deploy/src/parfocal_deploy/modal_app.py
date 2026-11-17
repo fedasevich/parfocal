@@ -14,7 +14,9 @@ from parfocal_deploy.parse_sandbox import PARSE_SANDBOX_OPTIONS
 from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 
 APP_NAME = "parfocal-api"
-WEB_FUNCTION = "web"
+WEB_FUNCTION = "web-eu"
+WEB_REGION = "eu"
+WEB_ROUTING_REGION = "eu-west"
 INGEST_FUNCTION = "ingest"
 EVENTS_FUNCTION = "events"
 BACKFILL_FUNCTION = "backfill_thumbnails"
@@ -48,6 +50,8 @@ WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
 WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 10, "target_inputs": 8}
 WEB_OPTIONS: dict[str, Any] = {
     "name": WEB_FUNCTION,
+    "region": WEB_REGION,
+    "routing_region": WEB_ROUTING_REGION,
     "memory": (512, 2048),
     "min_containers": 0,
     "max_containers": 4,

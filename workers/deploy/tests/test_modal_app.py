@@ -40,6 +40,8 @@ from parfocal_deploy.modal_app import (
     WEB_FUNCTION,
     WEB_OPTIONS,
     WEB_PRELOAD,
+    WEB_REGION,
+    WEB_ROUTING_REGION,
     EventSpawner,
     IngestSpawner,
     app,
@@ -73,6 +75,15 @@ def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
         assert "buffer_containers" not in options
         assert options["max_containers"] <= 4
     assert all(pool.min_containers == 0 for pool in POOLS)
+
+
+def test_only_the_web_function_runs_in_the_eu_and_enters_at_dublin() -> None:
+    assert (WEB_REGION, WEB_ROUTING_REGION) == ("eu", "eu-west")
+    assert WEB_OPTIONS["region"] == WEB_REGION
+    assert WEB_OPTIONS["routing_region"] == WEB_ROUTING_REGION
+    for options in (INGEST_OPTIONS, EVENTS_OPTIONS):
+        assert "region" not in options
+        assert "routing_region" not in options
 
 
 def test_only_the_web_function_restores_from_a_memory_snapshot() -> None:

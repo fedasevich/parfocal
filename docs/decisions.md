@@ -165,6 +165,12 @@ Prices and facts for four ways to place the servers, read from the vendors on 20
 
 Your choice: A without the warm container, the EU move (owner in chat, 2026-11-17). The web function goes to `eu` entering at Dublin, a new Neon project in Frankfurt is reseeded, and the old US project is deleted only after a separate yes.
 
+OPS-031 (move the API and database to the EU) created the Frankfurt project `parfocal-eu` (`still-field-25034761`) on 2026-11-17 ([result](results/2026-11-17-eu-move.md)). Three things wait for you:
+
+- TODO: the reseed stopped with HTTP 404 because the `NEON_API_KEY` secret in the GitHub environment `production` cannot reach the new project. Please make a Neon API key for the organisation "Vercel: fedasevich's projects" that reaches both projects and replace that secret with it, or say an agent may do so. Until then production stays on the US database.
+- TODO: pinning `ingest` and `events` to `eu` beside the new database adds about $0.07 a month and makes their queries about six times faster. Yes or no.
+- Deleting the old US Neon project `soft-pine-86468744` waits for your separate yes. The Modal secret `parfocal-api-database-us` keeps its connection URL for a rollback until then.
+
 ### 141. How fast a person turned off in the customer's directory loses access
 
 IAM-030 (a SCIM-created person signs in through SAML without a duplicate) measured this on the local Zitadel ([result](results/2026-11-17-scim-saml-linking.md)). When a customer's directory deactivates someone over SCIM, Zitadel refuses their next sign-in and token refresh at once, but a session already open in Parfocal keeps working until its access token expires, 12 hours locally. The production token lifetime on Zitadel Cloud was not read.
