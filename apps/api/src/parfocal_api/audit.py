@@ -283,14 +283,15 @@ def canonical(details: dict[str, Any]) -> str:
 
 
 async def pseudonym_of(connection: AsyncConnection, subject: str) -> uuid.UUID:
-    await connection.execute(
-        upsert(audit_people)
-        .values(subject=subject)
-        .on_conflict_do_nothing(index_elements=[audit_people.c.subject])
-    )
-    pseudonym = await connection.scalar(
-        select(audit_people.c.id).where(audit_people.c.subject == subject)
-    )
+    known = select(audit_people.c.id).where(audit_people.c.subject == subject)
+    pseudonym = await connection.scalar(known)
+    if pseudonym is None:
+        await connection.execute(
+            upsert(audit_people)
+            .values(subject=subject)
+            .on_conflict_do_nothing(index_elements=[audit_people.c.subject])
+        )
+        pseudonym = await connection.scalar(known)
     assert isinstance(pseudonym, uuid.UUID)
     return pseudonym
 

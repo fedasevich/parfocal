@@ -31,6 +31,7 @@ from parfocal_deploy.modal_app import (
     INGEST_OPTIONS,
     INGEST_PERIOD_MINUTES,
     INGEST_SPAWN_GAP_SECONDS,
+    LEVELS_BACKFILL_FUNCTION,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
     PRELOAD_VARIABLE,
@@ -60,7 +61,13 @@ from parfocal_ml.gpu_pool import POOLS
 def test_the_app_registers_the_web_and_ingest_functions() -> None:
     assert app.name == APP_NAME
     assert sorted(FUNCTIONS) == sorted(
-        [WEB_FUNCTION, INGEST_FUNCTION, EVENTS_FUNCTION, BACKFILL_FUNCTION]
+        [
+            WEB_FUNCTION,
+            INGEST_FUNCTION,
+            EVENTS_FUNCTION,
+            BACKFILL_FUNCTION,
+            LEVELS_BACKFILL_FUNCTION,
+        ]
     )
     assert all(function.app is app for function in FUNCTIONS.values())
 

@@ -391,6 +391,10 @@ class ObjectStore:
     async def get_object(self, key: str) -> bytes:
         return (await self.send("GET", key)).content
 
+    async def get_range(self, key: str, start: int, length: int) -> bytes:
+        extra = {"range": f"bytes={start}-{start + length - 1}"}
+        return (await self.send("GET", key, extra=extra)).content
+
     async def get_stored_bytes(self, key: str) -> bytes:
         url, headers = self.signed_request("GET", key, None, b"")
         async with self.http.stream("GET", url, headers=headers) as response:

@@ -69,6 +69,22 @@ async def is_live(connection: AsyncConnection, project_id: uuid.UUID) -> bool:
     )
 
 
+async def live_role(
+    connection: AsyncConnection, principal: MemberPrincipal, project_id: uuid.UUID
+) -> tuple[bool, ProjectRole | None]:
+    live = exists().where(projects.c.id == project_id, projects.c.deleted_at.is_(None))
+    role = (
+        select(project_members.c.role)
+        .where(
+            project_members.c.project_id == project_id,
+            project_members.c.user_id == principal.user_id,
+        )
+        .scalar_subquery()
+    )
+    found = (await connection.execute(select(live.label("live"), role.label("role")))).one()
+    return bool(found.live), ProjectRole(found.role) if found.live and found.role else None
+
+
 def open_grants(principal: MemberPrincipal) -> ColumnElement[bool]:
     return (emergency_grants.c.user_id == principal.user_id) & (
         emergency_grants.c.expires_at > func.now()
@@ -101,12 +117,16 @@ async def project_grant(
     project_id: uuid.UUID,
     permission: Permission,
 ) -> Grant:
-    if not await is_live(connection, project_id):
+    if isinstance(principal, MemberPrincipal):
+        live, role = await live_role(connection, principal, project_id)
+    else:
+        live, role = await is_live(connection, project_id), None
+    if not live:
         return Grant.NONE
     workspace = grant_of(principal, permission)
     if isinstance(principal, ServicePrincipal):
         return workspace
-    grant = in_project(workspace, permission, await role_in(connection, principal, project_id))
+    grant = in_project(workspace, permission, role)
     if (
         grant is Grant.NONE
         and permission in EMERGENCY_READS

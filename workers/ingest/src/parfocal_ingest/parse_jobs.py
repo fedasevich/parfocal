@@ -4,7 +4,7 @@ import shutil
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 import openslide
 import tifffile
@@ -17,6 +17,7 @@ from parfocal_ingest.identify import Format, Identified, Refusal, identify
 from parfocal_ingest.identifying_text import ranges_file
 from parfocal_ingest.integrity import check_integrity
 from parfocal_ingest.isolated_child import ScopedStorage
+from parfocal_ingest.level_directories import directory_sizes, located
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
 from parfocal_ingest.thumbnail import previews
@@ -119,8 +120,15 @@ def validate_upload(arguments: Mapping[str, Any], storage: ScopedStorage) -> dic
     return reading(body)
 
 
-def level_table(found: Pyramid) -> bytes:
-    return json.dumps(asdict(found), separators=(",", ":")).encode()
+def level_table(
+    found: Pyramid,
+    source: Path | BinaryIO | None = None,
+    tiles: Mapping[str, Any] | None = None,
+) -> bytes:
+    table = asdict(found)
+    if source is not None and tiles is not None:
+        table = located(table, tiles, directory_sizes(source, tiles))
+    return json.dumps(table, separators=(",", ":")).encode()
 
 
 def restricted_output(kind: str) -> str:
@@ -141,8 +149,8 @@ def index_upload(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[s
     def body() -> dict[str, Any]:
         opened = opened_in(arguments, storage)
         out = Path(arguments["out"])
-        (out / LEVELS_OUTPUT).write_bytes(level_table(opened.pyramid))
         tiles = tile_index(opened.path, opened.identified, opened.pyramid)
+        (out / LEVELS_OUTPUT).write_bytes(level_table(opened.pyramid, opened.path, tiles))
         derived = None
         if tiles is not None and opened.identified.format is not None:
             derived = overview_levels(opened.path, opened.identified.format, opened.pyramid)
