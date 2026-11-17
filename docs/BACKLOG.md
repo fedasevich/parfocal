@@ -5501,7 +5501,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests cover both refusals and an unknown name, and a worker test runs a lab model against a fake endpoint into a stored result set.
   Depends on JOBS-008. Size: M.
 
-- [ ] JOBS-010 · The GPU pool runs a lab model stage
+- [x] JOBS-010 · The GPU pool runs a lab model stage
   JOBS-009 (run a connected lab model) built the run start checks and `LabDetector` in `workers/ml/src/parfocal_ml/lab_detector.py`, but no deployed worker picks a lab model stage: nothing reads the lab model row, opens its sealed token or calls the detector when the stage starts. Wire the stage into the worker that runs model stages, reading the row and opening the token with the workspace key the way INGEST-026 (saved import sources) opens a source credential, and store region objects as well as cells.
   Done when a worker test runs a queued lab model stage end to end against a fake endpoint with a sealed token and stores cells and regions, and the token never appears in logs or stored rows.
   Depends on JOBS-009. Size: M.
