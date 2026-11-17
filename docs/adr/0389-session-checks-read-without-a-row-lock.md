@@ -21,10 +21,12 @@ Option 2.
 
 - The session check reads the session row, the policy, the person, the membership and the second factor setting in one transaction with no lock. The lifetime and idle lock checks run on that read.
 - When the access token is within 30 seconds of expiry, a second short transaction takes `FOR UPDATE` on the session row, checks again that a refresh is still due and only then calls Zitadel. A request that waited for another one's refresh finds the new expiry and skips it, so racing requests refresh once and never spend the rotated refresh token twice. A refused refresh still deletes the session.
-- The rate counters and the once a minute `last_seen_at` touch run last, in their own short transaction. The touch is a plain conditional update, so a second request in the same minute skips it.
+- The once a minute `last_seen_at` touch runs after the check in its own short transaction, as a plain conditional update, so a second request in the same minute skips it.
+- The rate counter upsert runs last, alone in its own short transaction, so the counter rows stay locked only from the upsert to the commit.
 
 ## Consequences
 
-- 20 parallel calls of one session against the local stack, with 0.5 s of simulated database latency per check, take 1.1 s instead of 20 times one call. `test_session_concurrency.py` holds that to under three times one call and checks that racing calls near expiry refresh once.
-- A normal request opens two short transactions instead of one, which costs a few more round trips but never waits on a sibling request. Requests that need neither a counter nor a touch, such as an operator's, open only one.
+- With 0.2 s of simulated database latency in each check, 20 parallel calls of one session against the local stack took 4.318 s before this change and 0.493 s after, against 0.22 s for one call. `test_session_concurrency.py` runs with 0.5 s for a wider margin (0.51 s for one call, 1.07 s for 20), holds that to under three times one call and checks that racing calls near expiry refresh once.
+- Calls of one person still queue on that person's counter row for the one round trip between the upsert and the commit, and calls of one workspace on its counter row. The test does not measure that wait. If it shows in production, ADR 0088 already names moving the counters to the edge.
+- A normal request opens two short transactions instead of one, three once a minute, which costs a few more round trips but no longer waits on a sibling request's whole check. An operator's request, which has no counter, opens one.
 - Refused requests still count toward the limit, as they did before this change.

@@ -42,7 +42,7 @@ def test_calls_of_one_session_do_not_wait_on_each_other(
     browser: Browser, slow_database: None
 ) -> None:
     browser.login()
-    timed_calls(browser, 1)
+    timed_calls(browser, CALLS)
     one, single = timed_calls(browser, 1)
     many, codes = timed_calls(browser, CALLS)
     print(f"one call {one:.3f} s, {CALLS} parallel calls {many:.3f} s")

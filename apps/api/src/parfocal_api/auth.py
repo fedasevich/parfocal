@@ -230,12 +230,8 @@ async def refresh_once(state: AuthState, session_id: str) -> bool:
 async def record_use(
     state: AuthState, session_id: str, seen_due: bool, counted: Principal | None
 ) -> int | None:
-    allowed = {} if counted is None else limits_for(counted, state.limits)
-    if not seen_due and not allowed:
-        return None
-    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
-        wait = await counted_wait(connection, allowed)
-        if seen_due:
+    if seen_due:
+        async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
             await connection.execute(
                 update(sessions)
                 .where(
@@ -244,7 +240,11 @@ async def record_use(
                 )
                 .values(last_seen_at=func.now())
             )
-    return wait
+    allowed = {} if counted is None else limits_for(counted, state.limits)
+    if not allowed:
+        return None
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        return await counted_wait(connection, allowed)
 
 
 @dataclass(frozen=True)
