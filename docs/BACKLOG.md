@@ -5492,6 +5492,11 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests show the refusal without a confirmation, the audit event on confirming and the reset on removal, and a browser test covers the confirmation dialog.
   Depends on JOBS-000. Size: S.
 
+- [ ] JOBS-009 · Run a connected lab model
+  [ADR 0363](adr/0363-the-model-run-contract-with-parfocal-and-lab-endpoints.md) (the model run contract with Parfocal and lab endpoints) found that a lab model connected by JOBS-005 cannot run: run start knows only Parfocal models and accepts an unknown name when a version is given, and the ML worker has no detector that calls an endpoint. Make run start resolve a lab model by its connection, refuse it with `lab-model-not-allowed` when the project does not allow it or JOBS-008 (confirm tile sharing) has no confirmation, and with `lab-model-changed` when the endpoint changed since the run was planned. Add a worker detector that sends one tile per call through `call_endpoint` and stores what the endpoint returns as a result set.
+  Done when API tests cover both refusals and an unknown name, and a worker test runs a lab model against a fake endpoint into a stored result set.
+  Depends on JOBS-008. Size: M.
+
 ## 48 REMOTE · Remote sources, webhooks and events
 
 - [ ] REMOTE-000 · Research check
