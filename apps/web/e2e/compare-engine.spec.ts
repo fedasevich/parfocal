@@ -19,6 +19,19 @@ const pane = (page: Page, side: string) => page.locator(`[data-pane="${side}"]`)
 const engineOn = (page: Page, side: string) => pane(page, side).getByTestId("still-engine");
 const cameraOn = (page: Page, side: string) => engineOn(page, side).getAttribute("data-camera");
 
+const canvasFillsHost = (page: Page, side: string) =>
+  pane(page, side)
+    .getByTestId("engine-turn")
+    .evaluate((host) => {
+      const canvas = host.querySelector("canvas");
+      const turned = host as HTMLElement;
+      return (
+        canvas !== null &&
+        Math.abs(canvas.clientWidth - turned.offsetWidth) <= 1 &&
+        Math.abs(canvas.clientHeight - turned.offsetHeight) <= 1
+      );
+    });
+
 async function drag(page: Page, side: string, by: { x: number; y: number }) {
   const box = await pane(page, side).boundingBox();
   if (box === null) throw new Error(`no ${side} pane`);
@@ -90,9 +103,11 @@ test("rotating a compare pane turns its engine stage with the pane", async ({ pa
   }));
   expect(host.width).toBeGreaterThan(host.paneWidth);
   await expect(engineOn(page, "left")).toHaveAttribute("data-state", "ready");
+  await expect.poll(() => canvasFillsHost(page, "left")).toBe(true);
 
   await page.getByRole("switch", { name: "Linked" }).click();
   await page.getByRole("button", { name: "Reset right pane rotation" }).click();
   await expect(turn("right")).toHaveAttribute("data-rotation", "0");
   await expect(turn("left")).toHaveAttribute("data-rotation", "15");
+  await expect.poll(() => canvasFillsHost(page, "right")).toBe(true);
 });
