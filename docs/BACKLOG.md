@@ -5508,7 +5508,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 48 REMOTE · Remote sources, webhooks and events
 
-- [ ] REMOTE-000 · Research check
+- [x] REMOTE-000 · Research check
   Done when an ADR records read in place with a tile cache, the webhook signature and the event delivery guarantees.
   Depends on INGEST-026.
   Size: M.
