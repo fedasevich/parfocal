@@ -2,6 +2,17 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.4 (2026-11-17)
+
+### Performance
+
+- OPS-030: Pin the web function to narrow Modal region eu-west beside Frankfurt
+
+### Docs
+
+- TEST-037: Tick after the deployed seeded-formats smoke passes
+- OPS-030: Log the slow container region
+
 ## v0.17.3 (2026-11-17)
 
 ### Fixes
