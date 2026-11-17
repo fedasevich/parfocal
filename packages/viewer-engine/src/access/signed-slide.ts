@@ -68,12 +68,16 @@ export interface LevelDirectory {
   readonly ifdOffset: number;
 }
 
+export interface LocatedDirectory extends LevelDirectory {
+  readonly siblings: readonly LevelDirectory[];
+}
+
 export interface LevelTableLevel {
   readonly downsample: number;
   readonly width: number;
   readonly height: number;
   readonly stored: { readonly width: number; readonly height: number };
-  readonly directory?: LevelDirectory & { readonly siblings: readonly LevelDirectory[] };
+  readonly directory?: LocatedDirectory;
 }
 
 export interface LevelTable {
@@ -112,7 +116,7 @@ function directoryOf(value: unknown): LevelDirectory | null {
   return { page, subIfd: subIfd ?? null, ifdOffset };
 }
 
-function locatedLevel(level: Record<string, unknown>): LevelTableLevel["directory"] | null {
+function locatedLevel(level: Record<string, unknown>): LocatedDirectory | null {
   const directory = directoryOf(level);
   const rawSiblings = level["siblings"] ?? [];
   if (directory === null || !Array.isArray(rawSiblings)) return null;
