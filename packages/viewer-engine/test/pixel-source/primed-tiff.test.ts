@@ -63,6 +63,21 @@ describe("PrimedRangeSource", () => {
     assert.deepEqual(file.asked, ["bytes=100-149", "bytes=100-107"]);
   });
 
+  it("answers the parser's longer read of a directory from the directory's own bytes", async () => {
+    const file = fakeFile();
+    const directory = { offset: 100, length: 30 };
+    const source = new PrimedRangeSource("/s.tif", file.fetcher, [directory], undefined, [
+      directory,
+    ]);
+    const [parsed, sized] = await source.fetch([
+      { offset: 100, length: 1024 },
+      { offset: 100, length: 54 },
+    ]);
+    assert.equal(parsed?.byteLength, 30);
+    assert.equal(sized?.byteLength, 30);
+    assert.deepEqual(file.asked, ["bytes=100-129"]);
+  });
+
   it("merges overlapping and touching ranges into one read", () => {
     assert.deepEqual(
       mergedSlices([

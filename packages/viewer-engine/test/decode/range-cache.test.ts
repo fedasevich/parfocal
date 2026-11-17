@@ -14,7 +14,10 @@ interface Seen {
   readonly signal: AbortSignal | null;
 }
 
-function fakeServer(file: Uint8Array, options: { gate?: Promise<void> } = {}) {
+function fakeServer(
+  file: Uint8Array,
+  options: { gate?: Promise<void>; restricted?: readonly (readonly [number, number])[] } = {},
+) {
   const seen: Seen[] = [];
   const fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const range = new Headers(init?.headers).get("range");
@@ -24,6 +27,11 @@ function fakeServer(file: Uint8Array, options: { gate?: Promise<void> } = {}) {
     const match = /^bytes=(\d+)-(\d+)$/.exec(range);
     if (match === null) return new Response(null, { status: 400 });
     const start = Number(match[1]);
+    const stop = Math.min(Number(match[2]) + 1, file.length);
+    const closed = options.restricted ?? [];
+    if (closed.some(([from, to]) => start < to && from < stop)) {
+      return new Response(null, { status: 403 });
+    }
     if (start >= file.length) {
       return new Response(null, {
         status: 416,
@@ -188,5 +196,24 @@ describe("the shared range cache", () => {
     assert.deepEqual(b.bytes, file);
     assert.notEqual(a.bytes.buffer, b.bytes.buffer);
     assert.equal(server.seen.length, 1);
+  });
+
+  it("asks for the exact range when a block would reach into bytes the edge refuses", async () => {
+    const file = fileOf(100);
+    const server = fakeServer(file, { restricted: [[40, 60]] });
+    const cache = createRangeCache({ blockSize, fetch: server.fetch });
+    const before = await cache.get(url, "bytes=33-39");
+    assert.equal(before.status, 206);
+    assert.deepEqual(before.bytes, file.slice(33, 40));
+    const after = await cache.get(url, "bytes=60-70");
+    assert.deepEqual(after.bytes, file.slice(60, 71));
+    const again = await cache.get(url, "bytes=34-38");
+    assert.deepEqual(again.bytes, file.slice(34, 39));
+    const label = await cache.get(url, "bytes=45-50");
+    assert.equal(label.status, 403);
+    assert.deepEqual(
+      server.seen.map(({ range }) => range),
+      ["bytes=32-47", "bytes=33-39", "bytes=48-79", "bytes=60-70", "bytes=34-38", "bytes=45-50"],
+    );
   });
 });
