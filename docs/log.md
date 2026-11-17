@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- OPS-028 OPS-028 after numbers on Modal v21: restores took 2.18, 6.39 and 3.99 s, so the 3 s bar is not met and the task stays in progress. The app's lifespan now takes 80 to 570 ms, and the rest is Modal placing the container (1 to 2 s) and restoring it (1.3 to 3.6 s). The two 25 s 500s, one of them the v0.15.0 health check, came seconds after this task's own modal container stop and are not a restore fault. The startup timing fields were redacted by the log allowlist, now fixed. Owner question 145 (keep one API container warm) is in decisions.md. Production touch: stopping web containers, which also failed a few in-flight calls of other agents, cost about $0.
 - INGEST-032 Seed gap fixed: Case slides now take real fixture facts round robin from the four smallest published gallery fixtures when no camelyon samples exist (showcase_samples.py). After deploy: reset the deployed seed, then run the thumbnail backfill.
 - SHELL-021 home-first-week spec passes: fake checklist has open-sample undone like the real API, the sample hero opens the sample project, spec waits for the project before going back
 - SHELL-020 quiet-calls spec passes (4 of 4): the viewer no longer saves the tool hint as seen when it unmounts, so leaving makes no settings call

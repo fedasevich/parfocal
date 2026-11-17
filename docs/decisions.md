@@ -216,6 +216,19 @@ PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) buil
 
 Your choice: 
 
+### 145. Whether the API keeps one container warm so the first call after idle stays under 3 s
+
+OPS-028 (the API answers its first call after idle in under 3 s) moved the API's imports and startup into a Modal memory snapshot. The app's own startup now takes 0.1 to 0.6 s, but a restored cold start still took 2.18, 6.39 and 3.99 s, because Modal needs 1 to 2 s to place a container and 1.3 to 3.6 s to restore it ([result](results/2026-11-17-api-cold-start.md)). After each deploy the first several cold starts also build new snapshots and take 2.7 to 15 s. Only a warm container removes this.
+
+- A. Keep `min_containers` at 0 and accept 2 to 6 s on the first call after 5 idle minutes, with no cost.
+- B. Set `min_containers` to 1 for the web function during working hours only, through a schedule. TODO: cost measured after a week.
+- C. Set `min_containers` to 1 all the time. An estimate from Modal's list prices for 0.125 core and 512 MiB is about $7 a month of the $30 budget. TODO: confirm on the Modal usage page.
+- Other.
+
+No recommendation, because it trades budget against the first call.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.

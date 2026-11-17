@@ -143,6 +143,9 @@ def test_the_served_api_logs_how_long_startup_took(
     assert created.__dict__["create_app_ms"] <= created.__dict__["serve_ms"]
     assert ready.getMessage() == "web ready"
     assert ready.__dict__["lifespan_ms"] >= 0
+    from parfocal_common.scrubbing import ALLOWED_FIELDS
+
+    assert {"serve_ms", "create_app_ms", "lifespan_ms"} <= ALLOWED_FIELDS
 
 
 def test_other_containers_and_local_runs_skip_the_api_preload() -> None:

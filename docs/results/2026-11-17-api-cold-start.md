@@ -56,7 +56,26 @@ What the samples show:
 
 `create_app` still imported modules that the snapshot did not hold: asyncpg and SQLAlchemy's asyncpg dialect, which `create_engine` loads, the httpx2 transport stack (httpcore2, h11, truststore), the anyio asyncio backend, `encodings.idna` and the thread pool executor. Locally, with the API's modules preloaded, `create_app` took 0.10 s and 92% of that was these imports. With them preloaded too it took 0.03 s and imported nothing new, and neither did the lifespan's database connect. The web container runs on 0.125 of a core, so the saving there is larger than on the Mac.
 
-After samples: TODO, taken once the lead deploys this change. Discard any sample whose container log says "Creating CPU memory snapshot", and take at least three restores. Read the `parfocal.api.startup` lines of each container: `web app created` gives `serve_ms` and `create_app_ms`, and `web ready` gives `lifespan_ms`, which is the database connect and the row security check. Their millisecond timestamps against the curl start split Modal's placement and restore from the app's own startup. Take one sample after more than 5 idle minutes of the whole app, so Neon is suspended too.
+### After the second change (Modal app v21, commit cd3263c)
+
+Taken from 20:08 to 20:11 UTC by the same script. App created and ready are the `parfocal.api.startup` log times. The millisecond fields of those lines were redacted by the log scrubber's allowlist, which the third commit fixes, so the split below uses the line timestamps.
+
+| Sample | Curl start (UTC) | Kind | Worker | Status | Cold total | Restore logged | App created | Ready | Warm total |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A1 | 20:08:44.9 | created snapshot | AWS eu-west | 200 | 6.86 s | not read | 20:08:51.62 | 20:08:51.70 | 0.47 s |
+| A2 | 20:09:20.3 | restored | AWS eu-west | 200 | 2.18 s | 20:09:21 | 20:09:22.27 | 20:09:22.35 | 0.23 s |
+| A3 | 20:10:19.1 | restored | AWS eu-north | 200 | 6.39 s | 20:10:21 | 20:10:24.59 | 20:10:25.16 | 0.50 s |
+| A4 | 20:10:52.5 | restored | Azure eu-west | 200 | 3.99 s | 20:10:54 | 20:10:56.04 | 20:10:56.26 | 0.60 s |
+
+A fifth try met a container another call had just started and answered in 0.73 s, so it is left out.
+
+- Only one of three restores was under 3 s, so the task's bar is not met.
+- The app's own part is now small. The lifespan, which is the database connect and the row security check, took 80, 570 and 220 ms. The 570 ms was on AWS eu-north, which is farther from Neon in Frankfurt.
+- The rest is Modal. Placing the container took 1 to 2 s from the curl start to the restore line, and the restore up to the app created line took 1.3 to 3.6 s. Neither can be cut in the app at no cost. Region `eu` lets Modal place the container in eu-north and eu-south, and narrowing it costs more.
+- No call returned a 500 after about 25 s after this deploy. Both such 500s, at 19:29:10 and at 19:36:44 (the v0.15.0 post-deploy health check), came within seconds of a `modal container stop` this task ran, and Modal attributed them to no container. Stopping a container also failed other agents' calls in flight on it, such as five calls at 19:29:51 after 3.27 s and one at 20:09:48 after 4.69 s. So the 500 came from this measurement method, not from a restore. Forced stops should not run while a deploy check runs.
+- Owner question 145 in `docs/decisions.md` (whether the API keeps one container warm) asks whether to pay for a warm container.
+
+The plan for these samples was: Discard any sample whose container log says "Creating CPU memory snapshot", and take at least three restores. Read the `parfocal.api.startup` lines of each container: `web app created` gives `serve_ms` and `create_app_ms`, and `web ready` gives `lifespan_ms`, which is the database connect and the row security check. Their millisecond timestamps against the curl start split Modal's placement and restore from the app's own startup. Take one sample after more than 5 idle minutes of the whole app, so Neon is suspended too.
 
 ## The change
 
