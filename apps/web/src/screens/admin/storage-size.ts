@@ -7,6 +7,10 @@ const units = [
 
 const oneDecimal = (value: number) => +value.toFixed(1);
 
+export function inPlaceSize(terabytes: number): string | null {
+  return terabytes > 0 ? storageSize(terabytes) : null;
+}
+
 export function storageSize(terabytes: number): string {
   if (terabytes <= 0) return "0 TB";
   for (const unit of units) {

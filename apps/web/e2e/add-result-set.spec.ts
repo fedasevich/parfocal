@@ -247,3 +247,53 @@ test("a stored heatmap is drawn on the slide and listed in Layers with colour ma
   await controls.getByRole("switch").click();
   await expect(layer).toHaveCount(0);
 });
+
+test("a long result set name is shown in full in the Display tab", async ({ page }) => {
+  test.setTimeout(90_000);
+  await openSlide(page);
+  const slideId = /slides\/([^/]+)\//.exec(page.url())?.[1] ?? "";
+  const name = "( InstanSeg ) Tumour bed nuclei, second pass with a long descriptive name";
+  await page.addInitScript(
+    ({ slide, label }) => {
+      (window as unknown as { __parfocalFake: unknown }).__parfocalFake = {
+        statuses: {
+          "up-long": {
+            kind: "result",
+            status: "ready",
+            slide_id: slide,
+            result_set_id: "00000000-0000-4000-8009-0000000000c1",
+          },
+        },
+        chosen: [],
+        left: [],
+        sets: [
+          {
+            id: "00000000-0000-4000-8009-0000000000c1",
+            project_id: "00000000-0000-4000-8003-000000000007",
+            slide_id: slide,
+            name: label,
+            model_version: "instanseg-v1.2.0-brightfield",
+            source: "import",
+            source_file: null,
+            produced_at: null,
+            status: "ready",
+            error_code: null,
+            cell_count: 0,
+            region_count: 0,
+            zone_count: 0,
+            created_by_user_id: null,
+            created_at: "2026-11-15T09:00:00+01:00",
+          },
+        ],
+        heatmaps: {},
+      };
+    },
+    { slide: slideId, label: name },
+  );
+  await page.reload();
+  const shown = page.getByTestId("result-set-name").filter({ hasText: "InstanSeg" });
+  await expect(shown).toBeVisible({ timeout: 15_000 });
+  await expect(shown).toHaveText(name);
+  const clipped = await shown.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+  expect(clipped).toBe(false);
+});

@@ -4,11 +4,21 @@ import { Button } from "@parfocal/ui/components/button";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAnswerKeys } from "../screens/review/answer-keys.ts";
+import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
+import {
+  storedType,
+  type TypeOption,
+  typeAnswers,
+  typeChoice,
+  typeOptions,
+} from "../screens/review/type-bar.ts";
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
+import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -18,10 +28,12 @@ function ObjectOutlines({
   engine,
   module,
   objects,
+  current,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   objects: readonly ReviewObject[];
+  current: string | null;
 }) {
   const placed = useMemo(() => placedObjects(objects), [objects]);
   const drawing = useMemo(
@@ -32,6 +44,9 @@ function ObjectOutlines({
   useEffect(() => {
     drawing.setObjects(placed);
   }, [drawing, placed]);
+  useEffect(() => {
+    drawing.setCurrent(current);
+  }, [drawing, current]);
   return <div hidden data-testid="review-object-outlines" data-objects={placed.length} />;
 }
 
@@ -145,11 +160,44 @@ export function StageReviewObjects({
     if (guided) pick(nextOpenObject(order, new Set([...decided, item.object]), item.object));
     else setCurrent(item.object);
   };
+  const currentItem = objects.find((item) => item.object === current);
+  const typedCell =
+    currentItem?.kind === "cell" && outlineArea(currentItem.outline) !== null ? currentItem : null;
+  const decideType = (cell: ReviewObject, id: string) => {
+    const option = typeOptions.find((item) => item.id === id);
+    if (option === undefined) {
+      if (id === "unsure") saves.save(cell.object, rawFor(session.style, "unsure", cell), "unsure");
+    } else {
+      const choice = typeChoice(session.style, option, cell, session.classes);
+      saves.save(cell.object, choice.raw, choice.value, choice.draft);
+    }
+    if (guided) pick(nextOpenObject(order, new Set([...decided, cell.object]), cell.object));
+  };
+  useAnswerKeys(
+    typeAnswers,
+    (raw) => {
+      if (typedCell !== null) decideType(typedCell, raw);
+    },
+    ready && typedCell !== null,
+  );
   const index = current === null ? -1 : order.indexOf(current);
   const shown = guided ? objects.filter((item) => item.object === current) : objects;
   return (
     <>
-      <ObjectOutlines engine={engine} module={module} objects={objects} />
+      <ObjectOutlines engine={engine} module={module} objects={objects} current={current} />
+      {typedCell === null ? null : (
+        <StageCellTypeBar
+          engine={engine}
+          cell={typedCell}
+          chosen={storedType(
+            session.style,
+            typedCell,
+            session.classes,
+            session.decisions.get(typedCell.object),
+          )}
+          onChoose={(option: TypeOption) => decideType(typedCell, option.id)}
+        />
+      )}
       <DockCard section="objects" order={1}>
         <section
           aria-label={t`AI objects`}

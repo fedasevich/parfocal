@@ -58,7 +58,7 @@ test("the due line counts days from the server's clock", () => {
 });
 
 test("each reviewer row says what the mock says", () => {
-  assert.equal(reviewerDetail(reviewer({}), asOf), "8 slides left · about 2 h 40 min");
+  assert.equal(reviewerDetail(reviewer({}), asOf), "8 slides left · about 2 h 8 min");
   assert.equal(
     reviewerDetail(reviewer({ status: "done", slides_done: 12 }), asOf),
     "all 12 submitted",

@@ -21,6 +21,7 @@ import { auditLabel, auditParams, defaultAuditFilter } from "./audit-model.ts";
 import { ModelStatus, TextLink, tb } from "./common.tsx";
 import { storageParts } from "./storage.tsx";
 import { barTotalTb, sourceState } from "./storage-model.ts";
+import { inPlaceSize } from "./storage-size.ts";
 
 const quietActions = new Set(["slide.opened", "decision.changed-after-sign-off"]);
 
@@ -55,6 +56,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
   if (overview === undefined) {
     return <SkeletonCards label={t`Loading the overview`} cards={6} />;
   }
+  const inPlace = inPlaceSize(overview.in_place_tb);
   const researchersShown = members.slice(0, 6).map(toPersonInfo);
   return (
     <>
@@ -74,7 +76,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
             value: tb(overview.stored_tb),
             label:
               overview.capacity_tb === null ? t`Stored` : t`Stored, of ${tb(overview.capacity_tb)}`,
-            detail: t`${tb(overview.in_place_tb)} more read in place`,
+            detail: inPlace === null ? undefined : t`${inPlace} more read in place`,
           },
           {
             value: overview.webhook_calls_today,

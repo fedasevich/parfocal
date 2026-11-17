@@ -1,3 +1,4 @@
+import json
 import uuid
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -149,6 +150,21 @@ async def millimetres_per_pixel(connection: AsyncConnection, slide_id: uuid.UUID
     return None if mpp is None else float(mpp) / 1000
 
 
+def outline_of(shape: str | None) -> list[float] | None:
+    if not shape:
+        return None
+    geometry: dict[str, Any] = json.loads(shape)
+    rings: list[Any] = geometry.get("coordinates") or []
+    if geometry.get("type") == "MultiPolygon":
+        rings = rings[0] if rings else []
+    ring: list[list[float]] = rings[0] if rings else []
+    if len(ring) > 1 and ring[0] == ring[-1]:
+        ring = ring[:-1]
+    if len(ring) < 3:
+        return None
+    return [float(value) for point in ring for value in point[:2]]
+
+
 async def region_claims(
     connection: AsyncConnection,
     set_id: uuid.UUID,
@@ -170,6 +186,7 @@ async def region_claims(
                 func.ST_XMax(result_objects.c.geometry) - func.ST_XMin(result_objects.c.geometry),
                 func.ST_YMax(result_objects.c.geometry) - func.ST_YMin(result_objects.c.geometry),
             ).label("across"),
+            func.ST_AsGeoJSON(result_objects.c.geometry).label("shape"),
         ).where(
             result_objects.c.result_set_id == set_id,
             result_objects.c.kind == "region",
@@ -184,6 +201,7 @@ async def region_claims(
             score=share(certainty_of(row.class_index, row.score, row.probabilities, temperature)),
             size_mm=None if mm is None else round(float(row.across) * mm, 3),
             other_class=None if other is None else names.get(other),
+            outline=outline_of(row.shape),
         )
     return claims
 

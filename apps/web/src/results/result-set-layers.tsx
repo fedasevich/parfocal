@@ -55,14 +55,15 @@ export function ResultSetLayers({ slideId, adding, onAdd, heatmaps }: ResultSetL
       </div>
       {sets.map((set) => (
         <div key={set.id} className="grid gap-1">
-          <div
-            data-testid="result-set-layer"
-            className="flex items-center justify-between gap-2 text-body-sm"
-          >
-            <span className="truncate">{set.name}</span>
-            <span className="shrink-0 text-fg-dim">
-              {set.model_version ?? set.source_file ?? ""}
+          <div data-testid="result-set-layer" className="grid min-w-0 gap-0.5 text-body-sm">
+            <span className="min-w-0 break-words" title={set.name} data-testid="result-set-name">
+              {set.name}
             </span>
+            {(set.model_version ?? set.source_file) ? (
+              <span className="min-w-0 truncate text-caption text-fg-dim">
+                {set.model_version ?? set.source_file}
+              </span>
+            ) : null}
           </div>
           <HeatmapControls set={set} heatmaps={heatmaps} />
         </div>

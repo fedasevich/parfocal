@@ -3,7 +3,7 @@ import { Switch } from "@parfocal/ui/components/switch";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
-type Stat = { value: React.ReactNode; label: string; detail: React.ReactNode };
+type Stat = { value: React.ReactNode; label: string; detail?: React.ReactNode };
 
 function StatStrip({
   stats,
@@ -28,7 +28,9 @@ function StatStrip({
             {stat.value}
           </b>
           <span className="text-body-sm text-fg-dim">{stat.label}</span>
-          <small className="text-caption text-fg-faint">{stat.detail}</small>
+          {stat.detail === undefined ? null : (
+            <small className="text-caption text-fg-faint">{stat.detail}</small>
+          )}
         </div>
       ))}
     </div>

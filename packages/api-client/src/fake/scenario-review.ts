@@ -375,3 +375,27 @@ export const outlinedObjects: ScenarioReviewObject[] = [
   outlinedRegion("R2", 0.81, 1.4, [560, 180, 760, 200, 790, 340, 600, 380]),
   outlinedRegion("R3", 0.66, 0.9, [420, 480, 610, 470, 640, 640, 450, 660]),
 ];
+
+const outlinedCell = (
+  object: string,
+  className: string,
+  score: number,
+  x: number,
+  y: number,
+): ScenarioReviewObject => ({
+  object,
+  kind: "cell",
+  className,
+  score,
+  sizeMm: null,
+  otherClass: null,
+  detectorScore: 0.9,
+  foreground: 0.8,
+  outline: [x - 6, y - 5, x + 5, y - 6, x + 7, y + 4, x - 1, y + 7, x - 7, y + 2],
+});
+
+export const outlinedCells: ScenarioReviewObject[] = [
+  outlinedCell("C1", "Tumor", 0.91, 300, 240),
+  outlinedCell("C2", "Immune", 0.74, 520, 300),
+  outlinedCell("C3", "Stroma", 0.58, 420, 520),
+];

@@ -3,6 +3,7 @@ import { test } from "node:test";
 import type { ReviewObject } from "@parfocal/api-client";
 import {
   chosenType,
+  storedType,
   typeAnswers,
   typeChoice,
   typeOptions,
@@ -68,4 +69,17 @@ test("the pressed button follows the saved answer", () => {
   const choice = typeChoice(blind, option("Stroma"), cell, classes);
   assert.equal(chosenType(blind, cell, classes, choice), "Stroma");
   assert.equal(chosenType(blind, cell, classes, undefined), undefined);
+});
+
+test("a stored decision reads back as the type that made it", () => {
+  for (const id of ["keep", "Stroma", "notcell"]) {
+    const choice = typeChoice(agree, option(id), cell, classes);
+    const stored = {
+      answer: choice.raw,
+      reasons: choice.draft?.reasons ?? [],
+      reason_class_id: choice.draft?.reason_class_id ?? null,
+    };
+    assert.equal(storedType(agree, cell, classes, stored), id);
+  }
+  assert.equal(storedType(agree, cell, classes, undefined), undefined);
 });

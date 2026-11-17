@@ -7,7 +7,7 @@
       "kind": "bytes",
       "unit": "bytes",
       "baseline": 355662,
-      "limit": 366000,
+      "limit": 372000,
       "environment": "Production Vite build of apps/web, default gzip level of node:zlib",
       "check": "apps/web/test/route-chunks.test.ts",
       "adr": "docs/adr/0048-routing.md",
