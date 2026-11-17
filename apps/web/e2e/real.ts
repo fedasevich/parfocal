@@ -11,7 +11,7 @@ export const area = {
   team: "@team",
 } as const;
 
-export const switchedAreas: readonly string[] = [area.login, area.upload, area.review];
+export const switchedAreas: readonly string[] = [area.login, area.upload, area.review, area.team];
 
 export const realTags = (tag: (typeof area)[keyof typeof area]) => ({ tag: ["@real", tag] });
 
@@ -34,9 +34,17 @@ export async function signIn(page: Page, returnTo: string): Promise<void> {
   await page.getByRole("textbox", { name: "Work email" }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const target = returnTo.split("?")[0];
   await expect
-    .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
-    .toBe(returnTo.split("?")[0]);
+    .poll(
+      async () => {
+        const notNow = page.getByRole("button", { name: "Not now", exact: true });
+        if (await notNow.isVisible()) await notNow.click();
+        return new URL(page.url()).pathname;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(target);
   if (onRealApi) await ensureActiveWorkspace(page);
 }
 

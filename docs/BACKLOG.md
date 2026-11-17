@@ -5238,7 +5238,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-001, IAM-007, NOTIF-004.
   Size: M.
 
-- [ ] TASK-007 · Nudge, reassign and change a task
+- [x] TASK-007 · Nudge, reassign and change a task
   The researcher nudges reviewers who are behind with a message, reassigns slides, adds a reviewer and changes the due date, each audited and notified. Reassigning moves a reviewer's slides that are not started by default, or every slide, and then the decisions already given stay with the first reviewer's name and the new reviewer starts fresh on those slides. A reassign never goes to the same person.
   Done when API tests cover each action, both ways of reassigning with the decisions kept under the first reviewer, and a refused reassign to the same person, and E2E nudges from Assigned by me and from Team (TEAM-007).
   Depends on TASK-001, NOTIF-001. Reassigning never drops a recorded first read ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)). Refs mock: team/nudge, mock: team/reassign, mock: team/partial, doc 44.
