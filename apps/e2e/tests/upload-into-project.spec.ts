@@ -1,16 +1,6 @@
-import { execFileSync } from "node:child_process";
 import { fixturePath } from "@parfocal/test-fixtures";
 import { expect, type Page, test } from "@playwright/test";
-import {
-  call,
-  field,
-  idOf,
-  type Reply,
-  researcherWorkspace,
-  root,
-  signIn,
-  sql,
-} from "./support.ts";
+import { call, field, idOf, type Reply, researcherWorkspace, signIn, sql } from "./support.ts";
 
 const SLIDE = "CMU-1-Small-Region.svs";
 const RESULT = "CMU-1-Small-Region.geojson";
@@ -43,38 +33,38 @@ const regions = JSON.stringify({
   ],
 });
 
-function runIngest(tenantId: string): void {
-  execFileSync(
-    "uv",
-    [
-      "run",
-      "--package",
-      "parfocal-ingest",
-      "python",
-      "-m",
-      "parfocal_ingest",
-      "--idle-exit",
-      "3",
-      "--poll",
-      "0.2",
-      "--workspace",
-      tenantId,
-    ],
-    { cwd: root, stdio: "ignore", timeout: 120_000 },
-  );
-}
-
-function ensureLocalBucket(): void {
-  execFileSync("uv", ["run", "python", "-m", "parfocal_common.local_bucket"], {
-    cwd: root,
-    stdio: "ignore",
-  });
-}
+const SETTLED = new Set(["ready", "failed", "skipped"]);
 
 async function statusOf(page: Page, uploadId: string): Promise<Reply> {
   const reply = await call(page, "GET", `/api/uploads/${uploadId}/status`);
   expect(reply.status, JSON.stringify(reply.json)).toBe(200);
   return reply;
+}
+
+function needsChoices(reply: Reply): boolean {
+  return Reflect.get(reply.json ?? {}, "reason") === "needs-choices";
+}
+
+function settled(reply: Reply): boolean {
+  return SETTLED.has(String(Reflect.get(reply.json ?? {}, "status")));
+}
+
+async function settledStatusOf(
+  page: Page,
+  uploadId: string,
+  done: (reply: Reply) => boolean = settled,
+): Promise<Reply> {
+  let latest = await statusOf(page, uploadId);
+  await expect
+    .poll(
+      async () => {
+        latest = await statusOf(page, uploadId);
+        return done(latest);
+      },
+      { timeout: 120_000, intervals: [500, 1_000] },
+    )
+    .toBe(true);
+  return latest;
 }
 
 async function uploadResult(
@@ -110,8 +100,6 @@ async function uploadResult(
   expect(done.status, JSON.stringify(done.json)).toBe(200);
   return uploadId;
 }
-
-test.beforeAll(ensureLocalBucket);
 
 test("an SVS and its GeoJSON result upload into a project and both show there", async ({
   page,
@@ -157,18 +145,20 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
     ),
   ).toBe("2");
 
-  runIngest(tenantId);
-  const slideState = await statusOf(page, slideUploadId);
+  const slideState = await settledStatusOf(page, slideUploadId);
   expect(slideState.json).toMatchObject({ status: "ready" });
   const slideId = field(slideState, "slide_id");
-  const waiting = await statusOf(page, resultUploadId);
+  const waiting = await settledStatusOf(
+    page,
+    resultUploadId,
+    (reply) => settled(reply) || needsChoices(reply),
+  );
   expect(waiting.json).toMatchObject({ slide_id: slideId });
-  if (Reflect.get(waiting.json ?? {}, "reason") === "needs-choices") {
+  if (needsChoices(waiting)) {
     const chosen = await call(page, "PUT", `/api/uploads/${resultUploadId}/import-choices`, {});
     expect(chosen.status, JSON.stringify(chosen.json)).toBe(200);
-    runIngest(tenantId);
   }
-  const resultState = await statusOf(page, resultUploadId);
+  const resultState = await settledStatusOf(page, resultUploadId);
   expect(resultState.json).toMatchObject({ status: "ready", slide_id: slideId });
   const resultSetId = field(resultState, "result_set_id");
 
