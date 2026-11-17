@@ -11,8 +11,11 @@ export type OutlineTyper = (
   outlines: readonly { points: number[] }[],
 ) => Promise<OutlineTypes>;
 
-export const serverTyper: OutlineTyper = async (slideId, outlines) =>
-  (await typeOutlines(slideId, { outlines: [...outlines] })).data;
+export const serverTyper: OutlineTyper = async (slideId, outlines) => {
+  const response = await typeOutlines(slideId, { outlines: [...outlines] });
+  if (response.status !== 200) throw new Error("The typer did not answer");
+  return response.data;
+};
 
 export const typerBatch = 500;
 
@@ -30,7 +33,7 @@ function typingOf(answer: OutlineTypes, typed: TypedOutline, confidence: number 
   return {
     typer: answer.typer,
     version: answer.version,
-    probabilities: typed.probabilities,
+    probabilities: { ...typed.probabilities },
     type: typed.type,
     alternatives: typed.alternatives,
     foreground: typed.foreground,

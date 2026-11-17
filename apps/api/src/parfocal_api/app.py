@@ -55,6 +55,7 @@ from parfocal_api import (
     notifications,
     opinion_forms,
     opinions,
+    outline_types,
     own_workspaces,
     painted_maps,
     password_login,
@@ -354,6 +355,7 @@ def create_app(
     app.include_router(slide_tissue.router)
     app.include_router(slide_embeddings.router)
     app.include_router(view_maps.router)
+    app.include_router(outline_types.router)
     app.include_router(slide_areas.router)
 
     return app

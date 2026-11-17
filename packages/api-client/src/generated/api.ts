@@ -4053,6 +4053,73 @@ export const Outcome = {
   unmatched: "unmatched",
 } as const;
 
+export interface OutlineToType {
+  /**
+   * @minItems 6
+   * @maxItems 4096
+   */
+  points: number[];
+}
+
+export interface TypeShares {
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  tumor: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  stroma: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  immune: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  other: number;
+}
+
+export type TyperClass = (typeof TyperClass)[keyof typeof TyperClass];
+
+export const TyperClass = {
+  tumor: "tumor",
+  stroma: "stroma",
+  immune: "immune",
+  other: "other",
+} as const;
+
+export interface TypedOutline {
+  probabilities: TypeShares;
+  type: TyperClass;
+  alternatives: TyperClass[];
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  foreground: number;
+}
+
+export interface OutlineTypes {
+  slide_id: string;
+  typer: string;
+  version: string;
+  calibrated: boolean;
+  outlines: TypedOutline[];
+}
+
+export interface OutlinesToType {
+  /**
+   * @minItems 1
+   * @maxItems 500
+   */
+  outlines: OutlineToType[];
+}
+
 export interface PaintedMap {
   id: string;
   slide_id: string;
@@ -71605,6 +71672,171 @@ export const useScoreViewMapTile = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getScoreViewMapTileMutationOptions(options), queryClient);
+};
+
+export type typeOutlinesResponse200 = {
+  data: OutlineTypes;
+  status: 200;
+};
+
+export type typeOutlinesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type typeOutlinesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type typeOutlinesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type typeOutlinesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type typeOutlinesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type typeOutlinesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type typeOutlinesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type typeOutlinesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type typeOutlinesResponseSuccess = typeOutlinesResponse200 & {
+  headers: Headers;
+};
+export type typeOutlinesResponseError = (
+  | typeOutlinesResponse400
+  | typeOutlinesResponse401
+  | typeOutlinesResponse403
+  | typeOutlinesResponse404
+  | typeOutlinesResponse409
+  | typeOutlinesResponse422
+  | typeOutlinesResponse429
+  | typeOutlinesResponse500
+) & {
+  headers: Headers;
+};
+
+export type typeOutlinesResponse = typeOutlinesResponseSuccess | typeOutlinesResponseError;
+
+export const getTypeOutlinesUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/outline-types`;
+};
+
+/**
+ * @summary Type Outlines
+ */
+export const typeOutlines = async (
+  slideId: string,
+  outlinesToType: OutlinesToType,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<typeOutlinesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<typeOutlinesResponse>(getTypeOutlinesUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(outlinesToType),
+  });
+};
+
+export const getTypeOutlinesMutationKey = () => ["typeOutlines"] as const;
+
+export const getTypeOutlinesMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof typeOutlines>>,
+    TError,
+    TypeOutlinesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof typeOutlines>>,
+  TError,
+  TypeOutlinesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTypeOutlinesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof typeOutlines>>,
+    TypeOutlinesMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return typeOutlines(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TypeOutlinesMutationResult = NonNullable<Awaited<ReturnType<typeof typeOutlines>>>;
+export type TypeOutlinesMutationBody = OutlinesToType;
+export type TypeOutlinesMutationError = Problem;
+export type TypeOutlinesMutationVariables = { slideId: string; data: OutlinesToType };
+
+/**
+ * @summary Type Outlines
+ */
+export const useTypeOutlines = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof typeOutlines>>,
+      TError,
+      TypeOutlinesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof typeOutlines>>,
+  TError,
+  TypeOutlinesMutationVariables,
+  TContext
+> => {
+  return useMutation(getTypeOutlinesMutationOptions(options), queryClient);
 };
 
 export type listSlideAreasResponse200 = {

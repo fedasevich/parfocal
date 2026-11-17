@@ -86,6 +86,7 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
         "test_a_person_from_another_domain_cannot_join_or_ask",
     ),
     "scoreViewMapTile": ("test_view_maps", "test_anyone_who_can_read_the_slide_may_ask"),
+    "typeOutlines": ("test_outline_types", "test_anyone_who_can_read_the_slide_may_ask"),
 }
 
 CONFLICT = frozenset({409})

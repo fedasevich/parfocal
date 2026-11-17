@@ -177,9 +177,11 @@ test("PathoSAM's typer scores under the accuracy floor and CAMELYON's does not",
 
 test("the fake server typer returns one calibrated HoVer-NeXt type per outline", async () => {
   const square = (x: number) => [x - 8, 8, x + 8, 8, x + 8, 24, x - 8, 24];
-  const { data } = await typeOutlines(a1.id, {
-    outlines: [{ points: square(16) }, { points: square(112) }],
-  });
+  const data = body(
+    await typeOutlines(a1.id, {
+      outlines: [{ points: square(16) }, { points: square(112) }],
+    }),
+  );
   assert.equal(data.typer, "pathosam-hovernext");
   assert.equal(data.calibrated, true);
   assert.deepEqual(
@@ -187,7 +189,8 @@ test("the fake server typer returns one calibrated HoVer-NeXt type per outline",
     ["tumor", "other"],
   );
   for (const outline of data.outlines) {
-    const sum = Object.values(outline.probabilities).reduce((total, share) => total + share, 0);
+    const { tumor, stroma, immune, other } = outline.probabilities;
+    const sum = tumor + stroma + immune + other;
     assert.ok(Math.abs(sum - 1) < 1e-9);
   }
   await assert.rejects(typeOutlines(a1.id, { outlines: [] }));

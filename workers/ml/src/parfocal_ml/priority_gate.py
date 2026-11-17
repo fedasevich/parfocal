@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from parfocal_common.embedding_cache import EMBEDDING_CONTENT_TYPE, tile_key
+from parfocal_common.outline_types import KIND as OUTLINE_TYPES_KIND
 from parfocal_common.view_maps import KIND as VIEW_MAP_KIND
 from parfocal_common.warm_gate import WARM_EVERY_SECONDS, Device, ModalPools, Pools, Warm, WarmGate
 from parfocal_ml.embedding_service import Encoder, TileReader, Writer, pack_embedding
@@ -23,9 +24,12 @@ class Kind(StrEnum):
     EMBEDDING_CACHE = "embedding-cache"
     TUMOR_MAP = "tumor-map"
     VIEW_MAP = VIEW_MAP_KIND
+    OUTLINE_TYPES = OUTLINE_TYPES_KIND
 
 
-INTERACTIVE_KINDS = frozenset({Kind.WARM, Kind.EMBED, Kind.REGION_PASS, Kind.VIEW_MAP})
+INTERACTIVE_KINDS = frozenset(
+    {Kind.WARM, Kind.EMBED, Kind.REGION_PASS, Kind.VIEW_MAP, Kind.OUTLINE_TYPES}
+)
 JOB_KINDS = frozenset({Kind.DETECT, Kind.TYPE, Kind.EMBEDDING_CACHE, Kind.TUMOR_MAP})
 
 

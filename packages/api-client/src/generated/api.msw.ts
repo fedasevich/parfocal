@@ -107,6 +107,7 @@ import type {
   OpinionAnswers,
   OpinionForm,
   Organisation,
+  OutlineTypes,
   PaintedMap,
   PaintedMapContent,
   PaintedMapVersion,
@@ -324,6 +325,7 @@ import {
   TenantKind,
   TenantStatus,
   TierTask,
+  TyperClass,
   UncheckedExport,
   UploadKind,
   UploadStatus,
@@ -17075,6 +17077,29 @@ export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
 export const getScoreViewMapTileResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getTypeOutlinesResponseMock = (
+  overrideResponse: Partial<Extract<OutlineTypes, object>> = {},
+): OutlineTypes => ({
+  slide_id: faker.string.uuid(),
+  typer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  calibrated: faker.datatype.boolean(),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      probabilities: {
+        tumor: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        stroma: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        immune: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        other: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      },
+      type: faker.helpers.arrayElement(Object.values(TyperClass)),
+      alternatives: faker.helpers.arrayElements(Object.values(TyperClass)),
+      foreground: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getListSlideAreasResponseMock = (): SlideArea[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -25372,6 +25397,30 @@ export const getScoreViewMapTileMockHandler = (
   );
 };
 
+export const getTypeOutlinesMockHandler = (
+  overrideResponse?:
+    | OutlineTypes
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<OutlineTypes> | OutlineTypes),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/outline-types",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTypeOutlinesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListSlideAreasMockHandler = (
   overrideResponse?:
     | SlideArea[]
@@ -25757,5 +25806,6 @@ export const getParfocalAPIMock = () => [
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),
   getScoreViewMapTileMockHandler(),
+  getTypeOutlinesMockHandler(),
   getListSlideAreasMockHandler(),
 ];

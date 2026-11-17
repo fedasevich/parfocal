@@ -74,6 +74,12 @@ def view_map_runner(call: Mapping[str, object]) -> Mapping[str, object]:
     return answer_view_map(call)
 
 
+def outline_types_runner(call: Mapping[str, object]) -> Mapping[str, object]:
+    from parfocal_ml.outline_typer_worker import answer_outline_types_call
+
+    return answer_outline_types_call(call)
+
+
 def secret_names(pool: PoolLimits) -> tuple[str, ...]:
     if pool.family is TUMOR_MAP_FAMILY:
         return TUMOR_MAP_SECRETS
@@ -86,7 +92,7 @@ def default_runners(pool: PoolLimits) -> dict[str, Runner]:
     if pool.family is TUMOR_MAP_FAMILY:
         return {Kind.TUMOR_MAP: tumor_map_runner(pool)}
     if pool.family is VIEW_MAP_FAMILY:
-        return {Kind.VIEW_MAP: view_map_runner}
+        return {Kind.VIEW_MAP: view_map_runner, Kind.OUTLINE_TYPES: outline_types_runner}
     return {}
 
 
