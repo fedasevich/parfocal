@@ -1,6 +1,6 @@
 import { statSync } from "node:fs";
-import { expect, test } from "@playwright/test";
-import { call, field, idOf, researcherWorkspace, root, signIn, sql } from "./support.ts";
+import { debugHandle, expect, test } from "./harness.ts";
+import { call, idOf, root, sql } from "./support.ts";
 
 const fixture = `${root}packages/test-fixtures/synthetic/synthetic-jpeg.tiff`;
 
@@ -13,14 +13,8 @@ const corners = [
 
 test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds the same shape", async ({
   page,
+  researcher,
 }) => {
-  await signIn(page, "/");
-  const profile = await call(page, "GET", "/api/me");
-  const me = field(profile, "user_id");
-  const home = Reflect.get(profile.json ?? {}, "active_tenant_id") as unknown;
-  const tenantId = researcherWorkspace(me);
-  const switched = await call(page, "PUT", "/api/me/workspace", { tenant_id: tenantId });
-  expect(switched.status, JSON.stringify(switched.json)).toBe(200);
   const sample = await call(page, "POST", "/api/projects/sample");
   expect(sample.status, JSON.stringify(sample.json)).toBe(201);
   const projectId = idOf(sample);
@@ -34,6 +28,7 @@ test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds t
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await debugHandle(page, "jumpTo");
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await page.keyboard.press("p");
   for (const [x, y] of corners) await page.mouse.click(box.x + x, box.y + y);
@@ -51,7 +46,8 @@ test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds t
 
   const [kind = "", number = "", type = "", points = "", srid = ""] = sql(
     `SELECT kind || '|' || number || '|' || GeometryType(geometry) || '|' || ST_NPoints(geometry) ` +
-      `|| '|' || ST_SRID(geometry) FROM annotations WHERE slide_id = '${slideId}'`,
+      `|| '|' || ST_SRID(geometry) FROM annotations ` +
+      `WHERE slide_id = '${slideId}' AND tenant_id = '${researcher.tenantId}'`,
   ).split("|");
   expect([kind, number, type, points, srid]).toEqual(["region", "1", "POLYGON", "5", "0"]);
   const stored = sql(
@@ -60,8 +56,4 @@ test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds t
       `WHERE slide_id = '${slideId}' AND point.path[1] < 5`,
   );
   expect(stored).toBe(drawn);
-
-  if (typeof home === "string") {
-    await call(page, "PUT", "/api/me/workspace", { tenant_id: home });
-  }
 });

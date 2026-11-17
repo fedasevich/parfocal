@@ -4,7 +4,7 @@ import { call, signIn } from "./support.ts";
 
 const rounds = Number(process.env["PARFOCAL_MAIN_PATH_ROUNDS"] ?? 0);
 
-test.use({ viewport: { width: 1440, height: 900 } });
+test.use({ viewport: { width: 1440, height: 900 }, video: "off" });
 test.skip(rounds === 0, "Set PARFOCAL_MAIN_PATH_ROUNDS to measure the main paths");
 
 type Round = { open: number[]; fitted: number[]; jump: number[]; decision: number[] };

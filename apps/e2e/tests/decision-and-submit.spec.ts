@@ -1,17 +1,10 @@
-import { expect, test } from "@playwright/test";
-import { call, field, idOf, readSession, researcherWorkspace, signIn, sql } from "./support.ts";
+import { expect, test } from "./harness.ts";
+import { call, idOf, sql } from "./support.ts";
 
 test("a reviewer decides on an AI region, submits, and the slide shows as submitted", async ({
   page,
+  researcher,
 }) => {
-  await signIn(page, "/");
-  const profile = await call(page, "GET", "/api/me");
-  const me = field(profile, "user_id");
-  const home = Reflect.get(profile.json ?? {}, "active_tenant_id") as unknown;
-  const { subject } = await readSession(page);
-  const tenantId = researcherWorkspace(me);
-  const switched = await call(page, "PUT", "/api/me/workspace", { tenant_id: tenantId });
-  expect(switched.status, JSON.stringify(switched.json)).toBe(200);
   const sample = await call(page, "POST", "/api/projects/sample");
   expect(sample.status, JSON.stringify(sample.json)).toBe(201);
   const projectId = idOf(sample);
@@ -66,7 +59,7 @@ test("a reviewer decides on an AI region, submits, and the slide shows as submit
     `SELECT user_id || '|' || (submitted_at > now() - interval '1 minute') FROM review_assignments ` +
       `WHERE task_id = '${taskId}' AND slide_id = '${slideId}'`,
   ).split("|");
-  expect(reviewer).toBe(me);
+  expect(reviewer).toBe(researcher.me);
   expect(recent).toBe("true");
   expect(
     sql(
@@ -74,12 +67,9 @@ test("a reviewer decides on an AI region, submits, and the slide shows as submit
         `JOIN audit_people p ON p.id = e.actor_id ` +
         `WHERE e.target_id = '${taskId}' AND e.action = 'task.review-submitted'`,
     ),
-  ).toBe(`${subject}|${slideId}`);
+  ).toBe(`${researcher.subject}|${slideId}`);
 
   await page.goto(`/projects/${projectId}?tab=slides`);
   await expect(page.getByRole("row", { name: /tumor_001/ })).toContainText("submitted");
   await expect(page.getByRole("row", { name: /tumor_002/ })).toContainText("assigned");
-  if (typeof home === "string") {
-    await call(page, "PUT", "/api/me/workspace", { tenant_id: home });
-  }
 });

@@ -248,6 +248,7 @@ jobs:
         with:
           tofu_version: 1.13.x
           tofu_wrapper: false
+      - run: pnpm --filter @parfocal/e2e exec playwright install ffmpeg
       - run: pnpm stack:up
       - run: docker pull --platform linux/amd64 kristophjunge/test-saml-idp:1.15
       - run: pnpm test:e2e
@@ -265,9 +266,11 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
       - if: failure()
-        run: docker compose -f compose.yaml -f infra/local/stack.compose.yaml logs
+        run: |
+          mkdir -p apps/e2e/test-results
+          docker compose -f compose.yaml -f infra/local/stack.compose.yaml logs --no-color | tee apps/e2e/test-results/stack.log
       - if: failure()
-        run: docker compose -p parfocal-zitadel -f infra/local/zitadel.compose.yaml logs zitadel
+        run: docker compose -p parfocal-zitadel -f infra/local/zitadel.compose.yaml logs --no-color zitadel | tee apps/e2e/test-results/zitadel.log
       - if: failure()
         uses: actions/upload-artifact@v7
         with:

@@ -1,6 +1,7 @@
 import { fixturePath } from "@parfocal/test-fixtures";
-import { expect, type Page, test } from "@playwright/test";
-import { call, field, idOf, type Reply, researcherWorkspace, signIn, sql } from "./support.ts";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./harness.ts";
+import { call, field, idOf, type Reply, sql } from "./support.ts";
 
 const SLIDE = "CMU-1-Small-Region.svs";
 const RESULT = "CMU-1-Small-Region.geojson";
@@ -103,15 +104,9 @@ async function uploadResult(
 
 test("an SVS and its GeoJSON result upload into a project and both show there", async ({
   page,
+  researcher,
 }) => {
   test.setTimeout(240_000);
-  await signIn(page, "/");
-  const profile = await call(page, "GET", "/api/me");
-  const me = field(profile, "user_id");
-  const home = Reflect.get(profile.json ?? {}, "active_tenant_id") as unknown;
-  const tenantId = researcherWorkspace(me);
-  const switched = await call(page, "PUT", "/api/me/workspace", { tenant_id: tenantId });
-  expect(switched.status, JSON.stringify(switched.json)).toBe(200);
 
   const project = await call(page, "POST", "/api/projects", { name: "Skeleton upload" });
   expect(project.status, JSON.stringify(project.json)).toBe(201);
@@ -141,7 +136,7 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   expect(
     sql(
       `SELECT count(*) FROM uploads WHERE project_id = '${projectId}' ` +
-        `AND status = 'completed' AND object_key LIKE 't/${tenantId}/%'`,
+        `AND status = 'completed' AND object_key LIKE 't/${researcher.tenantId}/%'`,
     ),
   ).toBe("2");
 
@@ -170,7 +165,7 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   ).toBe(`${caseId}|${slideId}|ready|2`);
   expect(
     sql(
-      `SELECT count(*) FROM slides WHERE project_id = '${projectId}' AND tenant_id = '${tenantId}'`,
+      `SELECT count(*) FROM slides WHERE project_id = '${projectId}' AND tenant_id = '${researcher.tenantId}'`,
     ),
   ).toBe("1");
 
@@ -184,8 +179,4 @@ test("an SVS and its GeoJSON result upload into a project and both show there", 
   await expect(page.getByTestId("result-sets")).toContainText("GeoJSON import");
   await expect(page.getByTestId("result-sets")).toContainText(`Imported from ${RESULT}`);
   await expect(page.getByTestId("result-sets")).toContainText("2 regions");
-
-  if (typeof home === "string") {
-    await call(page, "PUT", "/api/me/workspace", { tenant_id: home });
-  }
 });
