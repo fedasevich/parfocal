@@ -1774,7 +1774,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-070.
   Size: S.
 
-- [ ] VIEW-073 · Finish the custom WebGPU route
+- [x] VIEW-073 · Finish the custom WebGPU route
   VIEW-038 draws the slide and seven of eight overlay kinds on the custom WebGPU route, but not ID labels, and it has no compute culling, no level-of-detail tiers for many nuclei, no buffer size guard and no device-loss recovery. Translucent outlines also blend twice at round caps there. The developer route picker offers the route with a note that it is incomplete, since only developers see it.
   Done when the ID labels and translucent outline goldens pass on the route at Viv's tolerance, compute culling and the detail tiers draw 1.6M nuclei within the VIEW-029 budget on the Mac's GPU, and a test loses the device and the route recovers.
   Depends on VIEW-038.
