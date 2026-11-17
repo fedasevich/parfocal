@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-18
+
+- OPS-016 (browser check after every deploy) test run against a deliberately broken build, 2026-11-18, nothing deployed and no production touch, no cost. Two throwaway local Node servers served a broken page (an error screen with a console error and a 500 from /api/me, the v0.1.4 symptom) and a healthy sign-in page. Running the real smoke spec apps/web/smoke/deployed.spec.ts with PARFOCAL_SMOKE_URL pointed at each: the broken build FAILED the signed-out test (no sign-in shown, exit 1, failure screenshot and trace kept under apps/web/test-results/smoke) and the healthy page PASSED (1 passed, exit 0). The same spec passes against the real app.parfocal.eu in the deploy workflow browser-smoke job since v0.17.6, and the e2e self-test deploy-smoke-selftest.spec.ts covers the console, api and write problem kinds. The Done when holds (deploy workflow runs it, a broken build fails it, screenshots are kept as artifacts), so OPS-016 is ticked.
+
 ## 2026-11-17
 
 - VIEW-076 Browser spec stage-cells-grid-pick.spec.ts added. The cells grid exists only inside a task (it lists the task's cell review objects), so the spec opens task rt14 on the cells slide, checks all 3 tiles draw from GET /api/slides/:id/cell-crops/:number with 200, then clicks C1, C2 and C3 and checks each selects (data-current, type bar) and settles on a distinct camera centre. No app fix needed. Deployed colour and GPU check still open, left in review.
