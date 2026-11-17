@@ -1,17 +1,8 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import {
-  type AdjudicationObject,
-  adjudicationObjectSchema,
-  type DisagreementQueue,
-  disagreementQueueSchema,
-  type MyAdjudicationTask,
-  myAdjudicationTaskSchema,
-  type QueuedObjectUpdate,
-  type QueueRow,
-  queueRowSchema,
-} from "../draft/disagreements.ts";
 import { type EvaluationReport, evaluationReportSchema } from "../draft/evaluation-report.ts";
 import {
+  getGetDisagreementQueueMockHandler,
+  getGetMyAdjudicationMockHandler,
   getGetSignOffSummaryMockHandler,
   getGetTaskEvaluationMockHandler,
   getListEvaluationChangesMockHandler,
@@ -21,12 +12,18 @@ import {
   getStartEvaluationVersionMockHandler,
 } from "../generated/api.msw.ts";
 import type {
+  AdjudicationAnswer,
   AdjudicationDraft,
+  AdjudicationObject,
+  DisagreementQueue,
   Evaluation,
   EvaluationChange,
   EvaluationChanges,
   MyAdjudication,
+  MyAdjudicationTask,
   QueuedObject,
+  QueuedObjectUpdate,
+  QueueRow,
   SignOffSummary,
 } from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
@@ -122,7 +119,7 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
           at: live.decision.at,
         }
       : null;
-  return queueRowSchema.parse({
+  return {
     key,
     slide_id: slideByIndex(seed.slide).id,
     slide_label: seed.slideLabel,
@@ -143,18 +140,15 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
       ? { user_id: idOf(live.adjudicator.by), note: live.adjudicator.note }
       : null,
     edited: live.edited ? { by_user_id: idOf(editedRow.by), on: editedRow.on } : null,
-  });
+  };
 };
 
-export const toDisagreementQueue = (taskId: string): DisagreementQueue =>
-  disagreementQueueSchema.parse({
-    task_id: taskId,
-    total_objects: queueTotalObjects,
-    locked: reviewsAreIn()
-      ? null
-      : { user_id: idOf(lockedBy.by), slides_left: lockedBy.slidesLeft },
-    rows: queueRows.map(toQueueRow),
-  });
+export const toDisagreementQueue = (taskId: string): DisagreementQueue => ({
+  task_id: taskId,
+  total_objects: queueTotalObjects,
+  locked: reviewsAreIn() ? null : { user_id: idOf(lockedBy.by), slides_left: lockedBy.slidesLeft },
+  rows: queueRows.map(toQueueRow),
+});
 
 const seedOf = (slideId: string, object: string) =>
   queueRows.find((seed) => slideByIndex(seed.slide).id === slideId && seed.object === object);
@@ -180,7 +174,7 @@ const sentNote = () =>
 
 const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
   const live = liveRow(queueKey(seed));
-  return adjudicationObjectSchema.parse({
+  return {
     key: queueKey(seed),
     slide_id: slideByIndex(seed.slide).id,
     slide_label: seed.slideLabel,
@@ -192,18 +186,17 @@ const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
     reviewer_b: answerOf(seed, reviewerB),
     decision: live.adjudicated?.raw ?? null,
     decision_note: live.adjudicated?.note ?? null,
-  });
+  };
 };
 
-export const toMyAdjudication = (taskId: string): MyAdjudicationTask =>
-  myAdjudicationTaskSchema.parse({
-    task_id: taskId,
-    asked_by_user_id: idOf(researcher),
-    note: sentNote(),
-    objects: queueRows
-      .filter((seed) => forAdjudicator(liveRow(queueKey(seed))))
-      .map(toAdjudicationObject),
-  });
+export const toMyAdjudication = (taskId: string): MyAdjudicationTask => ({
+  task_id: taskId,
+  asked_by_user_id: idOf(researcher),
+  note: sentNote(),
+  objects: queueRows
+    .filter((seed) => forAdjudicator(liveRow(queueKey(seed))))
+    .map(toAdjudicationObject),
+});
 
 const counted = (keys: PersonKey[]) =>
   [...new Set(keys)].map((key) => ({
@@ -410,37 +403,6 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
 
 const taskPath = "*/api/review-tasks/:taskId";
 
-export const getGetDisagreementQueueMockHandler = (overrideResponse?: DisagreementQueue) =>
-  http.get<{ taskId: string }>(`${taskPath}/disagreement-queue`, ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toDisagreementQueue(params.taskId)),
-  );
-
-export const getUpdateQueuedObjectMockHandler = (overrideResponse?: QueueRow) =>
-  http.post<{ taskId: string; slideId: string; object: string }>(
-    `${taskPath}/disagreement-queue/:slideId/:object`,
-    async ({ params, request }) => {
-      const seed = seedOf(params.slideId, decodeURIComponent(params.object));
-      if (seed === undefined) return HttpResponse.json({ status: 404 }, { status: 404 });
-      const body = (await request.json()) as QueuedObjectUpdate;
-      const live = liveRow(queueKey(seed));
-      if (body.action === "decide" && body.raw) {
-        Object.assign(live, {
-          state: "decided",
-          decision: { raw: body.raw, note: body.note ?? null, by: researcher, at: scenarioNow },
-        });
-      }
-      if (body.action === "leave-open") {
-        Object.assign(live, {
-          state: "left-open",
-          decision: null,
-        });
-      }
-      if (body.action === "look-again") Object.assign(live, { state: "look-again", edited: false });
-      if (body.action === "keep-decisions") live.edited = false;
-      return HttpResponse.json(overrideResponse ?? toQueueRow(seed));
-    },
-  );
-
 const sendToAdjudicatorInScene = async (request: Request): Promise<QueuedObject[]> => {
   const body = (await request.json()) as AdjudicationDraft;
   const who =
@@ -481,26 +443,6 @@ const toMyAdjudications = (): MyAdjudication[] =>
       };
     });
 
-export const getGetMyAdjudicationMockHandler = (overrideResponse?: MyAdjudicationTask) =>
-  http.get<{ taskId: string }>(`${taskPath}/adjudication`, ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toMyAdjudication(params.taskId)),
-  );
-
-export const getDecideAdjudicationMockHandler = (overrideResponse?: AdjudicationObject) =>
-  http.post<{ taskId: string; slideId: string; object: string }>(
-    `${taskPath}/adjudication/:slideId/:object`,
-    async ({ params, request }) => {
-      const seed = seedOf(params.slideId, decodeURIComponent(params.object));
-      if (seed === undefined) return HttpResponse.json({ status: 404 }, { status: 404 });
-      const body = (await request.json()) as { raw: string; note?: string | null };
-      Object.assign(liveRow(queueKey(seed)), {
-        state: "adjudicated",
-        adjudicated: { raw: body.raw, at: scenarioNow, note: body.note?.trim() || null },
-      });
-      return HttpResponse.json(overrideResponse ?? toAdjudicationObject(seed));
-    },
-  );
-
 export const getGetEvaluationReportMockHandler = (overrideResponse?: EvaluationReport) =>
   http.get<{ taskId: string }>(`${taskPath}/evaluation-report`, ({ params }) =>
     HttpResponse.json(overrideResponse ?? toEvaluationReport(params.taskId)),
@@ -510,30 +452,6 @@ const taskApi = "/api/review-tasks/{task_id}";
 
 export const adjudicationDraftOperations: DraftOperation[] = [
   {
-    operationId: "getDisagreementQueue",
-    method: "get",
-    path: `${taskApi}/disagreement-queue`,
-    handler: () => getGetDisagreementQueueMockHandler(),
-  },
-  {
-    operationId: "updateQueuedObject",
-    method: "post",
-    path: `${taskApi}/disagreement-queue/{slide_id}/{object}`,
-    handler: () => getUpdateQueuedObjectMockHandler(),
-  },
-  {
-    operationId: "getMyAdjudication",
-    method: "get",
-    path: `${taskApi}/adjudication`,
-    handler: () => getGetMyAdjudicationMockHandler(),
-  },
-  {
-    operationId: "decideAdjudication",
-    method: "post",
-    path: `${taskApi}/adjudication/{slide_id}/{object}`,
-    handler: () => getDecideAdjudicationMockHandler(),
-  },
-  {
     operationId: "getEvaluationReport",
     method: "get",
     path: `${taskApi}/evaluation-report`,
@@ -541,8 +459,55 @@ export const adjudicationDraftOperations: DraftOperation[] = [
   },
 ];
 
+type ObjectParams = { taskId: string; slideId: string; objectId: string };
+
+const objectOf = (params: ObjectParams) =>
+  seedOf(params.slideId, decodeURIComponent(params.objectId));
+
+const notQueued = () => HttpResponse.json({ status: 404 }, { status: 404 });
+
+const updateQueuedObjectInScene = () =>
+  http.post<ObjectParams>(
+    `${taskPath}/disagreement-queue/:slideId/:objectId`,
+    async ({ params, request }) => {
+      const seed = objectOf(params);
+      if (seed === undefined) return notQueued();
+      const body = (await request.json()) as QueuedObjectUpdate;
+      const live = liveRow(queueKey(seed));
+      if (body.action === "decide" && body.raw) {
+        Object.assign(live, {
+          state: "decided",
+          decision: { raw: body.raw, note: body.note ?? null, by: researcher, at: scenarioNow },
+        });
+      }
+      if (body.action === "leave-open") Object.assign(live, { state: "left-open", decision: null });
+      if (body.action === "look-again") Object.assign(live, { state: "look-again", edited: false });
+      if (body.action === "keep-decisions") live.edited = false;
+      return HttpResponse.json<QueueRow>(toQueueRow(seed));
+    },
+  );
+
+const decideAdjudicationInScene = () =>
+  http.post<ObjectParams>(
+    `${taskPath}/adjudication/:slideId/:objectId`,
+    async ({ params, request }) => {
+      const seed = objectOf(params);
+      if (seed === undefined) return notQueued();
+      const body = (await request.json()) as AdjudicationAnswer;
+      Object.assign(liveRow(queueKey(seed)), {
+        state: "adjudicated",
+        adjudicated: { raw: body.raw, at: scenarioNow, note: body.note?.trim() || null },
+      });
+      return HttpResponse.json<AdjudicationObject>(toAdjudicationObject(seed));
+    },
+  );
+
 export function adjudicationHandlers(): RequestHandler[] {
   return [
+    getGetDisagreementQueueMockHandler(({ params }) => toDisagreementQueue(String(params.taskId))),
+    updateQueuedObjectInScene(),
+    getGetMyAdjudicationMockHandler(({ params }) => toMyAdjudication(String(params.taskId))),
+    decideAdjudicationInScene(),
     getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),
     getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
     getGetTaskEvaluationMockHandler(({ params }) => toTaskEvaluation(String(params.taskId))),

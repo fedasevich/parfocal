@@ -17,13 +17,7 @@ import { fakeView } from "./view.ts";
 import { viewerDraftOperations } from "./viewer-handlers.ts";
 import { viewerToolsDraftOperations } from "./viewer-tools-handlers.ts";
 
-export {
-  getDecideAdjudicationMockHandler,
-  getGetDisagreementQueueMockHandler,
-  getGetEvaluationReportMockHandler,
-  getGetMyAdjudicationMockHandler,
-  getUpdateQueuedObjectMockHandler,
-} from "./adjudication-handlers.ts";
+export { getGetEvaluationReportMockHandler } from "./adjudication-handlers.ts";
 export {
   getGetAdminOverviewMockHandler,
   getGetInvitePreviewMockHandler,
@@ -57,12 +51,7 @@ export {
   getGetProjectOverviewMockHandler,
   getGetUploadBatchMockHandler,
 } from "./project-handlers.ts";
-export {
-  getGetSlideAgreementMockHandler,
-  getGetTaskDisplayMockHandler,
-  getListReviewObjectsMockHandler,
-  getListThreadCommentsMockHandler,
-} from "./review-handlers.ts";
+export { getListThreadCommentsMockHandler } from "./review-handlers.ts";
 export {
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,

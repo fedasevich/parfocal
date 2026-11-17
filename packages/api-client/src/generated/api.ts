@@ -191,6 +191,11 @@ export interface AddedDraft {
   class_id?: string | null;
 }
 
+export interface AddedObject {
+  object: string;
+  note: string | null;
+}
+
 /**
  * @minLength 1
  * @maxLength 2048
@@ -275,6 +280,22 @@ export interface Adjudication {
   declined_note: string | null;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 60
+ */
+export type Raw = string;
+
+/**
+ * @maxLength 500
+ */
+export type ParfocalApiDisagreementQueueNote = string;
+
+export interface AdjudicationAnswer {
+  raw: Raw;
+  note?: ParfocalApiDisagreementQueueNote | null;
+}
+
 export interface ObjectRef {
   slide_id: string;
   object: string;
@@ -293,6 +314,38 @@ export interface AdjudicationDraft {
    */
   objects: ObjectRef[];
   note?: SendNote | null;
+}
+
+export type ObjectKind = (typeof ObjectKind)[keyof typeof ObjectKind];
+
+export const ObjectKind = {
+  region: "region",
+  cell: "cell",
+} as const;
+
+export interface AiCall {
+  class_name: string;
+  score: number;
+}
+
+export interface AnonymousAnswer {
+  raw: string;
+  reason: string | null;
+  note: string | null;
+}
+
+export interface AdjudicationObject {
+  key: string;
+  slide_id: string;
+  slide_label: string;
+  object: string;
+  kind: ObjectKind;
+  ai: AiCall;
+  size_mm: number | null;
+  reviewer_a: AnonymousAnswer;
+  reviewer_b: AnonymousAnswer;
+  decision: string | null;
+  decision_note: string | null;
 }
 
 export interface AdminRightsChange {
@@ -1784,6 +1837,78 @@ export const Device = {
   slow: "slow",
 } as const;
 
+export interface QueueLock {
+  user_id: string;
+  slides_left: number;
+}
+
+export type QueueTag = (typeof QueueTag)[keyof typeof QueueTag];
+
+export const QueueTag = {
+  differ: "differ",
+  bothai: "bothai",
+  second: "second",
+} as const;
+
+export interface QueueAnswerRecord {
+  user_id: string;
+  raw: string;
+  reason: string | null;
+  note: string | null;
+}
+
+export type QueueRowState = (typeof QueueRowState)[keyof typeof QueueRowState];
+
+export const QueueRowState = {
+  open: "open",
+  decided: "decided",
+  "left-open": "left-open",
+  "with-adjudicator": "with-adjudicator",
+  declined: "declined",
+  adjudicated: "adjudicated",
+  "look-again": "look-again",
+} as const;
+
+export interface QueueRowDecision {
+  raw: string;
+  note: string | null;
+  by_user_id: string;
+  at: string;
+}
+
+export interface QueueAdjudicator {
+  user_id: string;
+  note: string | null;
+}
+
+export interface QueueEdit {
+  by_user_id: string;
+  on: string;
+}
+
+export interface QueueRow {
+  key: string;
+  slide_id: string;
+  slide_label: string;
+  object: string;
+  kind: ObjectKind;
+  ai: AiCall;
+  size_mm: number | null;
+  tag: QueueTag;
+  answers: QueueAnswerRecord[];
+  state: QueueRowState;
+  decision: QueueRowDecision | null;
+  adjudicator: QueueAdjudicator | null;
+  edited: QueueEdit | null;
+}
+
+export interface DisagreementQueue {
+  task_id: string;
+  total_objects: number;
+  locked: QueueLock | null;
+  rows: QueueRow[];
+}
+
 export type DisagreementReasonsWidth =
   (typeof DisagreementReasonsWidth)[keyof typeof DisagreementReasonsWidth];
 
@@ -1875,6 +2000,14 @@ export interface DisplaySettings {
 export interface DisplayChoice {
   preset_id?: string | null;
   settings: DisplaySettings;
+}
+
+export type SettingValue = string | number | boolean;
+
+export interface DisplayLock {
+  setting: string;
+  value: SettingValue;
+  reason: string;
 }
 
 /**
@@ -3551,6 +3684,13 @@ export interface MyAdjudication {
   sent_at: string;
 }
 
+export interface MyAdjudicationTask {
+  task_id: string;
+  asked_by_user_id: string;
+  note: string | null;
+  objects: AdjudicationObject[];
+}
+
 export interface MyDisplay {
   task: TaskDisplaySettings;
   preset_id: string | null;
@@ -4282,6 +4422,23 @@ export interface Proportion {
   high: number;
 }
 
+export type QueueAction = (typeof QueueAction)[keyof typeof QueueAction];
+
+export const QueueAction = {
+  decide: "decide",
+  "leave-open": "leave-open",
+  "look-again": "look-again",
+  "keep-decisions": "keep-decisions",
+} as const;
+
+export type QueueAnswer = (typeof QueueAnswer)[keyof typeof QueueAnswer];
+
+export const QueueAnswer = {
+  agree: "agree",
+  disagree: "disagree",
+  unsure: "unsure",
+} as const;
+
 export interface QueueDecision {
   style: DecisionStyle | null;
   answer: string | null;
@@ -4322,6 +4479,13 @@ export interface QueuedObject {
   edited_after_decisions?: boolean;
   looking_again?: boolean;
   adjudication?: Adjudication | null;
+}
+
+export interface QueuedObjectUpdate {
+  action: QueueAction;
+  raw?: Raw | null;
+  counts_as?: QueueAnswer | null;
+  note?: ParfocalApiDisagreementQueueNote | null;
 }
 
 export type ReassignWhat = (typeof ReassignWhat)[keyof typeof ReassignWhat];
@@ -4910,6 +5074,46 @@ export interface ReviewEdit {
   updated_at: string;
 }
 
+export type ReviewObjectKind = (typeof ReviewObjectKind)[keyof typeof ReviewObjectKind];
+
+export const ReviewObjectKind = {
+  region: "region",
+  cell: "cell",
+} as const;
+
+export interface ReviewObject {
+  object: string;
+  kind: ReviewObjectKind;
+  number: number;
+  class_name: string;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  score: number;
+  size_mm: number | null;
+  other_class: string | null;
+  detector_score?: number | null;
+  foreground?: number | null;
+  outline?: number[] | null;
+}
+
+export interface SlideFacts {
+  label: string;
+  case_label: string | null;
+  stain: string;
+  width: number | null;
+  height: number | null;
+}
+
+export interface ReviewObjects {
+  task_id: string;
+  slide_id: string;
+  slide: SlideFacts;
+  objects: ReviewObject[];
+  added: AddedObject[];
+}
+
 export interface ReviewOrder {
   task_id: string;
   slide_id: string;
@@ -5366,6 +5570,14 @@ export interface SkipDraft {
   ai_score?: Score | null;
 }
 
+export interface SlideAgreement {
+  task_id: string;
+  slide_id: string;
+  with_user_id: string | null;
+  agree: number;
+  total: number;
+}
+
 export interface SlideArea {
   object: string;
   number: number;
@@ -5709,6 +5921,21 @@ export interface TaskChange {
   display?: TaskDisplaySettings | null;
   check?: CheckChange | null;
   blind_first?: boolean | null;
+}
+
+export type TaskPresetSettings = { [key: string]: SettingValue };
+
+export interface TaskPreset {
+  name: string;
+  key: string;
+  settings: TaskPresetSettings;
+}
+
+export interface TaskDisplay {
+  task_id: string;
+  task_code: string;
+  locks: DisplayLock[];
+  presets: TaskPreset[];
 }
 
 export interface TaskDraft {
@@ -35614,6 +35841,1337 @@ export function useGetReviewOrder<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listReviewObjectsResponse200 = {
+  data: ReviewObjects;
+  status: 200;
+};
+
+export type listReviewObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listReviewObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listReviewObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listReviewObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listReviewObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listReviewObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listReviewObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listReviewObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listReviewObjectsResponseSuccess = listReviewObjectsResponse200 & {
+  headers: Headers;
+};
+export type listReviewObjectsResponseError = (
+  | listReviewObjectsResponse400
+  | listReviewObjectsResponse401
+  | listReviewObjectsResponse403
+  | listReviewObjectsResponse404
+  | listReviewObjectsResponse409
+  | listReviewObjectsResponse422
+  | listReviewObjectsResponse429
+  | listReviewObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listReviewObjectsResponse =
+  | listReviewObjectsResponseSuccess
+  | listReviewObjectsResponseError;
+
+export const getListReviewObjectsUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/objects`;
+};
+
+/**
+ * @summary List Review Objects
+ */
+export const listReviewObjects = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listReviewObjectsResponse> => {
+  return apiFetch<listReviewObjectsResponse>(getListReviewObjectsUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListReviewObjectsQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/objects`] as const;
+};
+
+export const getListReviewObjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listReviewObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewObjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListReviewObjectsQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewObjects>>> = ({ signal }) =>
+    listReviewObjects(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listReviewObjects>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListReviewObjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listReviewObjects>>
+>;
+export type ListReviewObjectsQueryError = Problem;
+
+export function useListReviewObjects<
+  TData = Awaited<ReturnType<typeof listReviewObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewObjects>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewObjects<
+  TData = Awaited<ReturnType<typeof listReviewObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewObjects>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewObjects<
+  TData = Awaited<ReturnType<typeof listReviewObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewObjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Review Objects
+ */
+
+export function useListReviewObjects<
+  TData = Awaited<ReturnType<typeof listReviewObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listReviewObjects>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListReviewObjectsQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSlideAgreementResponse200 = {
+  data: SlideAgreement;
+  status: 200;
+};
+
+export type getSlideAgreementResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideAgreementResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideAgreementResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideAgreementResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideAgreementResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideAgreementResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideAgreementResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideAgreementResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideAgreementResponseSuccess = getSlideAgreementResponse200 & {
+  headers: Headers;
+};
+export type getSlideAgreementResponseError = (
+  | getSlideAgreementResponse400
+  | getSlideAgreementResponse401
+  | getSlideAgreementResponse403
+  | getSlideAgreementResponse404
+  | getSlideAgreementResponse409
+  | getSlideAgreementResponse422
+  | getSlideAgreementResponse429
+  | getSlideAgreementResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideAgreementResponse =
+  | getSlideAgreementResponseSuccess
+  | getSlideAgreementResponseError;
+
+export const getGetSlideAgreementUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/agreement`;
+};
+
+/**
+ * @summary Get Slide Agreement
+ */
+export const getSlideAgreement = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideAgreementResponse> => {
+  return apiFetch<getSlideAgreementResponse>(getGetSlideAgreementUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideAgreementQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/agreement`] as const;
+};
+
+export const getGetSlideAgreementQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideAgreement>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAgreement>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideAgreementQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideAgreement>>> = ({ signal }) =>
+    getSlideAgreement(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideAgreement>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideAgreementQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideAgreement>>
+>;
+export type GetSlideAgreementQueryError = Problem;
+
+export function useGetSlideAgreement<
+  TData = Awaited<ReturnType<typeof getSlideAgreement>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAgreement>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideAgreement>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideAgreement>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideAgreement<
+  TData = Awaited<ReturnType<typeof getSlideAgreement>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAgreement>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideAgreement>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideAgreement>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideAgreement<
+  TData = Awaited<ReturnType<typeof getSlideAgreement>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAgreement>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Agreement
+ */
+
+export function useGetSlideAgreement<
+  TData = Awaited<ReturnType<typeof getSlideAgreement>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAgreement>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideAgreementQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getTaskDisplayResponse200 = {
+  data: TaskDisplay;
+  status: 200;
+};
+
+export type getTaskDisplayResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskDisplayResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskDisplayResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskDisplayResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskDisplayResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskDisplayResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskDisplayResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTaskDisplayResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskDisplayResponseSuccess = getTaskDisplayResponse200 & {
+  headers: Headers;
+};
+export type getTaskDisplayResponseError = (
+  | getTaskDisplayResponse400
+  | getTaskDisplayResponse401
+  | getTaskDisplayResponse403
+  | getTaskDisplayResponse404
+  | getTaskDisplayResponse409
+  | getTaskDisplayResponse422
+  | getTaskDisplayResponse429
+  | getTaskDisplayResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskDisplayResponse = getTaskDisplayResponseSuccess | getTaskDisplayResponseError;
+
+export const getGetTaskDisplayUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/display`;
+};
+
+/**
+ * @summary Get Task Display
+ */
+export const getTaskDisplay = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskDisplayResponse> => {
+  return apiFetch<getTaskDisplayResponse>(getGetTaskDisplayUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskDisplayQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/display`] as const;
+};
+
+export const getGetTaskDisplayQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskDisplay>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDisplay>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskDisplayQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskDisplay>>> = ({ signal }) =>
+    getTaskDisplay(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTaskDisplay>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTaskDisplayQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskDisplay>>>;
+export type GetTaskDisplayQueryError = Problem;
+
+export function useGetTaskDisplay<
+  TData = Awaited<ReturnType<typeof getTaskDisplay>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDisplay>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskDisplay>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskDisplay>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskDisplay<
+  TData = Awaited<ReturnType<typeof getTaskDisplay>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDisplay>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskDisplay>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskDisplay>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskDisplay<
+  TData = Awaited<ReturnType<typeof getTaskDisplay>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDisplay>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Display
+ */
+
+export function useGetTaskDisplay<
+  TData = Awaited<ReturnType<typeof getTaskDisplay>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDisplay>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskDisplayQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getDisagreementQueueResponse200 = {
+  data: DisagreementQueue;
+  status: 200;
+};
+
+export type getDisagreementQueueResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getDisagreementQueueResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getDisagreementQueueResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getDisagreementQueueResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getDisagreementQueueResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getDisagreementQueueResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getDisagreementQueueResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getDisagreementQueueResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getDisagreementQueueResponseSuccess = getDisagreementQueueResponse200 & {
+  headers: Headers;
+};
+export type getDisagreementQueueResponseError = (
+  | getDisagreementQueueResponse400
+  | getDisagreementQueueResponse401
+  | getDisagreementQueueResponse403
+  | getDisagreementQueueResponse404
+  | getDisagreementQueueResponse409
+  | getDisagreementQueueResponse422
+  | getDisagreementQueueResponse429
+  | getDisagreementQueueResponse500
+) & {
+  headers: Headers;
+};
+
+export type getDisagreementQueueResponse =
+  | getDisagreementQueueResponseSuccess
+  | getDisagreementQueueResponseError;
+
+export const getGetDisagreementQueueUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/disagreement-queue`;
+};
+
+/**
+ * @summary Get Disagreement Queue
+ */
+export const getDisagreementQueue = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getDisagreementQueueResponse> => {
+  return apiFetch<getDisagreementQueueResponse>(getGetDisagreementQueueUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDisagreementQueueQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/disagreement-queue`] as const;
+};
+
+export const getGetDisagreementQueueQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDisagreementQueue>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDisagreementQueue>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDisagreementQueueQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDisagreementQueue>>> = ({ signal }) =>
+    getDisagreementQueue(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getDisagreementQueue>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetDisagreementQueueQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDisagreementQueue>>
+>;
+export type GetDisagreementQueueQueryError = Problem;
+
+export function useGetDisagreementQueue<
+  TData = Awaited<ReturnType<typeof getDisagreementQueue>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDisagreementQueue>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDisagreementQueue>>,
+          TError,
+          Awaited<ReturnType<typeof getDisagreementQueue>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDisagreementQueue<
+  TData = Awaited<ReturnType<typeof getDisagreementQueue>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDisagreementQueue>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDisagreementQueue>>,
+          TError,
+          Awaited<ReturnType<typeof getDisagreementQueue>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDisagreementQueue<
+  TData = Awaited<ReturnType<typeof getDisagreementQueue>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDisagreementQueue>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Disagreement Queue
+ */
+
+export function useGetDisagreementQueue<
+  TData = Awaited<ReturnType<typeof getDisagreementQueue>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDisagreementQueue>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetDisagreementQueueQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type updateQueuedObjectResponse200 = {
+  data: QueueRow;
+  status: 200;
+};
+
+export type updateQueuedObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type updateQueuedObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type updateQueuedObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type updateQueuedObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type updateQueuedObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type updateQueuedObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type updateQueuedObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type updateQueuedObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type updateQueuedObjectResponseSuccess = updateQueuedObjectResponse200 & {
+  headers: Headers;
+};
+export type updateQueuedObjectResponseError = (
+  | updateQueuedObjectResponse400
+  | updateQueuedObjectResponse401
+  | updateQueuedObjectResponse403
+  | updateQueuedObjectResponse404
+  | updateQueuedObjectResponse409
+  | updateQueuedObjectResponse422
+  | updateQueuedObjectResponse429
+  | updateQueuedObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type updateQueuedObjectResponse =
+  | updateQueuedObjectResponseSuccess
+  | updateQueuedObjectResponseError;
+
+export const getUpdateQueuedObjectUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/disagreement-queue/${slideId}/${objectId}`;
+};
+
+/**
+ * @summary Update Queued Object
+ */
+export const updateQueuedObject = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  queuedObjectUpdate: QueuedObjectUpdate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<updateQueuedObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<updateQueuedObjectResponse>(getUpdateQueuedObjectUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(queuedObjectUpdate),
+  });
+};
+
+export const getUpdateQueuedObjectMutationKey = () => ["updateQueuedObject"] as const;
+
+export const getUpdateQueuedObjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateQueuedObject>>,
+    TError,
+    UpdateQueuedObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateQueuedObject>>,
+  TError,
+  UpdateQueuedObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateQueuedObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateQueuedObject>>,
+    UpdateQueuedObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return updateQueuedObject(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateQueuedObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateQueuedObject>>
+>;
+export type UpdateQueuedObjectMutationBody = QueuedObjectUpdate;
+export type UpdateQueuedObjectMutationError = Problem;
+export type UpdateQueuedObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: QueuedObjectUpdate;
+};
+
+/**
+ * @summary Update Queued Object
+ */
+export const useUpdateQueuedObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateQueuedObject>>,
+      TError,
+      UpdateQueuedObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateQueuedObject>>,
+  TError,
+  UpdateQueuedObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateQueuedObjectMutationOptions(options), queryClient);
+};
+
+export type getMyAdjudicationResponse200 = {
+  data: MyAdjudicationTask;
+  status: 200;
+};
+
+export type getMyAdjudicationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyAdjudicationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyAdjudicationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyAdjudicationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyAdjudicationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyAdjudicationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyAdjudicationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMyAdjudicationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyAdjudicationResponseSuccess = getMyAdjudicationResponse200 & {
+  headers: Headers;
+};
+export type getMyAdjudicationResponseError = (
+  | getMyAdjudicationResponse400
+  | getMyAdjudicationResponse401
+  | getMyAdjudicationResponse403
+  | getMyAdjudicationResponse404
+  | getMyAdjudicationResponse409
+  | getMyAdjudicationResponse422
+  | getMyAdjudicationResponse429
+  | getMyAdjudicationResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyAdjudicationResponse =
+  | getMyAdjudicationResponseSuccess
+  | getMyAdjudicationResponseError;
+
+export const getGetMyAdjudicationUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/adjudication`;
+};
+
+/**
+ * @summary Get My Adjudication
+ */
+export const getMyAdjudication = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyAdjudicationResponse> => {
+  return apiFetch<getMyAdjudicationResponse>(getGetMyAdjudicationUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyAdjudicationQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/adjudication`] as const;
+};
+
+export const getGetMyAdjudicationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyAdjudication>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdjudication>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyAdjudicationQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAdjudication>>> = ({ signal }) =>
+    getMyAdjudication(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getMyAdjudication>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetMyAdjudicationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyAdjudication>>
+>;
+export type GetMyAdjudicationQueryError = Problem;
+
+export function useGetMyAdjudication<
+  TData = Awaited<ReturnType<typeof getMyAdjudication>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdjudication>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAdjudication>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAdjudication>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyAdjudication<
+  TData = Awaited<ReturnType<typeof getMyAdjudication>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdjudication>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyAdjudication>>,
+          TError,
+          Awaited<ReturnType<typeof getMyAdjudication>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyAdjudication<
+  TData = Awaited<ReturnType<typeof getMyAdjudication>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdjudication>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Adjudication
+ */
+
+export function useGetMyAdjudication<
+  TData = Awaited<ReturnType<typeof getMyAdjudication>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyAdjudication>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyAdjudicationQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type decideAdjudicationResponse200 = {
+  data: AdjudicationObject;
+  status: 200;
+};
+
+export type decideAdjudicationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type decideAdjudicationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type decideAdjudicationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type decideAdjudicationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type decideAdjudicationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type decideAdjudicationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type decideAdjudicationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type decideAdjudicationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type decideAdjudicationResponseSuccess = decideAdjudicationResponse200 & {
+  headers: Headers;
+};
+export type decideAdjudicationResponseError = (
+  | decideAdjudicationResponse400
+  | decideAdjudicationResponse401
+  | decideAdjudicationResponse403
+  | decideAdjudicationResponse404
+  | decideAdjudicationResponse409
+  | decideAdjudicationResponse422
+  | decideAdjudicationResponse429
+  | decideAdjudicationResponse500
+) & {
+  headers: Headers;
+};
+
+export type decideAdjudicationResponse =
+  | decideAdjudicationResponseSuccess
+  | decideAdjudicationResponseError;
+
+export const getDecideAdjudicationUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/adjudication/${slideId}/${objectId}`;
+};
+
+/**
+ * @summary Decide Adjudication
+ */
+export const decideAdjudication = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  adjudicationAnswer: AdjudicationAnswer,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<decideAdjudicationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<decideAdjudicationResponse>(getDecideAdjudicationUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(adjudicationAnswer),
+  });
+};
+
+export const getDecideAdjudicationMutationKey = () => ["decideAdjudication"] as const;
+
+export const getDecideAdjudicationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof decideAdjudication>>,
+    TError,
+    DecideAdjudicationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof decideAdjudication>>,
+  TError,
+  DecideAdjudicationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDecideAdjudicationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof decideAdjudication>>,
+    DecideAdjudicationMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return decideAdjudication(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DecideAdjudicationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof decideAdjudication>>
+>;
+export type DecideAdjudicationMutationBody = AdjudicationAnswer;
+export type DecideAdjudicationMutationError = Problem;
+export type DecideAdjudicationMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: AdjudicationAnswer;
+};
+
+/**
+ * @summary Decide Adjudication
+ */
+export const useDecideAdjudication = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof decideAdjudication>>,
+      TError,
+      DecideAdjudicationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof decideAdjudication>>,
+  TError,
+  DecideAdjudicationMutationVariables,
+  TContext
+> => {
+  return useMutation(getDecideAdjudicationMutationOptions(options), queryClient);
+};
 
 export type exportReviewedLayerResponse200 = {
   data: ExportReviewedLayer200;

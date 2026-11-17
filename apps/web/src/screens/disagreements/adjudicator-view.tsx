@@ -123,7 +123,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
     decideMutation.mutate({
       taskId,
       slideId: current.slide_id,
-      object: current.object,
+      objectId: current.object,
       data: { raw, note: notes[current.key]?.trim() || null },
     });
     const at = objects.indexOf(current);

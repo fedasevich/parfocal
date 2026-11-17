@@ -2,7 +2,7 @@ import uuid
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, StringConstraints
@@ -25,7 +25,7 @@ from parfocal_api.disagreements import (
 )
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, NotFoundError
-from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims
+from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims, kind_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task, task_row
 from parfocal_api.reviewed_layer import ai_object
@@ -49,6 +49,8 @@ from parfocal_common.result_store import ResultStore
 type Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
 type Raw = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
 type Key = tuple[uuid.UUID, str, int]
+
+type ObjectKind = Literal["region", "cell"]
 
 CLASS_ANSWER = "class"
 REASON_TEXT = {
@@ -132,7 +134,7 @@ class QueueRow(BaseModel):
     slide_id: uuid.UUID
     slide_label: str
     object: str
-    kind: str
+    kind: ObjectKind
     ai: AiCall
     size_mm: float | None
     tag: QueueTag
@@ -173,7 +175,7 @@ class AdjudicationObject(BaseModel):
     slide_id: uuid.UUID
     slide_label: str
     object: str
-    kind: str
+    kind: ObjectKind
     ai: AiCall
     size_mm: float | None
     reviewer_a: AnonymousAnswer
@@ -386,7 +388,7 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
         slide_id=item.slide_id,
         slide_label=label,
         object=item.object,
-        kind=item.kind.value,
+        kind=kind_of(letter_of(item)),
         ai=AiCall(class_name=claim.class_name, score=claim.score),
         size_mm=claim.size_mm,
         tag=TAGS.get(item.why, QueueTag.SECOND),
@@ -583,7 +585,7 @@ def adjudication_object(
         slide_id=item.slide_id,
         slide_label=label,
         object=item.object,
-        kind=item.kind.value,
+        kind=kind_of(letter_of(item)),
         ai=AiCall(class_name=claim.class_name, score=claim.score),
         size_mm=claim.size_mm,
         reviewer_a=first,

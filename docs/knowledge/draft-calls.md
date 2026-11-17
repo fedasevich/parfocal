@@ -22,6 +22,8 @@ Three draft paths sit under a real route with a path parameter, so the real API 
 
 `createAccount`, `confirmEmail`, `resendEmailCode` and `signInWithPassword` (the sign-up and password sign-in screens) are real routes since IAM-027 (the app's own sign-up and sign-in), together with `getPasswordSignIn`, which tells the web app whether to use them or the hosted login.
 
+The review area switched in OPS-021 (review area on the real API). `listReviewObjects`, `getSlideAgreement` and `getTaskDisplay` live in `apps/api/src/parfocal_api/review_objects.py`, and `getDisagreementQueue`, `updateQueuedObject`, `getMyAdjudication` and `decideAdjudication` in `disagreement_queue.py`. They keep the draft URLs and shapes and are built from stored data: the review order, result objects and cell chunks, review decisions, the disagreement queue and adjudications. The queue actions and the adjudicator's decision call the existing disagreement and adjudication routes, so audit and sign-off rules stay in one place. A queue change after sign-off still answers 409, because the draft body has no change reason. The review object list is not paged, which matters for a whole-slide cell scope. The fake answers these operations through the generated MSW handlers.
+
 ## Remaining drafts
 
 High priority sits on the home, project, viewer, review and annotate paths.
@@ -33,9 +35,6 @@ High priority sits on the home, project, viewer, review and annotate paths.
 | getSlideAiProgress | full viewer | none | high |
 | getSlideResultStats | full viewer and review | none | high |
 | getResultSetTyper | full viewer | none | high |
-| listReviewObjects | review | partly, result objects | high |
-| getSlideAgreement | review | none | high |
-| getTaskDisplay | review display tab | none | high |
 | listAnnotationLayers | annotate view | partly, annotation sets | high |
 | getProjectImports | project settings and upload | none | high |
 | getUploadBatch | upload page | partly, uploads | high |
@@ -48,7 +47,6 @@ High priority sits on the home, project, viewer, review and annotate paths.
 | moveModelRun | job window | none | medium |
 | requestProjectAccess | project page without access | none | medium |
 | listTeamWorkload | team | none | medium |
-| getDisagreementQueue, getMyAdjudication, decideAdjudication, updateQueuedObject | disagreements | none | medium |
 | getEvaluationReport | evaluation report | partly, task evaluation | medium |
 | getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |
 | listStudyTemplateReviewDefaults | study templates | none, path swallowed | medium |

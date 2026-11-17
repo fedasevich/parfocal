@@ -70,7 +70,7 @@ test("RT-14 on A1 has the mock's five regions and 50 sampled cells in order", as
     order.objects.slice(0, 6).map((item) => item.object),
     ["T1", "T2", "T3", "T4", "T5", "T1·C101"],
   );
-  const objects = (await listReviewObjects(rt14.id, a1.id)).data.objects;
+  const objects = body(await listReviewObjects(rt14.id, a1.id)).objects;
   assert.deepEqual(
     objects.map((item) => item.object),
     order.objects.map((item) => item.object),
@@ -161,27 +161,27 @@ test("the Slide done card, the display locks and the next slide come from the sc
     ],
   );
   assert.equal(opinion.answers["acceptable"], 4);
-  const display = (await getTaskDisplay(rt14.id)).data;
+  const display = body(await getTaskDisplay(rt14.id));
   assert.equal(display.locks[0]?.setting, "order");
   assert.ok(display.presets.some((preset) => preset.name === "Dots, no IDs"));
   const neighbours = body(await getSlideNeighbours(a1.id, { from: "task", task_id: rt14.id }));
   assert.deepEqual([neighbours.position, neighbours.total], [8, 12]);
   assert.equal(neighbours.next?.label, "A2");
-  const agreement = (await getSlideAgreement(rt14.id, a1.id)).data;
+  const agreement = body(await getSlideAgreement(rt14.id, a1.id));
   assert.deepEqual([agreement.agree, agreement.total], [51, 55]);
 });
 
 test("another viewer gets no review of A1", async () => {
   assert.ok(rt14);
   setFakeView({ viewer: "AK", firstWeek: false });
-  assert.equal((await listReviewObjects(rt14.id, a1.id)).data.objects.length, 0);
+  assert.equal(body(await listReviewObjects(rt14.id, a1.id)).objects.length, 0);
 });
 
 test("RT-16 is the task the new task flow sends, and slide 9 opens with its objects open", async () => {
   assert.ok(rt14);
   assert.equal(scenarioReview.rt16.id, scenarioTask.newTask.id);
   const a2 = scenario.slideByIndex(2);
-  const next = (await listReviewObjects(rt14.id, a2.id)).data;
+  const next = body(await listReviewObjects(rt14.id, a2.id));
   assert.equal(next.objects.filter((item) => item.kind === "region").length, 2);
   assert.equal(next.objects.filter((item) => item.kind === "cell").length, 50);
   assert.equal(body(await listDecisions(rt14.id, a2.id)).length, 0);
