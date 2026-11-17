@@ -50,7 +50,9 @@ async def run_job(
     monkeypatch.setattr(cell_crop_job, "still_mine", still_mine)
     monkeypatch.setattr(cell_crop_job, "picked_on", picked_on)
     resources = Resources(
-        storage=cast("StorageLocation", None), work_dir=work_dir, store_class=StoreOf(store)
+        storage=cast("StorageLocation", None),
+        work_dir=work_dir,
+        store_class=cast("type[ObjectStore]", StoreOf(store)),
     )
     return await cut_ordered_cells(cast("StepRun", Step()), resources)
 
