@@ -2,6 +2,22 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.12.2 (2026-11-17)
+
+### Performance
+
+- TILES-010: Record every directory offset in levels.json and read them at once
+- TILES-010: Ask for tile access before the viewer code loads
+- TILES-010: Cut tile-access to seven queries and read storage beside the checks
+
+### Docs
+
+- TILES-010: Record the slide open numbers with directory offsets
+
+### Tests
+
+- TILES-010: Pin parallel directory reads and split the tile-access time
+
 ## v0.12.1 (2026-11-17)
 
 ### Docs
