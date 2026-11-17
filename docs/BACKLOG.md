@@ -3682,7 +3682,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a unit test shows a request made after the worker stopped answered by a fresh worker, and a request waiting at a `messageerror` rejected.
   Size: S.
 
-- [ ] AISEG-021 · InstanSeg post-processing in the browser
+- [x] AISEG-021 · InstanSeg post-processing in the browser
   Port InstanSeg's seed peaks, per-seed pixel classifier and overlap merging to TypeScript or a second small graph, on top of the network graph from `parfocal_ml.instanseg`, and add a CI job that fetches the 15 MB `brightfield_nuclei.zip` by checksum and runs `bench:instanseg`. Wire it as the auto tool without WebGPU only if decision 134 allows. Rules in ADR 0362 (Fast tier auto tool without WebGPU is deferred).
   Done when the exported path scores within 0.01 PQ of the TorchScript 0.712 on the 50 TNBC images, and a CI run shows the whole path segmenting a 512 px tile in under 1 s on WebAssembly at the app's thread count.
   Depends on AISEG-013.
