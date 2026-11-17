@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from workspace_support import join_project, make_project, make_workspace
 
 from parfocal_api.app import create_app
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.remote_cache_sweep import run_once
 from parfocal_api.source_watches import scan_every_workspace
 from parfocal_api.tables import Role
 from parfocal_common.db import create_engine
@@ -132,7 +134,8 @@ def test_files_dropped_in_a_watched_bucket_arrive_checked_like_an_upload(
     assert scan(linked, database) == 0
     drop(f"{prefix}{SLIDE}", fixture_path(SLIDE).read_bytes())
     drop(f"{prefix}{BROKEN}", b"these bytes are not a slide")
-    assert scan(linked, database) == 2
+    asyncio.run(run_once(linked.app.settings))
+    assert set(arrivals(database, team)) == {SLIDE, BROKEN}
     run_worker(database, team.tenant_id, tmp_path / "work", (STORAGE_ORIGIN,))
     arrived = arrivals(database, team)
     assert set(arrived) == {SLIDE, BROKEN}

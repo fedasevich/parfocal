@@ -384,7 +384,7 @@ def notices(database: str) -> list[tuple[Any, ...]]:
 
 def check_sources(database: str, at: datetime) -> int:
     async def work() -> int:
-        engine = create_engine(with_database(OWNER_URL, database))
+        engine = create_engine(str(api_settings(database).database_url))
         try:
             return await notice_every_workspace(engine, at)
         finally:
