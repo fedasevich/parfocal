@@ -102,6 +102,7 @@ def reset(target: Environment, tools: Tools, local: Mapping[str, str]) -> int:
             **storage,
             "DATABASE_URL": neon.engine_uri(direct),
             "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
+            "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
         },
     )
     return removed
