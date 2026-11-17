@@ -228,7 +228,7 @@ test("To review continues into guided review at the next open object in one acti
   await expect(tasks.getByText("Blind").first()).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=[0-9a-f-]+&object=T5$/);
-  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible({
+  await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T5", {
     timeout: 60_000,
   });
   await page.goBack();
@@ -237,5 +237,7 @@ test("To review continues into guided review at the next open object in one acti
   const url = new URL(page.url());
   url.searchParams.set("object", "T3");
   await page.goto(url.toString());
-  await expect(page.getByText(/The AI says T3 is tumor/)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T3", {
+    timeout: 60_000,
+  });
 });

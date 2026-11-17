@@ -162,7 +162,7 @@ test("a comment pin drops on a cell with the comment tool on", async ({ page }) 
 
 test("a signed off slide shows the type bar disabled with the reason", async ({ page }) => {
   const url = await fullViewerUrl(page, "T1·C145");
-  await page.goto(`${url}&scene=signedoff`);
+  await page.goto(url.replace("scene=objects", "scene=signedoff"));
   await expect(bar(page)).toBeVisible();
   await expect(bar(page)).toHaveAttribute("title", "Signed off. Ask the researcher to amend.");
   await expect(bar(page).getByRole("button", { name: /Keep/ })).toBeDisabled();

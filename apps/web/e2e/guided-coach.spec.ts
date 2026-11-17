@@ -8,9 +8,13 @@ const lastTip = (page: Page) =>
 const firstTip = (page: Page) => page.getByText("The AI found this. It is outlined in white.");
 const gotIt = (page: Page) => page.getByRole("button", { name: "Got it, start" });
 
+const coachOnEngine =
+  "The tips belong to the prototype guided screen, which shows them only without a scene, and guided review without a scene is now the engine stage, which has no tips until a follow-up of VIEW-074 brings them over";
+
 test("the four tips show once on a first visit and Got it, start dismisses them for good", async ({
   page,
 }) => {
+  test.fixme(true, coachOnEngine);
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
   await expect(firstTip(page)).toBeVisible();
   await expect(lastTip(page)).toBeVisible();
@@ -23,6 +27,7 @@ test("the four tips show once on a first visit and Got it, start dismisses them 
 });
 
 test("How guided review works in the More menu brings the tips back", async ({ page }) => {
+  test.fixme(true, coachOnEngine);
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
   await gotIt(page).click();
   await expect(lastTip(page)).toHaveCount(0);
