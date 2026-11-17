@@ -353,19 +353,23 @@ async def add_viewer(connection: AsyncConnection, tenant_id: uuid.UUID, email: s
     )
 
 
-async def seat_viewer_on_gallery(
-    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID, gallery: str
+async def seat_viewer_on_projects(
+    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID
 ) -> None:
-    project_id = await connection.scalar(select(projects.c.id).where(projects.c.name == gallery))
-    if project_id is None:
-        return
-    await connection.execute(
-        upsert(project_members)
-        .values(
-            tenant_id=tenant_id, project_id=project_id, user_id=user_id, role=ProjectRole.VIEWER
-        )
-        .on_conflict_do_nothing()
+    project_ids = await connection.scalars(
+        select(projects.c.id).where(projects.c.tenant_id == tenant_id)
     )
+    for project_id in project_ids.all():
+        await connection.execute(
+            upsert(project_members)
+            .values(
+                tenant_id=tenant_id,
+                project_id=project_id,
+                user_id=user_id,
+                role=ProjectRole.VIEWER,
+            )
+            .on_conflict_do_nothing()
+        )
 
 
 def principal_of(seeded: Seeded, key: str, role: Role, admin_rights: bool) -> MemberPrincipal:
@@ -1053,16 +1057,15 @@ async def seed(
                     workspace.gallery,
                 )
         for email in viewer_emails:
-            async with scoped_transaction(
-                engine, DatabaseScope(platform=True, auth=True)
-            ) as connection:
-                viewer = await add_viewer(connection, tenant_ids[0], email)
-            async with scoped_transaction(
-                engine, DatabaseScope(tenant_id=tenant_ids[0], user_id=viewer)
-            ) as connection:
-                await seat_viewer_on_gallery(
-                    connection, tenant_ids[0], viewer, WORKSPACES[0].gallery
-                )
+            for tenant_id in tenant_ids:
+                async with scoped_transaction(
+                    engine, DatabaseScope(platform=True, auth=True)
+                ) as connection:
+                    viewer = await add_viewer(connection, tenant_id, email)
+                async with scoped_transaction(
+                    engine, DatabaseScope(tenant_id=tenant_id, user_id=viewer)
+                ) as connection:
+                    await seat_viewer_on_projects(connection, tenant_id, viewer)
         return tenant_ids
     finally:
         await engine.dispose()
