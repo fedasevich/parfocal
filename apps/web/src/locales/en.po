@@ -3283,6 +3283,15 @@ msgstr "AI is checked least sure first, and experts draw what it missed."
 msgid "AI models"
 msgstr "AI models"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects"
+msgstr "AI objects"
+
+#. placeholder {0}: objects.length
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects · {0}"
+msgstr "AI objects · {0}"
+
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr "AI only, reviewer disagreed"
@@ -8756,7 +8765,8 @@ msgstr "Loading the project"
 msgid "Loading the report"
 msgstr "Loading the report"
 
-#: src/screens/review/guided-review.tsx
+#: src/routes/tasks.$taskId.guided.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "Loading the review"
 msgstr "Loading the review"
 
@@ -9674,6 +9684,7 @@ msgstr "New workspace"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Next"
 msgstr "Next"
 
@@ -10553,6 +10564,13 @@ msgstr "Object"
 #: src/screens/upload/check-step.tsx
 msgid "object {0}"
 msgstr "object {0}"
+
+#. placeholder {0}: index + 1
+#. placeholder {1}: objects.length
+#. placeholder {2}: decided.size
+#: src/viewer/stage-review-objects.tsx
+msgid "Object {0} of {1} · {2} decided"
+msgstr "Object {0} of {1} · {2} decided"
 
 #. placeholder {0}: deposit.objectId
 #: ../../packages/ui/src/components/clinical-report.tsx
@@ -11911,6 +11929,7 @@ msgstr "Preview the report"
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Previous"
 msgstr "Previous"
 
@@ -15371,7 +15390,7 @@ msgstr "The AI sizes it at {0}, between {1} and {2}. Measure across the widest p
 msgid "The AI stays hidden until your first read"
 msgstr "The AI stays hidden until your first read"
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "The AI stays hidden until your first read is confirmed. Try again in a moment."
 msgstr "The AI stays hidden until your first read is confirmed. Try again in a moment."
 
@@ -16509,7 +16528,7 @@ msgstr "True positives"
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
@@ -17836,6 +17855,7 @@ msgstr "Your alignment is kept for this pair of slides. Clear puts the panes bac
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr "Your answer on {0}"
 
@@ -17880,7 +17900,7 @@ msgstr "Your endpoint"
 msgid "Your files stay as they are. Check your connection and press the upload button again."
 msgstr "Your files stay as they are. Check your connection and press the upload button again."
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "Your first read could not be checked"
 msgstr "Your first read could not be checked"
 

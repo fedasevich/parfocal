@@ -3281,6 +3281,15 @@ msgstr ""
 msgid "AI models"
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects"
+msgstr ""
+
+#. placeholder {0}: objects.length
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects · {0}"
+msgstr ""
+
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr ""
@@ -8751,7 +8760,8 @@ msgstr ""
 msgid "Loading the report"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/routes/tasks.$taskId.guided.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "Loading the review"
 msgstr ""
 
@@ -9669,6 +9679,7 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Next"
 msgstr ""
 
@@ -10547,6 +10558,13 @@ msgstr ""
 #. placeholder {0}: line.object
 #: src/screens/upload/check-step.tsx
 msgid "object {0}"
+msgstr ""
+
+#. placeholder {0}: index + 1
+#. placeholder {1}: objects.length
+#. placeholder {2}: decided.size
+#: src/viewer/stage-review-objects.tsx
+msgid "Object {0} of {1} · {2} decided"
 msgstr ""
 
 #. placeholder {0}: deposit.objectId
@@ -11902,6 +11920,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Previous"
 msgstr ""
 
@@ -15362,7 +15381,7 @@ msgstr ""
 msgid "The AI stays hidden until your first read"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "The AI stays hidden until your first read is confirmed. Try again in a moment."
 msgstr ""
 
@@ -16500,7 +16519,7 @@ msgstr ""
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
@@ -17827,6 +17846,7 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr ""
 
@@ -17871,7 +17891,7 @@ msgstr ""
 msgid "Your files stay as they are. Check your connection and press the upload button again."
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "Your first read could not be checked"
 msgstr ""
 

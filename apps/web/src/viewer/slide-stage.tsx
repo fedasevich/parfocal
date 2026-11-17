@@ -1072,6 +1072,7 @@ function OpenedSlide({
               {session ? (
                 <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
               ) : null}
+              {session && inspector.extras ? inspector.extras(session) : null}
               {session ? (
                 <ThreadFocus
                   engine={session.engine}

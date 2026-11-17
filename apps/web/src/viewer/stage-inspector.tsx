@@ -5,7 +5,9 @@ import { InspectorDock } from "../screens/review/inspector-dock.tsx";
 import type { InspectorLayout, InspectorLayoutChange } from "../screens/review/inspector-layout.ts";
 import { type ViewerTab, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import type { InspectorSection } from "./inspector-slots.tsx";
+import type { ViewerModule } from "./magnification-control.tsx";
 import type { ThreadFocusRequest } from "./thread-focus.tsx";
+import type { ViewerEngine } from "./viewer-engine.ts";
 
 type StageInspectorProps = {
   layout: InspectorLayout;
@@ -24,7 +26,10 @@ export type StageInspectorLink = {
   readonly comments: ReactNode;
   readonly opinion: ReactNode;
   readonly focus?: ThreadFocusRequest | null;
+  readonly extras?: (session: StageSession) => ReactNode;
 };
+
+export type StageSession = { readonly engine: ViewerEngine; readonly module: ViewerModule };
 
 const slotClass = "flex flex-col gap-3";
 

@@ -5,7 +5,9 @@ import { CompareView } from "../screens/viewer-tools/compare-view.tsx";
 import { FocusView } from "../screens/viewer-tools/focus-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { type SlideSearch, slideSearch } from "../search/route-searches.ts";
+import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
+import type { StageStart } from "../viewer/stage-start.tsx";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId")({
   validateSearch: slideSearch,
@@ -46,5 +48,34 @@ function SlideView() {
       </WithToolSession>
     );
   }
-  return <FullViewer projectId={projectId} slideId={slideId} search={search} onSearch={onSearch} />;
+  if (search.scene !== undefined) {
+    return (
+      <FullViewer projectId={projectId} slideId={slideId} search={search} onSearch={onSearch} />
+    );
+  }
+  return (
+    <EngineViewer
+      projectId={projectId}
+      slideId={slideId}
+      task={search.task}
+      workspace={search.workspace}
+      tab={search.tab}
+      object={search.object}
+      start={startOf(search)}
+      onOpenSlide={(next) =>
+        void navigate({
+          to: "/projects/$projectId/slides/$slideId",
+          params: { projectId, slideId: next },
+          search: { task: search.task, workspace: search.workspace, tab: search.tab },
+        })
+      }
+      onWorkspace={(workspace) => onSearch({ workspace })}
+      onTab={(tab) => onSearch({ tab })}
+    />
+  );
+}
+
+function startOf(search: SlideSearch): StageStart | undefined {
+  if (search.x === undefined || search.y === undefined) return undefined;
+  return { x: search.x, y: search.y, scale: search.z ?? 1 };
 }

@@ -105,6 +105,7 @@ export const slideSearch = lenientSearch({
   tab: z.enum(viewerTabs).optional(),
   modal: z.enum(["preset"]).optional(),
   pagedCells: z.number().int().optional(),
+  workspace: z.enum(workspaces).optional(),
 });
 
 export type SlideSearch = ReturnType<typeof slideSearch.read>;
