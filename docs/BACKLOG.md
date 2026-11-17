@@ -1780,7 +1780,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-038.
   Size: L.
 
-- [ ] VIEW-038 · Custom WebGPU engine route
+- [x] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
   Refs [`poc/src/webgpu/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/webgpu), docs 04, 07.
