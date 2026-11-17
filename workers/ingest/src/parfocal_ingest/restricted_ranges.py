@@ -1,6 +1,7 @@
 import json
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import BinaryIO
 
 import tifffile
 
@@ -31,8 +32,8 @@ def data_ranges(series: tifffile.TiffPageSeries) -> Iterator[ByteRange]:
                     yield offset, offset + count
 
 
-def outside_the_pyramid(path: Path) -> list[ByteRange] | None:
-    with tifffile.TiffFile(path) as tiff:
+def outside_the_pyramid(source: Path | BinaryIO) -> list[ByteRange] | None:
+    with tifffile.TiffFile(source) as tiff:
         pyramid = main_series(tiff)
         if pyramid is None:
             return None
@@ -42,11 +43,15 @@ def outside_the_pyramid(path: Path) -> list[ByteRange] | None:
 
 
 def restricted_ranges(path: Path) -> list[ByteRange]:
-    whole = [(0, path.stat().st_size)]
-    if path.suffix.lower() in WHOLE_FILE_SUFFIXES:
+    return restricted_ranges_of(path, path.stat().st_size, path.suffix)
+
+
+def restricted_ranges_of(source: Path | BinaryIO, size: int, suffix: str) -> list[ByteRange]:
+    whole = [(0, size)]
+    if suffix.lower() in WHOLE_FILE_SUFFIXES:
         return whole
     try:
-        found = outside_the_pyramid(path)
+        found = outside_the_pyramid(source)
     except tifffile.TiffFileError, ValueError:
         return whole
     return whole if found is None else found

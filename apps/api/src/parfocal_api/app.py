@@ -69,6 +69,7 @@ from parfocal_api import (
     project_uploads,
     project_webhooks,
     projects,
+    remote_slides,
     report_links,
     report_preview,
     restricted_images,
@@ -279,6 +280,8 @@ def create_app(
     app.include_router(project_webhooks.router)
     app.include_router(project_webhooks.public_router)
     app.include_router(events_out.router)
+    app.include_router(remote_slides.router)
+    app.include_router(remote_slides.public_router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(task_changes.router)

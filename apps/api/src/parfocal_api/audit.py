@@ -90,6 +90,7 @@ class AuditAction(StrEnum):
     SLIDE_PUBLISHED = "slide.published"
     SLIDE_RESTRICTED_IMAGE_VIEWED = "slide.restricted-image-viewed"
     SLIDE_OPENED = "slide.opened"
+    SLIDE_READ_IN_PLACE = "slide.read-in-place"
     SLIDE_COPIED = "slide.copied"
     SLIDE_DETAILS_CHANGED = "slide.details-changed"
     CASE_SLIDES_REORDERED = "case.slides-reordered"

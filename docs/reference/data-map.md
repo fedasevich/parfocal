@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 
 | Class | Columns |
 |---|---|
-| `phi` | 48 |
+| `phi` | 49 |
 | `personal` | 99 |
 | `secret` | 15 |
-| `operational` | 857 |
+| `operational` | 863 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1230,6 +1230,13 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `original_key` | operational |
 | `restricted_images` | operational |
 | `published_at` | operational |
+| `storage` | operational |
+| `source_id` | operational |
+| `remote_path` | phi |
+| `remote_etag` | operational |
+| `remote_failures` | operational |
+| `remote_failing_since` | operational |
+| `remote_read_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |

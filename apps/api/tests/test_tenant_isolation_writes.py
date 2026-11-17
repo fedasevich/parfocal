@@ -348,6 +348,10 @@ WRITE_ROUTES: dict[str, Write] = {
     "requestEmergencyAccess": Write(
         body=constant({"reason": "An urgent second look"}), owner=CONFLICT
     ),
+    "readInPlace": Write(
+        body=lambda a: {"source_id": str(a.ids["import_source"]), "names": [SHARED_FILE]},
+        owner=None,
+    ),
     "importFromLink": Write(
         body=constant({"address": LINK_SITE.url(SHARED_FOLDER), "names": [SHARED_FILE]}),
         linked=True,

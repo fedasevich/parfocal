@@ -1946,6 +1946,9 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/links"
     ),
     "getSharedReport": Route(Exposure.PUBLIC, lambda a: f"/api/shared-reports/{shared_token(a)}"),
+    "getRemoteTile": Route(
+        Exposure.PUBLIC, lambda a: f"/api/remote-tiles/{a.ids['slide']}/scan.svs"
+    ),
     "getOpinion": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",
