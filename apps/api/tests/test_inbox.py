@@ -25,6 +25,15 @@ READ = "/api/me/notifications/read"
 MUTES = "/api/me/notification-mutes"
 
 
+def quiet_task(api: ApiAs, s: Study, database: str, **draft: Any) -> dict[str, Any]:
+    created = task(api, s, **draft)
+    owner(
+        database,
+        f"DELETE FROM notifications WHERE kind = 'task-assigned' AND target_id = '{created['id']}'",
+    )
+    return created
+
+
 def run[T](database: str, tenant: uuid.UUID, work: Callable[[AsyncConnection], Awaitable[T]]) -> T:
     async def go() -> T:
         engine = create_async_engine(async_database_url(with_database(APP_URL, database)))
@@ -248,7 +257,9 @@ def test_a_muted_event_is_kept_in_the_inbox_without_a_push_or_an_email(
     people = s.people
     first, second, lead = people["first"], people["second"], people["owner"]
     with_email(database, first, second, lead)
-    created = task(api, s, name="Round 1", reviewer_ids=[s.user("first"), s.user("second")])
+    created = quiet_task(
+        api, s, database, name="Round 1", reviewer_ids=[s.user("first"), s.user("second")]
+    )
     task_id = uuid.UUID(created["id"])
     assert mute(api, first, "task", task_id).status_code == 200
     send(database, s.tenant_id, [first, second], NotificationKind.TASK_SIGNED_OFF, "task", task_id)
@@ -322,7 +333,7 @@ def test_a_muted_event_is_kept_in_the_inbox_without_a_push_or_an_email(
 def test_muted_rows_stay_out_of_the_main_list_and_the_badge(api: ApiAs, database: str) -> None:
     s = study(database)
     first = s.people["first"]
-    created = task(api, s, name="Round 1", reviewer_ids=[s.user("first")])
+    created = quiet_task(api, s, database, name="Round 1", reviewer_ids=[s.user("first")])
     task_id = uuid.UUID(created["id"])
     assert mute(api, first, "task", task_id).status_code == 200
     for kind in (NotificationKind.TASK_SIGNED_OFF, NotificationKind.TASK_SIGNED_OFF):
@@ -394,7 +405,7 @@ def test_muting_skips_pending_emails_for_that_subject_and_lets_work_through(
     first = s.people["first"]
     with_email(database, first)
     owner(database, f"UPDATE users SET email_digest = 'hourly' WHERE id = '{first.user_id}'")
-    created = task(api, s, name="Round 1", reviewer_ids=[s.user("first")])
+    created = quiet_task(api, s, database, name="Round 1", reviewer_ids=[s.user("first")])
     task_id = uuid.UUID(created["id"])
     other_project = make_project(database, s.tenant_id, "de-identified")
     owner(

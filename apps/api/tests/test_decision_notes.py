@@ -146,7 +146,7 @@ def test_the_bell_opens_the_note_for_its_recipient_only(api: ApiAs, database: st
     assert found["origin"]["route"] == "task"
     assert api(s.people["first"]).get(path).status_code == 404
     inbox = ok(api(s.people["second"]).get("/api/me/notifications")).json()["notifications"]
-    assert [item["target_kind"] for item in inbox] == ["decision"]
+    assert sorted(item["target_kind"] for item in inbox) == ["decision", "task"]
     owner(
         database,
         f"UPDATE review_assignments SET released_at = now() WHERE task_id = '{s.task}' "

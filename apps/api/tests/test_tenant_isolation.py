@@ -30,6 +30,7 @@ from parfocal_api.identifiers import ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.slide_thumbnail import THUMBNAIL_FILE
 from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import BUILT_INS, content, seed_built_ins
 from parfocal_api.tables import (
@@ -591,6 +592,13 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             seeded.tenant_id,
             case.loose_slide_id,
             {RestrictedImage.LABEL: stand_in_images(str(seeded.tenant_id))[RestrictedImage.LABEL]},
+        )
+        thumbnail_marker = f"thumbnail-{uuid.uuid4()}"
+        seeded.markers.add(thumbnail_marker)
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            f"{slide_prefix(seeded.tenant_id, case.loose_slide_id)}{THUMBNAIL_FILE}",
+            thumbnail_marker.encode(),
+            "image/jpeg",
         )
         await ObjectStore(TEST_STORAGE, http).put_object(
             f"{slide_prefix(seeded.tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
@@ -1933,6 +1941,9 @@ GET_ROUTES = {
     ),
     "getTileAccess": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tile-access"),
     "getSlideTissue": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/tissue"),
+    "getSlideThumbnail": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/thumbnail"
+    ),
     "getSlideEmbeddings": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/embeddings"
     ),

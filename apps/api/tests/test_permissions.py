@@ -37,6 +37,7 @@ from parfocal_api.permissions import (
 )
 from parfocal_api.permissions_doc import DOC_PATH, render
 from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
+from parfocal_api.slide_thumbnail import THUMBNAIL_FILE
 from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
@@ -1005,6 +1006,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getTileAccess": lambda w: Call("GET", f"/api/slides/{w.slide}/tile-access"),
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
     "getSlideTissue": lambda w: Call("GET", f"/api/slides/{w.slide}/tissue"),
+    "getSlideThumbnail": lambda w: Call("GET", f"/api/slides/{w.slide}/thumbnail"),
     "getSlideEmbeddings": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings"),
     "getSlideEmbeddingTile": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings/0/0"),
     "warmSlideEmbedder": lambda w: Call(
@@ -2601,6 +2603,11 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     tenant_id,
                     case.loose_slide_id,
                     {RestrictedImage.LABEL: stand_in_images(slug)[RestrictedImage.LABEL]},
+                )
+                await store.put_object(
+                    f"{slide_prefix(tenant_id, case.loose_slide_id)}{THUMBNAIL_FILE}",
+                    b"thumbnail",
+                    "image/jpeg",
                 )
                 await store.put_object(
                     f"{slide_prefix(tenant_id, case.loose_slide_id)}{TISSUE_FILE}",
