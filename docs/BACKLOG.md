@@ -2166,7 +2166,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on IAM-002, IAM-015. Refs mock 1, kit W35, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
-- [ ] SHELL-013 · Help and what's new
+- [x] SHELL-013 · Help and what's new
   The account menu (SHELL-012) shows "Help and what's new" disabled. Build the page it opens: short help per screen, the keyboard map link and release notes from the release versioning (FOUND-017).
   Done when the menu item opens the page, a component test covers it, and axe passes.
   Depends on SHELL-012.
