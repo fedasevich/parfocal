@@ -25,7 +25,7 @@ uv run --package parfocal-api python -m parfocal_api.tenant_command deprovision 
 
 ## Drill environment run
 
-The local stack is the drill environment for OPS-010 ([ADR XXXX](../adr/XXXX-the-local-stack-is-the-drill-environment-for-tenant-provisioning.md), the local stack is the drill environment for tenant provisioning). `apps/api/tests/test_tenant_drill.py` runs the command as a subprocess against the local Zitadel, a scratch database and MinIO, puts three objects under the tenant's prefix, deprovisions the tenant and checks that the organisation, the objects and the keys are gone. It runs only with `PARFOCAL_DRILL=1` and fails, not skips, when the local Zitadel is missing.
+The local stack is the drill environment for OPS-010 (tenant provisioning automation) ([ADR XXXX](../adr/XXXX-the-local-stack-is-the-drill-environment-for-tenant-provisioning.md), the local stack is the drill environment for tenant provisioning). `apps/api/tests/test_tenant_drill.py` runs the command as a subprocess against the local Zitadel, a scratch database and MinIO, puts three objects under the tenant's prefix, deprovisions the tenant and checks that the organisation, the objects and the keys are gone. It runs only with `PARFOCAL_DRILL=1` and fails, not skips, when the local Zitadel is missing. Postgres and MinIO must already be up, through `pnpm stack:up` or `make dev`, and `zitadel-up.sh` alone starts only Zitadel.
 
 ```
 bash infra/local/zitadel-up.sh

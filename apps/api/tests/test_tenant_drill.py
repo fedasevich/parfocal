@@ -96,7 +96,7 @@ def put_tenant_objects(prefix: str, names: list[str]) -> None:
 @pytest.mark.db
 @pytest.mark.usefixtures("storage")
 def test_the_drill_provisions_and_deprovisions_a_tenant_leaving_nothing_behind(
-    drill_database: str, stack_zitadel: dict[str, str]
+    stack_zitadel: dict[str, str], drill_database: str
 ) -> None:
     environment = drill_environment(drill_database, stack_zitadel)
     slug = f"drill-{uuid.uuid4().hex[:8]}"
