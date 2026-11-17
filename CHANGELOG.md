@@ -2,6 +2,25 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.2 (2026-11-17)
+
+### Fixes
+
+- TILES-012: Read each NDPI directory exactly so its guess never reaches the macro bytes
+
+### Docs
+
+- TILES-012: Log the v0.17.1 checks
+- OPS-017: Tick after the deployed walk shows no unfinished areas
+
+### Tests
+
+- OPS-017: Run annotate and sign-off specs on the real stack with their own tasks and tiles
+
+### Other
+
+- OPS-017: Merge main
+
 ## v0.17.1 (2026-11-17)
 
 ### Fixes
