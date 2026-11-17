@@ -4326,7 +4326,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on EXP-008. Refs [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: L.
 
-- [ ] EXP-010 · Study task guard
+- [x] EXP-010 · Study task guard
   A study task can name destinations that are clearly wrong for it, for example leaving the case once a task has started there, or leaving the upload window in an upload task. Going there is blocked with a visible message that says where the task happens. A navigation that completes the task is never blocked, and every blocked attempt is logged and counted per task.
   Done when E2E covers a blocked attempt with its message and log entry, a completing navigation that passes, and a task with no guard.
   Depends on EXP-008. Refs [`poc/study/public/study.js`](https://github.com/fedasevich/pathlogy-poc/blob/master/study/public/study.js), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
