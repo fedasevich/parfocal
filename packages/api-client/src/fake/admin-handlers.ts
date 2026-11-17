@@ -3,7 +3,6 @@ import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-over
 import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
 import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
 import { type StorageUsage, storageUsageSchema } from "../draft/get-storage-usage.ts";
-import { type AiModels, aiModelsSchema } from "../draft/list-ai-models.ts";
 import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
 import { type AccessRequest, accessRequestSchema } from "../draft/request-project-access.ts";
 import {
@@ -16,6 +15,7 @@ import {
   getGetSessionPolicyMockHandler,
   getInviteTaskReviewerMockHandler,
   getJoinWorkspaceMockHandler,
+  getListAiModelsMockHandler,
   getListAuditEventsMockHandler,
   getListInvitationsMockHandler,
   getListJoinableWorkspacesMockHandler,
@@ -27,6 +27,7 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   AcceptedInvitation,
+  AiModels,
   AuditExport,
   Invitation,
   InvitationDraft,
@@ -179,32 +180,31 @@ function withVisibility(model: AiModelSeed): AiModelSeed {
     : { ...model, shown: true, status: "active", whoCanRun: "Researchers" };
 }
 
-export const toAiModels = (): AiModels =>
-  aiModelsSchema.parse({
-    models: aiModels.map(withVisibility).map((model) => ({
-      id: model.id,
-      name: model.name,
-      version: model.version,
-      source: model.source,
-      catalogue_name: model.catalogueName,
-      makes: model.makes,
-      description: model.description,
-      runs_on: model.runsOn,
-      who_can_run: model.whoCanRun,
-      result_sets: model.resultSets,
-      shown: model.shown,
-      status: model.status,
-      latency_ms: model.latencyMs,
-    })),
-    running: runningNow.map((run) => ({
-      id: run.id,
-      model: run.model,
-      project: ref(run.project),
-      slides: run.slides,
-      slides_done: run.slidesDone,
-      started_by: people[run.by].id,
-    })),
-  });
+export const toAiModels = (): AiModels => ({
+  models: aiModels.map(withVisibility).map((model) => ({
+    id: model.id,
+    name: model.name,
+    version: model.version,
+    source: model.source,
+    catalogue_name: model.catalogueName,
+    makes: model.makes,
+    description: model.description,
+    runs_on: model.runsOn,
+    who_can_run: model.whoCanRun,
+    result_sets: model.resultSets,
+    shown: model.shown,
+    status: model.status,
+    latency_ms: model.latencyMs,
+  })),
+  running: runningNow.map((run) => ({
+    id: run.id,
+    model: run.model,
+    project: ref(run.project),
+    slides: run.slides,
+    slides_done: run.slidesDone,
+    started_by: people[run.by].id,
+  })),
+});
 
 export const toStorageUsage = (): StorageUsage =>
   storageUsageSchema.parse({
@@ -522,6 +522,7 @@ const joinedWorkspace = (): AcceptedInvitation => {
 
 export function adminHandlers(): RequestHandler[] {
   return [
+    getListAiModelsMockHandler(() => toAiModels()),
     getListInvitationsMockHandler(() => toInvitations()),
     getCreateInvitationMockHandler(async ({ request }) => {
       const body = (await request.json()) as InvitationDraft;
@@ -606,9 +607,6 @@ export function adminHandlers(): RequestHandler[] {
 export const getGetAdminOverviewMockHandler = (overrideResponse?: AdminOverview) =>
   http.get("*/api/tenant/overview", () => HttpResponse.json(overrideResponse ?? toAdminOverview()));
 
-export const getListAiModelsMockHandler = (overrideResponse?: AiModels) =>
-  http.get("*/api/tenant/models", () => HttpResponse.json(overrideResponse ?? toAiModels()));
-
 export const getGetStorageUsageMockHandler = (overrideResponse?: StorageUsage) =>
   http.get("*/api/tenant/storage", () => HttpResponse.json(overrideResponse ?? toStorageUsage()));
 
@@ -651,12 +649,6 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/tenant/overview",
     handler: () => getGetAdminOverviewMockHandler(),
-  },
-  {
-    operationId: "listAiModels",
-    method: "get",
-    path: "/api/tenant/models",
-    handler: () => getListAiModelsMockHandler(),
   },
   {
     operationId: "getStorageUsage",

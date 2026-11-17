@@ -347,7 +347,7 @@ function useRunCancellation(notify: Notify) {
 export function ModelsSection({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
-  const data = useListAiModels().data?.data;
+  const data = okData(useListAiModels().data);
   const personOf = usePeople();
   const visibility = useModelVisibility(notify);
   const { cancelled, start } = useRunCancellation(notify);

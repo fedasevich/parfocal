@@ -46,7 +46,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
 
   const overview = useGetAdminOverview().data?.data;
   const members = okData(useListTenantMembers().data) ?? [];
-  const models = useListAiModels().data?.data;
+  const models = okData(useListAiModels().data);
   const storage = useGetStorageUsage().data?.data;
   const events = okData(useListAuditEvents(auditParams(defaultAuditFilter, now())).data) ?? [];
   const personOf = usePeople();

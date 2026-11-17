@@ -4,7 +4,6 @@ import type { Checklist } from "../generated/api.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
-import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { checklist, sampleProject } from "./scenario.ts";
@@ -19,7 +18,6 @@ export {
   getGetInvitePreviewMockHandler,
   getGetSecuritySettingsMockHandler,
   getGetStorageUsageMockHandler,
-  getListAiModelsMockHandler,
   getListWebhooksMockHandler,
   getRequestProjectAccessMockHandler,
 } from "./admin-handlers.ts";
@@ -29,11 +27,7 @@ export {
   getGetCosignReviewMockHandler,
   getReturnCosignRequestMockHandler,
 } from "./clinical-handlers.ts";
-export { getGetLabModelConnectionMockHandler } from "./connect-model-handlers.ts";
-export {
-  getGetModelRunDefaultsMockHandler,
-  getMoveModelRunMockHandler,
-} from "./job-handlers.ts";
+export { getMoveModelRunMockHandler } from "./job-handlers.ts";
 export {
   getGetProjectImportsMockHandler,
   getGetProjectOverviewMockHandler,
@@ -74,7 +68,6 @@ export const draftOperations: DraftOperation[] = [
   ...teamDraftOperations,
   ...adminDraftOperations,
   ...clinicalDraftOperations,
-  ...connectModelDraftOperations,
   ...adjudicationDraftOperations,
   ...viewerToolsDraftOperations,
 ];
