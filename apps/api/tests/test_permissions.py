@@ -19,7 +19,7 @@ import numpy as np
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, query, with_database
-from link_support import Site
+from link_support import Served, Site
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
@@ -125,6 +125,7 @@ OPEN_OPERATIONS = {
     "getHealth": "public",
     "getPlatformStatus": "public",
     "getSharedReport": "public",
+    "getRemoteTile": "public",
     **dict.fromkeys(
         (
             "getPasswordSignIn",
@@ -404,6 +405,8 @@ def template_body() -> dict[str, Any]:
 
 LINK_SITE = Site()
 LINK_SITE.file("/scan.svs", b"slide-bytes")
+LINK_SITE.index("/scans/", ["scan.svs"])
+LINK_SITE.routes["/scans/scan.svs"] = Served(body=b"slide-bytes", ranged=True)
 LINK_SITE.json(
     "/infer",
     {
@@ -416,6 +419,7 @@ LINK_OPERATIONS = frozenset(
     {
         "listSourceFiles",
         "importFromLink",
+        "readInPlace",
         "testLabModel",
         "connectLabModel",
         "testConnectedLabModel",
@@ -685,6 +689,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listSourceFiles": lambda w: Call(
         "GET",
         f"/api/projects/{w.project}/source-files?address={quote(LINK_SITE.url('/scan.svs'))}",
+    ),
+    "readInPlace": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/remote-slides",
+        {"source_id": str(seeded(w, "import-source")), "names": ["scan.svs"]},
     ),
     "importFromLink": lambda w: Call(
         "POST",

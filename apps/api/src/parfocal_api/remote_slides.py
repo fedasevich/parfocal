@@ -240,22 +240,6 @@ async def read_through(
     return body
 
 
-@public_router.head("/{slide_id}/{name}", operation_id="headRemoteTile")
-async def head_remote_tile(
-    slide_id: uuid.UUID,
-    name: str,
-    request: Request,
-    authorization: Annotated[str | None, Header()] = None,
-) -> Response:
-    grant = grant_of(request, slide_id, name, authorization)
-    headers = {
-        **BASE_HEADERS,
-        "Content-Length": str(grant.pinned.size),
-        "ETag": f'"{cache_tag(grant.pinned)}"',
-    }
-    return Response(status_code=200, headers=headers, media_type="application/octet-stream")
-
-
 @public_router.get("/{slide_id}/{name}", operation_id="getRemoteTile")
 async def get_remote_tile(
     slide_id: uuid.UUID,
