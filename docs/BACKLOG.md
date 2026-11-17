@@ -5521,7 +5521,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on INGEST-026.
   Size: M.
 
-- [ ] REMOTE-001 · Read in place from a connected source
+- [x] REMOTE-001 · Read in place from a connected source
   A connected source is browsed like a folder. Read in place streams tiles on demand and copies nothing, with a 7-day tile cache, a remote tag on the slide and an offline state that opens from the cache. Copy into Parfocal copies once. Result files next to a slide are always imported. Slides get their storage (uploaded or the connected source), and My work's All slides gains the storage filter ([ADR 0082](adr/0082-my-work-query-api.md)). Source credentials are sealed with the tenant data key and source addresses follow the rules of INGEST-025 ([threat model](security/threat-model.md) T5).
   Done when E2E opens a remote slide, a test serves tiles from the cache with the source down, and a copy keeps IDs and reviews.
   Depends on REMOTE-000, TILES-001. Refs mock: upload/remote, mock: states/remoteoff.
