@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.3 (2026-11-17)
+
+### Fixes
+
+- TEST-037: Answer a missing tissue mask with 200 and a null mask
+
+### Docs
+
+- VIEW-074: Log guard and golden passes and the deployed checklist for VIEW-074 and VIEW-076
+- SEC-042: Tick after the deployed check shows the API origin refuses the Worker bypass
+
+### Other
+
+- SEC-042: Merge main
+
 ## v0.17.2 (2026-11-17)
 
 ### Fixes
