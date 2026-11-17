@@ -1,4 +1,4 @@
-# XXXX. The viewer typer runs in the interactive pool behind the warm gate
+# 0377. The viewer typer runs in the interactive pool behind the warm gate
 
 - Date: 2026-11-17
 - Status: Accepted
