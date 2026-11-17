@@ -93,6 +93,20 @@ Curl from the owner's Mac at about 15:30 UTC with a scratch session for the seed
 
 `/api/me/slides` (the slides page) still reads per slide and is the next N+1 to batch.
 
+## After, deployed v0.13.5 (OPS-034, my slides page reads its review states in batches)
+
+Owner account on app.parfocal.eu, Server-Timing and end to end time, warm calls:
+
+| Route | Queries, transactions | App (ms) | End to end (ms) | Before |
+|---|---|---|---|---|
+| `/api/me` | 5, 2 | TODO | 293 | 9 queries |
+| `/api/me/slides` | 15, 2 | 116 | 268 (first call 1,548 with app 251) | about 70 queries, app 1,181 ms |
+| `/api/me/home` | TODO | TODO | well under 1 s warm, no exact number logged | 59 queries, 2,429 ms of database time, 2.4 s |
+
+Local counts are pinned by `test_query_counts.py` at 14 queries or fewer for home, 5 for review tasks and 3 for notification preferences, and 12 or fewer for my slides, flat however much work there is. The deployed counts of notification preferences (10 queries, 228 ms in v0.10.0) and review tasks (11, 319 ms) were not read again after v0.11.0. TODO: one Server-Timing read of home, notification preferences and review tasks on the current version.
+
+The slide open part is tracked by TILES-012 (the slide's ranges arrive in two rounds after levels.json). Its log entry measured test_065 from navigation at 3.30 s for the last range in v0.13.4, and a follow-up fix is deployed in v0.13.6 with the browser waterfall still to take.
+
 ## The per-request floor
 
 Every signed-in call ran 9 statements before this change when the member signed in with a password only. The deployed log shows `/api/me` at 9 queries for the owner and at 6 for the scratch session, which carries `mfa`. The 9 are the session check's scope and read, 3 statements for the workspace's two factor setting, the rate counter upsert, then the handler's scope and the workspace status. [ADR 0393](../adr/0393-the-session-check-reads-the-two-factor-setting-and-counts-in-batches.md) (the session check reads the two factor setting and counts in batches) joins the setting into the one read and writes rate counts in batches. `test_session_check_queries.py` on the compose Postgres pins `/api/tenant` for a password-only member at 5 statements in 2 transactions on warm calls and 6 on the first call of a minute. On a fast container at 17 to 25 ms a statement that is about 80 to 100 ms less per call, an estimate, not measured. Not deployed.
