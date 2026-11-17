@@ -45,7 +45,7 @@ const tb = (value: number) => {
 
 type StorageBarProps = React.ComponentProps<"div"> & {
   parts: StoragePart[];
-  totalTb: number;
+  totalTb: number | null;
   size?: "md" | "sm";
   foot?: React.ReactNode;
 };
@@ -54,10 +54,13 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
   const { t } = useLingui();
 
   const used = parts.reduce((sum, part) => sum + part.tb, 0);
-  const free = Math.max(0, totalTb - used);
-  const label = t`${tb(used)} of ${tb(totalTb)} used. ${parts
-    .map((part) => `${part.label} ${tb(part.tb)}`)
-    .join(", ")}, free ${tb(free)}`;
+  const free = totalTb === null ? null : Math.max(0, totalTb - used);
+  const split = parts.map((part) => `${part.label} ${tb(part.tb)}`).join(", ");
+  const label =
+    totalTb === null || free === null
+      ? t`${tb(used)} used. ${split}`
+      : t`${tb(used)} of ${tb(totalTb)} used. ${split}, free ${tb(free)}`;
+  const legend = free === null ? parts : [...parts, { label: t`Free`, tb: free, colour: "" }];
   return (
     <div data-slot="storage-bar" className={cn("grid min-w-0 gap-2.5", className)} {...props}>
       <div
@@ -74,9 +77,7 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
         >
           {tb(used)}
         </b>
-        <span>
-          <Trans>of {tb(totalTb)} used</Trans>
-        </span>
+        <span>{totalTb === null ? <Trans>used</Trans> : <Trans>of {tb(totalTb)} used</Trans>}</span>
       </div>
       <div
         role="img"
@@ -95,8 +96,10 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
               style={{ flex: `${part.tb} 0 0`, background: part.colour }}
             />
           ))}
-        {free > 0 ? <i className="block bg-track" style={{ flex: `${free} 0 0` }} /> : null}
-        {used === 0 && free === 0 ? <i className="block flex-1 bg-track" /> : null}
+        {free !== null && free > 0 ? (
+          <i className="block bg-track" style={{ flex: `${free} 0 0` }} />
+        ) : null}
+        {used === 0 && !free ? <i className="block flex-1 bg-track" /> : null}
       </div>
       <div
         className={cn(
@@ -104,7 +107,7 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
           size === "sm" ? "gap-x-3.5 gap-y-1 text-caption" : "gap-x-4.5 gap-y-1.5 text-body-sm",
         )}
       >
-        {[...parts, { label: t`Free`, tb: free, colour: "" }].map((part) => (
+        {legend.map((part) => (
           <span key={part.label} className="inline-flex items-center gap-1.75">
             <i
               className={cn(

@@ -27,8 +27,7 @@ export const spaceParts = (usage: StorageUsage): SpacePart[] =>
     colour: colourOf(part.kind, index),
   }));
 
-export const barTotalTb = (usage: StorageUsage): number =>
-  usage.capacity_tb ?? usage.total_bytes / TERABYTE;
+export const barTotalTb = (usage: StorageUsage): number | null => usage.capacity_tb;
 
 export function fullness(usage: StorageUsage): Fullness {
   if (usage.total_bytes === 0) return "empty";

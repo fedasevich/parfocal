@@ -113,7 +113,7 @@ function NewTokenModal({ onClose, notify }: { onClose: () => void; notify: Notif
           {
             onSuccess: (response) => {
               if (response.status !== 201) {
-                notify(failure(response.data));
+                notify(response.data.title);
                 return;
               }
               void queryClient.invalidateQueries({ queryKey: getListServiceAccountsQueryKey() });

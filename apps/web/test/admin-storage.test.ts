@@ -29,7 +29,7 @@ const usage = (parts: [string, number][], capacityTb: number | null): StorageUsa
 test("an empty workspace draws an empty bar with no share and no warning", () => {
   const empty = usage([["copied-slides", 0]], null);
   assert.equal(fullness(empty), "empty");
-  assert.equal(barTotalTb(empty), 0);
+  assert.equal(barTotalTb(empty), null);
   assert.deepEqual(
     spaceParts(empty).map((part) => part.tb),
     [0],
