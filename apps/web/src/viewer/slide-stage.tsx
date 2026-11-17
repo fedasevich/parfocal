@@ -99,7 +99,7 @@ import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
-import { StageInspector, type StageInspectorLink } from "./stage-inspector.tsx";
+import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import { stageToolOf } from "./stage-tools.ts";
@@ -139,6 +139,7 @@ const LabLayer = lazy(() => import("./lab-layer.tsx"));
 type Session = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
+  readonly overview: StageSession["overview"];
   readonly open: SmartServicesContext["open"];
   readonly route: VivRoute | null;
   readonly shownRoute: EngineRouteId;
@@ -612,6 +613,7 @@ function OpenedSlide({
           setSession({
             engine: viewport.engine,
             module: engine,
+            overview: viewport.overview,
             open,
             route: viewport.route(),
             shownRoute: viewport.shownRoute(),

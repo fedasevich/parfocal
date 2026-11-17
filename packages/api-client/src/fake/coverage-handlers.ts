@@ -137,6 +137,14 @@ function maskless(slideId: string): boolean {
   return (JSON.parse(stored) as string[]).includes(slideId);
 }
 
+export const thumblessSlidesKey = "parfocal.fake.thumbless-slides";
+
+function thumbless(slideId: string): boolean {
+  const stored = session()?.getItem(thumblessSlidesKey);
+  if (stored === null || stored === undefined) return false;
+  return (JSON.parse(stored) as string[]).includes(slideId);
+}
+
 function thumbnailSvg(slideId: string): string {
   const hue = Array.from(slideId.split(""), (char) => char.charCodeAt(0)).reduce(
     (sum, code) => (sum * 31 + code) % 360,
@@ -161,8 +169,13 @@ export const tissueHandlers = (): RequestHandler[] => [
       : HttpResponse.json(toSlideTissue(params.slideId)),
   ),
   http.get<{ slideId: string }>("*/api/slides/:slideId/thumbnail", ({ params }) =>
-    HttpResponse.text(thumbnailSvg(params.slideId), {
-      headers: { "Content-Type": "image/svg+xml" },
-    }),
+    thumbless(params.slideId)
+      ? HttpResponse.json(
+          { status: 404, code: "thumbnail-missing", title: "No thumbnail yet" },
+          { status: 404 },
+        )
+      : HttpResponse.text(thumbnailSvg(params.slideId), {
+          headers: { "Content-Type": "image/svg+xml" },
+        }),
   ),
 ];

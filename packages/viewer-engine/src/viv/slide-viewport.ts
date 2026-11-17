@@ -23,6 +23,7 @@ import {
   type PixelSlide,
 } from "./pixel-slide.ts";
 import { pixelRendererRoutes } from "./renderer-routes.ts";
+import { readSlideOverview, type SlideOverview } from "./slide-overview.ts";
 import { type VivRoute, type VivRouteOptions, vivRendererFactory } from "./viv-route.ts";
 
 export interface SlideViewportOptions {
@@ -45,6 +46,7 @@ export interface SlideViewport {
   readonly liveRoute: () => RendererRoute<PixelSlide> | null;
   readonly availableRoutes: () => readonly RendererRouteId[];
   readonly switchRoute: (id: RendererRouteId) => Promise<RendererSwitchOutcome>;
+  readonly overview: (signal?: AbortSignal) => Promise<SlideOverview | null>;
   readonly dispose: () => void;
 }
 
@@ -72,12 +74,18 @@ export function mountSlideViewport(options: SlideViewportOptions): SlideViewport
   ][]) {
     trackedLoaders[id] = async () => tracked(id, await load());
   }
+  let opened: PixelSlide | null = null;
+  const opener = createPixelSlideOpener(
+    options.resolve,
+    options.registry ?? createDefaultPixelSourceRegistry(),
+  );
   const engine = createViewerEngine<PixelSlide>({
     createRenderer: tracked(PRIMARY_RENDERER_ROUTE, vivRendererFactory(options.route)),
-    openSlide: createPixelSlideOpener(
-      options.resolve,
-      options.registry ?? createDefaultPixelSourceRegistry(),
-    ),
+    openSlide: async (ref, signal) => {
+      const slide = await opener(ref, signal);
+      opened = slide;
+      return slide;
+    },
   });
   const switcher = createRendererSwitcher<PixelSlide>({ engine, routes: trackedLoaders });
   engine.mount(options.container);
@@ -93,6 +101,10 @@ export function mountSlideViewport(options: SlideViewportOptions): SlideViewport
     liveRoute: () => live,
     availableRoutes: switcher.available,
     switchRoute: switcher.switchTo,
+    overview: async (signal) => {
+      await ready;
+      return opened === null ? null : readSlideOverview(opened.source, signal);
+    },
     dispose: () => {
       input.dispose();
       engine.dispose();

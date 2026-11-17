@@ -145,6 +145,20 @@ test("the minimap shows the slide overview with a viewport box that shrinks on z
   await expect.poll(async () => Number(await box.getAttribute("width"))).toBeLessThan(before);
 });
 
+test("the minimap falls back to the slide's smallest level while the thumbnail is missing", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    (id) => sessionStorage.setItem("parfocal.fake.thumbless-slides", JSON.stringify([id])),
+    tumor044,
+  );
+  await page.goto(fullViewer);
+  await ready(page);
+  const minimap = page.getByTestId("stage-minimap");
+  await expect(minimap).toHaveAttribute("data-source", "overview");
+  await expect(minimap.locator("image")).toHaveAttribute("href", /^data:image\/jpeg/);
+});
+
 test("New comment and the C key arm the comment tool from the Comments tab in annotate", async ({
   page,
 }) => {
