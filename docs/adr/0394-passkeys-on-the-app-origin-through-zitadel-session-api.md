@@ -1,7 +1,7 @@
-# XXXX. Passkeys belong to the app origin and go through Zitadel's session API
+# 0394. Passkeys belong to the app origin and go through Zitadel's session API
 
 - Date: 2026-11-17
-- Status: accepted
+- Status: Accepted
 - Deciders: agent (claude parallel run), under the owner's request of 2026-11-17
 - Backlog: IAM-032
 
