@@ -2172,7 +2172,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on SHELL-012.
   Size: S.
 
-- [ ] SHELL-014 · Lock the screen from the account menu
+- [x] SHELL-014 · Lock the screen from the account menu
   The account menu (SHELL-012) shows "Lock the screen" disabled. Make it lock the session at once, the same lock IAM-021 (lock screen that returns to the same view) shows after idle, with LockCard wording for a manual lock, such as "You locked the screen", instead of "after N minutes". Unlock returns to the same view and camera.
   Done when an API test locks a session on request, a component test covers the menu item and the manual wording, and E2E locks from the menu, unlocks and finds the same camera position.
   Depends on IAM-021, SHELL-012.
