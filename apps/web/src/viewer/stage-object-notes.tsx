@@ -4,6 +4,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { useState } from "react";
 import { usePeople } from "../screens/people.ts";
 import { reasonText } from "../screens/review/decision-style.ts";
+import { disagreeOptions } from "../screens/review/disagree-reasons.ts";
 import { fromMentionTokens } from "../screens/review/mention-picking.ts";
 import {
   hasNote,
@@ -54,7 +55,17 @@ export function StageObjectNotes({
   const shown = kept
     ? {
         ...kept,
-        reasons: kept.reasons.map((code) => reasonText[code] ?? code),
+        reasons: kept.reasons.map((code) => {
+          const option =
+            kept.value === "disagree" && item !== undefined
+              ? disagreeOptions(item.kind, item.class_name, session.classes).find(
+                  (entry) =>
+                    entry.code === code &&
+                    (entry.classId === null || entry.classId === decision?.reason_class_id),
+                )
+              : undefined;
+          return option?.label ?? reasonText[code] ?? code;
+        }),
         note: kept.note === null ? null : fromMentionTokens(kept.note, nameOf),
       }
     : undefined;

@@ -272,4 +272,23 @@ test("a decision note with a reason is written and saved on the stage", async ({
   await expect(field).toHaveCount(0);
   await expect(notes).toContainText("Note on decision: Disagree");
   await expect(notes).toContainText("Runs past the fold");
+
+  await notes.getByRole("button", { name: "Edit" }).click();
+  await expect(field).toBeFocused();
+  await expect(page.getByRole("button", { name: "Boundary is off" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(field).toHaveValue("Runs past the fold");
+  await field.fill("Runs past the fold and more");
+  const edited = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      request.url().includes("/decisions/T2") &&
+      (request.postData() ?? "").includes("and more"),
+  );
+  await page.keyboard.press("Enter");
+  const again = (await edited).postDataJSON() as { note: string; reasons: string[] };
+  expect(again.note).toBe("Runs past the fold and more");
+  expect(again.reasons).toContain("boundary_off");
 });
