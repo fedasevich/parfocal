@@ -285,7 +285,9 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
           kind="AI vs reviewed"
           title={t`${input.setA} and Reviewed`}
           note={
-            stats
+            stats &&
+            stats.ai_vs_reviewed.dice !== null &&
+            stats.ai_vs_reviewed.cells_agree_percent !== null
               ? t`Region Dice ${stats.ai_vs_reviewed.dice.toFixed(2)} · cells agree ${stats.ai_vs_reviewed.cells_agree_percent}%`
               : undefined
           }
@@ -339,7 +341,7 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
           kind="Model vs model"
           title={t`Two result sets`}
           note={
-            stats
+            stats && stats.model_vs_model.dice !== null
               ? t`Matched by overlap. ${firstBoth} to ${lastBoth} are in both, ${onlyA.join(", ")} only in A. Dice ${stats.model_vs_model.dice.toFixed(2)}.`
               : t`Matched by overlap. ${firstBoth} to ${lastBoth} are in both, ${onlyA.join(", ")} only in A.`
           }

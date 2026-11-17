@@ -16,15 +16,7 @@ const operationsByArea: Record<string, string[]> = {
     "requestProjectAccess",
     "getUploadBatch",
   ],
-  viewer: [
-    "getSlideAiProgress",
-    "getSlideResultStats",
-    "getResultSetTyper",
-    "listSlideThreads",
-    "listThreadComments",
-    "typeOutlines",
-    "listAnnotationLayers",
-  ],
+  viewer: ["typeOutlines"],
   review: [],
   reports: [
     "getEvaluationReport",

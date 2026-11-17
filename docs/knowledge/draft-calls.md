@@ -24,6 +24,10 @@ Three draft paths sit under a real route with a path parameter, so the real API 
 
 The review area switched in OPS-021 (review area on the real API). `listReviewObjects`, `getSlideAgreement` and `getTaskDisplay` live in `apps/api/src/parfocal_api/review_objects.py`, and `getDisagreementQueue`, `updateQueuedObject`, `getMyAdjudication` and `decideAdjudication` in `disagreement_queue.py`. They keep the draft URLs and shapes and are built from stored data: the review order, result objects and cell chunks, review decisions, the disagreement queue and adjudications. The queue actions and the adjudicator's decision call the existing disagreement and adjudication routes, so audit and sign-off rules stay in one place. A queue change after sign-off still answers 409, because the draft body has no change reason. The review object list is not paged, which matters for a whole-slide cell scope. The fake answers these operations through the generated MSW handlers.
 
+The viewer area switched in OPS-022 (viewer area on the real API), except `typeOutlines`. `getSlideAiProgress`, `listAnnotationLayers` and `getResultSetTyper` live in `apps/api/src/parfocal_api/slide_viewer.py`, `listSlideThreads` and `listThreadComments` in `slide_threads.py`, and `getSlideResultStats` in `slide_result_stats.py`. They keep the draft URLs and are built from stored data. AI progress reads the newest queued or running model run on the slide and maps its tissue, model and object placing stages to the three steps, and `found` stays empty because object IDs are given only at the end of a run. Annotation layers are the project classes counted over the slide's annotations, plus a "No class" and a "Measurements" layer when they hold anything, and a reader who does not see the whole project counts only slide annotations and their own. The typer reads the recorded calibration of the run's typer, or answers `calibrated: false` with nulls. Slide threads gather the slide's own threads and those of every task on it the reader can open, through the same sight rules as the thread routes, and a comment has no `reply_to` because messages are flat. Result stats count from the result set, compare the AI with the consensus of the decisions the reader may see, compare with the newest other ready result set on the slide, and give Cohen's kappa for the first two submitted reviewers the reader may see. Dice, the cell agreement and both set IDs are nullable, unlike the draft, because a slide with no decisions or one result set has no honest number. The fake answers these operations through the generated MSW handlers.
+
+`typeOutlines` stays a viewer draft. It needs a typer runner on the GPU pool behind the warm gate, which does not exist yet.
+
 ## Remaining drafts
 
 High priority sits on the home, project, viewer, review and annotate paths.
@@ -32,17 +36,11 @@ High priority sits on the home, project, viewer, review and annotate paths.
 |---|---|---|---|
 | getProjectOverview | project page, settings and slides tabs | none | high |
 | listProjectSlides | run model window, new task, compare view | partly, the project slide list | high |
-| getSlideAiProgress | full viewer | none | high |
-| getSlideResultStats | full viewer and review | none | high |
-| getResultSetTyper | full viewer | none | high |
-| listAnnotationLayers | annotate view | partly, annotation sets | high |
 | getProjectImports | project settings and upload | none | high |
 | getUploadBatch | upload page | partly, uploads | high |
 | getProjectScopeOptions | new task | none | high |
 | getReviewTaskDefaults | new task | none | high |
-| listSlideThreads | viewer comments | partly, threads | high |
-| listThreadComments | viewer comments | partly, thread messages | high |
-| typeOutlines | viewer typing tool | none | high |
+| typeOutlines | viewer typing tool | none, needs a GPU typer runner | high |
 | getModelRunDefaults | run model window | none, path swallowed | medium |
 | moveModelRun | job window | none | medium |
 | requestProjectAccess | project page without access | none | medium |

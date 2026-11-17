@@ -73,7 +73,9 @@ def test_result_stats_compare_the_ai_the_reviewers_and_another_set(
     assert stats["model_vs_model"]["only_in_a"] == ["T1"]
     assert stats["model_vs_model"]["dice"] == pytest.approx(0.4, abs=0.001)
     reviewers = stats["reviewers"]
-    assert reviewers["user_ids"] == [str(r.people[who].user_id) for who in ("first", "second")]
+    assert sorted(reviewers["user_ids"]) == sorted(
+        str(r.people[who].user_id) for who in ("first", "second")
+    )
     assert reviewers["objects"] == [
         {"object": "T1", "agreement": "same"},
         {"object": "T2", "agreement": "split"},

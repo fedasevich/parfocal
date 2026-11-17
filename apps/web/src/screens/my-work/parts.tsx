@@ -100,9 +100,11 @@ export function ProgressSummary({ progress }: { progress: SlideProgress }) {
 }
 
 export function useOpenThreads(slideId: string | undefined) {
-  const threads = useListSlideThreads(slideId ?? "", {
-    query: { enabled: slideId !== undefined },
-  }).data?.data;
+  const threads = okData(
+    useListSlideThreads(slideId ?? "", {
+      query: { enabled: slideId !== undefined },
+    }).data,
+  );
   return (threads ?? []).filter((thread) => !thread.resolved);
 }
 

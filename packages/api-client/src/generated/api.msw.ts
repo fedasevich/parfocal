@@ -18,6 +18,7 @@ import type {
   AiUsage,
   AnnotateSlideStatus,
   Annotation,
+  AnnotationLayers,
   AnnotationRef,
   AnnotationVersion,
   Announcement,
@@ -134,6 +135,7 @@ import type {
   ResultSet,
   ResultSetDeletion,
   ResultSetDetail,
+  ResultSetTyper,
   ResumeState,
   RetentionPolicy,
   ReviewDecision,
@@ -165,6 +167,7 @@ import type {
   SiteValidation,
   Skip,
   SlideAgreement,
+  SlideAiProgress,
   SlideArea,
   SlideCopies,
   SlideCoverage,
@@ -173,8 +176,10 @@ import type {
   SlideFigure,
   SlideMoved,
   SlidePage,
+  SlideResultStats,
   SlideScope,
   SlideTable,
+  SlideThread,
   SlideTissue,
   Sorting,
   SourceListing,
@@ -192,6 +197,7 @@ import type {
   TextBlock,
   TextQuestion,
   Thread,
+  ThreadComment,
   ThreadDetail,
   TierMapping,
   TileAccess,
@@ -304,6 +310,8 @@ import {
   SlideOutcome,
   StartMode,
   State,
+  StepKey,
+  StepState,
   StepStatus,
   StudyKind,
   TargetKind,
@@ -7493,6 +7501,143 @@ export const getGetTaskDisplayResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSlideResultStatsResponseMock = (
+  overrideResponse: Partial<Extract<SlideResultStats, object>> = {},
+): SlideResultStats => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  object_count: faker.number.int({ min: 0 }),
+  class_counts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      count: faker.number.int(),
+    }),
+  ),
+  score_bins: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.number.int(),
+  ),
+  ai_vs_reviewed: {
+    dice: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    cells_agree_percent: faker.helpers.arrayElement([
+      faker.number.float({ fractionDigits: 2 }),
+      null,
+    ]),
+    objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        agreement: faker.helpers.arrayElement(["both", "ai_only", "reviewer_only"] as const),
+      }),
+    ),
+  },
+  model_vs_model: {
+    set_a_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    set_b_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    dice: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    only_in_a: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+  },
+  reviewers: {
+    user_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => faker.string.uuid(),
+    ),
+    kappa: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        agreement: faker.helpers.arrayElement(["same", "split", "unsure"] as const),
+      }),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getGetSlideAiProgressResponseMock = (
+  overrideResponse: Partial<Extract<SlideAiProgress, object>> = {},
+): SlideAiProgress => ({
+  slide_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(["running", "ready"] as const),
+  steps: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    key: faker.helpers.arrayElement(Object.values(StepKey)),
+    state: faker.helpers.arrayElement(Object.values(StepState)),
+    percent: faker.number.float({ min: 0, max: 100, fractionDigits: 2 }),
+    seconds: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+    fragments: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+  })),
+  found: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
+export const getListAnnotationLayersResponseMock = (
+  overrideResponse: Partial<Extract<AnnotationLayers, object>> = {},
+): AnnotationLayers => ({
+  slide_id: faker.string.uuid(),
+  layers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      class_name: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      count: faker.number.int({ min: 0 }),
+      parent: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      locked: faker.datatype.boolean(),
+    }),
+  ),
+  new_shapes_go_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getGetResultSetTyperResponseMock = (
+  overrideResponse: Partial<Extract<ResultSetTyper, object>> = {},
+): ResultSetTyper => ({
+  result_set_id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  calibrated: faker.datatype.boolean(),
+  checked_on_held_out: faker.datatype.boolean(),
+  band_accuracy: {
+    confident: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      null,
+    ]),
+    likely: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      null,
+    ]),
+    unsure: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      null,
+    ]),
+    doubtful: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      null,
+    ]),
+  },
+  test_set_accuracy: faker.helpers.arrayElement([
+    faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    null,
+  ]),
+  test_set_confident_share: faker.helpers.arrayElement([
+    faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    null,
+  ]),
+  test_set_unsure_share: faker.helpers.arrayElement([
+    faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+    null,
+  ]),
+  validated_sites: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+  ...overrideResponse,
+});
+
 export const getGetDisagreementQueueResponseMock = (
   overrideResponse: Partial<Extract<DisagreementQueue, object>> = {},
 ): DisagreementQueue => ({
@@ -10308,6 +10453,27 @@ export const getMoveThreadOnSlideResponseMock = (
   ),
   ...overrideResponse,
 });
+
+export const getListSlideThreadsResponseMock = (): SlideThread[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    slide_id: faker.string.uuid(),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    anchor: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    replies: faker.number.int({ min: 0 }),
+    resolved: faker.datatype.boolean(),
+  }));
+
+export const getListThreadCommentsResponseMock = (): ThreadComment[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    thread_id: faker.string.uuid(),
+    author_id: faker.string.uuid(),
+    author_is_researcher: faker.datatype.boolean(),
+    text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reply_to: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
 
 export const getSaveOpinionResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
@@ -20721,6 +20887,102 @@ export const getGetTaskDisplayMockHandler = (
   );
 };
 
+export const getGetSlideResultStatsMockHandler = (
+  overrideResponse?:
+    | SlideResultStats
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideResultStats> | SlideResultStats),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/result-stats",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideResultStatsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetSlideAiProgressMockHandler = (
+  overrideResponse?:
+    | SlideAiProgress
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideAiProgress> | SlideAiProgress),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/ai-progress",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideAiProgressResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListAnnotationLayersMockHandler = (
+  overrideResponse?:
+    | AnnotationLayers
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AnnotationLayers> | AnnotationLayers),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/annotation-layers",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListAnnotationLayersResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetResultSetTyperMockHandler = (
+  overrideResponse?:
+    | ResultSetTyper
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ResultSetTyper> | ResultSetTyper),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/typer",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetResultSetTyperResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetDisagreementQueueMockHandler = (
   overrideResponse?:
     | DisagreementQueue
@@ -22425,6 +22687,54 @@ export const getMoveThreadOnSlideMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getMoveThreadOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListSlideThreadsMockHandler = (
+  overrideResponse?:
+    | SlideThread[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideThread[]> | SlideThread[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/threads",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSlideThreadsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListThreadCommentsMockHandler = (
+  overrideResponse?:
+    | ThreadComment[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ThreadComment[]> | ThreadComment[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/threads/:threadId/comments",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListThreadCommentsResponseMock(),
         { status: 200 },
       );
     },
@@ -25232,6 +25542,10 @@ export const getParfocalAPIMock = () => [
   getListReviewObjectsMockHandler(),
   getGetSlideAgreementMockHandler(),
   getGetTaskDisplayMockHandler(),
+  getGetSlideResultStatsMockHandler(),
+  getGetSlideAiProgressMockHandler(),
+  getListAnnotationLayersMockHandler(),
+  getGetResultSetTyperMockHandler(),
   getGetDisagreementQueueMockHandler(),
   getUpdateQueuedObjectMockHandler(),
   getGetMyAdjudicationMockHandler(),
@@ -25307,6 +25621,8 @@ export const getParfocalAPIMock = () => [
   getResolveThreadOnSlideMockHandler(),
   getReopenThreadOnSlideMockHandler(),
   getMoveThreadOnSlideMockHandler(),
+  getListSlideThreadsMockHandler(),
+  getListThreadCommentsMockHandler(),
   getSaveOpinionMockHandler(),
   getGetOpinionMockHandler(),
   getSubmitFirstReadMockHandler(),

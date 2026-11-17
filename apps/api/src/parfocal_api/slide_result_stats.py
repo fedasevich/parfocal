@@ -78,7 +78,7 @@ class ReviewerObjectAgreement(BaseModel):
     agreement: Literal["same", "split", "unsure"]
 
 
-class ReviewerAgreement(BaseModel):
+class SlideReviewers(BaseModel):
     user_ids: list[uuid.UUID]
     kappa: float | None
     objects: list[ReviewerObjectAgreement]
@@ -92,7 +92,7 @@ class SlideResultStats(BaseModel):
     score_bins: list[int]
     ai_vs_reviewed: AiAgainstReviewed
     model_vs_model: ModelAgainstModel
-    reviewers: ReviewerAgreement
+    reviewers: SlideReviewers
 
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}", tags=["review-tasks"])
@@ -296,16 +296,16 @@ def regions_only(values: Mapping[tuple[str, int], str]) -> dict[int, str]:
 
 async def reviewer_agreement(
     connection: AsyncConnection, principal: Principal, row: Any
-) -> ReviewerAgreement:
+) -> SlideReviewers:
     submitted = await submitted_reviewers(connection, row.task_id, row.slide_id)
     shown = await visible_people(connection, principal, row, set(submitted))
     pair = [person for person in submitted if person in shown][:2]
     if len(pair) < 2:
-        return ReviewerAgreement(user_ids=[], kappa=None, objects=[])
+        return SlideReviewers(user_ids=[], kappa=None, objects=[])
     first = regions_only(await values_of(connection, row.task_id, row.slide_id, pair[0]))
     second = regions_only(await values_of(connection, row.task_id, row.slide_id, pair[1]))
     shared = sorted(first.keys() & second.keys())
-    return ReviewerAgreement(
+    return SlideReviewers(
         user_ids=pair,
         kappa=engine.cohen([first[n] for n in shared], [second[n] for n in shared]),
         objects=[
