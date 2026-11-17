@@ -1,6 +1,5 @@
 import asyncio
 import time
-import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -17,15 +16,15 @@ CALLS = 20
 
 @pytest.fixture
 def slow_database(monkeypatch: pytest.MonkeyPatch) -> None:
-    resolve = auth.resolve
+    read_session = auth.read_session
 
-    async def far_away_resolve(
-        connection: Any, subject: str, active_tenant_id: uuid.UUID | None
-    ) -> auth.Resolved:
+    async def far_away_read(
+        connection: Any, state: auth.AuthState, session_id: str
+    ) -> auth.CheckedSession | None:
         await asyncio.sleep(DATABASE_ROUND_TRIPS)
-        return await resolve(connection, subject, active_tenant_id)
+        return await read_session(connection, state, session_id)
 
-    monkeypatch.setattr(auth, "resolve", far_away_resolve)
+    monkeypatch.setattr(auth, "read_session", far_away_read)
 
 
 def timed_calls(browser: Browser, count: int) -> tuple[float, list[int]]:
