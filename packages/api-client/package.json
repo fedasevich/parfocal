@@ -3,6 +3,7 @@
   "description": "Typed API client generated from the backend OpenAPI schema",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
     "./fake": "./src/fake/index.ts",
