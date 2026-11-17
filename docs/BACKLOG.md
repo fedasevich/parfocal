@@ -443,7 +443,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a contract test proves the served schema equals the committed one.
   Depends on STACK-008, STACK-019.
 
-- [ ] FOUND-009 · Local development environment
+- [x] FOUND-009 · Local development environment
   Docker Compose with Postgres plus PostGIS and a PgBouncer in transaction mode like Neon's (the compose file exists since FOUND-013). The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
   Done when a new machine runs `make dev` (or equivalent) and reaches the logged-in home screen in under 10 minutes, documented in the README.
   Size: L.
@@ -806,7 +806,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-014, TASK-007, ADJ-003. Refs kit W51, kit Flow 25.
   Size: M.
 
-- [ ] IAM-021 · Lock screen that returns to the same view
+- [x] IAM-021 · Lock screen that returns to the same view
   Split from IAM-009. The web app sends `recordActivity` on keyboard, pointer and viewer input at most once a minute, shows the kit's lock screen when the API answers `session-locked`, unlocks through `/api/auth/login?reauth=true` and comes back to the same view and camera position.
   Done when a component test and an E2E test lock an open slide, unlock and find the same camera position.
   After a session that ended, the sign-in page says so and names the last saved decision, as in "Your session ended after 8 hours. Sign in to go on. Your last decision, T5 on A1, is saved.", and signing in returns to that object.
@@ -874,7 +874,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests show ciphertext at rest, correct search, and unreadable data after the tenant key is destroyed.
   Depends on STACK-037. Search is decided in [ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md).
 
-- [ ] SEC-005 · Data residency enforcement
+- [x] SEC-005 · Data residency enforcement
   Tenant region pins storage, database and GPU processing to that region. Not enforced during the pilot. Built before the first tenant with real PHI ([ADR 0003](adr/0003-pilot-platform-architecture.md)). Since 2026-11-16 this task builds the rule in the job claim behind a switch ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch), and OPS-020 (pin storage, database and Modal functions per region) pins the cloud resources.
   Done when a test fails if a job for an EU tenant is scheduled on a non-EU queue.
   Size: L.
@@ -889,7 +889,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when tests cover both workflows end to end.
   Refs [ADR 0090](adr/0090-access-export-and-erasure.md).
 
-- [ ] SEC-008 · De-identified projects
+- [x] SEC-008 · De-identified projects
   A de-identified project never holds a direct identifier. Upload strips names and record numbers from file metadata and hides label and macro images. Copying slides from a clinical project into a de-identified one replaces case IDs with stable pseudonyms and removes label images.
   Done when tests prove no direct identifier, label image or macro image with a barcode reaches a de-identified project, through upload, link import, webhook and copy.
   Depends on PROJ-002, SEC-009. Refs doc 37 "Data model", [ADR 0053](adr/0053-ai-results-review-direction.md).
@@ -937,7 +937,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when load tests show limits enforced with proper 429 responses.
   Refs [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md). Per-IP limits and bot protection on login moved to SEC-027.
 
-- [ ] SEC-013 · Secrets management in all environments
+- [x] SEC-013 · Secrets management in all environments
   Done when no secret exists in the repo (scanner in CI), runtime secrets come from the secret store, and rotation is documented and tested in a drill environment.
   Depends on STACK-037.
   Size: L.
@@ -1360,7 +1360,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
   The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, ). Ingest records the byte ranges of the label and macro pages and the edge refuses any range that overlaps them, so the stored original keeps the bytes and SHA-256 of the upload, as the owner chose on 2026-11-02.
 
-- [ ] TILES-009 · A rewritten original never comes from a stale cache
+- [x] TILES-009 · A rewritten original never comes from a stale cache
   TILES-002 caches tile ranges at the edge keyed on the original's signed size, so an original rewritten at the same size is served stale for up to a day. Add an optional ETag field to the tile token, have `head_object` return it, and make the Worker add it to the cache key and refuse to cache on a mismatch.
   Done when a test shows a same-size rewrite misses the cache, and a check against real R2 confirms the S3 ETag of a multipart upload equals the Worker's `etag`.
   Depends on TILES-002.
@@ -2160,7 +2160,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 35, mock 7 pop-out icon.
   Size: M.
 
-- [ ] SHELL-012 · Account menu
+- [x] SHELL-012 · Account menu
   Opens from the user's avatar wherever the global bar shows. It holds the user's name and role, availability status (IAM-015), theme (DS-005), initials only (WL-013), settings, keyboard shortcuts (CMD-003), profile and signature (SET-010), help and what's new, and log out. Theme and initials only apply at once. Log out ends the session, keeps unsaved drafts, and is never worded like signing out a case.
   Done when component tests cover each item, axe passes, keyboard users reach every item, and E2E logs out and back in with a draft intact.
   Depends on IAM-002, IAM-015. Refs mock 1, kit W35, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -3558,7 +3558,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ## 22 AISEG · Interactive segmentation
 
-- [ ] AISEG-000 · Research check
+- [x] AISEG-000 · Research check
   Compare PathoSAM (and its AIS decoder), newer SAM variants, small SAMs fine-tuned on pathology (EfficientViT-SAM, EdgeSAM, MobileSAM) and exemplar prompting (SAM 3) on the held-out sets.
   Done when an ADR picks encoder and decoder per tier, backed by MLEVAL numbers.
   Size: L.
@@ -3814,7 +3814,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when golden tests cover colormaps and threshold.
   Size: S.
 
-- [ ] AITUM-008 · The tumor map runs as a job and the API serves it
+- [x] AITUM-008 · The tumor map runs as a job and the API serves it
   AITUM-001 (tumor map job) built `parfocal_ml.tumor_map`, which maps a slide over the tissue mask and writes the heatmap format the API already serves plus three pyramid levels, but nothing starts it. Add it as a job kind in the job system with its GPU pool and cost cap, start it from the API under a member's rights, store the map with the slide, and give the "Map this view" panel of AITUM-004 (view-scoped map on demand) the server scorer it waits for.
   Done when an API test starts a tumor map job and reads the stored map back through the heatmap route, a worker test runs the job end to end with a stand-in model on a small fixture, and the routes are in the permission and tenant isolation tables.
   Depends on AITUM-001.
@@ -4193,7 +4193,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a test confirms the default mapping.
   Size: S.
 
-- [ ] DEV-008 · Tablet layout
+- [x] DEV-008 · Tablet layout
   Top bar with larger targets, floating dock with 56 px targets, inspector as a bottom sheet with peek, half and full heights, review buttons of 52 to 60 px.
   Done when visual tests at 1024×1366 match kit W8 and the mock tablet tab.
   Size: M.
@@ -4313,7 +4313,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm no events are sent after opt-out.
   Size: S.
 
-- [ ] EXP-008 · Moderated test support
+- [x] EXP-008 · Moderated test support
   A study mode that loads public slides (CAMELYON16) with scripted tasks and records timing, for the usability plan in the kit. Round 4 tests the cell findings: open the zone where the AI is least sure, answer 4 unsure cells (round 1 wording, so the rounds compare) and change a cell you can see is a lymphocyte.
   A running round keeps its screens and tasks frozen so its sessions compare, and prototype changes start the next round.
   Done when the ten pilot tasks in the kit test plan can run end to end in study mode, with the task set editable without a deploy.
