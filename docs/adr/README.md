@@ -335,4 +335,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0368](0368-the-end-to-end-suite-runs-the-api-and-ingest-containers.md) | The end-to-end suite runs the API and ingest containers | Accepted | 2026-11-17 |
 | [0369](0369-the-local-stack-is-the-drill-environment-for-tenant-provisioning.md) | The local stack is the drill environment for tenant provisioning | Accepted | 2026-11-17 |
 | [0370](0370-the-project-owner-confirms-tile-sharing-with-a-lab-model.md) | The project owner confirms tile sharing before a lab model runs on a clinical project | Accepted | 2026-11-17 |
+| [0371](0371-a-lab-model-run-pins-the-model-from-its-first-answer.md) | A lab model run pins the model and version from its first answer | Accepted | 2026-11-17 |
+| [0376](0376-study-replay-is-a-first-party-recorder-without-a-library.md) | Study session replay is a first-party recorder with no recording library | Accepted | 2026-11-17 |
 | [0377](0377-the-viewer-typer-runs-in-the-interactive-pool.md) | The viewer typer runs in the interactive pool behind the warm gate | Accepted | 2026-11-17 |
+| [0378](0378-saved-import-sources-keep-credentials-on-the-server.md) | Saved import sources keep their credentials on the server | Accepted | 2026-11-17 |

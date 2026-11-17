@@ -1,4 +1,4 @@
-# 0369. Saved import sources keep their credentials on the server
+# 0378. Saved import sources keep their credentials on the server
 
 - Date: 2026-11-17
 - Status: Accepted
