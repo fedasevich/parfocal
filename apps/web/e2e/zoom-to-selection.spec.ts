@@ -81,6 +81,7 @@ test("Shift+F leaves the camera alone when nothing is selected", async ({ page }
 
 test("Shift+F fits the focused AI area when no shape is selected", async ({ page }) => {
   await openSlide(page);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   const nav = page.getByTestId("area-nav");
   await page.keyboard.press("]");
   await expect(nav).toHaveAttribute("data-current", "T1");

@@ -244,7 +244,7 @@ function PaintedMapPanel({ engine, stage, session }: PanelProps) {
           </div>
           {open ? (
             <>
-              <p className="text-muted">
+              <p className="m-0 text-fg-dim">
                 <Trans>Drag to paint. Hold Shift or Alt to erase. Press [ or ] to resize.</Trans>
               </p>
               <label className="flex items-center gap-2">

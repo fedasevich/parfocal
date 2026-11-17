@@ -1185,6 +1185,7 @@ function OpenedSlide({
             ) : null}
           </div>
           <StageInspector
+            key={workspace}
             layout={inspectorLayout}
             onLayout={setInspectorLayout}
             initialTab={initialTab}

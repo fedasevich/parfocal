@@ -12,6 +12,7 @@ async function openSlide(page: import("@playwright/test").Page) {
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   return stage;
 }
 

@@ -25,6 +25,7 @@ const paintedOf = async (panel: Locator) => Number(await panel.getAttribute("dat
 test("a painted map is painted, saved, reloaded and opened again", async ({ page }) => {
   test.setTimeout(90_000);
   const stage = await openReviewSlide(page);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
   const panel = page.getByTestId("painted-map");
   await page.getByTestId("painted-map-toggle").click();
   await expect(panel).toHaveAttribute("data-open", "on");
@@ -45,6 +46,7 @@ test("a painted map is painted, saved, reloaded and opened again", async ({ page
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 30_000,
   });
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
   await page.getByTestId("painted-map-toggle").click();
   const list = page.getByTestId("painted-map-list");
   await expect(list.locator("option")).toHaveCount(2);

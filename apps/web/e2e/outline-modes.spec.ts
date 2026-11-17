@@ -11,6 +11,7 @@ async function openReviewSlide(page: Page) {
   const url = new URL(page.url());
   await page.goto(`${url.pathname}?task=${rt14}`);
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
   return stage;
 }
 
@@ -50,6 +51,7 @@ test("each outline mode changes the overlay on a real slide and the choice is re
     timeout: 30_000,
   });
   await expect(layer(page)).toHaveAttribute("data-mode", "mark-unsure");
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
   await expect(modes(page).getByRole("radio", { name: "Mark unsure" })).toBeChecked();
 });
 

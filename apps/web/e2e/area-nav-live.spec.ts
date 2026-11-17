@@ -9,6 +9,7 @@ async function openSlide(page: Page) {
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 15_000,
   });
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   return page.getByTestId("area-nav");
 }
 
