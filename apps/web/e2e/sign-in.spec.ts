@@ -21,7 +21,28 @@ test("the sign-in form offers no flows that the hosted login replaced", async ({
   await expect(page.getByRole("button", { name: "Email me a sign-in link instead" })).toHaveCount(
     0,
   );
-  await expect(page.getByRole("button", { name: "Sign in with your organisation" })).toHaveCount(0);
+});
+
+test("sign in with your organisation asks for the email domain and names an unknown one", async ({
+  page,
+}) => {
+  await page.goto("/sign-in");
+  await page.getByRole("button", { name: "Sign in with your organisation" }).click();
+  await expect(page.getByRole("heading", { name: "Continue with your institution" })).toBeVisible();
+  const go = page.getByRole("button", { name: "Continue to your organisation's sign-in" });
+  await expect(go).toBeDisabled();
+  await page.getByRole("textbox", { name: "Institution or email domain" }).fill("lenka@");
+  await expect(go).toBeDisabled();
+  await page
+    .getByRole("textbox", { name: "Institution or email domain" })
+    .fill("lenka@hospital.example");
+  await expect(go).toBeEnabled();
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in to Parfocal" })).toBeVisible();
+
+  await page.goto("/sign-in?sso=none&return_to=%2Fmy-work");
+  await expect(page.getByRole("heading", { name: "Continue with your institution" })).toBeVisible();
+  await expect(page.getByText("No Parfocal workspace signs in that email domain")).toBeVisible();
 });
 
 test("a return target that is not a slide still lands, and one outside the site is ignored", async ({

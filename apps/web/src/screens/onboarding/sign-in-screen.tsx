@@ -18,17 +18,18 @@ import { okData } from "../placeholder.tsx";
 import { PitchLayout, slideImage } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
 import type { SignInScene } from "./scenes.ts";
-import { EmailForm, type Flow } from "./sign-in-forms.tsx";
+import { EmailForm, type Flow, SsoForm } from "./sign-in-forms.tsx";
 
 type Props = {
   scene: SignInScene;
   change: (scene: SignInScene) => void;
   returnTo: string | null;
+  ssoUnknown?: boolean;
 };
 
 const defaultSessionHours = 8;
 
-export function SignInScreen({ scene, change, returnTo }: Props) {
+export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Props) {
   const me = okData(useGetMe().data);
   const signedInScene = scene === "lock" || scene === "lockkey" || scene === "expired";
   const policy = okData(useGetSessionPolicy({ query: { enabled: signedInScene } }).data);
@@ -45,7 +46,7 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
   };
   const landOnTarget = () => void goTo(target);
   const toast = (text: string) => show(text);
-  const flow: Flow = { email, setEmail, returnTo, change, land };
+  const flow: Flow = { email, setEmail, returnTo, change, land, ssoUnknown };
 
   if (scene === "lock" || scene === "lockkey") {
     return (
@@ -113,7 +114,7 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
 
   return (
     <PitchLayout>
-      <EmailForm flow={flow} />
+      {scene === "sso" ? <SsoForm flow={flow} /> : <EmailForm flow={flow} />}
       {notice}
     </PitchLayout>
   );

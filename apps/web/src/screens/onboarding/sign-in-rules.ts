@@ -11,6 +11,29 @@ export function safeReturnPath(value: string | undefined): string | null {
   return unsafe ? null : value;
 }
 
+export function emailDomain(email: string): string {
+  const at = email.lastIndexOf("@");
+  return at < 0
+    ? ""
+    : email
+        .slice(at + 1)
+        .trim()
+        .toLowerCase();
+}
+
+const domainPattern = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+
+export function organisationDomain(typed: string): string | null {
+  const text = typed.trim().toLowerCase();
+  const domain = text.includes("@") ? emailDomain(text) : text;
+  return domainPattern.test(domain) ? domain : null;
+}
+
+export function organisationSignInUrl(domain: string, returnTo: string | null): string {
+  const query = new URLSearchParams({ domain, return_to: returnTo ?? "/" });
+  return `/api/auth/sso?${query.toString()}`;
+}
+
 export function codeDigits(value: string): string {
   return value.replace(/\D/g, "").slice(0, codeLength);
 }

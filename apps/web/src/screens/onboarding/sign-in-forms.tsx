@@ -18,6 +18,7 @@ import { startNamedLogin } from "../../session/sign-in-redirect.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { handled, PasswordInput, problemText } from "./auth-inputs.tsx";
 import type { SignInScene } from "./scenes.ts";
+import { emailDomain, organisationDomain, organisationSignInUrl } from "./sign-in-rules.ts";
 
 export type Flow = {
   email: string;
@@ -25,6 +26,7 @@ export type Flow = {
   returnTo: string | null;
   change: (scene: SignInScene) => void;
   land: (session: SignInLanding) => void;
+  ssoUnknown: boolean;
 };
 
 function EmailField({ flow }: { flow: Flow }) {
@@ -103,10 +105,55 @@ export function EmailForm({ flow }: { flow: Flow }) {
         <Icon name="key" />
         <Trans>Sign in with a passkey</Trans>
       </Button>
+      <Button size="lg" block onClick={() => flow.change("sso")}>
+        <Icon name="shield" />
+        <Trans>Sign in with your organisation</Trans>
+      </Button>
       <AuthFoot>
         <Trans>New to Parfocal?</Trans> <SignUpLink />
         <DotSeparator />
         <Trans>Invited? Open the link in your email</Trans>
+      </AuthFoot>
+    </AuthForm>
+  );
+}
+
+export function SsoForm({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
+  const [text, setText] = useState(() => emailDomain(flow.email));
+  const domain = organisationDomain(text);
+  const go = () => {
+    if (domain !== null) window.location.assign(organisationSignInUrl(domain, flow.returnTo));
+  };
+  return (
+    <AuthForm>
+      <AuthHeading title={t`Continue with your institution`}>
+        <Trans>Your institution checks who you are, so Parfocal never sees your password.</Trans>
+      </AuthHeading>
+      <AuthField label={t`Institution or email domain`}>
+        <Input
+          aria-label={t`Institution or email domain`}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") go();
+          }}
+          className="h-9"
+        />
+      </AuthField>
+      {flow.ssoUnknown ? (
+        <Banner inline tone="bad" icon="warn">
+          {t`No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email.`}
+        </Banner>
+      ) : null}
+      <Button variant="primary" size="lg" block onClick={go} disabled={domain === null}>
+        <Trans>Continue to your organisation's sign-in</Trans>
+      </Button>
+      <AuthFoot>
+        <AuthLink onClick={() => flow.change("email")}>
+          <Trans>Back</Trans>
+        </AuthLink>
       </AuthFoot>
     </AuthForm>
   );

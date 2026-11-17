@@ -3872,6 +3872,7 @@ msgstr ""
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/onboarding/setup-screen.tsx
+#: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
@@ -5390,9 +5391,17 @@ msgstr ""
 msgid "Continue reviewing, your tasks, asks and mentions"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Continue to your organisation's sign-in"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Continue where you left off"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Continue with your institution"
 msgstr ""
 
 #: src/screens/admin/storage.tsx
@@ -7980,6 +7989,10 @@ msgstr ""
 msgid "Instant"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Institution or email domain"
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Intent"
 msgstr ""
@@ -9803,6 +9816,10 @@ msgstr ""
 
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "No other task to compare"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
 msgstr ""
 
 #: src/screens/project/settings-tab.tsx
@@ -14012,6 +14029,10 @@ msgstr ""
 msgid "Sign in with a passkey"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in with your organisation"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -17763,6 +17784,10 @@ msgstr ""
 #. placeholder {0}: roles[role].effect
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Your home keeps a short checklist until each part has been tried once. {0}"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Your institution checks who you are, so Parfocal never sees your password."
 msgstr ""
 
 #: src/screens/admin/sections.tsx

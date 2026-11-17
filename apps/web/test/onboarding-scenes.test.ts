@@ -9,7 +9,7 @@ import {
   sectionOf,
 } from "../src/screens/onboarding/scenes.ts";
 
-const replacedByHostedLogin = ["magic", "sso", "forgot", "reset"];
+const replacedByHostedLogin = ["magic", "forgot", "reset"];
 
 test("the sign-in, sign-up, invite, setup and admin scenes match the PROTO-001 inventory", () => {
   const inventory = readFileSync(

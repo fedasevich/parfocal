@@ -3,6 +3,7 @@ import { onboardingScenes } from "./scenes.ts";
 
 const signInNotes = {
   email: "Email and password",
+  sso: "Sign in with your organisation",
   passkey: "Passkey, the browser asks",
   passkeyqr: "Passkey on a phone or key",
   lock: "Locked after inactivity",
