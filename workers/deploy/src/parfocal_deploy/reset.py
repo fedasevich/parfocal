@@ -28,6 +28,15 @@ AUDIT_TABLE = "audit_events"
 AUDIT_TRUNCATE_GUARD = "audit_events_no_truncate"
 metadata = slides.metadata
 SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.showcase")
+PUBLISH_FIXTURES = (
+    "uv",
+    "run",
+    "--package",
+    "parfocal-ingest",
+    "python",
+    "-m",
+    "parfocal_ingest.fixture_slides",
+)
 
 
 def truncate_statement() -> str:
@@ -74,20 +83,24 @@ def reset(target: Environment, tools: Tools, local: Mapping[str, str]) -> int:
     database = neon.first_database(tools.neon, project, branch)
     direct = neon.owner_uri(tools.neon, project, branch, database, pooled=False)
     location = storage_location(target, settings)
+    storage = {
+        "APP_ENV": target.app_env,
+        "STORAGE_ENDPOINT": location.endpoint,
+        "STORAGE_REGION": location.region,
+        "STORAGE_BUCKET": location.bucket,
+        "STORAGE_ACCESS_KEY_ID": location.access_key_id,
+        "STORAGE_SECRET_ACCESS_KEY": location.secret_access_key,
+    }
     tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
+    tools.run(PUBLISH_FIXTURES, None, storage)
     tools.sql(direct, reset_statement())
     removed = asyncio.run(empty_tenant_objects(location))
     tools.run(
         SEED,
         None,
         {
+            **storage,
             "DATABASE_URL": neon.engine_uri(direct),
-            "APP_ENV": target.app_env,
-            "STORAGE_ENDPOINT": location.endpoint,
-            "STORAGE_REGION": location.region,
-            "STORAGE_BUCKET": location.bucket,
-            "STORAGE_ACCESS_KEY_ID": location.access_key_id,
-            "STORAGE_SECRET_ACCESS_KEY": location.secret_access_key,
             "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
         },
     )

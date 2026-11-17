@@ -8,7 +8,12 @@ import pytest
 
 from parfocal_common.ingest import fixture_folder, fixture_original_key
 from parfocal_common.object_store import ObjectStore, StorageLocation
-from parfocal_ingest.fixture_slides import SYNTHETIC_FOLDER, Outcome, send_fixtures
+from parfocal_ingest.fixture_slides import (
+    SYNTHETIC_FOLDER,
+    Outcome,
+    send_fixtures,
+    unfinished,
+)
 
 STORAGE = StorageLocation(
     endpoint=os.environ.get("PARFOCAL_TEST_STORAGE_URL", "http://127.0.0.1:9000"),
@@ -76,6 +81,22 @@ def test_each_fixture_gets_its_own_folder_and_nothing_is_overwritten_or_deleted(
     again, kept = asyncio.run(run("again", [OME, SHARED]))
     assert [outcome.state for outcome in again] == ["kept", "kept"]
     assert kept == stored
+
+
+@pytest.mark.db
+def test_a_fixture_missing_locally_is_read_from_the_shared_fixtures_folder() -> None:
+    asyncio.run(run("fresh", []))
+
+    async def without_local_files() -> list[Outcome]:
+        async with httpx2.AsyncClient(timeout=60) as http:
+            return await send_fixtures(ObjectStore(STORAGE, http), [SHARED, "absent.svs"], [])
+
+    outcomes = asyncio.run(without_local_files())
+    assert [outcome.state for outcome in outcomes] == ["stored", "missing locally"]
+    assert f"{fixture_folder(SHARED)}facts.json" in outcomes[0].written
+    assert unfinished(outcomes) == [outcomes[1]]
+    again = asyncio.run(without_local_files())
+    assert again[0].state == "kept"
 
 
 def test_fixture_folders_fit_the_edge_folder_rule() -> None:

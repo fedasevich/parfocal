@@ -4853,6 +4853,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a result file reports which models ran on which crops with the times, the seed tests pass with the real result files, and after the next reset the demo project shows the real cells and regions in the deployed viewer.
   Depends on TEST-046. Size: M.
 
+- [x] TEST-048 · Format gallery slides open on the deployed app
+  On 2026-11-17 the 39 Format gallery slides on app.parfocal.eu, such as Argos-1.avs in "Scanner format comparison", showed "You cannot open this slide". No deploy or reset step ever ran the TEST-037 publisher (seeded fixture slides get their own folders), so the seed fell back to `fixtures/<file>`, the API signed the folder `fixtures/` and the edge refused it as malformed. Make Reset production publish the `fixture-slides/` folders before it empties anything, make a deployed seed fail loudly instead of falling back, publish the folders once and point the existing rows at them.
+  Done when a test proves every seeded `original_key` yields a folder the edge's shared-folder rule accepts, the reset test proves the publish runs before the truncate, and the tile of a gallery slide on app.parfocal.eu answers 206.
+  Depends on TEST-037. Size: S.
+
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
   Done when the 6 specs in `apps/e2e` pass against the API container locally and in one CI job with no secrets, and an upload is ingested with no manual ingest call.

@@ -100,6 +100,16 @@ PLACEHOLDER_PREFIX = SEEDED_SUBJECT_PREFIX
 INERT_JOB_KIND = "showcase"
 FIXTURE_PREFIX = "fixtures/"
 FIXTURES_MANIFEST = repository_root(__file__) / "packages/test-fixtures/fixtures.json"
+DEPLOYED_ENVS = frozenset({AppEnv.STAGING, AppEnv.PROD})
+
+
+class MissingFixtureFoldersError(RuntimeError):
+    def __init__(self, files: list[str]) -> None:
+        super().__init__(
+            f"{len(files)} format gallery slides have no published fixture-slides folder, "
+            f"run python -m parfocal_ingest.fixture_slides first: {', '.join(files)}"
+        )
+        self.files = files
 
 
 @dataclass(frozen=True)
@@ -171,7 +181,7 @@ FORMAT_GALLERY = (
     GallerySlide("CMU-1-JP2K-33005.svs", "aperio-svs", "jpeg2000-rgb"),
     GallerySlide("CMU-1.ndpi", "hamamatsu-ndpi", "tiff"),
     GallerySlide("Leica-1.scn", "leica-scn", "bigtiff"),
-    GallerySlide("Ventana-1.bif", "ventana-bif", "bigtiff"),
+    GallerySlide("OS-1.bif", "ventana-bif", "bigtiff"),
     GallerySlide("Philips-4.tiff", "philips-tiff", "bigtiff"),
     GallerySlide("Huron-1-40x.tif", "huron-tiff", "bigtiff"),
     GallerySlide("Argos-1.avs", "argos-avs", "bigtiff"),
@@ -1089,7 +1099,11 @@ async def seed(
     results: ResultStore,
     owner_email: str | None,
     manifest: Mapping[str, Mapping[str, Any]] | None = None,
+    *,
+    require_fixture_folders: bool = False,
 ) -> list[uuid.UUID]:
+    if require_fixture_folders and (missing := await unpublished_gallery(store)):
+        raise MissingFixtureFoldersError(missing)
     engine = create_engine(database_url)
     try:
         async with scoped_transaction(
@@ -1141,6 +1155,14 @@ async def seed(
         await engine.dispose()
 
 
+async def unpublished_gallery(store: ObjectStore) -> list[str]:
+    return [
+        slide.file
+        for slide in FORMAT_GALLERY
+        if await stored_facts(store, fixture_folder(slide.file)) is None
+    ]
+
+
 async def people_of(engine: Any, tenant_id: uuid.UUID) -> dict[str, uuid.UUID]:
     async with scoped_transaction(engine, DatabaseScope(platform=True, auth=True)) as connection:
         rows = await connection.execute(
@@ -1167,6 +1189,7 @@ async def main() -> None:
             store,
             ObjectResultStore(store),
             os.environ.get("SEED_OWNER_EMAIL") or None,
+            require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
         )
     print(f"seeded {len(tenant_ids)} ČVUT workspaces")
 

@@ -1,7 +1,10 @@
+import asyncio
 import json
+import re
 import uuid
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from db_support import OWNER_URL, migrated_database, run_sql, with_database
@@ -34,6 +37,7 @@ from parfocal_api.showcase import (
     SUBMITTED,
     VIEWER_SAMPLE,
     WORKSPACES,
+    MissingFixtureFoldersError,
     seed,
 )
 from parfocal_api.slide_result_stats import get_slide_result_stats
@@ -53,9 +57,16 @@ from parfocal_api.tables import (
     review_tasks,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
-from parfocal_common.ingest import SAMPLE_FACTS_NAME, fixture_folder, fixture_original_key
+from parfocal_common.ingest import (
+    SAMPLE_FACTS_NAME,
+    fixture_folder,
+    fixture_original_key,
+    folder_of,
+    slide_prefix,
+)
 from parfocal_common.jobs import JobStatus
 from parfocal_common.object_store import StorageError
+from parfocal_common.repository import repository_root
 from parfocal_common.result_imports import ResultFormat
 
 pytestmark = pytest.mark.db
@@ -124,6 +135,22 @@ class EmptyStore:
         if key in self.written:
             raise StorageError(412, "PreconditionFailed")
         self.written[key] = body
+
+
+class PublishedStore(EmptyStore):
+    def __init__(self) -> None:
+        super().__init__()
+        self.facts = {
+            f"{fixture_folder(slide.file)}{SAMPLE_FACTS_NAME}": stored_fixture(slide.file)
+            for slide in FORMAT_GALLERY
+        }
+
+
+def edge_shared_folder() -> re.Pattern[str]:
+    source = (repository_root(__file__, 3) / "apps/edge/src/capability.ts").read_text()
+    found = re.search(r"^const SHARED_FOLDER = /(.+)/;$", source, re.MULTILINE)
+    assert found is not None
+    return re.compile(found.group(1))
 
 
 class MemoryResults:
@@ -250,6 +277,35 @@ async def test_the_owner_can_open_the_format_gallery(seeded: str) -> None:
     assert {(str(name), str(role)) for name, role in rows} == {
         (workspace.gallery, "owner") for workspace in WORKSPACES
     }
+
+
+async def deployed_seed(url: str, store: EmptyStore) -> list[Any]:
+    await seed(url, store, RESULTS, "owner@example.test", require_fixture_folders=True)  # type: ignore[arg-type]
+    return await run_sql(url, "SELECT tenant_id, id, original_key FROM slides")
+
+
+def test_a_deployed_seed_refuses_to_start_without_every_gallery_folder() -> None:
+    with migrated_database() as name:
+        url = with_database(OWNER_URL, name)
+        with pytest.raises(MissingFixtureFoldersError) as raised:
+            asyncio.run(deployed_seed(url, EmptyStore()))
+        assert len(raised.value.files) == len(FORMAT_GALLERY) - len(OPENABLE)
+        assert asyncio.run(run_sql(url, "SELECT count(*) FROM tenants"))[0][0] == 0
+
+
+def test_every_seeded_original_key_yields_a_folder_the_edge_accepts() -> None:
+    shared = edge_shared_folder()
+    with migrated_database() as name:
+        rows = asyncio.run(deployed_seed(with_database(OWNER_URL, name), PublishedStore()))
+    refused = [
+        str(key)
+        for tenant_id, slide_id, key in rows
+        if key is not None
+        and not str(key).startswith(slide_prefix(uuid.UUID(str(tenant_id)), slide_id))
+        and not shared.fullmatch(folder_of(str(key)))
+    ]
+    assert len(rows) > len(FORMAT_GALLERY)
+    assert refused == []
 
 
 async def test_the_owner_reviews_a_gallery_tour_that_opens_on_the_camelyon_sample(

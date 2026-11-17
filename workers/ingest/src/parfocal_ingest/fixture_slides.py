@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import hashlib
 import os
+import sys
 import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -35,6 +36,7 @@ from parfocal_ingest.settings import IngestSettings
 ALREADY_STORED = 412
 COPY_PART_BYTES = 256 * 1024 * 1024
 HASH_CHUNK_BYTES = 8 * 1024 * 1024
+FINISHED = frozenset({"stored", "kept", "planned"})
 SYNTHETIC_FOLDER = repository_root(__file__) / "packages/test-fixtures/synthetic"
 
 
@@ -128,8 +130,6 @@ async def send_fixture(
 ) -> Outcome:
     folder = fixture_folder(name)
     facts_key = f"{folder}{SAMPLE_FACTS_NAME}"
-    if await store.head_object(facts_key) is not None:
-        return Outcome(name, "kept")
     with tempfile.TemporaryDirectory(prefix="fixture-slide-") as work:
         ready = await asyncio.to_thread(prepared, local, Path(work))
     planned = (
@@ -163,15 +163,32 @@ async def send_fixtures(
 ) -> list[Outcome]:
     outcomes: list[Outcome] = []
     for name in names:
-        local = local_copy(name, folders)
-        if local is None:
-            outcomes.append(Outcome(name, "missing locally"))
+        if await store.head_object(f"{fixture_folder(name)}{SAMPLE_FACTS_NAME}") is not None:
+            outcomes.append(Outcome(name, "kept"))
             continue
-        try:
-            outcomes.append(await send_fixture(store, name, local, dry_run=dry_run))
-        except (NotASampleSlideError, StepFailedError, *READER_ERRORS) as error:
-            outcomes.append(Outcome(name, f"failed: {type(error).__name__} {error}"))
+        with tempfile.TemporaryDirectory(prefix="fixture-download-") as downloads:
+            local = local_copy(name, folders) or await stored_copy(store, name, Path(downloads))
+            if local is None:
+                outcomes.append(Outcome(name, "missing locally"))
+                continue
+            try:
+                outcomes.append(await send_fixture(store, name, local, dry_run=dry_run))
+            except (NotASampleSlideError, StepFailedError, *READER_ERRORS) as error:
+                outcomes.append(Outcome(name, f"failed: {type(error).__name__} {error}"))
     return outcomes
+
+
+async def stored_copy(store: ObjectStore, name: str, folder: Path) -> Path | None:
+    source = f"{FIXTURES_PREFIX}{name}"
+    if await store.head_object(source) is None:
+        return None
+    target = folder / name
+    await store.download(source, target)
+    return target
+
+
+def unfinished(outcomes: Sequence[Outcome]) -> list[Outcome]:
+    return [outcome for outcome in outcomes if outcome.state not in FINISHED]
 
 
 async def main() -> None:
@@ -197,6 +214,8 @@ async def main() -> None:
         print(outcome.name, outcome.state, len(outcome.written))
         for key in outcome.written:
             print("  ", key)
+    if left := unfinished(outcomes):
+        sys.exit(f"{len(left)} fixture slides are not published: {', '.join(o.name for o in left)}")
 
 
 if __name__ == "__main__":
