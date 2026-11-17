@@ -3850,6 +3850,7 @@ export const TargetKind = {
   project: "project",
   "access-request": "access-request",
   "template-offer": "template-offer",
+  source: "source",
 } as const;
 
 export interface InboxItem {
@@ -7349,13 +7350,14 @@ export interface StudyTemplateVersion {
 
 export interface Target {
   kind: TargetKind;
-  project_id: string;
+  project_id: string | null;
   task_id?: string | null;
   slide_id?: string | null;
   object_id?: string | null;
   job_id?: string | null;
   thread_id?: string | null;
   delivery_id?: string | null;
+  source_id?: string | null;
   case_id?: string | null;
   resolved_from?: string | null;
   origin: Origin;

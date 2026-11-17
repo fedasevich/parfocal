@@ -221,6 +221,7 @@ import_sources = Table(
     Column("region", String(40), nullable=True, info=OPERATIONAL),
     Column("header_name", String(80), nullable=True, info=OPERATIONAL),
     Column("credential_ciphertext", LargeBinary, nullable=True, info=SECRET),
+    Column("down_notified_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column(
         "created_by_user_id",
         Uuid[uuid.UUID](),

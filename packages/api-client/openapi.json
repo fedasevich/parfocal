@@ -78877,8 +78877,15 @@
             "$ref": "#/components/schemas/TargetKind"
           },
           "project_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Id"
           },
           "task_id": {
@@ -78952,6 +78959,18 @@
             ],
             "title": "Delivery Id"
           },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
           "case_id": {
             "anyOf": [
               {
@@ -78999,7 +79018,8 @@
           "delivery",
           "project",
           "access-request",
-          "template-offer"
+          "template-offer",
+          "source"
         ],
         "title": "TargetKind"
       },

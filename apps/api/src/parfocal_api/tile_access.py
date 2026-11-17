@@ -21,6 +21,7 @@ from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
 from parfocal_api.remote_reads import probed_offline, served_name
 from parfocal_api.restricted_images import sees_restricted
+from parfocal_api.source_outages import notice_if_down
 from parfocal_api.tables import PrivacyMode, SlideStorage, projects, slides
 from parfocal_api.token_keys import decoded_key, usable_keys
 from parfocal_api.uploads import Settings
@@ -229,6 +230,8 @@ async def get_tile_access(
             policy_of(settings.link_trusted_origins),
             settings.link_read_seconds,
         )
+        if offline:
+            await notice_if_down(connection, slide_id, datetime.now(UTC))
         folder = slide_prefix(row.tenant_id, slide_id)
         original = served_name(row.remote_path)
         etag = row.remote_etag

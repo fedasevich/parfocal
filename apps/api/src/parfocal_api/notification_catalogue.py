@@ -24,6 +24,7 @@ class TargetKind(StrEnum):
     PROJECT = "project"
     ACCESS_REQUEST = "access-request"
     TEMPLATE_OFFER = "template-offer"
+    SOURCE = "source"
 
 
 @dataclass(frozen=True)
@@ -191,9 +192,10 @@ DEFAULTS: Mapping[NotificationKind, Channels] = {
     kind: entry.channels for kind, entry in CATALOGUE.items()
 }
 BREAKS_MUTES = frozenset(kind for kind, entry in CATALOGUE.items() if entry.breaks_mute)
+ROW_TARGETS = frozenset({TargetKind.DECISION, TargetKind.SOURCE})
 
 
 def target_kind_of(row: Any) -> TargetKind:
-    if row.target_type == TargetKind.DECISION:
-        return TargetKind.DECISION
+    if row.target_type in ROW_TARGETS:
+        return TargetKind(row.target_type)
     return CATALOGUE[NotificationKind(row.kind)].target

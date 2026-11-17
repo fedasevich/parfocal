@@ -4,6 +4,7 @@ import type { InboxItem } from "@parfocal/api-client";
 import {
   filteredActivity,
   isNotificationsQuery,
+  kindIcons,
   newestFirst,
   unreadIn,
 } from "../src/shell/activity.ts";
@@ -66,4 +67,14 @@ test("a worklist change refreshes every notifications query", () => {
   assert.equal(isWorklistQuery(["/api/me/notifications/counts"]), true);
   assert.equal(isWorklistQuery(["/api/me/home"]), true);
   assert.equal(isWorklistQuery(["/api/projects"]), false);
+});
+
+test("a connected source that went down shows a warning line", () => {
+  assert.equal(kindIcons["integration-down"], "warn");
+  assert.deepEqual(
+    filteredActivity([item("h", "integration-down", "2026-11-14T13:00:00Z")], "all").map(
+      (entry) => entry.id,
+    ),
+    ["h"],
+  );
 });

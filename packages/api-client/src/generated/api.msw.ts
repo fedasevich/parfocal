@@ -9933,7 +9933,7 @@ export const getGetNotificationTargetResponseMock = (
   overrideResponse: Partial<Extract<Target, object>> = {},
 ): Target => ({
   kind: faker.helpers.arrayElement(Object.values(TargetKind)),
-  project_id: faker.string.uuid(),
+  project_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   object_id: faker.helpers.arrayElement([
@@ -9943,6 +9943,7 @@ export const getGetNotificationTargetResponseMock = (
   job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   thread_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   delivery_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  source_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   resolved_from: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),

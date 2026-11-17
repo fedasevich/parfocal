@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from parfocal_api.remote_reads import sweep_remote_cache
 from parfocal_api.settings import ApiSettings
+from parfocal_api.source_outages import notice_every_workspace
 from parfocal_api.tables import tenants
 from parfocal_common.db import (
     DatabaseScope,
@@ -38,9 +39,12 @@ async def run_once(settings: ApiSettings) -> int:
     engine = create_engine(str(settings.database_url))
     try:
         await require_row_security(engine)
+        now = datetime.now(UTC)
         async with httpx2.AsyncClient(timeout=30) as http:
             store = ObjectStore(settings.storage(), http)
-            return await sweep_every_workspace(engine, store, datetime.now(UTC))
+            removed = await sweep_every_workspace(engine, store, now)
+        await notice_every_workspace(engine, now)
+        return removed
     finally:
         await engine.dispose()
 

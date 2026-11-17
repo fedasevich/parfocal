@@ -47,6 +47,7 @@ from parfocal_api.remote_reads import (
 )
 from parfocal_api.remote_results import start_side_results
 from parfocal_api.slide_ingest import LABEL_ATTEMPTS, free_label, label_stem, taken_labels
+from parfocal_api.source_outages import notice_if_down
 from parfocal_api.tables import SlideStorage, slides
 from parfocal_api.tile_access import claims_under_any
 from parfocal_api.token_keys import usable_keys
@@ -235,6 +236,7 @@ async def read_through(
     async with tenant_transaction(engine_of(request), grant.tenant_id) as connection:
         if body is None:
             await mark_failed(connection, slide_id, now)
+            await notice_if_down(connection, slide_id, now)
         else:
             await mark_reached(connection, slide_id, now)
     if body is None or found is None:
