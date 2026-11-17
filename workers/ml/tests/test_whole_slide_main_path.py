@@ -158,6 +158,7 @@ async def into_minio(slide: NDArray[np.uint8], runs: int) -> tuple[list[Run], in
         return measured, len(keys)
 
 
+@pytest.mark.bench
 @pytest.mark.skipif(MAIN_PATH_RUNS is None, reason="set PARFOCAL_MAIN_PATH_MODEL_RUNS to a count")
 def test_main_path_whole_slide_run_after_a_warm_up():
     assert MAIN_PATH_RUNS is not None

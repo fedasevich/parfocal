@@ -11,7 +11,7 @@
     "verify:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.verify",
     "test:weights": "uv run --package parfocal-ml --extra export pytest tests/test_sam_onnx.py tests/test_interactive.py tests/test_ais_region.py tests/test_prompt_region.py tests/test_instanseg.py -m weights -q",
     "test:tumor": "uv run --package parfocal-ml --extra tumor --all-groups pytest tests/test_stored_slides.py -m 'not db' -q",
-    "test:accuracy": "PARFOCAL_REQUIRE_WEIGHTS=1 uv run --package parfocal-ml --extra export pytest tests -m 'not db' -q --continue-on-collection-errors",
+    "test:accuracy": "PARFOCAL_REQUIRE_WEIGHTS=1 uv run --package parfocal-ml --extra export pytest tests -m 'not db and not bench' -q --continue-on-collection-errors",
     "bench:typed-exemplars": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.typed_exemplars",
     "bench:ais-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.ais_region",
     "bench:prompt-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.prompt_region",

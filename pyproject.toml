@@ -38,6 +38,7 @@ addopts = ["--import-mode=importlib", "-ra", "-m", "not db and not weights"]
 markers = [
     "db: needs the local Postgres and pooler from compose.yaml (pnpm test:db)",
     "weights: needs model checkpoints and the parfocal-ml export extra (pnpm --filter @parfocal/ml test:weights)",
+    "bench: an on-demand timing benchmark, left out of test:accuracy",
 ]
 pythonpath = ["scripts", "apps/api/tests", "workers/ingest/tests", "workers/ml/tests", "workers/deploy/tests"]
 testpaths = ["apps/api/tests", "workers/ingest/tests", "workers/ml/tests", "workers/deploy/tests", "packages/py-common/tests", "scripts"]

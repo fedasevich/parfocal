@@ -1623,13 +1623,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 35 colour method.
   Size: M.
 
-- [ ] VIEW-028 · Overlay level of detail
+- [x] VIEW-028 · Overlay level of detail
   A density texture below 2 px nucleus size, dots from 2 to 7 px, outlines above 7 px. Large shapes always outlined. LOD engages only from 500 nucleus-sized shapes.
   Done when a manual measurement on the owner's Mac with 81k real nuclei, recorded as a result file, shows overlay GPU time under 1 ms at overview ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 27, [`poc/src/annotations/lod.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/lod.ts).
   Size: M.
 
-- [ ] VIEW-029 · Cull grid for overlays
+- [x] VIEW-029 · Cull grid for overlays
   Cells of 16 median nucleus diameters, contiguous ranges per row, a window 2 cells wider than the view.
   Done when a manual measurement on the owner's Mac, recorded as a result file, shows the Viv route's detail-zoom GPU time at 1.6M nuclei under 6 ms ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 31, [`poc/src/annotations/cull-grid.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/cull-grid.ts).
@@ -4644,7 +4644,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the db job finishes in under 10 minutes on three ci runs in a row with the same number of tests passing, and a result file records the times before and after.
   Size: M.
 
-- [ ] TEST-028 · Model accuracy tests that cannot be skipped unseen
+- [x] TEST-028 · Model accuracy tests that cannot be skipped unseen
   The tests in `workers/ml/tests` that need model weights, exported ONNX graphs or cached datasets are deselected by the `weights` marker or skip when the files are missing, and CI has none of the files, so the accuracy numbers are checked only on the owner's Mac when someone remembers ([project review](results/2026-11-09-project-review.md)). Add one command that runs them all with the files required, as `PARFOCAL_REQUIRE_FIXTURES` does for slides, and make the lead run it before ticking a task that changes `workers/ml` or a model graph, one such run at a time because of the Mac's memory.
   Done when the command fails on a missing weight or dataset instead of skipping, a result file records one full run with its numbers, and `knowledge/agent-workflow.md` names when the lead runs it.
   Size: S.
