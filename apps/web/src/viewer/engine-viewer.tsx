@@ -2,6 +2,7 @@ import { type Thread, useGetProject, useGetReviewTask } from "@parfocal/api-clie
 import { useCallback, useMemo, useRef, useState } from "react";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
+import { useRememberResume } from "../screens/home/remember-resume.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
@@ -35,6 +36,7 @@ export type EngineViewerProps = {
   start?: StageStart | undefined;
   object?: string | undefined;
   guided?: boolean;
+  tool?: string | undefined;
   onOpenSlide: (slideId: string) => void;
   onWorkspace: (workspace: SlideWorkspace) => void;
   onTab?: ((tab: ViewerTab) => void) | undefined;
@@ -49,6 +51,7 @@ export function EngineViewer({
   start,
   object,
   guided = false,
+  tool,
   onOpenSlide,
   onWorkspace,
   onTab: onRouteTab,
@@ -86,11 +89,23 @@ export function EngineViewer({
       request: { count: (before?.request.count ?? 0) + 1, anchor: thread.anchor },
     }));
   const toolLink = useRef<ArmTool | null>(null);
+  const [currentObject, setCurrentObject] = useState<string | null>(object ?? null);
+  useRememberResume(
+    reviewTask === null
+      ? null
+      : {
+          task_id: reviewTask,
+          slide_id: slideId,
+          mode: guided ? "guided" : "viewer",
+          object_id: currentObject,
+          camera: start === undefined ? null : { x: start.x, y: start.y, z: start.scale },
+        },
+  );
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
       <StageMinimap engine={session.engine} slideId={slideId} />
-      <StageToolLink armTool={session.armTool} link={toolLink} />
+      <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       {reviewTask === null ? null : (
         <StageReviewObjects
           engine={session.engine}
@@ -99,6 +114,7 @@ export function EngineViewer({
           slideId={slideId}
           object={object}
           guided={guided}
+          onCurrent={setCurrentObject}
           onComments={(id) => {
             setNoteObject(id);
             onTab("comments");

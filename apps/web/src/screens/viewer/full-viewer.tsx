@@ -245,7 +245,7 @@ function ViewerBody(props: BodyProps) {
             current="T2"
             onPeek={() => onSearch({ peek: true })}
             onTravel={() => onSearch({ scene: "travel" })}
-            onGoTo={(object) => onSearch({ scene: undefined, object })}
+            onGoTo={(object) => onSearch({ scene: "objects", object })}
             onPopOut={() =>
               setToast({ id: Date.now(), text: t`Opens the whole slide on the second monitor` })
             }

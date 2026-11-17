@@ -17,6 +17,7 @@ import {
 import { Switch } from "@parfocal/ui/components/switch";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { type ReactNode, useEffect, useRef } from "react";
+import { actionHintText } from "../../viewer/tool-hint-text.ts";
 import {
   directionSets,
   type KeyAction,
@@ -299,8 +300,10 @@ function Row({
       </KeyBinding>
     );
   };
+  const toolHint = actionHintText(action.id);
   const notes: ReactNode[] = [
     ...(action.note ? [action.note] : []),
+    ...(toolHint ? [toolHint] : []),
     ...(action.hold ? [holdNotes[state.wholeSlide]] : []),
     ...(action.fixed ? ["fixed"] : []),
   ];

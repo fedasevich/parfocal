@@ -116,7 +116,7 @@ type CompareViewProps = {
   scene: SceneOf<"compare">;
   rightSlideId?: string | undefined;
   onLeave: (change: {
-    scene?: undefined;
+    scene?: "objects";
     tab?: "objects" | "display" | "comments" | "opinion";
   }) => void;
 };
@@ -521,11 +521,11 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       tool="select"
       railGroups={reviewRail}
       onToolChange={(tool) => {
-        if (tool === "select") onLeave({ scene: undefined });
+        if (tool === "select") onLeave({ scene: "objects" });
       }}
       onCompare={() => setPicking("right")}
       tab="objects"
-      onTabChange={(tab) => onLeave({ scene: undefined, tab: tab as "display" })}
+      onTabChange={(tab) => onLeave({ scene: "objects", tab: tab as "display" })}
       scene={scene}
       tabs={[
         { value: "objects", label: "Objects", count: counts.total, body },

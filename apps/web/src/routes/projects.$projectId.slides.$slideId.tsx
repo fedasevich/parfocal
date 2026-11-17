@@ -31,7 +31,7 @@ function SlideView() {
             <FocusView
               tools={tools}
               object={search.object}
-              onShowUi={() => onSearch({ focus: undefined, peek: undefined })}
+              onShowUi={() => onSearch({ focus: undefined, peek: undefined, scene: "objects" })}
               onObject={(next) => onSearch({ object: next })}
               peekOpen={search.peek === true}
               onPeekChange={(open) => onSearch({ peek: open || undefined })}

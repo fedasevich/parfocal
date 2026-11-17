@@ -10,6 +10,7 @@ type ToolRailButtonProps = Omit<TogglePrimitive.Props, "children"> & {
   icon: IconName;
   label: string;
   keyHint?: string;
+  hint?: string;
   action?: string;
   ai?: boolean;
   state?: "hover";
@@ -20,6 +21,7 @@ function ToolRailButton({
   icon,
   label,
   keyHint: written,
+  hint,
   action,
   ai = false,
   state,
@@ -61,6 +63,11 @@ function ToolRailButton({
       <TooltipContent side={tipSide}>
         {label}
         {keyHint ? ` · ${keyHint}` : ""}
+        {hint ? (
+          <span data-slot="tool-rail-hint" className="mt-0.5 block max-w-56 text-fg-dim">
+            {hint}
+          </span>
+        ) : null}
       </TooltipContent>
     </Tooltip>
   );

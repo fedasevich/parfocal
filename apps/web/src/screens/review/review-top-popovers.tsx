@@ -76,7 +76,7 @@ export function useReviewTopPopovers({
   const thumb = lookUrl("overview");
   const pick = (slideId: string) => {
     if (!projectId) return;
-    void goTo(
+    const target = new URL(
       destinations.slide(
         projectId,
         slideId,
@@ -84,7 +84,10 @@ export function useReviewTopPopovers({
         undefined,
         recallSlideCamera(session.meId, slideId),
       ),
+      window.location.origin,
     );
+    target.searchParams.set("scene", "objects");
+    void goTo(`${target.pathname}${target.search}`);
   };
   const blockOf = (blockId: string | null) => {
     if (blockId === null) return undefined;

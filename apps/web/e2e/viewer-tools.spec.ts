@@ -28,7 +28,7 @@ const hrefOf = (links: { name: string; href: string }[], name: string) => {
 async function plainViewer(page: Page) {
   const links = await toolLinks(page);
   const plain = new URL(hrefOf(links, "Smart minimap · Reading at 10x"), "http://localhost");
-  plain.searchParams.delete("scene");
+  plain.searchParams.set("scene", "objects");
   await page.goto(`${plain.pathname}${plain.search}`);
   await expect(page.getByTitle("Progress on this slide and in the whole task")).toBeVisible({
     timeout: 20_000,
@@ -237,6 +237,7 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   const links = await toolLinks(page);
   const viewer = new URL(hrefOf(links, "Focus mode"), "http://localhost");
   viewer.searchParams.delete("focus");
+  viewer.searchParams.set("scene", "objects");
   await page.goto(`${viewer.pathname}${viewer.search}`);
   await expect(page.getByTestId("full-viewer")).toBeVisible();
   await expect(page.locator("header")).toBeVisible();

@@ -93,6 +93,7 @@ export function StageReviewObjects({
   object,
   guided = false,
   onComments,
+  onCurrent,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -101,6 +102,7 @@ export function StageReviewObjects({
   object: string | undefined;
   guided?: boolean;
   onComments: (object: string) => void;
+  onCurrent?: (object: string | null) => void;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -120,14 +122,19 @@ export function StageReviewObjects({
     setCurrent(id);
     flyTo(id);
   };
-  const ready = session.ready;
-  const opening = useRef(current);
+  const ready = session.ready && objects.length > 0;
+  const opening = useRef(true);
+  const reported = useRef(onCurrent);
+  reported.current = onCurrent;
   useEffect(() => {
-    if (!ready || opening.current === null) return;
-    const area = outlineArea(objects.find((item) => item.object === opening.current)?.outline);
-    opening.current = null;
+    if (!ready || !opening.current) return;
+    opening.current = false;
+    const area = outlineArea(objects.find((item) => item.object === current)?.outline);
     if (area !== null) void engine.flyToArea(area);
-  }, [ready, objects, engine]);
+  }, [ready, objects, engine, current]);
+  useEffect(() => {
+    if (ready) reported.current?.(current);
+  }, [ready, current]);
   const answer = (item: ReviewObject, raw: string) => {
     const option = answersOf(session.style, session.classes, item).find(
       (entry) => entry.raw === raw,
