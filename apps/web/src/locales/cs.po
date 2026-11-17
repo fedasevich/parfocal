@@ -120,6 +120,7 @@ msgid " in {projectCode}"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid " or $1"
 msgstr ""
 
@@ -3621,6 +3622,10 @@ msgstr ""
 msgid "Answer with one of the buttons, or press {answerKeyList}."
 msgstr ""
 
+#: src/viewer/stage-coach.tsx
+msgid "Answer with one of the buttons, or press {keyList}."
+msgstr ""
+
 #: src/study/study-screen.tsx
 msgid "Answered"
 msgstr ""
@@ -6184,6 +6189,10 @@ msgstr ""
 msgid "Drag one onto the page, or click it to add it after the selected block."
 msgstr ""
 
+#: src/viewer/stage-coach.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom."
+msgstr ""
+
 #: src/screens/review/guided-review.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
 msgstr ""
@@ -7508,6 +7517,7 @@ msgid "Good"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "Got it, start"
 msgstr ""
 
@@ -7769,6 +7779,10 @@ msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "How each answer counts toward agree, not sure and disagree in the evaluation."
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "How guided review works"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -15443,6 +15457,7 @@ msgid "The AI found no tumor areas on this slide. Look at all the tissue at {sca
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "The AI found this. It is outlined in white."
 msgstr ""
 
@@ -15744,6 +15759,10 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "The next object comes by itself. The dots take you back to any of them."
+msgstr ""
+
+#: src/viewer/stage-coach.tsx
+msgid "The next open object comes by itself. Previous and Next take you back to any of them."
 msgstr ""
 
 #: src/routes/prototype.tsx

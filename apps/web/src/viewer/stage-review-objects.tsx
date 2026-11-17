@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
+import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import {
   storedType,
@@ -19,6 +20,7 @@ import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
+import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -142,6 +144,8 @@ export function StageReviewObjects({
     flyTo(id);
   };
   const ready = session.ready && objects.length > 0;
+  const coach = useGuidedCoach(guided && object === undefined);
+  const coachOn = guided && coachShown(coach.open, ready ? objects.length : 0);
   const opening = useRef(true);
   const reported = useRef(onCurrent);
   reported.current = onCurrent;
@@ -189,6 +193,7 @@ export function StageReviewObjects({
   return (
     <>
       <ObjectOutlines engine={engine} module={module} objects={objects} current={current} />
+      {coachOn && focus === null ? <StageCoachOnSlide /> : null}
       {focus === null || currentItem === undefined || typedCell !== null ? null : (
         <StageFocusCard
           session={session}
@@ -225,8 +230,14 @@ export function StageReviewObjects({
               ? t`Object ${index + 1} of ${objects.length} · ${decided.size} decided`
               : t`AI objects · ${objects.length}`}
           </h3>
+          {coachOn ? (
+            <StageCoachInPanel
+              keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
+              onStart={coach.dismiss}
+            />
+          ) : null}
           {guided ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
                 variant="ghost"
@@ -243,6 +254,11 @@ export function StageReviewObjects({
               >
                 {t`Next`}
               </Button>
+              {coachOn ? null : (
+                <Button size="sm" variant="ghost" onClick={coach.reopen}>
+                  {t`How guided review works`}
+                </Button>
+              )}
             </div>
           ) : null}
           <ul className="m-0 flex list-none flex-col gap-2 p-0">

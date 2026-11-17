@@ -120,6 +120,7 @@ msgid " in {projectCode}"
 msgstr " in {projectCode}"
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid " or $1"
 msgstr " or $1"
 
@@ -3623,6 +3624,10 @@ msgstr "Answer it"
 msgid "Answer with one of the buttons, or press {answerKeyList}."
 msgstr "Answer with one of the buttons, or press {answerKeyList}."
 
+#: src/viewer/stage-coach.tsx
+msgid "Answer with one of the buttons, or press {keyList}."
+msgstr "Answer with one of the buttons, or press {keyList}."
+
 #: src/study/study-screen.tsx
 msgid "Answered"
 msgstr "Answered"
@@ -6189,6 +6194,10 @@ msgstr "Draft. Not for clinical use until it is signed."
 msgid "Drag one onto the page, or click it to add it after the selected block."
 msgstr "Drag one onto the page, or click it to add it after the selected block."
 
+#: src/viewer/stage-coach.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom."
+msgstr "Drag to move around. Scroll or use + and − to zoom."
+
 #: src/screens/review/guided-review.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
 msgstr "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
@@ -7513,6 +7522,7 @@ msgid "Good"
 msgstr "Good"
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "Got it, start"
 msgstr "Got it, start"
 
@@ -7775,6 +7785,10 @@ msgstr "How do you move around a slide?"
 #: src/screens/project/task-settings-drawer.tsx
 msgid "How each answer counts toward agree, not sure and disagree in the evaluation."
 msgstr "How each answer counts toward agree, not sure and disagree in the evaluation."
+
+#: src/viewer/stage-review-objects.tsx
+msgid "How guided review works"
+msgstr "How guided review works"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/how-step.tsx
@@ -15452,6 +15466,7 @@ msgid "The AI found no tumor areas on this slide. Look at all the tissue at {sca
 msgstr "The AI found no tumor areas on this slide. Look at all the tissue at {scanMagnification}×, one field at a time in reading order, before you decide."
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "The AI found this. It is outlined in white."
 msgstr "The AI found this. It is outlined in white."
 
@@ -15754,6 +15769,10 @@ msgstr "The next object comes after an answer"
 #: src/screens/review/guided-review.tsx
 msgid "The next object comes by itself. The dots take you back to any of them."
 msgstr "The next object comes by itself. The dots take you back to any of them."
+
+#: src/viewer/stage-coach.tsx
+msgid "The next open object comes by itself. Previous and Next take you back to any of them."
+msgstr "The next open object comes by itself. Previous and Next take you back to any of them."
 
 #: src/routes/prototype.tsx
 msgid "The nine chapters from upload to the co-signed clinical report"
