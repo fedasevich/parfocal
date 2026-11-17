@@ -82,6 +82,7 @@ from parfocal_api.tables import (
     service_accounts,
     slide_counters,
     slides,
+    source_watches,
     task_nudges,
     task_reassignments,
     template_offers,
@@ -435,6 +436,7 @@ LINK_OPERATIONS = frozenset(
         "saveImportSource",
         "changeImportSource",
         "saveEventTarget",
+        "watchSource",
     }
 )
 
@@ -897,6 +899,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "deleteImportSource": lambda w: Call(
         "DELETE", f"/api/tenant/import-sources/{seeded(w, 'spare-import-source')}"
     ),
+    "watchSource": lambda w: Call(
+        "PUT", f"/api/projects/{w.project}/watch", {"source_id": str(seeded(w, "import-source"))}
+    ),
+    "stopWatchingSource": lambda w: Call("DELETE", f"/api/projects/{w.project}/watch"),
     "getProjectWebhook": lambda w: Call("GET", f"/api/projects/{w.project}/webhook"),
     "createWebhookSecret": lambda w: Call("POST", f"/api/projects/{w.project}/webhook/secret"),
     "retireWebhookSecret": lambda w: Call(
@@ -2461,6 +2467,13 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         created_by_user_id=colleague,
                     )
                 )
+            await connection.execute(
+                insert(source_watches).values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    source_id=uuid.uuid5(tenant_id, "import-source"),
+                )
+            )
             await connection.execute(
                 insert(slides).values(
                     id=uuid.uuid5(tenant_id, "remote-slide"),

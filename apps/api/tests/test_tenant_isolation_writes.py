@@ -645,6 +645,12 @@ WRITE_ROUTES: dict[str, Write] = {
     "decideAdjudication": Write(path=OBJECT, body=constant({"raw": "1"})),
     "createWebhookSecret": Write(admin_rights=True),
     "retireWebhookSecret": Write(admin_rights=True),
+    "watchSource": Write(
+        body=lambda a: {"source_id": str(a.ids["import_source"])},
+        admin_rights=True,
+        owner=frozenset({400}),
+    ),
+    "stopWatchingSource": Write(admin_rights=True),
     "saveEventTarget": Write(body=event_target, admin_rights=True, linked=True),
     "deleteEventTarget": Write(admin_rights=True),
     "replayEvent": Write(admin_rights=True, owner=CONFLICT),

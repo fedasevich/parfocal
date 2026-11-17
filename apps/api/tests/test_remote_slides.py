@@ -1,3 +1,4 @@
+import asyncio
 import gzip
 import json
 import uuid
@@ -20,6 +21,7 @@ from parfocal_api.app import create_app
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.remote_cache_sweep import sweep_every_workspace
 from parfocal_api.remote_reads import cache_prefix
+from parfocal_api.source_outages import notice_every_workspace
 from parfocal_api.tables import Role
 from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
@@ -370,3 +372,77 @@ def test_a_result_file_next_to_a_slide_read_in_place_is_imported_onto_it(
         f"SELECT mpp_x, objective_power FROM slides WHERE id = '{slide['slide_id']}'",
     )
     assert scale == (pytest.approx(0.499), 20)
+
+
+def notices(database: str) -> list[tuple[Any, ...]]:
+    return query(
+        with_database(OWNER_URL, database),
+        "SELECT user_id, target_type, target_id::text, payload->>'title' FROM notifications"
+        " WHERE kind = 'integration-down' ORDER BY created_at",
+    )
+
+
+def check_sources(database: str, at: datetime) -> int:
+    async def work() -> int:
+        engine = create_engine(str(api_settings(database).database_url))
+        try:
+            return await notice_every_workspace(engine, at)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(work())
+
+
+def failing_since(database: str, slide_id: str, at: datetime) -> None:
+    query(
+        with_database(OWNER_URL, database),
+        f"UPDATE slides SET remote_failing_since = '{at.isoformat()}' WHERE id = '{slide_id}'",
+    )
+
+
+def test_a_source_down_for_15_minutes_notifies_the_admins_once_per_outage(
+    linked: ApiAs, database: str, team: Team, site: Site, tmp_path: Path
+) -> None:
+    data = fixture_path(SLIDE).read_bytes()
+    serve_slide(site, data)
+    source = save_source(linked, team, site)
+    slide_id = opened_in_place(linked, team, source["id"])
+    inspected(database, team, site, tmp_path)
+
+    site.routes[FILE] = Served(503)
+    for _ in range(3):
+        access(linked, team, slide_id)
+    assert slide_row(database, slide_id)[5] == 3
+    assert check_sources(database, datetime.now(UTC)) == 0
+    assert notices(database) == []
+
+    failing_since(database, slide_id, datetime.now(UTC) - timedelta(minutes=16))
+    access(linked, team, slide_id)
+    assert notices(database) == [
+        (team.admin.user_id, "source", source["id"], "Connected source down")
+    ]
+    assert check_sources(database, datetime.now(UTC)) == 0
+    access(linked, team, slide_id)
+    assert len(notices(database)) == 1
+
+    [item] = linked(team.admin).get("/api/me/notifications").json()["notifications"]
+    assert (item["target_kind"], item["link"]) == (
+        "source",
+        f"/admin?section=storage&source={source['id']}",
+    )
+    assert "/scans/" not in json.dumps(item["payload"])
+    target = linked(team.admin).get(f"/api/me/notifications/{item['id']}/target")
+    assert target.status_code == 200, target.text
+    assert (target.json()["kind"], target.json()["source_id"]) == ("source", source["id"])
+    assert linked(team.lead).get("/api/me/notifications").json()["notifications"] == []
+
+    serve_slide(site, data)
+    assert access(linked, team, slide_id)["offline"] is False
+    assert slide_row(database, slide_id)[5] == 0
+    site.routes[FILE] = Served(503)
+    for _ in range(3):
+        access(linked, team, slide_id)
+    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=10)) == 0
+    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=20)) == 1
+    assert len(notices(database)) == 2
+    assert check_sources(database, datetime.now(UTC) + timedelta(minutes=40)) == 0

@@ -109,6 +109,7 @@ from parfocal_api import (
     slide_threads,
     slide_tissue,
     slide_viewer,
+    source_watches,
     study_templates,
     task_changes,
     task_report_layout,
@@ -288,6 +289,7 @@ def create_app(
     app.include_router(import_sources.router)
     app.include_router(project_webhooks.router)
     app.include_router(project_webhooks.public_router)
+    app.include_router(source_watches.router)
     app.include_router(events_out.router)
     app.include_router(remote_slides.router)
     app.include_router(remote_slides.public_router)

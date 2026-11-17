@@ -16,20 +16,28 @@ from parfocal_api.project_access import reads_slide, role_in
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import review_slide
 from parfocal_api.search import SearchContext, current_ids
-from parfocal_api.tables import event_outbox, jobs, notifications, projects, slides
+from parfocal_api.tables import (
+    event_outbox,
+    import_sources,
+    jobs,
+    notifications,
+    projects,
+    slides,
+)
 from parfocal_api.threads import visible_thread
 from parfocal_common.object_ids import ObjectIdError, parse
 
 
 class Target(BaseModel):
     kind: TargetKind
-    project_id: uuid.UUID
+    project_id: uuid.UUID | None
     task_id: uuid.UUID | None = None
     slide_id: uuid.UUID | None = None
     object_id: str | None = None
     job_id: uuid.UUID | None = None
     thread_id: uuid.UUID | None = None
     delivery_id: uuid.UUID | None = None
+    source_id: uuid.UUID | None = None
     case_id: uuid.UUID | None = None
     resolved_from: str | None = None
     origin: Origin
@@ -251,6 +259,18 @@ async def get_notification_target(
                 project_id=project_id,
                 delivery_id=row.target_id,
                 origin=origin_of(project_id),
+            )
+        case TargetKind.SOURCE:
+            known = await connection.scalar(
+                select(import_sources.c.id).where(import_sources.c.id == row.target_id)
+            )
+            if grant_of(principal, Permission.INTEGRATIONS) is Grant.NONE or known is None:
+                raise TargetGoneError
+            return Target(
+                kind=TargetKind.SOURCE,
+                project_id=None,
+                source_id=row.target_id,
+                origin=Origin(route=OriginRoute.HOME),
             )
         case TargetKind.ACCESS_REQUEST | TargetKind.TEMPLATE_OFFER:
             raise TargetNotAvailableError

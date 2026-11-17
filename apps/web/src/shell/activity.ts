@@ -27,6 +27,7 @@ export const kindIcons: Record<string, IconName> = {
   "workspace-access-asked": "users",
   "template-offered": "file",
   "project-access-asked": "users",
+  "integration-down": "warn",
 };
 
 export const payloadText = (item: InboxItem, key: string): string | undefined => {

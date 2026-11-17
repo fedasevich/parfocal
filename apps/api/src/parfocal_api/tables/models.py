@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from parfocal_api.model_catalogue import LicenceClass, ModelHost, ModelStatus
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
-from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
+from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
 from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 from parfocal_common.model_runs import ModelTier
 
@@ -221,6 +221,7 @@ import_sources = Table(
     Column("region", String(40), nullable=True, info=OPERATIONAL),
     Column("header_name", String(80), nullable=True, info=OPERATIONAL),
     Column("credential_ciphertext", LargeBinary, nullable=True, info=SECRET),
+    Column("down_notified_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column(
         "created_by_user_id",
         Uuid[uuid.UUID](),
@@ -274,6 +275,44 @@ webhook_calls = Table(
     ),
     tenant_foreign_key("webhook_id", "project_webhooks", ondelete="CASCADE"),
     UniqueConstraint("webhook_id", "idempotency_key"),
+)
+
+source_watches = Table(
+    "source_watches",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, unique=True, info=OPERATIONAL),
+    Column("source_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("scanned_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    tenant_foreign_key("project_id", "projects", ondelete="CASCADE"),
+    tenant_foreign_key("source_id", "import_sources", ondelete="CASCADE"),
+    tenant_unique(),
+)
+
+watched_files = Table(
+    "watched_files",
+    metadata,
+    *owned_ids(),
+    Column("watch_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("name", String(1024), nullable=False, info=PHI),
+    Column("upload_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        info=OPERATIONAL,
+    ),
+    tenant_foreign_key("watch_id", "source_watches", ondelete="CASCADE"),
+    UniqueConstraint("watch_id", "name"),
 )
 
 rate_counters = Table(

@@ -102,6 +102,7 @@ from parfocal_api.tables import (
     slide_counters,
     slide_coverage,
     slides,
+    source_watches,
     sso_connections,
     stage_throughput,
     study_template_versions,
@@ -114,6 +115,7 @@ from parfocal_api.tables import (
     threads,
     uploads,
     users,
+    watched_files,
     webhook_calls,
     workspace_access_requests,
     workspace_settings,
@@ -1337,6 +1339,29 @@ async def seed_webhook_calls(connection: AsyncConnection, seeded: Seeded) -> Non
     )
 
 
+async def seed_source_watches(connection: AsyncConnection, seeded: Seeded) -> None:
+    watch_id = uuid.uuid4()
+    await connection.execute(
+        insert(source_watches).values(
+            id=watch_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            source_id=seeded.ids["import_source"],
+        )
+    )
+    seeded.ids["source_watch"] = watch_id
+
+
+async def seed_watched_files(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"watched-{uuid.uuid4().hex[:10]}.svs"
+    await connection.execute(
+        insert(watched_files).values(
+            tenant_id=seeded.tenant_id, watch_id=seeded.ids["source_watch"], name=marker
+        )
+    )
+    seeded.markers.add(marker)
+
+
 async def seed_event_targets(connection: AsyncConnection, seeded: Seeded) -> None:
     marker = f"event-target-{uuid.uuid4().hex[:10]}"
     target_id = uuid.uuid5(seeded.tenant_id, "event-target")
@@ -1686,6 +1711,8 @@ SEEDERS: dict[str, Seeder] = {
     "import_sources": seed_import_sources,
     "project_webhooks": seed_project_webhooks,
     "webhook_calls": seed_webhook_calls,
+    "source_watches": seed_source_watches,
+    "watched_files": seed_watched_files,
     "event_targets": seed_event_targets,
     "event_outbox": seed_event_outbox,
     "event_attempts": seed_event_attempts,

@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 
 | Class | Columns |
 |---|---|
-| `phi` | 49 |
-| `personal` | 99 |
+| `phi` | 50 |
+| `personal` | 100 |
 | `secret` | 15 |
-| `operational` | 863 |
+| `operational` | 876 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -430,6 +430,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `region` | operational |
 | `header_name` | operational |
 | `credential_ciphertext` | secret |
+| `down_notified_at` | operational |
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
@@ -1241,6 +1242,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `updated_at` | operational |
 | `deleted_at` | operational |
 
+## source_watches
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `source_id` | operational |
+| `created_by_user_id` | personal |
+| `scanned_at` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## specimens
 
 | Column | Class |
@@ -1482,6 +1496,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `last_tenant_id` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## watched_files
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `watch_id` | operational |
+| `name` | phi |
+| `upload_id` | operational |
+| `created_at` | operational |
 
 ## webhook_calls
 

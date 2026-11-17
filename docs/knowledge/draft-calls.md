@@ -39,7 +39,7 @@ The project area switched in OPS-023 (project and upload area on the real API). 
 - ROIs are the project's ROI annotations, named by their class or "ROI" and their number. Unsure zones are grouped by zone number across ready result sets, and cells per slide counts the cells in the chunks a zone touches, which is an upper bound.
 - The task defaults take the next task code, every ready result set and its slides, the project's reviewers, a due date 14 days ahead, reminders 2 and 1 days before and the project's study template, or an empty string. `task_id` is a fresh ID, because no task exists yet.
 - An access request is a `project.access-asked` audit event, so asking twice returns the same request. A member gets 409 `already-in-project`. The owner is not notified yet, because a new notification kind needs a migration.
-- Imports list the newest 20 uploads of the project as arrivals. The watched folder, webhook, events out and token are off and empty until saved import sources and webhooks are stored.
+- Imports list the newest 20 uploads of the project as arrivals. The watched folder shows the project's watched source (`watchSource`, REMOTE-004, watched folder or bucket) with copy, pairing and a 1 hour scan. The webhook, events out and token are off and empty until webhooks are stored.
 - The upload batch is the caller's own uploads in the project from the last 24 hours, with progress from the upload status and result pairing from the stored rule. Folder tree, problems, new classes, duplicate, storage, source outage, done, result preview and format check are empty or zero, because only the prototype scenes fill them.
 
 The fake answers these operations through the generated MSW handlers.

@@ -348,3 +348,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0385](0385-webhook-imports-are-credited-to-the-secret-maker.md) | Webhook imports are credited to the person who made the secret, and the call names a Parfocal case | Accepted | 2026-11-17 |
 | [0386](0386-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) | SAML sign-in links a SCIM user by email inside the workspace organisation | Accepted | 2026-11-17 |
 | [0387](0387-custom-webgpu-route-culls-by-cell-rows-on-the-main-thread.md) | The custom WebGPU route culls by cell rows on the main thread and reuses the Viv level of detail tiers | Accepted | 2026-11-17 |
+| [0388](0388-watched-sources-are-scanned-hourly-and-imported-as-their-creator.md) | Watched sources are scanned hourly and imported as the person who set them up | Accepted | 2026-11-17 |
