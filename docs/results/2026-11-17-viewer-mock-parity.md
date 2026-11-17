@@ -3,7 +3,7 @@
 - Date: 2026-11-17
 - Backlog: PROTO-022 (the viewers match the frozen mock again)
 - Kind: check
-- Commit: 3d0dd477 for the inventory and the before shots, the PROTO-022 layout commits for the after shots
+- Commit: 3d0dd477 for the inventory and the before shots, 24c92c9b for the after shots
 - Environment: MacBook, macOS 15, Chrome through Playwright, 1440x900 at scale 0.5, light theme
 - Data: the fake API's sample project `00000000-0000-4000-8003-000000000007` and its fictional slide `tumor_044`, and the frozen mock's fictional demo slide. No PHI
 
@@ -21,7 +21,7 @@ Where do the three viewers differ from the frozen mock `docs/design/ux-mock/inde
 
 ## Results
 
-The full viewer and the annotate workspace already sit in the shared `ViewerFrame` (`screens/review/viewer-frame.tsx`), which draws the mock's top bar, docked rail and docked tabbed inspector. Their floating parts are the mock's own: magnification bar, minimap, context bar and the drawing legend of the Visualize screen. They are not changed here.
+The full viewer and the annotate workspace already sit in the shared `ViewerFrame` (`screens/review/viewer-frame.tsx`), which draws the mock's top bar, docked rail and docked tabbed inspector. This was read from the code, not compared with the mock scene by scene, and they are not changed here.
 
 Every difference below is in the live viewer.
 
@@ -29,7 +29,7 @@ Every difference below is in the live viewer.
 |---|---|---|---|---|---|
 | 1 | Tool rail | A rounded card floating at the canvas's top left | A 52 px column docked left with a border | Restored | No ADR floats it. ADR 0338 (layout experiments, rail or bottom dock) and ADR 0270 (settings schema, the `tools` setting) choose only between the left rail and the bottom dock, and both stay |
 | 2 | Bottom dock of tools | Floats bottom centre when the `tools` setting or experiment says dock | Floats bottom centre when the tools setting says bottom | Kept | It is the mock's own bottom variant, and ADR 0338 runs it as an experiment arm |
-| 3 | Inspector | None. Each part was its own card over the slide | One 340 px docked inspector with tabs | Restored, with the tabs Objects and Display | MEAS-003 (measurement list in the inspector) already names the inspector. The live viewer has no comments or opinion data yet, so those two tabs are left out until it does |
+| 3 | Inspector | None. Each part was its own card over the slide | One 340 px docked inspector with tabs Objects, Display, Comments and Opinion | Restored with Objects and Display. Comments and Opinion are left | MEAS-003 (measurement list in the inspector) already names the inspector. No ADR drops the other two tabs. TODO add them when the live viewer reads comments and opinions |
 | 4 | Device legend (the Trackpad hint) | A card over the rail at top left | A `mock-only` card, never built over the slide | Restored into the Display tab as an inline section | ADR 0272 (input device support) requires the legend but not its place. DEV-006 (device legend on the canvas) has no ADR |
 | 5 | Areas, largest first | A card at the top right | Rows in the Objects tab | Restored into the Objects tab | No ADR |
 | 6 | Annotate task checks (slides checked, AI result, Mark slide checked) | A card at the top left beside the rail | The Objects tab lists what the task asks about | Restored into the Objects tab | ADR 0237 (annotate tasks on one shared layer) and ADR 0278 (blind first on annotate tasks) say what it shows, not where |
@@ -38,14 +38,15 @@ Every difference below is in the live viewer.
 | 9 | Count panel and Clear all | Cards at the bottom right | Counts sit in the Objects tab | Restored into the Objects tab | No ADR |
 | 10 | Paint a map and Map this view | Cards at the bottom right | Display controls sit in the Display tab | Restored into the Display tab | AITUM-005 (painted maps) and AITUM-004 (view-scoped map) set behaviour, not place |
 | 11 | Find nuclei, Load last run, Options and the run status | A bar at the bottom left | Model controls sit in the auto tool's context bar and picker | Restored into the Objects tab of the Annotate workspace | No ADR. The run streams over the slide as before |
-| 12 | Add result set | A wide card over the slide | The upload `viewer` scene adds results from the side | Restored into the Display tab | No ADR |
+| 12 | Add result set | A wide card over the slide | Not read in the mock for this check | Restored into the Display tab beside the result sets | No ADR |
 | 13 | Outline display switch (fake data only) | A bar at the top centre | The Display tab | Restored into the Display tab | No ADR |
-| 14 | Context bar, including the select hints | A bar at the top centre | `.ctxbar` at the top centre, text from the `CTX` table | Kept | It is the mock. ANN-003 (context bar) built it from the `CTX` table, and ADR 0255 (smart select gestures and proposals) puts the accept and discard buttons there |
+| 14a | Context bar with tool options, accept and discard | A bar at the top centre | `.ctxbar` at the top centre on the annotate screen | Kept | It is the mock, and ADR 0255 (smart select gestures and proposals) puts the accept and discard buttons there |
+| 14b | Hint-only bar of a tool, such as the select hints | A bar at the top centre | `ctxBar()` draws it as `mock-only`, "Mock only · tool hints", so it was never meant to be built | Left | ANN-003 (context bar) built it from the `CTX` table, but no ADR keeps it. TODO show a tool's hints once inline and draw the bar only when the tool has options |
 | 15 | Magnification bar | Bottom centre | `.magbar` bottom centre | Kept | It is the mock |
 | 16 | Tile loading hint | Above the magnification bar | `.tl-hint` above the magnification bar | Kept | It is the mock |
 | 17 | Pin threads and comment popovers | Next to the pin | `.thread` next to the pin | Kept | It is the mock |
 | 18 | Smart and auto tool chips (model and scale) | Small chips at the bottom | Inside the context bar | Left as they are | TODO a follow-up moves them into the context bar |
-| 19 | Save status, live changes marker, edit conflict notice | Small notices at the canvas's top left and top centre | Toasts and the one banner | Kept as transient notices | They show only while something happens. No ADR covers them. TODO decide with the owner whether they join the one banner |
+| 19 | Save status, live changes marker, edit conflict notice | Small notices at the canvas's top left and top centre | Toasts and the one banner | Left | No ADR covers them. Question 144 in `docs/decisions.md` asks the owner whether they join the one banner |
 | 20 | Top bar | Back to the project, slide name with facts, workspace switch, viewing now and the viewed ring | My work, task and due date, slide picker, progress, Guided, Full viewer and Annotate, Submit, account | Left as it is | TODO the slide picker and the "Slide n of m" progress are a follow-up. The viewed ring already matches the mock's progress ring |
 | 21 | Loading label | Top left of the canvas | | Not touched | SHELL-017 (route loading, skeletons and the viewer's loading label) owns it |
 
@@ -76,5 +77,10 @@ The drift came from building each live feature as its own card on the stage, one
 - TODO the top bar's slide picker and "Slide n of m" progress on the live viewer.
 - TODO the smart and auto tool chips move into the context bar.
 - TODO the owner decides whether the save, live changes and conflict notices join the one banner.
+- TODO the hint-only context bar shows its hints once inline instead.
+- TODO the inspector tab lives in local state, so it resets on reload, on a slide switch and on a workspace switch. ADR 0176 (case view state model) puts it in the `tab` search param, which touches the live route file.
+- TODO "Hide while panning" and the panel key do nothing on the live viewer yet.
+- A slide opened from the project page lands in the Annotate workspace, so Areas, Measurements and Find nuclei start behind the Objects tab there.
+- About 40 other specs that open the live viewer were not run in this change.
 - The viewer goldens in `packages/golden-images` render overlay layers in their own harness and import no app code, so the layout change moves none of them and none were updated. One run passed 132, skipped 2 and failed 1, the id-labels layer over CMU-1.svs, which this change cannot reach. TODO check it on main.
 - Browser specs updated for the tabs: `device-legend`, `outline-modes`, `painted-map`, `view-map`, `count-markers`, `measurement-list`, `area-nav-live` and `zoom-to-selection` select their tab first. `viewer-mock-layout.spec.ts` is new and checks the docked rail, the docked inspector and that no card sits on the stage.

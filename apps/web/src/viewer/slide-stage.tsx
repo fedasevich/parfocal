@@ -761,7 +761,7 @@ function OpenedSlide({
   return (
     <EscProvider value={escRegistry}>
       <InspectorSlotsProvider value={slots}>
-        <div data-slot="viewer-body" className="flex size-full min-h-0 bg-chrome">
+        <div data-slot="viewer-body" className="relative flex size-full min-h-0 bg-chrome">
           {toolsLayout === "dock" ? null : (
             <ToolRail className="justify-between">
               <div className="grid gap-1">

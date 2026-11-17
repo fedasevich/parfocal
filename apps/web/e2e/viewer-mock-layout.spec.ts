@@ -42,6 +42,15 @@ test("the live viewer docks its rail and inspector beside the slide like the moc
   await expect(inspector.getByTestId("view-map")).toBeVisible();
   await expect(inspector.getByTestId("painted-map")).toBeVisible();
   await expect(stage.getByTestId("area-nav")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Hide the side panel" }).click();
+  const tab = page.getByTestId("inspector-tab");
+  await expect(tab).toBeVisible();
+  const tabBox = await boxOf(page, '[data-testid="inspector-tab"]');
+  const header = await boxOf(page, "header");
+  expect(tabBox.y).toBeGreaterThanOrEqual(header.y + header.height);
+  await tab.click();
+  await expect(inspector).toBeVisible();
 });
 
 test("the Annotate workspace opens its inspector on Display with the layers", async ({ page }) => {
