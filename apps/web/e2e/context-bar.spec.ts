@@ -46,6 +46,13 @@ test("one context bar shows the active tool's hints and the class strip where a 
     await page.keyboard.press("Escape");
     await expect(stage).toHaveAttribute("data-tool", "select");
   }
+
+  await expect(bar).toHaveCount(0);
+  await page.keyboard.press("l");
+  await expect(stage).toHaveAttribute("data-tool", "ruler");
+  await expect(bar).toHaveCount(0);
+  await page.keyboard.press("p");
+  await expect(bar).toHaveAttribute("aria-label", "Polygon options");
 });
 
 test("the class keys and the swatches pick the same class across tools", async ({ page }) => {

@@ -70,7 +70,7 @@ export function ConflictNotice({
       data-testid="conflict-notice"
       data-action={conflict.action}
       data-theirs-deleted={conflict.theirs.deleted}
-      className="absolute top-12 left-4 flex w-[min(420px,calc(100%-2rem))] gap-3 rounded-lg border border-line-strong bg-chrome p-3 shadow-pop"
+      className="flex w-full gap-3 border-line border-t bg-warn/10 px-4 py-3"
     >
       <Preview conflict={conflict} />
       <div className="flex min-w-0 flex-1 flex-col gap-2">

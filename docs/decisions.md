@@ -200,6 +200,8 @@ PROTO-022 (the viewers match the frozen mock again) docked every card of the liv
 - B. Keep them as small notices on the slide, since they show only while something happens.
 - Other.
 
+PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) built option A to follow the mock, so B means moving them back.
+
 Your choice: 
 
 ## What your answers of 2026-11-16 changed

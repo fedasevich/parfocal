@@ -133,6 +133,7 @@ export const annotateSearch = lenientSearch({
 export const liveSearch = lenientSearch({
   task: z.string().optional(),
   workspace: z.enum(workspaces).optional(),
+  tab: z.enum(viewerTabs).optional(),
 });
 
 export const annotateTaskSearch = lenientSearch({

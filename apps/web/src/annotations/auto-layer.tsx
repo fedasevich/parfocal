@@ -20,6 +20,7 @@ import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { ContextExtra, contextChip } from "./context-extras.tsx";
 import { type AnnotationDocument, addRun, removeRun } from "./document.ts";
 import { runFromProposals } from "./runs.ts";
 import {
@@ -325,18 +326,20 @@ export function AutoLayer({
         )}
       </svg>
       {active && (progress !== null || status.message !== null) ? (
-        <div
-          data-testid="auto-status"
-          role="status"
-          data-done={progress?.done}
-          data-total={progress?.total}
-          data-found={progress?.found}
-          className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome px-3 py-1.5 font-mono text-caption"
-        >
-          {progress !== null
-            ? t`Tile ${Math.min(progress.done + 1, progress.total)} of ${progress.total} · ${progress.found} found`
-            : status.message}
-        </div>
+        <ContextExtra>
+          <span
+            data-testid="auto-status"
+            role="status"
+            data-done={progress?.done}
+            data-total={progress?.total}
+            data-found={progress?.found}
+            className={contextChip}
+          >
+            {progress !== null
+              ? t`Tile ${Math.min(progress.done + 1, progress.total)} of ${progress.total} · ${progress.found} found`
+              : status.message}
+          </span>
+        </ContextExtra>
       ) : null}
     </>
   );

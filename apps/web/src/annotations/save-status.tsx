@@ -25,7 +25,7 @@ export function SaveStatus({ state, unsaved }: { state: SaveState; unsaved: numb
       role={state === "failed" ? "alert" : "status"}
       data-testid="save-status"
       data-state={state}
-      className={`absolute top-4 left-4 text-body-sm ${tone}`}
+      className={`truncate text-body-sm ${tone}`}
     >
       {text}
     </p>
