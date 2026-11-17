@@ -24,7 +24,7 @@ export const slideFileName = "slide.tiff";
 export const unavailablePrefix = "missing-";
 
 const tilePath =
-  /^\/(?:tiles|api\/remote-tiles)\/([^/]+)\/(levels\.json|slide\.tiff|original\.tif)$/;
+  /^\/(?:tiles|api\/remote-tiles)\/([^/]+)\/(levels\.json|[^/]+\.(?:tiff?|svs|ndpi|scn|mrxs|bif|vsi|dcm))$/;
 
 function rangeOf(header: string | undefined, size: number): [number, number] | null {
   const match = header?.match(/^bytes=(\d*)-(\d*)$/);

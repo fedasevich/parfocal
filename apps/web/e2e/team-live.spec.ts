@@ -109,11 +109,14 @@ test(
   async ({ page }) => {
     await signIn(page, "/my-work");
     await arrangeOtherReviewers(page);
+    const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
     const assigned = await ok<Assigned[]>(page, "GET", "/api/me/assigned-tasks");
     const task = assigned.find(
       (candidate) =>
         (candidate.status === "in-review" || candidate.status === "not-started") &&
-        candidate.reviewers.some((row) => row.slides_submitted < row.slides_assigned),
+        candidate.reviewers.some(
+          (row) => row.user_id !== me && row.slides_submitted < row.slides_assigned,
+        ),
     );
     test.skip(task === undefined, "No task of mine has a reviewer with slides left");
     if (task === undefined) return;

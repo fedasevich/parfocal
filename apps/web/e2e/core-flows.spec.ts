@@ -3,7 +3,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
-import { area, ok, onRealApi, realTags, sampleTask, signIn, storageStandIn } from "./real.ts";
+import {
+  area,
+  ok,
+  onRealApi,
+  realTags,
+  signIn,
+  storageStandIn,
+  taskWithEveryReviewIn,
+  viewableTask,
+} from "./real.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -31,24 +40,6 @@ interface TaskStates {
   slides: { state: string }[];
 }
 
-interface TaskRow {
-  id: string;
-  kind: string;
-}
-
-async function readyToSign(page: Page): Promise<string> {
-  const projects = await ok<{ id: string }[]>(page, "GET", "/api/projects");
-  for (const project of projects) {
-    const tasks = await ok<TaskRow[]>(page, "GET", `/api/projects/${project.id}/review-tasks`);
-    for (const task of tasks.filter(({ kind }) => kind === "review")) {
-      const states = await ok<TaskStates>(page, "GET", `/api/review-tasks/${task.id}/states`);
-      const allIn = states.slides.every(({ state }) => state === "submitted");
-      if (states.signed_off_at === null && states.slides.length > 0 && allIn) return task.id;
-    }
-  }
-  throw new Error("No unsigned review task has every review in");
-}
-
 interface Decision {
   object: string;
   value: string;
@@ -74,7 +65,7 @@ test(
   realTags(area.review),
   async ({ page }) => {
     await signIn(page, "/my-work");
-    const { task, slide } = await sampleTask(page, "review");
+    const { task, slide } = await viewableTask(page, "review", true);
     await page.goto(`/tasks/${task}/guided?slide=${slide}`);
     const decisions = `/api/review-tasks/${task}/slides/${slide}/decisions`;
     const stored = async () => (await ok<Decision[]>(page, "GET", decisions)).length;
@@ -118,7 +109,7 @@ test("a slide uploaded into a project finishes", realTags(area.upload), async ({
 
 test("an annotate task slide keeps a drawn region", realTags(area.annotate), async ({ page }) => {
   await signIn(page, "/my-work");
-  const { project, task, slide } = await sampleTask(page, "annotate");
+  const { project, task, slide } = await viewableTask(page, "annotate");
   await page.goto(`/projects/${project}/slides/${slide}/live?task=${task}`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
@@ -141,7 +132,7 @@ test(
   realTags(area.signOff),
   async ({ page }) => {
     await signIn(page, "/my-work");
-    const task = await readyToSign(page);
+    const task = await taskWithEveryReviewIn(page);
     await page.goto(`/tasks/${task}/sign-off`);
     const modal = page.getByRole("dialog", { name: /^Sign off / });
     await expect(modal).toBeVisible({ timeout: 30_000 });
