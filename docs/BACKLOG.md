@@ -2367,7 +2367,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Done when component tests cover combined filters and URL persistence.
   Size: S.
 
-- [ ] WL-018 · Assigned by me tab
+- [x] WL-018 · Assigned by me tab
   The researcher's tasks as a table with the result set, each reviewer as avatar and name with a progress bar, the due date, a status tag and one action by status: Nudge, Resolve for disagreements or Sign off when ready. A more menu reassigns slides, changes the due date or adds a reviewer (TASK-007).
   Done when component tests cover each status and its action, and E2E nudges a reviewer and opens the disagreement queue.
   Depends on WL-001, TASK-007. Refs mock: worklist/assigned.
@@ -6150,7 +6150,7 @@ How a lead controls who works on what: absences and back-ups, each person's capa
   Who is reviewing what, with progress and last activity per reviewer, is part of TEAM-007 (Team, the researcher's workload view). Capacity, folders and back-ups stay in this idea.
   Size: M.
 
-- [ ] TEAM-007 · Team, the researcher's workload view
+- [x] TEAM-007 · Team, the researcher's workload view
   Team, under Workspace in the sidebar, shows researchers who is reviewing what. Invites and roles stay in the admin page. It has one block per open task with the result set, the due date and "overdue by 1 day" in the bad colour once it has passed, and a row per reviewer with avatar and name, a progress bar with "7 of 12", the last activity and a status word: on track, behind (fewer slides done than the share due by today), not started, away until a date (ADAPT-009) or done. The researcher's own reviewing shows with "(you)". Nudge opens the small Nudge modal with a message filled in, and the row then says "nudged just now". Reassign opens the small Reassign modal with who takes over and what moves, and warns when slides with decisions would move. Both show an Undo. "Nudge all behind" asks to confirm inside the button. The Project and Reviewer filters work, and a Done tab lists the signed-off tasks with their sign-off dates and a link to each report. The API extends the Assigned by me query of [ADR 0082](adr/0082-my-work-query-api.md) (My work query API) with the last activity and the status word. This task takes over the parts of TEAM-005 (bulk reassign) and TEAM-006 (team directory API) that a research lab needs.
   Done when API tests compute each status word with a fake clock, including behind and overdue, component tests cover each status, the filters, the Done tab, both modals with the partial progress warning, Undo and the confirm of Nudge all behind, axe passes, and E2E nudges and reassigns from Team.
   Depends on TASK-007, WL-018, DS-022. Refs mock: team/open, mock: team/done, mock: team/nudge, mock: team/reassign, mock: team/sent, mock: team/overdue, mock: team/away, mock: team/partial, kit: Team, doc 44.

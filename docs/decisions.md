@@ -182,6 +182,16 @@ ADMIN-006 (storage, sources, API and webhooks in the admin console) now shows us
 
 Your choice: 
 
+### 143. Which tasks the "Assigned by me" tab lists
+
+WL-018 (Assigned by me tab) lists the tasks you created, while Team lists tasks in the projects you own. When a task is on the first list but not the second, such as one you created in a project someone else owns, "Reassign slides" opens Team without that task.
+
+- **A. List tasks in projects you own, like Team, so both screens agree (recommended).** Tasks you created in other people's projects leave the tab.
+- B. Keep listing the tasks you created, and hide "Reassign slides" on rows Team cannot show.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
