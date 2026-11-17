@@ -292,3 +292,46 @@ test("a decision note with a reason is written and saved on the stage", async ({
   expect(again.note).toBe("Runs past the fold and more");
   expect(again.reasons).toContain("boundary_off");
 });
+
+test("a result set's cells page in as outlines and its regions draw outside a task, and both hide", async ({
+  page,
+}) => {
+  const chunks: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/cell-chunks/")) chunks.push(request.url());
+  });
+  await page.goto(`/projects/${p07}/slides/${a1}?as=DH`);
+  await ready(page);
+  const sam = '[data-set="00000000-0000-4000-8006-000000000002"]';
+  const cells = page.locator(`[data-testid="result-set-cells"]${sam}`);
+  await expect(cells).toHaveAttribute("data-drawn", "outlines", { timeout: 15_000 });
+  expect(Number(await cells.getAttribute("data-cells"))).toBeGreaterThan(0);
+  expect(Number(await cells.getAttribute("data-resident"))).toBeGreaterThan(0);
+  expect(chunks.length).toBeGreaterThan(0);
+  const regions = page.locator(`[data-testid="result-set-regions"]${sam}`);
+  await expect(regions).toHaveAttribute("data-regions", "2");
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(2);
+  const toggle = page.getByRole("button", { name: "Hide PathoSAM + HoVer-NeXt" });
+  await toggle.click();
+  await expect(page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(cells).toHaveCount(0);
+  await expect(regions).toHaveCount(0);
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(1);
+  await page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" }).click();
+  await expect(cells).toHaveAttribute("data-drawn", "outlines");
+});
+
+test("inside a task a result set's cells stay dots and its regions are left to the task", async ({
+  page,
+}) => {
+  await page.goto(`${objectsViewer}&as=DH`);
+  await ready(page);
+  const cells = page.locator(
+    '[data-testid="result-set-cells"][data-set="00000000-0000-4000-8006-000000000002"]',
+  );
+  await expect(cells).toHaveAttribute("data-drawn", "dots", { timeout: 15_000 });
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(0);
+});

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { pagedCellSource } from "@parfocal/api-client/fake/paged-cell-source";
 import { PagedCells } from "@parfocal/viewer-engine";
-import { pagedCellSource } from "../src/lab/paged-cell-source.ts";
 import {
   cellObjectId,
   circlePath,

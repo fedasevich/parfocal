@@ -116,7 +116,12 @@ export function EngineViewer({
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
       <StageMinimap engine={session.engine} slideId={slideId} overview={session.overview} />
-      <StageResultCells engine={session.engine} module={session.module} slideId={slideId} />
+      <StageResultCells
+        engine={session.engine}
+        module={session.module}
+        slideId={slideId}
+        inTask={task !== undefined}
+      />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       {focus ? (
         <StageFocusPill

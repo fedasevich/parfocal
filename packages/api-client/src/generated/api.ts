@@ -6089,6 +6089,13 @@ export const ResultFormat = {
   heatmap: "heatmap",
 } as const;
 
+export type ResultObjectKind = (typeof ResultObjectKind)[keyof typeof ResultObjectKind];
+
+export const ResultObjectKind = {
+  region: "region",
+  zone: "zone",
+} as const;
+
 export type Rule = (typeof Rule)[keyof typeof Rule];
 
 export const Rule = {
@@ -6162,6 +6169,7 @@ export interface ResultSet {
 export interface ResultSetClass {
   position: number;
   source_name: string;
+  name: string;
   class_id: string | null;
   object_count: number;
 }
@@ -6737,6 +6745,19 @@ export interface SetRef {
   id: string;
   name: string;
   status: ResultStatus;
+}
+
+export interface SetRegion {
+  number: number;
+  kind: ResultObjectKind;
+  class_index: number | null;
+  score: number | null;
+  outline: number[];
+}
+
+export interface SetRegions {
+  regions: SetRegion[];
+  truncated: boolean;
 }
 
 export type SharedAiObjectKind = (typeof SharedAiObjectKind)[keyof typeof SharedAiObjectKind];
@@ -8095,6 +8116,18 @@ export type DeleteAnnotationParams = {
 
 export type DeleteResultSetParams = {
   confirm?: boolean;
+};
+
+export type ListResultSetRegionsParams = {
+  left?: number | null;
+  top?: number | null;
+  right?: number | null;
+  bottom?: number | null;
+  /**
+   * @minimum 1
+   * @maximum 2000
+   */
+  limit?: number;
 };
 
 export type GetResultsSchema200 = { [key: string]: unknown };
@@ -32747,6 +32780,413 @@ export function useGetCellSummary<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetCellSummaryQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getCellChunkResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getCellChunkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCellChunkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCellChunkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCellChunkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCellChunkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCellChunkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCellChunkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCellChunkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCellChunkResponseSuccess = getCellChunkResponse200 & {
+  headers: Headers;
+};
+export type getCellChunkResponseError = (
+  | getCellChunkResponse400
+  | getCellChunkResponse401
+  | getCellChunkResponse403
+  | getCellChunkResponse404
+  | getCellChunkResponse409
+  | getCellChunkResponse422
+  | getCellChunkResponse429
+  | getCellChunkResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCellChunkResponse = getCellChunkResponseSuccess | getCellChunkResponseError;
+
+export const getGetCellChunkUrl = (resultSetId: string, chunk: number) => {
+  return `/api/result-sets/${resultSetId}/cell-chunks/${chunk}`;
+};
+
+/**
+ * @summary Get Cell Chunk
+ */
+export const getCellChunk = async (
+  resultSetId: string,
+  chunk: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCellChunkResponse> => {
+  return apiFetch<getCellChunkResponse>(getGetCellChunkUrl(resultSetId, chunk), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCellChunkQueryKey = (resultSetId: string, chunk: number) => {
+  return [`/api/result-sets/${resultSetId}/cell-chunks/${chunk}`] as const;
+};
+
+export const getGetCellChunkQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCellChunk>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCellChunkQueryKey(resultSetId, chunk);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCellChunk>>> = ({ signal }) =>
+    getCellChunk(resultSetId, chunk, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      resultSetId !== null && resultSetId !== undefined && chunk !== null && chunk !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCellChunkQueryResult = NonNullable<Awaited<ReturnType<typeof getCellChunk>>>;
+export type GetCellChunkQueryError = Problem;
+
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellChunk>>,
+          TError,
+          Awaited<ReturnType<typeof getCellChunk>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellChunk>>,
+          TError,
+          Awaited<ReturnType<typeof getCellChunk>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Cell Chunk
+ */
+
+export function useGetCellChunk<TData = Awaited<ReturnType<typeof getCellChunk>>, TError = Problem>(
+  resultSetId: string,
+  chunk: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellChunk>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCellChunkQueryOptions(resultSetId, chunk, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listResultSetRegionsResponse200 = {
+  data: SetRegions;
+  status: 200;
+};
+
+export type listResultSetRegionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listResultSetRegionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listResultSetRegionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listResultSetRegionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listResultSetRegionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listResultSetRegionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listResultSetRegionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listResultSetRegionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listResultSetRegionsResponseSuccess = listResultSetRegionsResponse200 & {
+  headers: Headers;
+};
+export type listResultSetRegionsResponseError = (
+  | listResultSetRegionsResponse400
+  | listResultSetRegionsResponse401
+  | listResultSetRegionsResponse403
+  | listResultSetRegionsResponse404
+  | listResultSetRegionsResponse409
+  | listResultSetRegionsResponse422
+  | listResultSetRegionsResponse429
+  | listResultSetRegionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listResultSetRegionsResponse =
+  | listResultSetRegionsResponseSuccess
+  | listResultSetRegionsResponseError;
+
+export const getListResultSetRegionsUrl = (
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/result-sets/${resultSetId}/regions?${stringifiedParams}`
+    : `/api/result-sets/${resultSetId}/regions`;
+};
+
+/**
+ * @summary List Result Set Regions
+ */
+export const listResultSetRegions = async (
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listResultSetRegionsResponse> => {
+  return apiFetch<listResultSetRegionsResponse>(getListResultSetRegionsUrl(resultSetId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListResultSetRegionsQueryKey = (
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+) => {
+  return [`/api/result-sets/${resultSetId}/regions`, ...(params ? [params] : [])] as const;
+};
+
+export const getListResultSetRegionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListResultSetRegionsQueryKey(resultSetId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listResultSetRegions>>> = ({ signal }) =>
+    listResultSetRegions(resultSetId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListResultSetRegionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listResultSetRegions>>
+>;
+export type ListResultSetRegionsQueryError = Problem;
+
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params: undefined | ListResultSetRegionsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listResultSetRegions>>,
+          TError,
+          Awaited<ReturnType<typeof listResultSetRegions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listResultSetRegions>>,
+          TError,
+          Awaited<ReturnType<typeof listResultSetRegions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Result Set Regions
+ */
+
+export function useListResultSetRegions<
+  TData = Awaited<ReturnType<typeof listResultSetRegions>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  params?: ListResultSetRegionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listResultSetRegions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListResultSetRegionsQueryOptions(resultSetId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

@@ -59,8 +59,69 @@ export function nextOpenObject(
 
 const engineClasses = ["tumor", "stroma", "immune", "other"] as const;
 
-const engineClassOf = (name: string) =>
+export const engineClassOf = (name: string) =>
   engineClasses.find((item) => item === name.toLowerCase()) ?? "other";
+
+type ChunkRows = {
+  readonly number: ArrayLike<number>;
+  readonly offsets: ArrayLike<number>;
+  readonly points: Float32Array;
+  readonly score: ArrayLike<number>;
+};
+
+type LiveCells = {
+  forEachLive(visit: (chunk: ChunkRows, local: number, classIndex: number) => void): void;
+};
+
+export function chunkCells(setId: string, cells: LiveCells, names: readonly string[]) {
+  const drawn: {
+    id: string;
+    kind: "cell";
+    ring: Float32Array;
+    className: (typeof engineClasses)[number];
+    score: number;
+  }[] = [];
+  cells.forEachLive((chunk, local, classIndex) => {
+    const from = (chunk.offsets[local] ?? 0) * 2;
+    const to = (chunk.offsets[local + 1] ?? 0) * 2;
+    if (to - from < 6) return;
+    drawn.push({
+      id: `${setId}:${chunk.number[local] ?? local}`,
+      kind: "cell",
+      ring: chunk.points.subarray(from, to),
+      className: engineClassOf(names[classIndex] ?? ""),
+      score: (chunk.score[local] ?? 255) / 255,
+    });
+  });
+  return drawn;
+}
+
+type SetRegionRow = {
+  readonly number: number;
+  readonly class_index?: number | null;
+  readonly score?: number | null;
+  readonly outline: number[];
+};
+
+export function setRegions(
+  setId: string,
+  regions: readonly SetRegionRow[],
+  names: readonly string[],
+) {
+  return regions
+    .filter((region) => region.outline.length >= 6)
+    .map((region) => ({
+      id: `${setId}:region:${region.number}`,
+      kind: "region" as const,
+      ring: region.outline,
+      className: engineClassOf(
+        region.class_index === null || region.class_index === undefined
+          ? ""
+          : (names[region.class_index] ?? ""),
+      ),
+      score: region.score ?? 1,
+    }));
+}
 
 type Placeable = {
   readonly object: string;

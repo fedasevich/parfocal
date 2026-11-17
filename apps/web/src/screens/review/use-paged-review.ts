@@ -67,7 +67,7 @@ export function usePagedReview(classNames: readonly string[]): PagedReview | nul
     void (async () => {
       const [engine, generator] = await Promise.all([
         import("../../viewer/viewer-engine.ts"),
-        import("../../lab/paged-cell-source.ts"),
+        import("@parfocal/api-client/fake/paged-cell-source"),
       ]);
       const paged = await engine.PagedCells.open(generator.pagedCellSource({ cells: count }));
       if (closed) {
