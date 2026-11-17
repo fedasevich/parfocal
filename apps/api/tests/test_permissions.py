@@ -2242,7 +2242,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     {
                         "tenant_id": tenant_id,
                         "project_id": outside_project,
-                        "user_id": colleague,
+                        "user_id": deputy,
                         "role": "owner",
                     }
                 ]
