@@ -34,8 +34,11 @@ export function organisationSignInUrl(domain: string, returnTo: string | null): 
   return `/api/auth/sso?${query.toString()}`;
 }
 
-export function codeDigits(value: string): string {
-  return value.replace(/\D/g, "").slice(0, codeLength);
+export function codeCharacters(value: string): string {
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, codeLength);
 }
 
 export function clock(seconds: number): string {

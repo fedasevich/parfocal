@@ -3,7 +3,7 @@ import { test } from "node:test";
 import {
   checkPassword,
   clock,
-  codeDigits,
+  codeCharacters,
   emailDomain,
   organisationDomain,
   organisationSignInUrl,
@@ -42,8 +42,9 @@ test("a return path must stay on this site", () => {
   assert.equal(safeReturnPath(undefined), null);
 });
 
-test("the code keeps six digits only and the clock reads minutes and seconds", () => {
-  assert.equal(codeDigits("48 17-26x99"), "481726");
+test("the code keeps six letters and digits only and the clock reads minutes and seconds", () => {
+  assert.equal(codeCharacters("48 17-26x99"), "481726");
+  assert.equal(codeCharacters("gp0-ryg1"), "GP0RYG");
   assert.equal(clock(42), "0:42");
   assert.equal(clock(65), "1:05");
 });

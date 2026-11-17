@@ -32,6 +32,9 @@ test("the emailed link opens the reset screen with the code filled in", async ({
   await expect(page.getByRole("heading", { name: "Choose a new password" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Reset code" })).toHaveValue(code);
   await expect(page.getByRole("button", { name: "Set password and sign in" })).toBeDisabled();
+  await page.getByRole("textbox", { name: "Reset code" }).fill("gp0ryg");
+  await expect(page.getByRole("textbox", { name: "Reset code" })).toHaveValue("GP0RYG");
+  await page.getByRole("textbox", { name: "Reset code" }).fill(code);
   await page.getByLabel("New password", { exact: true }).fill(newPassword);
   await page.getByRole("button", { name: "Set password and sign in" }).click();
   await expect(page).toHaveURL(/\/projects$/);

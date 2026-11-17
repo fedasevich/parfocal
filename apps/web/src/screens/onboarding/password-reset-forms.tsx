@@ -15,7 +15,7 @@ import { Input } from "@parfocal/ui/components/input";
 import { useState } from "react";
 import { CodeInput, handled, PasswordInput, problemText, useCountdown } from "./auth-inputs.tsx";
 import type { Flow } from "./sign-in-forms.tsx";
-import { clock, codeDigits, codeLength } from "./sign-in-rules.ts";
+import { clock, codeCharacters, codeLength } from "./sign-in-rules.ts";
 
 const messageOf = (error: unknown, fallback: string) =>
   error instanceof ApiError && error.fieldErrors().length > 0
@@ -54,7 +54,7 @@ export function ForgotPasswordForm({
   return (
     <AuthForm>
       <AuthHeading title={t`Reset your password`}>
-        <Trans>We email a {codeLength}-digit code to the address on your account.</Trans>
+        <Trans>We email a {codeLength}-character code to the address on your account.</Trans>
       </AuthHeading>
       <AuthField label={t`Work email`}>
         <Input
@@ -97,7 +97,7 @@ export function ResetPasswordForm({
   restart: (seconds: number) => void;
 }) {
   const { t } = useLingui();
-  const [code, setCode] = useState(codeDigits(link?.code ?? ""));
+  const [code, setCode] = useState(codeCharacters(link?.code ?? ""));
   const [password, setPassword] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -150,7 +150,7 @@ export function ResetPasswordForm({
           <Trans>Check the code from your email, then enter a new password.</Trans>
         ) : (
           <Trans>
-            Enter the {codeLength}-digit code we sent to <b>{email}</b>, then a new password.
+            Enter the {codeLength}-character code we sent to <b>{email}</b>, then a new password.
           </Trans>
         )}
       </AuthHeading>

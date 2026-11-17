@@ -4,7 +4,7 @@ import { CodeBoxes } from "@parfocal/ui/components/auth";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { type KeyboardEvent, useEffect, useState } from "react";
-import { codeDigits, codeLength } from "./sign-in-rules.ts";
+import { codeCharacters, codeLength } from "./sign-in-rules.ts";
 
 export const handled = { mutation: { onError: () => undefined } };
 
@@ -75,11 +75,11 @@ export function CodeInput({
       <CodeBoxes digits={value} aria-hidden="true" />
       <input
         aria-label={label}
-        inputMode="numeric"
+        autoCapitalize="characters"
         autoComplete="one-time-code"
         maxLength={codeLength}
         value={value}
-        onChange={(event) => onChange(codeDigits(event.target.value))}
+        onChange={(event) => onChange(codeCharacters(event.target.value))}
         onKeyDown={onEnter(() => value.length === codeLength && onSubmit())}
         className="absolute inset-0 h-full w-full cursor-text opacity-0"
       />

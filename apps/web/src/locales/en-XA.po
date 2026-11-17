@@ -6494,11 +6494,11 @@ msgid "Enter posts, Shift+Enter adds a line"
 msgstr ""
 
 #: src/screens/onboarding/sign-up-screen.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>"
 msgstr ""
 
 #: src/screens/onboarding/password-reset-forms.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>, then a new password."
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -17376,7 +17376,7 @@ msgid "Ways to show results"
 msgstr ""
 
 #: src/screens/onboarding/password-reset-forms.tsx
-msgid "We email a {codeLength}-digit code to the address on your account."
+msgid "We email a {codeLength}-character code to the address on your account."
 msgstr ""
 
 #: src/feedback/feedback-dialog.tsx
