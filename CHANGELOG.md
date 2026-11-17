@@ -2,6 +2,22 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.8.0 (2026-11-17)
+
+### Features
+
+- VIEW-074: Show seen tool hints in tooltips and the shortcuts sheet, arm a routed tool
+
+### Fixes
+
+- VIEW-074: Remember the resume point on the stage and keep prototype tool specs in their scene
+- VIEW-074: Keep prototype viewer steps, compare exits and the study cell link in their scene
+
+### Docs
+
+- VIEW-074: Log the tool hints, scene pins and the specs that fail on main too
+- VIEW-074: Move to review after merge and tick SHELL-023
+
 ## v0.7.0 (2026-11-17)
 
 ### Features
