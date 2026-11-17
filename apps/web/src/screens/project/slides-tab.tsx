@@ -502,23 +502,28 @@ function SlideRow({
             </span>
           )}
         </TableCell>
-        <TableCell className="w-px text-right whitespace-nowrap">
-          {onMove ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="mr-1"
-              onClick={(event) => {
-                event.stopPropagation();
-                onMove();
-              }}
-            >
-              {moveTitle(slide.case_label !== null)}
+        <TableCell className="w-px whitespace-nowrap">
+          <span
+            data-testid="slide-actions"
+            className="flex flex-nowrap items-center justify-end gap-1.5"
+          >
+            {onMove ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="shrink-0"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMove();
+                }}
+              >
+                {moveTitle(slide.case_label !== null)}
+              </Button>
+            ) : null}
+            <Button size="sm" className="shrink-0" onClick={open}>
+              <Trans>Open</Trans>
             </Button>
-          ) : null}
-          <Button size="sm" onClick={open}>
-            <Trans>Open</Trans>
-          </Button>
+          </span>
         </TableCell>
       </TableRow>
       {expanded ? <ResultSetDetail project={project} slide={slide} /> : null}
