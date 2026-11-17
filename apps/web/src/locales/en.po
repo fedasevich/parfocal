@@ -2970,6 +2970,7 @@ msgstr "Add a layer"
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-object-notes.tsx
 msgid "Add a note"
 msgstr "Add a note"
 

@@ -242,3 +242,34 @@ test("guided review on outlined cells moves to the next cell after a type", asyn
   await page.keyboard.press("x");
   await expect(card).toHaveAttribute("data-current", "C2");
 });
+
+test("a decision note with a reason is written and saved on the stage", async ({ page }) => {
+  await page.goto(objectsViewer);
+  await ready(page);
+  const row = page.locator('[data-testid="stage-review-object"][data-object="T2"]');
+  await row
+    .getByRole("group", { name: "Your answer on T2" })
+    .getByRole("button", { name: /Disagree/ })
+    .click();
+  await expect(row).toHaveAttribute("data-decision", "disagree");
+  await row.getByRole("button", { name: "Notes and comments" }).click();
+  const notes = page.getByTestId("stage-object-notes");
+  await notes.getByRole("button", { name: "Add a note" }).click();
+  const field = page.getByRole("textbox", { name: "Note on your decision for T2" });
+  await expect(field).toBeFocused();
+  await page.getByRole("button", { name: "Boundary is off" }).click();
+  await field.pressSequentially("Runs past the fold");
+  const put = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      request.url().includes("/decisions/T2") &&
+      (request.postData() ?? "").includes("Runs past the fold"),
+  );
+  await page.keyboard.press("Enter");
+  const body = (await put).postDataJSON() as { note: string; reasons: string[] };
+  expect(body.note).toBe("Runs past the fold");
+  expect(body.reasons).toContain("boundary_off");
+  await expect(field).toHaveCount(0);
+  await expect(notes).toContainText("Note on decision: Disagree");
+  await expect(notes).toContainText("Runs past the fold");
+});
