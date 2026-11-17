@@ -642,6 +642,7 @@ export function createCustomWebGpuRoute(
       if (isVector(layer)) {
         kept.add(layer.id);
         const dashed = layer.style.dash !== null;
+        if (force === layer.id) culledShapes.delete(layer.shapes);
         if (force === layer.id || sent?.source !== layer.shapes || sent.dashed !== dashed) {
           sendSet(layer);
         }

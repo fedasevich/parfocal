@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
+import { PNG } from "pngjs";
 import { gpuOriginVariable } from "./global-setup.ts";
 import type { CustomCaseReport, CustomGpuInfo } from "./page/custom-gpu-timing-harness.ts";
 import type { CaseRequest } from "./page/gpu-timing-harness.ts";
@@ -20,6 +21,13 @@ const cases: readonly CaseRequest[] = [
     warmup: smoke ? 2 : 10,
   },
   {
+    name: "dots-160k",
+    perRow: smoke ? 40 : 400,
+    diameterPx: 4,
+    frames: smoke ? 6 : 60,
+    warmup: smoke ? 2 : 10,
+  },
+  {
     name: "detail-1.6m",
     perRow: smoke ? 60 : 1265,
     diameterPx: 20,
@@ -27,6 +35,25 @@ const cases: readonly CaseRequest[] = [
     warmup: smoke ? 2 : 10,
   },
 ];
+
+const channelTolerance = 4;
+
+function differingPixels(first: Buffer, second: Buffer): number {
+  const a = PNG.sync.read(first);
+  const b = PNG.sync.read(second);
+  if (a.width !== b.width || a.height !== b.height) return a.width * a.height;
+  let differing = 0;
+  for (let at = 0; at < a.data.length; at += 4) {
+    for (let channel = 0; channel < 3; channel++) {
+      const delta = Math.abs((a.data[at + channel] ?? 0) - (b.data[at + channel] ?? 0));
+      if (delta > channelTolerance) {
+        differing += 1;
+        break;
+      }
+    }
+  }
+  return differing;
+}
 
 test.use({ launchOptions: { args: ["--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] } });
 
@@ -39,9 +66,14 @@ test("the custom WebGPU route's GPU time at overview and at detail zoom", async 
     (url) => window.customGpuTiming.open(url),
     `${origin}/synthetic/synthetic-zlib.ome.tiff`,
   );
-  const reports: CustomCaseReport[] = [];
+  const reports: (CustomCaseReport & { readonly overlayPixels: number })[] = [];
+  const canvas = page.locator("#viewer canvas");
   for (const request of cases) {
-    reports.push(await page.evaluate((r) => window.customGpuTiming.run(r), request));
+    const report = await page.evaluate((r) => window.customGpuTiming.run(r), request);
+    const shown = await canvas.screenshot();
+    await page.evaluate(() => window.customGpuTiming.clearOverlays());
+    const bare = await canvas.screenshot();
+    reports.push({ ...report, overlayPixels: differingPixels(shown, bare) });
   }
   await page.evaluate(() => window.customGpuTiming.close());
 
@@ -53,7 +85,7 @@ test("the custom WebGPU route's GPU time at overview and at detail zoom", async 
   );
   for (const report of reports) {
     console.log(
-      `${report.name}: ${report.nuclei} nuclei, with overlay median ${report.withOverlay.medianMs.toFixed(2)} ms p95 ${report.withOverlay.p95Ms.toFixed(2)} ms (${report.withOverlay.samples} samples), without ${report.withoutOverlay.medianMs.toFixed(2)} ms, overlay share ${report.overlayDeltaMs.toFixed(2)} ms, build ${report.buildBatchMs.toFixed(0)} ms, errors ${report.errors.length}, uncaptured ${report.uncapturedGpuErrors}`,
+      `${report.name}: ${report.nuclei} nuclei, with overlay median ${report.withOverlay.medianMs.toFixed(2)} ms p95 ${report.withOverlay.p95Ms.toFixed(2)} ms (${report.withOverlay.samples} samples), without ${report.withoutOverlay.medianMs.toFixed(2)} ms, overlay share ${report.overlayDeltaMs.toFixed(2)} ms, build ${report.buildBatchMs.toFixed(0)} ms, errors ${report.errors.length}, uncaptured ${report.uncapturedGpuErrors}, overlay pixels ${report.overlayPixels}`,
     );
     for (const error of report.errors) console.log(`  ${error}`);
   }
@@ -64,5 +96,8 @@ test("the custom WebGPU route's GPU time at overview and at detail zoom", async 
   for (const report of reports) {
     expect(report.withOverlay.samples, report.name).toBeGreaterThan(0);
     expect(report.withoutOverlay.samples, report.name).toBeGreaterThan(0);
+    expect(report.overlayPixels, report.name).toBeGreaterThan(0);
+    expect(report.errors, report.name).toEqual([]);
+    expect(report.uncapturedGpuErrors, report.name).toBe(0);
   }
 });

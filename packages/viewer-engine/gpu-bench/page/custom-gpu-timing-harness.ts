@@ -33,6 +33,7 @@ export interface CustomGpuInfo {
 export interface CustomGpuTimingHarness {
   open(slideUrl: string): Promise<CustomGpuInfo>;
   run(request: CaseRequest): Promise<CustomCaseReport>;
+  clearOverlays(): Promise<void>;
   close(): void;
 }
 
@@ -176,8 +177,6 @@ async function run(request: CaseRequest): Promise<CustomCaseReport> {
   await route.whenIdle(AbortSignal.timeout(120_000));
   const withOverlay = await measure(route, request.warmup, request.frames);
 
-  route.setOverlays([]);
-  await route.whenIdle(AbortSignal.timeout(120_000));
   const withStats = statsOf(withOverlay);
   const withoutStats = statsOf(without);
   return {
@@ -193,4 +192,10 @@ async function run(request: CaseRequest): Promise<CustomCaseReport> {
   };
 }
 
-window.customGpuTiming = { open, run, close };
+async function clearOverlays(): Promise<void> {
+  if (opened === null) throw new Error("Open a slide first");
+  opened.route.setOverlays([]);
+  await opened.route.whenIdle(AbortSignal.timeout(120_000));
+}
+
+window.customGpuTiming = { open, run, clearOverlays, close };
