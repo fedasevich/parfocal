@@ -384,7 +384,7 @@ async def get_project_scope_options(
             annotations.c.kind == AnnotationKind.ROI,
             annotations.c.deleted_at.is_(None),
         )
-        .order_by(annotations.c.created_at, annotations.c.id)
+        .order_by(annotations.c.created_at, annotations.c.number, annotations.c.id)
     )
     named: list[str] = []
     for row in rois:
