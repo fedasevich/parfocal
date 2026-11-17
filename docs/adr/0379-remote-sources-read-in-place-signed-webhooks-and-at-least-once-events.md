@@ -52,6 +52,6 @@ What exists today. Saved import sources ([ADR 0378](0378-saved-import-sources-ke
 
 - REMOTE-001 adds the `storage` column and the tile cache. It needs TILES-001 for the shared readers. The storage filter in All slides reads `storage`.
 - REMOTE-002 adds a secret table and the webhook route. REMOTE-003 adds `event_outbox`, the delivery job and the target table. Both need migrations, so they take the next free numbers when they land.
-- The audit names for webhook calls and event deliveries go in the permission and audit tables with each task, and none contains the word "verdict".
+- The audit names for webhook calls and event deliveries go in the permission and audit tables with each task, and none uses the old word that ADR 0072 (decisions, reasons and opinion forms) replaced with "decision".
 - ADMIN-006 (storage, sources, API and webhooks) shows the secret once, rotates it and lists the delivery log.
 - Open choices the owner may change later without a rewrite: the 7 day cache time, the 5 minute clock skew, the retry waits and the 60 calls a minute.
