@@ -5487,7 +5487,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-001, ANN-031, AINUC-013. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), doc 19.
   Size: M.
 
-- [ ] JOBS-008 · Confirm tile sharing before a lab model joins a clinical project
+- [x] JOBS-008 · Confirm tile sharing before a lab model joins a clinical project
   Decision 138 (tile sharing when a lab model runs on a clinical project) chose option A. Adding a lab model to a clinical project's allowed list asks the project owner to confirm, once per model and project, that tiles of its slides will be sent to the lab model's named server. The confirmation is stored and audited, a lab model without one cannot run on that project, and removing the model clears it. [ADR 0363](adr/0363-the-model-run-contract-with-parfocal-and-lab-endpoints.md) (the model run contract with Parfocal and lab endpoints) records the contract.
   Done when API tests show the refusal without a confirmation, the audit event on confirming and the reset on removal, and a browser test covers the confirmation dialog.
   Depends on JOBS-000. Size: S.
