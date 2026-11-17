@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- 2026-11-17 IAM-031 (requests from one session run in parallel): session checks read without a row lock, a refresh locks and rechecks, last_seen and the rate counter get their own short transactions. 20 parallel calls with one cookie went from 4.32 s to 0.49 s locally with 0.2 s simulated latency. ADR 0389 (session checks read without a row lock). Left: calls still wait one round trip on the shared rate counter.
 - 2026-11-17 SHELL-018 (a key event without a key no longer crashes the screen): found on app.parfocal.eu, the review tasks tab showed the error page with 33 TypeErrors from the shortcut step. Chrome autofill sends keydown with no key. step now ignores such events, with a hotkeys unit test.
 - 2026-11-17 SHELL-016 (signed-out and expired sessions go straight to sign-in, with a loader while the app boots): the shell asks /api/me once before any data query, a 401 goes to sign-in with the return path, the lock card needs a named person, and index.html paints a boot loader. Left: a blank display name is never treated as known, and a second-factor answer to the first /api/me shows only after later calls are refused.
 - 2026-11-17 Production touch: released v0.4.0 (68ef526e) and dispatched deploy run 44046440491 to production, approved by the night run under ADR 0151 (standing approval within 30 dollars a month). Migrations 0127 to 0134 are additive, and 0132 widens a notification kind check. Cost TODO after the run.
