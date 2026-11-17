@@ -48,9 +48,38 @@ These counts are estimates from the code, not measured. At 60 to 90 ms a round t
 
 Every answer now carries `Server-Timing: app;dur=…, db;dur=…, sql;dur=…, queries;desc="…", transactions;desc="…"`. `app` is the whole handler, `db` the time inside `scoped_transaction` (checkout, ping, `BEGIN`, queries, `COMMIT`), `sql` the time in statements only, so `db` minus `sql` is the transaction overhead. Where a route takes its connection from a dependency that commits after the answer starts, the header can miss that transaction, so the log line is the source for the slowest routes. The `request finished` log line carries the same numbers and the container's region, so `modal app logs parfocal-api -e main` shows them for real traffic.
 
-TODO after the deploy of e70c6802: the ten slowest routes with their Server-Timing, read from the logs of a minute of clicking through home, projects and a review.
+### The ten slowest routes before (deployed API after the EU move, read from the request log)
 
-TODO after the deploy of the session check change: the same routes again, and the median of ten warm calls of `/api/me`, `/api/projects` and `/api/me/home`.
+Source: `modal app logs parfocal-api` in environment `main`, 113 recent `request finished` lines at 20:42 UTC on 2026-11-17, one container in `eu-west`, one signed-in member clicking through a project and a review. Only a few calls per route, so the medians are rough. App ms is `duration_ms`, the rest comes from the same line. Every call ran 2 transactions.
+
+| Route | Calls | App ms (median, max) | db ms of it | SQL ms | Queries |
+|---|---|---|---|---|---|
+| `GET /api/slides/{slide_id}/tissue` (404) | 2 | 252, 264 | 262 | 27 | 6 |
+| `GET /api/rooms/{room}/access` | 1 | 161 | 160 | n/a | 7 |
+| `GET /api/result-sets/{id}/cell-chunks/{chunk}` | 6 | 160, 189 | 153 | 21 | 8 |
+| `GET /api/result-sets/{id}/cell-summary` | 1 | 155 | n/a | n/a | 7 |
+| `GET /api/tenant/session-policy` | 1 | 152 | n/a | n/a | 6 |
+| `GET /api/slides/{slide_id}/tile-access` | 1 | 150 | n/a | n/a | 8 |
+| `GET /api/me/availability` | 1 | 146 | n/a | n/a | 6 |
+| `GET /api/slides/{slide_id}/neighbours` | 2 | 142, 174 | n/a | n/a | 16 |
+| `GET /api/projects/{project_id}` | 2 | 137, 158 | n/a | n/a | 9 |
+| `GET /api/slides/{slide_id}/thumbnail` | 1 | 130 | n/a | n/a | 6 |
+
+Next in line: `/api/me/slides` 127 ms at 15 queries (4 calls), `/api/slides/{id}/result-sets` 118 ms, `/api/me/setting-layers` 114 ms. `/api/me` was 23 ms at 5 queries. `/api/me/home` and `/api/projects` were not clicked in this window, so their numbers are the owner's earlier ones (7.5 s and 3.8 s before the EU move) and the OPS-033 browser read (home 26 queries, 449 ms of database time).
+
+Every route is already under 300 ms warm in this sample. The cost left is mostly the two transactions (`db` minus `sql` is 100 to 240 ms on the slow lines) and not the statements. The two routes whose query count grows with the data are the ones cut here.
+
+### What this change cuts
+
+| Route | Queries before | Queries after | How |
+|---|---|---|---|
+| `GET /api/projects` | the session check's 4, the id read and 3 per project (row, members, role), from the code | 5 for the owner at any number of projects (`test_query_counts.py`) | One read of all project rows and one read of all members, `my_role` taken from the member rows instead of one more query per project |
+| `GET /api/projects/{id}` | 9 on the deployed log, which includes the session check | 5 (`test_query_counts.py`) | The row `visible` already read is reused, and `my_role` comes from the member rows |
+| `GET /api/slides/{id}/neighbours?from=all-slides` and `from=list` | 16 on the deployed log, and about 10 more for every further 200 slides, from the code | 4 at any number of slides | The order is one select of slide ids with the same filters as the slide list, without describing every slide's reviews. A status filter still pages through the full list |
+
+The other eight slowest routes run 6 to 8 queries, which is the session check's 5 plus a scope statement and one or two reads. They have no loop to cut, so they are left for the pool and transaction floor and for the deploy.
+
+TODO after the deploy of this change (the lead, with a signed-in browser reading Server-Timing): the same ten routes again, the three cut routes above, and the median of ten warm calls of `/api/me`, `/api/projects` and `/api/me/home`.
 
 ## Conclusion
 

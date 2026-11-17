@@ -7,7 +7,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import exists, func, or_, select, tuple_, union
+from sqlalchemy import Select, exists, func, or_, select, tuple_, union
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -452,20 +452,14 @@ async def describe(
     return described
 
 
-@router.get("/slides", operation_id="listMySlides", **require(Permission.SEE_SLIDES))
-async def list_my_slides(
+def slides_statement(
     principal: CurrentPrincipal,
-    connection: TenantConnection,
-    project_id: uuid.UUID | None = None,
-    status: State | None = None,
-    result_set: Annotated[str | None, Query(max_length=120)] = None,
-    reviewer_id: uuid.UUID | None = None,
-    storage: SlideStorage | None = None,
-    q: Annotated[str | None, Query(max_length=100)] = None,
-    cursor: str | None = None,
-    limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
-) -> SlidePage:
-    member_of(principal)
+    project_id: uuid.UUID | None,
+    result_set: str | None,
+    reviewer_id: uuid.UUID | None,
+    storage: SlideStorage | None,
+    q: str | None,
+) -> Select[*tuple[Any, ...]]:
     statement = (
         select(
             slides.c.id,
@@ -511,6 +505,24 @@ async def list_my_slides(
         statement = statement.where(
             or_(slides.c.label.ilike(pattern), cases.c.label.ilike(pattern))
         )
+    return statement
+
+
+@router.get("/slides", operation_id="listMySlides", **require(Permission.SEE_SLIDES))
+async def list_my_slides(
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    project_id: uuid.UUID | None = None,
+    status: State | None = None,
+    result_set: Annotated[str | None, Query(max_length=120)] = None,
+    reviewer_id: uuid.UUID | None = None,
+    storage: SlideStorage | None = None,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    cursor: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
+) -> SlidePage:
+    member_of(principal)
+    statement = slides_statement(principal, project_id, result_set, reviewer_id, storage, q)
     after = decode_cursor(cursor) if cursor else None
     found: list[SlideRow] = []
     cache: dict[uuid.UUID, TaskStates] = {}
