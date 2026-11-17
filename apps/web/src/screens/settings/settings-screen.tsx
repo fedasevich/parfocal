@@ -787,7 +787,7 @@ function LoadedSettings({
         <input
           aria-label={t`Name`}
           maxLength={200}
-          className="h-7 w-64 rounded-sm border border-line bg-surface px-2 text-body text-fg"
+          className="h-7 w-64 rounded-sm border border-line bg-surf-field px-2 text-body text-fg"
           value={nameDraft ?? shownName}
           onChange={(event) => setNameDraft(event.target.value)}
           onBlur={commitName}

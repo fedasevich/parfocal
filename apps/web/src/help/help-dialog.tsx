@@ -44,8 +44,8 @@ export function HelpDialog() {
       <dl className="grid gap-2 text-body-sm">
         {helpTopics.map((topic) => (
           <div key={topic.title}>
-            <dt className="font-medium text-ink">{topic.title}</dt>
-            <dd className="text-ink-2">{topic.text}</dd>
+            <dt className="font-medium text-fg">{topic.title}</dt>
+            <dd className="text-fg-dim">{topic.text}</dd>
           </div>
         ))}
       </dl>

@@ -5,6 +5,9 @@ test("the first-run offer starts the tour and the ten steps reach Done", async (
   await page.goto("/");
   const offer = page.getByRole("region", { name: "Tour offer" });
   await expect(offer).toBeVisible({ timeout: 20_000 });
+  const offerBackground = await offer.evaluate((node) => getComputedStyle(node).backgroundColor);
+  expect(offerBackground).not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+  await expect(page.getByRole("region", { name: "Quick survey" })).toBeHidden();
   await offer.getByRole("button", { name: "Take the tour" }).click();
   const tour = page.getByRole("dialog", { name: "Guided tour" });
   for (let step = 1; step <= 9; step += 1) {

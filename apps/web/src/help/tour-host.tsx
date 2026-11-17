@@ -11,7 +11,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMatches, useRouter } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
-import { startTour, stopTour, useActiveTourStep, useHelpOpen } from "./tour-state.ts";
+import {
+  setTourOfferShown,
+  startTour,
+  stopTour,
+  useActiveTourStep,
+  useHelpOpen,
+} from "./tour-state.ts";
 import {
   isLastStep,
   offerShows,
@@ -103,7 +109,7 @@ function TourCard({ index }: { index: number }) {
       {box ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed z-[60] rounded-card border-2 border-accent shadow-pop"
+          className="pointer-events-none fixed z-[60] rounded-zone border-2 border-accent shadow-pop"
           style={{
             left: box.left - 4,
             top: box.top - 4,
@@ -115,15 +121,15 @@ function TourCard({ index }: { index: number }) {
       <section
         role="dialog"
         aria-label={t`Guided tour`}
-        className="fixed right-4 bottom-4 z-[60] flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
+        className="fixed right-4 bottom-4 z-[60] flex w-80 flex-col gap-2 rounded-zone border border-line bg-surf-panel p-3 shadow-pop"
       >
-        <p className="text-caption text-ink-2">
+        <p className="text-caption text-fg-dim">
           <Trans>
             Step {index + 1} of {tourLength}
           </Trans>
         </p>
-        <h2 className="text-body font-semibold text-ink">{step.title}</h2>
-        <p className="text-body-sm text-ink">{step.text}</p>
+        <h2 className="text-body font-semibold text-fg">{step.title}</h2>
+        <p className="text-body-sm text-fg">{step.text}</p>
         <div className="flex items-center justify-between gap-2">
           <Button size="xs" variant="ghost" onClick={stop}>
             <Trans>Stop tour</Trans>
@@ -153,16 +159,21 @@ function TourOfferCard() {
   const { t } = useLingui();
 
   const saved = useSavedTour();
-  if (!saved.loaded || !offerShows(saved)) return null;
+  const shows = saved.loaded && offerShows(saved);
+  useEffect(() => {
+    setTourOfferShown(shows);
+    return () => setTourOfferShown(false);
+  }, [shows]);
+  if (!shows) return null;
   return (
     <section
       aria-label={t`Tour offer`}
-      className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
+      className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-zone border border-line bg-surf-panel p-3 shadow-pop"
     >
-      <p className="font-medium text-ink">
+      <p className="font-medium text-fg">
         <Trans>New here?</Trans>
       </p>
-      <p className="text-body-sm text-ink-2">
+      <p className="text-body-sm text-fg-dim">
         <Trans>A short tour walks through the ten steps from upload to the signed report.</Trans>
       </p>
       <div className="flex justify-between gap-2">

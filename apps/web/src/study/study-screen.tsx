@@ -176,7 +176,7 @@ export function StudyScreen() {
         {current === undefined || active === undefined ? (
           <div className="flex gap-2">
             <input
-              className="rounded border border-line bg-surface px-2 py-1 text-fg"
+              className="rounded border border-line bg-surf-field px-2 py-1 text-fg"
               aria-label={t`Participant code`}
               value={participant}
               onChange={(event) => setParticipant(event.target.value)}
@@ -348,7 +348,7 @@ export function StudyScreen() {
           <Trans>Task set</Trans>
         </h2>
         <textarea
-          className="min-h-64 rounded border border-line bg-surface p-2 font-mono text-body-sm text-fg"
+          className="min-h-64 rounded border border-line bg-surf-field p-2 font-mono text-body-sm text-fg"
           aria-label={t`Task set JSON`}
           value={draft}
           readOnly={frozen}

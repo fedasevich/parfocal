@@ -1,6 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { useTourCornerBusy } from "../help/tour-state.ts";
 import { seqPoints } from "../telemetry/survey-items.ts";
 import { seqEnds, seqQuestion, susItems, susScale } from "../telemetry/survey-text.ts";
 import type { SurveyOffer, SurveyPrompter } from "../telemetry/surveys.ts";
@@ -64,13 +65,13 @@ function Scale({
 function SeqCard() {
   return (
     <>
-      <p className="font-medium text-ink">{seqQuestion}</p>
+      <p className="font-medium text-fg">{seqQuestion}</p>
       <Scale
         name={seqQuestion}
         points={seqPoints}
         onPick={(point) => surveyPrompter.answerSeq(point)}
       />
-      <div className="flex justify-between text-caption text-ink-2">
+      <div className="flex justify-between text-caption text-fg-dim">
         <span>1 {seqEnds.low}</span>
         <span>
           {seqPoints} {seqEnds.high}
@@ -86,12 +87,12 @@ function SusCard() {
   const item = susItems[step] ?? "";
   return (
     <>
-      <p className="text-caption text-ink-2">
+      <p className="text-caption text-fg-dim">
         <Trans>
           Question {step + 1} of {susItems.length}
         </Trans>
       </p>
-      <p className="font-medium text-ink">{item}</p>
+      <p className="font-medium text-fg">{item}</p>
       <Scale
         name={item}
         points={5}
@@ -102,7 +103,7 @@ function SusCard() {
           if (next.length === susItems.length) surveyPrompter.answerSus(next);
         }}
       />
-      <div className="flex justify-between text-caption text-ink-2">
+      <div className="flex justify-between text-caption text-fg-dim">
         <span>1 {susScale[0]}</span>
         <span>5 {susScale[4]}</span>
       </div>
@@ -119,11 +120,12 @@ export function SurveyPrompt() {
   const { t } = useLingui();
 
   const offer = useOffer();
-  if (offer === null) return null;
+  const tourBusy = useTourCornerBusy();
+  if (offer === null || tourBusy) return null;
   return (
     <section
       aria-label={t`Quick survey`}
-      className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
+      className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-zone border border-line bg-surf-panel p-3 shadow-pop"
     >
       {offer.survey === "seq" ? <SeqCard /> : <SusCard />}
       <Button size="xs" variant="ghost" onClick={() => surveyPrompter.dismiss()}>

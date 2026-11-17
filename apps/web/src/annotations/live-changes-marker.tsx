@@ -30,7 +30,7 @@ export function LiveChangesMarker({
       type="button"
       data-testid="changes-by"
       onClick={onShow}
-      className="absolute top-16 left-1/2 z-5 -translate-x-1/2 rounded-full border border-line bg-surface px-3 py-1 text-body-sm text-fg shadow-pop"
+      className="absolute top-16 left-1/2 z-5 -translate-x-1/2 rounded-full border border-line bg-surf-panel px-3 py-1 text-body-sm text-fg shadow-pop"
     >
       <Trans>{text}. Show changes</Trans>
     </button>

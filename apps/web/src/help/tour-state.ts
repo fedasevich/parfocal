@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 
 let active: number | null = null;
 let helpOpen = false;
+let offerShown = false;
 const listeners = new Set<() => void>();
 
 const emit = () => {
@@ -33,6 +34,19 @@ export const closeHelp = () => {
   helpOpen = false;
   emit();
 };
+
+export const setTourOfferShown = (shown: boolean) => {
+  if (offerShown === shown) return;
+  offerShown = shown;
+  emit();
+};
+
+export const useTourCornerBusy = () =>
+  useSyncExternalStore(
+    subscribe,
+    () => offerShown || active !== null,
+    () => false,
+  );
 
 export const useActiveTourStep = () =>
   useSyncExternalStore(
