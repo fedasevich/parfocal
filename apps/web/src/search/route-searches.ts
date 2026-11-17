@@ -11,6 +11,7 @@ import { viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import { searchScopes } from "../shell/search-hits.ts";
 import { workspaces } from "../viewer/workspace.ts";
 import { lenientSearch } from "./lenient-search.ts";
+import { sceneField } from "./scene-harness.ts";
 
 const annotateTaskSceneKeys = taskScenes.map((item) => item.scene) as [
   (typeof taskScenes)[number]["scene"],
@@ -29,20 +30,29 @@ const viewerScenes = [
   ...mockScenes.compare,
 ] as const;
 
+const liveViewerScenes = ["objects", "picking", "picked", "travel"] as const;
+
 export const inviteSearch = lenientSearch({
   token: z.string().min(1).optional(),
-  scene: z.enum(onboardingScenes.invite).optional(),
+  scene: sceneField(onboardingScenes.invite, ["landing", "account"]),
 });
 
 export const adminSearch = lenientSearch({
   section: z.enum(adminSections).optional(),
-  scene: z.enum(onboardingScenes.admin).optional(),
+  scene: sceneField(onboardingScenes.admin, [
+    "tplnew",
+    "tpledit",
+    "addmodel",
+    "addtested",
+    "addfail",
+    "addmap",
+  ]),
   modal: z.enum(adminModals).optional(),
   request: z.string().max(64).optional(),
 });
 
 export const developerSearch = lenientSearch({
-  scene: z.enum(mockScenes.developer).optional(),
+  scene: sceneField(mockScenes.developer),
   section: z.enum(developerSectionKeys).optional(),
   renderer: z.enum(rendererKeys).optional(),
 });
@@ -58,17 +68,17 @@ export const myWorkSearch = lenientSearch({
   storage: z
     .enum(storageChoices.map((choice) => choice.value) as [SlideStorage, ...SlideStorage[]])
     .optional(),
-  scene: z.enum(["review", "preview", "anna", "assigned", "all", "allpreview"]).optional(),
+  scene: sceneField(["review", "preview", "anna", "assigned", "all", "allpreview"]),
 });
 
 export const clinicalReportSearch = lenientSearch({
-  scene: z.enum(mockScenes.creport).optional(),
+  scene: sceneField(mockScenes.creport),
   step: z.enum(["findings", "staging", "text", "sign"]).optional(),
   modal: z.enum(["deposit", "sign", "amend"]).optional(),
 });
 
 export const homeSearch = lenientSearch({
-  scene: z.enum(["launch", "new"]).optional(),
+  scene: sceneField(["launch", "new"]),
 });
 
 export const popoutSearch = lenientSearch({
@@ -76,18 +86,18 @@ export const popoutSearch = lenientSearch({
   project: z.string().optional(),
   slide: z.string().optional(),
   task: z.string().optional(),
-  scene: z.enum(viewerScenes).optional(),
+  scene: sceneField(viewerScenes, liveViewerScenes),
   tab: z.enum(viewerTabs).optional(),
   object: z.string().optional(),
 });
 
 export const runModelSearch = lenientSearch({
-  scene: z.enum(mockScenes.runmodel).optional(),
+  scene: sceneField(mockScenes.runmodel),
   slides: z.array(z.string()).optional(),
 });
 
 export const coSignSearch = lenientSearch({
-  scene: z.enum(mockScenes.cosign).optional(),
+  scene: sceneField(mockScenes.cosign),
 });
 
 export const slideSearch = lenientSearch({
@@ -97,7 +107,7 @@ export const slideSearch = lenientSearch({
   z: z.number().min(0).max(20).optional(),
   object: z.string().optional(),
   with: z.string().optional(),
-  scene: z.enum(viewerScenes).optional(),
+  scene: sceneField(viewerScenes, liveViewerScenes),
   tool: z.enum(stayTools).optional(),
   across: z.string().optional(),
   focus: z.boolean().optional(),
@@ -117,7 +127,7 @@ export const projectSearch = lenientSearch({
   sets: z.string().optional(),
   modal: z.enum(["addcls"]).optional(),
   add: z.string().optional(),
-  scene: z.enum(mockScenes.project).optional(),
+  scene: sceneField(mockScenes.project),
 });
 
 export const newAnnotateSearch = lenientSearch({
@@ -127,7 +137,7 @@ export const newAnnotateSearch = lenientSearch({
 
 export const annotateSearch = lenientSearch({
   task: z.string().optional(),
-  scene: z.enum(mockScenes.annotate).optional(),
+  scene: sceneField(mockScenes.annotate, ["auto", "models"]),
   tool: z.enum(["smart"]).optional(),
 });
 
@@ -139,28 +149,28 @@ export const liveSearch = lenientSearch({
 
 export const annotateTaskSearch = lenientSearch({
   task: z.string().optional(),
-  scene: z.enum(annotateTaskSceneKeys).optional(),
+  scene: sceneField(annotateTaskSceneKeys),
 });
 
 export const newTaskSearch = lenientSearch({
-  scene: z.enum(mockScenes.task).optional(),
+  scene: sceneField(mockScenes.task),
   step: z.enum(["kind", "slides", "reviewers", "check", "how", "send", "sent"]).optional(),
   modal: z.enum(["addslides", "dpreview"]).optional(),
 });
 
 export const uploadSearch = lenientSearch({
-  scene: z.enum(mockScenes.upload).optional(),
+  scene: sceneField(mockScenes.upload, ["empty", "files", "check", "progress", "done"]),
   flow: z.string().optional(),
   formats: z.enum(mockScenes.formats).optional(),
 });
 
 export const setupSearch = lenientSearch({
   step: z.enum(onboardingScenes.setup).optional(),
-  scene: z.enum(onboardingScenes.setup).optional(),
+  scene: sceneField(onboardingScenes.setup),
 });
 
 export const settingsSearch = lenientSearch({
-  scene: z.enum(mockScenes.settings).optional(),
+  scene: sceneField(mockScenes.settings),
   q: z.string().optional(),
 });
 
@@ -170,7 +180,7 @@ export const searchPageSearch = lenientSearch({
 
 export const cellsSearch = lenientSearch({
   slide: z.string().optional(),
-  scene: z.enum(mockScenes.gallery).optional(),
+  scene: sceneField(mockScenes.gallery),
 });
 
 export const commentsSearch = lenientSearch({
@@ -184,31 +194,38 @@ export const guidedSearch = lenientSearch({
   x: z.number().optional(),
   y: z.number().optional(),
   z: z.number().positive().max(100).optional(),
-  scene: z.enum(mockScenes.guided).optional(),
+  scene: sceneField(mockScenes.guided, ["region"]),
   submitted: z.boolean().optional(),
   tab: z.enum(["review", "comments", "display"]).optional(),
 });
 
 export const signOffSearch = lenientSearch({
-  scene: z.enum(mockScenes.signoff).optional(),
+  scene: sceneField(mockScenes.signoff),
 });
 
 export const signUpSearch = lenientSearch({
-  scene: z.enum(onboardingScenes.signup).optional(),
+  scene: sceneField(onboardingScenes.signup, ["form", "verify"]),
 });
 
 export const disagreementsSearch = lenientSearch({
-  scene: z.enum(mockScenes.disagree).optional(),
+  scene: sceneField(mockScenes.disagree, ["adjudicate"]),
 });
 
 export const signInSearch = lenientSearch({
-  scene: z.enum(onboardingScenes.signin).optional(),
+  scene: sceneField(onboardingScenes.signin, [
+    "email",
+    "sso",
+    "passkey",
+    "passkeyqr",
+    "lock",
+    "lockkey",
+  ]),
   return_to: z.string().optional(),
   sso: z.literal("none").optional(),
 });
 
 export const teamSearch = lenientSearch({
-  scene: z.enum(mockScenes.team).optional(),
+  scene: sceneField(mockScenes.team, ["reassign", "nudge", "signoff"]),
   tab: z.enum(["open", "done"]).optional(),
   project: z.string().optional(),
   reviewer: z.string().optional(),
@@ -222,7 +239,7 @@ export const worklistSearch = lenientSearch({
 });
 
 export const evaluationSearch = lenientSearch({
-  scene: z.enum(mockScenes.evaluation).optional(),
+  scene: sceneField(mockScenes.evaluation, ["report", "arrange", "pdf"]),
 });
 
 export const submittedSearch = lenientSearch({
