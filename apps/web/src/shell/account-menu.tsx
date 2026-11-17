@@ -46,7 +46,7 @@ function useEntries() {
       disabledReason: t`Locks after a quiet spell for now`,
     },
     { icon: "comment", label: t`Send feedback`, action: "feedback" },
-    { icon: "help", label: t`Help and tour`, action: "help" },
+    { icon: "help", label: t`Help and what's new`, action: "help" },
   ] satisfies {
     icon: IconName;
     label: string;

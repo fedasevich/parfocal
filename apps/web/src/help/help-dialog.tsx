@@ -5,6 +5,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "../shell/destinations.ts";
 import { useGoTo } from "../shell/router-link.tsx";
 import { helpTopics } from "./help-topics.ts";
+import { latestReleases } from "./release-notes-source.ts";
 import { closeHelp, startTour, useHelpOpen } from "./tour-state.ts";
 import { progressOf, resumeIndex, tourLength } from "./tour-steps.ts";
 
@@ -22,7 +23,7 @@ export function HelpDialog() {
         if (!next) closeHelp();
       }}
       title={t`Help`}
-      subtitle={t`Short answers, the shortcut sheet and the tour.`}
+      subtitle={t`Short answers, the shortcut sheet, the tour and what changed.`}
       primaryLabel={resuming ? t`Resume the tour` : t`Take the tour`}
       onPrimary={() => startTour(resumeIndex(progress))}
       cancelLabel={t`Close`}
@@ -49,6 +50,23 @@ export function HelpDialog() {
           </div>
         ))}
       </dl>
+      <section aria-labelledby="whats-new-heading" className="mt-4 grid gap-2 text-body-sm">
+        <h3 id="whats-new-heading" className="font-medium text-fg">
+          <Trans>What's new</Trans>
+        </h3>
+        {latestReleases.map((release) => (
+          <div key={release.version}>
+            <h4 className="text-fg-dim">
+              {release.version} ({release.date})
+            </h4>
+            <ul className="list-disc pl-5 text-fg-dim">
+              {release.notes.slice(0, 5).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
     </SmallModal>
   );
 }

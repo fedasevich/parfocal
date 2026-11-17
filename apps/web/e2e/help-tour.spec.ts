@@ -25,9 +25,11 @@ test("Help in the account menu opens the topics and stopping keeps the place", a
   test.slow();
   await page.goto("/");
   await page.getByRole("button", { name: "Account menu" }).click();
-  await page.getByRole("menuitem", { name: "Help and tour" }).click();
+  await page.getByRole("menuitem", { name: "Help and what's new" }).click();
   const help = page.getByRole("dialog", { name: "Help" });
   await expect(help).toContainText("Review an AI result");
+  await expect(help.getByRole("heading", { name: "What's new" })).toBeVisible();
+  await expect(help.getByRole("heading", { name: /^v\d+\.\d+\.\d+ \(/ }).first()).toBeVisible();
   await help.getByRole("button", { name: "Take the tour" }).click();
   const tour = page.getByRole("dialog", { name: "Guided tour" });
   await tour.getByRole("button", { name: "Next" }).click();
@@ -36,7 +38,7 @@ test("Help in the account menu opens the topics and stopping keeps the place", a
   await expect(tour).toBeHidden();
   await page.goto("/");
   await page.getByRole("button", { name: "Account menu" }).click();
-  await page.getByRole("menuitem", { name: "Help and tour" }).click();
+  await page.getByRole("menuitem", { name: "Help and what's new" }).click();
   await expect(page.getByRole("dialog", { name: "Help" })).toBeVisible();
   await page.getByRole("button", { name: "Resume the tour" }).click();
   await expect(tour).toContainText("Step 3 of 10");
