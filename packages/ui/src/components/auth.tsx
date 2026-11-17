@@ -691,12 +691,20 @@ function PasskeySheet({
 type LockCardProps = {
   person: PersonInfo;
   minutes: number;
+  reason?: "idle" | "manual";
   onUnlock: () => void;
   onPasskey: () => void;
   onLogOut: () => void;
 };
 
-function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardProps) {
+function LockCard({
+  person,
+  minutes,
+  reason = "idle",
+  onUnlock,
+  onPasskey,
+  onLogOut,
+}: LockCardProps) {
   const { t } = useLingui();
 
   const first = person.name.split(" ")[0] ?? person.name;
@@ -713,7 +721,11 @@ function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardPr
         <div>
           <b className="text-title-sm text-fg">{person.name}</b>
           <div className="text-body-sm text-fg-dim">
-            <Trans>Locked after {minutes} minutes without input</Trans>
+            {reason === "manual" ? (
+              <Trans>You locked the screen</Trans>
+            ) : (
+              <Trans>Locked after {minutes} minutes without input</Trans>
+            )}
           </div>
         </div>
         <form

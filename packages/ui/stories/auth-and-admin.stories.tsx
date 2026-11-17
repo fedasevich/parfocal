@@ -232,6 +232,24 @@ export const Locked: Story = {
   ),
 };
 
+export const LockedByYou: Story = {
+  render: () => (
+    <div
+      className="relative h-130 w-180 bg-cover bg-center"
+      style={{ backgroundImage: `url(${mockAssets.mid})` }}
+    >
+      <LockCard
+        person={people.LM}
+        minutes={15}
+        reason="manual"
+        onUnlock={() => undefined}
+        onPasskey={() => undefined}
+        onLogOut={() => undefined}
+      />
+    </div>
+  ),
+};
+
 export const AdminStats: Story = {
   render: () => (
     <div className="w-220">

@@ -95,6 +95,21 @@ async def record_activity(request: Request, principal: CurrentPrincipal) -> None
         )
 
 
+@router.post("/lock", operation_id="lockSession", status_code=204, response_class=Response)
+async def lock_session(request: Request, principal: CurrentPrincipal) -> None:
+    signed_in(principal)
+    async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as connection:
+        tenant_id = await connection.scalar(
+            select(sessions.c.active_tenant_id).where(sessions.c.id_hash == current_hash(request))
+        )
+        limits = await session_limits(connection, tenant_id)
+        await connection.execute(
+            sessions.update()
+            .where(sessions.c.id_hash == current_hash(request))
+            .values(active_at=now() - limits.idle)
+        )
+
+
 @router.delete(
     "/sessions/{session_id}", operation_id="endSession", status_code=204, response_class=Response
 )

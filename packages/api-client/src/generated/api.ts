@@ -8952,6 +8952,122 @@ export const useRecordActivity = <TError = Problem, TContext = unknown>(
   return useMutation(getRecordActivityMutationOptions(options), queryClient);
 };
 
+export type lockSessionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type lockSessionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type lockSessionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type lockSessionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type lockSessionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type lockSessionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type lockSessionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type lockSessionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type lockSessionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type lockSessionResponseSuccess = lockSessionResponse204 & {
+  headers: Headers;
+};
+export type lockSessionResponseError = (
+  | lockSessionResponse400
+  | lockSessionResponse401
+  | lockSessionResponse403
+  | lockSessionResponse404
+  | lockSessionResponse409
+  | lockSessionResponse422
+  | lockSessionResponse429
+  | lockSessionResponse500
+) & {
+  headers: Headers;
+};
+
+export type lockSessionResponse = lockSessionResponseSuccess | lockSessionResponseError;
+
+export const getLockSessionUrl = () => {
+  return `/api/auth/lock`;
+};
+
+/**
+ * @summary Lock Session
+ */
+export const lockSession = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<lockSessionResponse> => {
+  return apiFetch<lockSessionResponse>(getLockSessionUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getLockSessionMutationKey = () => ["lockSession"] as const;
+
+export const getLockSessionMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof lockSession>>, TError, void, TContext>;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof lockSession>>, TError, void, TContext> => {
+  const mutationKey = getLockSessionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof lockSession>>, void> = () => {
+    return lockSession(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LockSessionMutationResult = NonNullable<Awaited<ReturnType<typeof lockSession>>>;
+
+export type LockSessionMutationError = Problem;
+
+/**
+ * @summary Lock Session
+ */
+export const useLockSession = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof lockSession>>, TError, void, TContext>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof lockSession>>, TError, void, TContext> => {
+  return useMutation(getLockSessionMutationOptions(options), queryClient);
+};
+
 export type endSessionResponse204 = {
   data: void;
   status: 204;

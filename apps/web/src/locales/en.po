@@ -8805,10 +8805,6 @@ msgstr "locked by the task"
 msgid "Locked keeps the lab's choice for everyone."
 msgstr "Locked keeps the lab's choice for everyone."
 
-#: src/shell/account-menu.tsx
-msgid "Locks after a quiet spell for now"
-msgstr "Locks after a quiet spell for now"
-
 #: ../../packages/ui/src/components/account-menu.tsx
 #: ../../packages/ui/src/components/auth.tsx
 #: src/session/second-factor-screen.tsx
@@ -17557,6 +17553,10 @@ msgstr "You have not handed out any review tasks yet. New review task starts one
 #: src/screens/onboarding/setup-screen.tsx
 msgid "You join at once"
 msgstr "You join at once"
+
+#: ../../packages/ui/src/components/auth.tsx
+msgid "You locked the screen"
+msgstr "You locked the screen"
 
 #: src/screens/upload/live-wizard.tsx
 msgid "you pick its slide"

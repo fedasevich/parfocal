@@ -17238,6 +17238,25 @@ export const getRecordActivityMockHandler = (
   );
 };
 
+export const getLockSessionMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/lock",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getEndSessionMockHandler = (
   overrideResponse?:
     | void
@@ -25079,6 +25098,7 @@ export const getParfocalAPIMock = () => [
   getSignInWithPasswordMockHandler(),
   getListSessionsMockHandler(),
   getRecordActivityMockHandler(),
+  getLockSessionMockHandler(),
   getEndSessionMockHandler(),
   getEndOtherSessionsMockHandler(),
   getCreateProjectMockHandler(),

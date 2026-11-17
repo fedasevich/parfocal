@@ -8,7 +8,13 @@ function currentPath(): string {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
 
-export default function LockScreen({ minutes }: { minutes: number }) {
+export default function LockScreen({
+  minutes,
+  reason,
+}: {
+  minutes: number;
+  reason: "idle" | "manual";
+}) {
   const me = okData(useGetMe().data);
   const unlock = () => window.location.assign(reauthUrl(currentPath()));
   return (
@@ -16,6 +22,7 @@ export default function LockScreen({ minutes }: { minutes: number }) {
       <LockCard
         person={personOf(me)}
         minutes={minutes}
+        reason={reason}
         onUnlock={unlock}
         onPasskey={unlock}
         onLogOut={() => window.location.assign("/api/auth/logout")}

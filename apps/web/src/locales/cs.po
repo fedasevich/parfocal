@@ -8800,10 +8800,6 @@ msgstr ""
 msgid "Locked keeps the lab's choice for everyone."
 msgstr ""
 
-#: src/shell/account-menu.tsx
-msgid "Locks after a quiet spell for now"
-msgstr ""
-
 #: ../../packages/ui/src/components/account-menu.tsx
 #: ../../packages/ui/src/components/auth.tsx
 #: src/session/second-factor-screen.tsx
@@ -17547,6 +17543,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "You join at once"
+msgstr ""
+
+#: ../../packages/ui/src/components/auth.tsx
+msgid "You locked the screen"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx

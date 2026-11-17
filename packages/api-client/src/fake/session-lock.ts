@@ -49,6 +49,10 @@ export function sessionLockHandlers() {
         headers: { "content-type": problemMediaType },
       });
     }),
+    http.post("*/api/auth/lock", () => {
+      locked = true;
+      return new HttpResponse(null, { status: 204 });
+    }),
     http.post("*/api/auth/activity", () => {
       activeAt = Date.now();
       return undefined;
