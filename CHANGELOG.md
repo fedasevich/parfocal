@@ -2,6 +2,20 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.13.5 (2026-11-17)
+
+### Performance
+
+- OPS-034: Load review states for the my slides page in batches
+
+### Docs
+
+- TILES-012: Log the deployed slide open numbers
+
+### Other
+
+- OPS-034: Merge origin/main
+
 ## v0.13.4 (2026-11-17)
 
 ### Performance
