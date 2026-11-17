@@ -32,6 +32,7 @@
     "data-map:doc": "uv run --package parfocal-api python -m parfocal_api.data_map",
     "api:dev": "uv run --package parfocal-api --env-file .env uvicorn parfocal_api.app:create_app --factory --port 8000",
     "test:e2e": "pnpm --filter @parfocal/e2e test:e2e",
+    "test:e2e:real": "pnpm --filter @parfocal/web test:browser:real",
     "stack:up": "bash infra/local/stack-up.sh",
     "stack:down": "bash infra/local/stack-down.sh",
     "test:db": "docker compose up -d --wait && uv run pytest -m db",

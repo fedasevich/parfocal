@@ -159,6 +159,8 @@ An image costs a lot and stays in context for every later turn. Take few screens
 
 When stopping mid-task, leave the claim with a `note:` naming the exact next step and any broken or uncommitted state.
 
+A UI task that adds a screen adds at least one `@real` spec for it in `apps/web/e2e`, as [ADR 0295](../adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md) (UI first on fakes, then each area switches) asks. Tag it with `realTags(area.x)` from `e2e/real.ts` and keep it to what the real API will do. Sign in with `signIn`, find IDs through the API with `ok` or `sampleTask` instead of fixed fake IDs, and assert stored state or plain UI states, never faker text or `?scene=` screens. It runs on the fake in the web browser job. When its area is in `switchedAreas`, `pnpm test:e2e:real` also runs it against the stack from `pnpm stack:up`, with `PARFOCAL_PUBLIC_FAKE_API=off`. The switch of an area adds its tag to `switchedAreas`. Source: TEST-026 (core browser specs against the real API).
+
 ## Decision records
 
 Copy `docs/adr/0000-template.md` to the next free number. Status stays `Proposed` until the owner agrees. Never rewrite an accepted record. Write a new one and mark the old one `Superseded by NNNN`. If the ADR changes a backlog task, edit that task in the same change. Add a row to `docs/adr/README.md`.

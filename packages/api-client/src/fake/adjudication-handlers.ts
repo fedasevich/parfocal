@@ -34,8 +34,9 @@ import {
   type LiveRow,
   liveRow,
   queueState,
+  queueTaskView,
   reviewsAreIn,
-  signQueueTask,
+  signTask,
   startNextVersion,
 } from "./queue-scene.ts";
 import { savedNoteOf } from "./review-decisions.ts";
@@ -46,6 +47,7 @@ import {
   people,
   projectByCode,
   reviewTasks,
+  type ScenarioReviewTask,
   scenarioNow,
   signedInAs,
   slideByIndex,
@@ -77,7 +79,7 @@ import {
   signature,
   worstObjects,
 } from "./scenario-adjudication.ts";
-import { rt13 } from "./scenario-review.ts";
+import { rt13, rt18 } from "./scenario-review.ts";
 import { studyTemplates } from "./scenario-task.ts";
 import { fakeView } from "./view.ts";
 import { toTaskStates } from "./work-handlers.ts";
@@ -204,7 +206,53 @@ const counted = (keys: PersonKey[]) =>
     count: keys.filter((item) => item === key).length,
   }));
 
+const otherTask = (taskId: string) =>
+  [...reviewTasks, rt18].find(
+    (candidate) => candidate.id === taskId && candidate.code !== queueTask,
+  );
+
+const ownSignOffSummary = (current: ScenarioReviewTask): SignOffSummary => {
+  const view = queueTaskView(current);
+  const total = view.slides * view.reviewers.length;
+  const submitted = view.reviewers.reduce((sum, key) => sum + (view.progress[key] ?? 0), 0);
+  const signed = view.status === "signed";
+  return {
+    task_id: view.id,
+    version: 1,
+    reviewer_ids: view.reviewers.map(idOf),
+    reviews: {
+      slides: view.slides,
+      submitted,
+      total,
+      opinion_forms: submitted,
+      behind: view.reviewers
+        .map((key) => ({
+          user_id: idOf(key),
+          slides_left: view.slides - (view.progress[key] ?? 0),
+        }))
+        .filter((row) => row.slides_left > 0),
+    },
+    queue: {
+      total: 0,
+      resolved: 0,
+      by_researcher: 0,
+      by_adjudicator: [],
+      with_adjudicator: [],
+      left_open: [],
+    },
+    open_threads: { total: 0, slides: [] },
+    result_set: resultSetFacts,
+    signature: signed
+      ? { by_user_id: idOf(signature.by), at: signature.at, checksum: signature.checksum }
+      : null,
+    changes: [],
+    next_version: null,
+  };
+};
+
 export const toSignOffSummary = (taskId: string): SignOffSummary => {
+  const own = otherTask(taskId);
+  if (own !== undefined) return ownSignOffSummary(own);
   const current = task();
   const state = queueState();
   const live = queueRows.map((seed) => ({ seed, live: liveRow(queueKey(seed)) }));
@@ -524,10 +572,9 @@ export function adjudicationHandlers(): RequestHandler[] {
       };
     }),
     getSignOffReviewTaskMockHandler(({ params }) => {
-      signQueueTask();
-      return toTaskStates(
-        reviewTasks.find((candidate) => candidate.id === params.taskId) ?? task(),
-      );
+      const signing = otherTask(String(params.taskId)) ?? task();
+      signTask(signing);
+      return toTaskStates(signing);
     }),
   ];
 }

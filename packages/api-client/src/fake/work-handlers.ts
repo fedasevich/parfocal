@@ -66,6 +66,7 @@ import {
   slides,
 } from "./scenario.ts";
 import { assignedTo, toAnnouncement, toProjectRef } from "./scenario-handlers.ts";
+import { rt18 } from "./scenario-review.ts";
 import { fakeView } from "./view.ts";
 
 const taskByCode = (code: string): ScenarioReviewTask => {
@@ -523,11 +524,11 @@ export function workHandlers(): RequestHandler[] {
       };
     }),
     getGetReviewTaskMockHandler(({ params }) => {
-      const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
+      const task = [...reviewTasks, rt18].find((candidate) => candidate.id === params.taskId);
       return toReviewTaskDetail(task ?? taskByCode("RT-14"));
     }),
     getGetReviewTaskStatesMockHandler(({ params }) => {
-      const task = reviewTasks.find((candidate) => candidate.id === params.taskId);
+      const task = [...reviewTasks, rt18].find((candidate) => candidate.id === params.taskId);
       return task
         ? toTaskStates(task)
         : { task_id: String(params.taskId), signed_off_at: null, slides: [], left_open: 0 };
