@@ -3374,6 +3374,10 @@ msgstr "All actions"
 msgid "All chapters"
 msgstr "All chapters"
 
+#: src/viewer/stage-object-notes.tsx
+msgid "All comments on this slide"
+msgstr "All comments on this slide"
+
 #: src/screens/my-work/to-review-tab.tsx
 msgid "All decided"
 msgstr "All decided"
@@ -8754,6 +8758,7 @@ msgstr "Loading the report"
 
 #: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
+#: src/viewer/first-read-guard.tsx
 msgid "Loading the review"
 msgstr "Loading the review"
 
@@ -10290,6 +10295,10 @@ msgstr "Note to them <0>optional</0>"
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Note, optional"
 msgstr "Note, optional"
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Notes and comments"
+msgstr "Notes and comments"
 
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"

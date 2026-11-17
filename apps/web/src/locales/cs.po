@@ -3372,6 +3372,10 @@ msgstr ""
 msgid "All chapters"
 msgstr ""
 
+#: src/viewer/stage-object-notes.tsx
+msgid "All comments on this slide"
+msgstr ""
+
 #: src/screens/my-work/to-review-tab.tsx
 msgid "All decided"
 msgstr ""
@@ -8749,6 +8753,7 @@ msgstr ""
 
 #: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
+#: src/viewer/first-read-guard.tsx
 msgid "Loading the review"
 msgstr ""
 
@@ -10284,6 +10289,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Note, optional"
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Notes and comments"
 msgstr ""
 
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx

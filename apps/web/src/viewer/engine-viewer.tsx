@@ -12,6 +12,7 @@ import { SlideStage } from "./slide-stage.tsx";
 import { StageComments } from "./stage-comments.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
+import { StageObjectNotes } from "./stage-object-notes.tsx";
 import { StageOpinion } from "./stage-opinion.tsx";
 import { StageReviewObjects } from "./stage-review-objects.tsx";
 import { type StageStart, StageStartCamera } from "./stage-start.tsx";
@@ -75,6 +76,7 @@ export function EngineViewer({
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
   const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
+  const [noteObject, setNoteObject] = useState<string | null>(object ?? null);
   const [focus, setFocus] = useState<{ slideId: string; request: ThreadFocusRequest } | null>(null);
   const goToThread = (thread: Thread) =>
     setFocus((before) => ({
@@ -92,6 +94,10 @@ export function EngineViewer({
           slideId={slideId}
           object={object}
           guided={guided}
+          onComments={(id) => {
+            setNoteObject(id);
+            onTab("comments");
+          }}
         />
       )}
     </>
@@ -101,16 +107,24 @@ export function EngineViewer({
     onTab,
     focus: focus?.slideId === slideId ? focus.request : null,
     extras,
-    comments: (
-      <StageComments
-        onGoTo={goToThread}
-        projectId={projectId}
-        taskId={task}
-        taskName={taskDetail?.name}
-        slideId={slideId}
-        slideLabel={load?.slide?.label ?? ""}
-      />
-    ),
+    comments:
+      reviewTask !== null && noteObject !== null ? (
+        <StageObjectNotes
+          taskId={reviewTask}
+          slideId={slideId}
+          object={noteObject}
+          onAllComments={() => setNoteObject(null)}
+        />
+      ) : (
+        <StageComments
+          onGoTo={goToThread}
+          projectId={projectId}
+          taskId={task}
+          taskName={taskDetail?.name}
+          slideId={slideId}
+          slideLabel={load?.slide?.label ?? ""}
+        />
+      ),
     opinion: (
       <StageOpinion
         taskId={task}

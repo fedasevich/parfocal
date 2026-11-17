@@ -102,6 +102,15 @@ test("guided review decides the current object and steps to the next open one", 
   await expect(card).not.toHaveAttribute("data-current", first);
 });
 
+test("a link to an object's comments opens its decision notes on the stage", async ({ page }) => {
+  await page.goto(`${objectsViewer}&object=T5&tab=comments&as=DH`);
+  await ready(page);
+  const notes = page.getByRole("region", { name: "Decision notes on T5" });
+  await expect(notes).toContainText("Note on decision: Disagree");
+  await page.getByRole("button", { name: "All comments on this slide" }).click();
+  await expect(page.getByTestId("stage-object-notes")).toHaveCount(0);
+});
+
 test("a deep link opens the full viewer at its camera", async ({ page }) => {
   const parts = async () => ((await cameraOf(page)) ?? "").split(",").map(Number);
   await page.goto(fullViewer);

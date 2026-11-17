@@ -41,12 +41,14 @@ function ObjectRow({
   current,
   onPick,
   onAnswer,
+  onComments,
 }: {
   session: ReviewSession;
   object: ReviewObject;
   current: boolean;
   onPick: () => void;
   onAnswer: (raw: string) => void;
+  onComments: () => void;
 }) {
   const { t } = useLingui();
   const decision = session.decisions.get(object.object);
@@ -76,6 +78,9 @@ function ObjectRow({
         aiClass={object.class_name}
         label={t`Your answer on ${object.object}`}
       />
+      <Button size="sm" variant="ghost" className="justify-self-start" onClick={onComments}>
+        {t`Notes and comments`}
+      </Button>
     </li>
   );
 }
@@ -87,6 +92,7 @@ export function StageReviewObjects({
   slideId,
   object,
   guided = false,
+  onComments,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -94,6 +100,7 @@ export function StageReviewObjects({
   slideId: string;
   object: string | undefined;
   guided?: boolean;
+  onComments: (object: string) => void;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -179,6 +186,7 @@ export function StageReviewObjects({
                 current={current === item.object}
                 onPick={() => pick(item.object)}
                 onAnswer={(raw) => answer(item, raw)}
+                onComments={() => onComments(item.object)}
               />
             ))}
           </ul>
