@@ -30,7 +30,7 @@ from parfocal_api.tables import (
     memberships,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
-from parfocal_common.envelope import MasterKeyring
+from parfocal_common.envelope import InvalidCiphertextError, MasterKeyring
 from parfocal_common.link_fetch import LinkPolicy, LinkRefusedError, policy_of, target_of
 from parfocal_common.settings import load_settings
 from parfocal_common.structured_logging import configure_logging
@@ -307,7 +307,13 @@ async def deliver_due(
     moment = now or datetime.now(UTC)
     outcomes: list[AttemptOutcome] = []
     for delivery in await claim_due(engine, moment):
-        outcome = await deliver_one(engine, keyring, http, policy, delivery, moment)
+        try:
+            outcome = await deliver_one(engine, keyring, http, policy, delivery, moment)
+        except InvalidCiphertextError:
+            logger.warning(
+                "event target secret could not be opened", extra={"event": str(delivery.event_id)}
+            )
+            continue
         if outcome is not None:
             outcomes.append(outcome)
     return outcomes

@@ -1340,6 +1340,7 @@ async def seed_webhook_calls(connection: AsyncConnection, seeded: Seeded) -> Non
 async def seed_event_targets(connection: AsyncConnection, seeded: Seeded) -> None:
     marker = f"event-target-{uuid.uuid4().hex[:10]}"
     target_id = uuid.uuid5(seeded.tenant_id, "event-target")
+    keys = await ensure_keys(connection, TEST_KEYRING, seeded.tenant_id)
     await connection.execute(
         insert(event_targets).values(
             id=target_id,
@@ -1347,7 +1348,7 @@ async def seed_event_targets(connection: AsyncConnection, seeded: Seeded) -> Non
             project_id=seeded.ids["project"],
             address=f"https://pipeline.example.org/{marker}",
             events=["review-submitted"],
-            secret_ciphertext=b"sealed",
+            secret_ciphertext=seal_field(keys, "event_targets", target_id, "secret", "seeded"),
         )
     )
     seeded.ids["event_target"] = target_id

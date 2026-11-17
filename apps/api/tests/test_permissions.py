@@ -2492,14 +2492,17 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 )
             )
             for target in ("event-target", "spare-event-target"):
+                target_id = uuid.uuid5(tenant_id, target)
                 await connection.execute(
                     insert(event_targets).values(
-                        id=uuid.uuid5(tenant_id, target),
+                        id=target_id,
                         tenant_id=tenant_id,
                         project_id=case.project_id,
                         address=LINK_SITE.url("/events"),
                         events=["review-submitted"],
-                        secret_ciphertext=b"sealed",
+                        secret_ciphertext=seal_field(
+                            hook_keys, "event_targets", target_id, "secret", "seeded"
+                        ),
                     )
                 )
             await connection.execute(
