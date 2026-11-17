@@ -18,12 +18,18 @@ import {
   useListThreads,
 } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
+import { useState } from "react";
 import { formatDue } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { type ReviewStyle, toReviewStyle } from "./decision-style.ts";
 import { type TaskDisplayView, taskDisplayView } from "./display-model.ts";
 import { fromMentionTokensOrNull } from "./mention-picking.ts";
+import {
+  nextReviewOrderState,
+  preparingInterval,
+  type ReviewOrderState,
+} from "./review-order-state.ts";
 
 export type SlideThread = {
   id: string;
@@ -72,13 +78,20 @@ export type ReviewSession = {
   nodeStaging: boolean;
   slideSize: { width: number; height: number } | null;
   ready: boolean;
+  order: ReviewOrderState;
+  retryOrder: () => void;
 };
 
 export function useReviewSession(taskId: string, slideId: string): ReviewSession {
   const task = okData(useGetReviewTask(taskId).data);
   const projectId = task?.project_id ?? "";
-  const objectsQuery = useListReviewObjects(taskId, slideId);
+  const objectsQuery = useListReviewObjects(taskId, slideId, {
+    query: { refetchInterval: (query) => preparingInterval(query.state.error) },
+  });
   const reviewObjects = okData(objectsQuery.data);
+  const [heldOrder, holdOrder] = useState<ReviewOrderState>("ready");
+  const order = nextReviewOrderState(heldOrder, objectsQuery.error, objectsQuery.isFetching);
+  if (order !== heldOrder) holdOrder(order);
   const decisions = okData(useListDecisions(taskId, slideId).data) ?? [];
   const person = usePeople();
   const nameOf = (userId: string) => person(userId)?.name;
@@ -120,5 +133,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     nodeStaging: task?.analysis_template === "sentinel-node",
     slideSize: slide?.width && slide.height ? { width: slide.width, height: slide.height } : null,
     ready: task !== undefined && reviewObjects !== undefined,
+    order,
+    retryOrder: () => void objectsQuery.refetch(),
   };
 }

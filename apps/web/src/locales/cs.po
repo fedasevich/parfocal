@@ -11760,6 +11760,10 @@ msgstr ""
 msgid "Prefetch ahead of motion"
 msgstr ""
 
+#: src/screens/review/guided-review.tsx
+msgid "Preparing this slide"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -15564,6 +15568,10 @@ msgstr ""
 msgid "The object in focus"
 msgstr ""
 
+#: src/screens/review/guided-review.tsx
+msgid "The objects are being put in review order. This usually takes under a minute."
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The objects of finished tiles are in the layer and join the check scope."
 msgstr ""
@@ -15708,6 +15716,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
+msgstr ""
+
+#: src/screens/review/guided-review.tsx
+msgid "The review order of this slide could not be worked out. Try again in a moment."
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -16100,6 +16112,10 @@ msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
 msgid "This slide cannot be read"
+msgstr ""
+
+#: src/screens/review/guided-review.tsx
+msgid "This slide could not be prepared"
 msgstr ""
 
 #: src/screens/annotate-task/annotate-task-view.tsx

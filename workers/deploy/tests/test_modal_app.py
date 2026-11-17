@@ -1,12 +1,17 @@
 import asyncio
 import importlib
 import inspect
+import uuid
 from pathlib import Path
+from typing import Any, cast
 
 import modal
 import pytest
+from sqlalchemy.ext.asyncio import AsyncConnection
 
+import parfocal_common.jobs
 from parfocal_common.db import POOL_OVERFLOW, POOL_SIZE
+from parfocal_common.jobs import enqueue, load_workflow, no_job_wake
 from parfocal_common.repository import repository_root
 from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
@@ -19,8 +24,12 @@ from parfocal_deploy.modal_app import (
     EVENTS_SPAWN_GAP_SECONDS,
     FUNCTION_SECRETS,
     FUNCTIONS,
+    INGEST_DRAINED_KINDS,
     INGEST_FUNCTION,
+    INGEST_IDLE_EXIT_SECONDS,
     INGEST_OPTIONS,
+    INGEST_PERIOD_MINUTES,
+    INGEST_SPAWN_GAP_SECONDS,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
     SECRETS,
@@ -29,8 +38,10 @@ from parfocal_deploy.modal_app import (
     WEB_FUNCTION,
     WEB_OPTIONS,
     EventSpawner,
+    IngestSpawner,
     app,
 )
+from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
 from parfocal_ingest.settings import (
     INGEST_MEMORY_LIMIT_MIB,
     INGEST_MEMORY_MIB,
@@ -91,13 +102,99 @@ def test_secrets_are_attached_per_function_and_not_to_the_app(
     assert all("secrets" not in options for options in built)
 
 
-def test_the_app_deploys_one_schedule_for_the_event_sweep() -> None:
-    assert "schedule" not in WEB_OPTIONS
-    assert "schedule" not in INGEST_OPTIONS
-    assert MAX_DEPLOYED_CRONS == 5
-    assert EVENTS_PERIOD_MINUTES == 60
+def test_the_app_deploys_hourly_schedules_for_the_event_sweep_and_the_job_drain() -> None:
+    scheduled = [
+        options
+        for options in (WEB_OPTIONS, INGEST_OPTIONS, EVENTS_OPTIONS)
+        if "schedule" in options
+    ]
+    assert scheduled == [INGEST_OPTIONS, EVENTS_OPTIONS]
+    assert len(scheduled) <= MAX_DEPLOYED_CRONS == 5
+    assert EVENTS_PERIOD_MINUTES == INGEST_PERIOD_MINUTES == 60
     assert isinstance(EVENTS_OPTIONS["schedule"], modal.Period)
+    assert isinstance(INGEST_OPTIONS["schedule"], modal.Period)
     assert EVENTS_OPTIONS["max_containers"] == 1
+    assert INGEST_OPTIONS["min_containers"] == 0
+
+
+def test_the_ingest_spawner_knows_exactly_the_kinds_the_worker_drains() -> None:
+    drained = {load_workflow(path).kind for path in DEFAULT_WORKFLOWS}
+    assert drained == INGEST_DRAINED_KINDS
+
+
+def test_a_queued_job_spawns_the_worker_once_within_the_gap() -> None:
+    spawned: list[int] = []
+    now = [100.0]
+
+    async def spawn() -> None:
+        spawned.append(1)
+
+    spawner = IngestSpawner(spawn, lambda: now[0])
+    asyncio.run(spawner("review-order"))
+    asyncio.run(spawner("ingest"))
+    assert spawned == [1]
+    now[0] += INGEST_SPAWN_GAP_SECONDS
+    asyncio.run(spawner("review-order"))
+    assert spawned == [1, 1]
+    assert INGEST_SPAWN_GAP_SECONDS < INGEST_IDLE_EXIT_SECONDS
+
+
+class QueuingConnection:
+    async def scalar(self, statement: Any) -> uuid.UUID:
+        return uuid.uuid4()
+
+    async def execute(self, statement: Any, rows: Any = None) -> None:
+        return None
+
+
+def test_the_served_api_spawns_the_worker_once_for_two_jobs_queued_within_the_gap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi import FastAPI
+
+    import parfocal_api.app
+    from parfocal_api.review_order_job import REVIEW_ORDER
+
+    spawned: list[int] = []
+
+    async def spawn() -> None:
+        spawned.append(1)
+
+    monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    monkeypatch.setattr(modal_app, "spawn_ingest", lambda: IngestSpawner(spawn, lambda: 0.0))
+    monkeypatch.setattr(parfocal_common.jobs, "JOB_WAKERS", [no_job_wake])
+    modal_app.serve()
+    connection = cast("AsyncConnection", QueuingConnection())
+    asyncio.run(enqueue(connection, REVIEW_ORDER, uuid.uuid4()))
+    asyncio.run(enqueue(connection, REVIEW_ORDER, uuid.uuid4()))
+    assert spawned == [1]
+
+
+def test_a_job_the_worker_does_not_drain_spawns_nothing() -> None:
+    spawned: list[int] = []
+
+    async def spawn() -> None:
+        spawned.append(1)
+
+    spawner = IngestSpawner(spawn, lambda: 0.0)
+    asyncio.run(spawner("model-run"))
+    asyncio.run(spawner("retention"))
+    assert spawned == []
+
+
+def test_a_failed_ingest_spawn_is_tried_again_at_the_next_job() -> None:
+    attempts: list[int] = []
+
+    async def spawn() -> None:
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise RuntimeError("modal is down")
+
+    spawner = IngestSpawner(spawn, lambda: 0.0)
+    with pytest.raises(RuntimeError):
+        asyncio.run(spawner("ingest"))
+    asyncio.run(spawner("ingest"))
+    assert len(attempts) == 2
 
 
 def test_the_image_installs_the_app_lock_and_no_workspace_package() -> None:
@@ -170,6 +267,7 @@ def test_the_served_api_warms_the_deployed_embedder_through_modal(
     from parfocal_common.warm_gate import EMBEDDER_FUNCTION, GPU_POOL_APP, ModalPools, WarmGate
 
     monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    monkeypatch.setattr(parfocal_common.jobs, "JOB_WAKERS", [no_job_wake])
     served = modal_app.serve()
     gate = served.state.warm_gate
     assert isinstance(gate, WarmGate)

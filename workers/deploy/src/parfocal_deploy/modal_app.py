@@ -43,9 +43,23 @@ WEB_OPTIONS: dict[str, Any] = {
     "scaledown_window": 300,
     "timeout": 300,
 }
+INGEST_PERIOD_MINUTES = 60
+INGEST_SPAWN_GAP_SECONDS = 15.0
+INGEST_DRAINED_KINDS = frozenset(
+    {
+        "ingest",
+        "result-import",
+        "link-fetch",
+        "remote-inspect",
+        "remote-copy",
+        "review-order",
+        "patch-export",
+    }
+)
 INGEST_OPTIONS: dict[str, Any] = {
     "name": INGEST_FUNCTION,
     "memory": (INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
+    "schedule": modal.Period(minutes=INGEST_PERIOD_MINUTES),
     "min_containers": 0,
     "max_containers": 2,
     "scaledown_window": 60,
@@ -88,9 +102,11 @@ def app_image() -> modal.Image:
 def serve() -> Any:
     from parfocal_api.app import create_app
     from parfocal_api.event_emit import set_waker
+    from parfocal_common.jobs import set_job_waker
     from parfocal_common.warm_gate import ModalPools, WarmGate
 
     set_waker(spawn_events())
+    set_job_waker(spawn_ingest())
     app = create_app()
     pools = ModalPools()
     app.state.gpu_pools = pools
@@ -147,6 +163,29 @@ class EventSpawner:
 def spawn_events() -> Callable[[], Awaitable[None]]:
     function = modal.Function.from_name(APP_NAME, EVENTS_FUNCTION)
     return EventSpawner(function.spawn.aio)
+
+
+class IngestSpawner:
+    def __init__(
+        self, spawn: Callable[[], Awaitable[Any]], clock: Callable[[], float] = time.monotonic
+    ) -> None:
+        self.spawn = spawn
+        self.clock = clock
+        self.last: float | None = None
+
+    async def __call__(self, kind: str) -> None:
+        if kind not in INGEST_DRAINED_KINDS:
+            return
+        now = self.clock()
+        if self.last is not None and now - self.last < INGEST_SPAWN_GAP_SECONDS:
+            return
+        await self.spawn()
+        self.last = now
+
+
+def spawn_ingest() -> Callable[[str], Awaitable[None]]:
+    function = modal.Function.from_name(APP_NAME, INGEST_FUNCTION)
+    return IngestSpawner(function.spawn.aio)
 
 
 def secrets_of(function: str) -> list[modal.Secret]:

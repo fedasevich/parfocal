@@ -11769,6 +11769,10 @@ msgstr "Preferences"
 msgid "Prefetch ahead of motion"
 msgstr "Prefetch ahead of motion"
 
+#: src/screens/review/guided-review.tsx
+msgid "Preparing this slide"
+msgstr "Preparing this slide"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -15573,6 +15577,10 @@ msgstr "The nine chapters from upload to the co-signed clinical report"
 msgid "The object in focus"
 msgstr "The object in focus"
 
+#: src/screens/review/guided-review.tsx
+msgid "The objects are being put in review order. This usually takes under a minute."
+msgstr "The objects are being put in review order. This usually takes under a minute."
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The objects of finished tiles are in the layer and join the check scope."
 msgstr "The objects of finished tiles are in the layer and join the check scope."
@@ -15718,6 +15726,10 @@ msgstr "The researcher"
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
 msgstr "The review could not be submitted. Nothing was lost, every decision is saved."
+
+#: src/screens/review/guided-review.tsx
+msgid "The review order of this slide could not be worked out. Try again in a moment."
+msgstr "The review order of this slide could not be worked out. Try again in a moment."
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "The review task to compare with is not available."
@@ -16110,6 +16122,10 @@ msgstr "This sets your home page and which walkthrough you see first."
 #: src/screens/upload/live-wizard.tsx
 msgid "This slide cannot be read"
 msgstr "This slide cannot be read"
+
+#: src/screens/review/guided-review.tsx
+msgid "This slide could not be prepared"
+msgstr "This slide could not be prepared"
 
 #: src/screens/annotate-task/annotate-task-view.tsx
 msgid "This slide has no objects."
