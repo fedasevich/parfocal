@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { area, ok, realTags, sampleTask, signIn } from "./real.ts";
+import { area, ok, realTags, signIn, viewableTask } from "./real.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -50,13 +50,11 @@ test(
   async ({ page }) => {
     await signIn(page, "/my-work");
     const unanswered = watchUnanswered(page);
-    const { project, slide } = await sampleTask(page, "review");
+    const { project, slide } = await viewableTask(page, "review");
     await page.goto(`/projects/${project}/slides/${slide}`);
-    await expect(page.getByTestId("slide-stage")).toHaveAttribute(
-      "data-state",
-      /^(ready|failed)$/,
-      { timeout: 45_000 },
-    );
+    await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+      timeout: 45_000,
+    });
     await noNotice(page);
     expect(unanswered).toEqual([]);
   },
@@ -80,7 +78,7 @@ test(
   async ({ page }) => {
     await signIn(page, "/my-work");
     const unanswered = watchUnanswered(page);
-    const { task } = await sampleTask(page, "review");
+    const { task } = await viewableTask(page, "review");
     await page.goto(`/tasks/${task}/evaluation`);
     await noNotice(page);
     expect(unanswered).toEqual([]);
