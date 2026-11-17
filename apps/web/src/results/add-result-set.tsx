@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { ResultProblems } from "../screens/upload/result-problems.tsx";
 import type { ResultUpload } from "../screens/upload/result-problems-model.ts";
 import { useUploadEngine } from "../upload/use-uploads.ts";
+import { useDocked } from "../viewer/inspector-slots.tsx";
 import {
   isUnplaced,
   noPlacement,
@@ -108,6 +109,7 @@ function Sending({
 
 export function AddResultSet({ projectId, slideId, onClose, onPreview }: AddResultSetProps) {
   const { t } = useLingui();
+  const docked = useDocked();
   const engine = useUploadEngine();
   const [picked, setPicked] = useState<Picked | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -165,7 +167,11 @@ export function AddResultSet({ projectId, slideId, onClose, onPreview }: AddResu
     <section
       aria-label={t`Add a result set`}
       data-testid="add-result-set-panel"
-      className="absolute top-4 left-20 z-10 grid max-h-[calc(100%-2rem)] w-96 gap-3 overflow-auto rounded-ctl border border-line bg-chrome p-3 shadow-pop"
+      className={
+        docked
+          ? "grid gap-3 rounded-ctl border border-line bg-surf-panel p-3"
+          : "absolute top-4 left-20 z-10 grid max-h-[calc(100%-2rem)] w-96 gap-3 overflow-auto rounded-ctl border border-line bg-chrome p-3 shadow-pop"
+      }
     >
       <div className="flex items-center justify-between gap-2">
         <h2 className="m-0 text-body font-semibold">

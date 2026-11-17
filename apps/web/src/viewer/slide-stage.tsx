@@ -4,7 +4,7 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Loader } from "@parfocal/ui/components/loader";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
+import { ToolRail, ToolRailButton, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSharedSmartServices } from "../aiseg/shared-smart-services.ts";
 import {
@@ -75,6 +75,7 @@ import { PaintedMapLayer } from "../results/painted-map-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { ViewMapLayer } from "../results/view-map-layer.tsx";
+import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
@@ -86,6 +87,12 @@ import { appFrameReporter } from "../telemetry/frame-monitor.ts";
 import { useFrameMonitor } from "../telemetry/use-frame-monitor.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { AreaKeys } from "./area-keys.tsx";
+import {
+  DockCard,
+  type InspectorSection,
+  type InspectorSlots,
+  InspectorSlotsProvider,
+} from "./inspector-slots.tsx";
 import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
@@ -98,6 +105,7 @@ import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
+import { StageInspector } from "./stage-inspector.tsx";
 import { stageToolOf } from "./stage-tools.ts";
 import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
@@ -317,6 +325,11 @@ function OpenedSlide({
   const [brightness, setBrightness] = useSlideBrightness();
   const magnificationLabel = useMagnificationLabel();
   const toolsLayout = useToolsLayout();
+  const [inspectorLayout, setInspectorLayout] = useInspectorLayout();
+  const [slots, setSlots] = useState<InspectorSlots>({});
+  const placeSlot = useCallback((section: InspectorSection, node: HTMLElement | null) => {
+    setSlots((current) => (current[section] === node ? current : { ...current, [section]: node }));
+  }, []);
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useSavedOutlineMode();
   const sharedTaskId = annotateTask?.taskId ?? null;
@@ -715,423 +728,470 @@ function OpenedSlide({
 
   useFrameMonitor(hostNode, session?.shownRoute, appFrameReporter);
 
+  const railButtons = (item: (typeof setup.rail)[number][number]) => {
+    const stageTool = stageToolOf(item.tool);
+    return (
+      <ToolRailButton
+        key={item.tool}
+        icon={item.icon}
+        label={item.label}
+        tipSide={toolsLayout === "dock" ? "top" : "right"}
+        ai={item.ai ?? false}
+        {...(item.action === undefined ? {} : { action: item.action })}
+        data-tool={item.tool}
+        className={toolsLayout === "dock" ? undefined : "[@media(max-height:760px)]:size-7"}
+        pressed={tool === stageTool}
+        onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
+      />
+    );
+  };
+  const panelLabel = inspectorLayout.hidden ? t`Show the side panel` : t`Hide the side panel`;
+  const panelButton = (
+    <ToolRailButton
+      icon="panel"
+      label={panelLabel}
+      tipSide={toolsLayout === "dock" ? "top" : "right"}
+      pressed={!inspectorLayout.hidden}
+      onPressedChange={() => setInspectorLayout((current) => ({ hidden: !current.hidden }))}
+    />
+  );
+  const initialTab: InspectorSection =
+    taskId === undefined && workspace === "annotate" ? "display" : "objects";
+
   return (
     <EscProvider value={escRegistry}>
-      <div
-        data-testid="slide-stage"
-        data-state={phase.state}
-        data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
-        data-renderer-route={session?.shownRoute}
-        data-tool={tool}
-        data-workspace={workspace}
-        data-tools={toolsLayout}
-        data-layer={sharedTaskId === null ? "slide" : "shared"}
-        data-drag={setup.dragBehaviour}
-        data-annotations={saved.loaded ? "loaded" : "loading"}
-        data-save-state={saved.saveState}
-        data-coverage={coverage?.loaded ? "loaded" : "loading"}
-        data-coverage-percent={coverage?.percent}
-        data-coverage-seen={coverage?.share.seen}
-        data-coverage-pending={coverage?.pending}
-        data-coverage-basis={coverage?.share.basis}
-        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=brush]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair! data-[tool=auto]:**:cursor-crosshair!"
-      >
-        {opened && hostNode ? <SlideChecker engine={opened.engine} stage={hostNode} /> : null}
-        <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
-        {opened?.route && hostNode ? (
-          <FailedTilePlaceholders engine={opened.engine} route={opened.route} stage={hostNode} />
-        ) : null}
-        {phase.state === "failed" ? null : <TileHintChip route={opened?.route ?? null} />}
-        {session && developerMode ? (
-          <Suspense fallback={null}>
-            <LabLayer
-              engine={session.engine}
-              route={session.route}
-              shownRoute={session.shownRoute}
-            />
-          </Suspense>
-        ) : null}
-        {session && hostNode ? (
-          <>
-            <SharedCursorLayer slideId={slideId} engine={session.engine} stage={hostNode} />
-            <RulerLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "ruler"}
-              document={annotations}
-              onApply={saved.apply}
-            />
-            <PolygonLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "polygon"}
-              document={annotations}
-              onClose={closeShape}
-              draftControl={draftControl}
-            />
-            <FreehandLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "freehand"}
-              onClose={closeShape}
-            />
-            <BrushLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "brush"}
-              document={annotations}
-              classKey={activeClass}
-              colour={colourOf(activeClass)}
-              onApply={saved.apply}
-            />
-            <DragLayer
-              engine={session.engine}
-              stage={hostNode}
-              kind="rectangle"
-              active={tool === "rectangle"}
-              onClose={closeShape}
-            />
-            <DragLayer
-              engine={session.engine}
-              stage={hostNode}
-              kind="ellipse"
-              active={tool === "ellipse"}
-              onClose={closeShape}
-            />
-            <CountLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "marker"}
-              document={annotations}
-              colourOf={colourOf}
-              onDrop={dropAt}
-              onRemove={saved.removeMarker}
-            />
-            <ArrowLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "arrow"}
-              document={annotations}
-              onApply={saved.apply}
-            />
-            <TextLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "text"}
-              document={annotations}
-              onApply={saved.apply}
-              control={textControl}
-            />
-            <SelectLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "select"}
-              document={annotations}
-              onDocumentChange={setAnnotations}
-              onCommit={saved.commit}
-              onEditText={(id) => textControl.current?.edit(id)}
-              onSelectionChange={setSelectedIds}
-              pinRegistry={pinRegistry}
-            />
-            <PinLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "comment"}
-              selecting={tool === "select"}
-              registry={pinRegistry}
-              document={annotations}
-              projectId={projectId}
-              taskId={taskId}
-              slideId={slideId}
-              micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
-              onDocumentChange={setAnnotations}
-              onCommit={saved.commit}
-            />
-            <SmartLayer
-              engine={session.engine}
-              stage={hostNode}
-              slideId={slideId}
-              active={tool === "smart"}
-              document={annotations}
-              activeClass={activeClass}
-              loader={sharedServices}
-              openRequest={session.open}
-              onDocumentChange={setAnnotations}
-            />
-            <AutoLayer
-              engine={session.engine}
-              stage={hostNode}
-              active={tool === "auto"}
-              document={annotations}
-              activeClass={activeClass}
-              loader={sharedServices}
-              openRequest={session.open}
-              tier={outlineTier}
-              onDocumentChange={setAnnotations}
-            />
-            <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
-            <HeatmapLayers
-              engine={session.engine}
-              stage={hostNode}
-              slideId={slideId}
-              choices={heatmapChoices}
-            />
-            {workspace === "annotate" ? null : (
-              <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
-            )}
-            {workspace === "annotate" ? null : (
-              <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
-            )}
-            {workspace === "annotate" ? (
-              <RunStreamLayer
-                key={slideId}
-                engine={session.engine}
+      <InspectorSlotsProvider value={slots}>
+        <div data-slot="viewer-body" className="flex size-full min-h-0 bg-chrome">
+          {toolsLayout === "dock" ? null : (
+            <ToolRail className="justify-between">
+              <div className="grid gap-1">
+                {setup.rail.map((group) => (
+                  <ToolRailGroup key={group.map((item) => item.tool).join("-")}>
+                    {group.map(railButtons)}
+                  </ToolRailGroup>
+                ))}
+              </div>
+              <ToolRailGroup>{panelButton}</ToolRailGroup>
+            </ToolRail>
+          )}
+          <div
+            data-testid="slide-stage"
+            data-state={phase.state}
+            data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
+            data-renderer-route={session?.shownRoute}
+            data-tool={tool}
+            data-workspace={workspace}
+            data-tools={toolsLayout}
+            data-layer={sharedTaskId === null ? "slide" : "shared"}
+            data-drag={setup.dragBehaviour}
+            data-annotations={saved.loaded ? "loaded" : "loading"}
+            data-save-state={saved.saveState}
+            data-coverage={coverage?.loaded ? "loaded" : "loading"}
+            data-coverage-percent={coverage?.percent}
+            data-coverage-seen={coverage?.share.seen}
+            data-coverage-pending={coverage?.pending}
+            data-coverage-basis={coverage?.share.basis}
+            className="relative min-h-0 min-w-0 flex-1 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=brush]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair! data-[tool=auto]:**:cursor-crosshair!"
+          >
+            {opened && hostNode ? <SlideChecker engine={opened.engine} stage={hostNode} /> : null}
+            <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
+            {opened?.route && hostNode ? (
+              <FailedTilePlaceholders
+                engine={opened.engine}
+                route={opened.route}
                 stage={hostNode}
-                selection={selectedBox}
-                task={annotateTask}
-                projectId={projectId}
-                slideId={slideId}
-                startShown={tool !== "smart"}
               />
             ) : null}
-            {resultPreview === null ? null : (
-              <PreviewLayer
-                engine={session.engine}
-                stage={hostNode}
-                results={resultPreview.results}
-                placement={resultPreview.placement}
-              />
-            )}
-            {addingResults && projectId !== undefined ? (
-              <AddResultSet
-                projectId={projectId}
-                slideId={slideId}
-                onClose={closeAddResults}
-                onPreview={setResultPreview}
-              />
+            {phase.state === "failed" ? null : <TileHintChip route={opened?.route ?? null} />}
+            {session && developerMode ? (
+              <Suspense fallback={null}>
+                <LabLayer
+                  engine={session.engine}
+                  route={session.route}
+                  shownRoute={session.shownRoute}
+                />
+              </Suspense>
             ) : null}
-            {annotateTask ? (
-              <AnnotateTaskPanel
-                engine={session.engine}
-                stage={hostNode}
-                task={annotateTask}
-                classes={classes}
-                saveState={saved.saveState}
-                colourOf={colourOf}
-                onOpenSlide={onOpenSlide}
-              />
-            ) : null}
-            {workspace === "annotate" || tool !== restingTool || proposalCount > 0 ? (
-              <ContextBarView
-                model={contextModel}
-                classes={classes}
-                activeClass={activeClass}
-                onPick={pickClassKey}
-                proposals={
-                  proposalCount > 0
-                    ? {
-                        count: proposalCount,
-                        activeName: activeInfo?.name ?? null,
-                        onAccept: acceptProposals,
-                        onDiscard: discardProposals,
-                      }
-                    : null
-                }
-              />
-            ) : null}
-            <div
-              data-slot="stage-tools"
-              className={
-                toolsLayout === "dock"
-                  ? "absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
-                  : "absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome"
-              }
-            >
-              {setup.rail.map((group) => (
-                <div
-                  key={group.map((item) => item.tool).join("-")}
-                  className={
-                    toolsLayout === "dock"
-                      ? "flex border-r border-line px-1 last:border-r-0"
-                      : "flex flex-col border-b border-line last:border-b-0"
-                  }
-                >
-                  {group.map((item) => {
-                    const stageTool = stageToolOf(item.tool);
-                    return (
-                      <ToolRailButton
-                        key={item.tool}
-                        icon={item.icon}
-                        label={item.label}
-                        tipSide={toolsLayout === "dock" ? "top" : "right"}
-                        ai={item.ai ?? false}
-                        {...(item.action === undefined ? {} : { action: item.action })}
-                        data-tool={item.tool}
-                        className={
-                          toolsLayout === "dock" ? undefined : "[@media(max-height:760px)]:size-7"
-                        }
-                        pressed={tool === stageTool}
-                        onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-            <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
-              {workspace === "annotate" ? (
-                <LayersPanel
+            {session && hostNode ? (
+              <>
+                <SharedCursorLayer slideId={slideId} engine={session.engine} stage={hostNode} />
+                <RulerLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "ruler"}
                   document={annotations}
                   onApply={saved.apply}
-                  classes={classes}
-                  areas={areas}
-                  target={saved.target}
-                  onTarget={saved.setTarget}
-                  resultSets={
-                    projectId === undefined ? undefined : (
-                      <ResultSetLayers
-                        slideId={slideId}
-                        adding={addingResults}
-                        onAdd={() => setAddingResults(true)}
-                        heatmaps={heatmapChoices}
-                      />
-                    )
-                  }
                 />
-              ) : null}
-              {showsCountPanel(setup, {
-                counting: tool === "marker",
-                markers: markerTotal,
-              }) ? (
-                <CountPanel
+                <PolygonLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "polygon"}
                   document={annotations}
-                  classes={classes}
-                  activeClass={activeClass}
-                  onPick={setActiveClass}
+                  onClose={closeShape}
+                  draftControl={draftControl}
                 />
-              ) : null}
-              <MeasurementList
-                document={annotations}
-                micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
-                onRemove={(id) =>
-                  saved.apply(deleteShapes(annotations, [id]).document, t`Delete shape`)
+                <FreehandLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "freehand"}
+                  onClose={closeShape}
+                />
+                <BrushLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "brush"}
+                  document={annotations}
+                  classKey={activeClass}
+                  colour={colourOf(activeClass)}
+                  onApply={saved.apply}
+                />
+                <DragLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  kind="rectangle"
+                  active={tool === "rectangle"}
+                  onClose={closeShape}
+                />
+                <DragLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  kind="ellipse"
+                  active={tool === "ellipse"}
+                  onClose={closeShape}
+                />
+                <CountLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "marker"}
+                  document={annotations}
+                  colourOf={colourOf}
+                  onDrop={dropAt}
+                  onRemove={saved.removeMarker}
+                />
+                <ArrowLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "arrow"}
+                  document={annotations}
+                  onApply={saved.apply}
+                />
+                <TextLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "text"}
+                  document={annotations}
+                  onApply={saved.apply}
+                  control={textControl}
+                />
+                <SelectLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "select"}
+                  document={annotations}
+                  onDocumentChange={setAnnotations}
+                  onCommit={saved.commit}
+                  onEditText={(id) => textControl.current?.edit(id)}
+                  onSelectionChange={setSelectedIds}
+                  pinRegistry={pinRegistry}
+                />
+                <PinLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "comment"}
+                  selecting={tool === "select"}
+                  registry={pinRegistry}
+                  document={annotations}
+                  projectId={projectId}
+                  taskId={taskId}
+                  slideId={slideId}
+                  micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
+                  onDocumentChange={setAnnotations}
+                  onCommit={saved.commit}
+                />
+                <SmartLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  slideId={slideId}
+                  active={tool === "smart"}
+                  document={annotations}
+                  activeClass={activeClass}
+                  loader={sharedServices}
+                  openRequest={session.open}
+                  onDocumentChange={setAnnotations}
+                />
+                <AutoLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  active={tool === "auto"}
+                  document={annotations}
+                  activeClass={activeClass}
+                  loader={sharedServices}
+                  openRequest={session.open}
+                  tier={outlineTier}
+                  onDocumentChange={setAnnotations}
+                />
+                <ProposalLayer
+                  engine={session.engine}
+                  stage={hostNode}
+                  proposals={proposals.pending}
+                />
+                <HeatmapLayers
+                  engine={session.engine}
+                  stage={hostNode}
+                  slideId={slideId}
+                  choices={heatmapChoices}
+                />
+                {workspace === "annotate" ? null : (
+                  <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+                )}
+                {workspace === "annotate" ? null : (
+                  <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+                )}
+                {workspace === "annotate" ? (
+                  <RunStreamLayer
+                    key={slideId}
+                    engine={session.engine}
+                    stage={hostNode}
+                    selection={selectedBox}
+                    task={annotateTask}
+                    projectId={projectId}
+                    slideId={slideId}
+                    startShown={tool !== "smart"}
+                  />
+                ) : null}
+                {resultPreview === null ? null : (
+                  <PreviewLayer
+                    engine={session.engine}
+                    stage={hostNode}
+                    results={resultPreview.results}
+                    placement={resultPreview.placement}
+                  />
+                )}
+                {addingResults && projectId !== undefined ? (
+                  <DockCard section="display" order={4}>
+                    <AddResultSet
+                      projectId={projectId}
+                      slideId={slideId}
+                      onClose={closeAddResults}
+                      onPreview={setResultPreview}
+                    />
+                  </DockCard>
+                ) : null}
+                {annotateTask ? (
+                  <AnnotateTaskPanel
+                    engine={session.engine}
+                    stage={hostNode}
+                    task={annotateTask}
+                    classes={classes}
+                    saveState={saved.saveState}
+                    colourOf={colourOf}
+                    onOpenSlide={onOpenSlide}
+                  />
+                ) : null}
+                {workspace === "annotate" || tool !== restingTool || proposalCount > 0 ? (
+                  <ContextBarView
+                    model={contextModel}
+                    classes={classes}
+                    activeClass={activeClass}
+                    onPick={pickClassKey}
+                    proposals={
+                      proposalCount > 0
+                        ? {
+                            count: proposalCount,
+                            activeName: activeInfo?.name ?? null,
+                            onAccept: acceptProposals,
+                            onDiscard: discardProposals,
+                          }
+                        : null
+                    }
+                  />
+                ) : null}
+                {toolsLayout === "dock" ? (
+                  <div
+                    data-slot="stage-tools"
+                    className="absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
+                  >
+                    {setup.rail.map((group) => (
+                      <div
+                        key={group.map((item) => item.tool).join("-")}
+                        className="flex border-r border-line px-1 last:border-r-0"
+                      >
+                        {group.map(railButtons)}
+                      </div>
+                    ))}
+                    <div className="flex px-1">{panelButton}</div>
+                  </div>
+                ) : null}
+                <DockCard section="display" order={1}>
+                  {workspace === "annotate" ? (
+                    <LayersPanel
+                      document={annotations}
+                      onApply={saved.apply}
+                      classes={classes}
+                      areas={areas}
+                      target={saved.target}
+                      onTarget={saved.setTarget}
+                      resultSets={
+                        projectId === undefined ? undefined : (
+                          <ResultSetLayers
+                            slideId={slideId}
+                            adding={addingResults}
+                            onAdd={() => setAddingResults(true)}
+                            heatmaps={heatmapChoices}
+                          />
+                        )
+                      }
+                    />
+                  ) : null}
+                </DockCard>
+                <DockCard section="objects" order={3}>
+                  {showsCountPanel(setup, {
+                    counting: tool === "marker",
+                    markers: markerTotal,
+                  }) ? (
+                    <CountPanel
+                      document={annotations}
+                      classes={classes}
+                      activeClass={activeClass}
+                      onPick={setActiveClass}
+                    />
+                  ) : null}
+                </DockCard>
+                <DockCard section="objects" order={4}>
+                  <MeasurementList
+                    document={annotations}
+                    micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
+                    onRemove={(id) =>
+                      saved.apply(deleteShapes(annotations, [id]).document, t`Delete shape`)
+                    }
+                  />
+                  {annotations.shapes.size > 0 ? (
+                    <Button
+                      size="sm"
+                      data-testid="clear-annotations"
+                      onClick={() => {
+                        const count = annotations.shapes.size;
+                        if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count)))
+                          return;
+                        saved.apply(clearAll(annotations).document, t`Clear all`);
+                      }}
+                    >
+                      <Trans>Clear all</Trans>
+                    </Button>
+                  ) : null}
+                </DockCard>
+              </>
+            ) : null}
+            {session && coverage && viewed?.peek ? (
+              <ViewedPeek
+                engine={session.engine}
+                raster={coverage.raster}
+                tissue={coverage.tissue}
+                percent={coverage.percent}
+                onClose={viewed.onPeekClose}
+              />
+            ) : null}
+            {session && outlines ? (
+              <>
+                <OutlineLayer
+                  engine={session.engine}
+                  module={session.module}
+                  mode={outlineMode}
+                  tissue={coverage?.tissue ?? null}
+                />
+                {taskId === undefined ? null : (
+                  <ObjectDrawLayer
+                    engine={session.engine}
+                    module={session.module}
+                    taskId={taskId}
+                    tissue={coverage?.tissue ?? null}
+                  />
+                )}
+                <DockCard section="display" order={0}>
+                  <SegmentedControl
+                    aria-label={t`Outline display`}
+                    value={outlineMode}
+                    onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
+                    options={outlineModeChoices.map((choice) => ({
+                      value: choice,
+                      label: outlineModeLabels[choice],
+                    }))}
+                  />
+                </DockCard>
+              </>
+            ) : null}
+            {session ? (
+              <ViewerKeys
+                session={session}
+                selection={() =>
+                  zoomTargetArea(annotations.shapes, selectedIds, focusedArea.current)
                 }
               />
-              {annotations.shapes.size > 0 ? (
-                <Button
-                  size="sm"
-                  data-testid="clear-annotations"
-                  onClick={() => {
-                    const count = annotations.shapes.size;
-                    if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count)))
-                      return;
-                    saved.apply(clearAll(annotations).document, t`Clear all`);
-                  }}
-                >
-                  <Trans>Clear all</Trans>
-                </Button>
-              ) : null}
-            </div>
-          </>
-        ) : null}
-        {session && coverage && viewed?.peek ? (
-          <ViewedPeek
-            engine={session.engine}
-            raster={coverage.raster}
-            tissue={coverage.tissue}
-            percent={coverage.percent}
-            onClose={viewed.onPeekClose}
-          />
-        ) : null}
-        {session && outlines ? (
-          <>
-            <OutlineLayer
-              engine={session.engine}
-              module={session.module}
-              mode={outlineMode}
-              tissue={coverage?.tissue ?? null}
-            />
-            {taskId === undefined ? null : (
-              <ObjectDrawLayer
-                engine={session.engine}
-                module={session.module}
-                taskId={taskId}
-                tissue={coverage?.tissue ?? null}
-              />
+            ) : null}
+            {session ? (
+              <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
+            ) : null}
+            {session && hostNode && systematicScan ? (
+              <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
+            ) : null}
+            {session ? (
+              <div
+                data-slot="stage-magnification"
+                className="absolute bottom-4 left-1/2 -translate-x-1/2"
+              >
+                <MagnificationControl
+                  engine={session.engine}
+                  units={session.module}
+                  brightness={brightness}
+                  onBrightnessChange={setBrightness}
+                  labelAs={magnificationLabel}
+                />
+              </div>
+            ) : null}
+            {phase.state === "loading" ? (
+              <div className="absolute top-4 left-4">
+                <Loader label={t`Loading the slide`} size="inline" />
+              </div>
+            ) : null}
+            {chosenDevice === undefined ? null : (
+              <DockCard section="display" order={9}>
+                <DeviceLegend
+                  device={legendDeviceOf(chosenDevice)}
+                  context={workspace === "annotate" ? "annotate" : "review"}
+                />
+              </DockCard>
             )}
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
-              <SegmentedControl
-                aria-label={t`Outline display`}
-                value={outlineMode}
-                onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
-                options={outlineModeChoices.map((choice) => ({
-                  value: choice,
-                  label: outlineModeLabels[choice],
-                }))}
-              />
-            </div>
-          </>
-        ) : null}
-        {session ? (
-          <ViewerKeys
-            session={session}
-            selection={() => zoomTargetArea(annotations.shapes, selectedIds, focusedArea.current)}
+            {phase.state === "loading" ? null : (
+              <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
+            )}
+            <LiveChangesMarker changes={saved.incoming} onShow={saved.showIncoming} />
+            <ConflictNotice conflicts={saved.conflicts} onResolve={saved.resolveConflict} />
+            {phase.state === "failed" ? (
+              <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
+                <InlineState
+                  icon="warn"
+                  title={phase.failure.title}
+                  role="alert"
+                  className="border-solid shadow-pop"
+                  action={
+                    <Button size="lg" onClick={onRetry}>
+                      <Trans>Try again</Trans>
+                    </Button>
+                  }
+                >
+                  {phase.failure.detail}
+                </InlineState>
+              </div>
+            ) : null}
+          </div>
+          <StageInspector
+            layout={inspectorLayout}
+            onLayout={setInspectorLayout}
+            initialTab={initialTab}
+            onSlot={placeSlot}
           />
-        ) : null}
-        {session ? (
-          <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
-        ) : null}
-        {session && hostNode && systematicScan ? (
-          <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
-        ) : null}
-        {session ? (
-          <div
-            data-slot="stage-magnification"
-            className="absolute bottom-4 left-1/2 -translate-x-1/2"
-          >
-            <MagnificationControl
-              engine={session.engine}
-              units={session.module}
-              brightness={brightness}
-              onBrightnessChange={setBrightness}
-              labelAs={magnificationLabel}
-            />
-          </div>
-        ) : null}
-        {phase.state === "loading" ? (
-          <div className="absolute top-4 left-4">
-            <Loader label={t`Loading the slide`} size="inline" />
-          </div>
-        ) : null}
-        {chosenDevice === undefined ? null : (
-          <DeviceLegend
-            device={legendDeviceOf(chosenDevice)}
-            context={workspace === "annotate" ? "annotate" : "review"}
-          />
-        )}
-        {phase.state === "loading" ? null : (
-          <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
-        )}
-        <LiveChangesMarker changes={saved.incoming} onShow={saved.showIncoming} />
-        <ConflictNotice conflicts={saved.conflicts} onResolve={saved.resolveConflict} />
-        {phase.state === "failed" ? (
-          <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
-            <InlineState
-              icon="warn"
-              title={phase.failure.title}
-              role="alert"
-              className="border-solid shadow-pop"
-              action={
-                <Button size="lg" onClick={onRetry}>
-                  <Trans>Try again</Trans>
-                </Button>
-              }
-            >
-              {phase.failure.detail}
-            </InlineState>
-          </div>
-        ) : null}
-      </div>
+        </div>
+      </InspectorSlotsProvider>
     </EscProvider>
   );
 }

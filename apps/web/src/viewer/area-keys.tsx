@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { useEffect, useMemo } from "react";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
+import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { TravelMinimap } from "./travel-minimap.tsx";
@@ -21,6 +22,7 @@ export function AreaKeys({
   focused: { current: SelectionArea | null };
 }) {
   const { t } = useLingui();
+  const docked = useDocked();
   const nav = useEngineAreaNav(session.engine, session.module, areas, host);
   useEffect(() => {
     focused.current = areas.find((entry) => entry.object === nav.current)?.bounds ?? null;
@@ -51,24 +53,30 @@ export function AreaKeys({
           host={host}
         />
       ) : null}
-      <section
-        aria-label={t`Areas`}
-        data-testid="area-nav"
-        data-current={nav.current ?? ""}
-        data-visited={[...nav.visited].sort().join(" ")}
-        className="absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
-      >
-        <h2 className="m-0 font-semibold text-body-sm">
-          <Trans>Areas, largest first</Trans>
-        </h2>
-        <AreaList
-          areas={areas}
-          current={nav.current}
-          visited={nav.visited}
-          roleOf={(object) => roles.get(object)}
-          onGoTo={nav.goTo}
-        />
-      </section>
+      <DockCard section="objects" order={2}>
+        <section
+          aria-label={t`Areas`}
+          data-testid="area-nav"
+          data-current={nav.current ?? ""}
+          data-visited={[...nav.visited].sort().join(" ")}
+          className={
+            docked
+              ? dockedCard
+              : "absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
+          }
+        >
+          <h2 className="m-0 font-semibold text-body-sm">
+            <Trans>Areas, largest first</Trans>
+          </h2>
+          <AreaList
+            areas={areas}
+            current={nav.current}
+            visited={nav.visited}
+            roleOf={(object) => roles.get(object)}
+            onGoTo={nav.goTo}
+          />
+        </section>
+      </DockCard>
     </>
   );
 }

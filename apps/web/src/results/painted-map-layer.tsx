@@ -13,6 +13,7 @@ import {
 } from "../annotations/stage-pointer.ts";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { fingerPans } from "../devices/pen-touch.ts";
+import { DockCard, useDocked } from "../viewer/inspector-slots.tsx";
 import {
   type HeatmapGrid,
   screenScale,
@@ -61,6 +62,7 @@ type PanelProps = {
 
 function PaintedMapPanel({ engine, stage, session }: PanelProps) {
   const { t } = useLingui();
+  const docked = useDocked();
   const state = useSyncExternalStore(session.subscribe, session.getState);
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
@@ -206,134 +208,140 @@ function PaintedMapPanel({ engine, stage, session }: PanelProps) {
           />
         </svg>
       )}
-      <section
-        aria-label={t`Painted map`}
-        data-testid="painted-map"
-        data-phase={state.phase}
-        data-open={open ? "on" : "off"}
-        data-painted={state.painted}
-        data-dirty={state.dirty ? "yes" : "no"}
-        data-version={state.opened ?? 0}
-        className="pointer-events-auto absolute right-3 bottom-16 z-10 flex max-w-80 flex-col gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
-      >
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            data-testid="painted-map-toggle"
-            aria-pressed={open}
-            onClick={() => setOpen((value) => !value)}
-          >
-            {open ? <Trans>Stop painting</Trans> : <Trans>Paint a map</Trans>}
-          </Button>
-          <span role="status" data-testid="painted-map-status">
-            {state.phase === "changed" ? (
-              <Trans>This map changed since you opened it, open it again</Trans>
-            ) : state.phase === "failed" ? (
-              <Trans>That did not work, try again</Trans>
-            ) : state.dirty ? (
-              <Trans>Unsaved changes</Trans>
-            ) : null}
-          </span>
-        </div>
-        {open ? (
-          <>
-            <p className="text-muted">
-              <Trans>Drag to paint. Hold Shift or Alt to erase. Press [ or ] to resize.</Trans>
-            </p>
-            <label className="flex items-center gap-2">
-              <span>
-                <Trans>Name</Trans>
-              </span>
-              <input
-                data-testid="painted-map-name"
-                value={name}
-                maxLength={80}
-                onChange={(event) => setName(event.target.value)}
-                className="min-w-0 flex-1 rounded-sm border border-line bg-canvas px-2 py-1"
-              />
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                data-testid="painted-map-save"
-                disabled={working || trimmed === "" || state.painted === 0}
-                onClick={() => void session.save(trimmed)}
-              >
-                <Trans>Save</Trans>
-              </Button>
-              <Button
-                size="sm"
-                data-testid="painted-map-save-new"
-                disabled={working || trimmed === "" || state.painted === 0}
-                onClick={() => void session.saveAsNew(trimmed)}
-              >
-                <Trans>Save as new</Trans>
-              </Button>
-              <Button
-                size="sm"
-                data-testid="painted-map-new"
-                disabled={working}
-                onClick={() => session.startNew()}
-              >
-                <Trans>New map</Trans>
-              </Button>
-              <Button
-                size="sm"
-                data-testid="painted-map-export"
-                disabled={working || state.current === null}
-                onClick={exportMap}
-              >
-                <Trans>Export</Trans>
-              </Button>
-            </div>
-            <label className="flex items-center gap-2">
-              <span>
-                <Trans>Open</Trans>
-              </span>
-              <select
-                data-testid="painted-map-list"
-                value={state.current?.id ?? ""}
-                disabled={working || state.maps.length === 0}
-                onChange={(event) => {
-                  if (event.target.value !== "") void session.open(event.target.value);
-                }}
-                className="min-w-0 flex-1 rounded-sm border border-line bg-canvas px-2 py-1"
-              >
-                <option value="">{t`Choose a saved map`}</option>
-                {state.maps.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {t`${item.name} (v${item.version})`}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {state.current === null ? null : (
+      <DockCard section="display" order={3}>
+        <section
+          aria-label={t`Painted map`}
+          data-testid="painted-map"
+          data-phase={state.phase}
+          data-open={open ? "on" : "off"}
+          data-painted={state.painted}
+          data-dirty={state.dirty ? "yes" : "no"}
+          data-version={state.opened ?? 0}
+          className={
+            docked
+              ? "flex flex-col gap-2 rounded-ctl border border-line bg-surf-panel px-3 py-2 text-caption"
+              : "pointer-events-auto absolute right-3 bottom-16 z-10 flex max-w-80 flex-col gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
+          }
+        >
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              data-testid="painted-map-toggle"
+              aria-pressed={open}
+              onClick={() => setOpen((value) => !value)}
+            >
+              {open ? <Trans>Stop painting</Trans> : <Trans>Paint a map</Trans>}
+            </Button>
+            <span role="status" data-testid="painted-map-status">
+              {state.phase === "changed" ? (
+                <Trans>This map changed since you opened it, open it again</Trans>
+              ) : state.phase === "failed" ? (
+                <Trans>That did not work, try again</Trans>
+              ) : state.dirty ? (
+                <Trans>Unsaved changes</Trans>
+              ) : null}
+            </span>
+          </div>
+          {open ? (
+            <>
+              <p className="text-muted">
+                <Trans>Drag to paint. Hold Shift or Alt to erase. Press [ or ] to resize.</Trans>
+              </p>
               <label className="flex items-center gap-2">
                 <span>
-                  <Trans>Version</Trans>
+                  <Trans>Name</Trans>
+                </span>
+                <input
+                  data-testid="painted-map-name"
+                  value={name}
+                  maxLength={80}
+                  onChange={(event) => setName(event.target.value)}
+                  className="min-w-0 flex-1 rounded-sm border border-line bg-canvas px-2 py-1"
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  data-testid="painted-map-save"
+                  disabled={working || trimmed === "" || state.painted === 0}
+                  onClick={() => void session.save(trimmed)}
+                >
+                  <Trans>Save</Trans>
+                </Button>
+                <Button
+                  size="sm"
+                  data-testid="painted-map-save-new"
+                  disabled={working || trimmed === "" || state.painted === 0}
+                  onClick={() => void session.saveAsNew(trimmed)}
+                >
+                  <Trans>Save as new</Trans>
+                </Button>
+                <Button
+                  size="sm"
+                  data-testid="painted-map-new"
+                  disabled={working}
+                  onClick={() => session.startNew()}
+                >
+                  <Trans>New map</Trans>
+                </Button>
+                <Button
+                  size="sm"
+                  data-testid="painted-map-export"
+                  disabled={working || state.current === null}
+                  onClick={exportMap}
+                >
+                  <Trans>Export</Trans>
+                </Button>
+              </div>
+              <label className="flex items-center gap-2">
+                <span>
+                  <Trans>Open</Trans>
                 </span>
                 <select
-                  data-testid="painted-map-versions"
-                  value={state.opened ?? ""}
-                  disabled={working}
+                  data-testid="painted-map-list"
+                  value={state.current?.id ?? ""}
+                  disabled={working || state.maps.length === 0}
                   onChange={(event) => {
-                    if (state.current !== null) {
-                      void session.open(state.current.id, Number(event.target.value));
-                    }
+                    if (event.target.value !== "") void session.open(event.target.value);
                   }}
                   className="min-w-0 flex-1 rounded-sm border border-line bg-canvas px-2 py-1"
                 >
-                  {state.versions.map((item) => (
-                    <option key={item.version} value={item.version}>
-                      {t`Version ${item.version}`}
+                  <option value="">{t`Choose a saved map`}</option>
+                  {state.maps.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {t`${item.name} (v${item.version})`}
                     </option>
                   ))}
                 </select>
               </label>
-            )}
-          </>
-        ) : null}
-      </section>
+              {state.current === null ? null : (
+                <label className="flex items-center gap-2">
+                  <span>
+                    <Trans>Version</Trans>
+                  </span>
+                  <select
+                    data-testid="painted-map-versions"
+                    value={state.opened ?? ""}
+                    disabled={working}
+                    onChange={(event) => {
+                      if (state.current !== null) {
+                        void session.open(state.current.id, Number(event.target.value));
+                      }
+                    }}
+                    className="min-w-0 flex-1 rounded-sm border border-line bg-canvas px-2 py-1"
+                  >
+                    {state.versions.map((item) => (
+                      <option key={item.version} value={item.version}>
+                        {t`Version ${item.version}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </>
+          ) : null}
+        </section>
+      </DockCard>
     </>
   );
 }
