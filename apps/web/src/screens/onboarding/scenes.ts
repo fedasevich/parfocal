@@ -2,10 +2,10 @@ export const onboardingScenes = {
   signin: [
     "email",
     "sso",
-    "passkey",
-    "passkeyqr",
     "forgot",
     "reset",
+    "passkey",
+    "passkeyqr",
     "lock",
     "lockkey",
     "expired",

@@ -355,7 +355,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   <button
                     type="button"
                     aria-label={t`Rotate ${paneName[side]} pane left`}
-                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    className="min-h-6 min-w-6 rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { by: -rotationStep })}
                   >
                     ↺
@@ -366,7 +366,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   <button
                     type="button"
                     aria-label={t`Rotate ${paneName[side]} pane right`}
-                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    className="min-h-6 min-w-6 rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { by: rotationStep })}
                   >
                     ↻
@@ -374,7 +374,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   <button
                     type="button"
                     aria-label={t`Reset ${paneName[side]} pane rotation to 0°`}
-                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    className="min-h-6 min-w-6 rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { to: 0 })}
                   >
                     0°

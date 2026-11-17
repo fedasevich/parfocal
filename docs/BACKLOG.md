@@ -4886,6 +4886,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a seed test shows the viewer seat is created once and read-only on repeated seeds, and the next production deploy's browser-smoke job passes without a reset.
   Depends on TEST-020. Size: S.
 
+- [x] TEST-050 · Three web tests left failing after the viewer moved to the engine
+  After VIEW-075 (the rest of the viewer runs on the engine stage) three web tests failed: the four-pane compare accessibility spec on the rotation reset buttons (axe target size under 24 pixels), the viewer tools spec that expects the Focus mode link to show the prototype card text, and `onboarding-scenes.test.ts`, whose inventory check still dropped the forgot and reset sign-in scenes that IAM-033 (reset a forgotten password) brought back and listed them in a different order than the inventory.
+  Done when `compare-layouts.spec.ts`, `viewer-tools.spec.ts` part 1 and `onboarding-scenes.test.ts` pass.
+  Size: S.
+
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
   Done when the 6 specs in `apps/e2e` pass against the API container locally and in one CI job with no secrets, and an upload is ingested with no manual ingest call.
