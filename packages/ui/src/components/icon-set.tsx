@@ -147,11 +147,17 @@ export const iconSet = {
     ),
   },
   gear: {
-    svg: { fill: "none", stroke: "currentColor", strokeWidth: 1.75 },
+    svg: {
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.75,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+    },
     body: (
       <>
+        <path d="M10.3 3h3.4l.5 2.3 1.6.7 2-1.3 2.4 2.4-1.3 2 .7 1.6 2.3.5v3.4l-2.3.5-.7 1.6 1.3 2-2.4 2.4-2-1.3-1.6.7-.5 2.3h-3.4l-.5-2.3-1.6-.7-2 1.3-2.4-2.4 1.3-2-.7-1.6L3 13.7v-3.4l2.3-.5.7-1.6-1.3-2 2.4-2.4 2 1.3 1.6-.7z" />
         <circle cx="12" cy="12" r="3" />
-        <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
       </>
     ),
   },

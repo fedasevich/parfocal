@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { type ReactNode, useEffect, useState } from "react";
 import { setDeveloperMode, useDeveloperMode } from "../../shell/developer-mode.ts";
 import { useOverlay } from "../../shell/overlays.ts";
@@ -133,9 +134,7 @@ export function SearchScreen({
             <Trans>Type at least two letters to search.</Trans>
           </p>
         ) : found.isPending && !onlyActions ? (
-          <p className="m-0 text-body-sm text-fg-dim">
-            <Trans>Searching…</Trans>
-          </p>
+          <SkeletonRows label={t`Searching`} rows={4} columns={2} />
         ) : total === 0 ? (
           <p className="m-0 text-body-sm text-fg-dim">
             <Trans>Nothing matches "{trimmed}".</Trans>

@@ -11,6 +11,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
+import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import {
   Table,
   TableBody,
@@ -41,12 +42,15 @@ const headCell = "px-4 py-(--density-head-y)";
 export function TasksTab({
   project,
   tasks,
+  loading = false,
   toast,
 }: {
   project: Project;
   tasks: ReviewTask[];
+  loading?: boolean;
   toast: (message: ReactNode) => void;
 }) {
+  const { t } = useLingui();
   const [settingsOf, setSettingsOf] = useState<string | null>(null);
   const opened = tasks.find((task) => task.id === settingsOf);
   return (
@@ -75,6 +79,13 @@ export function TasksTab({
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="p-0">
+                  <SkeletonRows label={t`Loading tasks`} rows={4} columns={5} />
+                </TableCell>
+              </TableRow>
+            ) : null}
             {tasks.map((task) => (
               <TaskRow
                 key={task.id}

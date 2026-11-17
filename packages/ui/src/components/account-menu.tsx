@@ -7,6 +7,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -31,7 +34,8 @@ type AccountMenuProps = {
   person: PersonInfo;
   organisation?: string | undefined;
   presence: AccountPresence;
-  onNextPresence: () => void;
+  statuses: readonly AccountPresence[];
+  onPresenceChange: (key: Presence) => void;
   presenceBusy?: boolean;
   theme: AccountTheme;
   onThemeChange: (theme: AccountTheme) => void;
@@ -55,7 +59,8 @@ function AccountMenu({
   person,
   organisation,
   presence,
-  onNextPresence,
+  statuses,
+  onPresenceChange,
   presenceBusy,
   theme,
   onThemeChange,
@@ -107,19 +112,42 @@ function AccountMenu({
             <small className="block truncate text-caption text-fg-faint">{organisation}</small>
           </div>
         </div>
-        <DropdownMenuItem
-          closeOnClick={false}
-          disabled={presenceBusy ?? false}
-          onClick={onNextPresence}
-          className="mx-1 mb-1 grid grid-cols-[18px_1fr_14px] items-center gap-2.5 border border-line"
-        >
-          <i className={`size-2.25 justify-self-center rounded-full ${presence.tone}`} />
-          <span>
-            {presence.label}
-            <small className="block text-caption text-fg-faint">{presence.hint}</small>
-          </span>
-          <Icon name="next" />
-        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger
+            disabled={presenceBusy ?? false}
+            className="mx-1 mb-1 grid grid-cols-[18px_1fr_14px] items-center gap-2.5 border border-line px-2.5 py-1.5"
+          >
+            <i className={`size-2.25 justify-self-center rounded-full ${presence.tone}`} />
+            <span>
+              {presence.label}
+              <small className="block text-caption text-fg-faint">{presence.hint}</small>
+            </span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-[280px] p-1.5">
+            <MenuPrimitive.RadioGroup
+              value={presence.key}
+              onValueChange={(value) => onPresenceChange(value as Presence)}
+            >
+              {statuses.map((status) => (
+                <MenuPrimitive.RadioItem
+                  key={status.key}
+                  value={status.key}
+                  disabled={presenceBusy ?? false}
+                  className="grid cursor-pointer grid-cols-[18px_1fr_16px] items-center gap-2.5 rounded-md px-2.5 py-1.5 outline-none data-highlighted:bg-chrome-2"
+                >
+                  <i className={`size-2.25 justify-self-center rounded-full ${status.tone}`} />
+                  <span>
+                    {status.label}
+                    <small className="block text-caption text-fg-faint">{status.hint}</small>
+                  </span>
+                  <MenuPrimitive.RadioItemIndicator className="text-accent">
+                    <Icon name="check" />
+                  </MenuPrimitive.RadioItemIndicator>
+                </MenuPrimitive.RadioItem>
+              ))}
+            </MenuPrimitive.RadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <div className="flex items-center justify-between gap-2.5 px-2.5 py-1.5 text-fg-dim">
           <span id="account-theme">

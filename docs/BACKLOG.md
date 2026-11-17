@@ -2231,6 +2231,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Apply Fable's recommendation recorded in the log to every such note outside the settings screens, which SET-015 owns: one show-once mechanism, one place the note lives afterwards, a way to reset all hints, and warnings and irreversible actions kept always visible.
   Done when a unit test covers the seen state and the reset, and a browser test sees a note the first time, not the second time, and finds it again in its afterwards place.
   Depends on SHELL-022. Size: M.
+- [ ] SHELL-024 · A member can set their status to Busy
+  SHELL-022 (the account menu's status dropdown) lists only Available and Away, because the API and the `memberships` availability check know only those two. The owner's review asked for every status the avatar dot can show, and the dot already draws Busy.
+  Add `busy` to the availability enum, a migration that widens the memberships availability check so Busy takes no end and an optional note, the regenerated client and fake handler, and a Busy row with its meaning in the dropdown. Team and the new task form keep treating only Away as absent.
+  Done when an API test sets and reads Busy and the check refuses an end on Busy, and a browser test picks Busy from the availability dropdown and sees the avatar dot turn Busy.
+  Depends on SHELL-022. Size: S.
 
 ---
 

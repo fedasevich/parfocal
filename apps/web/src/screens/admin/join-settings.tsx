@@ -12,6 +12,7 @@ import { WorkspaceLogo } from "@parfocal/ui/components/auth";
 import { Button } from "@parfocal/ui/components/button";
 import { Input } from "@parfocal/ui/components/input";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -182,7 +183,7 @@ export function JoinSettingsZone({
   const { t } = useLingui();
 
   const saved = okData(useGetJoinSettings().data);
-  if (saved === undefined) return null;
+  if (saved === undefined) return <SkeletonPanel label={t`Loading join settings`} />;
   return (
     <Zone
       title={t`Logo and joining`}

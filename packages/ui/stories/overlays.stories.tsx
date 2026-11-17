@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { type AccountEntry, AccountMenu } from "../src/components/account-menu.tsx";
+import {
+  type AccountEntry,
+  AccountMenu,
+  type AccountPresence,
+} from "../src/components/account-menu.tsx";
 import { BrightnessPopover } from "../src/components/brightness-popover.tsx";
 import { Button } from "../src/components/button.tsx";
 import { CommandPaletteView, type PaletteCommand } from "../src/components/command-palette.tsx";
@@ -352,6 +356,18 @@ export const CommandPaletteNothingMatches: Story = {
   render: () => <PaletteStage query="zzz" list={[]} current={0} />,
 };
 
+const storyAvailable: AccountPresence = {
+  key: "available",
+  label: "Available",
+  hint: "Researchers can give you review tasks",
+  tone: "bg-ok",
+};
+
+const storyStatuses: AccountPresence[] = [
+  storyAvailable,
+  { key: "away", label: "Away", hint: "Team shows you as away", tone: "bg-fg-faint" },
+];
+
 function AccountStage({
   initialsOnly,
   jobTitle,
@@ -363,7 +379,7 @@ function AccountStage({
 }) {
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [only, setOnly] = useState(initialsOnly);
-  const [away, setAway] = useState(false);
+  const [presence, setPresence] = useState<AccountPresence["key"]>("available");
   const [chosen, setChosen] = useState("Nothing yet");
   const entry = (icon: AccountEntry["icon"], label: string, keys?: string): AccountEntry => ({
     icon,
@@ -391,17 +407,9 @@ function AccountStage({
           role: jobTitle,
         }}
         organisation="Institute of Pathology, University Hospital"
-        presence={
-          away
-            ? { key: "away", label: "Away", hint: "Team shows you as away", tone: "bg-fg-faint" }
-            : {
-                key: "available",
-                label: "Available",
-                hint: "Researchers can give you review tasks",
-                tone: "bg-ok",
-              }
-        }
-        onNextPresence={() => setAway(!away)}
+        presence={storyStatuses.find((status) => status.key === presence) ?? storyAvailable}
+        statuses={storyStatuses}
+        onPresenceChange={setPresence}
         presenceBusy={presenceBusy}
         theme={theme}
         onThemeChange={setTheme}
