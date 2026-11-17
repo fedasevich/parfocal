@@ -39,6 +39,8 @@ function subscribe(onChange: () => void) {
   };
 }
 
+export const coachShown = (asked: boolean, objectCount: number) => asked && objectCount > 0;
+
 export type GuidedCoach = { open: boolean; dismiss: () => void; reopen: () => void };
 
 export function useGuidedCoach(

@@ -70,7 +70,7 @@ import {
   questionBlockers,
   unsureBlockers,
 } from "./guided-blockers.ts";
-import { useGuidedCoach } from "./guided-coach.ts";
+import { coachShown, useGuidedCoach } from "./guided-coach.ts";
 import { orderObjects, zoomedCamera } from "./guided-drive.ts";
 import { CameraBar, CanvasNotice, CoachTip, IssueCard } from "./guided-parts.tsx";
 import { nextOpenIndex } from "./guided-progress.ts";
@@ -316,7 +316,7 @@ function GuidedBody({
   const { answers: opinion, change: changeOpinion } = useOpinionDraft(session, setup.dropAnswers);
   const [failed, setFailed] = useState(setup.submitFail);
   const coach = useGuidedCoach(session.meId, scene === undefined && objectId === undefined);
-  const coachOn = setup.coach || coach.open;
+  const coachOn = coachShown(setup.coach || coach.open, objects.length);
   const slideShort = session.slideName.split(" ")[0] ?? "";
   const creatorName = person(session.task?.created_by_user_id)?.name;
   const researcherFirstName = creatorName?.split(" ")[0];

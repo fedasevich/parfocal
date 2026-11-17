@@ -8,6 +8,7 @@ from db_support import OWNER_URL, migrated_database, run_sql, with_database
 from sqlalchemy import select
 
 from parfocal_api.auth import sign_in_user
+from parfocal_api.evaluation_report import get_evaluation_report
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.project_overview import (
     get_project_overview,
@@ -19,11 +20,18 @@ from parfocal_api.project_uploads import get_project_imports, get_upload_batch
 from parfocal_api.review_decisions import ReviewDecisionDraft, list_decisions, save_decision
 from parfocal_api.review_objects import list_review_objects
 from parfocal_api.review_states import State, states_of, task_of
+from parfocal_api.sample_files import SampleFile
 from parfocal_api.showcase import (
+    ANNOTATE_DEMO,
+    CELL_TOUR,
+    CELLS_CHECKED,
+    DEMO_TASKS,
     FIXTURES_MANIFEST,
     FORMAT_GALLERY,
     GALLERY_TOUR,
+    HALF_DONE,
     RESULT_FILES,
+    SUBMITTED,
     VIEWER_SAMPLE,
     WORKSPACES,
     seed,
@@ -45,6 +53,7 @@ from parfocal_api.tables import (
     review_tasks,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.ingest import SAMPLE_FACTS_NAME, fixture_folder, fixture_original_key
 from parfocal_common.jobs import JobStatus
 from parfocal_common.object_store import StorageError
 from parfocal_common.result_imports import ResultFormat
@@ -74,11 +83,41 @@ SUFFIX_FORMATS = {
 }
 
 
+OPENABLE = ("CMU-1-Small-Region.svs", "Philips-4.tiff")
+
+
+def stored_fixture(name: str) -> bytes:
+    return (
+        SampleFile(
+            original_key=fixture_original_key(name),
+            file_bytes=1000,
+            sha256="a" * 64,
+            format="aperio-svs",
+            variant="jpeg",
+            reader="openslide",
+            width=2220,
+            height=2967,
+            level_count=1,
+            mpp_x=0.5,
+            mpp_y=0.5,
+            objective_power=20.0,
+            notices=[],
+        )
+        .model_dump_json()
+        .encode()
+    )
+
+
 class EmptyStore:
     def __init__(self) -> None:
         self.written: dict[str, bytes] = {}
+        self.facts = {
+            f"{fixture_folder(name)}{SAMPLE_FACTS_NAME}": stored_fixture(name) for name in OPENABLE
+        }
 
     async def get_object(self, key: str) -> bytes:
+        if key in self.facts:
+            return self.facts[key]
         raise StorageError(404, "NoSuchKey")
 
     async def put_new_object(self, key: str, body: bytes, content_type: str) -> None:
@@ -87,9 +126,21 @@ class EmptyStore:
         self.written[key] = body
 
 
-class UnusedResults:
+class MemoryResults:
+    def __init__(self) -> None:
+        self.objects: dict[str, bytes] = {}
+
     async def get(self, object_key: str) -> bytes:
-        raise AssertionError(object_key)
+        return self.objects[object_key]
+
+    async def get_packed(self, object_key: str) -> bytes:
+        return self.objects[object_key]
+
+    async def put(self, object_key: str, data: bytes) -> None:
+        self.objects[object_key] = data
+
+
+RESULTS = MemoryResults()
 
 
 @pytest.fixture(scope="module")
@@ -102,7 +153,7 @@ async def run_seed(
     url: str, owner_email: str | None = "owner@example.test", store: EmptyStore | None = None
 ) -> uuid.UUID:
     used = store if store is not None else EmptyStore()
-    tenant_ids = await seed(url, used, UnusedResults(), owner_email)  # type: ignore[arg-type]
+    tenant_ids = await seed(url, used, RESULTS, owner_email)  # type: ignore[arg-type]
     return tenant_ids[0]
 
 
@@ -301,7 +352,7 @@ async def test_the_owner_reviews_the_gallery_tour_on_the_real_review_calls(seede
         "seed:owner@example.test", tenant, uuid.UUID(str(user_id)), Role.RESEARCHER, True
     )
     task, slide = uuid.UUID(str(task_id)), uuid.UUID(str(slide_id))
-    results = UnusedResults()
+    results = RESULTS
     engine = create_engine(seeded)
     try:
         async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant)) as connection:
@@ -395,3 +446,143 @@ async def test_the_owner_opens_a_seeded_project_on_the_real_project_calls(seeded
             assert batch.project_id == project
     finally:
         await engine.dispose()
+
+
+async def owner_task(url: str, name: str) -> tuple[uuid.UUID, MemberPrincipal, list[uuid.UUID]]:
+    rows = await run_sql(
+        url,
+        "SELECT t.id, t.tenant_id, u.id, ts.slide_id FROM review_tasks t "
+        "JOIN review_task_slides ts ON ts.task_id = t.id "
+        "JOIN review_assignments a ON a.task_id = t.id AND a.slide_id = ts.slide_id "
+        "JOIN users u ON u.id = a.user_id JOIN tenants w ON w.id = t.tenant_id "
+        f"WHERE t.name = '{name}' AND u.email = 'owner@example.test' "
+        f"AND w.slug = '{WORKSPACES[0].slug}' ORDER BY ts.position",
+    )
+    task_id, tenant_id, user_id, _ = rows[0]
+    principal = MemberPrincipal(
+        "seed:owner@example.test",
+        uuid.UUID(str(tenant_id)),
+        uuid.UUID(str(user_id)),
+        Role.RESEARCHER,
+        True,
+    )
+    return uuid.UUID(str(task_id)), principal, [uuid.UUID(str(row[3])) for row in rows]
+
+
+async def test_the_demo_tasks_use_templates_that_match_their_results(seeded: str) -> None:
+    await run_seed(seeded)
+    rows = await run_sql(
+        seeded,
+        "SELECT t.name, t.kind, t.scope, v.study_kind FROM review_tasks t "
+        "LEFT JOIN study_template_versions v ON v.template_id = t.study_template_id "
+        "AND v.version = t.study_template_version "
+        f"WHERE t.name IN ({', '.join(repr(name) for name in DEMO_TASKS)})",
+    )
+    found = {(str(name), str(kind), str(scope), str(study)) for name, kind, scope, study in rows}
+    assert found == {
+        (GALLERY_TOUR, "review", "all-regions", "regions"),
+        (CELL_TOUR, "review", "random-cells", "cells"),
+        (HALF_DONE, "review", "all-regions", "regions"),
+        (SUBMITTED, "review", "all-regions", "regions"),
+        (ANNOTATE_DEMO, "annotate", "whole-slide", "regions"),
+    }
+    defaults = await values(
+        seeded,
+        "SELECT v.study_kind FROM projects p JOIN study_templates s ON s.id = p.study_template_id "
+        "JOIN study_template_versions v ON v.template_id = s.id AND v.version = s.version "
+        f"WHERE p.name = '{WORKSPACES[0].gallery}'",
+    )
+    assert defaults == {"regions"}
+
+
+async def test_every_demo_slide_has_a_regions_and_a_cells_result(seeded: str) -> None:
+    await run_seed(seeded)
+    rows = await run_sql(
+        seeded,
+        "SELECT s.id, max(r.region_count), max(r.cell_count) FROM slides s "
+        "JOIN projects p ON p.id = s.project_id "
+        "JOIN result_sets r ON r.slide_id = s.id AND r.status = 'ready' "
+        f"WHERE p.name = '{WORKSPACES[0].gallery}' GROUP BY s.id",
+    )
+    assert len(rows) == len(FORMAT_GALLERY) + 1
+    assert all(int(str(regions)) > 0 and int(str(cells)) > 0 for _, regions, cells in rows)
+
+
+async def test_the_tour_opens_the_slides_that_open_first(seeded: str) -> None:
+    await run_seed(seeded)
+    _, _, slide_ids = await owner_task(seeded, GALLERY_TOUR)
+    labels = [
+        str(row[0])
+        for row in await run_sql(
+            seeded,
+            "SELECT label FROM slides WHERE id IN "
+            f"({', '.join(repr(str(slide_id)) for slide_id in slide_ids[:3])})",
+        )
+    ]
+    assert set(labels) == {VIEWER_SAMPLE, *OPENABLE}
+
+
+async def test_the_owner_has_objects_to_decide_in_each_open_demo_task(seeded: str) -> None:
+    await run_seed(seeded)
+    engine = create_engine(seeded)
+    try:
+        for name, kind, count in ((GALLERY_TOUR, "region", 3), (CELL_TOUR, "cell", CELLS_CHECKED)):
+            task, principal, slide_ids = await owner_task(seeded, name)
+            async with scoped_transaction(
+                engine, DatabaseScope(tenant_id=principal.tenant_id)
+            ) as connection:
+                listed = await list_review_objects(
+                    task,
+                    slide_ids[-1],
+                    principal,
+                    connection,
+                    RESULTS,  # type: ignore[arg-type]
+                )
+                assert len(listed.objects) == count
+                assert {item.kind for item in listed.objects} == {kind}
+    finally:
+        await engine.dispose()
+
+
+async def test_one_demo_task_is_half_done_and_one_is_submitted_with_a_report(
+    seeded: str,
+) -> None:
+    await run_seed(seeded)
+    half, principal, half_slides = await owner_task(seeded, HALF_DONE)
+    done, _, done_slides = await owner_task(seeded, SUBMITTED)
+    engine = create_engine(seeded)
+    try:
+        async with scoped_transaction(
+            engine, DatabaseScope(tenant_id=principal.tenant_id)
+        ) as connection:
+            states = await states_of(connection, await task_of(connection, half))
+            by_slide = {slide.slide_id: slide for slide in states.slides}
+            submitted = [
+                slide_id
+                for slide_id in half_slides
+                if by_slide[slide_id].reviewers[0].submitted_at is not None
+            ]
+            assert submitted == half_slides[:1]
+            decided = await list_decisions(half, half_slides[1], principal, connection)
+            assert len(decided) == 3
+            assert not await list_decisions(half, half_slides[2], principal, connection)
+            done_states = await states_of(connection, await task_of(connection, done))
+            assert len(done_slides) == 2
+            assert all(
+                reviewer.submitted_at is not None
+                for slide in done_states.slides
+                for reviewer in slide.reviewers
+            )
+            report = await get_evaluation_report(done, principal, connection)
+            assert report.slides == 2
+            assert report.objects > 0
+    finally:
+        await engine.dispose()
+
+
+async def test_the_owner_has_an_annotate_task(seeded: str) -> None:
+    await run_seed(seeded)
+    task, _, slide_ids = await owner_task(seeded, ANNOTATE_DEMO)
+    kinds = await values(seeded, f"SELECT kind FROM review_tasks WHERE id = '{task}'")
+    assert kinds == {"annotate"}
+    assert len(slide_ids) == 2

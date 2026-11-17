@@ -18,23 +18,33 @@ from parfocal_api.audit import actor_of
 from parfocal_api.auth import SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.decision_styles import DecisionSettings
+from parfocal_api.opinions import OpinionChange, save_opinion
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.projects import ProjectDraft, create_project
 from parfocal_api.realtime import NoRealtime
 from parfocal_api.result_sets import (
+    ChunkRow,
     RegionRow,
     ResultSetDraft,
+    add_chunks,
     add_regions,
+    cells_per_class,
     fail,
     finish,
     insert_result_set,
 )
+from parfocal_api.review_decisions import ReviewDecisionDraft, save_decision
+from parfocal_api.review_objects import list_review_objects
+from parfocal_api.review_order import cancel_order_jobs, stored_seeds
+from parfocal_api.review_order_job import order_one_slide
+from parfocal_api.review_states import submit_slide_review
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
 from parfocal_api.sample_files import SampleFile, stored_facts, stored_sample_file
 from parfocal_api.sample_project import SAMPLE_SLIDES, square
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     AnalysisTemplate,
+    BuiltInTemplate,
     DecisionReason,
     DecisionStyle,
     DecisionValue,
@@ -55,10 +65,12 @@ from parfocal_api.tables import (
     review_task_slides,
     review_tasks,
     slides,
+    study_templates,
     tenants,
     users,
     workspace_settings,
 )
+from parfocal_common.chunk_store import Cell, build_cells, write_cells
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.ingest import (
     RESTRICTED_RANGES_NAME,
@@ -178,6 +190,18 @@ VIEWER_SAMPLE_RANGES = {
     "barcode": [[309578626, 309578638]],
 }
 GALLERY_TOUR = "Format gallery tour"
+CELL_TOUR = "Cell typing tour"
+HALF_DONE = "Half done review"
+SUBMITTED = "Submitted review"
+ANNOTATE_DEMO = "Tumour outline practice"
+DEMO_TASKS = (GALLERY_TOUR, CELL_TOUR, HALF_DONE, SUBMITTED, ANNOTATE_DEMO)
+CELL_CLASSES = ("Tumor cell", "Lymphocyte", "Stroma cell")
+DEMO_CELLS = 24
+CELLS_CHECKED = 12
+DEMO_WIDTH = 32000
+DEMO_HEIGHT = 24000
+DEMO_OPINION = {"acceptable": 4}
+OWNER_SUBJECT = f"{PLACEHOLDER_PREFIX}owner"
 ALREADY_STORED = 412
 
 
@@ -518,25 +542,30 @@ async def review_task(
     reviewers: list[uuid.UUID],
     style: DecisionStyle,
     kind: TaskKind = TaskKind.REVIEW,
+    template_id: uuid.UUID | None = None,
+    scope: Scope | None = None,
 ) -> uuid.UUID:
     reviewing = kind is TaskKind.REVIEW
+    draft = TaskDraft(
+        name=name,
+        kind=kind,
+        slide_ids=list(sets),
+        result_sets=[
+            SlideSet(slide_id=slide_id, result_set_id=set_id)
+            for slide_id, set_id in sets.items()
+            if set_id is not None
+        ],
+        reviewer_ids=reviewers,
+        split=TaskSplit.EVERYONE,
+        scope=(scope or Scope(kind=TaskScope.ALL_REGIONS)) if reviewing else None,
+        blinded=False,
+        decision=DecisionSettings(style=style) if reviewing else None,
+    )
+    if template_id is not None:
+        draft = draft.model_copy(update={"study_template_id": template_id})
     task = await create_review_task(
         project_id,
-        TaskDraft(
-            name=name,
-            kind=kind,
-            slide_ids=list(sets),
-            result_sets=[
-                SlideSet(slide_id=slide_id, result_set_id=set_id)
-                for slide_id, set_id in sets.items()
-                if set_id is not None
-            ],
-            reviewer_ids=reviewers,
-            split=TaskSplit.EVERYONE,
-            scope=Scope(kind=TaskScope.ALL_REGIONS) if reviewing else None,
-            blinded=False,
-            decision=DecisionSettings(style=style) if reviewing else None,
-        ),
+        draft,
         principal,
         connection,
         results,
@@ -725,6 +754,163 @@ async def seed_gallery(
         )
 
 
+@dataclass
+class DemoSets:
+    regions: dict[uuid.UUID, uuid.UUID | None]
+    cells: dict[uuid.UUID, uuid.UUID | None]
+
+
+async def built_in_templates(
+    connection: AsyncConnection, tenant_id: uuid.UUID
+) -> dict[BuiltInTemplate, uuid.UUID]:
+    rows = await connection.execute(
+        select(study_templates.c.built_in, study_templates.c.id).where(
+            study_templates.c.tenant_id == tenant_id, study_templates.c.built_in.is_not(None)
+        )
+    )
+    return {BuiltInTemplate(built_in): template_id for built_in, template_id in rows}
+
+
+def box(left: int, top: int, size: int) -> str:
+    right, bottom = left + size, top + size
+    return f"POLYGON(({left} {top},{right} {top},{right} {bottom},{left} {bottom},{left} {top}))"
+
+
+def demo_regions(width: int, height: int) -> list[RegionRow]:
+    size = max(min(width, height) // 8, 16)
+    top = height // 2 - size // 2
+    return [
+        RegionRow(
+            kind=ResultObjectKind.REGION,
+            number=index + 1,
+            wkt=box(width * (index + 1) // 4 - size // 2, top, size),
+            class_position=0,
+            score=220 - index * 50,
+        )
+        for index in range(3)
+    ]
+
+
+def demo_cells(width: int, height: int) -> list[Cell]:
+    size = max(min(width, height) // 60, 4)
+    left, top = width // 2 - 3 * size * 2, height // 4
+    cells: list[Cell] = []
+    for index in range(DEMO_CELLS):
+        x = left + (index % 6) * size * 2
+        y = top + (index // 6) * size * 2
+        cells.append(
+            Cell(
+                number=index + 1,
+                ring=(x, y, x + size, y, x + size, y + size, x, y + size),
+                class_index=index % len(CELL_CLASSES),
+                score=250 - index * 9,
+            )
+        )
+    return cells
+
+
+async def add_demo_sets(
+    connection: AsyncConnection,
+    principal: MemberPrincipal,
+    results: ResultStore,
+    slide_id: uuid.UUID,
+    demo: DemoSets,
+) -> None:
+    slide = (
+        await connection.execute(
+            select(slides.c.id, slides.c.project_id, slides.c.width, slides.c.height).where(
+                slides.c.id == slide_id
+            )
+        )
+    ).one()
+    width, height = slide.width or DEMO_WIDTH, slide.height or DEMO_HEIGHT
+    regions_id = await insert_result_set(
+        connection,
+        principal.tenant_id,
+        slide,
+        ResultSetDraft(
+            name="Tumour detector v1",
+            model_version="v1.0",
+            classes=["Tumor"],
+            source_file="regions.parfocal.json",
+        ),
+        ResultSource.IMPORT,
+        actor_of(principal),
+        principal.user_id,
+    )
+    await add_regions(connection, regions_id, demo_regions(width, height))
+    await finish(connection, regions_id)
+    cells_id = await insert_result_set(
+        connection,
+        principal.tenant_id,
+        slide,
+        ResultSetDraft(
+            name="Cell typer v1",
+            model_version="v1.0",
+            classes=list(CELL_CLASSES),
+            source_file="cells.geojson",
+        ),
+        ResultSource.IMPORT,
+        actor_of(principal),
+        principal.user_id,
+    )
+    built = build_cells(
+        principal.tenant_id,
+        slide_id,
+        cells_id,
+        demo_cells(width, height),
+        len(CELL_CLASSES),
+    )
+    entries = await write_cells(results, built)
+    await add_chunks(connection, cells_id, [ChunkRow.of(entry) for entry in entries])
+    await finish(connection, cells_id, cells_per_class(entries))
+    demo.regions[slide_id] = regions_id
+    demo.cells[slide_id] = cells_id
+
+
+async def order_now(
+    connection: AsyncConnection,
+    results: ResultStore,
+    task_id: uuid.UUID,
+    slide_ids: list[uuid.UUID],
+) -> None:
+    seeds = await stored_seeds(connection, task_id, slide_ids)
+    for slide_id, seed in seeds.items():
+        await order_one_slide(connection, results, task_id, slide_id, seed)
+    await cancel_order_jobs(connection, task_id)
+
+
+async def decide_all(
+    connection: AsyncConnection,
+    principal: MemberPrincipal,
+    results: ResultStore,
+    task_id: uuid.UUID,
+    slide_ids: list[uuid.UUID],
+    *,
+    submit: bool,
+) -> None:
+    for slide_id in slide_ids:
+        listed = await list_review_objects(task_id, slide_id, principal, connection, results)
+        for position, found in enumerate(listed.objects):
+            draft = (
+                ReviewDecisionDraft(
+                    value=DecisionValue.DISAGREE, reasons=[DecisionReason.BOUNDARY_OFF]
+                )
+                if position == len(listed.objects) - 1
+                else ReviewDecisionDraft(value=DecisionValue.AGREE)
+            )
+            await save_decision(
+                task_id, slide_id, found.object, draft, principal, connection, results
+            )
+        await save_opinion(
+            task_id, slide_id, OpinionChange(answers=DEMO_OPINION), principal, connection
+        )
+        if submit:
+            await submit_slide_review(
+                task_id, slide_id, principal, connection, BackgroundTasks(), NoRealtime()
+            )
+
+
 async def seed_gallery_tour(
     connection: AsyncConnection,
     seeded: Seeded,
@@ -778,25 +964,85 @@ async def seed_gallery_tour(
     gallery_ids = await connection.scalars(
         select(slides.c.id)
         .where(slides.c.project_id == project_id, slides.c.id != sample_id)
-        .order_by(slides.c.label)
+        .order_by(slides.c.width.is_(None), slides.c.label)
+    )
+    templates = await built_in_templates(connection, seeded.tenant_id)
+    await connection.execute(
+        update(projects)
+        .where(projects.c.id == project_id)
+        .values(study_template_id=templates[BuiltInTemplate.DETECTION])
     )
     principal = principal_of(seeded, "ada", Role.RESEARCHER, True)
-    sets = {
-        slide_id: await ready_set(
-            connection, principal, await slide_row(connection, slide_id), "regions.parfocal.json"
-        )
-        for slide_id in [sample_id, *gallery_ids]
-    }
+    demo = DemoSets({}, {})
+    for slide_id in [sample_id, *gallery_ids]:
+        await add_demo_sets(connection, principal, results, slide_id, demo)
+    regions_of = demo.regions
+    owner = [seeded.owner]
+    detection = templates[BuiltInTemplate.DETECTION]
     await review_task(
         connection,
         principal,
         results,
         project_id,
         GALLERY_TOUR,
-        sets,
-        [seeded.owner],
+        regions_of,
+        owner,
         DecisionStyle.AGREE,
+        template_id=detection,
     )
+    cell_tour = await review_task(
+        connection,
+        principal,
+        results,
+        project_id,
+        CELL_TOUR,
+        demo.cells,
+        owner,
+        DecisionStyle.AGREE,
+        template_id=templates[BuiltInTemplate.CELL_TYPING],
+        scope=Scope(kind=TaskScope.RANDOM_CELLS, count=CELLS_CHECKED),
+    )
+    await order_now(connection, results, cell_tour, list(demo.cells))
+    ordered = list(regions_of)
+    half_done = await review_task(
+        connection,
+        principal,
+        results,
+        project_id,
+        HALF_DONE,
+        {slide_id: regions_of[slide_id] for slide_id in ordered[:4]},
+        owner,
+        DecisionStyle.AGREE,
+        template_id=detection,
+    )
+    submitted = await review_task(
+        connection,
+        principal,
+        results,
+        project_id,
+        SUBMITTED,
+        {slide_id: regions_of[slide_id] for slide_id in ordered[:2]},
+        owner,
+        DecisionStyle.AGREE,
+        template_id=detection,
+    )
+    await review_task(
+        connection,
+        principal,
+        results,
+        project_id,
+        ANNOTATE_DEMO,
+        dict.fromkeys(ordered[:2]),
+        owner,
+        DecisionStyle.CERTAINTY,
+        TaskKind.ANNOTATE,
+    )
+    owner_principal = MemberPrincipal(
+        OWNER_SUBJECT, seeded.tenant_id, seeded.owner, Role.RESEARCHER, True
+    )
+    await decide_all(connection, owner_principal, results, half_done, ordered[:1], submit=True)
+    await decide_all(connection, owner_principal, results, half_done, ordered[1:2], submit=False)
+    await decide_all(connection, owner_principal, results, submitted, ordered[:2], submit=True)
 
 
 async def seed_workspace(
