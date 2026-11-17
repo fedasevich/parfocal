@@ -58,6 +58,30 @@ test("the scenes set their state like the mock", async ({ page }) => {
   await expect(dialog.getByRole("button", { name: /Reassign 12 slides/ })).toBeEnabled();
 });
 
+test("the reviewer rows show every status word", async ({ page }) => {
+  const words = ["On track", "Behind", "Not started", "Away", "Done"];
+  const seen = new Set<string>();
+  const collect = async () => {
+    const rows = page.locator('[data-slot="reviewer-row"]');
+    await expect(rows.first()).toBeVisible();
+    for (const text of await rows.allInnerTexts()) {
+      for (const word of words) if (text.includes(word)) seen.add(word);
+    }
+  };
+  for (const scene of ["away", "sent", "overdue", "open"]) {
+    await page.goto(`/team?scene=${scene}`);
+    await collect();
+  }
+  await row(page, "RT-14", "Simona Marková").getByRole("button", { name: "Reassign" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reassign slides" });
+  await dialog.getByRole("combobox", { name: "To" }).fill("Jan");
+  await dialog.getByRole("option", { name: /Jan Růžička/ }).click();
+  await dialog.getByRole("button", { name: /Reassign 8 slides/ }).click();
+  await expect(row(page, "RT-14", "Simona Marková")).toContainText("all 4 submitted");
+  await collect();
+  expect([...seen].sort()).toEqual([...words].sort());
+});
+
 test("Nudge sends, marks the row and Undo takes it back", async ({ page }) => {
   await page.goto("/team");
   const simona = row(page, "RT-14", "Simona Marková");
@@ -146,22 +170,15 @@ test("a filter that matches nothing says so and clears", async ({ page }) => {
   await expect(page.getByText("Signed off 14 Oct")).toBeVisible();
 });
 
-test("Nudge and Reassign in Assigned by me open Team on the clicked task's row", async ({
-  page,
-}) => {
+test("Reassign slides in Assigned by me opens Team on the clicked task's row", async ({ page }) => {
   await page.goto("/my-work?tab=assigned");
   const rt15 = page.getByRole("row").filter({ hasText: "RT-15" });
-  await rt15.getByRole("button", { name: "Nudge" }).click();
-  await expect(page).toHaveURL(/\/team\?scene=nudge&task=[0-9a-f-]+&focus=[0-9a-f-]+$/);
-  const nudge = page.getByRole("dialog", { name: "Nudge" });
-  await expect(nudge).toContainText("Anna Kopecká");
-  await expect(nudge).toContainText("RT-15 · PathoSAM vs CAMELYON");
-  await page.keyboard.press("Escape");
-  await expect(nudge).toHaveCount(0);
-  await expect(row(page, "RT-15", "Anna Kopecká")).toHaveAttribute("data-highlight", "true");
-  await page.goto("/my-work?tab=assigned");
-  await rt15.getByRole("button", { name: "Reassign" }).click();
+  await rt15.getByRole("button", { name: "More actions for RT-15" }).click();
+  await page.getByRole("menuitem", { name: "Reassign slides" }).click();
+  await expect(page).toHaveURL(/\/team\?scene=reassign&task=[0-9a-f-]+&focus=[0-9a-f-]+$/);
   const reassign = page.getByRole("dialog", { name: "Reassign slides" });
   await expect(reassign).toContainText("RT-15 · PathoSAM vs CAMELYON");
   await expect(reassign).toContainText("0 of 12 slides done");
+  await page.keyboard.press("Escape");
+  await expect(row(page, "RT-15", "Anna Kopecká")).toHaveAttribute("data-highlight", "true");
 });

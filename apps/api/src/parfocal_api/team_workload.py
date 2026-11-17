@@ -153,7 +153,10 @@ async def paces_of(
             (last.c.task_id == review_assignments.c.task_id)
             & (last.c.user_id == review_assignments.c.user_id),
         )
-        .where(review_assignments.c.task_id.in_(task_ids))
+        .where(
+            review_assignments.c.task_id.in_(task_ids),
+            review_assignments.c.released_at.is_(None),
+        )
         .group_by(review_assignments.c.task_id, review_assignments.c.user_id)
         .order_by(func.min(review_assignments.c.assigned_at), review_assignments.c.user_id)
     )
@@ -294,6 +297,7 @@ async def list_reviewer_workload(connection: TenantConnection) -> list[ReviewerW
         .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
         .where(
             review_assignments.c.submitted_at.is_(None),
+            review_assignments.c.released_at.is_(None),
             review_tasks.c.signed_off_at.is_(None),
             review_tasks.c.archived_at.is_(None),
         )
