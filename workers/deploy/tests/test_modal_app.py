@@ -116,6 +116,35 @@ def test_the_web_container_imports_the_api_before_its_snapshot() -> None:
         importlib.import_module(module)
 
 
+def test_the_snapshot_holds_the_database_driver_and_http_stack_the_app_loads_at_startup() -> None:
+    for module in ("sqlalchemy.dialects.postgresql.asyncpg", "asyncpg", "httpcore2", "truststore"):
+        assert module in WEB_PRELOAD
+
+
+def test_the_served_api_logs_how_long_startup_took(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    from fastapi import FastAPI
+
+    import parfocal_api.app
+
+    monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    monkeypatch.setattr(parfocal_common.jobs, "JOB_WAKERS", [no_job_wake])
+    caplog.set_level("INFO", logger=modal_app.STARTUP_LOGGER)
+    app = modal_app.serve()
+
+    async def start_and_stop() -> None:
+        async with app.router.lifespan_context(app):
+            pass
+
+    asyncio.run(start_and_stop())
+    created, ready = caplog.records
+    assert created.getMessage() == "web app created"
+    assert created.__dict__["create_app_ms"] <= created.__dict__["serve_ms"]
+    assert ready.getMessage() == "web ready"
+    assert ready.__dict__["lifespan_ms"] >= 0
+
+
 def test_other_containers_and_local_runs_skip_the_api_preload() -> None:
     loaded: list[str] = []
     modal_app.preload({}, loaded.append)

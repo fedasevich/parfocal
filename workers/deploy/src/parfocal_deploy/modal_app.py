@@ -1,8 +1,10 @@
 import importlib
+import logging
 import os
 import time
 import tomllib
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -49,7 +51,16 @@ WEB_PRELOAD = (
     "parfocal_api.event_emit",
     "parfocal_common.jobs",
     "parfocal_common.warm_gate",
+    "sqlalchemy.dialects.postgresql.asyncpg",
+    "asyncpg",
+    "httpcore2",
+    "h11",
+    "truststore",
+    "anyio._backends._asyncio",
+    "encodings.idna",
+    "concurrent.futures.thread",
 )
+STARTUP_LOGGER = "parfocal.api.startup"
 
 WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
 WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 20, "target_inputs": 16}
@@ -135,7 +146,27 @@ def preload(
             load(module)
 
 
+def elapsed_ms(started: float) -> float:
+    return round((time.perf_counter() - started) * 1000, 1)
+
+
+def timed_lifespan(
+    lifespan: Callable[[Any], AbstractAsyncContextManager[Any]],
+) -> Callable[[Any], AbstractAsyncContextManager[Any]]:
+    @asynccontextmanager
+    async def timed(app: Any) -> AsyncIterator[Any]:
+        started = time.perf_counter()
+        async with lifespan(app) as state:
+            logging.getLogger(STARTUP_LOGGER).info(
+                "web ready", extra={"lifespan_ms": elapsed_ms(started)}
+            )
+            yield state
+
+    return timed
+
+
 def serve() -> Any:
+    started = time.perf_counter()
     import parfocal_api.app
     from parfocal_api.event_emit import set_waker
     from parfocal_common.jobs import set_job_waker
@@ -143,10 +174,16 @@ def serve() -> Any:
 
     set_waker(spawn_events())
     set_job_waker(spawn_ingest())
+    created = time.perf_counter()
     app = parfocal_api.app.create_app()
     pools = ModalPools()
     app.state.gpu_pools = pools
     app.state.warm_gate = WarmGate(pools)
+    app.router.lifespan_context = timed_lifespan(app.router.lifespan_context)
+    logging.getLogger(STARTUP_LOGGER).info(
+        "web app created",
+        extra={"serve_ms": elapsed_ms(started), "create_app_ms": elapsed_ms(created)},
+    )
     return app
 
 
