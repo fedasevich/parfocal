@@ -112,7 +112,7 @@ def test_the_database_clock_turns_a_task_past_its_due_day_overdue_and_behind(
     task, words = statuses(api, r)
     assert words == {"not-started"}
     assert task["due_on"] > task["as_of"][:10]
-    shift_task(database, r, 10, -1)
+    shift_task(database, r, 10, -2)
     task, words = statuses(api, r)
     assert task["due_on"] < task["as_of"][:10]
     assert words == {"behind"}

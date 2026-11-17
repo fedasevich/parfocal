@@ -58,6 +58,30 @@ test("the scenes set their state like the mock", async ({ page }) => {
   await expect(dialog.getByRole("button", { name: /Reassign 12 slides/ })).toBeEnabled();
 });
 
+test("the reviewer rows show every status word", async ({ page }) => {
+  const words = ["On track", "Behind", "Not started", "Away", "Done"];
+  const seen = new Set<string>();
+  const collect = async () => {
+    const rows = page.locator('[data-slot="reviewer-row"]');
+    await expect(rows.first()).toBeVisible();
+    for (const text of await rows.allInnerTexts()) {
+      for (const word of words) if (text.includes(word)) seen.add(word);
+    }
+  };
+  for (const scene of ["away", "sent", "overdue", "open"]) {
+    await page.goto(`/team?scene=${scene}`);
+    await collect();
+  }
+  await row(page, "RT-14", "Simona Marková").getByRole("button", { name: "Reassign" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reassign slides" });
+  await dialog.getByRole("combobox", { name: "To" }).fill("Jan");
+  await dialog.getByRole("option", { name: /Jan Růžička/ }).click();
+  await dialog.getByRole("button", { name: /Reassign 8 slides/ }).click();
+  await expect(row(page, "RT-14", "Simona Marková")).toContainText("all 4 submitted");
+  await collect();
+  expect([...seen].sort()).toEqual([...words].sort());
+});
+
 test("Nudge sends, marks the row and Undo takes it back", async ({ page }) => {
   await page.goto("/team");
   const simona = row(page, "RT-14", "Simona Marková");
