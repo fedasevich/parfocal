@@ -14,8 +14,16 @@ export interface SetCasing {
   readonly followsAlpha: boolean;
 }
 
+export interface InstanceRanges {
+  readonly triangles?: readonly number[];
+  readonly segments?: readonly number[];
+  readonly repeats?: readonly number[];
+  readonly points?: readonly number[];
+}
+
 export interface SetDraw {
   readonly kind: "set";
+  readonly ranges?: InstanceRanges;
   readonly id: string;
   readonly fillAlpha: number;
   readonly alpha: number;

@@ -686,13 +686,23 @@ export function createRenderer(
         const parts = slots[index] ?? [];
         const [fill] = parts;
         const point = parts[5];
+        const ranges = layer.kind === "set" ? layer.ranges : undefined;
+        const drawRanges = (vertices: number, kept: readonly number[], first = 0) => {
+          for (let at = 0; at + 1 < kept.length; at += 2) {
+            const from = kept[at] ?? 0;
+            const to = kept[at + 1] ?? 0;
+            if (to > from) pass.draw(vertices, to - from, 0, first + from);
+          }
+        };
+        const segmentRanges = ranges?.segments ?? [0, stored.segments];
         if (fill && stored.triangles > 0) {
           pass.setPipeline(trianglePipeline);
           pass.setBindGroup(0, styles.group, [offsetOf(0)]);
           pass.setVertexBuffer(0, stored.buffer, 0);
-          pass.draw(3, stored.triangles);
+          drawRanges(3, ranges?.triangles ?? [0, stored.triangles]);
         }
         if (stored.segments > 0 && layer.alpha < 1) {
+          const repeatRanges = ranges?.repeats ?? [0, stored.repeats ?? 0];
           for (const part of bodyParts) {
             if (!parts[part]) continue;
             pass.end();
@@ -700,7 +710,8 @@ export function createRenderer(
             pass.setPipeline(segmentOncePipeline);
             pass.setBindGroup(0, styles.group, [offsetOf(part)]);
             pass.setVertexBuffer(0, stored.buffer, stored.segmentOffset);
-            pass.draw(onceVertices, stored.segments + (stored.repeats ?? 0));
+            drawRanges(onceVertices, segmentRanges);
+            drawRanges(onceVertices, repeatRanges, stored.segments);
             pass.end();
             pass = beginPass(null);
           }
@@ -710,14 +721,14 @@ export function createRenderer(
           for (let part = 1; part <= 4; part++) {
             if (!parts[part]) continue;
             pass.setBindGroup(0, styles.group, [offsetOf(part)]);
-            pass.draw(4, stored.segments);
+            drawRanges(4, segmentRanges);
           }
         }
         if (point && stored.points > 0) {
           pass.setPipeline(pointPipeline);
           pass.setBindGroup(0, styles.group, [offsetOf(5)]);
           pass.setVertexBuffer(0, stored.buffer, stored.pointOffset);
-          pass.draw(4, stored.points);
+          drawRanges(4, ranges?.points ?? [0, stored.points]);
         }
       });
     }

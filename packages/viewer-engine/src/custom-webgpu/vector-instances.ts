@@ -1,3 +1,4 @@
+import type { PolygonBatch } from "../overlay/batch-types.ts";
 import type { ShapeData } from "../overlay/types.ts";
 import {
   pointInstanceBytes,
@@ -31,6 +32,48 @@ function ringEnds(starts: Uint32Array, holeStarts: Uint32Array): number[] {
 function ringSegments(vertices: number, fromMiddle: boolean): number {
   if (vertices < 2) return 0;
   return fromMiddle && vertices >= smallestRing ? vertices + 1 : vertices;
+}
+
+export interface ShapeInstanceStarts {
+  readonly triangles: Uint32Array;
+  readonly segments: Uint32Array;
+  readonly repeats: Uint32Array;
+}
+
+export function shapeInstanceStarts(
+  polygons: PolygonBatch,
+  options: VectorInstanceOptions = {},
+): ShapeInstanceStarts {
+  const fromMiddle = options.ringsFromMidFirstEdge === true;
+  const { count, starts, holeStarts, indices } = polygons;
+  const triangles = new Uint32Array(count + 1);
+  const segments = new Uint32Array(count + 1);
+  const repeats = new Uint32Array(count + 1);
+  let index = 0;
+  let from = 0;
+  const ends = ringEnds(starts, holeStarts);
+  let ring = 0;
+  for (let shape = 0; shape < count; shape++) {
+    const end = starts[shape + 1] ?? 0;
+    let triangleCount = 0;
+    while (index < indices.length && (indices[index] ?? 0) < end) {
+      index += 3;
+      triangleCount += 1;
+    }
+    let segmentTotal = 0;
+    let repeatTotal = 0;
+    while (ring < ends.length && (ends[ring] ?? 0) <= end) {
+      const to = ends[ring] ?? 0;
+      segmentTotal += ringSegments(to - from, fromMiddle);
+      if (!fromMiddle && to - from >= smallestRing) repeatTotal += repeatSegments;
+      from = to;
+      ring += 1;
+    }
+    triangles[shape + 1] = (triangles[shape] ?? 0) + triangleCount;
+    segments[shape + 1] = (segments[shape] ?? 0) + segmentTotal;
+    repeats[shape + 1] = (repeats[shape] ?? 0) + repeatTotal;
+  }
+  return { triangles, segments, repeats };
 }
 
 function repeatCount(shapes: ShapeData, fromMiddle: boolean): number {

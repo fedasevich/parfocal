@@ -12,6 +12,7 @@ import {
 } from "../decode/worker-reader.ts";
 import { systemClock } from "../engine/environment.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
+import { cameraViewRect } from "../overlay/cull-grid.ts";
 import { nearBlack, white } from "../overlay/outline-style.ts";
 import {
   isLabelOverlay,
@@ -25,6 +26,7 @@ import type {
   OverlayDescription,
   PinOverlay,
   RasterOverlay,
+  ShapeData,
   VectorOverlay,
 } from "../overlay/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
@@ -36,6 +38,13 @@ import { createTileFade } from "../viv/tile-fade.ts";
 import type { TileLoadState } from "../viv/tile-wait.ts";
 import { createVivLevels, type VivLevels, vivSignalAborted } from "../viv/viv-levels.ts";
 import { WebGpuError } from "../viv/webgpu-errors.ts";
+import {
+  type CulledSet,
+  type CulledShapes,
+  culledDraw,
+  culledSet,
+  cullShapes,
+} from "./culled-sets.ts";
 import { buildLabelInstances, createGlyphAtlas, type GlyphLayout } from "./label-glyphs.ts";
 import {
   type LayerDraw,
@@ -76,6 +85,14 @@ const labelBorderPx = 2;
 
 function glyphSetId(id: string): string {
   return `${id}:glyphs`;
+}
+
+function dotsSetId(id: string): string {
+  return `${id}:dots`;
+}
+
+function densityRasterId(id: string): string {
+  return `${id}:density`;
 }
 
 const vectorKinds: ReadonlySet<string> = new Set([
@@ -231,6 +248,8 @@ export function createCustomWebGpuRoute(
   let maxLayers: number | null = null;
   let overlays: readonly OverlayLayer[] = [];
   const sentLayers = new Map<string, SentLayer>();
+  const culled = new Map<string, CulledSet>();
+  const culledShapes = new WeakMap<ShapeData, CulledShapes | null>();
   const reportedOverlays = new Set<string>();
   let overlayWrites = 0;
   let pinAtlasSent = false;
@@ -438,14 +457,87 @@ export function createCustomWebGpuRoute(
     reportError(new WebGpuBufferLimitError(id, bytes, limit));
   };
 
+  const dropDerived = (id: string) => {
+    post({ type: "drop", id: dotsSetId(id) });
+    post({ type: "drop", id: densityRasterId(id) });
+  };
+
+  const preparedShapes = (shapes: ShapeData): CulledShapes | null => {
+    const known = culledShapes.get(shapes);
+    if (known !== undefined) return known;
+    const prepared = cullShapes(shapes);
+    culledShapes.set(shapes, prepared);
+    return prepared;
+  };
+
   const sendSet = (overlay: VectorOverlay) => {
     const dashed = overlay.style.dash !== null;
-    const { data, counts } = buildVectorInstances(overlay.shapes, {
-      ringsFromMidFirstEdge: dashed,
-    });
+    const options = { ringsFromMidFirstEdge: dashed };
+    const prepared = preparedShapes(overlay.shapes);
+    const { data, counts } = buildVectorInstances(prepared?.shapes ?? overlay.shapes, options);
     sentLayers.set(overlay.id, { source: overlay.shapes, dashed });
     overlayWrites += 1;
     post({ type: "set", id: overlay.id, data, counts }, [data]);
+    if (prepared === null) {
+      if (culled.delete(overlay.id)) dropDerived(overlay.id);
+      return;
+    }
+    culled.set(overlay.id, culledSet(prepared, counts, options));
+    const dots = buildVectorInstances({ points: prepared.centres });
+    overlayWrites += 1;
+    post({ type: "set", id: dotsSetId(overlay.id), data: dots.data, counts: dots.counts }, [
+      dots.data,
+    ]);
+    if (prepared.density === null) return;
+    const { width, height, rgba } = prepared.density;
+    const copy = new Uint8Array(rgba.byteLength);
+    copy.set(rgba);
+    post(
+      {
+        type: "raster",
+        id: densityRasterId(overlay.id),
+        width,
+        height,
+        rgba: copy.buffer,
+        smooth: true,
+      },
+      [copy.buffer],
+    );
+  };
+
+  const vectorDraws = (overlay: VectorOverlay): LayerDraw[] => {
+    const base = setDraw(overlay);
+    const set = culled.get(overlay.id);
+    if (set === undefined) return [base];
+    const view = viewSize();
+    const { choice, ranges, dots } = culledDraw(
+      set,
+      2 ** camera.zoom,
+      cameraViewRect(camera, view.width, view.height),
+    );
+    const draws: LayerDraw[] = [];
+    if (choice.tier === "density" && set.density !== null) {
+      draws.push({
+        kind: "raster",
+        id: densityRasterId(overlay.id),
+        alpha: layerAlpha(overlay.opacity),
+        area: set.density.area,
+      });
+    }
+    if (dots !== null) {
+      draws.push({
+        ...base,
+        id: dotsSetId(overlay.id),
+        fillAlpha: 0,
+        lineWidthPx: 0,
+        casing: null,
+        dash: null,
+        pointRadiusPx: choice.dotRadiusPx,
+        ranges: { points: dots },
+      });
+    }
+    draws.push({ ...base, ranges });
+    return draws;
   };
 
   const sendRaster = (overlay: RasterOverlay) => {
@@ -569,6 +661,7 @@ export function createCustomWebGpuRoute(
       sentLayers.delete(id);
       post({ type: "drop", id });
       post({ type: "drop", id: glyphSetId(id) });
+      if (culled.delete(id)) dropDerived(id);
     }
   };
 
@@ -578,7 +671,7 @@ export function createCustomWebGpuRoute(
       .filter((overlay) => overlay.visible && sentLayers.has(overlay.id))
       .sort((a, b) => a.order - b.order)
       .flatMap((overlay): LayerDraw[] => {
-        if (isVector(overlay)) return [setDraw(overlay)];
+        if (isVector(overlay)) return vectorDraws(overlay);
         if (isRasterOverlay(overlay)) {
           return [
             {
