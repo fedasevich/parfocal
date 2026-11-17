@@ -1,5 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
+import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useTourCornerBusy } from "../help/tour-state.ts";
 import { seqPoints } from "../telemetry/survey-items.ts";
@@ -16,7 +17,8 @@ const recheckMs = 15_000;
 let sessionCounted = false;
 
 function useOffer(): SurveyOffer | null {
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
+  useRouterState({ select: (state) => state.location.pathname });
   useEffect(() => {
     if (sessionCounted) return;
     sessionCounted = true;
@@ -26,12 +28,11 @@ function useOffer(): SurveyOffer | null {
     const timer = window.setInterval(() => setTick((value) => value + 1), recheckMs);
     return () => window.clearInterval(timer);
   }, []);
-  useSyncExternalStore(
+  return useSyncExternalStore(
     (listener) => surveyPrompter.subscribe(listener),
-    () => tick,
-    () => 0,
+    () => surveyPrompter.current(),
+    () => null,
   );
-  return surveyPrompter.current();
 }
 
 function Scale({

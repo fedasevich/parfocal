@@ -6,18 +6,31 @@ import { seqPoints, susScoreTenths } from "./survey-items.ts";
 import type { TaskKind } from "./task-timer.ts";
 
 const stateKey = "survey_state";
+const enabledKey = "surveys_on";
 const hour = 3_600_000;
 const day = 24 * hour;
 
 export const surveyRules = {
   sessionsBeforeSus: 5,
   susRepeatMs: 90 * day,
-  susDismissedMs: 14 * day,
+  susDismissedMs: 90 * day,
+  susArmLifeMs: 10 * 60_000,
   seqGapMs: 2 * hour,
   seqPerKindMs: 7 * day,
   seqDismissedMs: 7 * day,
   seqOfferLifeMs: 15 * 60_000,
 } as const;
+
+export function surveysEnabled(storage?: DeviceStorage): boolean {
+  return readDeviceSettings(storage)[enabledKey] === true;
+}
+
+export function setSurveysEnabled(on: boolean, storage?: DeviceStorage): void {
+  writeDeviceSetting(enabledKey, on, storage);
+}
+
+export const isPausePath = (pathname: string): boolean =>
+  /^\/tasks\/[^/]+\/submitted\/?$/.test(pathname);
 
 export type SurveyState = {
   sessions: number;
@@ -37,6 +50,8 @@ export const freshSurveyState: SurveyState = {
 
 export type SeqOffer = { survey: "seq"; taskKind: TaskKind; caseId: string; offeredAt: number };
 export type SurveyOffer = SeqOffer | { survey: "sus" };
+
+const susOffer: SurveyOffer = { survey: "sus" };
 
 const counted = (value: unknown): number =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0;
@@ -76,14 +91,18 @@ export type SurveyDeps = {
   now: () => number;
   held: () => boolean;
   optedOut?: () => boolean;
+  enabled?: () => boolean;
+  atPause?: () => boolean;
   storage?: DeviceStorage;
 };
 
 export function createSurveyPrompter(deps: SurveyDeps): SurveyPrompter {
   const optedOut = deps.optedOut ?? (() => analyticsOptedOut(deps.storage));
+  const enabled = deps.enabled ?? (() => surveysEnabled(deps.storage));
+  const atPause = deps.atPause ?? (() => true);
   const listeners = new Set<() => void>();
   let seqOffer: SeqOffer | null = null;
-  let susOffered = false;
+  let susArmedAt: number | null = null;
 
   const state = () => readSurveyState(deps.storage);
   const save = (next: SurveyState) => {
@@ -111,20 +130,21 @@ export function createSurveyPrompter(deps: SurveyDeps): SurveyPrompter {
   const closeSus = (waitMs: number) => {
     const current = state();
     save({ ...current, susSessionsAtPrompt: current.sessions, susNotBefore: deps.now() + waitMs });
-    susOffered = false;
+    susArmedAt = null;
   };
 
   const currentOffer = (): SurveyOffer | null => {
-    if (optedOut() || deps.held()) return null;
+    if (optedOut() || !enabled() || deps.held()) return null;
     if (seqOffer !== null) {
       if (deps.now() - seqOffer.offeredAt <= surveyRules.seqOfferLifeMs) return seqOffer;
       seqOffer = null;
     }
-    if (susOffered || susDue(state())) {
-      susOffered = true;
-      return { survey: "sus" };
+    if (susArmedAt === null) return null;
+    if (deps.now() - susArmedAt > surveyRules.susArmLifeMs || !susDue(state())) {
+      susArmedAt = null;
+      return null;
     }
-    return null;
+    return atPause() ? susOffer : null;
   };
 
   return {
@@ -134,11 +154,19 @@ export function createSurveyPrompter(deps: SurveyDeps): SurveyPrompter {
       changed();
     },
     taskFinished(kind, caseId) {
-      if (optedOut() || seqOffer !== null) return;
+      if (optedOut() || !enabled()) return;
       const current = state();
       const at = deps.now();
-      if (at < current.seqNotBefore) return;
-      if (at < (current.seqKindNotBefore[kind] ?? 0)) return;
+      if (susDue(current)) susArmedAt = at;
+      if (seqOffer !== null) {
+        changed();
+        return;
+      }
+      const seqBlocked = at < current.seqNotBefore || at < (current.seqKindNotBefore[kind] ?? 0);
+      if (seqBlocked) {
+        changed();
+        return;
+      }
       seqOffer = { survey: "seq", taskKind: kind, caseId, offeredAt: at };
       changed();
     },

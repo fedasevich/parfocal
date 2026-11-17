@@ -17,10 +17,11 @@ export const appEventSink: EventSink = sink;
 let surveyPrompter: Promise<SurveyPrompter> | undefined;
 
 export function loadSurveyPrompter(): Promise<SurveyPrompter> {
-  surveyPrompter ??= import("./surveys.ts").then(({ createSurveyPrompter }) =>
+  surveyPrompter ??= import("./surveys.ts").then(({ createSurveyPrompter, isPausePath }) =>
     createSurveyPrompter({
       sink,
       now: () => Date.now(),
+      atPause: () => isPausePath(window.location.pathname),
       held: () => readingHold.isHeld(Date.now(), defaultIdleLockMinutes),
     }),
   );
