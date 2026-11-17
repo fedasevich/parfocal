@@ -9,6 +9,7 @@ from typing import Any
 import httpx2
 from sqlalchemy import func, select, update
 
+from parfocal_api.import_sources import fetch_headers
 from parfocal_api.slide_ingest import upload_of
 from parfocal_api.tables import UploadStatus, slides, uploads
 from parfocal_api.uploads import close_upload
@@ -75,11 +76,28 @@ async def open_row(step: StepRun) -> Any:
     return row
 
 
-async def address_of(store: ObjectStore, row: Any) -> str:
+@dataclass(frozen=True)
+class Source:
+    address: str
+    source_id: uuid.UUID | None = None
+
+
+async def source_of(store: ObjectStore, row: Any) -> Source:
     try:
-        return str(json.loads(await store.get_object(source_key(row.tenant_id, row.id)))["address"])
+        note = json.loads(await store.get_object(source_key(row.tenant_id, row.id)))
+        source_id = note.get("source_id")
+        return Source(str(note["address"]), uuid.UUID(source_id) if source_id else None)
     except (KeyError, ValueError) as error:
         raise StepFailedError(Failure.UPLOAD_MISSING) from error
+
+
+async def headers_of(
+    step: StepRun, resources: Resources, row: Any, source: Source
+) -> dict[str, str]:
+    if source.source_id is None:
+        return {}
+    async with step.transaction() as connection:
+        return await fetch_headers(connection, resources.keyring, row.tenant_id, source.source_id)
 
 
 async def fresh_parts(step: StepRun, store: ObjectStore, row: Any) -> Parts:
@@ -95,14 +113,15 @@ async def fresh_parts(step: StepRun, store: ObjectStore, row: Any) -> Parts:
 
 
 async def download(
-    step: StepRun, resources: Resources, store: ObjectStore, row: Any, address: str
+    step: StepRun, resources: Resources, store: ObjectStore, row: Any, source: Source
 ) -> Parts:
     policy = policy_of(resources.link_trusted_origins, row.size_bytes)
     try:
+        headers = await headers_of(step, resources, row, source)
         async with (
             asyncio.timeout(resources.link_fetch_seconds),
             link_client(resources.link_read_seconds) as client,
-            open_link(client, address, policy) as opened,
+            open_link(client, source.address, policy, "GET", headers) as opened,
         ):
             parts = await fresh_parts(step, store, row)
             async for chunk in chunks_of(opened.response, policy, CHUNK_BYTES):
@@ -149,9 +168,9 @@ async def refuse(step: StepRun, store: ObjectStore, row: Any, code: str) -> None
 
 async def fetch(step: StepRun, resources: Resources, store: ObjectStore) -> Mapping[str, Any]:
     row = await open_row(step)
-    address = await address_of(store, row)
+    source = await source_of(store, row)
     try:
-        parts = await download(step, resources, store, row, address)
+        parts = await download(step, resources, store, row, source)
     except StepFailedError as failure:
         await refuse(step, store, row, failure.code)
         raise

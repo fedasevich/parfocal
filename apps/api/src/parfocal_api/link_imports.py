@@ -1,18 +1,21 @@
 import json
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Path, Query
-from pydantic import BaseModel, Field, StringConstraints
+from fastapi import APIRouter, Path, Query, Request
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction
 from parfocal_api.case_sorting import SlideOutcome, SortedFile, SortingRequest, draft_of
+from parfocal_api.cases import keyring_of
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
+from parfocal_api.import_sources import Reach, saved_reach
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import Principal
+from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError
 from parfocal_api.tables import uploads
 from parfocal_api.uploads import Settings, audit, creator_values, object_key
@@ -43,6 +46,11 @@ router = APIRouter(prefix="/api/projects", tags=["uploads"])
 class LinkNotFetchedError(BadRequestError):
     code = "link-refused"
     title = "Parfocal will not fetch this link"
+
+
+class SourceOrAddressError(BadRequestError):
+    code = "source-or-address"
+    title = "Give either a link or a saved source, not both"
 
 
 class NothingChosenError(BadRequestError):
@@ -80,8 +88,15 @@ class SourceListing(BaseModel):
 
 
 class LinkImportRequest(BaseModel):
-    address: Address
+    address: Address | None = None
+    source_id: uuid.UUID | None = None
     names: Annotated[list[Annotated[str, StringConstraints(max_length=255)]], Field(min_length=1)]
+
+    @model_validator(mode="after")
+    def one_place(self) -> LinkImportRequest:
+        if (self.address is None) == (self.source_id is None):
+            raise ValueError("Give either a link or a saved source")
+        return self
 
 
 class StartedFile(BaseModel):
@@ -129,21 +144,46 @@ def kind_of_file(name: str) -> FileKind:
     return kind
 
 
-async def files_at(settings: Settings, address: str) -> list[LinkedFile]:
+async def files_at(settings: Settings, reach: Reach) -> list[LinkedFile]:
     policy = policy_of(settings.link_trusted_origins)
     try:
         async with link_client(settings.link_read_seconds) as client:
-            found = await list_link(client, address, policy)
+            found = await list_link(client, reach.listing, policy, reach.headers)
     except LinkRefusedError as error:
         raise LinkNotFetchedError(LINK_FAILURES[error.code]) from error
     unique: dict[str, LinkedFile] = {}
+    now = datetime.now(UTC)
     for file in found:
-        unique.setdefault(file.name, file)
+        unique.setdefault(file.name, reach.signed(file, now))
     return list(unique.values())
+
+
+async def reach_for(
+    request: Request,
+    connection: AsyncConnection,
+    principal: Principal,
+    settings: Settings,
+    address: str | None,
+    source_id: uuid.UUID | None,
+) -> Reach:
+    if (address is None) == (source_id is None):
+        raise SourceOrAddressError
+    if address is not None:
+        return Reach(address, address)
+    assert source_id is not None
+    tenant_id = database_scope(principal).tenant_id
+    assert tenant_id is not None
+    try:
+        return await saved_reach(
+            connection, keyring_of(request), tenant_id, source_id, settings.link_fetch_seconds
+        )
+    except LinkRefusedError as error:
+        raise LinkNotFetchedError(LINK_FAILURES[error.code]) from error
 
 
 @dataclass(frozen=True)
 class Look:
+    reach: Reach
     files: list[LinkedFile]
     request: SortingRequest
     draft: Any
@@ -154,9 +194,9 @@ async def look(
     principal: Principal,
     settings: Settings,
     project_id: uuid.UUID,
-    address: str,
+    reach: Reach,
 ) -> Look:
-    found = await files_at(settings, address)
+    found = await files_at(settings, reach)
     kinds = {file.name: kind_of_file(file.name) for file in found}
     request = SortingRequest(
         project_id=project_id,
@@ -166,7 +206,7 @@ async def look(
         ]
         or [SortedFile(path="empty", kind=FileKind.OTHER)],
     )
-    return Look(found, request, await draft_of(connection, principal, request))
+    return Look(reach, found, request, await draft_of(connection, principal, request))
 
 
 def paired_results(draft: Any) -> dict[str, list[Any]]:
@@ -214,15 +254,18 @@ def source_files(look: Look, settings: Settings) -> list[SourceFile]:
 )
 async def list_source_files(
     project_id: ProjectId,
-    address: Annotated[str, Query(min_length=1, max_length=MAX_ADDRESS)],
+    request: Request,
     principal: CurrentPrincipal,
     connection: TenantConnection,
     settings: Settings,
+    address: Annotated[str | None, Query(min_length=1, max_length=MAX_ADDRESS)] = None,
+    source_id: Annotated[uuid.UUID | None, Query()] = None,
 ) -> SourceListing:
-    found = await look(connection, principal, settings, project_id, address)
+    reach = await reach_for(request, connection, principal, settings, address, source_id)
+    found = await look(connection, principal, settings, project_id, reach)
     return SourceListing(
-        address=address,
-        kind="link",
+        address=reach.address,
+        kind="storage" if reach.location is not None else "link",
         files=source_files(found, settings),
         others=found.draft.others,
     )
@@ -265,6 +308,7 @@ async def start_file(
     project_id: uuid.UUID,
     planned: Planned,
     slide_uploads: dict[str, uuid.UUID],
+    reach: Reach,
 ) -> StartedFile:
     file = planned.file
     size = file.size or 0
@@ -301,7 +345,7 @@ async def start_file(
             .returning(uploads)
         )
     ).one()
-    source = json.dumps({"address": file.url}).encode()
+    source = json.dumps(reach.fetch_note(file)).encode()
     await store.put_object(source_key(tenant_id, upload_id), source, "application/json")
     job_id = await enqueue_link_fetch(connection, tenant_id, project_id, upload_id)
     await audit(connection, principal, AuditAction.UPLOAD_LINKED, row)
@@ -318,14 +362,16 @@ async def start_file(
 )
 async def import_from_link(
     project_id: ProjectId,
-    request: LinkImportRequest,
+    body: LinkImportRequest,
+    request: Request,
     principal: CurrentPrincipal,
     connection: TenantConnection,
     settings: Settings,
     store: Store,
 ) -> LinkImport:
-    found = await look(connection, principal, settings, project_id, request.address)
-    names = set(request.names)
+    reach = await reach_for(request, connection, principal, settings, body.address, body.source_id)
+    found = await look(connection, principal, settings, project_id, reach)
+    names = set(body.names)
     planned = planned_files(found, settings, names)
     if not planned:
         raise NothingChosenError
@@ -340,6 +386,7 @@ async def import_from_link(
             found.draft.project_id,
             item,
             slide_uploads,
+            reach,
         )
         for item in planned
     ]

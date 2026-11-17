@@ -80,6 +80,11 @@ class LabModelSignIn(StrEnum):
     HEADER = "header"
 
 
+class ImportSourceKind(StrEnum):
+    HTTPS = "https"
+    STORAGE = "storage"
+
+
 class LabModelRunners(StrEnum):
     ADMINS = "admins"
     RESEARCHERS = "researchers"
@@ -204,6 +209,29 @@ lab_model_projects = Table(
     ),
     tenant_foreign_key("lab_model_id", "lab_models", ondelete="CASCADE"),
     tenant_foreign_key("project_id", "projects", ondelete="CASCADE"),
+)
+
+import_sources = Table(
+    "import_sources",
+    metadata,
+    *owned_ids(),
+    Column("name", String(80), nullable=False, info=OPERATIONAL),
+    Column("kind", String(10), nullable=False, info=OPERATIONAL),
+    Column("address", String(2048), nullable=False, info=OPERATIONAL),
+    Column("region", String(40), nullable=True, info=OPERATIONAL),
+    Column("header_name", String(80), nullable=True, info=OPERATIONAL),
+    Column("credential_ciphertext", LargeBinary, nullable=True, info=SECRET),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "name"),
+    tenant_unique(),
+    one_of("kind", ImportSourceKind),
 )
 
 rate_counters = Table(

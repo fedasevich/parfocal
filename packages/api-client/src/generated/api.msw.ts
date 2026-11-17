@@ -65,6 +65,8 @@ import type {
   Home,
   ImportCheck,
   ImportReport,
+  ImportSource,
+  ImportSources,
   InboxCounts,
   InboxPage,
   Invitation,
@@ -257,6 +259,7 @@ import {
   Extranodal,
   FailureClass,
   HitKind,
+  ImportSourceKind,
   IngestStatus,
   JobControl,
   JobPauseReason,
@@ -291,8 +294,8 @@ import {
   QueueTag,
   Read,
   ReassignWhat,
-  Region,
   RegionColumn,
+  RegionOutput,
   RestrictedImage,
   ResultFormat,
   ResultSource,
@@ -6321,6 +6324,70 @@ export const getImportFromLinkResponseMock = (
   left_out: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
     faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
+  ...overrideResponse,
+});
+
+export const getListImportSourcesResponseMock = (
+  overrideResponse: Partial<Extract<ImportSources, object>> = {},
+): ImportSources => ({
+  sources: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      kind: faker.helpers.arrayElement(Object.values(ImportSourceKind)),
+      address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      region: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      header_name: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      has_credential: faker.datatype.boolean(),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSaveImportSourceResponseMock = (
+  overrideResponse: Partial<Extract<ImportSource, object>> = {},
+): ImportSource => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ImportSourceKind)),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  region: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  has_credential: faker.datatype.boolean(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getChangeImportSourceResponseMock = (
+  overrideResponse: Partial<Extract<ImportSource, object>> = {},
+): ImportSource => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ImportSourceKind)),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  region: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  has_credential: faker.datatype.boolean(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
 
@@ -16500,7 +16567,7 @@ export const getListTenantsResponseMock = (): Tenant[] =>
     slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
     name: faker.string.alpha({ length: { min: 10, max: 20 } }),
     kind: faker.helpers.arrayElement(Object.values(TenantKind)),
-    region: faker.helpers.arrayElement(Object.values(Region)),
+    region: faker.helpers.arrayElement(Object.values(RegionOutput)),
     plan: faker.helpers.arrayElement(Object.values(Plan)),
     status: faker.helpers.arrayElement(Object.values(TenantStatus)),
     suspended_at: faker.helpers.arrayElement([
@@ -16519,7 +16586,7 @@ export const getCreateTenantResponseMock = (
   slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
-  region: faker.helpers.arrayElement(Object.values(Region)),
+  region: faker.helpers.arrayElement(Object.values(RegionOutput)),
   plan: faker.helpers.arrayElement(Object.values(Plan)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   suspended_at: faker.helpers.arrayElement([
@@ -16539,7 +16606,7 @@ export const getGetTenantResponseMock = (
   slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
-  region: faker.helpers.arrayElement(Object.values(Region)),
+  region: faker.helpers.arrayElement(Object.values(RegionOutput)),
   plan: faker.helpers.arrayElement(Object.values(Plan)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   suspended_at: faker.helpers.arrayElement([
@@ -16559,7 +16626,7 @@ export const getSuspendTenantResponseMock = (
   slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
-  region: faker.helpers.arrayElement(Object.values(Region)),
+  region: faker.helpers.arrayElement(Object.values(RegionOutput)),
   plan: faker.helpers.arrayElement(Object.values(Plan)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   suspended_at: faker.helpers.arrayElement([
@@ -16579,7 +16646,7 @@ export const getReactivateTenantResponseMock = (
   slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
-  region: faker.helpers.arrayElement(Object.values(Region)),
+  region: faker.helpers.arrayElement(Object.values(RegionOutput)),
   plan: faker.helpers.arrayElement(Object.values(Plan)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   suspended_at: faker.helpers.arrayElement([
@@ -16599,7 +16666,7 @@ export const getGetCurrentTenantResponseMock = (
   slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
   name: faker.string.alpha({ length: { min: 10, max: 20 } }),
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
-  region: faker.helpers.arrayElement(Object.values(Region)),
+  region: faker.helpers.arrayElement(Object.values(RegionOutput)),
   plan: faker.helpers.arrayElement(Object.values(Plan)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   suspended_at: faker.helpers.arrayElement([
@@ -20439,6 +20506,97 @@ export const getImportFromLinkMockHandler = (
           : getImportFromLinkResponseMock(),
         { status: 202 },
       );
+    },
+    options,
+  );
+};
+
+export const getListImportSourcesMockHandler = (
+  overrideResponse?:
+    | ImportSources
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ImportSources> | ImportSources),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/import-sources",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListImportSourcesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSaveImportSourceMockHandler = (
+  overrideResponse?:
+    | ImportSource
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ImportSource> | ImportSource),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/import-sources",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSaveImportSourceResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getChangeImportSourceMockHandler = (
+  overrideResponse?:
+    | ImportSource
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<ImportSource> | ImportSource),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/import-sources/:sourceId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChangeImportSourceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteImportSourceMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/import-sources/:sourceId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -25890,6 +26048,10 @@ export const getParfocalAPIMock = () => [
   getApplyDroppedFilesMockHandler(),
   getListSourceFilesMockHandler(),
   getImportFromLinkMockHandler(),
+  getListImportSourcesMockHandler(),
+  getSaveImportSourceMockHandler(),
+  getChangeImportSourceMockHandler(),
+  getDeleteImportSourceMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),

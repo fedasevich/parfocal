@@ -22,6 +22,7 @@
     "evaluation_versions",
     "gpu_usage",
     "hidden_models",
+    "import_sources",
     "invitations",
     "job_steps",
     "job_units",

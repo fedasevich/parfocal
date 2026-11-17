@@ -54,6 +54,7 @@ from parfocal_api.tables import (
     evaluation_versions,
     gpu_usage,
     hidden_models,
+    import_sources,
     invitations,
     job_steps,
     job_units,
@@ -1277,6 +1278,22 @@ async def seed_lab_models(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(marker)
 
 
+async def seed_import_sources(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"import-source-{uuid.uuid4().hex[:10]}"
+    source_id = uuid.uuid5(seeded.tenant_id, "import-source")
+    await connection.execute(
+        insert(import_sources).values(
+            id=source_id,
+            tenant_id=seeded.tenant_id,
+            name=marker,
+            kind="https",
+            address="https://data.example.org/scans/",
+        )
+    )
+    seeded.ids["import_source"] = source_id
+    seeded.markers.add(marker)
+
+
 async def seed_template_offers(connection: AsyncConnection, seeded: Seeded) -> None:
     name = f"Offer {uuid.uuid4().hex[:12]}"
     draft = BUILT_INS[next(iter(BUILT_INS))].model_copy(update={"name": name})
@@ -1577,6 +1594,7 @@ SEEDERS: dict[str, Seeder] = {
     "hidden_models": seed_hidden_models,
     "lab_models": seed_lab_models,
     "lab_model_projects": seed_lab_model_projects,
+    "import_sources": seed_import_sources,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -1959,6 +1977,7 @@ GET_ROUTES = {
     "listSiteValidations": Route(Exposure.TENANT, lambda _: "/api/site-validations"),
     "listModelTiers": Route(Exposure.TENANT, lambda _: "/api/tenant/model-tiers"),
     "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
+    "listImportSources": Route(Exposure.TENANT, lambda _: "/api/tenant/import-sources"),
     "getLabModel": Route(
         Exposure.TENANT,
         lambda s: f"/api/tenant/models/{s.ids['lab_model']}",

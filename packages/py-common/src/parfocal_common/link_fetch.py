@@ -1,7 +1,7 @@
 import asyncio
 import ipaddress
 import socket
-from collections.abc import AsyncGenerator, AsyncIterator, Collection
+from collections.abc import AsyncGenerator, AsyncIterator, Collection, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -70,6 +70,10 @@ def port_of(url: httpx2.URL) -> int:
 
 def origin_of(url: httpx2.URL) -> str:
     return f"{url.host.lower()}:{port_of(url)}"
+
+
+def same_origin(first: httpx2.URL, second: httpx2.URL) -> bool:
+    return first.scheme == second.scheme and origin_of(first) == origin_of(second)
 
 
 def public(address: Address) -> bool:
@@ -145,16 +149,22 @@ class Opened:
 
 @asynccontextmanager
 async def open_link(
-    client: httpx2.AsyncClient, address: str, policy: LinkPolicy, method: str = "GET"
+    client: httpx2.AsyncClient,
+    address: str,
+    policy: LinkPolicy,
+    method: str = "GET",
+    headers: Mapping[str, str] | None = None,
 ) -> AsyncGenerator[Opened]:
     try:
         url = httpx2.URL(address)
     except httpx2.InvalidURL as error:
         raise LinkRefusedError(LinkRefusal.SCHEME) from error
+    first = url
     for _ in range(MAX_REDIRECTS + 1):
         target = await target_of(url, policy)
+        sent = dict(headers or {}) if same_origin(first, url) else {}
         request = client.build_request(
-            method, target.url, headers=target.headers, extensions=target.extensions
+            method, target.url, headers={**sent, **target.headers}, extensions=target.extensions
         )
         try:
             response = await client.send(request, stream=True)

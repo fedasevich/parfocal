@@ -354,6 +354,21 @@ export const sourceListings = {
   },
 } as const;
 
+export const savedSources = [
+  {
+    id: "00000000-0000-4000-8098-000000000001",
+    name: "Vltava scanner bucket",
+    kind: "storage",
+    address: "https://s3.eu-central-1.amazonaws.com/fnvltava-scans/sentinel/2026-10/",
+    host: "s3.eu-central-1.amazonaws.com",
+    region: "eu-central-1",
+    header_name: null,
+    has_credential: true,
+    created_at: "2026-11-10T09:00:00Z",
+    updated_at: "2026-11-10T09:00:00Z",
+  },
+] as const;
+
 export const sourceFiles = [
   {
     name: "tumor_090.tif",

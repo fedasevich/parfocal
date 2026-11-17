@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 
 from parfocal_common.part_plan import MIB, MIN_PART_BYTES
 from parfocal_common.settings import StorageSettings
@@ -31,3 +31,4 @@ class IngestSettings(StorageSettings):
     ingest_parse_seconds: Annotated[float, Field(gt=0)] = PARSE_SECONDS
     ingest_parse_user: str | None = None
     ingest_parse_launcher: str | None = None
+    master_keys: SecretStr | None = None
