@@ -37,6 +37,16 @@ test("review defaults, study template and ID matching save on the project", asyn
     ]);
 });
 
+test("an access request link opens a prefilled confirm that adds the person", async ({ page }) => {
+  const asker = "00000000-0000-4000-8001-000000000005";
+  await page.goto(`/projects/${p07}?tab=people&add=${asker}`);
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Add Tomáš Beneš to P07?")).toBeVisible();
+  await dialog.getByRole("button", { name: "Add as reviewer" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId("project-settings").getByText("Tomáš Beneš")).toBeVisible();
+});
+
 test("a clinical project picks its report template", async ({ page }) => {
   await page.goto(`/projects/${p03}?tab=settings`);
   const group = page.getByRole("radiogroup", { name: "Report template" });

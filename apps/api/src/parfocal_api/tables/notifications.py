@@ -50,6 +50,7 @@ class NotificationKind(StrEnum):
     SLIDE_MOVED = "slide-moved"
     WORKSPACE_ACCESS_ASKED = "workspace-access-asked"
     TEMPLATE_OFFERED = "template-offered"
+    PROJECT_ACCESS_ASKED = "project-access-asked"
 
 
 class EmailStatus(StrEnum):

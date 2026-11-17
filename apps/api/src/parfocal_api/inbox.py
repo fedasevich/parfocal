@@ -114,6 +114,8 @@ def mine(me: MemberPrincipal) -> ColumnElement[bool]:
 def link_of(row: Any, target: TargetKind) -> str:
     if target is TargetKind.ACCESS_REQUEST:
         return f"/admin?section=people&request={row.target_id}"
+    if row.kind == NotificationKind.PROJECT_ACCESS_ASKED:
+        return f"/projects/{row.target_id}?tab=people&add={row.payload.get('user_id', '')}"
     return link_to("", row.id)
 
 
