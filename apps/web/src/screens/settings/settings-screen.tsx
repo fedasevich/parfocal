@@ -24,6 +24,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/segmented-control";
+import { PreviewOption, type SettingPreviewKind } from "@parfocal/ui/components/setting-preview";
 import {
   SettingsDialog,
   SettingsEmpty,
@@ -127,18 +128,24 @@ const noticeKinds: Partial<Record<RowKey, string>> = {
   noticeDue: "task-due-soon",
 };
 
-const options = (pairs: [string, string][]): SegmentOption[] =>
-  pairs.map(([value, label]) => ({ value, label }));
+const options = (pairs: [string, string][], preview?: SettingPreviewKind): SegmentOption[] =>
+  pairs.map(([value, label]) => ({
+    value,
+    label:
+      preview === undefined ? label : <PreviewOption kind={preview} option={value} label={label} />,
+  }));
 
 function Segments({
   label,
   value,
   pairs,
+  preview,
   onChange,
 }: {
   label: string;
   value: string;
   pairs: [string, string][];
+  preview?: SettingPreviewKind;
   onChange: (value: string) => void;
 }) {
   return (
@@ -147,7 +154,7 @@ function Segments({
       aria-label={label}
       value={value}
       onValueChange={(next) => onChange(String(next))}
-      options={options(pairs)}
+      options={options(pairs, preview)}
     />
   );
 }
@@ -380,6 +387,7 @@ function LoadedSettings({
     homeLayout: () => (
       <Segments
         label={t`Home`}
+        preview="home"
         value={values.home_layout}
         pairs={homeLayoutOptions.map((option) => [option.value, option.label])}
         onChange={(value) => {
@@ -394,6 +402,7 @@ function LoadedSettings({
     theme: () => (
       <Segments
         label={t`Theme`}
+        preview="theme"
         value={theme}
         pairs={[
           ["dark", t`Dark`],
@@ -417,6 +426,7 @@ function LoadedSettings({
     density: () => (
       <Segments
         label={t`Density`}
+        preview="density"
         value={values.density}
         pairs={[
           ["comfortable", t`Comfortable`],
@@ -510,6 +520,7 @@ function LoadedSettings({
     tools: () => (
       <Segments
         label={t`Tools`}
+        preview="tools"
         value={values.tools}
         pairs={[
           ["rail", t`Left rail`],
@@ -521,6 +532,7 @@ function LoadedSettings({
     panelWidth: () => (
       <Segments
         label={t`Side panel width`}
+        preview="panelWidth"
         value={String(values.side_panel_width)}
         pairs={[
           ["300", t`Narrow`],
@@ -537,6 +549,7 @@ function LoadedSettings({
     panelMoving: () => (
       <Segments
         label={t`Panel while moving`}
+        preview="panelMoving"
         value={values.panel_while_moving}
         pairs={[
           ["pinned", t`Stays put`],
@@ -550,6 +563,7 @@ function LoadedSettings({
     minimap: () => (
       <Segments
         label={t`Minimap`}
+        preview="minimap"
         value={values.minimap}
         pairs={[
           ["useful", t`When useful`],

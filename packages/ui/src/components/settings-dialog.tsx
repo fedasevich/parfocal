@@ -15,10 +15,32 @@ const scopes: Record<SettingScopeKind, { icon: IconName; label: MessageDescripto
   lab: { icon: "lock", label: msg`Set by your lab` },
 };
 
-function SettingScope({ scope, className }: { scope: SettingScopeKind; className?: string }) {
+function SettingScope({
+  scope,
+  iconOnly = false,
+  className,
+}: {
+  scope: SettingScopeKind;
+  iconOnly?: boolean;
+  className?: string;
+}) {
   const { t } = useLingui();
 
   const { icon, label } = scopes[scope];
+  if (iconOnly) {
+    return (
+      <span
+        data-slot="setting-scope"
+        data-scope={scope}
+        role="img"
+        aria-label={t(label)}
+        title={t(label)}
+        className={cn("inline-flex items-center text-fg-faint", className)}
+      >
+        <Icon name={icon} size="xs" />
+      </span>
+    );
+  }
   return (
     <span
       data-slot="setting-scope"
@@ -221,9 +243,11 @@ function SettingsRow({
       {...props}
     >
       <div className="flex min-w-0 flex-col items-start gap-0.75">
-        <b className="text-body font-medium text-fg">{label}</b>
+        <span className="inline-flex items-center gap-1.5">
+          <b className="text-body font-medium text-fg">{label}</b>
+          <SettingScope scope={scope} iconOnly />
+        </span>
         {help ? <span className="text-body-sm leading-[1.45] text-fg-dim">{help}</span> : null}
-        <SettingScope scope={scope} className="mt-0.75" />
       </div>
       <div className="flex max-w-[440px] items-center justify-end">
         {fact ? (
