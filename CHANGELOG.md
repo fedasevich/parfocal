@@ -2,6 +2,31 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.18.0 (2026-11-17)
+
+### Features
+
+- TEST-010: Add the signed-out routes scenario and measure it on production
+- TEST-046: Let the reset seed listed accounts as viewers of every seeded workspace
+- TEST-046: Merge origin/main and seat listed viewers on every project of every workspace
+
+### Docs
+
+- OPS-030: Log the v0.17.6 medians
+- OPS-009: Apply R2 lifecycle and lock to dev and prod, log the cost report blocker
+- OPS-016: Log the broken-build smoke run and tick the task
+- TEST-046: Log the reset dispatch that waits for approval
+
+### Tests
+
+- VIEW-076: Pick a cell from the cells grid built from real crops
+- SEC-027: Record the production login burst that ends in a 429 at login 11
+
+### Other
+
+- OPS-016: Merge origin/main
+- TEST-010: Merge origin/main
+
 ## v0.17.6 (2026-11-17)
 
 ### Performance
