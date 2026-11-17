@@ -18,6 +18,7 @@ from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
     BACKFILL_FUNCTION,
+    CROPS_BACKFILL_FUNCTION,
     EVENTS_FUNCTION,
     EVENTS_LINGER_MINUTES,
     EVENTS_OPTIONS,
@@ -66,6 +67,7 @@ def test_the_app_registers_the_web_and_ingest_functions() -> None:
             INGEST_FUNCTION,
             EVENTS_FUNCTION,
             BACKFILL_FUNCTION,
+            CROPS_BACKFILL_FUNCTION,
             LEVELS_BACKFILL_FUNCTION,
         ]
     )

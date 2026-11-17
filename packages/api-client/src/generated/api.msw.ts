@@ -19089,6 +19089,9 @@ export const getGetSlideTissueResponseMock = (
 export const getGetSlideThumbnailResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getGetCellCropResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getGetSlideEmbeddingsResponseMock = (
   overrideResponse: Partial<Extract<SlideEmbeddings, object>> = {},
 ): SlideEmbeddings => ({
@@ -28665,6 +28668,30 @@ export const getGetSlideThumbnailMockHandler = (
   );
 };
 
+export const getGetCellCropMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/cell-crops/:number",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCellCropResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    },
+    options,
+  );
+};
+
 export const getGetSlideEmbeddingsMockHandler = (
   overrideResponse?:
     | SlideEmbeddings
@@ -29218,6 +29245,7 @@ export const getParfocalAPIMock = () => [
   getRecordSlideCoverageMockHandler(),
   getGetSlideTissueMockHandler(),
   getGetSlideThumbnailMockHandler(),
+  getGetCellCropMockHandler(),
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),

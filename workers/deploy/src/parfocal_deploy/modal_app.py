@@ -21,6 +21,7 @@ WEB_ROUTING_REGION = "eu-west"
 INGEST_FUNCTION = "ingest"
 EVENTS_FUNCTION = "events"
 BACKFILL_FUNCTION = "backfill_thumbnails"
+CROPS_BACKFILL_FUNCTION = "backfill_cell_crops"
 LEVELS_BACKFILL_FUNCTION = "backfill_level_directories"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
@@ -31,6 +32,7 @@ FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {
     INGEST_FUNCTION: SECRETS,
     EVENTS_FUNCTION: SECRETS,
     BACKFILL_FUNCTION: SECRETS,
+    CROPS_BACKFILL_FUNCTION: SECRETS,
     LEVELS_BACKFILL_FUNCTION: SECRETS,
 }
 PYTHON_VERSION = "3.14"
@@ -166,6 +168,12 @@ def run_thumbnail_backfill() -> None:
     main()
 
 
+def run_cell_crops_backfill() -> None:
+    from parfocal_ingest.cell_crops_backfill import main
+
+    main()
+
+
 def run_level_directories_backfill() -> dict[str, int]:
     from parfocal_ingest.level_directories_backfill import main
 
@@ -252,6 +260,12 @@ backfill_thumbnails = app.function(
     timeout=3600,
     secrets=secrets_of(BACKFILL_FUNCTION),
 )(run_thumbnail_backfill)
+backfill_cell_crops = app.function(
+    name=CROPS_BACKFILL_FUNCTION,
+    memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
+    timeout=3600,
+    secrets=secrets_of(CROPS_BACKFILL_FUNCTION),
+)(run_cell_crops_backfill)
 backfill_level_directories = app.function(
     name=LEVELS_BACKFILL_FUNCTION,
     timeout=3600,
@@ -262,5 +276,6 @@ FUNCTIONS: dict[str, modal.Function] = {
     INGEST_FUNCTION: ingest,
     EVENTS_FUNCTION: events,
     BACKFILL_FUNCTION: backfill_thumbnails,
+    CROPS_BACKFILL_FUNCTION: backfill_cell_crops,
     LEVELS_BACKFILL_FUNCTION: backfill_level_directories,
 }
