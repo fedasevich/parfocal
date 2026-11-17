@@ -317,7 +317,9 @@ function OpenedSlide({
   const { t } = useLingui();
   const host = useRef<HTMLDivElement | null>(null);
   const doubleClick = useRef<"zoom" | "toggle">("zoom");
-  doubleClick.current = useResolvedSettings()?.double_click ?? "zoom";
+  const settings = useResolvedSettings();
+  doubleClick.current = settings?.double_click ?? "zoom";
+  const outlineTier = settings?.tier_outline ?? "best";
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);
   const pageServices = useSharedSmartServices();
@@ -920,6 +922,7 @@ function OpenedSlide({
               activeClass={activeClass}
               loader={sharedServices}
               openRequest={session.open}
+              tier={outlineTier}
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />

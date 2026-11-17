@@ -3,8 +3,17 @@ import { describe, it } from "node:test";
 import type { Patch, SamOutputs } from "@parfocal/viewer-engine";
 import { createFakeSam } from "../src/aiseg/fake-sam.ts";
 import type { PresetPatchQuery } from "../src/aiseg/patch-reader.ts";
-import { promptFallback } from "../src/aiseg/prompt-fallback.ts";
-import { promptPassOptionsFor, promptTileOverlapPixels } from "../src/aiseg/prompt-pass.ts";
+import {
+  autoFallback,
+  type OutlineTier,
+  promptFallback,
+  qualityForTier,
+} from "../src/aiseg/prompt-fallback.ts";
+import {
+  promptEnsemblePoints,
+  promptPassOptionsFor,
+  promptTileOverlapPixels,
+} from "../src/aiseg/prompt-pass.ts";
 import {
   clickTile,
   planRegionTiles,
@@ -163,6 +172,36 @@ describe("prompt-pass fallback", () => {
       found.map((nucleus) => `${nearest(nucleus.centroid.x)},${nearest(nucleus.centroid.y)}`),
     );
     assert.equal(centres.size, expected);
+  });
+
+  it("follows the outline tier setting, adding the ensemble only in best quality", async () => {
+    const runs = new Map<OutlineTier, { found: number; prompts: number }>();
+    for (const tier of ["best", "good", "fast"] as const) {
+      const { sam, reader } = setup(() =>
+        Promise.reject(new Error("The AIS decoder could not load")),
+      );
+      const found = await runRegionPass({
+        tiles: [clickTile({ x: 256, y: 256 })],
+        preset: "nuclei",
+        reader,
+        sam,
+        fallback: autoFallback(sam, tier),
+      });
+      for (const centre of centres) {
+        assert.ok(found.some((nucleus) => ringContains(nucleus.ring, centre)));
+      }
+      runs.set(tier, { found: found.length, prompts: sam.prompts.length });
+    }
+    assert.equal(qualityForTier("best"), "best");
+    assert.equal(qualityForTier("good"), "fast");
+    assert.equal(qualityForTier("fast"), "fast");
+    const best = runs.get("best");
+    const good = runs.get("good");
+    const fast = runs.get("fast");
+    assert.ok(best !== undefined && good !== undefined && fast !== undefined);
+    assert.deepEqual(good, fast);
+    assert.equal(best.found, fast.found);
+    assert.ok(best.prompts >= fast.prompts + centres.length * promptEnsemblePoints);
   });
 
   it("does not prompt when the AIS graph answers", async () => {
