@@ -81,3 +81,63 @@ def test_signed_tasks_move_to_done_and_leave_the_open_workload(api: ApiAs, datab
     assert team["done"][0]["signed_on"] is not None
     after = ok(api(r.people["owner"]).get(WORKLOAD))
     assert {item["open_tasks"] for item in after} == {0}
+
+
+def shift_task(database: str, r: Review, sent_days_ago: int, due_in_days: int) -> None:
+    owner(
+        database,
+        f"UPDATE review_tasks SET created_at = now() - interval '{sent_days_ago} days', "
+        f"due_on = (now() + interval '{due_in_days} days')::date WHERE id = '{r.task}'",
+    )
+    owner(
+        database,
+        f"UPDATE review_assignments SET assigned_at = now() - interval '{sent_days_ago} days' "
+        f"WHERE task_id = '{r.task}'",
+    )
+
+
+def statuses(api: ApiAs, r: Review) -> tuple[dict[str, Any], set[str]]:
+    team = ok(api(r.people["owner"]).get(TEAM))
+    [task] = team["open"]
+    return task | {"as_of": team["as_of"]}, {
+        item["status"] for item in reviewers_of(task, r).values()
+    }
+
+
+def test_the_database_clock_turns_a_task_past_its_due_day_overdue_and_behind(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    shift_task(database, r, 10, 5)
+    task, words = statuses(api, r)
+    assert words == {"not-started"}
+    assert task["due_on"] > task["as_of"][:10]
+    shift_task(database, r, 10, -1)
+    task, words = statuses(api, r)
+    assert task["due_on"] < task["as_of"][:10]
+    assert words == {"behind"}
+
+
+def test_a_reviewer_whose_slides_moved_leaves_the_task_and_their_load(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    first, third = r.people["first"].user_id, r.people["third"].user_id
+    owner(
+        database,
+        "INSERT INTO review_decisions (tenant_id, project_id, task_id, slide_id, user_id, "
+        "kind, number, value, style, answer) VALUES "
+        f"('{r.people['owner'].tenant_id}', '{r.project}', '{r.task}', '{r.slide}', '{first}', "
+        "'region', 1, 'agree', 'agree', 'agree')",
+    )
+    moved = api(r.people["owner"]).post(
+        f"/api/review-tasks/{r.task}/reassignments",
+        json={"from_user_id": str(first), "to_user_id": str(third), "what": "all"},
+    )
+    assert moved.status_code == 201, moved.text
+    [task] = ok(api(r.people["owner"]).get(TEAM))["open"]
+    assert set(reviewers_of(task, r)) == {"second", "third"}
+    load = {
+        item["user_id"]: item["open_tasks"] for item in ok(api(r.people["owner"]).get(WORKLOAD))
+    }
+    assert (load[str(first)], load[str(third)]) == (0, 1)
