@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.6 (2026-11-17)
+
+### Performance
+
+- OPS-030: Batch the home reads and carry the workspace status in the session check
+
+### Other
+
+- OPS-030: Drop the GCP cloud pin Modal refuses
+
 ## v0.17.5 (2026-11-17)
 
 ### Performance
