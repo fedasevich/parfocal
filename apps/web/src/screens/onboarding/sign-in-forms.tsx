@@ -141,6 +141,11 @@ export function EmailForm({ flow }: { flow: Flow }) {
           onSubmit={submit}
         />
       </AuthField>
+      <AuthFoot>
+        <AuthLink onClick={() => flow.change("forgot")}>
+          <Trans>Forgot your password?</Trans>
+        </AuthLink>
+      </AuthFoot>
       {failure === null ? null : (
         <Banner inline tone="bad" icon="warn">
           {failure}

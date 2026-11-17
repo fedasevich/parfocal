@@ -2651,6 +2651,10 @@ msgstr ""
 msgid "A new code is on its way. The old one stops working"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "A new code is on its way. The old one stops working."
+msgstr ""
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "A new draft, Evaluation v2, copied from v1"
 msgstr ""
@@ -3960,6 +3964,10 @@ msgstr ""
 msgid "Back to Parfocal"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Back to sign in"
+msgstr ""
+
 #: src/screens/review/object-card.tsx
 msgid "Back to the answers"
 msgstr ""
@@ -4618,6 +4626,10 @@ msgstr ""
 msgid "Change the {0} slide"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Change the address"
+msgstr ""
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Change the slide on this side"
 msgstr ""
@@ -4829,6 +4841,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Choose a model"
+msgstr ""
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Choose a new password"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
@@ -5522,11 +5538,20 @@ msgstr ""
 msgid "Could not load {label}."
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Could not remove the passkey. Try again."
+msgstr ""
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Could not reset the password."
+msgstr ""
+
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Could not save the passkey. Try again."
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not send the code."
 msgstr ""
@@ -6414,6 +6439,10 @@ msgstr ""
 msgid "Email domain"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Email me a code"
+msgstr ""
+
 #: src/screens/admin/audit.tsx
 msgid "Emergency"
 msgstr ""
@@ -6488,12 +6517,20 @@ msgstr ""
 msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
+msgstr ""
+
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter the size."
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter your password."
+msgstr ""
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Enter your work email, then ask for a code."
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -7215,6 +7252,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Forget learned"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Forgot your password?"
 msgstr ""
 
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -9672,6 +9713,10 @@ msgstr ""
 msgid "New map"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "New password"
+msgstr ""
+
 #: src/annotations/pin-layer.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "New pinned thread"
@@ -11490,6 +11535,10 @@ msgid "Participant code"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
+msgid "Passkey removed. It no longer signs you in"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
 msgid "Passkey saved. Next time sign in with it instead of your password"
 msgstr ""
 
@@ -12475,6 +12524,7 @@ msgstr ""
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/measure/measurement-list.tsx
 #: src/screens/admin/workspace-settings.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Remove"
 msgstr ""
 
@@ -12512,6 +12562,11 @@ msgstr ""
 
 #: src/screens/upload/check-step.tsx
 msgid "Remove the 4 largest slides from this upload"
+msgstr ""
+
+#. placeholder {0}: item.name
+#: src/screens/settings/settings-screen.tsx
+msgid "Remove the passkey {0}"
 msgstr ""
 
 #: src/screens/developer/bench-section.tsx
@@ -12667,10 +12722,12 @@ msgid "Resend"
 msgstr ""
 
 #. placeholder {0}: clock(secondsLeft)
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend in {0}"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend the code"
 msgstr ""
@@ -12697,6 +12754,10 @@ msgstr ""
 msgid "Reset all"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Reset code"
+msgstr ""
+
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Reset to 100%"
 msgstr ""
@@ -12707,6 +12768,10 @@ msgstr ""
 
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Reset to the template"
+msgstr ""
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Reset your password"
 msgstr ""
 
 #: ../../packages/ui/src/components/bottom-sheet.tsx
@@ -13850,6 +13915,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Set for this block only."
+msgstr ""
+
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Set password and sign in"
 msgstr ""
 
 #: src/screens/onboarding/sign-up-screen.tsx
@@ -17334,6 +17403,10 @@ msgstr ""
 msgid "Ways to show results"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "We email a {codeLength}-digit code to the address on your account."
+msgstr ""
+
 #: src/feedback/feedback-dialog.tsx
 msgid "We read every message. Nothing else from this screen was sent."
 msgstr ""
@@ -17744,6 +17817,7 @@ msgstr ""
 msgid "Words"
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Work email"

@@ -16,7 +16,7 @@ from parfocal_api.password_login import (
     login_of,
     throttle,
 )
-from parfocal_api.problems import ProblemError
+from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.users import signed_in
 from parfocal_api.zitadel_login import (
     CheckedSession,
@@ -148,6 +148,20 @@ async def save_passkey(
     except LoginClientError as error:
         raise IdentityUnavailableError from error
     return SavedPasskeySummary(id=passkey.passkey, name=name)
+
+
+@router.delete("/passkeys/{passkey_id}", operation_id="removePasskey", status_code=204)
+async def remove_passkey(passkey_id: str, request: Request, principal: CurrentPrincipal) -> None:
+    login, subject = subject_login(request, principal)
+    try:
+        saved = await login.passkeys(subject)
+        if passkey_id not in {item.passkey_id for item in saved}:
+            raise NotFoundError
+        await login.remove_passkey(subject, passkey_id)
+    except PasskeyRejectedError as error:
+        raise NotFoundError from error
+    except LoginClientError as error:
+        raise IdentityUnavailableError from error
 
 
 @router.post("/passkey-sign-in", operation_id="startPasskeySignIn")

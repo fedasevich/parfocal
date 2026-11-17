@@ -17,6 +17,7 @@ import {
   useListNotificationPreferences,
   useListPasskeys,
   useListSessions,
+  useRemovePasskey,
   useSetMySettingLayers,
   useSetNotificationPreferences,
   useUpdateMe,
@@ -248,6 +249,7 @@ function LoadedSettings({
   const sessions = okData(useListSessions().data) ?? [];
   const passkeys = okData(useListPasskeys().data) ?? [];
   const [addingPasskey, setAddingPasskey] = useState(false);
+  const removePasskey = useRemovePasskey();
   const policy = okData(useGetSessionPolicy().data);
   const preferences = okData(useListNotificationPreferences().data) ?? [];
   const queryClient = useQueryClient();
@@ -796,14 +798,39 @@ function LoadedSettings({
     lockAfter: () => lockAfterText(policy?.idle_lock_minutes),
     patientBanner: () => patientBannerText(layers.lab),
     passkeys: () => (
-      <span className="inline-flex items-center gap-3">
-        <span className="text-body text-fg">
-          {passkeys.length === 0 ? (
+      <span className="inline-flex flex-wrap items-center gap-3">
+        {passkeys.length === 0 ? (
+          <span className="text-body text-fg">
             <Trans>None saved</Trans>
-          ) : (
-            passkeys.map((item) => item.name).join(", ")
-          )}
-        </span>
+          </span>
+        ) : (
+          passkeys.map((item) => (
+            <span key={item.id} className="inline-flex items-center gap-2">
+              <span className="text-body text-fg">{item.name}</span>
+              <Button
+                size="sm"
+                aria-label={t`Remove the passkey ${item.name}`}
+                disabled={removePasskey.isPending}
+                onClick={() =>
+                  removePasskey.mutate(
+                    { passkeyId: item.id },
+                    {
+                      onSuccess: () => {
+                        notify(t`Passkey removed. It no longer signs you in`);
+                        void queryClient.invalidateQueries({
+                          queryKey: getListPasskeysQueryKey(),
+                        });
+                      },
+                      onError: () => notify(t`Could not remove the passkey. Try again.`),
+                    },
+                  )
+                }
+              >
+                <Trans>Remove</Trans>
+              </Button>
+            </span>
+          ))
+        )}
         <Button
           disabled={addingPasskey}
           onClick={() => {

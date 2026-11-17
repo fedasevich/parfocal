@@ -671,6 +671,8 @@ UNAIMED_WRITES: dict[str, str] = {
             "createAccount",
             "confirmEmail",
             "resendEmailCode",
+            "requestPasswordReset",
+            "resetPassword",
             "signInWithPassword",
             "startPasskeySignIn",
             "finishPasskeySignIn",
@@ -678,7 +680,7 @@ UNAIMED_WRITES: dict[str, str] = {
         "answers the anonymous caller about their own account and names no other row",
     ),
     **dict.fromkeys(
-        ("startPasskeyRegistration", "savePasskey"),
+        ("startPasskeyRegistration", "savePasskey", "removePasskey"),
         "adds a passkey to the caller's own identity and names no other row",
     ),
     "recordActivity": "stamps the caller's own session",
