@@ -1,3 +1,4 @@
+import gzip
 import json
 import uuid
 from collections.abc import Iterator
@@ -17,13 +18,16 @@ from workspace_support import join_project, make_project, make_workspace
 
 from parfocal_api.app import create_app
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.remote_reads import cache_prefix, sweep_remote_cache
+from parfocal_api.remote_cache_sweep import sweep_every_workspace
+from parfocal_api.remote_reads import cache_prefix
 from parfocal_api.tables import Role
-from parfocal_common.db import create_engine, tenant_transaction
+from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.ingest import restricted_ranges_key
 from parfocal_common.object_store import ObjectStore
+from parfocal_ingest.identify import Format, Identified
 from parfocal_ingest.identifying_text import ranges_file
+from parfocal_ingest.pyramid import Pyramid, read_pyramid
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -32,6 +36,16 @@ SLIDE = "CMU-1-Small-Region.svs"
 FILE = f"/scans/{SLIDE}"
 HEADER_VALUE = "source-token-9c41aa0e72"
 ETAG = '"first-version"'
+RESULT = "CMU-1-Small-Region.geojson"
+REGIONS = (
+    Path(__file__).resolve().parents[3]
+    / "workers"
+    / "ingest"
+    / "tests"
+    / "fixtures"
+    / "results"
+    / "regions.geojson"
+).read_bytes()
 
 
 @dataclass(frozen=True)
@@ -120,6 +134,21 @@ def read(api: ApiAs, grant: dict[str, Any], first: int, last: int) -> Any:
     )
 
 
+def sidecar(api: ApiAs, grant: dict[str, Any], name: str) -> Any:
+    return api.client.get(
+        f"{grant['base_path']}{name}", headers={"Authorization": f"Bearer {grant['token']}"}
+    )
+
+
+def uploaded_levels(path: Path) -> list[dict[str, Any]]:
+    found = read_pyramid(path, Identified(Format.APERIO_SVS))
+    assert isinstance(found, Pyramid)
+    return [
+        {"downsample": level.downsample, "width": level.width, "height": level.height}
+        for level in found.levels
+    ]
+
+
 def source_reads(site: Site) -> int:
     return sum(1 for method, path, _ in site.requests if method == "GET" and path == FILE)
 
@@ -178,6 +207,22 @@ def test_a_slide_read_in_place_copies_nothing_and_opens_from_the_cache_with_the_
     offline = access(linked, team, slide_id)
     assert offline["offline"] is True
     assert read(linked, offline, 0, 4095).content == data[:4096]
+    levels = sidecar(linked, offline, "levels.json")
+    assert levels.status_code == 200, levels.text
+    table = levels.json()
+    shown = [
+        {name: level[name] for name in ("downsample", "width", "height")}
+        for level in table["levels"]
+    ]
+    assert shown == uploaded_levels(fixture_path(SLIDE))
+    assert table["scale"]["mpp_x"] == pytest.approx(0.499)
+    tiles = sidecar(linked, offline, "tile-index.json")
+    assert tiles.status_code == 200
+    body = tiles.content
+    index = json.loads(gzip.decompress(body) if body[:2] == b"\x1f\x8b" else body)
+    assert (index["formatId"], len(index["levels"])) == ("aperio-svs", len(shown))
+    assert sidecar(linked, offline, "thumbnail.webp").status_code == 401
+    assert sidecar(linked, {**offline, "token": "forged.token"}, "levels.json").status_code == 401
 
     serve_slide(site, data)
     back = read(linked, offline, 4096, 8191)
@@ -225,8 +270,7 @@ def test_the_cache_of_a_slide_unread_for_seven_days_is_swept(
         async def work(store: ObjectStore) -> int:
             engine = create_engine(with_database(OWNER_URL, database))
             try:
-                async with tenant_transaction(engine, team.tenant_id) as connection:
-                    return await sweep_remote_cache(store, connection, at)
+                return await sweep_every_workspace(engine, store, at)
             finally:
                 await engine.dispose()
 
@@ -235,3 +279,94 @@ def test_the_cache_of_a_slide_unread_for_seven_days_is_swept(
     assert sweep(datetime.now(UTC) + timedelta(days=6)) == 0
     assert sweep(datetime.now(UTC) + timedelta(days=8)) >= 1
     assert stored_keys(prefix) == []
+
+
+def stored_original(database: str, slide_id: str) -> tuple[Any, ...]:
+    [row] = query(
+        with_database(OWNER_URL, database),
+        "SELECT storage, original_key, source_id, remote_path, remote_etag FROM slides"
+        f" WHERE id = '{slide_id}'",
+    )
+    return row
+
+
+def test_copying_a_remote_slide_in_keeps_its_id_and_its_annotations(
+    linked: ApiAs, database: str, team: Team, site: Site, tmp_path: Path
+) -> None:
+    data = fixture_path(SLIDE).read_bytes()
+    serve_slide(site, data)
+    source = save_source(linked, team, site)
+    slide_id = opened_in_place(linked, team, source["id"])
+    early = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
+    assert (early.status_code, early.json()["code"]) == (409, "remote-slide-not-ready")
+    inspected(database, team, site, tmp_path)
+    grant = access(linked, team, slide_id)
+    assert read(linked, grant, 0, 1023).status_code == 206
+    ring = [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]]
+    drawn = linked(team.lead).post(
+        f"/api/slides/{slide_id}/annotations",
+        json={"kind": "roi", "geometry": {"type": "Polygon", "coordinates": [ring]}},
+    )
+    assert drawn.status_code == 201, drawn.text
+
+    asked = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
+    assert asked.status_code == 202, asked.text
+    inspected(database, team, site, tmp_path)
+
+    key = f"t/{team.tenant_id}/s/{slide_id}/original.svs"
+    assert stored_original(database, slide_id) == ("uploaded", key, None, None, None)
+    assert read_object(key) == data
+    assert stored_keys(cache_prefix(team.tenant_id, uuid.UUID(slide_id))) == []
+    kept = linked(team.lead).get(f"/api/slides/{slide_id}/annotations").json()
+    assert [annotation["id"] for annotation in kept] == [drawn.json()["id"]]
+
+    site.routes[FILE] = Served(503)
+    copied = access(linked, team, slide_id)
+    assert copied["base_path"] == f"/tiles/{slide_id}/"
+    assert (copied["original"], copied["storage"], copied["offline"]) == (
+        "original.svs",
+        "uploaded",
+        False,
+    )
+    again = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
+    assert (again.status_code, again.json()["code"]) == (409, "slide-not-remote")
+
+
+def test_a_result_file_next_to_a_slide_read_in_place_is_imported_onto_it(
+    linked: ApiAs, database: str, team: Team, site: Site, tmp_path: Path
+) -> None:
+    serve_slide(site, fixture_path(SLIDE).read_bytes())
+    site.index("/scans/", [SLIDE, RESULT])
+    site.file(f"/scans/{RESULT}", REGIONS)
+    source = save_source(linked, team, site)
+    response = linked(team.lead).post(
+        f"/api/projects/{team.project}/remote-slides",
+        json={"source_id": source["id"], "names": [SLIDE]},
+    )
+    assert response.status_code == 202, response.text
+    [slide] = response.json()["opened"]
+    [result] = response.json()["results"]
+    assert (result["name"], result["kind"]) == (RESULT, "result")
+
+    keyring = MasterKeyring.from_setting(TEST_MASTER_KEYS)
+    fetched_only = frozenset({"link-fetch", "result-import"})
+    run_worker(database, team.tenant_id, tmp_path / "work", (site.origin,), keyring, fetched_only)
+    [row] = query(
+        with_database(OWNER_URL, database),
+        "SELECT status, slide_id, slide_upload_id, job_id FROM uploads"
+        f" WHERE id = '{result['upload_id']}'",
+    )
+    assert row == ("completed", uuid.UUID(slide["slide_id"]), None, None)
+
+    inspected(database, team, site, tmp_path)
+    imported = query(
+        with_database(OWNER_URL, database),
+        "SELECT jobs.kind, jobs.status FROM jobs JOIN uploads ON uploads.job_id = jobs.id"
+        f" WHERE uploads.id = '{result['upload_id']}'",
+    )
+    assert imported == [("result-import", "done")]
+    [scale] = query(
+        with_database(OWNER_URL, database),
+        f"SELECT mpp_x, objective_power FROM slides WHERE id = '{slide['slide_id']}'",
+    )
+    assert scale == (pytest.approx(0.499), 20)

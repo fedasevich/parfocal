@@ -3,7 +3,7 @@ import json
 import re
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO
 
 import tifffile
 
@@ -111,7 +111,9 @@ def microns_per_pixel(found: Pyramid) -> dict[str, float] | None:
     return None if x is None or y is None else {"x": x, "y": y}
 
 
-def tile_index(path: Path, identified: Identified, found: Pyramid) -> dict[str, Any] | None:
+def tile_index(
+    path: Path | BinaryIO, identified: Identified, found: Pyramid
+) -> dict[str, Any] | None:
     chosen = identified.format
     if chosen is None or chosen not in TIFF_FAMILY or identified.variant == "zip":
         return None

@@ -731,6 +731,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         f"/api/projects/{w.project}/remote-slides",
         {"source_id": str(seeded(w, "import-source")), "names": ["scan.svs"]},
     ),
+    "copyRemoteSlide": lambda w: Call("POST", f"/api/slides/{seeded(w, 'remote-slide')}/copy-in"),
     "importFromLink": lambda w: Call(
         "POST",
         f"/api/projects/{w.project}/link-imports",
@@ -2460,6 +2461,19 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         created_by_user_id=colleague,
                     )
                 )
+            await connection.execute(
+                insert(slides).values(
+                    id=uuid.uuid5(tenant_id, "remote-slide"),
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    label="Matrix remote slide",
+                    storage="remote",
+                    source_id=uuid.uuid5(tenant_id, "import-source"),
+                    remote_path="scan.svs",
+                    file_bytes=11,
+                    published_at=func.now(),
+                )
+            )
             hook_id = uuid.uuid5(tenant_id, "webhook")
             hook_keys = await ensure_keys(connection, TEST_KEYRING, tenant_id)
             await connection.execute(

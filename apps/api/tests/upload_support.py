@@ -15,7 +15,7 @@ from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import work
 from parfocal_common.object_store import ObjectStore
 from parfocal_ingest.link_fetch import link_fetch_workflow
-from parfocal_ingest.remote_inspect import remote_inspect_workflow
+from parfocal_ingest.remote_inspect import remote_copy_workflow, remote_inspect_workflow
 from parfocal_ingest.result_import import result_import_workflow
 from parfocal_ingest.workflow import Resources, ingest_workflow
 
@@ -80,15 +80,21 @@ def run_worker(
     work_dir: Path,
     trusted: tuple[str, ...] = (),
     keyring: MasterKeyring | None = None,
+    kinds: frozenset[str] | None = None,
 ) -> int:
     def resources() -> Resources:
         return Resources(TEST_STORAGE, work_dir, link_trusted_origins=trusted, keyring=keyring)
 
     workflows = [
-        ingest_workflow(resources),
-        result_import_workflow(resources),
-        link_fetch_workflow(resources),
-        remote_inspect_workflow(resources),
+        workflow
+        for workflow in (
+            ingest_workflow(resources),
+            result_import_workflow(resources),
+            link_fetch_workflow(resources),
+            remote_inspect_workflow(resources),
+            remote_copy_workflow(resources),
+        )
+        if kinds is None or workflow.kind in kinds
     ]
 
     async def go() -> int:

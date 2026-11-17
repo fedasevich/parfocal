@@ -100,7 +100,7 @@ import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { stageToolOf } from "./stage-tools.ts";
-import { grantFor } from "./tile-grant.ts";
+import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
 import { TravelMinimap } from "./travel-minimap.tsx";
@@ -254,6 +254,7 @@ export function SlideStage({
   annotateTask = null,
   layerKnown = true,
   onOpenSlide,
+  onStorage,
 }: {
   slideId: string;
   projectId?: string;
@@ -261,6 +262,7 @@ export function SlideStage({
   annotateTask?: AnnotateTask | null;
   layerKnown?: boolean;
   onOpenSlide?: (slideId: string) => void;
+  onStorage?: (note: SlideStorageNote) => void;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
   systematicScan?: boolean;
@@ -282,6 +284,7 @@ export function SlideStage({
       annotateTask={annotateTask}
       layerKnown={layerKnown}
       onOpenSlide={onOpenSlide}
+      onStorage={onStorage}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -299,6 +302,7 @@ function OpenedSlide({
   annotateTask,
   layerKnown,
   onOpenSlide,
+  onStorage,
   onRetry,
 }: {
   slideId: string;
@@ -307,6 +311,7 @@ function OpenedSlide({
   annotateTask: AnnotateTask | null;
   layerKnown: boolean;
   onOpenSlide: ((slideId: string) => void) | undefined;
+  onStorage: ((note: SlideStorageNote) => void) | undefined;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
@@ -316,6 +321,8 @@ function OpenedSlide({
 }) {
   const { t } = useLingui();
   const host = useRef<HTMLDivElement | null>(null);
+  const storageNote = useRef(onStorage);
+  storageNote.current = onStorage;
   const doubleClick = useRef<"zoom" | "toggle">("zoom");
   const settings = useResolvedSettings();
   doubleClick.current = settings?.double_click ?? "zoom";
@@ -540,7 +547,11 @@ function OpenedSlide({
     };
     void loadViewerEngine().then((engine) => {
       if (disposed) return;
-      const access = engine.createSlideAccess((previous) => grantFor(slideId, previous));
+      const access = engine.createSlideAccess(async (previous) => {
+        const grant = await grantFor(slideId, previous);
+        if (!disposed) storageNote.current?.({ storage: grant.storage, offline: grant.offline });
+        return grant;
+      });
       const open = async () => {
         const grant = await access.grant();
         return engine.signedOpenRequest({

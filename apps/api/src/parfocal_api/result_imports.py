@@ -20,6 +20,7 @@ from parfocal_api.tables import (
     ResultObjectKind,
     ResultSource,
     ResultStatus,
+    SlideStorage,
     UploadStatus,
     result_objects,
     result_sets,
@@ -59,6 +60,20 @@ async def slide_upload_of(connection: AsyncConnection, upload_id: uuid.UUID) -> 
     )
 
 
+async def awaits_inspection(connection: AsyncConnection, slide_id: uuid.UUID) -> bool:
+    return bool(
+        await connection.scalar(
+            select(func.count())
+            .select_from(slides)
+            .where(
+                slides.c.id == slide_id,
+                slides.c.storage == SlideStorage.REMOTE,
+                slides.c.published_at.is_(None),
+            )
+        )
+    )
+
+
 async def queue_if_ready(connection: AsyncConnection, row: Any) -> uuid.UUID | None:
     if row.kind != UploadKind.RESULT or row.result_set_id is not None:
         return None
@@ -70,6 +85,8 @@ async def queue_if_ready(connection: AsyncConnection, row: Any) -> uuid.UUID | N
                 update(uploads).where(uploads.c.id == row.id).values(slide_id=slide_id)
             )
     if slide_id is None or row.status != UploadStatus.COMPLETED or row.job_id is not None:
+        return None
+    if await awaits_inspection(connection, slide_id):
         return None
     job_id = await enqueue_result_import(connection, row.tenant_id, row.project_id, row.id)
     await connection.execute(update(uploads).where(uploads.c.id == row.id).values(job_id=job_id))
@@ -91,6 +108,27 @@ async def queue_waiting_results(
             )
             .values(slide_id=slide_id)
             .returning(uploads)
+        )
+    ).all()
+    queued: list[uuid.UUID] = []
+    for row in rows:
+        job_id = await queue_if_ready(connection, row)
+        if job_id is not None:
+            queued.append(job_id)
+    return queued
+
+
+async def queue_results_on(connection: AsyncConnection, slide_id: uuid.UUID) -> list[uuid.UUID]:
+    rows = (
+        await connection.execute(
+            select(uploads)
+            .where(
+                uploads.c.slide_id == slide_id,
+                uploads.c.kind == UploadKind.RESULT,
+                uploads.c.job_id.is_(None),
+                uploads.c.result_set_id.is_(None),
+            )
+            .with_for_update()
         )
     ).all()
     queued: list[uuid.UUID] = []
