@@ -1,4 +1,4 @@
-# XXXX. Anyone who can read a slide maps a view, and the audit event carries the GPU seconds
+# 0365. Anyone who can read a slide maps a view, and the audit event carries the GPU seconds
 
 - Date: 2026-11-17
 - Status: Accepted

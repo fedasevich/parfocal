@@ -1,4 +1,4 @@
-# 0363. Seeded fixture slides get their own folders under fixture-slides/, with a server-side copy of the original beside their derived files
+# 0367. Seeded fixture slides get their own folders under fixture-slides/, with a server-side copy of the original beside their derived files
 
 - Date: 2026-11-17
 - Status: Accepted

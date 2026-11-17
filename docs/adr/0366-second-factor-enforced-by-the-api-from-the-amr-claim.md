@@ -1,4 +1,4 @@
-# XXXX. The API enforces a workspace's second factor from the ID token's amr claim
+# 0366. The API enforces a workspace's second factor from the ID token's amr claim
 
 - Date: 2026-11-17
 - Status: Accepted

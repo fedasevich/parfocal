@@ -328,3 +328,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0361](0361-interactive-encoder-and-decoder-per-tier.md) | PathoSAM ViT-B stays the interactive encoder in every tier, with the window decoder for clicks and the int8 AIS decoder for regions, because no smaller or newer SAM has a better held-out number here | Accepted | 2026-11-16 |
 | [0362](0362-fast-tier-auto-tool-without-webgpu-is-deferred.md) | The Fast tier auto tool without WebGPU is deferred, with InstanSeg brightfield nuclei as the named candidate, because it misses its quality bar on the one set it did not train on and its post-processing is not yet in the browser | Accepted | 2026-11-16 |
 | [0364](0364-ci-builds-the-modal-and-web-images-without-credentials.md) | CI builds the Modal and web images without credentials | Accepted | 2026-11-17 |
+| [0365](0365-anyone-who-reads-a-slide-maps-a-view.md) | Anyone who can read a slide maps a view, and the audit event carries the GPU seconds | Accepted | 2026-11-17 |
+| [0366](0366-second-factor-enforced-by-the-api-from-the-amr-claim.md) | The API enforces a workspace's second factor from the ID token's amr claim | Accepted | 2026-11-17 |
+| [0367](0367-seeded-fixture-slides-get-their-own-folders.md) | Seeded fixture slides get their own folders under fixture-slides/, with a server-side copy of the original beside their derived files | Accepted | 2026-11-17 |
+| [0368](0368-the-end-to-end-suite-runs-the-api-and-ingest-containers.md) | The end-to-end suite runs the API and ingest containers | Accepted | 2026-11-17 |
