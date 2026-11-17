@@ -45,7 +45,6 @@ import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useSlideProgress } from "../slide-progress.ts";
 import { SlideThumb } from "../slide-thumb.tsx";
-import { lookUrl } from "../thumbnails.ts";
 import { ActivityCard } from "./activity-card.tsx";
 import { Announcements } from "./announcements.tsx";
 import { DotRow, SideCard } from "./cards.tsx";
@@ -72,10 +71,10 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
   const continueHref = continueTo(resume);
   return (
     <div className="grid grid-cols-[220px_minmax(0,1fr)] overflow-hidden rounded-[14px] border border-line bg-chrome">
-      <div
-        aria-hidden="true"
-        className="min-h-[150px] bg-[length:150%] bg-[35%_40%]"
-        style={{ backgroundImage: `url(${lookUrl("mid")})` }}
+      <SlideThumb
+        slideId={resume.slide_id}
+        file={resume.slide_label}
+        className="min-h-[150px] size-full"
       />
       <div className="grid content-center gap-2 px-5 py-4.5">
         <div className="flex items-center gap-2.5">
@@ -137,12 +136,7 @@ function SampleHero({
 }) {
   const goTo = useGoTo();
   return (
-    <div className="grid grid-cols-[220px_minmax(0,1fr)] overflow-hidden rounded-[14px] border border-line bg-chrome">
-      <div
-        aria-hidden="true"
-        className="min-h-[150px] bg-[length:150%] bg-[35%_40%]"
-        style={{ backgroundImage: `url(${lookUrl("overview")})` }}
-      />
+    <div className="grid overflow-hidden rounded-[14px] border border-line bg-chrome">
       <div className="grid content-center gap-2 px-5 py-4.5">
         <div className="flex items-center gap-2.5">
           <StatusTag tone="accent">

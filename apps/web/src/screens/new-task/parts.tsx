@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group"
 import { Switch } from "@parfocal/ui/components/switch";
 import { cn } from "@parfocal/ui/lib/utils";
 import type { ReactNode } from "react";
+import { SlideThumb as RealSlideThumb } from "../slide-thumb.tsx";
 
 export const fieldId = (field: string) => `task-field-${field.replace(/\./g, "-")}`;
 
@@ -44,13 +45,31 @@ export function Warn({ icon = "warn", children }: { icon?: IconName; children: R
   );
 }
 
-export function SlideThumb({ size = 32 }: { size?: number }) {
+export function SlideThumb({
+  slideId,
+  file,
+  size = 32,
+}: {
+  slideId: string | undefined;
+  file: string;
+  size?: number;
+}) {
+  if (slideId === undefined) {
+    return (
+      <span
+        aria-hidden="true"
+        className="shrink-0 rounded-md border border-line bg-surf-section"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   return (
     <span
-      aria-hidden="true"
-      className="shrink-0 rounded-md border border-line bg-cover bg-center"
-      style={{ width: size, height: size, backgroundImage: "url(/mock-assets/overview.jpg)" }}
-    />
+      className="block shrink-0 overflow-hidden rounded-md border border-line"
+      style={{ width: size, height: size }}
+    >
+      <RealSlideThumb slideId={slideId} file={file} className="size-full" />
+    </span>
   );
 }
 

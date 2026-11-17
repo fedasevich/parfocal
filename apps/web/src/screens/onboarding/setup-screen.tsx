@@ -47,7 +47,6 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import type { SetupRole as Role } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
-import { slideImage } from "./auth-side.tsx";
 import { onboardingScenes, type SetupStep } from "./scenes.ts";
 import {
   creatorNote,
@@ -237,7 +236,6 @@ export function SetupScreen({ step, change }: Props) {
   const index = onboardingScenes.setup.indexOf(step);
   const [reached, setReached] = useState(index);
   const [other, setOther] = useState(false);
-  const [zoom, setZoom] = useState(false);
   const [u, setU] = useState<Choices>({
     role: "rev",
     spec: [t`Breast`, t`Lymph nodes`],
@@ -565,22 +563,6 @@ export function SetupScreen({ step, change }: Props) {
           fill
         />
       </AuthField>
-      <button
-        type="button"
-        onClick={() => setZoom(!zoom)}
-        title={t`Click to zoom in and out`}
-        className={cn(
-          "relative h-42.5 cursor-zoom-in rounded-xl border-0 bg-center p-0 transition-[background-size] duration-(--motion-slow)",
-          zoom ? "bg-[length:400%] cursor-zoom-out" : "bg-cover",
-        )}
-        style={{ backgroundImage: `url(${slideImage})` }}
-      >
-        <span className="absolute top-3 left-3 rounded-lg bg-black/60 px-2.5 py-1 text-body-sm text-white">
-          {zoom
-            ? t`Zoomed to 10×. Click again to zoom out.`
-            : t`Try it. Click to zoom, as with ${device?.keys[1]?.[1].toLowerCase() ?? "the wheel"}.`}
-        </span>
-      </button>
     </>,
     <DoneStep
       key="done"

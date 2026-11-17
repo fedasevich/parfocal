@@ -15,7 +15,7 @@ import { personOf } from "../../shell/global-shell.tsx";
 import { NoAccessPage, SessionExpiredPage } from "../../shell/issue-pages.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
-import { PitchLayout, slideImage } from "./auth-side.tsx";
+import { PitchLayout } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
 import type { SignInScene } from "./scenes.ts";
 import { EmailForm, type Flow, SsoForm } from "./sign-in-forms.tsx";
@@ -51,10 +51,7 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
 
   if ((scene === "lock" || scene === "lockkey") && canShowLock(me)) {
     return (
-      <div
-        className="relative h-dvh overflow-hidden bg-cover bg-center"
-        style={{ backgroundImage: `url(${slideImage})` }}
-      >
+      <div className="relative h-dvh overflow-hidden bg-[#0c111c]">
         <LockCard
           person={personOf(me)}
           minutes={policy?.idle_lock_minutes ?? defaultIdleLockMinutes}

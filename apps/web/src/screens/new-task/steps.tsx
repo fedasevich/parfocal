@@ -219,7 +219,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
               }
               end={`${group.slideIds.length} slides`}
             >
-              <SlideThumb />
+              <SlideThumb slideId={group.slideIds[0]} file={group.title} />
               <RowText title={group.title} sub={group.sub} />
             </CheckRow>
           ))}
@@ -232,7 +232,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                 className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 pl-7"
               >
                 <span className="flex min-w-0 items-center gap-2.5">
-                  <SlideThumb />
+                  <SlideThumb slideId={id} file={slide.name} />
                   <RowText
                     title={slide.name}
                     sub={t`${slide.caseLabel ? `Case ${slide.caseLabel}` : t`Loose`} · added`}

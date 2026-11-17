@@ -24,8 +24,8 @@ import { useSlideProgress } from "../slide-progress.ts";
 import { slideOpenPath } from "./list-keys.ts";
 import {
   PreviewPanel,
+  RowThumb,
   SetChip,
-  SlideThumb,
   scopeWords,
   ThreadsValue,
   useOpenThreads,
@@ -121,6 +121,7 @@ function SlidePreview({
       ];
   return (
     <PreviewPanel
+      slideId={row.id}
       title={row.label}
       subtitle={row.project.name}
       progress={mine ? progress : undefined}
@@ -201,7 +202,7 @@ function SlideLine({
     >
       <TableCell className="whitespace-normal">
         <span className="inline-flex items-center gap-2.25">
-          <SlideThumb className="h-5.5 w-8.5" />
+          <RowThumb slideId={row.id} file={row.label} className="h-5.5 w-8.5" />
           <b className="font-medium text-fg">{row.label}</b>
         </span>
       </TableCell>

@@ -66,7 +66,7 @@ type TileCell = { x: number; y: number; rx: number; ry: number; colour: string }
 
 type SampleTilePreviewProps = Omit<React.ComponentProps<"figure">, "children"> & {
   state: "empty" | "ok" | "fail";
-  image: string;
+  image?: string;
   regions?: readonly (readonly TilePoint[])[];
   regionColour?: string;
   cells?: TileCell[];
@@ -111,11 +111,11 @@ function SampleTilePreview({
       data-state={state}
       aria-label={label}
       className={cn(
-        "relative m-0 h-49 overflow-hidden rounded-zone border border-line bg-size-[760px_auto] bg-position-[40%_30%]",
+        "relative m-0 h-49 overflow-hidden rounded-zone border border-line bg-surf-section bg-size-[760px_auto] bg-position-[40%_30%]",
         state === "fail" && "brightness-80 saturate-40",
         className,
       )}
-      style={{ backgroundImage: `url(${image})` }}
+      style={image ? { backgroundImage: `url(${image})` } : undefined}
       {...props}
     >
       <svg
