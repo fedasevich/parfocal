@@ -31,6 +31,7 @@ from parfocal_api.result_sets import (
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
 from parfocal_api.sample_files import stored_sample_file
+from parfocal_api.seed_request import seed_request
 from parfocal_api.tables import (
     AnalysisTemplate,
     PrivacyMode,
@@ -177,6 +178,7 @@ async def seed(
         results,
         NoRealtime(),
         BackgroundTasks(),
+        seed_request(),
     )
     await audit(
         connection,

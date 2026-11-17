@@ -41,6 +41,7 @@ from parfocal_api.review_states import submit_slide_review
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
 from parfocal_api.sample_files import SampleFile, stored_facts, stored_sample_file
 from parfocal_api.sample_project import SAMPLE_SLIDES, square
+from parfocal_api.seed_request import seed_request
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -571,6 +572,7 @@ async def review_task(
         results,
         NoRealtime(),
         BackgroundTasks(),
+        seed_request(),
     )
     return task.id
 
