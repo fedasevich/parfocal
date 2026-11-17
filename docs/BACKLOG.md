@@ -6385,6 +6385,16 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Build the four as the mock's scenes 19 to 29 show them, with Q and E in the shortcut registry so they can be rebound.
   Done when a browser test steps with Q and E, opens the progress popover, opens the report from a clinical project and moves the camera with Go to on a thread.
   Depends on PROTO-023. Size: S.
+- [ ] PROTO-025 · Home, My work, the task wizards, upload, jobs and sign-in show real data and real images
+  On 2026-11-17 the owner asked that the deployed app never show prototype stand-ins. These screens still draw pictures from `/mock-assets/` through `lookUrl` or `coverTile`, which production does not serve, or read the fake API: `screens/home/home-screen.tsx`, `screens/my-work/parts.tsx`, `screens/my-work/to-review-tab.tsx`, `screens/new-task/parts.tsx`, `screens/upload/parts.tsx`, `screens/upload/upload-page.tsx`, `screens/onboarding/auth-side.tsx`, `screens/jobs/job-window-screen.tsx`, `screens/jobs/run-model-window.tsx`, `screens/admin/connect-model.tsx` and `popout/popout-screen.tsx`. They are listed in `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates).
+  Replace each picture with the real slide thumbnail from `GET /api/slides/{id}/thumbnail` through `SlideThumb`, a real overview from the engine, or no picture where none is real, and replace each fake data read with the real API or an honest empty state. Remove each fixed file from the guard's list.
+  Done when none of these files is in the guard's list, their unit and browser tests pass, and the deployed Home, My work, wizard and upload screens show only real slide images.
+  Size: M.
+- [ ] PROTO-026 · Project, sign-off, evaluation, disagreements and clinical report screens show real data
+  On 2026-11-17 the owner asked that the deployed app never show prototype stand-ins. These screens import `@parfocal/api-client/fake`, `fake-task.ts` or `mock-toast`, draw `/mock-assets/` pictures, or print prototype dates: `screens/project/project-page.tsx`, `screens/sign-off/sign-off-screen.tsx`, `screens/evaluation/evaluation-screen.tsx`, `screens/evaluation/report-pages.tsx`, `screens/disagreements/queue-screen.tsx`, `screens/disagreements/adjudicator-view.tsx`, `screens/annotate-task/new-annotate-task.tsx` and `worklist-live/connect-worklist-live.ts`, listed in `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates). The clinical report screens (`screens/clinical-report/model.ts`, `cosign-screen.tsx`, `report-screen.tsx`) and `screens/search/search-screen.tsx` print fixed dates or names that need a check.
+  Read every value from the real API, keep fakes only behind the fake API's own entry, use real dates and people, and show an honest empty state where the API has nothing. Remove each fixed file from the guard's list.
+  Done when none of these files is in the guard's list, the clinical report and search screens print no fixed date or name, and their unit and browser tests pass.
+  Size: M.
 
 ---
 
