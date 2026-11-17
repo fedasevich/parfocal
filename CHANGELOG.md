@@ -2,6 +2,12 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.13.2 (2026-11-17)
+
+### Fixes
+
+- TEST-049: Smoke watcher skips requests a navigation aborts
+
 ## v0.13.1 (2026-11-17)
 
 ### Fixes
