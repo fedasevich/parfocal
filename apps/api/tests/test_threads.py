@@ -288,6 +288,7 @@ def test_replies_notify_followers_who_may_see_them(api: ApiAs, database: str) ->
         "thread_id": thread["id"],
         "case_id": None,
         "delivery_id": None,
+        "source_id": None,
         "resolved_from": None,
         "origin": {
             "route": "task",
