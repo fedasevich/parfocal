@@ -248,6 +248,7 @@ jobs:
         with:
           tofu_version: 1.13.x
           tofu_wrapper: false
+      - run: pnpm --filter @parfocal/e2e exec playwright install ffmpeg
       - run: pnpm stack:up
       - run: docker pull --platform linux/amd64 kristophjunge/test-saml-idp:1.15
       - run: pnpm test:e2e
