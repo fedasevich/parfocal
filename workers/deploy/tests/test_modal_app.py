@@ -32,11 +32,13 @@ from parfocal_deploy.modal_app import (
     INGEST_SPAWN_GAP_SECONDS,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
+    PRELOAD_VARIABLE,
     SECRETS,
     WEB_CONCURRENCY,
     WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
+    WEB_PRELOAD,
     EventSpawner,
     IngestSpawner,
     app,
@@ -68,6 +70,28 @@ def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
         assert "buffer_containers" not in options
         assert options["max_containers"] <= 4
     assert all(pool.min_containers == 0 for pool in POOLS)
+
+
+def test_only_the_web_function_restores_from_a_memory_snapshot() -> None:
+    assert WEB_OPTIONS["enable_memory_snapshot"] is True
+    assert "enable_memory_snapshot" not in INGEST_OPTIONS
+    assert "enable_memory_snapshot" not in EVENTS_OPTIONS
+
+
+def test_the_web_container_imports_the_api_before_its_snapshot() -> None:
+    loaded: list[str] = []
+    modal_app.preload({PRELOAD_VARIABLE: WEB_FUNCTION}, loaded.append)
+    assert loaded == list(WEB_PRELOAD)
+    assert "parfocal_api.app" in WEB_PRELOAD
+    for module in WEB_PRELOAD:
+        importlib.import_module(module)
+
+
+def test_other_containers_and_local_runs_skip_the_api_preload() -> None:
+    loaded: list[str] = []
+    modal_app.preload({}, loaded.append)
+    modal_app.preload({PRELOAD_VARIABLE: INGEST_FUNCTION}, loaded.append)
+    assert loaded == []
 
 
 def test_the_parse_sandbox_blocks_the_network_and_carries_no_secret() -> None:
