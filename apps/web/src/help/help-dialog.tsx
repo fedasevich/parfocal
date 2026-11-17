@@ -5,6 +5,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "../shell/destinations.ts";
 import { useGoTo } from "../shell/router-link.tsx";
 import { helpTopics } from "./help-topics.ts";
+import { latestReleases } from "./release-notes-source.ts";
 import { closeHelp, startTour, useHelpOpen } from "./tour-state.ts";
 import { progressOf, resumeIndex, tourLength } from "./tour-steps.ts";
 
@@ -22,7 +23,7 @@ export function HelpDialog() {
         if (!next) closeHelp();
       }}
       title={t`Help`}
-      subtitle={t`Short answers, the shortcut sheet and the tour.`}
+      subtitle={t`Short answers, the shortcut sheet, the tour and what changed.`}
       primaryLabel={resuming ? t`Resume the tour` : t`Take the tour`}
       onPrimary={() => startTour(resumeIndex(progress))}
       cancelLabel={t`Close`}
@@ -41,14 +42,35 @@ export function HelpDialog() {
         </button>
       }
     >
-      <dl className="grid gap-2 text-body-sm">
-        {helpTopics.map((topic) => (
-          <div key={topic.title}>
-            <dt className="font-medium text-fg">{topic.title}</dt>
-            <dd className="text-fg-dim">{topic.text}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="grid gap-4">
+        <dl className="grid gap-2 text-body-sm">
+          {helpTopics.map((topic) => (
+            <div key={topic.title}>
+              <dt className="font-medium text-fg">{topic.title}</dt>
+              <dd className="text-fg-dim">{topic.text}</dd>
+            </div>
+          ))}
+        </dl>
+        <section aria-labelledby="whats-new-heading" className="grid gap-2 text-body-sm">
+          <h3 id="whats-new-heading" className="font-medium text-fg">
+            <Trans>What's new</Trans>
+          </h3>
+          {latestReleases.map((release) => (
+            <details key={release.version} open>
+              <summary className="cursor-pointer text-fg-dim">
+                <h4 className="inline">
+                  {release.version} ({release.date})
+                </h4>
+              </summary>
+              <ul className="list-disc pl-5 text-fg-dim">
+                {release.notes.slice(0, 5).map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </section>
+      </div>
     </SmallModal>
   );
 }
