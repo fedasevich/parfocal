@@ -1,6 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type ModelRunDefaults, modelRunDefaultsSchema } from "../draft/model-runs.ts";
 import {
+  getGetModelRunDefaultsMockHandler,
   getListModelRunsMockHandler,
   getListMyJobsMockHandler,
   getListProjectModelsMockHandler,
@@ -9,6 +9,7 @@ import {
 import type {
   JobStatus,
   ModelRun,
+  ModelRunDefaults,
   ModelRunDraft,
   MyJob,
   ProjectModel,
@@ -162,15 +163,14 @@ export const toProjectModels = (): ProjectModel[] =>
     }),
   );
 
-export const toModelRunDefaults = (): ModelRunDefaults =>
-  modelRunDefaultsSchema.parse({
-    slide_ids: defaultRunSlideIds,
-    model_id: (
-      shownModels().find((model) => model.key === defaultRunModel) ??
-      shownModels()[0] ??
-      modelByKey(defaultRunModel)
-    ).id,
-  });
+export const toModelRunDefaults = (): ModelRunDefaults => ({
+  slide_ids: defaultRunSlideIds,
+  model_id: (
+    shownModels().find((model) => model.key === defaultRunModel) ??
+    shownModels()[0] ??
+    modelByKey(defaultRunModel)
+  ).id,
+});
 
 const modelKeyOf = (name: string): ModelKey =>
   models.find((model) => model.name === name)?.key ?? defaultRunModel;
@@ -196,11 +196,6 @@ const notFound = () =>
     { status: 404, headers: { "content-type": "application/problem+json" } },
   );
 
-export const getGetModelRunDefaultsMockHandler = (overrideResponse?: ModelRunDefaults) =>
-  http.get("*/api/projects/:projectId/model-runs/defaults", () =>
-    HttpResponse.json(overrideResponse ?? toModelRunDefaults()),
-  );
-
 export const getMoveModelRunMockHandler = () =>
   http.post<RunParams>("*/api/projects/:projectId/model-runs/:runId/move", ({ params }) => {
     const found = runById(params.runId);
@@ -211,12 +206,6 @@ export const getMoveModelRunMockHandler = () =>
   });
 
 export const jobDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getModelRunDefaults",
-    method: "get",
-    path: "/api/projects/{project_id}/model-runs/defaults",
-    handler: () => getGetModelRunDefaultsMockHandler(),
-  },
   {
     operationId: "moveModelRun",
     method: "post",
@@ -233,6 +222,7 @@ const cancelled = (run: ModelRun): ModelRun => ({
 
 export function jobHandlers(): RequestHandler[] {
   return [
+    getGetModelRunDefaultsMockHandler(() => toModelRunDefaults()),
     ...hiddenModelHandlers(),
     getListMyJobsMockHandler(() => toMyJobs()),
     getListModelRunsMockHandler(({ params, request }) =>

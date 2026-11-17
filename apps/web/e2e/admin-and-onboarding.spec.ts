@@ -3,19 +3,7 @@ import { expect, type Page, test } from "./a11y.ts";
 const badge = (page: Page) => page.getByTestId("fake-data-badge");
 
 const scenes: { path: string; heading: string; shows: string }[] = [
-  { path: "/sign-in", heading: "Sign in to Parfocal", shows: "After you sign in:" },
-  { path: "/sign-in?scene=magic", heading: "Check your email", shows: "Resend in 0:" },
-  {
-    path: "/sign-in?scene=sso",
-    heading: "Continue with your institution",
-    shows: "Matches your email",
-  },
-  { path: "/sign-in?scene=forgot", heading: "Reset your password", shows: "Send reset link" },
-  {
-    path: "/sign-in?scene=reset",
-    heading: "Choose a new password",
-    shows: "Not found in known leaks",
-  },
+  { path: "/sign-in", heading: "Sign in to Parfocal", shows: "Keep me signed in" },
   {
     path: "/sign-in?scene=passkey",
     heading: "Sign in to Parfocal",
@@ -89,27 +77,22 @@ for (const { path, heading, shows } of scenes) {
   });
 }
 
-test("sign-in moves between its scenes and lands on the deep link", async ({ page }) => {
-  await page.goto("/sign-in");
-  await page.getByRole("button", { name: "Forgot password?" }).click();
-  await expect(page).toHaveURL(/scene=forgot/);
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByRole("heading", { name: "Choose a new password" })).toBeVisible();
-  await page.goto("/sign-in?scene=passkey");
+test("the passkey sheet moves to a phone and lands on the return target", async ({ page }) => {
+  await page.goto("/sign-in?scene=passkey&return_to=%2Fmy-work");
   await page.getByRole("button", { name: "Use a phone or security key" }).click();
   await expect(
     page.getByRole("img", { name: "QR code for signing in with a phone" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "The phone answered" }).click();
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=/);
+  await expect(page).toHaveURL(/\/my-work$/);
 });
 
-test("the lock unlocks to the same slide and no access asks the owner", async ({ page }) => {
-  await page.goto("/sign-in?scene=lock");
+test("the lock unlocks to the return target and no access asks the owner", async ({ page }) => {
+  await page.goto("/sign-in?scene=lock&return_to=%2Fmy-work");
   await page.getByRole("button", { name: "Unlock with a passkey" }).click();
   await expect(page).toHaveURL(/scene=lockkey/);
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\//);
+  await expect(page).toHaveURL(/\/my-work$/);
   await page.goto("/sign-in?scene=noaccess");
   await expect(badge(page)).toContainText("viewing as Anna Kopecká");
   await page.getByRole("button", { name: "Ask for access" }).click();

@@ -10,7 +10,7 @@ When `fakeApi` is `off`, `apps/web/src/main.tsx` calls `setDraftsAnswered(false)
 - An object query fails without a toast and without a retry. A screen can show the shared notice with `notAvailable(query)` and `<NotAvailableYet what="..." />` from `apps/web/src/shell/not-available.tsx`. The team screen does this.
 - A mutation shows one toast saying the action is not available yet.
 
-Three draft paths sit under a real route with a path parameter, so the real API answers 422 instead of 404 and the call fails as an ordinary error. They are `getLabModelConnection` (under `/api/tenant/models/{id}`), `getModelRunDefaults` (under `/api/projects/{id}/model-runs/{id}`) and `listStudyTemplateReviewDefaults` (under `/api/study-templates/{id}`). `listAiModels` gets a 405 because only POST exists on its path, which the mechanism handles.
+One draft path sits under a real route with a path parameter, so the real API answers 422 instead of 404 and the call fails as an ordinary error. It is `listStudyTemplateReviewDefaults` (under `/api/study-templates/{id}`).
 
 ## Counting them
 
@@ -28,6 +28,8 @@ The viewer area switched in OPS-022 (viewer area on the real API) and OPS-025 (t
 
 `typeOutlines` lives in `apps/api/src/parfocal_api/outline_types.py` and keeps the draft URL. It sends 1 to 500 rings, each at most 512 px wide in slide pixels, through the warm gate to the `outline-types` runner in the embedder pool (`parfocal_ml.outline_typer`), with the registry's single view temperature for `pathosam-hovernext` v1.2, so the answer is calibrated. Any failure or a reply of the wrong length is 503 `typer-offline`, and the web then leaves the accepts untyped. The runner needs `hovernext-pannuke` v1.2 `typer.onnx` in model artifacts, which is not exported yet, so production answers 503 until it is. The fake answers through `fakeTypeOutlinesHandler` in `viewer-tools-handlers.ts`.
 
+OPS-024 (models, reports, team and admin areas on the real API) switched three model calls, all in `apps/api/src/parfocal_api/model_area.py` and registered before the routes with a path parameter. `getModelRunDefaults` offers the project's slides that have no result set yet and the first catalogue model that is not hidden. `listAiModels` lists the catalogue models with their hidden state and the tenant's lab models, counts result sets by the name a run gives them, and lists the run batches that still have a queued or running slide. `getLabModelConnection` prefills the connect form from the latest connected lab model and answers 404 when there is none, so the screen starts blank. Its test is always `untested`, and `tiles_at_once` and `health_check_minutes` are the constants the screen already showed, because nothing stores them yet.
+
 ## Remaining drafts
 
 High priority sits on the home, project, viewer, review and annotate paths.
@@ -40,14 +42,15 @@ High priority sits on the home, project, viewer, review and annotate paths.
 | getUploadBatch | upload page | partly, uploads | high |
 | getProjectScopeOptions | new task | none | high |
 | getReviewTaskDefaults | new task | none | high |
-| getModelRunDefaults | run model window | none, path swallowed | medium |
 | moveModelRun | job window | none | medium |
 | requestProjectAccess | project page without access | none | medium |
 | listTeamWorkload | team | none | medium |
 | getEvaluationReport | evaluation report | partly, task evaluation | medium |
 | getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |
 | listStudyTemplateReviewDefaults | study templates | none, path swallowed | medium |
-| getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks, listAiModels | admin console | none | low |
-| getLabModelConnection | connect a model | none, path swallowed | low |
+| getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks | admin console | none | low |
 | getInvitePreview | invitation page | partly, invitations | low |
-| getSignInOptions, signInWithCode, requestSignInLink, startSso, requestPasswordReset, resetPassword | sign in screens, replaced by Zitadel | Zitadel | low |
+
+## Deleted
+
+OPS-024 (models, reports, team and admin areas on the real API) deleted `getSignInOptions`, `signInWithCode`, `requestSignInLink`, `startSso`, `requestPasswordReset` and `resetPassword`, because the hosted Zitadel login does single sign-on, sign-in links and password resets. The sign-in screen lost its link, single sign-on, forgot and reset scenes, and sign-up lost its single sign-on button. The lock and expired scenes read the idle lock and session length from the real session policy, and the lock and passkey scenes land on `return_to` or home.

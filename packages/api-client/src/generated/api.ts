@@ -447,6 +447,62 @@ export interface AiCorrections {
   months: CorrectionsMonth[];
 }
 
+export type AiModelSource = (typeof AiModelSource)[keyof typeof AiModelSource];
+
+export const AiModelSource = {
+  parfocal: "parfocal",
+  lab: "lab",
+} as const;
+
+export type AiModelStatus = (typeof AiModelStatus)[keyof typeof AiModelStatus];
+
+export const AiModelStatus = {
+  active: "active",
+  answering: "answering",
+  offline: "offline",
+  "imports-only": "imports-only",
+  hidden: "hidden",
+} as const;
+
+export interface AiModel {
+  id: string;
+  name: string;
+  version: string;
+  source: AiModelSource;
+  catalogue_name: string | null;
+  makes: string[];
+  description: string;
+  runs_on: string;
+  who_can_run: string;
+  /** @minimum 0 */
+  result_sets: number;
+  shown: boolean;
+  status: AiModelStatus;
+  latency_ms: number | null;
+}
+
+export interface ProjectRef {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface AiModelRun {
+  id: string;
+  model: string;
+  project: ProjectRef;
+  /** @minimum 0 */
+  slides: number;
+  /** @minimum 0 */
+  slides_done: number;
+  started_by: string | null;
+}
+
+export interface AiModels {
+  models: AiModel[];
+  running: AiModelRun[];
+}
+
 export interface AiObjectConfirm {
   geometry?: Geometry | null;
 }
@@ -734,12 +790,6 @@ export const Asked = {
   aided: "aided",
   both: "both",
 } as const;
-
-export interface ProjectRef {
-  id: string;
-  code: string;
-  name: string;
-}
 
 export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 
@@ -3075,6 +3125,66 @@ export interface JoinableWorkspace {
   asked: boolean;
 }
 
+export type LabConnectionTestOutcome =
+  (typeof LabConnectionTestOutcome)[keyof typeof LabConnectionTestOutcome];
+
+export const LabConnectionTestOutcome = {
+  untested: "untested",
+  "follows-contract": "follows-contract",
+  "not-contract": "not-contract",
+} as const;
+
+export interface OutlineCell {
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+  class: string;
+}
+
+export interface TileOutline {
+  /**
+   * @items.items.minItems 2
+   * @items.items.maxItems 2
+   */
+  regions: [number, number][][];
+  cells: OutlineCell[];
+}
+
+export interface SampleTile {
+  label: string;
+  slide: string;
+  answered_ms: number;
+  regions: number;
+  cells: number;
+  classes: number;
+  outline: TileOutline;
+}
+
+export interface LabTestModel {
+  name: string;
+  version: string;
+}
+
+export interface SentClass {
+  name: string;
+  cells: number;
+  suggested: string | null;
+}
+
+export interface LabConnectionTest {
+  outcome: LabConnectionTestOutcome;
+  sample_slide: string;
+  returns: string[];
+  answered_ms: number | null;
+  server_software: string | null;
+  tiles: SampleTile[];
+  /** @minimum 0 */
+  missing_geometry: number;
+  model: LabTestModel | null;
+  classes: SentClass[];
+}
+
 export type LabModelSignIn = (typeof LabModelSignIn)[keyof typeof LabModelSignIn];
 
 export const LabModelSignIn = {
@@ -3135,6 +3245,42 @@ export interface LabModel {
   created_at: string;
 }
 
+export type LabModelConnectionSignIn =
+  (typeof LabModelConnectionSignIn)[keyof typeof LabModelConnectionSignIn];
+
+export const LabModelConnectionSignIn = {
+  none: "none",
+  token: "token",
+  header: "header",
+} as const;
+
+export type LabModelConnectionWhoCanRun =
+  (typeof LabModelConnectionWhoCanRun)[keyof typeof LabModelConnectionWhoCanRun];
+
+export const LabModelConnectionWhoCanRun = {
+  admins: "admins",
+  researchers: "researchers",
+} as const;
+
+export interface LabModelConnection {
+  address: string;
+  host: string;
+  sign_in: LabModelConnectionSignIn;
+  last_four: string;
+  /** @exclusiveMinimum 0 */
+  tile_size: number;
+  /** @exclusiveMinimum 0 */
+  magnification: number;
+  /** @exclusiveMinimum 0 */
+  tiles_at_once: number;
+  /** @exclusiveMinimum 0 */
+  health_check_minutes: number;
+  taxonomy: string;
+  who_can_run: LabModelConnectionWhoCanRun;
+  project_ids: string[];
+  test: LabConnectionTest;
+}
+
 export type TileSize = (typeof TileSize)[keyof typeof TileSize];
 
 export const TileSize = {
@@ -3191,42 +3337,9 @@ export const LabModelTestOutcome = {
   "not-contract": "not-contract",
 } as const;
 
-export interface OutlineCell {
-  x: number;
-  y: number;
-  rx: number;
-  ry: number;
-  class: string;
-}
-
-export interface TileOutline {
-  /**
-   * @items.items.minItems 2
-   * @items.items.maxItems 2
-   */
-  regions: [number, number][][];
-  cells: OutlineCell[];
-}
-
-export interface SampleTile {
-  label: string;
-  slide: string;
-  answered_ms: number;
-  regions: number;
-  cells: number;
-  classes: number;
-  outline: TileOutline;
-}
-
 export interface ModelOfTest {
   name: string;
   version: string;
-}
-
-export interface SentClass {
-  name: string;
-  cells: number;
-  suggested: string | null;
 }
 
 export interface LabModelTest {
@@ -3735,6 +3848,11 @@ export interface ModelRun {
   finished_at: string | null;
   stages: RunStage[];
   actions: JobControl[];
+}
+
+export interface ModelRunDefaults {
+  slide_ids: string[];
+  model_id: string;
 }
 
 export type TierTask = (typeof TierTask)[keyof typeof TierTask];
@@ -16197,6 +16315,727 @@ export function useGetProjectJob<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type getModelRunDefaultsResponse200 = {
+  data: ModelRunDefaults;
+  status: 200;
+};
+
+export type getModelRunDefaultsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getModelRunDefaultsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getModelRunDefaultsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getModelRunDefaultsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getModelRunDefaultsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getModelRunDefaultsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getModelRunDefaultsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getModelRunDefaultsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getModelRunDefaultsResponseSuccess = getModelRunDefaultsResponse200 & {
+  headers: Headers;
+};
+export type getModelRunDefaultsResponseError = (
+  | getModelRunDefaultsResponse400
+  | getModelRunDefaultsResponse401
+  | getModelRunDefaultsResponse403
+  | getModelRunDefaultsResponse404
+  | getModelRunDefaultsResponse409
+  | getModelRunDefaultsResponse422
+  | getModelRunDefaultsResponse429
+  | getModelRunDefaultsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getModelRunDefaultsResponse =
+  | getModelRunDefaultsResponseSuccess
+  | getModelRunDefaultsResponseError;
+
+export const getGetModelRunDefaultsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/model-runs/defaults`;
+};
+
+/**
+ * @summary Get Model Run Defaults
+ */
+export const getModelRunDefaults = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getModelRunDefaultsResponse> => {
+  return apiFetch<getModelRunDefaultsResponse>(getGetModelRunDefaultsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetModelRunDefaultsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/model-runs/defaults`] as const;
+};
+
+export const getGetModelRunDefaultsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getModelRunDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getModelRunDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetModelRunDefaultsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getModelRunDefaults>>> = ({ signal }) =>
+    getModelRunDefaults(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getModelRunDefaults>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetModelRunDefaultsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getModelRunDefaults>>
+>;
+export type GetModelRunDefaultsQueryError = Problem;
+
+export function useGetModelRunDefaults<
+  TData = Awaited<ReturnType<typeof getModelRunDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getModelRunDefaults>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRunDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRunDefaults>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRunDefaults<
+  TData = Awaited<ReturnType<typeof getModelRunDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getModelRunDefaults>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRunDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRunDefaults>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRunDefaults<
+  TData = Awaited<ReturnType<typeof getModelRunDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getModelRunDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Model Run Defaults
+ */
+
+export function useGetModelRunDefaults<
+  TData = Awaited<ReturnType<typeof getModelRunDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getModelRunDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetModelRunDefaultsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listAiModelsResponse200 = {
+  data: AiModels;
+  status: 200;
+};
+
+export type listAiModelsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAiModelsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAiModelsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAiModelsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAiModelsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAiModelsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAiModelsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listAiModelsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAiModelsResponseSuccess = listAiModelsResponse200 & {
+  headers: Headers;
+};
+export type listAiModelsResponseError = (
+  | listAiModelsResponse400
+  | listAiModelsResponse401
+  | listAiModelsResponse403
+  | listAiModelsResponse404
+  | listAiModelsResponse409
+  | listAiModelsResponse422
+  | listAiModelsResponse429
+  | listAiModelsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAiModelsResponse = listAiModelsResponseSuccess | listAiModelsResponseError;
+
+export const getListAiModelsUrl = () => {
+  return `/api/tenant/models`;
+};
+
+/**
+ * @summary List Ai Models
+ */
+export const listAiModels = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAiModelsResponse> => {
+  return apiFetch<listAiModelsResponse>(getListAiModelsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAiModelsQueryKey = () => {
+  return [`/api/tenant/models`] as const;
+};
+
+export const getListAiModelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAiModels>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiModels>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAiModelsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAiModels>>> = ({ signal }) =>
+    listAiModels({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAiModels>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAiModelsQueryResult = NonNullable<Awaited<ReturnType<typeof listAiModels>>>;
+export type ListAiModelsQueryError = Problem;
+
+export function useListAiModels<TData = Awaited<ReturnType<typeof listAiModels>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiModels>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAiModels>>,
+          TError,
+          Awaited<ReturnType<typeof listAiModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAiModels<TData = Awaited<ReturnType<typeof listAiModels>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiModels>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAiModels>>,
+          TError,
+          Awaited<ReturnType<typeof listAiModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAiModels<TData = Awaited<ReturnType<typeof listAiModels>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiModels>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Ai Models
+ */
+
+export function useListAiModels<TData = Awaited<ReturnType<typeof listAiModels>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listAiModels>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAiModelsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type connectLabModelResponse201 = {
+  data: LabModel;
+  status: 201;
+};
+
+export type connectLabModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type connectLabModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type connectLabModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type connectLabModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type connectLabModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type connectLabModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type connectLabModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type connectLabModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type connectLabModelResponseSuccess = connectLabModelResponse201 & {
+  headers: Headers;
+};
+export type connectLabModelResponseError = (
+  | connectLabModelResponse400
+  | connectLabModelResponse401
+  | connectLabModelResponse403
+  | connectLabModelResponse404
+  | connectLabModelResponse409
+  | connectLabModelResponse422
+  | connectLabModelResponse429
+  | connectLabModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type connectLabModelResponse = connectLabModelResponseSuccess | connectLabModelResponseError;
+
+export const getConnectLabModelUrl = () => {
+  return `/api/tenant/models`;
+};
+
+/**
+ * @summary Connect Lab Model
+ */
+export const connectLabModel = async (
+  labModelDraft: LabModelDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<connectLabModelResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<connectLabModelResponse>(getConnectLabModelUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(labModelDraft),
+  });
+};
+
+export const getConnectLabModelMutationKey = () => ["connectLabModel"] as const;
+
+export const getConnectLabModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof connectLabModel>>,
+    TError,
+    ConnectLabModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof connectLabModel>>,
+  TError,
+  ConnectLabModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getConnectLabModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof connectLabModel>>,
+    ConnectLabModelMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return connectLabModel(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConnectLabModelMutationResult = NonNullable<
+  Awaited<ReturnType<typeof connectLabModel>>
+>;
+export type ConnectLabModelMutationBody = LabModelDraft;
+export type ConnectLabModelMutationError = Problem;
+export type ConnectLabModelMutationVariables = { data: LabModelDraft };
+
+/**
+ * @summary Connect Lab Model
+ */
+export const useConnectLabModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof connectLabModel>>,
+      TError,
+      ConnectLabModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof connectLabModel>>,
+  TError,
+  ConnectLabModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getConnectLabModelMutationOptions(options), queryClient);
+};
+
+export type getLabModelConnectionResponse200 = {
+  data: LabModelConnection;
+  status: 200;
+};
+
+export type getLabModelConnectionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getLabModelConnectionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getLabModelConnectionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getLabModelConnectionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getLabModelConnectionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getLabModelConnectionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getLabModelConnectionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getLabModelConnectionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getLabModelConnectionResponseSuccess = getLabModelConnectionResponse200 & {
+  headers: Headers;
+};
+export type getLabModelConnectionResponseError = (
+  | getLabModelConnectionResponse400
+  | getLabModelConnectionResponse401
+  | getLabModelConnectionResponse403
+  | getLabModelConnectionResponse404
+  | getLabModelConnectionResponse409
+  | getLabModelConnectionResponse422
+  | getLabModelConnectionResponse429
+  | getLabModelConnectionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getLabModelConnectionResponse =
+  | getLabModelConnectionResponseSuccess
+  | getLabModelConnectionResponseError;
+
+export const getGetLabModelConnectionUrl = () => {
+  return `/api/tenant/models/connection`;
+};
+
+/**
+ * @summary Get Lab Model Connection
+ */
+export const getLabModelConnection = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getLabModelConnectionResponse> => {
+  return apiFetch<getLabModelConnectionResponse>(getGetLabModelConnectionUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetLabModelConnectionQueryKey = () => {
+  return [`/api/tenant/models/connection`] as const;
+};
+
+export const getGetLabModelConnectionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLabModelConnection>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getLabModelConnection>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetLabModelConnectionQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLabModelConnection>>> = ({ signal }) =>
+    getLabModelConnection({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLabModelConnection>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetLabModelConnectionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getLabModelConnection>>
+>;
+export type GetLabModelConnectionQueryError = Problem;
+
+export function useGetLabModelConnection<
+  TData = Awaited<ReturnType<typeof getLabModelConnection>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getLabModelConnection>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLabModelConnection>>,
+          TError,
+          Awaited<ReturnType<typeof getLabModelConnection>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetLabModelConnection<
+  TData = Awaited<ReturnType<typeof getLabModelConnection>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getLabModelConnection>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLabModelConnection>>,
+          TError,
+          Awaited<ReturnType<typeof getLabModelConnection>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetLabModelConnection<
+  TData = Awaited<ReturnType<typeof getLabModelConnection>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getLabModelConnection>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Lab Model Connection
+ */
+
+export function useGetLabModelConnection<
+  TData = Awaited<ReturnType<typeof getLabModelConnection>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getLabModelConnection>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetLabModelConnectionQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type startModelRunsResponse201 = {
   data: ModelRun[];
   status: 201;
@@ -19374,172 +20213,6 @@ export const useTestLabModel = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getTestLabModelMutationOptions(options), queryClient);
-};
-
-export type connectLabModelResponse201 = {
-  data: LabModel;
-  status: 201;
-};
-
-export type connectLabModelResponse400 = {
-  data: Problem;
-  status: 400;
-};
-
-export type connectLabModelResponse401 = {
-  data: Problem;
-  status: 401;
-};
-
-export type connectLabModelResponse403 = {
-  data: Problem;
-  status: 403;
-};
-
-export type connectLabModelResponse404 = {
-  data: Problem;
-  status: 404;
-};
-
-export type connectLabModelResponse409 = {
-  data: Problem;
-  status: 409;
-};
-
-export type connectLabModelResponse422 = {
-  data: Problem;
-  status: 422;
-};
-
-export type connectLabModelResponse429 = {
-  data: Problem;
-  status: 429;
-};
-
-export type connectLabModelResponse500 = {
-  data: Problem;
-  status: 500;
-};
-
-export type connectLabModelResponseSuccess = connectLabModelResponse201 & {
-  headers: Headers;
-};
-export type connectLabModelResponseError = (
-  | connectLabModelResponse400
-  | connectLabModelResponse401
-  | connectLabModelResponse403
-  | connectLabModelResponse404
-  | connectLabModelResponse409
-  | connectLabModelResponse422
-  | connectLabModelResponse429
-  | connectLabModelResponse500
-) & {
-  headers: Headers;
-};
-
-export type connectLabModelResponse = connectLabModelResponseSuccess | connectLabModelResponseError;
-
-export const getConnectLabModelUrl = () => {
-  return `/api/tenant/models`;
-};
-
-/**
- * @summary Connect Lab Model
- */
-export const connectLabModel = async (
-  labModelDraft: LabModelDraft,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<connectLabModelResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit["headers"]>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          (entry) => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<connectLabModelResponse>(getConnectLabModelUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
-    body: JSON.stringify(labModelDraft),
-  });
-};
-
-export const getConnectLabModelMutationKey = () => ["connectLabModel"] as const;
-
-export const getConnectLabModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof connectLabModel>>,
-    TError,
-    ConnectLabModelMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof connectLabModel>>,
-  TError,
-  ConnectLabModelMutationVariables,
-  TContext
-> => {
-  const mutationKey = getConnectLabModelMutationKey();
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof connectLabModel>>,
-    ConnectLabModelMutationVariables
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return connectLabModel(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type ConnectLabModelMutationResult = NonNullable<
-  Awaited<ReturnType<typeof connectLabModel>>
->;
-export type ConnectLabModelMutationBody = LabModelDraft;
-export type ConnectLabModelMutationError = Problem;
-export type ConnectLabModelMutationVariables = { data: LabModelDraft };
-
-/**
- * @summary Connect Lab Model
- */
-export const useConnectLabModel = <TError = Problem, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof connectLabModel>>,
-      TError,
-      ConnectLabModelMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof connectLabModel>>,
-  TError,
-  ConnectLabModelMutationVariables,
-  TContext
-> => {
-  return useMutation(getConnectLabModelMutationOptions(options), queryClient);
 };
 
 export type getLabModelResponse200 = {
