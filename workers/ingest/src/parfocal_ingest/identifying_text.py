@@ -164,6 +164,7 @@ def identifying_text(path: Path) -> IdentifyingText:
 
 def identifying_text_of(handle: BinaryIO) -> IdentifyingText:
     found = IdentifyingText()
+    handle.seek(0)
     try:
         with tifffile.TiffFile(handle) as tiff:
             spans = list(text_tags(tiff))
@@ -182,5 +183,6 @@ def ranges_file(path: Path) -> bytes:
 
 def ranges_file_of(handle: BinaryIO, size: int, suffix: str) -> bytes:
     text = identifying_text_of(handle)
+    handle.seek(0)
     ranges = restricted_ranges_of(handle, size, suffix)
     return ranges_document(ranges, text.identifying, text.barcode)
