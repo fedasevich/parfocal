@@ -62,11 +62,18 @@ export class SlideHasSeveralScanAreasError extends Error {
   }
 }
 
+export interface LevelDirectory {
+  readonly page: number;
+  readonly subIfd: number | null;
+  readonly ifdOffset: number;
+}
+
 export interface LevelTableLevel {
   readonly downsample: number;
   readonly width: number;
   readonly height: number;
   readonly stored: { readonly width: number; readonly height: number };
+  readonly directory?: LevelDirectory & { readonly siblings: readonly LevelDirectory[] };
 }
 
 export interface LevelTable {
@@ -92,25 +99,55 @@ function optionalMicrons(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function wholeNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function directoryOf(value: unknown): LevelDirectory | null {
+  if (typeof value !== "object" || value === null) return null;
+  const entry = value as Record<string, unknown>;
+  const { page, subIfd, ifdOffset } = entry;
+  if (!wholeNumber(page) || !wholeNumber(ifdOffset) || ifdOffset === 0) return null;
+  if (subIfd !== null && subIfd !== undefined && !wholeNumber(subIfd)) return null;
+  return { page, subIfd: subIfd ?? null, ifdOffset };
+}
+
+function locatedLevel(level: Record<string, unknown>): LevelTableLevel["directory"] | null {
+  const directory = directoryOf(level);
+  const rawSiblings = level["siblings"] ?? [];
+  if (directory === null || !Array.isArray(rawSiblings)) return null;
+  const siblings = rawSiblings.map(directoryOf);
+  if (siblings.some((sibling) => sibling === null)) return null;
+  return { ...directory, siblings: siblings as LevelDirectory[] };
+}
+
 export function parseLevelTable(document: unknown): LevelTable {
   const table = record(document, "table");
   const rawLevels = table["levels"];
   if (!Array.isArray(rawLevels) || rawLevels.length === 0) {
     throw new LevelTableError("The level table lists no levels");
   }
-  const levels = rawLevels.map((raw): LevelTableLevel => {
+  const parsed = rawLevels.map((raw) => {
     const level = record(raw, "level");
     const stored = record(level["stored"], "stored size");
     return {
-      downsample: positive(level["downsample"], "downsample"),
-      width: positive(level["width"], "width"),
-      height: positive(level["height"], "height"),
-      stored: {
-        width: positive(stored["width"], "stored width"),
-        height: positive(stored["height"], "stored height"),
+      level: {
+        downsample: positive(level["downsample"], "downsample"),
+        width: positive(level["width"], "width"),
+        height: positive(level["height"], "height"),
+        stored: {
+          width: positive(stored["width"], "stored width"),
+          height: positive(stored["height"], "stored height"),
+        },
       },
+      directory: locatedLevel(level),
     };
   });
+  const everyLocated = parsed.every(({ directory }) => directory !== null);
+  const levels = parsed.map(
+    ({ level, directory }): LevelTableLevel =>
+      everyLocated && directory !== null ? { ...level, directory } : level,
+  );
   const scale = table["scale"] === undefined ? {} : record(table["scale"], "scale");
   const x = optionalMicrons(scale["mpp_x"]);
   const y = optionalMicrons(scale["mpp_y"]);
@@ -123,6 +160,7 @@ export function slideIndexFromLevelTable(table: LevelTable, formatId: SlideForma
     downsample: level.downsample,
     width: level.width,
     height: level.height,
+    ...(level.directory === undefined ? {} : level.directory),
   }));
   return {
     formatId,
