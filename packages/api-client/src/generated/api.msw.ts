@@ -105,6 +105,7 @@ import type {
   MyTask,
   NamedAuditEvent,
   Neighbours,
+  NewWebhookSecret,
   Nudge,
   ObjectResolution,
   OpenUpload,
@@ -130,6 +131,7 @@ import type {
   ProjectClass,
   ProjectLabModel,
   ProjectModel,
+  ProjectWebhook,
   Question,
   QueuedObject,
   QueueRow,
@@ -214,6 +216,7 @@ import type {
   UploadState,
   Validation,
   ViewScope,
+  WebhookAnswer,
   Workspace,
   WorkspaceAccessRequest,
   WorstObjects,
@@ -6530,6 +6533,55 @@ export const getChangeImportSourceResponseMock = (
   has_credential: faker.datatype.boolean(),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getGetProjectWebhookResponseMock = (
+  overrideResponse: Partial<Extract<ProjectWebhook, object>> = {},
+): ProjectWebhook => ({
+  url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  has_old_secret: faker.datatype.boolean(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  rotated_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getCreateWebhookSecretResponseMock = (
+  overrideResponse: Partial<Extract<NewWebhookSecret, object>> = {},
+): NewWebhookSecret => ({
+  url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  has_old_secret: faker.datatype.boolean(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  rotated_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  secret: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getCallProjectWebhookResponseMock = (
+  overrideResponse: Partial<Extract<WebhookAnswer, object>> = {},
+): WebhookAnswer => ({
+  call_id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  task: faker.helpers.arrayElement([{ id: faker.string.uuid(), outcome: "recorded" }, null]),
+  repeated: faker.datatype.boolean(),
+  links: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    link: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+    outcome: faker.helpers.arrayElement(["started", "refused"] as const),
+    upload_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    message: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+  })),
   ...overrideResponse,
 });
 
@@ -20814,6 +20866,97 @@ export const getDeleteImportSourceMockHandler = (
   );
 };
 
+export const getGetProjectWebhookMockHandler = (
+  overrideResponse?:
+    | ProjectWebhook
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectWebhook> | ProjectWebhook),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/webhook",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetProjectWebhookResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateWebhookSecretMockHandler = (
+  overrideResponse?:
+    | NewWebhookSecret
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<NewWebhookSecret> | NewWebhookSecret),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/webhook/secret",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateWebhookSecretResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRetireWebhookSecretMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId/webhook/old-secret",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getCallProjectWebhookMockHandler = (
+  overrideResponse?:
+    | WebhookAnswer
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<WebhookAnswer> | WebhookAnswer),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/webhooks/:hookKey",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCallProjectWebhookResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateReviewTaskMockHandler = (
   overrideResponse?:
     | ReviewTaskDetail
@@ -26267,6 +26410,10 @@ export const getParfocalAPIMock = () => [
   getSaveImportSourceMockHandler(),
   getChangeImportSourceMockHandler(),
   getDeleteImportSourceMockHandler(),
+  getGetProjectWebhookMockHandler(),
+  getCreateWebhookSecretMockHandler(),
+  getRetireWebhookSecretMockHandler(),
+  getCallProjectWebhookMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),

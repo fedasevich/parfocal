@@ -234,6 +234,45 @@ import_sources = Table(
     one_of("kind", ImportSourceKind),
 )
 
+project_webhooks = Table(
+    "project_webhooks",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, unique=True, info=OPERATIONAL),
+    Column("hook_key", String(32), nullable=False, unique=True, info=OPERATIONAL),
+    Column("secret_ciphertext", LargeBinary, nullable=False, info=SECRET),
+    Column("old_secret_ciphertext", LargeBinary, nullable=True, info=SECRET),
+    Column("rotated_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    tenant_foreign_key("project_id", "projects", ondelete="CASCADE"),
+    tenant_unique(),
+)
+
+webhook_calls = Table(
+    "webhook_calls",
+    metadata,
+    *owned_ids(),
+    Column("webhook_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("idempotency_key", String(200), nullable=True, info=OPERATIONAL),
+    Column("answer", JSONB, nullable=False, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        info=OPERATIONAL,
+    ),
+    tenant_foreign_key("webhook_id", "project_webhooks", ondelete="CASCADE"),
+    UniqueConstraint("webhook_id", "idempotency_key"),
+)
+
 rate_counters = Table(
     "rate_counters",
     metadata,
