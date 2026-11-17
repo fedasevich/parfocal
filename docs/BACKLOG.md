@@ -4538,6 +4538,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Measure where the cold start goes (container start, imports, database pool, first query), then cut it at no monthly cost, for example with Modal memory snapshots, lazy imports of heavy modules such as image and ML libraries in the web function, and a lighter web image. Keep min_containers at 0 and record the measured cost of any longer scale-down window before changing it.
   Done when a result file reports the cold start before and after, measured from outside against the deployed app at least three times each, and the first call after idle answers in under 3 s.
   Size: M.
+- [ ] OPS-029 · A queued job starts a worker in the deployed app
+  The click-through of app.parfocal.eu on 2026-11-17 created a review task and its guided review stayed on "Loading the review", because `/objects` answered 409 review-order-not-ready for ever. The Modal `ingest` function runs every queued job kind (ingest, result import, link fetch, remote inspect and copy, review order, patch export), but nothing in the deployment spawns it and it has no schedule, so queued jobs wait until someone runs it by hand.
+  After the API enqueues a job, spawn the `ingest` function, at most once per few seconds per container like the events spawner, and add a schedule as a backstop that drains anything left. Keep min_containers at 0. The guided review shows "Preparing this slide" with progress while the order is not ready, and an error with a retry when it failed, instead of an endless loader.
+  Done when a unit test proves enqueueing spawns the function once within the gap, a deploy test lists the schedule, and on the deployed app a new review task opens its first slide's objects within a minute of being sent, recorded in the log.
+  Size: M.
 
 ---
 
@@ -5173,6 +5178,11 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   `POST /api/review-tasks/{task_id}/slides/{slide_id}/runs` calls `editable_layer` without a reason and takes none, so on a signed-off slide the owner always gets 400 `reason-needed` and can never add the run, while every other shared layer write takes `reason` as a query parameter. The write isolation suite of SEC-043 (every write route is sent as another workspace) found it. Take `reason` like the other routes, log the change in the layer history and ask for the reason in the web app where the run is added.
   Done when an API test adds a run to a signed-off slide with a reason and finds it in the layer history, and a browser test adds one through the reason dialog.
   Size: S.
+- [ ] TASK-020 · The new review task wizard shows the true slides, results and dates
+  The click-through of app.parfocal.eu on 2026-11-17 found the Slides step listing "Tumour detector v1 v1.0, imported 16 Nov" 13 times, once per slide instead of once per result set, and reading "13 picked. 1 have Tumour v1.0, 12 are left out." The default study template "Cell typing study" asked for "200 random cells per slide" while the only AI result holds regions. The sent page said "Sent to 1 reviewer on 15 Oct", a date from the prototype. My work then showed "Assigned by me 0" and the bell 0 unread after the task was sent to the owner.
+  List each result set once with the number of slides it covers, write the slide count as one plain sentence with singular and plural right, pick a default template whose object kind matches the chosen result, show the real send date, count tasks the person created under Assigned by me, and notify the assignee in the bell as well as by email.
+  Done when unit tests cover the result set grouping, the sentence and the template choice, and a browser test sends a task and finds the real date, one result row, Assigned by me 1 and a bell notification for the assignee.
+  Size: M.
 
 Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
 
