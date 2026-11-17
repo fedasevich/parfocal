@@ -45931,7 +45931,7 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "run-models",
+        "x-permission": "see-slides",
         "x-permission-write": true
       }
     },

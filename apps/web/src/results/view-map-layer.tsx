@@ -1,10 +1,9 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useGetMe, useGetProject, useListSlideResultSets } from "@parfocal/api-client";
+import { useListSlideResultSets } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { okData } from "../screens/placeholder.tsx";
-import { canRunModels } from "../viewer/run-options.ts";
 import {
   colorizeHeatmap,
   defaultHeatmapLook,
@@ -114,10 +113,9 @@ type ViewMapLayerProps = {
   engine: ViewerEngine;
   stage: HTMLElement;
   slideId: string;
-  projectId?: string | undefined;
 };
 
-type SlideViewMapProps = Omit<ViewMapLayerProps, "projectId"> & {
+type SlideViewMapProps = ViewMapLayerProps & {
   slide: { readonly width: number; readonly height: number };
   source: ViewMapSource;
 };
@@ -131,24 +129,10 @@ function SlideViewMap({ engine, stage, slide, slideId, source }: SlideViewMapPro
   return <ViewMapPanel engine={engine} stage={stage} session={session} />;
 }
 
-function useViewMapSource(projectId: string | undefined): ViewMapSource {
-  const source = buildViewMapSource();
-  const me = okData(useGetMe({ query: { enabled: source === "server" } }).data);
-  const project = okData(
-    useGetProject(projectId ?? "", { query: { enabled: source === "server" && !!projectId } }).data,
-  );
-  if (source !== "server") return source;
-  const runner = canRunModels({
-    tenantRole: me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.role,
-    projectRole: project?.my_role,
-  });
-  return runner ? "server" : null;
-}
-
-export function ViewMapLayer({ engine, stage, slideId, projectId }: ViewMapLayerProps) {
+export function ViewMapLayer({ engine, stage, slideId }: ViewMapLayerProps) {
   const sets = okData(useListSlideResultSets(slideId).data);
   const slide = useSyncExternalStore(engine.subscribeCamera, engine.getSlide);
-  const source = useViewMapSource(projectId);
+  const source = buildViewMapSource();
   if (sets === undefined || sets.some(mayBeHeatmap) || slide === null || source === null) {
     return null;
   }

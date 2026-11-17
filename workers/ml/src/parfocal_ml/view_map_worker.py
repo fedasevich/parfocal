@@ -1,6 +1,7 @@
 import asyncio
 import tempfile
 import threading
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from contextlib import AsyncExitStack
 from functools import cache
@@ -10,6 +11,7 @@ import httpx2
 
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import StorageSettings, load_settings
+from parfocal_common.view_maps import timed
 from parfocal_ml.stored_slides import StoredSlides
 from parfocal_ml.tumor_map import Scorer
 from parfocal_ml.tumor_map_job import SlideOpener
@@ -29,7 +31,9 @@ class ViewMapService:
 
     def answer(self, call: Mapping[str, object]) -> dict[str, object]:
         with self.lock:
-            return self.loop.run(self.answered(call))
+            started = time.perf_counter()
+            reply = self.loop.run(self.answered(call))
+            return timed(reply, time.perf_counter() - started)
 
     async def answered(self, call: Mapping[str, object]) -> dict[str, object]:
         if self.ready is None:

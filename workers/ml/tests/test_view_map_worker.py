@@ -9,7 +9,7 @@ from tumor_map_support import STORED_SLIDE, CentreScorer, opener
 from view_map_support import view_slide
 
 from parfocal_common.object_store import Downloaded, ObjectStore
-from parfocal_common.view_maps import TILE_CELLS, ViewTile, cells_in
+from parfocal_common.view_maps import TILE_CELLS, ViewTile, cells_in, seconds_in
 from parfocal_ml.gpu_pool import POOLS, Family, cpu_stand_in
 from parfocal_ml.modal_pool import default_runners, pool_entry
 from parfocal_ml.priority_gate import Kind
@@ -64,6 +64,9 @@ def test_the_embedder_pool_answers_a_view_tile_with_256_cells() -> None:
     expected = view_tile_values(view_slide(), CentreScorer(), 0, 0)
     assert cells == expected.tobytes()
     assert setup.count == 1
+    seconds = seconds_in(reply)
+    assert seconds is not None
+    assert seconds > 0
 
 
 @pytest.mark.weights
@@ -120,6 +123,6 @@ def test_a_stored_slide_answers_its_edge_tile_and_is_downloaded_once(tmp_path: P
         service.close()
     assert (first["width"], first["height"]) == (9, 12)
     assert cells_in(first, 9, 12) is not None
-    assert again == first
+    assert cells_in(again, 9, 12) == cells_in(first, 9, 12)
     assert len(downloads) == 1
     assert not any(path.is_file() for path in tmp_path.rglob("*"))

@@ -1,5 +1,7 @@
 import logging
+import time
 import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Response
@@ -10,16 +12,16 @@ from parfocal_api.blinding import ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.gpu_warm import warm_gate_of
 from parfocal_api.hidden_models import refuse_hidden
-from parfocal_api.model_runs import ModelOfflineError, require_controlling
+from parfocal_api.model_runs import ModelOfflineError
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
-from parfocal_api.projects import visible
 from parfocal_api.slide_coverage import readable_slide
 from parfocal_common.view_maps import (
     MODEL,
     MODEL_VERSION,
     ViewTile,
     cells_in,
+    seconds_in,
     tile_grid,
     tile_size,
 )
@@ -38,16 +40,25 @@ class ViewTileOutsideError(NotFoundError):
     title = "This view tile is outside the slide"
 
 
-async def scored_cells(gate: WarmGate, tile: ViewTile, width: int, height: int) -> bytes:
+@dataclass(frozen=True)
+class ScoredTile:
+    cells: bytes
+    gpu_seconds: float
+
+
+async def scored_tile(gate: WarmGate, tile: ViewTile, width: int, height: int) -> ScoredTile:
+    started = time.perf_counter()
     try:
         reply = await run_in_threadpool(gate.request, tile.call())
     except Exception as error:
         logger.warning("view map call failed: %s", type(error).__name__)
         raise ModelOfflineError(f"{MODEL} has no interactive worker answering") from error
+    waited = time.perf_counter() - started
     cells = cells_in(reply, width, height)
     if cells is None:
         raise ModelOfflineError(f"{MODEL} has no interactive worker answering")
-    return cells
+    reported = seconds_in(reply)
+    return ScoredTile(cells, round(waited if reported is None else reported, 3))
 
 
 @router.post(
@@ -55,7 +66,7 @@ async def scored_cells(gate: WarmGate, tile: ViewTile, width: int, height: int) 
     operation_id="scoreViewMapTile",
     response_class=Response,
     responses={200: {"content": {VIEW_MAP_CONTENT_TYPE: {}}}},
-    **require(Permission.RUN_MODELS, write=True),
+    **require(Permission.SEE_SLIDES, write=True),
 )
 async def score_view_map_tile(
     slide_id: uuid.UUID,
@@ -66,10 +77,6 @@ async def score_view_map_tile(
     row: int = Path(ge=0, le=100_000),
 ) -> Response:
     slide = await readable_slide(connection, principal, slide_id)
-    project = await visible(connection, principal, slide.project_id)
-    await require_controlling(
-        connection, principal, slide.project_id, project.archived_at is not None
-    )
     if await ai_hidden_on(connection, principal, slide.project_id, slide_id):
         raise NotFoundError("Slide not found")
     await refuse_hidden(connection, {MODEL})
@@ -80,7 +87,7 @@ async def score_view_map_tile(
         raise ViewTileOutsideError
     width, height = tile_size(slide.width, slide.height, column, row)
     tile = ViewTile(slide.tenant_id, slide_id, column, row)
-    cells = await scored_cells(gate, tile, width, height)
+    scored = await scored_tile(gate, tile, width, height)
     await record(
         connection,
         actor_of(principal),
@@ -93,6 +100,7 @@ async def score_view_map_tile(
             "column": column,
             "row": row,
             "model": f"{MODEL}@{MODEL_VERSION}",
+            "gpu_seconds": scored.gpu_seconds,
         },
     )
-    return Response(cells, media_type=VIEW_MAP_CONTENT_TYPE, headers=VIEW_MAP_HEADERS)
+    return Response(scored.cells, media_type=VIEW_MAP_CONTENT_TYPE, headers=VIEW_MAP_HEADERS)

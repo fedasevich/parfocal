@@ -1,7 +1,7 @@
 # 0357. The view map asks the interactive lane for one view tile at a time
 
 - Date: 2026-11-16
-- Status: Accepted
+- Status: Accepted, who may ask amended by [ADR XXXX](XXXX-anyone-who-reads-a-slide-maps-a-view.md) (anyone who can read a slide maps a view)
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: AITUM-009 (Map this view asks the server for its tiles). Builds on AITUM-004 (view-scoped map on demand), AITUM-008 (the tumor map runs as a job and the API serves it), [ADR 0354](0354-the-api-warms-the-embedder-with-the-modal-sdk.md) (the API warms the embedder with the Modal SDK) and [ADR 0355](0355-the-tumor-map-job-shares-the-detector-good-pool.md) (the tumor map job shares the detector-good T4 pool).
 
@@ -30,7 +30,7 @@ The web uses the server scorer whenever the fake API is off and shows the panel 
 - AITUM-012 (the interactive pool answers view map calls) gave the embedder pool its `view-map` runner, `parfocal_ml.view_map_worker`. Each container fetches the ResNet18 once and keeps the last slide it downloaded, and one lock lets one tile score at a time. Until the pool is deployed with storage secrets on the embedder function, each click on the real API still ends in "This view could not be mapped". The first tile of a large slide downloads the whole slide inside the embedder's 60 s timeout, which may not be enough (TODO after the first T4 run).
 - One view tile took a median of 5.5 s on an Apple M4 CPU ([result](../results/2026-11-16-view-tile-time.md)).
 - The route holds its tenant database connection and one thread while it waits for the pool, and the call has no timeout of its own. Many slow tiles at once could use up the API's connection pool.
-- The fake API still shows the panel to reviewers, while the server refuses them. Who may map a view is open decision 129 (who may map a view of a slide on the server) in `docs/decisions.md`.
+- The fake API still shows the panel to reviewers, while the server refuses them. Decision 129 (who may map a view of a slide on the server) opened the route to everyone who can read the slide, in ADR XXXX (anyone who can read a slide maps a view).
 - A cold embedder start, up to about a minute, lands on the first tile. The panel shows "Mapping this view" until it ends.
 - One view tile scores 4 job tiles. At the 0.34 s a tile measured on a laptop GPU that is about 1.4 s, above the 1 s interactive target. The T4 time is not measured (TODO).
 - Each ask can send up to 64 tile calls, one after another. Nothing caps the GPU seconds of view maps per person yet (TODO if the bill shows it).

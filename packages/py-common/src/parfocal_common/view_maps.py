@@ -9,6 +9,7 @@ KIND = "view-map"
 CELL = 256
 TILE_CELLS = 16
 TILE_SPAN = CELL * TILE_CELLS
+MAX_TILE_SECONDS = 60 * 60.0
 __all__ = ["CELL", "KIND", "MODEL", "MODEL_VERSION", "TILE_CELLS", "TILE_SPAN"]
 
 
@@ -56,6 +57,19 @@ def tile_size(width: int, height: int, column: int, row: int) -> tuple[int, int]
 
 def reply_of(cells: bytes, width: int, height: int) -> dict[str, object]:
     return {"cells": cells, "width": width, "height": height}
+
+
+def timed(reply: Mapping[str, object], seconds: float) -> dict[str, object]:
+    return {**reply, "seconds": seconds}
+
+
+def seconds_in(reply: Mapping[str, object]) -> float | None:
+    seconds = reply.get("seconds")
+    if isinstance(seconds, bool) or not isinstance(seconds, int | float):
+        return None
+    if not 0.0 <= seconds <= MAX_TILE_SECONDS:
+        return None
+    return float(seconds)
 
 
 def cells_in(reply: Mapping[str, object], width: int, height: int) -> bytes | None:
