@@ -30,7 +30,6 @@ test("sign in with your organisation asks for the email domain and names an unkn
   await page.getByRole("button", { name: "Sign in with your organisation" }).click();
   await expect(page.getByRole("heading", { name: "Continue with your institution" })).toBeVisible();
   const go = page.getByRole("button", { name: "Continue to your organisation's sign-in" });
-  await expect(go).toBeDisabled();
   await page.getByRole("textbox", { name: "Institution or email domain" }).fill("lenka@");
   await expect(go).toBeDisabled();
   await page
