@@ -3,8 +3,8 @@
 - Date: 2026-11-17
 - Backlog: VIEW-073 (finish the custom WebGPU route)
 - Kind: check
-- Commit: 6d723566 (cell row culling and the density and dot tiers)
-- Environment: 24 GB Mac, Darwin 24.6.0. Goldens in Playwright headless Chrome (`channel: "chrome"`) on SwiftShader, one worker. GPU timing headed on the Mac's own GPU, Chrome 157, WebGPU, canvas 2880 by 1800 at a pixel ratio of 2, one worker, with a 1-minute load of 5.57 before and 5.45 after while other agents ran. Nothing was run on the Linux CI runner.
+- Commit: 6d723566 (cell row culling and the density and dot tiers), and the timing harness change of the same task that adds the dots case and the drawn pixel count
+- Environment: 24 GB Mac, Darwin 24.6.0. Goldens in Playwright headless Chrome (`channel: "chrome"`) on SwiftShader, one worker. GPU timing headed on the Mac's own GPU, Chrome 157, WebGPU, canvas 2880 by 1800 at a pixel ratio of 2, one worker, two runs, the first with a 1-minute load of 5.57 before and 5.45 after while other agents ran. Nothing was run on the Linux CI runner.
 - Data: `CMU-1.svs` from the fixture cache for the goldens and `synthetic-zlib.ome.tiff` for the timing (public and synthetic, no PHI)
 
 ## Question
@@ -21,14 +21,22 @@ GPU timing: `PARFOCAL_GPU=hardware pnpm exec playwright test -c playwright.gpu.c
 
 ## Results
 
-GPU time of the render pass, 60 frames each, 0 errors and 0 uncaptured GPU errors:
+GPU time of the render pass, first run, 60 frames each, 0 errors and 0 uncaptured GPU errors:
 
 | Case | Nuclei | Pixels per slide unit | Tier | Median with overlay | 95th percentile | Least and most | Median without overlay | Overlay share | Budget | Outcome | Before (2026-11-15) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | overview | 81,225 | 0.118 | density | 0.75 ms | 0.82 ms | 0.43 and 0.89 ms | 0.73 ms | 0.02 ms | 1 ms of overlay time | within | 21.12 ms overlay share |
 | detail zoom | 1,600,225 | 2.357 | outlines, culled | 2.05 ms | 2.13 ms | 1.96 and 2.14 ms | 0.88 ms | 1.17 ms | 6 ms a frame | within | 114.82 ms a frame |
 
-The harness built the polygon batches in 30 ms and 285 ms on the main thread. The time the route takes to order a set, build its cull grid and its density raster when the set is sent was not measured on its own.
+The overview share of the first run lies inside the spread of its frames, so it alone does not show that anything was drawn. A second run added a case at the dots tier and counted the pixels of the canvas screenshot that differ by more than 4 in a channel between the frame with the overlay and the frame without it, and the spec now fails if that count is 0 or a case has an error. Second run, load 4.17 before and 5.98 after, 60 frames each, 0 errors and 0 uncaptured GPU errors:
+
+| Case | Nuclei | Pixels per slide unit | Tier | Median with overlay | 95th percentile | Least and most | Median without overlay | Overlay share | Pixels the overlay changed | Budget | Outcome |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| overview | 81,225 | 0.118 | density | 0.43 ms | 0.43 ms | 0.43 and 0.44 ms | 0.40 ms | 0.03 ms | 44,044 | 1 ms of overlay time | within |
+| dots | 160,000 | 0.471 | dots, culled | 0.83 ms | 0.86 ms | 0.38 and 1.05 ms | 0.42 ms | 0.41 ms | 60,435 | none set | none |
+| detail zoom | 1,600,225 | 2.357 | outlines, culled | 1.96 ms | 2.03 ms | 0.72 and 2.18 ms | 0.70 ms | 1.26 ms | 603,710 | 6 ms a frame | within |
+
+The harness built the polygon batches in 30 ms and 285 ms on the main thread in the first run, and 20, 36 and 278 ms in the second. The time the route takes to order a set, build its cull grid and its density raster when the set is sent was not measured on its own.
 
 Goldens on the `custom-webgpu` route, all 13 passed:
 
@@ -48,7 +56,7 @@ The three slide goldens (fit, 10x and 40x) matched and the lost device test reco
 
 ## Interpretation
 
-Both budgets are met with room: the detail frame takes about a third of its 6 ms, and the density raster at overview costs almost nothing over the slide. The gap from 114.82 ms is far larger than the load of a shared machine can explain, but each case is one run.
+Both budgets are met with room: the detail frame takes about a third of its 6 ms, and the density raster at overview costs almost nothing over the slide. The gap from 114.82 ms is far larger than the load of a shared machine can explain, and two runs agree. Every tier drew pixels on the Mac's GPU without an error.
 
 The golden sets have fewer than 500 shapes, so they do not engage the tiers and are drawn exactly as before, which is why their numbers did not move. No golden image covers the density or dot tier or a culled set on this route, and the order of small shapes inside a culled set is by cell, not the original order the Viv route keeps.
 

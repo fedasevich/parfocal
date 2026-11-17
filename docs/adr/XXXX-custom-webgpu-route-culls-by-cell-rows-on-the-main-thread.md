@@ -1,4 +1,4 @@
-# 0387. The custom WebGPU route culls by cell rows on the main thread and reuses the Viv level of detail tiers
+# XXXX. The custom WebGPU route culls by cell rows on the main thread and reuses the Viv level of detail tiers
 
 - Date: 2026-11-17
 - Status: Accepted
@@ -34,6 +34,6 @@ Measured on the Mac's GPU ([result](../results/2026-11-17-custom-webgpu-route-cu
 
 Within a culled set the small shapes are drawn in cell order, where the Viv route draws the window in original order. Two overlapping nuclei of different colours in one set can therefore swap which is on top. No golden covers this, since no golden set engages the tiers.
 
-Ordering a set, the cull grid and the density raster are built on the main thread when a set is sent, as on the Viv route, and are kept per shape batch so a lost device does not build them again. Their time for 1.6M nuclei was not measured.
+Ordering a set, the cull grid and the density raster are built on the main thread when a set is sent, as on the Viv route, and are kept per shape batch so a lost device does not build them again. An invalidated overlay builds them again, since its data may have changed in place. Their time for 1.6M nuclei was not measured.
 
-The route still holds every instance of a set in one GPU buffer, so the buffer size guard of ADR 0327 still applies to the full set. A compute pass stays possible if a set's visible rows become too many draws, which would show as CPU time in the render worker rather than GPU time.
+The route still holds every instance of a set in one GPU buffer, so the buffer size guard of ADR 0327 (glyph atlas, rings blended once and device recovery) still applies to the full set. A compute pass stays possible if a set's visible rows become too many draws, which would show as CPU time in the render worker rather than GPU time.
