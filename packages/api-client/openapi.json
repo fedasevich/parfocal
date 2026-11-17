@@ -72348,14 +72348,22 @@
           },
           "outcome": {
             "type": "string",
-            "const": "not-attached",
+            "enum": [
+              "waiting",
+              "not-attached"
+            ],
             "title": "Outcome"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "outcome"
+          "outcome",
+          "message"
         ],
         "title": "TaskOutcome"
       },

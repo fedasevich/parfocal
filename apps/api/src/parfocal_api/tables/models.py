@@ -262,6 +262,9 @@ webhook_calls = Table(
     Column("webhook_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("idempotency_key", String(200), nullable=True, info=OPERATIONAL),
     Column("answer", JSONB, nullable=False, info=OPERATIONAL),
+    Column("slide_upload_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("task_attached_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column(
         "created_at",
         DateTime(timezone=True),

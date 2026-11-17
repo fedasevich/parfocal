@@ -49,6 +49,9 @@ CREATE_CALLS = (
     " webhook_id uuid NOT NULL,"
     " idempotency_key character varying(200),"
     " answer jsonb NOT NULL,"
+    " slide_upload_id uuid,"
+    " task_id uuid,"
+    " task_attached_at timestamp with time zone,"
     " created_at timestamp with time zone DEFAULT now() NOT NULL,"
     " CONSTRAINT pk_webhook_calls PRIMARY KEY (id),"
     " CONSTRAINT uq_webhook_calls_webhook_id_idempotency_key UNIQUE (webhook_id, idempotency_key),"
@@ -70,6 +73,7 @@ def upgrade() -> None:
         CREATE_CALLS,
         "CREATE INDEX ix_webhook_calls_tenant_id ON webhook_calls (tenant_id)",
         "CREATE INDEX ix_webhook_calls_webhook_id ON webhook_calls (webhook_id)",
+        "CREATE INDEX ix_webhook_calls_slide_upload_id ON webhook_calls (slide_upload_id)",
         *enable_tenant_isolation(CALLS),
     ):
         op.execute(statement)

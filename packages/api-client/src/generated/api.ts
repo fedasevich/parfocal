@@ -6414,9 +6414,17 @@ export interface TaskInvitationDraft {
   email: Email;
 }
 
+export type TaskOutcomeOutcome = (typeof TaskOutcomeOutcome)[keyof typeof TaskOutcomeOutcome];
+
+export const TaskOutcomeOutcome = {
+  waiting: "waiting",
+  "not-attached": "not-attached",
+} as const;
+
 export interface TaskOutcome {
   id: string;
-  outcome: "not-attached";
+  outcome: TaskOutcomeOutcome;
+  message: string;
 }
 
 export interface TaskReportLayout {

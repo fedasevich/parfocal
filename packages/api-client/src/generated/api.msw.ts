@@ -6569,7 +6569,14 @@ export const getCallProjectWebhookResponseMock = (
   call_id: faker.string.uuid(),
   project_id: faker.string.uuid(),
   case_id: faker.string.uuid(),
-  task: faker.helpers.arrayElement([{ id: faker.string.uuid(), outcome: "not-attached" }, null]),
+  task: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      outcome: faker.helpers.arrayElement(["waiting", "not-attached"] as const),
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
   repeated: faker.datatype.boolean(),
   links: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     link: faker.string.alpha({ length: { min: 10, max: 20 } }),

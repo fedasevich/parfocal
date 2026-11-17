@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import AUTH_SCOPE, auth_state
 from parfocal_api.blinding import user_of
+from parfocal_api.case_sorting import duplicates
 from parfocal_api.cases import keyring_of
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection, engine_of
 from parfocal_api.identifiers import ensure_keys, load_keys, open_field, seal_field
@@ -45,6 +46,7 @@ from parfocal_api.projects import row_of
 from parfocal_api.rate_limits import counted_wait
 from parfocal_api.tables import (
     ActorKind,
+    TaskKind,
     TenantStatus,
     cases,
     project_webhooks,
@@ -152,7 +154,8 @@ class LinkOutcome(BaseModel):
 
 class TaskOutcome(BaseModel):
     id: uuid.UUID
-    outcome: Literal["not-attached"]
+    outcome: Literal["waiting", "not-attached"]
+    message: str
 
 
 class WebhookAnswer(BaseModel):
@@ -373,6 +376,10 @@ async def started_links(
     call: WebhookCall,
 ) -> list[LinkOutcome]:
     slide = await one_file(settings, call.slide, UploadKind.SLIDE)
+    if not isinstance(slide, str) and await duplicates(
+        connection, hook.project_id, {slide.name: call.case_id}, {slide.name: slide.size}
+    ):
+        slide = "This slide is already in the case, so it was left out."
     if isinstance(slide, str):
         skipped = "The slide was not imported, so its results were not either."
         return [
@@ -485,11 +492,15 @@ async def handled(
     ):
         return Handled("task-not-found", problem=WebhookTaskNotFoundError())
     links = await started_links(connection, settings, store, hook, call)
+    slide_upload = links[0].upload_id
+    task = None
+    if call.task_id is not None:
+        task = task_outcome(call.task_id, await task_kind(connection, call.task_id), links)
     answer = WebhookAnswer(
         call_id=uuid.uuid4(),
         project_id=hook.project_id,
         case_id=call.case_id,
-        task=TaskOutcome(id=call.task_id, outcome="not-attached") if call.task_id else None,
+        task=task,
         repeated=False,
         links=links,
     )
@@ -500,9 +511,33 @@ async def handled(
             webhook_id=hook.id,
             idempotency_key=key,
             answer=answer.model_dump(mode="json"),
+            slide_upload_id=slide_upload,
+            task_id=call.task_id if task is not None and task.outcome == "waiting" else None,
         )
     )
     return Handled("accepted", answer=answer)
+
+
+async def task_kind(connection: AsyncConnection, task_id: uuid.UUID) -> TaskKind:
+    kind = await connection.scalar(select(review_tasks.c.kind).where(review_tasks.c.id == task_id))
+    return TaskKind(kind)
+
+
+def task_outcome(task_id: uuid.UUID, kind: TaskKind, links: list[LinkOutcome]) -> TaskOutcome:
+    started = {link.kind for link in links if link.outcome == "started"}
+    if UploadKind.SLIDE not in started:
+        return TaskOutcome(
+            id=task_id, outcome="not-attached", message="The slide was not imported."
+        )
+    if kind is TaskKind.REVIEW and UploadKind.RESULT not in started:
+        return TaskOutcome(
+            id=task_id,
+            outcome="not-attached",
+            message="A review task needs a result file with the slide.",
+        )
+    return TaskOutcome(
+        id=task_id, outcome="waiting", message="The slide joins the task once it is imported."
+    )
 
 
 def counted(answer: WebhookAnswer | None, outcome: str) -> dict[str, int]:

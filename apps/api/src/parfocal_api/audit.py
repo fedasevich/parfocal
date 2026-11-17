@@ -162,6 +162,7 @@ class AuditAction(StrEnum):
     WEBHOOK_SECRET_RETIRED = "webhook.secret-retired"
     WEBHOOK_CALLED = "webhook.called"
     WEBHOOK_REJECTED = "webhook.rejected"
+    WEBHOOK_TASK_ATTACHED = "webhook.task-attached"
     MODEL_REGISTERED = "model.registered"
     MODEL_EVALUATED = "model.evaluated"
     MAINTENANCE_STARTED = "maintenance.started"

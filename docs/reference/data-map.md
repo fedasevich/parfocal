@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `phi` | 48 |
 | `personal` | 98 |
 | `secret` | 14 |
-| `operational` | 825 |
+| `operational` | 828 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1439,6 +1439,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `webhook_id` | operational |
 | `idempotency_key` | operational |
 | `answer` | operational |
+| `slide_upload_id` | operational |
+| `task_id` | operational |
+| `task_attached_at` | operational |
 | `created_at` | operational |
 
 ## workspace_access_requests

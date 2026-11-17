@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 import uuid
@@ -6,16 +7,27 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from db_support import ApiAs, api_settings
+from db_support import APP_URL, ApiAs, api_settings, with_database
 from fastapi.testclient import TestClient
 from link_support import Site, serving
+from sqlalchemy.ext.asyncio import create_async_engine
+from test_review_tasks import Study, add_set, create, insert_id, study
 from upload_support import single
-from workspace_support import join_project, make_case, make_project, make_workspace, owner
+from workspace_support import (
+    join_project,
+    make_case,
+    make_project,
+    make_slide,
+    make_workspace,
+    owner,
+)
 
 from parfocal_api.app import create_app
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.project_webhooks import Check, signature_check, signature_of
 from parfocal_api.tables import Role
+from parfocal_api.webhook_tasks import attach_waiting_tasks
+from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -312,3 +324,100 @@ def test_an_archived_project_or_a_deleted_case_takes_no_slides(
     assert archived.status_code == 404
     assert archived.json()["code"] == "webhook-project-closed"
     assert uploads_of(database, team) == []
+
+
+def test_a_slide_already_in_the_case_is_left_out_with_its_results(
+    hooked: ApiAs, team: Team, site: Site, database: str
+) -> None:
+    hook = new_secret(hooked, team)
+    make_slide(database, team.tenant_id, team.project, "scan", team.case)
+    answer = call(hooked, hook, body_of(site, team)).json()
+    assert [(link["kind"], link["outcome"]) for link in answer["links"]] == [
+        ("slide", "refused"),
+        ("result", "refused"),
+    ]
+    assert "already in the case" in answer["links"][0]["message"]
+    assert uploads_of(database, team) == []
+
+
+def ingest_finished(
+    database: str, s: Study, upload_id: str, slide_id: uuid.UUID, set_id: uuid.UUID | None
+) -> None:
+    async def go() -> None:
+        engine = create_async_engine(async_database_url(with_database(APP_URL, database)))
+        try:
+            async with scoped_transaction(
+                engine, DatabaseScope(tenant_id=s.tenant_id)
+            ) as connection:
+                await attach_waiting_tasks(connection, uuid.UUID(upload_id), slide_id, set_id)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(go())
+
+
+def ingested(database: str, s: Study, upload_id: str) -> uuid.UUID:
+    return insert_id(
+        database,
+        "INSERT INTO slides (tenant_id, project_id, case_id, label, upload_id, original_key) "
+        f"VALUES ('{s.tenant_id}', '{s.project}', '{s.case}', 'webhook-scan', '{upload_id}', "
+        f"'t/{s.tenant_id}/slides/{upload_id}') RETURNING id",
+    )
+
+
+def task_slides(database: str, task_id: str) -> list[tuple[Any, ...]]:
+    return owner(
+        database,
+        "SELECT s.slide_id::text, s.result_set_id::text, count(a.user_id) "
+        "FROM review_task_slides s LEFT JOIN review_assignments a "
+        "ON a.task_id = s.task_id AND a.slide_id = s.slide_id "
+        f"WHERE s.task_id = '{task_id}' GROUP BY s.slide_id, s.result_set_id, s.position "
+        "ORDER BY s.position",
+    )
+
+
+def test_a_named_review_task_takes_the_slide_once_its_result_set_is_imported(
+    hooked: ApiAs, site: Site, database: str
+) -> None:
+    s = study(database)
+    task = create(hooked, s).json()
+    response = hooked(s.people["admin"]).post(f"/api/projects/{s.project}/webhook/secret")
+    hook = response.json()
+    team = Team(s.tenant_id, s.people["admin"], s.people["first"], s.project, s.case)
+    answer = call(hooked, hook, body_of(site, team, task_id=task["id"])).json()
+    assert answer["task"]["outcome"] == "waiting"
+    slide_upload = answer["links"][0]["upload_id"]
+    before = len(task_slides(database, task["id"]))
+    slide_id = ingested(database, s, slide_upload)
+    ingest_finished(database, s, slide_upload, slide_id, None)
+    assert len(task_slides(database, task["id"])) == before
+    set_id = add_set(database, s.tenant_id, s.project, slide_id, "Pipeline", "ready")
+    for _ in range(2):
+        ingest_finished(database, s, slide_upload, slide_id, set_id)
+    added = task_slides(database, task["id"])
+    assert len(added) == before + 1
+    assert added[-1] == (str(slide_id), str(set_id), 3)
+    attached = owner(
+        database,
+        "SELECT count(*) FROM audit_events WHERE action = 'webhook.task-attached' "
+        f"AND tenant_id = '{s.tenant_id}'",
+    )
+    assert attached[0][0] == 1
+
+
+def test_a_review_task_without_a_result_file_is_not_attached(
+    hooked: ApiAs, site: Site, database: str
+) -> None:
+    s = study(database)
+    task = create(hooked, s).json()
+    hook = hooked(s.people["admin"]).post(f"/api/projects/{s.project}/webhook/secret").json()
+    team = Team(s.tenant_id, s.people["admin"], s.people["first"], s.project, s.case)
+    answer = call(hooked, hook, body_of(site, team, task_id=task["id"], results=[])).json()
+    assert answer["task"]["outcome"] == "not-attached"
+    assert answer["task"]["message"] == "A review task needs a result file with the slide."
+    waiting = owner(
+        database,
+        "SELECT count(*) FROM webhook_calls "
+        f"WHERE task_id IS NOT NULL AND tenant_id = '{s.tenant_id}'",
+    )
+    assert waiting[0][0] == 0
