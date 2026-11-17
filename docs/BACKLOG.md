@@ -4733,7 +4733,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on FOUND-015, TEST-039.
   Size: M.
 
-- [ ] TEST-041 · Settings parity check
+- [x] TEST-041 · Settings parity check
   CI writes its `.env` by hand and production reads three Modal secrets, and nothing checks they carry the same keys, so a setting added in code can be missing in one place until a deploy fails.
   Done when a test fails if an `ApiSettings` field that has no default is missing from the stack env or from the secret key list in `workers/deploy/src/parfocal_deploy/bootstrap.py`.
   Depends on TEST-040.
