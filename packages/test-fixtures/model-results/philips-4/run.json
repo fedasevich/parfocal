@@ -1,0 +1,59 @@
+{
+  "slide": "Philips-4.tiff",
+  "dimensions": [
+    91136,
+    68096
+  ],
+  "mpp": 0.25,
+  "machine": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+  "torch": "2.15.0",
+  "tumor_map": {
+    "box_cells": [
+      1170,
+      625,
+      1234,
+      689
+    ],
+    "box_px": [
+      74880,
+      40000,
+      78976,
+      44096
+    ],
+    "tiles": 4,
+    "map_s": 9.024069333972875,
+    "areas_over_outline": 6,
+    "regions": 1,
+    "providers": [
+      "CPUExecutionProvider"
+    ]
+  },
+  "cells": {
+    "crop_px": [
+      75904,
+      41024,
+      77952,
+      43072
+    ],
+    "weights": "instanseg_models_v0.1.1/brightfield_nuclei",
+    "count": 5719,
+    "by_class": {
+      "Immune": 5017,
+      "Stroma": 687,
+      "Tumor": 15
+    },
+    "input_side": [
+      1024,
+      1024
+    ],
+    "segment_s": 28.38775537494803,
+    "rings_s": 7.490532334020827,
+    "typer_windows": 4,
+    "typer_window_px": 1024,
+    "typer_s": 9.984374125022441
+  },
+  "bytes": {
+    "cells.geojson": 2626885,
+    "regions.parfocal.json": 626
+  }
+}
