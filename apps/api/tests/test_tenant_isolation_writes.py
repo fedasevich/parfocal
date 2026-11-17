@@ -61,6 +61,8 @@ PATH_IDS: dict[str, str] = {
     "nudge_id": "nudge",
     "reassignment_id": "reassignment",
     "source_id": "import_source",
+    "target_id": "event_target",
+    "event_id": "event",
 }
 
 ROW_IDS: dict[str, str] = {
@@ -88,6 +90,10 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
     ),
     "scoreViewMapTile": ("test_view_maps", "test_anyone_who_can_read_the_slide_may_ask"),
     "typeOutlines": ("test_outline_types", "test_anyone_who_can_read_the_slide_may_ask"),
+    "callProjectWebhook": (
+        "test_project_webhooks",
+        "test_a_case_outside_the_project_and_a_bad_body_are_refused_and_logged",
+    ),
 }
 
 CONFLICT = frozenset({409})
@@ -250,6 +256,10 @@ def lab_model(a: Seeded) -> object:
         "who_can_run": "admins",
         "project_ids": [str(a.ids["project"])],
     }
+
+
+def event_target(_: Seeded) -> object:
+    return {"address": LINK_SITE.url("/events"), "events": ["review-submitted"]}
 
 
 STORED_AS_TEXT = "the block keeps the id as text and a report looks it up in the caller's workspace"
@@ -626,6 +636,11 @@ WRITE_ROUTES: dict[str, Write] = {
         path=OBJECT, body=constant({"action": "leave-open"}), owner=CONFLICT
     ),
     "decideAdjudication": Write(path=OBJECT, body=constant({"raw": "1"})),
+    "createWebhookSecret": Write(admin_rights=True),
+    "retireWebhookSecret": Write(admin_rights=True),
+    "saveEventTarget": Write(body=event_target, admin_rights=True, linked=True),
+    "deleteEventTarget": Write(admin_rights=True),
+    "replayEvent": Write(admin_rights=True, owner=CONFLICT),
     "downloadStudyTemplatePreview": Write(
         body=lambda a: {"name": "Preview", "blocks": naming(a)},
         admin_rights=True,

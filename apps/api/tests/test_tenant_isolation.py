@@ -16,7 +16,7 @@ from typing import Any
 import httpx2
 import numpy as np
 import pytest
-from case_support import seed_case, seed_project
+from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from link_support import Site
 from pypdf import PdfReader
@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
 from parfocal_api.display_settings import DisplaySettings
+from parfocal_api.identifiers import ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.principals import MemberPrincipal
@@ -1304,13 +1305,19 @@ async def seed_import_sources(connection: AsyncConnection, seeded: Seeded) -> No
 
 async def seed_project_webhooks(connection: AsyncConnection, seeded: Seeded) -> None:
     hook_id = uuid.uuid4()
+    keys = await ensure_keys(connection, TEST_KEYRING, seeded.tenant_id)
     await connection.execute(
         insert(project_webhooks).values(
             id=hook_id,
             tenant_id=seeded.tenant_id,
             project_id=seeded.ids["project"],
             hook_key=hook_id.hex,
-            secret_ciphertext=b"sealed",
+            secret_ciphertext=seal_field(
+                keys, "project_webhooks", hook_id, "secret", "seeded-secret"
+            ),
+            old_secret_ciphertext=seal_field(
+                keys, "project_webhooks", hook_id, "old_secret", "older-secret"
+            ),
         )
     )
     seeded.ids["webhook"] = hook_id
