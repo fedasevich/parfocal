@@ -309,7 +309,7 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
       <AuthHeading title={t`Confirm your email`}>
         <Trans>
           Enter the {codeLength}
-          -digit code we sent to <b>{email}</b>
+          -character code we sent to <b>{email}</b>
         </Trans>
         .
       </AuthHeading>

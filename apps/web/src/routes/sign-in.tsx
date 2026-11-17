@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { readBuildConfig } from "../config.ts";
 import { safeReturnPath } from "../screens/onboarding/sign-in-rules.ts";
 import { SignInScreen } from "../screens/onboarding/sign-in-screen.tsx";
@@ -18,14 +18,22 @@ export const Route = createFileRoute("/sign-in")({
   component: SignIn,
 });
 
+function resetLinkOf(rawSearch: string) {
+  const params = new URLSearchParams(rawSearch);
+  const userId = params.get("user_id");
+  return userId === null || userId === "" ? null : { userId, code: params.get("code") ?? "" };
+}
+
 function SignIn() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const rawSearch = useLocation({ select: (location) => location.searchStr });
   return (
     <SignInScreen
       scene={search.scene ?? (search.sso === "none" ? "sso" : "email")}
       returnTo={safeReturnPath(search.return_to)}
       ssoUnknown={search.sso === "none"}
+      resetLink={resetLinkOf(rawSearch)}
       change={(scene) =>
         void navigate({ search: (previous) => ({ ...previous, scene, sso: undefined }) })
       }

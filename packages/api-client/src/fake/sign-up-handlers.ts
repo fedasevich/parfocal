@@ -95,7 +95,8 @@ const resendEmailCodeHandler = () =>
 const passwordResetRequestSchema = z.object({ email: z.string() });
 
 const passwordResetSchema = z.object({
-  email: z.string(),
+  email: z.string().nullable().optional(),
+  user_id: z.string().nullable().optional(),
   code: z.string(),
   password: z.string(),
   return_to: z.string().nullable().optional(),

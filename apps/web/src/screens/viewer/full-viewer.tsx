@@ -376,6 +376,7 @@ function ViewerBody(props: BodyProps) {
                           onRect={setCellsRect}
                         >
                           <CellsGrid
+                            slideId={session.slideId}
                             cells={cells}
                             current={current.object}
                             answer={answer}

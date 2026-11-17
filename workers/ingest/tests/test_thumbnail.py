@@ -8,8 +8,9 @@ from PIL import Image
 from slide_support import opened
 from test_pyramid import TABLES
 
-from parfocal_ingest.pyramid import Pyramid, read_pyramid
+from parfocal_ingest.pyramid import Pyramid, Refusal, read_pyramid
 from parfocal_ingest.thumbnail import OVERVIEW_SIDE, THUMBNAIL_SIDE, Previews, previews
+from parfocal_ingest.thumbnail_backfill import thumbnail_from
 
 GOLDEN = Path(__file__).resolve().parent / "golden" / "overviews"
 GOLDEN_SIDE = 128
@@ -70,6 +71,17 @@ def test_the_dicom_copy_matches_the_svs_it_came_from(tmp_path: Path) -> None:
     _, dicom = previews_of("CMU-1-JP2K-33005-v2.zip", tmp_path / "dicom")
     first, second = decoded(svs.overview), decoded(dicom.overview)
     assert difference(small(first), small(second)) <= TOLERANCE
+
+
+def test_a_ventana_bif_openslide_cannot_open_still_gets_a_thumbnail(tmp_path: Path) -> None:
+    slide = opened("Ventana-1.bif", tmp_path)
+    assert isinstance(slide, tuple), slide
+    path, found = slide
+    assert read_pyramid(path, found) == Refusal.UNREADABLE
+    image = decoded(thumbnail_from(path, tmp_path))
+    assert max(image.size) == THUMBNAIL_SIDE
+    assert abs(image.width / image.height - 24576 / 21504) < 0.02
+    assert np.asarray(image).std() > 5
 
 
 def test_ycbcr_shown_as_rgb_fails_the_golden_check(tmp_path: Path) -> None:

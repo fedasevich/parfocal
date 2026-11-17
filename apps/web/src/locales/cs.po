@@ -4751,6 +4751,10 @@ msgstr ""
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Check the code from your email, then enter a new password."
+msgstr ""
+
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Check the line"
 msgstr ""
@@ -6490,11 +6494,11 @@ msgid "Enter posts, Shift+Enter adds a line"
 msgstr ""
 
 #: src/screens/onboarding/sign-up-screen.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>"
 msgstr ""
 
 #: src/screens/onboarding/password-reset-forms.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>, then a new password."
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -7682,6 +7686,10 @@ msgstr ""
 msgid "Hide the AI for a first read"
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Hide the cells grid"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
 msgstr ""
@@ -8866,6 +8874,7 @@ msgstr ""
 msgid "Loading the report"
 msgstr ""
 
+#: src/routes/tasks.$taskId.cells.tsx
 #: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
 #: src/viewer/first-read-guard.tsx
@@ -14120,6 +14129,10 @@ msgstr ""
 msgid "Show the cells"
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Show the cells grid"
+msgstr ""
+
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"
 msgstr ""
@@ -17372,7 +17385,7 @@ msgid "Ways to show results"
 msgstr ""
 
 #: src/screens/onboarding/password-reset-forms.tsx
-msgid "We email a {codeLength}-digit code to the address on your account."
+msgid "We email a {codeLength}-character code to the address on your account."
 msgstr ""
 
 #: src/feedback/feedback-dialog.tsx

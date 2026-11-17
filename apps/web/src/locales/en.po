@@ -4753,6 +4753,10 @@ msgstr "Check the address first."
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr "Check the address to list what is there. Nothing is fetched yet."
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Check the code from your email, then enter a new password."
+msgstr "Check the code from your email, then enter a new password."
+
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Check the line"
 msgstr "Check the line"
@@ -6495,12 +6499,12 @@ msgid "Enter posts, Shift+Enter adds a line"
 msgstr "Enter posts, Shift+Enter adds a line"
 
 #: src/screens/onboarding/sign-up-screen.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
-msgstr "Enter the {codeLength}-digit code we sent to <0>{email}</0>"
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>"
+msgstr "Enter the {codeLength}-character code we sent to <0>{email}</0>"
 
 #: src/screens/onboarding/password-reset-forms.tsx
-msgid "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
-msgstr "Enter the {codeLength}-digit code we sent to <0>{email}</0>, then a new password."
+msgid "Enter the {codeLength}-character code we sent to <0>{email}</0>, then a new password."
+msgstr "Enter the {codeLength}-character code we sent to <0>{email}</0>, then a new password."
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter the size."
@@ -7687,6 +7691,10 @@ msgstr "Hide overlays (A)"
 msgid "Hide the AI for a first read"
 msgstr "Hide the AI for a first read"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Hide the cells grid"
+msgstr "Hide the cells grid"
+
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
 msgstr "Hide the checklist"
@@ -8871,6 +8879,7 @@ msgstr "Loading the project"
 msgid "Loading the report"
 msgstr "Loading the report"
 
+#: src/routes/tasks.$taskId.cells.tsx
 #: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
 #: src/viewer/first-read-guard.tsx
@@ -14129,6 +14138,10 @@ msgstr "Show the AI result"
 msgid "Show the cells"
 msgstr "Show the cells"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Show the cells grid"
+msgstr "Show the cells grid"
+
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"
 msgstr "Show the cells panel"
@@ -17381,8 +17394,8 @@ msgid "Ways to show results"
 msgstr "Ways to show results"
 
 #: src/screens/onboarding/password-reset-forms.tsx
-msgid "We email a {codeLength}-digit code to the address on your account."
-msgstr "We email a {codeLength}-digit code to the address on your account."
+msgid "We email a {codeLength}-character code to the address on your account."
+msgstr "We email a {codeLength}-character code to the address on your account."
 
 #: src/feedback/feedback-dialog.tsx
 msgid "We read every message. Nothing else from this screen was sent."

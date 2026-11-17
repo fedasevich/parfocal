@@ -2,6 +2,7 @@ import asyncio
 import gzip
 import io
 import json
+import logging
 import re
 import shutil
 import uuid
@@ -60,6 +61,7 @@ from parfocal_common.result_imports import (
 )
 from parfocal_common.result_store import MissingObjectError, ObjectResultStore
 from parfocal_ingest import result_wire
+from parfocal_ingest.cell_crops import Isolation, crop_slide, picked_on
 from parfocal_ingest.cell_import import (
     NAME_LENGTH,
     CellCollector,
@@ -99,6 +101,8 @@ from parfocal_ingest.results import (
 from parfocal_ingest.workflow import Resources, resources_from_environment
 
 __all__ = ["RESULT_IMPORT", "result_import_workflow"]
+
+logger = logging.getLogger("parfocal.ingest.result_import")
 
 PARFOCAL_FORMAT = re.compile(rb'"format"\s*:\s*"parfocal-results"')
 SNIFF_BYTES = 64 * 1024
@@ -744,8 +748,10 @@ async def import_step(context: Context) -> Mapping[str, Any]:
     ]
     await context.store.delete_object(upload.object_key)
     shutil.rmtree(context.folder, ignore_errors=True)
+    crops = await crops_after_import(context, slide.id) if written.entries else None
     return {
         "result_set_id": str(set_id),
+        "crops": crops,
         "regions": sum(1 for row in rows if row.kind is ResultObjectKind.REGION),
         "zones": sum(1 for row in rows if row.kind is ResultObjectKind.ZONE),
         "cells": len(parsed.cells),
@@ -754,6 +760,30 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         "skipped": parsed.skipped,
         "notices": notices,
     }
+
+
+async def crops_after_import(context: Context, slide_id: uuid.UUID) -> str | None:
+    tenant_id = context.upload.tenant_id
+    try:
+        async with context.step.transaction() as connection:
+            original = await connection.scalar(
+                select(slides.c.original_key).where(slides.c.id == slide_id)
+            )
+            picked = await picked_on(connection, context.store, tenant_id, slide_id)
+        if original is None:
+            return None
+        return await crop_slide(
+            context.store,
+            tenant_id,
+            slide_id,
+            original,
+            picked,
+            context.folder,
+            Isolation(context.resources.parse_limits, context.resources.parse_tokens),
+        )
+    except Exception:
+        logger.exception("cell crops failed after an import", extra={"slide_id": str(slide_id)})
+        return None
 
 
 async def refuse(context: Context, code: str) -> None:

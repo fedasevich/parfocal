@@ -15,7 +15,7 @@ import { Input } from "@parfocal/ui/components/input";
 import { useState } from "react";
 import { CodeInput, handled, PasswordInput, problemText, useCountdown } from "./auth-inputs.tsx";
 import type { Flow } from "./sign-in-forms.tsx";
-import { clock, codeLength } from "./sign-in-rules.ts";
+import { clock, codeCharacters, codeLength } from "./sign-in-rules.ts";
 
 const messageOf = (error: unknown, fallback: string) =>
   error instanceof ApiError && error.fieldErrors().length > 0
@@ -54,7 +54,7 @@ export function ForgotPasswordForm({
   return (
     <AuthForm>
       <AuthHeading title={t`Reset your password`}>
-        <Trans>We email a {codeLength}-digit code to the address on your account.</Trans>
+        <Trans>We email a {codeLength}-character code to the address on your account.</Trans>
       </AuthHeading>
       <AuthField label={t`Work email`}>
         <Input
@@ -83,17 +83,21 @@ export function ForgotPasswordForm({
   );
 }
 
+export type ResetLink = { userId: string; code: string };
+
 export function ResetPasswordForm({
   flow,
+  link,
   secondsLeft,
   restart,
 }: {
   flow: Flow;
+  link: ResetLink | null;
   secondsLeft: number;
   restart: (seconds: number) => void;
 }) {
   const { t } = useLingui();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(codeCharacters(link?.code ?? ""));
   const [password, setPassword] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -103,7 +107,14 @@ export function ResetPasswordForm({
   const submit = () => {
     setFailure(null);
     reset.mutate(
-      { data: { email, code, password, return_to: flow.returnTo } },
+      {
+        data: {
+          ...(email === "" ? { user_id: link?.userId ?? null } : { email }),
+          code,
+          password,
+          return_to: flow.returnTo,
+        },
+      },
       {
         onSuccess: (response) => {
           if (response.status === 200) flow.land(response.data);
@@ -116,7 +127,7 @@ export function ResetPasswordForm({
     );
   };
   const sendAgain = () => {
-    if (secondsLeft > 0) return;
+    if (secondsLeft > 0 || email === "") return;
     again.mutate(
       { data: { email } },
       {
@@ -135,9 +146,13 @@ export function ResetPasswordForm({
     <AuthForm center>
       <AuthBadge icon="mail" />
       <AuthHeading title={t`Choose a new password`}>
-        <Trans>
-          Enter the {codeLength}-digit code we sent to <b>{email}</b>, then a new password.
-        </Trans>
+        {email === "" ? (
+          <Trans>Check the code from your email, then enter a new password.</Trans>
+        ) : (
+          <Trans>
+            Enter the {codeLength}-character code we sent to <b>{email}</b>, then a new password.
+          </Trans>
+        )}
       </AuthHeading>
       <CodeInput label={t`Reset code`} value={code} onChange={setCode} onSubmit={() => undefined} />
       <AuthField label={t`New password`}>
@@ -173,19 +188,38 @@ export function ResetPasswordForm({
         <AuthLink onClick={() => flow.change("forgot")}>
           <Trans>Change the address</Trans>
         </AuthLink>
-        <DotSeparator />
-        <AuthLink onClick={sendAgain}>
-          {secondsLeft > 0 ? t`Resend in ${clock(secondsLeft)}` : t`Resend the code`}
-        </AuthLink>
+        {email === "" ? null : (
+          <>
+            <DotSeparator />
+            <AuthLink onClick={sendAgain}>
+              {secondsLeft > 0 ? t`Resend in ${clock(secondsLeft)}` : t`Resend the code`}
+            </AuthLink>
+          </>
+        )}
       </AuthFoot>
     </AuthForm>
   );
 }
 
-export function PasswordResetScene({ flow, scene }: { flow: Flow; scene: "forgot" | "reset" }) {
+export function PasswordResetScene({
+  flow,
+  scene,
+  link = null,
+}: {
+  flow: Flow;
+  scene: "forgot" | "reset";
+  link?: ResetLink | null;
+}) {
   const [secondsLeft, setSecondsLeft] = useCountdown(0);
-  if (scene === "reset" && flow.email.trim() !== "") {
-    return <ResetPasswordForm flow={flow} secondsLeft={secondsLeft} restart={setSecondsLeft} />;
+  if (scene === "reset" && (flow.email.trim() !== "" || link !== null)) {
+    return (
+      <ResetPasswordForm
+        flow={flow}
+        link={link}
+        secondsLeft={secondsLeft}
+        restart={setSecondsLeft}
+      />
+    );
   }
   return (
     <ForgotPasswordForm

@@ -136,7 +136,11 @@ async def slide_row(connection: AsyncConnection, principal: Principal, slide_id:
     row = (
         await connection.execute(
             select(
-                slides.c.id, slides.c.project_id, projects.c.privacy_mode, projects.c.archived_at
+                slides.c.id,
+                slides.c.tenant_id,
+                slides.c.project_id,
+                projects.c.privacy_mode,
+                projects.c.archived_at,
             )
             .join(projects, projects.c.id == slides.c.project_id)
             .where(slides.c.id == slide_id, slides.c.deleted_at.is_(None))

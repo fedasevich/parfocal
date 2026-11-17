@@ -1840,6 +1840,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the fake offers and hides the first-read-only set by the same rule on all its routes, a scenario slide nobody has looked at reads back empty coverage, `viewer-tools.spec.ts` no longer allows any HTTP error on the Focus mode scene, and the API client coverage test passes.
   Size: S.
 
+- [ ] VIEW-078 · A new review task's cells get crops when its order is written
+  VIEW-075 cuts cell crops in the parse sandbox after a result import and in the `backfill_cell_crops` Modal function, choosing the cells in every stored review order of the slide first and then the twelve best scored cells of each class, at most 240 a slide. A task created after the import has its order written later, so its cells show the grid without pictures until the backfill runs again, and seeded sets get crops only from the backfill.
+  Cut the missing crops of a slide when its review order is written, in the ingest worker after the order job and for orders the API writes directly, with the same cap and the same sandbox.
+  Done when a worker test writes an order for cells without crops and finds their crops stored under the slide, and a browser test opens the cells grid of a fresh task with every tile answered by the crop route.
+  Depends on VIEW-075. Size: M.
+
 - [x] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
