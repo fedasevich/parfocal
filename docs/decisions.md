@@ -139,6 +139,16 @@ JOBS-000 (research check for the model run contract) recorded the contract in [A
 
 Your choice: 
 
+### 139. Whether a one-factor member can switch out of a workspace that requires a second factor
+
+IAM-025 (ask for a second factor at sign-in when a workspace requires it) refuses a session without a second factor in a workspace with "two-factor required" on, and also refuses switching into one. A member who lands in such a workspace after sign-in, joining or an invitation can then only set up a factor or log out.
+
+- **A. Keep it, they set up a factor or log out (recommended).** It is the strict reading of the switch and the simplest to audit.
+- B. Let them switch out to a workspace that does not require a second factor.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
