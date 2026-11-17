@@ -63,7 +63,7 @@ import {
   uploadStorage,
   uploadUnscored,
 } from "./scenario-project.ts";
-import { annotateStubTaskId, rt13 } from "./scenario-review.ts";
+import { annotateStubTaskId, rt13, rt18 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates } from "./scenario-task.ts";
 import { annotateTaskClasses, annotateTaskSlides } from "./shared-layer-handlers.ts";
 import { addedResultSets } from "./upload-handlers.ts";
@@ -199,7 +199,7 @@ export const toAnnotateReviewTask = (): ReviewTask => ({
 
 export const toProjectReviewTasks = (idOrCode: string): ReviewTask[] => {
   const project = projectOf(idOrCode);
-  const listed = [...reviewTasks, rt13]
+  const listed = [...reviewTasks, rt13, rt18]
     .filter((task) => task.project === project.code)
     .map(toReviewTask);
   return project.code === rt13.project ? [...listed, toAnnotateReviewTask()] : listed;

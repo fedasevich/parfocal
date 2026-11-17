@@ -110,8 +110,11 @@ export function queueState(): QueueState {
   return state;
 }
 
+const signedTasks = new Set<string>();
+
 export function resetQueueState(): void {
   state = freshState(scene);
+  signedTasks.clear();
 }
 
 export function setFakeQueueScene(next: FakeQueueScene): boolean {
@@ -140,6 +143,11 @@ export function signQueueTask(): void {
   state.signed = true;
 }
 
+export function signTask(task: ScenarioReviewTask): void {
+  if (task.code === queueTask) signQueueTask();
+  else signedTasks.add(task.id);
+}
+
 export function startNextVersion(reason: string, at: string): void {
   state.nextVersion = { reason, at };
 }
@@ -147,7 +155,9 @@ export function startNextVersion(reason: string, at: string): void {
 export const reviewsAreIn = () => scene.stage !== "locked";
 
 export function queueTaskView(task: ScenarioReviewTask): ScenarioReviewTask {
-  if (task.code !== queueTask) return task;
+  if (task.code !== queueTask) {
+    return signedTasks.has(task.id) ? { ...task, status: "signed", signedOn: "2026-10-15" } : task;
+  }
   const progress = reviewsAreIn()
     ? Object.fromEntries(task.reviewers.map((key) => [key, task.slides]))
     : task.progress;

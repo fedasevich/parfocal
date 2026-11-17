@@ -52,6 +52,24 @@ export const rt13: ScenarioReviewTask = {
   status: "review",
 };
 
+export const rt18: ScenarioReviewTask = {
+  code: "RT-18",
+  id: uuid(7, 18),
+  name: "Reviews all in · PathoSAM",
+  project: "P09",
+  resultSet: "sam",
+  reviewers: ["AK", "SM"],
+  scope: "all-regions",
+  scopeText: "Tumor regions: all",
+  dueOn: "2026-10-28",
+  sentOn: "2026-10-12",
+  slides: 6,
+  split: "all",
+  progress: { AK: 6, SM: 6 },
+  blinded: true,
+  status: "review",
+};
+
 export const annotateStubTaskId = uuid(7, 21);
 
 export type DecisionStyleKind = "certainty" | "agree" | "yesno" | "blind";

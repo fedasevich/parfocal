@@ -2,7 +2,7 @@ import { copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { area, ok, onRealApi, realTags, sampleTask, signIn, storageStandIn } from "./real.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -26,8 +26,27 @@ interface ProjectRow {
   sample: boolean;
 }
 
-interface SignedOff {
+interface TaskStates {
   signed_off_at: string | null;
+  slides: { state: string }[];
+}
+
+interface TaskRow {
+  id: string;
+  kind: string;
+}
+
+async function readyToSign(page: Page): Promise<string> {
+  const projects = await ok<{ id: string }[]>(page, "GET", "/api/projects");
+  for (const project of projects) {
+    const tasks = await ok<TaskRow[]>(page, "GET", `/api/projects/${project.id}/review-tasks`);
+    for (const task of tasks.filter(({ kind }) => kind === "review")) {
+      const states = await ok<TaskStates>(page, "GET", `/api/review-tasks/${task.id}/states`);
+      const allIn = states.slides.every(({ state }) => state === "submitted");
+      if (states.signed_off_at === null && states.slides.length > 0 && allIn) return task.id;
+    }
+  }
+  throw new Error("No unsigned review task has every review in");
 }
 
 interface Decision {
@@ -118,22 +137,21 @@ test("an annotate task slide keeps a drawn region", realTags(area.annotate), asy
 });
 
 test(
-  "the owner checks an annotate task slide and signs it off",
+  "the owner signs off a task whose reviews are all in",
   realTags(area.signOff),
   async ({ page }) => {
     await signIn(page, "/my-work");
-    const { project, task, slide } = await sampleTask(page, "annotate");
-    const asOwner = onRealApi ? "" : "&as=DH";
-    await page.goto(`/projects/${project}/slides/${slide}/live?task=${task}${asOwner}`);
-    const panel = page.getByTestId("annotate-task-panel");
-    await expect(panel).toBeVisible({ timeout: 30_000 });
-    await page.getByRole("button", { name: /^(Mark slide checked|Nothing to mark)$/ }).click();
-    await expect(panel).toHaveAttribute("data-step", "checked");
-    await page.getByRole("button", { name: "Sign off", exact: true }).click();
-    await expect(panel).toHaveAttribute("data-step", "signed-off");
-    const status = `/api/review-tasks/${task}/slides/${slide}/check-status`;
+    const task = await readyToSign(page);
+    await page.goto(`/tasks/${task}/sign-off`);
+    const modal = page.getByRole("dialog", { name: /^Sign off / });
+    await expect(modal).toBeVisible({ timeout: 30_000 });
+    const sign = modal.getByRole("button", { name: /^Sign with/ });
+    await expect(sign).toBeEnabled();
+    await sign.click();
+    await expect(modal.getByText(/Evaluation v1 · signed/)).toBeVisible();
+    const states = `/api/review-tasks/${task}/states`;
     await expect
-      .poll(async () => (await ok<SignedOff>(page, "GET", status)).signed_off_at)
+      .poll(async () => (await ok<TaskStates>(page, "GET", states)).signed_off_at)
       .not.toBeNull();
   },
 );
