@@ -182,7 +182,7 @@ function CellsBody({
                 counts={counts}
                 added={session.added.map((item) => item.object)}
               />
-              <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
+              <AiSays setName={setName} objects={objects} />
               <ObjectList
                 objects={objects}
                 counts={counts}

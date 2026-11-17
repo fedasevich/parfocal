@@ -37,7 +37,7 @@ test("a comment written on an object in guided review survives a reload and show
   await page.getByRole("tab", { name: /Comments/ }).click();
   await expect(page.locator("p").filter({ hasText: text })).toBeVisible();
 
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&tab=comments`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects&tab=comments`);
   await expect(
     page.locator('[data-slot="thread-card"]', { hasText: "Check the capsule fold" }),
   ).toContainText("T5");

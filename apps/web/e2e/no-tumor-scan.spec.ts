@@ -5,7 +5,7 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 const emptySlide = "00000000-0000-4000-8005-000000000007";
 
 test("a slide with no tumor flagged scans the tissue one field at a time", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${emptySlide}?task=${rt14}`);
+  await page.goto(`/projects/${p07}/slides/${emptySlide}?task=${rt14}&scene=objects`);
   const staging = page.locator('[data-slot="staging-cards"]');
   await expect(staging).toHaveAttribute("data-state", "no-tumor", { timeout: 20_000 });
   await expect(staging).toContainText("Needs review");

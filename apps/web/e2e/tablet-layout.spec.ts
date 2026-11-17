@@ -14,7 +14,7 @@ async function openViewer(page: Page) {
       .getByRole("list", { name: "Screens" })
       .getByRole("link", { name: "Full viewer · Objects tab", exact: true })
       .getAttribute("href")) ?? "";
-  await page.goto(`${new URL(href, "http://localhost").pathname}?task=${reviewTask}`);
+  await page.goto(`${new URL(href, "http://localhost").pathname}?task=${reviewTask}&scene=objects`);
   await expect(page.getByTestId("full-viewer")).toBeVisible();
 }
 

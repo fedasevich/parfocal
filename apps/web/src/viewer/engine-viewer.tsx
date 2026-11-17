@@ -28,13 +28,13 @@ export type EngineViewerProps = {
   slideId: string;
   task: string | undefined;
   workspace: SlideWorkspace | undefined;
-  tab: ViewerTab | undefined;
+  tab?: ViewerTab | undefined;
   start?: StageStart | undefined;
   object?: string | undefined;
   guided?: boolean;
   onOpenSlide: (slideId: string) => void;
   onWorkspace: (workspace: SlideWorkspace) => void;
-  onTab: (tab: ViewerTab) => void;
+  onTab?: ((tab: ViewerTab) => void) | undefined;
 };
 
 export function EngineViewer({
@@ -42,14 +42,17 @@ export function EngineViewer({
   slideId,
   task,
   workspace: chosen,
-  tab,
+  tab: routeTab,
   start,
   object,
   guided = false,
   onOpenSlide,
   onWorkspace,
-  onTab,
+  onTab: onRouteTab,
 }: EngineViewerProps) {
+  const [ownTab, setOwnTab] = useState<ViewerTab | undefined>(undefined);
+  const tab = onRouteTab === undefined ? ownTab : routeTab;
+  const onTab = onRouteTab ?? setOwnTab;
   const loaded = useCaseLoad(projectId, slideId, task);
   const [percent, setPercent] = useState<number | null>(null);
   const [peek, setPeek] = useState(false);

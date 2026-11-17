@@ -8,6 +8,9 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 const fullViewer = `/projects/${p07}/slides/${tumor044}?task=${rt14}&as=DH`;
 const guided = `/tasks/${rt14}/guided?slide=${tumor044}&as=DH`;
+const a1 = "00000000-0000-4000-8005-000000000001";
+const objectsViewer = `/projects/${p07}/slides/${a1}?task=${rt14}`;
+const objectsGuided = `/tasks/${rt14}/guided?slide=${a1}`;
 
 async function ready(page: Page) {
   const stage = page.getByTestId("slide-stage");
@@ -70,10 +73,10 @@ for (const [name, path] of [
 }
 
 test("the full viewer decides an AI object on the real stage", async ({ page }) => {
-  await page.goto(fullViewer);
+  await page.goto(objectsViewer);
   await ready(page);
   const list = page.getByTestId("stage-review-objects");
-  await expect(list).toBeVisible();
+  await expect(list.getByTestId("stage-review-object").first()).toBeVisible();
   const row = list.getByTestId("stage-review-object").first();
   const answers = row.getByRole("group").getByRole("button");
   await answers.first().click();
@@ -83,10 +86,11 @@ test("the full viewer decides an AI object on the real stage", async ({ page }) 
 test("guided review decides the current object and steps to the next open one", async ({
   page,
 }) => {
-  await page.goto(guided);
+  await page.goto(objectsGuided);
   await ready(page);
   const card = page.getByTestId("stage-review-objects");
   await expect(card).toHaveAttribute("data-guided", "true");
+  await expect(card).not.toHaveAttribute("data-current", "");
   const first = (await card.getAttribute("data-current")) ?? "";
   expect(first).not.toBe("");
   await card

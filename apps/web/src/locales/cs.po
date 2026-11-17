@@ -2097,10 +2097,6 @@ msgstr ""
 msgid "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
 msgstr ""
 
-#: src/screens/viewer/use-viewer-panels.tsx
-msgid "{setName}, imported 12 Oct"
-msgstr ""
-
 #. placeholder {0}: changedCount ? t`your ${changedCount} changed key${changedCount > 1 ? "s" : ""}` : t`the default keys`
 #: src/screens/settings/shortcuts-section.tsx
 msgid "{shortcutFileName} saved to Downloads, with {0}"
@@ -2391,11 +2387,11 @@ msgid "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/viewer-notices.tsx
 msgid "<0>Signed off 15 Oct.</0> Changes need an amendment."
 msgstr ""
 
 #: src/routes/issue-pages.$kind.tsx
+#: src/screens/viewer/viewer-notices.tsx
 msgid "<0>Signed off.</0> Changes need an amendment."
 msgstr ""
 
@@ -14250,16 +14246,16 @@ msgstr ""
 msgid "Signed off {signedOn}"
 msgstr ""
 
-#: src/screens/viewer/use-viewer-panels.tsx
-msgid "Signed off 15 Oct. Changes need an amendment."
-msgstr ""
-
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Signed off by: ____________  Date: ________"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "Signed off. Ask the researcher to amend."
+msgstr ""
+
+#: src/screens/viewer/use-viewer-panels.tsx
+msgid "Signed off. Changes need an amendment."
 msgstr ""
 
 #. placeholder {0}: signature.at

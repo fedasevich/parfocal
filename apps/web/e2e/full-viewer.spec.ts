@@ -37,7 +37,7 @@ const shows: Record<string, string> = {
   "Full viewer · Issue · slide fails to load": "could not be read at 20x and 40x",
   "Full viewer · Issue · no results": "Nothing to decide here yet.",
   "Full viewer · Issue · the task was withdrawn": "RT-14 was withdrawn.",
-  "Full viewer · Read-only after sign-off": "Signed off 15 Oct.",
+  "Full viewer · Read-only after sign-off": "Signed off.",
   "Full viewer · Issue · slow source": "Slow source.",
   "Full viewer · Issue · remote source offline": "Scanner archive is not answering",
   "Full viewer, one object · An open region, T5": "The AI says T5 is tumor",

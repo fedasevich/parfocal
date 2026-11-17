@@ -44,7 +44,6 @@ const STILL_TO_REPLACE = new Set([
   "screens/onboarding/auth-side.tsx",
   "screens/project/project-page.tsx",
   "screens/review/cells-grid.tsx",
-  "screens/review/cells-on-slide.tsx",
   "screens/review/comments-on-ids.tsx",
   "screens/review/guided-review.tsx",
   "screens/review/review-top-popovers.tsx",
@@ -65,7 +64,6 @@ const STILL_TO_REPLACE = new Set([
   "screens/viewer/layer-views.tsx",
   "screens/viewer/use-viewer-panels.tsx",
   "screens/viewer/viewer-canvas-parts.tsx",
-  "screens/viewer/viewer-notices.tsx",
   "worklist-live/connect-worklist-live.ts",
 ]);
 

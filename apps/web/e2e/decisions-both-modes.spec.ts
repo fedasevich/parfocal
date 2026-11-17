@@ -20,7 +20,7 @@ async function plainFullViewerUrl(page: Page) {
     .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
   const href = (await link.getAttribute("href")) ?? "";
   const url = new URL(href, "http://localhost");
-  return `${url.pathname}?task=${rt14}`;
+  return `${url.pathname}?task=${rt14}&scene=objects`;
 }
 
 test("K, X and U decide the selected object in the full viewer and the list shows each", async ({

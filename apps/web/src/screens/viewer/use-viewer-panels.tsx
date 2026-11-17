@@ -270,7 +270,7 @@ export function useViewerPanels(
         ) : (
           <ModelWarningsBlock warnings={modelWarnings} />
         )}
-        <AiSays setName={t`${setName}, imported 12 Oct`} objects={objects} />
+        <AiSays setName={setName} objects={objects} />
         <TrackRecordBlock
           enabled={personalSettings?.inspector_track_record ?? true}
           lines={trackRecordLines(trackRecord, typer?.name ?? "")}
@@ -508,7 +508,7 @@ export function useViewerPanels(
       submitLabel={failed ? t`Try again` : t`Submit`}
       failed={failed}
       warning={threadsWarning}
-      {...(readOnly ? { lockedReason: t`Signed off 15 Oct. Changes need an amendment.` } : {})}
+      {...(readOnly ? { lockedReason: t`Signed off. Changes need an amendment.` } : {})}
       onSubmit={submit}
       onAnswerChange={changeOpinion}
     />

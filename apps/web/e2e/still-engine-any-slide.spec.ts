@@ -125,7 +125,7 @@ test("guided review draws the real outlines of a slide outside the mock and keep
   page,
 }) => {
   const errors = watchErrors(page);
-  await page.goto(`/tasks/${rt14}/guided?slide=${outlinedSlide}`);
+  await page.goto(`/tasks/${rt14}/guided?slide=${outlinedSlide}&scene=region`);
   await engineReady(page);
   await expect(engine(page)).toHaveAttribute("data-objects", "2");
   expect(Number(await engine(page).getAttribute("data-overlays"))).toBeGreaterThan(0);
@@ -170,7 +170,7 @@ test("with WebGL off the still draws the real outlines and the region home over 
       return original.call(this, kind, options);
     } as typeof prototype.getContext;
   });
-  await page.goto(`/tasks/${rt14}/guided?slide=${outlinedSlide}`);
+  await page.goto(`/tasks/${rt14}/guided?slide=${outlinedSlide}&scene=region`);
   await expect(still(page).locator("svg image")).toHaveCount(1);
   await expect(engine(page)).toHaveCount(0);
   await expect(still(page).locator('svg[role="img"] > g > path')).toHaveCount(3);

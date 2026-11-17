@@ -11,7 +11,7 @@ async function fullViewerUrl(page: Page, object: string) {
     .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
   const href = (await link.getAttribute("href")) ?? "";
   const url = new URL(href, "http://localhost");
-  return `${url.pathname}?task=${rt14}&object=${encodeURIComponent(object)}`;
+  return `${url.pathname}?task=${rt14}&scene=objects&object=${encodeURIComponent(object)}`;
 }
 
 const bar = (page: Page) => page.getByTestId("cell-type-bar");

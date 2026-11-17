@@ -22,7 +22,7 @@ test("closing the browser mid-review resumes guided review at the same object", 
 }) => {
   const before = await freshBrowser(browser, baseURL);
   const page = await before.newPage();
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&object=T2`);
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region&object=T2`);
   await expect(page.getByText(/The AI says T2 is/)).toBeVisible();
   await page.getByRole("button", { name: /Skip for now|Next/ }).click();
   await expect(page.getByText(/The AI says T3 is/)).toBeVisible();
@@ -45,7 +45,7 @@ test("a slide left in the full viewer resumes there with its camera", async ({
 }) => {
   const before = await freshBrowser(browser, baseURL);
   const page = await before.newPage();
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&x=0.3&y=0.4&z=2`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects&x=0.3&y=0.4&z=2`);
   await expect.poll(() => stored(page)).toMatch(/"mode":"viewer".*"camera":\{"x"/);
   const camera = (JSON.parse((await stored(page)) ?? "{}") as { camera: { z: number } }).camera;
   const state = await before.storageState();

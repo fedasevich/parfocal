@@ -8,7 +8,7 @@ const a1 = "00000000-0000-4000-8005-000000000001";
 for (const width of chromeWidths) {
   test(`Review chrome share at ${width}x${chromeHeight}`, async ({ page }) => {
     await page.setViewportSize({ width, height: chromeHeight });
-    await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}`);
+    await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects`);
     await expect(page.getByTestId("full-viewer")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("header").first()).toBeVisible();
     await expect(page.locator('[data-slot="tool-rail"]')).toBeVisible();

@@ -53,10 +53,13 @@ test("the AI is absent before the first read, appears after it, and the first re
   await expect(page.getByTestId("first-read-added")).toHaveText("1 added.");
 
   await record.click();
-  await expect(page.locator('main[data-ai="shown"]')).toBeVisible();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
   await expect(hidden).toHaveCount(0);
-  await expect(page.getByRole("group", { name: "Objects" })).toBeVisible();
   await expect(page.getByTestId("first-read-panel")).toHaveCount(0);
+  const objects = page.getByTestId("stage-review-objects");
+  await expect(objects).not.toHaveAttribute("data-current", "");
 
   const recorded = await firstReadOf(page);
   expect(recorded.status).toBe(200);
@@ -64,18 +67,14 @@ test("the AI is absent before the first read, appears after it, and the first re
   expect(first.answers["findings"]).toBe("Tumor present");
   expect(first.added).toHaveLength(1);
 
-  const gotIt = page.getByRole("button", { name: "Got it, start" });
-  if (await gotIt.isVisible()) await gotIt.click();
-  const submit = page.getByRole("button", { name: "Submit", exact: true }).first();
-  const agree = page.getByRole("button", { name: /^Agree/ }).first();
-  for (let answered = 0; answered < 80 && (await submit.isDisabled()); answered += 1) {
-    await agree.click();
-  }
-  await submit.click();
-  const card = page.locator('[data-slot="slide-done-card"]');
-  await expect(card).toBeVisible();
-  await card.getByRole("radio", { name: "4" }).click();
-  await expect(card.getByRole("radio", { name: "4" })).toBeChecked();
+  const current = (await objects.getAttribute("data-current")) ?? "";
+  await objects
+    .getByTestId("stage-review-object")
+    .getByRole("group")
+    .getByRole("button")
+    .first()
+    .click();
+  await expect(objects).not.toHaveAttribute("data-current", current);
 
   expect(await firstReadOf(page)).toEqual(recorded);
 });
