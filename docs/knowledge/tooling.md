@@ -136,6 +136,10 @@ Every performance budget is a row of `perf-budgets.json` with its baseline, limi
 
 `pnpm analyze:web` builds `apps/web` in the `analyze` mode and writes `apps/web/bundle-report/treemap.html` (rollup-plugin-visualizer) and `summary.json` (every chunk with its modules and gzip size, plus the largest modules and packages of the first-page chunks). The normal build is unchanged. The CI `bundle-report` job runs it on pull requests, uploads both files as the `bundle-report` artifact and prints the ten largest first-page modules in the job summary.
 
+## Repeat the first-page audit at each milestone
+
+Run `pnpm --filter @parfocal/web analyze`. Sum the gzip size of every file `apps/web/bundle-report/dist/index.html` names in a `src` or `href`, which is what `route-chunks.test.ts` counts. Do not use `firstPage.gzipBytes` of `summary.json` for the budget, it counts differently. Read `largestPackages` and the `modules` of the biggest first-page chunks in `summary.json` for what to move behind `React.lazy` or mark free of side effects. Never put an awaited `import()` at the top level of `main.tsx` unless a compile-time constant gates it, because Vite then preloads the route chunks. Record both sizes in a result file and set the limit of `web.first-page-gzip-bytes` to the new size plus 10 KB. The latest audit is [the first page bundle audit](../results/2026-11-17-first-page-bundle-audit.md).
+
 ## Parallel sessions share one working tree
 
 Several agent sessions often edit the same checkout at once. Staging a file by name stages every edit in it, including another session's unfinished work. On 2026-10-31 a commit for OPS-009 (cost controls) carried another session's backlog tasks and ADR index row to `origin` without that session's ADR file, and two sessions picked the same ADR number. Before every commit, read `git diff --cached` and make sure each hunk is yours. If a file holds someone else's edits, change only your lines in a fresh copy of the file from `HEAD`, or wait for the other session to commit first. Check `ls docs/adr` and `git status` for an untracked ADR right before choosing a number.
