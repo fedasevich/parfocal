@@ -762,7 +762,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-028.
   Size: S.
 
-- [ ] IAM-013 · SCIM provisioning
+- [x] IAM-013 · SCIM provisioning
   Done when a SCIM test client creates, updates and deactivates users.
   Depends on IAM-012.
   Size: M.
@@ -835,6 +835,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ADMIN-009, IAM-001.
   Size: M.
 
+- [ ] IAM-030 · A SCIM-created person signs in through SAML without a duplicate
+  IAM-013 (SCIM provisioning) creates people through Zitadel's own SCIM server, but a SCIM-created user's first SAML sign-in may collide with Zitadel's auto-creation because linking is off. Configure the SAML provider to link by email to the SCIM user, and check that one workspace's SCIM token cannot reach another workspace's endpoint and how fast an open session ends after deactivation.
+  Done when a test on the local Zitadel creates a user by SCIM, signs them in through a test SAML provider into the same user, and refuses a cross-workspace SCIM token.
+  Depends on IAM-013. Size: S.
 - [x] IAM-026 · A workspace on a shared mail domain is not open to strangers
   A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) chose 84a on 2026-11-13: a new workspace saves no domain, and an admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public.
   Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
@@ -4482,7 +4486,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   OPS-025 (the viewer typing tool on a GPU typer runner) built the `outline-types` runner, but no HoVer-NeXt `typer.onnx` export exists in model storage, so the route answers 503 `typer-offline` in production. Export the typer head to ONNX on the Mac, check it against the PyTorch output on a small fixture, and publish it with its checksum where the embedder pool loads models, through the same path as the other published artifacts.
   Done when a parity test passes within the tolerance the other exports use, the artifact and checksum are published, and the deployed route types one outline on a seeded slide.
   Depends on OPS-025. Size: M.
-- [ ] OPS-027 · A project access request notifies the owner
+- [x] OPS-027 · A project access request notifies the owner
   OPS-023 (project and upload area on the real API) stores a request for project access as a `project.access-asked` audit event, but nobody is told. Add a `project-access-asked` notification kind, send it to the project owner, and let the owner add the person from it with one action.
   Done when the owner gets an inbox entry for a request, an API test covers sending and adding, and asking twice still makes one request.
   Depends on OPS-023. Size: S.
@@ -5523,18 +5527,22 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on REMOTE-000, TILES-001. Refs mock: upload/remote, mock: states/remoteoff.
   Size: L.
 
-- [ ] REMOTE-002 · Webhook in per project
+- [x] REMOTE-002 · Webhook in per project
   A signed URL per project takes a slide link, result links, a case ID and optionally a task, answers what was done, and logs every call.
   Done when API tests cover a valid call, a bad signature and the log.
   Depends on REMOTE-000, INGEST-025, RSET-005. Refs mock: upload/webhook.
   Size: M.
 
-- [ ] REMOTE-003 · Events out
+- [x] REMOTE-003 · Events out
   Parfocal calls a pipeline back when a review is submitted, a task has disagreements, a task is signed off or a result set is added, signed, retried and logged. A failed delivery is an `integration-down` target that the notification resolver opens ([ADR 0091](adr/0091-notification-catalogue-and-targets.md)).
   Done when tests deliver each event, retry after a failure and prove the signature.
   Depends on REMOTE-000. Refs mock: upload/events.
   Size: M.
 
+- [ ] REMOTE-005 · The event delivery sweep runs in production
+  REMOTE-003 (events out) writes project events to an outbox, but nothing in production runs `python -m parfocal_api.event_delivery`, so events stay pending. Run the sweep on a Modal schedule that scales to zero between runs, and record events that happen while a target is paused so they can be replayed.
+  Done when a deployed schedule delivers a test event to a fake receiver set up for the check, a paused target's events are kept and replayable, and the schedule's cost is in `knowledge/platform.md`.
+  Depends on REMOTE-003. Size: S.
 - [ ] REMOTE-004 · Watched folder or bucket
   New files in a watched folder or bucket arrive in a project, checked like an upload.
   Done when a test drops files in a bucket fixture and they arrive.
