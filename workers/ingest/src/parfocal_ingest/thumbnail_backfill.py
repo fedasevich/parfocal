@@ -4,6 +4,7 @@ import tempfile
 import uuid
 from collections import Counter
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 import httpx2
@@ -22,9 +23,9 @@ from parfocal_common.ingest import FIXTURES_PREFIX, folder_of, slide_prefix
 from parfocal_common.jobs import PLATFORM
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import load_settings
-from parfocal_ingest.identify import identify
+from parfocal_ingest.identify import Format, identify
 from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
-from parfocal_ingest.thumbnail import previews
+from parfocal_ingest.thumbnail import coarse_level_thumbnail, previews
 
 logger = logging.getLogger("parfocal.ingest.thumbnail_backfill")
 
@@ -57,7 +58,9 @@ def thumbnail_from(path: Path, work: Path) -> bytes:
         path = unpacked
     found = read_pyramid(path, identified)
     if not isinstance(found, Pyramid):
-        raise NoThumbnailError(f"{path.name} has no readable pyramid")
+        if identified.format is Format.VENTANA_BIF:
+            return coarse_level_thumbnail(path)
+        raise NoThumbnailError(f"{path.name} has no readable pyramid ({found})")
     return previews(path, identified.format, found).thumbnail
 
 
@@ -104,8 +107,36 @@ async def ensure_thumbnail(
     return state
 
 
-async def backfill(engine: AsyncEngine, store: ObjectStore) -> Counter[str]:
-    outcomes: Counter[str] = Counter()
+def skip_reason(original_key: str | None, file_bytes: int | None) -> str:
+    if original_key is None:
+        return "no original file"
+    if file_bytes is None:
+        return "upload not finished"
+    return "tenant upload, not parsed here"
+
+
+@dataclass
+class Report:
+    outcomes: Counter[str] = field(default_factory=Counter)
+    reasons: Counter[tuple[str, str]] = field(default_factory=Counter)
+
+    def add(self, state: str, reason: str | None = None) -> None:
+        self.outcomes[state] += 1
+        if reason is not None:
+            self.reasons[(state, reason)] += 1
+
+    def lines(self) -> list[str]:
+        order = (STORED, COPIED, PRESENT, SKIPPED, FAILED)
+        counts = ", ".join(f"{state} {self.outcomes[state]}" for state in order)
+        details = [
+            f"  {state}: {count} x {reason}"
+            for (state, reason), count in sorted(self.reasons.items())
+        ]
+        return [counts, *details]
+
+
+async def backfill(engine: AsyncEngine, store: ObjectStore) -> Report:
+    report = Report()
     made: dict[str, bytes] = {}
     async with scoped_transaction(engine, PLATFORM) as connection:
         tenant_ids: Sequence[uuid.UUID] = list(
@@ -115,24 +146,26 @@ async def backfill(engine: AsyncEngine, store: ObjectStore) -> Counter[str]:
         async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant_id)) as connection:
             rows = (
                 await connection.execute(
-                    select(slides.c.id, slides.c.original_key).where(
-                        slides.c.deleted_at.is_(None),
-                        slides.c.original_key.is_not(None),
-                        slides.c.file_bytes.is_not(None),
+                    select(slides.c.id, slides.c.original_key, slides.c.file_bytes).where(
+                        slides.c.deleted_at.is_(None)
                     )
                 )
             ).all()
         for row in rows:
+            if row.original_key is None or row.file_bytes is None:
+                report.add(SKIPPED, skip_reason(row.original_key, row.file_bytes))
+                continue
             try:
                 state = await ensure_thumbnail(store, tenant_id, row.id, row.original_key, made)
-                outcomes[state] += 1
-            except Exception:
+                reason = skip_reason(row.original_key, row.file_bytes)
+                report.add(state, reason if state == SKIPPED else None)
+            except Exception as error:
                 logger.exception("thumbnail backfill failed", extra={"slide_id": str(row.id)})
-                outcomes[FAILED] += 1
-    return outcomes
+                report.add(FAILED, f"{type(error).__name__}: {error}"[:160])
+    return report
 
 
-async def run_once(settings: ApiSettings) -> Counter[str]:
+async def run_once(settings: ApiSettings) -> Report:
     engine = create_engine(str(settings.database_url))
     try:
         await require_row_security(engine)
@@ -142,9 +175,11 @@ async def run_once(settings: ApiSettings) -> Counter[str]:
         await engine.dispose()
 
 
-def main() -> None:
-    outcomes = asyncio.run(run_once(load_settings(ApiSettings)))
-    print(dict(outcomes))
+def main() -> list[str]:
+    report = asyncio.run(run_once(load_settings(ApiSettings)))
+    lines = report.lines()
+    print("\n".join(lines))
+    return lines
 
 
 if __name__ == "__main__":

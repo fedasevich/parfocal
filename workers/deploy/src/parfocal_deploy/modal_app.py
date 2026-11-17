@@ -200,10 +200,10 @@ def run_ingest() -> None:
     asyncio.run(main())
 
 
-def run_thumbnail_backfill() -> None:
+def run_thumbnail_backfill() -> list[str]:
     from parfocal_ingest.thumbnail_backfill import main
 
-    main()
+    return main()
 
 
 def run_cell_crops_backfill() -> None:
