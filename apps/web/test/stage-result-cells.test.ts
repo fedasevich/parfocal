@@ -6,7 +6,13 @@ import {
   fallbackPalette,
   hexToRgba,
 } from "../src/viewer/class-paint.ts";
-import { chunkCells, setRegions, summaryCells } from "../src/viewer/stage-geometry.ts";
+import {
+  chunkCells,
+  mergeRegions,
+  regionBox,
+  setRegions,
+  summaryCells,
+} from "../src/viewer/stage-geometry.ts";
 import { classColors } from "../src/viewer/viewer-engine.ts";
 
 const named = (...names: string[]) =>
@@ -100,4 +106,21 @@ test("set classes take the project colour by class id, then by name, then a stab
   assert.deepEqual(classPaints([{ position: 0, name: "dead" }], [])[0]?.hex, paints[2]?.hex);
   assert.equal(paints[3]?.className, "stroma");
   assert.equal(hexToRgba("nope"), null);
+});
+
+test("the region page box pads the viewport by half and snaps so small pans keep the same box", () => {
+  const box = regionBox([1000, 2000, 800, 600]);
+  assert.deepEqual(box, { left: 0, top: 1024, right: 3072, bottom: 3072 });
+  assert.deepEqual(regionBox([1010, 2010, 800, 600]), box);
+  assert.deepEqual(regionBox([-500, -500, 100, 100]), { left: 0, top: 0, right: 0, bottom: 0 });
+});
+
+test("paged regions are kept by number and dropped all at once past the keep limit", () => {
+  const a = { number: 1 };
+  const b = { number: 2 };
+  const first = mergeRegions(new Map(), [a]);
+  assert.equal(mergeRegions(first, [a]), first);
+  const both = mergeRegions(first, [b]);
+  assert.deepEqual([...both.keys()], [1, 2]);
+  assert.deepEqual([...mergeRegions(both, [{ number: 3 }], 2).keys()], [3]);
 });

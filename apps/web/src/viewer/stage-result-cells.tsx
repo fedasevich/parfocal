@@ -3,6 +3,7 @@ import {
   getGetCellChunkUrl,
   getGetCellSummaryUrl,
   type ResultSet,
+  type SetRegion,
   useGetResultSet,
   useListProjectClasses,
   useListResultSetRegions,
@@ -13,7 +14,15 @@ import { okData } from "../screens/placeholder.tsx";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { DockCard, dockedCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
-import { chunkCells, setRegions, summaryCells, viewportRect } from "./stage-geometry.ts";
+import {
+  chunkCells,
+  mergeRegions,
+  regionBox,
+  regionPageLimit,
+  setRegions,
+  summaryCells,
+  viewportRect,
+} from "./stage-geometry.ts";
 import { httpCellSource, PagedCells, type ViewerEngine } from "./viewer-engine.ts";
 
 const sameOrigin: typeof fetch = (input, init) =>
@@ -139,22 +148,42 @@ function SetRegions({
   set: ResultSet;
   paints: readonly ClassPaint[];
 }) {
-  const listed = okData(useListResultSetRegions(set.id).data);
+  const { frame, size } = useStageSize();
+  const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const paged = set.region_count > regionPageLimit;
+  const box = regionBox(viewportRect(camera, size));
+  const params = paged && size.width > 0 ? box : undefined;
+  const page = okData(
+    useListResultSetRegions(set.id, params, { query: { enabled: !paged || size.width > 0 } }).data,
+  );
+  const [kept, setKept] = useState<ReadonlyMap<number, SetRegion>>(new Map());
+  useEffect(() => {
+    if (page !== undefined) setKept((before) => mergeRegions(before, page.regions));
+  }, [page]);
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: `result-regions-${set.id}`, host: engine }),
     [module, engine, set.id],
   );
   useEffect(() => () => drawing.clear(), [drawing]);
   const regions = useMemo(
-    () => setRegions(set.id, listed?.regions ?? [], paints),
-    [listed, set.id, paints],
+    () => setRegions(set.id, [...kept.values()], paints),
+    [kept, set.id, paints],
   );
   useEffect(() => {
     drawing.setChoices({ draw: "outline", colorBy: "class" });
     drawing.setObjects(regions);
   }, [drawing, regions]);
   return (
-    <div hidden data-testid="result-set-regions" data-set={set.id} data-regions={regions.length} />
+    <div
+      ref={frame}
+      className="pointer-events-none invisible absolute inset-0"
+      data-testid="result-set-regions"
+      data-set={set.id}
+      data-regions={regions.length}
+      data-paged={paged}
+      data-box={params === undefined ? "" : `${box.left},${box.top},${box.right},${box.bottom}`}
+      data-truncated={page?.truncated ?? false}
+    />
   );
 }
 

@@ -592,6 +592,21 @@ const fakeSetRegions = [
   },
 ];
 
+const insideBox = (outline: readonly number[], query: URLSearchParams) => {
+  const edge = (name: string, fallback: number) => {
+    const value = query.get(name);
+    return value === null ? fallback : Number(value);
+  };
+  const xs = outline.filter((_, index) => index % 2 === 0);
+  const ys = outline.filter((_, index) => index % 2 === 1);
+  return (
+    Math.max(...xs) >= edge("left", -Infinity) &&
+    Math.min(...xs) <= edge("right", Infinity) &&
+    Math.max(...ys) >= edge("top", -Infinity) &&
+    Math.min(...ys) <= edge("bottom", Infinity)
+  );
+};
+
 const aiHidden = () =>
   problem(403, "ai-hidden", "The AI stays hidden on this slide until you record your first read");
 
@@ -626,10 +641,17 @@ export function reviewHandlers(): RequestHandler[] {
           ? aiHidden()
           : cellBytes(await fakeSetCells.chunk(Number(params.chunk)), "cell-chunk"),
     ),
-    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId/regions", ({ params }) =>
-      aiHiddenForResultSet(params.resultSetId)
-        ? aiHidden()
-        : HttpResponse.json({ regions: fakeSetRegions, truncated: false }),
+    http.get<{ resultSetId: string }>(
+      "*/api/result-sets/:resultSetId/regions",
+      ({ params, request }) =>
+        aiHiddenForResultSet(params.resultSetId)
+          ? aiHidden()
+          : HttpResponse.json({
+              regions: fakeSetRegions.filter((region) =>
+                insideBox(region.outline, new URL(request.url).searchParams),
+              ),
+              truncated: false,
+            }),
     ),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
       if (params.taskId === annotateStubTaskId)

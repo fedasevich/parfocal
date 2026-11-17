@@ -201,3 +201,30 @@ export function placedObjects(
       : [],
   );
 }
+
+export const regionPageLimit = 2000;
+
+export const regionKeepLimit = 20_000;
+
+export function regionBox([left, top, width, height]: readonly [number, number, number, number]) {
+  const step = 2 ** Math.ceil(Math.log2(Math.max(width, height, 1)));
+  const snapDown = (value: number) => Math.max(0, Math.floor(value / step) * step);
+  const snapUp = (value: number) => Math.max(0, Math.ceil(value / step) * step);
+  return {
+    left: snapDown(left - width / 2),
+    top: snapDown(top - height / 2),
+    right: snapUp(left + width * 1.5),
+    bottom: snapUp(top + height * 1.5),
+  };
+}
+
+export function mergeRegions<Row extends { readonly number: number }>(
+  before: ReadonlyMap<number, Row>,
+  rows: readonly Row[],
+  keep = regionKeepLimit,
+): ReadonlyMap<number, Row> {
+  if (rows.every((row) => before.get(row.number) === row)) return before;
+  const merged = new Map(before.size + rows.length > keep ? [] : before);
+  for (const row of rows) merged.set(row.number, row);
+  return merged;
+}
