@@ -35,6 +35,21 @@ export const closeHelp = () => {
   emit();
 };
 
+let offerSlot: HTMLElement | null = null;
+
+export const setTourOfferSlot = (slot: HTMLElement | null) => {
+  if (offerSlot === slot) return;
+  offerSlot = slot;
+  emit();
+};
+
+export const useTourOfferSlot = () =>
+  useSyncExternalStore(
+    subscribe,
+    () => offerSlot,
+    () => null,
+  );
+
 export const setTourOfferShown = (shown: boolean) => {
   if (offerShown === shown) return;
   offerShown = shown;

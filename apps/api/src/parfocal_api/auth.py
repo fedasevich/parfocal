@@ -421,6 +421,16 @@ def avatar_colour_of(subject: str) -> int:
 
 
 SEEDED_SUBJECT_PREFIX = "seed:"
+SEEDED_OWNER_NAME = "Workspace owner"
+
+
+def stored_name_after_sign_in(stored: str | None, profile_name: object) -> str | None:
+    if stored != SEEDED_OWNER_NAME or not isinstance(profile_name, str):
+        return None
+    chosen = profile_name.strip()
+    return chosen or None
+
+
 NO_SSO_CONNECTION_PATH = "/sign-in"
 
 
@@ -452,6 +462,13 @@ async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> S
     subject = await linked_subject(
         connection, token_subject, sso, None if email is None else str(email)
     )
+    stored_name = await connection.scalar(
+        select(users.c.display_name).where(users.c.subject == subject)
+    )
+    adopted_name = stored_name_after_sign_in(stored_name, claims.get("name"))
+    refreshed: dict[str, Any] = {"email": email}
+    if adopted_name is not None:
+        refreshed |= {"display_name": adopted_name, "initials": initials_of(adopted_name)}
     user_id = await connection.scalar(
         upsert(users)
         .values(
@@ -461,7 +478,7 @@ async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> S
             initials=initials_of(name),
             avatar_colour=avatar_colour_of(subject),
         )
-        .on_conflict_do_update(index_elements=[users.c.subject], set_={"email": email})
+        .on_conflict_do_update(index_elements=[users.c.subject], set_=refreshed)
         .returning(users.c.id)
     )
     await record(

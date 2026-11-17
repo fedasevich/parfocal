@@ -25,10 +25,11 @@ import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/t
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useFormat } from "../../format.ts";
 import { readDropped } from "../../upload/drop.ts";
 import { dropStore } from "../../upload/drop-store.ts";
+import { markTried } from "../home/getting-started.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "./mock-toast.tsx";
 import { usePeople } from "./people.ts";
@@ -72,6 +73,10 @@ export function ProjectPage({
   const { t } = useLingui();
 
   const project = okData(useGetProject(projectId).data);
+  const isSample = project?.sample === true;
+  useEffect(() => {
+    if (isSample) markTried("open-sample");
+  }, [isSample]);
   const format = useFormat();
   const overview = okData(useGetProjectOverview(projectId).data);
   const tasks = okData(useListReviewTasks(projectId).data) ?? [];

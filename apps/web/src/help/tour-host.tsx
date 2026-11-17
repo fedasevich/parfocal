@@ -10,6 +10,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMatches, useRouter } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { okData } from "../screens/placeholder.tsx";
 import {
   setTourOfferShown,
@@ -17,6 +18,7 @@ import {
   stopTour,
   useActiveTourStep,
   useHelpOpen,
+  useTourOfferSlot,
 } from "./tour-state.ts";
 import {
   isLastStep,
@@ -159,24 +161,25 @@ function TourOfferCard() {
   const { t } = useLingui();
 
   const saved = useSavedTour();
-  const shows = saved.loaded && offerShows(saved);
+  const slot = useTourOfferSlot();
+  const shows = saved.loaded && offerShows(saved) && slot !== null;
   useEffect(() => {
     setTourOfferShown(shows);
     return () => setTourOfferShown(false);
   }, [shows]);
-  if (!shows) return null;
-  return (
+  if (!shows || slot === null) return null;
+  return createPortal(
     <section
       aria-label={t`Tour offer`}
-      className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-zone border border-line bg-surf-panel p-3 shadow-pop"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-zone border border-line bg-surf-panel p-3"
     >
       <p className="font-medium text-fg">
         <Trans>New here?</Trans>
       </p>
-      <p className="text-body-sm text-fg-dim">
+      <p className="flex-1 text-body-sm text-fg-dim">
         <Trans>A short tour walks through the ten steps from upload to the signed report.</Trans>
       </p>
-      <div className="flex justify-between gap-2">
+      <div className="flex gap-2">
         <Button size="xs" variant="ghost" onClick={saved.dismiss}>
           <Trans>Not now</Trans>
         </Button>
@@ -184,7 +187,8 @@ function TourOfferCard() {
           <Trans>Take the tour</Trans>
         </Button>
       </div>
-    </section>
+    </section>,
+    slot,
   );
 }
 
