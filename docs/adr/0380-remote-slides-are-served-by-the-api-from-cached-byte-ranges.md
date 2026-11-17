@@ -29,4 +29,5 @@
 
 - Remote tiles cost an API call on a cache miss and on a hit, until the edge serves deterministic hits. Hits read one object from storage and touch the database at most once an hour.
 - Remote slides have no scale (microns per pixel) yet, because the scale reader needs OpenSlide on a local path.
+- The browser cannot open a remote slide yet. The viewer first reads `levels.json` (and for some formats the tile index) from the slide folder, so the inspection job must write those files the way ingest does, and the remote route must serve those small files from Parfocal storage as the edge does for uploaded slides. This comes first in what is left.
 - Still to build in REMOTE-001 (read in place from a connected source): the remote tag and offline message in the viewer, the storage filter in All slides, copy into Parfocal, importing result files next to a remote slide, the 15 minute `integration-down` notification, wiring the sweep into a scheduled job and re-inspection when a file changes.
