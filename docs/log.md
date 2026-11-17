@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- IAM-025 (second factor at sign-in) checked on real tokens from a local Zitadel v4.20.3: a password gives amr pwd, a password with TOTP or an OTP email code gives pwd, otp and mfa, prompt=login asks for the enrolled factor, and /ui/console/users/me holds the two-factor setup. The API needed no change. Result in docs/results/2026-11-17-zitadel-amr-values.md. Decision 139 (switching out of a strict workspace) stays open.
 - OPS-018 (SLI events from the workers, a realtime SLI and traces) ticked on the owner's instruction to accept review tasks: its Done line (worker and realtime SLI counts the alert cycle reads, pre-reads only, tests on fakes) is met by ADR 0344. Exporting spans is not part of the Done line.
 - SHELL-014 (lock the screen from the account menu): new POST /api/auth/lock moves only this session's active_at back by the idle limit, the account menu item Lock the screen is live and shows You locked the screen, and unlock returns to the same path and camera. 2 API tests and session-lock.spec.ts pass, the new account menu component specs run in CI.
 - Decision 138 (tile sharing when a lab model runs on a clinical project) answered A by the owner: JOBS-008 (confirm tile sharing before a lab model joins a clinical project) builds the confirmation.
