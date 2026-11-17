@@ -2,6 +2,31 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.1 (2026-11-17)
+
+### Fixes
+
+- TASK-007: Refuse deleting the owner's local Zitadel volume in the destructive guard
+- TILES-012: Read around the token's label and macro ranges so the edge refuses nothing
+
+### Performance
+
+- OPS-030: Read projects in batches and neighbours as ids only, list slow routes
+
+### Docs
+
+- TASK-007: Log the local Zitadel volume loss and the new guard
+- OPS-030: Log the warm medians from the browser
+
+### Tests
+
+- TASK-007: Run the nudge and reassign specs on the real stack and tick the task
+- OPS-017: Add @real specs for five more areas and skip the passkey prompt
+
+### Other
+
+- TASK-007: Merge main
+
 ## v0.17.0 (2026-11-17)
 
 ### Features
