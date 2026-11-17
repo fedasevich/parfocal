@@ -127,6 +127,18 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 
 Your choice: a
 
+## Open decisions from the night run of 2026-11-17
+
+### 138. Tile sharing when a lab model runs on a clinical project
+
+JOBS-000 (research check for the model run contract) recorded the contract in [ADR 0363](adr/0363-the-model-run-contract-with-parfocal-and-lab-endpoints.md). A lab model is a server the lab runs, so when it runs on a clinical project every tile it scores leaves Parfocal for that server. Today a project only lists which lab models it may use.
+
+- **A. Connecting a lab model to a clinical project asks the project owner to confirm, once, that tiles will be sent to the named server, and the confirmation is audited (recommended).** It makes the data leaving Parfocal an explicit, recorded choice at little cost.
+- B. The per-project allowed list is enough.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
