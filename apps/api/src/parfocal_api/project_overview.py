@@ -23,6 +23,7 @@ from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
     AnnotationKind,
     NotificationKind,
+    PrivacyMode,
     ProjectRole,
     ResultObjectKind,
     ResultStatus,
@@ -281,6 +282,7 @@ async def get_project_overview(
     )
     states = await slide_states(connection, project_id)
     reviewed = sum(1 for state in states if state in REVIEWED)
+    clinical = PrivacyMode(project.privacy_mode) is PrivacyMode.CLINICAL
     return ProjectOverview(
         project_id=project_id,
         cases=case_count or 0,
@@ -298,7 +300,10 @@ async def get_project_overview(
         ],
         slide_files=[
             SlideFile(
-                slide_id=row.id, file=row.file_name or row.label, stain=row.stain, remote=None
+                slide_id=row.id,
+                file=(row.file_name if clinical else None) or row.label,
+                stain=row.stain,
+                remote=None,
             )
             for row in files
         ],
