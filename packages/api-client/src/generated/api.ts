@@ -937,6 +937,7 @@ export const AuditTarget = {
   "lab-model": "lab-model",
   "import-source": "import-source",
   webhook: "webhook",
+  "source-watch": "source-watch",
   "event-target": "event-target",
   "registered-model": "registered-model",
   maintenance: "maintenance",
@@ -7167,6 +7168,21 @@ export interface SourceOutage {
   source: string;
   at: string;
   waiting: number;
+}
+
+export interface SourceWatch {
+  project_id: string;
+  source_id: string;
+  source_name: string;
+  host: string;
+  every_minutes: number;
+  files_seen: number;
+  scanned_at: string | null;
+  created_at: string;
+}
+
+export interface SourceWatchDraft {
+  source_id: string;
 }
 
 export interface SplitPart {
@@ -37373,6 +37389,321 @@ export const useCallProjectWebhook = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getCallProjectWebhookMutationOptions(options), queryClient);
+};
+
+export type watchSourceResponse200 = {
+  data: SourceWatch;
+  status: 200;
+};
+
+export type watchSourceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type watchSourceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type watchSourceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type watchSourceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type watchSourceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type watchSourceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type watchSourceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type watchSourceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type watchSourceResponseSuccess = watchSourceResponse200 & {
+  headers: Headers;
+};
+export type watchSourceResponseError = (
+  | watchSourceResponse400
+  | watchSourceResponse401
+  | watchSourceResponse403
+  | watchSourceResponse404
+  | watchSourceResponse409
+  | watchSourceResponse422
+  | watchSourceResponse429
+  | watchSourceResponse500
+) & {
+  headers: Headers;
+};
+
+export type watchSourceResponse = watchSourceResponseSuccess | watchSourceResponseError;
+
+export const getWatchSourceUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/watch`;
+};
+
+/**
+ * @summary Watch Source
+ */
+export const watchSource = async (
+  projectId: string,
+  sourceWatchDraft: SourceWatchDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<watchSourceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<watchSourceResponse>(getWatchSourceUrl(projectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(sourceWatchDraft),
+  });
+};
+
+export const getWatchSourceMutationKey = () => ["watchSource"] as const;
+
+export const getWatchSourceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof watchSource>>,
+    TError,
+    WatchSourceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof watchSource>>,
+  TError,
+  WatchSourceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWatchSourceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof watchSource>>,
+    WatchSourceMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return watchSource(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WatchSourceMutationResult = NonNullable<Awaited<ReturnType<typeof watchSource>>>;
+export type WatchSourceMutationBody = SourceWatchDraft;
+export type WatchSourceMutationError = Problem;
+export type WatchSourceMutationVariables = { projectId: string; data: SourceWatchDraft };
+
+/**
+ * @summary Watch Source
+ */
+export const useWatchSource = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof watchSource>>,
+      TError,
+      WatchSourceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof watchSource>>,
+  TError,
+  WatchSourceMutationVariables,
+  TContext
+> => {
+  return useMutation(getWatchSourceMutationOptions(options), queryClient);
+};
+
+export type stopWatchingSourceResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type stopWatchingSourceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type stopWatchingSourceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type stopWatchingSourceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type stopWatchingSourceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type stopWatchingSourceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type stopWatchingSourceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type stopWatchingSourceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type stopWatchingSourceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type stopWatchingSourceResponseSuccess = stopWatchingSourceResponse204 & {
+  headers: Headers;
+};
+export type stopWatchingSourceResponseError = (
+  | stopWatchingSourceResponse400
+  | stopWatchingSourceResponse401
+  | stopWatchingSourceResponse403
+  | stopWatchingSourceResponse404
+  | stopWatchingSourceResponse409
+  | stopWatchingSourceResponse422
+  | stopWatchingSourceResponse429
+  | stopWatchingSourceResponse500
+) & {
+  headers: Headers;
+};
+
+export type stopWatchingSourceResponse =
+  | stopWatchingSourceResponseSuccess
+  | stopWatchingSourceResponseError;
+
+export const getStopWatchingSourceUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/watch`;
+};
+
+/**
+ * @summary Stop Watching Source
+ */
+export const stopWatchingSource = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<stopWatchingSourceResponse> => {
+  return apiFetch<stopWatchingSourceResponse>(getStopWatchingSourceUrl(projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getStopWatchingSourceMutationKey = () => ["stopWatchingSource"] as const;
+
+export const getStopWatchingSourceMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stopWatchingSource>>,
+    TError,
+    StopWatchingSourceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stopWatchingSource>>,
+  TError,
+  StopWatchingSourceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStopWatchingSourceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stopWatchingSource>>,
+    StopWatchingSourceMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return stopWatchingSource(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StopWatchingSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stopWatchingSource>>
+>;
+
+export type StopWatchingSourceMutationError = Problem;
+export type StopWatchingSourceMutationVariables = { projectId: string };
+
+/**
+ * @summary Stop Watching Source
+ */
+export const useStopWatchingSource = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof stopWatchingSource>>,
+      TError,
+      StopWatchingSourceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof stopWatchingSource>>,
+  TError,
+  StopWatchingSourceMutationVariables,
+  TContext
+> => {
+  return useMutation(getStopWatchingSourceMutationOptions(options), queryClient);
 };
 
 export type listEventTargetsResponse200 = {

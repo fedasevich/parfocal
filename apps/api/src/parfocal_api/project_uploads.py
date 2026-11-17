@@ -10,6 +10,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.project_overview import BYTES_PER_GB, whole_project
+from parfocal_api.source_watches import SourceWatch, project_watch
 from parfocal_api.tables import UploadStatus, cases, slides, uploads
 from parfocal_common.result_imports import UploadKind
 
@@ -246,6 +247,18 @@ def arrival_of(row: Any) -> Arrival:
     )
 
 
+def watched_folder_of(watch: SourceWatch | None) -> WatchedFolder:
+    if watch is None:
+        return WatchedFolder(address="", slides="", results="", every="", on=False)
+    return WatchedFolder(
+        address=f"{watch.source_name}, {watch.host}",
+        slides="Copy into Parfocal",
+        results="Pair by name, then slide ID",
+        every="1 hour",
+        on=True,
+    )
+
+
 @router.get(
     "/imports",
     operation_id="getProjectImports",
@@ -271,7 +284,7 @@ async def get_project_imports(
     arrivals = [arrival_of(row) for row in rows]
     return ProjectImports(
         project_id=project_id,
-        watched_folder=WatchedFolder(address="", slides="", results="", every="", on=False),
+        watched_folder=watched_folder_of(await project_watch(connection, project_id)),
         webhook=ImportWebhook(url="", secret_end="", abilities=[], on=False),
         events_out=EventsOut(endpoint="", last_call=0, events=[], on=False),
         token=TokenEnd(end=""),

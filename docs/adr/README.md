@@ -347,3 +347,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0384](0384-scim-provisioning-through-zitadel.md) | SCIM provisioning through the workspace's Zitadel organisation | Accepted | 2026-11-17 |
 | [0385](0385-webhook-imports-are-credited-to-the-secret-maker.md) | Webhook imports are credited to the person who made the secret, and the call names a Parfocal case | Accepted | 2026-11-17 |
 | [0386](0386-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) | SAML sign-in links a SCIM user by email inside the workspace organisation | Accepted | 2026-11-17 |
+| [XXXX](XXXX-watched-sources-are-scanned-hourly-and-imported-as-their-creator.md) | Watched sources are scanned hourly and imported as the person who set them up | Accepted | 2026-11-17 |

@@ -69,6 +69,7 @@
     "slide_counters",
     "slide_coverage",
     "slides",
+    "source_watches",
     "specimens",
     "sso_connections",
     "stage_throughput",
@@ -81,6 +82,7 @@
     "thread_messages",
     "threads",
     "uploads",
+    "watched_files",
     "webhook_calls",
     "workspace_access_requests",
     "workspace_settings"

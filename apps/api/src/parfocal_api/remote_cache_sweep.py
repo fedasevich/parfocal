@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from parfocal_api.remote_reads import sweep_remote_cache
 from parfocal_api.settings import ApiSettings
 from parfocal_api.source_outages import notice_every_workspace
+from parfocal_api.source_watches import scan_every_workspace
 from parfocal_api.tables import tenants
 from parfocal_common.db import (
     DatabaseScope,
@@ -16,6 +17,7 @@ from parfocal_common.db import (
     require_row_security,
     scoped_transaction,
 )
+from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import PLATFORM
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import load_settings
@@ -43,7 +45,9 @@ async def run_once(settings: ApiSettings) -> int:
         async with httpx2.AsyncClient(timeout=30) as http:
             store = ObjectStore(settings.storage(), http)
             removed = await sweep_every_workspace(engine, store, now)
-        await notice_every_workspace(engine, now)
+            await notice_every_workspace(engine, now)
+            keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
+            await scan_every_workspace(engine, keyring, settings, store, now)
         return removed
     finally:
         await engine.dispose()

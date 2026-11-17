@@ -213,6 +213,7 @@ import type {
   SlideTissue,
   Sorting,
   SourceListing,
+  SourceWatch,
   StorageUsage,
   StudyTemplate,
   StudyTemplateReviewDefaults,
@@ -7483,6 +7484,23 @@ export const getCallProjectWebhookResponseMock = (
       null,
     ]),
   })),
+  ...overrideResponse,
+});
+
+export const getWatchSourceResponseMock = (
+  overrideResponse: Partial<Extract<SourceWatch, object>> = {},
+): SourceWatch => ({
+  project_id: faker.string.uuid(),
+  source_id: faker.string.uuid(),
+  source_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  every_minutes: faker.number.int(),
+  files_seen: faker.number.int(),
+  scanned_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
 
@@ -22821,6 +22839,47 @@ export const getCallProjectWebhookMockHandler = (
   );
 };
 
+export const getWatchSourceMockHandler = (
+  overrideResponse?:
+    | SourceWatch
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<SourceWatch> | SourceWatch),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/projects/:projectId/watch",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getWatchSourceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStopWatchingSourceMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId/watch",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getListEventTargetsMockHandler = (
   overrideResponse?:
     | EventTargets
@@ -28571,6 +28630,8 @@ export const getParfocalAPIMock = () => [
   getCreateWebhookSecretMockHandler(),
   getRetireWebhookSecretMockHandler(),
   getCallProjectWebhookMockHandler(),
+  getWatchSourceMockHandler(),
+  getStopWatchingSourceMockHandler(),
   getListEventTargetsMockHandler(),
   getSaveEventTargetMockHandler(),
   getDeleteEventTargetMockHandler(),
