@@ -34,6 +34,7 @@ def researcher(database: str) -> Workspace:
     ("path", "open_"),
     [
         ("/api/auth/sign-in", True),
+        ("/api/auth/passkey-sign-in/finish", True),
         ("/api/auth/activity", True),
         ("/api/auth/sessions/end-others", True),
         ("/api/platform/maintenance", True),

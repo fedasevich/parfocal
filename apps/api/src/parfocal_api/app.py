@@ -65,6 +65,7 @@ from parfocal_api import (
     outline_types,
     own_workspaces,
     painted_maps,
+    passkeys,
     password_login,
     patch_exports,
     personal_data,
@@ -243,6 +244,7 @@ def create_app(
     app.include_router(rum_router)
     app.include_router(auth.router)
     app.include_router(password_login.router)
+    app.include_router(passkeys.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
     app.include_router(project_overview.router)

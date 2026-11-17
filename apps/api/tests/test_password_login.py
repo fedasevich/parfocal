@@ -174,8 +174,10 @@ def fake_identity(zitadel: FakeZitadel) -> OidcClient:
     )
 
 
-def visiting(database: str, **changes: object) -> Iterator[Visitor]:
-    zitadel = FakeZitadel()
+def visiting(
+    database: str, zitadel: FakeZitadel | None = None, **changes: object
+) -> Iterator[Visitor]:
+    zitadel = zitadel or FakeZitadel()
     settings = api_settings(database).model_copy(update=changes)
     app = create_app(settings, identity=fake_identity(zitadel))
     with TestClient(

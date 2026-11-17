@@ -53,6 +53,7 @@ export function usePaletteLabels(): Record<string, string> {
     "setting-analytics": t`Share usage statistics`,
     "setting-lockAfter": t`Lock after`,
     "setting-patientBanner": t`Patient banner`,
+    "setting-passkeys": t`Passkeys`,
     "setting-otherDevices": t`Other devices`,
     "setting-name": t`Name`,
     "setting-email": t`Email`,

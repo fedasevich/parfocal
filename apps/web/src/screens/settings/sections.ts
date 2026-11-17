@@ -82,6 +82,7 @@ export type RowKey =
   | "analytics"
   | "lockAfter"
   | "patientBanner"
+  | "passkeys"
   | "otherDevices"
   | "name"
   | "email"
@@ -330,6 +331,12 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Patient banner",
       "lab",
       "Set by your lab. Whether the clinical viewer shows the patient and in what form.",
+    ),
+    row(
+      "passkeys",
+      "Passkeys",
+      "personal",
+      "Sign in with Touch ID, your phone or a security key instead of a password. The passkey is saved in your iCloud Keychain or password manager.",
     ),
     row("otherDevices", "Other devices", "personal", "Other devices that are signed in."),
   ],
