@@ -4548,6 +4548,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   After the API enqueues a job, spawn the `ingest` function, at most once per few seconds per container like the events spawner, and add a schedule as a backstop that drains anything left. Keep min_containers at 0. The guided review shows "Preparing this slide" with progress while the order is not ready, and an error with a retry when it failed, instead of an endless loader.
   Done when a unit test proves enqueueing spawns the function once within the gap, a deploy test lists the schedule, and on the deployed app a new review task opens its first slide's objects within a minute of being sent, recorded in the log.
   Size: M.
+- [ ] OPS-030 · A warm API call answers in under 300 ms
+  After v0.5.0 was deployed on 2026-11-17, warm calls to app.parfocal.eu measured from Europe took 0.95 s for `/api/status`, 2.4 s for `/api/me`, 3.8 s for `/api/projects` and 7.5 s for `/api/me/home`, one at a time, so neither the cold start (OPS-028) nor the session lock (IAM-031) explains them. Likely causes are many database round trips per request between Modal and Neon in different regions, IAM-031's extra short transactions, and N+1 queries in the home and project lists. Decision 140 (region) is still open.
+  Add a Server-Timing header with database time, query count and handler time to every API answer, measure the slow routes on the deployed app, find where Modal runs and where Neon runs, and cut the time at no added monthly cost: fewer round trips per request (one transaction for the session check where safe, batched or joined queries, no N+1), pool settings, and moving Modal next to Neon if region selection costs nothing extra on the current plan. Record the before and after numbers in a result file.
+  Done when a result file reports Server-Timing for the ten slowest routes before and after, measured on the deployed app, and warm `/api/me`, `/api/projects` and `/api/me/home` each answer in under 300 ms at the median of ten calls.
+  Size: M.
 
 ---
 
