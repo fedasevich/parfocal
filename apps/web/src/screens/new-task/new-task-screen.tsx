@@ -13,6 +13,7 @@ import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Toast } from "@parfocal/ui/components/undo-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
@@ -40,6 +41,7 @@ import {
   sceneStep,
   scopeKinds,
   sendLabel,
+  shortDate,
   slidesInTask,
   slidesWithResult,
   stepKeys,
@@ -120,6 +122,10 @@ const scopeOf = (draft: Draft): NonNullable<TaskDraft["scope"]> => {
   return { kind: "all-regions" };
 };
 
+const pinnedSet = (draft: Draft, data: TaskData, slideId: string) =>
+  data.resultSets.find((set) => set.id === draft.resultSetId)?.slideSets[slideId] ??
+  draft.resultSetId;
+
 function annotateFields(draft: Draft, data: TaskData): Partial<TaskDraft> {
   const fromPreset = annotatePresets.find((item) => item.key === draft.preset)?.options;
   const change = fromPreset ? checkChangeOf(draft.check, fromPreset) : undefined;
@@ -134,7 +140,7 @@ function annotateFields(draft: Draft, data: TaskData): Partial<TaskDraft> {
     study_template_version: null,
     result_sets: withResult.map((slide) => ({
       slide_id: slide.id,
-      result_set_id: draft.resultSetId,
+      result_set_id: pinnedSet(draft, data, slide.id),
     })),
     scope: { kind: "whole-slide" },
     preset: checkPresetOf[draft.preset],
@@ -159,7 +165,10 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
         }
       : {}),
     slide_ids: slides.map((slide) => slide.id),
-    result_sets: slides.map((slide) => ({ slide_id: slide.id, result_set_id: draft.resultSetId })),
+    result_sets: slides.map((slide) => ({
+      slide_id: slide.id,
+      result_set_id: pinnedSet(draft, data, slide.id),
+    })),
     scope: scopeOf(draft),
     blinded: draft.blind,
     ai_hidden_first_read: draft.hide,
@@ -200,6 +209,7 @@ function NewTaskFlow({
   const [toast, setToast] = useState<string | null>(null);
   const [sentTaskId, setSentTaskId] = useState<string | null>(null);
   const create = useCreateReviewTask();
+  const queryClient = useQueryClient();
   const publishForm = usePublishOpinionForm();
   const invite = useInviteTaskReviewer();
   const renderLink = useLinkRenderer();
@@ -274,7 +284,10 @@ function NewTaskFlow({
     goTo: (to: StepKey) => go(to),
     openModal: (next: TaskModal) => onNavigate({ step: page, modal: next }),
     onTemplate: (template: (typeof data.templates)[number]) => {
-      setDraft((current) => applyTemplate(current, template, data));
+      setDraft((current) => ({
+        ...applyTemplate(current, template, data),
+        touched: { ...current.touched, tplPicked: true },
+      }));
       setToast(t`${template.name} filled in what to check, how it runs and the display defaults`);
     },
   };
@@ -311,6 +324,9 @@ function NewTaskFlow({
         {
           onSuccess: (response) => {
             if (response.status === 201) {
+              void queryClient.invalidateQueries({
+                predicate: (query) => String(query.queryKey[0]).startsWith("/api/me/"),
+              });
               const taskId = response.data.id;
               setSentTaskId(taskId);
               for (const email of draft.invites) {
@@ -323,7 +339,9 @@ function NewTaskFlow({
                 );
               }
             }
-            setDraft((current) => ({ ...current, sentAt: "15 Oct" }));
+            const sentOn =
+              response.status === 201 ? response.data.created_at : new Date().toISOString();
+            setDraft((current) => ({ ...current, sentAt: shortDate(sentOn) }));
             onNavigate({ step: "sent" });
           },
           onError: () => setToast(t`The task could not be created. Try again.`),
@@ -428,13 +446,14 @@ function NewTaskFlow({
     one: "# reviewer",
     other: "# reviewers",
   });
+  const sentOn = draft.sentAt ?? shortDate(data.today);
   const sentLine = (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="check" className="text-ok" />
       <span>
         {draft.invites.length
-          ? t`Sent to ${reviewerCount} and ${draft.invites.length} invited on ${draft.sentAt ?? "15 Oct"}`
-          : t`Sent to ${reviewerCount} on ${draft.sentAt ?? "15 Oct"}`}
+          ? t`Sent to ${reviewerCount} and ${draft.invites.length} invited on ${sentOn}`
+          : t`Sent to ${reviewerCount} on ${sentOn}`}
       </span>
     </p>
   );

@@ -3,7 +3,11 @@ import { expect, type Page, test } from "./a11y.ts";
 const newTask = "/projects/00000000-0000-4000-8003-000000000007/tasks/new";
 
 const scenes: { scene: string; step: string; sees: string }[] = [
-  { scene: "slides", step: "Slides", sees: "12 picked. 9 have CAMELYON v1.0, 3 are left out." },
+  {
+    scene: "slides",
+    step: "Slides",
+    sees: "12 slides picked, 9 with CAMELYON v1.0 and 3 left out.",
+  },
   { scene: "reviewers", step: "Reviewers", sees: "Everyone reviews all" },
   { scene: "find", step: "Reviewers", sees: "Away until 22 Oct" },
   { scene: "check", step: "What to check", sees: "About 55 objects per slide and 3 hours" },
@@ -79,6 +83,36 @@ test("Next walks every step, Change goes back, and Send creates RT-16", async ({
   );
 });
 
+test("a sent task lists each result once, shows its date, and reaches the bell and Assigned by me", async ({
+  page,
+}) => {
+  await page.goto(`${newTask}?scene=slides`);
+  await expect(
+    flow(page).getByRole("radiogroup", { name: "AI result to check" }).getByRole("radio"),
+  ).toHaveCount(2);
+  for (const step of ["Reviewers", "What to check", "How it runs", "Send"]) {
+    await flow(page).getByRole("button", { name: "Next" }).click();
+    await expect(flow(page).locator('[aria-current="step"]')).toHaveText(new RegExp(step));
+  }
+  await flow(page).getByRole("button", { name: "Create and notify 2 reviewers" }).click();
+  await expect(page.getByRole("heading", { name: "RT-16 is out" })).toBeVisible();
+  await expect(page.getByText("Sent to 2 reviewers on 15 Oct")).toBeVisible();
+  await page.getByRole("button", { name: /^Notifications/ }).click();
+  const panel = page.getByRole("dialog", { name: "Notifications" });
+  await expect(
+    panel.getByTestId("notification").filter({ hasText: "RT-16" }).first(),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Show the sidebar" }).click();
+  await page
+    .getByRole("navigation", { name: "Main" })
+    .getByRole("link", { name: "My work" })
+    .click();
+  await page.getByRole("tab", { name: /Assigned by me/ }).click();
+  await expect(page.getByRole("tab", { name: /Assigned by me\s*5/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /RT-16/ })).toBeVisible();
+});
+
 test("Send invites a new reviewer by email to the created task", async ({ page }) => {
   await page.goto(`${newTask}?scene=reviewers`);
   const who = flow(page).getByRole("combobox", { name: "Who reviews" });
@@ -150,7 +184,7 @@ test("an annotate task is created from the Kind step with a preset and blind fir
   await body.getByRole("radio", { name: /^Annotate by hand/ }).click();
   await body.getByRole("button", { name: "Next" }).click();
   await expect(step).toHaveText(/Slides/);
-  await expect(body.getByText("3 have no result set and are annotated by hand.")).toBeVisible();
+  await expect(body.getByText("and 3 annotated by hand.")).toBeVisible();
   await expect(body.getByText("Study template")).toHaveCount(0);
   await body.getByRole("button", { name: "Next" }).click();
   await expect(step).toHaveText(/Reviewers/);

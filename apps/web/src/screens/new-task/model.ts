@@ -147,6 +147,8 @@ export type ResultSetChoice = {
   label: string;
   short: string;
   detail: string;
+  slideSets: Record<string, string>;
+  objects: { regions: boolean; cells: boolean; zones: boolean };
 };
 
 export type Preset = {
@@ -400,7 +402,7 @@ export function sceneDraft(data: TaskData, scene: TaskScene): Draft {
     case "locks":
       return { ...draft, dispOpen: true, locks: { conf: "Confidence hidden this round" } };
     case "sent":
-      return { ...draft, sentAt: "15 Oct" };
+      return { ...draft, sentAt: shortDate(data.today) };
     case "noresult": {
       const groups = Object.fromEntries(data.groups.map((group) => [group.key, false]));
       const loose = data.groups.find((group) => group.key === "loose");
@@ -656,19 +658,25 @@ export function displaySummary(draft: Draft) {
   return `${displayWords.draw[display.draw]} · ${displayWords.conf[display.conf]} · ${displayWords.order[display.order]}${locked ? ` · ${locked} locked` : ""}`;
 }
 
+const slidesOf = (count: number) => `${count} ${count === 1 ? "slide" : "slides"}`;
+
 export function annotateSlideLine(sum: Summary, withResult: number, rsShort: string) {
   if (!sum.all) return "No slides picked yet.";
   const none = sum.all - withResult;
-  return `${sum.all} picked. ${withResult} have ${rsShort}, ${none} ${none === 1 ? "has" : "have"} no result set and are annotated by hand.`;
+  const picked = `${slidesOf(sum.all)} picked`;
+  if (!withResult)
+    return `${picked}, none has ${rsShort}, so ${none === 1 ? "it is" : "they are"} annotated by hand.`;
+  if (!none) return `${picked}, all with ${rsShort}.`;
+  return `${picked}, ${withResult} with ${rsShort} and ${none} annotated by hand.`;
 }
 
 export function slideLine(sum: Summary, rsShort: string) {
   const out = sum.all - sum.ns;
+  const picked = `${slidesOf(sum.all)} picked`;
   if (!sum.all) return "No slides picked yet.";
-  if (!sum.ns) return `${sum.all} picked, none has ${rsShort}.`;
-  if (out)
-    return `${sum.all} picked. ${sum.ns} have ${rsShort}, ${out} ${out > 1 ? "are" : "is"} left out.`;
-  return `${sum.all} picked, all with ${rsShort}.`;
+  if (!sum.ns) return `${picked}, none has ${rsShort}.`;
+  if (out) return `${picked}, ${sum.ns} with ${rsShort} and ${out} left out.`;
+  return `${picked}, all with ${rsShort}.`;
 }
 
 export function splitText(sum: Summary, nameOf: (id: string) => string) {

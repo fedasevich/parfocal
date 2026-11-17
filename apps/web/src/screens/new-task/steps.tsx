@@ -18,6 +18,7 @@ import { type ReactNode, useState } from "react";
 import { LazySavedTemplatePdf } from "../evaluation/pdf-overlay-lazy.tsx";
 import {
   annotateSlideLine,
+  applyTemplate,
   type DecisionKindKey,
   type Draft,
   isAnnotate,
@@ -31,6 +32,7 @@ import {
   type TemplateChoice,
 } from "./model.ts";
 import { CheckRow, FieldNote, fieldId, RadioRows, RowText, SlideThumb, Warn } from "./parts.tsx";
+import { templateFor } from "./result-sets.ts";
 
 export type StepProps = {
   draft: Draft;
@@ -271,12 +273,25 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
               label={t`AI result to check`}
               value={draft.resultSetId}
               onChange={(value) =>
-                update((current) => ({
-                  ...current,
-                  resultSetId: value,
-                  name: current.nameSet ? current.name : (data.names[value] ?? current.name),
-                  touched: { ...current.touched, rset: true },
-                }))
+                update((current) => {
+                  const objects = data.resultSets.find((set) => set.id === value)?.objects;
+                  const fitting =
+                    objects && !current.touched["tplPicked"] && !isAnnotate(current)
+                      ? data.templates.find(
+                          (item) =>
+                            item.id === templateFor(data.templates, current.templateId, objects),
+                        )
+                      : undefined;
+                  const next = {
+                    ...current,
+                    resultSetId: value,
+                    name: current.nameSet ? current.name : (data.names[value] ?? current.name),
+                    touched: { ...current.touched, rset: true },
+                  };
+                  return fitting && fitting.id !== current.templateId
+                    ? applyTemplate(next, fitting, data)
+                    : next;
+                })
               }
               options={data.resultSets.map((set) => ({
                 value: set.id,

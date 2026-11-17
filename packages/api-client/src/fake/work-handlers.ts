@@ -67,6 +67,7 @@ import {
 } from "./scenario.ts";
 import { assignedTo, toAnnouncement, toProjectRef } from "./scenario-handlers.ts";
 import { rt18 } from "./scenario-review.ts";
+import { type SentTask, sentTasks } from "./sent-tasks.ts";
 import { fakeView } from "./view.ts";
 
 const taskByCode = (code: string): ScenarioReviewTask => {
@@ -111,11 +112,31 @@ export const toAssignedTask = (task: ScenarioReviewTask): AssignedTask => {
   };
 };
 
-export const tasksAssignedBy = (viewer: PersonKey) =>
-  reviewTasks
+const toSentAssignedTask = (task: SentTask): AssignedTask => ({
+  id: task.id,
+  code: task.code,
+  name: task.name,
+  project: toProjectRef(
+    projects.find((item) => item.id === task.projectId) ?? projectByCode("P07"),
+  ),
+  due_on: task.dueOn,
+  status: "not-started",
+  open_disagreements: 0,
+  reviewers: task.reviewerIds.map((userId) => ({
+    user_id: userId,
+    slides_submitted: 0,
+    slides_assigned: 0,
+    state: "not-started",
+  })),
+});
+
+export const tasksAssignedBy = (viewer: PersonKey) => [
+  ...reviewTasks
     .filter((task) => projectByCode(task.project).owner === viewer)
     .map(toAssignedTask)
-    .sort((a, b) => order(a) - order(b));
+    .sort((a, b) => order(a) - order(b)),
+  ...(viewer === "DH" ? sentTasks.map(toSentAssignedTask) : []),
+];
 
 const order = (task: AssignedTask) =>
   reviewTasks.findIndex((candidate) => candidate.id === task.id);

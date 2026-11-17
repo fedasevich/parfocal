@@ -13599,14 +13599,12 @@ msgid "Sent to {0}, {1} · waiting"
 msgstr ""
 
 #. placeholder {0}: draft.invites.length
-#. placeholder {1}: draft.sentAt ?? "15 Oct"
 #: src/screens/new-task/new-task-screen.tsx
-msgid "Sent to {reviewerCount} and {0} invited on {1}"
+msgid "Sent to {reviewerCount} and {0} invited on {sentOn}"
 msgstr ""
 
-#. placeholder {0}: draft.sentAt ?? "15 Oct"
 #: src/screens/new-task/new-task-screen.tsx
-msgid "Sent to {reviewerCount} on {0}"
+msgid "Sent to {reviewerCount} on {sentOn}"
 msgstr ""
 
 #: ../../packages/ui/src/components/new-forms.tsx

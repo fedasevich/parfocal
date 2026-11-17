@@ -95,6 +95,8 @@ const data: TaskData = {
       label: "CAMELYON tumor model v1.0",
       short: "CAMELYON v1.0",
       detail: "",
+      slideSets: {},
+      objects: { regions: true, cells: false, zones: false },
     },
     {
       id: "sam",
@@ -102,6 +104,8 @@ const data: TaskData = {
       label: "PathoSAM + HoVer-NeXt v1.2",
       short: "PathoSAM v1.2",
       detail: "",
+      slideSets: {},
+      objects: { regions: true, cells: true, zones: true },
     },
   ],
   names: { cam: "Round 3 · CAMELYON v1.0", sam: "Round 1 · PathoSAM v1.2" },
@@ -167,11 +171,34 @@ test("the default draft picks 12 slides, 9 with CAMELYON, for two reviewers", ()
   const sum = summary(draft, data);
   assert.equal(sum.all, 12);
   assert.equal(sum.ns, 9);
-  assert.equal(slideLine(sum, "CAMELYON v1.0"), "12 picked. 9 have CAMELYON v1.0, 3 are left out.");
+  assert.equal(
+    slideLine(sum, "CAMELYON v1.0"),
+    "12 slides picked, 9 with CAMELYON v1.0 and 3 left out.",
+  );
   assert.equal(draft.name, "Round 3 · CAMELYON v1.0");
   assert.deepEqual(draft.required, ["q1", "q3"]);
   assert.deepEqual(issues(draft, data), []);
   assert.equal(sendLabel(draft), "Create and notify 2 reviewers");
+});
+
+test("the slide sentence gets singular and plural right", () => {
+  const sum = (all: number, ns: number) => ({
+    ...summary(sceneDraft(data, "slides"), data),
+    all,
+    ns,
+  });
+  assert.equal(slideLine(sum(1, 1), "Tumour v1.0"), "1 slide picked, all with Tumour v1.0.");
+  assert.equal(slideLine(sum(13, 13), "Tumour v1.0"), "13 slides picked, all with Tumour v1.0.");
+  assert.equal(
+    slideLine(sum(2, 1), "Tumour v1.0"),
+    "2 slides picked, 1 with Tumour v1.0 and 1 left out.",
+  );
+  assert.equal(slideLine(sum(1, 0), "Tumour v1.0"), "1 slide picked, none has Tumour v1.0.");
+  assert.equal(slideLine(sum(0, 0), "Tumour v1.0"), "No slides picked yet.");
+  assert.equal(
+    annotateSlideLine(sum(1, 0), 0, "Tumour v1.0"),
+    "1 slide picked, none has Tumour v1.0, so it is annotated by hand.",
+  );
 });
 
 test("the estimate counts 55 objects per slide and 3 hours each", () => {
@@ -321,7 +348,7 @@ test("an annotate task keeps slides with no result set and blocks nothing on the
   assert.equal(slidesWithResult(draft, data).length, 9);
   assert.equal(
     annotateSlideLine(sum, 9, "CAMELYON v1.0"),
-    "12 picked. 9 have CAMELYON v1.0, 3 have no result set and are annotated by hand.",
+    "12 slides picked, 9 with CAMELYON v1.0 and 3 annotated by hand.",
   );
   assert.deepEqual(issues(draft, data), []);
   const unmatched = annotating({ resultSetId: "sam", check: { ...draft.check, hasResult: true } });

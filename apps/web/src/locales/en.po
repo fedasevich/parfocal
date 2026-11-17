@@ -13608,15 +13608,13 @@ msgid "Sent to {0}, {1} · waiting"
 msgstr "Sent to {0}, {1} · waiting"
 
 #. placeholder {0}: draft.invites.length
-#. placeholder {1}: draft.sentAt ?? "15 Oct"
 #: src/screens/new-task/new-task-screen.tsx
-msgid "Sent to {reviewerCount} and {0} invited on {1}"
-msgstr "Sent to {reviewerCount} and {0} invited on {1}"
+msgid "Sent to {reviewerCount} and {0} invited on {sentOn}"
+msgstr "Sent to {reviewerCount} and {0} invited on {sentOn}"
 
-#. placeholder {0}: draft.sentAt ?? "15 Oct"
 #: src/screens/new-task/new-task-screen.tsx
-msgid "Sent to {reviewerCount} on {0}"
-msgstr "Sent to {reviewerCount} on {0}"
+msgid "Sent to {reviewerCount} on {sentOn}"
+msgstr "Sent to {reviewerCount} on {sentOn}"
 
 #: ../../packages/ui/src/components/new-forms.tsx
 msgid "Sentinel lymph node, left"
