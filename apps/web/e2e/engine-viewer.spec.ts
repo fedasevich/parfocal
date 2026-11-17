@@ -198,7 +198,7 @@ test("a tool's tooltip carries its hint once the hint was seen", async ({ page }
   );
 });
 
-const cellsSlide = "00000000-0000-4000-8005-000000000007";
+const cellsSlide = "00000000-0000-4000-8005-000000000008";
 
 test("outlined cells draw on the real stage and the type bar decides the current cell", async ({
   page,

@@ -90,6 +90,31 @@ export function slideToScreen(
   };
 }
 
+type SummaryRows = {
+  readonly count: number;
+  readonly x: ArrayLike<number>;
+  readonly y: ArrayLike<number>;
+  readonly diagonal: ArrayLike<number>;
+  readonly score: ArrayLike<number>;
+};
+
+export function summaryCells(setId: string, summary: SummaryRows) {
+  const cells = [];
+  for (let row = 0; row < summary.count; row += 1) {
+    const x = summary.x[row] ?? 0;
+    const y = summary.y[row] ?? 0;
+    const half = Math.max(1, (summary.diagonal[row] ?? 2) / 2);
+    cells.push({
+      id: `${setId}:${row}`,
+      kind: "cell" as const,
+      ring: [x - half, y - half, x + half, y - half, x + half, y + half, x - half, y + half],
+      className: "other" as const,
+      score: (summary.score[row] ?? 0) / 255,
+    });
+  }
+  return cells;
+}
+
 export function placedObjects(objects: readonly Placeable[]) {
   return objects.flatMap((item) =>
     item.outline && item.outline.length >= 6

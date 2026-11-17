@@ -16,6 +16,7 @@ import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import { StageObjectNotes } from "./stage-object-notes.tsx";
 import { StageOpinion } from "./stage-opinion.tsx";
+import { StageResultCells } from "./stage-result-cells.tsx";
 import { StageReviewObjects } from "./stage-review-objects.tsx";
 import { type StageStart, StageStartCamera } from "./stage-start.tsx";
 import { type ArmTool, StageToolLink } from "./stage-tool-link.tsx";
@@ -105,6 +106,7 @@ export function EngineViewer({
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
       <StageMinimap engine={session.engine} slideId={slideId} />
+      <StageResultCells engine={session.engine} module={session.module} slideId={slideId} />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       {reviewTask === null ? null : (
         <StageReviewObjects

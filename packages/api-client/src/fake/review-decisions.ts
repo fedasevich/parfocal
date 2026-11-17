@@ -45,7 +45,7 @@ export const outlinedSlide = slideByIndex(4);
 const reviewsOutlined = (taskId: string, slideId: string) =>
   slideId === outlinedSlide.id && reviewsA1(taskId, reviewedSlide.id);
 
-export const outlinedCellsSlide = slideByIndex(7);
+export const outlinedCellsSlide = slideByIndex(8);
 
 const reviewsOutlinedCells = (taskId: string, slideId: string) =>
   slideId === outlinedCellsSlide.id && reviewsA1(taskId, reviewedSlide.id);
