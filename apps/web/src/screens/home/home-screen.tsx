@@ -32,6 +32,7 @@ import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
 import {
+  dotJoin,
   formatDue,
   formatLongDay,
   formatWeekday,
@@ -84,7 +85,7 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
           <b className="text-title-sm font-semibold text-fg">{resume.task_name}</b>
         </div>
         <span className="text-body text-fg" data-phi="">
-          {resume.slide_label} · {resume.case_label} · {resume.project.name}
+          {dotJoin([resume.slide_label, resume.case_label, resume.project.name])}
         </span>
         <span className="flex flex-wrap items-center gap-2 text-body-sm text-fg-dim">
           <Trans>

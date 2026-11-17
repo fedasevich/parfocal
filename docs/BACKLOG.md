@@ -2250,6 +2250,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Add `busy` to the availability enum, a migration that widens the memberships availability check so Busy takes no end and an optional note, the regenerated client and fake handler, and a Busy row with its meaning in the dropdown. Team and the new task form keep treating only Away as absent.
   Done when an API test sets and reads Busy and the check refuses an end on Busy, and a browser test picks Busy from the availability dropdown and sees the avatar dot turn Busy.
   Depends on SHELL-022. Size: S.
+- [ ] SHELL-025 · Fixes from the walk after the EU move
+  A walk of app.parfocal.eu on 2026-11-17 found six faults. The Home Activity panel shows rows with no text. The Home "Start here" row prints a double separator when a part is empty. Review task progress differs between My work, its list and Team. The viewer's Result sets names are clipped. The project slides Reviews column repeats one person per task. The admin overview prints "0 TB more read in place".
+  Fix each with one source of truth or by dropping empty parts, and give each fix a unit or browser test.
+  Done when each of the six has a test that fails before and passes after.
+  Size: M.
 
 ---
 

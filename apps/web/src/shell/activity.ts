@@ -35,6 +35,36 @@ export const payloadText = (item: InboxItem, key: string): string | undefined =>
   return typeof value === "string" ? value : undefined;
 };
 
+export const kindTitles: Record<string, string> = {
+  mention: "You were mentioned",
+  reply: "New reply",
+  "task-assigned": "New review task",
+  "task-due-soon": "Review task due soon",
+  "task-nudged": "A note about your review task",
+  "task-reassigned": "Review slides moved",
+  "task-due-changed": "Review task due date changed",
+  "task-signed-off": "Task signed off",
+  "model-run-finished": "Model run finished",
+  "model-run-paused": "Model run paused",
+  "upload-done": "Upload done",
+  "upload-refused": "Upload refused",
+  "disagreements-ready": "Disagreements to decide",
+  "emergency-access": "Emergency access to your project",
+  "result-set-added": "Results added",
+  "integration-down": "Integration down",
+  "adjudication-requested": "Objects to adjudicate",
+  "slide-moved": "Slide moved",
+  "workspace-access-asked": "Someone asked to join your workspace",
+  "template-offered": "A report layout was offered as a template",
+  "project-access-asked": "Someone asked to join your project",
+};
+
+export const titleOf = (item: Pick<InboxItem, "kind" | "payload">): string => {
+  const written = item.payload.title;
+  if (typeof written === "string" && written !== "") return written;
+  return kindTitles[item.kind] ?? "Something happened";
+};
+
 export const inFilter = (item: Pick<InboxItem, "kind">, filter: ActivityFilter): boolean => {
   const kinds = filterKinds[filter];
   return kinds === null || kinds.includes(item.kind);
