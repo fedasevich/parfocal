@@ -4418,7 +4418,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on OPS-010.
   Size: S.
 
-- [ ] OPS-010 · Tenant provisioning automation
+- [x] OPS-010 · Tenant provisioning automation
   Create a tenant with region, IdP organisation, buckets, keys and defaults in one command.
   Done when a test provisions and deprovisions a tenant in a drill environment.
   Size: L.
