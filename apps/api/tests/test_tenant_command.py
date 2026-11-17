@@ -12,7 +12,13 @@ import pytest
 from db_support import APP_URL, OWNER_URL, TEST_MASTER_KEYS, migrated_database, query, with_database
 from storage_support import TEST_STORAGE
 
-from parfocal_api.scim_provisioning import SCIM_ROLES, scim_endpoint
+from parfocal_api.scim_provisioning import (
+    SCIM_ROLES,
+    ScimConnectionRequest,
+    connect_scim,
+    scim_endpoint,
+)
+from parfocal_api.sso_provisioning import NoIdpOrganisationError
 from parfocal_api.tenant_command import ProvisioningSettings, main
 from parfocal_api.zitadel_directory import (
     ACTIVE,
@@ -20,6 +26,7 @@ from parfocal_api.zitadel_directory import (
     DirectoryError,
     ZitadelDirectory,
 )
+from parfocal_common.db import create_engine
 
 LOCAL_ZITADEL = Path(__file__).resolve().parents[3] / ".zitadel/e2e.env"
 
@@ -370,3 +377,45 @@ def test_a_scim_client_creates_updates_and_deactivates_users_in_the_local_zitade
         assert unsigned.status_code == 401
     finally:
         command(["deprovision", tenant_id], settings, capsys)
+
+
+@pytest.mark.db
+def test_connect_scim_finds_the_workspace_organisation_and_refuses_what_it_cannot_serve(
+    drill: str,
+) -> None:
+    slug = f"scim-{uuid.uuid4().hex[:8]}"
+    tenant_id = query(
+        with_database(OWNER_URL, drill),
+        "WITH organisation AS ("
+        f"INSERT INTO organisations (slug, name) VALUES ('{slug}', 'Hospital {slug}') "
+        "RETURNING id) "
+        "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
+        f"SELECT id, '{slug}', 'Workspace {slug}', 'research', 'eu', 'pilot' "
+        "FROM organisation RETURNING id",
+    )[0][0]
+    assert isinstance(tenant_id, uuid.UUID)
+    zitadel = FakeZitadel()
+
+    async def connect(request: ScimConnectionRequest) -> str:
+        engine = create_engine(with_database(APP_URL, drill))
+        try:
+            transport = httpx2.MockTransport(zitadel.handle)
+            async with httpx2.AsyncClient(transport=transport) as http:
+                directory = ZitadelDirectory("http://zitadel.test/", "admin", http)
+                connected = await connect_scim(engine, directory, request)
+                return f"{connected.endpoint} {connected.machine_user_id} {connected.token}"
+        finally:
+            await engine.dispose()
+
+    issuer = "http://zitadel.test/"
+    with pytest.raises(NoIdpOrganisationError):
+        asyncio.run(connect(ScimConnectionRequest(tenant_id, issuer)))
+    zitadel.organisations.append({"id": "org-w", "name": f"parfocal-{slug}", "state": ACTIVE})
+    first = asyncio.run(connect(ScimConnectionRequest(tenant_id, issuer, 30)))
+    assert first == "http://zitadel.test/scim/v2/org-w user-0 pat-0"
+    assert list(zitadel.machine_users) == [f"org-w/scim-{slug}"]
+    for days in (0, 731):
+        with pytest.raises(LookupError, match="--token-days"):
+            asyncio.run(connect(ScimConnectionRequest(tenant_id, issuer, days)))
+    with pytest.raises(LookupError, match="No tenant"):
+        asyncio.run(connect(ScimConnectionRequest(uuid.uuid4(), issuer)))
