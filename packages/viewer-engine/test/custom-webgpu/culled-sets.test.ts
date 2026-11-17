@@ -111,8 +111,9 @@ describe("culled sets", () => {
     const polygons = prepared.shapes.polygons;
     assert.ok(polygons);
     for (let shape = 0; shape < prepared.smallCount; shape++) {
-      const x = polygons.positions[(polygons.starts[shape] ?? 0) * 2] ?? 0;
-      const y = polygons.positions[(polygons.starts[shape] ?? 0) * 2 + 1] ?? 0;
+      const first: number = polygons.starts[shape] ?? 0;
+      const x: number = polygons.positions[first * 2] ?? 0;
+      const y: number = polygons.positions[first * 2 + 1] ?? 0;
       if (x + side < view[0] || x > view[2] || y + side < view[1] || y > view[3]) continue;
       const from = set.starts.segments[shape] ?? 0;
       const to = set.starts.segments[shape + 1] ?? 0;
