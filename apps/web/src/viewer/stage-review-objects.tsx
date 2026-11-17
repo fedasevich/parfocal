@@ -19,6 +19,7 @@ import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
+import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -107,6 +108,7 @@ export function StageReviewObjects({
   slideId,
   object,
   guided = false,
+  focus = null,
   onComments,
   onCurrent,
 }: {
@@ -116,6 +118,7 @@ export function StageReviewObjects({
   slideId: string;
   object: string | undefined;
   guided?: boolean;
+  focus?: { onShowUi: () => void } | null;
   onComments: (object: string) => void;
   onCurrent?: (object: string | null) => void;
 }) {
@@ -127,7 +130,8 @@ export function StageReviewObjects({
   const decided = new Set(session.decisions.keys());
   const [chosen, setCurrent] = useState<string | null>(object ?? null);
   const current =
-    chosen ?? (guided ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
+    chosen ??
+    (guided || focus !== null ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
   const flyTo = (id: string | null) => {
     const area = outlineArea(objects.find((item) => item.object === id)?.outline);
     if (area !== null) void engine.flyToArea(area);
@@ -185,6 +189,15 @@ export function StageReviewObjects({
   return (
     <>
       <ObjectOutlines engine={engine} module={module} objects={objects} current={current} />
+      {focus === null || currentItem === undefined || typedCell !== null ? null : (
+        <StageFocusCard
+          session={session}
+          object={currentItem}
+          onAnswer={(raw) => answer(currentItem, raw)}
+          onShowUi={focus.onShowUi}
+          keysLive={ready}
+        />
+      )}
       {typedCell === null ? null : (
         <StageCellTypeBar
           engine={engine}

@@ -298,6 +298,12 @@ msgstr "{0, plural, one {# reviewer} other {# reviewers}}"
 msgid "{0} - offline"
 msgstr "{0} - offline"
 
+#. placeholder {0}: object.object
+#. placeholder {1}: object.class_name
+#: src/viewer/stage-focus.tsx
+msgid "{0} · {1}"
+msgstr "{0} · {1}"
+
 #. placeholder {0}: kindLabel(offer.study_kind)
 #. placeholder {1}: offer.blocks.length
 #: src/screens/admin/template-offers.tsx
@@ -979,11 +985,6 @@ msgstr "{0} mm across. Decided. Press a key again to change it."
 #: src/screens/viewer-tools/focus-view.tsx
 msgid "{0} mm across. Still open."
 msgstr "{0} mm across. Still open."
-
-#. placeholder {0}: tb(overview.in_place_tb)
-#: src/screens/admin/overview.tsx
-msgid "{0} more read in place"
-msgstr "{0} more read in place"
 
 #. placeholder {0}: plural(toFix, "file")
 #. placeholder {1}: toFix === 1 ? "s" : ""
@@ -1941,6 +1942,10 @@ msgstr "{id} added. {0}"
 #: src/screens/clinical-report/report-screen.tsx
 msgid "{id} added. It is the largest now and sets the category."
 msgstr "{id} added. It is the largest now and sets the category."
+
+#: src/screens/admin/overview.tsx
+msgid "{inPlace} more read in place"
+msgstr "{inPlace} more read in place"
 
 #: src/routes/issue-states.tsx
 msgid "{issueStateCount} states, grouped by flow. Each one is a scene of its own screen, and Show opens that screen in that state with its fix ready to try. Back to the index sits above the frame."
@@ -3345,6 +3350,14 @@ msgstr "AI says: {0}"
 #: src/screens/new-task/modals.tsx
 msgid "AI says: <0>Tumor, 91% sure</0>"
 msgstr "AI says: <0>Tumor, 91% sure</0>"
+
+#: src/viewer/stage-focus.tsx
+msgid "AI score {score}%. Decided. Press a key again to change it."
+msgstr "AI score {score}%. Decided. Press a key again to change it."
+
+#: src/viewer/stage-focus.tsx
+msgid "AI score {score}%. Still open."
+msgstr "AI score {score}%. Still open."
 
 #: src/results/add-result-set.tsx
 #: src/screens/upload/viewer-flow.tsx
@@ -4765,8 +4778,8 @@ msgid "Checked by you"
 msgstr "Checked by you"
 
 #: src/screens/admin/admin-screen.tsx
-msgid "Checking your access…"
-msgstr "Checking your access…"
+msgid "Checking your access"
+msgstr "Checking your access"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Checking your password…"
@@ -6619,6 +6632,10 @@ msgstr "Every file reads cleanly and lines up with its slide. Nothing needs you.
 #: src/screens/upload/check-step.tsx
 msgid "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
 msgstr "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Every hint shows again, once, under its setting."
+msgstr "Every hint shows again, once, under its setting."
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Every object is decided, left open or with the adjudicator"
@@ -8765,6 +8782,18 @@ msgstr "Loading {label}"
 msgid "Loading {productName}"
 msgstr "Loading {productName}"
 
+#: src/screens/admin/join-settings.tsx
+msgid "Loading join settings"
+msgstr "Loading join settings"
+
+#: src/screens/admin/sections.tsx
+msgid "Loading models"
+msgstr "Loading models"
+
+#: src/screens/admin/retention.tsx
+msgid "Loading retention"
+msgstr "Loading retention"
+
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
 msgstr "Loading sharper tiles · 12 left"
@@ -8772,6 +8801,14 @@ msgstr "Loading sharper tiles · 12 left"
 #: src/screens/project/slides-tab.tsx
 msgid "Loading slides"
 msgstr "Loading slides"
+
+#: src/screens/admin/storage.tsx
+msgid "Loading storage"
+msgstr "Loading storage"
+
+#: src/screens/project/tasks-tab.tsx
+msgid "Loading tasks"
+msgstr "Loading tasks"
 
 #: src/screens/team/team-screen.tsx
 msgid "Loading Team"
@@ -8784,6 +8821,10 @@ msgstr "Loading the check order"
 #: ../../packages/ui/src/components/thread-popover.tsx
 msgid "Loading the messages"
 msgstr "Loading the messages"
+
+#: src/screens/admin/overview.tsx
+msgid "Loading the overview"
+msgstr "Loading the overview"
 
 #: src/screens/project/project-page.tsx
 msgid "Loading the project"
@@ -8798,6 +8839,10 @@ msgstr "Loading the report"
 #: src/viewer/first-read-guard.tsx
 msgid "Loading the review"
 msgstr "Loading the review"
+
+#: src/screens/admin/workspace-settings.tsx
+msgid "Loading the security contact"
+msgstr "Loading the security contact"
 
 #: src/screens/admin/connect-model.tsx
 msgid "Loading the server details"
@@ -10886,6 +10931,7 @@ msgstr "Opacity"
 #: src/screens/review/viewer-frame.tsx
 #: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer/object-table.tsx
+#: src/viewer/stage-focus.tsx
 msgid "open"
 msgstr "open"
 
@@ -13522,8 +13568,8 @@ msgid "Search, or press a key to see what it does"
 msgstr "Search, or press a key to see what it does"
 
 #: src/screens/search/search-screen.tsx
-msgid "Searching…"
-msgstr "Searching…"
+msgid "Searching"
+msgstr "Searching"
 
 #: src/session/second-factor-screen.tsx
 msgid "Second factor needed"
@@ -13966,6 +14012,11 @@ msgstr "Show activity"
 msgid "Show after adding"
 msgstr "Show after adding"
 
+#: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
+msgid "Show all hints again"
+msgstr "Show all hints again"
+
 #: src/screens/upload/overlays.tsx
 msgid "Show an example call"
 msgstr "Show an example call"
@@ -14039,6 +14090,7 @@ msgid "Show the ID tags on the slide"
 msgstr "Show the ID tags on the slide"
 
 #: src/screens/viewer-tools/focus-view.tsx
+#: src/viewer/stage-focus.tsx
 msgid "Show the interface"
 msgstr "Show the interface"
 
@@ -14076,6 +14128,10 @@ msgstr "Show the title"
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "Show threads"
 msgstr "Show threads"
+
+#: src/viewer/stage-focus.tsx
+msgid "show UI"
+msgstr "show UI"
 
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
