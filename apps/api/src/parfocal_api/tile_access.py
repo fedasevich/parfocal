@@ -195,7 +195,8 @@ async def get_tile_access(
         connection, principal, row.project_id, mode, slide_id, "Slide not found"
     )
     remote = row.storage == SlideStorage.REMOTE
-    if row.file_bytes is None or (row.original_key is None and not remote):
+    original_key: str | None = row.original_key
+    if row.file_bytes is None or (original_key is None and not remote):
         raise SlideFileNotFoundError
     keys = usable_keys(settings.tile_token_key)
     if keys is None:
@@ -232,11 +233,13 @@ async def get_tile_access(
         original = served_name(row.remote_path)
         etag = row.remote_etag
         ranges = await restricted_ranges(store, folder, row.file_bytes)
+    elif original_key is None:
+        raise SlideFileNotFoundError
     else:
-        folder = folder_of(row.original_key)
-        original = PurePosixPath(row.original_key).name
+        folder = folder_of(original_key)
+        original = PurePosixPath(original_key).name
         ranges, stored = await asyncio.gather(
-            restricted_ranges(store, folder, row.file_bytes), store.stat_object(row.original_key)
+            restricted_ranges(store, folder, row.file_bytes), store.stat_object(original_key)
         )
         etag = stored.etag if stored is not None and stored.etag else None
     labels = await sees_restricted(connection, principal, row.project_id, mode)

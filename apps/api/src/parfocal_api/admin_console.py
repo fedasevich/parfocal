@@ -3,7 +3,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func, literal_column, select
+from sqlalchemy import ColumnClause, Uuid, func, literal_column, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.auth import auth_state
@@ -126,7 +126,7 @@ class Webhook(BaseModel):
 
 router = APIRouter(prefix="/api/tenant", tags=["tenant"])
 
-IN_THIS_TENANT = literal_column(CURRENT_TENANT)
+IN_THIS_TENANT: ColumnClause[uuid.UUID] = literal_column(CURRENT_TENANT, Uuid())
 READ_ONLY_RULE = StorageRule(
     key="read-only-keys",
     label="Read-only keys only",
