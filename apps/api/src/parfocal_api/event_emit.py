@@ -1,11 +1,35 @@
+import logging
 import uuid
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
 
 from sqlalchemy import ColumnElement, exists, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.tables import EventKind, EventStatus, event_outbox, event_targets
+
+logger = logging.getLogger("parfocal.events")
+
+Waker = Callable[[], Awaitable[None]]
+
+
+async def no_wake() -> None:
+    return None
+
+
+class Wakeup:
+    waker: Waker = staticmethod(no_wake)
+
+
+def set_waker(waker: Waker) -> None:
+    Wakeup.waker = staticmethod(waker)
+
+
+async def wake() -> None:
+    try:
+        await Wakeup.waker()
+    except Exception:
+        logger.warning("event sweep could not be started", exc_info=True)
 
 
 def listening(project_id: uuid.UUID, kind: EventKind) -> ColumnElement[bool]:
@@ -46,4 +70,7 @@ async def emit(
                 for target in targets
             ],
         )
-    return sum(target.paused_at is None for target in targets)
+    live = sum(target.paused_at is None for target in targets)
+    if live:
+        await wake()
+    return live

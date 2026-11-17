@@ -16,8 +16,8 @@ from test_reviewed_layer import Review, review
 from workspace_support import make_project, make_workspace, owner
 
 from parfocal_api.app import create_app
-from parfocal_api.event_delivery import deliver_due, delivery_client
-from parfocal_api.event_emit import emit
+from parfocal_api.event_delivery import deliver_due, deliver_until_idle, delivery_client
+from parfocal_api.event_emit import emit, no_wake, set_waker
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.result_sets import finish
 from parfocal_api.tables import EventKind, Role
@@ -343,3 +343,91 @@ def test_an_event_that_happens_while_a_target_is_paused_is_kept_and_can_be_repla
     [(headers, body)] = received(site)
     assert headers["parfocal-event-id"] == kept["id"]
     assert proven(w.secret, headers, body)
+
+
+def lingered(database: str, site: Site, start: datetime, linger: timedelta) -> tuple[int, int]:
+    clock = [start]
+
+    async def sleep(seconds: float) -> None:
+        clock[0] += timedelta(seconds=seconds)
+
+    async def go() -> tuple[int, int]:
+        engine = create_engine(with_database(APP_URL, database))
+        try:
+            async with delivery_client() as http:
+                count = await deliver_until_idle(
+                    engine,
+                    MasterKeyring.from_setting(TEST_MASTER_KEYS),
+                    http,
+                    policy_of([site.origin]),
+                    linger,
+                    sleep,
+                    lambda: clock[0],
+                )
+                return count, int((clock[0] - start).total_seconds())
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(go())
+
+
+@pytest.mark.db
+def test_a_run_that_lingers_delivers_the_retry_and_stops_when_nothing_is_due_soon(
+    linked: ApiAs, database: str, site: Site
+) -> None:
+    workspace = make_workspace(database, {"admin": Role.RESEARCHER})
+    project = make_project(database, workspace.tenant_id)
+    w = wire(linked, database, site, workspace.tenant_id, project, workspace.people["admin"])
+    assert emitted(database, w) == 1
+    site.routes["/events"] = Served(500)
+    start = soon()
+    assert lingered(database, site, start, timedelta()) == (1, 0)
+    assert len(received(site)) == 1
+    site.routes["/events"] = Served(200)
+    count, waited = lingered(database, site, start, timedelta(minutes=35))
+    assert count == 1
+    assert 60 <= waited < 120
+    assert len(received(site)) == 2
+
+
+@pytest.mark.db
+def test_a_run_leaves_at_once_when_the_next_retry_is_beyond_the_window(
+    linked: ApiAs, database: str, site: Site
+) -> None:
+    workspace = make_workspace(database, {"admin": Role.RESEARCHER})
+    project = make_project(database, workspace.tenant_id)
+    w = wire(linked, database, site, workspace.tenant_id, project, workspace.people["admin"])
+    owner(database, f"UPDATE event_targets SET failures_in_row = 0 WHERE id = '{w.target}'")
+    assert emitted(database, w) == 1
+    owner(database, "UPDATE event_outbox SET next_attempt_at = now() + interval '3 hours'")
+    assert lingered(database, site, soon(), timedelta(minutes=35)) == (0, 10)
+    assert received(site) == []
+
+
+@pytest.mark.db
+def test_emitting_wakes_the_sweep_and_a_failed_wake_does_not_fail_the_emit(
+    database: str, site: Site, linked: ApiAs
+) -> None:
+    workspace = make_workspace(database, {"admin": Role.RESEARCHER})
+    project = make_project(database, workspace.tenant_id)
+    w = wire(linked, database, site, workspace.tenant_id, project, workspace.people["admin"])
+    woken: list[int] = []
+
+    async def counting() -> None:
+        woken.append(1)
+
+    async def broken() -> None:
+        raise RuntimeError("modal is down")
+
+    try:
+        set_waker(counting)
+        assert emitted(database, w) == 1
+        assert woken == [1]
+        set_waker(broken)
+        assert emitted(database, w) == 1
+        owner(database, f"UPDATE event_targets SET paused_at = now() WHERE id = '{w.target}'")
+        set_waker(counting)
+        assert emitted(database, w) == 0
+        assert woken == [1]
+    finally:
+        set_waker(no_wake)

@@ -1,4 +1,6 @@
+import time
 import tomllib
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
@@ -49,7 +51,9 @@ INGEST_OPTIONS: dict[str, Any] = {
     "scaledown_window": 60,
     "timeout": 3600,
 }
-EVENTS_PERIOD_MINUTES = 5
+EVENTS_PERIOD_MINUTES = 60
+EVENTS_LINGER_MINUTES = 35
+EVENTS_SPAWN_GAP_SECONDS = 600.0
 EVENTS_OPTIONS: dict[str, Any] = {
     "name": EVENTS_FUNCTION,
     "schedule": modal.Period(minutes=EVENTS_PERIOD_MINUTES),
@@ -83,8 +87,10 @@ def app_image() -> modal.Image:
 
 def serve() -> Any:
     from parfocal_api.app import create_app
+    from parfocal_api.event_emit import set_waker
     from parfocal_common.warm_gate import ModalPools, WarmGate
 
+    set_waker(spawn_events())
     app = create_app()
     pools = ModalPools()
     app.state.gpu_pools = pools
@@ -104,10 +110,31 @@ def run_ingest() -> None:
     asyncio.run(main())
 
 
-def run_events() -> None:
+def run_events(linger_minutes: int = 0) -> None:
     from parfocal_api.event_delivery import main
 
-    main()
+    main(["--linger-minutes", str(linger_minutes)])
+
+
+class EventSpawner:
+    def __init__(
+        self, spawn: Callable[[int], Awaitable[Any]], clock: Callable[[], float] = time.monotonic
+    ) -> None:
+        self.spawn = spawn
+        self.clock = clock
+        self.last: float | None = None
+
+    async def __call__(self) -> None:
+        now = self.clock()
+        if self.last is not None and now - self.last < EVENTS_SPAWN_GAP_SECONDS:
+            return
+        await self.spawn(EVENTS_LINGER_MINUTES)
+        self.last = now
+
+
+def spawn_events() -> Callable[[], Awaitable[None]]:
+    function = modal.Function.from_name(APP_NAME, EVENTS_FUNCTION)
+    return EventSpawner(function.spawn.aio)
 
 
 def secrets_of(function: str) -> list[modal.Secret]:

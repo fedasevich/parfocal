@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import inspect
 from pathlib import Path
@@ -12,8 +13,10 @@ from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
     EVENTS_FUNCTION,
+    EVENTS_LINGER_MINUTES,
     EVENTS_OPTIONS,
     EVENTS_PERIOD_MINUTES,
+    EVENTS_SPAWN_GAP_SECONDS,
     FUNCTION_SECRETS,
     FUNCTIONS,
     INGEST_FUNCTION,
@@ -25,6 +28,7 @@ from parfocal_deploy.modal_app import (
     WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
+    EventSpawner,
     app,
 )
 from parfocal_ingest.settings import (
@@ -91,7 +95,7 @@ def test_the_app_deploys_one_schedule_for_the_event_sweep() -> None:
     assert "schedule" not in WEB_OPTIONS
     assert "schedule" not in INGEST_OPTIONS
     assert MAX_DEPLOYED_CRONS == 5
-    assert EVENTS_PERIOD_MINUTES == 5
+    assert EVENTS_PERIOD_MINUTES == 60
     assert isinstance(EVENTS_OPTIONS["schedule"], modal.Period)
     assert EVENTS_OPTIONS["max_containers"] == 1
 
@@ -173,3 +177,34 @@ def test_the_served_api_warms_the_deployed_embedder_through_modal(
     assert (gate.pools.app_name, gate.function_name) == (GPU_POOL_APP, EMBEDDER_FUNCTION)
     assert gate.pools.environment is None
     assert served.state.gpu_pools is gate.pools
+
+
+def test_the_spawner_starts_a_lingering_sweep_and_not_a_second_one_within_the_gap() -> None:
+    spawned: list[int] = []
+    now = [100.0]
+
+    async def spawn(linger: int) -> None:
+        spawned.append(linger)
+
+    spawner = EventSpawner(spawn, lambda: now[0])
+    asyncio.run(spawner())
+    asyncio.run(spawner())
+    assert spawned == [EVENTS_LINGER_MINUTES]
+    now[0] += EVENTS_SPAWN_GAP_SECONDS
+    asyncio.run(spawner())
+    assert spawned == [EVENTS_LINGER_MINUTES] * 2
+
+
+def test_a_failed_spawn_is_tried_again_at_the_next_event() -> None:
+    attempts: list[int] = []
+
+    async def spawn(linger: int) -> None:
+        attempts.append(linger)
+        if len(attempts) == 1:
+            raise RuntimeError("modal is down")
+
+    spawner = EventSpawner(spawn, lambda: 0.0)
+    with pytest.raises(RuntimeError):
+        asyncio.run(spawner())
+    asyncio.run(spawner())
+    assert len(attempts) == 2

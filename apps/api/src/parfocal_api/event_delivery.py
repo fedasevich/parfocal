@@ -1,15 +1,16 @@
+import argparse
 import asyncio
 import json
 import logging
 import time
 import uuid
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx2
-from sqlalchemy import or_, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, record
@@ -55,6 +56,10 @@ ANSWER_SECONDS = 10.0
 PAUSE_AFTER = 5
 PAUSED_WAIT = timedelta(hours=12)
 BATCH = 50
+LINGER_WINDOW_MINUTES = 35
+START_DELAY_SECONDS = 10.0
+POLL_SECONDS = 30.0
+POLL_FLOOR_SECONDS = 5.0
 LEASE = timedelta(seconds=BATCH * ANSWER_SECONDS + 60)
 
 
@@ -314,23 +319,57 @@ def delivery_client() -> httpx2.AsyncClient:
     )
 
 
-async def sweep(settings: ApiSettings) -> list[AttemptOutcome]:
+async def next_due(engine: AsyncEngine) -> datetime | None:
+    async with scoped_transaction(engine, PLATFORM) as connection:
+        return await connection.scalar(
+            select(func.min(event_outbox.c.next_attempt_at)).where(
+                event_outbox.c.status == EventStatus.PENDING
+            )
+        )
+
+
+async def deliver_until_idle(
+    engine: AsyncEngine,
+    keyring: MasterKeyring,
+    http: httpx2.AsyncClient,
+    policy: LinkPolicy,
+    linger: timedelta,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> int:
+    delivered = 0
+    if linger:
+        await sleep(START_DELAY_SECONDS)
+    while True:
+        delivered += len(await deliver_due(engine, keyring, http, policy, clock()))
+        upcoming = await next_due(engine)
+        moment = clock()
+        if upcoming is None or upcoming > moment + linger:
+            return delivered
+        wait = (upcoming - moment).total_seconds()
+        await sleep(min(POLL_SECONDS, max(POLL_FLOOR_SECONDS, wait)))
+
+
+async def sweep(settings: ApiSettings, linger: timedelta = timedelta()) -> int:
     engine = create_engine(str(settings.database_url))
     keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
     try:
         async with delivery_client() as http:
-            return await deliver_due(
-                engine, keyring, http, policy_of(settings.link_trusted_origins)
+            return await deliver_until_idle(
+                engine, keyring, http, policy_of(settings.link_trusted_origins), linger
             )
     finally:
         await engine.dispose()
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--linger-minutes", type=int, default=0)
+    arguments = parser.parse_args(argv)
     settings = load_settings(ApiSettings)
     configure_logging("events", settings.app_env)
-    outcomes = asyncio.run(sweep(settings))
-    logger.info("event sweep finished", extra={"count": len(outcomes)})
+    count = asyncio.run(sweep(settings, timedelta(minutes=arguments.linger_minutes)))
+    logger.info("event sweep finished", extra={"count": count})
 
 
 if __name__ == "__main__":
