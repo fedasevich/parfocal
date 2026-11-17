@@ -26,6 +26,7 @@ from parfocal_api.tables import (
     slides,
     uploads,
 )
+from parfocal_api.webhook_tasks import attach_waiting_tasks
 from parfocal_common.chunk_store import ChunkEntry
 from parfocal_common.result_imports import UploadKind, enqueue_result_import
 
@@ -175,3 +176,4 @@ async def store_result_set(
     await connection.execute(
         update(uploads).where(uploads.c.id == upload.id).values(result_set_id=set_id)
     )
+    await attach_waiting_tasks(connection, upload.slide_upload_id, slide.id, set_id)

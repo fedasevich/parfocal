@@ -76,6 +76,7 @@ from parfocal_api.tables import (
     platform_operators,
     project_classes,
     project_members,
+    project_webhooks,
     projects,
     report_links,
     result_chunks,
@@ -109,6 +110,7 @@ from parfocal_api.tables import (
     threads,
     uploads,
     users,
+    webhook_calls,
     workspace_access_requests,
     workspace_settings,
 )
@@ -1297,6 +1299,32 @@ async def seed_import_sources(connection: AsyncConnection, seeded: Seeded) -> No
     seeded.markers.add(marker)
 
 
+async def seed_project_webhooks(connection: AsyncConnection, seeded: Seeded) -> None:
+    hook_id = uuid.uuid4()
+    await connection.execute(
+        insert(project_webhooks).values(
+            id=hook_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            hook_key=hook_id.hex,
+            secret_ciphertext=b"sealed",
+        )
+    )
+    seeded.ids["webhook"] = hook_id
+    seeded.markers.add(hook_id.hex)
+
+
+async def seed_webhook_calls(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(webhook_calls).values(
+            tenant_id=seeded.tenant_id,
+            webhook_id=seeded.ids["webhook"],
+            idempotency_key=f"call-{uuid.uuid4().hex[:10]}",
+            answer={},
+        )
+    )
+
+
 async def seed_template_offers(connection: AsyncConnection, seeded: Seeded) -> None:
     name = f"Offer {uuid.uuid4().hex[:12]}"
     draft = BUILT_INS[next(iter(BUILT_INS))].model_copy(update={"name": name})
@@ -1598,6 +1626,8 @@ SEEDERS: dict[str, Seeder] = {
     "lab_models": seed_lab_models,
     "lab_model_projects": seed_lab_model_projects,
     "import_sources": seed_import_sources,
+    "project_webhooks": seed_project_webhooks,
+    "webhook_calls": seed_webhook_calls,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -2002,6 +2032,9 @@ GET_ROUTES = {
     "listModelTiers": Route(Exposure.TENANT, lambda _: "/api/tenant/model-tiers"),
     "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
     "listImportSources": Route(Exposure.TENANT, lambda _: "/api/tenant/import-sources"),
+    "getProjectWebhook": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook"
+    ),
     "getLabModel": Route(
         Exposure.TENANT,
         lambda s: f"/api/tenant/models/{s.ids['lab_model']}",

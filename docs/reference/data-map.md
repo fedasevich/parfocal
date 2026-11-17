@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 48 |
-| `personal` | 97 |
-| `secret` | 12 |
-| `operational` | 812 |
+| `personal` | 98 |
+| `secret` | 14 |
+| `operational` | 828 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -743,6 +743,21 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `role` | operational |
 | `sign_out` | operational |
 
+## project_webhooks
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `hook_key` | operational |
+| `secret_ciphertext` | secret |
+| `old_secret_ciphertext` | secret |
+| `rotated_at` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## projects
 
 | Column | Class |
@@ -1414,6 +1429,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `last_tenant_id` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## webhook_calls
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `webhook_id` | operational |
+| `idempotency_key` | operational |
+| `answer` | operational |
+| `slide_upload_id` | operational |
+| `task_id` | operational |
+| `task_attached_at` | operational |
+| `created_at` | operational |
 
 ## workspace_access_requests
 

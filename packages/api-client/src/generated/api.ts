@@ -907,6 +907,7 @@ export const AuditTarget = {
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
   "import-source": "import-source",
+  webhook: "webhook",
   "registered-model": "registered-model",
   maintenance: "maintenance",
   feedback: "feedback",
@@ -3746,6 +3747,22 @@ export interface LinkImportRequest {
   names: string[];
 }
 
+export type LinkOutcomeOutcome = (typeof LinkOutcomeOutcome)[keyof typeof LinkOutcomeOutcome];
+
+export const LinkOutcomeOutcome = {
+  started: "started",
+  refused: "refused",
+} as const;
+
+export interface LinkOutcome {
+  link: string;
+  kind: UploadKind;
+  outcome: LinkOutcomeOutcome;
+  upload_id?: string | null;
+  job_id?: string | null;
+  message?: string | null;
+}
+
 export type LinkRefusal = (typeof LinkRefusal)[keyof typeof LinkRefusal];
 
 export const LinkRefusal = {
@@ -4317,6 +4334,14 @@ export interface NewClass {
   name: string;
   cells: number;
   to: string | null;
+}
+
+export interface NewWebhookSecret {
+  url: string;
+  has_old_secret: boolean;
+  created_at: string;
+  rotated_at: string | null;
+  secret: string;
 }
 
 export interface NoteDraft {
@@ -5113,6 +5138,13 @@ export interface ProjectSlide {
   stain: string;
   case: SlideCase | null;
   result_set_ids: string[];
+}
+
+export interface ProjectWebhook {
+  url: string;
+  has_old_secret: boolean;
+  created_at: string;
+  rotated_at: string | null;
 }
 
 export interface PromotionRequest {
@@ -6848,6 +6880,19 @@ export interface TaskInvitationDraft {
   email: Email;
 }
 
+export type TaskOutcomeOutcome = (typeof TaskOutcomeOutcome)[keyof typeof TaskOutcomeOutcome];
+
+export const TaskOutcomeOutcome = {
+  waiting: "waiting",
+  "not-attached": "not-attached",
+} as const;
+
+export interface TaskOutcome {
+  id: string;
+  outcome: TaskOutcomeOutcome;
+  message: string;
+}
+
 export interface TaskReportLayout {
   blocks: ReportBlocks;
   format?: ReportFormat;
@@ -7221,6 +7266,15 @@ export interface VersionDraft {
   reason: VersionReason;
 }
 
+export interface WebhookAnswer {
+  call_id: string;
+  project_id: string;
+  case_id: string;
+  task: TaskOutcome | null;
+  repeated: boolean;
+  links: LinkOutcome[];
+}
+
 export interface WorkspaceAccessRequest {
   id: string;
   tenant_id: string;
@@ -7408,6 +7462,22 @@ export type CompleteUploadParams = {
 export type ListSourceFilesParams = {
   address?: string | null;
   source_id?: string | null;
+};
+
+export type CallProjectWebhookBody = {
+  /**
+   * @minLength 1
+   * @maxLength 2048
+   */
+  slide: string;
+  /**
+   * @maxItems 20
+   * @items.minLength 1
+   * @items.maxLength 2048
+   */
+  results?: string[];
+  case_id: string;
+  task_id?: string | null;
 };
 
 export type ResolveReviewObjectParams = {
@@ -34352,6 +34422,669 @@ export const useDeleteImportSource = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getDeleteImportSourceMutationOptions(options), queryClient);
+};
+
+export type getProjectWebhookResponse200 = {
+  data: ProjectWebhook;
+  status: 200;
+};
+
+export type getProjectWebhookResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectWebhookResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectWebhookResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectWebhookResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectWebhookResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectWebhookResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectWebhookResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getProjectWebhookResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectWebhookResponseSuccess = getProjectWebhookResponse200 & {
+  headers: Headers;
+};
+export type getProjectWebhookResponseError = (
+  | getProjectWebhookResponse400
+  | getProjectWebhookResponse401
+  | getProjectWebhookResponse403
+  | getProjectWebhookResponse404
+  | getProjectWebhookResponse409
+  | getProjectWebhookResponse422
+  | getProjectWebhookResponse429
+  | getProjectWebhookResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectWebhookResponse =
+  | getProjectWebhookResponseSuccess
+  | getProjectWebhookResponseError;
+
+export const getGetProjectWebhookUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/webhook`;
+};
+
+/**
+ * @summary Get Project Webhook
+ */
+export const getProjectWebhook = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectWebhookResponse> => {
+  return apiFetch<getProjectWebhookResponse>(getGetProjectWebhookUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectWebhookQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/webhook`] as const;
+};
+
+export const getGetProjectWebhookQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectWebhookQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectWebhook>>> = ({ signal }) =>
+    getProjectWebhook(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectWebhookQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProjectWebhook>>
+>;
+export type GetProjectWebhookQueryError = Problem;
+
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectWebhook>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectWebhook>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectWebhook>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectWebhook>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Webhook
+ */
+
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectWebhookQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createWebhookSecretResponse201 = {
+  data: NewWebhookSecret;
+  status: 201;
+};
+
+export type createWebhookSecretResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createWebhookSecretResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createWebhookSecretResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createWebhookSecretResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createWebhookSecretResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createWebhookSecretResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createWebhookSecretResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createWebhookSecretResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createWebhookSecretResponseSuccess = createWebhookSecretResponse201 & {
+  headers: Headers;
+};
+export type createWebhookSecretResponseError = (
+  | createWebhookSecretResponse400
+  | createWebhookSecretResponse401
+  | createWebhookSecretResponse403
+  | createWebhookSecretResponse404
+  | createWebhookSecretResponse409
+  | createWebhookSecretResponse422
+  | createWebhookSecretResponse429
+  | createWebhookSecretResponse500
+) & {
+  headers: Headers;
+};
+
+export type createWebhookSecretResponse =
+  | createWebhookSecretResponseSuccess
+  | createWebhookSecretResponseError;
+
+export const getCreateWebhookSecretUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/webhook/secret`;
+};
+
+/**
+ * @summary Create Webhook Secret
+ */
+export const createWebhookSecret = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createWebhookSecretResponse> => {
+  return apiFetch<createWebhookSecretResponse>(getCreateWebhookSecretUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCreateWebhookSecretMutationKey = () => ["createWebhookSecret"] as const;
+
+export const getCreateWebhookSecretMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWebhookSecret>>,
+    TError,
+    CreateWebhookSecretMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createWebhookSecret>>,
+  TError,
+  CreateWebhookSecretMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateWebhookSecretMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createWebhookSecret>>,
+    CreateWebhookSecretMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return createWebhookSecret(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateWebhookSecretMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createWebhookSecret>>
+>;
+
+export type CreateWebhookSecretMutationError = Problem;
+export type CreateWebhookSecretMutationVariables = { projectId: string };
+
+/**
+ * @summary Create Webhook Secret
+ */
+export const useCreateWebhookSecret = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createWebhookSecret>>,
+      TError,
+      CreateWebhookSecretMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createWebhookSecret>>,
+  TError,
+  CreateWebhookSecretMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateWebhookSecretMutationOptions(options), queryClient);
+};
+
+export type retireWebhookSecretResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type retireWebhookSecretResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type retireWebhookSecretResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type retireWebhookSecretResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type retireWebhookSecretResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type retireWebhookSecretResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type retireWebhookSecretResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type retireWebhookSecretResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type retireWebhookSecretResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type retireWebhookSecretResponseSuccess = retireWebhookSecretResponse204 & {
+  headers: Headers;
+};
+export type retireWebhookSecretResponseError = (
+  | retireWebhookSecretResponse400
+  | retireWebhookSecretResponse401
+  | retireWebhookSecretResponse403
+  | retireWebhookSecretResponse404
+  | retireWebhookSecretResponse409
+  | retireWebhookSecretResponse422
+  | retireWebhookSecretResponse429
+  | retireWebhookSecretResponse500
+) & {
+  headers: Headers;
+};
+
+export type retireWebhookSecretResponse =
+  | retireWebhookSecretResponseSuccess
+  | retireWebhookSecretResponseError;
+
+export const getRetireWebhookSecretUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/webhook/old-secret`;
+};
+
+/**
+ * @summary Retire Webhook Secret
+ */
+export const retireWebhookSecret = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<retireWebhookSecretResponse> => {
+  return apiFetch<retireWebhookSecretResponse>(getRetireWebhookSecretUrl(projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRetireWebhookSecretMutationKey = () => ["retireWebhookSecret"] as const;
+
+export const getRetireWebhookSecretMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retireWebhookSecret>>,
+    TError,
+    RetireWebhookSecretMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retireWebhookSecret>>,
+  TError,
+  RetireWebhookSecretMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRetireWebhookSecretMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retireWebhookSecret>>,
+    RetireWebhookSecretMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return retireWebhookSecret(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetireWebhookSecretMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retireWebhookSecret>>
+>;
+
+export type RetireWebhookSecretMutationError = Problem;
+export type RetireWebhookSecretMutationVariables = { projectId: string };
+
+/**
+ * @summary Retire Webhook Secret
+ */
+export const useRetireWebhookSecret = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retireWebhookSecret>>,
+      TError,
+      RetireWebhookSecretMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retireWebhookSecret>>,
+  TError,
+  RetireWebhookSecretMutationVariables,
+  TContext
+> => {
+  return useMutation(getRetireWebhookSecretMutationOptions(options), queryClient);
+};
+
+export type callProjectWebhookResponse202 = {
+  data: WebhookAnswer;
+  status: 202;
+};
+
+export type callProjectWebhookResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type callProjectWebhookResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type callProjectWebhookResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type callProjectWebhookResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type callProjectWebhookResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type callProjectWebhookResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type callProjectWebhookResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type callProjectWebhookResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type callProjectWebhookResponseSuccess = callProjectWebhookResponse202 & {
+  headers: Headers;
+};
+export type callProjectWebhookResponseError = (
+  | callProjectWebhookResponse400
+  | callProjectWebhookResponse401
+  | callProjectWebhookResponse403
+  | callProjectWebhookResponse404
+  | callProjectWebhookResponse409
+  | callProjectWebhookResponse422
+  | callProjectWebhookResponse429
+  | callProjectWebhookResponse500
+) & {
+  headers: Headers;
+};
+
+export type callProjectWebhookResponse =
+  | callProjectWebhookResponseSuccess
+  | callProjectWebhookResponseError;
+
+export const getCallProjectWebhookUrl = (hookKey: string) => {
+  return `/api/webhooks/${hookKey}`;
+};
+
+/**
+ * @summary Call Project Webhook
+ */
+export const callProjectWebhook = async (
+  hookKey: string,
+  callProjectWebhookBody: CallProjectWebhookBody,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<callProjectWebhookResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<callProjectWebhookResponse>(getCallProjectWebhookUrl(hookKey), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(callProjectWebhookBody),
+  });
+};
+
+export const getCallProjectWebhookMutationKey = () => ["callProjectWebhook"] as const;
+
+export const getCallProjectWebhookMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof callProjectWebhook>>,
+    TError,
+    CallProjectWebhookMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof callProjectWebhook>>,
+  TError,
+  CallProjectWebhookMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCallProjectWebhookMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof callProjectWebhook>>,
+    CallProjectWebhookMutationVariables
+  > = (props) => {
+    const { hookKey, data } = props ?? {};
+
+    return callProjectWebhook(hookKey, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CallProjectWebhookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof callProjectWebhook>>
+>;
+export type CallProjectWebhookMutationBody = CallProjectWebhookBody;
+export type CallProjectWebhookMutationError = Problem;
+export type CallProjectWebhookMutationVariables = { hookKey: string; data: CallProjectWebhookBody };
+
+/**
+ * @summary Call Project Webhook
+ */
+export const useCallProjectWebhook = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof callProjectWebhook>>,
+      TError,
+      CallProjectWebhookMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof callProjectWebhook>>,
+  TError,
+  CallProjectWebhookMutationVariables,
+  TContext
+> => {
+  return useMutation(getCallProjectWebhookMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

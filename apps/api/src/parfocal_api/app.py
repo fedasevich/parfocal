@@ -66,6 +66,7 @@ from parfocal_api import (
     project_jobs,
     project_overview,
     project_uploads,
+    project_webhooks,
     projects,
     report_links,
     report_preview,
@@ -274,6 +275,8 @@ def create_app(
     app.include_router(case_sorting.router)
     app.include_router(link_imports.router)
     app.include_router(import_sources.router)
+    app.include_router(project_webhooks.router)
+    app.include_router(project_webhooks.public_router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(task_changes.router)

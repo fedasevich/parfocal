@@ -24,7 +24,7 @@ from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
-from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
+from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.permissions import (
@@ -67,6 +67,7 @@ from parfocal_api.tables import (
     painted_maps,
     project_classes,
     project_members,
+    project_webhooks,
     projects,
     report_links,
     result_objects,
@@ -125,6 +126,7 @@ OPEN_OPERATIONS = {
     "getHealth": "public",
     "getPlatformStatus": "public",
     "getSharedReport": "public",
+    "callProjectWebhook": "webhook-signature",
     **dict.fromkeys(
         (
             "getPasswordSignIn",
@@ -850,6 +852,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "deleteImportSource": lambda w: Call(
         "DELETE", f"/api/tenant/import-sources/{seeded(w, 'spare-import-source')}"
+    ),
+    "getProjectWebhook": lambda w: Call("GET", f"/api/projects/{w.project}/webhook"),
+    "createWebhookSecret": lambda w: Call("POST", f"/api/projects/{w.project}/webhook/secret"),
+    "retireWebhookSecret": lambda w: Call(
+        "DELETE", f"/api/projects/{w.project}/webhook/old-secret"
     ),
     "addLabModelProject": lambda w: Call(
         "PUT", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.spare_project}"
@@ -2376,6 +2383,23 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         created_by_user_id=colleague,
                     )
                 )
+            hook_id = uuid.uuid5(tenant_id, "webhook")
+            hook_keys = await ensure_keys(connection, TEST_KEYRING, tenant_id)
+            await connection.execute(
+                insert(project_webhooks).values(
+                    id=hook_id,
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    hook_key=hook_id.hex,
+                    secret_ciphertext=seal_field(
+                        hook_keys, "project_webhooks", hook_id, "secret", "seeded-secret"
+                    ),
+                    old_secret_ciphertext=seal_field(
+                        hook_keys, "project_webhooks", hook_id, "old_secret", "older-secret"
+                    ),
+                    created_by_user_id=colleague,
+                )
+            )
             await connection.execute(
                 insert(lab_model_projects).values(
                     lab_model_id=uuid.uuid5(tenant_id, "lab-model"),

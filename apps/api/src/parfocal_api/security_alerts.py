@@ -18,6 +18,7 @@ from parfocal_api.tables import (
     lab_models,
     legal_holds,
     patients,
+    project_webhooks,
     projects,
     report_links,
     result_sets,
@@ -55,6 +56,7 @@ TARGET_TABLES: Mapping[AuditTarget, Table] = {
     AuditTarget.SITE_VALIDATION: site_validations,
     AuditTarget.LAB_MODEL: lab_models,
     AuditTarget.IMPORT_SOURCE: import_sources,
+    AuditTarget.WEBHOOK: project_webhooks,
 }
 
 UNCHECKED_TARGETS: Mapping[AuditTarget, str] = {

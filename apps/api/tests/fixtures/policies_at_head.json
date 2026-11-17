@@ -44,6 +44,7 @@
     "personal_settings",
     "project_classes",
     "project_members",
+    "project_webhooks",
     "projects",
     "report_links",
     "result_chunks",
@@ -77,6 +78,7 @@
     "thread_messages",
     "threads",
     "uploads",
+    "webhook_calls",
     "workspace_access_requests",
     "workspace_settings"
   ],
@@ -259,6 +261,15 @@
       true,
       "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
       "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      []
+    ],
+    [
+      "project_webhooks",
+      "auth_read",
+      "r",
+      true,
+      "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      null,
       []
     ],
     [
