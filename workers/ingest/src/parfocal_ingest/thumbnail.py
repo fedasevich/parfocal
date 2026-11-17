@@ -120,6 +120,43 @@ def overview_image(path: Path, found: Format, pyramid: Pyramid) -> Image.Image:
     return scaled(region_for(path, found, pyramid, OVERVIEW_SIDE), pyramid, OVERVIEW_SIDE)
 
 
+def jpeg_tiles_image(tiff: tifffile.TiffFile, level: tifffile.TiffPageSeries) -> Image.Image:
+    page = level.keyframe
+    if not page.is_tiled:
+        raise ValueError("level is not tiled")
+    height, width = level.shape[0], level.shape[1]
+    across = math.ceil(width / page.tilewidth)
+    canvas = Image.new(
+        "RGB",
+        (across * page.tilewidth, math.ceil(height / page.tilelength) * page.tilelength),
+        WHITE,
+    )
+    handle = tiff.filehandle
+    for index, (offset, length) in enumerate(
+        zip(page.dataoffsets, page.databytecounts, strict=True)
+    ):
+        handle.seek(offset)
+        with Image.open(io.BytesIO(handle.read(length))) as tile:
+            canvas.paste(
+                tile.convert("RGB"),
+                (index % across * page.tilewidth, index // across * page.tilelength),
+            )
+    return canvas.crop((0, 0, width, height))
+
+
+def coarse_level_thumbnail(path: Path) -> bytes:
+    with tifffile.TiffFile(path) as tiff:
+        series = main_series(tiff)
+        if series is None:
+            raise ValueError("no slide series")
+        big_enough = [level for level in series.levels if max(level.shape[:2]) >= THUMBNAIL_SIDE]
+        level = big_enough[-1] if big_enough else series.levels[0]
+        image = jpeg_tiles_image(tiff, level)
+    scale = min(1.0, THUMBNAIL_SIDE / max(image.size))
+    size = (max(1, round(image.width * scale)), max(1, round(image.height * scale)))
+    return jpeg(image.resize(size, Image.Resampling.LANCZOS))
+
+
 def previews(path: Path, found: Format, pyramid: Pyramid) -> Previews:
     overview = overview_image(path, found, pyramid)
     thumbnail = scaled(overview, pyramid, THUMBNAIL_SIDE)
