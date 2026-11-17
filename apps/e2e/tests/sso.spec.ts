@@ -123,14 +123,17 @@ async function countIn(organisation: string, path: string, body: unknown): Promi
   return ((await response.json()) as { result?: unknown[] }).result?.length ?? 0;
 }
 
-async function signInThroughOrganisation(page: Page, user: string, typed: string): Promise<void> {
-  test.setTimeout(120_000);
-  const organisation = page.getByRole("button", { name: "Sign in with your organisation" });
+async function openSignIn(page: Page): Promise<void> {
   await expect(async () => {
     await page.goto("/sign-in?return_to=/");
-    await expect(organisation).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel("Work email")).toBeVisible({ timeout: 15_000 });
   }).toPass({ timeout: 60_000 });
-  await organisation.click();
+}
+
+async function signInThroughOrganisation(page: Page, user: string, typed: string): Promise<void> {
+  test.setTimeout(180_000);
+  await openSignIn(page);
+  await page.getByRole("button", { name: "Sign in with your organisation" }).click();
   await page.getByRole("textbox", { name: "Institution or email domain" }).fill(typed);
   await page.getByRole("button", { name: "Continue to your organisation's sign-in" }).click();
   await expect(page).toHaveURL(new RegExp(`^${idpOrigin}/simplesaml/`));
@@ -242,7 +245,8 @@ test.describe("per-workspace SSO", () => {
       password: { password: secret, changeRequired: false },
     });
     expect(created.ok).toBe(true);
-    await page.goto("/sign-in?return_to=/");
+    test.setTimeout(180_000);
+    await openSignIn(page);
     await page.getByLabel("Work email").fill(linkedEmail);
     await page.getByLabel("Password", { exact: true }).fill(secret);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();

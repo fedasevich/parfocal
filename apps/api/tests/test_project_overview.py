@@ -33,6 +33,35 @@ def test_the_overview_counts_the_project_from_stored_data(api: ApiAs, database: 
     assert api(r.people["first"]).get(url).status_code == 404
 
 
+def test_the_overview_names_the_uploaded_file_only_in_a_clinical_project(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    tenant = tenant_of(database, r)
+    creator = r.people["owner"].user_id
+    upload = owner(
+        database,
+        "INSERT INTO uploads (id, tenant_id, project_id, file_name, size_bytes, object_key, "
+        "storage_upload_id, part_bytes, part_count, created_by_user_id) "
+        f"VALUES (gen_random_uuid(), '{tenant}', '{r.project}', 'accession-17.svs', 1, "
+        f"'k-{uuid.uuid4().hex}', 'u', 5242880, 1, '{creator}') RETURNING id",
+    )[0][0]
+    owner(
+        database,
+        f"UPDATE slides SET upload_id = '{upload}', original_key = COALESCE(original_key, 'k') "
+        f"WHERE id = '{r.slide}'",
+    )
+    label = owner(database, f"SELECT label FROM slides WHERE id = '{r.slide}'")[0][0]
+    url = f"/api/projects/{r.project}/overview"
+
+    hidden = api(r.people["owner"]).get(url).json()["slide_files"]
+    assert [item["file"] for item in hidden] == [label]
+
+    owner(database, f"UPDATE projects SET privacy_mode = 'clinical' WHERE id = '{r.project}'")
+    shown = api(r.people["owner"]).get(url).json()["slide_files"]
+    assert [item["file"] for item in shown] == ["accession-17.svs"]
+
+
 def test_project_slides_show_ready_sets_and_only_assigned_slides_to_a_reviewer(
     api: ApiAs, database: str
 ) -> None:

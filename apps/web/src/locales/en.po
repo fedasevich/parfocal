@@ -3874,6 +3874,7 @@ msgstr "B · {0}"
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/onboarding/setup-screen.tsx
+#: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
@@ -5392,10 +5393,18 @@ msgstr "Continue reviewing <0/>"
 msgid "Continue reviewing, your tasks, asks and mentions"
 msgstr "Continue reviewing, your tasks, asks and mentions"
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Continue to your organisation's sign-in"
+msgstr "Continue to your organisation's sign-in"
+
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Continue where you left off"
 msgstr "Continue where you left off"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Continue with your institution"
+msgstr "Continue with your institution"
 
 #: src/screens/admin/storage.tsx
 #: src/screens/evaluation/share-links.tsx
@@ -7985,6 +7994,10 @@ msgstr "inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px {color}"
 msgid "Instant"
 msgstr "Instant"
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Institution or email domain"
+msgstr "Institution or email domain"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Intent"
 msgstr "Intent"
@@ -9809,6 +9822,10 @@ msgstr "No other device is signed in."
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "No other task to compare"
 msgstr "No other task to compare"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
+msgstr "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
 
 #: src/screens/project/settings-tab.tsx
 msgid "No patient fields anywhere. Names are removed from file metadata and labels on upload."
@@ -14021,6 +14038,10 @@ msgstr "Sign in to Parfocal"
 msgid "Sign in with a passkey"
 msgstr "Sign in with a passkey"
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in with your organisation"
+msgstr "Sign in with your organisation"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -17773,6 +17794,10 @@ msgstr "Your home could not load"
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Your home keeps a short checklist until each part has been tried once. {0}"
 msgstr "Your home keeps a short checklist until each part has been tried once. {0}"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Your institution checks who you are, so Parfocal never sees your password."
+msgstr "Your institution checks who you are, so Parfocal never sees your password."
 
 #: src/screens/admin/sections.tsx
 msgid "Your lab's models"

@@ -4,8 +4,33 @@ import {
   checkPassword,
   clock,
   codeDigits,
+  emailDomain,
+  organisationDomain,
+  organisationSignInUrl,
   safeReturnPath,
 } from "../src/screens/onboarding/sign-in-rules.ts";
+
+test("the organisation sign-in takes a domain or a whole work email", () => {
+  assert.equal(emailDomain("Lenka@FNVltava.example "), "fnvltava.example");
+  assert.equal(emailDomain("no-at-sign"), "");
+  assert.equal(organisationDomain(" FNVltava.example "), "fnvltava.example");
+  assert.equal(organisationDomain("lenka@Hospital.example.org"), "hospital.example.org");
+  assert.equal(organisationDomain("vltava"), null);
+  assert.equal(organisationDomain("lenka@"), null);
+  assert.equal(organisationDomain("bad domain.example"), null);
+  assert.equal(organisationDomain("-bad.example"), null);
+});
+
+test("the organisation sign-in goes to the API with the domain and the return path", () => {
+  assert.equal(
+    organisationSignInUrl("hospital.example", "/projects?tab=open"),
+    "/api/auth/sso?domain=hospital.example&return_to=%2Fprojects%3Ftab%3Dopen",
+  );
+  assert.equal(
+    organisationSignInUrl("hospital.example", null),
+    "/api/auth/sso?domain=hospital.example&return_to=%2F",
+  );
+});
 
 test("a return path must stay on this site", () => {
   assert.equal(safeReturnPath("/projects/p1/slides/s1?task=t1"), "/projects/p1/slides/s1?task=t1");
