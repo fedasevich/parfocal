@@ -89,6 +89,7 @@ def reset(target: Environment, tools: Tools, local: Mapping[str, str]) -> int:
             "STORAGE_ACCESS_KEY_ID": location.access_key_id,
             "STORAGE_SECRET_ACCESS_KEY": location.secret_access_key,
             "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
+            "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
         },
     )
     return removed

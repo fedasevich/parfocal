@@ -3,7 +3,7 @@ import asyncio
 import json
 import os
 import uuid
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -324,6 +324,41 @@ async def add_owner(connection: AsyncConnection, tenant_id: uuid.UUID, email: st
         admin_rights=True,
         email=address,
     )
+
+
+def viewer_emails_of(listed: str) -> list[str]:
+    return [email.strip().lower() for email in listed.split(",") if email.strip()]
+
+
+async def add_viewer(connection: AsyncConnection, tenant_id: uuid.UUID, email: str) -> uuid.UUID:
+    signed_in = await connection.scalar(
+        select(users.c.subject).where(func.lower(users.c.email) == email).limit(1)
+    )
+    user_id = await add_member(
+        connection,
+        tenant_id,
+        signed_in or placeholder_subject(email),
+        "Workspace viewer",
+        "WV",
+        Role.REVIEWER,
+        admin_rights=False,
+        email=email,
+    )
+    project_ids = await connection.scalars(
+        select(projects.c.id).where(projects.c.tenant_id == tenant_id)
+    )
+    for project_id in project_ids.all():
+        await connection.execute(
+            upsert(project_members)
+            .values(
+                tenant_id=tenant_id,
+                project_id=project_id,
+                user_id=user_id,
+                role=ProjectRole.VIEWER,
+            )
+            .on_conflict_do_nothing()
+        )
+    return user_id
 
 
 def principal_of(seeded: Seeded, key: str, role: Role, admin_rights: bool) -> MemberPrincipal:
@@ -1076,6 +1111,7 @@ async def seed(
     results: ResultStore,
     owner_email: str | None,
     manifest: Mapping[str, Mapping[str, Any]] | None = None,
+    viewer_emails: Sequence[str] = (),
 ) -> list[uuid.UUID]:
     engine = create_engine(database_url)
     try:
@@ -1123,6 +1159,12 @@ async def seed(
                     facts,
                     workspace.gallery,
                 )
+        for email in viewer_emails:
+            for tenant_id in tenant_ids:
+                async with scoped_transaction(
+                    engine, DatabaseScope(tenant_id=tenant_id, auth=True)
+                ) as connection:
+                    await add_viewer(connection, tenant_id, email)
         return tenant_ids
     finally:
         await engine.dispose()
@@ -1154,6 +1196,7 @@ async def main() -> None:
             store,
             ObjectResultStore(store),
             os.environ.get("SEED_OWNER_EMAIL") or None,
+            viewer_emails=viewer_emails_of(os.environ.get("SEED_VIEWER_EMAILS", "")),
         )
     print(f"seeded {len(tenant_ids)} ČVUT workspaces")
 

@@ -35,6 +35,7 @@ from parfocal_api.showcase import (
     VIEWER_SAMPLE,
     WORKSPACES,
     seed,
+    viewer_emails_of,
 )
 from parfocal_api.slide_result_stats import get_slide_result_stats
 from parfocal_api.slide_threads import list_slide_threads, list_thread_comments
@@ -598,3 +599,39 @@ async def test_the_owner_has_an_annotate_task(seeded: str) -> None:
     kinds = await values(seeded, f"SELECT kind FROM review_tasks WHERE id = '{task}'")
     assert kinds == {"annotate"}
     assert len(slide_ids) == 2
+
+
+async def test_a_listed_viewer_can_see_every_project_without_admin_rights(seeded: str) -> None:
+    for _ in range(2):
+        await seed(
+            seeded,
+            EmptyStore(),  # type: ignore[arg-type]
+            RESULTS,  # type: ignore[arg-type]
+            "owner@example.test",
+            viewer_emails=viewer_emails_of(" Watcher@Example.test ,"),
+        )
+    members = await run_sql(
+        seeded,
+        "SELECT u.subject, m.role, m.admin_rights FROM users u "
+        "JOIN memberships m ON m.user_id = u.id WHERE u.email = 'watcher@example.test'",
+    )
+    assert [(str(s), str(r), a) for s, r, a in members] == [
+        ("seed:watcher@example.test", "reviewer", False)
+    ] * len(WORKSPACES)
+    assert await values(
+        seeded,
+        "SELECT t.slug FROM users u JOIN tenants t ON t.id = u.last_tenant_id "
+        "WHERE u.email = 'watcher@example.test'",
+    ) == {WORKSPACES[-1].slug}
+    roles = await values(
+        seeded,
+        "SELECT pm.role FROM project_members pm JOIN users u ON u.id = pm.user_id "
+        "WHERE u.email = 'watcher@example.test'",
+    )
+    assert roles == {"viewer"}
+    covered = await values(
+        seeded,
+        "SELECT count(*) FROM project_members pm JOIN users u ON u.id = pm.user_id "
+        "WHERE u.email = 'watcher@example.test'",
+    )
+    assert covered == {str(3 * len(WORKSPACES))}
