@@ -113,7 +113,7 @@ export function useViewerScene(props: BodyProps, model: ReturnType<typeof useVie
       ...(camera ? cameraToSearch(cameraImage, camera) : { x: search.x, y: search.y, z: search.z }),
     },
     magnification: shownCamera ? magnificationOf(stillView, shownCamera) : 0,
-    goTo: (object) => (navigator ? onSearch({ scene: undefined, object }) : pick(object)),
+    goTo: (object) => (navigator ? onSearch({ scene: "objects", object }) : pick(object)),
     restore: (spot) => {
       setCamera(null);
       setPeekHeld(false);
@@ -132,7 +132,7 @@ export function useViewerScene(props: BodyProps, model: ReturnType<typeof useVie
       }
       if (fired.action !== "nextarea" || !navigator || navigator === "overview") return false;
       if (fired.phase !== "press") return true;
-      if (navigator === "travel") onSearch({ scene: undefined, object: "T3" });
+      if (navigator === "travel") onSearch({ scene: "objects", object: "T3" });
       else onSearch({ scene: "travel" });
       return true;
     },
