@@ -293,6 +293,8 @@ for (const fixture of [spreadFixture, philipsFixture]) {
       );
       assert.equal(located.levels, walked.levels);
       assert.equal(primed.levels, walked.levels);
+      assert.ok(located.peak >= located.levels);
+      assert.ok(walked.peak < located.levels);
       assert.ok(primed.rounds <= 3, `the primed open took ${primed.rounds} rounds`);
       assert.ok(primed.rounds < located.rounds);
       assert.ok(located.rounds < walked.rounds || located.ms < walked.ms);
