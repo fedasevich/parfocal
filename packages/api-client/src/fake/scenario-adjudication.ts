@@ -246,7 +246,7 @@ export const reportTemplate = {
       kind: "headline-numbers",
       title: "Results",
       width: "full",
-      metrics: ["sensitivity", "precision", "dice", "kappa"],
+      metrics: ["sensitivity", "precision", "dice", "kappa", "cell-agreement"],
     },
     { kind: "confusion-matrix", title: "Cell types, AI against the consensus", width: "full" },
     { kind: "disagreement-reasons", title: "Why reviewers disagreed", width: "half" },

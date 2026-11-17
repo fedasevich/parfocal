@@ -431,7 +431,6 @@ async def get_cosign_review(
             .order_by(*CASE_SLIDE_ORDER)
         )
     ).all()
-    measured = [item for item in report.findings.measurements if item.length_mm is not None]
     return CosignReview(
         id=str(report.id),
         project=ProjectRef(id=project.id, code=project.code, name=project.name),
@@ -447,17 +446,7 @@ async def get_cosign_review(
             CosignReviewSlide(key=item.key, node=item.node, short=item.short)
             for item in slides_of(case_slides)
         ],
-        ai=CosignAi(
-            largest_mm=max((item.length_mm or 0.0 for item in measured), default=0.0),
-            deposits=[
-                CosignAiDeposit(
-                    slide=str(item.slide_id),
-                    object_id=item.object_id,
-                    size_mm=item.length_mm or 0.0,
-                )
-                for item in measured
-            ],
-        ),
+        ai=CosignAi(largest_mm=0.0, deposits=[]),
         co_signer_covers_case=report.cosigner_user_id in report.signers,
     )
 

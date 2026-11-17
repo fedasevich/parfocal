@@ -1,4 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { reportFormatSchema } from "../draft/report-layout.ts";
 import {
   getGetDisagreementQueueMockHandler,
   getGetEvaluationReportMockHandler,
@@ -433,7 +434,7 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
       latest_version: reportTemplate.latestVersion,
       retired_on: fakeQueueScene().retired ? reportTemplate.retiredOn : null,
       blocks: [...reportTemplate.blocks],
-      format: {},
+      format: reportFormatSchema.parse({}),
     },
     formats: reportFormats,
     confusion,
