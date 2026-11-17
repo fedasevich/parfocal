@@ -30,7 +30,8 @@ const defaultSessionHours = 8;
 
 export function SignInScreen({ scene, change, returnTo }: Props) {
   const me = okData(useGetMe().data);
-  const policy = okData(useGetSessionPolicy().data);
+  const signedInScene = scene === "lock" || scene === "lockkey" || scene === "expired";
+  const policy = okData(useGetSessionPolicy({ query: { enabled: signedInScene } }).data);
   const goTo = useGoTo();
   const queryClient = useQueryClient();
   const [notice, show] = useNotice();
