@@ -64,9 +64,15 @@ const rowsOf = (task: TeamTask | undefined): Record<string, string> =>
     ]),
   );
 
+const teamNow = async () => {
+  const response = await listTeamWorkload();
+  if (response.status !== 200) throw new Error(`team answered ${response.status}`);
+  return response.data;
+};
+
 const asResearcher = async () => {
   setFakeView({ viewer: "DH", firstWeek: false });
-  return (await listTeamWorkload()).data;
+  return teamNow();
 };
 
 test("each status word follows the share of slides the time so far asks for", () => {
@@ -109,7 +115,7 @@ test("Team lists the researcher's open tasks by due date with RT-14's numbers", 
 });
 
 test("a reviewer sees no Team of their own", async () => {
-  const team = (await listTeamWorkload()).data;
+  const team = await teamNow();
   assert.deepEqual(team.open, []);
 });
 
@@ -197,7 +203,7 @@ test("a reassign to someone who already reviews the task is refused", async () =
   );
 });
 
-test("the workload is a draft and the nudge is a shipped route", () => {
-  assert.ok(isDraftMeta(getListTeamWorkloadQueryOptions().meta));
+test("the workload and the nudge are shipped routes", () => {
+  assert.ok(!isDraftMeta(getListTeamWorkloadQueryOptions().meta));
   assert.ok(!isDraftMeta(getNudgeReviewerMutationOptions().meta));
 });

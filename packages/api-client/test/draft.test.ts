@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
+import { z } from "zod";
 import * as draft from "../src/draft/index.ts";
 import { draftOperations } from "../src/fake/index.ts";
 import * as generatedMocks from "../src/generated/api.msw.ts";
@@ -50,8 +51,13 @@ test("each draft operation exports every name Orval would generate for it", () =
 });
 
 test("draft queries carry the draft marker the badge looks for", () => {
-  const options = draft.getListTeamWorkloadQueryOptions();
+  const planned = draft.defineDraftQuery(
+    "listPlannedThings",
+    () => "/api/planned",
+    z.array(z.string()),
+  );
+  const options = planned.queryOptions([]);
   assert.ok(draft.isDraftMeta(options.meta));
-  assert.deepEqual(options.meta, { draft: "listTeamWorkload" });
-  assert.deepEqual(options.queryKey, ["/api/me/team"]);
+  assert.deepEqual(options.meta, { draft: "listPlannedThings" });
+  assert.deepEqual(options.queryKey, ["/api/planned"]);
 });

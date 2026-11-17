@@ -7,7 +7,7 @@ A draft call is an operation in `packages/api-client/src/draft` that only the fa
 When `fakeApi` is `off`, `apps/web/src/main.tsx` calls `setDraftsAnswered(false)`. From then on `callDraft` in `draft/support.ts` turns a 404 or 405 into `DraftNotAvailableError` (kind `not-found`, code `not-available-yet`).
 
 - A list query answers `[]` and a nullable query answers `null`, so the screen shows its empty state.
-- An object query fails without a toast and without a retry. A screen can show the shared notice with `notAvailable(query)` and `<NotAvailableYet what="..." />` from `apps/web/src/shell/not-available.tsx`. The team screen does this.
+- An object query fails without a toast and without a retry. A screen can show the shared notice with `notAvailable(query)` and `<NotAvailableYet what="..." />` from `apps/web/src/shell/not-available.tsx`.
 - A mutation shows one toast saying the action is not available yet.
 
 ## Counting them
@@ -44,17 +44,20 @@ The project area switched in OPS-023 (project and upload area on the real API). 
 
 The fake answers these operations through the generated MSW handlers.
 
+The team area switched in OPS-024 too. `listTeamWorkload` and `listReviewerWorkload` live in `apps/api/src/parfocal_api/team_workload.py` and keep the draft URLs. The team lists the tasks that are not archived in the projects the caller owns, open ones by due date and signed ones newest first. Each reviewer row counts the caller's assignments and submitted slides, takes the first assignment time, the newest decision and the newest nudge, and reads away and its end from the member's availability. The status follows the rule the fake used. A task with no due date uses the day it was sent, and the everyone split shows as `all` while even and chosen show as `even`. `minutes_left` is nullable, unlike the draft, and comes from the reviewer's own pace in the task, so it is null until they have submitted a slide. The reviewer workload lists every member of the workspace with the number of open tasks that still hold an unsubmitted slide for them, so the new task page offers people with no work too. The fake answers both through the generated MSW handlers.
+
+The admin console reads switched in OPS-024 too, all in `apps/api/src/parfocal_api/admin_console.py`. `getAdminOverview` counts members by role and admin rights, live projects that are not archived, invitations still waiting, the shown catalogue models plus the lab models, and the run batches going now. The people who can sign out are the members of clinical projects whose sign-out right is not never. Stored terabytes sum the slide file sizes. `capacity_tb` is nullable, unlike the draft, because no allowance is stored, and in place, webhook calls and rejections are zero. `getStorageUsage` gives one part, copied slides, the slide bytes per project with no cap, the read-only key rule and the saved import sources, each copied, answering and with no timing. `getSecuritySettings` lists single sign-on, on when the workspace has a single sign-on connection and naming its domains, and email and password, on when the deployment offers the password login. Both are locked, because the hosted Zitadel login sets them. `two_factor` is nullable, unlike the draft, because the second factor is checked at sign-in and never stored per person. `listWebhooks` lists nothing, because the project event targets of REMOTE-003 (events out) are not on this base. The fake answers all four through the generated MSW handlers.
+
+`getInvitePreview` lives in `invite_preview.py` and keeps the draft URL. It answers without signing in, like accepting does, and looks the token up the same way. A revoked, used, expired or workspace-only invitation answers 404 `invitation-not-found`, because the invite screen shows a task. The inviter comes from the invitation's audit event, so it is null once that person is erased, and the name is the display name of a user who already has the email, or empty. `hours`, `due_on` and `invited_by` are nullable and `specialty` is always null, because nothing stores them. The fake keeps its own handler, `invitePreviewHandler`, because it answers 404 for an unknown token.
+
 ## Remaining drafts
 
 No draft is left on the home, project, viewer, review, annotate, model run and new task paths.
 
 | Operation | Screen | Real equivalent | Priority |
 |---|---|---|---|
-| listTeamWorkload | team | none | medium |
 | getEvaluationReport | evaluation report | partly, task evaluation | medium |
 | getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |
-| getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks | admin console | none | low |
-| getInvitePreview | invitation page | partly, invitations | low |
 
 ## Deleted
 

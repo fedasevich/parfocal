@@ -13,6 +13,7 @@ import type {
   AccountCodeSent,
   AdjudicatedObject,
   AdjudicationObject,
+  AdminOverview,
   AiChanges,
   AiCorrections,
   AiModels,
@@ -71,6 +72,7 @@ import type {
   InboxCounts,
   InboxPage,
   Invitation,
+  InvitePreview,
   IssuedToken,
   Job,
   JoinableWorkspace,
@@ -154,6 +156,7 @@ import type {
   ReviewEdit,
   ReviewedLayer,
   ReviewerAgreement,
+  ReviewerWorkload,
   ReviewObjects,
   ReviewOrder,
   ReviewTask,
@@ -164,6 +167,7 @@ import type {
   ScaleQuestion,
   SearchResults,
   SecurityContact,
+  SecuritySettings,
   SelectionScope,
   ServiceAccount,
   Session,
@@ -196,6 +200,7 @@ import type {
   SlideTissue,
   Sorting,
   SourceListing,
+  StorageUsage,
   StudyTemplate,
   StudyTemplateReviewDefaults,
   StudyTemplateSummary,
@@ -205,6 +210,7 @@ import type {
   TaskReportLayout,
   TaskSlide,
   TaskStates,
+  TeamWorkload,
   Template,
   TemplateOffer,
   Tenant,
@@ -222,6 +228,7 @@ import type {
   UploadState,
   Validation,
   ViewScope,
+  Webhook,
   Workspace,
   WorkspaceAccessRequest,
   WorstObjects,
@@ -338,6 +345,7 @@ import {
   TaskSplit,
   TaskStatus,
   TaxonomyTemplate,
+  TeamReviewerStatus,
   TemplateOfferStatus,
   TenantKind,
   TenantStatus,
@@ -3699,6 +3707,159 @@ export const getGetLabModelConnectionResponseMock = (
       }),
     ),
   },
+  ...overrideResponse,
+});
+
+export const getGetAdminOverviewResponseMock = (
+  overrideResponse: Partial<Extract<AdminOverview, object>> = {},
+): AdminOverview => ({
+  people: faker.number.int({ min: 0 }),
+  researchers: faker.number.int({ min: 0 }),
+  reviewers: faker.number.int({ min: 0 }),
+  with_admin_rights: faker.number.int({ min: 0 }),
+  can_sign_out_user_ids: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => faker.string.uuid()),
+  projects: faker.number.int({ min: 0 }),
+  invites_waiting: faker.number.int({ min: 0 }),
+  models: faker.number.int({ min: 0 }),
+  runs_now: faker.number.int({ min: 0 }),
+  stored_tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  capacity_tb: faker.helpers.arrayElement([
+    faker.number.float({ min: 0, fractionDigits: 2 }),
+    null,
+  ]),
+  in_place_tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  webhook_calls_today: faker.number.int({ min: 0 }),
+  webhook_rejected_today: faker.number.int({ min: 0 }),
+  ...overrideResponse,
+});
+
+export const getGetStorageUsageResponseMock = (
+  overrideResponse: Partial<Extract<StorageUsage, object>> = {},
+): StorageUsage => ({
+  total_tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  in_place_tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  parts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    kind: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    tb: faker.number.float({ min: 0, fractionDigits: 2 }),
+  })),
+  by_project: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      project: {
+        id: faker.string.uuid(),
+        code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      colour: faker.number.int({ min: 0 }),
+      gb: faker.number.float({ min: 0, fractionDigits: 2 }),
+      cap_gb: faker.helpers.arrayElement([faker.number.float({ min: 0, fractionDigits: 2 }), null]),
+    }),
+  ),
+  rules: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    on: faker.datatype.boolean(),
+    locked: faker.datatype.boolean(),
+  })),
+  sources: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      kind: faker.helpers.arrayElement(["s3", "dicomweb", "https", "azure"] as const),
+      access: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      new_slides: faker.helpers.arrayElement(["copied", "in-place"] as const),
+      health: faker.helpers.arrayElement(["answering", "expiring"] as const),
+      first_tile_ms: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+      expires_in_days: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetSecuritySettingsResponseMock = (
+  overrideResponse: Partial<Extract<SecuritySettings, object>> = {},
+): SecuritySettings => ({
+  sign_in: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      on: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+    }),
+  ),
+  two_factor: faker.helpers.arrayElement([
+    { people: faker.number.int({ min: 0 }), of: faker.number.int({ min: 0 }) },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getListWebhooksResponseMock = (): Webhook[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    direction: faker.helpers.arrayElement(["incoming", "outgoing"] as const),
+    events: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    calls_today: faker.number.int({ min: 0 }),
+    rejected_today: faker.number.int({ min: 0 }),
+  }));
+
+export const getGetInvitePreviewResponseMock = (
+  overrideResponse: Partial<Extract<InvitePreview, object>> = {},
+): InvitePreview => ({
+  token: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  invited_by: faker.helpers.arrayElement([
+    {
+      user_id: faker.string.uuid(),
+      display_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      initials: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      avatar_colour: faker.number.int({ min: 0 }),
+      title: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
+  sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  workspace: {
+    id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  project: {
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    colour: faker.number.int({ min: 0 }),
+    privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
+    study_template: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  task: {
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slides: faker.number.int({ min: 0 }),
+    hours: faker.helpers.arrayElement([faker.number.float({ min: 0, fractionDigits: 2 }), null]),
+    scope: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+    blinded: faker.datatype.boolean(),
+    first_slide_id: faker.string.uuid(),
+  },
+  specialty: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  expires_on: faker.date.past().toISOString().slice(0, 10),
   ...overrideResponse,
 });
 
@@ -17226,6 +17387,93 @@ export const getSetMyAvailabilityResponseMock = (
   ...overrideResponse,
 });
 
+export const getListTeamWorkloadResponseMock = (
+  overrideResponse: Partial<Extract<TeamWorkload, object>> = {},
+): TeamWorkload => ({
+  as_of: faker.date.past().toISOString().slice(0, 19) + "Z",
+  open: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    project: {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    slides: faker.number.int({ min: 0 }),
+    split: faker.helpers.arrayElement(["all", "even"] as const),
+    sent_on: faker.date.past().toISOString().slice(0, 10),
+    due_on: faker.date.past().toISOString().slice(0, 10),
+    signed_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+    reviewers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        slides_done: faker.number.int({ min: 0 }),
+        slides_assigned: faker.number.int({ min: 0 }),
+        status: faker.helpers.arrayElement(Object.values(TeamReviewerStatus)),
+        minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+        away_until: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 10),
+          null,
+        ]),
+        assigned_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        last_decision_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        nudged_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+      }),
+    ),
+  })),
+  done: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    project: {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    slides: faker.number.int({ min: 0 }),
+    split: faker.helpers.arrayElement(["all", "even"] as const),
+    sent_on: faker.date.past().toISOString().slice(0, 10),
+    due_on: faker.date.past().toISOString().slice(0, 10),
+    signed_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+    reviewers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        slides_done: faker.number.int({ min: 0 }),
+        slides_assigned: faker.number.int({ min: 0 }),
+        status: faker.helpers.arrayElement(Object.values(TeamReviewerStatus)),
+        minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+        away_until: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 10),
+          null,
+        ]),
+        assigned_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        last_decision_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+        nudged_at: faker.helpers.arrayElement([
+          faker.date.past().toISOString().slice(0, 19) + "Z",
+          null,
+        ]),
+      }),
+    ),
+  })),
+  ...overrideResponse,
+});
+
+export const getListReviewerWorkloadResponseMock = (): ReviewerWorkload[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    user_id: faker.string.uuid(),
+    open_tasks: faker.number.int({ min: 0 }),
+  }));
+
 export const getListAvailabilityResponseMock = (): MemberAvailability[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     user_id: faker.string.uuid(),
@@ -19548,6 +19796,124 @@ export const getGetLabModelConnectionMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getGetLabModelConnectionResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetAdminOverviewMockHandler = (
+  overrideResponse?:
+    | AdminOverview
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AdminOverview> | AdminOverview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/overview",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetAdminOverviewResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetStorageUsageMockHandler = (
+  overrideResponse?:
+    | StorageUsage
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<StorageUsage> | StorageUsage),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/storage",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetStorageUsageResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetSecuritySettingsMockHandler = (
+  overrideResponse?:
+    | SecuritySettings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SecuritySettings> | SecuritySettings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/security",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSecuritySettingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListWebhooksMockHandler = (
+  overrideResponse?:
+    | Webhook[]
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Webhook[]> | Webhook[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/webhooks",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListWebhooksResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetInvitePreviewMockHandler = (
+  overrideResponse?:
+    | InvitePreview
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<InvitePreview> | InvitePreview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/invitations/:token/preview",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetInvitePreviewResponseMock(),
         { status: 200 },
       );
     },
@@ -25565,6 +25931,54 @@ export const getSetMyAvailabilityMockHandler = (
   );
 };
 
+export const getListTeamWorkloadMockHandler = (
+  overrideResponse?:
+    | TeamWorkload
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TeamWorkload> | TeamWorkload),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/team",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListTeamWorkloadResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListReviewerWorkloadMockHandler = (
+  overrideResponse?:
+    | ReviewerWorkload[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReviewerWorkload[]> | ReviewerWorkload[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/workload",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListReviewerWorkloadResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListAvailabilityMockHandler = (
   overrideResponse?:
     | MemberAvailability[]
@@ -26952,6 +27366,11 @@ export const getParfocalAPIMock = () => [
   getListAiModelsMockHandler(),
   getConnectLabModelMockHandler(),
   getGetLabModelConnectionMockHandler(),
+  getGetAdminOverviewMockHandler(),
+  getGetStorageUsageMockHandler(),
+  getGetSecuritySettingsMockHandler(),
+  getListWebhooksMockHandler(),
+  getGetInvitePreviewMockHandler(),
   getStartModelRunsMockHandler(),
   getListModelRunsMockHandler(),
   getGetModelRunMockHandler(),
@@ -27214,6 +27633,8 @@ export const getParfocalAPIMock = () => [
   getRequestEmergencyAccessMockHandler(),
   getGetMyAvailabilityMockHandler(),
   getSetMyAvailabilityMockHandler(),
+  getListTeamWorkloadMockHandler(),
+  getListReviewerWorkloadMockHandler(),
   getListAvailabilityMockHandler(),
   getListOrganisationsMockHandler(),
   getCreateOrganisationMockHandler(),

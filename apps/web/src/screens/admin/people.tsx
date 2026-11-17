@@ -100,7 +100,7 @@ export function PeopleSection({
   const activity = okData(useListMemberActivity().data) ?? [];
   const invitationList = useListInvitations();
   const invitations = okData(invitationList.data) ?? [];
-  const overview = useGetAdminOverview().data?.data;
+  const overview = okData(useGetAdminOverview().data);
   const setRights = useSetMemberAdminRights();
   const changeRole = useChangeMemberRole();
   const resend = useResendInvitation();

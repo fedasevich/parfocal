@@ -44,10 +44,10 @@ export function SystemActor({ sub, size = 20 }: { sub?: string; size?: number })
 export function OverviewSection({ open }: { open: (section: AdminSection) => void }) {
   const { t } = useLingui();
 
-  const overview = useGetAdminOverview().data?.data;
+  const overview = okData(useGetAdminOverview().data);
   const members = okData(useListTenantMembers().data) ?? [];
   const models = okData(useListAiModels().data);
-  const storage = useGetStorageUsage().data?.data;
+  const storage = okData(useGetStorageUsage().data);
   const events = okData(useListAuditEvents(auditParams(defaultAuditFilter, now())).data) ?? [];
   const personOf = usePeople();
   if (overview === undefined) return null;
@@ -68,7 +68,8 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
           },
           {
             value: tb(overview.stored_tb),
-            label: t`Stored, of ${tb(overview.capacity_tb)}`,
+            label:
+              overview.capacity_tb === null ? t`Stored` : t`Stored, of ${tb(overview.capacity_tb)}`,
             detail: t`${tb(overview.in_place_tb)} more read in place`,
           },
           {

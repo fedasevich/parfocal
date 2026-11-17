@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from parfocal_api import (
     adjudications,
+    admin_console,
     ai_changes,
     ai_corrections,
     ai_usage,
@@ -42,6 +43,7 @@ from parfocal_api import (
     import_sources,
     inbox,
     invitations,
+    invite_preview,
     lab_models,
     link_imports,
     maintenance,
@@ -106,6 +108,7 @@ from parfocal_api import (
     task_report_layout,
     task_runs,
     taxonomy,
+    team_workload,
     template_offers,
     template_review_defaults,
     tenants,
@@ -245,6 +248,8 @@ def create_app(
     app.include_router(project_jobs.router)
     app.include_router(model_area.project_router)
     app.include_router(model_area.tenant_router)
+    app.include_router(admin_console.router)
+    app.include_router(invite_preview.router)
     app.include_router(model_runs.router)
     app.include_router(tumor_maps.router)
     app.include_router(model_tiers.router)
@@ -345,6 +350,8 @@ def create_app(
     app.include_router(case_imports.router)
     app.include_router(emergency.router)
     app.include_router(availability.me_router)
+    app.include_router(team_workload.me_router)
+    app.include_router(team_workload.tenant_router)
     app.include_router(availability.team_router)
     app.include_router(tenants.platform)
     app.include_router(tenants.tenant)

@@ -24,6 +24,7 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue, plural } from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { toPersonInfo } from "../people.ts";
+import { okData } from "../placeholder.tsx";
 import { PitchLayout } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
 import type { InviteScene } from "./scenes.ts";
@@ -60,7 +61,7 @@ export function InviteScreen({ token, scene, change }: Props) {
   const { t } = useLingui();
 
   const previewQuery = useGetInvitePreview(token, { query: { retry: false } });
-  const preview = previewQuery.data?.data;
+  const preview = okData(previewQuery.data);
   const accept = useAcceptInvitation();
   const goTo = useGoTo();
   const [notice, show] = useNotice();
@@ -107,7 +108,15 @@ export function InviteScreen({ token, scene, change }: Props) {
         },
       },
     );
-  const inviter = toPersonInfo(preview.invited_by);
+  const inviter = toPersonInfo(
+    preview.invited_by ?? {
+      user_id: "",
+      display_name: preview.workspace.name,
+      initials: "",
+      avatar_colour: 0,
+      title: null,
+    },
+  );
   if (scene === "account") {
     return (
       <PitchLayout>
@@ -186,7 +195,7 @@ export function InviteScreen({ token, scene, change }: Props) {
                 <b>{inviter.name}</b> invited you to review
               </Trans>
               <small className="block text-body-sm text-fg-dim">
-                {preview.invited_by.title} ·
+                {preview.invited_by?.title ?? ""} ·
                 <Trans>
                   {" "}
                   {plural(
@@ -222,15 +231,19 @@ export function InviteScreen({ token, scene, change }: Props) {
               <span className="font-mono">{preview.task.code}</span> · {preview.task.name}
             </Fact>
             <Fact icon="slides" label={t`Slides`}>
-              <Trans>
-                {preview.task.slides} slides, about {preview.task.hours} hours
-              </Trans>
+              {preview.task.hours === null ? (
+                <Trans>{preview.task.slides} slides</Trans>
+              ) : (
+                <Trans>
+                  {preview.task.slides} slides, about {preview.task.hours} hours
+                </Trans>
+              )}
             </Fact>
             <Fact icon="target" label={t`What to check`}>
               {preview.task.scope}
             </Fact>
             <Fact icon="calendar" label={t`Due`}>
-              {formatDue(preview.task.due_on)}
+              {preview.task.due_on ? formatDue(preview.task.due_on) : t`No due date`}
             </Fact>
             <Fact icon="eye-off" label={t`Review`}>
               {preview.task.blinded

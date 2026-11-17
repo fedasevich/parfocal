@@ -1,13 +1,14 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { getListTeamWorkloadMockHandler } from "../generated/api.msw.ts";
 import {
+  type Nudge,
+  type Reassignment,
+  ReassignWhat,
   type TeamReviewer,
   TeamReviewerStatus,
   type TeamTask,
   type TeamWorkload,
-  teamWorkloadSchema,
-} from "../draft/list-team-workload.ts";
-import { type Nudge, type Reassignment, ReassignWhat } from "../generated/api.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
+} from "../generated/api.ts";
 import {
   type PersonKey,
   people,
@@ -190,7 +191,7 @@ export function toTeamWorkload(
 ): TeamWorkload {
   const asOf = teamAsOf(scene);
   const mine = teamSources(scene).filter((task) => projectByCode(task.project).owner === viewer);
-  return teamWorkloadSchema.parse({
+  return {
     as_of: asOf,
     open: mine
       .filter((task) => !isSigned(task))
@@ -200,7 +201,7 @@ export function toTeamWorkload(
       .filter(isSigned)
       .sort((a, b) => dayNumber(b.signedOn ?? "") - dayNumber(a.signedOn ?? ""))
       .map((task) => toTeamTask(task, asOf, scene)),
-  });
+  };
 }
 
 const problem = (status: number, title: string, code: string, detail: string) =>
@@ -210,9 +211,6 @@ const problem = (status: number, title: string, code: string, detail: string) =>
   );
 
 const notFound = () => problem(404, "Review task not found", "not-found", "No such review task.");
-
-export const getListTeamWorkloadMockHandler = (overrideResponse?: TeamWorkload) =>
-  http.get("*/api/me/team", () => HttpResponse.json(overrideResponse ?? toTeamWorkload()));
 
 export const getNudgeReviewerMockHandler = (overrideResponse?: Nudge) =>
   http.post<{ taskId: string }, { user_id?: string; message?: string }>(
@@ -312,16 +310,8 @@ export const getUndoReassignmentMockHandler = () =>
     },
   );
 
-export const teamDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listTeamWorkload",
-    method: "get",
-    path: "/api/me/team",
-    handler: () => getListTeamWorkloadMockHandler(),
-  },
-];
-
 export const teamActionHandlers = (): RequestHandler[] => [
+  getListTeamWorkloadMockHandler(() => toTeamWorkload()),
   getNudgeReviewerMockHandler(),
   getCancelNudgeMockHandler(),
   getReassignSlidesMockHandler(),

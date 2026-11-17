@@ -1,17 +1,15 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-overview.ts";
-import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
-import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
-import { type StorageUsage, storageUsageSchema } from "../draft/get-storage-usage.ts";
-import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
 import {
   getAcceptInvitationMockHandler,
   getAskToJoinWorkspaceMockHandler,
   getChangeMemberRoleMockHandler,
   getCreateInvitationMockHandler,
   getExportAuditEventsMockHandler,
+  getGetAdminOverviewMockHandler,
   getGetCurrentTenantMockHandler,
+  getGetSecuritySettingsMockHandler,
   getGetSessionPolicyMockHandler,
+  getGetStorageUsageMockHandler,
   getInviteTaskReviewerMockHandler,
   getJoinWorkspaceMockHandler,
   getListAiModelsMockHandler,
@@ -20,6 +18,7 @@ import {
   getListJoinableWorkspacesMockHandler,
   getListMemberActivityMockHandler,
   getListServiceAccountsMockHandler,
+  getListWebhooksMockHandler,
   getRequestProjectAccessMockHandler,
   getResendInvitationMockHandler,
   getRevokeInvitationMockHandler,
@@ -27,23 +26,27 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   AcceptedInvitation,
+  AdminOverview,
   AiModels,
   AuditExport,
   Invitation,
   InvitationDraft,
+  InvitePreview,
   JoinableWorkspace,
   Member,
   MemberActivity,
   NamedAuditEvent,
   ProjectAccessRequest,
+  SecuritySettings,
   ServiceAccount,
   SessionPolicy,
+  StorageUsage,
   TaskInvitationDraft,
   Tenant,
+  Webhook,
   Workspace,
   WorkspaceAccessRequest,
 } from "../generated/api.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { isModelHidden } from "./hidden-models.ts";
 import {
   type PersonKey,
@@ -145,23 +148,22 @@ export const toInvitations = (): Invitation[] =>
     (invitation) => !withdrawn.has(invitation.id),
   );
 
-export const toAdminOverview = (): AdminOverview =>
-  adminOverviewSchema.parse({
-    people: workspaceTotals.people,
-    researchers: workspaceTotals.researchers,
-    reviewers: workspaceTotals.reviewers,
-    with_admin_rights: workspaceTotals.withAdminRights,
-    can_sign_out_user_ids: canSignOut.map((key) => people[key].id),
-    projects: workspaceTotals.projects,
-    invites_waiting: toInvitations().length,
-    models: toAiModels().models.filter((model) => model.shown).length,
-    runs_now: runningNow.length,
-    stored_tb: Math.round(storage.parts.reduce((sum, part) => sum + part.tb, 0) * 10) / 10,
-    capacity_tb: storage.totalTb,
-    in_place_tb: storage.inPlaceTb,
-    webhook_calls_today: webhooks[0]?.callsToday ?? 0,
-    webhook_rejected_today: webhooks.reduce((sum, hook) => sum + hook.rejectedToday, 0),
-  });
+export const toAdminOverview = (): AdminOverview => ({
+  people: workspaceTotals.people,
+  researchers: workspaceTotals.researchers,
+  reviewers: workspaceTotals.reviewers,
+  with_admin_rights: workspaceTotals.withAdminRights,
+  can_sign_out_user_ids: canSignOut.map((key) => people[key].id),
+  projects: workspaceTotals.projects,
+  invites_waiting: toInvitations().length,
+  models: toAiModels().models.filter((model) => model.shown).length,
+  runs_now: runningNow.length,
+  stored_tb: Math.round(storage.parts.reduce((sum, part) => sum + part.tb, 0) * 10) / 10,
+  capacity_tb: storage.totalTb,
+  in_place_tb: storage.inPlaceTb,
+  webhook_calls_today: webhooks[0]?.callsToday ?? 0,
+  webhook_rejected_today: webhooks.reduce((sum, hook) => sum + hook.rejectedToday, 0),
+});
 
 export const toMemberActivity = (): MemberActivity[] =>
   memberActivity.map((row) => ({
@@ -207,48 +209,44 @@ export const toAiModels = (): AiModels => ({
   })),
 });
 
-export const toStorageUsage = (): StorageUsage =>
-  storageUsageSchema.parse({
-    total_tb: storage.totalTb,
-    in_place_tb: storage.inPlaceTb,
-    parts: storage.parts,
-    by_project: storage.byProject.map((row) => ({
-      project: ref(row.code),
-      colour: projectByCode(row.code).colour,
-      gb: row.gb,
-      cap_gb: row.capGb,
-    })),
-    rules: storage.rules,
-    sources: sources.map((source) => ({
-      id: source.id,
-      name: source.name,
-      kind: source.kind,
-      access: source.access,
-      address: source.address,
-      new_slides: source.newSlides,
-      health: source.health,
-      first_tile_ms: source.firstTileMs,
-      expires_in_days: source.expiresInDays,
-    })),
-  });
+export const toStorageUsage = (): StorageUsage => ({
+  total_tb: storage.totalTb,
+  in_place_tb: storage.inPlaceTb,
+  parts: storage.parts,
+  by_project: storage.byProject.map((row) => ({
+    project: ref(row.code),
+    colour: projectByCode(row.code).colour,
+    gb: row.gb,
+    cap_gb: row.capGb,
+  })),
+  rules: storage.rules,
+  sources: sources.map((source) => ({
+    id: source.id,
+    name: source.name,
+    kind: source.kind,
+    access: source.access,
+    address: source.address,
+    new_slides: source.newSlides,
+    health: source.health,
+    first_tile_ms: source.firstTileMs,
+    expires_in_days: source.expiresInDays,
+  })),
+});
 
 export const toWebhooks = (): Webhook[] =>
-  webhookListSchema.parse(
-    webhooks.map((hook) => ({
-      id: hook.id,
-      name: hook.name,
-      direction: hook.direction,
-      events: hook.events,
-      calls_today: hook.callsToday,
-      rejected_today: hook.rejectedToday,
-    })),
-  );
+  webhooks.map((hook) => ({
+    id: hook.id,
+    name: hook.name,
+    direction: hook.direction,
+    events: hook.events,
+    calls_today: hook.callsToday,
+    rejected_today: hook.rejectedToday,
+  }));
 
-export const toSecuritySettings = (): SecuritySettings =>
-  securitySettingsSchema.parse({
-    sign_in: signInMethods,
-    two_factor: twoFactor,
-  });
+export const toSecuritySettings = (): SecuritySettings => ({
+  sign_in: signInMethods,
+  two_factor: twoFactor,
+});
 
 const brandOf = (index: number) => {
   const workspace = workspaces[index] ?? workspaces[0];
@@ -331,7 +329,7 @@ export const toInvitePreview = (): InvitePreview => {
   if (task === undefined) throw new Error("The scenario has no review task to invite to.");
   const project = projectByCode(task.project);
   const workspace = brandOf(0);
-  return invitePreviewSchema.parse({
+  return {
     token: inviteSeed.invitation,
     email: people[inviteSeed.to].email,
     name: people[inviteSeed.to].name,
@@ -359,7 +357,7 @@ export const toInvitePreview = (): InvitePreview => {
     },
     specialty: inviteSeed.specialty,
     expires_on: inviteSeed.expiresOn,
-  });
+  };
 };
 
 const toAuditEvents = (): NamedAuditEvent[] => [...recordedAudit, ...seededAuditEvents()];
@@ -524,6 +522,11 @@ const joinedWorkspace = (): AcceptedInvitation => {
 export function adminHandlers(): RequestHandler[] {
   return [
     getListAiModelsMockHandler(() => toAiModels()),
+    getGetAdminOverviewMockHandler(() => toAdminOverview()),
+    getGetStorageUsageMockHandler(() => toStorageUsage()),
+    getListWebhooksMockHandler(() => toWebhooks()),
+    getGetSecuritySettingsMockHandler(() => toSecuritySettings()),
+    invitePreviewHandler(),
     getListInvitationsMockHandler(() => toInvitations()),
     getRequestProjectAccessMockHandler(({ params }) =>
       toProjectAccessRequest(String(params.projectId)),
@@ -608,21 +611,7 @@ export function adminHandlers(): RequestHandler[] {
   ];
 }
 
-export const getGetAdminOverviewMockHandler = (overrideResponse?: AdminOverview) =>
-  http.get("*/api/tenant/overview", () => HttpResponse.json(overrideResponse ?? toAdminOverview()));
-
-export const getGetStorageUsageMockHandler = (overrideResponse?: StorageUsage) =>
-  http.get("*/api/tenant/storage", () => HttpResponse.json(overrideResponse ?? toStorageUsage()));
-
-export const getListWebhooksMockHandler = (overrideResponse?: Webhook[]) =>
-  http.get("*/api/tenant/webhooks", () => HttpResponse.json(overrideResponse ?? toWebhooks()));
-
-export const getGetSecuritySettingsMockHandler = (overrideResponse?: SecuritySettings) =>
-  http.get("*/api/tenant/security", () =>
-    HttpResponse.json(overrideResponse ?? toSecuritySettings()),
-  );
-
-export const getGetInvitePreviewMockHandler = (overrideResponse?: InvitePreview) =>
+export const invitePreviewHandler = (overrideResponse?: InvitePreview) =>
   http.get("*/api/invitations/:token/preview", ({ params }) =>
     overrideResponse === undefined && params.token !== inviteSeed.invitation
       ? HttpResponse.json(
@@ -642,36 +631,3 @@ export const toProjectAccessRequest = (projectId: string): ProjectAccessRequest 
     asked_at: scenarioNow,
   };
 };
-
-export const adminDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getAdminOverview",
-    method: "get",
-    path: "/api/tenant/overview",
-    handler: () => getGetAdminOverviewMockHandler(),
-  },
-  {
-    operationId: "getStorageUsage",
-    method: "get",
-    path: "/api/tenant/storage",
-    handler: () => getGetStorageUsageMockHandler(),
-  },
-  {
-    operationId: "listWebhooks",
-    method: "get",
-    path: "/api/tenant/webhooks",
-    handler: () => getListWebhooksMockHandler(),
-  },
-  {
-    operationId: "getSecuritySettings",
-    method: "get",
-    path: "/api/tenant/security",
-    handler: () => getGetSecuritySettingsMockHandler(),
-  },
-  {
-    operationId: "getInvitePreview",
-    method: "get",
-    path: "/api/invitations/{token}/preview",
-    handler: () => getGetInvitePreviewMockHandler(),
-  },
-];
