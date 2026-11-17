@@ -163,7 +163,7 @@ OPS-030 (a warm API call answers in under 300 ms) found on 2026-11-17 that the A
 
 Prices and facts for four ways to place the servers, read from the vendors on 2026-11-17, are in [server region options](results/2026-11-17-server-region-options.md). It recommends option A without the warm container, entering Modal at Dublin, over A0, because the EU pin is cheaper (1.15 times against 1.75) and the move is cheap only while the database can be reseeded.
 
-Your choice: 
+Your choice: A without the warm container, the EU move (owner in chat, 2026-11-17). The web function goes to `eu` entering at Dublin, a new Neon project in Frankfurt is reseeded, and the old US project is deleted only after a separate yes.
 
 ### 141. How fast a person turned off in the customer's directory loses access
 
