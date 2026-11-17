@@ -208,3 +208,42 @@ def test_a_failed_spawn_is_tried_again_at_the_next_event() -> None:
         asyncio.run(spawner())
     asyncio.run(spawner())
     assert len(attempts) == 2
+
+
+def test_the_hourly_event_run_also_sweeps_the_remote_tile_caches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import parfocal_api.event_delivery
+
+    calls: list[str] = []
+    monkeypatch.setattr(
+        parfocal_api.event_delivery, "main", lambda argv: calls.append(f"events {argv[-1]}")
+    )
+    monkeypatch.setattr(modal_app, "sweep_remote_caches", lambda: calls.append("caches"))
+    modal_app.run_events()
+    modal_app.run_events(EVENTS_LINGER_MINUTES)
+    assert calls == ["events 0", "caches", f"events {EVENTS_LINGER_MINUTES}"]
+
+
+def test_the_cache_sweep_runs_one_pass_with_the_api_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import parfocal_api.remote_cache_sweep
+    import parfocal_common.settings
+    from parfocal_api.settings import ApiSettings
+
+    settings = object()
+    passes: list[object] = []
+
+    async def run_once(given: object) -> int:
+        passes.append(given)
+        return 0
+
+    def load(kind: type) -> object:
+        assert kind is ApiSettings
+        return settings
+
+    monkeypatch.setattr(parfocal_common.settings, "load_settings", load)
+    monkeypatch.setattr(parfocal_api.remote_cache_sweep, "run_once", run_once)
+    modal_app.sweep_remote_caches()
+    assert passes == [settings]

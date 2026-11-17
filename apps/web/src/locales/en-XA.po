@@ -690,6 +690,11 @@ msgstr ""
 msgid "{0} evaluation report"
 msgstr ""
 
+#. placeholder {0}: hook.rejected_today
+#: src/screens/admin/api-section.tsx
+msgid "{0} failed"
+msgstr ""
+
 #. placeholder {0}: template.name
 #: src/screens/new-task/new-task-screen.tsx
 msgid "{0} filled in what to check, how it runs and the display defaults"
@@ -706,10 +711,8 @@ msgstr ""
 msgid "{0} found"
 msgstr ""
 
-#. placeholder {0}: row.gb
 #. placeholder {0}: space.gb
 #: src/screens/admin/sections.tsx
-#: src/screens/admin/storage.tsx
 msgid "{0} GB"
 msgstr ""
 
@@ -772,6 +775,12 @@ msgstr ""
 #. placeholder {2}: item.key
 #: src/screens/project/settings-tab.tsx
 msgid "{0} is a class in {1}, on key {2}"
+msgstr ""
+
+#. placeholder {0}: person.name
+#. placeholder {1}: project.code
+#: src/screens/project/add-person-dialog.tsx
+msgid "{0} is a reviewer in {1}"
 msgstr ""
 
 #. placeholder {0}: pending.combo
@@ -1118,10 +1127,9 @@ msgstr ""
 
 #. placeholder {0}: tb(used)
 #. placeholder {1}: tb(totalTb)
-#. placeholder {2}: parts .map((part) => `${part.label} ${tb(part.tb)}`) .join(", ")
-#. placeholder {3}: tb(free)
+#. placeholder {2}: tb(free)
 #: ../../packages/ui/src/components/admin.tsx
-msgid "{0} of {1} used. {2}, free {3}"
+msgid "{0} of {1} used. {split}, free {2}"
 msgstr ""
 
 #. placeholder {0}: text.length
@@ -1272,7 +1280,7 @@ msgid "{0} regions"
 msgstr ""
 
 #. placeholder {0}: hook.rejected_today
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
 msgid "{0} rejected"
 msgstr ""
 
@@ -1334,6 +1342,11 @@ msgstr ""
 #. placeholder {1}: loose.length === 1 ? "" : "s"
 #: src/screens/project/slides-tab.tsx
 msgid "{0} slide{1}, no case"
+msgstr ""
+
+#. placeholder {0}: preview.task.slides
+#: src/screens/onboarding/invite-screen.tsx
+msgid "{0} slides"
 msgstr ""
 
 #. placeholder {0}: moved.data.slides_moved
@@ -1421,6 +1434,11 @@ msgstr ""
 msgid "{0} to fix first."
 msgstr ""
 
+#. placeholder {0}: tb(used)
+#: ../../packages/ui/src/components/admin.tsx
+msgid "{0} used. {split}"
+msgstr ""
+
 #. placeholder {0}: other.name
 #. placeholder {1}: pending.slot
 #. placeholder {2}: other.name.toLowerCase()
@@ -1500,11 +1518,6 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "{0} without results"
-msgstr ""
-
-#. placeholder {0}: flow.workspace.name
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "{0} workspace"
 msgstr ""
 
 #. placeholder {0}: clash.value.split("").join(" ")
@@ -2896,6 +2909,12 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
+#. placeholder {0}: person.name
+#. placeholder {1}: project.code
+#: src/screens/project/add-person-dialog.tsx
+msgid "Add {0} to {1}?"
+msgstr ""
+
 #. placeholder {0}: count > 1 ? "s" : ""
 #: src/screens/new-task/modals.tsx
 msgid "Add {count} slide{0}"
@@ -2951,10 +2970,6 @@ msgstr ""
 msgid "Add a run to a signed-off slide"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Add a webhook: incoming for a project, or outgoing to your server (mock)"
-msgstr ""
-
 #: src/screens/new-task/reviewers-step.tsx
 msgid "Add a zone"
 msgstr ""
@@ -2988,6 +3003,10 @@ msgstr ""
 msgid "Add another result set to {0}"
 msgstr ""
 
+#: src/screens/project/add-person-dialog.tsx
+msgid "Add as reviewer"
+msgstr ""
+
 #: src/screens/upload/live-wizard.tsx
 msgid "Add at least one slide to go on. Results go with a slide."
 msgstr ""
@@ -3007,6 +3026,10 @@ msgstr ""
 #: src/results/add-result-set.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Add result set"
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Add result sets to P07"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -3052,10 +3075,6 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Add them to the viewer address, for example <0>?lab&renderer=viv&nuclei=100k</0>"
-msgstr ""
-
-#: src/screens/admin/sections.tsx
-msgid "Add webhook"
 msgstr ""
 
 #: src/screens/viewer/object-table.tsx
@@ -3119,10 +3138,6 @@ msgstr ""
 msgid "Admin · {0}"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Admin · Security"
-msgstr ""
-
 #: src/screens/admin/people.tsx
 msgid "Admin rights"
 msgstr ""
@@ -3158,10 +3173,6 @@ msgstr ""
 
 #: src/screens/review/first-read.tsx
 msgid "After this the AI result appears and you can give your decisions."
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "After you sign in:"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -3552,16 +3563,6 @@ msgstr ""
 msgid "Answered in"
 msgstr ""
 
-#: src/screens/admin/overview.tsx
-#: src/screens/admin/sections.tsx
-msgid "Answering"
-msgstr ""
-
-#. placeholder {0}: source.first_tile_ms
-#: src/screens/admin/storage.tsx
-msgid "Answering · {0} ms"
-msgstr ""
-
 #: src/screens/admin/audit.tsx
 msgid "Any time"
 msgstr ""
@@ -3584,10 +3585,6 @@ msgstr ""
 
 #: src/screens/admin/admin-shell.tsx
 msgid "API and webhooks"
-msgstr ""
-
-#: src/screens/admin/sections.tsx
-msgid "API reference"
 msgstr ""
 
 #: src/screens/upload/overlays.tsx
@@ -3850,7 +3847,6 @@ msgstr ""
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/onboarding/setup-screen.tsx
-#: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
@@ -3885,10 +3881,6 @@ msgstr ""
 #: src/screens/admin/admin-screen.tsx
 #: src/screens/admin/admin-shell.tsx
 msgid "Back to Parfocal"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Back to sign in"
 msgstr ""
 
 #: src/screens/review/object-card.tsx
@@ -3975,6 +3967,7 @@ msgstr ""
 msgid "Before you can add the class"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/templates.tsx
 msgid "Before you can create it"
 msgstr ""
@@ -4110,6 +4103,10 @@ msgstr ""
 #. placeholder {0}: index + 1
 #: src/screens/project/case-slides-editor.tsx
 msgid "Block of slide {0}"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Blocked"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
@@ -4274,10 +4271,6 @@ msgstr ""
 msgid "Camera feel preview"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Can"
-msgstr ""
-
 #: src/screens/clinical-report/steps.tsx
 #: src/screens/project/settings-zones.tsx
 msgid "Can sign out"
@@ -4306,6 +4299,7 @@ msgstr ""
 #: ../../packages/ui/src/components/small-modal.tsx
 #: ../../packages/ui/src/components/team.tsx
 #: src/results/add-result-set.tsx
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/sections.tsx
 #: src/screens/admin/tile-sharing-modal.tsx
@@ -4690,10 +4684,6 @@ msgstr ""
 msgid "Check the line"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Check your email"
-msgstr ""
-
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Check, fix and comment on AI results, give your opinion"
 msgstr ""
@@ -4759,10 +4749,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Choose a model"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Choose a new password"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
@@ -5301,14 +5287,6 @@ msgstr ""
 msgid "Connect a model"
 msgstr ""
 
-#: src/screens/admin/admin-screen.tsx
-msgid "Connect a source"
-msgstr ""
-
-#: src/screens/admin/admin-screen.tsx
-msgid "Connect a source: S3, Azure, DICOMweb or HTTPS with range requests. Read-only keys only (mock)"
-msgstr ""
-
 #: src/screens/admin/connect-model.tsx
 msgid "Connect and test"
 msgstr ""
@@ -5379,27 +5357,9 @@ msgstr ""
 msgid "Continue reviewing, your tasks, asks and mentions"
 msgstr ""
 
-#. placeholder {0}: chosen.short_name
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Continue to {0} sign-in"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Continue to your organisation's sign-in"
-msgstr ""
-
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Continue where you left off"
-msgstr ""
-
-#. placeholder {0}: matched.short_name
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Continue with {0} single sign-on"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Continue with your institution"
 msgstr ""
 
 #: src/screens/admin/storage.tsx
@@ -5411,6 +5371,7 @@ msgstr ""
 msgid "Copied {copyText}"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/evaluation/share-links.tsx
 #: src/screens/upload/overlays.tsx
 msgid "Copy"
@@ -5425,11 +5386,28 @@ msgid "Copy ID {copyText}"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
+#: src/viewer/remote-slide-notice.tsx
 msgid "Copy into Parfocal"
 msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
 msgid "Copy it now. Parfocal keeps only a fingerprint and cannot show it again."
+msgstr ""
+
+#: src/viewer/remote-slide-notice.tsx
+msgid "Copy the file once into Parfocal storage."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Copy the token by hand"
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Copy the token now"
+msgstr ""
+
+#: src/viewer/remote-slide-notice.tsx
+msgid "Copying. The slide keeps its ID, reviews and annotations."
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -5440,7 +5418,6 @@ msgstr ""
 msgid "Corrections per hundred nuclei"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not check the code."
 msgstr ""
@@ -5453,16 +5430,8 @@ msgstr ""
 msgid "Could not load {label}."
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Could not save the password."
-msgstr ""
-
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not send the code."
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Could not send the link."
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -5574,6 +5543,10 @@ msgstr ""
 
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Create the account first."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Create token"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -5918,10 +5891,6 @@ msgstr ""
 msgid "Dimmer"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Direction"
-msgstr ""
-
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Directions come as a set of four."
 msgstr ""
@@ -5991,6 +5960,7 @@ msgstr ""
 #: ../../packages/ui/src/components/team.tsx
 #: src/feedback/feedback-dialog.tsx
 #: src/help/tour-host.tsx
+#: src/screens/admin/api-section.tsx
 #: src/screens/new-task/modals.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/team/team-screen.tsx
@@ -6329,10 +6299,6 @@ msgstr ""
 msgid "Email domain"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Email me a sign-in link instead"
-msgstr ""
-
 #: src/screens/admin/audit.tsx
 msgid "Emergency"
 msgstr ""
@@ -6415,10 +6381,6 @@ msgstr ""
 msgid "Enter your password."
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Enter your work email. If it has an account, a reset link arrives in a minute."
-msgstr ""
-
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/result-problems.tsx
 msgid "Error report"
@@ -6477,7 +6439,11 @@ msgstr ""
 msgid "Evaluation v2 started from v1. v1 stays as it was signed."
 msgstr ""
 
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
+msgid "Event targets out"
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
 msgid "Events"
 msgstr ""
 
@@ -6721,12 +6687,6 @@ msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
 msgid "Expired"
-msgstr ""
-
-#. placeholder {0}: source.expires_in_days
-#: src/screens/admin/overview.tsx
-#: src/screens/admin/storage.tsx
-msgid "Expires in {0} days"
 msgstr ""
 
 #: src/results/painted-map-layer.tsx
@@ -7034,13 +6994,12 @@ msgstr ""
 msgid "Follows the contract"
 msgstr ""
 
-#. placeholder {0}: flow.email
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "For <0>{0}</0>. Other devices are signed out after the change."
-msgstr ""
-
 #: src/screens/onboarding/setup-screen.tsx
 msgid "For a lab or a group that is not here yet. You get admin rights to set it up"
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "For a pipeline that sends slides or results into Parfocal"
 msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
@@ -7134,10 +7093,6 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Forget learned"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Forgot password?"
 msgstr ""
 
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -7243,6 +7198,10 @@ msgstr ""
 #. placeholder {0}: data.slide
 #: src/screens/clinical-report/steps.tsx
 msgid "From your decisions on {0}"
+msgstr ""
+
+#: src/screens/admin/storage.tsx
+msgid "Full"
 msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
@@ -7396,6 +7355,7 @@ msgstr ""
 msgid "Go to the field"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/templates.tsx
 msgid "Go to the name"
 msgstr ""
@@ -7504,10 +7464,6 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "Header"
-msgstr ""
-
-#: src/screens/admin/storage.tsx
-msgid "Health"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
@@ -7919,10 +7875,6 @@ msgstr ""
 msgid "Include {0}"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Incoming"
-msgstr ""
-
 #: src/screens/upload/overlays.tsx
 msgid "Incoming webhook"
 msgstr ""
@@ -7991,14 +7943,6 @@ msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Instant"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Institution or email domain"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Institutions"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -8096,6 +8040,10 @@ msgstr ""
 msgid "It {0}, before the viewer can see the key. Pick another key."
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
+msgid "It can"
+msgstr ""
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "It changes the report, so a single key could be pressed by accident while reading. Your lab requires a modifier for it."
 msgstr ""
@@ -8111,6 +8059,10 @@ msgstr ""
 
 #: src/screens/upload/viewer-flow.tsx
 msgid "It goes on A1 only. Every result set records its file, model and version."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "It is shown once. Parfocal keeps only a fingerprint of it."
 msgstr ""
 
 #: src/screens/onboarding/invite-screen.tsx
@@ -8433,7 +8385,7 @@ msgstr ""
 msgid "Last two magnifications"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
 msgid "Last used"
 msgstr ""
 
@@ -9070,10 +9022,6 @@ msgstr ""
 msgid "Matched by overlap. {firstBoth} to {lastBoth} are in both, {0} only in A. Dice {1}."
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Matches your email"
-msgstr ""
-
 #. placeholder {0}: typed.trim()
 #: src/screens/settings/settings-screen.tsx
 msgid "Matching \"{0}\""
@@ -9298,13 +9246,12 @@ msgstr ""
 msgid "More"
 msgstr ""
 
-#. placeholder {0}: hook.name
 #. placeholder {0}: member.display_name
 #. placeholder {0}: model.name
+#. placeholder {0}: set.name
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/admin/sections.tsx
-#: src/screens/admin/storage.tsx
 #: src/screens/admin/templates.tsx
 msgid "More for {0}"
 msgstr ""
@@ -9421,6 +9368,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/new-forms.tsx
 #: src/results/painted-map-layer.tsx
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/template-editor.tsx
 #: src/screens/admin/templates.tsx
@@ -9464,6 +9412,10 @@ msgstr ""
 msgid "Nearest"
 msgstr ""
 
+#: src/screens/admin/storage.tsx
+msgid "Nearly full"
+msgstr ""
+
 #: src/screens/new-task/modals.tsx
 msgid "Need a deeper level"
 msgstr ""
@@ -9489,8 +9441,8 @@ msgstr ""
 msgid "Needs two or more reviewers"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/people.tsx
-#: src/screens/admin/sections.tsx
 #: src/screens/project/settings-zones.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Never"
@@ -9533,10 +9485,6 @@ msgstr ""
 
 #: src/results/painted-map-layer.tsx
 msgid "New map"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "New password"
 msgstr ""
 
 #: src/annotations/pin-layer.tsx
@@ -9611,13 +9559,9 @@ msgstr ""
 msgid "New to Parfocal?"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
 #: src/screens/upload/overlays.tsx
 msgid "New token"
-msgstr ""
-
-#: src/screens/admin/sections.tsx
-msgid "New token: pick a project and what it can do. Shown once (mock)"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -9763,16 +9707,13 @@ msgid "No deposit yet. Add one from an object on a slide, or measure one by hand
 msgstr ""
 
 #: src/screens/my-work/assigned-tab.tsx
+#: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
 msgid "No due date"
 msgstr ""
 
 #: src/viewer/start-run-panel.tsx
 msgid "No earlier run on this slide"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "No email?"
 msgstr ""
 
 #: src/screens/admin/audit.tsx
@@ -9823,16 +9764,24 @@ msgstr ""
 msgid "No other task to compare"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "No Parfocal workspace signs in that email domain through your organisation. Check the domain, or go back and sign in with your email."
-msgstr ""
-
 #: src/screens/project/settings-tab.tsx
 msgid "No patient fields anywhere. Names are removed from file metadata and labels on upload."
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "No patient fields, names are stripped on upload."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "No project has an incoming webhook yet."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "No project sends events to a pipeline yet."
+msgstr ""
+
+#: src/screens/admin/storage.tsx
+msgid "No projects yet."
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -9869,6 +9818,10 @@ msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "No reviewer gave a reason for disagreeing."
+msgstr ""
+
+#: src/screens/admin/storage.tsx
+msgid "No saved sources yet. Save one when you import slides from a link or a bucket."
 msgstr ""
 
 #: src/screens/viewer/object-table.tsx
@@ -9934,6 +9887,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "No title"
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "No tokens yet. A pipeline needs one to send slides or results."
 msgstr ""
 
 #: ../../packages/ui/src/components/systematic-scan.tsx
@@ -10089,10 +10046,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Not known"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Not listed? Your admin can connect it in"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
@@ -10958,10 +10911,6 @@ msgstr ""
 msgid "Opens in this browser only. Nothing is uploaded."
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Opens the API reference in the docs (mock)"
-msgstr ""
-
 #: src/screens/viewer/full-viewer.tsx
 msgid "Opens the whole slide on the second monitor"
 msgstr ""
@@ -11011,11 +10960,6 @@ msgstr ""
 msgid "Or plug in your security key and touch it."
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-#: src/screens/onboarding/sign-up-screen.tsx
-msgid "or with your email"
-msgstr ""
-
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/how-step.tsx
@@ -11050,10 +10994,6 @@ msgstr ""
 
 #: src/screens/new-task/modals.tsx
 msgid "Out of focus"
-msgstr ""
-
-#: src/screens/admin/sections.tsx
-msgid "Outgoing"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
@@ -11394,6 +11334,10 @@ msgstr ""
 msgid "Pause models while moving"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
+msgid "Paused"
+msgstr ""
+
 #. placeholder {0}: formatBytes(entry.bytesUploaded)
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "Paused at {0} of {total}"
@@ -11491,11 +11435,6 @@ msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Personal: they follow you to any workstation."
-msgstr ""
-
-#. placeholder {0}: token.id.slice(-4)
-#: src/screens/admin/sections.tsx
-msgid "pf_live_…{0}"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -11623,8 +11562,8 @@ msgstr ""
 msgid "Pinned when the task was sent."
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Pipelines post result files to a project's incoming webhook, signed with its token."
+#: src/screens/admin/api-section.tsx
+msgid "Pipelines post slides and result files to a project's incoming webhook, signed with its secret. Event targets receive signed calls when reviews and result sets change."
 msgstr ""
 
 #: src/screens/upload/result-problems.tsx
@@ -11879,6 +11818,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/routes/issue-states.tsx
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/audit.tsx
 #: src/screens/admin/deleted-projects.tsx
 #: src/screens/admin/sections.tsx
@@ -12060,14 +12000,9 @@ msgstr ""
 msgid "Read in place from a connected source. Nothing is copied."
 msgstr ""
 
-#. placeholder {0}: tb(usage.in_place_tb)
+#. placeholder {0}: sizeText(usage.in_place_bytes)
 #: src/screens/admin/storage.tsx
 msgid "Read in place, not counted: <0>{0}</0> stays on your sources"
-msgstr ""
-
-#. placeholder {0}: source.first_tile_ms ?? 180
-#: src/screens/admin/storage.tsx
-msgid "Read one tile and listed the folder: answered in {0} ms (mock)"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -12270,6 +12205,7 @@ msgid "Reminders"
 msgstr ""
 
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/remote-slide-notice.tsx
 msgid "remote"
 msgstr ""
 
@@ -12332,10 +12268,6 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "Reopen my review"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Repeat it"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
@@ -12474,7 +12406,6 @@ msgid "Resend"
 msgstr ""
 
 #. placeholder {0}: clock(secondsLeft)
-#: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Resend in {0}"
 msgstr ""
@@ -12486,10 +12417,6 @@ msgstr ""
 #. placeholder {0}: invitation.email
 #: src/screens/admin/people.tsx
 msgid "Resend the invite to {0}"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Resend the link"
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
@@ -12509,11 +12436,6 @@ msgstr ""
 msgid "Reset all"
 msgstr ""
 
-#. placeholder {0}: response.data.email
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Reset link sent to {0}"
-msgstr ""
-
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Reset to 100%"
 msgstr ""
@@ -12524,10 +12446,6 @@ msgstr ""
 
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Reset to the template"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Reset your password"
 msgstr ""
 
 #: ../../packages/ui/src/components/bottom-sheet.tsx
@@ -12882,9 +12800,14 @@ msgstr ""
 msgid "Reviews this task"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
 #: src/screens/evaluation/share-links.tsx
 msgid "Revoke"
+msgstr ""
+
+#. placeholder {0}: account.name
+#: src/screens/admin/api-section.tsx
+msgid "Revoke the token for {0}"
 msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
@@ -13201,10 +13124,6 @@ msgstr ""
 
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "Save a preset"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Save and sign in"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
@@ -13532,10 +13451,6 @@ msgstr ""
 msgid "Send pixels"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Send reset link"
-msgstr ""
-
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Send the request and continue"
 msgstr ""
@@ -13563,10 +13478,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/ingest-failure.tsx
 msgid "Sending this file again will not change the result. If it should work, tell support."
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Sends a new link. The old one stops working"
 msgstr ""
 
 #. placeholder {0}: test.sample_slide
@@ -14044,14 +13955,6 @@ msgstr ""
 msgid "Sign in with a passkey"
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Sign in with the code"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Sign in with your organisation"
-msgstr ""
-
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -14098,10 +14001,6 @@ msgstr ""
 msgid "Sign out on other devices"
 msgstr ""
 
-#: src/screens/onboarding/sign-up-screen.tsx
-msgid "Sign up with {ssoName} single sign-on"
-msgstr ""
-
 #. placeholder {0}: summary.next_version.version
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Sign v{0}"
@@ -14122,10 +14021,6 @@ msgstr ""
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/sections.tsx
 msgid "Sign-in"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Sign-in code"
 msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
@@ -14219,11 +14114,6 @@ msgstr ""
 msgid "Signed out of the {count} other devices"
 msgstr ""
 
-#. placeholder {0}: institutionFor(flow.email, flow.options?.institutions ?? [])?.short_name
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Signing in with {0} single sign-on? Reset that password with hospital IT instead."
-msgstr ""
-
 #: src/screens/clinical-report/modals.tsx
 msgid "Signing locks this version."
 msgstr ""
@@ -14251,11 +14141,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "simulated"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-#: src/screens/onboarding/sign-up-screen.tsx
-msgid "Single sign-on did not answer."
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
@@ -14361,12 +14246,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "Slide {slideNumber} is done"
-msgstr ""
-
-#. placeholder {0}: link.slide_label
-#. placeholder {1}: link.case_label
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "slide <0>{0}</0> of <1>{1}</1>"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -14619,6 +14498,10 @@ msgstr ""
 msgid "Space"
 msgstr ""
 
+#: src/screens/admin/storage.tsx
+msgid "Space by project"
+msgstr ""
+
 #: src/screens/admin/admin-shell.tsx
 msgid "Space used, and the servers slides are read from"
 msgstr ""
@@ -14771,6 +14654,11 @@ msgstr ""
 msgid "Starts in"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
+#: src/screens/admin/storage.tsx
+msgid "State"
+msgstr ""
+
 #: src/screens/admin/people.tsx
 #: src/screens/admin/sections.tsx
 #: src/screens/kpi/kpi-screen.tsx
@@ -14858,10 +14746,18 @@ msgstr ""
 msgid "Stopped. What was stored is kept"
 msgstr ""
 
+#: src/screens/my-work/all-slides-tab.tsx
+msgid "Storage"
+msgstr ""
+
 #: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
 #: src/screens/upload/check-step.tsx
 msgid "Storage and sources"
+msgstr ""
+
+#: src/screens/admin/overview.tsx
+msgid "Stored"
 msgstr ""
 
 #. placeholder {0}: tb(overview.capacity_tb)
@@ -15058,6 +14954,7 @@ msgid "Taps {0}, holds {1}, whole slide"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/admin/api-section.tsx
 msgid "Target"
 msgstr ""
 
@@ -15124,10 +15021,6 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: src/screens/team/team-screen.tsx
-msgid "Team workload"
-msgstr ""
-
 #: src/screens/viewer/objects-panel.tsx
 msgid "Tell me when it is ready"
 msgstr ""
@@ -15152,7 +15045,6 @@ msgid "Templates that come with Parfocal stay as they are. Duplicate one to chan
 msgstr ""
 
 #: src/screens/admin/sections.tsx
-#: src/screens/admin/storage.tsx
 msgid "Test"
 msgstr ""
 
@@ -15410,6 +15302,10 @@ msgstr ""
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The connection is lost. It saves when the connection is back."
+msgstr ""
+
+#: src/viewer/remote-slide-notice.tsx
+msgid "The copy could not be started. Try again."
 msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
@@ -15838,8 +15734,16 @@ msgstr ""
 msgid "The Slide done card with the opinion questions. It opens from Submit once every object is decided."
 msgstr ""
 
+#: src/viewer/remote-slide-notice.tsx
+msgid "The slide is still being inspected at its source."
+msgstr ""
+
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
+msgstr ""
+
+#: src/viewer/remote-slide-notice.tsx
+msgid "The source is not answering, so the slide cannot be copied now."
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
@@ -15905,10 +15809,6 @@ msgstr ""
 msgid "The two factor setting did not save. Try again."
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "The two passwords are not the same."
-msgstr ""
-
 #. placeholder {0}: learnerView.corrections
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
@@ -15972,6 +15872,10 @@ msgstr ""
 
 #: src/screens/admin/join-settings.tsx
 msgid "They ask, and someone with admin rights answers in Join requests on People."
+msgstr ""
+
+#: src/screens/project/add-person-dialog.tsx
+msgid "They asked for access. They join as a reviewer and see this project from then on."
 msgstr ""
 
 #: ../../packages/ui/src/components/token-field.tsx
@@ -16093,6 +15997,10 @@ msgstr ""
 
 #: src/screens/upload/server-check.tsx
 msgid "This slide is already in the project"
+msgstr ""
+
+#: src/viewer/remote-slide-notice.tsx
+msgid "This slide is already stored in Parfocal."
 msgstr ""
 
 #: src/viewer/annotate-task-panel.tsx
@@ -16300,24 +16208,28 @@ msgstr ""
 msgid "To slide {0} in case <0>{1}</0>"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
 msgid "Today"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/connect-model.tsx
-#: src/screens/admin/sections.tsx
 msgid "Token"
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Token copied"
 msgstr ""
 
 #: src/screens/upload/overlays.tsx
 msgid "Token for {projectCode}"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Token revoked. Pipelines using it stop at once (mock)"
+#: src/screens/admin/api-section.tsx
+msgid "Token revoked. Pipelines using it stop at once."
 msgstr ""
 
-#: src/screens/admin/sections.tsx
+#: src/screens/admin/api-section.tsx
 msgid "Tokens"
 msgstr ""
 
@@ -16817,10 +16729,6 @@ msgstr ""
 msgid "Use a number above 0, for example 1.5."
 msgstr ""
 
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Use a password"
-msgstr ""
-
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Use a phone or security key"
 msgstr ""
@@ -16873,6 +16781,10 @@ msgstr ""
 msgid "Use your passkey for parfocal.eu"
 msgstr ""
 
+#: ../../packages/ui/src/components/admin.tsx
+msgid "used"
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "used to suggest you for review tasks"
 msgstr ""
@@ -16883,6 +16795,19 @@ msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "v1 stays readable."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Valid for {TOKEN_DAYS} days. Revoke it here at any time."
+msgstr ""
+
+#: src/screens/admin/api-section.tsx
+msgid "Valid until"
+msgstr ""
+
+#. placeholder {0}: formatDue(issued.expires_at.slice(0, 10))
+#: src/screens/admin/api-section.tsx
+msgid "Valid until {0}."
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -17078,17 +17003,12 @@ msgstr ""
 msgid "We read every message. Nothing else from this screen was sent."
 msgstr ""
 
-#. placeholder {0}: options?.link_minutes ?? 15
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "We sent a sign-in link and a code to <0>{email}</0>. Both work once, for {0} minutes."
-msgstr ""
-
 #: src/screens/developer/developer-screen.tsx
 msgid "WebGPU only"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/admin/overview.tsx
-#: src/screens/admin/sections.tsx
 msgid "Webhook"
 msgstr ""
 
@@ -17108,8 +17028,8 @@ msgstr ""
 msgid "Webhook URL for {projectCode}"
 msgstr ""
 
-#: src/screens/admin/sections.tsx
-msgid "Webhooks"
+#: src/screens/admin/api-section.tsx
+msgid "Webhooks in"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -17493,6 +17413,7 @@ msgstr ""
 msgid "Work email"
 msgstr ""
 
+#: src/screens/admin/api-section.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Working"
 msgstr ""
@@ -17602,6 +17523,10 @@ msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "You are told when it is signed or returned."
+msgstr ""
+
+#: src/screens/project/add-person-dialog.tsx
+msgid "You can change their role later in the project settings."
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
@@ -17764,10 +17689,6 @@ msgstr ""
 #. placeholder {0}: roles[role].effect
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Your home keeps a short checklist until each part has been tried once. {0}"
-msgstr ""
-
-#: src/screens/onboarding/sign-in-forms.tsx
-msgid "Your institution checks who you are, so Parfocal never sees your password."
 msgstr ""
 
 #: src/screens/admin/sections.tsx

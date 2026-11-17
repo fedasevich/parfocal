@@ -1,6 +1,7 @@
 import { expect, test } from "./a11y.ts";
 
 const project = "p-1";
+const ownedProject = "P03";
 
 function remoteReads(page: import("@playwright/test").Page): string[] {
   const reads: string[] = [];
@@ -42,4 +43,24 @@ test("an uploaded slide shows neither the remote tag nor the offline notice", as
     timeout: 15_000,
   });
   await expect(page.getByTestId("remote-tag")).toHaveCount(0);
+  await expect(page.getByTestId("copy-into-parfocal")).toHaveCount(0);
+});
+
+test("the owner copies a remote slide into Parfocal from the viewer", async ({ page }) => {
+  const asked: string[] = [];
+  page.on("request", (request) => {
+    const { pathname } = new URL(request.url());
+    if (request.method() === "POST" && pathname.endsWith("/copy-in")) asked.push(pathname);
+  });
+  await page.goto(`/projects/${ownedProject}/slides/remote-1/live`);
+  const copy = page.getByTestId("copy-into-parfocal");
+  await expect(copy).toBeEnabled({ timeout: 15_000 });
+  await copy.click();
+  await expect(page.getByTestId("copy-outcome")).toBeVisible();
+  expect(asked).toEqual(["/api/slides/remote-1/copy-in"]);
+});
+
+test("a remote slide whose source is down cannot be copied now", async ({ page }) => {
+  await page.goto(`/projects/${ownedProject}/slides/remote-offline-1/live`);
+  await expect(page.getByTestId("copy-into-parfocal")).toBeDisabled({ timeout: 15_000 });
 });

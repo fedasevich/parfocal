@@ -5,6 +5,7 @@ import pytest
 from db_support import ApiAs
 from test_my_work import submit, task
 from test_review_tasks import Study, study
+from workspace_support import owner
 
 pytestmark = pytest.mark.db
 
@@ -102,6 +103,17 @@ def test_all_slides_and_a_sent_list_give_neighbours_in_their_own_order(
         1,
         2,
         False,
+    )
+    owner(
+        database,
+        "UPDATE slides SET storage = 'remote', remote_path = 'scans/a.svs' "
+        f"WHERE id IN ('{s.slides[0]}', '{s.slides[1]}')",
+    )
+    remote = {"from": "all-slides", "storage": "remote"}
+    assert around(neighbours(api, s, "owner", s.slides[1], **remote))[:3] == (
+        None,
+        "loose-1",
+        "loose-0",
     )
     sent = {"from": "list", "ids": [str(s.slides[3]), str(s.slides[0]), str(uuid.uuid4())]}
     assert around(neighbours(api, s, "owner", s.slides[0], **sent)) == (

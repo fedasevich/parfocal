@@ -14,7 +14,13 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, NotFoundError
 from parfocal_api.review_states import State
 from parfocal_api.review_tasks import readable_task
-from parfocal_api.tables import cases, review_assignments, review_task_slides, slides
+from parfocal_api.tables import (
+    SlideStorage,
+    cases,
+    review_assignments,
+    review_task_slides,
+    slides,
+)
 
 MAX_LISTED = 200
 
@@ -98,6 +104,7 @@ async def all_slides_order(
     status: State | None,
     result_set: str | None,
     reviewer_id: uuid.UUID | None,
+    storage: SlideStorage | None,
     q: str | None,
 ) -> list[uuid.UUID]:
     ordered: list[uuid.UUID] = []
@@ -110,6 +117,7 @@ async def all_slides_order(
             status=status,
             result_set=result_set,
             reviewer_id=reviewer_id,
+            storage=storage,
             q=q,
             cursor=cursor,
             limit=MAX_PAGE,
@@ -123,7 +131,7 @@ async def all_slides_order(
 async def readable_ids(
     connection: AsyncConnection, principal: CurrentPrincipal, ids: list[uuid.UUID]
 ) -> list[uuid.UUID]:
-    seen = set(await all_slides_order(connection, principal, None, None, None, None, None))
+    seen = set(await all_slides_order(connection, principal, None, None, None, None, None, None))
     unique = list(dict.fromkeys(ids))
     return [slide for slide in unique if slide in seen]
 
@@ -150,6 +158,7 @@ async def get_slide_neighbours(
     status: State | None = None,
     result_set: Annotated[str | None, Query(max_length=120)] = None,
     reviewer_id: uuid.UUID | None = None,
+    storage: SlideStorage | None = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
 ) -> Neighbours:
     match kind:
@@ -159,7 +168,7 @@ async def get_slide_neighbours(
             ordered = await task_order(connection, principal, task_id, slide_id, skip_submitted)
         case ListKind.ALL_SLIDES:
             ordered = await all_slides_order(
-                connection, principal, project_id, status, result_set, reviewer_id, q
+                connection, principal, project_id, status, result_set, reviewer_id, storage, q
             )
         case ListKind.LIST:
             if not ids:

@@ -1,17 +1,24 @@
-import type { ListMySlidesParams, SlideRow, State } from "@parfocal/api-client";
+import type { ListMySlidesParams, SlideRow, SlideStorage, State } from "@parfocal/api-client";
 
 export type SlideFilterValues = {
   project: string | undefined;
   status: State | undefined;
   set: string | undefined;
   reviewer: string | undefined;
+  storage: SlideStorage | undefined;
 };
 
 export type SlideFilterKey = keyof SlideFilterValues;
 
 export type FilterChoice = { value: string; label: string; hint?: string };
 
-export const slideFilterKeys: SlideFilterKey[] = ["project", "status", "set", "reviewer"];
+export const slideFilterKeys: SlideFilterKey[] = [
+  "project",
+  "status",
+  "set",
+  "reviewer",
+  "storage",
+];
 
 export const statusChoices: (FilterChoice & { value: State })[] = [
   { value: "uploaded", label: "Needs results" },
@@ -24,6 +31,19 @@ export const statusChoices: (FilterChoice & { value: State })[] = [
   { value: "signed-off", label: "Signed off" },
 ];
 
+export const storageChoices: (FilterChoice & { value: SlideStorage })[] = [
+  { value: "uploaded", label: "Copied" },
+  { value: "remote", label: "Read in place" },
+];
+
+export const noSlideFilters: SlideFilterValues = {
+  project: undefined,
+  status: undefined,
+  set: undefined,
+  reviewer: undefined,
+  storage: undefined,
+};
+
 export const slideQuery = (
   filters: SlideFilterValues,
   q: string,
@@ -34,6 +54,7 @@ export const slideQuery = (
     ...(filters.status ? { status: filters.status } : {}),
     ...(filters.set ? { result_set: filters.set } : {}),
     ...(filters.reviewer ? { reviewer_id: filters.reviewer } : {}),
+    ...(filters.storage ? { storage: filters.storage } : {}),
   };
   return Object.keys(params).length > 0 ? params : undefined;
 };

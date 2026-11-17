@@ -5543,6 +5543,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   REMOTE-003 (events out) writes project events to an outbox, but nothing in production runs `python -m parfocal_api.event_delivery`, so events stay pending. Run the sweep on a Modal schedule that scales to zero between runs, and record events that happen while a target is paused so they can be replayed.
   Done when a deployed schedule delivers a test event to a fake receiver set up for the check, a paused target's events are kept and replayable, and the schedule's cost is in `knowledge/platform.md`.
   Depends on REMOTE-003. Size: S.
+
+- [ ] REMOTE-006 · A connected source that stays down notifies the admins
+  [ADR 0379](adr/0379-remote-sources-read-in-place-signed-webhooks-and-at-least-once-events.md) (remote sources read in place) says a source that stays down for 15 minutes writes one `integration-down` notification. Slides already count failures and keep `remote_failing_since`, but nothing notifies. The catalogue entry for `integration-down` targets a delivery, so this needs a source target kind, a resolver that opens the source for people who hold the integrations permission, one notification per source outage rather than per slide, a check that runs on the hourly event schedule or when a token is minted, and the web inbox line for it.
+  Done when an API test keeps a source failing past 15 minutes and finds one notification for the admins, a second check writes none, and a recovered source can notify again.
+  Depends on REMOTE-001. Size: S.
+
 - [ ] REMOTE-004 · Watched folder or bucket
   New files in a watched folder or bucket arrive in a project, checked like an upload.
   Done when a test drops files in a bucket fixture and they arrive.
