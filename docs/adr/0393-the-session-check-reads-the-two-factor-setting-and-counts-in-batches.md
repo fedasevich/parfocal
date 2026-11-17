@@ -28,4 +28,5 @@ Option 2.
 - A warm member call in a one factor workspace runs 5 statements in 2 transactions instead of 9 (`test_session_check_queries.py`). Only the first call of a minute and a batch write add the upsert.
 - With N containers a person can pass a limit by at most N times a twentieth of it before every container sees the total. Modal runs at most 4 web containers, so that is at most a fifth over. Near the limit every call is written, so a single container counts exactly, and the small limits of the tests still answer 429 on the same call.
 - Calls counted in memory and not yet written are lost when a container stops. They were all under half the limit.
+- Migration 0136 must run before the new code serves. Without the policy the join finds no settings row, and a workspace that requires two factors would accept one.
 - The auth scope can now read every workspace's settings. It already reads sessions, people, memberships and session policies across workspaces, and only the session check and sign-in run in it.

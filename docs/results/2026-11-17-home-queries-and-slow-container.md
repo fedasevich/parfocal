@@ -95,21 +95,21 @@ Curl from the owner's Mac at about 15:30 UTC with a scratch session for the seed
 
 ## The per-request floor
 
-Every signed-in call ran 9 statements before this change when the member signed in with a password only: the session check's scope and read, 3 statements for the workspace's two factor setting, the rate counter upsert, then the handler's scope and the workspace status. [ADR 0393](../adr/0393-the-session-check-reads-the-two-factor-setting-and-counts-in-batches.md) (the session check reads the two factor setting and counts in batches) joins the setting into the one read and writes rate counts in batches. `test_session_check_queries.py` on the compose Postgres pins `/api/tenant` for a password-only member at 5 statements in 2 transactions on warm calls and 6 on the first call of a minute. On a fast container at 17 to 25 ms a statement that is about 80 to 100 ms less per call, an estimate, not measured. Not deployed.
+Every signed-in call ran 9 statements before this change when the member signed in with a password only. The deployed log shows `/api/me` at 9 queries for the owner and at 6 for the scratch session, which carries `mfa`. The 9 are the session check's scope and read, 3 statements for the workspace's two factor setting, the rate counter upsert, then the handler's scope and the workspace status. [ADR 0393](../adr/0393-the-session-check-reads-the-two-factor-setting-and-counts-in-batches.md) (the session check reads the two factor setting and counts in batches) joins the setting into the one read and writes rate counts in batches. `test_session_check_queries.py` on the compose Postgres pins `/api/tenant` for a password-only member at 5 statements in 2 transactions on warm calls and 6 on the first call of a minute. On a fast container at 17 to 25 ms a statement that is about 80 to 100 ms less per call, an estimate, not measured. Not deployed.
 
 Left for the floor: the check and the handler still run in 2 transactions, which costs `BEGIN`, `COMMIT` and a scope statement more, about 40 to 110 ms on the deployed `/api/me` (`db` minus `sql`).
 
 ## Where the time outside the handler goes
 
-Modal's own request lines (`modal app logs --source system`) give `duration` at Modal's entry and `execution` in the container, 1,819 requests from 12:30 to 15:18 UTC:
+Modal's own request lines (`modal app logs --source system`) give `duration` at Modal's entry and `execution` in the container, 1,819 requests from 11:58 to 15:18 UTC:
 
 - Warm containers: the gap between the two is 79 ms at the median and 200 ms at the 90th percentile.
-- New containers: the first requests wait 1.0 to 2.8 s at Modal's entry while the container restores from its memory snapshot (`…4SQ1AR` 1,399 to 1,509 ms, `…X60NPR` 1,420 to 1,430 ms, `…BFVH0R` 1,110 to 2,151 ms, `…M4SXSR` 2,580 to 3,245 ms). Their first execution adds 0.7 to 1.3 s outside the database, for example 1,763 ms with 426 ms of database time on `…4SQ1AR`.
-- New containers start inside one page load. `…4SQ1AR` started at 15:16:16 while `…5VQRRR` from 15:15:38 was running, during a page that sends about 12 calls at once, above the `target_inputs` of 8.
+- New containers: the first requests wait 1.0 to 2.8 s at Modal's entry while the container starts (`…4SQ1AR` 1,399 to 1,509 ms, `…X60NPR` 1,420 to 1,430 ms, `…BFVH0R` 1,110 to 2,151 ms, `…M4SXSR` 2,580 to 3,245 ms). Some of them restored the memory snapshot and some created it, which is what the first containers after a deploy do. `…5VQRRR` and `…4SQ1AR` both created it after the v0.10.0 image build, so the owner's 2 s sample was partly a deploy effect. The first execution adds 0.7 to 1.3 s outside the database, for example 1,763 ms with 426 ms of database time on `…4SQ1AR`.
+- New containers start inside one page load. `…4SQ1AR` began creating its snapshot at 15:16:04 UTC, and 14 requests finished on `…5VQRRR` at 15:16:06, above the `target_inputs` of 8.
 
-From the Mac, `/api/health` through the edge answers in 0.15 to 0.18 s on a kept-alive connection, and the Modal address directly in 0.10 to 0.11 s. A new connection adds 0.1 to 0.5 s of TCP and TLS on the Mac's network. The Worker adds about 50 ms.
+From the Mac, `/api/health` through the edge answers in 0.15 to 0.18 s on a kept-alive connection. A new connection adds 0.1 to 0.5 s of TCP and TLS on the Mac's network.
 
-So the 2 s calls with 0.3 to 0.5 s of database time are cold containers, started on a page burst or after 5 idle minutes. The change raises `max_inputs` to 20 and `target_inputs` to 16 and the pool overflow to 30, so one page load fits in one container. Not deployed.
+So the 2 s calls with 0.3 to 0.5 s of database time are new containers, started by a deploy, by a page burst or after 5 idle minutes. The change raises `max_inputs` to 20 and `target_inputs` to 16 and the pool overflow to 30, so one page load fits in one container. Not deployed.
 
 ## The slide open of test_065
 
@@ -121,7 +121,7 @@ So the 2 s calls with 0.3 to 0.5 s of database time are cold containers, started
 | `levels.json` | 0.29 |
 | 64 KiB ranges of `original.tif` | 0.23 to 0.37 |
 
-The viewer reads the TIFF in 1 MiB blocks and follows the directory chain one directory at a time. A script that walks the chain the same way through the edge read 9 blocks one after another (blocks 0, 294, 295, 386, 387, 416, 424, 426 and 427):
+The viewer reads the TIFF in 1 MiB blocks and follows the directory chain one directory at a time (`pixel-source/tiff/directory.ts` awaits `getImageCount` and then `getImage` for each directory). A script that walks the chain the same way, on a new TLS connection per block where a browser would reuse one, through the edge read 9 blocks one after another (blocks 0, 294, 295, 386, 387, 416, 424, 426 and 427):
 
 | Run | Walk (s) | Per block (s) | Edge cache |
 |---|---|---|---|
@@ -129,7 +129,7 @@ The viewer reads the TIFF in 1 MiB blocks and follows the directory chain one di
 | Second | 4.18 | 1.73, 0.52, 0.34, … | not read |
 | Third | 2.61 | 0.19 to 0.43 | hit on all 9, 9 to 31 ms in the Worker |
 
-The Worker's range cache works. The biggest wait is the serial directory walk, 2.6 to 4.8 s from the Mac before the first tile, on top of `tile-access`. Writing each level's directory offset into `levels.json` at ingest would let the viewer read all 9 blocks at once. That is an ingest, backfill and viewer change, so it is a new backlog task, not done here. The browser's own waterfall was not read, so client work and the tiles after the walk are not measured.
+The Worker's range cache works. The biggest wait is the serial directory walk, 2.6 to 4.8 s from the Mac before the first tile, on top of `tile-access`. Writing each level's directory offset into `levels.json` at ingest would let the viewer read all 9 blocks at once. That is an ingest, backfill and viewer change, so it is a new backlog task, not done here. The browser's own waterfall was not read, so client work and the tiles after the walk are not measured. The 4 to 6 s measured here (`tile-access`, `levels.json` and the walk) do not explain the more than 10 s the owner saw on their own.
 
 ## What this means
 
