@@ -715,6 +715,7 @@ function OpenedSlide({
             )}
             <div
               data-testid="slide-stage"
+              data-vt-target=""
               data-state={phase.state}
               data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
               data-renderer-route={session?.shownRoute}
