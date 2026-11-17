@@ -7,7 +7,6 @@ export * from "./get-storage-usage.ts";
 export * from "./list-ai-models.ts";
 export * from "./list-webhooks.ts";
 export * from "./request-password-reset.ts";
-export * from "./request-project-access.ts";
 export * from "./request-sign-in-link.ts";
 export * from "./reset-password.ts";
 export * from "./sign-in-session.ts";

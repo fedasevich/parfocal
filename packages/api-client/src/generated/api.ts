@@ -727,6 +727,14 @@ export const Appendix = {
   methods: "methods",
 } as const;
 
+export interface Arrival {
+  at: string;
+  event: string;
+  file: string;
+  code: number;
+  result: string;
+}
+
 export type Asked = (typeof Asked)[keyof typeof Asked];
 
 export const Asked = {
@@ -899,6 +907,56 @@ export interface BandRecord {
   recorded_share: number | null;
   /** How often the typer was right in this band on its test set, null when not measured */
   recorded_accuracy: number | null;
+}
+
+export interface BatchDone {
+  minutes: number;
+  first_ids: string;
+}
+
+export type BatchFailureFailureClass =
+  (typeof BatchFailureFailureClass)[keyof typeof BatchFailureFailureClass];
+
+export const BatchFailureFailureClass = {
+  transient: "transient",
+  permanent: "permanent",
+} as const;
+
+export interface BatchFailure {
+  reason: string;
+  message: string;
+  failure_class: BatchFailureFailureClass;
+}
+
+export type BatchProgressTone = (typeof BatchProgressTone)[keyof typeof BatchProgressTone];
+
+export const BatchProgressTone = {
+  ok: "ok",
+  tiles: "tiles",
+  accent: "accent",
+} as const;
+
+export interface BatchProgress {
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  percent: number;
+  tone: BatchProgressTone;
+  text: string;
+}
+
+export interface BatchStep {
+  label: string;
+  detail: string;
+}
+
+export interface BatchStorage {
+  needed_gb: number;
+  left_gb: number;
+  allowance_gb: number;
+  trimmed_gb: number;
+  trimmed_slides: number;
 }
 
 /**
@@ -1092,6 +1150,13 @@ export interface CaseDraft {
   patient?: NewPatient | null;
   /** @maxItems 26 */
   specimens?: SpecimenDraft[];
+}
+
+export interface CaseGroup {
+  label: string;
+  specimen: string;
+  /** @minimum 0 */
+  slide_count: number;
 }
 
 export interface CaseImport {
@@ -2133,6 +2198,12 @@ export interface DroppedFile {
   head?: string | null;
 }
 
+export interface Duplicate {
+  /** @minimum 0 */
+  slide: number;
+  uploaded_on: string;
+}
+
 export interface EditDraft {
   class_id?: string | null;
   geometry?: Geometry | null;
@@ -2341,6 +2412,19 @@ export interface EvaluationVersionStarted {
   started_at: string;
 }
 
+export interface OutgoingEvent {
+  name: string;
+  text: string;
+  on: boolean;
+}
+
+export interface EventsOut {
+  endpoint: string;
+  last_call: number;
+  events: OutgoingEvent[];
+  on: boolean;
+}
+
 export type ExpertChangesWidth = (typeof ExpertChangesWidth)[keyof typeof ExpertChangesWidth];
 
 export const ExpertChangesWidth = {
@@ -2373,6 +2457,11 @@ export const ExportKind = {
   annotationsjson: "annotations.json",
   annotationsgeojson: "annotations.geojson",
 } as const;
+
+export interface ExtraResult {
+  name: string;
+  detail: string;
+}
 
 export type TaskScope = (typeof TaskScope)[keyof typeof TaskScope];
 
@@ -2444,6 +2533,12 @@ export interface FirstRead {
   form_version: number;
   answers: FirstReadAnswers;
   added: Annotation[];
+}
+
+export interface FolderEntry {
+  name: string;
+  note: string;
+  depth: number;
 }
 
 export type ScaleQuestionKind = (typeof ScaleQuestionKind)[keyof typeof ScaleQuestionKind];
@@ -2522,6 +2617,24 @@ export interface FormVersion {
   project_id: string;
   version: number;
   created_at: string;
+}
+
+export type FormatFindingTone = (typeof FormatFindingTone)[keyof typeof FormatFindingTone];
+
+export const FormatFindingTone = {
+  ok: "ok",
+  warn: "warn",
+} as const;
+
+export interface FormatFinding {
+  tone: FormatFindingTone;
+  text: string;
+}
+
+export interface FormatCheck {
+  file: string;
+  detail: string;
+  findings: FormatFinding[];
 }
 
 /**
@@ -2757,6 +2870,14 @@ export interface ImportChoices {
   class_mappings?: ClassMapping[];
 }
 
+export interface ImportFailure {
+  file: string;
+  slide_label: string;
+  /** @exclusiveMinimum 0 */
+  objects: number;
+  reason: string;
+}
+
 export interface RowProblem {
   row: number;
   column: string | null;
@@ -2773,6 +2894,18 @@ export interface ImportReport {
   slides_created: number;
   slides_existing: number;
   problems: RowProblem[];
+}
+
+export interface WebhookAbility {
+  label: string;
+  on: boolean;
+}
+
+export interface ImportWebhook {
+  url: string;
+  secret_end: string;
+  abilities: WebhookAbility[];
+  on: boolean;
 }
 
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
@@ -3196,6 +3329,11 @@ export type LabSettingsValues = { [key: string]: unknown };
 export interface LabSettings {
   values: LabSettingsValues;
   locked: string[];
+}
+
+export interface LastArrival {
+  at: string;
+  what: string;
 }
 
 export type Layer = (typeof Layer)[keyof typeof Layer];
@@ -3879,6 +4017,12 @@ export interface NewCaseReportDeposit {
   note?: string | null;
 }
 
+export interface NewClass {
+  name: string;
+  cells: number;
+  to: string | null;
+}
+
 export interface NoteDraft {
   note?: ParfocalApiDisagreementsNote | null;
   reason?: ChangeReason | null;
@@ -4112,6 +4256,12 @@ export interface PairedSlide {
   slide_id: string | null;
 }
 
+export interface Pairing {
+  slide: number | null;
+  how: string;
+  warn: string | null;
+}
+
 export interface PairingRequest {
   project_id: string;
   case_id?: string | null;
@@ -4121,31 +4271,6 @@ export interface PairingRequest {
    * @maxItems 5000
    */
   files: DroppedFile[];
-}
-
-export type Rule = (typeof Rule)[keyof typeof Rule];
-
-export const Rule = {
-  "next-to-slide": "next-to-slide",
-  "folder-named-like-slide": "folder-named-like-slide",
-  "file-name": "file-name",
-  "embedded-id": "embedded-id",
-  picked: "picked",
-} as const;
-
-export interface ResultPairing {
-  path: string;
-  outcome: Outcome;
-  slide: PairedSlide | null;
-  rule: Rule | null;
-  certainty: Certainty | null;
-  candidates: PairedSlide[];
-}
-
-export interface Pairings {
-  slides: string[];
-  results: ResultPairing[];
-  others: string[];
 }
 
 export interface PasswordSignIn {
@@ -4355,6 +4480,12 @@ export interface Problem {
   current?: ProblemCurrent;
 }
 
+export interface ProblemLine {
+  line: string;
+  object: string;
+  error: string;
+}
+
 /**
  * @maxLength 40
  */
@@ -4424,6 +4555,14 @@ export interface Project {
   members: ProjectMember[];
 }
 
+export interface ProjectAccessRequest {
+  id: string;
+  project_id: string;
+  user_id: string;
+  owner_id: string;
+  asked_at: string;
+}
+
 /**
  * @minLength 1
  * @maxLength 120
@@ -4468,6 +4607,28 @@ export interface ProjectDraft {
   taxonomy?: TaxonomyTemplate | null;
 }
 
+export interface WatchedFolder {
+  address: string;
+  slides: string;
+  results: string;
+  every: string;
+  on: boolean;
+}
+
+export interface TokenEnd {
+  end: string;
+}
+
+export interface ProjectImports {
+  project_id: string;
+  watched_folder: WatchedFolder;
+  webhook: ImportWebhook;
+  events_out: EventsOut;
+  token: TokenEnd;
+  last_arrival: LastArrival | null;
+  arrivals: Arrival[];
+}
+
 export type Serving = (typeof Serving)[keyof typeof Serving];
 
 export const Serving = {
@@ -4490,6 +4651,75 @@ export interface ProjectModel {
   queue_minutes: number;
   latency_ms: number | null;
   serving?: Serving;
+}
+
+export interface SlideFile {
+  slide_id: string;
+  file: string;
+  stain: string;
+  remote: string | null;
+}
+
+export interface ProjectStorage {
+  /** @minimum 0 */
+  used_gb: number;
+  allowance_gb: number | null;
+}
+
+export interface ProjectOverview {
+  project_id: string;
+  /** @minimum 0 */
+  cases: number;
+  /** @minimum 0 */
+  slides: number;
+  /** @minimum 0 */
+  result_sets: number;
+  /** @minimum 0 */
+  objects: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  reviewed_percent: number;
+  /** @minimum 0 */
+  needs_review: number;
+  /** @minimum 0 */
+  no_results: number;
+  case_groups: CaseGroup[];
+  slide_files: SlideFile[];
+  study_template_id: string | null;
+  storage: ProjectStorage;
+  import_failure: ImportFailure | null;
+}
+
+export interface ScopeRoi {
+  key: string;
+  name: string;
+}
+
+export interface UnsureZone {
+  key: string;
+  /** @minimum 0 */
+  cells_per_slide: number;
+}
+
+export interface ProjectScopeOptions {
+  rois: ScopeRoi[];
+  unsure_zones: UnsureZone[];
+}
+
+export interface SlideCase {
+  id: string;
+  label: string;
+  specimen: string;
+}
+
+export interface ProjectSlide {
+  id: string;
+  label: string;
+  stain: string;
+  case: SlideCase | null;
+  result_set_ids: string[];
 }
 
 export interface PromotionRequest {
@@ -4978,6 +5208,43 @@ export const ResultFormat = {
   heatmap: "heatmap",
 } as const;
 
+export type Rule = (typeof Rule)[keyof typeof Rule];
+
+export const Rule = {
+  "next-to-slide": "next-to-slide",
+  "folder-named-like-slide": "folder-named-like-slide",
+  "file-name": "file-name",
+  "embedded-id": "embedded-id",
+  picked: "picked",
+} as const;
+
+export interface ResultPairing {
+  path: string;
+  outcome: Outcome;
+  slide: PairedSlide | null;
+  rule: Rule | null;
+  certainty: Certainty | null;
+  candidates: PairedSlide[];
+}
+
+export interface ResultPreview {
+  slide_label: string;
+  case_label: string;
+  beside: string;
+  file: string;
+  detail: string;
+  model: string;
+  version: string;
+  checks: string[];
+  level: number;
+  scale: number;
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  shift: [number, number];
+}
+
 export type ResultSource = (typeof ResultSource)[keyof typeof ResultSource];
 
 export const ResultSource = {
@@ -5255,6 +5522,24 @@ export interface ReviewTask {
   reviewer_count: number;
 }
 
+export interface SetName {
+  result_set_id: string;
+  name: string;
+}
+
+export interface ReviewTaskDefaults {
+  code: string;
+  task_id: string;
+  names: SetName[];
+  slide_ids: string[];
+  result_set_id: string;
+  reviewer_ids: string[];
+  due_on: string;
+  reminder_days: number[];
+  study_template_id: string;
+  today: string;
+}
+
 export interface TaskSlide {
   slide_id: string;
   result_set_id: string | null;
@@ -5387,6 +5672,11 @@ export interface RunAreas {
 
 export interface RunJoin {
   result_set_id: string;
+}
+
+export interface RunningStep {
+  percent: number;
+  text: string;
 }
 
 export interface SchemaProblem {
@@ -5966,6 +6256,12 @@ export interface SourceListing {
   others: string[];
 }
 
+export interface SourceOutage {
+  source: string;
+  at: string;
+  waiting: number;
+}
+
 export interface SplitPart {
   geometry: Geometry;
   class_id?: string | null;
@@ -6334,6 +6630,69 @@ export interface TumorMapJob {
   status: JobStatus;
 }
 
+export interface UploadBatchSlide {
+  name: string;
+  format: string;
+  /** @exclusiveMinimum 0 */
+  size_gb: number;
+  case_label: string | null;
+  steps: BatchStep[];
+  /** @minimum 0 */
+  steps_done: number;
+  running: RunningStep | null;
+  progress: BatchProgress;
+  extra_result: ExtraResult;
+  failure?: BatchFailure | null;
+}
+
+export interface ParfocalApiProjectUploadsPairings {
+  auto: Pairing;
+  name: Pairing;
+  id: Pairing;
+}
+
+export interface UploadBatchResult {
+  name: string;
+  detail: string;
+  pairings: ParfocalApiProjectUploadsPairings;
+}
+
+export type UploadProblemKind = (typeof UploadProblemKind)[keyof typeof UploadProblemKind];
+
+export const UploadProblemKind = {
+  "read-error": "read-error",
+  scale: "scale",
+  "new-classes": "new-classes",
+} as const;
+
+export interface UploadProblem {
+  kind: UploadProblemKind;
+  /** @minimum 0 */
+  result: number;
+  title: string;
+  text: string;
+  lines: ProblemLine[];
+  fix: string;
+  fixed: string;
+}
+
+export interface UploadBatch {
+  project_id: string;
+  slides: UploadBatchSlide[];
+  results: UploadBatchResult[];
+  folder_tree: FolderEntry[];
+  problems: UploadProblem[];
+  new_classes: NewClass[];
+  /** @minimum 0 */
+  unscored_rows: number;
+  duplicate: Duplicate;
+  storage: BatchStorage;
+  source_outage: SourceOutage;
+  done: BatchDone;
+  result_preview: ResultPreview;
+  format_check: FormatCheck;
+}
+
 export interface UploadMetadata {
   project_id: string;
   case_id?: string | null;
@@ -6477,6 +6836,12 @@ export const ParfocalApiAnnotationExportsExportFormat = {
   flatgeobuf: "flatgeobuf",
   parfocal: "parfocal",
 } as const;
+
+export interface ParfocalApiResultPairingPairings {
+  slides: string[];
+  results: ResultPairing[];
+  others: string[];
+}
 
 export type ParfocalApiReviewedExportExportFormat =
   (typeof ParfocalApiReviewedExportExportFormat)[keyof typeof ParfocalApiReviewedExportExportFormat];
@@ -11468,6 +11833,1320 @@ export const useRemoveProjectMember = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getRemoveProjectMemberMutationOptions(options), queryClient);
 };
+
+export type getProjectOverviewResponse200 = {
+  data: ProjectOverview;
+  status: 200;
+};
+
+export type getProjectOverviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectOverviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectOverviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectOverviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectOverviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectOverviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectOverviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getProjectOverviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectOverviewResponseSuccess = getProjectOverviewResponse200 & {
+  headers: Headers;
+};
+export type getProjectOverviewResponseError = (
+  | getProjectOverviewResponse400
+  | getProjectOverviewResponse401
+  | getProjectOverviewResponse403
+  | getProjectOverviewResponse404
+  | getProjectOverviewResponse409
+  | getProjectOverviewResponse422
+  | getProjectOverviewResponse429
+  | getProjectOverviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectOverviewResponse =
+  | getProjectOverviewResponseSuccess
+  | getProjectOverviewResponseError;
+
+export const getGetProjectOverviewUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/overview`;
+};
+
+/**
+ * @summary Get Project Overview
+ */
+export const getProjectOverview = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectOverviewResponse> => {
+  return apiFetch<getProjectOverviewResponse>(getGetProjectOverviewUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectOverviewQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/overview`] as const;
+};
+
+export const getGetProjectOverviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectOverview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectOverviewQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectOverview>>> = ({ signal }) =>
+    getProjectOverview(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectOverview>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectOverviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProjectOverview>>
+>;
+export type GetProjectOverviewQueryError = Problem;
+
+export function useGetProjectOverview<
+  TData = Awaited<ReturnType<typeof getProjectOverview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectOverview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectOverview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectOverview<
+  TData = Awaited<ReturnType<typeof getProjectOverview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getProjectOverview>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectOverview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectOverview<
+  TData = Awaited<ReturnType<typeof getProjectOverview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Overview
+ */
+
+export function useGetProjectOverview<
+  TData = Awaited<ReturnType<typeof getProjectOverview>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectOverviewQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listProjectSlidesResponse200 = {
+  data: ProjectSlide[];
+  status: 200;
+};
+
+export type listProjectSlidesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listProjectSlidesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listProjectSlidesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listProjectSlidesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listProjectSlidesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listProjectSlidesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listProjectSlidesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listProjectSlidesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listProjectSlidesResponseSuccess = listProjectSlidesResponse200 & {
+  headers: Headers;
+};
+export type listProjectSlidesResponseError = (
+  | listProjectSlidesResponse400
+  | listProjectSlidesResponse401
+  | listProjectSlidesResponse403
+  | listProjectSlidesResponse404
+  | listProjectSlidesResponse409
+  | listProjectSlidesResponse422
+  | listProjectSlidesResponse429
+  | listProjectSlidesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listProjectSlidesResponse =
+  | listProjectSlidesResponseSuccess
+  | listProjectSlidesResponseError;
+
+export const getListProjectSlidesUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/slides`;
+};
+
+/**
+ * @summary List Project Slides
+ */
+export const listProjectSlides = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listProjectSlidesResponse> => {
+  return apiFetch<listProjectSlidesResponse>(getListProjectSlidesUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectSlidesQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/slides`] as const;
+};
+
+export const getListProjectSlidesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectSlides>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectSlides>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectSlidesQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectSlides>>> = ({ signal }) =>
+    listProjectSlides(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listProjectSlides>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListProjectSlidesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectSlides>>
+>;
+export type ListProjectSlidesQueryError = Problem;
+
+export function useListProjectSlides<
+  TData = Awaited<ReturnType<typeof listProjectSlides>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectSlides>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectSlides>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectSlides>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectSlides<
+  TData = Awaited<ReturnType<typeof listProjectSlides>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectSlides>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectSlides>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectSlides>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectSlides<
+  TData = Awaited<ReturnType<typeof listProjectSlides>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectSlides>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Slides
+ */
+
+export function useListProjectSlides<
+  TData = Awaited<ReturnType<typeof listProjectSlides>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectSlides>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectSlidesQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getProjectScopeOptionsResponse200 = {
+  data: ProjectScopeOptions;
+  status: 200;
+};
+
+export type getProjectScopeOptionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectScopeOptionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectScopeOptionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectScopeOptionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectScopeOptionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectScopeOptionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectScopeOptionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getProjectScopeOptionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectScopeOptionsResponseSuccess = getProjectScopeOptionsResponse200 & {
+  headers: Headers;
+};
+export type getProjectScopeOptionsResponseError = (
+  | getProjectScopeOptionsResponse400
+  | getProjectScopeOptionsResponse401
+  | getProjectScopeOptionsResponse403
+  | getProjectScopeOptionsResponse404
+  | getProjectScopeOptionsResponse409
+  | getProjectScopeOptionsResponse422
+  | getProjectScopeOptionsResponse429
+  | getProjectScopeOptionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectScopeOptionsResponse =
+  | getProjectScopeOptionsResponseSuccess
+  | getProjectScopeOptionsResponseError;
+
+export const getGetProjectScopeOptionsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/scope-options`;
+};
+
+/**
+ * @summary Get Project Scope Options
+ */
+export const getProjectScopeOptions = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectScopeOptionsResponse> => {
+  return apiFetch<getProjectScopeOptionsResponse>(getGetProjectScopeOptionsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectScopeOptionsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/scope-options`] as const;
+};
+
+export const getGetProjectScopeOptionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectScopeOptions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getProjectScopeOptions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectScopeOptionsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectScopeOptions>>> = ({ signal }) =>
+    getProjectScopeOptions(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectScopeOptions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectScopeOptionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProjectScopeOptions>>
+>;
+export type GetProjectScopeOptionsQueryError = Problem;
+
+export function useGetProjectScopeOptions<
+  TData = Awaited<ReturnType<typeof getProjectScopeOptions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getProjectScopeOptions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectScopeOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectScopeOptions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectScopeOptions<
+  TData = Awaited<ReturnType<typeof getProjectScopeOptions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getProjectScopeOptions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectScopeOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectScopeOptions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectScopeOptions<
+  TData = Awaited<ReturnType<typeof getProjectScopeOptions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getProjectScopeOptions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Scope Options
+ */
+
+export function useGetProjectScopeOptions<
+  TData = Awaited<ReturnType<typeof getProjectScopeOptions>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getProjectScopeOptions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectScopeOptionsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getReviewTaskDefaultsResponse200 = {
+  data: ReviewTaskDefaults;
+  status: 200;
+};
+
+export type getReviewTaskDefaultsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getReviewTaskDefaultsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getReviewTaskDefaultsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getReviewTaskDefaultsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getReviewTaskDefaultsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getReviewTaskDefaultsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getReviewTaskDefaultsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getReviewTaskDefaultsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getReviewTaskDefaultsResponseSuccess = getReviewTaskDefaultsResponse200 & {
+  headers: Headers;
+};
+export type getReviewTaskDefaultsResponseError = (
+  | getReviewTaskDefaultsResponse400
+  | getReviewTaskDefaultsResponse401
+  | getReviewTaskDefaultsResponse403
+  | getReviewTaskDefaultsResponse404
+  | getReviewTaskDefaultsResponse409
+  | getReviewTaskDefaultsResponse422
+  | getReviewTaskDefaultsResponse429
+  | getReviewTaskDefaultsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getReviewTaskDefaultsResponse =
+  | getReviewTaskDefaultsResponseSuccess
+  | getReviewTaskDefaultsResponseError;
+
+export const getGetReviewTaskDefaultsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/review-tasks/defaults`;
+};
+
+/**
+ * @summary Get Review Task Defaults
+ */
+export const getReviewTaskDefaults = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getReviewTaskDefaultsResponse> => {
+  return apiFetch<getReviewTaskDefaultsResponse>(getGetReviewTaskDefaultsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetReviewTaskDefaultsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/review-tasks/defaults`] as const;
+};
+
+export const getGetReviewTaskDefaultsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReviewTaskDefaultsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReviewTaskDefaults>>> = ({ signal }) =>
+    getReviewTaskDefaults(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskDefaults>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetReviewTaskDefaultsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getReviewTaskDefaults>>
+>;
+export type GetReviewTaskDefaultsQueryError = Problem;
+
+export function useGetReviewTaskDefaults<
+  TData = Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskDefaults>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewTaskDefaults>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewTaskDefaults<
+  TData = Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskDefaults>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof getReviewTaskDefaults>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReviewTaskDefaults<
+  TData = Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Review Task Defaults
+ */
+
+export function useGetReviewTaskDefaults<
+  TData = Awaited<ReturnType<typeof getReviewTaskDefaults>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReviewTaskDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetReviewTaskDefaultsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type requestProjectAccessResponse200 = {
+  data: ProjectAccessRequest;
+  status: 200;
+};
+
+export type requestProjectAccessResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type requestProjectAccessResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type requestProjectAccessResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type requestProjectAccessResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type requestProjectAccessResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type requestProjectAccessResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type requestProjectAccessResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type requestProjectAccessResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type requestProjectAccessResponseSuccess = requestProjectAccessResponse200 & {
+  headers: Headers;
+};
+export type requestProjectAccessResponseError = (
+  | requestProjectAccessResponse400
+  | requestProjectAccessResponse401
+  | requestProjectAccessResponse403
+  | requestProjectAccessResponse404
+  | requestProjectAccessResponse409
+  | requestProjectAccessResponse422
+  | requestProjectAccessResponse429
+  | requestProjectAccessResponse500
+) & {
+  headers: Headers;
+};
+
+export type requestProjectAccessResponse =
+  | requestProjectAccessResponseSuccess
+  | requestProjectAccessResponseError;
+
+export const getRequestProjectAccessUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/access-requests`;
+};
+
+/**
+ * @summary Request Project Access
+ */
+export const requestProjectAccess = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<requestProjectAccessResponse> => {
+  return apiFetch<requestProjectAccessResponse>(getRequestProjectAccessUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRequestProjectAccessMutationKey = () => ["requestProjectAccess"] as const;
+
+export const getRequestProjectAccessMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestProjectAccess>>,
+    TError,
+    RequestProjectAccessMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestProjectAccess>>,
+  TError,
+  RequestProjectAccessMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRequestProjectAccessMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestProjectAccess>>,
+    RequestProjectAccessMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return requestProjectAccess(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestProjectAccessMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestProjectAccess>>
+>;
+
+export type RequestProjectAccessMutationError = Problem;
+export type RequestProjectAccessMutationVariables = { projectId: string };
+
+/**
+ * @summary Request Project Access
+ */
+export const useRequestProjectAccess = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof requestProjectAccess>>,
+      TError,
+      RequestProjectAccessMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof requestProjectAccess>>,
+  TError,
+  RequestProjectAccessMutationVariables,
+  TContext
+> => {
+  return useMutation(getRequestProjectAccessMutationOptions(options), queryClient);
+};
+
+export type getProjectImportsResponse200 = {
+  data: ProjectImports;
+  status: 200;
+};
+
+export type getProjectImportsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectImportsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectImportsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectImportsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectImportsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectImportsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectImportsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getProjectImportsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectImportsResponseSuccess = getProjectImportsResponse200 & {
+  headers: Headers;
+};
+export type getProjectImportsResponseError = (
+  | getProjectImportsResponse400
+  | getProjectImportsResponse401
+  | getProjectImportsResponse403
+  | getProjectImportsResponse404
+  | getProjectImportsResponse409
+  | getProjectImportsResponse422
+  | getProjectImportsResponse429
+  | getProjectImportsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectImportsResponse =
+  | getProjectImportsResponseSuccess
+  | getProjectImportsResponseError;
+
+export const getGetProjectImportsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/imports`;
+};
+
+/**
+ * @summary Get Project Imports
+ */
+export const getProjectImports = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectImportsResponse> => {
+  return apiFetch<getProjectImportsResponse>(getGetProjectImportsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectImportsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/imports`] as const;
+};
+
+export const getGetProjectImportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectImports>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectImports>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectImportsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectImports>>> = ({ signal }) =>
+    getProjectImports(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectImports>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectImportsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProjectImports>>
+>;
+export type GetProjectImportsQueryError = Problem;
+
+export function useGetProjectImports<
+  TData = Awaited<ReturnType<typeof getProjectImports>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectImports>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectImports>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectImports>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectImports<
+  TData = Awaited<ReturnType<typeof getProjectImports>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectImports>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectImports>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectImports>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectImports<
+  TData = Awaited<ReturnType<typeof getProjectImports>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectImports>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Imports
+ */
+
+export function useGetProjectImports<
+  TData = Awaited<ReturnType<typeof getProjectImports>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectImports>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectImportsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getUploadBatchResponse200 = {
+  data: UploadBatch;
+  status: 200;
+};
+
+export type getUploadBatchResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getUploadBatchResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getUploadBatchResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getUploadBatchResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getUploadBatchResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getUploadBatchResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getUploadBatchResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getUploadBatchResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getUploadBatchResponseSuccess = getUploadBatchResponse200 & {
+  headers: Headers;
+};
+export type getUploadBatchResponseError = (
+  | getUploadBatchResponse400
+  | getUploadBatchResponse401
+  | getUploadBatchResponse403
+  | getUploadBatchResponse404
+  | getUploadBatchResponse409
+  | getUploadBatchResponse422
+  | getUploadBatchResponse429
+  | getUploadBatchResponse500
+) & {
+  headers: Headers;
+};
+
+export type getUploadBatchResponse = getUploadBatchResponseSuccess | getUploadBatchResponseError;
+
+export const getGetUploadBatchUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/upload-batch`;
+};
+
+/**
+ * @summary Get Upload Batch
+ */
+export const getUploadBatch = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getUploadBatchResponse> => {
+  return apiFetch<getUploadBatchResponse>(getGetUploadBatchUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUploadBatchQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/upload-batch`] as const;
+};
+
+export const getGetUploadBatchQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUploadBatch>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadBatch>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUploadBatchQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUploadBatch>>> = ({ signal }) =>
+    getUploadBatch(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getUploadBatch>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetUploadBatchQueryResult = NonNullable<Awaited<ReturnType<typeof getUploadBatch>>>;
+export type GetUploadBatchQueryError = Problem;
+
+export function useGetUploadBatch<
+  TData = Awaited<ReturnType<typeof getUploadBatch>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadBatch>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUploadBatch>>,
+          TError,
+          Awaited<ReturnType<typeof getUploadBatch>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUploadBatch<
+  TData = Awaited<ReturnType<typeof getUploadBatch>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadBatch>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUploadBatch>>,
+          TError,
+          Awaited<ReturnType<typeof getUploadBatch>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUploadBatch<
+  TData = Awaited<ReturnType<typeof getUploadBatch>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadBatch>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Upload Batch
+ */
+
+export function useGetUploadBatch<
+  TData = Awaited<ReturnType<typeof getUploadBatch>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUploadBatch>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetUploadBatchQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type createSampleProjectResponse200 = {
   data: void;
@@ -28434,7 +30113,7 @@ export const useCompleteUpload = <TError = Problem, TContext = unknown>(
 };
 
 export type pairResultFilesResponse200 = {
-  data: Pairings;
+  data: ParfocalApiResultPairingPairings;
   status: 200;
 };
 

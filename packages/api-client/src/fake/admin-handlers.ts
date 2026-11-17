@@ -6,7 +6,6 @@ import { type SignInOptions, signInOptionsSchema } from "../draft/get-sign-in-op
 import { type StorageUsage, storageUsageSchema } from "../draft/get-storage-usage.ts";
 import { type AiModels, aiModelsSchema } from "../draft/list-ai-models.ts";
 import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
-import { type AccessRequest, accessRequestSchema } from "../draft/request-project-access.ts";
 import {
   getAcceptInvitationMockHandler,
   getAskToJoinWorkspaceMockHandler,
@@ -22,6 +21,7 @@ import {
   getListJoinableWorkspacesMockHandler,
   getListMemberActivityMockHandler,
   getListServiceAccountsMockHandler,
+  getRequestProjectAccessMockHandler,
   getResendInvitationMockHandler,
   getRevokeInvitationMockHandler,
   getSetMemberAdminRightsMockHandler,
@@ -35,6 +35,7 @@ import type {
   Member,
   MemberActivity,
   NamedAuditEvent,
+  ProjectAccessRequest,
   ServiceAccount,
   SessionPolicy,
   TaskInvitationDraft,
@@ -574,6 +575,9 @@ const joinedWorkspace = (): AcceptedInvitation => {
 export function adminHandlers(): RequestHandler[] {
   return [
     getListInvitationsMockHandler(() => toInvitations()),
+    getRequestProjectAccessMockHandler(({ params }) =>
+      toProjectAccessRequest(String(params.projectId)),
+    ),
     getCreateInvitationMockHandler(async ({ request }) => {
       const body = (await request.json()) as InvitationDraft;
       const invitation: Invitation = {
@@ -688,20 +692,16 @@ export const getGetSignInOptionsMockHandler = (overrideResponse?: SignInOptions)
     ),
   );
 
-export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequest) =>
-  http.post<{ projectId: string }>("*/api/projects/:projectId/access-requests", ({ params }) => {
-    const project = projects.find((item) => item.id === params.projectId) ?? projects[0];
-    return HttpResponse.json(
-      overrideResponse ??
-        accessRequestSchema.parse({
-          id: "00000000-0000-4000-8069-000000000002",
-          project_id: project?.id ?? params.projectId,
-          user_id: people.AK.id,
-          owner_id: people[project?.owner ?? "LM"].id,
-          asked_at: scenarioNow,
-        }),
-    );
-  });
+export const toProjectAccessRequest = (projectId: string): ProjectAccessRequest => {
+  const project = projects.find((item) => item.id === projectId) ?? projects[0];
+  return {
+    id: "00000000-0000-4000-8069-000000000002",
+    project_id: project?.id ?? projectId,
+    user_id: people.AK.id,
+    owner_id: people[project?.owner ?? "LM"].id,
+    asked_at: scenarioNow,
+  };
+};
 
 export const adminDraftOperations: DraftOperation[] = [
   {
@@ -745,11 +745,5 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/auth/sign-in-options",
     handler: () => getGetSignInOptionsMockHandler(),
-  },
-  {
-    operationId: "requestProjectAccess",
-    method: "post",
-    path: "/api/projects/{project_id}/access-requests",
-    handler: () => getRequestProjectAccessMockHandler(),
   },
 ];

@@ -1,9 +1,9 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type ProjectImports, projectImportsSchema } from "../draft/get-project-imports.ts";
-import { type ProjectOverview, projectOverviewSchema } from "../draft/get-project-overview.ts";
-import { type UploadBatch, uploadBatchSchema } from "../draft/get-upload-batch.ts";
 import {
   getGetOpinionFormMockHandler,
+  getGetProjectImportsMockHandler,
+  getGetProjectOverviewMockHandler,
+  getGetUploadBatchMockHandler,
   getListClassMappingsMockHandler,
   getListProjectClassesMockHandler,
   getListReviewTasksMockHandler,
@@ -17,16 +17,18 @@ import type {
   LinkImportRequest,
   OpinionForm,
   ProjectClass,
+  ProjectImports,
+  ProjectOverview,
   ResultSet,
   ReviewTask,
   SlideArea,
   SourceListing,
   Template,
+  UploadBatch,
 } from "../generated/api.ts";
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { hidesRt17Sets, rt17SetId } from "./review-decisions.ts";
 import {
   cases,
@@ -105,7 +107,7 @@ export const toTaxonomyTemplates = (): Template[] => [
 export const toProjectOverview = (idOrCode: string): ProjectOverview => {
   const project = projectOf(idOrCode);
   const seed = overviewSeedOf(project.code);
-  return projectOverviewSchema.parse({
+  return {
     project_id: project.id,
     cases: project.counts.cases,
     slides: project.counts.slides,
@@ -143,7 +145,7 @@ export const toProjectOverview = (idOrCode: string): ProjectOverview => {
           reason: seed.importFailure.reason,
         }
       : null,
-  });
+  };
 };
 
 const scopeOf = (task: ScenarioReviewTask): ReviewTask["scope"] => ({
@@ -257,7 +259,7 @@ export const toSlideAreas = (slideId: string): SlideArea[] => {
 
 export const toUploadBatch = (idOrCode: string): UploadBatch => {
   const project = projectOf(idOrCode);
-  return uploadBatchSchema.parse({
+  return {
     project_id: project.id,
     slides: uploadSlides.map((slide, index) => ({
       name: slide.name,
@@ -295,7 +297,7 @@ export const toUploadBatch = (idOrCode: string): UploadBatch => {
     done: { minutes: uploadDone.minutes, first_ids: uploadDone.firstIds },
     result_preview: resultPreview,
     format_check: formatCheck,
-  });
+  };
 };
 
 export const toSourceListing = (address: string): SourceListing => {
@@ -321,7 +323,7 @@ export const toSourceListing = (address: string): SourceListing => {
 
 export const toProjectImports = (idOrCode: string): ProjectImports => {
   const project = projectOf(idOrCode);
-  return projectImportsSchema.parse({
+  return {
     project_id: project.id,
     watched_folder: projectImports.watchedFolder,
     webhook: {
@@ -339,7 +341,7 @@ export const toProjectImports = (idOrCode: string): ProjectImports => {
     token: projectImports.token,
     last_arrival: projectImports.lastArrival,
     arrivals: projectImports.arrivals,
-  });
+  };
 };
 
 const questionKey = (label: string) =>
@@ -384,16 +386,6 @@ export const projectSlideRows = (idOrCode: string) => {
     .map((slide) => toSlideRow(slide.id));
 };
 
-export const getGetProjectOverviewMockHandler = (overrideResponse?: ProjectOverview) =>
-  http.get<{ projectId: string }>("*/api/projects/:projectId/overview", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toProjectOverview(params.projectId)),
-  );
-
-export const getGetUploadBatchMockHandler = (overrideResponse?: UploadBatch) =>
-  http.get<{ projectId: string }>("*/api/projects/:projectId/upload-batch", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toUploadBatch(params.projectId)),
-  );
-
 export const sourceFilesHandler = (overrideResponse?: SourceListing) =>
   http.get("*/api/projects/:projectId/source-files", ({ request }) =>
     HttpResponse.json(
@@ -413,32 +405,6 @@ export const linkImportHandler = () =>
     return HttpResponse.json({ started, left_out: [] } satisfies LinkImport, { status: 202 });
   });
 
-export const getGetProjectImportsMockHandler = (overrideResponse?: ProjectImports) =>
-  http.get<{ projectId: string }>("*/api/projects/:projectId/imports", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toProjectImports(params.projectId)),
-  );
-
-export const projectDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getProjectOverview",
-    method: "get",
-    path: "/api/projects/{project_id}/overview",
-    handler: () => getGetProjectOverviewMockHandler(),
-  },
-  {
-    operationId: "getUploadBatch",
-    method: "get",
-    path: "/api/projects/{project_id}/upload-batch",
-    handler: () => getGetUploadBatchMockHandler(),
-  },
-  {
-    operationId: "getProjectImports",
-    method: "get",
-    path: "/api/projects/{project_id}/imports",
-    handler: () => getGetProjectImportsMockHandler(),
-  },
-];
-
 const runsToAddInAnnotateTask = (request: Request, slideId: string): ResultSetKey[] => {
   const inTask =
     request.referrer.includes(annotateStubTaskId) ||
@@ -453,6 +419,9 @@ export function projectHandlers(): RequestHandler[] {
       if (!projectId) return undefined;
       return HttpResponse.json({ slides: projectSlideRows(projectId), next_cursor: null });
     }),
+    getGetProjectOverviewMockHandler(({ params }) => toProjectOverview(String(params.projectId))),
+    getGetUploadBatchMockHandler(({ params }) => toUploadBatch(String(params.projectId))),
+    getGetProjectImportsMockHandler(({ params }) => toProjectImports(String(params.projectId))),
     getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params.projectId))),
     getListReviewTasksMockHandler(({ params }) => toProjectReviewTasks(String(params.projectId))),
     getListSlideResultSetsMockHandler(({ params, request }) => {

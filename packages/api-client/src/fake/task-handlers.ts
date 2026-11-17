@@ -1,13 +1,4 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import {
-  type ProjectScopeOptions,
-  projectScopeOptionsSchema,
-} from "../draft/get-project-scope-options.ts";
-import {
-  type ReviewTaskDefaults,
-  reviewTaskDefaultsSchema,
-} from "../draft/get-review-task-defaults.ts";
-import { type ProjectSlide, projectSlideSchema } from "../draft/list-project-slides.ts";
 import { type ReviewerWorkload, reviewerWorkloadSchema } from "../draft/list-reviewer-workload.ts";
 import {
   type StudyTemplateReviewDefaults,
@@ -15,11 +6,17 @@ import {
 } from "../draft/list-study-template-review-defaults.ts";
 import {
   getCreateReviewTaskMockHandler,
+  getGetProjectScopeOptionsMockHandler,
+  getGetReviewTaskDefaultsMockHandler,
   getListAvailabilityMockHandler,
+  getListProjectSlidesMockHandler,
   getListStudyTemplatesMockHandler,
 } from "../generated/api.msw.ts";
 import type {
   MemberAvailability,
+  ProjectScopeOptions,
+  ProjectSlide,
+  ReviewTaskDefaults,
   ReviewTaskDetail,
   StudyTemplateSummary,
   TaskChange,
@@ -63,8 +60,8 @@ const isTaskProject = (projectId: string) =>
 
 export const toProjectSlides = (projectId: string): ProjectSlide[] =>
   isTaskProject(projectId)
-    ? taskSlides.map((slide) =>
-        projectSlideSchema.parse({
+    ? taskSlides.map(
+        (slide): ProjectSlide => ({
           id: slide.id,
           label: slide.label,
           stain: slide.stain,
@@ -81,31 +78,29 @@ export const toProjectSlides = (projectId: string): ProjectSlide[] =>
       )
     : [];
 
-export const toReviewTaskDefaults = (): ReviewTaskDefaults =>
-  reviewTaskDefaultsSchema.parse({
-    code: newTask.code,
-    task_id: newTask.id,
-    names: (["cam", "sam"] as const).map((key) => ({
-      result_set_id: resultSetIdOf(key),
-      name: newTask.names[key],
-    })),
-    slide_ids: newTask.slideIds,
-    result_set_id: resultSetIdOf(newTask.resultSet),
-    reviewer_ids: newTask.reviewers.map((key) => people[key].id),
-    due_on: newTask.dueOn,
-    reminder_days: newTask.reminders,
-    study_template_id: newTask.studyTemplate.id,
-    today: taskToday,
-  });
+export const toReviewTaskDefaults = (): ReviewTaskDefaults => ({
+  code: newTask.code,
+  task_id: newTask.id,
+  names: (["cam", "sam"] as const).map((key) => ({
+    result_set_id: resultSetIdOf(key),
+    name: newTask.names[key],
+  })),
+  slide_ids: newTask.slideIds,
+  result_set_id: resultSetIdOf(newTask.resultSet),
+  reviewer_ids: newTask.reviewers.map((key) => people[key].id),
+  due_on: newTask.dueOn,
+  reminder_days: newTask.reminders,
+  study_template_id: newTask.studyTemplate.id,
+  today: taskToday,
+});
 
-export const toProjectScopeOptions = (): ProjectScopeOptions =>
-  projectScopeOptionsSchema.parse({
-    rois,
-    unsure_zones: unsureZones.map((zone) => ({
-      key: zone.key,
-      cells_per_slide: zone.cellsPerSlide,
-    })),
-  });
+export const toProjectScopeOptions = (): ProjectScopeOptions => ({
+  rois,
+  unsure_zones: unsureZones.map((zone) => ({
+    key: zone.key,
+    cells_per_slide: zone.cellsPerSlide,
+  })),
+});
 
 export const toReviewerWorkload = (): ReviewerWorkload[] =>
   taskReviewers.map((item) =>
@@ -257,21 +252,6 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   })),
 });
 
-export const getListProjectSlidesMockHandler = (overrideResponse?: ProjectSlide[]) =>
-  http.get<{ projectId: string }>("*/api/projects/:projectId/slides", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toProjectSlides(params.projectId)),
-  );
-
-export const getGetReviewTaskDefaultsMockHandler = (overrideResponse?: ReviewTaskDefaults) =>
-  http.get("*/api/projects/:projectId/review-tasks/defaults", () =>
-    HttpResponse.json(overrideResponse ?? toReviewTaskDefaults()),
-  );
-
-export const getGetProjectScopeOptionsMockHandler = (overrideResponse?: ProjectScopeOptions) =>
-  http.get("*/api/projects/:projectId/scope-options", () =>
-    HttpResponse.json(overrideResponse ?? toProjectScopeOptions()),
-  );
-
 export const getListReviewerWorkloadMockHandler = (overrideResponse?: ReviewerWorkload[]) =>
   http.get("*/api/tenant/workload", () =>
     HttpResponse.json(overrideResponse ?? toReviewerWorkload()),
@@ -285,24 +265,6 @@ export const getListStudyTemplateReviewDefaultsMockHandler = (
   );
 
 export const taskDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listProjectSlides",
-    method: "get",
-    path: "/api/projects/{project_id}/slides",
-    handler: () => getListProjectSlidesMockHandler(),
-  },
-  {
-    operationId: "getReviewTaskDefaults",
-    method: "get",
-    path: "/api/projects/{project_id}/review-tasks/defaults",
-    handler: () => getGetReviewTaskDefaultsMockHandler(),
-  },
-  {
-    operationId: "getProjectScopeOptions",
-    method: "get",
-    path: "/api/projects/{project_id}/scope-options",
-    handler: () => getGetProjectScopeOptionsMockHandler(),
-  },
   {
     operationId: "listReviewerWorkload",
     method: "get",
@@ -354,6 +316,9 @@ export function taskHandlers(): RequestHandler[] {
     getListStudyTemplatesMockHandler(() => listedStudyTemplates()),
     ...studyTemplateHandlers(toStudyTemplates),
     getListAvailabilityMockHandler(toAvailability()),
+    getListProjectSlidesMockHandler(({ params }) => toProjectSlides(String(params.projectId))),
+    getGetReviewTaskDefaultsMockHandler(() => toReviewTaskDefaults()),
+    getGetProjectScopeOptionsMockHandler(() => toProjectScopeOptions()),
     getCreateReviewTaskMockHandler(async ({ request, params }) =>
       toCreatedTask(String(params["projectId"]), (await request.json()) as TaskDraft),
     ),

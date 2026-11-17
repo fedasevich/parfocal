@@ -110,7 +110,7 @@ import type {
   PaintedMap,
   PaintedMapContent,
   PaintedMapVersion,
-  Pairings,
+  ParfocalApiResultPairingPairings,
   PasswordSignInAvailability,
   PatchExportStarted,
   PatientData,
@@ -121,8 +121,13 @@ import type {
   PolygonGeometry,
   Preference,
   Project,
+  ProjectAccessRequest,
   ProjectClass,
+  ProjectImports,
   ProjectModel,
+  ProjectOverview,
+  ProjectScopeOptions,
+  ProjectSlide,
   Question,
   QueuedObject,
   QueueRow,
@@ -145,6 +150,7 @@ import type {
   ReviewObjects,
   ReviewOrder,
   ReviewTask,
+  ReviewTaskDefaults,
   ReviewTaskDetail,
   RoomAccess,
   RunAreas,
@@ -203,6 +209,7 @@ import type {
   TileAccess,
   TrackRecord,
   TumorMapJob,
+  UploadBatch,
   UploadedPart,
   UploadState,
   Validation,
@@ -850,6 +857,338 @@ export const getSetProjectMemberResponseMock = (
       ]),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getGetProjectOverviewResponseMock = (
+  overrideResponse: Partial<Extract<ProjectOverview, object>> = {},
+): ProjectOverview => ({
+  project_id: faker.string.uuid(),
+  cases: faker.number.int({ min: 0 }),
+  slides: faker.number.int({ min: 0 }),
+  result_sets: faker.number.int({ min: 0 }),
+  objects: faker.number.int({ min: 0 }),
+  reviewed_percent: faker.number.float({ min: 0, max: 100, fractionDigits: 2 }),
+  needs_review: faker.number.int({ min: 0 }),
+  no_results: faker.number.int({ min: 0 }),
+  case_groups: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      specimen: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_count: faker.number.int({ min: 0 }),
+    }),
+  ),
+  slide_files: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide_id: faker.string.uuid(),
+      file: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      stain: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      remote: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  storage: {
+    used_gb: faker.number.float({ min: 0, fractionDigits: 2 }),
+    allowance_gb: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, fractionDigits: 2 }),
+      null,
+    ]),
+  },
+  import_failure: faker.helpers.arrayElement([
+    {
+      file: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      objects: faker.number.int({ min: 0 }),
+      reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getListProjectSlidesResponseMock = (): ProjectSlide[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    stain: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    case: faker.helpers.arrayElement([
+      {
+        id: faker.string.uuid(),
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        specimen: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      null,
+    ]),
+    result_set_ids: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => faker.string.uuid()),
+  }));
+
+export const getGetProjectScopeOptionsResponseMock = (
+  overrideResponse: Partial<Extract<ProjectScopeOptions, object>> = {},
+): ProjectScopeOptions => ({
+  rois: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  unsure_zones: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cells_per_slide: faker.number.int({ min: 0 }),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetReviewTaskDefaultsResponseMock = (
+  overrideResponse: Partial<Extract<ReviewTaskDefaults, object>> = {},
+): ReviewTaskDefaults => ({
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  task_id: faker.string.uuid(),
+  names: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    result_set_id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  slide_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  result_set_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  reviewer_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  due_on: faker.date.past().toISOString().slice(0, 10),
+  reminder_days: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.number.int(),
+  ),
+  study_template_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  today: faker.date.past().toISOString().slice(0, 10),
+  ...overrideResponse,
+});
+
+export const getRequestProjectAccessResponseMock = (
+  overrideResponse: Partial<Extract<ProjectAccessRequest, object>> = {},
+): ProjectAccessRequest => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  user_id: faker.string.uuid(),
+  owner_id: faker.string.uuid(),
+  asked_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getGetProjectImportsResponseMock = (
+  overrideResponse: Partial<Extract<ProjectImports, object>> = {},
+): ProjectImports => ({
+  project_id: faker.string.uuid(),
+  watched_folder: {
+    address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slides: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    results: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    every: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    on: faker.datatype.boolean(),
+  },
+  webhook: {
+    url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    secret_end: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    abilities: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        on: faker.datatype.boolean(),
+      }),
+    ),
+    on: faker.datatype.boolean(),
+  },
+  events_out: {
+    endpoint: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    last_call: faker.number.int(),
+    events: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        on: faker.datatype.boolean(),
+      }),
+    ),
+    on: faker.datatype.boolean(),
+  },
+  token: { end: faker.string.alpha({ length: { min: 10, max: 20 } }) },
+  last_arrival: faker.helpers.arrayElement([
+    {
+      at: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      what: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  arrivals: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      at: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      event: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      file: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      code: faker.number.int(),
+      result: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetUploadBatchResponseMock = (
+  overrideResponse: Partial<Extract<UploadBatch, object>> = {},
+): UploadBatch => ({
+  project_id: faker.string.uuid(),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      format: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      size_gb: faker.number.float({ min: 0, fractionDigits: 2 }),
+      case_label: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      steps: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+      steps_done: faker.number.int({ min: 0 }),
+      running: faker.helpers.arrayElement([
+        {
+          percent: faker.number.float({ fractionDigits: 2 }),
+          text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        },
+        null,
+      ]),
+      progress: {
+        percent: faker.number.float({ min: 0, max: 100, fractionDigits: 2 }),
+        tone: faker.helpers.arrayElement(["ok", "tiles", "accent"] as const),
+        text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      extra_result: {
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      },
+      failure: faker.helpers.arrayElement([
+        {
+          reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          failure_class: faker.helpers.arrayElement(["transient", "permanent"] as const),
+        },
+        null,
+      ]),
+    }),
+  ),
+  results: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      pairings: {
+        auto: {
+          slide: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+          how: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          warn: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+        },
+        name: {
+          slide: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+          how: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          warn: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+        },
+        id: {
+          slide: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+          how: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          warn: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+        },
+      },
+    }),
+  ),
+  folder_tree: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      depth: faker.number.float({ fractionDigits: 2 }),
+    }),
+  ),
+  problems: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      kind: faker.helpers.arrayElement(["read-error", "scale", "new-classes"] as const),
+      result: faker.number.int({ min: 0 }),
+      title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      lines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          line: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          error: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+      fix: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      fixed: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  new_classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cells: faker.number.float({ fractionDigits: 2 }),
+      to: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    }),
+  ),
+  unscored_rows: faker.number.int({ min: 0 }),
+  duplicate: {
+    slide: faker.number.int({ min: 0 }),
+    uploaded_on: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  storage: {
+    needed_gb: faker.number.float({ fractionDigits: 2 }),
+    left_gb: faker.number.float({ fractionDigits: 2 }),
+    allowance_gb: faker.number.float({ fractionDigits: 2 }),
+    trimmed_gb: faker.number.float({ fractionDigits: 2 }),
+    trimmed_slides: faker.number.int(),
+  },
+  source_outage: {
+    source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    at: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    waiting: faker.number.int(),
+  },
+  done: {
+    minutes: faker.number.int(),
+    first_ids: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  result_preview: {
+    slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    case_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    beside: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    file: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    model: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    checks: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    level: faker.number.int(),
+    scale: faker.number.float({ fractionDigits: 2 }),
+    shift: [faker.number.float({ fractionDigits: 2 }), faker.number.float({ fractionDigits: 2 })],
+  },
+  format_check: {
+    file: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    findings: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        tone: faker.helpers.arrayElement(["ok", "warn"] as const),
+        text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+  },
   ...overrideResponse,
 });
 
@@ -5727,8 +6066,8 @@ export const getCompleteUploadResponseMock = (
 });
 
 export const getPairResultFilesResponseMock = (
-  overrideResponse: Partial<Extract<Pairings, object>> = {},
-): Pairings => ({
+  overrideResponse: Partial<Extract<ParfocalApiResultPairingPairings, object>> = {},
+): ParfocalApiResultPairingPairings => ({
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
     faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
@@ -17726,6 +18065,172 @@ export const getRemoveProjectMemberMockHandler = (
   );
 };
 
+export const getGetProjectOverviewMockHandler = (
+  overrideResponse?:
+    | ProjectOverview
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectOverview> | ProjectOverview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/overview",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetProjectOverviewResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListProjectSlidesMockHandler = (
+  overrideResponse?:
+    | ProjectSlide[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectSlide[]> | ProjectSlide[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/slides",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListProjectSlidesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetProjectScopeOptionsMockHandler = (
+  overrideResponse?:
+    | ProjectScopeOptions
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectScopeOptions> | ProjectScopeOptions),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/scope-options",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetProjectScopeOptionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetReviewTaskDefaultsMockHandler = (
+  overrideResponse?:
+    | ReviewTaskDefaults
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReviewTaskDefaults> | ReviewTaskDefaults),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/review-tasks/defaults",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetReviewTaskDefaultsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRequestProjectAccessMockHandler = (
+  overrideResponse?:
+    | ProjectAccessRequest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ProjectAccessRequest> | ProjectAccessRequest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/access-requests",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRequestProjectAccessResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetProjectImportsMockHandler = (
+  overrideResponse?:
+    | ProjectImports
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectImports> | ProjectImports),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/imports",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetProjectImportsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetUploadBatchMockHandler = (
+  overrideResponse?:
+    | UploadBatch
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UploadBatch> | UploadBatch),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/upload-batch",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetUploadBatchResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateSampleProjectMockHandler = (
   overrideResponse?:
     | void
@@ -19886,8 +20391,10 @@ export const getCompleteUploadMockHandler = (
 
 export const getPairResultFilesMockHandler = (
   overrideResponse?:
-    | Pairings
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Pairings> | Pairings),
+    | ParfocalApiResultPairingPairings
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ParfocalApiResultPairingPairings> | ParfocalApiResultPairingPairings),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
@@ -25423,6 +25930,13 @@ export const getParfocalAPIMock = () => [
   getUndeleteProjectMockHandler(),
   getSetProjectMemberMockHandler(),
   getRemoveProjectMemberMockHandler(),
+  getGetProjectOverviewMockHandler(),
+  getListProjectSlidesMockHandler(),
+  getGetProjectScopeOptionsMockHandler(),
+  getGetReviewTaskDefaultsMockHandler(),
+  getRequestProjectAccessMockHandler(),
+  getGetProjectImportsMockHandler(),
+  getGetUploadBatchMockHandler(),
   getCreateSampleProjectMockHandler(),
   getSetProjectMemberSignOutMockHandler(),
   getCreateCaseReportMockHandler(),

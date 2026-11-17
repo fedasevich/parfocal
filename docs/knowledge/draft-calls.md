@@ -28,22 +28,27 @@ The viewer area switched in OPS-022 (viewer area on the real API), except `typeO
 
 `typeOutlines` stays a viewer draft. It needs a typer runner on the GPU pool behind the warm gate, which does not exist yet.
 
+The project area switched in OPS-023 (project and upload area on the real API). `getProjectOverview`, `listProjectSlides`, `getProjectScopeOptions`, `getReviewTaskDefaults` and `requestProjectAccess` live in `apps/api/src/parfocal_api/project_overview.py`, and `getProjectImports` and `getUploadBatch` in `project_uploads.py`. They keep the draft URLs and shapes, need no migration and are built from stored data.
+
+- The overview, scope options, defaults, imports and upload batch answer only a reader who sees the whole project, so blinding never applies to them. The project slide list also answers a reviewer, with only their assigned slides and no result set IDs while the AI is hidden for a first read.
+- The overview counts slides by the same states as the slide list on My work. Reviewed means submitted or later, needs review means imported, ready, assigned or in review, and no results means uploaded. Objects are the region and cell counts of ready result sets. The storage allowance is null because none is stored, and the import failure is the newest result upload with unresolved import problems.
+- ROIs are the project's ROI annotations, named by their class or "ROI" and their number. Unsure zones are grouped by zone number across ready result sets, and cells per slide counts the cells in the chunks a zone touches, which is an upper bound.
+- The task defaults take the next task code, every ready result set and its slides, the project's reviewers, a due date 14 days ahead, reminders 2 and 1 days before and the project's study template, or an empty string. `task_id` is a fresh ID, because no task exists yet.
+- An access request is a `project.access-asked` audit event, so asking twice returns the same request. A member gets 409 `already-in-project`. The owner is not notified yet, because a new notification kind needs a migration.
+- Imports list the newest 20 uploads of the project as arrivals. The watched folder, webhook, events out and token are off and empty until saved import sources and webhooks are stored.
+- The upload batch is the caller's own uploads in the project from the last 24 hours, with progress from the upload status and result pairing from the stored rule. Folder tree, problems, new classes, duplicate, storage, source outage, done, result preview and format check are empty or zero, because only the prototype scenes fill them.
+
+The fake answers these operations through the generated MSW handlers.
+
 ## Remaining drafts
 
-High priority sits on the home, project, viewer, review and annotate paths.
+High priority sits on the viewer path. The new task page still fails with the fake off, because `listStudyTemplateReviewDefaults` answers 422 under a real path, which OPS-024 (models, reports, team and admin areas on the real API) fixes.
 
 | Operation | Screen | Real equivalent | Priority |
 |---|---|---|---|
-| getProjectOverview | project page, settings and slides tabs | none | high |
-| listProjectSlides | run model window, new task, compare view | partly, the project slide list | high |
-| getProjectImports | project settings and upload | none | high |
-| getUploadBatch | upload page | partly, uploads | high |
-| getProjectScopeOptions | new task | none | high |
-| getReviewTaskDefaults | new task | none | high |
 | typeOutlines | viewer typing tool | none, needs a GPU typer runner | high |
 | getModelRunDefaults | run model window | none, path swallowed | medium |
 | moveModelRun | job window | none | medium |
-| requestProjectAccess | project page without access | none | medium |
 | listTeamWorkload | team | none | medium |
 | getEvaluationReport | evaluation report | partly, task evaluation | medium |
 | getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |

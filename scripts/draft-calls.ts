@@ -7,15 +7,7 @@ export const draftFolder = fileURLToPath(
 );
 
 const operationsByArea: Record<string, string[]> = {
-  project: [
-    "getProjectOverview",
-    "listProjectSlides",
-    "getProjectImports",
-    "getProjectScopeOptions",
-    "getReviewTaskDefaults",
-    "requestProjectAccess",
-    "getUploadBatch",
-  ],
+  project: [],
   viewer: ["typeOutlines"],
   review: [],
   reports: [
