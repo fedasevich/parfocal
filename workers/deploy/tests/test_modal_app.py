@@ -37,6 +37,7 @@ from parfocal_deploy.modal_app import (
     PARSE_SANDBOX_OPTIONS,
     PRELOAD_VARIABLE,
     SECRETS,
+    WEB_CLOUD,
     WEB_CONCURRENCY,
     WEB_ENDPOINT,
     WEB_FUNCTION,
@@ -91,6 +92,7 @@ def test_only_the_web_function_is_pinned_narrow_and_enters_at_dublin() -> None:
     assert (WEB_REGION, WEB_ROUTING_REGION) == ("eu-west", "eu-west")
     assert WEB_OPTIONS["region"] == WEB_REGION
     assert WEB_OPTIONS["routing_region"] == WEB_ROUTING_REGION
+    assert WEB_OPTIONS["cloud"] == WEB_CLOUD == "gcp"
     for options in (INGEST_OPTIONS, EVENTS_OPTIONS):
         assert "routing_region" not in options
 
