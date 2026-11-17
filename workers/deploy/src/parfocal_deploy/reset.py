@@ -59,7 +59,7 @@ async def empty_tenant_objects(location: StorageLocation) -> int:
 
 def storage_location(target: Environment, settings: Mapping[str, str]) -> StorageLocation:
     return StorageLocation(
-        endpoint=storage_endpoint(settings["CLOUDFLARE_ACCOUNT_ID"]),
+        endpoint=storage_endpoint(settings["CLOUDFLARE_ACCOUNT_ID"], target.storage_jurisdiction),
         region="auto",
         bucket=target.slide_bucket,
         access_key_id=settings["R2_ACCESS_KEY_ID"],

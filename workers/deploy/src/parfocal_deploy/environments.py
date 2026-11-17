@@ -13,6 +13,7 @@ class Environment:
     tofu_root: str
     slide_bucket: str
     storage_prefix: str = ""
+    storage_jurisdiction: str = ""
 
     @property
     def origin(self) -> str:
@@ -37,7 +38,8 @@ ENVIRONMENTS = {
             modal_environment="main",
             neon_branch="main",
             tofu_root="prod",
-            slide_bucket="parfocal-dev",
+            slide_bucket="parfocal-dev-eu",
+            storage_jurisdiction="eu",
         ),
         Environment(
             name="staging",

@@ -8,7 +8,7 @@ type Bindings = {
   name: string;
   workers_dev: boolean;
   routes?: { pattern: string; custom_domain: boolean }[];
-  r2_buckets: { binding: string; bucket_name: string }[];
+  r2_buckets: { binding: string; bucket_name: string; jurisdiction?: string }[];
   durable_objects: { bindings: { name: string; class_name: string }[] };
   ratelimits: { name: string; namespace_id: string; simple: { limit: number; period: number } }[];
 };
@@ -20,11 +20,15 @@ type Config = Bindings & {
 const source = readFileSync(fileURLToPath(import.meta.resolve("../wrangler.jsonc")), "utf8");
 const config = JSON.parse(source) as Config;
 const deployed = {
-  production: { name: "parfocal-edge", hostname: "app.parfocal.eu", bucket: "parfocal-dev" },
+  production: {
+    name: "parfocal-edge",
+    hostname: "app.parfocal.eu",
+    slides: { binding: "SLIDES", bucket_name: "parfocal-dev-eu", jurisdiction: "eu" },
+  },
   staging: {
     name: "parfocal-edge-staging",
     hostname: "staging.parfocal.eu",
-    bucket: "parfocal-staging",
+    slides: { binding: "SLIDES", bucket_name: "parfocal-staging" },
   },
 };
 
@@ -39,7 +43,7 @@ test("each deployed environment repeats every binding the dev Worker has", () =>
     const block = config.env[name];
     assert.ok(block);
     assert.equal(block.name, expected.name);
-    assert.deepEqual(block.r2_buckets, [{ binding: "SLIDES", bucket_name: expected.bucket }]);
+    assert.deepEqual(block.r2_buckets, [expected.slides]);
     assert.deepEqual(block.durable_objects, config.durable_objects);
     assert.deepEqual(
       block.ratelimits.map(({ name: binding, simple }) => ({ binding, simple })),

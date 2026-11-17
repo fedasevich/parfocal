@@ -130,7 +130,7 @@ def test_an_unknown_environment_is_refused_and_production_is_the_only_live_targe
         "main",
         "prod",
     )
-    assert PRODUCTION.slide_bucket == "parfocal-dev"
+    assert (PRODUCTION.slide_bucket, PRODUCTION.storage_jurisdiction) == ("parfocal-dev-eu", "eu")
     with pytest.raises(UnknownEnvironmentError):
         environment("preview")
 
@@ -181,8 +181,8 @@ def test_the_first_bootstrap_writes_keys_once_and_the_second_only_the_config() -
     config = cloud.modal_secrets[CONFIG_SECRET]
     assert config["APP_ENV"] == "prod"
     assert config["PUBLIC_ORIGIN"] == "https://app.parfocal.eu"
-    assert config["STORAGE_BUCKET"] == "parfocal-dev"
-    assert config["STORAGE_ENDPOINT"] == "https://account-1.r2.cloudflarestorage.com"
+    assert config["STORAGE_BUCKET"] == "parfocal-dev-eu"
+    assert config["STORAGE_ENDPOINT"] == "https://account-1.eu.r2.cloudflarestorage.com"
     assert config["ZITADEL_CLIENT_ID"] == "client-1"
     statements = len(cloud.statements)
 
@@ -262,7 +262,7 @@ def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> Non
         "pnpm --filter @parfocal/web build",
         "pnpm --filter @parfocal/edge exec wrangler deploy --env production "
         "--var API_ORIGIN:https://api.modal.example "
-        "--var UPLOAD_ORIGIN:https://account-1.r2.cloudflarestorage.com",
+        "--var UPLOAD_ORIGIN:https://account-1.eu.r2.cloudflarestorage.com",
     ]
     migration = cloud.commands[0][1]["MIGRATION_DATABASE_URL"]
     assert "neondb_owner" in migration

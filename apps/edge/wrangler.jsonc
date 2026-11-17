@@ -39,7 +39,9 @@
       "name": "parfocal-edge",
       "workers_dev": false,
       "routes": [{ "pattern": "app.parfocal.eu", "custom_domain": true }],
-      "r2_buckets": [{ "binding": "SLIDES", "bucket_name": "parfocal-dev" }],
+      "r2_buckets": [
+        { "binding": "SLIDES", "bucket_name": "parfocal-dev-eu", "jurisdiction": "eu" }
+      ],
       "durable_objects": {
         "bindings": [
           { "name": "ROOMS", "class_name": "Room" },

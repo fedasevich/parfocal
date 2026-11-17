@@ -81,7 +81,7 @@ def edge_commands(target: Environment, account: str, api_origin: str) -> list[Co
                 "--var",
                 f"API_ORIGIN:{api_origin}",
                 "--var",
-                f"UPLOAD_ORIGIN:{storage_endpoint(account)}",
+                f"UPLOAD_ORIGIN:{storage_endpoint(account, target.storage_jurisdiction)}",
                 *prefix,
             )
         ),

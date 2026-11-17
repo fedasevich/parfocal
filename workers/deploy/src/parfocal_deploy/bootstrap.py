@@ -69,8 +69,9 @@ def output_values(raw: str) -> dict[str, str]:
     return {name: str(parsed[name]["value"]) for name in OUTPUTS}
 
 
-def storage_endpoint(account: str) -> str:
-    return f"https://{account}.r2.cloudflarestorage.com"
+def storage_endpoint(account: str, jurisdiction: str = "") -> str:
+    zone = f"{jurisdiction}." if jurisdiction else ""
+    return f"https://{account}.{zone}r2.cloudflarestorage.com"
 
 
 def config_values(
@@ -83,7 +84,9 @@ def config_values(
         "ZITADEL_ISSUER": outputs["zitadel_issuer"],
         "ZITADEL_CLIENT_ID": outputs["zitadel_client_id"],
         "ZITADEL_CLIENT_SECRET": outputs["zitadel_client_secret"],
-        "STORAGE_ENDPOINT": storage_endpoint(local["CLOUDFLARE_ACCOUNT_ID"]),
+        "STORAGE_ENDPOINT": storage_endpoint(
+            local["CLOUDFLARE_ACCOUNT_ID"], target.storage_jurisdiction
+        ),
         "STORAGE_REGION": "auto",
         "STORAGE_BUCKET": target.slide_bucket,
         "STORAGE_ACCESS_KEY_ID": local["R2_ACCESS_KEY_ID"],
