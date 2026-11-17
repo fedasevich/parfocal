@@ -184,7 +184,7 @@ test("the preview of A1 reads its decisions, its object count and its open threa
   assert.equal(decisions.length, 48);
   assert.equal(decisions.filter((decision) => decision.value === "disagree").length, 3);
   assert.equal(body(await getReviewOrder(task.id, a1.id)).total, 55);
-  const threads = (await listSlideThreads(a1.id)).data;
+  const threads = body(await listSlideThreads(a1.id));
   assert.deepEqual(
     threads.filter((thread) => !thread.resolved).map((thread) => thread.anchor),
     ["T2", "T1·C145", "R2⁺"],

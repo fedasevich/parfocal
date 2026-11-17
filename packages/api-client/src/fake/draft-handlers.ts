@@ -1,5 +1,4 @@
-import { HttpResponse, http, type RequestHandler } from "msw";
-import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
+import type { RequestHandler } from "msw";
 import { getGetMyChecklistMockHandler } from "../generated/api.msw.ts";
 import type { Checklist } from "../generated/api.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
@@ -9,12 +8,10 @@ import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
-import { reviewDraftOperations } from "./review-handlers.ts";
-import { checklist, reviewTasks, sampleProject, slideByIndex, threads } from "./scenario.ts";
+import { checklist, sampleProject } from "./scenario.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
-import { viewerDraftOperations } from "./viewer-handlers.ts";
 import { viewerToolsDraftOperations } from "./viewer-tools-handlers.ts";
 
 export { getGetEvaluationReportMockHandler } from "./adjudication-handlers.ts";
@@ -51,7 +48,6 @@ export {
   getGetProjectOverviewMockHandler,
   getGetUploadBatchMockHandler,
 } from "./project-handlers.ts";
-export { getListThreadCommentsMockHandler } from "./review-handlers.ts";
 export {
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
@@ -60,27 +56,13 @@ export {
   getListStudyTemplateReviewDefaultsMockHandler,
 } from "./task-handlers.ts";
 export { getListTeamWorkloadMockHandler } from "./team-handlers.ts";
-export {
-  getGetResultSetTyperMockHandler,
-  getGetSlideAiProgressMockHandler,
-  getGetSlideResultStatsMockHandler,
-} from "./viewer-handlers.ts";
-export {
-  getListAnnotationLayersMockHandler,
-  getTypeOutlinesMockHandler,
-} from "./viewer-tools-handlers.ts";
+export { getTypeOutlinesMockHandler } from "./viewer-tools-handlers.ts";
 
 export type DraftOperation = {
   operationId: string;
   method: "get" | "post" | "put" | "patch" | "delete";
   path: string;
   handler: () => RequestHandler;
-};
-
-const taskByCode = (code: string) => {
-  const task = reviewTasks.find((candidate) => candidate.code === code);
-  if (task === undefined) throw new Error(`no scenario task ${code}`);
-  return task;
 };
 
 export const toChecklist = (): Checklist => ({
@@ -94,42 +76,15 @@ export const toChecklist = (): Checklist => ({
   },
 });
 
-export const toSlideThreads = (slideId: string): SlideThread[] =>
-  threads
-    .filter((item) => slideByIndex(item.slide).id === slideId)
-    .map((item) =>
-      slideThreadSchema.parse({
-        id: item.id,
-        slide_id: slideId,
-        task_id: taskByCode(item.task).id,
-        anchor: item.anchor,
-        replies: item.replies,
-        resolved: !item.open,
-      }),
-    );
-
-export const getListSlideThreadsMockHandler = (overrideResponse?: SlideThread[]) =>
-  http.get<{ slideId: string }>("*/api/slides/:slideId/threads", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toSlideThreads(params.slideId)),
-  );
-
 export const draftOperations: DraftOperation[] = [
-  {
-    operationId: "listSlideThreads",
-    method: "get",
-    path: "/api/slides/{slide_id}/threads",
-    handler: () => getListSlideThreadsMockHandler(),
-  },
   ...jobDraftOperations,
   ...taskDraftOperations,
   ...projectDraftOperations,
   ...teamDraftOperations,
   ...adminDraftOperations,
   ...authDraftOperations,
-  ...reviewDraftOperations,
   ...clinicalDraftOperations,
   ...connectModelDraftOperations,
-  ...viewerDraftOperations,
   ...adjudicationDraftOperations,
   ...viewerToolsDraftOperations,
 ];

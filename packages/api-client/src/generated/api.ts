@@ -360,6 +360,26 @@ export const AgreementPart = {
   form: "form",
 } as const;
 
+export type AiObjectAgreementAgreement =
+  (typeof AiObjectAgreementAgreement)[keyof typeof AiObjectAgreementAgreement];
+
+export const AiObjectAgreementAgreement = {
+  both: "both",
+  ai_only: "ai_only",
+  reviewer_only: "reviewer_only",
+} as const;
+
+export interface AiObjectAgreement {
+  object: string;
+  agreement: AiObjectAgreementAgreement;
+}
+
+export interface AiAgainstReviewed {
+  dice: number | null;
+  cells_agree_percent: number | null;
+  objects: AiObjectAgreement[];
+}
+
 export interface ManifestAnnotator {
   letter: string;
   assigned: boolean;
@@ -438,6 +458,34 @@ export interface AiObjectEdit {
 }
 
 export type AiOutline = PolygonGeometry | MultiPolygonGeometry;
+
+export type StepKey = (typeof StepKey)[keyof typeof StepKey];
+
+export const StepKey = {
+  tissue: "tissue",
+  regions: "regions",
+  cells: "cells",
+} as const;
+
+export type StepState = (typeof StepState)[keyof typeof StepState];
+
+export const StepState = {
+  done: "done",
+  running: "running",
+  queued: "queued",
+} as const;
+
+export interface AiStep {
+  key: StepKey;
+  state: StepState;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  percent: number;
+  seconds: number | null;
+  fragments: number | null;
+}
 
 export interface AiUsageModel {
   model: string | null;
@@ -584,6 +632,22 @@ export interface AnnotationEdit {
   geometry?: Geometry | null;
   class_id?: string | null;
   text?: Words | null;
+}
+
+export interface AnnotationLayer {
+  key: string;
+  name: string;
+  class_name: string | null;
+  /** @minimum 0 */
+  count: number;
+  parent: string | null;
+  locked: boolean;
+}
+
+export interface AnnotationLayers {
+  slide_id: string;
+  layers: AnnotationLayer[];
+  new_shapes_go_to: string;
 }
 
 export type AnnotationOrigin = (typeof AnnotationOrigin)[keyof typeof AnnotationOrigin];
@@ -807,6 +871,13 @@ export interface AvailabilityChange {
   status: Availability;
   until?: string | null;
   note?: ParfocalApiAvailabilityNote | null;
+}
+
+export interface BandAccuracy {
+  confident?: number | null;
+  likely?: number | null;
+  unsure?: number | null;
+  doubtful?: number | null;
 }
 
 export type ConfidenceBand = (typeof ConfidenceBand)[keyof typeof ConfidenceBand];
@@ -1447,6 +1518,11 @@ export interface ClaimedPart {
    * @maxLength 80
    */
   ETag: string;
+}
+
+export interface ClassCount {
+  class_name: string;
+  count: number;
 }
 
 /**
@@ -3437,6 +3513,13 @@ export interface Metrics {
   [key: string]: number;
 }
 
+export interface ModelAgainstModel {
+  set_a_id: string | null;
+  set_b_id: string | null;
+  dice: number | null;
+  only_in_a: string[];
+}
+
 /**
  * @minLength 1
  * @maxLength 80
@@ -4980,6 +5063,18 @@ export interface ResultSetFacts {
   added: number;
 }
 
+export interface ResultSetTyper {
+  result_set_id: string;
+  name: string;
+  calibrated: boolean;
+  checked_on_held_out: boolean;
+  band_accuracy: BandAccuracy;
+  test_set_accuracy: number | null;
+  test_set_confident_share: number | null;
+  test_set_unsure_share: number | null;
+  validated_sites: string[];
+}
+
 export interface ResultsFile {
   /** @maxLength 20000000 */
   content: string;
@@ -5212,6 +5307,20 @@ export interface ReviewedLayer {
 export interface ReviewerLeft {
   user_id: string;
   slides_left: number;
+}
+
+export type ReviewerObjectAgreementAgreement =
+  (typeof ReviewerObjectAgreementAgreement)[keyof typeof ReviewerObjectAgreementAgreement];
+
+export const ReviewerObjectAgreementAgreement = {
+  same: "same",
+  split: "split",
+  unsure: "unsure",
+} as const;
+
+export interface ReviewerObjectAgreement {
+  object: string;
+  agreement: ReviewerObjectAgreementAgreement;
 }
 
 export type State = (typeof State)[keyof typeof State];
@@ -5578,6 +5687,20 @@ export interface SlideAgreement {
   total: number;
 }
 
+export type SlideAiProgressState = (typeof SlideAiProgressState)[keyof typeof SlideAiProgressState];
+
+export const SlideAiProgressState = {
+  running: "running",
+  ready: "ready",
+} as const;
+
+export interface SlideAiProgress {
+  slide_id: string;
+  state: SlideAiProgressState;
+  steps: AiStep[];
+  found: string[];
+}
+
 export interface SlideArea {
   object: string;
   number: number;
@@ -5706,6 +5829,24 @@ export interface SlidePage {
   next_cursor: string | null;
 }
 
+export interface SlideReviewers {
+  user_ids: string[];
+  kappa: number | null;
+  objects: ReviewerObjectAgreement[];
+}
+
+export interface SlideResultStats {
+  task_id: string;
+  slide_id: string;
+  /** @minimum 0 */
+  object_count: number;
+  class_counts: ClassCount[];
+  score_bins: number[];
+  ai_vs_reviewed: AiAgainstReviewed;
+  model_vs_model: ModelAgainstModel;
+  reviewers: SlideReviewers;
+}
+
 export interface SlideSet {
   slide_id: string;
   result_set_id: string;
@@ -5715,6 +5856,16 @@ export interface SlideState {
   slide_id: string;
   state: State;
   reviewers: ReviewerState[];
+}
+
+export interface SlideThread {
+  id: string;
+  slide_id: string;
+  task_id: string | null;
+  anchor: string;
+  /** @minimum 0 */
+  replies: number;
+  resolved: boolean;
 }
 
 /**
@@ -6080,6 +6231,16 @@ export interface Thread {
   resolved_by: string | null;
   message_count: number;
   last_message_at: string;
+}
+
+export interface ThreadComment {
+  id: string;
+  thread_id: string;
+  author_id: string;
+  author_is_researcher: boolean;
+  text: string;
+  reply_to: string | null;
+  created_at: string;
 }
 
 export interface ThreadCreate {
@@ -36539,6 +36700,798 @@ export function useGetTaskDisplay<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type getSlideResultStatsResponse200 = {
+  data: SlideResultStats;
+  status: 200;
+};
+
+export type getSlideResultStatsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideResultStatsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideResultStatsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideResultStatsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideResultStatsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideResultStatsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideResultStatsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideResultStatsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideResultStatsResponseSuccess = getSlideResultStatsResponse200 & {
+  headers: Headers;
+};
+export type getSlideResultStatsResponseError = (
+  | getSlideResultStatsResponse400
+  | getSlideResultStatsResponse401
+  | getSlideResultStatsResponse403
+  | getSlideResultStatsResponse404
+  | getSlideResultStatsResponse409
+  | getSlideResultStatsResponse422
+  | getSlideResultStatsResponse429
+  | getSlideResultStatsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideResultStatsResponse =
+  | getSlideResultStatsResponseSuccess
+  | getSlideResultStatsResponseError;
+
+export const getGetSlideResultStatsUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/result-stats`;
+};
+
+/**
+ * @summary Get Slide Result Stats
+ */
+export const getSlideResultStats = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideResultStatsResponse> => {
+  return apiFetch<getSlideResultStatsResponse>(getGetSlideResultStatsUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideResultStatsQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/result-stats`] as const;
+};
+
+export const getGetSlideResultStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideResultStats>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideResultStats>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideResultStatsQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideResultStats>>> = ({ signal }) =>
+    getSlideResultStats(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideResultStats>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideResultStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideResultStats>>
+>;
+export type GetSlideResultStatsQueryError = Problem;
+
+export function useGetSlideResultStats<
+  TData = Awaited<ReturnType<typeof getSlideResultStats>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideResultStats>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideResultStats>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideResultStats>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideResultStats<
+  TData = Awaited<ReturnType<typeof getSlideResultStats>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideResultStats>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideResultStats>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideResultStats>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideResultStats<
+  TData = Awaited<ReturnType<typeof getSlideResultStats>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideResultStats>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Result Stats
+ */
+
+export function useGetSlideResultStats<
+  TData = Awaited<ReturnType<typeof getSlideResultStats>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideResultStats>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideResultStatsQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSlideAiProgressResponse200 = {
+  data: SlideAiProgress;
+  status: 200;
+};
+
+export type getSlideAiProgressResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideAiProgressResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideAiProgressResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideAiProgressResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideAiProgressResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideAiProgressResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideAiProgressResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideAiProgressResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideAiProgressResponseSuccess = getSlideAiProgressResponse200 & {
+  headers: Headers;
+};
+export type getSlideAiProgressResponseError = (
+  | getSlideAiProgressResponse400
+  | getSlideAiProgressResponse401
+  | getSlideAiProgressResponse403
+  | getSlideAiProgressResponse404
+  | getSlideAiProgressResponse409
+  | getSlideAiProgressResponse422
+  | getSlideAiProgressResponse429
+  | getSlideAiProgressResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideAiProgressResponse =
+  | getSlideAiProgressResponseSuccess
+  | getSlideAiProgressResponseError;
+
+export const getGetSlideAiProgressUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/ai-progress`;
+};
+
+/**
+ * @summary Get Slide Ai Progress
+ */
+export const getSlideAiProgress = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideAiProgressResponse> => {
+  return apiFetch<getSlideAiProgressResponse>(getGetSlideAiProgressUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideAiProgressQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/ai-progress`] as const;
+};
+
+export const getGetSlideAiProgressQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideAiProgress>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideAiProgressQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideAiProgress>>> = ({ signal }) =>
+    getSlideAiProgress(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideAiProgressQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideAiProgress>>
+>;
+export type GetSlideAiProgressQueryError = Problem;
+
+export function useGetSlideAiProgress<
+  TData = Awaited<ReturnType<typeof getSlideAiProgress>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideAiProgress>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideAiProgress>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideAiProgress<
+  TData = Awaited<ReturnType<typeof getSlideAiProgress>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideAiProgress>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideAiProgress>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideAiProgress<
+  TData = Awaited<ReturnType<typeof getSlideAiProgress>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Ai Progress
+ */
+
+export function useGetSlideAiProgress<
+  TData = Awaited<ReturnType<typeof getSlideAiProgress>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideAiProgressQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listAnnotationLayersResponse200 = {
+  data: AnnotationLayers;
+  status: 200;
+};
+
+export type listAnnotationLayersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listAnnotationLayersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listAnnotationLayersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listAnnotationLayersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listAnnotationLayersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listAnnotationLayersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listAnnotationLayersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listAnnotationLayersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listAnnotationLayersResponseSuccess = listAnnotationLayersResponse200 & {
+  headers: Headers;
+};
+export type listAnnotationLayersResponseError = (
+  | listAnnotationLayersResponse400
+  | listAnnotationLayersResponse401
+  | listAnnotationLayersResponse403
+  | listAnnotationLayersResponse404
+  | listAnnotationLayersResponse409
+  | listAnnotationLayersResponse422
+  | listAnnotationLayersResponse429
+  | listAnnotationLayersResponse500
+) & {
+  headers: Headers;
+};
+
+export type listAnnotationLayersResponse =
+  | listAnnotationLayersResponseSuccess
+  | listAnnotationLayersResponseError;
+
+export const getListAnnotationLayersUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/annotation-layers`;
+};
+
+/**
+ * @summary List Annotation Layers
+ */
+export const listAnnotationLayers = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listAnnotationLayersResponse> => {
+  return apiFetch<listAnnotationLayersResponse>(getListAnnotationLayersUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAnnotationLayersQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/annotation-layers`] as const;
+};
+
+export const getListAnnotationLayersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAnnotationLayers>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationLayers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAnnotationLayersQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAnnotationLayers>>> = ({ signal }) =>
+    listAnnotationLayers(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listAnnotationLayers>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListAnnotationLayersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAnnotationLayers>>
+>;
+export type ListAnnotationLayersQueryError = Problem;
+
+export function useListAnnotationLayers<
+  TData = Awaited<ReturnType<typeof listAnnotationLayers>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationLayers>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnotationLayers>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnotationLayers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnotationLayers<
+  TData = Awaited<ReturnType<typeof listAnnotationLayers>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationLayers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAnnotationLayers>>,
+          TError,
+          Awaited<ReturnType<typeof listAnnotationLayers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAnnotationLayers<
+  TData = Awaited<ReturnType<typeof listAnnotationLayers>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationLayers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Annotation Layers
+ */
+
+export function useListAnnotationLayers<
+  TData = Awaited<ReturnType<typeof listAnnotationLayers>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listAnnotationLayers>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAnnotationLayersQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getResultSetTyperResponse200 = {
+  data: ResultSetTyper;
+  status: 200;
+};
+
+export type getResultSetTyperResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getResultSetTyperResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getResultSetTyperResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getResultSetTyperResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getResultSetTyperResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getResultSetTyperResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getResultSetTyperResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getResultSetTyperResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getResultSetTyperResponseSuccess = getResultSetTyperResponse200 & {
+  headers: Headers;
+};
+export type getResultSetTyperResponseError = (
+  | getResultSetTyperResponse400
+  | getResultSetTyperResponse401
+  | getResultSetTyperResponse403
+  | getResultSetTyperResponse404
+  | getResultSetTyperResponse409
+  | getResultSetTyperResponse422
+  | getResultSetTyperResponse429
+  | getResultSetTyperResponse500
+) & {
+  headers: Headers;
+};
+
+export type getResultSetTyperResponse =
+  | getResultSetTyperResponseSuccess
+  | getResultSetTyperResponseError;
+
+export const getGetResultSetTyperUrl = (resultSetId: string) => {
+  return `/api/result-sets/${resultSetId}/typer`;
+};
+
+/**
+ * @summary Get Result Set Typer
+ */
+export const getResultSetTyper = async (
+  resultSetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getResultSetTyperResponse> => {
+  return apiFetch<getResultSetTyperResponse>(getGetResultSetTyperUrl(resultSetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetResultSetTyperQueryKey = (resultSetId: string) => {
+  return [`/api/result-sets/${resultSetId}/typer`] as const;
+};
+
+export const getGetResultSetTyperQueryOptions = <
+  TData = Awaited<ReturnType<typeof getResultSetTyper>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSetTyper>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetResultSetTyperQueryKey(resultSetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getResultSetTyper>>> = ({ signal }) =>
+    getResultSetTyper(resultSetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getResultSetTyper>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetResultSetTyperQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getResultSetTyper>>
+>;
+export type GetResultSetTyperQueryError = Problem;
+
+export function useGetResultSetTyper<
+  TData = Awaited<ReturnType<typeof getResultSetTyper>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSetTyper>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultSetTyper>>,
+          TError,
+          Awaited<ReturnType<typeof getResultSetTyper>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultSetTyper<
+  TData = Awaited<ReturnType<typeof getResultSetTyper>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSetTyper>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getResultSetTyper>>,
+          TError,
+          Awaited<ReturnType<typeof getResultSetTyper>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetResultSetTyper<
+  TData = Awaited<ReturnType<typeof getResultSetTyper>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSetTyper>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Result Set Typer
+ */
+
+export function useGetResultSetTyper<
+  TData = Awaited<ReturnType<typeof getResultSetTyper>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getResultSetTyper>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetResultSetTyperQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type getDisagreementQueueResponse200 = {
   data: DisagreementQueue;
   status: 200;
@@ -49972,6 +50925,388 @@ export const useMoveThreadOnSlide = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getMoveThreadOnSlideMutationOptions(options), queryClient);
 };
+
+export type listSlideThreadsResponse200 = {
+  data: SlideThread[];
+  status: 200;
+};
+
+export type listSlideThreadsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSlideThreadsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSlideThreadsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSlideThreadsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSlideThreadsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSlideThreadsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSlideThreadsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSlideThreadsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSlideThreadsResponseSuccess = listSlideThreadsResponse200 & {
+  headers: Headers;
+};
+export type listSlideThreadsResponseError = (
+  | listSlideThreadsResponse400
+  | listSlideThreadsResponse401
+  | listSlideThreadsResponse403
+  | listSlideThreadsResponse404
+  | listSlideThreadsResponse409
+  | listSlideThreadsResponse422
+  | listSlideThreadsResponse429
+  | listSlideThreadsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSlideThreadsResponse =
+  | listSlideThreadsResponseSuccess
+  | listSlideThreadsResponseError;
+
+export const getListSlideThreadsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/threads`;
+};
+
+/**
+ * @summary List Slide Threads
+ */
+export const listSlideThreads = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSlideThreadsResponse> => {
+  return apiFetch<listSlideThreadsResponse>(getListSlideThreadsUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSlideThreadsQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/threads`] as const;
+};
+
+export const getListSlideThreadsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSlideThreads>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideThreads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSlideThreadsQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSlideThreads>>> = ({ signal }) =>
+    listSlideThreads(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSlideThreads>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSlideThreadsQueryResult = NonNullable<Awaited<ReturnType<typeof listSlideThreads>>>;
+export type ListSlideThreadsQueryError = Problem;
+
+export function useListSlideThreads<
+  TData = Awaited<ReturnType<typeof listSlideThreads>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideThreads>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlideThreads>>,
+          TError,
+          Awaited<ReturnType<typeof listSlideThreads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSlideThreads<
+  TData = Awaited<ReturnType<typeof listSlideThreads>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideThreads>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlideThreads>>,
+          TError,
+          Awaited<ReturnType<typeof listSlideThreads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSlideThreads<
+  TData = Awaited<ReturnType<typeof listSlideThreads>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideThreads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Slide Threads
+ */
+
+export function useListSlideThreads<
+  TData = Awaited<ReturnType<typeof listSlideThreads>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlideThreads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSlideThreadsQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listThreadCommentsResponse200 = {
+  data: ThreadComment[];
+  status: 200;
+};
+
+export type listThreadCommentsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listThreadCommentsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listThreadCommentsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listThreadCommentsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listThreadCommentsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listThreadCommentsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listThreadCommentsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listThreadCommentsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listThreadCommentsResponseSuccess = listThreadCommentsResponse200 & {
+  headers: Headers;
+};
+export type listThreadCommentsResponseError = (
+  | listThreadCommentsResponse400
+  | listThreadCommentsResponse401
+  | listThreadCommentsResponse403
+  | listThreadCommentsResponse404
+  | listThreadCommentsResponse409
+  | listThreadCommentsResponse422
+  | listThreadCommentsResponse429
+  | listThreadCommentsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listThreadCommentsResponse =
+  | listThreadCommentsResponseSuccess
+  | listThreadCommentsResponseError;
+
+export const getListThreadCommentsUrl = (threadId: string) => {
+  return `/api/threads/${threadId}/comments`;
+};
+
+/**
+ * @summary List Thread Comments
+ */
+export const listThreadComments = async (
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listThreadCommentsResponse> => {
+  return apiFetch<listThreadCommentsResponse>(getListThreadCommentsUrl(threadId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListThreadCommentsQueryKey = (threadId: string) => {
+  return [`/api/threads/${threadId}/comments`] as const;
+};
+
+export const getListThreadCommentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listThreadComments>>,
+  TError = Problem,
+>(
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadComments>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListThreadCommentsQueryKey(threadId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listThreadComments>>> = ({ signal }) =>
+    listThreadComments(threadId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: threadId !== null && threadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listThreadComments>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListThreadCommentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listThreadComments>>
+>;
+export type ListThreadCommentsQueryError = Problem;
+
+export function useListThreadComments<
+  TData = Awaited<ReturnType<typeof listThreadComments>>,
+  TError = Problem,
+>(
+  threadId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadComments>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listThreadComments>>,
+          TError,
+          Awaited<ReturnType<typeof listThreadComments>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListThreadComments<
+  TData = Awaited<ReturnType<typeof listThreadComments>>,
+  TError = Problem,
+>(
+  threadId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listThreadComments>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listThreadComments>>,
+          TError,
+          Awaited<ReturnType<typeof listThreadComments>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListThreadComments<
+  TData = Awaited<ReturnType<typeof listThreadComments>>,
+  TError = Problem,
+>(
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadComments>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Thread Comments
+ */
+
+export function useListThreadComments<
+  TData = Awaited<ReturnType<typeof listThreadComments>>,
+  TError = Problem,
+>(
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadComments>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListThreadCommentsQueryOptions(threadId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type saveOpinionResponse200 = {
   data: Opinion;

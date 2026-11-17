@@ -1,5 +1,10 @@
-import type { AnnotationLayer } from "../draft/list-annotation-layers.ts";
-import type { ModelTier, TierMapping, TierModel, TierTask } from "../generated/api.ts";
+import type {
+  AnnotationLayer,
+  ModelTier,
+  TierMapping,
+  TierModel,
+  TierTask,
+} from "../generated/api.ts";
 
 export const layersOnA1: AnnotationLayer[] = [
   {

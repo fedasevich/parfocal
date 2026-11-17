@@ -30,6 +30,7 @@ import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
 import { uploadHandlers } from "./upload-handlers.ts";
+import { viewerHandlers } from "./viewer-handlers.ts";
 import { viewerToolsHandlers } from "./viewer-tools-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
 import { workspaceJoinHandlers } from "./workspace-join-handlers.ts";
@@ -76,6 +77,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...sharedLayerHandlers(),
     ...resumeHandlers(),
     ...reportLinkHandlers(),
+    ...viewerHandlers(),
     ...viewerToolsHandlers(),
     ...getParfocalAPIMock(),
   ];

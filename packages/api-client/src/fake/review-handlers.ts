@@ -1,5 +1,4 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
   getAddReviewObjectMockHandler,
   getClearDecisionMockHandler,
@@ -19,6 +18,8 @@ import {
   getListMentionableMembersOnSlideMockHandler,
   getListProjectClassesMockHandler,
   getListReviewObjectsMockHandler,
+  getListSlideThreadsMockHandler,
+  getListThreadCommentsMockHandler,
   getListThreadsMockHandler,
   getListThreadsOnSlideMockHandler,
   getMoveThreadMockHandler,
@@ -49,10 +50,12 @@ import type {
   ReviewDecisionDraft,
   ReviewObjects,
   SlideAgreement,
+  SlideThread,
   SlideThreadCreate,
   TaskDisplay,
   TaskStates,
   Thread,
+  ThreadComment,
   ThreadCreate,
   ThreadDetail,
 } from "../generated/api.ts";
@@ -197,6 +200,18 @@ export const resetFakeThreads = () => {
   removedThreads.clear();
 };
 
+export const toSlideThreads = (slideId: string): SlideThread[] =>
+  threads
+    .filter((item) => slideByIndex(item.slide).id === slideId)
+    .map((item) => ({
+      id: item.id,
+      slide_id: slideId,
+      task_id: reviewTasks.find((task) => task.code === item.task)?.id ?? null,
+      anchor: item.anchor,
+      replies: item.replies,
+      resolved: !item.open,
+    }));
+
 export const toThreadComments = (threadId: string): ThreadComment[] => {
   const posted = postedComments.filter((item) => item.thread_id === threadId);
   const thread = threads.find((item) => item.id === threadId);
@@ -205,8 +220,8 @@ export const toThreadComments = (threadId: string): ThreadComment[] => {
   const researcher = projectByCode(task?.project ?? "P07").owner;
   const seeded = visibleComments(fakeView().viewer, task?.blinded ?? false, researcher)
     .filter((item) => item.anchor === thread.anchor)
-    .map((item) =>
-      threadCommentSchema.parse({
+    .map(
+      (item): ThreadComment => ({
         id: item.id,
         thread_id: threadId,
         author_id: people[item.by].id,
@@ -283,23 +298,21 @@ const postThread = (
     last_message_at: at,
   };
   postedThreads.push(thread);
-  postedComments.push(
-    threadCommentSchema.parse({
-      id: message.id,
-      thread_id: id,
-      author_id: viewer.id,
-      author_is_researcher: false,
-      text: body.body,
-      reply_to: null,
-      created_at: at,
-    }),
-  );
+  postedComments.push({
+    id: message.id,
+    thread_id: id,
+    author_id: viewer.id,
+    author_is_researcher: false,
+    text: body.body,
+    reply_to: null,
+    created_at: at,
+  });
   keepPosted();
   return { ...thread, messages: [message] };
 };
 
 const postReply = (threadId: string, body: MessageCreate): Message => {
-  const comment = threadCommentSchema.parse({
+  const comment: ThreadComment = {
     id: crypto.randomUUID(),
     thread_id: threadId,
     author_id: people[fakeView().viewer].id,
@@ -307,7 +320,7 @@ const postReply = (threadId: string, body: MessageCreate): Message => {
     text: body.body,
     reply_to: null,
     created_at: new Date().toISOString(),
-  });
+  };
   postedComments.push(comment);
   keepPosted();
   return toMessage(comment);
@@ -556,20 +569,6 @@ const submittedStates = (taskId: string, slideId: string): TaskStates => ({
   ],
 });
 
-export const getListThreadCommentsMockHandler = (overrideResponse?: ThreadComment[]) =>
-  http.get<{ threadId: string }>("*/api/threads/:threadId/comments", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toThreadComments(params.threadId)),
-  );
-
-export const reviewDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listThreadComments",
-    method: "get",
-    path: "/api/threads/{thread_id}/comments",
-    handler: () => getListThreadCommentsMockHandler(),
-  },
-];
-
 const aiHidden = () =>
   problem(403, "ai-hidden", "The AI stays hidden on this slide until you record your first read");
 
@@ -579,6 +578,8 @@ export function reviewHandlers(): RequestHandler[] {
       toReviewObjects(String(params.taskId), String(params.slideId)),
     ),
     getGetTaskDisplayMockHandler(({ params }) => toTaskDisplay(String(params.taskId))),
+    getListThreadCommentsMockHandler(({ params }) => toThreadComments(String(params.threadId))),
+    getListSlideThreadsMockHandler(({ params }) => toSlideThreads(String(params.slideId))),
     getGetSlideAgreementMockHandler(({ params }) =>
       toSlideAgreement(String(params.taskId), String(params.slideId)),
     ),

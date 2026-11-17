@@ -138,10 +138,10 @@ test("saving a 5-point certainty answer on RT-16 counts it through the task's ma
 });
 
 test("a blind reviewer sees only their own comments and the researcher's", async () => {
-  const threads = (await listSlideThreads(a1.id)).data;
+  const threads = body(await listSlideThreads(a1.id));
   const t2 = threads.find((thread) => thread.anchor === "T2");
   assert.ok(t2);
-  const comments = (await listThreadComments(t2.id)).data;
+  const comments = body(await listThreadComments(t2.id));
   assert.equal(comments.length, 3);
   assert.equal(comments.filter((item) => item.reply_to !== null).length, 2);
   assert.ok(comments.every((item) => item.text !== "Boundary looks fine to me."));
@@ -246,7 +246,7 @@ test("a thread posted with a point anchor is listed back with its first message"
   assert.equal(posted?.message_count, 1);
   const open = body(await listThreads(rt14.id, a1.id, { resolved: false }));
   assert.ok(open.some((thread) => thread.id === created.id));
-  const comments = (await listThreadComments(created.id)).data;
+  const comments = body(await listThreadComments(created.id));
   assert.equal(comments[0]?.text, "Is this fold real?");
 });
 

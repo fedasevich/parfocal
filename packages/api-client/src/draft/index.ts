@@ -15,18 +15,6 @@ export {
   useGetProjectScopeOptions,
 } from "./get-project-scope-options.ts";
 export {
-  type GetResultSetTyperQueryError,
-  type GetResultSetTyperQueryResult,
-  getGetResultSetTyperQueryKey,
-  getGetResultSetTyperQueryOptions,
-  getGetResultSetTyperUrl,
-  getResultSetTyper,
-  type getResultSetTyperResponse,
-  type ResultSetTyper,
-  resultSetTyperSchema,
-  useGetResultSetTyper,
-} from "./get-result-set-typer.ts";
-export {
   type GetReviewTaskDefaultsQueryError,
   type GetReviewTaskDefaultsQueryResult,
   getGetReviewTaskDefaultsQueryKey,
@@ -38,44 +26,6 @@ export {
   reviewTaskDefaultsSchema,
   useGetReviewTaskDefaults,
 } from "./get-review-task-defaults.ts";
-export {
-  type GetSlideAiProgressQueryError,
-  type GetSlideAiProgressQueryResult,
-  getGetSlideAiProgressQueryKey,
-  getGetSlideAiProgressQueryOptions,
-  getGetSlideAiProgressUrl,
-  getSlideAiProgress,
-  type getSlideAiProgressResponse,
-  type SlideAiProgress,
-  slideAiProgressSchema,
-  useGetSlideAiProgress,
-} from "./get-slide-ai-progress.ts";
-export {
-  type GetSlideResultStatsQueryError,
-  type GetSlideResultStatsQueryResult,
-  getGetSlideResultStatsQueryKey,
-  getGetSlideResultStatsQueryOptions,
-  getGetSlideResultStatsUrl,
-  getSlideResultStats,
-  type getSlideResultStatsResponse,
-  type SlideResultStats,
-  slideResultStatsSchema,
-  useGetSlideResultStats,
-} from "./get-slide-result-stats.ts";
-export {
-  type AnnotationLayer,
-  type AnnotationLayers,
-  annotationLayerSchema,
-  annotationLayersSchema,
-  getListAnnotationLayersQueryKey,
-  getListAnnotationLayersQueryOptions,
-  getListAnnotationLayersUrl,
-  type ListAnnotationLayersQueryError,
-  type ListAnnotationLayersQueryResult,
-  listAnnotationLayers,
-  type listAnnotationLayersResponse,
-  useListAnnotationLayers,
-} from "./list-annotation-layers.ts";
 export {
   getListProjectSlidesQueryKey,
   getListProjectSlidesQueryOptions,
@@ -100,18 +50,6 @@ export {
   reviewerWorkloadSchema,
   useListReviewerWorkload,
 } from "./list-reviewer-workload.ts";
-export {
-  getListSlideThreadsQueryKey,
-  getListSlideThreadsQueryOptions,
-  getListSlideThreadsUrl,
-  type ListSlideThreadsQueryError,
-  type ListSlideThreadsQueryResult,
-  listSlideThreads,
-  type listSlideThreadsResponse,
-  type SlideThread,
-  slideThreadSchema,
-  useListSlideThreads,
-} from "./list-slide-threads.ts";
 export {
   DecisionKind,
   type DisplayDefaults,
@@ -147,18 +85,6 @@ export {
   teamWorkloadSchema,
   useListTeamWorkload,
 } from "./list-team-workload.ts";
-export {
-  getListThreadCommentsQueryKey,
-  getListThreadCommentsQueryOptions,
-  getListThreadCommentsUrl,
-  type ListThreadCommentsQueryError,
-  type ListThreadCommentsQueryResult,
-  listThreadComments,
-  type listThreadCommentsResponse,
-  type ThreadComment,
-  threadCommentSchema,
-  useListThreadComments,
-} from "./list-thread-comments.ts";
 export * from "./model-runs.ts";
 export * from "./project.ts";
 export * from "./report-layout.ts";
