@@ -3,6 +3,7 @@ import os
 import random
 import sys
 import time
+import uuid
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
@@ -87,6 +88,39 @@ class ApiUser(FastHttpUser):
             params={"q": random.choice(SEARCH_TERMS)},
             headers=bearer(),
             name="/api/search",
+        )
+
+
+class PublicUser(FastHttpUser):
+    wait_time = between(0.5, 2)
+
+    def expect(self, path: str, name: str, statuses: tuple[int, ...]) -> None:
+        with self.client.get(path, name=name, catch_response=True) as response:
+            if response.status_code in statuses:
+                response.success()
+            else:
+                response.failure(f"{path} answered {response.status_code}")
+
+    @task(3)
+    def shell(self) -> None:
+        self.expect("/", "/ shell", (200,))
+
+    @task(2)
+    def login(self) -> None:
+        self.expect("/login", "/login shell", (200,))
+
+    @task(2)
+    def health(self) -> None:
+        self.expect("/api/health", "/api/health", (200,))
+
+    @task(2)
+    def signed_out_api(self) -> None:
+        self.expect("/api/projects", "/api/projects signed out", (401,))
+
+    @task(1)
+    def signed_out_tiles(self) -> None:
+        self.expect(
+            f"/tiles/{uuid.uuid4()}/levels.json", "/tiles/[id]/levels.json signed out", (401, 403)
         )
 
 

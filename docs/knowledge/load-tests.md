@@ -7,7 +7,7 @@ Locust scenarios for the API, tiles and realtime, run on demand ([ADR 0286](../a
 | File | What it does |
 |---|---|
 | `scripts/load/run.py` | `pnpm load:run`. Runs the chosen scenarios against one origin, writes CSV files and prints one table. Exits 3 when every scenario skipped |
-| `scripts/load/locustfile.py` | The three user classes `ApiUser`, `TileUser` and `RoomUser`. `pnpm load` runs Locust on it directly |
+| `scripts/load/locustfile.py` | The four user classes `PublicUser` (signed-out routes, needs no secret), `ApiUser`, `TileUser` and `RoomUser`. `pnpm load` runs Locust on it directly |
 | `scripts/load/target.py` | The target guard and the cloud cap, tested by `scripts/test_load_target.py` (unittest only, because the docs workflow has no pytest) |
 | `scripts/load/local_token.py` | Mints or removes a two-hour service token in the local compose database only, under a `load-smoke` tenant |
 | `.github/workflows/load.yml` | The `load` workflow, `workflow_dispatch` only, in the `production` environment |
@@ -35,7 +35,7 @@ Service tokens are rate limited per principal and the Worker limits `/tiles/` pe
 
 ## Runs
 
-A production run with no secrets: `pnpm load:run --origin https://app.parfocal.eu --users 2 --seconds 60`. The API scales to zero, so the first request after a quiet spell takes about 8 s. Wake it with one `curl` of `/api/health` first, or read the max column as the cold start. On 2026-11-16 it made 53 health reads at 230 ms p50 and 690 ms p95 for about $0.002 of Modal time ([result](../results/2026-11-16-load-scenarios-on-production.md)).
+A production run with no secrets: `pnpm load:run --origin https://app.parfocal.eu --scenarios public --users 2 --seconds 60`. On 2026-11-18 it made 85 requests at 50 ms p50 and 120 ms p95, no failures ([result](../results/2026-11-18-load-public-routes-on-production.md)). The older `api` run below reads only health. The API scales to zero, so the first request after a quiet spell takes about 8 s. Wake it with one `curl` of `/api/health` first, or read the max column as the cold start. On 2026-11-16 it made 53 health reads at 230 ms p50 and 690 ms p95 for about $0.002 of Modal time ([result](../results/2026-11-16-load-scenarios-on-production.md)).
 
 The workflow reads the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. None exist yet, which is decision 124 (a production token and session for the load workflow).
 

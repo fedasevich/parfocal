@@ -7,7 +7,7 @@ from pathlib import Path
 
 from load.target import TargetRefusedError, checked_target
 
-SCENARIOS = {"api": "ApiUser", "tiles": "TileUser", "room": "RoomUser"}
+SCENARIOS = {"public": "PublicUser", "api": "ApiUser", "tiles": "TileUser", "room": "RoomUser"}
 LOCUSTFILE = Path(__file__).with_name("locustfile.py")
 SCRIPTS = LOCUSTFILE.parent.parent
 COLUMNS = ("Request Count", "Failure Count", "50%", "95%", "Max Response Time")

@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-18
+
+- TEST-010 Added the PublicUser scenario (signed-out routes). Production run 2 users 60 s: 85 requests, 0 failures, p50 50 ms, p95 120 ms, about 0.002 USD Modal (estimate). Signed-in tiles through the edge not measured, no password-free session, stays in review. Result docs/results/2026-11-18-load-public-routes-on-production.md
+
 ## 2026-11-17
 
 - VIEW-076 Browser spec stage-cells-grid-pick.spec.ts added. The cells grid exists only inside a task (it lists the task's cell review objects), so the spec opens task rt14 on the cells slide, checks all 3 tiles draw from GET /api/slides/:id/cell-crops/:number with 200, then clicks C1, C2 and C3 and checks each selects (data-current, type bar) and settles on a distinct camera centre. No app fix needed. Deployed colour and GPU check still open, left in review.
