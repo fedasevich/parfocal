@@ -2,6 +2,33 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.9.0 (2026-11-17)
+
+### Features
+
+- SHELL-024: Let a member set their status to Busy
+- PROTO-027: Keep prototype scenes out of the deployed build
+- VIEW-075: Draw review cells and the cell type bar on the engine stage
+- VIEW-075: Draw AI region outlines and every result set cell on the engine stage
+
+### Fixes
+
+- SHELL-025: Fix six faults found in the walk after the EU move
+
+### Docs
+
+- OPS-031: Log the EU cutover
+- INGEST-032: Log the thumbnail backfill after the reseed
+- SHELL-025: Log the budget change
+
+### Tests
+
+- IAM-032: Expect the passkeys row in the Privacy section
+
+### Other
+
+- SHELL-025: Raise the first page budget to 372 KB after the passkey, hint and skeleton work
+
 ## v0.8.0 (2026-11-17)
 
 ### Features
