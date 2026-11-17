@@ -42,6 +42,14 @@ from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_
 from parfocal_api.sample_files import SampleFile, stored_facts, stored_sample_file
 from parfocal_api.sample_project import SAMPLE_SLIDES, square
 from parfocal_api.seed_request import seed_request
+from parfocal_api.showcase_results import (
+    CELLS_FILE,
+    CELLS_MODEL,
+    REGIONS_FILE,
+    REGIONS_MODEL,
+    model_cells,
+    model_regions,
+)
 from parfocal_api.showcase_shapes import CELL_CLASSES, demo_cells, demo_regions
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
@@ -781,37 +789,42 @@ async def add_demo_sets(
 ) -> None:
     slide = (
         await connection.execute(
-            select(slides.c.id, slides.c.project_id, slides.c.width, slides.c.height).where(
-                slides.c.id == slide_id
-            )
+            select(
+                slides.c.id, slides.c.project_id, slides.c.label, slides.c.width, slides.c.height
+            ).where(slides.c.id == slide_id)
         )
     ).one()
     width, height = slide.width or DEMO_WIDTH, slide.height or DEMO_HEIGHT
+    real_regions = model_regions(slide.label)
+    real_cells = model_cells(slide.label)
     regions_id = await insert_result_set(
         connection,
         principal.tenant_id,
         slide,
         ResultSetDraft(
             name="Tumour detector v1",
-            model_version="v1.0",
-            classes=["Tumor"],
-            source_file="regions.parfocal.json",
+            model_version=REGIONS_MODEL if real_regions else "v1.0",
+            classes=real_regions.classes if real_regions else ["Tumor"],
+            source_file=REGIONS_FILE,
         ),
         ResultSource.IMPORT,
         actor_of(principal),
         principal.user_id,
     )
-    await add_regions(connection, regions_id, demo_regions(width, height))
+    await add_regions(
+        connection, regions_id, real_regions.rows if real_regions else demo_regions(width, height)
+    )
     await finish(connection, regions_id)
+    classes: list[str] = real_cells.classes if real_cells else [*CELL_CLASSES]
     cells_id = await insert_result_set(
         connection,
         principal.tenant_id,
         slide,
         ResultSetDraft(
             name="Cell typer v1",
-            model_version="v1.0",
-            classes=list(CELL_CLASSES),
-            source_file="cells.geojson",
+            model_version=CELLS_MODEL if real_cells else "v1.0",
+            classes=classes,
+            source_file=CELLS_FILE,
         ),
         ResultSource.IMPORT,
         actor_of(principal),
@@ -821,8 +834,8 @@ async def add_demo_sets(
         principal.tenant_id,
         slide_id,
         cells_id,
-        demo_cells(width, height),
-        len(CELL_CLASSES),
+        real_cells.cells if real_cells else demo_cells(width, height),
+        len(classes),
     )
     entries = await write_cells(results, built)
     await add_chunks(connection, cells_id, [ChunkRow.of(entry) for entry in entries])
