@@ -350,6 +350,7 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     absoluteUrl(request.url, request.baseUrl),
     request.signal,
     request.fetch,
+    request.index,
   );
   const pages = (await indexedPages(tiff, request.index?.levels)) ?? (await listPages(tiff));
   const plainLevels = await chooseLevels(pages, request);

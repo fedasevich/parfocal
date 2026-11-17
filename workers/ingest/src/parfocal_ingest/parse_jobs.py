@@ -17,7 +17,7 @@ from parfocal_ingest.identify import Format, Identified, Refusal, identify
 from parfocal_ingest.identifying_text import ranges_file
 from parfocal_ingest.integrity import check_integrity
 from parfocal_ingest.isolated_child import ScopedStorage
-from parfocal_ingest.level_directories import directory_sizes, located
+from parfocal_ingest.level_directories import directories_in, located
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
 from parfocal_ingest.thumbnail import previews
@@ -127,7 +127,7 @@ def level_table(
 ) -> bytes:
     table = asdict(found)
     if source is not None and tiles is not None:
-        table = located(table, tiles, directory_sizes(source, tiles))
+        table = located(table, tiles, directories_in(source, tiles))
     return json.dumps(table, separators=(",", ":")).encode()
 
 
