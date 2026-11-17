@@ -59,7 +59,7 @@ test("reviewing a slide and signing it out sends slide, area and cell times", as
 test("the full viewer samples how much of the screen its chrome covers", async ({ page }) => {
   await allowAnalytics(page);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects`);
   await expect(page.getByTestId("full-viewer")).toBeVisible({ timeout: 20_000 });
   await expect
     .poll(async () => named(await logged(page), "chrome_coverage_measured").length, {

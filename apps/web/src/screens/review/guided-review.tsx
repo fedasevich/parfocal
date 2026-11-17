@@ -1,21 +1,18 @@
 import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
-  ApiError,
   resolveSetting,
-  useGetFirstRead,
   useGetMySettingLayers,
   useGetReviewedLayer,
   useReopenSlideReview,
   useSubmitSlideReview,
 } from "@parfocal/api-client";
-import { Banner, InlineState } from "@parfocal/ui/components/banner";
+import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { Loader } from "@parfocal/ui/components/loader";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import {
@@ -63,7 +60,6 @@ import {
 } from "./decision-style.ts";
 import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings, withOverrides } from "./display-tab.tsx";
-import { FirstReadStep } from "./first-read.tsx";
 import {
   openBlockers,
   opinionQuestions,
@@ -72,6 +68,7 @@ import {
 } from "./guided-blockers.ts";
 import { coachShown, useGuidedCoach } from "./guided-coach.ts";
 import { orderObjects, zoomedCamera } from "./guided-drive.ts";
+import { GuidedGate } from "./guided-gate.tsx";
 import { CameraBar, CanvasNotice, CoachTip, IssueCard } from "./guided-parts.tsx";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
@@ -95,8 +92,7 @@ import { ObjectComments, useThreadMessages } from "./object-comments.tsx";
 import { nextObjectAction, previousObjectAction, useObjectKeys } from "./object-keys.ts";
 import { imageOfKind, ringOfGeometry, slideToStill, stillToSlide } from "./outline-coords.ts";
 import { RedrawLayer } from "./redraw-layer.tsx";
-import { type ReviewSession, useReviewSession } from "./review-data.ts";
-import { ReviewOrderState } from "./review-order-state.tsx";
+import type { ReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
 import { type Camera, homeCamera, SlideStill, type StillView } from "./slide-still.tsx";
@@ -118,44 +114,16 @@ type GuidedReviewProps = {
 };
 
 export function GuidedReview(props: GuidedReviewProps) {
-  const { t } = useLingui();
-  const session = useReviewSession(props.taskId, props.slideId);
-  const hidesAi = session.task?.ai_hidden_first_read === true;
-  const firstRead = useGetFirstRead(props.taskId, props.slideId, undefined, {
-    query: { enabled: hidesAi, retry: false },
-  });
-  if (!session.ready && (session.order === "preparing" || session.order === "failed"))
-    return <ReviewOrderState order={session.order} onRetry={session.retryOrder} />;
-  if (!session.ready || (hidesAi && firstRead.isPending)) {
-    return <Loader label={t`Loading the review`} size="page" />;
-  }
-  if (hidesAi && firstRead.isError) {
-    const notRecorded = firstRead.error instanceof ApiError && firstRead.error.status === 404;
-    if (notRecorded) return <FirstReadStep session={session} />;
-    return (
-      <main
-        className="grid h-dvh place-items-center bg-page p-6 text-fg"
-        data-ai="hidden"
-        data-testid="first-read-unavailable"
-      >
-        <InlineState
-          icon="warn"
-          title={t`Your first read could not be checked`}
-          action={
-            <Button variant="ghost" onClick={() => void firstRead.refetch()}>
-              <Trans>Try again</Trans>
-            </Button>
-          }
-        >
-          <Trans>
-            The AI stays hidden until your first read is confirmed. Try again in a moment.
-          </Trans>
-        </InlineState>
-      </main>
-    );
-  }
   return (
-    <GuidedBody key={`${props.scene ?? "region"}-${props.slideId}`} session={session} {...props} />
+    <GuidedGate taskId={props.taskId} slideId={props.slideId}>
+      {(session) => (
+        <GuidedBody
+          key={`${props.scene ?? "region"}-${props.slideId}`}
+          session={session}
+          {...props}
+        />
+      )}
+    </GuidedGate>
   );
 }
 

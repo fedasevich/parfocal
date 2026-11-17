@@ -6,7 +6,7 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 
 test("the debug handle reads and moves the full viewer camera", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&x=0.25&y=0.75&z=6`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects&x=0.25&y=0.75&z=6`);
   await expect(page.getByTestId("full-viewer")).toBeVisible();
   const first = await page.evaluate(() => window.__parfocal?.getCamera?.() ?? null);
   expect(first?.scale).toBe(6);

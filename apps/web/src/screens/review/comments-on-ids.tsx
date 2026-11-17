@@ -86,7 +86,7 @@ function CommentsBody({
                 counts={counts}
                 added={session.added.map((item) => item.object)}
               />
-              <AiSays setName="CAMELYON v1.0, imported 12 Oct" objects={session.objects} />
+              <AiSays setName="CAMELYON v1.0" objects={session.objects} />
             </>
           ),
         },

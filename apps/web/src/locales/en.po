@@ -2105,10 +2105,6 @@ msgstr "{senderFirst} sees your changes and the note."
 msgid "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
 msgstr "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
 
-#: src/screens/viewer/use-viewer-panels.tsx
-msgid "{setName}, imported 12 Oct"
-msgstr "{setName}, imported 12 Oct"
-
 #. placeholder {0}: changedCount ? t`your ${changedCount} changed key${changedCount > 1 ? "s" : ""}` : t`the default keys`
 #: src/screens/settings/shortcuts-section.tsx
 msgid "{shortcutFileName} saved to Downloads, with {0}"
@@ -2400,11 +2396,11 @@ msgid "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read
 msgstr "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/viewer-notices.tsx
 msgid "<0>Signed off 15 Oct.</0> Changes need an amendment."
 msgstr "<0>Signed off 15 Oct.</0> Changes need an amendment."
 
 #: src/routes/issue-pages.$kind.tsx
+#: src/screens/viewer/viewer-notices.tsx
 msgid "<0>Signed off.</0> Changes need an amendment."
 msgstr "<0>Signed off.</0> Changes need an amendment."
 
@@ -3291,6 +3287,15 @@ msgstr "AI is checked least sure first, and experts draw what it missed."
 msgid "AI models"
 msgstr "AI models"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects"
+msgstr "AI objects"
+
+#. placeholder {0}: objects.length
+#: src/viewer/stage-review-objects.tsx
+msgid "AI objects · {0}"
+msgstr "AI objects · {0}"
+
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr "AI only, reviewer disagreed"
@@ -3368,6 +3373,10 @@ msgstr "All actions"
 #: src/flow-map/walk-bar.tsx
 msgid "All chapters"
 msgstr "All chapters"
+
+#: src/viewer/stage-object-notes.tsx
+msgid "All comments on this slide"
+msgstr "All comments on this slide"
 
 #: src/screens/my-work/to-review-tab.tsx
 msgid "All decided"
@@ -8747,7 +8756,9 @@ msgstr "Loading the project"
 msgid "Loading the report"
 msgstr "Loading the report"
 
-#: src/screens/review/guided-review.tsx
+#: src/routes/tasks.$taskId.guided.tsx
+#: src/screens/review/guided-gate.tsx
+#: src/viewer/first-read-guard.tsx
 msgid "Loading the review"
 msgstr "Loading the review"
 
@@ -9659,6 +9670,7 @@ msgstr "New workspace"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Next"
 msgstr "Next"
 
@@ -10284,6 +10296,10 @@ msgstr "Note to them <0>optional</0>"
 msgid "Note, optional"
 msgstr "Note, optional"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Notes and comments"
+msgstr "Notes and comments"
+
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"
 msgstr "nothing"
@@ -10542,6 +10558,13 @@ msgstr "Object"
 #: src/screens/upload/check-step.tsx
 msgid "object {0}"
 msgstr "object {0}"
+
+#. placeholder {0}: index + 1
+#. placeholder {1}: objects.length
+#. placeholder {2}: decided.size
+#: src/viewer/stage-review-objects.tsx
+msgid "Object {0} of {1} · {2} decided"
+msgstr "Object {0} of {1} · {2} decided"
 
 #. placeholder {0}: deposit.objectId
 #: ../../packages/ui/src/components/clinical-report.tsx
@@ -11900,6 +11923,7 @@ msgstr "Preview the report"
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Previous"
 msgstr "Previous"
 
@@ -14219,10 +14243,6 @@ msgstr "Signed off"
 msgid "Signed off {signedOn}"
 msgstr "Signed off {signedOn}"
 
-#: src/screens/viewer/use-viewer-panels.tsx
-msgid "Signed off 15 Oct. Changes need an amendment."
-msgstr "Signed off 15 Oct. Changes need an amendment."
-
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Signed off by: ____________  Date: ________"
 msgstr "Signed off by: ____________  Date: ________"
@@ -14230,6 +14250,10 @@ msgstr "Signed off by: ____________  Date: ________"
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "Signed off. Ask the researcher to amend."
 msgstr "Signed off. Ask the researcher to amend."
+
+#: src/screens/viewer/use-viewer-panels.tsx
+msgid "Signed off. Changes need an amendment."
+msgstr "Signed off. Changes need an amendment."
 
 #. placeholder {0}: signature.at
 #. placeholder {1}: name(signature.by)
@@ -15354,7 +15378,7 @@ msgstr "The AI sizes it at {0}, between {1} and {2}. Measure across the widest p
 msgid "The AI stays hidden until your first read"
 msgstr "The AI stays hidden until your first read"
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "The AI stays hidden until your first read is confirmed. Try again in a moment."
 msgstr "The AI stays hidden until your first read is confirmed. Try again in a moment."
 
@@ -16496,7 +16520,7 @@ msgstr "True positives"
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
@@ -17503,6 +17527,7 @@ msgstr "Who reviews"
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/stage-minimap.tsx
 #: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr "Whole slide"
@@ -17811,6 +17836,7 @@ msgstr "Your alignment is kept for this pair of slides. Clear puts the panes bac
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr "Your answer on {0}"
 
@@ -17855,7 +17881,7 @@ msgstr "Your endpoint"
 msgid "Your files stay as they are. Check your connection and press the upload button again."
 msgstr "Your files stay as they are. Check your connection and press the upload button again."
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/guided-gate.tsx
 msgid "Your first read could not be checked"
 msgstr "Your first read could not be checked"
 

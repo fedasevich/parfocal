@@ -4,7 +4,8 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 const ready = 20_000;
-const slidePath = (persona: string) => `/projects/${p07}/slides/${a1}?task=${rt14}&as=${persona}`;
+const slidePath = (persona: string) =>
+  `/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects&as=${persona}`;
 
 test("two people on one slide see each other within 2 s and it clears when one leaves", async ({
   context,

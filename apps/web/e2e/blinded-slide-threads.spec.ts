@@ -65,7 +65,7 @@ test("a blinded reviewer sees no other reviewer's slide pin or thread before sub
   page,
 }) => {
   await seedSlideThreads(page);
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&tab=comments`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&scene=objects&tab=comments`);
   const cards = page.locator('[data-slot="thread-card"]');
   await expect(cards.filter({ hasText: "Researcher asks about the margin" })).toBeVisible();
   await expect(cards.filter({ hasText: "Lenka checks the capsule" })).toBeVisible();
