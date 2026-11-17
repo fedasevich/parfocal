@@ -5,7 +5,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import delete, func, insert, select, tuple_, update
+from sqlalchemy import delete, exists, func, insert, select, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -256,6 +256,68 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
     return (await queues_of(connection, [task_id]))[task_id]
 
 
+def queued_why(rows: list[Any]) -> Why | None:
+    second_look = {
+        row.user_id
+        for row in rows
+        if row.value == DecisionValue.UNSURE and DecisionReason.NEED_SECOND_LOOK in row.reasons
+    }
+    return why_queued({row.user_id: row.value for row in rows}, second_look)
+
+
+async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> int:
+    pending = review_assignments.alias("pending")
+    reviewer = review_assignments.alias("reviewer")
+    rows = await connection.execute(
+        select(
+            review_decisions.c.task_id,
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
+            review_decisions.c.user_id,
+            review_decisions.c.value,
+            review_decisions.c.reasons,
+            review_decisions.c.reopened_at,
+            disagreement_decisions.c.value.label("chosen_value"),
+            disagreement_decisions.c.left_open,
+        )
+        .outerjoin(
+            disagreement_decisions,
+            (disagreement_decisions.c.task_id == review_decisions.c.task_id)
+            & (disagreement_decisions.c.slide_id == review_decisions.c.slide_id)
+            & (disagreement_decisions.c.kind == review_decisions.c.kind)
+            & (disagreement_decisions.c.number == review_decisions.c.number),
+        )
+        .where(
+            review_decisions.c.task_id.in_(task_ids),
+            exists().where(
+                reviewer.c.task_id == review_decisions.c.task_id,
+                reviewer.c.slide_id == review_decisions.c.slide_id,
+                reviewer.c.user_id == review_decisions.c.user_id,
+                reviewer.c.released_at.is_(None),
+            ),
+            ~exists().where(
+                pending.c.task_id == review_decisions.c.task_id,
+                pending.c.slide_id == review_decisions.c.slide_id,
+                pending.c.released_at.is_(None),
+                pending.c.submitted_at.is_(None),
+            ),
+        )
+    )
+    grouped: dict[TaskKey, list[Any]] = {}
+    for row in rows:
+        grouped.setdefault((row.task_id, row.slide_id, row.kind, row.number), []).append(row)
+    return sum(
+        counts_as_open(
+            looking_again=any(row.reopened_at is not None for row in found),
+            decided=found[0].chosen_value is not None,
+            left_open=bool(found[0].left_open),
+        )
+        for found in grouped.values()
+        if queued_why(found) is not None
+    )
+
+
 async def queues_of(
     connection: AsyncConnection, task_ids: list[uuid.UUID]
 ) -> dict[uuid.UUID, list[QueuedObject]]:
@@ -287,12 +349,7 @@ async def queues_of(
     sent = await sent_objects(connection, task_ids)
     for key, rows in grouped.items():
         task_id, slide_id, kind, number = key
-        second_look = {
-            row.user_id
-            for row in rows
-            if row.value == DecisionValue.UNSURE and DecisionReason.NEED_SECOND_LOOK in row.reasons
-        }
-        why = why_queued({row.user_id: row.value for row in rows}, second_look)
+        why = queued_why(rows)
         if why is None:
             continue
         object_kind = AnnotationKind(kind)
@@ -333,8 +390,16 @@ async def queues_of(
     return queues
 
 
+def counts_as_open(*, looking_again: bool, decided: bool, left_open: bool) -> bool:
+    return looking_again or (not decided and not left_open)
+
+
 def is_open(item: QueuedObject) -> bool:
-    return item.looking_again or (item.decision is None and not item.left_open)
+    return counts_as_open(
+        looking_again=item.looking_again,
+        decided=item.decision is not None,
+        left_open=item.left_open,
+    )
 
 
 def open_by_slide(queue: list[QueuedObject]) -> dict[uuid.UUID, int]:

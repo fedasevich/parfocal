@@ -11,7 +11,7 @@ from workspace_support import join_project, make_project
 pytestmark = pytest.mark.db
 
 ROUTES = ("/api/me/home", "/api/me/review-tasks", "/api/me/notification-preferences")
-HANDFUL = 14
+LIMITS = {"/api/me/home": 9, "/api/me/review-tasks": 4, "/api/me/notification-preferences": 3}
 SLIDES_PAGE = 12
 
 
@@ -48,6 +48,7 @@ def test_home_and_my_lists_read_a_handful_of_queries_however_much_work_there_is(
     api: ApiAs, database: str
 ) -> None:
     s = study(database)
+    task(api, s, name="Mine", case_ids=[], reviewer_ids=[s.user("owner")])
     disputed_round(api, database, s, "Round 1")
     small = counts(api, s)
     for name in ("Round 2", "Round 3", "Round 4"):
@@ -56,7 +57,7 @@ def test_home_and_my_lists_read_a_handful_of_queries_however_much_work_there_is(
         another_project(database, s)
     large = counts(api, s)
     assert large == small
-    assert max(large.values()) <= HANDFUL
+    assert all(found <= LIMITS[route] for (_, route), found in large.items()), large
 
 
 def many_slides(database: str, s: Study, count: int) -> list[uuid.UUID]:

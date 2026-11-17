@@ -414,6 +414,15 @@
     ],
     [
       "tenants",
+      "auth_read",
+      "r",
+      true,
+      "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      null,
+      []
+    ],
+    [
+      "tenants",
       "platform_read",
       "r",
       true,

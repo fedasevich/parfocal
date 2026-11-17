@@ -355,3 +355,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0392](0392-a-deployed-seed-refuses-to-fall-back-to-the-flat-fixtures-folder.md) | A deployed seed refuses to fall back to the flat fixtures folder, and Reset production publishes the fixture folders first | Accepted | 2026-11-17 |
 | [0393](0393-the-session-check-reads-the-two-factor-setting-and-counts-in-batches.md) | The session check reads the two factor setting in its one statement and counts calls in batches | Accepted | 2026-11-17 |
 | [0394](0394-passkeys-on-the-app-origin-through-zitadel-session-api.md) | Passkeys belong to the app origin and go through Zitadel's session API | Accepted | 2026-11-17 |
+| [0395](0395-home-reads-in-batches-and-the-session-check-carries-the-workspace-status.md) | Home reads in batches and the session check carries the workspace status | Accepted | 2026-11-17 |

@@ -220,10 +220,25 @@ async def my_assignments(
     return found
 
 
+type Assigned = dict[uuid.UUID, list[tuple[uuid.UUID, bool, bool]]]
+
+
 async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[MyTask]:
+    return (await my_review_tasks_with_slides(connection, me))[0]
+
+
+async def my_review_tasks_with_slides(
+    connection: AsyncConnection, me: uuid.UUID
+) -> tuple[list[MyTask], Assigned]:
+    my_decisions = (
+        select(func.count())
+        .where(review_decisions.c.task_id == review_tasks.c.id, review_decisions.c.user_id == me)
+        .scalar_subquery()
+        .label("my_decisions")
+    )
     rows = (
         await connection.execute(
-            select(*TASK_COLUMNS)
+            select(*TASK_COLUMNS, my_decisions)
             .join(projects, projects.c.id == review_tasks.c.project_id)
             .where(
                 review_tasks.c.archived_at.is_(None),
@@ -238,19 +253,7 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
         )
     ).all()
     if not rows:
-        return []
-    counted = dict(
-        (
-            await connection.execute(
-                select(review_decisions.c.task_id, func.count())
-                .where(
-                    review_decisions.c.user_id == me,
-                    review_decisions.c.task_id.in_([row.id for row in rows]),
-                )
-                .group_by(review_decisions.c.task_id)
-            )
-        ).all()
-    )
+        return [], {}
     assigned = await my_assignments(connection, me, [row.id for row in rows])
     tasks: list[MyTask] = []
     for row in rows:
@@ -260,7 +263,7 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
         status = reviewer_status(
             submitted,
             len(mine),
-            worked or bool(counted.get(row.id)),
+            worked or row.my_decisions > 0,
             row.signed_off_at is not None,
         )
         tasks.append(
@@ -275,16 +278,17 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
                 start_mode=StartMode(row.start_mode),
                 slides_submitted=submitted,
                 slides_assigned=len(mine),
-                decisions=int(counted.get(row.id, 0)),
+                decisions=int(row.my_decisions),
                 status=status,
                 next_slide_id=next((slide for slide, done in mine if not done), None),
                 created_by_user_id=row.created_by_user_id,
             )
         )
-    return sorted(
+    ordered = sorted(
         tasks,
         key=lambda task: (MY_ORDER.index(task.status), task.due_on or date.max, task.code),
     )
+    return ordered, assigned
 
 
 @router.get("/review-tasks", operation_id="listMyReviewTasks", **require(Permission.SEE_SLIDES))

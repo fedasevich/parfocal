@@ -69,6 +69,27 @@ def queued_review(api: ApiAs, database: str) -> tuple[Review, str]:
     return r, f"/api/review-tasks/{r.task}"
 
 
+def home_open(api: ApiAs, r: Review) -> int:
+    response = api(r.people["owner"]).get("/api/me/home")
+    assert response.status_code == 200, response.text
+    return int(response.json()["week"]["open_disagreements"])
+
+
+def test_home_counts_the_objects_still_open_in_the_queue(api: ApiAs, database: str) -> None:
+    r, task = queued_review(api, database)
+    decide = f"{task}/disagreements/{r.slide}"
+    assert home_open(api, r) == 2
+    assert api(r.people["owner"]).put(f"{decide}/T1", json={"answer": "agree"}).status_code == 200
+    assert home_open(api, r) == 1
+    left = api(r.people["owner"]).put(f"{decide}/T2/left-open", json={"note": "Later"})
+    assert left.status_code == 200, left.text
+    assert home_open(api, r) == 0
+    assert api(r.people["owner"]).delete(f"{decide}/T1").status_code == 204
+    assert home_open(api, r) == 1
+    assert api(r.people["second"]).post(f"{r.base}/reopen").status_code == 200
+    assert home_open(api, r) == 0
+
+
 def test_decisions_close_the_queue_and_lock_at_sign_off(api: ApiAs, database: str) -> None:
     r, task = queued_review(api, database)
     decide = f"{task}/disagreements/{r.slide}"

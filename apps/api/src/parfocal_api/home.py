@@ -5,14 +5,28 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
-from sqlalchemy import exists, func, literal, literal_column, select, union_all
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Integer,
+    String,
+    cast,
+    exists,
+    func,
+    literal,
+    literal_column,
+    null,
+    select,
+    union_all,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.announcements import Announcement, current_announcements
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.disagreements import open_count, queues_of
-from parfocal_api.my_work import MyStatus, MyTask, ProjectRef, my_review_tasks
+from parfocal_api.disagreements import open_disagreements as count_open_disagreements
+from parfocal_api.my_work import Assigned, MyStatus, MyTask, ProjectRef, my_review_tasks_with_slides
 from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Grant, Permission, grant_of, in_project
 from parfocal_api.principals import MemberPrincipal
@@ -35,7 +49,6 @@ from parfocal_api.tables import (
     review_assignments,
     review_decisions,
     review_edits,
-    review_task_slides,
     review_tasks,
     slides,
 )
@@ -143,7 +156,39 @@ def open_tasks(tasks: list[MyTask]) -> list[MyTask]:
     )
 
 
-async def last_activity(connection: AsyncConnection, me: uuid.UUID) -> Any:
+LAST = "last"
+STORED = "stored"
+NEXT = "next"
+
+
+def slide_facts(task_id: Any, slide_id: Any, me: uuid.UUID) -> tuple[Any, ...]:
+    return (
+        select(slides.c.label)
+        .where(slides.c.id == slide_id)
+        .scalar_subquery()
+        .label("slide_label"),
+        select(cases.c.label)
+        .select_from(slides)
+        .join(cases, cases.c.id == slides.c.case_id)
+        .where(slides.c.id == slide_id)
+        .scalar_subquery()
+        .label("case_label"),
+        select(func.count())
+        .where(
+            review_decisions.c.task_id == task_id,
+            review_decisions.c.slide_id == slide_id,
+            review_decisions.c.user_id == me,
+        )
+        .scalar_subquery()
+        .label("decisions"),
+    )
+
+
+def nothing(kind: Any) -> Any:
+    return cast(null(), kind)
+
+
+def last_activity_query(me: uuid.UUID) -> Any:
     touched = union_all(
         select(
             review_decisions.c.task_id,
@@ -176,12 +221,26 @@ async def last_activity(connection: AsyncConnection, me: uuid.UUID) -> Any:
         ),
     ).subquery()
     return (
-        await connection.execute(
-            still_open(select(touched), touched.c.task_id, touched.c.slide_id, me)
-            .order_by(touched.c.at.desc())
-            .limit(1)
+        still_open(
+            select(
+                touched.c.task_id,
+                touched.c.slide_id,
+                touched.c.kind,
+                touched.c.number,
+                touched.c.person,
+                touched.c.at,
+                literal(LAST).label("source"),
+                nothing(String).label("mode"),
+                nothing(String).label("object_id"),
+                nothing(JSONB).label("camera"),
+            ),
+            touched.c.task_id,
+            touched.c.slide_id,
+            me,
         )
-    ).one_or_none()
+        .order_by(touched.c.at.desc())
+        .limit(1)
+    )
 
 
 def still_open(query: Any, task_column: Any, slide_column: Any, me: uuid.UUID) -> Any:
@@ -202,95 +261,97 @@ def still_open(query: Any, task_column: Any, slide_column: Any, me: uuid.UUID) -
     )
 
 
-async def stored_resume(connection: AsyncConnection, me: uuid.UUID) -> Any:
-    return (
-        await connection.execute(
-            still_open(
-                select(resume_states),
-                resume_states.c.task_id,
-                resume_states.c.slide_id,
-                me,
-            ).where(
-                resume_states.c.tenant_id == literal_column(CURRENT_TENANT),
-                resume_states.c.user_id == me,
-            )
-        )
-    ).one_or_none()
+def stored_resume_query(me: uuid.UUID) -> Any:
+    return still_open(
+        select(
+            resume_states.c.task_id,
+            resume_states.c.slide_id,
+            nothing(String).label("kind"),
+            nothing(Integer).label("number"),
+            nothing(Boolean).label("person"),
+            resume_states.c.updated_at.label("at"),
+            literal(STORED).label("source"),
+            resume_states.c.mode,
+            resume_states.c.object_id,
+            resume_states.c.camera,
+        ),
+        resume_states.c.task_id,
+        resume_states.c.slide_id,
+        me,
+    ).where(
+        resume_states.c.tenant_id == literal_column(CURRENT_TENANT),
+        resume_states.c.user_id == me,
+    )
+
+
+def next_slide_query(task: MyTask) -> Any:
+    return select(
+        literal(task.id).label("task_id"),
+        literal(task.next_slide_id).label("slide_id"),
+        nothing(String).label("kind"),
+        nothing(Integer).label("number"),
+        nothing(Boolean).label("person"),
+        nothing(DateTime(timezone=True)).label("at"),
+        literal(NEXT).label("source"),
+        nothing(String).label("mode"),
+        nothing(String).label("object_id"),
+        nothing(JSONB).label("camera"),
+    )
+
+
+async def resume_rows(
+    connection: AsyncConnection, me: uuid.UUID, next_task: MyTask | None
+) -> dict[str, Any]:
+    arms = [last_activity_query(me).subquery().select(), stored_resume_query(me)]
+    if next_task is not None:
+        arms.append(next_slide_query(next_task))
+    found = union_all(*arms).subquery()
+    rows = await connection.execute(
+        select(found, *slide_facts(found.c.task_id, found.c.slide_id, me))
+    )
+    return {row.source: row for row in rows}
 
 
 async def resume_of(
-    connection: AsyncConnection, me: uuid.UUID, tasks: list[MyTask]
+    connection: AsyncConnection, me: uuid.UUID, tasks: list[MyTask], assigned: Assigned
 ) -> ResumeTarget | None:
     by_id = {task.id: task for task in tasks}
-    last = await last_activity(connection, me)
-    stored = await stored_resume(connection, me)
+    next_task = next((task for task in tasks if task.status in OPEN and task.next_slide_id), None)
+    rows = await resume_rows(connection, me, next_task)
+    last, stored = rows.get(LAST), rows.get(STORED)
     mode, camera = ResumeMode.GUIDED, None
     object_id: str | None
     if (
         stored is not None
         and stored.task_id in by_id
-        and (last is None or last.task_id not in by_id or stored.updated_at > last.at)
+        and (last is None or last.task_id not in by_id or stored.at > last.at)
     ):
         task, slide_id, object_id = by_id[stored.task_id], stored.slide_id, stored.object_id
+        facts = stored
         mode = ResumeMode(stored.mode)
         camera = None if stored.camera is None else ResumeCamera.model_validate(stored.camera)
     elif last is not None and last.task_id in by_id:
         task, slide_id = by_id[last.task_id], last.slide_id
+        facts = last
         object_id = ObjectId(LETTERS[last.kind], last.number, person=last.person).text(ascii=True)
     else:
-        task = next((task for task in tasks if task.status in OPEN and task.next_slide_id), None)
-        if task is None or task.next_slide_id is None:
+        if next_task is None or next_task.next_slide_id is None:
             return None
-        slide_id, object_id = task.next_slide_id, None
-    mine = [
-        row.slide_id
-        for row in await connection.execute(
-            select(review_task_slides.c.slide_id)
-            .join(
-                review_assignments,
-                (review_assignments.c.task_id == review_task_slides.c.task_id)
-                & (review_assignments.c.slide_id == review_task_slides.c.slide_id),
-            )
-            .where(
-                review_task_slides.c.task_id == task.id,
-                review_assignments.c.user_id == me,
-                review_assignments.c.released_at.is_(None),
-            )
-            .order_by(review_task_slides.c.position)
-        )
-    ]
-    counted = (
-        select(func.count())
-        .where(
-            review_decisions.c.task_id == task.id,
-            review_decisions.c.slide_id == slide_id,
-            review_decisions.c.user_id == me,
-        )
-        .scalar_subquery()
-    )
-    slide = (
-        await connection.execute(
-            select(
-                slides.c.label,
-                cases.c.label.label("case_label"),
-                counted.label("decisions"),
-            )
-            .outerjoin(cases, cases.c.id == slides.c.case_id)
-            .where(slides.c.id == slide_id)
-        )
-    ).one()
+        task, slide_id, object_id = next_task, next_task.next_slide_id, None
+        facts = rows[NEXT]
+    mine = [slide for slide, _, _ in assigned.get(task.id, [])]
     return ResumeTarget(
         task_id=task.id,
         task_code=task.code,
         task_name=task.name,
         project=task.project,
         slide_id=slide_id,
-        slide_label=slide.label,
-        case_label=slide.case_label,
+        slide_label=facts.slide_label,
+        case_label=facts.case_label,
         position=mine.index(slide_id) + 1,
         slides_assigned=len(mine),
         object_id=object_id,
-        decisions_on_slide=int(slide.decisions or 0),
+        decisions_on_slide=int(facts.decisions or 0),
         due_on=task.due_on,
         blinded=task.blinded,
         mode=mode,
@@ -308,39 +369,29 @@ def reviewed(slide_column: Any) -> Any:
 async def projects_of(
     connection: AsyncConnection, principal: MemberPrincipal, workspace: Grant
 ) -> tuple[list[HomeProject], int, list[uuid.UUID]]:
-    everyone = project_members.alias("everyone")
-    rows = (
-        await connection.execute(
-            select(
-                projects,
-                project_members.c.role.label("my_role"),
-                select(func.count())
-                .select_from(everyone)
-                .where(everyone.c.project_id == projects.c.id)
-                .scalar_subquery()
-                .label("members"),
-            )
-            .join(project_members, project_members.c.project_id == projects.c.id)
-            .where(
-                project_members.c.user_id == principal.user_id,
-                projects.c.archived_at.is_(None),
-                LIVE,
-            )
-            .order_by(projects.c.number)
-        )
-    ).all()
-    if not rows:
-        return [], 0, []
-    roles = {row.id: ProjectRole(row.my_role) for row in rows}
-    adjudicated = [
-        project_id
-        for project_id, role in roles.items()
+    reads_all = [
+        role.value
+        for role in ProjectRole
         if reads_whole(in_project(workspace, Permission.SEE_SLIDES, role))
     ]
-    visible = (
-        slides.c.project_id.in_(list(roles)),
-        slides.c.deleted_at.is_(None),
-        slides.c.project_id.in_(adjudicated) | slides.c.id.in_(assigned_slides(principal)),
+    everyone = project_members.alias("everyone")
+    mine = (
+        select(
+            projects,
+            project_members.c.role.label("my_role"),
+            select(func.count())
+            .select_from(everyone)
+            .where(everyone.c.project_id == projects.c.id)
+            .scalar_subquery()
+            .label("members"),
+        )
+        .join(project_members, project_members.c.project_id == projects.c.id)
+        .where(
+            project_members.c.user_id == principal.user_id,
+            projects.c.archived_at.is_(None),
+            LIVE,
+        )
+        .cte("mine")
     )
     has_set = exists().where(
         result_sets.c.slide_id == slides.c.id, result_sets.c.deleted_at.is_(None)
@@ -350,58 +401,64 @@ async def projects_of(
         .where(result_sets.c.slide_id == slides.c.id, result_sets.c.deleted_at.is_(None))
         .scalar_subquery()
     )
-    counts = {
-        row.project_id: row
-        for row in await connection.execute(
-            select(
-                slides.c.project_id,
-                func.count().label("slides"),
-                func.count().filter(reviewed(slides.c.id)).label("reviewed"),
-                func.count().filter(~has_set).label("without_results"),
-                func.coalesce(func.sum(sets_on_slide), 0).label("sets"),
-            )
-            .where(*visible)
-            .group_by(slides.c.project_id)
-        )
-    }
     ranked = (
         select(
-            slides.c.project_id,
-            slides.c.id,
-            slides.c.label,
-            reviewed(slides.c.id).label("reviewed"),
+            mine,
+            slides.c.id.label("slide_id"),
+            slides.c.label.label("slide_label"),
+            reviewed(slides.c.id).label("slide_reviewed"),
+            func.count(slides.c.id).over(partition_by=mine.c.id).label("slides"),
+            func.count(slides.c.id)
+            .filter(reviewed(slides.c.id))
+            .over(partition_by=mine.c.id)
+            .label("done"),
+            func.count(slides.c.id)
+            .filter(~has_set)
+            .over(partition_by=mine.c.id)
+            .label("without_results"),
+            func.coalesce(func.sum(sets_on_slide).over(partition_by=mine.c.id), 0).label("sets"),
             func.row_number()
-            .over(partition_by=slides.c.project_id, order_by=(slides.c.created_at, slides.c.id))
+            .over(partition_by=mine.c.id, order_by=(slides.c.created_at, slides.c.id))
             .label("place"),
         )
-        .where(*visible)
+        .select_from(mine)
+        .outerjoin(
+            slides,
+            (slides.c.project_id == mine.c.id)
+            & slides.c.deleted_at.is_(None)
+            & (mine.c.my_role.in_(reads_all) | slides.c.id.in_(assigned_slides(principal))),
+        )
         .subquery()
     )
-    strips: dict[uuid.UUID, list[StripSlide]] = {}
-    for slide in await connection.execute(
-        select(ranked).where(ranked.c.place <= STRIP).order_by(ranked.c.project_id, ranked.c.place)
-    ):
-        strips.setdefault(slide.project_id, []).append(
-            StripSlide(id=slide.id, label=slide.label, reviewed=slide.reviewed)
+    rows = (
+        await connection.execute(
+            select(ranked).where(ranked.c.place <= STRIP).order_by(ranked.c.number, ranked.c.place)
         )
-    found = [
-        HomeProject(
-            id=row.id,
-            code=project_code(row.number),
-            name=row.name,
-            colour=row.colour,
-            privacy_mode=PrivacyMode(row.privacy_mode),
-            my_role=roles[row.id],
-            members=int(row.members or 0),
-            slides=counts[row.id].slides if row.id in counts else 0,
-            result_sets=int(counts[row.id].sets) if row.id in counts else 0,
-            reviewed_slides=counts[row.id].reviewed if row.id in counts else 0,
-            strip=strips.get(row.id, []),
-        )
-        for row in rows
-    ]
-    without_results = sum(row.without_results for row in counts.values())
-    return found, without_results, adjudicated
+    ).all()
+    found: dict[uuid.UUID, HomeProject] = {}
+    for row in rows:
+        project = found.get(row.id)
+        if project is None:
+            project = found[row.id] = HomeProject(
+                id=row.id,
+                code=project_code(row.number),
+                name=row.name,
+                colour=row.colour,
+                privacy_mode=PrivacyMode(row.privacy_mode),
+                my_role=ProjectRole(row.my_role),
+                members=int(row.members or 0),
+                slides=row.slides,
+                result_sets=int(row.sets),
+                reviewed_slides=row.done,
+                strip=[],
+            )
+        if row.slide_id is not None:
+            project.strip.append(
+                StripSlide(id=row.slide_id, label=row.slide_label, reviewed=row.slide_reviewed)
+            )
+    without_results = sum(row.without_results for row in {row.id: row for row in rows}.values())
+    adjudicated = [row.id for row in rows if row.my_role in reads_all and row.place == 1]
+    return list(found.values()), without_results, adjudicated
 
 
 async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[uuid.UUID]) -> Week:
@@ -423,17 +480,14 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
     ).one()
     open_disagreements: int | None = None
     if adjudicated:
-        open_tasks = list(
-            await connection.scalars(
-                select(review_tasks.c.id).where(
-                    review_tasks.c.project_id.in_(adjudicated),
-                    review_tasks.c.archived_at.is_(None),
-                    review_tasks.c.signed_off_at.is_(None),
-                )
-            )
+        open_disagreements = await count_open_disagreements(
+            connection,
+            select(review_tasks.c.id).where(
+                review_tasks.c.project_id.in_(adjudicated),
+                review_tasks.c.archived_at.is_(None),
+                review_tasks.c.signed_off_at.is_(None),
+            ),
         )
-        queues = await queues_of(connection, open_tasks) if open_tasks else {}
-        open_disagreements = sum(open_count(queue) for queue in queues.values())
     return Week(
         since=since,
         objects_checked=checked,
@@ -451,11 +505,12 @@ async def get_my_home(principal: CurrentPrincipal, connection: TenantConnection)
     found: list[HomeProject] = []
     without_results = 0
     adjudicated: list[uuid.UUID] = []
+    assigned: Assigned = {}
     if workspace is not Grant.NONE:
-        tasks = await my_review_tasks(connection, person.user_id)
+        tasks, assigned = await my_review_tasks_with_slides(connection, person.user_id)
         found, without_results, adjudicated = await projects_of(connection, person, workspace)
     return Home(
-        resume=await resume_of(connection, person.user_id, tasks) if tasks else None,
+        resume=await resume_of(connection, person.user_id, tasks, assigned) if tasks else None,
         tasks=open_tasks(tasks),
         projects=found,
         slides_without_results=without_results,

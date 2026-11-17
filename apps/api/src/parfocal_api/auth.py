@@ -65,6 +65,7 @@ from parfocal_api.tables import (
     service_accounts,
     session_policies,
     sessions,
+    tenants,
     users,
     workspace_settings,
 )
@@ -285,6 +286,7 @@ class Resolved:
     operator: bool
     role: Role | None
     admin_rights: bool = False
+    tenant_status: str | None = None
 
 
 @dataclass(frozen=True)
@@ -304,6 +306,7 @@ def checked_session_query(session_id: str) -> Select[Any]:
             memberships.c.role.label("member_role"),
             memberships.c.admin_rights.label("member_admin_rights"),
             workspace_settings.c["values"].label("workspace_values"),
+            tenants.c.status.label("tenant_status"),
         )
         .select_from(
             sessions.outerjoin(
@@ -312,6 +315,7 @@ def checked_session_query(session_id: str) -> Select[Any]:
             .outerjoin(
                 workspace_settings, workspace_settings.c.tenant_id == sessions.c.active_tenant_id
             )
+            .outerjoin(tenants, tenants.c.id == sessions.c.active_tenant_id)
             .outerjoin(users, users.c.subject == sessions.c.subject)
             .outerjoin(
                 memberships,
@@ -342,6 +346,7 @@ class CheckedSession:
             row.operator,
             Role(row.member_role),
             row.member_admin_rights,
+            row.tenant_status,
         )
 
 
@@ -374,6 +379,7 @@ def principal_of(resolved: Resolved) -> Principal:
             resolved.user_id,
             resolved.role,
             resolved.admin_rights,
+            resolved.tenant_status,
         )
     return SignedInUser(resolved.subject, resolved.user_id)
 

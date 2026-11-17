@@ -29,8 +29,8 @@ def test_a_warm_check_in_a_one_factor_workspace_reads_the_session_in_one_stateme
     later = [browser.client.get("/api/tenant") for _ in range(4)]
     assert first.status_code == 200
     assert {response.status_code for response in later} == {200}
-    assert {shape(response) for response in later} == {(5, 2)}
-    assert shape(first) == (6, 2)
+    assert {shape(response) for response in later} == {(4, 2)}
+    assert shape(first) == (5, 2)
 
 
 def test_counts_are_claimed_in_chunks_and_every_call_near_the_limit() -> None:
