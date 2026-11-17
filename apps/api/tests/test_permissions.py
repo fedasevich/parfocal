@@ -53,6 +53,8 @@ from parfocal_api.tables import (
     clinical_report_versions,
     clinical_reports,
     display_presets,
+    event_outbox,
+    event_targets,
     import_sources,
     invitations,
     job_units,
@@ -421,6 +423,7 @@ LINK_OPERATIONS = frozenset(
         "testConnectedLabModel",
         "saveImportSource",
         "changeImportSource",
+        "saveEventTarget",
     }
 )
 
@@ -841,6 +844,23 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "deleteImportSource": lambda w: Call(
         "DELETE", f"/api/tenant/import-sources/{seeded(w, 'spare-import-source')}"
+    ),
+    "listEventTargets": lambda w: Call("GET", f"/api/projects/{w.project}/event-targets"),
+    "saveEventTarget": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/event-targets",
+        {"address": LINK_SITE.url("/events"), "events": ["review-submitted"]},
+    ),
+    "deleteEventTarget": lambda w: Call(
+        "DELETE", f"/api/projects/{w.project}/event-targets/{seeded(w, 'spare-event-target')}"
+    ),
+    "listEventDeliveries": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/event-targets/{seeded(w, 'event-target')}/events"
+    ),
+    "replayEvent": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/event-targets/{seeded(w, 'event-target')}"
+        f"/events/{seeded(w, 'failed-event')}/replay",
     ),
     "addLabModelProject": lambda w: Call(
         "PUT", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.spare_project}"
@@ -2348,6 +2368,28 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         created_by_user_id=colleague,
                     )
                 )
+            for target in ("event-target", "spare-event-target"):
+                await connection.execute(
+                    insert(event_targets).values(
+                        id=uuid.uuid5(tenant_id, target),
+                        tenant_id=tenant_id,
+                        project_id=case.project_id,
+                        address=LINK_SITE.url("/events"),
+                        events=["review-submitted"],
+                        secret_ciphertext=b"sealed",
+                    )
+                )
+            await connection.execute(
+                insert(event_outbox).values(
+                    id=uuid.uuid5(tenant_id, "failed-event"),
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    target_id=uuid.uuid5(tenant_id, "event-target"),
+                    kind="review-submitted",
+                    body={},
+                    status="failed",
+                )
+            )
             await connection.execute(
                 insert(lab_model_projects).values(
                     lab_model_id=uuid.uuid5(tenant_id, "lab-model"),

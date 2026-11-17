@@ -16,3 +16,4 @@ from .models import *
 from .retention import *
 from .threads import *
 from .clinical import *
+from .events import *

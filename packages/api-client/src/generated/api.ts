@@ -899,6 +899,7 @@ export const AuditTarget = {
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
   "import-source": "import-source",
+  "event-target": "event-target",
   "registered-model": "registered-model",
   maintenance: "maintenance",
   feedback: "feedback",
@@ -2390,6 +2391,67 @@ export interface EvaluationVersionStarted {
   reason: string;
   by_user_id: string | null;
   started_at: string;
+}
+
+export interface EventAttempt {
+  outcome: string;
+  status_code: number | null;
+  duration_ms: number;
+  created_at: string;
+}
+
+export type EventKind = (typeof EventKind)[keyof typeof EventKind];
+
+export const EventKind = {
+  "review-submitted": "review-submitted",
+  "task-disagreements": "task-disagreements",
+  "task-signed-off": "task-signed-off",
+  "result-set-added": "result-set-added",
+} as const;
+
+export type EventStatus = (typeof EventStatus)[keyof typeof EventStatus];
+
+export const EventStatus = {
+  pending: "pending",
+  delivered: "delivered",
+  failed: "failed",
+} as const;
+
+export interface EventDelivery {
+  id: string;
+  kind: EventKind;
+  sequence: number;
+  status: EventStatus;
+  attempts: number;
+  next_attempt_at: string;
+  delivered_at: string | null;
+  created_at: string;
+  log: EventAttempt[];
+}
+
+export interface EventDeliveries {
+  events: EventDelivery[];
+}
+
+export interface EventTarget {
+  id: string;
+  project_id: string;
+  address: string;
+  host: string;
+  events: EventKind[];
+  failures_in_row: number;
+  paused_at: string | null;
+  created_at: string;
+}
+
+export interface EventTargetDraft {
+  address: Address;
+  /** @minItems 1 */
+  events: EventKind[];
+}
+
+export interface EventTargets {
+  targets: EventTarget[];
 }
 
 export type ExpertChangesWidth = (typeof ExpertChangesWidth)[keyof typeof ExpertChangesWidth];
@@ -5643,6 +5705,18 @@ export interface RunJoin {
   result_set_id: string;
 }
 
+export interface SavedEventTarget {
+  id: string;
+  project_id: string;
+  address: string;
+  host: string;
+  events: EventKind[];
+  failures_in_row: number;
+  paused_at: string | null;
+  created_at: string;
+  secret: string;
+}
+
 export interface SchemaProblem {
   line: number;
   path: string;
@@ -6302,6 +6376,7 @@ export interface Target {
   object_id?: string | null;
   job_id?: string | null;
   thread_id?: string | null;
+  delivery_id?: string | null;
   case_id?: string | null;
   resolved_from?: string | null;
   origin: Origin;
@@ -32333,6 +32408,866 @@ export const useDeleteImportSource = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getDeleteImportSourceMutationOptions(options), queryClient);
+};
+
+export type listEventTargetsResponse200 = {
+  data: EventTargets;
+  status: 200;
+};
+
+export type listEventTargetsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listEventTargetsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listEventTargetsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listEventTargetsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listEventTargetsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listEventTargetsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listEventTargetsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listEventTargetsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listEventTargetsResponseSuccess = listEventTargetsResponse200 & {
+  headers: Headers;
+};
+export type listEventTargetsResponseError = (
+  | listEventTargetsResponse400
+  | listEventTargetsResponse401
+  | listEventTargetsResponse403
+  | listEventTargetsResponse404
+  | listEventTargetsResponse409
+  | listEventTargetsResponse422
+  | listEventTargetsResponse429
+  | listEventTargetsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listEventTargetsResponse =
+  | listEventTargetsResponseSuccess
+  | listEventTargetsResponseError;
+
+export const getListEventTargetsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/event-targets`;
+};
+
+/**
+ * @summary List Event Targets
+ */
+export const listEventTargets = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listEventTargetsResponse> => {
+  return apiFetch<listEventTargetsResponse>(getListEventTargetsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventTargetsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/event-targets`] as const;
+};
+
+export const getListEventTargetsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEventTargetsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEventTargets>>> = ({ signal }) =>
+    listEventTargets(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListEventTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listEventTargets>>>;
+export type ListEventTargetsQueryError = Problem;
+
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listEventTargets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listEventTargets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Event Targets
+ */
+
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListEventTargetsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type saveEventTargetResponse201 = {
+  data: SavedEventTarget;
+  status: 201;
+};
+
+export type saveEventTargetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveEventTargetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveEventTargetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveEventTargetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveEventTargetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveEventTargetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveEventTargetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveEventTargetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveEventTargetResponseSuccess = saveEventTargetResponse201 & {
+  headers: Headers;
+};
+export type saveEventTargetResponseError = (
+  | saveEventTargetResponse400
+  | saveEventTargetResponse401
+  | saveEventTargetResponse403
+  | saveEventTargetResponse404
+  | saveEventTargetResponse409
+  | saveEventTargetResponse422
+  | saveEventTargetResponse429
+  | saveEventTargetResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveEventTargetResponse = saveEventTargetResponseSuccess | saveEventTargetResponseError;
+
+export const getSaveEventTargetUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/event-targets`;
+};
+
+/**
+ * @summary Save Event Target
+ */
+export const saveEventTarget = async (
+  projectId: string,
+  eventTargetDraft: EventTargetDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveEventTargetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveEventTargetResponse>(getSaveEventTargetUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(eventTargetDraft),
+  });
+};
+
+export const getSaveEventTargetMutationKey = () => ["saveEventTarget"] as const;
+
+export const getSaveEventTargetMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveEventTarget>>,
+    TError,
+    SaveEventTargetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveEventTarget>>,
+  TError,
+  SaveEventTargetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveEventTargetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveEventTarget>>,
+    SaveEventTargetMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return saveEventTarget(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveEventTargetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveEventTarget>>
+>;
+export type SaveEventTargetMutationBody = EventTargetDraft;
+export type SaveEventTargetMutationError = Problem;
+export type SaveEventTargetMutationVariables = { projectId: string; data: EventTargetDraft };
+
+/**
+ * @summary Save Event Target
+ */
+export const useSaveEventTarget = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveEventTarget>>,
+      TError,
+      SaveEventTargetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveEventTarget>>,
+  TError,
+  SaveEventTargetMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveEventTargetMutationOptions(options), queryClient);
+};
+
+export type deleteEventTargetResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteEventTargetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteEventTargetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteEventTargetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteEventTargetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteEventTargetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteEventTargetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteEventTargetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteEventTargetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteEventTargetResponseSuccess = deleteEventTargetResponse204 & {
+  headers: Headers;
+};
+export type deleteEventTargetResponseError = (
+  | deleteEventTargetResponse400
+  | deleteEventTargetResponse401
+  | deleteEventTargetResponse403
+  | deleteEventTargetResponse404
+  | deleteEventTargetResponse409
+  | deleteEventTargetResponse422
+  | deleteEventTargetResponse429
+  | deleteEventTargetResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteEventTargetResponse =
+  | deleteEventTargetResponseSuccess
+  | deleteEventTargetResponseError;
+
+export const getDeleteEventTargetUrl = (projectId: string, targetId: string) => {
+  return `/api/projects/${projectId}/event-targets/${targetId}`;
+};
+
+/**
+ * @summary Delete Event Target
+ */
+export const deleteEventTarget = async (
+  projectId: string,
+  targetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteEventTargetResponse> => {
+  return apiFetch<deleteEventTargetResponse>(getDeleteEventTargetUrl(projectId, targetId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventTargetMutationKey = () => ["deleteEventTarget"] as const;
+
+export const getDeleteEventTargetMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventTarget>>,
+    TError,
+    DeleteEventTargetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEventTarget>>,
+  TError,
+  DeleteEventTargetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteEventTargetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEventTarget>>,
+    DeleteEventTargetMutationVariables
+  > = (props) => {
+    const { projectId, targetId } = props ?? {};
+
+    return deleteEventTarget(projectId, targetId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventTargetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEventTarget>>
+>;
+
+export type DeleteEventTargetMutationError = Problem;
+export type DeleteEventTargetMutationVariables = { projectId: string; targetId: string };
+
+/**
+ * @summary Delete Event Target
+ */
+export const useDeleteEventTarget = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteEventTarget>>,
+      TError,
+      DeleteEventTargetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEventTarget>>,
+  TError,
+  DeleteEventTargetMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteEventTargetMutationOptions(options), queryClient);
+};
+
+export type listEventDeliveriesResponse200 = {
+  data: EventDeliveries;
+  status: 200;
+};
+
+export type listEventDeliveriesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listEventDeliveriesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listEventDeliveriesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listEventDeliveriesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listEventDeliveriesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listEventDeliveriesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listEventDeliveriesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listEventDeliveriesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listEventDeliveriesResponseSuccess = listEventDeliveriesResponse200 & {
+  headers: Headers;
+};
+export type listEventDeliveriesResponseError = (
+  | listEventDeliveriesResponse400
+  | listEventDeliveriesResponse401
+  | listEventDeliveriesResponse403
+  | listEventDeliveriesResponse404
+  | listEventDeliveriesResponse409
+  | listEventDeliveriesResponse422
+  | listEventDeliveriesResponse429
+  | listEventDeliveriesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listEventDeliveriesResponse =
+  | listEventDeliveriesResponseSuccess
+  | listEventDeliveriesResponseError;
+
+export const getListEventDeliveriesUrl = (projectId: string, targetId: string) => {
+  return `/api/projects/${projectId}/event-targets/${targetId}/events`;
+};
+
+/**
+ * @summary List Event Deliveries
+ */
+export const listEventDeliveries = async (
+  projectId: string,
+  targetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listEventDeliveriesResponse> => {
+  return apiFetch<listEventDeliveriesResponse>(getListEventDeliveriesUrl(projectId, targetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventDeliveriesQueryKey = (projectId: string, targetId: string) => {
+  return [`/api/projects/${projectId}/event-targets/${targetId}/events`] as const;
+};
+
+export const getListEventDeliveriesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEventDeliveriesQueryKey(projectId, targetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEventDeliveries>>> = ({ signal }) =>
+    listEventDeliveries(projectId, targetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && targetId !== null && targetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListEventDeliveriesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEventDeliveries>>
+>;
+export type ListEventDeliveriesQueryError = Problem;
+
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventDeliveries>>,
+          TError,
+          Awaited<ReturnType<typeof listEventDeliveries>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventDeliveries>>,
+          TError,
+          Awaited<ReturnType<typeof listEventDeliveries>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Event Deliveries
+ */
+
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListEventDeliveriesQueryOptions(projectId, targetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type replayEventResponse200 = {
+  data: EventTarget;
+  status: 200;
+};
+
+export type replayEventResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type replayEventResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type replayEventResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type replayEventResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type replayEventResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type replayEventResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type replayEventResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type replayEventResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type replayEventResponseSuccess = replayEventResponse200 & {
+  headers: Headers;
+};
+export type replayEventResponseError = (
+  | replayEventResponse400
+  | replayEventResponse401
+  | replayEventResponse403
+  | replayEventResponse404
+  | replayEventResponse409
+  | replayEventResponse422
+  | replayEventResponse429
+  | replayEventResponse500
+) & {
+  headers: Headers;
+};
+
+export type replayEventResponse = replayEventResponseSuccess | replayEventResponseError;
+
+export const getReplayEventUrl = (projectId: string, targetId: string, eventId: string) => {
+  return `/api/projects/${projectId}/event-targets/${targetId}/events/${eventId}/replay`;
+};
+
+/**
+ * @summary Replay Event
+ */
+export const replayEvent = async (
+  projectId: string,
+  targetId: string,
+  eventId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<replayEventResponse> => {
+  return apiFetch<replayEventResponse>(getReplayEventUrl(projectId, targetId, eventId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReplayEventMutationKey = () => ["replayEvent"] as const;
+
+export const getReplayEventMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof replayEvent>>,
+    TError,
+    ReplayEventMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof replayEvent>>,
+  TError,
+  ReplayEventMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReplayEventMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof replayEvent>>,
+    ReplayEventMutationVariables
+  > = (props) => {
+    const { projectId, targetId, eventId } = props ?? {};
+
+    return replayEvent(projectId, targetId, eventId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReplayEventMutationResult = NonNullable<Awaited<ReturnType<typeof replayEvent>>>;
+
+export type ReplayEventMutationError = Problem;
+export type ReplayEventMutationVariables = { projectId: string; targetId: string; eventId: string };
+
+/**
+ * @summary Replay Event
+ */
+export const useReplayEvent = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof replayEvent>>,
+      TError,
+      ReplayEventMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof replayEvent>>,
+  TError,
+  ReplayEventMutationVariables,
+  TContext
+> => {
+  return useMutation(getReplayEventMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

@@ -148,7 +148,6 @@ def told(database: str, r: Review, who: str, kind: NotificationKind, about: obje
 
 
 WITHOUT_A_SCREEN_TO_OPEN = {
-    TargetKind.DELIVERY,
     TargetKind.ACCESS_REQUEST,
     TargetKind.TEMPLATE_OFFER,
 }
@@ -191,8 +190,16 @@ def test_every_kind_carries_its_origin_as_ids_and_route_names(api: ApiAs, databa
         TargetKind.SLIDE: (r.slide, in_task),
         TargetKind.THREAD: (thread.json()["id"], in_task),
     }
-    assert set(about) == set(TargetKind) - WITHOUT_A_SCREEN_TO_OPEN - {TargetKind.DECISION}
+    assert set(about) == set(TargetKind) - WITHOUT_A_SCREEN_TO_OPEN - {
+        TargetKind.DECISION,
+        TargetKind.DELIVERY,
+    }
     for kind, entry in CATALOGUE.items():
+        if entry.target is TargetKind.DELIVERY:
+            link = told(database, r, "owner", kind, r.project)
+            found = api(r.people["owner"]).get(f"/api/me/notifications/{link}/target")
+            assert (found.status_code, found.json()["code"]) == (404, "target-gone"), kind
+            continue
         if entry.target in WITHOUT_A_SCREEN_TO_OPEN:
             link = told(database, r, "owner", kind, r.project)
             found = api(r.people["owner"]).get(f"/api/me/notifications/{link}/target")
