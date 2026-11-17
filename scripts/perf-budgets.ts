@@ -42,7 +42,7 @@ export async function budget(id: string): Promise<Budget> {
 export function exceeds(entry: Budget, measured: number): string | null {
   if (entry.limit === null) return `${entry.id} has no limit, it is a ${entry.kind} budget`;
   if (measured <= entry.limit) return null;
-  return `${entry.id} measured ${Math.round(measured)} ${entry.unit}, over the limit ${entry.limit} (baseline ${entry.baseline}, ${entry.adr})`;
+  return `${entry.id} measured ${measured < 1 ? measured.toPrecision(2) : Math.round(measured)} ${entry.unit}, over the limit ${entry.limit} (baseline ${entry.baseline}, ${entry.adr})`;
 }
 
 export async function checkBudget(
