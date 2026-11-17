@@ -5,6 +5,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 ## 2026-11-18
 
 - OPS-009 (storage lifecycle and cost controls) production touch: targeted additive tofu apply on dev and prod roots (lifecycle rule tier-old-tenant-objects plus bucket lock keep-tenant-objects on t/, 1 added 1 changed 0 destroyed each, policy.sh plan passed, later plans clean, rules read back from the R2 API), cost $0. No expiry rule written, so no expiry drill. First costs report failed: the Cloudflare token lacks account analytics read, so OPS-009 stays in review and the owner step is in decisions.md.
+- SEC-027 Production burst from one address to app.parfocal.eu: logins 1 to 10 gave 302, login 11 gave 429 rate-limited with Retry-After 58, block ended 64 s after the first counted login, sign-in and /api/health fine afterwards. Result in docs/results/2026-11-17-edge-login-limit-production-burst.md. No account touched, nothing deployed.
 
 ## 2026-11-17
 
