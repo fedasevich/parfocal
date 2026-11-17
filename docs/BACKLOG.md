@@ -2186,7 +2186,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on IAM-021, SHELL-012.
   Size: S.
 
-- [ ] SHELL-016 · Signed-out and expired sessions go straight to sign-in, with a loader while the app boots
+- [x] SHELL-016 · Signed-out and expired sessions go straight to sign-in, with a loader while the app boots
   The production smoke after the v0.4.0 deploy (run 44046440491) failed because a signed-out visitor fires about a dozen `/api/*` data calls, such as `/api/me/jobs`, `/api/projects` and `/api/me/notifications`, before reaching sign-in. A browser whose session had expired saw the lock screen with no name, reading "Not ? Log out, 's work is saved.", while every call answered 401 and `/api/me` was asked three times. The first load shows a blank dark page for several seconds before any screen. Ask `/api/me` once first and start no other data query until it answers. A 401 goes to sign-in with the return path, and the lock screen shows only for a known person whose session is locked, never after a 401. Show a loader with the product name in `index.html` until the app mounts.
   Done when a browser test signed out finds no `/api/*` call other than `/api/me`, `/api/status` and the auth routes before sign-in, a test with an expired session lands on sign-in and not the lock screen, the lock card never renders an empty name, and a test finds the boot loader in the first paint.
   Size: S.
