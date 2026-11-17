@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_en
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from parfocal_common.data_classes import OPERATIONAL
+from parfocal_common.db_timing import time_queries, timed_transaction
 
 TENANT_SETTING = "app.tenant_id"
 PLATFORM_SETTING = "app.platform"
@@ -124,12 +125,14 @@ POOL_OVERFLOW = 10
 
 
 def create_engine(url: str) -> AsyncEngine:
-    return create_async_engine(
+    engine = create_async_engine(
         async_database_url(url),
         pool_pre_ping=True,
         pool_size=POOL_SIZE,
         max_overflow=POOL_OVERFLOW,
     )
+    time_queries(engine.sync_engine)
+    return engine
 
 
 async def require_row_security(engine: AsyncEngine) -> None:
@@ -143,9 +146,10 @@ async def require_row_security(engine: AsyncEngine) -> None:
 async def scoped_transaction(
     engine: AsyncEngine, scope: DatabaseScope
 ) -> AsyncGenerator[AsyncConnection]:
-    async with engine.begin() as connection:
-        await connection.execute(SET_SCOPE, scope.parameters())
-        yield connection
+    with timed_transaction():
+        async with engine.begin() as connection:
+            await connection.execute(SET_SCOPE, scope.parameters())
+            yield connection
 
 
 def tenant_transaction(

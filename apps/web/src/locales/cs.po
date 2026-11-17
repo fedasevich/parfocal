@@ -5856,18 +5856,34 @@ msgstr ""
 
 #: src/annotations/pin-layer.tsx
 #: src/screens/annotate-task/annotate-task-view.tsx
+#: src/screens/project/slides-tab.tsx
 #: src/viewer/guided-check.tsx
 msgid "Delete"
 msgstr ""
 
 #. placeholder {0}: selectedAi.object
+#. placeholder {0}: set.name
+#: src/screens/project/slides-tab.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Delete {0}"
+msgstr ""
+
+#. placeholder {0}: set.name
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete {0}?"
+msgstr ""
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete anyway"
 msgstr ""
 
 #: src/screens/project/project-delete-dialog.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Delete project"
+msgstr ""
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete result set"
 msgstr ""
 
 #: src/viewer/slide-stage.tsx
@@ -8131,6 +8147,10 @@ msgstr ""
 
 #: src/screens/admin/api-section.tsx
 msgid "It is shown once. Parfocal keeps only a fingerprint of it."
+msgstr ""
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "It leaves this slide and the viewer. The delete is kept in the audit log."
 msgstr ""
 
 #: src/screens/onboarding/invite-screen.tsx

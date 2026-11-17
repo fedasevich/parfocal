@@ -13,7 +13,8 @@
       "!packages/api-client/openapi.json",
       "!apps/web/src/routeTree.gen.ts",
       "!packages/api-client/src/settings/catalogue.generated.ts",
-      "!docs/design"
+      "!docs/design",
+      "!packages/test-fixtures/model-results"
     ]
   },
   "formatter": {

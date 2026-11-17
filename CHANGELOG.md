@@ -2,6 +2,60 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.6.0 (2026-11-17)
+
+### Features
+
+- VIEW-074: Draw the full viewer and guided review on the one engine stage
+- VIEW-074: Put annotate routes on the engine stage and pin prototype specs to their scene
+- VIEW-074: Ask for the first read before the engine viewer shows the AI
+- VIEW-074: Show decision notes and object threads on the engine stage
+- TEST-047: Seed real InstanSeg cells and tumour map regions on three fixture slides
+- SET-015: Show layout previews in Settings and each row's scope as an icon
+- SET-015: Show each setting's explanation once, then behind its label
+
+### Fixes
+
+- VIEW-074: Keep prototype links inside their scenes and point continue specs at the stage
+- VIEW-074: Add the stage minimap, arm the comment tool from New comment, hide the whole panel
+- OPS-030: Allow the Server-Timing fields in web telemetry too
+- SHELL-022: Draw the gear as a toothed cog so settings entries no longer look like a sun
+- SHELL-022: Keep the slide row's file and open buttons in one row
+- SHELL-022: Make availability a dropdown that lists each status with its meaning
+- SHELL-022: Show the reticle loader full screen and skeletons shaped like each page
+- INGEST-032: Find thumbnails beside the original and backfill missing ones
+
+### Docs
+
+- VIEW-074: Log the engine stage move and what is left
+- OPS-030: Compare server region options with prices
+- SHELL-022: Log the shell fixes and add SHELL-024 for the Busy status
+- SHELL-022: Tick after merge
+- TEST-047: Log the merge
+- SET-015: Log and tick after merge
+- OPS-030: Record the owner's choice of the EU move
+- INGEST-032: Log the thumbnail backfill on Modal
+- INGEST-032: Log the merge
+
+## v0.5.1 (2026-11-17)
+
+### Performance
+
+- OPS-030: Add Server-Timing with database time, queries and transactions
+- OPS-030: Check the session in one read and count in the same transaction
+
+### Docs
+
+- SHELL-023: Log Fable's recommendation for one-time notes
+- OPS-030: Count the three round trips of the pool ping
+- OPS-030: Log the merge and local database tests
+
+### Other
+
+- OPS-030: Add and claim OPS-030, warm API calls under 300 ms
+- SHELL-022: Add SHELL-022, SHELL-023, SET-015 and TEST-047 from the owner's review
+- OPS-030: Note the next step on the board
+
 ## v0.5.0 (2026-11-17)
 
 ### Features

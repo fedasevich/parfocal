@@ -4,7 +4,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { ApiError, type SharedReport, useGetSharedReport } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { CountBars, MetricTiles } from "@parfocal/ui/components/evaluation-report";
-import { Loader } from "@parfocal/ui/components/loader";
+import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
@@ -234,7 +234,7 @@ export function SharedReportScreen({ token }: { token: string }) {
   if (!query.error) {
     return (
       <Shell>
-        <Loader label={t`Loading the report`} />
+        <SkeletonPanel label={t`Loading the report`} sections={4} />
       </Shell>
     );
   }

@@ -30,12 +30,26 @@ test("log out ends the session and a comment draft is still there after logging 
   await expect(composer).toHaveValue("The margin looks closer than 1 mm", { timeout: 20_000 });
 });
 
-test("the status row sets the user away and back to available", async ({ page }) => {
+test("the status dropdown lists each status with its meaning and picks away and back", async ({
+  page,
+}) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: /^Available/ }).click();
+  const available = page.getByRole("menuitemradio", { name: /^Available/ });
+  const away = page.getByRole("menuitemradio", { name: /^Away/ });
+  await expect(available).toContainText("Researchers can give you review tasks");
+  await expect(away).toContainText("tasks can be reassigned");
+  await expect(available).toHaveAttribute("aria-checked", "true");
+  await expect(away).toHaveAttribute("aria-checked", "false");
+  await away.click();
   await expect(page.getByRole("menuitem", { name: /^Away/ })).toBeVisible();
   await page.getByRole("menuitem", { name: /^Away/ }).click();
+  await expect(page.getByRole("menuitemradio", { name: /^Away/ })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByRole("menuitemradio", { name: /^Available/ }).click();
   await expect(page.getByRole("menuitem", { name: /^Available/ })).toBeVisible();
 });
 

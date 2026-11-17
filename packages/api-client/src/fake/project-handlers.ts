@@ -31,6 +31,7 @@ import type {
 } from "../generated/api.ts";
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
+import { withoutDeleted } from "./deleted-result-sets.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import { hidesRt17Sets, rt17SetId } from "./review-decisions.ts";
 import {
@@ -500,7 +501,7 @@ export function projectHandlers(): RequestHandler[] {
       const shown = hidesRt17Sets(request, String(params.slideId))
         ? sets.filter((set) => set.id !== rt17SetId())
         : sets;
-      return [...shown, ...addedResultSets(slideId)];
+      return withoutDeleted([...shown, ...addedResultSets(slideId)]);
     }),
     getListSlideAreasMockHandler(({ params }) => toSlideAreas(String(params.slideId))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params.projectId))),

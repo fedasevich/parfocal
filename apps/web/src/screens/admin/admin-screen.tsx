@@ -3,6 +3,7 @@ import { useGetMe, useListStudyTemplates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
+import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo, useRouterLink } from "../../shell/router-link.tsx";
@@ -59,9 +60,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
   if (me === undefined) {
     return (
       <AdminShell section={section} folded>
-        <p className="p-8 text-body-sm text-fg-dim">
-          <Trans>Checking your access…</Trans>
-        </p>
+        <SkeletonPanel label={t`Checking your access`} className="p-8" />
       </AdminShell>
     );
   }

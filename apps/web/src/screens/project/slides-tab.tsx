@@ -41,6 +41,7 @@ import { okData } from "../placeholder.tsx";
 import { SlideThumb } from "../slide-thumb.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
+import { ResultSetDeleteDialog } from "./result-set-delete-dialog.tsx";
 import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
 import { moveTitle } from "./slide-move-model.ts";
@@ -502,23 +503,28 @@ function SlideRow({
             </span>
           )}
         </TableCell>
-        <TableCell className="w-px text-right whitespace-nowrap">
-          {onMove ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="mr-1"
-              onClick={(event) => {
-                event.stopPropagation();
-                onMove();
-              }}
-            >
-              {moveTitle(slide.case_label !== null)}
+        <TableCell className="w-px whitespace-nowrap">
+          <span
+            data-testid="slide-actions"
+            className="flex flex-nowrap items-center justify-end gap-1.5"
+          >
+            {onMove ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="shrink-0"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMove();
+                }}
+              >
+                {moveTitle(slide.case_label !== null)}
+              </Button>
+            ) : null}
+            <Button size="sm" className="shrink-0" onClick={open}>
+              <Trans>Open</Trans>
             </Button>
-          ) : null}
-          <Button size="sm" onClick={open}>
-            <Trans>Open</Trans>
-          </Button>
+          </span>
         </TableCell>
       </TableRow>
       {expanded ? <ResultSetDetail project={project} slide={slide} /> : null}
@@ -533,6 +539,7 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
   const people = usePeople();
   const format = useFormat();
   const navigate = useNavigate();
+  const [deleting, setDeleting] = useState<ResultSet | undefined>();
   const view = () =>
     void navigate({
       to: "/projects/$projectId/slides/$slideId",
@@ -576,6 +583,14 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
                   <Icon name="slides" />
                   <Trans>Compare</Trans>
                 </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={t`Delete ${set.name}`}
+                  onClick={() => setDeleting(set)}
+                >
+                  <Trans>Delete</Trans>
+                </Button>
               </span>
             </div>
           ))}
@@ -610,6 +625,9 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
             </Button>
           </div>
         </div>
+        {deleting ? (
+          <ResultSetDeleteDialog set={deleting} onClose={() => setDeleting(undefined)} />
+        ) : null}
       </TableCell>
     </TableRow>
   );

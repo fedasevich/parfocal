@@ -4,8 +4,10 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Dialog, DialogClose, DialogContent } from "@parfocal/ui/components/dialog";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 type SettingScopeKind = "personal" | "device" | "lab";
 
@@ -15,10 +17,32 @@ const scopes: Record<SettingScopeKind, { icon: IconName; label: MessageDescripto
   lab: { icon: "lock", label: msg`Set by your lab` },
 };
 
-function SettingScope({ scope, className }: { scope: SettingScopeKind; className?: string }) {
+function SettingScope({
+  scope,
+  iconOnly = false,
+  className,
+}: {
+  scope: SettingScopeKind;
+  iconOnly?: boolean;
+  className?: string;
+}) {
   const { t } = useLingui();
 
   const { icon, label } = scopes[scope];
+  if (iconOnly) {
+    return (
+      <span
+        data-slot="setting-scope"
+        data-scope={scope}
+        role="img"
+        aria-label={t(label)}
+        title={t(label)}
+        className={cn("inline-flex items-center text-fg-faint", className)}
+      >
+        <Icon name={icon} size="xs" />
+      </span>
+    );
+  }
   return (
     <span
       data-slot="setting-scope"
@@ -196,9 +220,70 @@ function SettingsRows({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+function SettingNoteLabel({ label, note }: { label: React.ReactNode; note: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const noteId = useId();
+  const pressing = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeFirst = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setOpen(false);
+    };
+    window.addEventListener("keydown", closeFirst, true);
+    return () => window.removeEventListener("keydown", closeFirst, true);
+  }, [open]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        openOnHover
+        delay={120}
+        data-slot="setting-note-trigger"
+        aria-describedby={noteId}
+        onPointerDown={() => {
+          pressing.current = true;
+        }}
+        onPointerUp={() => {
+          pressing.current = false;
+        }}
+        onFocus={() => {
+          if (!pressing.current) setOpen(true);
+        }}
+        onBlur={() => setOpen(false)}
+        className="inline-flex cursor-help items-center gap-1 rounded-sm border-0 bg-transparent p-0 text-left outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
+      >
+        <b className="text-body font-medium text-fg">{label}</b>
+        <Icon name="help" size="xs" className="text-fg-faint" data-slot="setting-note-glyph" />
+      </PopoverTrigger>
+      <span id={noteId} hidden>
+        {note}
+      </span>
+      <PopoverContent
+        data-slot="setting-note-popover"
+        side="bottom"
+        align="start"
+        initialFocus={false}
+        finalFocus={false}
+        className="leading-[1.45] text-fg-dim"
+      >
+        {note}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+const changeKeys = new Set([" ", "Enter", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]);
+
 type SettingsRowProps = Omit<React.ComponentProps<"div">, "children"> & {
   label: React.ReactNode;
   help?: React.ReactNode;
+  note?: React.ReactNode;
+  noteHidden?: boolean;
+  onControlChange?: () => void;
   scope: SettingScopeKind;
   fact?: boolean;
   children: React.ReactNode;
@@ -207,12 +292,16 @@ type SettingsRowProps = Omit<React.ComponentProps<"div">, "children"> & {
 function SettingsRow({
   label,
   help,
+  note,
+  noteHidden = false,
+  onControlChange,
   scope,
   fact = false,
   className,
   children,
   ...props
 }: SettingsRowProps) {
+  const folded = Boolean(note) && noteHidden;
   return (
     <div
       data-slot="settings-row"
@@ -221,11 +310,28 @@ function SettingsRow({
       {...props}
     >
       <div className="flex min-w-0 flex-col items-start gap-0.75">
-        <b className="text-body font-medium text-fg">{label}</b>
+        <span className="inline-flex items-center gap-1.5">
+          {folded ? (
+            <SettingNoteLabel label={label} note={note} />
+          ) : (
+            <b className="text-body font-medium text-fg">{label}</b>
+          )}
+          <SettingScope scope={scope} iconOnly />
+        </span>
+        {note && !folded ? (
+          <span data-slot="setting-note" className="text-body-sm leading-[1.45] text-fg-dim">
+            {note}
+          </span>
+        ) : null}
         {help ? <span className="text-body-sm leading-[1.45] text-fg-dim">{help}</span> : null}
-        <SettingScope scope={scope} className="mt-0.75" />
       </div>
-      <div className="flex max-w-[440px] items-center justify-end">
+      <div
+        className="flex max-w-[440px] items-center justify-end"
+        onPointerUpCapture={onControlChange}
+        onKeyUpCapture={(event) => {
+          if (changeKeys.has(event.key)) onControlChange?.();
+        }}
+      >
         {fact ? (
           <span className="flex flex-wrap justify-end gap-x-4 gap-y-1.5 text-body text-fg">
             {children}
