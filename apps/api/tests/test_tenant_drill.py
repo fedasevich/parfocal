@@ -9,7 +9,7 @@ import httpx2
 import pytest
 from db_support import APP_URL, OWNER_URL, TEST_MASTER_KEYS, migrated_database, query, with_database
 from storage_support import TEST_STORAGE, stored_keys, with_store
-from test_tenant_command import local_zitadel, organisations_named
+from zitadel_support import local_zitadel, organisations_named
 
 from parfocal_api.tenant_provisioning import storage_prefix
 from parfocal_common.object_store import ObjectStore
