@@ -27,6 +27,7 @@ from parfocal_api.tables import (
     service_accounts,
     site_validations,
     slides,
+    source_watches,
     study_templates,
     tenants,
     threads,
@@ -59,6 +60,7 @@ TARGET_TABLES: Mapping[AuditTarget, Table] = {
     AuditTarget.IMPORT_SOURCE: import_sources,
     AuditTarget.WEBHOOK: project_webhooks,
     AuditTarget.EVENT_TARGET: event_targets,
+    AuditTarget.SOURCE_WATCH: source_watches,
 }
 
 UNCHECKED_TARGETS: Mapping[AuditTarget, str] = {
@@ -82,6 +84,7 @@ REMOVAL_ACTIONS = frozenset(
         AuditAction.PATIENT_ERASED,
         AuditAction.DISPLAY_PRESET_DELETED,
         AuditAction.EVENT_TARGET_DELETED,
+        AuditAction.SOURCE_WATCH_STOPPED,
     }
 )
 
