@@ -112,4 +112,10 @@ Modal uses the web container's 0.125 core and 0.5 GiB, which is $0.00000275 per 
 
 Neon suspends after 5 idle minutes, so a short wake keeps the 0.25 CU compute awake for about 6 minutes. 24 short wakes a day and 24 hourly runs use about 34 CU-hours a month of the 100 on the free plan. If every wake waits for retries, each keeps it awake about 36 minutes and the total passes the plan. TODO: measure Neon CU-hours after the first deployed week.
 
+## A queued job starts the ingest worker, about $0.35 a month in Modal
+
+OPS-029 (a queued job starts a worker in the deployed app) made `parfocal_common.jobs.enqueue` call a job waker. In the deployed web container it spawns the `ingest` function when the job kind is one `ingest` drains, at most once every 15 seconds per container, which is under the worker's 30 second idle exit, so a job queued inside the gap is still picked up by the live run. A failed spawn is logged and never fails the request. An hourly `modal.Period(minutes=60)` run on `ingest` drains anything a failed spawn left, which makes two of the five crons Modal Starter allows. Model runs, tumor maps and retention do not spawn it.
+
+Estimated on 2026-11-17 from one measured run. `ingest` asks for 0.125 core and 2 GiB, which is $0.0000061 per second. A run by hand that drained one review order job took 40 seconds from call to return, cold start and the 30 second idle exit included. The hourly runs are 730 a month of about 40 seconds, so $0.18, and 20 spawned runs a day add about $0.15. The hourly run starts its own Neon wake when it does not fall inside the events run's, which in the worst case adds about 15 CU-hours a month to the estimate above.
+
 An event that happens while a target is paused is stored as `failed` with no attempts, so the delivery log shows it and `replayEvent` sends it and un-pauses the target.

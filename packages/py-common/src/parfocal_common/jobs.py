@@ -287,6 +287,27 @@ class Move:
     after: JobStatus | None
 
 
+JobWaker = Callable[[str], Awaitable[None]]
+
+
+async def no_job_wake(kind: str) -> None:
+    return None
+
+
+JOB_WAKERS: list[JobWaker] = [no_job_wake]
+
+
+def set_job_waker(waker: JobWaker) -> None:
+    JOB_WAKERS[0] = waker
+
+
+async def wake_worker(kind: str) -> None:
+    try:
+        await JOB_WAKERS[0](kind)
+    except Exception:
+        logger.warning("job worker could not be started", exc_info=True)
+
+
 async def enqueue(
     connection: AsyncConnection,
     workflow: Workflow,
@@ -312,6 +333,7 @@ async def enqueue(
             for ordinal, step in enumerate(workflow.steps)
         ],
     )
+    await wake_worker(workflow.kind)
     return job_id
 
 

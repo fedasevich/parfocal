@@ -24,6 +24,11 @@ import { okData } from "../placeholder.tsx";
 import { type ReviewStyle, toReviewStyle } from "./decision-style.ts";
 import { type TaskDisplayView, taskDisplayView } from "./display-model.ts";
 import { fromMentionTokensOrNull } from "./mention-picking.ts";
+import {
+  preparingInterval,
+  type ReviewOrderState,
+  reviewOrderState,
+} from "./review-order-state.ts";
 
 export type SlideThread = {
   id: string;
@@ -72,12 +77,16 @@ export type ReviewSession = {
   nodeStaging: boolean;
   slideSize: { width: number; height: number } | null;
   ready: boolean;
+  order: ReviewOrderState;
+  retryOrder: () => void;
 };
 
 export function useReviewSession(taskId: string, slideId: string): ReviewSession {
   const task = okData(useGetReviewTask(taskId).data);
   const projectId = task?.project_id ?? "";
-  const objectsQuery = useListReviewObjects(taskId, slideId);
+  const objectsQuery = useListReviewObjects(taskId, slideId, {
+    query: { refetchInterval: (query) => preparingInterval(query.state.error) },
+  });
   const reviewObjects = okData(objectsQuery.data);
   const decisions = okData(useListDecisions(taskId, slideId).data) ?? [];
   const person = usePeople();
@@ -120,5 +129,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     nodeStaging: task?.analysis_template === "sentinel-node",
     slideSize: slide?.width && slide.height ? { width: slide.width, height: slide.height } : null,
     ready: task !== undefined && reviewObjects !== undefined,
+    order: reviewOrderState(objectsQuery.error),
+    retryOrder: () => void objectsQuery.refetch(),
   };
 }

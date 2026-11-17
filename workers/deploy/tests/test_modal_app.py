@@ -7,6 +7,7 @@ import modal
 import pytest
 
 from parfocal_common.db import POOL_OVERFLOW, POOL_SIZE
+from parfocal_common.jobs import load_workflow
 from parfocal_common.repository import repository_root
 from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
@@ -19,8 +20,12 @@ from parfocal_deploy.modal_app import (
     EVENTS_SPAWN_GAP_SECONDS,
     FUNCTION_SECRETS,
     FUNCTIONS,
+    INGEST_DRAINED_KINDS,
     INGEST_FUNCTION,
+    INGEST_IDLE_EXIT_SECONDS,
     INGEST_OPTIONS,
+    INGEST_PERIOD_MINUTES,
+    INGEST_SPAWN_GAP_SECONDS,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
     SECRETS,
@@ -29,8 +34,10 @@ from parfocal_deploy.modal_app import (
     WEB_FUNCTION,
     WEB_OPTIONS,
     EventSpawner,
+    IngestSpawner,
     app,
 )
+from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
 from parfocal_ingest.settings import (
     INGEST_MEMORY_LIMIT_MIB,
     INGEST_MEMORY_MIB,
@@ -91,13 +98,68 @@ def test_secrets_are_attached_per_function_and_not_to_the_app(
     assert all("secrets" not in options for options in built)
 
 
-def test_the_app_deploys_one_schedule_for_the_event_sweep() -> None:
-    assert "schedule" not in WEB_OPTIONS
-    assert "schedule" not in INGEST_OPTIONS
-    assert MAX_DEPLOYED_CRONS == 5
-    assert EVENTS_PERIOD_MINUTES == 60
+def test_the_app_deploys_hourly_schedules_for_the_event_sweep_and_the_job_drain() -> None:
+    scheduled = [
+        options
+        for options in (WEB_OPTIONS, INGEST_OPTIONS, EVENTS_OPTIONS)
+        if "schedule" in options
+    ]
+    assert scheduled == [INGEST_OPTIONS, EVENTS_OPTIONS]
+    assert len(scheduled) <= MAX_DEPLOYED_CRONS == 5
+    assert EVENTS_PERIOD_MINUTES == INGEST_PERIOD_MINUTES == 60
     assert isinstance(EVENTS_OPTIONS["schedule"], modal.Period)
+    assert isinstance(INGEST_OPTIONS["schedule"], modal.Period)
     assert EVENTS_OPTIONS["max_containers"] == 1
+    assert INGEST_OPTIONS["min_containers"] == 0
+
+
+def test_the_ingest_spawner_knows_exactly_the_kinds_the_worker_drains() -> None:
+    drained = {load_workflow(path).kind for path in DEFAULT_WORKFLOWS}
+    assert drained == INGEST_DRAINED_KINDS
+
+
+def test_a_queued_job_spawns_the_worker_once_within_the_gap() -> None:
+    spawned: list[int] = []
+    now = [100.0]
+
+    async def spawn() -> None:
+        spawned.append(1)
+
+    spawner = IngestSpawner(spawn, lambda: now[0])
+    asyncio.run(spawner("review-order"))
+    asyncio.run(spawner("ingest"))
+    assert spawned == [1]
+    now[0] += INGEST_SPAWN_GAP_SECONDS
+    asyncio.run(spawner("review-order"))
+    assert spawned == [1, 1]
+    assert INGEST_SPAWN_GAP_SECONDS < INGEST_IDLE_EXIT_SECONDS
+
+
+def test_a_job_the_worker_does_not_drain_spawns_nothing() -> None:
+    spawned: list[int] = []
+
+    async def spawn() -> None:
+        spawned.append(1)
+
+    spawner = IngestSpawner(spawn, lambda: 0.0)
+    asyncio.run(spawner("model-run"))
+    asyncio.run(spawner("retention"))
+    assert spawned == []
+
+
+def test_a_failed_ingest_spawn_is_tried_again_at_the_next_job() -> None:
+    attempts: list[int] = []
+
+    async def spawn() -> None:
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise RuntimeError("modal is down")
+
+    spawner = IngestSpawner(spawn, lambda: 0.0)
+    with pytest.raises(RuntimeError):
+        asyncio.run(spawner("ingest"))
+    asyncio.run(spawner("ingest"))
+    assert len(attempts) == 2
 
 
 def test_the_image_installs_the_app_lock_and_no_workspace_package() -> None:
