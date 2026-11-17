@@ -194,6 +194,7 @@ export {
   type RangeCacheOptions,
   type RangeCacheStats,
   type RangeReply,
+  rangeCacheFor,
 } from "./decode/range-cache.ts";
 export {
   clampSlideBrightness,

@@ -5,7 +5,7 @@ import type { Device, Texture } from "@luma.gl/core";
 import { webgpuAdapter } from "@luma.gl/webgpu";
 import { type Camera, originCamera } from "../camera/camera.ts";
 import { defaultDecodeWorkers } from "../decode/decode-pool.ts";
-import { createRangeCache } from "../decode/range-cache.ts";
+import { rangeCacheFor } from "../decode/range-cache.ts";
 import {
   createWorkerRegionReader,
   type DecodeStats,
@@ -283,8 +283,7 @@ export function createDeckWebGpuRoute(
       },
       size: workerCount,
       onFailure: reportOnce,
-      cache:
-        slide.bytes ?? createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
+      cache: slide.bytes ?? rangeCacheFor(opened),
       ...(options.spawnDecodeWorker ? { spawn: options.spawnDecodeWorker } : {}),
     });
     reader.ready.catch(reportOnce);

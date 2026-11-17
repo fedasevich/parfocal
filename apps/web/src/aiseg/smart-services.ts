@@ -58,7 +58,7 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
   };
   const inner = engine.createWorkerPatchReader({
     request,
-    cache: engine.createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
+    cache: engine.rangeCacheFor(opened),
   });
   const local = engine.createSamClient({ modelsUrl: modelsUrl() });
   const server = createServerEmbeddings(httpEmbeddingTransport());

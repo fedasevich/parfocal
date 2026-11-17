@@ -1,6 +1,6 @@
 import type { SlideArea } from "../camera/camera.ts";
 import { cachedFetch } from "../decode/byte-relay.ts";
-import { createRangeCache, type RangeCache } from "../decode/range-cache.ts";
+import { type RangeCache, rangeCacheFor } from "../decode/range-cache.ts";
 import type { EngineSlide, SlideOpener, SlideRef } from "../engine/types.ts";
 import {
   createDefaultPixelSourceRegistry,
@@ -53,7 +53,7 @@ export function createPixelSlideOpener(
 ): SlideOpener<PixelSlide> {
   return async (ref, signal) => {
     const { tissue, tissueUrl, ...request } = await resolve(ref);
-    const bytes = createRangeCache(request.fetch === undefined ? {} : { fetch: request.fetch });
+    const bytes = rangeCacheFor(request);
     const stored =
       tissue !== undefined || tissueUrl === undefined
         ? Promise.resolve(tissue ?? null)

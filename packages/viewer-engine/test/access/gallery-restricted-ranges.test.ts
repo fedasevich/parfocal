@@ -5,7 +5,7 @@ import { cachedFixture, skipUnlessCached } from "@parfocal/test-fixtures";
 import { signedOpenRequest } from "../../src/access/signed-slide.ts";
 import { TileAccess } from "../../src/access/tile-access.ts";
 import { cachedFetch } from "../../src/decode/byte-relay.ts";
-import { createRangeCache } from "../../src/decode/range-cache.ts";
+import { rangeCacheFor } from "../../src/decode/range-cache.ts";
 import { openTiffSource } from "../../src/pixel-source/index.ts";
 import type { SlideFormatId } from "../../src/pixel-source/types.ts";
 
@@ -55,13 +55,14 @@ for (const [name, formatId] of slides) {
   describe(`the gallery's ${name} behind the edge's label and macro ranges`, {
     skip: skipUnlessCached(name),
   }, () => {
-    it("opens and draws a tile without asking for a refused byte", async () => {
+    it("opens and draws a tile without one refused request", async () => {
       assert.ok(table !== undefined);
       const file = await open(cachedFixture(name) ?? "");
       const asked: Asked[] = [];
       try {
         const edge = edgeOf(file, (await file.stat()).size, table, asked);
-        const access = new TileAccess(() => Promise.resolve({ token: "t", lifetimeSeconds: 600 }));
+        const token = capabilityLike(name, table.restricted);
+        const access = new TileAccess(() => Promise.resolve({ token, lifetimeSeconds: 600 }));
         const request = await signedOpenRequest({
           access,
           basePath: "/tiles/gallery/",
@@ -70,7 +71,8 @@ for (const [name, formatId] of slides) {
           formatId,
           fetcher: edge,
         });
-        const bytes = createRangeCache(request.fetch === undefined ? {} : { fetch: request.fetch });
+        assert.deepEqual(request.restricted, table.restricted);
+        const bytes = rangeCacheFor(request);
         const source = await openTiffSource({
           ...request,
           fetch: cachedFetch(bytes),
@@ -78,10 +80,10 @@ for (const [name, formatId] of slides) {
         });
         await source.getTile({ level: source.levels.length - 1, x: 0, y: 0 });
         source.close();
-        const refused = asked.filter(
-          ({ status, range }) => status === 403 && !isWholeBlocks(range),
+        assert.deepEqual(
+          asked.filter(({ status }) => status === 403),
+          [],
         );
-        assert.deepEqual(refused, []);
       } finally {
         await file.close();
       }
@@ -89,8 +91,7 @@ for (const [name, formatId] of slides) {
   });
 }
 
-function isWholeBlocks(range: string): boolean {
-  const [start = 0, last = 0] = range.replace("bytes=", "").split("-").map(Number);
-  const block = 1024 * 1024;
-  return start % block === 0 && (last + 1) % block === 0;
+function capabilityLike(original: string, restricted: readonly ByteRange[]): string {
+  const claims = { d: restricted, o: original, v: 1 };
+  return `${Buffer.from(JSON.stringify(claims)).toString("base64url")}.signature`;
 }
