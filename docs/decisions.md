@@ -229,6 +229,18 @@ No recommendation, because it trades budget against the first call.
 
 Your choice: 
 
+### 146. Whether PathoSAM ViT-L replaces ViT-B as the nucleus detector for the Best tier
+
+AINUC-015 (score newer nucleus models on the Mac) scored both on the same path and scorer ([result](results/2026-11-16-newer-nucleus-models-on-the-mac.md)). ViT-L's pooled PQ is 0.854 against 0.828 on TNBC and 0.554 against 0.524 on NuInsSeg, but 0.481 against 0.483 on CryoNuSeg, the frozen-section set. It takes about 1.4 times ViT-B's time per image, a 1.25 GB file instead of 0.38 GB, and peaked at 8.7 to 9.0 GB on the Mac over a full set. Its weights have no licence found, the same as ViT-B's. ADR 0349 (nucleus detector and typer per tier) lets ViT-L return to Best once it beats 0.828 on TNBC, which it does, while the stricter bar set for AINUC-015 asked for a gain on every set and is not met.
+
+- A. Keep ViT-B everywhere. The gain is two sets of three and the frozen-section set does not move.
+- B. Use ViT-L for the Best tier on the server only, as ADR 0349 allows, and keep ViT-B for the other tiers.
+- Other.
+
+Recommendation A, because the bar fixed before the runs was not met and ViT-L costs more on every run.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.

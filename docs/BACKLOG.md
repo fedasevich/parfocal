@@ -3917,7 +3917,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
   Size: S.
 
-- [ ] AINUC-015 · Score newer nucleus models on the Mac
+- [x] AINUC-015 · Score newer nucleus models on the Mac
   Decision 123 (newer nucleus models) allows downloading InstanSeg and the PathoSAM ViT-L decoder to score them against the kept PathoSAM AIS and HoVer-Net line-up. Check each file size and the peak memory of one inference before any full run, and keep a run under about 8 GB of RAM on the 24 GB Mac, one ML run at a time. The aim is the best model the thesis can run, not the fastest.
   Done when a result file scores both candidates and the kept line-up on TNBC and NuInsSeg with the same metrics as AINUC-000 (nuclei detector and typer research check), with CryoNuSeg added once MLEVAL-010 (loaders for datasets behind a sign-in) has its archive, and records each model's file size and peak RAM.
   Depends on AINUC-000.
