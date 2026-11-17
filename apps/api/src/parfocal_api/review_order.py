@@ -20,6 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.cell_crop_jobs import queue_crops
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.model_catalogue import calibration_of
 from parfocal_api.permissions import Permission, require
@@ -380,6 +381,7 @@ async def write_order(
             objects=pack(keys),
         )
     )
+    await queue_crops(connection, tenant_id, project_id, slide_id)
 
 
 class CheckState(StrEnum):

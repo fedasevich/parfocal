@@ -82496,6 +82496,187 @@ export function useGetSlideThumbnail<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type getCellCropResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getCellCropResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getCellCropResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getCellCropResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getCellCropResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getCellCropResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getCellCropResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getCellCropResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getCellCropResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getCellCropResponseSuccess = getCellCropResponse200 & {
+  headers: Headers;
+};
+export type getCellCropResponseError = (
+  | getCellCropResponse400
+  | getCellCropResponse401
+  | getCellCropResponse403
+  | getCellCropResponse404
+  | getCellCropResponse409
+  | getCellCropResponse422
+  | getCellCropResponse429
+  | getCellCropResponse500
+) & {
+  headers: Headers;
+};
+
+export type getCellCropResponse = getCellCropResponseSuccess | getCellCropResponseError;
+
+export const getGetCellCropUrl = (slideId: string, number: number) => {
+  return `/api/slides/${slideId}/cell-crops/${number}`;
+};
+
+/**
+ * @summary Get Cell Crop
+ */
+export const getCellCrop = async (
+  slideId: string,
+  number: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getCellCropResponse> => {
+  return apiFetch<getCellCropResponse>(getGetCellCropUrl(slideId, number), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCellCropQueryKey = (slideId: string, number: number) => {
+  return [`/api/slides/${slideId}/cell-crops/${number}`] as const;
+};
+
+export const getGetCellCropQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCellCrop>>,
+  TError = Problem,
+>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCellCropQueryKey(slideId, number);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCellCrop>>> = ({ signal }) =>
+    getCellCrop(slideId, number, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined && number !== null && number !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetCellCropQueryResult = NonNullable<Awaited<ReturnType<typeof getCellCrop>>>;
+export type GetCellCropQueryError = Problem;
+
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellCrop>>,
+          TError,
+          Awaited<ReturnType<typeof getCellCrop>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCellCrop>>,
+          TError,
+          Awaited<ReturnType<typeof getCellCrop>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Cell Crop
+ */
+
+export function useGetCellCrop<TData = Awaited<ReturnType<typeof getCellCrop>>, TError = Problem>(
+  slideId: string,
+  number: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCellCrop>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCellCropQueryOptions(slideId, number, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type getSlideEmbeddingsResponse200 = {
   data: SlideEmbeddings;
   status: 200;

@@ -24,6 +24,7 @@ DEFAULT_WORKFLOWS = (
     "parfocal_ingest.remote_inspect:REMOTE_COPY",
     "parfocal_api.review_order_job:REVIEW_ORDER",
     "parfocal_ingest.patch_export:PATCH_EXPORT",
+    "parfocal_ingest.cell_crop_job:CELL_CROPS",
 )
 
 

@@ -96,6 +96,7 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
+from parfocal_common.cell_crops import crop_key
 from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.embedding_cache import (
@@ -1016,6 +1017,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getSlideCoverage": lambda w: Call("GET", f"/api/slides/{w.slide}/coverage"),
     "getSlideTissue": lambda w: Call("GET", f"/api/slides/{w.slide}/tissue"),
     "getSlideThumbnail": lambda w: Call("GET", f"/api/slides/{w.slide}/thumbnail"),
+    "getCellCrop": lambda w: Call("GET", f"/api/slides/{w.slide}/cell-crops/1"),
     "getSlideEmbeddings": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings"),
     "getSlideEmbeddingTile": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings/0/0"),
     "warmSlideEmbedder": lambda w: Call(
@@ -2635,6 +2637,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     f"{slide_prefix(tenant_id, case.loose_slide_id)}{THUMBNAIL_FILE}",
                     b"thumbnail",
                     "image/jpeg",
+                )
+                await store.put_object(
+                    crop_key(tenant_id, case.loose_slide_id, 1), b"crop", "image/jpeg"
                 )
                 await store.put_object(
                     f"{slide_prefix(tenant_id, case.loose_slide_id)}{TISSUE_FILE}",

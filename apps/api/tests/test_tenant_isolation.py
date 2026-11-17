@@ -121,6 +121,7 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
+from parfocal_common.cell_crops import crop_key
 from parfocal_common.chunk_store import Cell, build_cells, cells_in, chunk_of, packed, write_cells
 from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, scoped_transaction
 from parfocal_common.embedding_cache import (
@@ -594,6 +595,11 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             seeded.tenant_id,
             case.loose_slide_id,
             {RestrictedImage.LABEL: stand_in_images(str(seeded.tenant_id))[RestrictedImage.LABEL]},
+        )
+        crop_marker = f"crop-{uuid.uuid4()}"
+        seeded.markers.add(crop_marker)
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            crop_key(seeded.tenant_id, case.loose_slide_id, 1), crop_marker.encode(), "image/jpeg"
         )
         thumbnail_marker = f"thumbnail-{uuid.uuid4()}"
         seeded.markers.add(thumbnail_marker)
@@ -1955,6 +1961,7 @@ GET_ROUTES = {
     "getSlideThumbnail": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/thumbnail"
     ),
+    "getCellCrop": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/cell-crops/1"),
     "getSlideEmbeddings": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/embeddings"
     ),
