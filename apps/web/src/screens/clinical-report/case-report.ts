@@ -340,13 +340,18 @@ export function signedOf(server: CaseReport, userId: string): Report["signed"] {
     by: last.signed_by_user_id ?? userId,
     co: reporter,
     at: stampOf(server.versions[0]?.signed_at ?? last.signed_at),
+    year: new Date(server.versions[0]?.signed_at ?? last.signed_at).getFullYear(),
   };
 }
 
 export function amendOf(server: CaseReport): Report["amend"] {
   const last: CaseReportSignature | undefined = server.versions[server.versions.length - 1];
   return isAmended(server) && last
-    ? { why: last.reason ?? "", at: stampOf(last.signed_at, false) }
+    ? {
+        why: last.reason ?? "",
+        at: stampOf(last.signed_at, false),
+        year: new Date(last.signed_at).getFullYear(),
+      }
     : null;
 }
 

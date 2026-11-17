@@ -1,4 +1,3 @@
-import "./i18n/i18n.ts";
 import "@parfocal/ui/globals.css";
 import { setDraftsAnswered } from "@parfocal/api-client";
 import { QueryClientProvider } from "@tanstack/react-query";

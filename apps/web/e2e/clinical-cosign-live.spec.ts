@@ -71,7 +71,7 @@ test("Tomáš sends for co-sign, Lenka returns it with a note, then co-signs it"
   await expect(review(page).getByText(/Tomáš Beneš asks you to co-sign/)).toBeVisible();
   await review(page).getByRole("button", { name: "Co-sign and sign out" }).click();
   const sign = page.getByRole("dialog", { name: "Co-sign and sign out S26-04812" });
-  await sign.getByRole("button", { name: /Sign with Vltava SSO/ }).click();
+  await sign.getByRole("button", { name: /Sign with single sign-on/ }).click();
   await expect(
     page.getByText("Co-signed and signed out. The report names you both."),
   ).toBeVisible();

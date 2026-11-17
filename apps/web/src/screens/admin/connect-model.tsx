@@ -619,7 +619,6 @@ function ConnectStep({
         <div className="grid gap-2">
           <SampleTilePreview
             state={passed ? "ok" : failed ? "fail" : "empty"}
-            image="/mock-assets/hpf-40x.jpg"
             label={sample?.label ?? t`Sample tile from ${test.sample_slide}`}
             emptyText={t`The outlines your server sends back show here, on the sample tile`}
             regions={sample?.outline.regions ?? []}

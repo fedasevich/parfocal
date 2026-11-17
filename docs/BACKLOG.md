@@ -4548,6 +4548,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   After the API enqueues a job, spawn the `ingest` function, at most once per few seconds per container like the events spawner, and add a schedule as a backstop that drains anything left. Keep min_containers at 0. The guided review shows "Preparing this slide" with progress while the order is not ready, and an error with a retry when it failed, instead of an endless loader.
   Done when a unit test proves enqueueing spawns the function once within the gap, a deploy test lists the schedule, and on the deployed app a new review task opens its first slide's objects within a minute of being sent, recorded in the log.
   Size: M.
+- [ ] OPS-030 · A warm API call answers in under 300 ms
+  After v0.5.0 was deployed on 2026-11-17, warm calls to app.parfocal.eu measured from Europe took 0.95 s for `/api/status`, 2.4 s for `/api/me`, 3.8 s for `/api/projects` and 7.5 s for `/api/me/home`, one at a time, so neither the cold start (OPS-028) nor the session lock (IAM-031) explains them. Likely causes are many database round trips per request between Modal and Neon in different regions, IAM-031's extra short transactions, and N+1 queries in the home and project lists. Decision 140 (region) is still open.
+  Add a Server-Timing header with database time, query count and handler time to every API answer, measure the slow routes on the deployed app, find where Modal runs and where Neon runs, and cut the time at no added monthly cost: fewer round trips per request (one transaction for the session check where safe, batched or joined queries, no N+1), pool settings, and moving Modal next to Neon if region selection costs nothing extra on the current plan. Record the before and after numbers in a result file.
+  Done when a result file reports Server-Timing for the ten slowest routes before and after, measured on the deployed app, and warm `/api/me`, `/api/projects` and `/api/me/home` each answer in under 300 ms at the median of ten calls.
+  Size: M.
 
 ---
 
@@ -6385,6 +6390,21 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Build the four as the mock's scenes 19 to 29 show them, with Q and E in the shortcut registry so they can be rebound.
   Done when a browser test steps with Q and E, opens the progress popover, opens the report from a clinical project and moves the camera with Go to on a thread.
   Depends on PROTO-023. Size: S.
+- [ ] PROTO-025 · Home, My work, the task wizards, upload, jobs and sign-in show real data and real images
+  On 2026-11-17 the owner asked that the deployed app never show prototype stand-ins. These screens still draw pictures from `/mock-assets/` through `lookUrl` or `coverTile`, which production does not serve, or read the fake API: `screens/home/home-screen.tsx`, `screens/my-work/parts.tsx`, `screens/my-work/to-review-tab.tsx`, `screens/new-task/parts.tsx`, `screens/upload/parts.tsx`, `screens/upload/upload-page.tsx`, `screens/onboarding/auth-side.tsx`, `screens/jobs/job-window-screen.tsx`, `screens/jobs/run-model-window.tsx`, `screens/admin/connect-model.tsx` and `popout/popout-screen.tsx`. They are listed in `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates).
+  Replace each picture with the real slide thumbnail from `GET /api/slides/{id}/thumbnail` through `SlideThumb`, a real overview from the engine, or no picture where none is real, and replace each fake data read with the real API or an honest empty state. Remove each fixed file from the guard's list.
+  Done when none of these files is in the guard's list, their unit and browser tests pass, and the deployed Home, My work, wizard and upload screens show only real slide images.
+  Size: M.
+- [x] PROTO-026 · Project, sign-off, evaluation, disagreements and clinical report screens show real data
+  On 2026-11-17 the owner asked that the deployed app never show prototype stand-ins. These screens import `@parfocal/api-client/fake`, `fake-task.ts` or `mock-toast`, draw `/mock-assets/` pictures, or print prototype dates: `screens/project/project-page.tsx`, `screens/sign-off/sign-off-screen.tsx`, `screens/evaluation/evaluation-screen.tsx`, `screens/evaluation/report-pages.tsx`, `screens/disagreements/queue-screen.tsx`, `screens/disagreements/adjudicator-view.tsx`, `screens/annotate-task/new-annotate-task.tsx` and `worklist-live/connect-worklist-live.ts`, listed in `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates). The clinical report screens (`screens/clinical-report/model.ts`, `cosign-screen.tsx`, `report-screen.tsx`) and `screens/search/search-screen.tsx` print fixed dates or names that need a check.
+  Read every value from the real API, keep fakes only behind the fake API's own entry, use real dates and people, and show an honest empty state where the API has nothing. Remove each fixed file from the guard's list.
+  Done when none of these files is in the guard's list, the clinical report and search screens print no fixed date or name, and their unit and browser tests pass.
+  Size: M.
+- [ ] PROTO-027 · The prototype scene harness is not reachable in the deployed app
+  PROTO-025 (main screens show real data and real images) found that `?scene=` still switches production screens into prototype scenes, for example `/projects/$projectId/upload?scene=X` renders the upload mock with its "Mock only" tag and "Jump to the end" button. About 108 route lines read a scene.
+  Let scenes run only in the fake API build and Storybook, ignore the `scene` search value in the deployed app, and remove the mock-only controls from production paths. Extend `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates) so a production route that reads a scene fails it.
+  Done when a browser test against the production build opens a screen with `?scene=` and sees the real screen, and the guard covers scenes.
+  Depends on VIEW-074, PROTO-026. Size: M.
 
 ---
 

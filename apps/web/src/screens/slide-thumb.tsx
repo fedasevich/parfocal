@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { formatNameOf } from "./format-name.ts";
+import { slideThumbUrl } from "./slide-thumb-url.ts";
 
 export function SlideThumb({
   slideId,
@@ -27,7 +28,7 @@ export function SlideThumb({
       alt=""
       aria-hidden="true"
       data-testid="slide-thumb"
-      src={`/api/slides/${slideId}/thumbnail`}
+      src={slideThumbUrl(slideId)}
       loading="lazy"
       draggable={false}
       onError={() => setFailed(slideId)}

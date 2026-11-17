@@ -1,5 +1,13 @@
+function readsList(read: () => unknown): boolean {
+  try {
+    return Array.isArray(read());
+  } catch {
+    return false;
+  }
+}
+
 export function lazyText<T extends object>(read: () => T): T {
-  const target = (Array.isArray(read()) ? [] : {}) as T;
+  const target = (readsList(read) ? [] : {}) as T;
   const bound = (value: unknown, owner: object) =>
     typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(owner) : value;
   return new Proxy(target, {

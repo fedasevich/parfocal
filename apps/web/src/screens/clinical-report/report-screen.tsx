@@ -31,6 +31,7 @@ import {
   stampOf,
   valuesOfCaseReport,
 } from "./case-report.ts";
+import { useLabName } from "./lab-name.ts";
 import { DepositModal, ReasonModal, SignModal } from "./modals.tsx";
 import {
   andJoin,
@@ -50,6 +51,7 @@ import {
   sceneModal,
   sceneReport,
   sceneStep,
+  sceneYear,
   signedAt,
   signersOf,
   slideOf,
@@ -134,6 +136,7 @@ function ReportFlow({
   keep = false,
 }: ReportScreenProps & { loaded: LoadedReport; owner: string | undefined }) {
   const { t } = useLingui();
+  const labName = useLabName();
 
   const data: ReportData = loaded.data;
   const live = scene === undefined;
@@ -555,7 +558,7 @@ function ReportFlow({
         : blockers.length
           ? t`${plural(blockers.length, "thing")} to finish first.`
           : mode === "sign"
-            ? t`Signed by ${me?.name ?? "you"}, MUDr. The report leaves for the clinician.`
+            ? t`Signed by ${me?.name ?? "you"}. The report leaves for the clinician.`
             : t`${person(report.cosigner)?.name ?? t`The co-signer`} gets it in My work.`;
       bar = (
         <FlowBar
@@ -705,7 +708,7 @@ function ReportFlow({
           closeLabel={t`Close the preview`}
           onClose={() => update((current) => ({ ...current, preview: false }))}
         >
-          <ReportDocument model={documentOf(data, report, "draft", nameOf)} />
+          <ReportDocument model={documentOf(data, report, "draft", nameOf, labName)} />
         </PreviewOverlay>
       ) : null}
       {openModal === "deposit" && !done && !sent ? (
@@ -749,7 +752,7 @@ function ReportFlow({
             {
               icon: "user",
               label: t`Signed by`,
-              value: `${person(data.author_user_id)?.name ?? ""}, MUDr.`,
+              value: person(data.author_user_id)?.name ?? "",
             },
             {
               icon: "mail",
@@ -770,7 +773,7 @@ function ReportFlow({
                 ...current,
                 signed: server
                   ? signedOf(server, data.author_user_id)
-                  : { by: data.author_user_id, co: null, at: signedAt },
+                  : { by: data.author_user_id, co: null, at: signedAt, year: sceneYear },
                 v1: current.values,
                 preview: false,
               }));
@@ -807,7 +810,7 @@ function ReportFlow({
       {openModal === "amend" && done ? (
         <ReasonModal
           title={t`Amend the report`}
-          subtitle={t`${data.case.label} · signed out ${(report.signed?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ")}`}
+          subtitle={t`${data.case.label} · signed out ${(report.signed?.at ?? "").replace(/^(\d+ \w+) /, `$1 ${report.signed?.year ?? sceneYear}, `)}`}
           whatLabel={t`What changes`}
           what={t`Version 2 of the report, with your reason on top`}
           told={
@@ -828,7 +831,7 @@ function ReportFlow({
             const finish = (server: CaseReport | null) => {
               setReport((current) => ({
                 ...current,
-                amend: (server ? amendOf(server) : null) ?? { why, at: "16 Oct" },
+                amend: (server ? amendOf(server) : null) ?? { why, at: "16 Oct", year: sceneYear },
                 showV1: false,
               }));
               closeModal();

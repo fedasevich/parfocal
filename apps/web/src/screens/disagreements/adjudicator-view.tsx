@@ -41,7 +41,7 @@ import { taskDisplayView } from "../review/display-model.ts";
 import { DisplayTab } from "../review/display-tab.tsx";
 import { fromMentionTokens } from "../review/mention-picking.ts";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   adjudicatorCard,
   allDecidedHeading,
@@ -280,9 +280,9 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       <ReviewTopBar
         mode="adjudicate"
         taskName={t`Adjudication · ${task?.code ?? ""}`}
-        taskSub={t`Sentinel node AI evaluation · due ${dueText(task?.due_on)}`}
-        slideName={`${shown?.slide_label ?? "A1"} · H&E`}
-        slideThumb={lookUrl("overview")}
+        taskSub={task?.due_on ? t`${task.name} · due ${dueText(task.due_on)}` : (task?.name ?? "")}
+        slideName={shown?.slide_label ?? ""}
+        slideThumb={shown ? slideThumbUrl(shown.slide_id) : undefined}
         progress={counts}
         slidesPopover={
           <SlidesPopover
@@ -294,9 +294,11 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               const open = label === (shown?.slide_label ?? slideLabels[0]);
               return {
                 id: label,
-                name: `${label} · H&E`,
+                name: label,
                 sub: t`${count} object${count === 1 ? "" : "s"} · ${decided.length} decided`,
-                thumb: lookUrl("overview"),
+                thumb: slideThumbUrl(
+                  objects.find((object) => object.slide_label === label)?.slide_id ?? "",
+                ),
                 resultSets: count,
                 current: open,
                 status: open

@@ -47,6 +47,7 @@ import {
   positiveNodes,
   type Report,
   type ReportData,
+  sceneYear,
   signedAt,
   type Values,
 } from "./model.ts";
@@ -610,7 +611,7 @@ function CosignFlow({
             {
               icon: "user",
               label: t`Signed by`,
-              value: `${me?.name}, MUDr. ${sender?.name} is named as the reporter`,
+              value: `${me?.name}. ${sender?.name} is named as the reporter`,
             },
             {
               icon: "mail",
@@ -638,7 +639,7 @@ function CosignFlow({
                 sent: null,
                 signed: signedServer
                   ? signedOf(signedServer, meId)
-                  : { by: meId, co: senderId, at: signedAt },
+                  : { by: meId, co: senderId, at: signedAt, year: sceneYear },
                 v1: values,
                 amend: null,
                 showV1: false,

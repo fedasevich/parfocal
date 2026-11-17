@@ -2,6 +2,7 @@ import type { ProjectModel, ProjectSlide } from "@parfocal/api-client";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import type { ModelGroup } from "@parfocal/ui/components/model-picker";
 import type { TokenItem } from "@parfocal/ui/components/token-field";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { makesLabel } from "./model.ts";
 
 const slideName = (slide: ProjectSlide) =>
@@ -11,7 +12,6 @@ export function slideItems(
   slides: ProjectSlide[],
   setNames: Map<string, string>,
   model: ProjectModel | undefined,
-  thumbnail: string,
 ): TokenItem[] {
   return slides.map((slide) => {
     const names = slide.result_set_ids.map((id) => setNames.get(id) ?? "");
@@ -19,7 +19,7 @@ export function slideItems(
     return {
       id: slide.id,
       name: slideName(slide),
-      thumbnail,
+      thumbnail: slideThumbUrl(slide.id),
       find: slide.case?.label ?? "Loose",
       sub: `${slide.case ? `Case ${slide.case.label}` : "Loose"} · ${names.length ? names.join(", ") : "no results yet"}`,
       ...(has ? { end: "has this set", endTone: "warn" as const } : {}),

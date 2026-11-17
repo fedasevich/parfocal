@@ -43,8 +43,8 @@ test("slides read as tokens with their case and the sets they hold", () => {
     [slide("a", "tumor_052", [], true), slide("b", "tumor_060", ["s1"], false)],
     names,
     model({}),
-    "thumb",
   );
+  assert.equal(items[0]?.thumbnail, "/api/slides/a/thumbnail");
   assert.equal(items[0]?.name, "tumor_052 · H&E");
   assert.equal(items[0]?.sub, "Case C-12 · no results yet");
   assert.equal(items[0]?.end, undefined);

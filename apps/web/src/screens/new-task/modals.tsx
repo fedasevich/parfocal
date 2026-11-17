@@ -89,7 +89,7 @@ export function AddSlidesModal({
                 )
               }
             >
-              <SlideThumb />
+              <SlideThumb slideId={slide.id} file={slide.name} />
               <RowText title={slide.name} sub={where(slide)} />
             </CheckRow>
           );

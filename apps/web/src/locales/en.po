@@ -388,6 +388,12 @@ msgstr "{0} · case number from the folder name"
 msgid "{0} · case number in the folder and file names"
 msgstr "{0} · case number in the folder and file names"
 
+#. placeholder {0}: task.name
+#. placeholder {1}: dueText(task.due_on)
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "{0} · due {1}"
+msgstr "{0} · due {1}"
+
 #. placeholder {0}: shared.project_name
 #. placeholder {1}: longDay(shared.expires_at)
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -426,7 +432,7 @@ msgid "{0} · sent {1}"
 msgstr "{0} · sent {1}"
 
 #. placeholder {0}: data.case.label
-#. placeholder {1}: (report.signed?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ")
+#. placeholder {1}: (report.signed?.at ?? "").replace(/^(\d+ \w+) /, `$1 ${report.signed?.year ?? sceneYear}, `)
 #: src/screens/clinical-report/report-screen.tsx
 msgid "{0} · signed out {1}"
 msgstr "{0} · signed out {1}"
@@ -696,6 +702,11 @@ msgstr "{0} edited"
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "{0} evaluation report"
 msgstr "{0} evaluation report"
+
+#. placeholder {0}: experts.length
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "{0} experts"
+msgstr "{0} experts"
 
 #. placeholder {0}: hook.rejected_today
 #: src/screens/admin/api-section.tsx
@@ -1907,15 +1918,6 @@ msgstr "{duplicate} is skipped. The other {0} slides upload."
 msgid "{duplicate} replaces the slide in {projectCode}. Its reviews stay."
 msgstr "{duplicate} replaces the slide in {projectCode}. Its reviews stay."
 
-#. placeholder {0}: fileKind === "docx" ? "docx" : fileKind === "pdf" ? "pdf" : "csv"
-#: src/screens/evaluation/evaluation-screen.tsx
-msgid "{file}.{0} saved to Downloads"
-msgstr "{file}.{0} saved to Downloads"
-
-#: src/screens/evaluation/evaluation-screen.tsx
-msgid "{file}.pdf saved to Downloads"
-msgstr "{file}.pdf saved to Downloads"
-
 #: ../../packages/ui/src/components/auth.tsx
 msgid "{first}'s work is saved."
 msgstr "{first}'s work is saved."
@@ -2087,6 +2089,10 @@ msgstr "{running} in progress"
 msgid "{running} running, {percent}%"
 msgstr "{running} running, {percent}%"
 
+#: src/screens/evaluation/evaluation-screen.tsx
+msgid "{saved} saved to Downloads"
+msgstr "{saved} saved to Downloads"
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "{seenPercent}% of the tissue seen at 10x or more"
 msgstr "{seenPercent}% of the tissue seen at 10x or more"
@@ -2176,9 +2182,10 @@ msgstr "{taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide
 msgid "{taskCodeOrThe} was withdrawn."
 msgstr "{taskCodeOrThe} was withdrawn."
 
+#. placeholder {0}: summary.result_set.name
 #: src/screens/sign-off/sign-off-screen.tsx
-msgid "{taskName} · Sentinel node AI evaluation"
-msgstr "{taskName} · Sentinel node AI evaluation"
+msgid "{taskName} · {0}"
+msgstr "{taskName} · {0}"
 
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "{templateName} v{version} "
@@ -2513,10 +2520,6 @@ msgstr "20 samples"
 #: ../../packages/ui/src/components/visualize.tsx
 msgid "2px dashed {color}"
 msgstr "2px dashed {color}"
-
-#: src/screens/annotate-task/new-annotate-task.tsx
-msgid "3 experts"
-msgstr "3 experts"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "3 of 3"
@@ -3250,8 +3253,13 @@ msgid "Agreement on"
 msgstr "Agreement on"
 
 #: src/screens/disagreements/queue-screen.tsx
-msgid "AI · CAMELYON v1.0"
-msgstr "AI · CAMELYON v1.0"
+msgid "AI"
+msgstr "AI"
+
+#. placeholder {0}: summary.result_set.name
+#: src/screens/disagreements/queue-screen.tsx
+msgid "AI · {0}"
+msgstr "AI · {0}"
 
 #. placeholder {0}: row.ai
 #: ../../packages/ui/src/components/clinical-report.tsx
@@ -4975,10 +4983,6 @@ msgstr "Click to move"
 msgid "Click to open the whole slide (or hold Z)"
 msgstr "Click to open the whole slide (or hold Z)"
 
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Click to zoom in and out"
-msgstr "Click to zoom in and out"
-
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Click, then press the new key"
 msgstr "Click, then press the new key"
@@ -6111,10 +6115,6 @@ msgstr "Downloaded the table as CSV with full IDs"
 msgid "Downloads cells.template.csv (mock)"
 msgstr "Downloads cells.template.csv (mock)"
 
-#: src/screens/project/project-page.tsx
-msgid "Downloads decisions per object and every result set of the project (mock)"
-msgstr "Downloads decisions per object and every result set of the project (mock)"
-
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Downloads offered"
 msgstr "Downloads offered"
@@ -6122,10 +6122,6 @@ msgstr "Downloads offered"
 #: src/screens/upload/check-step.tsx
 msgid "Downloads the error report as a CSV (mock)"
 msgstr "Downloads the error report as a CSV (mock)"
-
-#: src/screens/project/slides-tab.tsx
-msgid "Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)"
-msgstr "Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "DRAFT"
@@ -6762,15 +6758,10 @@ msgid "Expired"
 msgstr "Expired"
 
 #: src/results/painted-map-layer.tsx
-#: src/screens/project/slides-tab.tsx
 #: src/screens/settings/shortcuts-section.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Export"
 msgstr "Export"
-
-#: src/screens/project/project-page.tsx
-msgid "Export decisions and results"
-msgstr "Export decisions and results"
 
 #: src/screens/admin/audit.tsx
 msgid "Export signed log"
@@ -8793,12 +8784,6 @@ msgstr "Loading your home"
 msgid "Loading your work"
 msgstr "Loading your work"
 
-#. placeholder {0}: group.count - group.slides.length
-#. placeholder {1}: group.key
-#: src/screens/project/slides-tab.tsx
-msgid "Loads the other {0} slides of {1} (mock)"
-msgstr "Loads the other {0} slides of {1} (mock)"
-
 #: src/screens/developer/developer-screen.tsx
 msgid "Loads tiles where the view is heading"
 msgstr "Loads tiles where the view is heading"
@@ -9851,6 +9836,10 @@ msgstr "No object has a decision yet."
 #: ../../packages/ui/src/components/token-field.tsx
 msgid "No one called that. Type an email to invite them."
 msgstr "No one called that. Type an email to invite them."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "No one in this lab can be asked yet."
+msgstr "No one in this lab can be asked yet."
 
 #: src/screens/team/team-screen.tsx
 msgid "No open task matches these filters."
@@ -13703,11 +13692,6 @@ msgstr "Sentinel lymph node, left"
 msgid "Sentinel node"
 msgstr "Sentinel node"
 
-#. placeholder {0}: dueText(task?.due_on)
-#: src/screens/disagreements/adjudicator-view.tsx
-msgid "Sentinel node AI evaluation · due {0}"
-msgstr "Sentinel node AI evaluation · due {0}"
-
 #: src/screens/admin/workspace-settings.tsx
 msgid "Sentinel nodes"
 msgstr "Sentinel nodes"
@@ -13914,11 +13898,6 @@ msgstr "Show activity"
 #: src/screens/upload/viewer-flow.tsx
 msgid "Show after adding"
 msgstr "Show after adding"
-
-#. placeholder {0}: group.count
-#: src/screens/project/slides-tab.tsx
-msgid "Show all {0} slides"
-msgstr "Show all {0} slides"
 
 #: src/screens/upload/overlays.tsx
 msgid "Show an example call"
@@ -14180,8 +14159,8 @@ msgid "Sign with password"
 msgstr "Sign with password"
 
 #: src/screens/clinical-report/modals.tsx
-msgid "Sign with Vltava SSO"
-msgstr "Sign with Vltava SSO"
+msgid "Sign with single sign-on"
+msgstr "Sign with single sign-on"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Sign with your password"
@@ -14237,8 +14216,8 @@ msgstr "Signed by {0} on {1} at {2}. Changes after sign-off are logged with a re
 
 #. placeholder {0}: me?.name ?? "you"
 #: src/screens/clinical-report/report-screen.tsx
-msgid "Signed by {0}, MUDr. The report leaves for the clinician."
-msgstr "Signed by {0}, MUDr. The report leaves for the clinician."
+msgid "Signed by {0}. The report leaves for the clinician."
+msgstr "Signed by {0}. The report leaves for the clinician."
 
 #: ../../packages/ui/src/components/account-menu.tsx
 msgid "Signed in as"
@@ -14311,6 +14290,10 @@ msgstr "Signs reports as {shownName}{0}."
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "simulated"
 msgstr "simulated"
+
+#: src/screens/clinical-report/modals.tsx
+msgid "Single sign-on did not answer. Nothing was signed."
+msgstr "Single sign-on did not answer. Nothing was signed."
 
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Single-letter shortcuts"
@@ -16183,6 +16166,10 @@ msgstr "This page does not exist, or it was moved or deleted."
 msgid "This part of the slide can't be read yet"
 msgstr "This part of the slide can't be read yet"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "This project has no slides yet. Upload some first."
+msgstr "This project has no slides yet. Upload some first."
+
 #: src/screens/onboarding/invite-screen.tsx
 msgid "This project is de-identified. You will not see patient names or numbers."
 msgstr "This project is de-identified. You will not see patient names or numbers."
@@ -16551,11 +16538,6 @@ msgstr "Try another word, for example zoom, names or preset."
 #: src/shell/palette-labels.tsx
 msgid "Try it"
 msgstr "Try it"
-
-#. placeholder {0}: device?.keys[1]?.[1].toLowerCase() ?? "the wheel"
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Try it. Click to zoom, as with {0}."
-msgstr "Try it. Click to zoom, as with {0}."
 
 #: src/shell/connection-banner.tsx
 msgid "Trying again..."
@@ -17121,10 +17103,6 @@ msgstr "Viv only"
 msgid "Viv switches"
 msgstr "Viv switches"
 
-#: src/screens/clinical-report/modals.tsx
-msgid "Vltava single sign-on did not answer. Nothing was signed."
-msgstr "Vltava single sign-on did not answer. Nothing was signed."
-
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Wait a minute and open it again."
 msgstr "Wait a minute and open it again."
@@ -17147,6 +17125,7 @@ msgid "waiting for its admin"
 msgstr "waiting for its admin"
 
 #: src/screens/clinical-report/modals.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
 msgid "Waiting for single sign-on…"
 msgstr "Waiting for single sign-on…"
 
@@ -17165,10 +17144,6 @@ msgstr "Waiting for the owner"
 #: src/screens/upload/progress-step.tsx
 msgid "Waiting for the source"
 msgstr "Waiting for the source"
-
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "Waiting for Vltava single sign-on…"
-msgstr "Waiting for Vltava single sign-on…"
 
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Waiting for your phone or key…"
@@ -17949,6 +17924,10 @@ msgstr "Your outline"
 msgid "Your outline in blue and your colleague's outline in orange"
 msgstr "Your outline in blue and your colleague's outline in orange"
 
+#: src/screens/clinical-report/modals.tsx
+msgid "Your password"
+msgstr "Your password"
+
 #: src/screens/upload/overlays.tsx
 msgid "Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did."
 msgstr "Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did."
@@ -18000,10 +17979,6 @@ msgstr "Your text appears here."
 #: src/screens/viewer/ai-record-blocks.tsx
 msgid "Your track record"
 msgstr "Your track record"
-
-#: src/screens/clinical-report/modals.tsx
-msgid "Your Vltava password"
-msgstr "Your Vltava password"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Your workspace"
@@ -18073,10 +18048,6 @@ msgstr "Zoom out (−)"
 #: src/viewer/start-run-panel.tsx
 msgid "Zoom to a part of the slide first"
 msgstr "Zoom to a part of the slide first"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Zoomed to 10×. Click again to zoom out."
-msgstr "Zoomed to 10×. Click again to zoom out."
 
 #: src/screens/settings/settings-screen.tsx
 msgid "µm and mm"

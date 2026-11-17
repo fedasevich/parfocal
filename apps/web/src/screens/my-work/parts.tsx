@@ -9,7 +9,7 @@ import { ObjectIdTag, ResultSetTag } from "@parfocal/ui/components/tag";
 import type { ComponentProps, ReactNode } from "react";
 import { okData } from "../placeholder.tsx";
 import type { SlideProgress } from "../slide-progress.ts";
-import { lookUrl } from "../thumbnails.ts";
+import { SlideThumb } from "../slide-thumb.tsx";
 
 export { scopeWords } from "./to-review-rows.ts";
 
@@ -26,18 +26,20 @@ export function Callout({ children }: { children: ReactNode }) {
   );
 }
 
-export function SlideThumb({
+export function RowThumb({
+  slideId,
+  file,
   className = "",
-  style,
 }: {
+  slideId: string;
+  file: string;
   className?: string;
-  style?: ComponentProps<"i">["style"];
 }) {
   return (
-    <i
-      aria-hidden="true"
-      className={`block shrink-0 rounded-md border border-line bg-cover bg-center ${className}`}
-      style={{ backgroundImage: `url(${lookUrl("overview")})`, ...style }}
+    <SlideThumb
+      slideId={slideId}
+      file={file}
+      className={`block shrink-0 rounded-md border border-line ${className}`}
     />
   );
 }
@@ -130,6 +132,7 @@ export function ThreadsValue({ anchors }: { anchors: string[] }) {
 }
 
 type PreviewProps = {
+  slideId?: string | undefined;
   title: string;
   subtitle?: string | undefined;
   progress?: SlideProgress | undefined;
@@ -140,6 +143,7 @@ type PreviewProps = {
 };
 
 export function PreviewPanel({
+  slideId,
   title,
   subtitle,
   progress,
@@ -164,11 +168,13 @@ export function PreviewPanel({
           <Icon name="close" />
         </Button>
       </div>
-      <div
-        aria-hidden="true"
-        className="h-35 rounded-[10px] bg-[#f1eef2] bg-cover bg-[center_40%] bg-no-repeat"
-        style={{ backgroundImage: `url(${lookUrl("overview")})` }}
-      />
+      {slideId ? (
+        <SlideThumb
+          slideId={slideId}
+          file={title}
+          className="h-35 w-full rounded-[10px] bg-surf-section"
+        />
+      ) : null}
       <div>
         <h3 className="m-0 text-title-sm font-semibold text-fg">{title}</h3>
         {subtitle ? (

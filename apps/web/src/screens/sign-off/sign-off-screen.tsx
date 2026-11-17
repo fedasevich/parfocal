@@ -32,7 +32,7 @@ import { andJoin } from "../format.ts";
 import { ProjectBackground } from "../jobs/project-background.tsx";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { useMockToast } from "../project/mock-toast.tsx";
+import { useScreenToast } from "../project/screen-toast.tsx";
 
 export type SignOffScene = "blocked" | "ready" | "ssofail" | "signed" | "amend";
 
@@ -93,7 +93,7 @@ function SignOffModal({
   const person = usePeople();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const toast = useMockToast();
+  const toast = useScreenToast();
   const timing = useTaskRun("report", taskId, "reports");
   const [amending, setAmending] = useState(scene === "amend");
   const [signingNext, setSigningNext] = useState(false);
@@ -126,7 +126,9 @@ function SignOffModal({
   });
   const toProject = () =>
     void navigate({ to: "/projects/$projectId", params: { projectId }, search: { tab: "tasks" } });
-  const subtitle = t`${taskName} · Sentinel node AI evaluation`;
+  const subtitle = summary?.result_set.name
+    ? t`${taskName} · ${summary.result_set.name}`
+    : taskName;
   const signingVersion = summary?.next_version?.version ?? summary?.version ?? 1;
   if (!summary) return null;
   const nameOf = (userId: string) => person(userId)?.name ?? "";
@@ -322,7 +324,7 @@ function SignOffModal({
           blockers.length
             ? t`${blockers.length} thing${blockers.length === 1 ? "" : "s"} to finish first.`
             : busy
-              ? t`Waiting for Vltava single sign-on…`
+              ? t`Waiting for single sign-on…`
               : t`Reviewers are told once signed.`
         }
         cancelLabel={t`Back to disagreements`}

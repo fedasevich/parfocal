@@ -25,24 +25,9 @@ const prototypeUse = [
 ];
 
 const STILL_TO_REPLACE = new Set([
-  "popout/popout-screen.tsx",
-  "screens/admin/connect-model.tsx",
   "screens/annotate-task/annotate-task-view.tsx",
-  "screens/annotate-task/new-annotate-task.tsx",
   "screens/annotate-task/task-people.ts",
   "screens/annotate-task/task-shapes.tsx",
-  "screens/disagreements/adjudicator-view.tsx",
-  "screens/disagreements/queue-screen.tsx",
-  "screens/evaluation/evaluation-screen.tsx",
-  "screens/evaluation/report-pages.tsx",
-  "screens/home/home-screen.tsx",
-  "screens/jobs/job-window-screen.tsx",
-  "screens/jobs/run-model-window.tsx",
-  "screens/my-work/parts.tsx",
-  "screens/my-work/to-review-tab.tsx",
-  "screens/new-task/parts.tsx",
-  "screens/onboarding/auth-side.tsx",
-  "screens/project/project-page.tsx",
   "screens/review/cells-grid.tsx",
   "screens/review/comments-on-ids.tsx",
   "screens/review/guided-review.tsx",
@@ -50,10 +35,7 @@ const STILL_TO_REPLACE = new Set([
   "screens/review/review-top.tsx",
   "screens/review/slide-still.tsx",
   "screens/review/slide-submitted.tsx",
-  "screens/sign-off/sign-off-screen.tsx",
   "screens/thumbnails.ts",
-  "screens/upload/parts.tsx",
-  "screens/upload/upload-page.tsx",
   "screens/viewer-tools/annotate-view.tsx",
   "screens/viewer-tools/cell-focus.tsx",
   "screens/viewer-tools/compare-view.tsx",
@@ -64,7 +46,6 @@ const STILL_TO_REPLACE = new Set([
   "screens/viewer/layer-views.tsx",
   "screens/viewer/use-viewer-panels.tsx",
   "screens/viewer/viewer-canvas-parts.tsx",
-  "worklist-live/connect-worklist-live.ts",
 ]);
 
 function sourceFiles(dir: string): string[] {

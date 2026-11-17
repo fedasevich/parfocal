@@ -28,7 +28,7 @@ import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import { answerOf, answerWord } from "../disagreements/text.ts";
 import { okData } from "../placeholder.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   comparisonRows,
   fixed,
@@ -235,11 +235,10 @@ function BlockBody({
             people={report.reviewer_ids.map(
               (id, index) => nameOf(id) || `Reviewer ${String.fromCharCode(65 + index)}`,
             )}
-            rows={rows.map((row, index) => ({
+            rows={rows.map((row) => ({
               object: row.object,
               what: row.what,
               answers: row.answers.map((answer) => answer.raw),
-              thumb: lookUrl(index % 2 === 0 ? "mid" : "hpf"),
             }))}
           />
           <span className="text-[7.5px] text-[#666]">
@@ -286,7 +285,11 @@ function BlockBody({
         );
       return (
         <figure className="m-0 grid gap-1">
-          <img src={lookUrl("mid")} alt={block.caption || block.title} className="w-full" />
+          <img
+            src={slideThumbUrl(block.slide_id)}
+            alt={block.caption || block.title}
+            className="w-full"
+          />
           <figcaption className="text-[7.5px] text-[#666]">
             {block.object_id ? `${block.object_id} · ` : ""}
             {block.caption}

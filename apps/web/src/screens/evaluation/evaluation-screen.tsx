@@ -32,8 +32,9 @@ import { useRouterLink } from "../../shell/router-link.tsx";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { useMockToast } from "../project/mock-toast.tsx";
+import { useScreenToast } from "../project/screen-toast.tsx";
 import { ArrangeEditor } from "./arrange-editor.tsx";
+import { downloadExport, hasExport } from "./download-export.ts";
 import { LazyTaskPdf } from "./pdf-overlay-lazy.tsx";
 import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
 import { ShareLinks } from "./share-links.tsx";
@@ -101,7 +102,7 @@ function EvaluationBody({
   const person = usePeople();
   const nameOf = (userId: string) => person(userId)?.name ?? "";
   const renderLink = useRouterLink();
-  const toast = useMockToast();
+  const toast = useScreenToast();
   const [blocks, setBlocks] = useState<PageBlock[]>(() => fromLayout(layout.blocks));
   const [arranged, setArranged] = useState(layout.own);
   const [format, setFormat] = useState(
@@ -113,7 +114,6 @@ function EvaluationBody({
   const [failed, setFailed] = useState(scene === "exportfail");
   const arranging = scene === "arrange";
   const retired = report.template.retired_on !== null && version === report.template.version;
-  const file = `${report.task_code}_evaluation_v${report.version}`;
   const projectHref = destinations.project(report.project.id);
   const plan = planOf(blocks, format);
   const pageCount = plan.length;
@@ -154,14 +154,28 @@ function EvaluationBody({
       setBlocks(blocks),
     );
   };
-  const download = () => {
-    if (failed || (scene === "exportfail" && fileKind === "pdf")) {
+  const download = async (format = fileKind) => {
+    if (failed || (scene === "exportfail" && format === "pdf")) {
       setFailed(true);
       return;
     }
-    toast.show(
-      t`${file}.${fileKind === "docx" ? "docx" : fileKind === "pdf" ? "pdf" : "csv"} saved to Downloads`,
-    );
+    const saved = await downloadExport(taskId, format);
+    if (saved === null) {
+      setFailed(true);
+      return;
+    }
+    toast.show(t`${saved} saved to Downloads`);
+  };
+  const downloadCsv = async () => {
+    const saved = await Promise.all([
+      downloadExport(taskId, "decisions"),
+      downloadExport(taskId, "objects"),
+    ]);
+    if (saved.some((name) => name === null)) {
+      setFailed(true);
+      return;
+    }
+    toast.show(t`2 CSV files saved to Downloads`);
   };
   const switchTemplate = (id: string | null) => {
     const picked = templates.find((item) => item.id === id);
@@ -378,14 +392,16 @@ function EvaluationBody({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {report.formats.map((item) => (
-                    <SelectItem key={item.key} value={item.key}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
+                  {report.formats
+                    .filter((item) => hasExport(item.key))
+                    .map((item) => (
+                      <SelectItem key={item.key} value={item.key}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
-              <Button onClick={download}>
+              <Button onClick={() => void download()}>
                 <Icon name="download" />
                 <Trans>Download</Trans>
               </Button>
@@ -398,7 +414,10 @@ function EvaluationBody({
                         className="cursor-pointer border-0 bg-transparent p-0 text-body-sm text-accent hover:underline"
                         onClick={() => {
                           setFailed(false);
-                          toast.show(t`${file}.pdf saved to Downloads`);
+                          void downloadExport(taskId, "pdf").then((saved) => {
+                            if (saved === null) setFailed(true);
+                            else toast.show(t`${saved} saved to Downloads`);
+                          });
                         }}
                       >
                         <Trans>Try again</Trans>
@@ -406,7 +425,7 @@ function EvaluationBody({
                       <button
                         type="button"
                         className="cursor-pointer border-0 bg-transparent p-0 text-body-sm text-accent hover:underline"
-                        onClick={() => toast.show(t`2 CSV files saved to Downloads`)}
+                        onClick={() => void downloadCsv()}
                       >
                         <Trans>Download CSV only</Trans>
                       </button>

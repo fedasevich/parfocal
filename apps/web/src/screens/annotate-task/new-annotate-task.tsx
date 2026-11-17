@@ -1,5 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useGetProject } from "@parfocal/api-client";
+import {
+  useGetProject,
+  useListMySlides,
+  useListProjectResultSets,
+  useListTenantMembers,
+} from "@parfocal/api-client";
 import {
   annotatePresets,
   BlindFirstSwitch,
@@ -19,17 +24,9 @@ import { defaultSampleSize } from "@parfocal/ui/lib/sample-size";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { resultName } from "./fake-task.ts";
 import { type AnnotateStep, annotateStepKeys } from "./step-keys.ts";
-import { useTaskPeople } from "./task-people.ts";
-
-const slideRows = [
-  { id: "A1", name: "A1 H&E", result: true },
-  { id: "A2", name: "A2 H&E", result: true },
-  { id: "B4", name: "B4 CK", result: false },
-  { id: "C2", name: "C2 H&E", result: false },
-];
 
 type NewAnnotateTaskProps = {
   projectId: string;
@@ -65,20 +62,38 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
     regions: t`AI cells inside the areas you draw`,
   } as const;
   const project = okData(useGetProject(projectId).data);
-  const people = useTaskPeople();
+  const slideRows = (okData(useListMySlides({ project_id: projectId }).data)?.slides ?? []).map(
+    (slide) => ({
+      id: slide.id,
+      name: slide.label,
+      resultName: slide.result_sets[0]?.name.split(" ")[0] ?? null,
+      resultSetIds: slide.result_sets.map((ref) => ref.id),
+    }),
+  );
+  const resultSets = okData(useListProjectResultSets(projectId).data) ?? [];
+  const members = okData(useListTenantMembers().data) ?? [];
   const navigate = useNavigate();
   const [chosen, setChosen] = useState<PresetKey>(preset);
   const [options, setOptions] = useState(() => presetOptions(preset));
   const [blind, setBlind] = useState(false);
-  const [picked, setPicked] = useState<string[]>(["A1", "A2", "B4"]);
+  const [slideChoice, setSlideChoice] = useState<string[] | null>(null);
+  const [expertChoice, setExpertChoice] = useState<string[] | null>(null);
+  const picked = slideChoice ?? slideRows.map((row) => row.id);
+  const experts = expertChoice ?? members.map((member) => member.user_id);
   const index = annotateStepKeys.indexOf(step);
   const reached = annotateStepKeys.length - 1;
   const hasResult = options.hasResult;
-  const slidesWithResult = picked.filter(
-    (id) => slideRows.find((row) => row.id === id)?.result,
-  ).length;
+  const withResult = picked.filter((id) => slideRows.find((row) => row.id === id)?.resultName);
+  const slidesWithResult = withResult.length;
+  const cellsInScope = resultSets
+    .filter((set) => withResult.includes(set.slide_id))
+    .reduce((total, set) => total + set.cell_count, 0);
   const toCheck =
-    options.scope === "none" ? 0 : options.scope === "sample" ? 50 : 46 * slidesWithResult;
+    options.scope === "none"
+      ? 0
+      : options.scope === "sample"
+        ? Math.min(defaultSampleSize, cellsInScope)
+        : cellsInScope;
   const minutes = Math.round(toCheck * 0.5 + picked.length * 6);
 
   const steps: FlowStep[] = annotateStepKeys.map((key) => ({ label: stepNames[key] }));
@@ -165,6 +180,11 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
           title={t`Slides`}
           sub={t`Slides with no result set can be annotated by hand. Slides with one start with the AI objects.`}
         >
+          {slideRows.length === 0 ? (
+            <p className="m-0 text-body-sm text-fg-dim">
+              <Trans>This project has no slides yet. Upload some first.</Trans>
+            </p>
+          ) : null}
           <ul className="m-0 grid list-none gap-2 p-0">
             {slideRows.map((row) => {
               const on = picked.includes(row.id);
@@ -175,12 +195,14 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
                       type="checkbox"
                       checked={on}
                       onChange={() =>
-                        setPicked(on ? picked.filter((id) => id !== row.id) : [...picked, row.id])
+                        setSlideChoice(
+                          on ? picked.filter((id) => id !== row.id) : [...picked, row.id],
+                        )
                       }
                     />
                     <span className="min-w-0 flex-1 font-medium text-fg">{row.name}</span>
-                    {row.result ? (
-                      <StatusTag tone="accent">{resultName}</StatusTag>
+                    {row.resultName ? (
+                      <StatusTag tone="accent">{row.resultName}</StatusTag>
                     ) : (
                       <StatusTag>
                         <Trans>No result set</Trans>
@@ -195,18 +217,34 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       ) : null}
       {step === "experts" ? (
         <Zone title={t`Experts`} sub={t`Every expert edits the same layer on each slide.`}>
+          {members.length === 0 ? (
+            <p className="m-0 text-body-sm text-fg-dim">
+              <Trans>No one in this lab can be asked yet.</Trans>
+            </p>
+          ) : null}
           <ul className="m-0 grid list-none gap-2 p-0">
-            {[people?.me, people?.anna, people?.simona]
-              .flatMap((person) => (person ? [person] : []))
-              .map((person) => (
-                <li
-                  key={person.name}
-                  className="flex items-center gap-3 rounded-zone border border-line bg-surf-panel px-3.5 py-2.5 text-body-sm"
-                >
-                  <PersonAvatar person={person} size={24} />
-                  <span className="font-medium text-fg">{person.name}</span>
+            {members.map((member) => {
+              const on = experts.includes(member.user_id);
+              return (
+                <li key={member.user_id}>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-zone border border-line bg-surf-panel px-3.5 py-2.5 text-body-sm">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() =>
+                        setExpertChoice(
+                          on
+                            ? experts.filter((id) => id !== member.user_id)
+                            : [...experts, member.user_id],
+                        )
+                      }
+                    />
+                    <PersonAvatar person={toPersonInfo(member)} size={24} />
+                    <span className="font-medium text-fg">{member.display_name}</span>
+                  </label>
                 </li>
-              ))}
+              );
+            })}
           </ul>
         </Zone>
       ) : null}
@@ -241,7 +279,11 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
                 value: t`${picked.length} slides, ${slidesWithResult} with a result set`,
                 onChange: () => onStep("slides"),
               },
-              { label: t`Experts`, value: t`3 experts`, onChange: () => onStep("experts") },
+              {
+                label: t`Experts`,
+                value: t`${experts.length} experts`,
+                onChange: () => onStep("experts"),
+              },
               {
                 label: t`Experts check`,
                 value: scopeNames[options.scope],

@@ -2,6 +2,98 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.5.0 (2026-11-17)
+
+### Features
+
+- SHELL-016: Gate the app on one /api/me answer and show a boot loader
+- EXP-013: Show the usability survey only at natural pauses when surveys are on
+- SHELL-017: Show a top progress bar, dimmed route changes, skeleton rows and a stage label
+- PROTO-022: Dock the live viewer's rail and move its cards into a tabbed inspector
+- TEST-046: Seed a ready owner demo with matching templates and hide tips without AI objects
+- TEST-046: Give every seeded project the Detection study template as its default
+- PROTO-023: Give the live viewer the mock's top bar, four inspector tabs and quiet hints
+- PROTO-024: Step slides with Q and E, progress popover, report and Go to
+
+### Fixes
+
+- SHELL-016: Hold the sign-in page on the loader while it leaves for the hosted login
+- SHELL-018: Ignore key events without a key
+- SHELL-019: Fall back to the default when a search value is unknown
+- SHELL-017: Back off room access and coverage, greet by name, size storage
+- SHELL-017: Keep the progress bar off for queries that already failed
+- OPS-029: Spawn the ingest worker when a job is queued and show slide preparation
+- OPS-029: Keep the preparing screen during polls and test the served job waker
+- TASK-020: Show true result sets, slide count, template, send date and notices in the wizard
+- SHELL-021: Adopt the profile name, hide empty estimates, clear the tour offer
+- TASK-020: Keep the review tasks module under the length limit and the ADR status plain
+- OPS-029: Move the review order states out of the guided review screen
+- SHELL-020: Stop idle polling, remember missing tissue, show slide thumbnails
+- PROTO-022: Keep the hidden inspector tab below the top bar and record what is left
+- SHELL-017: Allow the stage label in the loading guard and list the checklist key
+- TASK-020: Pass a seed request where seeds create review tasks
+- TEST-046: Move the demo shapes out of the showcase seed
+- PROTO-023: Count live slides from the neighbours call and open the Opinion tab on Submit
+- PROTO-025: Show real slide thumbnails and drop prototype pictures from the screens
+- PROTO-026: Show real data on project, sign-off, evaluation, disagreements and report screens
+- I18N-005: Let lazy text be made before the locale is set
+
+### Performance
+
+- IAM-031: Read the session without a row lock and lock only to refresh
+- IAM-031: Touch the session apart from the rate counters and warm the timing test
+- OPS-028: Restore the web function from a memory snapshot taken after the API imports
+
+### Docs
+
+- OPS-005: Log the v0.4.0 production deploy
+- SHELL-016: Tick SHELL-016
+- IAM-031: Tick IAM-031
+- EXP-013: Tick EXP-013
+- OPS-014: Record app.parfocal.eu as a development environment
+- SHELL-019: Tick SHELL-019
+- SHELL-017: Tick SHELL-017
+- OPS-029: Note the deploy and check left after merge
+- TASK-020: Tick TASK-020
+- SHELL-021: Move SHELL-021 to review
+- SHELL-020: Move SHELL-020 to review
+- PROTO-022: List where the live viewer differs from the frozen mock
+- PROTO-022: Add the after shots and the log entry for the docked viewer layout
+- TEST-046: Move TEST-046 to review until the walk
+- PROTO-023: Tick PROTO-023
+- OPS-028: Record the API cold start before the memory snapshot
+- PROTO-024: Tick PROTO-024
+- PROTO-025: Move PROTO-025 to review and clean the catalogs
+- PROTO-026: Tick PROTO-026
+- I18N-005: Log the lazy text boot fix
+
+### Tests
+
+- PROTO-022: Open the inspector tab in viewer specs and check the docked mock layout
+- SHELL-020: Cover the thumbnail route and the assignment notice in the suites
+- VIEW-074: Guard production screens against prototype pictures, fake data and mock dates
+- VIEW-074: Leave the flow map gallery out of the prototype guard
+
+### Other
+
+- SHELL-016: Add and claim SHELL-016 from the production smoke
+- SHELL-017: Add and claim SHELL-017 from the production click-through
+- IAM-031: Add and claim IAM-031 from the production click-through
+- PROTO-022: Add PROTO-022 and EXP-013 from the owner's production review
+- SHELL-019: Add SHELL-019 to SHELL-021 from the production click-through
+- SHELL-019: Claim SHELL-019
+- OPS-028: Add and claim OPS-028 from the production click-through
+- OPS-029: Add and claim OPS-029 and TASK-020 from the click-through
+- SHELL-021: Claim SHELL-021
+- TEST-046: Add and claim TEST-046 for a ready demo workflow
+- SHELL-020: Claim SHELL-020
+- PROTO-023: Tick PROTO-022 and add PROTO-023 for what it left
+- TEST-046: Note the reset and walk that wait for the deploy
+- PROTO-024: Add and claim PROTO-024 for what PROTO-023 left
+- VIEW-074: Add and claim VIEW-074, one engine stage for every viewer
+- PROTO-025: Add and claim PROTO-025 and PROTO-026 to remove prototype stand-ins
+- PROTO-027: Add PROTO-027, no prototype scenes in the deployed app
+
 ## v0.4.0 (2026-11-17)
 
 ### Features
