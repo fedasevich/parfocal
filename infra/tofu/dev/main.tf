@@ -11,6 +11,7 @@ module "environment" {
   origin                = "http://localhost:5173"
   extra_upload_origins  = ["https://app.parfocal.eu"]
   dev_mode              = true
+  eu_bucket             = true
   cloudflare_account_id = var.cloudflare_account_id
   zitadel_org_id        = var.zitadel_org_id
   zitadel_project_id    = one(data.zitadel_projects.parfocal.project_ids)

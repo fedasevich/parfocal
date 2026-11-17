@@ -35,6 +35,11 @@ variable "dev_mode" {
   }
 }
 
+variable "eu_bucket" {
+  type    = bool
+  default = false
+}
+
 variable "tier_after_days" {
   type    = number
   default = 90
