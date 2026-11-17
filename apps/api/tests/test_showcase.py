@@ -24,6 +24,7 @@ from parfocal_api.showcase import (
 from parfocal_api.slide_result_stats import get_slide_result_stats
 from parfocal_api.slide_threads import list_slide_threads, list_thread_comments
 from parfocal_api.slide_viewer import (
+    NoTyperError,
     get_result_set_typer,
     get_slide_ai_progress,
     list_annotation_layers,
@@ -344,8 +345,8 @@ async def test_the_owner_opens_a_seeded_slide_on_the_real_viewer_calls(seeded: s
             assert progress.state == "ready"
             layers = await list_annotation_layers(slide, principal, connection)
             assert layers.slide_id == slide
-            typer = await get_result_set_typer(uuid.UUID(str(set_id)), principal, connection)
-            assert typer.name
+            with pytest.raises(NoTyperError):
+                await get_result_set_typer(uuid.UUID(str(set_id)), principal, connection)
             threads = await list_slide_threads(slide, principal, connection)
             for thread in threads:
                 await list_thread_comments(thread.id, principal, connection)

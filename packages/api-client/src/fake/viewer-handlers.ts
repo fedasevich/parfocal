@@ -1,6 +1,5 @@
-import type { RequestHandler } from "msw";
+import { HttpResponse, http, type RequestHandler } from "msw";
 import {
-  getGetResultSetTyperMockHandler,
   getGetSlideAiProgressMockHandler,
   getGetSlideResultStatsMockHandler,
 } from "../generated/api.msw.ts";
@@ -75,22 +74,10 @@ export const toSlideAiProgress = (slideId: string): SlideAiProgress => {
   };
 };
 
-const uncalibrated = (resultSetId: string, name: string): ResultSetTyper => ({
-  result_set_id: resultSetId,
-  name,
-  calibrated: false,
-  checked_on_held_out: false,
-  band_accuracy: {},
-  test_set_accuracy: null,
-  test_set_confident_share: null,
-  test_set_unsure_share: null,
-  validated_sites: [],
-});
-
-export const toResultSetTyper = (resultSetId: string): ResultSetTyper => {
+export const toResultSetTyper = (resultSetId: string): ResultSetTyper | undefined => {
   const set = resultSets.find((candidate) => candidate.id === resultSetId);
   const typer = set === undefined ? undefined : typers[set.key];
-  if (typer === undefined) return uncalibrated(resultSetId, set?.name ?? "");
+  if (typer === undefined) return undefined;
   return {
     result_set_id: resultSetId,
     name: typer.name,
@@ -105,7 +92,20 @@ export const toResultSetTyper = (resultSetId: string): ResultSetTyper => {
 };
 
 export const viewerHandlers = (): RequestHandler[] => [
-  getGetResultSetTyperMockHandler(({ params }) => toResultSetTyper(String(params.resultSetId))),
+  http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId/typer", ({ params }) => {
+    const typer = toResultSetTyper(params.resultSetId);
+    return typer === undefined
+      ? HttpResponse.json(
+          {
+            type: "about:blank",
+            title: "This result set has no typer",
+            status: 404,
+            code: "no-typer",
+          },
+          { status: 404 },
+        )
+      : HttpResponse.json(typer);
+  }),
   getGetSlideResultStatsMockHandler(({ params }) =>
     toSlideResultStats(String(params.taskId), String(params.slideId)),
   ),

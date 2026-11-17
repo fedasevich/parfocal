@@ -6,12 +6,13 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.blinding import sees_whole, user_of
+from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_whole, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.model_catalogue import ConfidenceBand, calibration_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import NotFoundError
+from parfocal_api.result_sets import set_row
 from parfocal_api.slide_coverage import readable_slide
 from parfocal_api.tables import (
     AnnotationKind,
@@ -88,9 +89,9 @@ class ResultSetTyper(BaseModel):
     validated_sites: list[str]
 
 
-class ResultSetNotFoundError(NotFoundError):
-    code = "result-set-not-found"
-    title = "There is no such result set for you"
+class NoTyperError(NotFoundError):
+    code = "no-typer"
+    title = "This result set has no cells, so no typer named their types"
 
 
 slide_router = APIRouter(prefix="/api/slides/{slide_id}", tags=["slides"])
@@ -158,8 +159,9 @@ async def active_run(connection: AsyncConnection, slide_id: uuid.UUID) -> uuid.U
 async def get_slide_ai_progress(
     slide_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> SlideAiProgress:
-    await readable_slide(connection, principal, slide_id)
-    job_id = await active_run(connection, slide_id)
+    slide = await readable_slide(connection, principal, slide_id)
+    hidden = await ai_hidden_on(connection, principal, slide.project_id, slide_id)
+    job_id = None if hidden else await active_run(connection, slide_id)
     if job_id is None:
         return SlideAiProgress(slide_id=slide_id, state="ready", steps=[], found=[])
     stages = {
@@ -281,11 +283,13 @@ def band_accuracy_of(accuracy: dict[ConfidenceBand, float]) -> BandAccuracy:
 async def get_result_set_typer(
     result_set_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> ResultSetTyper:
+    found = await set_row(connection, principal, result_set_id)
+    await require_ai_shown(connection, principal, found.project_id, found.slide_id)
+    if found.cell_count == 0:
+        raise NoTyperError
     row = (
         await connection.execute(
             select(
-                result_sets.c.slide_id,
-                result_sets.c.project_id,
                 func.coalesce(model_runs.c.typer, model_runs.c.detector, result_sets.c.name).label(
                     "typer"
                 ),
@@ -299,15 +303,7 @@ async def get_result_set_typer(
             .outerjoin(model_runs, model_runs.c.job_id == result_sets.c.job_id)
             .where(result_sets.c.id == result_set_id)
         )
-    ).one_or_none()
-    if row is None:
-        raise ResultSetNotFoundError
-    try:
-        slide = await readable_slide(connection, principal, row.slide_id)
-    except NotFoundError as error:
-        raise ResultSetNotFoundError from error
-    if slide.project_id != row.project_id:
-        raise ResultSetNotFoundError
+    ).one()
     calibration = (
         None if row.version is None else calibration_of(row.typer, row.version, int(row.views))
     )

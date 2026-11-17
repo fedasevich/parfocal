@@ -15,7 +15,9 @@ def tenant_of(database: str, r: Review) -> Any:
     return owner(database, f"SELECT tenant_id FROM slides WHERE id = '{r.slide}'")[0][0]
 
 
-def other_set(database: str, r: Review, name: str, version: str | None, region: str) -> str:
+def other_set(
+    database: str, r: Review, name: str, version: str | None, region: str, cells: int = 0
+) -> str:
     tenant = tenant_of(database, r)
     made = owner(
         database,
@@ -30,7 +32,8 @@ def other_set(database: str, r: Review, name: str, version: str | None, region: 
     )
     owner(
         database,
-        f"UPDATE result_sets SET status = 'ready', region_count = 1 WHERE id = '{made}'",
+        f"UPDATE result_sets SET status = 'ready', region_count = 1, cell_count = {cells} "
+        f"WHERE id = '{made}'",
     )
     return str(made)
 
@@ -138,6 +141,27 @@ def test_slide_threads_gather_the_task_and_slide_threads_with_their_comments(
     assert api(r.people["owner"]).get(f"/api/threads/{uuid.uuid4()}/comments").status_code == 404
 
 
+def test_a_blinded_reviewer_sees_no_other_reviewer_thread_on_the_slide(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    started = api(r.people["first"]).post(
+        f"{r.base}/threads",
+        json={
+            "title": "Is this tumour?",
+            "body": "Please look at the margin.",
+            "anchor": {"kind": "object", "object_id": "T1"},
+        },
+    )
+    assert started.status_code == 201, started.text
+    thread = started.json()["id"]
+    assert [
+        item["id"] for item in api(r.people["first"]).get(f"/api/slides/{r.slide}/threads").json()
+    ] == [thread]
+    assert api(r.people["second"]).get(f"/api/slides/{r.slide}/threads").json() == []
+    assert api(r.people["second"]).get(f"/api/threads/{thread}/comments").status_code == 404
+
+
 def test_annotation_layers_count_the_slide_annotations_by_class(api: ApiAs, database: str) -> None:
     r = review(api, database)
     tenant = tenant_of(database, r)
@@ -165,14 +189,28 @@ def test_a_result_set_typer_reads_its_recorded_calibration(api: ApiAs, database:
     assert plain.status_code == 200, plain.text
     assert (plain.json()["name"], plain.json()["calibrated"]) == ("HoVer-NeXt", False)
     assert plain.json()["test_set_accuracy"] is None
-    typed = other_set(database, r, "pathosam-hovernext", "v1.2", "POLYGON((0 0,9 0,9 9,0 9,0 0))")
+    square = "POLYGON((0 0,9 0,9 9,0 9,0 0))"
+    typed = other_set(database, r, "pathosam-hovernext", "v1.2", square, cells=3)
     calibrated = api(r.people["owner"]).get(f"/api/result-sets/{typed}/typer").json()
     assert calibrated["calibrated"] is True
     assert calibrated["test_set_accuracy"] == pytest.approx(0.8297)
     assert calibrated["band_accuracy"]["confident"] == pytest.approx(0.95)
     assert "Breast" in calibrated["validated_sites"]
+    regions_only = other_set(database, r, "camelyon-tumor", "v1.0", square)
+    missing = api(r.people["owner"]).get(f"/api/result-sets/{regions_only}/typer")
+    assert (missing.status_code, missing.json()["code"]) == (404, "no-typer")
     assert api(r.people["third"]).get(f"/api/result-sets/{typed}/typer").status_code == 404
     assert api(r.people["owner"]).get(f"/api/result-sets/{uuid.uuid4()}/typer").status_code == 404
+    owner(database, f"UPDATE review_tasks SET ai_hidden_first_read = true WHERE id = '{r.task}'")
+    assert api(r.people["first"]).get(f"/api/result-sets/{typed}/typer").status_code == 403
+
+
+def test_a_reviewer_whose_first_read_is_open_sees_no_ai_progress(api: ApiAs, database: str) -> None:
+    lab = make_lab(api, database, hidden=True)
+    one_run(api, lab)
+    url = f"/api/slides/{lab.slides[0]}/ai-progress"
+    assert api(lab.people["reader"]).get(url).json()["state"] == "ready"
+    assert api(lab.people["owner"]).get(url).json()["state"] == "running"
 
 
 def test_ai_progress_follows_the_running_model_run(api: ApiAs, database: str) -> None:
