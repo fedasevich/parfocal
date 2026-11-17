@@ -930,12 +930,7 @@ function OpenedSlide({
               choices={heatmapChoices}
             />
             {workspace === "annotate" ? null : (
-              <ViewMapLayer
-                engine={session.engine}
-                stage={hostNode}
-                slideId={slideId}
-                projectId={projectId}
-              />
+              <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
             )}
             {workspace === "annotate" ? null : (
               <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
