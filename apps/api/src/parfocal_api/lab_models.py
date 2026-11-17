@@ -771,6 +771,7 @@ async def remove_lab_model_project(
     connection: TenantConnection,
 ) -> LabModel:
     row = await model_row(connection, model_id)
+    await check_projects(connection, [project_id])
     removed = (
         await connection.execute(
             delete(lab_model_projects)
