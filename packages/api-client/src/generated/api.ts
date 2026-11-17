@@ -6416,7 +6416,7 @@ export interface TaskInvitationDraft {
 
 export interface TaskOutcome {
   id: string;
-  outcome: "recorded";
+  outcome: "not-attached";
 }
 
 export interface TaskReportLayout {

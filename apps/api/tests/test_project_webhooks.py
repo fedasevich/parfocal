@@ -10,11 +10,11 @@ from db_support import ApiAs, api_settings
 from fastapi.testclient import TestClient
 from link_support import Site, serving
 from upload_support import single
-from workspace_support import join_project, make_case, make_project, make_workspace
+from workspace_support import join_project, make_case, make_project, make_workspace, owner
 
 from parfocal_api.app import create_app
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.project_webhooks import signature_of
+from parfocal_api.project_webhooks import Check, signature_check, signature_of
 from parfocal_api.tables import Role
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
@@ -111,7 +111,8 @@ def calls_logged(database: str, team: Team) -> list[dict[str, Any]]:
     found = value(
         database,
         "SELECT coalesce(json_agg(details ORDER BY seq), '[]') FROM audit_events "
-        f"WHERE action = 'webhook.called' AND tenant_id = '{team.tenant_id}'",
+        "WHERE action IN ('webhook.called', 'webhook.rejected') "
+        f"AND tenant_id = '{team.tenant_id}'",
     )
     return [parsed(item) for item in parsed(found)]
 
@@ -196,6 +197,10 @@ def test_a_bad_or_old_signature_is_refused_with_one_answer_and_logged(
         assert response.status_code == 401
         assert response.json()["code"] == "webhook-refused"
     assert wrong.json() == stale.json() == unsigned.json()
+    rejected = value(
+        database, "SELECT count(*) FROM audit_events WHERE action = 'webhook.rejected'"
+    )
+    assert rejected == 3
     assert [(item["outcome"], item["signature"]) for item in calls_logged(database, team)] == [
         ("refused", "wrong"),
         ("refused", "stale"),
@@ -277,3 +282,33 @@ def test_a_missing_file_is_refused_per_link(
     ]
     assert answer["links"][1]["message"]
     assert len(uploads_of(database, team)) == 1
+
+
+@pytest.mark.parametrize("timestamp", ["²", "9" * 5000, "-5", " 17"])
+def test_an_odd_timestamp_counts_as_missing(timestamp: str) -> None:
+    body = b"{}"
+    signature = signature_of("secret", timestamp, body)
+    assert signature_check(["secret"], timestamp, signature, body, time.time()) is Check.MISSING
+
+
+def test_a_signature_checks_only_inside_the_clock_skew() -> None:
+    body = b"{}"
+    now = 1_800_000_000
+    for sent, expected in ((now - 300, Check.VALID), (now + 301, Check.STALE)):
+        timestamp = str(sent)
+        signature = signature_of("secret", timestamp, body)
+        assert signature_check(["old", "secret"], timestamp, signature, body, now) is expected
+
+
+def test_an_archived_project_or_a_deleted_case_takes_no_slides(
+    hooked: ApiAs, team: Team, site: Site, database: str
+) -> None:
+    hook = new_secret(hooked, team)
+    owner(database, f"UPDATE cases SET deleted_at = now() WHERE id = '{team.case}'")
+    deleted_case = call(hooked, hook, body_of(site, team))
+    assert deleted_case.json()["code"] == "webhook-case-not-found"
+    owner(database, f"UPDATE projects SET archived_at = now() WHERE id = '{team.project}'")
+    archived = call(hooked, hook, body_of(site, team))
+    assert archived.status_code == 404
+    assert archived.json()["code"] == "webhook-project-closed"
+    assert uploads_of(database, team) == []

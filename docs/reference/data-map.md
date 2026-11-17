@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 48 |
-| `personal` | 95 |
-| `secret` | 11 |
-| `operational` | 802 |
+| `personal` | 98 |
+| `secret` | 14 |
+| `operational` | 825 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -372,6 +372,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_at` | operational |
 | `updated_at` | operational |
 
+## import_sources
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `kind` | operational |
+| `address` | operational |
+| `region` | operational |
+| `header_name` | operational |
+| `credential_ciphertext` | secret |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## invitations
 
 | Column | Class |
@@ -442,6 +458,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `lab_model_id` | operational |
 | `project_id` | operational |
 | `tenant_id` | operational |
+| `tiles_confirmed_at` | operational |
+| `tiles_confirmed_by_user_id` | personal |
 
 ## lab_models
 
@@ -724,6 +742,21 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `user_id` | personal |
 | `role` | operational |
 | `sign_out` | operational |
+
+## project_webhooks
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `hook_key` | operational |
+| `secret_ciphertext` | secret |
+| `old_secret_ciphertext` | secret |
+| `rotated_at` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## projects
 
@@ -1396,6 +1429,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `last_tenant_id` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## webhook_calls
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `webhook_id` | operational |
+| `idempotency_key` | operational |
+| `answer` | operational |
+| `created_at` | operational |
 
 ## workspace_access_requests
 

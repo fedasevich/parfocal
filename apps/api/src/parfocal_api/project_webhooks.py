@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import re
 import secrets
 import time
 import uuid
@@ -72,6 +73,8 @@ MAX_IDEMPOTENCY_KEY = 200
 WEBHOOK_PATH = "/api/webhooks"
 WEBHOOK_ACTOR = Actor(ActorKind.SYSTEM)
 SIGNATURE_VERSION = "v1="
+TIMESTAMP = re.compile(r"[0-9]{1,12}", re.ASCII)
+REJECTED = frozenset({"refused", "workspace-suspended"})
 
 type ProjectId = Annotated[uuid.UUID, Path()]
 type HookKey = Annotated[str, Path(min_length=32, max_length=32, pattern=r"^[0-9a-f]{32}$")]
@@ -149,7 +152,7 @@ class LinkOutcome(BaseModel):
 
 class TaskOutcome(BaseModel):
     id: uuid.UUID
-    outcome: Literal["recorded"]
+    outcome: Literal["not-attached"]
 
 
 class WebhookAnswer(BaseModel):
@@ -188,7 +191,7 @@ def signature_of(secret: str, timestamp: str, body: bytes) -> str:
 def signature_check(
     known: list[str], timestamp: str | None, signature: str | None, body: bytes, now: float
 ) -> Check:
-    if not timestamp or not signature or not timestamp.isdigit():
+    if not timestamp or not signature or not TIMESTAMP.fullmatch(timestamp):
         return Check.MISSING
     if abs(now - int(timestamp)) > SKEW_SECONDS:
         return Check.STALE
@@ -437,9 +440,10 @@ async def repeated_answer(
 async def in_project(
     connection: AsyncConnection, table: Any, row_id: uuid.UUID, project_id: uuid.UUID
 ) -> bool:
-    found = await connection.scalar(
-        select(table.c.id).where(table.c.id == row_id, table.c.project_id == project_id)
-    )
+    statement = select(table.c.id).where(table.c.id == row_id, table.c.project_id == project_id)
+    if "deleted_at" in table.c:
+        statement = statement.where(table.c.deleted_at.is_(None))
+    found = await connection.scalar(statement)
     return found is not None
 
 
@@ -463,10 +467,14 @@ async def handled(
         repeated = await repeated_answer(connection, hook.id, key)
         if repeated is not None:
             return Handled("repeated", answer=repeated)
-    deleted = await connection.scalar(
-        select(projects.c.deleted_at).where(projects.c.id == hook.project_id)
-    )
-    if deleted is not None:
+    project = (
+        await connection.execute(
+            select(projects.c.deleted_at, projects.c.archived_at).where(
+                projects.c.id == hook.project_id
+            )
+        )
+    ).one()
+    if project.deleted_at is not None or project.archived_at is not None:
         return Handled("project-closed", problem=WebhookProjectClosedError())
     if not await in_project(connection, cases, call.case_id, hook.project_id):
         return Handled("case-not-found", problem=WebhookCaseNotFoundError())
@@ -481,7 +489,7 @@ async def handled(
         call_id=uuid.uuid4(),
         project_id=hook.project_id,
         case_id=call.case_id,
-        task=TaskOutcome(id=call.task_id, outcome="recorded") if call.task_id else None,
+        task=TaskOutcome(id=call.task_id, outcome="not-attached") if call.task_id else None,
         repeated=False,
         links=links,
     )
@@ -534,7 +542,7 @@ async def answered(
     await record(
         connection,
         WEBHOOK_ACTOR,
-        AuditAction.WEBHOOK_CALLED,
+        AuditAction.WEBHOOK_REJECTED if result.outcome in REJECTED else AuditAction.WEBHOOK_CALLED,
         AuditTarget.WEBHOOK,
         hook.id,
         tenant_id=tenant_id,

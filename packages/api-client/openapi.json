@@ -72348,7 +72348,7 @@
           },
           "outcome": {
             "type": "string",
-            "const": "recorded",
+            "const": "not-attached",
             "title": "Outcome"
           }
         },
