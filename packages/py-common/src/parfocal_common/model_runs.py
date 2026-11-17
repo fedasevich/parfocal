@@ -1,3 +1,4 @@
+import logging
 import uuid
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
@@ -38,6 +39,7 @@ from parfocal_common.jobs import (
 )
 from parfocal_common.residency import UNPINNED, Placement
 from parfocal_common.stage_throughput import RunLabels, this_machine
+from parfocal_common.warm_gate import Pools
 
 KIND = "model-run"
 STAGES = (
@@ -50,6 +52,10 @@ STAGES = (
 )
 MODEL_STAGE = "model-running"
 LAB_MODEL_INPUT = "lab_model"
+LAB_POOL_FUNCTION = "lab_model"
+LAB_POOL_KIND = "lab-model"
+
+logger = logging.getLogger("parfocal.model_runs")
 LEASE_SECONDS = 60.0
 TEST_TIME_VIEWS = (1, 8)
 
@@ -330,3 +336,16 @@ async def claim_model_run(
             await connection.execute(select(model_runs).where(model_runs.c.job_id == job.job_id))
         ).one()
     return ClaimedRun(job, chosen, row.slide_id, row.task_id, settings_of(row))
+
+
+def lab_drain_call() -> dict[str, object]:
+    return {"kind": LAB_POOL_KIND}
+
+
+def wake_lab_model_pool(pools: Pools) -> bool:
+    try:
+        pools.spawn(LAB_POOL_FUNCTION, lab_drain_call())
+    except Exception as error:
+        logger.warning("lab model pool spawn failed: %s", type(error).__name__)
+        return False
+    return True

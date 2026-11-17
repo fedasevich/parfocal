@@ -26,7 +26,7 @@ ADR 0371 (a lab model run pins the model from its first answer) left three jobs 
 
 ## Consequences
 
-- Nothing wakes the `lab-model` function when a lab run starts yet, and it is not deployed. Runs queued before this change carry no marker and are left to a Parfocal drain.
+- Starting a lab run spawns the `lab-model` function once per request, as a tumor map spawns its pool, and a failed spawn still leaves the run queued. The function is not deployed yet. Runs queued before this change carry no marker and are left to a Parfocal drain.
 - The cells are stored as tile chunks but not registered in `result_chunks`, so the sealed result set counts its regions and not its cells.
 - Sending every tile of the slide costs more lab calls than a tissue-first plan would.
 - `who_can_run` is checked only when the run starts, because the stage has no person to check.

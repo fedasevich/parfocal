@@ -36,8 +36,8 @@ from parfocal_common.model_runs import (
 
 pytestmark = pytest.mark.db
 
-DETECTOR = {"name": "hovernet-pannuke", "version": "1.0.0"}
-TYPER = {"name": "classify-nuclei", "version": "2026.10"}
+DETECTOR = {"name": "hovernet", "version": "v0.9"}
+TYPER = {"name": "pathosam-hovernext", "version": "v1.2"}
 SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [90, 0], [90, 90], [0, 90], [0, 0]]]}
 BOWTIE = {"type": "Polygon", "coordinates": [[[0, 0], [90, 90], [90, 0], [0, 90], [0, 0]]]}
 
@@ -270,7 +270,7 @@ def test_starting_a_run_queues_one_job_per_slide_with_every_stage(
         f"WHERE target_type = 'model-run' AND target_id = '{first['id']}'",
     )
     assert [row[0] for row in actions] == ["model-run.started"]
-    assert '"detector":"hovernet-pannuke@1.0.0"' in str(actions[0][1])
+    assert '"detector":"hovernet@v0.9"' in str(actions[0][1])
     listed = ok(api(lab.people["owner"]).get(lab.runs, params={"batch_id": first["batch_id"]}))
     assert {run["id"] for run in listed} == {run["id"] for run in runs}
     job = ok(api(lab.people["owner"]).get(f"/api/projects/{lab.project}/jobs/{first['id']}"))
@@ -644,9 +644,9 @@ def test_each_slide_gets_a_new_result_set_from_its_run(api: ApiAs, database: str
         assert (mine["source"], mine["status"], mine["model_version"]) == (
             "run",
             "importing",
-            "1.0.0",
+            "v0.9",
         )
-        assert mine["name"] == "hovernet-pannuke 1.0.0"
+        assert mine["name"] == "HoVer-Net v0.9"
     rows = owner(
         database,
         "SELECT r.job_id FROM result_sets r "

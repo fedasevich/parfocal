@@ -4,6 +4,7 @@ from dataclasses import replace
 
 import pytest
 
+from parfocal_common.model_runs import LAB_POOL_FUNCTION, lab_drain_call
 from parfocal_common.tumor_maps import POOL_FUNCTION, drain_call, wake_tumor_map_pool
 from parfocal_ml.gpu_pool import POOLS, Family, PoolLimitError, cpu_stand_in
 from parfocal_ml.modal_pool import (
@@ -135,3 +136,12 @@ def test_a_gpu_pool_refuses_to_score_on_the_cpu() -> None:
     refuse_cpu_on_a_gpu(("CPUExecutionProvider",), None)
     with pytest.raises(NoCudaError, match="T4"):
         refuse_cpu_on_a_gpu(("CPUExecutionProvider",), "T4")
+
+
+def test_the_api_wakes_the_lab_model_pool_with_a_call_it_runs() -> None:
+    pool = next(pool for pool in POOLS if pool.family is Family.LAB_MODEL)
+    assert pool.function_name == LAB_POOL_FUNCTION
+    assert LAB_POOL_FUNCTION in pool_functions
+    assert accepts(pool, str(lab_drain_call()["kind"]))
+    assert str(lab_drain_call()["kind"]) in default_runners(pool)
+    assert drain_of(lab_drain_call()) == Drain()

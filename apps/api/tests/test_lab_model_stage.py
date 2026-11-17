@@ -8,6 +8,7 @@ import pytest
 from db_support import TEST_MASTER_KEYS, ApiAs, api_settings
 from fastapi.testclient import TestClient
 from link_support import Site, serving
+from test_gpu_warm import FakeModal
 from test_lab_models import INFER, MODELS, TOKEN, draft, lab_run, lowered, square
 from test_model_runs import Lab, make_lab, ok, run_async, started
 from workspace_support import owner
@@ -18,6 +19,7 @@ from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import Workflow
 from parfocal_common.link_fetch import policy_of
 from parfocal_common.model_runs import (
+    LAB_POOL_FUNCTION,
     MODEL_STAGE,
     PLAN,
     Detectors,
@@ -276,3 +278,39 @@ def test_the_stage_pins_the_taxonomy_classes_with_their_counts(
         f"WHERE result_sets.job_id = '{run['id']}' ORDER BY result_set_classes.position",
     )
     assert pinned == [(0, "Tumor", 4), (1, "Stroma", 0), (2, "Immune", 1), (3, "Other", 0)]
+
+
+def test_starting_a_lab_run_wakes_the_lab_model_pool_once_and_a_parfocal_run_does_not(
+    linked: ApiAs, lab: Lab, site: Site
+) -> None:
+    modal = FakeModal()
+    linked.app.state.gpu_pools = modal
+    try:
+        detector = {"detector": {"name": "hovernet", "version": "v0.9"}}
+        started(linked, lab, [lab.slides[1]], parameters=detector)
+        assert modal.spawned == []
+        site.json(INFER, ANSWER)
+        ok(linked(lab.people["owner"]).post(MODELS, json=draft(site, lab, name=NAME)))
+        body = {
+            "slide_ids": [str(lab.slides[0]), str(lab.slides[2])],
+            "scope": {"kind": "slide"},
+            "parameters": {"detector": {"name": NAME, "version": "v2.1"}},
+        }
+        runs = ok(linked(lab.people["owner"]).post(lab.runs, json=body))
+        assert len(runs) == 2
+        assert modal.spawned == [(LAB_POOL_FUNCTION, {"kind": "lab-model"})]
+    finally:
+        del linked.app.state.gpu_pools
+
+
+def test_a_failed_lab_pool_spawn_still_queues_the_run(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    modal = FakeModal(fails=True)
+    linked.app.state.gpu_pools = modal
+    try:
+        run = queued(linked, lab, site)
+    finally:
+        del linked.app.state.gpu_pools
+    assert len(modal.spawned) == 1
+    assert job_of(database, run) == ("queued", None)
