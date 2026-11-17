@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-18
+
+- SEC-027 Production burst from one address to app.parfocal.eu: logins 1 to 10 gave 302, login 11 gave 429 rate-limited with Retry-After 58, block ended 64 s after the first counted login, sign-in and /api/health fine afterwards. Result in docs/results/2026-11-17-edge-login-limit-production-burst.md. No account touched, nothing deployed.
+
 ## 2026-11-17
 
 - VIEW-076 Browser spec stage-cells-grid-pick.spec.ts added. The cells grid exists only inside a task (it lists the task's cell review objects), so the spec opens task rt14 on the cells slide, checks all 3 tiles draw from GET /api/slides/:id/cell-crops/:number with 200, then clicks C1, C2 and C3 and checks each selects (data-current, type bar) and settles on a distinct camera centre. No app fix needed. Deployed colour and GPU check still open, left in review.
