@@ -39,6 +39,7 @@ import {
   resetAnnouncementBoard,
 } from "./announcement-board.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
+import { withoutDeleted } from "./deleted-result-sets.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import {
@@ -559,7 +560,9 @@ export function workHandlers(): RequestHandler[] {
     }),
     getListProjectResultSetsMockHandler(({ params, request }) => {
       const sets = projectResultSets(String(params.projectId));
-      return hidesRt17SetsOnProject(request) ? sets.filter((set) => set.id !== rt17SetId()) : sets;
+      return withoutDeleted(
+        hidesRt17SetsOnProject(request) ? sets.filter((set) => set.id !== rt17SetId()) : sets,
+      );
     }),
     getListNotificationsMockHandler(({ request }) => ({
       notifications: inbox.list(new URL(request.url)),

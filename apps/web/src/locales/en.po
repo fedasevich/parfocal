@@ -5861,19 +5861,35 @@ msgstr "Defaults that suit most cell models. The test reads the server's own val
 
 #: src/annotations/pin-layer.tsx
 #: src/screens/annotate-task/annotate-task-view.tsx
+#: src/screens/project/slides-tab.tsx
 #: src/viewer/guided-check.tsx
 msgid "Delete"
 msgstr "Delete"
 
 #. placeholder {0}: selectedAi.object
+#. placeholder {0}: set.name
+#: src/screens/project/slides-tab.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Delete {0}"
 msgstr "Delete {0}"
+
+#. placeholder {0}: set.name
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete {0}?"
+msgstr "Delete {0}?"
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete anyway"
+msgstr "Delete anyway"
 
 #: src/screens/project/project-delete-dialog.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Delete project"
 msgstr "Delete project"
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "Delete result set"
+msgstr "Delete result set"
 
 #: src/viewer/slide-stage.tsx
 msgid "Delete shape"
@@ -8137,6 +8153,10 @@ msgstr "It goes on A1 only. Every result set records its file, model and version
 #: src/screens/admin/api-section.tsx
 msgid "It is shown once. Parfocal keeps only a fingerprint of it."
 msgstr "It is shown once. Parfocal keeps only a fingerprint of it."
+
+#: src/screens/project/result-set-delete-dialog.tsx
+msgid "It leaves this slide and the viewer. The delete is kept in the audit log."
+msgstr "It leaves this slide and the viewer. The delete is kept in the audit log."
 
 #: src/screens/onboarding/invite-screen.tsx
 msgid "It may have expired, been used or been withdrawn. Ask the person who invited you to send a new one."

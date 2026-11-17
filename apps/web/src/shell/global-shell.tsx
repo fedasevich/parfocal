@@ -11,7 +11,7 @@ import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/com
 import type { PersonInfo } from "@parfocal/ui/components/person";
 import { personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { lazy, type ReactNode, Suspense } from "react";
 import { canOpenAdmin } from "../screens/admin/admin-access.ts";
 import { projectColour } from "../screens/palette.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -28,6 +28,10 @@ import { foldedShellRouteIds } from "./shell-routes.ts";
 import { shellStore, useShell } from "./shell-store.ts";
 import { ShellSidebarContext } from "./sidebar-toggle.tsx";
 import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx";
+
+const NewProjectDrawer = lazy(async () => ({
+  default: (await import("../screens/project/drawers.tsx")).NewProjectDrawer,
+}));
 
 export function personOf(me: Me | undefined): PersonInfo {
   return personFromProfile(me ?? { display_name: "", initials: "", avatar_colour: 0 });
@@ -67,6 +71,8 @@ export function GlobalShell({ children }: { children: ReactNode }) {
     select: (matches) => matches.some((match) => foldedShellRouteIds.has(match.routeId)),
   });
   const navOpen = useShell((state) => state.navOpen);
+  const newProjectOpen = useShell((state) => state.newProjectOpen);
+  const closeNewProject = () => shellStore.setState({ newProjectOpen: false });
   const routePending = useRoutePending();
   const showSide = !folded || navOpen;
   const firstProject = projects[0]?.id ?? "";
@@ -154,6 +160,17 @@ export function GlobalShell({ children }: { children: ReactNode }) {
         >
           {children}
         </ShellSidebarContext>
+        {newProjectOpen ? (
+          <Suspense fallback={null}>
+            <NewProjectDrawer
+              onClose={closeNewProject}
+              onCreated={(created) => {
+                closeNewProject();
+                void goTo(destinations.upload(created.id));
+              }}
+            />
+          </Suspense>
+        ) : null}
       </AppShell>
     </JobsTrayProvider>
   );

@@ -4,9 +4,10 @@ import { createStore } from "zustand/vanilla";
 export type ShellState = {
   initialsOnly: boolean;
   navOpen: boolean;
+  newProjectOpen: boolean;
 };
 
-const initial: ShellState = { initialsOnly: false, navOpen: false };
+const initial: ShellState = { initialsOnly: false, navOpen: false, newProjectOpen: false };
 
 const store = createStore<ShellState>(() => initial);
 
