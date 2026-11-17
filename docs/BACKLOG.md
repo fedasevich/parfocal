@@ -4886,7 +4886,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a test proves every seeded `original_key` yields a folder the edge's shared-folder rule accepts, the reset test proves the publish runs before the truncate, and the tile of a gallery slide on app.parfocal.eu answers 206.
   Depends on TEST-037. Size: S.
 
-- [ ] TEST-049 · The browser smoke passes on every production deploy
+- [x] TEST-049 · The browser smoke passes on every production deploy
   The browser-smoke job of the deploy workflow failed on every production deploy with 403 on GET /api/projects, because the smoke account smoke-walk@parfocal.eu had no workspace membership and every reset wipes the app tables. Make the showcase seed give each address in the repository variable SEED_VIEWER_EMAILS a reviewer seat with a viewer seat on the first gallery project of the first workspace, additively and on every reset, pass the variable through the Reset production workflow, add the same rows to the current Frankfurt database with an additive insert, and keep the smoke walk to reads.
   Done when a seed test shows the viewer seat is created once and read-only on repeated seeds, and the next production deploy's browser-smoke job passes without a reset.
   Depends on TEST-020. Size: S.
