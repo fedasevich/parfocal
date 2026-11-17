@@ -4100,7 +4100,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when API tests cover the update, its audit event and a refused empty name, and a browser test edits the name and finds it after a reload.
   Depends on SET-010.
   Size: S.
-- [ ] SET-015 · Settings show previews for layout choices and one scope legend instead of a label per row
+- [x] SET-015 · Settings show previews for layout choices and one scope legend instead of a label per row
   The owner's review of app.parfocal.eu on 2026-11-17 found choices such as Tools (left rail or bottom dock) offered as two words with a long sentence under them, where the mock showed small preview pictures of each layout, and every row repeating its scope (Personal, This computer) under it although the page has a legend on the left.
   Give every layout and appearance choice a small SVG preview of what it looks like, as the frozen mock does, show each row's scope as one icon that the legend explains, and make each row's explanatory sentence show once as SHELL-023 (notes show once and stay findable) and Fable's recommendation in the log describe.
   Done when every layout choice in Settings has a preview, no row prints its scope as text, and a browser test checks both on the Settings page.
