@@ -82,5 +82,10 @@ export function andJoin(items: readonly string[]): string {
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
+export const dotJoin = (parts: readonly (string | null | undefined)[]): string =>
+  parts
+    .filter((part): part is string => typeof part === "string" && part.trim() !== "")
+    .join(" · ");
+
 export const percent = (part: number, whole: number) =>
   whole > 0 ? Math.round((100 * part) / whole) : 0;

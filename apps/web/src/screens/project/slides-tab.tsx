@@ -37,6 +37,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useState } from "react";
 import { useFormat } from "../../format.ts";
 import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx";
+import { dotJoin } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { SlideThumb } from "../slide-thumb.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
@@ -45,6 +46,7 @@ import { ResultSetDeleteDialog } from "./result-set-delete-dialog.tsx";
 import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
 import { moveTitle } from "./slide-move-model.ts";
+import { reviewersOf } from "./slide-reviews.ts";
 
 type ProjectSlide = SlideRowData & {
   file: string;
@@ -483,15 +485,18 @@ function SlideRow({
         <TableCell>
           {slide.reviews.length > 0 ? (
             <span className="flex flex-wrap gap-x-5.5 gap-y-1.5">
-              {slide.reviews.map((review) => (
+              {reviewersOf(slide.reviews).map((review) => (
                 <span
-                  key={`${review.task_code}-${review.user_id}`}
+                  key={review.user_id}
                   className={reviewLook[review.state]?.tone ?? "text-fg-faint"}
                 >
                   <Person
                     person={people.byId(review.user_id)}
                     size={22}
-                    sub={reviewLook[review.state]?.text ?? review.state}
+                    sub={dotJoin([
+                      reviewLook[review.state]?.text ?? review.state,
+                      review.tasks > 1 ? `${review.tasks} tasks` : null,
+                    ])}
                     className="[&_small]:text-current"
                   />
                 </span>

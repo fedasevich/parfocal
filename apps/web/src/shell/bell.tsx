@@ -17,7 +17,7 @@ import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { defaultIdleLockMinutes } from "../session/lock-rules.ts";
-import { inFilter, kindIcons, payloadText } from "./activity.ts";
+import { inFilter, kindIcons, payloadText, titleOf } from "./activity.ts";
 import { destinations } from "./destinations.ts";
 import { chimeUnlessHeld, playChime, readStatNotice, shownInBell } from "./notification-gate.ts";
 import { useOverlay } from "./overlays.ts";
@@ -51,7 +51,7 @@ const toNotification = (item: InboxItem): NotificationItem => {
     id: item.id,
     group: groupOf(item),
     icon: kindIcons[item.kind] ?? "bell",
-    title: payloadText(item, "title") ?? "",
+    title: titleOf(item),
     detail: payloadText(item, "detail"),
     quote:
       quote && objectId
