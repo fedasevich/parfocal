@@ -242,6 +242,7 @@ def create_app(
     app.include_router(model_registry.router)
     app.include_router(model_registry.platform_router)
     app.include_router(lab_models.router)
+    app.include_router(lab_models.project_router)
     app.include_router(model_run_progress.router)
     app.include_router(notifications.router)
     app.include_router(opinion_forms.template_router)

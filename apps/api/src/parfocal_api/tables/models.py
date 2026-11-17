@@ -194,6 +194,14 @@ lab_model_projects = Table(
         index=True,
         info=OPERATIONAL,
     ),
+    Column("tiles_confirmed_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "tiles_confirmed_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
     tenant_foreign_key("lab_model_id", "lab_models", ondelete="CASCADE"),
     tenant_foreign_key("project_id", "projects", ondelete="CASCADE"),
 )

@@ -1,12 +1,14 @@
 import uuid
 from collections import Counter
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
 import httpx2
 from fastapi import APIRouter, Path, Request
 from pydantic import BaseModel, Field, StringConstraints, model_validator
-from sqlalchemy import func, insert, select
+from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.engine import Row
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -21,10 +23,14 @@ from parfocal_api.model_catalogue import ModelVersion
 from parfocal_api.model_registry import LicenceIn, licence_in_of, licence_of, licence_values
 from parfocal_api.permissions import Permission, member_of, require
 from parfocal_api.principals import Principal, database_scope
-from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
+from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
+from parfocal_api.project_access import role_in
+from parfocal_api.projects import visible
 from parfocal_api.tables import (
     LabModelRunners,
     LabModelSignIn,
+    PrivacyMode,
+    ProjectRole,
     lab_model_projects,
     lab_models,
     projects,
@@ -71,6 +77,7 @@ type Magnification = Literal[10, 20, 40]
 type ModelId = Annotated[uuid.UUID, Path()]
 
 router = APIRouter(prefix="/api/tenant/models", tags=["tenant"])
+project_router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 SUGGESTIONS: dict[TaxonomyTemplate, dict[str, str]] = {
     TaxonomyTemplate.SENTINEL_NODE: {
@@ -108,6 +115,31 @@ class LabModelProjectNotFoundError(BadRequestError):
     title = "A chosen project is not in this workspace"
 
 
+class LabModelProjectNotChosenError(BadRequestError):
+    code = "lab-model-project-not-chosen"
+    title = "A confirmed project is not one the model is added to"
+
+
+class LabModelTilesNotNeededError(BadRequestError):
+    code = "lab-model-tiles-not-needed"
+    title = "Only a clinical project confirms that its tiles go to a lab server"
+
+
+class LabModelTilesOwnerOnlyError(ForbiddenError):
+    code = "lab-model-tiles-owner-only"
+    title = "Only the project's owner confirms that its tiles go to this server"
+
+
+class LabModelNotAllowedError(ForbiddenError):
+    code = "lab-model-not-allowed"
+    title = "This project may not use this lab model"
+
+
+class LabModelTilesUnconfirmedError(ForbiddenError):
+    code = "lab-model-tiles-unconfirmed"
+    title = "The project's owner has not confirmed that its tiles go to this server"
+
+
 class LabModelExistsError(ConflictError):
     code = "lab-model-exists"
     title = "A model with this name and version is already connected"
@@ -143,6 +175,7 @@ class LabModelDraft(ServerSignIn):
     class_map: list[ClassMatch] = Field(max_length=MAX_CLASSES)
     who_can_run: LabModelRunners
     project_ids: list[uuid.UUID] = Field(max_length=200)
+    confirmed_project_ids: list[uuid.UUID] = Field(default=[], max_length=200)
     licence: LicenceIn | None = None
 
     @model_validator(mode="after")
@@ -199,6 +232,11 @@ class LabModelTest(BaseModel):
     classes: list[SentClass]
 
 
+class TileSharing(BaseModel):
+    project_id: uuid.UUID
+    confirmed_at: datetime | None
+
+
 class LabModel(BaseModel):
     id: uuid.UUID
     name: str
@@ -214,6 +252,7 @@ class LabModel(BaseModel):
     class_map: list[ClassMatch]
     who_can_run: LabModelRunners
     project_ids: list[uuid.UUID]
+    tile_sharing: list[TileSharing]
     licence: LicenceIn | None
     created_at: datetime
 
@@ -374,14 +413,93 @@ async def check_projects(connection: AsyncConnection, ids: list[uuid.UUID]) -> l
     return chosen
 
 
-async def project_ids_of(connection: AsyncConnection, model_id: uuid.UUID) -> list[uuid.UUID]:
+async def clinical_of(connection: AsyncConnection, ids: list[uuid.UUID]) -> set[uuid.UUID]:
+    if not ids:
+        return set()
     rows = await connection.scalars(
-        select(lab_model_projects.c.project_id)
+        select(projects.c.id).where(
+            projects.c.id.in_(ids), projects.c.privacy_mode == PrivacyMode.CLINICAL
+        )
+    )
+    return set(rows)
+
+
+async def check_owner(
+    connection: AsyncConnection, principal: Principal, ids: list[uuid.UUID]
+) -> None:
+    for project_id in ids:
+        if await role_in(connection, principal, project_id) is not ProjectRole.OWNER:
+            raise LabModelTilesOwnerOnlyError
+
+
+async def confirm_tiles(
+    connection: AsyncConnection,
+    principal: Principal,
+    model_id: uuid.UUID,
+    host: str,
+    ids: list[uuid.UUID],
+) -> None:
+    if not ids:
+        return
+    confirmed = await connection.scalars(
+        update(lab_model_projects)
+        .where(
+            lab_model_projects.c.lab_model_id == model_id,
+            lab_model_projects.c.project_id.in_(ids),
+            lab_model_projects.c.tiles_confirmed_at.is_(None),
+        )
+        .values(tiles_confirmed_at=func.now(), tiles_confirmed_by_user_id=user_of(principal))
+        .returning(lab_model_projects.c.project_id)
+    )
+    for project_id in sorted(confirmed):
+        await audited(
+            connection,
+            principal,
+            AuditAction.LAB_MODEL_TILES_CONFIRMED,
+            model_id,
+            {"host": host, "project": str(project_id)},
+        )
+
+
+async def project_rows_of(
+    connection: AsyncConnection, model_id: uuid.UUID
+) -> Sequence[Row[Any, Any, Any]]:
+    rows = await connection.execute(
+        select(
+            lab_model_projects.c.project_id,
+            lab_model_projects.c.tiles_confirmed_at,
+            projects.c.privacy_mode,
+        )
         .join(projects, projects.c.id == lab_model_projects.c.project_id)
         .where(lab_model_projects.c.lab_model_id == model_id, projects.c.deleted_at.is_(None))
         .order_by(lab_model_projects.c.project_id)
     )
-    return list(rows)
+    return rows.all()
+
+
+async def check_lab_run(
+    connection: AsyncConnection, project_id: uuid.UUID, name: str, version: str | None
+) -> None:
+    statement = select(lab_models.c.id).where(lab_models.c.name == name)
+    if version is not None:
+        statement = statement.where(lab_models.c.version == version)
+    model_id = await connection.scalar(statement.order_by(lab_models.c.created_at.desc()).limit(1))
+    if model_id is None:
+        return
+    allowed = (
+        await connection.execute(
+            select(lab_model_projects.c.tiles_confirmed_at, projects.c.privacy_mode)
+            .join(projects, projects.c.id == lab_model_projects.c.project_id)
+            .where(
+                lab_model_projects.c.lab_model_id == model_id,
+                lab_model_projects.c.project_id == project_id,
+            )
+        )
+    ).first()
+    if allowed is None:
+        raise LabModelNotAllowedError
+    if allowed.privacy_mode == PrivacyMode.CLINICAL and allowed.tiles_confirmed_at is None:
+        raise LabModelTilesUnconfirmedError
 
 
 async def model_row(connection: AsyncConnection, model_id: uuid.UUID) -> Row[Any]:
@@ -392,6 +510,7 @@ async def model_row(connection: AsyncConnection, model_id: uuid.UUID) -> Row[Any
 
 
 async def lab_model_of(connection: AsyncConnection, row: Row[Any]) -> LabModel:
+    chosen = await project_rows_of(connection, row.id)
     return LabModel(
         id=row.id,
         name=row.name,
@@ -406,7 +525,12 @@ async def lab_model_of(connection: AsyncConnection, row: Row[Any]) -> LabModel:
         taxonomy=TaxonomyTemplate(row.taxonomy),
         class_map=[ClassMatch.model_validate(match) for match in row.class_map],
         who_can_run=LabModelRunners(row.who_can_run),
-        project_ids=await project_ids_of(connection, row.id),
+        project_ids=[project.project_id for project in chosen],
+        tile_sharing=[
+            TileSharing(project_id=project.project_id, confirmed_at=project.tiles_confirmed_at)
+            for project in chosen
+            if project.privacy_mode == PrivacyMode.CLINICAL
+        ],
         licence=licence_in_of(licence) if (licence := licence_of(row)) else None,
         created_at=row.created_at,
     )
@@ -452,6 +576,10 @@ async def connect_lab_model(
     await check_address(settings, draft)
     check_class_map(draft)
     chosen = await check_projects(connection, draft.project_ids)
+    if not set(draft.confirmed_project_ids) <= set(chosen):
+        raise LabModelProjectNotChosenError
+    confirmed = sorted(await clinical_of(connection, sorted(set(draft.confirmed_project_ids))))
+    await check_owner(connection, principal, confirmed)
     tenant_id = database_scope(principal).tenant_id
     model_id = uuid.uuid4()
     sealed = None
@@ -504,6 +632,7 @@ async def connect_lab_model(
             "projects": [str(project_id) for project_id in chosen],
         },
     )
+    await confirm_tiles(connection, principal, model_id, host_of(draft.address), confirmed)
     return await lab_model_of(connection, await model_row(connection, model_id))
 
 
@@ -551,3 +680,140 @@ async def test_connected_lab_model(
         {"host": host_of(row.address), "outcome": result.outcome},
     )
     return result
+
+
+type ProjectId = Annotated[uuid.UUID, Path()]
+
+
+@router.put(
+    "/{model_id}/projects/{project_id}",
+    operation_id="addLabModelProject",
+    **require(Permission.INTEGRATIONS, write=True),
+)
+async def add_lab_model_project(
+    model_id: ModelId,
+    project_id: ProjectId,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> LabModel:
+    row = await model_row(connection, model_id)
+    await check_projects(connection, [project_id])
+    added = await connection.execute(
+        upsert(lab_model_projects)
+        .values(
+            lab_model_id=model_id,
+            project_id=project_id,
+            tenant_id=database_scope(principal).tenant_id,
+        )
+        .on_conflict_do_nothing(index_elements=["lab_model_id", "project_id"])
+        .returning(lab_model_projects.c.project_id)
+    )
+    if added.first() is not None:
+        await audited(
+            connection,
+            principal,
+            AuditAction.LAB_MODEL_PROJECT_ADDED,
+            model_id,
+            {"host": host_of(row.address), "project": str(project_id)},
+        )
+    return await lab_model_of(connection, row)
+
+
+@router.delete(
+    "/{model_id}/projects/{project_id}",
+    operation_id="removeLabModelProject",
+    **require(Permission.INTEGRATIONS, write=True),
+)
+async def remove_lab_model_project(
+    model_id: ModelId,
+    project_id: ProjectId,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> LabModel:
+    row = await model_row(connection, model_id)
+    removed = (
+        await connection.execute(
+            delete(lab_model_projects)
+            .where(
+                lab_model_projects.c.lab_model_id == model_id,
+                lab_model_projects.c.project_id == project_id,
+            )
+            .returning(lab_model_projects.c.tiles_confirmed_at)
+        )
+    ).first()
+    if removed is not None:
+        await audited(
+            connection,
+            principal,
+            AuditAction.LAB_MODEL_PROJECT_REMOVED,
+            model_id,
+            {
+                "host": host_of(row.address),
+                "project": str(project_id),
+                "tiles_confirmed": removed.tiles_confirmed_at is not None,
+            },
+        )
+    return await lab_model_of(connection, row)
+
+
+@router.post(
+    "/{model_id}/projects/{project_id}/tile-sharing",
+    operation_id="confirmLabModelTileSharing",
+    **require(Permission.RUN_MODELS, write=True),
+)
+async def confirm_lab_model_tile_sharing(
+    model_id: ModelId,
+    project_id: ProjectId,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> LabModel:
+    row = await model_row(connection, model_id)
+    chosen = [project.project_id for project in await project_rows_of(connection, model_id)]
+    if project_id not in chosen:
+        raise LabModelProjectNotChosenError
+    if not await clinical_of(connection, [project_id]):
+        raise LabModelTilesNotNeededError
+    await check_owner(connection, principal, [project_id])
+    await confirm_tiles(connection, principal, model_id, host_of(row.address), [project_id])
+    return await lab_model_of(connection, row)
+
+
+class ProjectLabModel(BaseModel):
+    id: uuid.UUID
+    name: str
+    version: str
+    host: str
+    confirmed_at: datetime | None
+
+
+@project_router.get(
+    "/{project_id}/lab-models",
+    operation_id="listProjectLabModels",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_project_lab_models(
+    project_id: ProjectId, principal: CurrentPrincipal, connection: TenantConnection
+) -> list[ProjectLabModel]:
+    await visible(connection, principal, project_id)
+    rows = await connection.execute(
+        select(
+            lab_models.c.id,
+            lab_models.c.name,
+            lab_models.c.version,
+            lab_models.c.address,
+            lab_model_projects.c.tiles_confirmed_at,
+        )
+        .join(lab_model_projects, lab_model_projects.c.lab_model_id == lab_models.c.id)
+        .where(lab_model_projects.c.project_id == project_id)
+        .order_by(lab_models.c.name, lab_models.c.version)
+    )
+    return [
+        ProjectLabModel(
+            id=row.id,
+            name=row.name,
+            version=row.version,
+            host=host_of(row.address),
+            confirmed_at=row.tiles_confirmed_at,
+        )
+        for row in rows
+    ]

@@ -122,6 +122,7 @@ import type {
   Preference,
   Project,
   ProjectClass,
+  ProjectLabModel,
   ProjectModel,
   Question,
   QueuedObject,
@@ -4542,6 +4543,15 @@ export const getConnectLabModelResponseMock = (
   project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => faker.string.uuid(),
   ),
+  tile_sharing: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      project_id: faker.string.uuid(),
+      confirmed_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
   licence: faker.helpers.arrayElement([
     {
       weights: faker.string.alpha({ length: { min: 1, max: 400 } }),
@@ -4595,6 +4605,15 @@ export const getGetLabModelResponseMock = (
   who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
   project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => faker.string.uuid(),
+  ),
+  tile_sharing: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      project_id: faker.string.uuid(),
+      confirmed_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
   ),
   licence: faker.helpers.arrayElement([
     {
@@ -4676,6 +4695,207 @@ export const getTestConnectedLabModelResponseMock = (
   ),
   ...overrideResponse,
 });
+
+export const getAddLabModelProjectResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  tile_sharing: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      project_id: faker.string.uuid(),
+      confirmed_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
+  licence: faker.helpers.arrayElement([
+    {
+      weights: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      code: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      data: Array.from({ length: faker.number.int({ min: 1, max: 20 }) }, (_, i) => i + 1).map(
+        () => ({
+          dataset: faker.string.alpha({ length: { min: 1, max: 400 } }),
+          licence: faker.string.alpha({ length: { min: 1, max: 400 } }),
+          licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+        }),
+      ),
+      source: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      read_on: faker.date.past().toISOString().slice(0, 10),
+    },
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getRemoveLabModelProjectResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  tile_sharing: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      project_id: faker.string.uuid(),
+      confirmed_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
+  licence: faker.helpers.arrayElement([
+    {
+      weights: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      code: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      data: Array.from({ length: faker.number.int({ min: 1, max: 20 }) }, (_, i) => i + 1).map(
+        () => ({
+          dataset: faker.string.alpha({ length: { min: 1, max: 400 } }),
+          licence: faker.string.alpha({ length: { min: 1, max: 400 } }),
+          licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+        }),
+      ),
+      source: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      read_on: faker.date.past().toISOString().slice(0, 10),
+    },
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getConfirmLabModelTileSharingResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  tile_sharing: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      project_id: faker.string.uuid(),
+      confirmed_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
+  licence: faker.helpers.arrayElement([
+    {
+      weights: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      code: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      data: Array.from({ length: faker.number.int({ min: 1, max: 20 }) }, (_, i) => i + 1).map(
+        () => ({
+          dataset: faker.string.alpha({ length: { min: 1, max: 400 } }),
+          licence: faker.string.alpha({ length: { min: 1, max: 400 } }),
+          licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+        }),
+      ),
+      source: faker.string.alpha({ length: { min: 1, max: 400 } }),
+      read_on: faker.date.past().toISOString().slice(0, 10),
+    },
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListProjectLabModelsResponseMock = (): ProjectLabModel[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    confirmed_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  }));
 
 export const getListModelRunAreasResponseMock = (
   overrideResponse: Partial<Extract<RunAreas, object>> = {},
@@ -18801,6 +19021,96 @@ export const getTestConnectedLabModelMockHandler = (
   );
 };
 
+export const getAddLabModelProjectMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/models/:modelId/projects/:projectId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAddLabModelProjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRemoveLabModelProjectMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/models/:modelId/projects/:projectId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRemoveLabModelProjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getConfirmLabModelTileSharingMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models/:modelId/projects/:projectId/tile-sharing",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getConfirmLabModelTileSharingResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListProjectLabModelsMockHandler = (
+  overrideResponse?:
+    | ProjectLabModel[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectLabModel[]> | ProjectLabModel[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/lab-models",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListProjectLabModelsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListModelRunAreasMockHandler = (
   overrideResponse?:
     | RunAreas
@@ -25470,6 +25780,10 @@ export const getParfocalAPIMock = () => [
   getConnectLabModelMockHandler(),
   getGetLabModelMockHandler(),
   getTestConnectedLabModelMockHandler(),
+  getAddLabModelProjectMockHandler(),
+  getRemoveLabModelProjectMockHandler(),
+  getConfirmLabModelTileSharingMockHandler(),
+  getListProjectLabModelsMockHandler(),
   getListModelRunAreasMockHandler(),
   getGetModelRunTileMockHandler(),
   getListNotificationPreferencesMockHandler(),

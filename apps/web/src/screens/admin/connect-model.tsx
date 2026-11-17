@@ -4,6 +4,7 @@ import {
   type LabModelConnection,
   type LabModelTest,
   type Problem,
+  type Project,
   useConnectLabModel,
   useGetLabModelConnection,
   useListProjects,
@@ -45,6 +46,7 @@ import { projectColour } from "../palette.ts";
 import { okData } from "../placeholder.tsx";
 import { adminHref } from "./admin-shell.tsx";
 import { InfoLine, type Notify, TextLink } from "./common.tsx";
+import { TileSharingModal } from "./tile-sharing-modal.tsx";
 
 type SignIn = LabModelConnection["sign_in"];
 type WhoCanRun = LabModelConnection["who_can_run"];
@@ -61,6 +63,7 @@ type Form = {
   classMap: Record<string, string | null> | null;
   whoCanRun: WhoCanRun;
   projectIds: string[];
+  confirmedProjectIds: string[];
 };
 
 const leaveOut = "out";
@@ -87,6 +90,7 @@ function startForm(data: LabModelConnection): Form {
     classMap: null,
     whoCanRun: data.who_can_run,
     projectIds: data.project_ids,
+    confirmedProjectIds: [],
   };
 }
 
@@ -364,7 +368,14 @@ function ConnectModelBody({
   const current = { ...(form ?? startForm(data)), secret };
   const update = (change: Partial<Form>) => {
     if (change.secret !== undefined) setSecret(change.secret);
-    setForm({ ...current, ...change });
+    const moved = change.address !== undefined && change.address !== current.address;
+    const unconfirmed = moved
+      ? {
+          projectIds: current.projectIds.filter((id) => !current.confirmedProjectIds.includes(id)),
+          confirmedProjectIds: [],
+        }
+      : {};
+    setForm({ ...current, ...change, ...unconfirmed });
   };
   const steps = [
     { label: t`Connect and test` },
@@ -753,6 +764,19 @@ function MapStep({
   const { taxonomies, options, map } = useClassMap(data, form);
   const projects = okData(useListProjects().data) ?? [];
   const chosenProjects = projects.filter((project) => form.projectIds.includes(project.id));
+  const [asking, setAsking] = useState<Project | null>(null);
+  const choose = (project: Project, on: boolean) => {
+    if (on && project.privacy_mode === "clinical" && project.my_role === "owner") {
+      setAsking(project);
+      return;
+    }
+    update({
+      projectIds: on
+        ? [...form.projectIds, project.id]
+        : form.projectIds.filter((id) => id !== project.id),
+      confirmedProjectIds: form.confirmedProjectIds.filter((id) => id !== project.id),
+    });
+  };
   const counts = new Map(data.test.classes.map((item) => [item.name, item.cells]));
   return (
     <>
@@ -838,21 +862,36 @@ function MapStep({
               >
                 <Checkbox
                   checked={form.projectIds.includes(project.id)}
-                  onCheckedChange={(on) =>
-                    update({
-                      projectIds: on
-                        ? [...form.projectIds, project.id]
-                        : form.projectIds.filter((id) => id !== project.id),
-                    })
-                  }
+                  onCheckedChange={(on) => choose(project, on)}
                 />
                 <Icon name="folder" style={{ color: projectColour(index) }} />
                 <b className="flex-1 font-semibold text-fg">{project.name}</b>
+                {project.privacy_mode === "clinical" && (
+                  <span className="text-caption text-fg-dim">
+                    {form.confirmedProjectIds.includes(project.id)
+                      ? t`Tiles go to ${hostOf(form.address)}`
+                      : t`Clinical, its owner confirms sending tiles`}
+                  </span>
+                )}
                 <span className="font-mono text-caption text-fg-dim">{project.code}</span>
               </label>
             ))}
           </div>
         </Labelled>
+        {asking && (
+          <TileSharingModal
+            projectName={asking.name}
+            host={hostOf(form.address)}
+            onClose={() => setAsking(null)}
+            onConfirm={() => {
+              update({
+                projectIds: [...form.projectIds, asking.id],
+                confirmedProjectIds: [...form.confirmedProjectIds, asking.id],
+              });
+              setAsking(null);
+            }}
+          />
+        )}
       </Zone>
       <Zone title={t`Summary`}>
         <Hint>
@@ -966,6 +1005,7 @@ function MapBar({
                   })),
                   who_can_run: form.whoCanRun,
                   project_ids: form.projectIds,
+                  confirmed_project_ids: form.confirmedProjectIds,
                 },
               },
               {

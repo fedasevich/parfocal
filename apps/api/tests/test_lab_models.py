@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import uuid
 from collections.abc import Iterator
 from typing import Any
 
@@ -9,7 +10,7 @@ from db_support import ApiAs, api_settings
 from fastapi.testclient import TestClient
 from link_support import Site, serving
 from test_model_runs import Lab, make_lab, ok, problem
-from workspace_support import make_project, make_tenant, owner
+from workspace_support import join_project, make_project, make_slide, make_tenant, owner
 
 from parfocal_api.app import create_app
 from parfocal_common.lab_model_call import CALL_FAILURES, CallRefusal
@@ -360,3 +361,168 @@ def test_a_deleted_project_leaves_the_models_project_list(
     assert model["project_ids"] == [str(lab.project)]
     owner(database, f"UPDATE projects SET deleted_at = now() WHERE id = '{lab.project}'")
     assert ok(acting.get(f"{MODELS}/{model['id']}"))["project_ids"] == []
+
+
+def clinical_project(database: str, lab: Lab) -> tuple[uuid.UUID, uuid.UUID]:
+    project = make_project(database, lab.tenant, "clinical")
+    join_project(database, project, lab.people["owner"], "owner")
+    join_project(database, project, lab.people["colleague"], "reviewer")
+    return project, make_slide(database, lab.tenant, project, "Clinical slide")
+
+
+def lab_run(api: ApiAs, lab: Lab, project: uuid.UUID, slide: uuid.UUID, who: str = "owner") -> Any:
+    return api(lab.people[who]).post(
+        f"/api/projects/{project}/model-runs",
+        json={
+            "slide_ids": [str(slide)],
+            "scope": {"kind": "slide"},
+            "parameters": {"detector": {"name": "lab-hovernet", "version": "v2.1"}},
+        },
+    )
+
+
+def lab_actions(database: str, lab: Lab) -> list[tuple[str, dict[str, Any]]]:
+    rows = owner(
+        database,
+        "SELECT action, details::text FROM audit_events "
+        f"WHERE tenant_id = '{lab.tenant}' AND action LIKE 'lab-model.%' ORDER BY seq",
+    )
+    return [(action, json.loads(details)) for action, details in rows]
+
+
+def test_a_clinical_project_without_a_tile_confirmation_refuses_the_lab_model(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    clinical, slide = clinical_project(database, lab)
+    acting = linked(lab.people["owner"])
+    model = ok(
+        acting.post(
+            MODELS,
+            json=draft(site, lab, name="lab-hovernet", project_ids=[str(clinical)]),
+        )
+    )
+    assert model["tile_sharing"] == [{"project_id": str(clinical), "confirmed_at": None}]
+    assert problem(lab_run(linked, lab, clinical, slide)) == (403, "lab-model-tiles-unconfirmed")
+    assert problem(lab_run(linked, lab, lab.project, lab.slides[0])) == (
+        403,
+        "lab-model-not-allowed",
+    )
+
+
+def test_confirming_tile_sharing_is_stored_audited_and_lets_the_check_pass(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    clinical, slide = clinical_project(database, lab)
+    acting = linked(lab.people["owner"])
+    body = draft(
+        site,
+        lab,
+        name="lab-hovernet",
+        project_ids=[str(lab.project), str(clinical)],
+        confirmed_project_ids=[str(clinical)],
+    )
+    model = ok(acting.post(MODELS, json=body))
+    [sharing] = model["tile_sharing"]
+    assert sharing["project_id"] == str(clinical)
+    assert sharing["confirmed_at"] is not None
+    [(confirmer,)] = owner(
+        database,
+        "SELECT tiles_confirmed_by_user_id FROM lab_model_projects "
+        f"WHERE lab_model_id = '{model['id']}' AND project_id = '{clinical}'",
+    )
+    assert confirmer == lab.people["owner"].user_id
+    assert lab_actions(database, lab)[-1] == (
+        "lab-model.tiles-confirmed",
+        {"host": site.origin, "project": str(clinical)},
+    )
+    assert lab_run(linked, lab, clinical, slide).status_code != 403
+
+
+def test_only_the_project_owner_confirms_and_only_for_a_clinical_project(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    clinical, _ = clinical_project(database, lab)
+    owner(database, f"DELETE FROM project_members WHERE project_id = '{clinical}'")
+    acting = linked(lab.people["owner"])
+    body = draft(
+        site,
+        lab,
+        name="lab-hovernet",
+        project_ids=[str(clinical)],
+        confirmed_project_ids=[str(clinical)],
+    )
+    assert problem(acting.post(MODELS, json=body)) == (403, "lab-model-tiles-owner-only")
+    other = draft(site, lab, name="lab-hovernet", confirmed_project_ids=[str(clinical)])
+    assert problem(acting.post(MODELS, json=other)) == (400, "lab-model-project-not-chosen")
+    model = ok(acting.post(MODELS, json=draft(site, lab, name="lab-hovernet")))
+    assert problem(acting.post(f"{MODELS}/{model['id']}/projects/{lab.project}/tile-sharing")) == (
+        400,
+        "lab-model-tiles-not-needed",
+    )
+    assert model["tile_sharing"] == []
+
+
+def test_removing_the_project_clears_the_confirmation_and_the_owner_confirms_again(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    clinical, slide = clinical_project(database, lab)
+    acting = linked(lab.people["owner"])
+    body = draft(
+        site,
+        lab,
+        name="lab-hovernet",
+        project_ids=[str(clinical)],
+        confirmed_project_ids=[str(clinical)],
+    )
+    model = ok(acting.post(MODELS, json=body))
+    on_project = f"{MODELS}/{model['id']}/projects/{clinical}"
+    removed = ok(acting.delete(on_project))
+    assert (removed["project_ids"], removed["tile_sharing"]) == ([], [])
+    assert problem(lab_run(linked, lab, clinical, slide)) == (403, "lab-model-not-allowed")
+    added = ok(acting.put(on_project))
+    assert added["tile_sharing"] == [{"project_id": str(clinical), "confirmed_at": None}]
+    assert problem(lab_run(linked, lab, clinical, slide)) == (403, "lab-model-tiles-unconfirmed")
+    reviewer = linked(lab.people["colleague"]).post(f"{on_project}/tile-sharing")
+    assert problem(reviewer) == (403, "lab-model-tiles-owner-only")
+    confirmed = ok(linked(lab.people["owner"]).post(f"{on_project}/tile-sharing"))
+    assert confirmed["tile_sharing"][0]["confirmed_at"] is not None
+    assert ok(linked(lab.people["owner"]).post(f"{on_project}/tile-sharing")) == confirmed
+    assert [action for action, _ in lab_actions(database, lab)] == [
+        "lab-model.connected",
+        "lab-model.tiles-confirmed",
+        "lab-model.project-removed",
+        "lab-model.project-added",
+        "lab-model.tiles-confirmed",
+    ]
+    assert lab_actions(database, lab)[2][1]["tiles_confirmed"] is True
+
+
+def test_the_owner_sees_a_pending_confirmation_an_admin_left_and_confirms_it(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    clinical = make_project(database, lab.tenant, "clinical")
+    join_project(database, clinical, lab.people["colleague"], "owner")
+    join_project(database, clinical, lab.people["owner"], "reviewer")
+    slide = make_slide(database, lab.tenant, clinical, "Clinical slide")
+    body = draft(site, lab, name="lab-hovernet", project_ids=[str(clinical)])
+    model = ok(linked(lab.people["owner"]).post(MODELS, json=body))
+    listed = f"/api/projects/{clinical}/lab-models"
+    pending = ok(linked(lab.people["colleague"]).get(listed))
+    assert pending == [
+        {
+            "id": model["id"],
+            "name": "lab-hovernet",
+            "version": "v2.1",
+            "host": site.origin,
+            "confirmed_at": None,
+        }
+    ]
+    assert problem(lab_run(linked, lab, clinical, slide, "colleague")) == (
+        403,
+        "lab-model-tiles-unconfirmed",
+    )
+    confirming = linked(lab.people["colleague"])
+    ok(confirming.post(f"{MODELS}/{model['id']}/projects/{clinical}/tile-sharing"))
+    [confirmed] = ok(confirming.get(listed))
+    assert confirmed["confirmed_at"] is not None
+    assert problem(linked(lab.people["stranger"]).get(listed))[0] in {403, 404}

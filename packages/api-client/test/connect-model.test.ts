@@ -78,7 +78,8 @@ test("a test call answers by the server and connecting keeps the class map and p
   assert.ok(failing.status === 200);
   assert.equal(failing.data.outcome, "not-contract");
   assert.equal(failing.data.missing_geometry, 38);
-  const projectIds = [scenario.projectByCode("P07").id];
+  const clinical = scenario.projectByCode("P03").id;
+  const projectIds = [scenario.projectByCode("P07").id, clinical];
   const connected = await connectLabModel({
     name: "Lab HoVer-Net fork",
     version: "v2.1",
@@ -91,6 +92,7 @@ test("a test call answers by the server and connecting keeps the class map and p
     class_map: [{ sent: "dead", becomes: null }],
     who_can_run: "admins",
     project_ids: projectIds,
+    confirmed_project_ids: [clinical],
   });
   assert.ok(connected.status === 201);
   const { data } = connected;
@@ -98,4 +100,8 @@ test("a test call answers by the server and connecting keeps the class map and p
   assert.equal(data.last_four, "3f9a");
   assert.deepEqual(data.class_map, [{ sent: "dead", becomes: null }]);
   assert.deepEqual(data.project_ids, projectIds);
+  assert.deepEqual(
+    data.tile_sharing.map((sharing) => [sharing.project_id, sharing.confirmed_at !== null]),
+    [[clinical, true]],
+  );
 });

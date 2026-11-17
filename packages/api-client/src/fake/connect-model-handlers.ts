@@ -9,10 +9,11 @@ import type {
   LabModelDraft,
   LabModelTest,
   LabModelTestRequest,
+  ProjectLabModel,
 } from "../generated/api.ts";
 import { fakeConnectModelScene } from "./connect-model-scene.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { projectByCode } from "./scenario.ts";
+import { projectByCode, projects } from "./scenario.ts";
 import { failedTest, labServer, sampleTiles, sentClasses } from "./scenario-connect-model.ts";
 
 const untested: LabModelConnectionTest = {
@@ -103,6 +104,14 @@ export function toConnectedModel(draft: LabModelDraft): LabModel {
     class_map: draft.class_map,
     who_can_run: draft.who_can_run,
     project_ids: draft.project_ids,
+    tile_sharing: projects
+      .filter((project) => project.privacy === "clinical" && draft.project_ids.includes(project.id))
+      .map((project) => ({
+        project_id: project.id,
+        confirmed_at: draft.confirmed_project_ids?.includes(project.id)
+          ? "2026-11-08T09:00:00Z"
+          : null,
+      })),
     licence: draft.licence ?? null,
     created_at: "2026-11-08T09:00:00Z",
   };
@@ -114,8 +123,55 @@ const incomplete = () =>
     { status: 422 },
   );
 
+const sharedLabModelId = "00000000-0000-4000-8065-000000000098";
+let sharedConfirmedAt: string | null = null;
+
+const sharedLabModel = (): LabModel =>
+  toConnectedModel({
+    name: labServer.model.name,
+    version: labServer.model.version,
+    address: labServer.address,
+    sign_in: "token",
+    secret: "secret-3f9a",
+    taxonomy: "sentinel-node",
+    class_map: [],
+    who_can_run: "researchers",
+    project_ids: [projectByCode("P03").id],
+    confirmed_project_ids: sharedConfirmedAt ? [projectByCode("P03").id] : [],
+  });
+
+const projectLabModels = (projectId: string): ProjectLabModel[] =>
+  projectId === projectByCode("P03").id
+    ? [
+        {
+          id: sharedLabModelId,
+          name: labServer.model.name,
+          version: labServer.model.version,
+          host: labServer.host,
+          confirmed_at: sharedConfirmedAt,
+        },
+      ]
+    : [];
+
 export function connectModelHandlers(): RequestHandler[] {
+  sharedConfirmedAt = null;
   return [
+    http.get<{ projectId: string }>("*/api/projects/:projectId/lab-models", ({ params }) =>
+      HttpResponse.json(projectLabModels(params.projectId)),
+    ),
+    http.post<{ modelId: string; projectId: string }>(
+      "*/api/tenant/models/:modelId/projects/:projectId/tile-sharing",
+      ({ params }) => {
+        if (params.modelId !== sharedLabModelId || params.projectId !== projectByCode("P03").id) {
+          return HttpResponse.json(
+            { type: "about:blank", title: "No connected model has this ID", status: 404 },
+            { status: 404 },
+          );
+        }
+        sharedConfirmedAt ??= "2026-11-17T09:00:00Z";
+        return HttpResponse.json({ ...sharedLabModel(), id: sharedLabModelId });
+      },
+    ),
     http.post("*/api/tenant/models/test", async ({ request }) => {
       const body = (await request.json()) as LabModelTestRequest | null;
       if (!body?.address) return incomplete();

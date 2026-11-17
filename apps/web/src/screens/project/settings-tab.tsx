@@ -23,6 +23,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { AddClassModal } from "./add-class-modal.tsx";
+import { LabModelsZone } from "./lab-models-zone.tsx";
 import type { NewClass } from "./model.ts";
 import { usePeople } from "./people.ts";
 import { ProjectDeleteDialog } from "./project-delete-dialog.tsx";
@@ -147,6 +148,7 @@ export function SettingsTab({
             <Trans>Set when the project was created.</Trans>
           </Hint>
         </Zone>
+        {clinical && <LabModelsZone project={project} toast={toast} />}
         <Zone
           title={t`Review defaults`}
           end={

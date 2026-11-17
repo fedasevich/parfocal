@@ -3039,6 +3039,11 @@ export const LabModelRunners = {
   researchers: "researchers",
 } as const;
 
+export interface TileSharing {
+  project_id: string;
+  confirmed_at: string | null;
+}
+
 export interface LicenceIn {
   weights: LicenceText;
   weights_class: LicenceClass;
@@ -3067,6 +3072,7 @@ export interface LabModel {
   class_map: ClassMatch[];
   who_can_run: LabModelRunners;
   project_ids: string[];
+  tile_sharing: TileSharing[];
   licence: LicenceIn | null;
   created_at: string;
 }
@@ -3121,6 +3127,8 @@ export interface LabModelDraft {
   who_can_run: LabModelRunners;
   /** @maxItems 200 */
   project_ids: string[];
+  /** @maxItems 200 */
+  confirmed_project_ids?: string[];
   licence?: LicenceIn | null;
 }
 
@@ -4466,6 +4474,14 @@ export interface ProjectDraft {
   privacy_mode?: PrivacyMode;
   template?: AnalysisTemplate;
   taxonomy?: TaxonomyTemplate | null;
+}
+
+export interface ProjectLabModel {
+  id: string;
+  name: string;
+  version: string;
+  host: string;
+  confirmed_at: string | null;
 }
 
 export type Serving = (typeof Serving)[keyof typeof Serving];
@@ -19719,6 +19735,664 @@ export const useTestConnectedLabModel = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getTestConnectedLabModelMutationOptions(options), queryClient);
 };
+
+export type addLabModelProjectResponse200 = {
+  data: LabModel;
+  status: 200;
+};
+
+export type addLabModelProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type addLabModelProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type addLabModelProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type addLabModelProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type addLabModelProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type addLabModelProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type addLabModelProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type addLabModelProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type addLabModelProjectResponseSuccess = addLabModelProjectResponse200 & {
+  headers: Headers;
+};
+export type addLabModelProjectResponseError = (
+  | addLabModelProjectResponse400
+  | addLabModelProjectResponse401
+  | addLabModelProjectResponse403
+  | addLabModelProjectResponse404
+  | addLabModelProjectResponse409
+  | addLabModelProjectResponse422
+  | addLabModelProjectResponse429
+  | addLabModelProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type addLabModelProjectResponse =
+  | addLabModelProjectResponseSuccess
+  | addLabModelProjectResponseError;
+
+export const getAddLabModelProjectUrl = (modelId: string, projectId: string) => {
+  return `/api/tenant/models/${modelId}/projects/${projectId}`;
+};
+
+/**
+ * @summary Add Lab Model Project
+ */
+export const addLabModelProject = async (
+  modelId: string,
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<addLabModelProjectResponse> => {
+  return apiFetch<addLabModelProjectResponse>(getAddLabModelProjectUrl(modelId, projectId), {
+    ...options,
+    method: "PUT",
+  });
+};
+
+export const getAddLabModelProjectMutationKey = () => ["addLabModelProject"] as const;
+
+export const getAddLabModelProjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addLabModelProject>>,
+    TError,
+    AddLabModelProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addLabModelProject>>,
+  TError,
+  AddLabModelProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddLabModelProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addLabModelProject>>,
+    AddLabModelProjectMutationVariables
+  > = (props) => {
+    const { modelId, projectId } = props ?? {};
+
+    return addLabModelProject(modelId, projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddLabModelProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addLabModelProject>>
+>;
+
+export type AddLabModelProjectMutationError = Problem;
+export type AddLabModelProjectMutationVariables = { modelId: string; projectId: string };
+
+/**
+ * @summary Add Lab Model Project
+ */
+export const useAddLabModelProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addLabModelProject>>,
+      TError,
+      AddLabModelProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addLabModelProject>>,
+  TError,
+  AddLabModelProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddLabModelProjectMutationOptions(options), queryClient);
+};
+
+export type removeLabModelProjectResponse200 = {
+  data: LabModel;
+  status: 200;
+};
+
+export type removeLabModelProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type removeLabModelProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type removeLabModelProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type removeLabModelProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type removeLabModelProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type removeLabModelProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type removeLabModelProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type removeLabModelProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type removeLabModelProjectResponseSuccess = removeLabModelProjectResponse200 & {
+  headers: Headers;
+};
+export type removeLabModelProjectResponseError = (
+  | removeLabModelProjectResponse400
+  | removeLabModelProjectResponse401
+  | removeLabModelProjectResponse403
+  | removeLabModelProjectResponse404
+  | removeLabModelProjectResponse409
+  | removeLabModelProjectResponse422
+  | removeLabModelProjectResponse429
+  | removeLabModelProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type removeLabModelProjectResponse =
+  | removeLabModelProjectResponseSuccess
+  | removeLabModelProjectResponseError;
+
+export const getRemoveLabModelProjectUrl = (modelId: string, projectId: string) => {
+  return `/api/tenant/models/${modelId}/projects/${projectId}`;
+};
+
+/**
+ * @summary Remove Lab Model Project
+ */
+export const removeLabModelProject = async (
+  modelId: string,
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<removeLabModelProjectResponse> => {
+  return apiFetch<removeLabModelProjectResponse>(getRemoveLabModelProjectUrl(modelId, projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveLabModelProjectMutationKey = () => ["removeLabModelProject"] as const;
+
+export const getRemoveLabModelProjectMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeLabModelProject>>,
+    TError,
+    RemoveLabModelProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeLabModelProject>>,
+  TError,
+  RemoveLabModelProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveLabModelProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeLabModelProject>>,
+    RemoveLabModelProjectMutationVariables
+  > = (props) => {
+    const { modelId, projectId } = props ?? {};
+
+    return removeLabModelProject(modelId, projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveLabModelProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeLabModelProject>>
+>;
+
+export type RemoveLabModelProjectMutationError = Problem;
+export type RemoveLabModelProjectMutationVariables = { modelId: string; projectId: string };
+
+/**
+ * @summary Remove Lab Model Project
+ */
+export const useRemoveLabModelProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeLabModelProject>>,
+      TError,
+      RemoveLabModelProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeLabModelProject>>,
+  TError,
+  RemoveLabModelProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveLabModelProjectMutationOptions(options), queryClient);
+};
+
+export type confirmLabModelTileSharingResponse200 = {
+  data: LabModel;
+  status: 200;
+};
+
+export type confirmLabModelTileSharingResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type confirmLabModelTileSharingResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type confirmLabModelTileSharingResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type confirmLabModelTileSharingResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type confirmLabModelTileSharingResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type confirmLabModelTileSharingResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type confirmLabModelTileSharingResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type confirmLabModelTileSharingResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type confirmLabModelTileSharingResponseSuccess = confirmLabModelTileSharingResponse200 & {
+  headers: Headers;
+};
+export type confirmLabModelTileSharingResponseError = (
+  | confirmLabModelTileSharingResponse400
+  | confirmLabModelTileSharingResponse401
+  | confirmLabModelTileSharingResponse403
+  | confirmLabModelTileSharingResponse404
+  | confirmLabModelTileSharingResponse409
+  | confirmLabModelTileSharingResponse422
+  | confirmLabModelTileSharingResponse429
+  | confirmLabModelTileSharingResponse500
+) & {
+  headers: Headers;
+};
+
+export type confirmLabModelTileSharingResponse =
+  | confirmLabModelTileSharingResponseSuccess
+  | confirmLabModelTileSharingResponseError;
+
+export const getConfirmLabModelTileSharingUrl = (modelId: string, projectId: string) => {
+  return `/api/tenant/models/${modelId}/projects/${projectId}/tile-sharing`;
+};
+
+/**
+ * @summary Confirm Lab Model Tile Sharing
+ */
+export const confirmLabModelTileSharing = async (
+  modelId: string,
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<confirmLabModelTileSharingResponse> => {
+  return apiFetch<confirmLabModelTileSharingResponse>(
+    getConfirmLabModelTileSharingUrl(modelId, projectId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getConfirmLabModelTileSharingMutationKey = () =>
+  ["confirmLabModelTileSharing"] as const;
+
+export const getConfirmLabModelTileSharingMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmLabModelTileSharing>>,
+    TError,
+    ConfirmLabModelTileSharingMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmLabModelTileSharing>>,
+  TError,
+  ConfirmLabModelTileSharingMutationVariables,
+  TContext
+> => {
+  const mutationKey = getConfirmLabModelTileSharingMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmLabModelTileSharing>>,
+    ConfirmLabModelTileSharingMutationVariables
+  > = (props) => {
+    const { modelId, projectId } = props ?? {};
+
+    return confirmLabModelTileSharing(modelId, projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmLabModelTileSharingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmLabModelTileSharing>>
+>;
+
+export type ConfirmLabModelTileSharingMutationError = Problem;
+export type ConfirmLabModelTileSharingMutationVariables = { modelId: string; projectId: string };
+
+/**
+ * @summary Confirm Lab Model Tile Sharing
+ */
+export const useConfirmLabModelTileSharing = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof confirmLabModelTileSharing>>,
+      TError,
+      ConfirmLabModelTileSharingMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof confirmLabModelTileSharing>>,
+  TError,
+  ConfirmLabModelTileSharingMutationVariables,
+  TContext
+> => {
+  return useMutation(getConfirmLabModelTileSharingMutationOptions(options), queryClient);
+};
+
+export type listProjectLabModelsResponse200 = {
+  data: ProjectLabModel[];
+  status: 200;
+};
+
+export type listProjectLabModelsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listProjectLabModelsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listProjectLabModelsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listProjectLabModelsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listProjectLabModelsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listProjectLabModelsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listProjectLabModelsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listProjectLabModelsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listProjectLabModelsResponseSuccess = listProjectLabModelsResponse200 & {
+  headers: Headers;
+};
+export type listProjectLabModelsResponseError = (
+  | listProjectLabModelsResponse400
+  | listProjectLabModelsResponse401
+  | listProjectLabModelsResponse403
+  | listProjectLabModelsResponse404
+  | listProjectLabModelsResponse409
+  | listProjectLabModelsResponse422
+  | listProjectLabModelsResponse429
+  | listProjectLabModelsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listProjectLabModelsResponse =
+  | listProjectLabModelsResponseSuccess
+  | listProjectLabModelsResponseError;
+
+export const getListProjectLabModelsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/lab-models`;
+};
+
+/**
+ * @summary List Project Lab Models
+ */
+export const listProjectLabModels = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listProjectLabModelsResponse> => {
+  return apiFetch<listProjectLabModelsResponse>(getListProjectLabModelsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectLabModelsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/lab-models`] as const;
+};
+
+export const getListProjectLabModelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectLabModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectLabModels>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectLabModelsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectLabModels>>> = ({ signal }) =>
+    listProjectLabModels(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listProjectLabModels>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListProjectLabModelsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectLabModels>>
+>;
+export type ListProjectLabModelsQueryError = Problem;
+
+export function useListProjectLabModels<
+  TData = Awaited<ReturnType<typeof listProjectLabModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectLabModels>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectLabModels>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectLabModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectLabModels<
+  TData = Awaited<ReturnType<typeof listProjectLabModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectLabModels>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectLabModels>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectLabModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectLabModels<
+  TData = Awaited<ReturnType<typeof listProjectLabModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectLabModels>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Lab Models
+ */
+
+export function useListProjectLabModels<
+  TData = Awaited<ReturnType<typeof listProjectLabModels>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectLabModels>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectLabModelsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type listModelRunAreasResponse200 = {
   data: RunAreas;
