@@ -43,9 +43,9 @@ export function reauthUrl(returnTo: string): string {
   return `/api/auth/login?${query.toString()}`;
 }
 
-export type SessionGate = "open" | "wait" | "sign-in";
+type SessionGate = "open" | "wait" | "sign-in";
 
-export type GateInput = {
+type GateInput = {
   guarded: boolean;
   known: boolean;
   settled: boolean;

@@ -32,7 +32,7 @@ function safeReturnPath(value: string | null): string {
 const redirectTo = (location: string) =>
   new HttpResponse(null, { status: 302, headers: { location } });
 
-export const fakeSessionKey = "parfocal.fake-session";
+const fakeSessionKey = "parfocal.fake-session";
 
 type FakeSession = "signed-out" | "expired";
 

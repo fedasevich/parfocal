@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { ApiError, getGetMeQueryKey } from "@parfocal/api-client";
 import {
   isSignedOut,
+  leaveFor,
   loginUrl,
   passwordSignInAvailable,
   redirectPauseMs,
@@ -124,6 +125,14 @@ test("the session gate's redirect says when the pause holds it back", () => {
   assert.equal(go(), false);
   assert.deepEqual(browser.visited, ["/sign-in?return_to=%2Fmy-work"]);
   assert.equal(signInRedirect(fakeBrowser("/sign-in"))(), false);
+});
+
+test("leaving for the hosted login never lets the sign-in page render", async () => {
+  const visited: string[] = [];
+  const left = leaveFor(loginUrl("/"), (url) => void visited.push(url));
+  const settled = await Promise.race([left.then(() => true), Promise.resolve(false)]);
+  assert.equal(settled, false);
+  assert.deepEqual(visited, ["/api/auth/login?return_to=%2F"]);
 });
 
 test("other failures do not redirect", () => {

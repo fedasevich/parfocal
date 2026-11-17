@@ -53,6 +53,14 @@ export async function startNamedLogin(
   }
 }
 
+export function leaveFor(
+  url: string,
+  go: (url: string) => void = (target) => window.location.assign(target),
+): Promise<never> {
+  go(url);
+  return new Promise<never>(() => undefined);
+}
+
 export function signInPageUrl(returnTo: string): string {
   return `/sign-in?${new URLSearchParams({ return_to: returnTo }).toString()}`;
 }
@@ -113,7 +121,7 @@ export function signInRedirect(browser: Browser, now = Date.now) {
 
 const meQueryKey = getGetMeQueryKey()[0];
 
-export function answersWhoIsSignedIn(queryKey: readonly unknown[] | undefined): boolean {
+function answersWhoIsSignedIn(queryKey: readonly unknown[] | undefined): boolean {
   return queryKey?.length === 1 && queryKey[0] === meQueryKey;
 }
 
