@@ -818,7 +818,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the table-driven permission test from IAM-006 covers every new role on every endpoint, invitations keep working with the new roles, and an ADR supersedes ADR 0026. Hiding a project from a reviewer who is not in it is tested in PROJ-003.
   Depends on IAM-006, ADAPT-001. Refs doc 37 "Product and roles", [ADR 0053](adr/0053-ai-results-review-direction.md).
 
-- [ ] IAM-023 · Sign in and unlock with a passkey
+- [x] IAM-023 · Sign in and unlock with a passkey
   Sign in and the lock screen offer "Sign in with a passkey" and "Unlock with a passkey" next to the other ways in. The button starts the BFF login with the identity provider's passwordless flow, the browser shows its own passkey window, and a passkey on a phone or security key works through the browser's QR option. Unlocking returns to the same view as IAM-021. Enrolment prompts, a passkey list in settings and an admin policy are not part of this task ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when E2E with a virtual WebAuthn authenticator signs in with a passkey and unlocks a locked slide to the same camera position, and a test shows a cancelled passkey window leaves the sign-in page usable.
   Depends on IAM-001, IAM-002, IAM-021. Refs mock: signin/passkey, mock: signin/lockkey, doc 42.
