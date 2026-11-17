@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiError } from "@parfocal/api-client";
 import {
+  nextReviewOrderState,
   preparingInterval,
   preparingPollMs,
   reviewOrderState,
@@ -21,6 +22,14 @@ test("a failed order and unreadable result files read as failed and stop polling
     assert.equal(reviewOrderState(conflict(code)), "failed");
     assert.equal(preparingInterval(conflict(code)), false);
   }
+});
+
+test("a poll in flight keeps the preparing or failed screen instead of the loader", () => {
+  assert.equal(nextReviewOrderState("preparing", null, true), "preparing");
+  assert.equal(nextReviewOrderState("failed", null, true), "failed");
+  assert.equal(nextReviewOrderState("ready", null, true), "ready");
+  assert.equal(nextReviewOrderState("preparing", null, false), "ready");
+  assert.equal(nextReviewOrderState("preparing", conflict("review-order-failed"), false), "failed");
 });
 
 test("no error or another error leaves the order ready", () => {

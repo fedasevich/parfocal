@@ -17,6 +17,15 @@ export function reviewOrderState(error: unknown): ReviewOrderState {
   return failedCodes.has(code) ? "failed" : "ready";
 }
 
+export function nextReviewOrderState(
+  previous: ReviewOrderState,
+  error: unknown,
+  fetching: boolean,
+): ReviewOrderState {
+  if (fetching && previous !== "ready" && error == null) return previous;
+  return reviewOrderState(error);
+}
+
 export function preparingInterval(error: unknown): number | false {
   return reviewOrderState(error) === "preparing" ? preparingPollMs : false;
 }

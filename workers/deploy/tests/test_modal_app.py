@@ -1,13 +1,17 @@
 import asyncio
 import importlib
 import inspect
+import uuid
 from pathlib import Path
+from typing import Any, cast
 
 import modal
 import pytest
+from sqlalchemy.ext.asyncio import AsyncConnection
 
+import parfocal_common.jobs
 from parfocal_common.db import POOL_OVERFLOW, POOL_SIZE
-from parfocal_common.jobs import load_workflow
+from parfocal_common.jobs import enqueue, load_workflow, no_job_wake
 from parfocal_common.repository import repository_root
 from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
@@ -135,6 +139,37 @@ def test_a_queued_job_spawns_the_worker_once_within_the_gap() -> None:
     assert INGEST_SPAWN_GAP_SECONDS < INGEST_IDLE_EXIT_SECONDS
 
 
+class QueuingConnection:
+    async def scalar(self, statement: Any) -> uuid.UUID:
+        return uuid.uuid4()
+
+    async def execute(self, statement: Any, rows: Any = None) -> None:
+        return None
+
+
+def test_the_served_api_spawns_the_worker_once_for_two_jobs_queued_within_the_gap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi import FastAPI
+
+    import parfocal_api.app
+    from parfocal_api.review_order_job import REVIEW_ORDER
+
+    spawned: list[int] = []
+
+    async def spawn() -> None:
+        spawned.append(1)
+
+    monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    monkeypatch.setattr(modal_app, "spawn_ingest", lambda: IngestSpawner(spawn, lambda: 0.0))
+    monkeypatch.setattr(parfocal_common.jobs, "JOB_WAKERS", [no_job_wake])
+    modal_app.serve()
+    connection = cast("AsyncConnection", QueuingConnection())
+    asyncio.run(enqueue(connection, REVIEW_ORDER, uuid.uuid4()))
+    asyncio.run(enqueue(connection, REVIEW_ORDER, uuid.uuid4()))
+    assert spawned == [1]
+
+
 def test_a_job_the_worker_does_not_drain_spawns_nothing() -> None:
     spawned: list[int] = []
 
@@ -232,6 +267,7 @@ def test_the_served_api_warms_the_deployed_embedder_through_modal(
     from parfocal_common.warm_gate import EMBEDDER_FUNCTION, GPU_POOL_APP, ModalPools, WarmGate
 
     monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    monkeypatch.setattr(parfocal_common.jobs, "JOB_WAKERS", [no_job_wake])
     served = modal_app.serve()
     gate = served.state.warm_gate
     assert isinstance(gate, WarmGate)
