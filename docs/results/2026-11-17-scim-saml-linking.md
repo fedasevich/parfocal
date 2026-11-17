@@ -21,6 +21,7 @@ Does a person created over SCIM sign in through the workspace's SAML IdP as the 
 | --- | --- | --- |
 | Token subject after the SCIM user's first SAML sign-in | a new user id | the SCIM user's id |
 | Users with that email in the workspace organisation | not counted | 1 |
+| Resource owner and groups metadata in the ID token | not checked | the workspace organisation and `group1` |
 | Confirmation page shown before linking | not applicable | none |
 | Password account with the same email in the Parfocal organisation | not tried | not linked, a new user is created in the workspace organisation |
 

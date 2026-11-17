@@ -3,6 +3,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import subprocess
 import time
 import uuid
@@ -17,6 +18,8 @@ import httpx2
 import pytest
 from zitadel_support import SCIM_USER, command, scim_patch, settings_for
 
+from parfocal_api.oidc import SCOPES as OIDC_SCOPES
+from parfocal_api.sso import METADATA_SCOPE, RESOURCE_OWNER_CLAIM, groups_of
 from parfocal_api.tenant_command import ProvisioningSettings
 
 IDP_IMAGE = "kristophjunge/test-saml-idp:1.15"
@@ -24,8 +27,7 @@ IDP_PORT = os.environ.get("PARFOCAL_SAML_IDP_PORT", "8091")
 IDP_CONTAINER = f"parfocal-api-saml-idp-{IDP_PORT}"
 IDP_ORIGIN = f"http://localhost:{IDP_PORT}"
 DOMAIN = "example.com"
-REDIRECT_URI = "http://localhost:5173/api/auth/callback"
-SCOPES = "openid profile email offline_access urn:zitadel:iam:user:resourceowner"
+SCOPES = f"{OIDC_SCOPES} {METADATA_SCOPE}"
 
 
 @dataclass
@@ -183,14 +185,6 @@ def start_idp(issuer: str, entity_id: str) -> str:
         time.sleep(2)
 
 
-@pytest.fixture
-def idp() -> Iterator[None]:
-    if subprocess.run(["docker", "info"], capture_output=True).returncode != 0:
-        pytest.skip("The SAML sign-in test starts a test IdP in Docker")
-    yield
-    subprocess.run(["docker", "rm", "-f", IDP_CONTAINER], capture_output=True)
-
-
 def project_id(zitadel: dict[str, str]) -> str:
     response = httpx2.post(
         f"{zitadel['ZITADEL_ISSUER']}/management/v1/projects/_search",
@@ -199,6 +193,31 @@ def project_id(zitadel: dict[str, str]) -> str:
     )
     response.raise_for_status()
     return str(response.json()["result"][0]["id"])
+
+
+def callback_of(zitadel: dict[str, str]) -> str:
+    response = httpx2.post(
+        f"{zitadel['ZITADEL_ISSUER']}/management/v1/projects/{project_id(zitadel)}/apps/_search",
+        headers=admin(zitadel, zitadel["ZITADEL_ORGANIZATION_ID"]),
+        json={},
+    )
+    response.raise_for_status()
+    for app in response.json()["result"]:
+        config = app.get("oidcConfig", {})
+        if config.get("clientId") == zitadel["ZITADEL_CLIENT_ID"]:
+            return str(config["redirectUris"][0])
+    pytest.fail("The local Zitadel has no OIDC app for ZITADEL_CLIENT_ID")
+
+
+@pytest.fixture
+def login(zitadel: dict[str, str]) -> Iterator[dict[str, str]]:
+    docker_ready = shutil.which("docker") is not None and (
+        subprocess.run(["docker", "info"], capture_output=True).returncode == 0
+    )
+    if not docker_ready:
+        pytest.skip("The SAML sign-in test starts a test IdP in Docker")
+    yield zitadel | {"CALLBACK": callback_of(zitadel)}
+    subprocess.run(["docker", "rm", "-f", IDP_CONTAINER], capture_output=True)
 
 
 def connect_saml(
@@ -266,7 +285,7 @@ def sign_in(zitadel: dict[str, str], workspace: Workspace, idp_id: str, user: st
     query = urlencode(
         {
             "client_id": zitadel["ZITADEL_CLIENT_ID"],
-            "redirect_uri": REDIRECT_URI,
+            "redirect_uri": zitadel["CALLBACK"],
             "response_type": "code",
             "scope": " ".join(
                 [
@@ -285,7 +304,7 @@ def sign_in(zitadel: dict[str, str], workspace: Workspace, idp_id: str, user: st
         for _ in range(30):
             if response.is_redirect:
                 url = urljoin(url, response.headers["location"])
-                if url.startswith(REDIRECT_URI):
+                if url.startswith(zitadel["CALLBACK"]):
                     return SignIn(parse_qs(urlparse(url).query).get("code", [None])[0], "")
                 response = browser.send("GET", url)
                 continue
@@ -306,16 +325,23 @@ def tokens_for(zitadel: dict[str, str], code: str) -> dict[str, str]:
     response = httpx2.post(
         f"{zitadel['ZITADEL_ISSUER']}/oauth/v2/token",
         auth=(zitadel["ZITADEL_CLIENT_ID"], zitadel["ZITADEL_CLIENT_SECRET"]),
-        data={"grant_type": "authorization_code", "code": code, "redirect_uri": REDIRECT_URI},
+        data={
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": zitadel["CALLBACK"],
+        },
     )
     response.raise_for_status()
     return dict(response.json())
 
 
-def subject_of(tokens: dict[str, str]) -> str:
+def claims_of(tokens: dict[str, str]) -> dict[str, object]:
     payload = tokens["id_token"].split(".")[1]
-    claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
-    return str(claims["sub"])
+    return dict(json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))))
+
+
+def subject_of(tokens: dict[str, str]) -> str:
+    return str(claims_of(tokens)["sub"])
 
 
 def refresh(zitadel: dict[str, str], tokens: dict[str, str]) -> httpx2.Response:
@@ -363,10 +389,11 @@ def idp_options(zitadel: dict[str, str], organisation: str, idp_id: str) -> dict
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures("storage", "idp")
+@pytest.mark.usefixtures("storage")
 def test_a_scim_created_person_signs_in_through_saml_as_the_same_zitadel_user(
-    drill: str, zitadel: dict[str, str], capsys: pytest.CaptureFixture[str], tmp_path: Path
+    drill: str, login: dict[str, str], capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
+    zitadel = login
     settings = settings_for(drill, zitadel)
     issuer = zitadel["ZITADEL_ISSUER"]
     workspace = provision_with_scim(settings, capsys, f"link-{uuid.uuid4().hex[:8]}")
@@ -386,7 +413,10 @@ def test_a_scim_created_person_signs_in_through_saml_as_the_same_zitadel_user(
         first = sign_in(zitadel, workspace, idp_id, "user1")
         assert first.code, text_of(first.page)
         tokens = tokens_for(zitadel, first.code)
-        assert subject_of(tokens) == provisioned
+        claims = claims_of(tokens)
+        assert claims["sub"] == provisioned
+        assert claims[RESOURCE_OWNER_CLAIM] == workspace.organisation_id
+        assert groups_of(claims) == ["group1"]
         assert users_with_email(zitadel, workspace.organisation_id, f"user1@{DOMAIN}") == [
             provisioned
         ]
