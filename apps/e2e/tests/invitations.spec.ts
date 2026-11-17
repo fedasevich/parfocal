@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { outbox, readSession, signIn, sql, username } from "./support.ts";
+import { newWorkspace } from "./workspaces.ts";
 
 interface SentEmail {
   to: string;
@@ -21,16 +22,6 @@ function lastInvitationLink(): string {
     throw new Error("No invitation email reached the outbox");
   }
   return last.link;
-}
-
-function makeWorkspace(): string {
-  const slug = `e2e-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-  const [id = ""] = sql(
-    `WITH organisation AS (INSERT INTO organisations (slug, name) VALUES ('${slug}', 'E2E ${slug}') RETURNING id) ` +
-      `INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) ` +
-      `SELECT id, '${slug}', 'E2E ${slug}', 'diagnostic', 'eu', 'pilot' FROM organisation RETURNING id`,
-  ).split("\n");
-  return id;
 }
 
 async function call(
@@ -79,7 +70,7 @@ function actions(tenantId: string): string[] {
 test("an invited researcher accepts and lands in the new workspace", async ({ page }) => {
   await signIn(page, "/cases/S26-0101");
   const { subject } = await readSession(page);
-  const tenantId = makeWorkspace();
+  const tenantId = newWorkspace("diagnostic");
   const token = await inviteAsOperator(page, subject, tenantId);
 
   const accepted = await call(page, "POST", "/api/invitations/accept", { token });
@@ -94,7 +85,7 @@ test("an invited researcher accepts and lands in the new workspace", async ({ pa
 test("an expired invitation is refused and the refusal is audited", async ({ page }) => {
   await signIn(page, "/cases/S26-0102");
   const { subject } = await readSession(page);
-  const tenantId = makeWorkspace();
+  const tenantId = newWorkspace("diagnostic");
   const token = await inviteAsOperator(page, subject, tenantId);
   sql(
     `UPDATE invitations SET expires_at = now() - interval '1 second' WHERE tenant_id = '${tenantId}'`,

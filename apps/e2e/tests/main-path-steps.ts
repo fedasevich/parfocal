@@ -1,6 +1,7 @@
 import { statSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
-import { call, field, idOf, researcherWorkspace, root, sql } from "./support.ts";
+import { call, field, idOf, root, sql } from "./support.ts";
+import { researcherWorkspace } from "./workspaces.ts";
 
 const fixture = `${root}packages/test-fixtures/synthetic/synthetic-jpeg.tiff`;
 const slideLabels = ["tumor_001", "tumor_002", "tumor_003"];

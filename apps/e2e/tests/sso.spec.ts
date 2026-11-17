@@ -9,6 +9,7 @@ import {
   zitadelIssuer,
   zitadelUserIds,
 } from "./support.ts";
+import { purgeWorkspace } from "./workspaces.ts";
 
 const idpImage = "kristophjunge/test-saml-idp:1.15";
 const idpPort = process.env["PARFOCAL_SAML_IDP_PORT"] ?? "8091";
@@ -165,6 +166,7 @@ test.describe("per-workspace SSO", () => {
     );
     for (const leftover of stale.split("\n").filter(Boolean)) {
       tenantCommand(["deprovision", leftover]);
+      purgeWorkspace(leftover);
     }
     await forgetPasswordAccounts();
     startIdp("http://placeholder.invalid/metadata");
@@ -192,6 +194,7 @@ test.describe("per-workspace SSO", () => {
     execFileSync("docker", ["rm", "-f", idpContainer], { stdio: "ignore" });
     if (tenantId) {
       tenantCommand(["deprovision", tenantId]);
+      purgeWorkspace(tenantId);
     }
     await forgetPasswordAccounts();
   });

@@ -191,16 +191,3 @@ export function field(reply: Reply, name: string): string {
 }
 
 export const idOf = (reply: Reply) => field(reply, "id");
-
-export function researcherWorkspace(userId: string): string {
-  const slug = `e2e-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-  return (
-    sql(
-      `WITH organisation AS (INSERT INTO organisations (slug, name) VALUES ('${slug}', 'E2E ${slug}') RETURNING id), ` +
-        `tenant AS (INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) ` +
-        `SELECT id, '${slug}', 'E2E ${slug}', 'research', 'eu', 'pilot' FROM organisation RETURNING id) ` +
-        `INSERT INTO memberships (tenant_id, user_id, role) SELECT id, '${userId}', 'researcher' FROM tenant ` +
-        `RETURNING tenant_id`,
-    ).split("\n")[0] ?? ""
-  );
-}

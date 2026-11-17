@@ -1,6 +1,7 @@
 import type { FullConfig } from "@playwright/test";
+import { counts, purgeRun } from "./tests/workspaces.ts";
 
-export default async function globalSetup(config: FullConfig): Promise<void> {
+export default async function globalSetup(config: FullConfig): Promise<() => void> {
   const origin = String(config.projects[0]?.use.baseURL);
   const health = await fetch(`${origin}/api/health`).catch(() => undefined);
   if (!health?.ok) {
@@ -17,4 +18,14 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   ) {
     throw new Error("The API has no Zitadel login client, so the app's own sign-in is off");
   }
+  const before = counts();
+  return () => {
+    purgeRun();
+    const after = counts();
+    if (after.workspaces > before.workspaces || after.organisations > before.organisations) {
+      throw new Error(
+        `The run left data behind: ${JSON.stringify(before)} before and ${JSON.stringify(after)} after`,
+      );
+    }
+  };
 }

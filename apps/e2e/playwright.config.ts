@@ -21,6 +21,7 @@ if (issuer.hostname !== "localhost") {
 process.env.EMAIL_OUTBOX = `${root}.outbox/e2e-email.jsonl`;
 process.env.PARFOCAL_API_PORT = String(apiPort);
 process.env.PARFOCAL_PUBLIC_APP_ENV ||= "test";
+process.env.PARFOCAL_E2E_RUN ||= Date.now().toString(36);
 
 export default defineConfig({
   testDir: "tests",
@@ -38,6 +39,7 @@ export default defineConfig({
     headless: true,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
   webServer: {
     command: `pnpm --filter @parfocal/web dev --port ${webPort} --strictPort`,
