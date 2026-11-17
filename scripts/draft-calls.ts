@@ -16,7 +16,7 @@ const operationsByArea: Record<string, string[]> = {
     "requestProjectAccess",
     "getUploadBatch",
   ],
-  viewer: ["typeOutlines"],
+  viewer: [],
   review: [],
   reports: [
     "getEvaluationReport",

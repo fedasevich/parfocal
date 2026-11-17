@@ -58,7 +58,10 @@ class OutlineTyperService:
 
     async def answered(self, call: Mapping[str, object]) -> dict[str, object]:
         if self.ready is None:
-            self.ready = await self.setup(self.stack)
+            async with AsyncExitStack() as attempt:
+                ready = await self.setup(attempt)
+                await self.stack.enter_async_context(attempt.pop_all())
+            self.ready = ready
         open_slide, model = self.ready
         return await answer_outline_types(call, open_slide, model)
 

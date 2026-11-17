@@ -8,10 +8,11 @@ from skimage.draw import polygon
 from parfocal_common.outline_types import Points, outline_types_call_of
 from parfocal_ml.tumor_map_job import SlideImage, SlideOpener
 from parfocal_ml.type_evaluation import VIEWER_CLASSES
-from parfocal_ml.typer import Model, Outline, TypedNucleus, type_nuclei, typed
+from parfocal_ml.typer import TYPER_MPP, Model, Outline, TypedNucleus, type_nuclei, typed
 
 WINDOW = 1024
 MARGIN = 16
+LEAST_TYPER_PIXELS = 256
 
 
 class SlideWithoutScaleError(ValueError):
@@ -37,13 +38,34 @@ def box_of(points: Points) -> Box:
     )
 
 
-def window_of(boxes: Sequence[Box], slide: SlideImage) -> Box:
-    return Box(
-        max(0, min(box.left for box in boxes) - MARGIN),
-        max(0, min(box.top for box in boxes) - MARGIN),
-        min(slide.width, max(box.right for box in boxes) + MARGIN),
-        min(slide.height, max(box.bottom for box in boxes) + MARGIN),
+def widened(low: int, high: int, least: int, limit: int) -> tuple[int, int]:
+    short = max(0, least - (high - low))
+    low, high = low - short // 2, high + short - short // 2
+    if low < 0:
+        low, high = 0, high - low
+    if high > limit:
+        low, high = low - (high - limit), limit
+    return max(0, low), high
+
+
+def window_of(boxes: Sequence[Box], slide: SlideImage, least: int = 0) -> Box:
+    left, right = widened(
+        min(box.left for box in boxes) - MARGIN,
+        max(box.right for box in boxes) + MARGIN,
+        least,
+        slide.width,
     )
+    top, bottom = widened(
+        min(box.top for box in boxes) - MARGIN,
+        max(box.bottom for box in boxes) + MARGIN,
+        least,
+        slide.height,
+    )
+    return Box(left, top, right, bottom)
+
+
+def least_span(mpp: float) -> int:
+    return math.ceil(LEAST_TYPER_PIXELS * TYPER_MPP / mpp)
 
 
 def grouped(outlines: Sequence[Points]) -> list[list[int]]:
@@ -81,7 +103,7 @@ def typed_in_window(
 ) -> list[TypedNucleus]:
     if slide.mpp is None:
         raise SlideWithoutScaleError("The typer needs the slide's microns per pixel")
-    window = window_of([box_of(points) for points in outlines], slide)
+    window = window_of([box_of(points) for points in outlines], slide, least_span(slide.mpp))
     if window.empty:
         return [unknown() for _ in outlines]
     rgb = slide.reader.read(

@@ -1,7 +1,7 @@
 import { type OutlineTypes, type TypedOutline, typeOutlines } from "@parfocal/api-client";
 import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
 import { type AnnotationDocument, typeShape } from "../annotations/document.ts";
-import type { OutlineTyping, Shape } from "../annotations/shapes.ts";
+import { boundsOf, type OutlineTyping, type Shape } from "../annotations/shapes.ts";
 import { smartSource } from "./smart-run.ts";
 
 export const typedSources: ReadonlySet<string> = new Set([smartSource]);
@@ -19,11 +19,26 @@ export const serverTyper: OutlineTyper = async (slideId, outlines) => {
 
 export const typerBatch = 500;
 
+export const typerSpan = 512;
+
+export const typerPoints = 4096;
+
+export function typerSized(points: Float32Array): boolean {
+  const [minX, minY, maxX, maxY] = boundsOf(points);
+  return (
+    points.length >= 6 &&
+    points.length <= typerPoints &&
+    maxX - minX <= typerSpan &&
+    maxY - minY <= typerSpan
+  );
+}
+
 export type KnownClass = (classKey: string) => boolean;
 
 export function typingTargets(doc: AnnotationDocument, shapes: readonly Shape[]): Shape[] {
   return shapes.filter((shape) => {
     if (shape.provenance.kind !== "model" || shape.provenance.typing !== undefined) return false;
+    if (!typerSized(shape.points)) return false;
     const source = doc.runs.get(shape.provenance.runId)?.source;
     return source != null && typedSources.has(source);
   });

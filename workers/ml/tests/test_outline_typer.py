@@ -18,7 +18,12 @@ from parfocal_common.outline_types import (
 from parfocal_common.view_maps import seconds_in
 from parfocal_ml.gpu_pool import POOLS, Family
 from parfocal_ml.modal_pool import default_runners, pool_entry
-from parfocal_ml.outline_typer import WINDOW, SlideWithoutScaleError, answer_outline_types
+from parfocal_ml.outline_typer import (
+    LEAST_TYPER_PIXELS,
+    WINDOW,
+    SlideWithoutScaleError,
+    answer_outline_types,
+)
 from parfocal_ml.outline_typer_worker import OutlineTyperService
 from parfocal_ml.priority_gate import Kind, WrongLaneError
 from parfocal_ml.tumor_map_job import SlideImage
@@ -81,9 +86,24 @@ def test_each_outline_gets_the_type_under_it_in_the_order_sent() -> None:
         assert sum(probabilities.values()) == pytest.approx(1.0)
         assert outline["foreground"] == pytest.approx(0.9)
     assert len(source.reads) == 2
-    for _, _, width, height in source.reads:
-        assert width <= WINDOW + MAX_OUTLINE_SPAN
-        assert height <= WINDOW + MAX_OUTLINE_SPAN
+    for x, y, width, height in source.reads:
+        assert LEAST_TYPER_PIXELS <= width <= WINDOW + MAX_OUTLINE_SPAN
+        assert LEAST_TYPER_PIXELS <= height <= WINDOW + MAX_OUTLINE_SPAN
+        assert 0 <= x <= x + width <= WIDTH
+        assert 0 <= y <= y + height <= HEIGHT
+
+
+def test_a_lone_outline_at_the_edge_still_gets_the_least_window() -> None:
+    slide, source = small_slide()
+    typed(slide, call_for(square(WIDTH - 21, HEIGHT - 21)))
+    assert source.reads == [
+        (
+            WIDTH - LEAST_TYPER_PIXELS,
+            HEIGHT - LEAST_TYPER_PIXELS,
+            LEAST_TYPER_PIXELS,
+            LEAST_TYPER_PIXELS,
+        )
+    ]
 
 
 def tumor_share(slide: SlideImage, temperature: float) -> tuple[float, float, str]:
@@ -116,7 +136,7 @@ def test_a_coarser_slide_is_scaled_to_the_typer_resolution() -> None:
     reply = typed_outlines_in(typed(slide, call_for(square(110, 110)), model), 1)
     assert reply is not None
     assert reply[0]["type"] == "tumor"
-    assert seen == [(2 * (20 + 1 + 32), 2 * (20 + 1 + 32), 3)]
+    assert seen == [(256, 256, 3)]
 
 
 def test_a_slide_without_a_scale_is_refused() -> None:
@@ -151,6 +171,28 @@ def test_the_service_sets_up_once_and_times_each_answer() -> None:
     assert setups == [1]
     assert typed_outlines_in(first, 1) is not None
     assert seconds_in(first) is not None
+
+
+def test_a_failed_setup_closes_what_it_opened_and_is_tried_again() -> None:
+    slide, _ = small_slide()
+    closed: list[int] = []
+
+    async def setup(stack: AsyncExitStack):
+        stack.callback(closed.append, 1)
+        if not closed:
+            raise FileNotFoundError("no typer weights yet")
+        return opener(slide), dark_is_neoplastic
+
+    service = OutlineTyperService(setup)
+    try:
+        with pytest.raises(FileNotFoundError):
+            service.answer(call_for(square(110, 110)))
+        assert closed == [1]
+        assert typed_outlines_in(service.answer(call_for(square(110, 110))), 1) is not None
+        assert closed == [1]
+    finally:
+        service.close()
+    assert closed == [1, 1]
 
 
 def test_only_the_interactive_pool_types_outlines() -> None:
