@@ -15,6 +15,17 @@ async function viewBoxOf(still: Locator) {
   return value.split(" ").map(Number);
 }
 
+async function expectSameCamera(page: Page, still: Locator, before: number[]) {
+  await expect
+    .poll(async () => {
+      await page.clock.runFor(100);
+      const after = await viewBoxOf(still);
+      if (after.length !== before.length) return Number.POSITIVE_INFINITY;
+      return Math.max(...after.map((value, index) => Math.abs(value - (before[index] ?? 0))));
+    })
+    .toBeLessThan(0.5);
+}
+
 test("a locked slide unlocks to the same camera position", async ({ page }) => {
   await page.clock.install();
   const href = await objectsTabHref(page);
@@ -46,11 +57,7 @@ test("a locked slide unlocks to the same camera position", async ({ page }) => {
   await expect(lock).toBeHidden();
   await expect(page).toHaveURL(lockedAt);
   await expect(still).toBeVisible();
-  const after = await viewBoxOf(still);
-  expect(after).toHaveLength(4);
-  for (const [index, value] of after.entries()) {
-    expect(value).toBeCloseTo(before[index] ?? Number.NaN, 0);
-  }
+  await expectSameCamera(page, still, before);
 });
 
 test("locking from the account menu unlocks to the same camera position", async ({ page }) => {
@@ -81,10 +88,7 @@ test("locking from the account menu unlocks to the same camera position", async 
   await lock.getByRole("button", { name: "Unlock", exact: true }).click();
   await expect(lock).toBeHidden();
   await expect(page).toHaveURL(lockedAt);
-  const after = await viewBoxOf(still);
-  for (const [index, value] of after.entries()) {
-    expect(value).toBeCloseTo(before[index] ?? Number.NaN, 0);
-  }
+  await expectSameCamera(page, still, before);
 });
 
 test("a passkey unlocks a locked slide to the same camera position", async ({ page }) => {
@@ -123,13 +127,7 @@ test("a passkey unlocks a locked slide to the same camera position", async ({ pa
   expect(started.url()).not.toContain(body.login_hint);
   await expect(lock).toBeHidden();
   await expect(page).toHaveURL(lockedAt);
-  await expect
-    .poll(async () => {
-      await page.clock.runFor(100);
-      const after = await viewBoxOf(still);
-      return Math.max(...after.map((value, index) => Math.abs(value - (before[index] ?? 0))));
-    })
-    .toBeLessThan(0.5);
+  await expectSameCamera(page, still, before);
 });
 
 test("sign in with a passkey starts the login with the typed email", async ({ page }) => {
