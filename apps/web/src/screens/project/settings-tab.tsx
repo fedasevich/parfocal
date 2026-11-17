@@ -23,6 +23,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { AddClassModal } from "./add-class-modal.tsx";
+import { AddPersonDialog } from "./add-person-dialog.tsx";
 import { LabModelsZone } from "./lab-models-zone.tsx";
 import type { NewClass } from "./model.ts";
 import { usePeople } from "./people.ts";
@@ -89,10 +90,12 @@ function ClassRow({
 export function SettingsTab({
   project,
   addClass,
+  addPerson,
   toast,
 }: {
   project: Project;
   addClass: boolean;
+  addPerson?: string | undefined;
   toast: (message: ReactNode, onUndo?: () => void) => void;
 }) {
   const { t } = useLingui();
@@ -110,6 +113,8 @@ export function SettingsTab({
   const { value, change } = useProjectChange(project, toast);
   const [extra, setExtra] = useState<NewClass[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const askedToAdd =
+    addPerson !== undefined && !project.members.some((member) => member.user_id === addPerson);
   const tasks = okData(useListReviewTasks(project.id).data) ?? [];
   const chosen = value.study_template_id ?? overview?.study_template_id ?? templates[0]?.id ?? "";
   const clinical = project.privacy_mode === "clinical";
@@ -350,6 +355,9 @@ export function SettingsTab({
           toast={toast}
           onClose={() => setDeleting(false)}
         />
+      ) : null}
+      {askedToAdd ? (
+        <AddPersonDialog project={project} userId={addPerson} toast={toast} onClose={closeModal} />
       ) : null}
       <AddClassModal
         open={addClass}
