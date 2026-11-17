@@ -1,4 +1,4 @@
-# XXXX. The project owner confirms tile sharing before a lab model runs on a clinical project
+# 0370. The project owner confirms tile sharing before a lab model runs on a clinical project
 
 - Date: 2026-11-17
 - Status: Accepted

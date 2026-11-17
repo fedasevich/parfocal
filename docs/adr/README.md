@@ -333,3 +333,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0367](0367-seeded-fixture-slides-get-their-own-folders.md) | Seeded fixture slides get their own folders under fixture-slides/, with a server-side copy of the original beside their derived files | Accepted | 2026-11-17 |
 | [0368](0368-the-end-to-end-suite-runs-the-api-and-ingest-containers.md) | The end-to-end suite runs the API and ingest containers | Accepted | 2026-11-17 |
 | [0369](0369-the-local-stack-is-the-drill-environment-for-tenant-provisioning.md) | The local stack is the drill environment for tenant provisioning | Accepted | 2026-11-17 |
+| [0370](0370-the-project-owner-confirms-tile-sharing-with-a-lab-model.md) | The project owner confirms tile sharing before a lab model runs on a clinical project | Accepted | 2026-11-17 |
