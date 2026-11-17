@@ -215,7 +215,9 @@ def ai_view(api: ApiAs, s: Study, who: str) -> dict[str, object]:
     client = api(s.people[who])
     export = client.get(f"{s.base}/export")
     layer = client.get(f"{s.base}/layer")
+    crop = client.get(f"/api/slides/{s.slide}/cell-crops/1")
     return {
+        "getCellCrop": crop.json().get("code", crop.status_code),
         "getResultSet": one.json().get("code", one.status_code),
         "listSlideResultSets": len(on_slide.json())
         if on_slide.is_success
@@ -232,6 +234,7 @@ def ai_view(api: ApiAs, s: Study, who: str) -> dict[str, object]:
 
 
 SHOWN = {
+    "getCellCrop": "cell-crop-missing",
     "getResultSet": 200,
     "listSlideResultSets": 1,
     "listSlideAreas": 2,
@@ -240,6 +243,7 @@ SHOWN = {
     "getReviewedLayer": 2,
 }
 HIDDEN = {
+    "getCellCrop": "ai-hidden",
     "getResultSet": "ai-hidden",
     "listSlideResultSets": 0,
     "listSlideAreas": 0,
@@ -248,6 +252,7 @@ HIDDEN = {
     "getReviewedLayer": None,
 }
 OUT_OF_PROJECT = {
+    "getCellCrop": "not-found",
     "getResultSet": "not-found",
     "listSlideResultSets": 404,
     "listSlideAreas": 404,
