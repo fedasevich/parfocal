@@ -1,14 +1,18 @@
 import asyncio
 import gzip
+import io
 import json
 import logging
+import struct
 import uuid
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 from typing import Any
 
 import httpx2
+import tifffile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -24,6 +28,7 @@ from parfocal_common.ingest import folder_of, slide_prefix
 from parfocal_common.jobs import PLATFORM
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.settings import load_settings
+from parfocal_ingest.identify import identify
 from parfocal_ingest.level_directories import (
     Directory,
     directory_of,
@@ -33,11 +38,13 @@ from parfocal_ingest.level_directories import (
     located,
 )
 from parfocal_ingest.parse_jobs import LEVELS_OUTPUT
+from parfocal_ingest.remote_inspect import BLOCK_BYTES, RangedFile, pyramid_in, tiles_in
 from parfocal_ingest.workflow import TILE_INDEX_NAME
 
 logger = logging.getLogger("parfocal.ingest.level_directories_backfill")
 
 STORED = "stored"
+INDEXED = "stored-from-original"
 PRESENT = "present"
 SKIPPED = "skipped"
 FAILED = "failed"
@@ -92,16 +99,60 @@ async def stored_directories(
     }
 
 
+def same_levels(table: Mapping[str, Any], tiles: Mapping[str, Any]) -> bool:
+    levels = table.get("levels") or []
+    indexed = tiles.get("levels") or []
+    return len(levels) == len(indexed) and all(
+        (level.get("width"), level.get("height")) == (entry.get("width"), entry.get("height"))
+        for level, entry in zip(levels, indexed, strict=True)
+    )
+
+
+def tiles_of(source: RangedFile, name: str) -> dict[str, Any] | None:
+    handle = io.BufferedReader(source, BLOCK_BYTES)
+    identified = identify(handle, name)
+    if identified.format is None:
+        return None
+    try:
+        handle.seek(0)
+        found = pyramid_in(handle, identified)
+        return None if found is None else tiles_in(handle, identified, found)
+    except tifffile.TiffFileError, ValueError, OSError, IndexError, struct.error:
+        return None
+
+
+async def original_tiles(store: ObjectStore, original_key: str) -> Any:
+    size = await store.head_object(original_key)
+    if size is None:
+        return None
+    loop = asyncio.get_running_loop()
+
+    def read_at(start: int, length: int) -> bytes:
+        return asyncio.run_coroutine_threadsafe(
+            store.get_range(original_key, start, length), loop
+        ).result()
+
+    name = PurePosixPath(original_key).name
+    return await asyncio.to_thread(tiles_of, RangedFile(read_at, size), name)
+
+
 async def locate_levels(store: ObjectStore, slide: StoredSlide) -> str:
     table_key = f"{slide.folder}{LEVELS_OUTPUT}"
     table_body = await optional_object(store, table_key)
-    tiles_body = await optional_object(store, f"{slide.folder}{TILE_INDEX_NAME}")
-    if table_body is None or tiles_body is None:
+    if table_body is None:
         return SKIPPED
     table = unpacked(table_body)
     if is_current(table):
         return PRESENT
-    tiles = unpacked(tiles_body)
+    tiles_body = await optional_object(store, f"{slide.folder}{TILE_INDEX_NAME}")
+    if tiles_body is not None:
+        tiles = unpacked(tiles_body)
+    elif slide.original_key is not None:
+        tiles = await original_tiles(store, slide.original_key)
+        if tiles is None or not same_levels(table, tiles):
+            return SKIPPED
+    else:
+        return SKIPPED
     directories = (
         {}
         if slide.original_key is None
@@ -112,7 +163,7 @@ async def locate_levels(store: ObjectStore, slide: StoredSlide) -> str:
         return SKIPPED
     body = json.dumps(result, separators=(",", ":")).encode()
     await store.put_object(table_key, body, "application/json")
-    return STORED
+    return STORED if tiles_body is not None else INDEXED
 
 
 async def backfill(engine: AsyncEngine, store: ObjectStore) -> Counter[str]:
@@ -155,9 +206,10 @@ async def run_once(settings: ApiSettings) -> Counter[str]:
         await engine.dispose()
 
 
-def main() -> None:
-    outcomes = asyncio.run(run_once(load_settings(ApiSettings)))
-    print(dict(outcomes))
+def main() -> dict[str, int]:
+    outcomes = dict(asyncio.run(run_once(load_settings(ApiSettings))))
+    print(outcomes)
+    return outcomes
 
 
 if __name__ == "__main__":

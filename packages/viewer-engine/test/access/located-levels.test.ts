@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { type LatencyProxy, startLatencyProxy } from "@parfocal/latency-proxy";
+import { cachedFixture } from "@parfocal/test-fixtures";
 import {
   parseLevelTable,
   signedOpenRequest,
@@ -31,6 +32,7 @@ interface TableLevel {
   readonly downsample: number;
   readonly width: number;
   readonly height: number;
+  readonly stored?: { readonly width: number; readonly height: number };
 }
 
 function levelTable(
@@ -63,7 +65,7 @@ function levelTable(
         downsample: level.downsample,
         width: level.width,
         height: level.height,
-        stored: { width: level.width, height: level.height },
+        stored: level.stored ?? { width: level.width, height: level.height },
         ...located,
       };
     }),
@@ -205,7 +207,42 @@ const philipsFixture: Fixture = {
   },
 };
 
-for (const fixture of [spreadFixture, philipsFixture]) {
+const camelyonFile = "test_065.tif";
+const camelyonCopy = cachedFixture(camelyonFile);
+const camelyonStored: readonly (readonly [number, number])[] = [
+  [77824, 53760],
+  [38912, 27136],
+  [19456, 13824],
+  [9728, 7168],
+  [5120, 3584],
+  [2560, 2048],
+  [1536, 1024],
+  [1024, 512],
+  [512, 512],
+];
+
+const camelyonFixture: Fixture = {
+  title: "CAMELYON16 test_065, a Philips BigTIFF of 9 levels",
+  formatId: "philips-tiff",
+  file: camelyonFile,
+  write: async (path) => {
+    await link(camelyonCopy ?? "", path);
+    return camelyonStored.map(([width, height], level) => ({
+      downsample: 2 ** level,
+      width: Math.round(77824 / 2 ** level),
+      height: Math.round(53760 / 2 ** level),
+      stored: { width, height },
+    }));
+  },
+};
+
+const fixtures = [
+  spreadFixture,
+  philipsFixture,
+  ...(camelyonCopy === null ? [] : [camelyonFixture]),
+];
+
+for (const fixture of fixtures) {
   describe(`a signed open of ${fixture.title} at ${rttMs} ms RTT`, () => {
     let folder = "";
     let origin: Served | null = null;
@@ -302,7 +339,7 @@ for (const fixture of [spreadFixture, philipsFixture]) {
       assert.equal(new Set(ranges).size, ranges.length, "a range was read twice");
       const description = tiff?.directories[0]?.description;
       if (description !== null && description !== undefined) {
-        assert.ok(description[1] > 10 * parserSliceBytes);
+        if (fixture === philipsFixture) assert.ok(description[1] > 10 * parserSliceBytes);
         assert.ok(ranges.every((range) => overlap(range, description) <= parserSliceBytes));
       }
     });

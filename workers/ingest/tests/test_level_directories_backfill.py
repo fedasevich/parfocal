@@ -10,6 +10,7 @@ import pytest
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_ingest.fixture_slides import SYNTHETIC_FOLDER
 from parfocal_ingest.level_directories_backfill import (
+    INDEXED,
     PRESENT,
     SKIPPED,
     STORED,
@@ -52,7 +53,7 @@ def derived() -> tuple[bytes, bytes, bytes]:
     return level_table(found), packed, level_table(found, path, tiles)
 
 
-async def run() -> tuple[list[str], dict, dict, dict, bytes]:
+async def run() -> tuple[list[str], dict, dict, dict, dict, bytes]:
     plain, packed, expected = derived()
     async with httpx2.AsyncClient(timeout=60) as http:
         store = ObjectStore(STORAGE, http)
@@ -63,7 +64,8 @@ async def run() -> tuple[list[str], dict, dict, dict, bytes]:
         remote = StoredSlide("t/a/s/2/", None)
         bare = StoredSlide("t/a/s/3/", f"t/a/s/3/{SLIDE}")
         earlier = StoredSlide("t/a/s/4/", f"t/a/s/4/{SLIDE}")
-        for slide in (uploaded, remote, bare):
+        untiled = StoredSlide("t/a/s/5/", f"t/a/s/5/{SLIDE}")
+        for slide in (uploaded, remote, bare, untiled):
             await store.put_object(f"{slide.folder}levels.json", plain, "application/json")
         await store.put_object(
             f"{earlier.folder}levels.json", without_open_facts(expected), "application/json"
@@ -75,24 +77,26 @@ async def run() -> tuple[list[str], dict, dict, dict, bytes]:
                 "application/json",
                 content_encoding="gzip",
             )
-        for slide in (uploaded, earlier):
+        for slide in (uploaded, earlier, untiled):
             await store.put_object(
                 slide.original_key or "", (SYNTHETIC_FOLDER / SLIDE).read_bytes(), "image/tiff"
             )
-        order = (uploaded, uploaded, remote, bare, earlier, earlier)
+        order = (uploaded, uploaded, remote, bare, earlier, earlier, untiled, untiled)
         states = [await locate_levels(store, slide) for slide in order]
         written = json.loads(await store.get_object(f"{uploaded.folder}levels.json"))
         remote_table = json.loads(await store.get_object(f"{remote.folder}levels.json"))
         rewritten = json.loads(await store.get_object(f"{earlier.folder}levels.json"))
-        return states, written, remote_table, rewritten, expected
+        indexed = json.loads(await store.get_object(f"{untiled.folder}levels.json"))
+        return states, written, remote_table, rewritten, indexed, expected
 
 
 @pytest.mark.db
 def test_a_stored_table_gains_what_ingest_writes_and_keeps_it() -> None:
-    states, written, remote_table, rewritten, expected = asyncio.run(run())
-    assert states == [STORED, PRESENT, STORED, SKIPPED, STORED, PRESENT]
+    states, written, remote_table, rewritten, indexed, expected = asyncio.run(run())
+    assert states == [STORED, PRESENT, STORED, SKIPPED, STORED, PRESENT, INDEXED, PRESENT]
     assert written == json.loads(expected)
     assert rewritten == json.loads(expected)
+    assert indexed == json.loads(expected)
     assert remote_table["bigTiff"] is False
     assert all("ifdOffset" in level for level in remote_table["levels"])
     assert all("ifdBytes" not in level for level in remote_table["levels"])
