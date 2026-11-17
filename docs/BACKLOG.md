@@ -2201,7 +2201,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Ignore a key event that has no key, before any binding is matched.
   Done when a unit test feeds the shortcut step an event without a key and nothing fires or throws.
   Size: S.
-- [ ] SHELL-019 · An address with an unknown search value opens the screen with its default
+- [x] SHELL-019 · An address with an unknown search value opens the screen with its default
   The production click-through on 2026-11-17 opened a project with `?tab=review-tasks` and got "Something went wrong on our side", because the route's search schema threw on a value it did not know. The 32 routes with search schemas hold 51 enums that behave the same, so any stale bookmark, old link or typo breaks a whole screen. The invite route also defaults a missing token to the prototype's `rt14-simona`.
   Make every route's search schema fall back to its default, or drop the key, when a value is unknown or malformed, with one shared helper rather than a catch on each field. Drop the invite route's demo token default, so a missing token shows the invalid invite notice.
   Done when a unit test runs every route's search schema against an unknown value for each enum key and none throws, and a browser test opens a project with an unknown tab and sees the slides tab.
