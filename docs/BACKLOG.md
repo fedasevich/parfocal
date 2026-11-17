@@ -3870,7 +3870,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-005.
   Size: M.
 
-- [ ] AITUM-013 · Anyone who can read a slide maps a view
+- [x] AITUM-013 · Anyone who can read a slide maps a view
   Decision 129 (who may map a view of a slide on the server) chose that everyone who can read the slide gets every AI tool. Open the view map route of AITUM-009 (Map this view asks the server for its tiles) to anyone with read access and count the GPU seconds per person, as the run limits of the other AI routes do. Amend ADR 0357 with a new ADR.
   Done when API tests show a reviewer who can read the slide maps a view, a person without read access gets a 403, and the GPU seconds land on the person who asked.
   Depends on AITUM-009.
