@@ -1831,6 +1831,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the deployed app shows the seeded cells as outlines coloured by class on the three slides on Viv within the VIEW-029 budget, and a browser test shows, hides and pages cells and picks one from the grid.
   Depends on VIEW-074. Size: L.
 
+- [x] VIEW-077 · Focus mode opens without error responses from the fake API
+  Opening the viewer with `focus=true` makes the engine viewer get 403 twice (hidden AI results) and 409 once (a slide with no measured size) before its first read, and TEST-050 (repair three web tests after the engine viewer move) made `apps/web/e2e/viewer-tools.spec.ts` allow exactly those three. The 403s are a fake API fault: the slide's result set list hides the first-read-only set by the task in the page address, but the set detail, cell summary, cell chunk and region routes hid it for any page, so a page of another task asked for a set the list had just offered. The real API answers both from the same per-person state, so the deployed app does not see it (found by reading `blinding.py` and the list SQL, not by signing in). The 409 is the coverage read: the fake refused every slide nobody had covered yet, while the real API answers an empty bitset for a measured slide and 409 only when the slide has no stored size, which the web has no field for, so the app keeps its single read and its ten minute pause.
+  Done when the fake offers and hides the first-read-only set by the same rule on all its routes, a scenario slide nobody has looked at reads back empty coverage, `viewer-tools.spec.ts` no longer allows any HTTP error on the Focus mode scene, and the API client coverage test passes.
+  Size: S.
+
 - [x] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).

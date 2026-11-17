@@ -30,8 +30,10 @@ assert.ok(firstSlide && secondSlide);
 const resultSetId = scenario.resultSets.find((set) => set.key === rt17.resultSet)?.id;
 assert.ok(resultSetId);
 
-const get = async (path: string) => {
-  const response = await fetch(path);
+const taskPage = (taskId: string) => `http://app.test/projects/p/slides/s?task=${taskId}`;
+
+const get = async (path: string, page: string = taskPage(rt17.id)) => {
+  const response = await fetch(path, { headers: { referer: page } });
   return { status: response.status, body: (await response.json()) as Record<string, unknown> };
 };
 
@@ -45,6 +47,17 @@ test("the result set routes answer 403 ai-hidden while the first read is open", 
   const summary = await get(`/api/result-sets/${resultSetId}/cell-summary`);
   assert.equal(summary.status, 403);
   assert.equal(summary.body["code"], "ai-hidden");
+});
+
+test("a page of another task still gets the result set the list offers it", async () => {
+  const otherTask = scenario.reviewTasks.find((task) => task.id !== rt17.id)?.id;
+  assert.ok(otherTask);
+  const detail = await get(`/api/result-sets/${resultSetId}`, taskPage(otherTask));
+  assert.notEqual(detail.status, 403);
+  const summary = await fetch(`/api/result-sets/${resultSetId}/cell-summary`, {
+    headers: { referer: taskPage(otherTask) },
+  });
+  assert.equal(summary.status, 200);
 });
 
 test("no slide shows AI objects while the first read is open", async () => {

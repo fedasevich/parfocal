@@ -1,5 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { CoverageBatch, CoverageGrid, SlideCoverage, SlideTissue } from "../generated/api.ts";
+import { slides } from "./scenario.ts";
 
 const storageKey = "parfocal.fake.coverage";
 
@@ -72,6 +73,16 @@ export function recordFakeCoverage(
   return toSlideCoverage(next);
 }
 
+const unseenGrid: CoverageGrid = { cell: 64, columns: 16, rows: 12 };
+
+const unseenCoverage = (slideId: string): SlideCoverage => ({
+  slide_id: slideId,
+  grid: unseenGrid,
+  seen: base64Of(Array.from({ length: 24 }, () => 0)),
+  seen_cells: 0,
+  updated_at: null,
+});
+
 const notMeasured = () =>
   HttpResponse.json(
     {
@@ -86,7 +97,10 @@ const notMeasured = () =>
 export const coverageHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/coverage", ({ params }) => {
     const stored = readStore()[params.slideId];
-    return stored ? HttpResponse.json(toSlideCoverage(stored)) : notMeasured();
+    if (stored) return HttpResponse.json(toSlideCoverage(stored));
+    return slides.some((slide) => slide.id === params.slideId)
+      ? HttpResponse.json(unseenCoverage(params.slideId))
+      : notMeasured();
   }),
   http.post<{ slideId: string }, CoverageBatch>(
     "*/api/slides/:slideId/coverage",

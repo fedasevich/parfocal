@@ -67,9 +67,9 @@ import { toResultSetDetail } from "./project-handlers.ts";
 import {
   addedOn,
   addObject,
-  aiHiddenForResultSet,
   firstReadOf,
   firstReadOpen,
+  hidesResultSetFrom,
   objectsOn,
   recordFirstRead,
   rememberDecision,
@@ -622,29 +622,29 @@ export function reviewHandlers(): RequestHandler[] {
       toSlideAgreement(String(params.taskId), String(params.slideId)),
     ),
     ...displayChoiceHandlers((taskId) => taskById(taskId)?.code ?? ""),
-    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) => {
-      if (aiHiddenForResultSet(params.resultSetId)) return aiHidden();
+    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params, request }) => {
+      if (hidesResultSetFrom(request, params.resultSetId)) return aiHidden();
       const detail = toResultSetDetail(params.resultSetId);
       return detail === undefined ? undefined : HttpResponse.json(detail);
     }),
     http.get<{ resultSetId: string }>(
       "*/api/result-sets/:resultSetId/cell-summary",
-      async ({ params }) =>
-        aiHiddenForResultSet(params.resultSetId)
+      async ({ params, request }) =>
+        hidesResultSetFrom(request, params.resultSetId)
           ? aiHidden()
           : cellBytes(await fakeSetCells.summary(), "cell-summary"),
     ),
     http.get<{ resultSetId: string; chunk: string }>(
       "*/api/result-sets/:resultSetId/cell-chunks/:chunk",
-      async ({ params }) =>
-        aiHiddenForResultSet(params.resultSetId)
+      async ({ params, request }) =>
+        hidesResultSetFrom(request, params.resultSetId)
           ? aiHidden()
           : cellBytes(await fakeSetCells.chunk(Number(params.chunk)), "cell-chunk"),
     ),
     http.get<{ resultSetId: string }>(
       "*/api/result-sets/:resultSetId/regions",
       ({ params, request }) =>
-        aiHiddenForResultSet(params.resultSetId)
+        hidesResultSetFrom(request, params.resultSetId)
           ? aiHidden()
           : HttpResponse.json({
               regions: fakeSetRegions.filter((region) =>

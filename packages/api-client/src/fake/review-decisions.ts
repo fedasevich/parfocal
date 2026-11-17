@@ -90,6 +90,9 @@ export const aiHiddenForResultSet = (resultSetId: string) => {
   );
 };
 
+export const hidesResultSetFrom = (request: Request, resultSetId: string) =>
+  inRt17Page(request) && aiHiddenForResultSet(resultSetId);
+
 export const firstReadOf = (taskId: string, slideId: string) =>
   firstReads.get(firstReadKey(taskId, slideId));
 
