@@ -93,7 +93,8 @@ class Inspected:
     ranges: bytes
 
 
-def inspected(handle: RangedFile, name: str) -> Inspected | str:
+def inspected(raw: RangedFile, name: str) -> Inspected | str:
+    handle = io.BufferedReader(raw, raw.block_bytes)
     found = identify(handle, name)
     if found.format is None:
         return str(found.refusal)
@@ -110,7 +111,7 @@ def inspected(handle: RangedFile, name: str) -> Inspected | str:
     except tifffile.TiffFileError, ValueError, OSError, IndexError:
         return REMOTE_FORMAT
     handle.seek(0)
-    ranges = ranges_file_of(handle, handle.size, PurePosixPath(name).suffix)
+    ranges = ranges_file_of(handle, raw.size, PurePosixPath(name).suffix)
     return Inspected(found.format, found.variant, base.width, base.height, levels, ranges)
 
 
