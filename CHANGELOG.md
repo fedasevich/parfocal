@@ -2,6 +2,253 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.4.0 (2026-11-17)
+
+### Features
+
+- SHELL-013: Add release notes to Help and rename the menu item Help and what's new
+- SHELL-013: Scan the Help dialog with axe and make its scroll area focusable
+- VIEW-046: Hold wheel and pinch zoom briefly on 5x, 10x, 20x and 40x
+- FOUND-018: Install and import the Modal images on their bases and build the web app in CI
+- FOUND-018: Import modal_app with the Modal client and add debian_slim's compilers in CI
+- AITUM-013: Let anyone who can read a slide map a view and count GPU seconds per person
+- IAM-025: Refuse one-factor sessions in workspaces that require two factors
+- TEST-040: Run the end-to-end suite against the API and ingest containers (wip)
+- TEST-040: Run SSO commands in the API container and retry a new user's first session
+- TEST-037: Give seeded fixture slides their own folders the edge can serve
+- TEST-037: Keep fixture runs going past one bad file, sign in once for every format
+- OPS-021: Add the review area routes to the API
+- OPS-021: Move the review area calls from drafts to the generated client
+- OPS-021: Prove guided review on the seed and list annotate task slides
+- AIP-019: Point the Good tier defaults at the v1 line-up
+- SHELL-014: Lock the screen from the account menu
+- TEST-004: Add the E2E harness with workspace cleanup, debug handle and failure video
+- TEST-004: Install ffmpeg for e2e video in CI and keep video off the timing spec
+- OPS-010: Add an opt-in tenant drill against the local Zitadel and MinIO
+- OPS-010: Say what the local tenant drill does not prove
+- EXP-010: Block wrong destinations in a study task with a visible message
+- OPS-022: Add the viewer area routes to the API
+- OPS-022: Move the viewer area calls from drafts to the generated client
+- OPS-022: Hide AI progress and the typer during a first read and test thread blinding
+- JOBS-008: Ask the project owner to confirm tile sharing before a lab model runs
+- JOBS-008: Let the clinical project owner confirm a pending lab model in settings
+- EXP-009: Record and replay study sessions with masked text and a pointer-only fallback
+- JOBS-009: Run a connected lab model through its endpoint one tile per call
+- OPS-025: Type viewer outlines on a GPU typer runner behind the warm gate
+- OPS-025: Give the typer a least window, skip oversized rings and drop the viewer draft
+- INGEST-026: Save import sources with sealed credentials and import from them
+- IAM-023: Sign in and unlock with a passkey through the hosted login with a login hint
+- IAM-023: Load the profile before a lock so the passkey unlock names the user
+- IAM-023: Post the login hint to the BFF so the email stays out of our URLs and logs
+- OPS-024: Delete the sign-in drafts that the hosted Zitadel login replaced
+- OPS-024: Add the model run defaults, model list and lab connection routes
+- OPS-024: Move the three model calls from drafts to the generated client
+- OPS-026: Export the HoVer-NeXt typer to ONNX and publish it for the viewer
+- JOBS-010: Run a lab model stage that opens its sealed token and stores cells and regions
+- JOBS-010: Scrub the lab token in a stage log context and test a refusing endpoint
+- JOBS-010: Drain only lab runs in a CPU pool function and pin the run classes
+- JOBS-010: Wake the lab model pool when a lab run starts and fix stale model names
+- OPS-023: Add the project and upload area routes to the API
+- OPS-023: Move the project area calls from drafts to the generated client
+- OPS-023: Read the project calls through okData and test first-read slide lists
+- OPS-024: Build the model run move and the study template review defaults
+- OPS-024: Build the team workload and reviewer workload from stored work
+- OPS-024: Build the admin console reads and the invite preview from stored data
+- AISEG-022: Let the outline tier setting choose best quality for the auto layer
+- IAM-013: Wire Zitadel's SCIM server per workspace with a connect-scim command
+- IAM-013: Test connect-scim in CI and mark what the SCIM run did not exercise
+- REMOTE-002: Add a signed webhook per project that imports a slide and its results
+- REMOTE-002: Guard webhook timestamps and closed projects, log rejections, add the ADR
+- REMOTE-002: Attach webhook slides to the named task after ingest and skip duplicates
+- REMOTE-003: Send signed project events from an outbox with retries and pausing
+- REMOTE-003: Check event targets in security alerts and lease a whole delivery batch
+- REMOTE-001: Read slides in place through a range cache (work in progress)
+- REMOTE-001: Inspect remote slides in place and test the offline cache
+- REMOTE-001: Declare read in place in the permission and isolation suites
+- REMOTE-001: Regenerate the API client and data map for read in place
+- OPS-027: Notify the project owner when someone asks for access
+- OPS-027: Add the asker from the project link with a prefilled confirm
+- REMOTE-005: Schedule the event sweep every 5 minutes and keep events for paused targets
+- REMOTE-005: Wake the event sweep when an event is emitted and run it hourly
+- OPS-024: Build the evaluation and clinical report routes at the draft URLs
+- OPS-024: Leave the co-sign AI part empty and keep the fake report format whole
+- IAM-030: Link a SCIM user's first SAML sign-in by email in its organisation
+- IAM-030: Check the linked token's organisation and groups and read the app callback
+- ADMIN-006: Build storage, sources, tokens and webhooks in admin from stored data
+- ADMIN-006: Show only used space when no capacity is set and test the bar in Storybook
+- REMOTE-001: Write the level table and tile index of a remote slide and serve them in place
+- REMOTE-001: Tag a slide read in place and say when it opens from the cache
+- REMOTE-001: Copy a remote slide into Parfocal under the same ID
+- REMOTE-001: Import the result files next to a slide read in place onto it
+- REMOTE-001: Sweep the remote tile caches of every workspace in one runnable pass
+- REMOTE-001: Sweep the remote tile caches on the hourly event schedule
+- REMOTE-001: Filter All slides by storage, copied or read in place
+- REMOTE-001: Copy a remote slide into Parfocal from the live viewer
+- VIEW-073: Cull by cell rows and draw density and dot tiers on the custom WebGPU route
+- TEAM-007: Leave released reviewers out of Team and test each status word on a fake clock
+- WL-018: Nudge in place and add a more menu for due date, reviewer and reassign
+- AISEG-023: Rank typed PanNuke nuclei by exemplar tokens against random
+- REMOTE-006: Notify admins once when a connected source stays down for 15 minutes
+- REMOTE-004: Import new files from a watched source on the hourly run
+- REMOTE-007: Wire the watch switch, import late results, probe before a down notice
+
+### Fixes
+
+- PILOT-001: Give tour and survey cards real backgrounds, calm disabled buttons
+- IAM-025: Confirm Zitadel amr values and prompt=login on a real local token
+- TEST-015: Give headless Firefox software WebGL2 in the browser matrix
+- TEST-015: Run Firefox headed under Xvfb so it gets a GL driver for WebGL2
+- JOBS-008: Type the audit rows in the lab model test helper
+- TEST-040: Declare the new operations, index ADR 0363 and skip the stack test outside uv
+- INGEST-026: Declare the import source operations in the permission matrix
+- SHELL-014: Wait for the reloaded slide to settle before comparing the camera
+- OPS-024: Ask for the session policy only on signed-in sign-in scenes
+- OPS-024: Type the result set counts
+- OPS-024: Use catalogue models in run tests and register the project lab models route
+- OPS-024: Narrow the generated model calls in the client tests
+- INGEST-026: Regenerate the data map for the import source tables
+- TEST-026: Restore the home workspace after the invitation spec and pick one on sign-in
+- TEST-026: Give each golden image worker its own Vite dependency cache
+- REMOTE-001: Key remote slides to their source by workspace and serve a neutral file name
+- REMOTE-001: Chain the merged migrations 0129 to 0132 after 0128
+- OPS-023: Order scope option regions by number when they share a time
+- OPS-024: Type the tenant column, spans, reviewers, tile key and login location
+- REMOTE-005: Hold the event sweep waker in a typed list
+- REMOTE-001: Read remote slides through a buffered reader
+- REMOTE-001: Hold side results until the remote slide is inspected and let a copy retry
+- OPS-003: Quote the preview teardown run name so the hash is not a YAML comment
+- VIEW-073: Rebuild culled shapes on invalidate and check every timing tier draws
+- OPS-024: Move area keys out of the slide stage and expect no draft operations
+- REMOTE-003: Seal seeded event target secrets and let one unreadable target not stop the sweep
+- REMOTE-004: Check source watch audit targets in security alerts
+- TEST-040: Name the uploaded slide file in the overview only in a clinical project
+- TEST-040: Restore sign in with your organisation that OPS-024 removed
+- TEST-028: Leave the whole-slide timing benchmark out of the accuracy run
+- TEST-006: Rebaseline the hit test budget on the hosted runner and list the study storage keys
+
+### Performance
+
+- FOUND-031: Mark the API client side-effect free, lower first-page budget to 366 KB
+- TEST-019: Serve parallel API calls per container and cache hashed assets
+- TEST-019: Flush the SLI batch beside the request instead of in it
+- TEST-019: Log the production latency findings and ask decision 140
+
+### Docs
+
+- OPS-016: Log the v0.3.0 deploy, the smoke locator and the reset fix
+- TEST-020: Log the successful production reset and seed
+- OPS-017: Split the real API switch into one task per area
+- JOBS-000: Record the model run contract with Parfocal and lab endpoints
+- JOBS-000: Log and tick after merge
+- JOBS-000: Ask decision 138 about tile sharing with lab models
+- SHELL-013: Log and tick after merge
+- FOUND-018: Number the ADR from the merge
+- FOUND-018: Log and tick the first merged batch
+- IAM-025: Mark unverified Zitadel details and the parked-member gap in the ADR
+- TEST-040: Number the ADRs from the second merged batch
+- TEST-040: Log the second merged batch
+- PILOT-004: Accept eleven review tasks on the owner's instruction
+- AISEG-021: Tick after the green instanseg run
+- AITUM-009: Tick six review tasks on three green main runs
+- OPS-021: Log and tick the review area switch
+- IAM-025: Ask decision 139 about switching out of a strict workspace
+- AIP-019: Tick AIP-019 and add JOBS-008 from decision 138
+- SHELL-014: Log and tick the manual lock
+- OPS-018: Tick OPS-018 and claim the rest of OPS-010
+- IAM-025: Tick after the real token check
+- TEST-004: Log the harness and claim TEST-026
+- Number the ADRs from the merge
+- OPS-010: Log and tick the provisioning drill
+- EXP-010: Log and tick the study task guard
+- TEST-015: Log and tick the cross-browser matrix
+- OPS-022: Tick the viewer area and add OPS-025 for the typer runner
+- Number the ADRs from the merge
+- JOBS-008: Log and tick tile sharing confirmation
+- JOBS-009: Add running a connected lab model from ADR 0363
+- TEST-026: Log and tick the real API specs
+- Number the ADRs from the merge
+- Number and index the ADRs from the merge
+- OPS-025: Tick four merged tasks and add JOBS-010 and OPS-026
+- IAM-023: Record the passing passkey stack run
+- OPS-026: Log the typer export and its R2 upload
+- REMOTE-000: ADR for read in place, webhook signing and event delivery
+- REMOTE-000: Log and tick the research check
+- REMOTE-000: Index ADR 0379
+- JOBS-010: Number the ADR from the merge
+- JOBS-010: Log and tick the lab model stage
+- OPS-023: Tick the project area and add OPS-027
+- IAM-023: Number the ADR from the merge
+- IAM-023: Log and tick passkey sign-in
+- OPS-024: Log the team, admin and invite preview routes
+- AISEG-022: Log and tick best quality for the auto region tool
+- REMOTE-001: ADR for serving remote slides from cached byte ranges
+- REMOTE-001: Note that the viewer still needs the level table of a remote slide
+- REMOTE-003: Number the ADRs from the integration merge
+- REMOTE-003: Tick the integrated tasks and add REMOTE-005 and IAM-030
+- REMOTE-005: Log the event sweep
+- REMOTE-003: Keep the old word out of the remote sources ADR
+- IAM-030: Index results, ask decision 141 and tick IAM-030 and OPS-024
+- ADMIN-006: Tick ADMIN-006 and ask decision 142
+- REMOTE-001: Record the scheduled cache sweep and add REMOTE-006 for the outage notice
+- REMOTE-001: Tick REMOTE-001 and claim REMOTE-004 and REMOTE-006
+- VIEW-073: Record cell row culling and the detail tiers with their GPU timing
+- VIEW-073: Leave the ADR number to the lead and add the dots tier timing
+- VIEW-073: Number and index ADR 0387
+- VIEW-073: Tick VIEW-073
+- TASK-007: Tick TEAM-007 and WL-018, move TASK-007 to review and ask decision 143
+- AISEG-023: Tick AISEG-023
+- REMOTE-004: Tick REMOTE-004 and REMOTE-006 and add REMOTE-007
+- REMOTE-007: Tick REMOTE-007
+- TEST-040: Log the end-to-end repairs
+- TEST-028: Record the first full test:accuracy run, 396 of 397 passed in 33 minutes
+- VIEW-028: Use the unrounded overlay shares and exact load figures in the Mac results
+- TEST-041: Tick TEST-041
+
+### Tests
+
+- TEST-026: Tag core browser flows @real and run switched areas against the real API
+- TEST-026: Upload the real-API browser traces when the e2e job fails
+- TEST-026: Sign off a task whose reviews are all in, with a per-task fake sign-off
+- OPS-023: Let the deputy own the outside project in the permission matrix
+- OPS-024: Probe the writes added tonight in the write isolation suite
+- REMOTE-003: Probe the webhook and event target writes across workspaces
+- IAM-030: Mark the SSO email domain as tenant data
+- REMOTE-001: Cover the copy button end to end and filter slide neighbours by storage
+- VIEW-073: Type the shape corner in the culled set test
+- TASK-007: Add real API specs that nudge from Assigned by me and nudge and reassign from Team
+- TEAM-007: Show every status word on Team and keep the overdue test clear of midnight
+- REMOTE-003: Keep event and webhook tests to their own rows in the shared database
+- REMOTE-004: Run the watch scan and outage check through the app role hourly path
+- REMOTE-006: Expect the source field on a thread notification target
+- TEST-040: Clear the prefilled domain before checking the organisation sign-in button
+- VIEW-028: Time 81k real Huron-1 nuclei at overview on the Viv route, 0.44 ms against 1 ms
+- VIEW-029: Time the Viv route at 1.6M nuclei, 1.60 ms against 6 ms, and test its cull window
+- TEST-040: Count the restored SSO sign-in scene in the prototype index
+- TEST-041: Fail when a required API setting is missing from the stack env or the secrets
+
+### Other
+
+- OPS-021: Claim the first batch of the night run
+- TEST-037: Claim three more tasks for the night run
+- OPS-021: Add the quick merge script and update the README
+- OPS-022: Claim the second wave of the night run
+- INGEST-026: Claim INGEST-026 and EXP-010
+- EXP-009: Claim study session replay
+- OPS-024: Claim the last area switch
+- IAM-023: Claim IAM-023 and REMOTE-000
+- REMOTE-001: Claim REMOTE-001 and REMOTE-002
+- REMOTE-003: Claim REMOTE-003 and IAM-013
+- OPS-023: Merge the project area into the lead state
+- AITUM-014: Claim the foundation model probe
+- AITUM-014: Release, the Hugging Face token of decision 125 is not set
+- AISEG-022: Claim best quality for the auto region tool
+- ADMIN-006: Claim the storage, sources, API and webhooks screen
+- VIEW-073: Accept VIEW-038 and claim VIEW-073, TASK-007, WL-018 and TEAM-007
+- AISEG-023: Accept MLEVAL-010 and claim AISEG-023
+- REMOTE-007: Claim REMOTE-007
+- OPS-017: Tick TEST-040 and TEST-004 and claim OPS-017 and TEST-041
+- OPS-017: Move OPS-017 to review for the production check
+
 ## v0.3.1 (2026-11-16)
 
 ### Fixes
