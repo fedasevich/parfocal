@@ -8,6 +8,7 @@ import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
+import { useNoteKey } from "../screens/review/note-key.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import {
   storedType,
@@ -124,6 +125,7 @@ export function StageReviewObjects({
   guided = false,
   focus = null,
   onComments,
+  onNote,
   onCurrent,
 }: {
   engine: ViewerEngine;
@@ -134,6 +136,7 @@ export function StageReviewObjects({
   guided?: boolean;
   focus?: { onShowUi: () => void } | null;
   onComments: (object: string) => void;
+  onNote?: (object: string) => void;
   onCurrent?: (object: string | null) => void;
 }) {
   const { t } = useLingui();
@@ -146,6 +149,9 @@ export function StageReviewObjects({
   const current =
     chosen ??
     (guided || focus !== null ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
+  useNoteKey(() => {
+    if (current !== null && decided.has(current)) onNote?.(current);
+  });
   const flyTo = (id: string | null) => {
     const area = outlineArea(objects.find((item) => item.object === id)?.outline);
     if (area !== null) void engine.flyToArea(area);

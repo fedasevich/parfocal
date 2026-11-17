@@ -3,28 +3,26 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
-import { useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { useBindings } from "../keys/personal-keys.ts";
+import type { Fired } from "../keys/registry.ts";
+import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { answersOf, countWord } from "../screens/review/decision-style.ts";
 import type { ReviewSession } from "../screens/review/review-data.ts";
 
 const tone = { agree: "ok", disagree: "bad", unsure: "warn" } as const;
 
-export const isFocusKey = (event: KeyboardEvent) =>
-  (event.metaKey || event.ctrlKey) && event.key === "\\";
+const focusActions = ["hideui"];
 
 export function useFocusKey(onToggle: () => void) {
   const toggle = useRef(onToggle);
   toggle.current = onToggle;
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (!isFocusKey(event)) return;
-      event.preventDefault();
-      toggle.current();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  const bindings = useBindings(["viewer"], focusActions);
+  const onFire = useCallback((fired: Fired) => {
+    if (fired.phase === "press") toggle.current();
   }, []);
+  useHotkeys(bindings, onFire);
 }
 
 export function StageFocusPill({
