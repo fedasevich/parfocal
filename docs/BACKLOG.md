@@ -5733,7 +5733,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on REMOTE-000. Refs mock: upload/events.
   Size: M.
 
-- [ ] REMOTE-005 · The event delivery sweep runs in production
+- [x] REMOTE-005 · The event delivery sweep runs in production
   REMOTE-003 (events out) writes project events to an outbox, but nothing in production runs `python -m parfocal_api.event_delivery`, so events stay pending. Run the sweep on a Modal schedule that scales to zero between runs, and record events that happen while a target is paused so they can be replayed.
   Done when a deployed schedule delivers a test event to a fake receiver set up for the check, a paused target's events are kept and replayable, and the schedule's cost is in `knowledge/platform.md`.
   Depends on REMOTE-003. Size: S.
