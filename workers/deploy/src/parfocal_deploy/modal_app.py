@@ -17,7 +17,7 @@ from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 
 APP_NAME = "parfocal-api"
 WEB_FUNCTION = "web-eu"
-WEB_REGION = "eu"
+WEB_REGION = "eu-west"
 WORKER_REGION = "eu"
 WEB_ROUTING_REGION = "eu-west"
 INGEST_FUNCTION = "ingest"

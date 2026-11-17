@@ -87,8 +87,8 @@ def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
     assert all(pool.min_containers == 0 for pool in POOLS)
 
 
-def test_only_the_web_function_enters_at_dublin() -> None:
-    assert (WEB_REGION, WEB_ROUTING_REGION) == ("eu", "eu-west")
+def test_only_the_web_function_is_pinned_narrow_and_enters_at_dublin() -> None:
+    assert (WEB_REGION, WEB_ROUTING_REGION) == ("eu-west", "eu-west")
     assert WEB_OPTIONS["region"] == WEB_REGION
     assert WEB_OPTIONS["routing_region"] == WEB_ROUTING_REGION
     for options in (INGEST_OPTIONS, EVENTS_OPTIONS):
