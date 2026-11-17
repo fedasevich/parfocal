@@ -116,7 +116,8 @@ class PasswordResetRequest(BaseModel):
 
 
 class PasswordReset(BaseModel):
-    email: Text
+    email: Text | None = None
+    user_id: Annotated[str, StringConstraints(max_length=64)] | None = None
     code: Annotated[str, StringConstraints(max_length=32)]
     password: Text
     return_to: Text | None = None
@@ -389,8 +390,9 @@ async def reset_password(
 ) -> SignInLanding | JSONResponse:
     auth = auth_state(request)
     login = login_of(auth)
-    email = reset.email.strip()
-    await throttle(auth, "reset-confirm", email)
+    email = (reset.email or "").strip()
+    user_id = (reset.user_id or "").strip()
+    await throttle(auth, "reset-confirm", email or user_id)
     if len(reset.password) < MIN_PASSWORD_LENGTH:
         return problem_response(
             422,
@@ -405,7 +407,7 @@ async def reset_password(
             ],
         )
     try:
-        found = await login.find_user(email)
+        found = await login.user_by_id(user_id) if user_id else await login.find_user(email)
         if found is None:
             raise InvalidCodeError
         await login.set_password(found.user_id, reset.code.strip(), reset.password)

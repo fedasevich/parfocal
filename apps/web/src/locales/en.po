@@ -4753,6 +4753,10 @@ msgstr "Check the address first."
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr "Check the address to list what is there. Nothing is fetched yet."
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Check the code from your email, then enter a new password."
+msgstr "Check the code from your email, then enter a new password."
+
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Check the line"
 msgstr "Check the line"

@@ -27,6 +27,16 @@ test("a forgotten password is reset with the emailed code and signs in", async (
   await expect(page).toHaveURL(/\/projects$/);
 });
 
+test("the emailed link opens the reset screen with the code filled in", async ({ page }) => {
+  await page.goto(`/sign-in?scene=reset&user_id=3141592&code=${code}&return_to=%2Fprojects`);
+  await expect(page.getByRole("heading", { name: "Choose a new password" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Reset code" })).toHaveValue(code);
+  await expect(page.getByRole("button", { name: "Set password and sign in" })).toBeDisabled();
+  await page.getByLabel("New password", { exact: true }).fill(newPassword);
+  await page.getByRole("button", { name: "Set password and sign in" }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+});
+
 test("settings remove a saved passkey", async ({ page }) => {
   const authenticator = await addVirtualAuthenticator(page);
   await page.goto("/settings/privacy");

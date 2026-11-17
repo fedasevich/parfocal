@@ -4751,6 +4751,10 @@ msgstr ""
 msgid "Check the address to list what is there. Nothing is fetched yet."
 msgstr ""
 
+#: src/screens/onboarding/password-reset-forms.tsx
+msgid "Check the code from your email, then enter a new password."
+msgstr ""
+
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Check the line"
 msgstr ""

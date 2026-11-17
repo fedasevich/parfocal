@@ -5399,8 +5399,8 @@ export interface PasskeySignInStart {
 }
 
 export interface PasswordReset {
-  /** @maxLength 320 */
-  email: string;
+  email?: string | null;
+  user_id?: string | null;
   /** @maxLength 32 */
   code: string;
   /** @maxLength 320 */

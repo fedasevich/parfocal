@@ -70023,9 +70023,28 @@
       "PasswordReset": {
         "properties": {
           "email": {
-            "type": "string",
-            "maxLength": 320,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
           },
           "code": {
             "type": "string",
@@ -70052,7 +70071,6 @@
         },
         "type": "object",
         "required": [
-          "email",
           "code",
           "password"
         ],

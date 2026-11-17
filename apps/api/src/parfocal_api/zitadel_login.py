@@ -94,6 +94,7 @@ class ZitadelLogin:
     organization_id: str | None
     http: httpx2.AsyncClient
     rp_id: str = "localhost"
+    app_origin: str = "http://localhost:5173"
 
     def headers(self) -> dict[str, str]:
         return {"authorization": f"Bearer {self.token}", "accept": "application/json"}
@@ -166,7 +167,23 @@ class ZitadelLogin:
             raise LoginClientError(f"verifying an email answered {response.status_code}")
 
     async def request_password_reset(self, user_id: str) -> None:
-        await self.ok("POST", f"/v2/users/{user_id}/password_reset", {})
+        query = "scene=reset&user_id={{.UserID}}&code={{.Code}}"
+        template = f"{self.app_origin}/sign-in?{query}"
+        await self.ok(
+            "POST", f"/v2/users/{user_id}/password_reset", {"sendLink": {"urlTemplate": template}}
+        )
+
+    async def user_by_id(self, user_id: str) -> FoundUser | None:
+        response = await self.call("GET", f"/v2/users/{user_id}", {})
+        if response.status_code == 404:
+            return None
+        if response.status_code >= 300:
+            raise LoginClientError(f"reading a user answered {response.status_code}")
+        user: dict[str, Any] = response.json().get("user", {})
+        if "human" not in user:
+            return None
+        email_state = user["human"].get("email", {})
+        return FoundUser(str(user["userId"]), bool(email_state.get("isVerified", False)))
 
     async def set_password(self, user_id: str, code: str, password: str) -> None:
         response = await self.call(
@@ -326,4 +343,5 @@ def login_client(settings: ApiSettings, http: httpx2.AsyncClient) -> ZitadelLogi
         organization_id=settings.zitadel_organization_id,
         http=http,
         rp_id=settings.public_origin.host or "localhost",
+        app_origin=str(settings.public_origin).rstrip("/"),
     )
