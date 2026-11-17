@@ -1,7 +1,8 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type EvaluationReport, evaluationReportSchema } from "../draft/evaluation-report.ts";
+import { reportFormatSchema } from "../draft/report-layout.ts";
 import {
   getGetDisagreementQueueMockHandler,
+  getGetEvaluationReportMockHandler,
   getGetMyAdjudicationMockHandler,
   getGetSignOffSummaryMockHandler,
   getGetTaskEvaluationMockHandler,
@@ -19,6 +20,7 @@ import type {
   Evaluation,
   EvaluationChange,
   EvaluationChanges,
+  EvaluationReport,
   MyAdjudication,
   MyAdjudicationTask,
   QueuedObject,
@@ -28,7 +30,6 @@ import type {
 } from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import {
   fakeQueueScene,
   type LiveRow,
@@ -412,7 +413,7 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
   const project = projectByCode(current.project);
   const template = studyTemplates.find((item) => item.key === "sn");
   const other = taskId === comparisonId();
-  return evaluationReportSchema.parse({
+  return {
     task_id: taskId,
     task_code: other ? comparisonTask.code : current.code,
     round_name: other ? "Round 1" : "Round 2",
@@ -432,7 +433,8 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
       version: reportTemplate.version,
       latest_version: reportTemplate.latestVersion,
       retired_on: fakeQueueScene().retired ? reportTemplate.retiredOn : null,
-      blocks: reportTemplate.blocks,
+      blocks: [...reportTemplate.blocks],
+      format: reportFormatSchema.parse({}),
     },
     formats: reportFormats,
     confusion,
@@ -446,7 +448,7 @@ export const toEvaluationReport = (taskId: string): EvaluationReport => {
     })),
     opinion_question: opinionQuestion.text,
     changes: loggedChanges(queueState().signed),
-  });
+  };
 };
 
 const taskPath = "*/api/review-tasks/:taskId";
@@ -490,22 +492,6 @@ const toMyAdjudications = (): MyAdjudication[] =>
         sent_at: item.sentAt,
       };
     });
-
-export const getGetEvaluationReportMockHandler = (overrideResponse?: EvaluationReport) =>
-  http.get<{ taskId: string }>(`${taskPath}/evaluation-report`, ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toEvaluationReport(params.taskId)),
-  );
-
-const taskApi = "/api/review-tasks/{task_id}";
-
-export const adjudicationDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getEvaluationReport",
-    method: "get",
-    path: `${taskApi}/evaluation-report`,
-    handler: () => getGetEvaluationReportMockHandler(),
-  },
-];
 
 type ObjectParams = { taskId: string; slideId: string; objectId: string };
 
@@ -559,6 +545,7 @@ export function adjudicationHandlers(): RequestHandler[] {
     getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),
     getListMyAdjudicationsMockHandler(() => toMyAdjudications()),
     getGetTaskEvaluationMockHandler(({ params }) => toTaskEvaluation(String(params.taskId))),
+    getGetEvaluationReportMockHandler(({ params }) => toEvaluationReport(String(params.taskId))),
     getGetSignOffSummaryMockHandler(({ params }) => toSignOffSummary(String(params.taskId))),
     getListEvaluationChangesMockHandler(({ params }) => toEvaluationChanges(String(params.taskId))),
     getStartEvaluationVersionMockHandler(async ({ request }) => {

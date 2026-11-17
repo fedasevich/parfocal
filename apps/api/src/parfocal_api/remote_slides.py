@@ -126,7 +126,8 @@ class Grant:
 
 
 def spans(value: Any) -> list[tuple[int, int]]:
-    return [(int(start), int(end)) for start, end in value or []]
+    pairs: list[tuple[int, int]] = value or []
+    return [(int(start), int(end)) for start, end in pairs]
 
 
 def grant_of(request: Request, slide_id: uuid.UUID, name: str, authorization: str | None) -> Grant:

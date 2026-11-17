@@ -233,7 +233,7 @@ async def list_team_workload(
     def shown(task: Any) -> TeamTask:
         sent_on = task.created_at.date()
         due_on = task.due_on or sent_on
-        reviewers = []
+        reviewers: list[TeamReviewer] = []
         for user_id, pace in paces.get(task.id, {}).items():
             away, until = away_until(availability.get(user_id))
             reviewers.append(

@@ -138,7 +138,7 @@ def test_a_passkey_login_names_the_user_only_to_the_identity_provider(
     )
     assert started.status_code == 200
     assert email not in str(started.request.url)
-    location = urlparse(started.json()["location"])
+    location = urlparse(str(started.json()["location"]))
     assert f"{location.scheme}://{location.netloc}" == ISSUER.rstrip("/")
     query = parse_qs(location.query)
     assert query["login_hint"] == [email]
@@ -149,7 +149,7 @@ def test_a_passkey_login_names_the_user_only_to_the_identity_provider(
     assert "/cases/S26-0009?z=2" in hop.text
     assert email not in caplog.text
     plain = browser.client.post("/api/auth/login", json={"login_hint": " "})
-    assert "login_hint" not in parse_qs(urlparse(plain.json()["location"]).query)
+    assert "login_hint" not in parse_qs(urlparse(str(plain.json()["location"])).query)
     too_long = browser.client.post("/api/auth/login", json={"login_hint": "a" * 321})
     assert too_long.status_code == 422
     hinted_get = browser.client.get("/api/auth/login", params={"login_hint": email})
