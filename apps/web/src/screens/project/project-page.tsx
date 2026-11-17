@@ -40,6 +40,7 @@ export type ProjectView = {
   open?: string | undefined;
   importFailed?: boolean | undefined;
   addClass?: boolean | undefined;
+  addPerson?: string | undefined;
 };
 
 const privacyTag = (project: Project) =>
@@ -282,7 +283,12 @@ export function ProjectPage({
           ) : view.tab === "tasks" ? (
             <TasksTab project={project} tasks={tasks} toast={toast.show} />
           ) : (
-            <SettingsTab project={project} addClass={view.addClass ?? false} toast={toast.show} />
+            <SettingsTab
+              project={project}
+              addClass={view.addClass ?? false}
+              addPerson={view.addPerson}
+              toast={toast.show}
+            />
           )}
         </div>
       </div>

@@ -140,6 +140,37 @@ def test_asking_for_project_access_records_one_request(api: ApiAs, database: str
     )
 
 
+def test_asking_for_project_access_tells_the_owner_once_and_the_owner_adds_the_person(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    tenant = uuid.UUID(str(tenant_of(database, r)))
+    closed = make_project(database, tenant, "de-identified")
+    join_project(database, closed, r.people["owner"], "owner")
+    asker = r.people["first"]
+    url = f"/api/projects/{closed}/access-requests"
+    assert api(asker).post(url).status_code == 200
+    assert api(asker).post(url).status_code == 200
+
+    def asks() -> list[dict[str, object]]:
+        inbox = api(r.people["owner"]).get("/api/me/notifications").json()["notifications"]
+        return [item for item in inbox if item["kind"] == "project-access-asked"]
+
+    found = asks()
+    assert len(found) == 1
+    assert found[0]["target_kind"] == "project"
+    assert found[0]["target_id"] == str(closed)
+    assert found[0]["payload"] == {"user_id": str(asker.user_id)}
+    assert found[0]["link"] == f"/projects/{closed}?tab=people&add={asker.user_id}"
+    inbox = api(asker).get("/api/me/notifications").json()["notifications"]
+    assert [item for item in inbox if item["kind"] == "project-access-asked"] == []
+    added = api(r.people["owner"]).put(
+        f"/api/projects/{closed}/members/{asker.user_id}", json={"role": "reviewer"}
+    )
+    assert added.status_code == 200, added.text
+    assert api(asker).post(url).status_code == 409
+
+
 def test_imports_and_the_upload_batch_list_the_callers_uploads(api: ApiAs, database: str) -> None:
     r = review(api, database)
     me = r.people["owner"]

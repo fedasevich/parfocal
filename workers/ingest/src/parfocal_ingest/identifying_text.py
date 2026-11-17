@@ -2,10 +2,17 @@ import re
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import BinaryIO
 
 import tifffile
 
-from parfocal_ingest.restricted_ranges import ByteRange, merged, ranges_document, restricted_ranges
+from parfocal_ingest.restricted_ranges import (
+    ByteRange,
+    merged,
+    ranges_document,
+    restricted_ranges,
+    restricted_ranges_of,
+)
 
 IMAGE_DESCRIPTION = 270
 DOCUMENT_NAME = 269
@@ -147,19 +154,35 @@ def text_tags(tiff: tifffile.TiffFile) -> Iterator[tuple[int, int, int]]:
 
 
 def identifying_text(path: Path) -> IdentifyingText:
-    found = IdentifyingText()
     try:
-        with tifffile.TiffFile(path) as tiff:
+        handle = path.open("rb")
+    except OSError:
+        return IdentifyingText()
+    with handle:
+        return identifying_text_of(handle)
+
+
+def identifying_text_of(handle: BinaryIO) -> IdentifyingText:
+    found = IdentifyingText()
+    handle.seek(0)
+    try:
+        with tifffile.TiffFile(handle) as tiff:
             spans = list(text_tags(tiff))
     except tifffile.TiffFileError, ValueError, OSError, IndexError:
         return found
-    with path.open("rb") as handle:
-        for code, offset, count in spans:
-            handle.seek(offset)
-            tag_text(code, handle.read(count), offset, found)
+    for code, offset, count in spans:
+        handle.seek(offset)
+        tag_text(code, handle.read(count), offset, found)
     return IdentifyingText(merged(found.identifying), merged(found.barcode))
 
 
 def ranges_file(path: Path) -> bytes:
     text = identifying_text(path)
     return ranges_document(restricted_ranges(path), text.identifying, text.barcode)
+
+
+def ranges_file_of(handle: BinaryIO, size: int, suffix: str) -> bytes:
+    text = identifying_text_of(handle)
+    handle.seek(0)
+    ranges = restricted_ranges_of(handle, size, suffix)
+    return ranges_document(ranges, text.identifying, text.barcode)

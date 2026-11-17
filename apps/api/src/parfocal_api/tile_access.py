@@ -7,22 +7,25 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
-from typing import Annotated, Any, cast
+from typing import Annotated, Any, Literal, cast
 
-from fastapi import APIRouter, Header, Response
+from fastapi import APIRouter, Header, Request, Response
 from pydantic import BaseModel
 from sqlalchemy import select
 
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
+from parfocal_api.cases import keyring_of
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
+from parfocal_api.remote_reads import probed_offline, served_name
 from parfocal_api.restricted_images import sees_restricted
-from parfocal_api.tables import PrivacyMode, projects, slides
+from parfocal_api.tables import PrivacyMode, SlideStorage, projects, slides
 from parfocal_api.token_keys import decoded_key, usable_keys
 from parfocal_api.uploads import Settings
 from parfocal_common.ingest import RESTRICTED_RANGES_NAME, folder_of, slide_prefix
+from parfocal_common.link_fetch import policy_of
 from parfocal_common.object_store import ObjectStore, StorageError
 
 TOKEN_VERSION = 1
@@ -50,6 +53,8 @@ class TileAccess(BaseModel):
     base_path: str
     original: str
     format: str | None
+    storage: Literal["uploaded", "remote"] = "uploaded"
+    offline: bool = False
 
 
 router = APIRouter(prefix="/api/slides/{slide_id}/tile-access", tags=["slides"])
@@ -156,6 +161,7 @@ async def restricted_ranges(store: ObjectStore, folder: str, file_bytes: int) ->
 @router.get("", operation_id="getTileAccess", **require(Permission.SEE_SLIDES))
 async def get_tile_access(
     slide_id: uuid.UUID,
+    request: Request,
     response: Response,
     principal: CurrentPrincipal,
     connection: TenantConnection,
@@ -171,6 +177,11 @@ async def get_tile_access(
                 slides.c.original_key,
                 slides.c.file_bytes,
                 slides.c.format,
+                slides.c.storage,
+                slides.c.source_id,
+                slides.c.remote_path,
+                slides.c.remote_etag,
+                slides.c.remote_failures,
                 projects.c.privacy_mode,
             )
             .join(projects, projects.c.id == slides.c.project_id)
@@ -183,7 +194,8 @@ async def get_tile_access(
     await require_slide_reading(
         connection, principal, row.project_id, mode, slide_id, "Slide not found"
     )
-    if row.original_key is None or row.file_bytes is None:
+    remote = row.storage == SlideStorage.REMOTE
+    if row.file_bytes is None or (row.original_key is None and not remote):
         raise SlideFileNotFoundError
     keys = usable_keys(settings.tile_token_key)
     if keys is None:
@@ -206,14 +218,30 @@ async def get_tile_access(
             slide_id,
             tenant_id=row.tenant_id,
         )
-    folder = folder_of(row.original_key)
+    offline = False
+    if remote:
+        offline = await probed_offline(
+            connection,
+            keyring_of(request),
+            row,
+            slide_id,
+            policy_of(settings.link_trusted_origins),
+            settings.link_read_seconds,
+        )
+        folder = slide_prefix(row.tenant_id, slide_id)
+        original = served_name(row.remote_path)
+        etag = row.remote_etag
+        ranges = await restricted_ranges(store, folder, row.file_bytes)
+    else:
+        folder = folder_of(row.original_key)
+        original = PurePosixPath(row.original_key).name
+        ranges, stored = await asyncio.gather(
+            restricted_ranges(store, folder, row.file_bytes), store.stat_object(row.original_key)
+        )
+        etag = stored.etag if stored is not None and stored.etag else None
     labels = await sees_restricted(connection, principal, row.project_id, mode)
-    ranges, stored = await asyncio.gather(
-        restricted_ranges(store, folder, row.file_bytes), store.stat_object(row.original_key)
-    )
     closed, blank = ranges.served(row.file_bytes, mode is not PrivacyMode.CLINICAL, not labels)
     expires = now + TOKEN_SECONDS
-    original = PurePosixPath(row.original_key).name
     claims = {
         **viewer,
         "o": original,
@@ -223,15 +251,19 @@ async def get_tile_access(
     }
     if blank:
         claims["b"] = [list(span) for span in blank]
-    if stored is not None and stored.etag:
-        claims["g"] = stored.etag
-    if folder != slide_prefix(row.tenant_id, slide_id):
+    if etag:
+        claims["g"] = etag
+    if remote:
+        claims["r"] = 1
+    elif folder != slide_prefix(row.tenant_id, slide_id):
         claims["p"] = folder
     return TileAccess(
         token=sign_capability(keys[0], claims),
         expires_at=datetime.fromtimestamp(expires, UTC),
         lifetime_seconds=TOKEN_SECONDS,
-        base_path=f"/tiles/{slide_id}/",
+        base_path=f"/api/remote-tiles/{slide_id}/" if remote else f"/tiles/{slide_id}/",
         original=original,
         format=row.format,
+        storage=SlideStorage(row.storage).value,
+        offline=offline,
     )

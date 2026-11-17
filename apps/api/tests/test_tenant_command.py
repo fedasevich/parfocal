@@ -2,7 +2,9 @@ import asyncio
 import json
 import uuid
 from collections.abc import Awaitable, Callable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 import httpx2
@@ -10,6 +12,13 @@ import pytest
 from db_support import APP_URL, OWNER_URL, TEST_MASTER_KEYS, migrated_database, query, with_database
 from storage_support import TEST_STORAGE
 
+from parfocal_api.scim_provisioning import (
+    SCIM_ROLES,
+    ScimConnectionRequest,
+    connect_scim,
+    scim_endpoint,
+)
+from parfocal_api.sso_provisioning import NoIdpOrganisationError
 from parfocal_api.tenant_command import ProvisioningSettings, main
 from parfocal_api.zitadel_directory import (
     ACTIVE,
@@ -17,6 +26,7 @@ from parfocal_api.zitadel_directory import (
     DirectoryError,
     ZitadelDirectory,
 )
+from parfocal_common.db import create_engine
 
 LOCAL_ZITADEL = Path(__file__).resolve().parents[3] / ".zitadel/e2e.env"
 
@@ -32,6 +42,9 @@ class FakeZitadel:
     def __init__(self) -> None:
         self.organisations: list[dict[str, str]] = []
         self.create_status = 201
+        self.machine_users: dict[str, str] = {}
+        self.members: dict[str, list[str]] = {}
+        self.tokens: list[tuple[str, str]] = []
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
         if request.headers.get("authorization") != "Bearer admin":
@@ -47,6 +60,8 @@ class FakeZitadel:
             organisation_id = f"org-{len(self.organisations)}"
             self.organisations.append({"id": organisation_id, "name": name, "state": ACTIVE})
             return httpx2.Response(201, json={"organizationId": organisation_id})
+        if request.url.path.startswith("/management/v1/"):
+            return self.manage(request, request.headers.get("x-zitadel-orgid", ""))
         if request.method == "DELETE":
             organisation_id = request.url.path.rsplit("/", 1)[-1]
             if organisation_id == "broken":
@@ -55,6 +70,32 @@ class FakeZitadel:
                 return httpx2.Response(404, json={"code": 5})
             self.organisations = [o for o in self.organisations if o["id"] != organisation_id]
             return httpx2.Response(200, json={})
+        return httpx2.Response(404, json={})
+
+    def manage(self, request: httpx2.Request, organisation_id: str) -> httpx2.Response:
+        path = request.url.path.removeprefix("/management/v1")
+        body: dict[str, Any] = json.loads(request.content) if request.content else {}
+        if path == "/users/_search":
+            name = body["queries"][0]["userNameQuery"]["userName"]
+            key = f"{organisation_id}/{name}"
+            found = [{"id": self.machine_users[key]}] if key in self.machine_users else []
+            return httpx2.Response(200, json={"result": found})
+        if path == "/users/machine":
+            key = f"{organisation_id}/{body['userName']}"
+            self.machine_users[key] = f"user-{len(self.machine_users)}"
+            return httpx2.Response(200, json={"userId": self.machine_users[key]})
+        if path == "/orgs/me/members" and request.method == "POST":
+            if body["userId"] in self.members:
+                return httpx2.Response(409, json={"code": 6})
+            self.members[body["userId"]] = body["roles"]
+            return httpx2.Response(200, json={})
+        if path.startswith("/orgs/me/members/") and request.method == "PUT":
+            self.members[path.rsplit("/", 1)[-1]] = body["roles"]
+            return httpx2.Response(200, json={})
+        if path.endswith("/pats"):
+            token = f"pat-{len(self.tokens)}"
+            self.tokens.append((token, body["expirationDate"]))
+            return httpx2.Response(200, json={"tokenId": token, "token": token})
         return httpx2.Response(404, json={})
 
 
@@ -126,6 +167,32 @@ def test_the_directory_treats_a_missing_organisation_as_removed_and_raises_on_er
     zitadel.create_status = 409
     with pytest.raises(DirectoryError, match="409"):
         against_fake(zitadel, "admin", create)
+
+
+def test_the_scim_client_is_one_machine_user_per_organisation_with_a_fresh_token() -> None:
+    zitadel = FakeZitadel()
+    expires = datetime(2027, 11, 17, tzinfo=UTC)
+
+    async def connect(directory: ZitadelDirectory) -> tuple[str, str]:
+        user = await directory.ensure_machine_user("org-a", "scim-a", "A SCIM")
+        await directory.grant_organisation_roles("org-a", user, SCIM_ROLES)
+        return user, await directory.issue_personal_token("org-a", user, expires)
+
+    first = against_fake(zitadel, "admin", connect)
+    second = against_fake(zitadel, "admin", connect)
+    assert first == ("user-0", "pat-0")
+    assert second == ("user-0", "pat-1")
+    assert zitadel.members == {"user-0": ["ORG_USER_MANAGER"]}
+    assert zitadel.tokens[0][1] == "2027-11-17T00:00:00Z"
+    assert scim_endpoint("http://localhost:8089/", "org-a") == (
+        "http://localhost:8089/scim/v2/org-a"
+    )
+
+    async def refused(directory: ZitadelDirectory) -> str:
+        return await directory.ensure_machine_user("org-a", "scim-a", "A SCIM")
+
+    with pytest.raises(DirectoryError, match="search users: 401"):
+        against_fake(zitadel, "wrong", refused)
 
 
 @pytest.fixture
@@ -222,3 +289,133 @@ def test_the_command_provisions_and_deprovisions_a_tenant_against_the_local_zita
     with pytest.raises(SystemExit) as unknown:
         main(["deprovision", str(uuid.uuid4())], settings)
     assert unknown.value.code == 1
+
+
+SCIM_USER = "urn:ietf:params:scim:schemas:core:2.0:User"
+PATCH_OP = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+
+
+def scim_patch(endpoint: str, headers: dict[str, str], user_id: str, operation: object) -> int:
+    response = httpx2.patch(
+        f"{endpoint}/Users/{user_id}",
+        headers=headers,
+        json={"schemas": [PATCH_OP], "Operations": [operation]},
+    )
+    return response.status_code
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures("storage")
+def test_a_scim_client_creates_updates_and_deactivates_users_in_the_local_zitadel(
+    drill: str, zitadel: dict[str, str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    settings = settings_for(drill, zitadel)
+    slug = f"scim-{uuid.uuid4().hex[:8]}"
+    tenant_id = command(
+        [
+            "provision",
+            "--organisation-slug",
+            f"org-{slug}",
+            "--organisation-name",
+            f"Organisation {slug}",
+            "--slug",
+            slug,
+            "--name",
+            f"Workspace {slug}",
+            "--kind",
+            "research",
+        ],
+        settings,
+        capsys,
+    )
+    try:
+        summary, token_line = command(
+            ["connect-scim", tenant_id, "--token-days", "1"], settings, capsys
+        ).splitlines()
+        fields = dict(part.split("=", 1) for part in summary.split()[1:])
+        organisation_id = organisations_named(zitadel, f"parfocal-{slug}")[0]
+        endpoint = fields["scim_endpoint"]
+        assert endpoint == f"{zitadel['ZITADEL_ISSUER']}/scim/v2/{organisation_id}"
+        again = command(["connect-scim", tenant_id], settings, capsys).splitlines()[0]
+        assert f"machine_user_id={fields['machine_user_id']}" in again
+
+        scim = {
+            "authorization": f"Bearer {token_line.removeprefix('token=')}",
+            "content-type": "application/scim+json",
+        }
+        assert httpx2.get(f"{endpoint}/ServiceProviderConfig", headers=scim).status_code == 200
+        email = f"ada@{slug}.example"
+        created = httpx2.post(
+            f"{endpoint}/Users",
+            headers=scim,
+            json={
+                "schemas": [SCIM_USER],
+                "userName": email,
+                "externalId": "idp-ada",
+                "name": {"givenName": "Ada", "familyName": "Lovelace"},
+                "emails": [{"value": email, "primary": True}],
+                "active": True,
+            },
+        )
+        assert created.status_code == 201
+        user_id = created.json()["id"]
+        rename = {"op": "replace", "path": "name.familyName", "value": "Byron"}
+        assert scim_patch(endpoint, scim, user_id, rename) == 204
+        deactivate = {"op": "replace", "value": {"active": False}}
+        assert scim_patch(endpoint, scim, user_id, deactivate) == 204
+
+        stored = httpx2.get(
+            f"{zitadel['ZITADEL_ISSUER']}/v2/users/{user_id}",
+            headers={"authorization": f"Bearer {zitadel['ZITADEL_ADMIN_TOKEN']}"},
+        ).json()["user"]
+        assert stored["state"] == "USER_STATE_INACTIVE"
+        assert stored["username"] == email
+        assert stored["details"]["resourceOwner"] == organisation_id
+        assert stored["human"]["profile"]["familyName"] == "Byron"
+
+        unsigned = httpx2.get(f"{endpoint}/Users/{user_id}")
+        assert unsigned.status_code == 401
+    finally:
+        command(["deprovision", tenant_id], settings, capsys)
+
+
+@pytest.mark.db
+def test_connect_scim_finds_the_workspace_organisation_and_refuses_what_it_cannot_serve(
+    drill: str,
+) -> None:
+    slug = f"scim-{uuid.uuid4().hex[:8]}"
+    tenant_id = query(
+        with_database(OWNER_URL, drill),
+        "WITH organisation AS ("
+        f"INSERT INTO organisations (slug, name) VALUES ('{slug}', 'Hospital {slug}') "
+        "RETURNING id) "
+        "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
+        f"SELECT id, '{slug}', 'Workspace {slug}', 'research', 'eu', 'pilot' "
+        "FROM organisation RETURNING id",
+    )[0][0]
+    assert isinstance(tenant_id, uuid.UUID)
+    zitadel = FakeZitadel()
+
+    async def connect(request: ScimConnectionRequest) -> str:
+        engine = create_engine(with_database(APP_URL, drill))
+        try:
+            transport = httpx2.MockTransport(zitadel.handle)
+            async with httpx2.AsyncClient(transport=transport) as http:
+                directory = ZitadelDirectory("http://zitadel.test/", "admin", http)
+                connected = await connect_scim(engine, directory, request)
+                return f"{connected.endpoint} {connected.machine_user_id} {connected.token}"
+        finally:
+            await engine.dispose()
+
+    issuer = "http://zitadel.test/"
+    with pytest.raises(NoIdpOrganisationError):
+        asyncio.run(connect(ScimConnectionRequest(tenant_id, issuer)))
+    zitadel.organisations.append({"id": "org-w", "name": f"parfocal-{slug}", "state": ACTIVE})
+    first = asyncio.run(connect(ScimConnectionRequest(tenant_id, issuer, 30)))
+    assert first == "http://zitadel.test/scim/v2/org-w user-0 pat-0"
+    assert list(zitadel.machine_users) == [f"org-w/scim-{slug}"]
+    for days in (0, 731):
+        with pytest.raises(LookupError, match="--token-days"):
+            asyncio.run(connect(ScimConnectionRequest(tenant_id, issuer, days)))
+    with pytest.raises(LookupError, match="No tenant"):
+        asyncio.run(connect(ScimConnectionRequest(uuid.uuid4(), issuer)))

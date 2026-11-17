@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -13,6 +14,10 @@ class Served:
     body: bytes = b""
     headers: dict[str, str] = field(default_factory=dict[str, str])
     head_length: int | None = None
+    ranged: bool = False
+
+
+RANGE = re.compile(r"^bytes=(\d+)-(\d+)$")
 
 
 class Site:
@@ -29,6 +34,10 @@ class Site:
             def answer(self, method: str) -> None:
                 site.requests.append((method, self.path, dict(self.headers)))
                 served = site.routes.get(self.path, Served(404))
+                wanted = RANGE.match(self.headers.get("range") or "")
+                if served.ranged and served.status == 200 and wanted is not None:
+                    self.partial(served, int(wanted.group(1)), int(wanted.group(2)))
+                    return
                 self.send_response(served.status)
                 for name, value in served.headers.items():
                     self.send_header(name, value)
@@ -37,6 +46,17 @@ class Site:
                 self.end_headers()
                 if method != "HEAD":
                     self.wfile.write(served.body)
+
+            def partial(self, served: Served, first: int, last: int) -> None:
+                last = min(last, len(served.body) - 1)
+                body = served.body[first : last + 1]
+                self.send_response(206)
+                for name, value in served.headers.items():
+                    self.send_header(name, value)
+                self.send_header("content-range", f"bytes {first}-{last}/{len(served.body)}")
+                self.send_header("content-length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
 
             def do_GET(self) -> None:
                 self.answer("GET")

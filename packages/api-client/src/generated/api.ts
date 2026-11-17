@@ -936,6 +936,8 @@ export const AuditTarget = {
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
   "import-source": "import-source",
+  webhook: "webhook",
+  "event-target": "event-target",
   "registered-model": "registered-model",
   maintenance: "maintenance",
   feedback: "feedback",
@@ -2604,6 +2606,67 @@ export interface EvaluationVersionStarted {
   started_at: string;
 }
 
+export interface EventAttempt {
+  outcome: string;
+  status_code: number | null;
+  duration_ms: number;
+  created_at: string;
+}
+
+export type EventKind = (typeof EventKind)[keyof typeof EventKind];
+
+export const EventKind = {
+  "review-submitted": "review-submitted",
+  "task-disagreements": "task-disagreements",
+  "task-signed-off": "task-signed-off",
+  "result-set-added": "result-set-added",
+} as const;
+
+export type EventStatus = (typeof EventStatus)[keyof typeof EventStatus];
+
+export const EventStatus = {
+  pending: "pending",
+  delivered: "delivered",
+  failed: "failed",
+} as const;
+
+export interface EventDelivery {
+  id: string;
+  kind: EventKind;
+  sequence: number;
+  status: EventStatus;
+  attempts: number;
+  next_attempt_at: string;
+  delivered_at: string | null;
+  created_at: string;
+  log: EventAttempt[];
+}
+
+export interface EventDeliveries {
+  events: EventDelivery[];
+}
+
+export interface EventTarget {
+  id: string;
+  project_id: string;
+  address: string;
+  host: string;
+  events: EventKind[];
+  failures_in_row: number;
+  paused_at: string | null;
+  created_at: string;
+}
+
+export interface EventTargetDraft {
+  address: Address;
+  /** @minItems 1 */
+  events: EventKind[];
+}
+
+export interface EventTargets {
+  targets: EventTarget[];
+}
+
 export interface OutgoingEvent {
   name: string;
   text: string;
@@ -3180,6 +3243,7 @@ export const NotificationKind = {
   "slide-moved": "slide-moved",
   "workspace-access-asked": "workspace-access-asked",
   "template-offered": "template-offered",
+  "project-access-asked": "project-access-asked",
 } as const;
 
 export interface KindCount {
@@ -3825,6 +3889,22 @@ export interface LinkImportRequest {
   names: string[];
 }
 
+export type LinkOutcomeOutcome = (typeof LinkOutcomeOutcome)[keyof typeof LinkOutcomeOutcome];
+
+export const LinkOutcomeOutcome = {
+  started: "started",
+  refused: "refused",
+} as const;
+
+export interface LinkOutcome {
+  link: string;
+  kind: UploadKind;
+  outcome: LinkOutcomeOutcome;
+  upload_id?: string | null;
+  job_id?: string | null;
+  message?: string | null;
+}
+
 export type LinkRefusal = (typeof LinkRefusal)[keyof typeof LinkRefusal];
 
 export const LinkRefusal = {
@@ -4396,6 +4476,14 @@ export interface NewClass {
   name: string;
   cells: number;
   to: string | null;
+}
+
+export interface NewWebhookSecret {
+  url: string;
+  has_old_secret: boolean;
+  created_at: string;
+  rotated_at: string | null;
+  secret: string;
 }
 
 export interface NoteDraft {
@@ -5194,6 +5282,13 @@ export interface ProjectSlide {
   result_set_ids: string[];
 }
 
+export interface ProjectWebhook {
+  url: string;
+  has_old_secret: boolean;
+  created_at: string;
+  rotated_at: string | null;
+}
+
 export interface PromotionRequest {
   measured: Partial<Record<ModelTask, Metrics>>;
   reference?: Partial<Record<ModelTask, Metrics>> | null;
@@ -5271,6 +5366,26 @@ export interface QueuedObjectUpdate {
   raw?: Raw | null;
   counts_as?: QueueAnswer | null;
   note?: ParfocalApiDisagreementQueueNote | null;
+}
+
+export interface SlideInPlace {
+  name: string;
+  slide_id: string;
+  job_id: string;
+}
+
+export interface ReadInPlace {
+  opened: SlideInPlace[];
+  left_out: string[];
+}
+
+export interface ReadInPlaceRequest {
+  source_id: string;
+  /**
+   * @minItems 1
+   * @items.maxLength 255
+   */
+  names: string[];
 }
 
 export type ReassignWhat = (typeof ReassignWhat)[keyof typeof ReassignWhat];
@@ -6157,6 +6272,18 @@ export interface RunningStep {
   text: string;
 }
 
+export interface SavedEventTarget {
+  id: string;
+  project_id: string;
+  address: string;
+  host: string;
+  events: EventKind[];
+  failures_in_row: number;
+  paused_at: string | null;
+  created_at: string;
+  secret: string;
+}
+
 export interface SchemaProblem {
   line: number;
   path: string;
@@ -6950,6 +7077,7 @@ export interface Target {
   object_id?: string | null;
   job_id?: string | null;
   thread_id?: string | null;
+  delivery_id?: string | null;
   case_id?: string | null;
   resolved_from?: string | null;
   origin: Origin;
@@ -7028,6 +7156,19 @@ export interface TaskDraft {
 
 export interface TaskInvitationDraft {
   email: Email;
+}
+
+export type TaskOutcomeOutcome = (typeof TaskOutcomeOutcome)[keyof typeof TaskOutcomeOutcome];
+
+export const TaskOutcomeOutcome = {
+  waiting: "waiting",
+  "not-attached": "not-attached",
+} as const;
+
+export interface TaskOutcome {
+  id: string;
+  outcome: TaskOutcomeOutcome;
+  message: string;
 }
 
 export interface TaskReportLayout {
@@ -7253,6 +7394,13 @@ export interface TierMapping {
   serving?: Serving;
 }
 
+export type TileAccessStorage = (typeof TileAccessStorage)[keyof typeof TileAccessStorage];
+
+export const TileAccessStorage = {
+  uploaded: "uploaded",
+  remote: "remote",
+} as const;
+
 export interface TileAccess {
   token: string;
   expires_at: string;
@@ -7260,6 +7408,8 @@ export interface TileAccess {
   base_path: string;
   original: string;
   format: string | null;
+  storage?: TileAccessStorage;
+  offline?: boolean;
 }
 
 export interface TokenRequest {
@@ -7478,6 +7628,15 @@ export interface Webhook {
   rejected_today: number;
 }
 
+export interface WebhookAnswer {
+  call_id: string;
+  project_id: string;
+  case_id: string;
+  task: TaskOutcome | null;
+  repeated: boolean;
+  links: LinkOutcome[];
+}
+
 export interface WorkspaceAccessRequest {
   id: string;
   tenant_id: string;
@@ -7665,6 +7824,22 @@ export type CompleteUploadParams = {
 export type ListSourceFilesParams = {
   address?: string | null;
   source_id?: string | null;
+};
+
+export type CallProjectWebhookBody = {
+  /**
+   * @minLength 1
+   * @maxLength 2048
+   */
+  slide: string;
+  /**
+   * @maxItems 20
+   * @items.minLength 1
+   * @items.maxLength 2048
+   */
+  results?: string[];
+  case_id: string;
+  task_id?: string | null;
 };
 
 export type ResolveReviewObjectParams = {
@@ -35505,6 +35680,1887 @@ export const useDeleteImportSource = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getDeleteImportSourceMutationOptions(options), queryClient);
 };
+
+export type getProjectWebhookResponse200 = {
+  data: ProjectWebhook;
+  status: 200;
+};
+
+export type getProjectWebhookResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectWebhookResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectWebhookResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectWebhookResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectWebhookResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectWebhookResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectWebhookResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getProjectWebhookResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectWebhookResponseSuccess = getProjectWebhookResponse200 & {
+  headers: Headers;
+};
+export type getProjectWebhookResponseError = (
+  | getProjectWebhookResponse400
+  | getProjectWebhookResponse401
+  | getProjectWebhookResponse403
+  | getProjectWebhookResponse404
+  | getProjectWebhookResponse409
+  | getProjectWebhookResponse422
+  | getProjectWebhookResponse429
+  | getProjectWebhookResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectWebhookResponse =
+  | getProjectWebhookResponseSuccess
+  | getProjectWebhookResponseError;
+
+export const getGetProjectWebhookUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/webhook`;
+};
+
+/**
+ * @summary Get Project Webhook
+ */
+export const getProjectWebhook = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectWebhookResponse> => {
+  return apiFetch<getProjectWebhookResponse>(getGetProjectWebhookUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectWebhookQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/webhook`] as const;
+};
+
+export const getGetProjectWebhookQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectWebhookQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectWebhook>>> = ({ signal }) =>
+    getProjectWebhook(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectWebhookQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProjectWebhook>>
+>;
+export type GetProjectWebhookQueryError = Problem;
+
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectWebhook>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectWebhook>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectWebhook>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectWebhook>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Webhook
+ */
+
+export function useGetProjectWebhook<
+  TData = Awaited<ReturnType<typeof getProjectWebhook>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectWebhook>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectWebhookQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createWebhookSecretResponse201 = {
+  data: NewWebhookSecret;
+  status: 201;
+};
+
+export type createWebhookSecretResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createWebhookSecretResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createWebhookSecretResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createWebhookSecretResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createWebhookSecretResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createWebhookSecretResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createWebhookSecretResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createWebhookSecretResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createWebhookSecretResponseSuccess = createWebhookSecretResponse201 & {
+  headers: Headers;
+};
+export type createWebhookSecretResponseError = (
+  | createWebhookSecretResponse400
+  | createWebhookSecretResponse401
+  | createWebhookSecretResponse403
+  | createWebhookSecretResponse404
+  | createWebhookSecretResponse409
+  | createWebhookSecretResponse422
+  | createWebhookSecretResponse429
+  | createWebhookSecretResponse500
+) & {
+  headers: Headers;
+};
+
+export type createWebhookSecretResponse =
+  | createWebhookSecretResponseSuccess
+  | createWebhookSecretResponseError;
+
+export const getCreateWebhookSecretUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/webhook/secret`;
+};
+
+/**
+ * @summary Create Webhook Secret
+ */
+export const createWebhookSecret = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createWebhookSecretResponse> => {
+  return apiFetch<createWebhookSecretResponse>(getCreateWebhookSecretUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCreateWebhookSecretMutationKey = () => ["createWebhookSecret"] as const;
+
+export const getCreateWebhookSecretMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWebhookSecret>>,
+    TError,
+    CreateWebhookSecretMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createWebhookSecret>>,
+  TError,
+  CreateWebhookSecretMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateWebhookSecretMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createWebhookSecret>>,
+    CreateWebhookSecretMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return createWebhookSecret(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateWebhookSecretMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createWebhookSecret>>
+>;
+
+export type CreateWebhookSecretMutationError = Problem;
+export type CreateWebhookSecretMutationVariables = { projectId: string };
+
+/**
+ * @summary Create Webhook Secret
+ */
+export const useCreateWebhookSecret = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createWebhookSecret>>,
+      TError,
+      CreateWebhookSecretMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createWebhookSecret>>,
+  TError,
+  CreateWebhookSecretMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateWebhookSecretMutationOptions(options), queryClient);
+};
+
+export type retireWebhookSecretResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type retireWebhookSecretResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type retireWebhookSecretResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type retireWebhookSecretResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type retireWebhookSecretResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type retireWebhookSecretResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type retireWebhookSecretResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type retireWebhookSecretResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type retireWebhookSecretResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type retireWebhookSecretResponseSuccess = retireWebhookSecretResponse204 & {
+  headers: Headers;
+};
+export type retireWebhookSecretResponseError = (
+  | retireWebhookSecretResponse400
+  | retireWebhookSecretResponse401
+  | retireWebhookSecretResponse403
+  | retireWebhookSecretResponse404
+  | retireWebhookSecretResponse409
+  | retireWebhookSecretResponse422
+  | retireWebhookSecretResponse429
+  | retireWebhookSecretResponse500
+) & {
+  headers: Headers;
+};
+
+export type retireWebhookSecretResponse =
+  | retireWebhookSecretResponseSuccess
+  | retireWebhookSecretResponseError;
+
+export const getRetireWebhookSecretUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/webhook/old-secret`;
+};
+
+/**
+ * @summary Retire Webhook Secret
+ */
+export const retireWebhookSecret = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<retireWebhookSecretResponse> => {
+  return apiFetch<retireWebhookSecretResponse>(getRetireWebhookSecretUrl(projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRetireWebhookSecretMutationKey = () => ["retireWebhookSecret"] as const;
+
+export const getRetireWebhookSecretMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retireWebhookSecret>>,
+    TError,
+    RetireWebhookSecretMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retireWebhookSecret>>,
+  TError,
+  RetireWebhookSecretMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRetireWebhookSecretMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retireWebhookSecret>>,
+    RetireWebhookSecretMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return retireWebhookSecret(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetireWebhookSecretMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retireWebhookSecret>>
+>;
+
+export type RetireWebhookSecretMutationError = Problem;
+export type RetireWebhookSecretMutationVariables = { projectId: string };
+
+/**
+ * @summary Retire Webhook Secret
+ */
+export const useRetireWebhookSecret = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retireWebhookSecret>>,
+      TError,
+      RetireWebhookSecretMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retireWebhookSecret>>,
+  TError,
+  RetireWebhookSecretMutationVariables,
+  TContext
+> => {
+  return useMutation(getRetireWebhookSecretMutationOptions(options), queryClient);
+};
+
+export type callProjectWebhookResponse202 = {
+  data: WebhookAnswer;
+  status: 202;
+};
+
+export type callProjectWebhookResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type callProjectWebhookResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type callProjectWebhookResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type callProjectWebhookResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type callProjectWebhookResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type callProjectWebhookResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type callProjectWebhookResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type callProjectWebhookResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type callProjectWebhookResponseSuccess = callProjectWebhookResponse202 & {
+  headers: Headers;
+};
+export type callProjectWebhookResponseError = (
+  | callProjectWebhookResponse400
+  | callProjectWebhookResponse401
+  | callProjectWebhookResponse403
+  | callProjectWebhookResponse404
+  | callProjectWebhookResponse409
+  | callProjectWebhookResponse422
+  | callProjectWebhookResponse429
+  | callProjectWebhookResponse500
+) & {
+  headers: Headers;
+};
+
+export type callProjectWebhookResponse =
+  | callProjectWebhookResponseSuccess
+  | callProjectWebhookResponseError;
+
+export const getCallProjectWebhookUrl = (hookKey: string) => {
+  return `/api/webhooks/${hookKey}`;
+};
+
+/**
+ * @summary Call Project Webhook
+ */
+export const callProjectWebhook = async (
+  hookKey: string,
+  callProjectWebhookBody: CallProjectWebhookBody,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<callProjectWebhookResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<callProjectWebhookResponse>(getCallProjectWebhookUrl(hookKey), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(callProjectWebhookBody),
+  });
+};
+
+export const getCallProjectWebhookMutationKey = () => ["callProjectWebhook"] as const;
+
+export const getCallProjectWebhookMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof callProjectWebhook>>,
+    TError,
+    CallProjectWebhookMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof callProjectWebhook>>,
+  TError,
+  CallProjectWebhookMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCallProjectWebhookMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof callProjectWebhook>>,
+    CallProjectWebhookMutationVariables
+  > = (props) => {
+    const { hookKey, data } = props ?? {};
+
+    return callProjectWebhook(hookKey, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CallProjectWebhookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof callProjectWebhook>>
+>;
+export type CallProjectWebhookMutationBody = CallProjectWebhookBody;
+export type CallProjectWebhookMutationError = Problem;
+export type CallProjectWebhookMutationVariables = { hookKey: string; data: CallProjectWebhookBody };
+
+/**
+ * @summary Call Project Webhook
+ */
+export const useCallProjectWebhook = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof callProjectWebhook>>,
+      TError,
+      CallProjectWebhookMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof callProjectWebhook>>,
+  TError,
+  CallProjectWebhookMutationVariables,
+  TContext
+> => {
+  return useMutation(getCallProjectWebhookMutationOptions(options), queryClient);
+};
+
+export type listEventTargetsResponse200 = {
+  data: EventTargets;
+  status: 200;
+};
+
+export type listEventTargetsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listEventTargetsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listEventTargetsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listEventTargetsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listEventTargetsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listEventTargetsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listEventTargetsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listEventTargetsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listEventTargetsResponseSuccess = listEventTargetsResponse200 & {
+  headers: Headers;
+};
+export type listEventTargetsResponseError = (
+  | listEventTargetsResponse400
+  | listEventTargetsResponse401
+  | listEventTargetsResponse403
+  | listEventTargetsResponse404
+  | listEventTargetsResponse409
+  | listEventTargetsResponse422
+  | listEventTargetsResponse429
+  | listEventTargetsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listEventTargetsResponse =
+  | listEventTargetsResponseSuccess
+  | listEventTargetsResponseError;
+
+export const getListEventTargetsUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/event-targets`;
+};
+
+/**
+ * @summary List Event Targets
+ */
+export const listEventTargets = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listEventTargetsResponse> => {
+  return apiFetch<listEventTargetsResponse>(getListEventTargetsUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventTargetsQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/event-targets`] as const;
+};
+
+export const getListEventTargetsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEventTargetsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEventTargets>>> = ({ signal }) =>
+    listEventTargets(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListEventTargetsQueryResult = NonNullable<Awaited<ReturnType<typeof listEventTargets>>>;
+export type ListEventTargetsQueryError = Problem;
+
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listEventTargets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventTargets>>,
+          TError,
+          Awaited<ReturnType<typeof listEventTargets>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Event Targets
+ */
+
+export function useListEventTargets<
+  TData = Awaited<ReturnType<typeof listEventTargets>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listEventTargets>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListEventTargetsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type saveEventTargetResponse201 = {
+  data: SavedEventTarget;
+  status: 201;
+};
+
+export type saveEventTargetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveEventTargetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveEventTargetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveEventTargetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveEventTargetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveEventTargetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveEventTargetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveEventTargetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveEventTargetResponseSuccess = saveEventTargetResponse201 & {
+  headers: Headers;
+};
+export type saveEventTargetResponseError = (
+  | saveEventTargetResponse400
+  | saveEventTargetResponse401
+  | saveEventTargetResponse403
+  | saveEventTargetResponse404
+  | saveEventTargetResponse409
+  | saveEventTargetResponse422
+  | saveEventTargetResponse429
+  | saveEventTargetResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveEventTargetResponse = saveEventTargetResponseSuccess | saveEventTargetResponseError;
+
+export const getSaveEventTargetUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/event-targets`;
+};
+
+/**
+ * @summary Save Event Target
+ */
+export const saveEventTarget = async (
+  projectId: string,
+  eventTargetDraft: EventTargetDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveEventTargetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveEventTargetResponse>(getSaveEventTargetUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(eventTargetDraft),
+  });
+};
+
+export const getSaveEventTargetMutationKey = () => ["saveEventTarget"] as const;
+
+export const getSaveEventTargetMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveEventTarget>>,
+    TError,
+    SaveEventTargetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveEventTarget>>,
+  TError,
+  SaveEventTargetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveEventTargetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveEventTarget>>,
+    SaveEventTargetMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return saveEventTarget(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveEventTargetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveEventTarget>>
+>;
+export type SaveEventTargetMutationBody = EventTargetDraft;
+export type SaveEventTargetMutationError = Problem;
+export type SaveEventTargetMutationVariables = { projectId: string; data: EventTargetDraft };
+
+/**
+ * @summary Save Event Target
+ */
+export const useSaveEventTarget = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveEventTarget>>,
+      TError,
+      SaveEventTargetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveEventTarget>>,
+  TError,
+  SaveEventTargetMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveEventTargetMutationOptions(options), queryClient);
+};
+
+export type deleteEventTargetResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteEventTargetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteEventTargetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteEventTargetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteEventTargetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteEventTargetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteEventTargetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteEventTargetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteEventTargetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteEventTargetResponseSuccess = deleteEventTargetResponse204 & {
+  headers: Headers;
+};
+export type deleteEventTargetResponseError = (
+  | deleteEventTargetResponse400
+  | deleteEventTargetResponse401
+  | deleteEventTargetResponse403
+  | deleteEventTargetResponse404
+  | deleteEventTargetResponse409
+  | deleteEventTargetResponse422
+  | deleteEventTargetResponse429
+  | deleteEventTargetResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteEventTargetResponse =
+  | deleteEventTargetResponseSuccess
+  | deleteEventTargetResponseError;
+
+export const getDeleteEventTargetUrl = (projectId: string, targetId: string) => {
+  return `/api/projects/${projectId}/event-targets/${targetId}`;
+};
+
+/**
+ * @summary Delete Event Target
+ */
+export const deleteEventTarget = async (
+  projectId: string,
+  targetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteEventTargetResponse> => {
+  return apiFetch<deleteEventTargetResponse>(getDeleteEventTargetUrl(projectId, targetId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventTargetMutationKey = () => ["deleteEventTarget"] as const;
+
+export const getDeleteEventTargetMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventTarget>>,
+    TError,
+    DeleteEventTargetMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEventTarget>>,
+  TError,
+  DeleteEventTargetMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteEventTargetMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEventTarget>>,
+    DeleteEventTargetMutationVariables
+  > = (props) => {
+    const { projectId, targetId } = props ?? {};
+
+    return deleteEventTarget(projectId, targetId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventTargetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEventTarget>>
+>;
+
+export type DeleteEventTargetMutationError = Problem;
+export type DeleteEventTargetMutationVariables = { projectId: string; targetId: string };
+
+/**
+ * @summary Delete Event Target
+ */
+export const useDeleteEventTarget = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteEventTarget>>,
+      TError,
+      DeleteEventTargetMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEventTarget>>,
+  TError,
+  DeleteEventTargetMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteEventTargetMutationOptions(options), queryClient);
+};
+
+export type listEventDeliveriesResponse200 = {
+  data: EventDeliveries;
+  status: 200;
+};
+
+export type listEventDeliveriesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listEventDeliveriesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listEventDeliveriesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listEventDeliveriesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listEventDeliveriesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listEventDeliveriesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listEventDeliveriesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listEventDeliveriesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listEventDeliveriesResponseSuccess = listEventDeliveriesResponse200 & {
+  headers: Headers;
+};
+export type listEventDeliveriesResponseError = (
+  | listEventDeliveriesResponse400
+  | listEventDeliveriesResponse401
+  | listEventDeliveriesResponse403
+  | listEventDeliveriesResponse404
+  | listEventDeliveriesResponse409
+  | listEventDeliveriesResponse422
+  | listEventDeliveriesResponse429
+  | listEventDeliveriesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listEventDeliveriesResponse =
+  | listEventDeliveriesResponseSuccess
+  | listEventDeliveriesResponseError;
+
+export const getListEventDeliveriesUrl = (projectId: string, targetId: string) => {
+  return `/api/projects/${projectId}/event-targets/${targetId}/events`;
+};
+
+/**
+ * @summary List Event Deliveries
+ */
+export const listEventDeliveries = async (
+  projectId: string,
+  targetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listEventDeliveriesResponse> => {
+  return apiFetch<listEventDeliveriesResponse>(getListEventDeliveriesUrl(projectId, targetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEventDeliveriesQueryKey = (projectId: string, targetId: string) => {
+  return [`/api/projects/${projectId}/event-targets/${targetId}/events`] as const;
+};
+
+export const getListEventDeliveriesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEventDeliveriesQueryKey(projectId, targetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEventDeliveries>>> = ({ signal }) =>
+    listEventDeliveries(projectId, targetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && targetId !== null && targetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListEventDeliveriesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEventDeliveries>>
+>;
+export type ListEventDeliveriesQueryError = Problem;
+
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventDeliveries>>,
+          TError,
+          Awaited<ReturnType<typeof listEventDeliveries>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEventDeliveries>>,
+          TError,
+          Awaited<ReturnType<typeof listEventDeliveries>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Event Deliveries
+ */
+
+export function useListEventDeliveries<
+  TData = Awaited<ReturnType<typeof listEventDeliveries>>,
+  TError = Problem,
+>(
+  projectId: string,
+  targetId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listEventDeliveries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListEventDeliveriesQueryOptions(projectId, targetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type replayEventResponse200 = {
+  data: EventTarget;
+  status: 200;
+};
+
+export type replayEventResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type replayEventResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type replayEventResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type replayEventResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type replayEventResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type replayEventResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type replayEventResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type replayEventResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type replayEventResponseSuccess = replayEventResponse200 & {
+  headers: Headers;
+};
+export type replayEventResponseError = (
+  | replayEventResponse400
+  | replayEventResponse401
+  | replayEventResponse403
+  | replayEventResponse404
+  | replayEventResponse409
+  | replayEventResponse422
+  | replayEventResponse429
+  | replayEventResponse500
+) & {
+  headers: Headers;
+};
+
+export type replayEventResponse = replayEventResponseSuccess | replayEventResponseError;
+
+export const getReplayEventUrl = (projectId: string, targetId: string, eventId: string) => {
+  return `/api/projects/${projectId}/event-targets/${targetId}/events/${eventId}/replay`;
+};
+
+/**
+ * @summary Replay Event
+ */
+export const replayEvent = async (
+  projectId: string,
+  targetId: string,
+  eventId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<replayEventResponse> => {
+  return apiFetch<replayEventResponse>(getReplayEventUrl(projectId, targetId, eventId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReplayEventMutationKey = () => ["replayEvent"] as const;
+
+export const getReplayEventMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof replayEvent>>,
+    TError,
+    ReplayEventMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof replayEvent>>,
+  TError,
+  ReplayEventMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReplayEventMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof replayEvent>>,
+    ReplayEventMutationVariables
+  > = (props) => {
+    const { projectId, targetId, eventId } = props ?? {};
+
+    return replayEvent(projectId, targetId, eventId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReplayEventMutationResult = NonNullable<Awaited<ReturnType<typeof replayEvent>>>;
+
+export type ReplayEventMutationError = Problem;
+export type ReplayEventMutationVariables = { projectId: string; targetId: string; eventId: string };
+
+/**
+ * @summary Replay Event
+ */
+export const useReplayEvent = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof replayEvent>>,
+      TError,
+      ReplayEventMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof replayEvent>>,
+  TError,
+  ReplayEventMutationVariables,
+  TContext
+> => {
+  return useMutation(getReplayEventMutationOptions(options), queryClient);
+};
+
+export type readInPlaceResponse202 = {
+  data: ReadInPlace;
+  status: 202;
+};
+
+export type readInPlaceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type readInPlaceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type readInPlaceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type readInPlaceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type readInPlaceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type readInPlaceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type readInPlaceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type readInPlaceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type readInPlaceResponseSuccess = readInPlaceResponse202 & {
+  headers: Headers;
+};
+export type readInPlaceResponseError = (
+  | readInPlaceResponse400
+  | readInPlaceResponse401
+  | readInPlaceResponse403
+  | readInPlaceResponse404
+  | readInPlaceResponse409
+  | readInPlaceResponse422
+  | readInPlaceResponse429
+  | readInPlaceResponse500
+) & {
+  headers: Headers;
+};
+
+export type readInPlaceResponse = readInPlaceResponseSuccess | readInPlaceResponseError;
+
+export const getReadInPlaceUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/remote-slides`;
+};
+
+/**
+ * @summary Read In Place
+ */
+export const readInPlace = async (
+  projectId: string,
+  readInPlaceRequest: ReadInPlaceRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<readInPlaceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<readInPlaceResponse>(getReadInPlaceUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(readInPlaceRequest),
+  });
+};
+
+export const getReadInPlaceMutationKey = () => ["readInPlace"] as const;
+
+export const getReadInPlaceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof readInPlace>>,
+    TError,
+    ReadInPlaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof readInPlace>>,
+  TError,
+  ReadInPlaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReadInPlaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof readInPlace>>,
+    ReadInPlaceMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return readInPlace(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReadInPlaceMutationResult = NonNullable<Awaited<ReturnType<typeof readInPlace>>>;
+export type ReadInPlaceMutationBody = ReadInPlaceRequest;
+export type ReadInPlaceMutationError = Problem;
+export type ReadInPlaceMutationVariables = { projectId: string; data: ReadInPlaceRequest };
+
+/**
+ * @summary Read In Place
+ */
+export const useReadInPlace = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof readInPlace>>,
+      TError,
+      ReadInPlaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof readInPlace>>,
+  TError,
+  ReadInPlaceMutationVariables,
+  TContext
+> => {
+  return useMutation(getReadInPlaceMutationOptions(options), queryClient);
+};
+
+export type getRemoteTileResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type getRemoteTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getRemoteTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getRemoteTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getRemoteTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getRemoteTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getRemoteTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getRemoteTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getRemoteTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getRemoteTileResponseSuccess = getRemoteTileResponse200 & {
+  headers: Headers;
+};
+export type getRemoteTileResponseError = (
+  | getRemoteTileResponse400
+  | getRemoteTileResponse401
+  | getRemoteTileResponse403
+  | getRemoteTileResponse404
+  | getRemoteTileResponse409
+  | getRemoteTileResponse422
+  | getRemoteTileResponse429
+  | getRemoteTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type getRemoteTileResponse = getRemoteTileResponseSuccess | getRemoteTileResponseError;
+
+export const getGetRemoteTileUrl = (slideId: string, name: string) => {
+  return `/api/remote-tiles/${slideId}/${name}`;
+};
+
+/**
+ * @summary Get Remote Tile
+ */
+export const getRemoteTile = async (
+  slideId: string,
+  name: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getRemoteTileResponse> => {
+  return apiFetch<getRemoteTileResponse>(getGetRemoteTileUrl(slideId, name), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRemoteTileQueryKey = (slideId: string, name: string) => {
+  return [`/api/remote-tiles/${slideId}/${name}`] as const;
+};
+
+export const getGetRemoteTileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRemoteTileQueryKey(slideId, name);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRemoteTile>>> = ({ signal }) =>
+    getRemoteTile(slideId, name, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined && name !== null && name !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetRemoteTileQueryResult = NonNullable<Awaited<ReturnType<typeof getRemoteTile>>>;
+export type GetRemoteTileQueryError = Problem;
+
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRemoteTile>>,
+          TError,
+          Awaited<ReturnType<typeof getRemoteTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRemoteTile>>,
+          TError,
+          Awaited<ReturnType<typeof getRemoteTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Remote Tile
+ */
+
+export function useGetRemoteTile<
+  TData = Awaited<ReturnType<typeof getRemoteTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  name: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRemoteTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRemoteTileQueryOptions(slideId, name, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type createReviewTaskResponse201 = {
   data: ReviewTaskDetail;

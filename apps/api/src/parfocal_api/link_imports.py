@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.audit import AuditAction
+from parfocal_api.audit import Actor, AuditAction, actor_of
 from parfocal_api.case_sorting import SlideOutcome, SortedFile, SortingRequest, draft_of
 from parfocal_api.cases import keyring_of
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
@@ -18,7 +18,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError
 from parfocal_api.tables import uploads
-from parfocal_api.uploads import Settings, audit, creator_values, object_key
+from parfocal_api.uploads import Settings, audit_by, creator_values, object_key
 from parfocal_common.link_fetch import (
     LINK_FAILURES,
     LinkRefusal,
@@ -301,7 +301,8 @@ def planned_files(look: Look, settings: Settings, names: set[str]) -> list[Plann
 
 async def start_file(
     connection: AsyncConnection,
-    principal: Principal,
+    actor: Actor,
+    creator: dict[str, uuid.UUID],
     settings: Settings,
     store: Store,
     tenant_id: uuid.UUID,
@@ -340,7 +341,7 @@ async def start_file(
                 part_bytes=plan.part_bytes,
                 part_count=plan.part_count,
                 **result,
-                **creator_values(principal),
+                **creator,
             )
             .returning(uploads)
         )
@@ -348,7 +349,7 @@ async def start_file(
     source = json.dumps(reach.fetch_note(file)).encode()
     await store.put_object(source_key(tenant_id, upload_id), source, "application/json")
     job_id = await enqueue_link_fetch(connection, tenant_id, project_id, upload_id)
-    await audit(connection, principal, AuditAction.UPLOAD_LINKED, row)
+    await audit_by(connection, actor, AuditAction.UPLOAD_LINKED, row)
     if planned.kind is UploadKind.SLIDE:
         slide_uploads[file.name] = upload_id
     return StartedFile(name=file.name, upload_id=upload_id, kind=planned.kind, job_id=job_id)
@@ -379,7 +380,8 @@ async def import_from_link(
     started = [
         await start_file(
             connection,
-            principal,
+            actor_of(principal),
+            creator_values(principal),
             settings,
             store,
             found.draft.tenant_id,

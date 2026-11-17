@@ -10,12 +10,13 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.notification_catalogue import TargetKind, target_kind_of
 from parfocal_api.notifications import member_of, uuid_or_none
 from parfocal_api.origins import Origin, OriginRoute
+from parfocal_api.permissions import Grant, Permission, grant_of
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import reads_slide, role_in
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import review_slide
 from parfocal_api.search import SearchContext, current_ids
-from parfocal_api.tables import jobs, notifications, projects, slides
+from parfocal_api.tables import event_outbox, jobs, notifications, projects, slides
 from parfocal_api.threads import visible_thread
 from parfocal_common.object_ids import ObjectIdError, parse
 
@@ -28,6 +29,7 @@ class Target(BaseModel):
     object_id: str | None = None
     job_id: uuid.UUID | None = None
     thread_id: uuid.UUID | None = None
+    delivery_id: uuid.UUID | None = None
     case_id: uuid.UUID | None = None
     resolved_from: str | None = None
     origin: Origin
@@ -235,5 +237,20 @@ async def get_notification_target(
             )
         case TargetKind.DECISION:
             return await decision_target(connection, principal, row, payload)
-        case TargetKind.DELIVERY | TargetKind.ACCESS_REQUEST | TargetKind.TEMPLATE_OFFER:
+        case TargetKind.DELIVERY:
+            if grant_of(principal, Permission.INTEGRATIONS) is Grant.NONE:
+                raise TargetGoneError
+            project_id = await project_of(
+                connection,
+                await connection.scalar(
+                    select(event_outbox.c.project_id).where(event_outbox.c.id == row.target_id)
+                ),
+            )
+            return Target(
+                kind=TargetKind.DELIVERY,
+                project_id=project_id,
+                delivery_id=row.target_id,
+                origin=origin_of(project_id),
+            )
+        case TargetKind.ACCESS_REQUEST | TargetKind.TEMPLATE_OFFER:
             raise TargetNotAvailableError

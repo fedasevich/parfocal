@@ -15,6 +15,7 @@ from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import work
 from parfocal_common.object_store import ObjectStore
 from parfocal_ingest.link_fetch import link_fetch_workflow
+from parfocal_ingest.remote_inspect import remote_inspect_workflow
 from parfocal_ingest.result_import import result_import_workflow
 from parfocal_ingest.workflow import Resources, ingest_workflow
 
@@ -87,6 +88,7 @@ def run_worker(
         ingest_workflow(resources),
         result_import_workflow(resources),
         link_fetch_workflow(resources),
+        remote_inspect_workflow(resources),
     ]
 
     async def go() -> int:

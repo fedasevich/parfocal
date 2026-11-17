@@ -60,6 +60,9 @@ PATH_IDS: dict[str, str] = {
     "deposit_id": "deposit",
     "nudge_id": "nudge",
     "reassignment_id": "reassignment",
+    "source_id": "import_source",
+    "target_id": "event_target",
+    "event_id": "event",
 }
 
 ROW_IDS: dict[str, str] = {
@@ -87,6 +90,10 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
     ),
     "scoreViewMapTile": ("test_view_maps", "test_anyone_who_can_read_the_slide_may_ask"),
     "typeOutlines": ("test_outline_types", "test_anyone_who_can_read_the_slide_may_ask"),
+    "callProjectWebhook": (
+        "test_project_webhooks",
+        "test_a_case_outside_the_project_and_a_bad_body_are_refused_and_logged",
+    ),
 }
 
 CONFLICT = frozenset({409})
@@ -251,6 +258,10 @@ def lab_model(a: Seeded) -> object:
     }
 
 
+def event_target(_: Seeded) -> object:
+    return {"address": LINK_SITE.url("/events"), "events": ["review-submitted"]}
+
+
 STORED_AS_TEXT = "the block keeps the id as text and a report looks it up in the caller's workspace"
 DRAWN_ON_SAMPLE_DATA = "the preview draws sample data and looks no id up"
 
@@ -267,6 +278,11 @@ AI_OBJECT = {**ON_ANNOTATE_TASK, **OBJECT}
 REGISTERED_MODEL = {"name": fixed("second-model"), "version": fixed("1.0")}
 ANCHOR = {"kind": "point", "geometry": POINT}
 THREAD = {"title": "A question", "body": "What is this?", "anchor": ANCHOR}
+
+
+def import_source(_: Seeded) -> object:
+    return {"name": "Second source", "kind": "https", "address": LINK_SITE.url(SHARED_FOLDER)}
+
 
 WRITE_ROUTES: dict[str, Write] = {
     "reorderCaseSlides": Write(body=lambda a: {"slide_ids": case_slides(a)}),
@@ -341,6 +357,10 @@ WRITE_ROUTES: dict[str, Write] = {
     ),
     "requestEmergencyAccess": Write(
         body=constant({"reason": "An urgent second look"}), owner=CONFLICT
+    ),
+    "readInPlace": Write(
+        body=lambda a: {"source_id": str(a.ids["import_source"]), "names": [SHARED_FILE]},
+        owner=None,
     ),
     "importFromLink": Write(
         body=constant({"address": LINK_SITE.url(SHARED_FOLDER), "names": [SHARED_FILE]}),
@@ -597,6 +617,30 @@ WRITE_ROUTES: dict[str, Write] = {
         owner=None,
         accepted_because=DRAWN_ON_SAMPLE_DATA,
     ),
+    "addLabModelProject": Write(admin_rights=True),
+    "removeLabModelProject": Write(admin_rights=True),
+    "confirmLabModelTileSharing": Write(admin_rights=True),
+    "saveImportSource": Write(
+        body=import_source,
+        admin_rights=True,
+        linked=True,
+        refused=201,
+        owner=None,
+        accepted_because="the draft names no row and the source is saved in the caller's workspace",
+    ),
+    "changeImportSource": Write(body=import_source, admin_rights=True, linked=True),
+    "deleteImportSource": Write(admin_rights=True),
+    "requestProjectAccess": Write(owner=CONFLICT),
+    "moveModelRun": Write(body=constant({"server": "Parfocal GPU"}), owner=CONFLICT),
+    "updateQueuedObject": Write(
+        path=OBJECT, body=constant({"action": "leave-open"}), owner=CONFLICT
+    ),
+    "decideAdjudication": Write(path=OBJECT, body=constant({"raw": "1"})),
+    "createWebhookSecret": Write(admin_rights=True),
+    "retireWebhookSecret": Write(admin_rights=True),
+    "saveEventTarget": Write(body=event_target, admin_rights=True, linked=True),
+    "deleteEventTarget": Write(admin_rights=True),
+    "replayEvent": Write(admin_rights=True, owner=CONFLICT),
     "downloadStudyTemplatePreview": Write(
         body=lambda a: {"name": "Preview", "blocks": naming(a)},
         admin_rights=True,
@@ -614,6 +658,7 @@ UNAIMED_WRITES: dict[str, str] = {
         "answers the anonymous caller about their own account and names no other row",
     ),
     "recordActivity": "stamps the caller's own session",
+    "lockSession": "locks the caller's own session",
     **dict.fromkeys(
         ("startMaintenance", "endMaintenance"),
         "switches the one platform-wide maintenance row, for platform operators only",

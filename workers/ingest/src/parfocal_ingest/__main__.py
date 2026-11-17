@@ -20,6 +20,7 @@ DEFAULT_WORKFLOWS = (
     "parfocal_ingest.workflow:INGEST",
     "parfocal_ingest.result_import:RESULT_IMPORT",
     "parfocal_ingest.link_fetch:LINK_FETCH",
+    "parfocal_ingest.remote_inspect:REMOTE_INSPECT",
     "parfocal_api.review_order_job:REVIEW_ORDER",
     "parfocal_ingest.patch_export:PATCH_EXPORT",
 )

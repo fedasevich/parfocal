@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 from typing import Any, cast
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -11,7 +11,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, pseudonym_of
 from parfocal_api.blinding import ai_hidden, sees_whole
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.my_work import describe
-from parfocal_api.notifications import member_of
+from parfocal_api.notifications import deliver_after_commit, member_of, notify
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import ConflictError, NotFoundError
@@ -22,6 +22,7 @@ from parfocal_api.review_states import State
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
     AnnotationKind,
+    NotificationKind,
     ProjectRole,
     ResultObjectKind,
     ResultStatus,
@@ -383,7 +384,7 @@ async def get_project_scope_options(
             annotations.c.kind == AnnotationKind.ROI,
             annotations.c.deleted_at.is_(None),
         )
-        .order_by(annotations.c.created_at, annotations.c.id)
+        .order_by(annotations.c.created_at, annotations.c.number, annotations.c.id)
     )
     named: list[str] = []
     for row in rois:
@@ -519,7 +520,11 @@ def asked_events(tenant_id: uuid.UUID, project_id: uuid.UUID, actor_id: uuid.UUI
     **require(Permission.SEE_SLIDES),
 )
 async def request_project_access(
-    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    project_id: uuid.UUID,
+    request: Request,
+    background: BackgroundTasks,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
 ) -> ProjectAccessRequest:
     member = member_of(principal)
     await row_of(connection, project_id)
@@ -534,6 +539,16 @@ async def request_project_access(
     if asked is None:
         await audit(connection, principal, AuditAction.PROJECT_ACCESS_ASKED, project_id, {})
         asked = (await connection.execute(lookup)).one()
+        await notify(
+            connection,
+            member.tenant_id,
+            [owner_id],
+            NotificationKind.PROJECT_ACCESS_ASKED,
+            AuditTarget.PROJECT,
+            project_id,
+            {"user_id": str(member.user_id)},
+        )
+        background.add_task(deliver_after_commit, request.app, member.tenant_id)
     return ProjectAccessRequest(
         id=asked.id,
         project_id=project_id,

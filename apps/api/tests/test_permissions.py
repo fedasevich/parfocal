@@ -19,12 +19,12 @@ import numpy as np
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import OWNER_URL, ApiAs, query, with_database
-from link_support import Site
+from link_support import Served, Site
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
-from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
+from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.permissions import (
@@ -53,6 +53,8 @@ from parfocal_api.tables import (
     clinical_report_versions,
     clinical_reports,
     display_presets,
+    event_outbox,
+    event_targets,
     import_sources,
     invitations,
     job_units,
@@ -67,6 +69,7 @@ from parfocal_api.tables import (
     painted_maps,
     project_classes,
     project_members,
+    project_webhooks,
     projects,
     report_links,
     result_objects,
@@ -126,6 +129,8 @@ OPEN_OPERATIONS = {
     "getPlatformStatus": "public",
     "getSharedReport": "public",
     "getInvitePreview": "public",
+    "callProjectWebhook": "webhook-signature",
+    "getRemoteTile": "public",
     **dict.fromkeys(
         (
             "getPasswordSignIn",
@@ -407,6 +412,8 @@ def template_body() -> dict[str, Any]:
 
 LINK_SITE = Site()
 LINK_SITE.file("/scan.svs", b"slide-bytes")
+LINK_SITE.index("/scans/", ["scan.svs"])
+LINK_SITE.routes["/scans/scan.svs"] = Served(body=b"slide-bytes", ranged=True)
 LINK_SITE.json(
     "/infer",
     {
@@ -419,11 +426,13 @@ LINK_OPERATIONS = frozenset(
     {
         "listSourceFiles",
         "importFromLink",
+        "readInPlace",
         "testLabModel",
         "connectLabModel",
         "testConnectedLabModel",
         "saveImportSource",
         "changeImportSource",
+        "saveEventTarget",
     }
 )
 
@@ -692,6 +701,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "GET",
         f"/api/projects/{w.project}/source-files?address={quote(LINK_SITE.url('/scan.svs'))}",
     ),
+    "readInPlace": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/remote-slides",
+        {"source_id": str(seeded(w, "import-source")), "names": ["scan.svs"]},
+    ),
     "importFromLink": lambda w: Call(
         "POST",
         f"/api/projects/{w.project}/link-imports",
@@ -856,6 +870,28 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "deleteImportSource": lambda w: Call(
         "DELETE", f"/api/tenant/import-sources/{seeded(w, 'spare-import-source')}"
+    ),
+    "getProjectWebhook": lambda w: Call("GET", f"/api/projects/{w.project}/webhook"),
+    "createWebhookSecret": lambda w: Call("POST", f"/api/projects/{w.project}/webhook/secret"),
+    "retireWebhookSecret": lambda w: Call(
+        "DELETE", f"/api/projects/{w.project}/webhook/old-secret"
+    ),
+    "listEventTargets": lambda w: Call("GET", f"/api/projects/{w.project}/event-targets"),
+    "saveEventTarget": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/event-targets",
+        {"address": LINK_SITE.url("/events"), "events": ["review-submitted"]},
+    ),
+    "deleteEventTarget": lambda w: Call(
+        "DELETE", f"/api/projects/{w.project}/event-targets/{seeded(w, 'spare-event-target')}"
+    ),
+    "listEventDeliveries": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/event-targets/{seeded(w, 'event-target')}/events"
+    ),
+    "replayEvent": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/event-targets/{seeded(w, 'event-target')}"
+        f"/events/{seeded(w, 'failed-event')}/replay",
     ),
     "addLabModelProject": lambda w: Call(
         "PUT", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.spare_project}"
@@ -2384,6 +2420,45 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                         created_by_user_id=colleague,
                     )
                 )
+            hook_id = uuid.uuid5(tenant_id, "webhook")
+            hook_keys = await ensure_keys(connection, TEST_KEYRING, tenant_id)
+            await connection.execute(
+                insert(project_webhooks).values(
+                    id=hook_id,
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    hook_key=hook_id.hex,
+                    secret_ciphertext=seal_field(
+                        hook_keys, "project_webhooks", hook_id, "secret", "seeded-secret"
+                    ),
+                    old_secret_ciphertext=seal_field(
+                        hook_keys, "project_webhooks", hook_id, "old_secret", "older-secret"
+                    ),
+                    created_by_user_id=colleague,
+                )
+            )
+            for target in ("event-target", "spare-event-target"):
+                await connection.execute(
+                    insert(event_targets).values(
+                        id=uuid.uuid5(tenant_id, target),
+                        tenant_id=tenant_id,
+                        project_id=case.project_id,
+                        address=LINK_SITE.url("/events"),
+                        events=["review-submitted"],
+                        secret_ciphertext=b"sealed",
+                    )
+                )
+            await connection.execute(
+                insert(event_outbox).values(
+                    id=uuid.uuid5(tenant_id, "failed-event"),
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    target_id=uuid.uuid5(tenant_id, "event-target"),
+                    kind="review-submitted",
+                    body={},
+                    status="failed",
+                )
+            )
             await connection.execute(
                 insert(lab_model_projects).values(
                     lab_model_id=uuid.uuid5(tenant_id, "lab-model"),

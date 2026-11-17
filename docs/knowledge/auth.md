@@ -63,6 +63,15 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 - A domain routes and links only once proven. `connect-saml` prints a `TXT _parfocal-sso.<domain>` record for the workspace to add, and `prove-sso-domains TENANT` checks it over DNS over HTTPS. A failed lookup keeps the last proof, and an answer without the token withdraws it (ADR 0352 amendment).
 - `apps/e2e/tests/sso.spec.ts` runs the test IdP on `PARFOCAL_SAML_IDP_PORT` (default 8091) and provisions and deprovisions its own workspace. CI pulls the amd64 image before the tests.
 
+## SCIM provisioning per workspace
+
+[ADR XXXX](../adr/XXXX-scim-provisioning-through-zitadel.md) (SCIM provisioning through Zitadel) has the design. Zitadel v4.20.3 serves SCIM 2.0 Users at `{issuer}/scim/v2/<organisationId>` with no feature flag, and has no groups.
+
+- An operator runs `python -m parfocal_api.tenant_command connect-scim TENANT [--token-days N]` with the admin token. It prints the endpoint and a bearer token once, and the customer pastes both into their directory's SCIM app.
+- Running it again rotates: the same machine user `scim-<slug>` gets a new token, and the old one stays valid until it expires or is removed in the Zitadel console.
+- Deactivation is `PATCH` with `{"op": "replace", "value": {"active": false}}`, which leaves the user `USER_STATE_INACTIVE`. Our membership row stays, and roles still come from SAML groups at sign-in.
+- The SCIM PAT user needs `ORG_USER_MANAGER` in that organisation only.
+
 ## Row-level security skips rows silently
 
 An `UPDATE` that row-level security filters out changes nothing and raises nothing, so a route can answer 200 while nothing was written. Workspace settings that members may change belong in a tenant-owned table such as `session_policies`, never in `tenants`, which only the platform scope writes. Tests should read a change back. Source: IAM-009 log entry.

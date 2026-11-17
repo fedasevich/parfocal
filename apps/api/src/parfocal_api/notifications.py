@@ -21,6 +21,7 @@ from parfocal_api.tables import (
     EmailStatus,
     MuteSubject,
     NotificationKind,
+    event_outbox,
     jobs,
     notification_mutes,
     notification_preferences,
@@ -165,6 +166,12 @@ async def context_of(
                 )
             ).one_or_none()
             return Context(row.project_id, row.task_id, row.case_id) if row else Context()
+        case TargetKind.DELIVERY:
+            return Context(
+                await connection.scalar(
+                    select(event_outbox.c.project_id).where(event_outbox.c.id == target_id)
+                )
+            )
         case _:
             return Context()
 

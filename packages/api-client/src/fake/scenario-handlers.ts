@@ -485,6 +485,18 @@ export function scenarioHandlers(): RequestHandler[] {
       return new HttpResponse(null, { status: 204 });
     }),
     http.put<{ projectId: string; userId: string }>(
+      "*/api/projects/:projectId/members/:userId",
+      ({ params }) => {
+        const project = projectNamed(params.projectId);
+        const key = (Object.keys(people) as PersonKey[]).find(
+          (candidate) => people[candidate].id === params.userId,
+        );
+        if (project === undefined || key === undefined) return projectNotFound();
+        if (!project.members.includes(key)) project.members.push(key);
+        return HttpResponse.json(toProject(project));
+      },
+    ),
+    http.put<{ projectId: string; userId: string }>(
       "*/api/projects/:projectId/members/:userId/sign-out",
       async ({ params, request }) => {
         const project = projectNamed(params.projectId);

@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 from sqlalchemy import ColumnElement, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, ServicePrincipal
@@ -364,9 +364,15 @@ def completed_of(row: Any, job_id: uuid.UUID | None = None) -> CompletedUpload:
 async def audit(
     connection: AsyncConnection, principal: Principal, action: AuditAction, row: Any
 ) -> None:
+    await audit_by(connection, actor_of(principal), action, row)
+
+
+async def audit_by(
+    connection: AsyncConnection, actor: Actor, action: AuditAction, row: Any
+) -> None:
     await record(
         connection,
-        actor_of(principal),
+        actor,
         action,
         AuditTarget.UPLOAD,
         row.id,

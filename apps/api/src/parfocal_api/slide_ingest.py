@@ -15,6 +15,7 @@ from parfocal_api.notifications import notify
 from parfocal_api.result_imports import queue_waiting_results
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import NotificationKind, PrivacyMode, projects, slides, uploads
+from parfocal_api.webhook_tasks import attach_waiting_tasks
 from parfocal_common.ingest import failure_message
 
 LABEL_LENGTH = 200
@@ -166,6 +167,7 @@ async def publish_slide(connection: AsyncConnection, upload: Any, facts: SlideFa
             {"upload_id": str(upload.id), "slide_id": str(facts.slide_id)},
         )
     await queue_waiting_results(connection, upload.id, facts.slide_id)
+    await attach_waiting_tasks(connection, upload.id, facts.slide_id, None)
     return True
 
 

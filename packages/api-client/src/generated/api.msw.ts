@@ -54,6 +54,9 @@ import type {
   Evaluation,
   EvaluationChanges,
   EvaluationVersionStarted,
+  EventDeliveries,
+  EventTarget,
+  EventTargets,
   ExpertChanges,
   ExportReviewedLayer200,
   FeedbackSent,
@@ -107,6 +110,7 @@ import type {
   MyTask,
   NamedAuditEvent,
   Neighbours,
+  NewWebhookSecret,
   Nudge,
   ObjectResolution,
   OpenUpload,
@@ -137,9 +141,11 @@ import type {
   ProjectOverview,
   ProjectScopeOptions,
   ProjectSlide,
+  ProjectWebhook,
   Question,
   QueuedObject,
   QueueRow,
+  ReadInPlace,
   Reassignment,
   RegionMetrics,
   RegistryEntry,
@@ -164,6 +170,7 @@ import type {
   ReviewTaskDetail,
   RoomAccess,
   RunAreas,
+  SavedEventTarget,
   ScaleQuestion,
   SearchResults,
   SecurityContact,
@@ -229,6 +236,7 @@ import type {
   Validation,
   ViewScope,
   Webhook,
+  WebhookAnswer,
   Workspace,
   WorkspaceAccessRequest,
   WorstObjects,
@@ -275,6 +283,8 @@ import {
   Download,
   DrawAs,
   EmailDigest,
+  EventKind,
+  EventStatus,
   Extranodal,
   FailureClass,
   HitKind,
@@ -7183,6 +7193,157 @@ export const getChangeImportSourceResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetProjectWebhookResponseMock = (
+  overrideResponse: Partial<Extract<ProjectWebhook, object>> = {},
+): ProjectWebhook => ({
+  url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  has_old_secret: faker.datatype.boolean(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  rotated_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getCreateWebhookSecretResponseMock = (
+  overrideResponse: Partial<Extract<NewWebhookSecret, object>> = {},
+): NewWebhookSecret => ({
+  url: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  has_old_secret: faker.datatype.boolean(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  rotated_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  secret: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getCallProjectWebhookResponseMock = (
+  overrideResponse: Partial<Extract<WebhookAnswer, object>> = {},
+): WebhookAnswer => ({
+  call_id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  case_id: faker.string.uuid(),
+  task: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      outcome: faker.helpers.arrayElement(["waiting", "not-attached"] as const),
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  repeated: faker.datatype.boolean(),
+  links: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    link: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+    outcome: faker.helpers.arrayElement(["started", "refused"] as const),
+    upload_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    message: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+  })),
+  ...overrideResponse,
+});
+
+export const getListEventTargetsResponseMock = (
+  overrideResponse: Partial<Extract<EventTargets, object>> = {},
+): EventTargets => ({
+  targets: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      project_id: faker.string.uuid(),
+      address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      events: faker.helpers.arrayElements(Object.values(EventKind)),
+      failures_in_row: faker.number.int(),
+      paused_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSaveEventTargetResponseMock = (
+  overrideResponse: Partial<Extract<SavedEventTarget, object>> = {},
+): SavedEventTarget => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  events: faker.helpers.arrayElements(Object.values(EventKind)),
+  failures_in_row: faker.number.int(),
+  paused_at: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  secret: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListEventDeliveriesResponseMock = (
+  overrideResponse: Partial<Extract<EventDeliveries, object>> = {},
+): EventDeliveries => ({
+  events: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      kind: faker.helpers.arrayElement(Object.values(EventKind)),
+      sequence: faker.number.int(),
+      status: faker.helpers.arrayElement(Object.values(EventStatus)),
+      attempts: faker.number.int(),
+      next_attempt_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      delivered_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      log: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          outcome: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          status_code: faker.helpers.arrayElement([faker.number.int(), null]),
+          duration_ms: faker.number.int(),
+          created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        }),
+      ),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getReplayEventResponseMock = (
+  overrideResponse: Partial<Extract<EventTarget, object>> = {},
+): EventTarget => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  events: faker.helpers.arrayElements(Object.values(EventKind)),
+  failures_in_row: faker.number.int(),
+  paused_at: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getReadInPlaceResponseMock = (
+  overrideResponse: Partial<Extract<ReadInPlace, object>> = {},
+): ReadInPlace => ({
+  opened: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_id: faker.string.uuid(),
+      job_id: faker.string.uuid(),
+    }),
+  ),
+  left_out: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
 export const getCreateReviewTaskResponseMock = (
   overrideResponse: Partial<Extract<ReviewTaskDetail, object>> = {},
 ): ReviewTaskDetail => ({
@@ -9433,6 +9594,8 @@ export const getGetTileAccessResponseMock = (
   base_path: faker.string.alpha({ length: { min: 10, max: 20 } }),
   original: faker.string.alpha({ length: { min: 10, max: 20 } }),
   format: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  storage: faker.helpers.arrayElement(["uploaded", "remote"] as const),
+  offline: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -9530,6 +9693,7 @@ export const getGetNotificationTargetResponseMock = (
   ]),
   job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   thread_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  delivery_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   resolved_from: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -21920,6 +22084,255 @@ export const getDeleteImportSourceMockHandler = (
   );
 };
 
+export const getGetProjectWebhookMockHandler = (
+  overrideResponse?:
+    | ProjectWebhook
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectWebhook> | ProjectWebhook),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/webhook",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetProjectWebhookResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateWebhookSecretMockHandler = (
+  overrideResponse?:
+    | NewWebhookSecret
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<NewWebhookSecret> | NewWebhookSecret),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/webhook/secret",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateWebhookSecretResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getRetireWebhookSecretMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId/webhook/old-secret",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getCallProjectWebhookMockHandler = (
+  overrideResponse?:
+    | WebhookAnswer
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<WebhookAnswer> | WebhookAnswer),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/webhooks/:hookKey",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCallProjectWebhookResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListEventTargetsMockHandler = (
+  overrideResponse?:
+    | EventTargets
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<EventTargets> | EventTargets),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/event-targets",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListEventTargetsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSaveEventTargetMockHandler = (
+  overrideResponse?:
+    | SavedEventTarget
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SavedEventTarget> | SavedEventTarget),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/event-targets",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSaveEventTargetResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteEventTargetMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId/event-targets/:targetId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getListEventDeliveriesMockHandler = (
+  overrideResponse?:
+    | EventDeliveries
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<EventDeliveries> | EventDeliveries),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/event-targets/:targetId/events",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListEventDeliveriesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReplayEventMockHandler = (
+  overrideResponse?:
+    | EventTarget
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<EventTarget> | EventTarget),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/event-targets/:targetId/events/:eventId/replay",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReplayEventResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReadInPlaceMockHandler = (
+  overrideResponse?:
+    | ReadInPlace
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReadInPlace> | ReadInPlace),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/remote-slides",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReadInPlaceResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetRemoteTileMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/remote-tiles/:slideId/:name",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 200 });
+    },
+    options,
+  );
+};
+
 export const getCreateReviewTaskMockHandler = (
   overrideResponse?:
     | ReviewTaskDetail
@@ -27458,6 +27871,17 @@ export const getParfocalAPIMock = () => [
   getSaveImportSourceMockHandler(),
   getChangeImportSourceMockHandler(),
   getDeleteImportSourceMockHandler(),
+  getGetProjectWebhookMockHandler(),
+  getCreateWebhookSecretMockHandler(),
+  getRetireWebhookSecretMockHandler(),
+  getCallProjectWebhookMockHandler(),
+  getListEventTargetsMockHandler(),
+  getSaveEventTargetMockHandler(),
+  getDeleteEventTargetMockHandler(),
+  getListEventDeliveriesMockHandler(),
+  getReplayEventMockHandler(),
+  getReadInPlaceMockHandler(),
+  getGetRemoteTileMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),

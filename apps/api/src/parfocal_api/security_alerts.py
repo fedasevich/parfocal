@@ -13,11 +13,13 @@ from parfocal_api.tables import (
     cases,
     clinical_reports,
     display_presets,
+    event_targets,
     import_sources,
     invitations,
     lab_models,
     legal_holds,
     patients,
+    project_webhooks,
     projects,
     report_links,
     result_sets,
@@ -55,6 +57,8 @@ TARGET_TABLES: Mapping[AuditTarget, Table] = {
     AuditTarget.SITE_VALIDATION: site_validations,
     AuditTarget.LAB_MODEL: lab_models,
     AuditTarget.IMPORT_SOURCE: import_sources,
+    AuditTarget.WEBHOOK: project_webhooks,
+    AuditTarget.EVENT_TARGET: event_targets,
 }
 
 UNCHECKED_TARGETS: Mapping[AuditTarget, str] = {
@@ -77,6 +81,7 @@ REMOVAL_ACTIONS = frozenset(
         AuditAction.THREAD_DELETED,
         AuditAction.PATIENT_ERASED,
         AuditAction.DISPLAY_PRESET_DELETED,
+        AuditAction.EVENT_TARGET_DELETED,
     }
 )
 

@@ -22,6 +22,7 @@ from parfocal_api.evaluation_versions import (
     record_signature,
     start_next_version,
 )
+from parfocal_api.event_emit import emit, subscribed
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -33,6 +34,7 @@ from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.submit_gate import require_done
 from parfocal_api.tables import (
+    EventKind,
     ProjectRole,
     ResultSource,
     ResultStatus,
@@ -459,6 +461,7 @@ async def review_move(
         await tell_mentioned_on_slide(
             connection, await task_slide(connection, principal, task_id, slide_id)
         )
+        await announce_submitted(connection, task, slide_id)
     background, live = announced
     announce_worklist(
         background,
@@ -469,6 +472,24 @@ async def review_move(
         slide=slide_id,
     )
     return await states_of(connection, await task_of(connection, task_id))
+
+
+async def announce_submitted(connection: AsyncConnection, task: Any, slide_id: uuid.UUID) -> None:
+    ids = {"task_id": task.id, "slide_id": slide_id}
+    await emit(connection, task.tenant_id, task.project_id, EventKind.REVIEW_SUBMITTED, ids)
+    if not await subscribed(connection, task.project_id, EventKind.TASK_DISAGREEMENTS):
+        return
+    states = await states_of(connection, await task_of(connection, task.id))
+    if any(r.submitted_at is None for slide in states.slides for r in slide.reviewers):
+        return
+    if open_count(await queue_of(connection, task.id)) > 0:
+        await emit(
+            connection,
+            task.tenant_id,
+            task.project_id,
+            EventKind.TASK_DISAGREEMENTS,
+            {"task_id": task.id},
+        )
 
 
 @router.get(
@@ -576,6 +597,13 @@ async def sign_off_review_task(
         task_id,
         tenant_id=task.tenant_id,
         details={"version": number, "confirmed_with": confirmed_with},
+    )
+    await emit(
+        connection,
+        task.tenant_id,
+        task.project_id,
+        EventKind.TASK_SIGNED_OFF,
+        {"task_id": task_id, "version": number},
     )
     announce_worklist(
         background, live, task.tenant_id, await task_people(connection, task_id), task=task_id

@@ -16,7 +16,7 @@ from typing import Any
 import httpx2
 import numpy as np
 import pytest
-from case_support import seed_case, seed_project
+from case_support import TEST_KEYRING, seed_case, seed_project
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from link_support import Site
 from pypdf import PdfReader
@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
 from parfocal_api.display_settings import DisplaySettings
+from parfocal_api.identifiers import ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.principals import MemberPrincipal
@@ -52,6 +53,9 @@ from parfocal_api.tables import (
     emergency_grants,
     evaluation_changes,
     evaluation_versions,
+    event_attempts,
+    event_outbox,
+    event_targets,
     gpu_usage,
     hidden_models,
     import_sources,
@@ -76,6 +80,7 @@ from parfocal_api.tables import (
     platform_operators,
     project_classes,
     project_members,
+    project_webhooks,
     projects,
     report_links,
     result_chunks,
@@ -109,6 +114,7 @@ from parfocal_api.tables import (
     threads,
     uploads,
     users,
+    webhook_calls,
     workspace_access_requests,
     workspace_settings,
 )
@@ -1297,6 +1303,83 @@ async def seed_import_sources(connection: AsyncConnection, seeded: Seeded) -> No
     seeded.markers.add(marker)
 
 
+async def seed_project_webhooks(connection: AsyncConnection, seeded: Seeded) -> None:
+    hook_id = uuid.uuid4()
+    keys = await ensure_keys(connection, TEST_KEYRING, seeded.tenant_id)
+    await connection.execute(
+        insert(project_webhooks).values(
+            id=hook_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            hook_key=hook_id.hex,
+            secret_ciphertext=seal_field(
+                keys, "project_webhooks", hook_id, "secret", "seeded-secret"
+            ),
+            old_secret_ciphertext=seal_field(
+                keys, "project_webhooks", hook_id, "old_secret", "older-secret"
+            ),
+        )
+    )
+    seeded.ids["webhook"] = hook_id
+    seeded.markers.add(hook_id.hex)
+
+
+async def seed_webhook_calls(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(webhook_calls).values(
+            tenant_id=seeded.tenant_id,
+            webhook_id=seeded.ids["webhook"],
+            idempotency_key=f"call-{uuid.uuid4().hex[:10]}",
+            answer={},
+        )
+    )
+
+
+async def seed_event_targets(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"event-target-{uuid.uuid4().hex[:10]}"
+    target_id = uuid.uuid5(seeded.tenant_id, "event-target")
+    await connection.execute(
+        insert(event_targets).values(
+            id=target_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            address=f"https://pipeline.example.org/{marker}",
+            events=["review-submitted"],
+            secret_ciphertext=b"sealed",
+        )
+    )
+    seeded.ids["event_target"] = target_id
+    seeded.markers.add(marker)
+
+
+async def seed_event_outbox(connection: AsyncConnection, seeded: Seeded) -> None:
+    event_id = uuid.uuid5(seeded.tenant_id, "event")
+    await connection.execute(
+        insert(event_outbox).values(
+            id=event_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            target_id=seeded.ids["event_target"],
+            kind="review-submitted",
+            body={},
+        )
+    )
+    seeded.ids["event"] = event_id
+    seeded.markers.add(str(event_id))
+
+
+async def seed_event_attempts(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(event_attempts).values(
+            tenant_id=seeded.tenant_id,
+            event_id=seeded.ids["event"],
+            outcome="status",
+            status_code=500,
+            duration_ms=12,
+        )
+    )
+
+
 async def seed_template_offers(connection: AsyncConnection, seeded: Seeded) -> None:
     name = f"Offer {uuid.uuid4().hex[:12]}"
     draft = BUILT_INS[next(iter(BUILT_INS))].model_copy(update={"name": name})
@@ -1598,6 +1681,11 @@ SEEDERS: dict[str, Seeder] = {
     "lab_models": seed_lab_models,
     "lab_model_projects": seed_lab_model_projects,
     "import_sources": seed_import_sources,
+    "project_webhooks": seed_project_webhooks,
+    "webhook_calls": seed_webhook_calls,
+    "event_targets": seed_event_targets,
+    "event_outbox": seed_event_outbox,
+    "event_attempts": seed_event_attempts,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -1865,6 +1953,9 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/links"
     ),
     "getSharedReport": Route(Exposure.PUBLIC, lambda a: f"/api/shared-reports/{shared_token(a)}"),
+    "getRemoteTile": Route(
+        Exposure.PUBLIC, lambda a: f"/api/remote-tiles/{a.ids['slide']}/scan.svs"
+    ),
     "getOpinion": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/opinion",
@@ -2002,6 +2093,16 @@ GET_ROUTES = {
     "listModelTiers": Route(Exposure.TENANT, lambda _: "/api/tenant/model-tiers"),
     "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
     "listImportSources": Route(Exposure.TENANT, lambda _: "/api/tenant/import-sources"),
+    "getProjectWebhook": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook"
+    ),
+    "listEventTargets": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/event-targets"
+    ),
+    "listEventDeliveries": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/event-targets/{a.ids['event_target']}/events",
+    ),
     "getLabModel": Route(
         Exposure.TENANT,
         lambda s: f"/api/tenant/models/{s.ids['lab_model']}",

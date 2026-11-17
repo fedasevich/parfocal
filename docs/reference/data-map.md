@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 
 | Class | Columns |
 |---|---|
-| `phi` | 48 |
-| `personal` | 97 |
-| `secret` | 12 |
-| `operational` | 812 |
+| `phi` | 49 |
+| `personal` | 99 |
+| `secret` | 15 |
+| `operational` | 863 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -344,6 +344,52 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `evaluation` | operational |
 | `blocks` | operational |
 | `format` | operational |
+
+## event_attempts
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `event_id` | operational |
+| `outcome` | operational |
+| `status_code` | operational |
+| `duration_ms` | operational |
+| `created_at` | operational |
+
+## event_outbox
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `target_id` | operational |
+| `kind` | operational |
+| `sequence` | operational |
+| `body` | operational |
+| `status` | operational |
+| `attempts` | operational |
+| `next_attempt_at` | operational |
+| `lease_until` | operational |
+| `delivered_at` | operational |
+| `created_at` | operational |
+
+## event_targets
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `address` | operational |
+| `events` | operational |
+| `secret_ciphertext` | secret |
+| `failures_in_row` | operational |
+| `paused_at` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## gpu_usage
 
@@ -742,6 +788,21 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `user_id` | personal |
 | `role` | operational |
 | `sign_out` | operational |
+
+## project_webhooks
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `hook_key` | operational |
+| `secret_ciphertext` | secret |
+| `old_secret_ciphertext` | secret |
+| `rotated_at` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## projects
 
@@ -1169,6 +1230,13 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `original_key` | operational |
 | `restricted_images` | operational |
 | `published_at` | operational |
+| `storage` | operational |
+| `source_id` | operational |
+| `remote_path` | phi |
+| `remote_etag` | operational |
+| `remote_failures` | operational |
+| `remote_failing_since` | operational |
+| `remote_read_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |
@@ -1414,6 +1482,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `last_tenant_id` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## webhook_calls
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `webhook_id` | operational |
+| `idempotency_key` | operational |
+| `answer` | operational |
+| `slide_upload_id` | operational |
+| `task_id` | operational |
+| `task_attached_at` | operational |
+| `created_at` | operational |
 
 ## workspace_access_requests
 

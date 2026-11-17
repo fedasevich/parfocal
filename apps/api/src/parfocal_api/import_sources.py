@@ -21,7 +21,7 @@ from parfocal_api.identifiers import ensure_keys, load_keys, open_field, seal_fi
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
-from parfocal_api.tables import ImportSourceKind, import_sources
+from parfocal_api.tables import ImportSourceKind, import_sources, slides
 from parfocal_api.uploads import Settings
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.link_fetch import (
@@ -404,6 +404,9 @@ async def delete_import_source(
     source_id: SourceId, principal: CurrentPrincipal, connection: TenantConnection
 ) -> None:
     row = await source_row(connection, source_id)
+    await connection.execute(
+        update(slides).where(slides.c.source_id == source_id).values(source_id=None)
+    )
     await connection.execute(delete(import_sources).where(import_sources.c.id == source_id))
     await record(
         connection,

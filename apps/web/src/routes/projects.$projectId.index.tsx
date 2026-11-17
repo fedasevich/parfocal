@@ -5,11 +5,12 @@ import { useResultsSlide } from "../screens/project/scene.ts";
 import { mockScenes } from "../screens/scenes.ts";
 
 const projectSearch = z.object({
-  tab: z.enum(["slides", "results", "tasks", "report", "settings"]).default("slides"),
+  tab: z.enum(["slides", "results", "tasks", "report", "settings", "people"]).default("slides"),
   status: z.string().optional(),
   q: z.string().optional(),
   sets: z.string().optional(),
   modal: z.enum(["addcls"]).optional(),
+  add: z.string().optional(),
   scene: z.enum(mockScenes.project).optional(),
 });
 
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/projects/$projectId/")({
 });
 
 const tabOf = (tab: z.infer<typeof projectSearch>["tab"]): ProjectTab =>
-  tab === "tasks" || tab === "settings" ? tab : "slides";
+  tab === "tasks" || tab === "settings" ? tab : tab === "people" ? "settings" : "slides";
 
 function ProjectRoute() {
   const { projectId } = Route.useParams();
@@ -41,6 +42,7 @@ function ProjectRoute() {
         open: scene === "results" ? resultsSlide : search.sets,
         importFailed: scene === "importfail",
         addClass: tab === "settings" && search.modal === "addcls",
+        addPerson: tab === "settings" ? search.add : undefined,
       }}
     />
   );
