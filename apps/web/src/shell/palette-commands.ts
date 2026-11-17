@@ -33,6 +33,7 @@ export type PaletteContext = {
   measure: () => void;
   openNotifications: () => void;
   setDeveloperMode: (on: boolean) => void;
+  showAllHints: () => void;
 };
 
 const keysOf = (...ids: string[]) =>
@@ -101,7 +102,15 @@ function settingEntries(ctx: PaletteContext): PaletteEntry[] {
     keywords: ["developer", "lab", "benchmark", "hud", "debug"],
     run: () => ctx.setDeveloperMode(!ctx.developerMode),
   };
-  return [...rows, shortcuts, developer];
+  const hints: PaletteEntry = {
+    id: "show-all-hints",
+    group: "Settings",
+    icon: "help",
+    label: "Show all hints again",
+    keywords: ["hints", "explanations", "notes", "tips", "reset", "coach", "settings"],
+    run: ctx.showAllHints,
+  };
+  return [...rows, shortcuts, hints, developer];
 }
 
 function actionEntries(ctx: PaletteContext): PaletteEntry[] {

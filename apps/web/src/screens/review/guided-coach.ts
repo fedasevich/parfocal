@@ -1,62 +1,18 @@
-import { useCallback, useState, useSyncExternalStore } from "react";
-
-const storageKey = "parfocal.guided-coach";
-const changeEvent = "parfocal:guided-coach";
-const guestKey = "guest";
-
-function readStore(): Record<string, unknown> {
-  try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
-    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-export function hasSeenGuidedCoach(userId: string | undefined): boolean {
-  return readStore()[userId ?? guestKey] === true;
-}
-
-export function markGuidedCoachSeen(userId: string | undefined) {
-  const store = readStore();
-  store[userId ?? guestKey] = true;
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify(store));
-  } catch {
-    return;
-  }
-  window.dispatchEvent(new Event(changeEvent));
-}
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(changeEvent, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(changeEvent, onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
+import { useCallback, useState } from "react";
+import { guidedCoachHintId, useHintsSeen } from "../../hints/hints-seen.ts";
 
 export const coachShown = (asked: boolean, objectCount: number) => asked && objectCount > 0;
 
 export type GuidedCoach = { open: boolean; dismiss: () => void; reopen: () => void };
 
-export function useGuidedCoach(
-  userId: string | undefined,
-  firstVisitAllowed: boolean,
-): GuidedCoach {
-  const seen = useSyncExternalStore(
-    subscribe,
-    () => hasSeenGuidedCoach(userId),
-    () => true,
-  );
+export function useGuidedCoach(firstVisitAllowed: boolean): GuidedCoach {
+  const { ready, seen, markSeen } = useHintsSeen();
   const [reopened, setReopened] = useState(false);
   const dismiss = useCallback(() => {
     setReopened(false);
-    markGuidedCoachSeen(userId);
-  }, [userId]);
+    markSeen([guidedCoachHintId]);
+  }, [markSeen]);
   const reopen = useCallback(() => setReopened(true), []);
-  return { open: reopened || (firstVisitAllowed && !seen), dismiss, reopen };
+  const firstVisit = ready && !seen.has(guidedCoachHintId);
+  return { open: reopened || (firstVisitAllowed && firstVisit), dismiss, reopen };
 }
