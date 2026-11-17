@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on, require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.event_emit import emit
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
@@ -20,6 +21,7 @@ from parfocal_api.project_access import project_grant, readable_slide, require_s
 from parfocal_api.projects import ProjectArchivedError, visible
 from parfocal_api.review_order import Results
 from parfocal_api.tables import (
+    EventKind,
     PrivacyMode,
     ResultObjectKind,
     ResultSource,
@@ -423,15 +425,25 @@ async def finish(
             )
             .values(object_count=result_set_classes.c.object_count + count)
         )
-    await connection.execute(
-        update(result_sets)
-        .where(result_sets.c.id == set_id)
-        .values(
-            status=ResultStatus.READY,
-            cell_count=cells.scalar_subquery(),
-            region_count=by_kind.get(ResultObjectKind.REGION, 0),
-            zone_count=by_kind.get(ResultObjectKind.ZONE, 0),
+    ready = (
+        await connection.execute(
+            update(result_sets)
+            .where(result_sets.c.id == set_id)
+            .values(
+                status=ResultStatus.READY,
+                cell_count=cells.scalar_subquery(),
+                region_count=by_kind.get(ResultObjectKind.REGION, 0),
+                zone_count=by_kind.get(ResultObjectKind.ZONE, 0),
+            )
+            .returning(result_sets.c.tenant_id, result_sets.c.project_id, result_sets.c.slide_id)
         )
+    ).one()
+    await emit(
+        connection,
+        ready.tenant_id,
+        ready.project_id,
+        EventKind.RESULT_SET_ADDED,
+        {"result_set_id": set_id, "slide_id": ready.slide_id},
     )
 
 

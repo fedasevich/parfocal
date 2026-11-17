@@ -20,6 +20,9 @@
     "emergency_grants",
     "evaluation_changes",
     "evaluation_versions",
+    "event_attempts",
+    "event_outbox",
+    "event_targets",
     "gpu_usage",
     "hidden_models",
     "import_sources",
@@ -153,6 +156,15 @@
       true,
       "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
       "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      []
+    ],
+    [
+      "event_outbox",
+      "platform_claims",
+      "*",
+      true,
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
       []
     ],
     [

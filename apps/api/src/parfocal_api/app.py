@@ -34,6 +34,7 @@ from parfocal_api import (
     evaluation,
     evaluation_exports,
     evaluation_versions,
+    events_out,
     feedback,
     first_reads,
     hidden_models,
@@ -277,6 +278,7 @@ def create_app(
     app.include_router(import_sources.router)
     app.include_router(project_webhooks.router)
     app.include_router(project_webhooks.public_router)
+    app.include_router(events_out.router)
     app.include_router(review_tasks.project_router)
     app.include_router(review_tasks.router)
     app.include_router(task_changes.router)

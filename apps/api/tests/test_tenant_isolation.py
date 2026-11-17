@@ -52,6 +52,9 @@ from parfocal_api.tables import (
     emergency_grants,
     evaluation_changes,
     evaluation_versions,
+    event_attempts,
+    event_outbox,
+    event_targets,
     gpu_usage,
     hidden_models,
     import_sources,
@@ -1325,6 +1328,51 @@ async def seed_webhook_calls(connection: AsyncConnection, seeded: Seeded) -> Non
     )
 
 
+async def seed_event_targets(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"event-target-{uuid.uuid4().hex[:10]}"
+    target_id = uuid.uuid5(seeded.tenant_id, "event-target")
+    await connection.execute(
+        insert(event_targets).values(
+            id=target_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            address=f"https://pipeline.example.org/{marker}",
+            events=["review-submitted"],
+            secret_ciphertext=b"sealed",
+        )
+    )
+    seeded.ids["event_target"] = target_id
+    seeded.markers.add(marker)
+
+
+async def seed_event_outbox(connection: AsyncConnection, seeded: Seeded) -> None:
+    event_id = uuid.uuid5(seeded.tenant_id, "event")
+    await connection.execute(
+        insert(event_outbox).values(
+            id=event_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            target_id=seeded.ids["event_target"],
+            kind="review-submitted",
+            body={},
+        )
+    )
+    seeded.ids["event"] = event_id
+    seeded.markers.add(str(event_id))
+
+
+async def seed_event_attempts(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(event_attempts).values(
+            tenant_id=seeded.tenant_id,
+            event_id=seeded.ids["event"],
+            outcome="status",
+            status_code=500,
+            duration_ms=12,
+        )
+    )
+
+
 async def seed_template_offers(connection: AsyncConnection, seeded: Seeded) -> None:
     name = f"Offer {uuid.uuid4().hex[:12]}"
     draft = BUILT_INS[next(iter(BUILT_INS))].model_copy(update={"name": name})
@@ -1628,6 +1676,9 @@ SEEDERS: dict[str, Seeder] = {
     "import_sources": seed_import_sources,
     "project_webhooks": seed_project_webhooks,
     "webhook_calls": seed_webhook_calls,
+    "event_targets": seed_event_targets,
+    "event_outbox": seed_event_outbox,
+    "event_attempts": seed_event_attempts,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -2034,6 +2085,13 @@ GET_ROUTES = {
     "listImportSources": Route(Exposure.TENANT, lambda _: "/api/tenant/import-sources"),
     "getProjectWebhook": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/webhook"
+    ),
+    "listEventTargets": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/event-targets"
+    ),
+    "listEventDeliveries": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/event-targets/{a.ids['event_target']}/events",
     ),
     "getLabModel": Route(
         Exposure.TENANT,
