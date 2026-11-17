@@ -89,6 +89,10 @@ On 2026-10-08 `modal deploy -e dev` failed with "Workspace … has exceeded its 
 
 Since 2026-10-31 the spend limit is $0 on purpose, so compute stops when the $30 of free credits is used. See the table above.
 
+## The API runs at one Modal address that only the Worker can reach
+
+Since OPS-031 (move the API and database to the EU) the API is the Modal function `web-eu` of the app `parfocal-api` in environment `main`, at `https://fedasevich--parfocal-api-web-eu.eu-west.modal.run`. The function sets `requires_proxy_auth`, so Modal answers 401 to any request without a valid workspace proxy auth token in the `Modal-Key` and `Modal-Secret` headers, before a container starts. The Cloudflare Worker at `app.parfocal.eu` holds the token as the secrets `MODAL_PROXY_TOKEN_ID` and `MODAL_PROXY_TOKEN_SECRET`, adds it to `/api` requests and drops any copy a client sends. So the Worker's login and upload limits and its bot check cannot be skipped by calling the Modal address. Checked from outside on 2026-11-17 with `apps/edge/test/deployed-api-origin.test.ts`: the Modal address answered 401 without a token and with a forged one, and `app.parfocal.eu/api/health` answered 200. The exact steps are in [deploy.md](deploy.md).
+
 ## Modal replies over 2 MB cost about 1 s more
 
 A warm Modal call returning 1.9 MB took a median 0.35 to 0.39 s from a home connection in Europe, and one returning 2.2 MB took 1.33 s, with the empty call at 0.24 s. Keep interactive replies under 2 MB, or write large ones to R2 and return a key. A T4 GPU function cold-starts in 12 to 16 s, with one sample at 40 s, and `modal billing report --for today` reads spend from the CLI. Source: [the GPU serving spike](../results/2026-11-02-gpu-serving-spike.md).
