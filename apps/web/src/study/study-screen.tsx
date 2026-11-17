@@ -12,21 +12,25 @@ import {
   nextTask,
   type Outcome,
   type PageProbe,
+  recordBlock,
   recordResult,
+  resolveGuard,
   resolveStartPath,
   type StudyContext,
   startNextRound,
   startSession,
   summariseRound,
+  taskWindowName,
 } from "./study-model.ts";
-import { readStudy, writeStudy } from "./study-storage.ts";
+import { clearBlockLog, readBlockLog, readStudy, writeGuard, writeStudy } from "./study-storage.ts";
+
+const blockLine = (blocks: { taskId: string; to: string }[]): string =>
+  ` · blocked ${blocks.map((attempt) => `${attempt.taskId} to ${attempt.to}`).join(", ")}`;
 
 const stamp = () => now().getTime();
 
 const timerText = (seconds: number, target: number | undefined): string =>
   target === undefined ? `${seconds}s` : `${seconds}s / ${target}s`;
-
-const taskWindowName = "parfocal-study-task";
 
 const documentOf = (target: Window | null): Document | undefined => {
   try {
@@ -91,7 +95,29 @@ export function StudyScreen() {
   const active = state.sessions.find((session) => session.id === activeId);
   const current = active === undefined ? undefined : nextTask(round, active);
   const elapsed = taskStart === null ? 0 : Math.max(0, Math.round((stamp() - taskStart) / 1000));
+  const guard =
+    active === undefined || current === undefined || taskStart === null
+      ? undefined
+      : resolveGuard(current, active.id, context);
+  const guardKey = guard === undefined ? "" : JSON.stringify(guard);
   const startPath = current === undefined ? undefined : resolveStartPath(current, context);
+
+  useEffect(() => {
+    writeGuard(guardKey === "" ? undefined : (JSON.parse(guardKey) as typeof guard));
+    return () => writeGuard(undefined);
+  }, [guardKey]);
+
+  useEffect(() => {
+    const entries = readBlockLog();
+    if (entries.length === 0) return;
+    clearBlockLog();
+    const merged = entries.reduce(
+      (next, entry) =>
+        recordBlock(next, entry.sessionId, { taskId: entry.taskId, at: entry.at, to: entry.to }),
+      state,
+    );
+    commit(merged);
+  });
 
   const begin = () => {
     const name = participant.trim();
@@ -294,6 +320,9 @@ export function StudyScreen() {
               <th>
                 <Trans>Median seconds</Trans>
               </th>
+              <th>
+                <Trans>Blocked</Trans>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -307,6 +336,7 @@ export function StudyScreen() {
                 <td className="font-mono">{summary[index]?.sessions ?? 0}</td>
                 <td className="font-mono">{summary[index]?.completed ?? 0}</td>
                 <td className="font-mono">{summary[index]?.medianSeconds ?? "-"}</td>
+                <td className="font-mono">{summary[index]?.blocked ?? 0}</td>
               </tr>
             ))}
           </tbody>
@@ -324,6 +354,9 @@ export function StudyScreen() {
                       `${result.taskId} ${durationSeconds(result)}s ${result.outcome}${result.auto ? " (auto)" : ""}`,
                   )
                   .join(", ")}
+                {session.blocks.length === 0 ? null : (
+                  <span data-testid="study-block-log">{blockLine(session.blocks)}</span>
+                )}
               </li>
             ))}
         </ul>
