@@ -47,6 +47,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
             new URL("./page/overlay-agreement.html", import.meta.url),
           ),
           "overlay-maps": fileURLToPath(new URL("./page/overlay-maps.html", import.meta.url)),
+          "overlay-cull": fileURLToPath(new URL("./page/overlay-cull.html", import.meta.url)),
           lifecycle: fileURLToPath(new URL("./page/lifecycle.html", import.meta.url)),
           "route-switch": fileURLToPath(new URL("./page/route-switch.html", import.meta.url)),
           "nuclei-paging": fileURLToPath(new URL("./page/nuclei-paging.html", import.meta.url)),

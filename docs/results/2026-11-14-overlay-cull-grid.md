@@ -30,7 +30,7 @@ It builds one `PolygonBatch` of all the squares and one vector overlay, then cal
 | A new window after leaving the old one, slowest of 20 | 7.8 ms |
 | Heap used at the end | 57 MB |
 | Array buffers at the end | 166 MB |
-| Viv route GPU time at detail zoom, 1.6M nuclei, owner's Mac | TODO |
+| Viv route GPU time at detail zoom, 1.6M nuclei, owner's Mac | 1.60 ms, see the [2026-11-17 result](2026-11-17-viv-route-cull-grid-at-1-6m-nuclei.md) |
 
 ## How to rerun on the Mac
 
