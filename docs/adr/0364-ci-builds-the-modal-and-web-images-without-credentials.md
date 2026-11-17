@@ -1,4 +1,4 @@
-# XXXX. CI builds the Modal and web images without credentials
+# 0364. CI builds the Modal and web images without credentials
 
 - Date: 2026-11-17
 - Status: Accepted
