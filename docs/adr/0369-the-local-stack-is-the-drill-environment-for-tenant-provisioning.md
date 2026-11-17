@@ -1,4 +1,4 @@
-# XXXX. The local stack is the drill environment for tenant provisioning
+# 0369. The local stack is the drill environment for tenant provisioning
 
 - Date: 2026-11-17
 - Status: Accepted
