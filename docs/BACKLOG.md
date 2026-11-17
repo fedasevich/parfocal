@@ -4558,7 +4558,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a known vulnerable dependency fails CI.
   Size: M.
 
-- [ ] TEST-015 · Cross-browser matrix
+- [x] TEST-015 · Cross-browser matrix
   Chromium, Firefox and Safari (WebKit) for the viewer on WebGL2, with WebGPU routes on Chromium and wherever supported.
   Done when the nightly matrix runs and results are published.
   Refs doc 20 (Safari and Firefox WebGPU parity untested).
