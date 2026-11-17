@@ -7,9 +7,10 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 import pytest
-from db_support import APP_URL, TEST_MASTER_KEYS, ApiAs, api_settings, with_database
+from db_support import APP_URL, OWNER_URL, TEST_MASTER_KEYS, ApiAs, api_settings, with_database
 from fastapi.testclient import TestClient
 from link_support import Served, Site, serving
+from sqlalchemy import text
 from submit_support import submitted
 from test_decision_styles import answer
 from test_reviewed_layer import Review, review
@@ -76,8 +77,25 @@ def wired_review(api: ApiAs, database: str, site: Site) -> tuple[Review, Wired]:
     return r, wire(api, database, site, tenant_id, r.project, r.people["owner"])
 
 
+PARK_OTHERS = (
+    "UPDATE event_outbox SET next_attempt_at = now() + interval '100 years' FROM event_targets"
+    " WHERE event_targets.id = event_outbox.target_id"
+    " AND event_targets.address NOT LIKE '%' || :origin || '/%'"
+)
+
+
+async def park_others(database: str, site: Site) -> None:
+    owner_engine = create_engine(with_database(OWNER_URL, database))
+    try:
+        async with owner_engine.begin() as connection:
+            await connection.execute(text(PARK_OTHERS), {"origin": site.origin})
+    finally:
+        await owner_engine.dispose()
+
+
 def swept(database: str, site: Site, now: datetime) -> list[str]:
     async def go() -> list[str]:
+        await park_others(database, site)
         engine = create_engine(with_database(APP_URL, database))
         try:
             async with delivery_client() as http:
@@ -352,6 +370,7 @@ def lingered(database: str, site: Site, start: datetime, linger: timedelta) -> t
         clock[0] += timedelta(seconds=seconds)
 
     async def go() -> tuple[int, int]:
+        await park_others(database, site)
         engine = create_engine(with_database(APP_URL, database))
         try:
             async with delivery_client() as http:

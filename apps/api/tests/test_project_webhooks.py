@@ -149,7 +149,11 @@ def test_only_admins_create_a_secret_and_it_is_shown_once(
     assert "secret" not in shown
     assert shown["url"] == hook["url"]
     assert shown["has_old_secret"] is False
-    stored = value(database, "SELECT encode(secret_ciphertext, 'escape') FROM project_webhooks")
+    stored = value(
+        database,
+        "SELECT encode(secret_ciphertext, 'escape') FROM project_webhooks"
+        f" WHERE project_id = '{team.project}'",
+    )
     assert hook["secret"] not in stored
 
 
