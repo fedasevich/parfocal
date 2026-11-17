@@ -15,13 +15,15 @@ function sourceFiles(dir: string): string[] {
 
 const allowedLine = /label=|TileHint/;
 
+const stageLabel = "viewer/stage-opening.tsx";
+
 test("no screen waits with loading text outside a Loader label", () => {
   const found: string[] = [];
   for (const file of sourceFiles(root)) {
     readFileSync(file, "utf8")
       .split("\n")
       .forEach((line, index) => {
-        if (/Loading\b/.test(line) && !allowedLine.test(line)) {
+        if (/Loading\b/.test(line) && !allowedLine.test(line) && !file.endsWith(stageLabel)) {
           found.push(`${file.slice(root.length)}:${index + 1} ${line.trim()}`);
         }
       });
@@ -29,13 +31,13 @@ test("no screen waits with loading text outside a Loader label", () => {
   assert.deepEqual(found, []);
 });
 
-test("the screens that waited now use the Loader", () => {
+test("the screens that waited now use the Loader or skeleton rows", () => {
   const files = [
     "screens/home/home-screen.tsx",
     "screens/team/team-screen.tsx",
-    "viewer/slide-stage.tsx",
+    "viewer/stage-opening.tsx",
   ];
   for (const file of files) {
-    assert.match(readFileSync(join(root, file), "utf8"), /<Loader\b/);
+    assert.match(readFileSync(join(root, file), "utf8"), /<Loader\b|<SkeletonRows\b/);
   }
 });

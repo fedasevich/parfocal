@@ -1,7 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Loader } from "@parfocal/ui/components/loader";
 
-export function StageLoading() {
+export function StageOpening() {
   const { t } = useLingui();
   return (
     <div
