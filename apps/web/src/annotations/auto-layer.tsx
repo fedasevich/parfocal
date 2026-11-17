@@ -1,8 +1,7 @@
 import { useLingui } from "@lingui/react/macro";
 import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AisOutliner, createAisOutliner } from "../aiseg/ais-outliner.ts";
-import { promptFallback } from "../aiseg/prompt-fallback.ts";
-import { promptPassOptionsFor } from "../aiseg/prompt-pass.ts";
+import { autoFallback, type OutlineTier, qualityForTier } from "../aiseg/prompt-fallback.ts";
 import {
   clickTile,
   planRegionTiles,
@@ -11,7 +10,6 @@ import {
   type RegionProgress,
   runRegionPass,
 } from "../aiseg/region-pass.ts";
-import { SCALE_PRESETS } from "../aiseg/scale-presets.ts";
 import { nextRunId } from "../aiseg/smart-run.ts";
 import type {
   SmartServices,
@@ -48,6 +46,7 @@ type AutoLayerProps = {
   activeClass: string | null;
   loader: SmartServicesLoader;
   openRequest: SmartServicesContext["open"];
+  tier: OutlineTier;
   onDocumentChange: (next: AnnotationDocument) => void;
 };
 
@@ -81,6 +80,7 @@ export function AutoLayer({
   activeClass,
   loader,
   openRequest,
+  tier,
   onDocumentChange,
 }: AutoLayerProps) {
   const { t } = useLingui();
@@ -89,8 +89,8 @@ export function AutoLayer({
   const [press, setPress] = useState<Press | null>(null);
   const [status, setStatus] = useState<Status>(idle);
   const escRegistry = useEscRegistry();
-  const latest = useRef({ engine, doc, activeClass, onDocumentChange, loader, openRequest });
-  latest.current = { engine, doc, activeClass, onDocumentChange, loader, openRequest };
+  const latest = useRef({ engine, doc, activeClass, onDocumentChange, loader, openRequest, tier });
+  latest.current = { engine, doc, activeClass, onDocumentChange, loader, openRequest, tier };
   const services = useRef<Promise<SmartServices> | null>(null);
   const outliner = useRef<AisOutliner | null>(null);
   const controller = useRef<AbortController | null>(null);
@@ -170,10 +170,7 @@ export function AutoLayer({
         signal: abort.signal,
         outline: outliner.current.outline,
         pixels: outliner.current.pixels,
-        fallback: promptFallback(
-          loaded.sam,
-          promptPassOptionsFor(SCALE_PRESETS.nuclei.micronsPerPixel, "fast"),
-        ),
+        fallback: autoFallback(loaded.sam, latest.current.tier),
         onProgress: (progress) => setStatus({ progress, message: null }),
         onTile: (nuclei) => {
           found.current = [...found.current, ...nuclei];
@@ -313,6 +310,7 @@ export function AutoLayer({
         data-testid="auto-layer"
         data-active={active ? "true" : "false"}
         data-running={progress === null ? "false" : "true"}
+        data-quality={qualityForTier(tier)}
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 size-full overflow-visible"
       >

@@ -4,10 +4,19 @@ import {
   type BatchDecoder,
   type PromptMask,
   type PromptPassOptions,
+  type PromptQuality,
   promptPass,
+  promptPassOptionsFor,
   stabilityScore,
 } from "./prompt-pass.ts";
 import type { RegionNucleus } from "./region-pass.ts";
+import { SCALE_PRESETS } from "./scale-presets.ts";
+
+export type OutlineTier = "best" | "good" | "fast";
+
+export function qualityForTier(tier: OutlineTier): PromptQuality {
+  return tier === "best" ? "best" : "fast";
+}
 
 export type PromptSam = Pick<SamClient, "prompt">;
 
@@ -89,4 +98,11 @@ export function promptFallback(sam: PromptSam, options: PromptPassOptions): Regi
     }
     return nuclei;
   };
+}
+
+export function autoFallback(sam: PromptSam, tier: OutlineTier): RegionFallback {
+  return promptFallback(
+    sam,
+    promptPassOptionsFor(SCALE_PRESETS.nuclei.micronsPerPixel, qualityForTier(tier)),
+  );
 }
