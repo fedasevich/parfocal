@@ -15,11 +15,14 @@ const availability = fixtureAvailability("CMU-1.svs");
 const levelTable = {
   reader: "openslide",
   levels: [
-    { index: 0, downsample: 1, width: 46_000, height: 32_914 },
-    { index: 1, downsample: 4, width: 11_500, height: 8_228 },
-    { index: 2, downsample: 16, width: 2_875, height: 2_057 },
+    { index: 0, downsample: 1, width: 46_000, height: 32_914, page: 0, ifdOffset: 157_121_040 },
+    { index: 1, downsample: 4, width: 11_500, height: 8_228, page: 2, ifdOffset: 175_414_110 },
+    { index: 2, downsample: 16, width: 2_875, height: 2_057, page: 3, ifdOffset: 177_087_892 },
   ].map((level) => ({
     ...level,
+    subIfd: null,
+    ifdBytes: level.page === 0 ? 210 : 198,
+    siblings: [],
     stored: {
       width: level.width,
       height: level.height,

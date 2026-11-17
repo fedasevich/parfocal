@@ -104,7 +104,7 @@ import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import { stageToolOf } from "./stage-tools.ts";
 import { ThreadFocus } from "./thread-focus.tsx";
-import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
+import { type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
 import { toolHintText } from "./tool-hint-text.ts";
@@ -511,10 +511,14 @@ function OpenedSlide({
     const fail = (error: unknown) => {
       if (!disposed) setPhase({ state: "failed", failure: describeOpenFailure(error) });
     };
+    let early: Promise<Grant> | null = grantFor(slideId, null);
+    early.catch(() => {});
     void loadViewerEngine().then((engine) => {
       if (disposed) return;
       const access = engine.createSlideAccess(async (previous) => {
-        const grant = await grantFor(slideId, previous);
+        const pending = previous === null ? early : null;
+        early = null;
+        const grant = await (pending ?? grantFor(slideId, previous));
         if (!disposed) storageNote.current?.({ storage: grant.storage, offline: grant.offline });
         return grant;
       });
