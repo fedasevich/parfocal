@@ -30,8 +30,8 @@ from parfocal_api.result_sets import (
     insert_result_set,
 )
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
-from parfocal_api.sample_files import SampleFile, stored_facts, stored_sample_file
-from parfocal_api.sample_project import SAMPLE_SLIDES, square
+from parfocal_api.sample_files import SampleFile, stored_facts
+from parfocal_api.sample_project import square
 from parfocal_api.seed_request import seed_request
 from parfocal_api.showcase_demo import (
     DemoSets,
@@ -40,6 +40,7 @@ from parfocal_api.showcase_demo import (
     decide_all,
     order_now,
 )
+from parfocal_api.showcase_samples import SamplePool, sample_pool
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -623,14 +624,14 @@ async def seed_states(
     principal: MemberPrincipal,
     results: ResultStore,
     project_id: uuid.UUID,
-    sample: SampleFile | None,
+    pool: SamplePool,
     job_ids: Mapping[JobStatus, uuid.UUID],
 ) -> None:
     sets: dict[uuid.UUID, uuid.UUID] = {}
     named: dict[str, uuid.UUID] = {}
     for index, state in enumerate(STATE_SLIDES):
         slide = await add_slide(
-            connection, seeded, project_id, f"Case {state}", sample_facts(sample)
+            connection, seeded, project_id, f"Case {state}", sample_facts(pool.next())
         )
         named[state] = slide.id
         sets[slide.id] = await ready_set(
@@ -733,11 +734,11 @@ async def seed_styles(
     principal: MemberPrincipal,
     results: ResultStore,
     project_id: uuid.UUID,
-    sample: SampleFile | None,
+    pool: SamplePool,
 ) -> None:
     for style in DecisionStyle:
         slide = await add_slide(
-            connection, seeded, project_id, f"Case {style} style", sample_facts(sample)
+            connection, seeded, project_id, f"Case {style} style", sample_facts(pool.next())
         )
         set_id = await ready_set(connection, principal, slide, "regions.parfocal.json")
         task_id = await review_task(
@@ -761,7 +762,9 @@ async def seed_styles(
                 DecisionValue.DISAGREE,
                 [DecisionReason.BOUNDARY_OFF],
             )
-    slide = await add_slide(connection, seeded, project_id, "Case annotate", sample_facts(sample))
+    slide = await add_slide(
+        connection, seeded, project_id, "Case annotate", sample_facts(pool.next())
+    )
     await review_task(
         connection,
         principal,
@@ -957,8 +960,7 @@ async def seed_projects(
     manifest: Mapping[str, Mapping[str, Any]],
 ) -> None:
     principal = principal_of(seeded, "ada", Role.RESEARCHER, True)
-    samples = [await stored_sample_file(store, label) for label in SAMPLE_SLIDES]
-    sample = next((found for found in samples if found is not None), None)
+    pool = await sample_pool(store, [slide.file for slide in FORMAT_GALLERY])
     detection = (await built_in_templates(connection, seeded.tenant_id))[BuiltInTemplate.DETECTION]
     for mode in PrivacyMode:
         project = await create_project(
@@ -987,8 +989,8 @@ async def seed_projects(
         )
         if mode is PrivacyMode.DE_IDENTIFIED:
             job_ids = await add_jobs(connection, seeded, project.id)
-            await seed_states(connection, seeded, principal, results, project.id, sample, job_ids)
-            await seed_styles(connection, seeded, principal, results, project.id, sample)
+            await seed_states(connection, seeded, principal, results, project.id, pool, job_ids)
+            await seed_styles(connection, seeded, principal, results, project.id, pool)
     await seed_gallery(connection, seeded, principal, store, manifest, workspace.gallery)
 
 

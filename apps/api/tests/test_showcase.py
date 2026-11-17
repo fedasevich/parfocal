@@ -309,6 +309,22 @@ def test_every_seeded_original_key_yields_a_folder_the_edge_accepts() -> None:
     assert refused == []
 
 
+def test_every_seeded_slide_row_has_an_original_a_size_and_dimensions() -> None:
+    with migrated_database() as name:
+        url = with_database(OWNER_URL, name)
+        asyncio.run(deployed_seed(url, PublishedStore()))
+        bare = asyncio.run(
+            run_sql(
+                url,
+                "SELECT label FROM slides WHERE original_key IS NULL OR file_bytes IS NULL "
+                "OR width IS NULL OR height IS NULL",
+            )
+        )
+        cases = asyncio.run(run_sql(url, "SELECT count(*) FROM slides WHERE label LIKE 'Case %'"))
+    assert int(str(cases[0][0])) > 0
+    assert bare == []
+
+
 async def test_the_owner_reviews_a_gallery_tour_that_opens_on_the_camelyon_sample(
     seeded: str,
 ) -> None:
