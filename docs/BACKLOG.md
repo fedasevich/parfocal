@@ -3698,7 +3698,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-016.
   Size: S.
 
-- [ ] AISEG-023 · Find more like these on typed PanNuke nuclei
+- [x] AISEG-023 · Find more like these on typed PanNuke nuclei
   Decision 130 (a typed fixture run for "find more like these") asks to measure exemplar ranking where cell types exist. Fetch PanNuke (CC BY-NC-SA 4.0, kept in the dataset cache and never committed), run the auto region tool's nuclei on its tiles, pick a few exemplars of one type and rank the rest by exemplar similarity as AISEG-014 (find more like these) does.
   Done when a result file records precision at 10 and 50 per cell type against PanNuke's labels, compared with a random ranking.
   Depends on AISEG-014, MLEVAL-010.
