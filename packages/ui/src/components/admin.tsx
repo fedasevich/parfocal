@@ -37,7 +37,11 @@ function StatStrip({
 
 type StoragePart = { label: string; tb: number; colour: string };
 
-const tb = (value: number) => `${+value.toFixed(1)} TB`;
+const tb = (value: number) => {
+  if (value === 0 || value >= 1) return `${+value.toFixed(1)} TB`;
+  const gb = value * 1000;
+  return gb >= 1 ? `${+gb.toFixed(1)} GB` : `${Math.max(1, Math.round(gb * 1000))} MB`;
+};
 
 type StorageBarProps = React.ComponentProps<"div"> & {
   parts: StoragePart[];
@@ -82,14 +86,17 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
           size === "sm" ? "h-2.5 rounded-sm" : "h-3.5 rounded-[5px]",
         )}
       >
-        {parts.map((part) => (
-          <i
-            key={part.label}
-            className="block min-w-0.75"
-            style={{ flex: `${part.tb} 0 0`, background: part.colour }}
-          />
-        ))}
+        {parts
+          .filter((part) => part.tb > 0)
+          .map((part) => (
+            <i
+              key={part.label}
+              className="block min-w-0.75"
+              style={{ flex: `${part.tb} 0 0`, background: part.colour }}
+            />
+          ))}
         {free > 0 ? <i className="block bg-track" style={{ flex: `${free} 0 0` }} /> : null}
+        {used === 0 && free === 0 ? <i className="block flex-1 bg-track" /> : null}
       </div>
       <div
         className={cn(

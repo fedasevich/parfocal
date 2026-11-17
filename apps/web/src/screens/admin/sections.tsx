@@ -14,9 +14,7 @@ import {
   useHideModel,
   useListAiModels,
   useListProjects,
-  useListServiceAccounts,
   useListTaxonomyTemplates,
-  useListWebhooks,
   useRestoreProject,
   useSetWorkspaceSettings,
   useShowModel,
@@ -48,15 +46,7 @@ import { percent } from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import {
-  InfoLine,
-  lastActive,
-  ModelStatus,
-  MoreButton,
-  type Notify,
-  TextLink,
-  tableClass,
-} from "./common.tsx";
+import { InfoLine, ModelStatus, MoreButton, type Notify, tableClass } from "./common.tsx";
 import { DeletedProjectsZone } from "./deleted-projects.tsx";
 import {
   archiveActionLabel,
@@ -525,154 +515,6 @@ export function ModelsSection({ notify }: { notify: Notify }) {
           A model that runs somewhere else can still bring its results in as files, like Lab model
           v3.0.
         </Trans>
-      </InfoLine>
-    </>
-  );
-}
-
-export function ApiSection({ notify }: { notify: Notify }) {
-  const { t } = useLingui();
-
-  const accounts = okData(useListServiceAccounts().data) ?? [];
-  const hooks = okData(useListWebhooks().data) ?? [];
-  const [revoked, setRevoked] = useState<string[]>([]);
-  return (
-    <>
-      <Zone
-        title={t`Tokens`}
-        end={
-          <Button
-            size="sm"
-            onClick={() =>
-              notify(t`New token: pick a project and what it can do. Shown once (mock)`)
-            }
-          >
-            <Trans>New token</Trans>
-          </Button>
-        }
-      >
-        <Table className={tableClass}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Trans>Token</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Can</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Last used</Trans>
-              </TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {accounts.flatMap((account) =>
-              account.tokens
-                .filter((token) => !revoked.includes(token.id))
-                .map((token) => (
-                  <TableRow key={token.id}>
-                    <TableCell className="font-mono font-semibold">
-                      <Trans>
-                        pf_live_…
-                        {token.id.slice(-4)}
-                      </Trans>
-                    </TableCell>
-                    <TableCell>{account.name}</TableCell>
-                    <TableCell>
-                      {token.last_used_at ? lastActive(token.last_used_at) : t`Never`}
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex justify-end">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setRevoked([...revoked, token.id]);
-                            notify(t`Token revoked. Pipelines using it stop at once (mock)`);
-                          }}
-                        >
-                          <Trans>Revoke</Trans>
-                        </Button>
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                )),
-            )}
-          </TableBody>
-        </Table>
-      </Zone>
-      <Zone
-        title={t`Webhooks`}
-        end={
-          <Button
-            size="sm"
-            onClick={() =>
-              notify(t`Add a webhook: incoming for a project, or outgoing to your server (mock)`)
-            }
-          >
-            <Trans>Add webhook</Trans>
-          </Button>
-        }
-      >
-        <Table className={tableClass}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Trans>Webhook</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Direction</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Events</Trans>
-              </TableHead>
-              <TableHead className={right}>
-                <Trans>Today</Trans>
-              </TableHead>
-              <TableHead>
-                <Trans>Status</Trans>
-              </TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {hooks.map((hook) => (
-              <TableRow key={hook.id}>
-                <TableCell>
-                  <b>{hook.name}</b>
-                </TableCell>
-                <TableCell>{hook.direction === "incoming" ? t`Incoming` : t`Outgoing`}</TableCell>
-                <TableCell className="font-mono">{hook.events.join(", ")}</TableCell>
-                <TableCell className={cn(right, "font-mono")}>{hook.calls_today}</TableCell>
-                <TableCell>
-                  {hook.rejected_today > 0 ? (
-                    <StatusTag tone="warn">
-                      <Trans>{hook.rejected_today} rejected</Trans>
-                    </StatusTag>
-                  ) : (
-                    <StatusTag tone="ok">
-                      <Trans>Answering</Trans>
-                    </StatusTag>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <span className="flex justify-end">
-                    <MoreButton label={t`More for ${hook.name}`} />
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Zone>
-      <InfoLine>
-        <Trans>
-          Pipelines post result files to a project's incoming webhook, signed with its token.
-        </Trans>
-        <TextLink onClick={() => notify(t`Opens the API reference in the docs (mock)`)}>
-          <Trans>API reference</Trans>
-        </TextLink>
       </InfoLine>
     </>
   );

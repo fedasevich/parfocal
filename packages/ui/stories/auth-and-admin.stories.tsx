@@ -282,6 +282,7 @@ export const Storage: Story = {
         totalTb={5}
         parts={[{ label: "Copied slides", tb: 4.9, colour: "var(--st-1)" }]}
       />
+      <StorageBar totalTb={0} parts={[{ label: "Copied slides", tb: 0, colour: "var(--st-1)" }]} />
     </div>
   ),
 };

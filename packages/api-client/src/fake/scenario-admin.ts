@@ -347,7 +347,7 @@ export const runningNow: ModelRunSeed[] = [
 ];
 
 export const storage = {
-  totalTb: 5,
+  capacityTb: 5,
   inPlaceTb: 3.4,
   parts: [
     { kind: "copied-slides", label: "Copied slides", tb: 0.7 },
@@ -392,9 +392,10 @@ export type SourceSeed = {
   access: string;
   address: string;
   newSlides: "copied" | "in-place";
-  health: "answering" | "expiring";
+  health: "answering" | "expiring" | "unreachable" | "unused";
   firstTileMs: number | null;
   expiresInDays: number | null;
+  slidesInPlace: number;
 };
 
 export const sources: SourceSeed[] = [
@@ -408,6 +409,7 @@ export const sources: SourceSeed[] = [
     health: "answering",
     firstTileMs: 180,
     expiresInDays: null,
+    slidesInPlace: 412,
   },
   {
     id: uuid(67, 2),
@@ -419,6 +421,7 @@ export const sources: SourceSeed[] = [
     health: "answering",
     firstTileMs: 240,
     expiresInDays: null,
+    slidesInPlace: 0,
   },
   {
     id: uuid(67, 3),
@@ -430,6 +433,7 @@ export const sources: SourceSeed[] = [
     health: "answering",
     firstTileMs: 310,
     expiresInDays: null,
+    slidesInPlace: 96,
   },
   {
     id: uuid(67, 4),
@@ -441,6 +445,7 @@ export const sources: SourceSeed[] = [
     health: "expiring",
     firstTileMs: null,
     expiresInDays: 3,
+    slidesInPlace: 40,
   },
 ];
 
@@ -451,6 +456,9 @@ export type WebhookSeed = {
   events: string[];
   callsToday: number;
   rejectedToday: number;
+  project: ProjectCode;
+  address: string | null;
+  paused: boolean;
 };
 
 export const webhooks: WebhookSeed[] = [
@@ -461,6 +469,9 @@ export const webhooks: WebhookSeed[] = [
     events: ["result.file"],
     callsToday: 148,
     rejectedToday: 1,
+    project: "P07",
+    address: null,
+    paused: false,
   },
   {
     id: uuid(68, 2),
@@ -469,6 +480,9 @@ export const webhooks: WebhookSeed[] = [
     events: ["slide.file", "result.file"],
     callsToday: 12,
     rejectedToday: 0,
+    project: "P09",
+    address: null,
+    paused: false,
   },
   {
     id: uuid(68, 3),
@@ -477,6 +491,9 @@ export const webhooks: WebhookSeed[] = [
     events: ["review.submitted", "task.signed"],
     callsToday: 3,
     rejectedToday: 0,
+    project: "P07",
+    address: "https://ml.cuailab.example/parfocal-events",
+    paused: false,
   },
 ];
 

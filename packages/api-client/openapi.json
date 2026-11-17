@@ -76406,13 +76406,19 @@
             "type": "number",
             "minimum": 0.0,
             "title": "Tb"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Bytes"
           }
         },
         "type": "object",
         "required": [
           "kind",
           "label",
-          "tb"
+          "tb",
+          "bytes"
         ],
         "title": "StoragePart"
       },
@@ -76514,7 +76520,9 @@
             "type": "string",
             "enum": [
               "answering",
-              "expiring"
+              "expiring",
+              "unreachable",
+              "unused"
             ],
             "title": "Health"
           },
@@ -76541,6 +76549,23 @@
               }
             ],
             "title": "Expires In Days"
+          },
+          "slides_in_place": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides In Place"
+          },
+          "last_read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Read At"
           }
         },
         "type": "object",
@@ -76553,7 +76578,9 @@
           "new_slides",
           "health",
           "first_tile_ms",
-          "expires_in_days"
+          "expires_in_days",
+          "slides_in_place",
+          "last_read_at"
         ],
         "title": "StorageSource"
       },
@@ -76564,10 +76591,32 @@
             "minimum": 0.0,
             "title": "Total Tb"
           },
+          "total_bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Bytes"
+          },
+          "capacity_tb": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Tb"
+          },
           "in_place_tb": {
             "type": "number",
             "minimum": 0.0,
             "title": "In Place Tb"
+          },
+          "in_place_bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "In Place Bytes"
           },
           "parts": {
             "items": {
@@ -76601,7 +76650,10 @@
         "type": "object",
         "required": [
           "total_tb",
+          "total_bytes",
+          "capacity_tb",
           "in_place_tb",
+          "in_place_bytes",
           "parts",
           "by_project",
           "rules",
@@ -80184,6 +80236,32 @@
             "type": "integer",
             "minimum": 0.0,
             "title": "Rejected Today"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StorageProjectRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "paused": {
+            "type": "boolean",
+            "title": "Paused",
+            "default": false
           }
         },
         "type": "object",
@@ -80659,6 +80737,11 @@
             "minimum": 0.0,
             "title": "Gb"
           },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Bytes"
+          },
           "cap_gb": {
             "anyOf": [
               {
@@ -80677,6 +80760,7 @@
           "project",
           "colour",
           "gb",
+          "bytes",
           "cap_gb"
         ],
         "title": "ProjectStorage"

@@ -16,12 +16,13 @@ import {
 import { okData } from "../placeholder.tsx";
 import { type AdminAccess, adminAccessOf, refusalOf } from "./admin-access.ts";
 import { AdminShell, adminHref, adminSectionList } from "./admin-shell.tsx";
+import { ApiSection } from "./api-section.tsx";
 import { AuditExportButton, AuditSection } from "./audit.tsx";
 import { type AuditFilter, defaultAuditFilter } from "./audit-model.ts";
 import { ConnectModelScreen } from "./connect-model.tsx";
 import { OverviewSection } from "./overview.tsx";
 import { PeopleSection } from "./people.tsx";
-import { ApiSection, ModelsSection, ProjectsSection, SecuritySection } from "./sections.tsx";
+import { ModelsSection, ProjectsSection, SecuritySection } from "./sections.tsx";
 import { StorageSection } from "./storage.tsx";
 import { TemplateEditor } from "./template-editor.tsx";
 import { editorHead, type TemplateSource } from "./template-model.ts";
@@ -147,19 +148,6 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
       <Button variant="primary" onClick={() => change({ scene: "tplnew" })}>
         <Icon name="plus" />
         <Trans>New template</Trans>
-      </Button>
-    ),
-    storage: (
-      <Button
-        variant="primary"
-        onClick={() =>
-          notify(
-            t`Connect a source: S3, Azure, DICOMweb or HTTPS with range requests. Read-only keys only (mock)`,
-          )
-        }
-      >
-        <Icon name="link" />
-        <Trans>Connect a source</Trans>
       </Button>
     ),
     audit: <AuditExportButton filter={auditFilter} notify={notify} />,
