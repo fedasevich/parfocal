@@ -114,18 +114,14 @@ for (const [name, extra] of [
   ["full viewer", ""],
   ["paged screen", "&pagedCells=2000"],
 ] as const) {
-  test(`the ${name} of a hide-the-AI task shows the first read notice and its link before the first read`, async ({
+  test(`the ${name} of a hide-the-AI task asks for the first read before the AI shows`, async ({
     page,
   }) => {
     await page.goto(`/projects/${p07}/slides/${a1}?task=${rt17}${extra}`);
-    const notice = page.getByTestId("first-read-notice");
-    await expect(notice).toBeVisible({ timeout: 60_000 });
-    await expect(notice).toContainText("The AI stays hidden until your first read");
+    await expect(page.getByTestId("first-read-panel")).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator('main[data-ai="hidden"]')).toBeVisible();
+    await expect(page.getByTestId("stage-review-objects")).toHaveCount(0);
     await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
-    const link = page.getByTestId("first-read-link");
-    await expect(link).toHaveAttribute("href", new RegExp(`/tasks/${rt17}/guided\\?slide=${a1}`));
-    await link.click();
-    await expect(page.getByTestId("first-read-panel")).toBeVisible();
   });
 }
 

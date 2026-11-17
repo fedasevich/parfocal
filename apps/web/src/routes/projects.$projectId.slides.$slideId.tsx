@@ -6,6 +6,7 @@ import { FocusView } from "../screens/viewer-tools/focus-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { type SlideSearch, slideSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
+import { FirstReadGuard } from "../viewer/first-read-guard.tsx";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import type { StageStart } from "../viewer/stage-start.tsx";
 
@@ -54,24 +55,26 @@ function SlideView() {
     );
   }
   return (
-    <EngineViewer
-      projectId={projectId}
-      slideId={slideId}
-      task={search.task}
-      workspace={search.workspace}
-      tab={search.tab}
-      object={search.object}
-      start={startOf(search)}
-      onOpenSlide={(next) =>
-        void navigate({
-          to: "/projects/$projectId/slides/$slideId",
-          params: { projectId, slideId: next },
-          search: { task: search.task, workspace: search.workspace, tab: search.tab },
-        })
-      }
-      onWorkspace={(workspace) => onSearch({ workspace })}
-      onTab={(tab) => onSearch({ tab })}
-    />
+    <FirstReadGuard taskId={search.task} slideId={slideId}>
+      <EngineViewer
+        projectId={projectId}
+        slideId={slideId}
+        task={search.task}
+        workspace={search.workspace}
+        tab={search.tab}
+        object={search.object}
+        start={startOf(search)}
+        onOpenSlide={(next) =>
+          void navigate({
+            to: "/projects/$projectId/slides/$slideId",
+            params: { projectId, slideId: next },
+            search: { task: search.task, workspace: search.workspace, tab: search.tab },
+          })
+        }
+        onWorkspace={(workspace) => onSearch({ workspace })}
+        onTab={(tab) => onSearch({ tab })}
+      />
+    </FirstReadGuard>
   );
 }
 
