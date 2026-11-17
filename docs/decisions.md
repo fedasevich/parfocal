@@ -168,8 +168,8 @@ Your choice: A without the warm container, the EU move (owner in chat, 2026-11-1
 OPS-031 (move the API and database to the EU) created the Frankfurt project `parfocal-eu` (`still-field-25034761`) on 2026-11-17 ([result](results/2026-11-17-eu-move.md)). Three things wait for you:
 
 - TODO: the reseed stopped with HTTP 404 because the `NEON_API_KEY` secret in the GitHub environment `production` cannot reach the new project. Please make a Neon API key for the organisation "Vercel: fedasevich's projects" that reaches both projects and replace that secret with it, or say an agent may do so. Until then production stays on the US database.
-- TODO: pinning `ingest` and `events` to `eu` beside the new database adds about $0.07 a month and makes their queries about six times faster. Yes or no.
-- TODO: copying the slides into a new bucket in the R2 `eu` jurisdiction costs about $0.43 a month while the old bucket is kept, and changes no speed. It is OPS-032 (slides in an EU jurisdiction bucket). Yes or no.
+- Pinning `ingest` and `events` to `eu` beside the new database, about $0.07 a month: your yes (in chat, 2026-11-17), done in v0.12.0.
+- Copying the slides into a new bucket in the R2 `eu` jurisdiction: your yes (in chat, 2026-11-17). OPS-032 (slides in an EU jurisdiction bucket) made `parfocal-dev-eu` with its own app key `parfocal-app-eu`, copied every object, and production reads and writes it from v0.12.0. Storage while both buckets exist is 34.3 GB more, about $0.51 a month. The old bucket `parfocal-dev` stays, for local development, previews and the fixture token, until your separate yes.
 - Deleting the old US Neon project `soft-pine-86468744` waits for your separate yes. The Modal secret `parfocal-api-database-us` keeps its connection URL until then. It is only a partial rollback, because the reseed empties `t/` in the bucket, so the US rows will point at slides that are gone.
 
 ### 141. How fast a person turned off in the customer's directory loses access
