@@ -9,8 +9,11 @@ export function isSignedOut(error: unknown): boolean {
   return error instanceof ApiError && error.kind === "unauthenticated" && !isSessionLocked(error);
 }
 
-export function loginUrl(returnTo: string): string {
-  return `/api/auth/login?${new URLSearchParams({ return_to: returnTo }).toString()}`;
+export function loginUrl(returnTo: string, loginHint?: string | null): string {
+  const query = new URLSearchParams({ return_to: returnTo });
+  const hint = loginHint?.trim();
+  if (hint) query.set("login_hint", hint);
+  return `/api/auth/login?${query.toString()}`;
 }
 
 export function signInPageUrl(returnTo: string): string {

@@ -45,6 +45,14 @@ test("a signed-out visitor goes to the app's sign-in page with the page to come 
   assert.equal(loginUrl("/"), "/api/auth/login?return_to=%2F");
 });
 
+test("a passkey sign-in names the typed email to the identity provider", () => {
+  assert.equal(
+    loginUrl("/cases", " anna@lab.test "),
+    "/api/auth/login?return_to=%2Fcases&login_hint=anna%40lab.test",
+  );
+  assert.equal(loginUrl("/", "  "), "/api/auth/login?return_to=%2F");
+});
+
 test("public pages never redirect", () => {
   assert.equal(signedOutTarget({ pathname: "/sign-in", search: "" }), null);
   assert.equal(signedOutTarget({ pathname: "/invite/abc", search: "" }), null);

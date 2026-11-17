@@ -76,6 +76,7 @@ class OidcClient:
         code_challenge: str,
         prompt: str | None = None,
         extra_scopes: tuple[str, ...] = (),
+        login_hint: str | None = None,
     ) -> str:
         parameters = {
             "client_id": self.client_id,
@@ -89,6 +90,8 @@ class OidcClient:
         }
         if prompt is not None:
             parameters["prompt"] = prompt
+        if login_hint:
+            parameters["login_hint"] = login_hint
         query = urlencode(parameters)
         return f"{(await self.discovery()).authorization_endpoint}?{query}"
 

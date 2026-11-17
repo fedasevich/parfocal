@@ -59,6 +59,14 @@ test("unlocking signs in again and returns to the same path and query", () => {
   assert.equal(url.pathname, "/api/auth/login");
   assert.equal(url.searchParams.get("reauth"), "true");
   assert.equal(url.searchParams.get("return_to"), "/projects/p7/slides/s1?x=0.25&y=0.5&z=1.2");
+  assert.equal(url.searchParams.get("login_hint"), null);
+});
+
+test("unlocking with a passkey names the locked user to the identity provider", () => {
+  const url = new URL(reauthUrl("/projects/p7/slides/s1?z=2", "anna@lab.test"), "https://x.test");
+  assert.equal(url.searchParams.get("reauth"), "true");
+  assert.equal(url.searchParams.get("login_hint"), "anna@lab.test");
+  assert.equal(url.searchParams.get("return_to"), "/projects/p7/slides/s1?z=2");
 });
 
 test("sign-in, sign-up and invite pages never lock", () => {

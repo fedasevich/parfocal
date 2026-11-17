@@ -126,6 +126,20 @@ def test_unlocking_asks_for_the_password_and_replaces_the_locked_session(
     assert count == [(1,)]
 
 
+def test_a_passkey_login_names_the_user_to_the_identity_provider(browser: Browser) -> None:
+    started = browser.client.get(
+        "/api/auth/login",
+        params={"return_to": "/", "login_hint": " anna@lab.test ", "reauth": "true"},
+    )
+    query = parse_qs(urlparse(started.headers["location"]).query)
+    assert query["login_hint"] == ["anna@lab.test"]
+    assert query["prompt"] == ["login"]
+    plain = browser.client.get("/api/auth/login", params={"return_to": "/", "login_hint": ""})
+    assert "login_hint" not in parse_qs(urlparse(plain.headers["location"]).query)
+    too_long = browser.client.get("/api/auth/login", params={"login_hint": "a" * 321})
+    assert too_long.status_code == 422
+
+
 def test_the_workspace_sets_the_session_lifetime(browser: Browser) -> None:
     browser.login()
     member_of_new_workspace(browser, session_hours=1)

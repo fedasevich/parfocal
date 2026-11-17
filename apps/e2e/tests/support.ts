@@ -91,7 +91,7 @@ export async function emailCode(to: string): Promise<string> {
   return code;
 }
 
-function zitadelAdmin(path: string, init: RequestInit = {}): Promise<Response> {
+export function zitadelAdmin(path: string, init: RequestInit = {}): Promise<Response> {
   return fetch(`${zitadelIssuer}${path}`, {
     ...init,
     headers: {

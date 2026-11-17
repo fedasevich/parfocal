@@ -34,6 +34,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
+import { loginUrl } from "../../session/sign-in-redirect.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { CodeInput, handled, PasswordInput, problemText, useCountdown } from "./auth-inputs.tsx";
@@ -216,7 +217,11 @@ export function EmailForm({ flow }: { flow: Flow }) {
         </Button>
       )}
       {methods?.passkey === false ? null : (
-        <Button size="lg" block onClick={() => flow.change("passkey")}>
+        <Button
+          size="lg"
+          block
+          onClick={() => window.location.assign(loginUrl(flow.returnTo ?? "/", email))}
+        >
           <Icon name="key" />
           <Trans>Sign in with a passkey</Trans>
         </Button>

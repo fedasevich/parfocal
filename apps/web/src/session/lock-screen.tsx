@@ -17,6 +17,7 @@ export default function LockScreen({
 }) {
   const me = okData(useGetMe().data);
   const unlock = () => window.location.assign(reauthUrl(currentPath()));
+  const unlockWithPasskey = () => window.location.assign(reauthUrl(currentPath(), me?.email));
   return (
     <div className="fixed inset-0 z-[1000]">
       <LockCard
@@ -24,7 +25,7 @@ export default function LockScreen({
         minutes={minutes}
         reason={reason}
         onUnlock={unlock}
-        onPasskey={unlock}
+        onPasskey={unlockWithPasskey}
         onLogOut={() => window.location.assign("/api/auth/logout")}
       />
     </div>

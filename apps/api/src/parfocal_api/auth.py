@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import delete, exists, func, insert, select, update
@@ -69,6 +69,7 @@ SESSION_COOKIE = "__Host-parfocal_session"
 LOGIN_COOKIE = "__Host-parfocal_login"
 LOGIN_LIFETIME = timedelta(minutes=10)
 USER_AGENT_LENGTH = 200
+LOGIN_HINT_LENGTH = 320
 REFRESH_MARGIN = timedelta(seconds=30)
 SEEN_INTERVAL = timedelta(minutes=1)
 AUTH_SCOPE = DatabaseScope(auth=True)
@@ -531,6 +532,7 @@ async def redirect_to_identity(
     return_to: str,
     prompt: str | None = None,
     extra_scopes: tuple[str, ...] = (),
+    login_hint: str | None = None,
 ) -> RedirectResponse:
     state = auth_state(request)
     login_state = secrets.token_urlsafe(32)
@@ -550,7 +552,12 @@ async def redirect_to_identity(
             )
         )
     url = await state.identity.authorization_url(
-        login_state, nonce, code_challenge(verifier), prompt=prompt, extra_scopes=extra_scopes
+        login_state,
+        nonce,
+        code_challenge(verifier),
+        prompt=prompt,
+        extra_scopes=extra_scopes,
+        login_hint=login_hint,
     )
     response = RedirectResponse(url, status_code=302)
     set_cookie(response, LOGIN_COOKIE, binding, int(LOGIN_LIFETIME.total_seconds()), "lax")
@@ -559,9 +566,17 @@ async def redirect_to_identity(
 
 @router.get("/login", include_in_schema=False)
 async def start_login(
-    request: Request, return_to: str = "/", reauth: bool = False
+    request: Request,
+    return_to: str = "/",
+    reauth: bool = False,
+    login_hint: Annotated[str | None, Query(max_length=LOGIN_HINT_LENGTH)] = None,
 ) -> RedirectResponse:
-    return await redirect_to_identity(request, return_to, prompt="login" if reauth else None)
+    return await redirect_to_identity(
+        request,
+        return_to,
+        prompt="login" if reauth else None,
+        login_hint=login_hint.strip() if login_hint else None,
+    )
 
 
 @router.get("/second-factor", include_in_schema=False)
