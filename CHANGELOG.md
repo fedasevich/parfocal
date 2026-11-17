@@ -2,6 +2,27 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.0 (2026-11-17)
+
+### Features
+
+- IAM-034: Open the app's reset screen from the reset email link
+
+### Fixes
+
+- IAM-034: Accept the letters in Zitadel codes and log the live proof
+- INGEST-032: Cut Ventana BIF thumbnails from a coarse level and report backfill counts
+- INGEST-032: Seed every case slide from a real shared fixture
+- SHELL-020: Stop the viewer saving a hint on exit, make the first-week sample checklist true
+- OPS-028: Let the startup timing fields through the log scrubber and record after numbers
+- TILES-012: Keep slide reads out of the label and macro bytes the edge refuses
+- OPS-028: Allow the startup timing fields in web telemetry too
+
+### Tests
+
+- VIEW-078: Type the crop job's store factory as an object store class
+- VIEW-078: Open a fresh task's cells grid with every tile answered by the crop route
+
 ## v0.16.0 (2026-11-17)
 
 ### Features

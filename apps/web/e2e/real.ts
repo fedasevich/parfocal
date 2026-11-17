@@ -9,9 +9,24 @@ export const area = {
   annotate: "@annotate",
   signOff: "@sign-off",
   team: "@team",
+  project: "@project",
+  viewer: "@viewer",
+  models: "@models",
+  reports: "@reports",
+  admin: "@admin",
 } as const;
 
-export const switchedAreas: readonly string[] = [area.login, area.upload, area.review, area.team];
+export const switchedAreas: readonly string[] = [
+  area.login,
+  area.upload,
+  area.review,
+  area.team,
+  area.project,
+  area.viewer,
+  area.models,
+  area.reports,
+  area.admin,
+];
 
 export const realTags = (tag: (typeof area)[keyof typeof area]) => ({ tag: ["@real", tag] });
 
@@ -34,17 +49,16 @@ export async function signIn(page: Page, returnTo: string): Promise<void> {
   await page.getByRole("textbox", { name: "Work email" }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  const target = returnTo.split("?")[0];
+  const later = page.getByRole("button", { name: "Not now", exact: true });
   await expect
-    .poll(
-      async () => {
-        const notNow = page.getByRole("button", { name: "Not now", exact: true });
-        if (await notNow.isVisible()) await notNow.click();
-        return new URL(page.url()).pathname;
-      },
-      { timeout: 30_000 },
-    )
-    .toBe(target);
+    .poll(async () => (await later.isVisible()) || new URL(page.url()).pathname !== "/sign-in", {
+      timeout: 30_000,
+    })
+    .toBe(true);
+  if (await later.isVisible()) await later.click();
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
+    .toBe(returnTo.split("?")[0]);
   if (onRealApi) await ensureActiveWorkspace(page);
 }
 

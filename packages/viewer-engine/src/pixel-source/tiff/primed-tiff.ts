@@ -41,15 +41,18 @@ export class PrimedRangeSource {
   readonly #url: string;
   readonly #fetcher: typeof globalThis.fetch;
   readonly #held: readonly Held[];
+  readonly #directories: ReadonlyMap<number, number>;
 
   constructor(
     url: string,
     fetcher: typeof globalThis.fetch,
     primed: readonly Slice[],
     signal?: AbortSignal,
+    directories: readonly Slice[] = [],
   ) {
     this.#url = url;
     this.#fetcher = fetcher;
+    this.#directories = new Map(directories.map(({ offset, length }) => [offset, length]));
     this.#held = mergedSlices(primed).map((slice) => ({
       offset: slice.offset,
       end: slice.offset + slice.length,
@@ -80,8 +83,15 @@ export class PrimedRangeSource {
     const heldEnd = held.offset + data.byteLength;
     const wanted = slice.offset + slice.length;
     const reachedFileEnd = heldEnd < held.end;
-    if (wanted > heldEnd && !reachedFileEnd) return this.#network(slice, signal);
+    if (wanted > heldEnd && !reachedFileEnd && !this.#holdsDirectoryAt(slice.offset, heldEnd)) {
+      return this.#network(slice, signal);
+    }
     return data.slice(slice.offset - held.offset, Math.min(wanted, heldEnd) - held.offset);
+  }
+
+  #holdsDirectoryAt(offset: number, heldEnd: number): boolean {
+    const bytes = this.#directories.get(offset);
+    return bytes !== undefined && offset + bytes <= heldEnd;
   }
 
   async #network(slice: Slice, signal?: AbortSignal): Promise<ArrayBuffer> {
@@ -118,10 +128,13 @@ function primedPages(index: SlideIndex | undefined): PrimedPage[] | null {
   return pages.every(isPrimedPage) ? pages : null;
 }
 
-export function primedSlices(pages: readonly PrimedPage[], bigTiff: boolean): Slice[] {
-  const parserSlice = bigTiff ? 4048 : 1024;
+function directorySlices(pages: readonly PrimedPage[]): Slice[] {
+  return pages.map((page) => ({ offset: page.ifdOffset, length: page.ifdBytes }));
+}
+
+export function primedSlices(pages: readonly PrimedPage[]): Slice[] {
   return pages.flatMap((page) => [
-    { offset: page.ifdOffset, length: Math.max(parserSlice, 2 * page.ifdBytes) },
+    { offset: page.ifdOffset, length: page.ifdBytes },
     ...page.valueRanges
       .filter(([tag, , length]) => tag !== TILE_OFFSETS_TAG || length <= PRIMED_TILE_OFFSETS_LIMIT)
       .map(([, offset, length]) => ({ offset, length })),
@@ -143,8 +156,9 @@ export function primedTiff(
   const source = new PrimedRangeSource(
     url.href,
     fetcher,
-    primedSlices(pages ?? [], bigTiff),
+    primedSlices(pages ?? []),
     signal,
+    directorySlices(pages ?? []),
   );
   const tiff = new GeoTIFF(source, littleEndian, bigTiff, first.ifdOffset);
   if (!littleEndian) tiff.parser.eager = true;
