@@ -121,6 +121,7 @@ import type {
   Preference,
   Project,
   ProjectClass,
+  ProjectLabModel,
   ProjectModel,
   Question,
   QueuedObject,
@@ -4875,6 +4876,18 @@ export const getConfirmLabModelTileSharingResponseMock = (
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   ...overrideResponse,
 });
+
+export const getListProjectLabModelsResponseMock = (): ProjectLabModel[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    confirmed_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  }));
 
 export const getListModelRunAreasResponseMock = (
   overrideResponse: Partial<Extract<RunAreas, object>> = {},
@@ -18889,6 +18902,30 @@ export const getConfirmLabModelTileSharingMockHandler = (
   );
 };
 
+export const getListProjectLabModelsMockHandler = (
+  overrideResponse?:
+    | ProjectLabModel[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectLabModel[]> | ProjectLabModel[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/lab-models",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListProjectLabModelsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListModelRunAreasMockHandler = (
   overrideResponse?:
     | RunAreas
@@ -25416,6 +25453,7 @@ export const getParfocalAPIMock = () => [
   getAddLabModelProjectMockHandler(),
   getRemoveLabModelProjectMockHandler(),
   getConfirmLabModelTileSharingMockHandler(),
+  getListProjectLabModelsMockHandler(),
   getListModelRunAreasMockHandler(),
   getGetModelRunTileMockHandler(),
   getListNotificationPreferencesMockHandler(),

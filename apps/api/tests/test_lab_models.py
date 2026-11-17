@@ -370,8 +370,8 @@ def clinical_project(database: str, lab: Lab) -> tuple[uuid.UUID, uuid.UUID]:
     return project, make_slide(database, lab.tenant, project, "Clinical slide")
 
 
-def lab_run(api: ApiAs, lab: Lab, project: uuid.UUID, slide: uuid.UUID) -> Any:
-    return api(lab.people["owner"]).post(
+def lab_run(api: ApiAs, lab: Lab, project: uuid.UUID, slide: uuid.UUID, who: str = "owner") -> Any:
+    return api(lab.people[who]).post(
         f"/api/projects/{project}/model-runs",
         json={
             "slide_ids": [str(slide)],
@@ -495,3 +495,34 @@ def test_removing_the_project_clears_the_confirmation_and_the_owner_confirms_aga
         "lab-model.tiles-confirmed",
     ]
     assert lab_actions(database, lab)[2][1]["tiles_confirmed"] is True
+
+
+def test_the_owner_sees_a_pending_confirmation_an_admin_left_and_confirms_it(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    clinical = make_project(database, lab.tenant, "clinical")
+    join_project(database, clinical, lab.people["colleague"], "owner")
+    join_project(database, clinical, lab.people["owner"], "reviewer")
+    slide = make_slide(database, lab.tenant, clinical, "Clinical slide")
+    body = draft(site, lab, name="lab-hovernet", project_ids=[str(clinical)])
+    model = ok(linked(lab.people["owner"]).post(MODELS, json=body))
+    listed = f"/api/projects/{clinical}/lab-models"
+    pending = ok(linked(lab.people["colleague"]).get(listed))
+    assert pending == [
+        {
+            "id": model["id"],
+            "name": "lab-hovernet",
+            "version": "v2.1",
+            "host": site.origin,
+            "confirmed_at": None,
+        }
+    ]
+    assert problem(lab_run(linked, lab, clinical, slide, "colleague")) == (
+        403,
+        "lab-model-tiles-unconfirmed",
+    )
+    confirming = linked(lab.people["colleague"])
+    ok(confirming.post(f"{MODELS}/{model['id']}/projects/{clinical}/tile-sharing"))
+    [confirmed] = ok(confirming.get(listed))
+    assert confirmed["confirmed_at"] is not None
+    assert problem(linked(lab.people["stranger"]).get(listed))[0] in {403, 404}

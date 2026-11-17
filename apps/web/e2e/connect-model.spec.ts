@@ -188,3 +188,24 @@ test("a clinical project asks its owner to confirm that tiles go to the server",
   expect(confirmed).toHaveLength(1);
   expect(body?.["project_ids"]).toContain(confirmed[0]);
 });
+
+test("the owner of a clinical project confirms a lab model an admin added", async ({ page }) => {
+  const p03 = "00000000-0000-4000-8003-000000000003";
+  await page.goto(`/projects/${p03}?tab=settings&as=SM`);
+  const zone = page.getByRole("region", { name: "Lab models" });
+  await expect(zone).toContainText("Waiting for the owner");
+  await expect(zone.getByRole("button", { name: "Confirm tile sharing" })).toHaveCount(0);
+  await page.goto(`/projects/${p03}?tab=settings`);
+  await expect(zone).toContainText("It runs here only after you confirm its server.");
+  await zone.getByRole("button", { name: "Confirm tile sharing" }).click();
+  const ask = page.getByRole("dialog", {
+    name: "Send tiles of Lymph nodes 2026 to ml.cuailab.cz?",
+  });
+  await expect(ask).toContainText("sends tiles of the project's slides to ml.cuailab.cz");
+  await ask.getByRole("button", { name: "Send tiles to this server" }).click();
+  await expect(ask).toBeHidden();
+  await expect(zone).toContainText("Confirmed");
+  await expect(
+    page.getByText("Lab HoVer-Net fork v2.1 can now run in this project."),
+  ).toBeVisible();
+});

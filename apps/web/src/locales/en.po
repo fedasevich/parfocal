@@ -468,6 +468,12 @@ msgstr "{0} {1} · version 1"
 msgid "{0} {1} added. {2} can run it."
 msgstr "{0} {1} added. {2} can run it."
 
+#. placeholder {0}: asking.name
+#. placeholder {1}: asking.version
+#: src/screens/project/lab-models-zone.tsx
+msgid "{0} {1} can now run in this project."
+msgstr "{0} {1} can now run in this project."
+
 #. placeholder {0}: preview.model
 #. placeholder {1}: preview.version
 #: src/screens/upload/viewer-flow.tsx
@@ -769,11 +775,6 @@ msgstr "{0} is a {1} now."
 #: src/screens/project/settings-tab.tsx
 msgid "{0} is a class in {1}, on key {2}"
 msgstr "{0} is a class in {1}, on key {2}"
-
-#. placeholder {0}: project.name
-#: src/screens/admin/connect-model.tsx
-msgid "{0} is a clinical project"
-msgstr "{0} is a clinical project"
 
 #. placeholder {0}: pending.combo
 #. placeholder {1}: other.group.toLowerCase()
@@ -2018,6 +2019,10 @@ msgstr "{point} mm, between {low} and {high} mm"
 msgid "{positive, plural, one {node has a deposit} other {nodes have a deposit}}"
 msgstr "{positive, plural, one {node has a deposit} other {nodes have a deposit}}"
 
+#: src/screens/admin/tile-sharing-modal.tsx
+msgid "{projectName} is a clinical project"
+msgstr "{projectName} is a clinical project"
+
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "{proposals} found"
 msgstr "{proposals} found"
@@ -2569,6 +2574,14 @@ msgstr "A folder is a case, and its name becomes the case number."
 #: src/screens/settings/shortcuts-section.tsx
 msgid "A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too."
 msgstr "A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too."
+
+#: src/screens/project/lab-models-zone.tsx
+msgid "A lab model waits for the project owner to confirm its server."
+msgstr "A lab model waits for the project owner to confirm its server."
+
+#: src/screens/project/lab-models-zone.tsx
+msgid "A lab model was added. It runs here only after you confirm its server."
+msgstr "A lab model was added. It runs here only after you confirm its server."
 
 #: src/screens/upload/live-wizard.tsx
 msgid "a loose slide"
@@ -4289,6 +4302,7 @@ msgstr "cancel"
 #: src/results/add-result-set.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/sections.tsx
+#: src/screens/admin/tile-sharing-modal.tsx
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/input-traces/input-traces.tsx
@@ -5247,6 +5261,10 @@ msgstr "confirm area {number}"
 msgid "Confirm email"
 msgstr "Confirm email"
 
+#: src/screens/project/lab-models-zone.tsx
+msgid "Confirm tile sharing"
+msgstr "Confirm tile sharing"
+
 #: src/screens/upload/result-problems.tsx
 msgid "Confirm what to do and the file imports with your choice."
 msgstr "Confirm what to do and the file imports with your choice."
@@ -5264,6 +5282,7 @@ msgid "Confirmation code"
 msgstr "Confirmation code"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
+#: src/screens/project/lab-models-zone.tsx
 msgid "Confirmed"
 msgstr "Confirmed"
 
@@ -6235,7 +6254,7 @@ msgstr "Each reviewer gets every slide, which gives agreement between them."
 msgid "Each reviewer gets one email, and the task shows at the top of their My work."
 msgstr "Each reviewer gets one email, and the task shows at the top of their My work."
 
-#: src/screens/admin/connect-model.tsx
+#: src/screens/admin/tile-sharing-modal.tsx
 msgid "Each run of this model sends tiles of the project's slides to {host}. The lab that runs the server sees them. Slide labels and patient details are never sent."
 msgstr "Each run of this model sends tiles of the project's slides to {host}. The lab that runs the server sees them. Slide labels and patient details are never sent."
 
@@ -8325,6 +8344,10 @@ msgstr "Kit target"
 #: ../../packages/ui/src/components/command-palette.tsx
 msgid "Lab"
 msgstr "Lab"
+
+#: src/screens/project/lab-models-zone.tsx
+msgid "Lab models"
+msgstr "Lab models"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Lab or group name"
@@ -11258,7 +11281,7 @@ msgstr "Parfocal models"
 msgid "Parfocal reads the file and lines it up with A1 before anything is added."
 msgstr "Parfocal reads the file and lines it up with A1 before anything is added."
 
-#: src/screens/admin/connect-model.tsx
+#: src/screens/admin/tile-sharing-modal.tsx
 msgid "Parfocal records your confirmation. Removing the model from the project clears it."
 msgstr "Parfocal records your confirmation. Removing the model from the project clears it."
 
@@ -13493,12 +13516,11 @@ msgstr "Send reset link"
 msgid "Send the request and continue"
 msgstr "Send the request and continue"
 
-#. placeholder {0}: project.name
-#: src/screens/admin/connect-model.tsx
-msgid "Send tiles of {0} to {host}?"
-msgstr "Send tiles of {0} to {host}?"
+#: src/screens/admin/tile-sharing-modal.tsx
+msgid "Send tiles of {projectName} to {host}?"
+msgstr "Send tiles of {projectName} to {host}?"
 
-#: src/screens/admin/connect-model.tsx
+#: src/screens/admin/tile-sharing-modal.tsx
 msgid "Send tiles to this server"
 msgstr "Send tiles to this server"
 
@@ -15353,6 +15375,10 @@ msgstr "The co-signer"
 msgid "The comment did not save. Try again."
 msgstr "The comment did not save. Try again."
 
+#: src/screens/project/lab-models-zone.tsx
+msgid "The confirmation was not saved. Try again."
+msgstr "The confirmation was not saved. Try again."
+
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The connection is lost. It saves when the connection is back."
@@ -16157,6 +16183,10 @@ msgstr "Tiles go to {0}"
 msgid "Tiles it gets"
 msgstr "Tiles it gets"
 
+#: src/screens/project/lab-models-zone.tsx
+msgid "Tiles of this project's slides go to these servers when the models run."
+msgstr "Tiles of this project's slides go to these servers when the models run."
+
 #: src/screens/upload/files-step.tsx
 msgid "Tiles stream from the source when someone looks. Nothing is copied and the slide shows a remote badge."
 msgstr "Tiles stream from the source when someone looks. Nothing is copied and the slide shows a remote badge."
@@ -16950,6 +16980,10 @@ msgstr "Waiting for the first tile"
 msgid "Waiting for the main window"
 msgstr "Waiting for the main window"
 
+#: src/screens/project/lab-models-zone.tsx
+msgid "Waiting for the owner"
+msgstr "Waiting for the owner"
+
 #: src/screens/upload/progress-step.tsx
 msgid "Waiting for the source"
 msgstr "Waiting for the source"
@@ -17132,7 +17166,7 @@ msgstr "What it returns"
 msgid "What it shows"
 msgstr "What it shows"
 
-#: src/screens/admin/connect-model.tsx
+#: src/screens/admin/tile-sharing-modal.tsx
 msgid "What leaves Parfocal"
 msgstr "What leaves Parfocal"
 

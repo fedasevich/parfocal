@@ -46,6 +46,7 @@ import { projectColour } from "../palette.ts";
 import { okData } from "../placeholder.tsx";
 import { adminHref } from "./admin-shell.tsx";
 import { InfoLine, type Notify, TextLink } from "./common.tsx";
+import { TileSharingModal } from "./tile-sharing-modal.tsx";
 
 type SignIn = LabModelConnection["sign_in"];
 type WhoCanRun = LabModelConnection["who_can_run"];
@@ -879,7 +880,7 @@ function MapStep({
         </Labelled>
         {asking && (
           <TileSharingModal
-            project={asking}
+            projectName={asking.name}
             host={hostOf(form.address)}
             onClose={() => setAsking(null)}
             onConfirm={() => {
@@ -934,46 +935,6 @@ function MapStep({
         />
       </Zone>
     </>
-  );
-}
-
-function TileSharingModal({
-  project,
-  host,
-  onClose,
-  onConfirm,
-}: {
-  project: Project;
-  host: string;
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  const { t } = useLingui();
-
-  return (
-    <SmallModal
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-      width={480}
-      title={t`Send tiles of ${project.name} to ${host}?`}
-      subtitle={t`${project.name} is a clinical project`}
-      cancelLabel={t`Cancel`}
-      onCancel={onClose}
-      primaryLabel={t`Send tiles to this server`}
-      onPrimary={onConfirm}
-      hint={t`Parfocal records your confirmation. Removing the model from the project clears it.`}
-    >
-      <SmallModalZone title={t`What leaves Parfocal`}>
-        <p className="text-body-sm text-fg">
-          <Trans>
-            Each run of this model sends tiles of the project's slides to {host}. The lab that runs
-            the server sees them. Slide labels and patient details are never sent.
-          </Trans>
-        </p>
-      </SmallModalZone>
-    </SmallModal>
   );
 }
 

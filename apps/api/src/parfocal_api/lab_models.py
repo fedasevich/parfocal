@@ -25,6 +25,7 @@ from parfocal_api.permissions import Permission, member_of, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
+from parfocal_api.projects import visible
 from parfocal_api.tables import (
     LabModelRunners,
     LabModelSignIn,
@@ -76,6 +77,7 @@ type Magnification = Literal[10, 20, 40]
 type ModelId = Annotated[uuid.UUID, Path()]
 
 router = APIRouter(prefix="/api/tenant/models", tags=["tenant"])
+project_router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 SUGGESTIONS: dict[TaxonomyTemplate, dict[str, str]] = {
     TaxonomyTemplate.SENTINEL_NODE: {
@@ -774,3 +776,44 @@ async def confirm_lab_model_tile_sharing(
     await check_owner(connection, principal, [project_id])
     await confirm_tiles(connection, principal, model_id, host_of(row.address), [project_id])
     return await lab_model_of(connection, row)
+
+
+class ProjectLabModel(BaseModel):
+    id: uuid.UUID
+    name: str
+    version: str
+    host: str
+    confirmed_at: datetime | None
+
+
+@project_router.get(
+    "/{project_id}/lab-models",
+    operation_id="listProjectLabModels",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_project_lab_models(
+    project_id: ProjectId, principal: CurrentPrincipal, connection: TenantConnection
+) -> list[ProjectLabModel]:
+    await visible(connection, principal, project_id)
+    rows = await connection.execute(
+        select(
+            lab_models.c.id,
+            lab_models.c.name,
+            lab_models.c.version,
+            lab_models.c.address,
+            lab_model_projects.c.tiles_confirmed_at,
+        )
+        .join(lab_model_projects, lab_model_projects.c.lab_model_id == lab_models.c.id)
+        .where(lab_model_projects.c.project_id == project_id)
+        .order_by(lab_models.c.name, lab_models.c.version)
+    )
+    return [
+        ProjectLabModel(
+            id=row.id,
+            name=row.name,
+            version=row.version,
+            host=host_of(row.address),
+            confirmed_at=row.tiles_confirmed_at,
+        )
+        for row in rows
+    ]

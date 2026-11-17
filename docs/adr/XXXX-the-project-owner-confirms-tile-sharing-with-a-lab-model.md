@@ -20,5 +20,5 @@ A lab model is a server the lab runs, so every tile it scores leaves Parfocal fo
 
 ## Consequences
 
-- An admin who is not the clinical project's owner can add the model to it, but it cannot run there until the owner confirms. No screen offers that later confirmation yet.
+- An admin who is not the clinical project's owner can add the model to it, but it cannot run there until the owner confirms. The project's settings tab lists its lab models from `GET /api/projects/{project_id}/lab-models`, and the owner confirms a pending one there with the same dialog the connect flow uses. Other members see that it waits for the owner.
 - The run start still accepts an unknown model name when a version is given, so a confirmed lab model gets past the gate and is refused only by the worker. The lab run path that ADR 0363 describes closes this.
