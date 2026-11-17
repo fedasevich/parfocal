@@ -2,6 +2,7 @@ import { TILE_INDEX_FILE } from "../pixel-source/tile-index.ts";
 import type {
   MicronsPerPixel,
   OpenRequest,
+  RestrictedRange,
   SlideFormatId,
   SlideIndex,
   SlideIndexLevel,
@@ -324,12 +325,37 @@ export async function signedOpenRequest(options: SignedSlideOptions): Promise<Op
       ? await withFrameStitching(table, new URL(TILE_INDEX_FILE, directory).href, options)
       : table;
   const url = new URL(encodeURIComponent(original), directory).href;
+  const restricted = restrictedRangesOf(await access.token(), original);
   return {
     formatId,
     url,
     index,
     fetch: (input, init) => access.fetch(requestUrl(input), init, fetcher),
+    ...(restricted.length === 0 ? {} : { restricted }),
   };
+}
+
+function isByteRange(value: unknown): value is RestrictedRange {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((part) => Number.isSafeInteger(part) && part >= 0) &&
+    value[0] < value[1]
+  );
+}
+
+export function restrictedRangesOf(token: string, original: string): RestrictedRange[] {
+  const [payload = ""] = token.split(".");
+  try {
+    const text = atob(payload.replaceAll("-", "+").replaceAll("_", "/"));
+    const json = new TextDecoder().decode(Uint8Array.from(text, (char) => char.charCodeAt(0)));
+    const claims = JSON.parse(json) as Record<string, unknown>;
+    const ranges = claims["d"];
+    if (claims["o"] !== original || !Array.isArray(ranges)) return [];
+    return ranges.every(isByteRange) ? ranges : [];
+  } catch {
+    return [];
+  }
 }
 
 export interface TileGrant {

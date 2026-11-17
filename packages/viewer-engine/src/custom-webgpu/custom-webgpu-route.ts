@@ -2,7 +2,7 @@ import { originCamera } from "../camera/camera.ts";
 import { WebGpuBufferLimitError } from "../deck-webgpu/buffer-limit.ts";
 import { rgbToRgba } from "../deck-webgpu/rgba.ts";
 import { defaultDecodeWorkers } from "../decode/decode-pool.ts";
-import { createRangeCache } from "../decode/range-cache.ts";
+import { rangeCacheFor } from "../decode/range-cache.ts";
 import {
   createWorkerRegionReader,
   type DecodeStats,
@@ -821,8 +821,7 @@ export function createCustomWebGpuRoute(
       },
       size: workerCount,
       onFailure: reportOnce,
-      cache:
-        slide.bytes ?? createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
+      cache: slide.bytes ?? rangeCacheFor(opened),
       ...(options.spawnDecodeWorker ? { spawn: options.spawnDecodeWorker } : {}),
     });
     reader.ready.catch(reportOnce);

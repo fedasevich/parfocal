@@ -4,7 +4,7 @@ import { BitmapLayer, MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { type Camera, originCamera } from "../camera/camera.ts";
 import type { MotionVector } from "../camera/motion-predictor.ts";
 import { defaultDecodeWorkers, type PrefetchStats } from "../decode/decode-pool.ts";
-import { createRangeCache } from "../decode/range-cache.ts";
+import { rangeCacheFor } from "../decode/range-cache.ts";
 import {
   createWorkerRegionReader,
   type DecodeStats,
@@ -279,8 +279,7 @@ export function createVivRoute(
       },
       size: workerCount,
       onFailure: reportOnce,
-      cache:
-        slide.bytes ?? createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
+      cache: slide.bytes ?? rangeCacheFor(opened),
       ...(options.spawnDecodeWorker ? { spawn: options.spawnDecodeWorker } : {}),
     });
     reader.ready.catch(reportOnce);

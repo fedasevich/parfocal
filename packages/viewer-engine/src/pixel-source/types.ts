@@ -194,12 +194,15 @@ export interface SlideIndex {
   readonly overviewLevels?: OverviewLevelsRef;
 }
 
+export type RestrictedRange = readonly [start: number, end: number];
+
 export interface OpenRequest {
   readonly formatId: SlideFormatId;
   readonly url: string | URL;
   readonly baseUrl?: string | URL;
   readonly index?: SlideIndex;
   readonly fetch?: typeof globalThis.fetch;
+  readonly restricted?: readonly RestrictedRange[];
   readonly signal?: AbortSignal;
   readonly nativeJpeg?: "off" | "unvalidated" | NativeTileDecoder;
 }

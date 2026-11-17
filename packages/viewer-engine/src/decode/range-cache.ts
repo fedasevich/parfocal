@@ -1,4 +1,6 @@
 import { TIFF_BLOCK_SIZE } from "../pixel-source/tiff/directory.ts";
+import type { OpenRequest, RestrictedRange } from "../pixel-source/types.ts";
+import { absoluteUrl } from "../pixel-source/url.ts";
 
 export const defaultCachedBlocks = 100;
 
@@ -16,10 +18,13 @@ export interface RangeCacheStats {
   readonly cachedBlocks: number;
 }
 
+export type { RestrictedRange };
+
 export interface RangeCacheOptions {
   readonly blockSize?: number;
   readonly maxBlocks?: number;
   readonly fetch?: typeof globalThis.fetch;
+  readonly restricted?: Readonly<Record<string, readonly RestrictedRange[]>>;
 }
 
 export interface RangeCache {
@@ -49,6 +54,35 @@ class RefusedBlocksError extends Error {
     super("The server refused a whole block run");
     this.name = "RefusedBlocksError";
   }
+}
+
+const normalUrl = (url: string): string => {
+  try {
+    return new URL(url).href;
+  } catch {
+    return url;
+  }
+};
+
+const overlaps = (ranges: readonly RestrictedRange[], start: number, endExclusive: number) =>
+  ranges.some(([from, to]) => start < to && from < endExclusive);
+
+function allowedSegments(
+  ranges: readonly RestrictedRange[],
+  start: number,
+  endExclusive: number,
+): (readonly [number, number])[] {
+  const segments: (readonly [number, number])[] = [];
+  let from = start;
+  const sorted = ranges
+    .filter(([low, high]) => low < endExclusive && start < high)
+    .sort(([a], [b]) => a - b);
+  for (const [low, high] of sorted) {
+    if (low > from) segments.push([from, low]);
+    from = Math.max(from, high);
+  }
+  if (from < endExclusive) segments.push([from, endExclusive]);
+  return segments;
 }
 
 export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
@@ -82,31 +116,70 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     return { response, bytes };
   };
 
+  const restrictedOf = new Map(
+    Object.entries(options.restricted ?? {}).map(([url, ranges]) => [normalUrl(url), ranges]),
+  );
+  const closedRanges = (url: string): readonly RestrictedRange[] =>
+    restrictedOf.size === 0 ? [] : (restrictedOf.get(normalUrl(url)) ?? []);
+
+  const fetchSegment = async (
+    url: string,
+    first: number,
+    last: number,
+    from: number,
+    to: number,
+  ): Promise<Uint8Array<ArrayBuffer> | null> => {
+    const { response, bytes } = await download(url, { Range: `bytes=${from}-${to - 1}` });
+    const contentRange = response.headers.get("content-range");
+    const total = totalOf(contentRange);
+    if (total !== null) totals.set(url, total);
+    if (response.status === 416) return null;
+    if (response.status === 403) {
+      for (let index = first; index <= last; index++) refused.add(blockKey(url, index));
+      throw new RefusedBlocksError();
+    }
+    if (response.status !== 206 || startOf(contentRange) !== from) {
+      throw new Error(`The server answered a range request with status ${response.status}`);
+    }
+    const expected = total === null ? to - from : Math.min(to - from, total - from);
+    if (total !== null && bytes.byteLength < expected) {
+      throw new Error(`The server answered ${bytes.byteLength} of the ${expected} bytes asked for`);
+    }
+    return bytes;
+  };
+
+  const fetchAround = async (
+    url: string,
+    first: number,
+    last: number,
+    segments: readonly (readonly [number, number])[],
+  ): Promise<Uint8Array<ArrayBuffer>> => {
+    const origin = first * blockSize;
+    const asked = (last + 1 - first) * blockSize;
+    const parts = await Promise.all(
+      segments.map(([from, to]) => fetchSegment(url, first, last, from, to)),
+    );
+    const total = totals.get(url);
+    const length = total === undefined ? 0 : Math.max(0, Math.min(asked, total - origin));
+    const bytes = new Uint8Array(length);
+    parts.forEach((part, at) => {
+      const offset = (segments[at]?.[0] ?? origin) - origin;
+      if (part !== null && offset < length) {
+        bytes.set(part.subarray(0, length - offset), offset);
+      }
+    });
+    return bytes;
+  };
+
   const fetchRun = (url: string, first: number, last: number): Promise<Block>[] => {
-    const run = (async () => {
-      const { response, bytes } = await download(url, {
-        Range: `bytes=${first * blockSize}-${(last + 1) * blockSize - 1}`,
-      });
-      const contentRange = response.headers.get("content-range");
-      const total = totalOf(contentRange);
-      if (total !== null) totals.set(url, total);
-      if (response.status === 416) return new Uint8Array(0);
-      if (response.status === 403) {
-        for (let index = first; index <= last; index++) refused.add(blockKey(url, index));
-        throw new RefusedBlocksError();
-      }
-      if (response.status !== 206 || startOf(contentRange) !== first * blockSize) {
-        throw new Error(`The server answered a range request with status ${response.status}`);
-      }
-      const asked = (last + 1 - first) * blockSize;
-      const expected = total === null ? asked : Math.min(asked, total - first * blockSize);
-      if (total !== null && bytes.byteLength < expected) {
-        throw new Error(
-          `The server answered ${bytes.byteLength} of the ${expected} bytes asked for`,
+    const runStart = first * blockSize;
+    const runEnd = (last + 1) * blockSize;
+    const closed = closedRanges(url);
+    const run = overlaps(closed, runStart, runEnd)
+      ? fetchAround(url, first, last, allowedSegments(closed, runStart, runEnd))
+      : fetchSegment(url, first, last, runStart, runEnd).then(
+          (bytes) => bytes ?? new Uint8Array(0),
         );
-      }
-      return bytes;
-    })();
     const promises: Promise<Block>[] = [];
     for (let index = first; index <= last; index++) {
       const key = blockKey(url, index);
@@ -180,6 +253,7 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     const last = Math.floor((known === undefined ? end : Math.min(end, known - 1)) / blockSize);
     const exact = `bytes=${start}-${end}`;
     if (last - first >= maxBlocks) return uncached(url, exact);
+    if (overlaps(closedRanges(url), start, end + 1)) return uncached(url, exact);
     for (let index = first; index <= last; index++) {
       if (refused.has(blockKey(url, index))) return uncached(url, exact);
     }
@@ -249,4 +323,19 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
       blocks.clear();
     },
   };
+}
+
+export function rangeCacheFor(
+  request: Pick<OpenRequest, "url" | "baseUrl" | "fetch" | "restricted">,
+  options: Omit<RangeCacheOptions, "fetch" | "restricted"> = {},
+): RangeCache {
+  const restricted =
+    request.restricted === undefined || request.restricted.length === 0
+      ? {}
+      : { restricted: { [absoluteUrl(request.url, request.baseUrl).href]: request.restricted } };
+  return createRangeCache({
+    ...options,
+    ...(request.fetch === undefined ? {} : { fetch: request.fetch }),
+    ...restricted,
+  });
 }
