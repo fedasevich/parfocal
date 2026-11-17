@@ -2,10 +2,22 @@ import uuid
 from collections.abc import Mapping
 from typing import Any
 
-from sqlalchemy import insert, select
+from sqlalchemy import ColumnElement, exists, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.tables import EventKind, event_outbox, event_targets
+
+
+def listening(project_id: uuid.UUID, kind: EventKind) -> ColumnElement[bool]:
+    return (
+        (event_targets.c.project_id == project_id)
+        & event_targets.c.paused_at.is_(None)
+        & event_targets.c.events.contains([kind.value])
+    )
+
+
+async def subscribed(connection: AsyncConnection, project_id: uuid.UUID, kind: EventKind) -> bool:
+    return bool(await connection.scalar(select(exists().where(listening(project_id, kind)))))
 
 
 async def emit(
@@ -16,13 +28,7 @@ async def emit(
     data: Mapping[str, Any],
 ) -> int:
     targets = (
-        await connection.scalars(
-            select(event_targets.c.id).where(
-                event_targets.c.project_id == project_id,
-                event_targets.c.paused_at.is_(None),
-                event_targets.c.events.contains([kind.value]),
-            )
-        )
+        await connection.scalars(select(event_targets.c.id).where(listening(project_id, kind)))
     ).all()
     body = {key: str(value) for key, value in data.items()}
     if targets:

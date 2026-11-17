@@ -22,7 +22,7 @@ from parfocal_api.evaluation_versions import (
     record_signature,
     start_next_version,
 )
-from parfocal_api.event_emit import emit
+from parfocal_api.event_emit import emit, subscribed
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -477,6 +477,8 @@ async def review_move(
 async def announce_submitted(connection: AsyncConnection, task: Any, slide_id: uuid.UUID) -> None:
     ids = {"task_id": task.id, "slide_id": slide_id}
     await emit(connection, task.tenant_id, task.project_id, EventKind.REVIEW_SUBMITTED, ids)
+    if not await subscribed(connection, task.project_id, EventKind.TASK_DISAGREEMENTS):
+        return
     states = await states_of(connection, await task_of(connection, task.id))
     if any(r.submitted_at is None for slide in states.slides for r in slide.reviewers):
         return

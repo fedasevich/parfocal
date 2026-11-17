@@ -52,10 +52,10 @@ RETRY_WAITS = (
     timedelta(hours=12),
 )
 ANSWER_SECONDS = 10.0
-LEASE = timedelta(seconds=60)
 PAUSE_AFTER = 5
 PAUSED_WAIT = timedelta(hours=12)
 BATCH = 50
+LEASE = timedelta(seconds=BATCH * ANSWER_SECONDS + 60)
 
 
 @dataclass(frozen=True)
