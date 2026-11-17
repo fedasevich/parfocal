@@ -2,7 +2,18 @@ import assert from "node:assert/strict";
 import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
 import { fakeApiHandlers, scenario, setFakeConnectModelScene } from "../src/fake/index.ts";
-import { connectLabModel, getLabModelConnection, testLabModel } from "../src/index.ts";
+import {
+  connectLabModel,
+  getLabModelConnection,
+  type LabModelConnection,
+  testLabModel,
+} from "../src/index.ts";
+
+const connection = async (): Promise<LabModelConnection> => {
+  const response = await getLabModelConnection();
+  assert.equal(response.status, 200);
+  return response.data;
+};
 
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
@@ -24,7 +35,7 @@ after(() => {
 });
 
 test("an untested connection has the server's address and no answer yet", async () => {
-  const { data } = await getLabModelConnection();
+  const data = await connection();
   assert.equal(data.address, "https://ml.cuailab.cz/parfocal/infer");
   assert.equal(data.sign_in, "token");
   assert.equal(data.tile_size, 512);
@@ -39,7 +50,7 @@ test("an untested connection has the server's address and no answer yet", async 
 
 test("a passing test returns two sample tiles and five classes that add up to the first", async () => {
   setFakeConnectModelScene("passed");
-  const { data } = await getLabModelConnection();
+  const data = await connection();
   assert.equal(data.test.outcome, "follows-contract");
   assert.deepEqual(data.test.returns, ["Regions", "Cells"]);
   assert.equal(data.test.tiles.length, 2);
@@ -56,7 +67,7 @@ test("a passing test returns two sample tiles and five classes that add up to th
 
 test("a failing test names the cells that came back without a geometry", async () => {
   setFakeConnectModelScene("failed");
-  const { data } = await getLabModelConnection();
+  const data = await connection();
   assert.equal(data.test.outcome, "not-contract");
   assert.equal(data.test.missing_geometry, 38);
   assert.deepEqual(data.test.returns, ["Cells"]);
