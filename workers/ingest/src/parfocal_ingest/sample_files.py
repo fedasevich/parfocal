@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import gzip
 import hashlib
+from dataclasses import dataclass
 from pathlib import Path
 
 import httpx2
@@ -72,32 +73,46 @@ async def send_original(store: ObjectStore, path: Path, key: str) -> tuple[int, 
     return size, digest.hexdigest()
 
 
-async def send_sample(store: ObjectStore, label: str, path: Path) -> SampleFile:
-    identified, found = await asyncio.to_thread(opened, path)
+@dataclass(frozen=True)
+class DerivedFile:
+    name: str
+    body: bytes
+    content_type: str
+    content_encoding: str | None = None
+
+
+def derived_files(
+    original: Path, readable: Path, identified: Identified, found: Pyramid
+) -> list[DerivedFile]:
     assert identified.format is not None
-    folder = sample_folder(label)
-    await store.put_object(f"{folder}levels.json", level_table(found), "application/json")
-    tiles = await asyncio.to_thread(tile_index, path, identified, found)
+    files = [DerivedFile("levels.json", level_table(found), "application/json")]
+    tiles = tile_index(readable, identified, found)
     if tiles is not None:
-        derived = await asyncio.to_thread(overview_levels, path, identified.format, found)
+        derived = overview_levels(readable, identified.format, found)
         if derived is not None:
-            await store.put_object(f"{folder}{OVERVIEW_LEVELS_NAME}", derived.data, "image/tiff")
+            files.append(DerivedFile(OVERVIEW_LEVELS_NAME, derived.data, "image/tiff"))
             tiles["overviewLevels"] = derived.reference()
-        await store.put_object(
-            f"{folder}{TILE_INDEX_NAME}",
-            gzip.compress(index_document(tiles), mtime=0),
-            "application/json",
-            content_encoding="gzip",
+        files.append(
+            DerivedFile(
+                TILE_INDEX_NAME,
+                gzip.compress(index_document(tiles), mtime=0),
+                "application/json",
+                "gzip",
+            )
         )
-    images = await asyncio.to_thread(previews, path, identified.format, found)
-    await store.put_object(f"{folder}thumbnail.jpg", images.thumbnail, "image/jpeg")
-    await store.put_object(f"{folder}overview.jpg", images.overview, "image/jpeg")
-    ranges = await asyncio.to_thread(ranges_file, path)
-    await store.put_object(f"{folder}{RESTRICTED_RANGES_NAME}", ranges, "application/json")
-    key = sample_original_key(label, path.name)
-    size, sha256 = await send_original(store, path, key)
+    images = previews(readable, identified.format, found)
+    files.append(DerivedFile("thumbnail.jpg", images.thumbnail, "image/jpeg"))
+    files.append(DerivedFile("overview.jpg", images.overview, "image/jpeg"))
+    files.append(DerivedFile(RESTRICTED_RANGES_NAME, ranges_file(original), "application/json"))
+    return files
+
+
+def facts_of(
+    key: str, size: int, sha256: str, identified: Identified, found: Pyramid
+) -> SampleFile:
+    assert identified.format is not None
     base = found.levels[0]
-    facts = SampleFile(
+    return SampleFile(
         original_key=key,
         file_bytes=size,
         sha256=sha256,
@@ -112,6 +127,21 @@ async def send_sample(store: ObjectStore, label: str, path: Path) -> SampleFile:
         objective_power=found.scale.objective_power,
         notices=[notice.value for notice in found.notices],
     )
+
+
+async def send_sample(store: ObjectStore, label: str, path: Path) -> SampleFile:
+    identified, found = await asyncio.to_thread(opened, path)
+    folder = sample_folder(label)
+    for file in await asyncio.to_thread(derived_files, path, path, identified, found):
+        await store.put_object(
+            f"{folder}{file.name}",
+            file.body,
+            file.content_type,
+            content_encoding=file.content_encoding,
+        )
+    key = sample_original_key(label, path.name)
+    size, sha256 = await send_original(store, path, key)
+    facts = facts_of(key, size, sha256, identified, found)
     await store.put_object(facts_key(label), facts.model_dump_json().encode(), "application/json")
     return facts
 

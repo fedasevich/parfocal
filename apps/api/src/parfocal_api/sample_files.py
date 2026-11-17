@@ -24,9 +24,9 @@ def facts_key(label: str) -> str:
     return f"{sample_folder(label)}{SAMPLE_FACTS_NAME}"
 
 
-async def stored_sample_file(store: ObjectStore, label: str) -> SampleFile | None:
+async def stored_facts(store: ObjectStore, folder: str) -> SampleFile | None:
     try:
-        body = await store.get_object(facts_key(label))
+        body = await store.get_object(f"{folder}{SAMPLE_FACTS_NAME}")
     except StorageError as error:
         if error.status == 404:
             return None
@@ -35,6 +35,10 @@ async def stored_sample_file(store: ObjectStore, label: str) -> SampleFile | Non
         found = SampleFile.model_validate_json(body)
     except ValidationError:
         return None
-    if not found.original_key.startswith(sample_folder(label)):
+    if not found.original_key.startswith(folder):
         return None
     return found
+
+
+async def stored_sample_file(store: ObjectStore, label: str) -> SampleFile | None:
+    return await stored_facts(store, sample_folder(label))

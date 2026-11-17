@@ -1,3 +1,4 @@
+import re
 import uuid
 from collections.abc import Mapping
 from enum import StrEnum
@@ -254,6 +255,22 @@ def sample_folder(label: str) -> str:
 
 def sample_original_key(label: str, name: str) -> str:
     return f"{sample_folder(label)}original{original_suffix(name)}"
+
+
+FIXTURES_PREFIX = "fixtures/"
+FIXTURE_SLIDES_PREFIX = "fixture-slides/"
+
+
+def fixture_slug(name: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_-]", "-", name)[:64]
+
+
+def fixture_folder(name: str) -> str:
+    return f"{FIXTURE_SLIDES_PREFIX}{fixture_slug(name)}/"
+
+
+def fixture_original_key(name: str) -> str:
+    return f"{fixture_folder(name)}original{original_suffix(name)}"
 
 
 def folder_of(key: str) -> str:

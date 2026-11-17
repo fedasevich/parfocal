@@ -30,7 +30,7 @@ from parfocal_api.result_sets import (
     insert_result_set,
 )
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
-from parfocal_api.sample_files import SampleFile, stored_sample_file
+from parfocal_api.sample_files import SampleFile, stored_facts, stored_sample_file
 from parfocal_api.sample_project import SAMPLE_SLIDES, square
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
@@ -60,7 +60,12 @@ from parfocal_api.tables import (
     workspace_settings,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
-from parfocal_common.ingest import RESTRICTED_RANGES_NAME, sample_folder, sample_original_key
+from parfocal_common.ingest import (
+    RESTRICTED_RANGES_NAME,
+    fixture_folder,
+    sample_folder,
+    sample_original_key,
+)
 from parfocal_common.jobs import JobStatus, jobs
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.repository import repository_root
@@ -151,6 +156,7 @@ FORMAT_GALLERY = (
     GallerySlide("CMU-1.tiff", "generic-tiff", "tiff"),
     GallerySlide("CMU-1-Saved-1_16.zip", "mirax", "zip"),
     GallerySlide("CMU-1-JP2K-33005-v2.zip", "dicom", "zip"),
+    GallerySlide("synthetic-zlib.ome.tiff", "ome-tiff", "tiff"),
 )
 
 STATE_SLIDES = (
@@ -183,8 +189,8 @@ class Seeded:
 
 
 def fixture_facts(manifest: Path = FIXTURES_MANIFEST) -> dict[str, Mapping[str, Any]]:
-    remote = json.loads(manifest.read_text())["remote"]
-    return {entry["file"]: entry for entry in remote}
+    listed = json.loads(manifest.read_text())
+    return {entry["file"]: entry for entry in [*listed["remote"], *listed["synthetic"]]}
 
 
 def placeholder_subject(email: str) -> str:
@@ -353,7 +359,13 @@ def sample_facts(stored: SampleFile | None) -> dict[str, Any]:
     return {} if stored is None else {**stored.model_dump(), "published_at": func.now()}
 
 
-def gallery_facts(slide: GallerySlide, manifest: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+def gallery_facts(
+    slide: GallerySlide,
+    manifest: Mapping[str, Mapping[str, Any]],
+    stored: SampleFile | None = None,
+) -> dict[str, Any]:
+    if stored is not None:
+        return sample_facts(stored)
     entry = manifest[slide.file]
     return {
         "format": slide.format,
@@ -696,6 +708,7 @@ async def seed_gallery(
     connection: AsyncConnection,
     seeded: Seeded,
     principal: MemberPrincipal,
+    store: ObjectStore,
     manifest: Mapping[str, Mapping[str, Any]],
     name: str,
 ) -> None:
@@ -706,7 +719,10 @@ async def seed_gallery(
     )
     await join(connection, seeded, project.id, {"rhea": ProjectRole.VIEWER})
     for slide in FORMAT_GALLERY:
-        await add_slide(connection, seeded, project.id, slide.file, gallery_facts(slide, manifest))
+        stored = await stored_facts(store, fixture_folder(slide.file))
+        await add_slide(
+            connection, seeded, project.id, slide.file, gallery_facts(slide, manifest, stored)
+        )
 
 
 async def seed_gallery_tour(
@@ -838,7 +854,7 @@ async def seed_projects(
             job_ids = await add_jobs(connection, seeded, project.id)
             await seed_states(connection, seeded, principal, results, project.id, sample, job_ids)
             await seed_styles(connection, seeded, principal, results, project.id, sample)
-    await seed_gallery(connection, seeded, principal, manifest, workspace.gallery)
+    await seed_gallery(connection, seeded, principal, store, manifest, workspace.gallery)
 
 
 async def seed(

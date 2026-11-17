@@ -361,10 +361,13 @@ class ObjectStore:
             extra["content-encoding"] = content_encoding
         await self.send("PUT", key, body=body, extra=extra)
 
-    async def put_new_object(self, key: str, body: bytes, content_type: str) -> None:
-        await self.send(
-            "PUT", key, body=body, extra={"content-type": content_type, "if-none-match": "*"}
-        )
+    async def put_new_object(
+        self, key: str, body: bytes, content_type: str, *, content_encoding: str | None = None
+    ) -> None:
+        extra = {"content-type": content_type, "if-none-match": "*"}
+        if content_encoding is not None:
+            extra["content-encoding"] = content_encoding
+        await self.send("PUT", key, body=body, extra=extra)
 
     async def head_object(self, key: str) -> int | None:
         stored = await self.stat_object(key)
