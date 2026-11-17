@@ -38,4 +38,5 @@ If the gesture comes back, it should be option 2: the auto region tool finds the
 
 - The region pass and the group and comment model need no change.
 - A typed fixture, such as PanNuke, is the next measurement. TODO: decided in `docs/decisions.md`.
+- The [PanNuke ranking result](../results/2026-11-17-find-more-like-these-on-pannuke.md) (AISEG-023) shows ranking the auto region tool's nuclei by exemplar tokens lifts precision at 10 to 0.61 for neoplastic and 0.58 for inflammatory, against 0.33 and 0.17 at random, and barely helps connective, epithelial or dead. Search stays a no-go.
 - SAM 3 and foundation-model features stay unmeasured until a task can fetch gated weights.
