@@ -1,4 +1,4 @@
-# 0381. Events out lease their own outbox rows, and there are four events
+# 0382. Events out lease their own outbox rows, and there are four events
 
 - Date: 2026-11-17
 - Status: Accepted

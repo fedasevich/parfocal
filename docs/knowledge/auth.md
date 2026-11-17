@@ -65,7 +65,7 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 
 ## SCIM provisioning per workspace
 
-[ADR XXXX](../adr/XXXX-scim-provisioning-through-zitadel.md) (SCIM provisioning through Zitadel) has the design. Zitadel v4.20.3 serves SCIM 2.0 Users at `{issuer}/scim/v2/<organisationId>` with no feature flag, and has no groups.
+[ADR 0384](../adr/0384-scim-provisioning-through-zitadel.md) (SCIM provisioning through Zitadel) has the design. Zitadel v4.20.3 serves SCIM 2.0 Users at `{issuer}/scim/v2/<organisationId>` with no feature flag, and has no groups.
 
 - An operator runs `python -m parfocal_api.tenant_command connect-scim TENANT [--token-days N]` with the admin token. It prints the endpoint and a bearer token once, and the customer pastes both into their directory's SCIM app.
 - Running it again rotates: the same machine user `scim-<slug>` gets a new token, and the old one stays valid until it expires or is removed in the Zitadel console.

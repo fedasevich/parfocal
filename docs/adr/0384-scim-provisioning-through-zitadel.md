@@ -1,4 +1,4 @@
-# XXXX. SCIM provisioning through the workspace's Zitadel organisation
+# 0384. SCIM provisioning through the workspace's Zitadel organisation
 
 - Date: 2026-11-17
 - Status: Accepted

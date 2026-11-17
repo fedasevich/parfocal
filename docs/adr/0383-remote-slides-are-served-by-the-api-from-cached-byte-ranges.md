@@ -1,4 +1,4 @@
-# 0380. Remote slides are served by the API from cached byte ranges
+# 0383. Remote slides are served by the API from cached byte ranges
 
 - Date: 2026-11-17
 - Status: Accepted
