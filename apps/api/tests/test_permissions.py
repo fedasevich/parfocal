@@ -710,6 +710,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/projects/{w.project}/slides/{w.slide}/tumor-maps"
     ),
     "listProjectModels": lambda w: Call("GET", f"/api/projects/{w.project}/models"),
+    "getModelRunDefaults": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs/defaults"),
     "getModelRun": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}"),
     "listModelRunAreas": lambda w: Call(
         "GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}/areas"
@@ -789,6 +790,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "getLabModel": lambda w: Call("GET", f"/api/tenant/models/{seeded(w, 'lab-model')}"),
+    "listAiModels": lambda _: Call("GET", "/api/tenant/models"),
+    "getLabModelConnection": lambda _: Call("GET", "/api/tenant/models/connection"),
     "testConnectedLabModel": lambda w: Call(
         "POST", f"/api/tenant/models/{seeded(w, 'lab-model')}/test"
     ),

@@ -1967,6 +1967,13 @@ GET_ROUTES = {
     "listProjectModels": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
     ),
+    "getModelRunDefaults": Route(
+        Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/model-runs/defaults"
+    ),
+    "listAiModels": Route(Exposure.TENANT, lambda _: "/api/tenant/models", admin_rights=True),
+    "getLabModelConnection": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/models/connection", admin_rights=True
+    ),
     "getResultSet": Route(Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}"),
     "getCellSummary": Route(
         Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/cell-summary"
