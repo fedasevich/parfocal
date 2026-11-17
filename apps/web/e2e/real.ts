@@ -36,6 +36,19 @@ export async function signIn(page: Page, returnTo: string): Promise<void> {
   await expect
     .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
     .toBe(returnTo.split("?")[0]);
+  if (onRealApi) await ensureActiveWorkspace(page);
+}
+
+async function ensureActiveWorkspace(page: Page): Promise<void> {
+  const me = await ok<{ active_tenant_id: string | null; workspaces: { tenant_id: string }[] }>(
+    page,
+    "GET",
+    "/api/me",
+  );
+  const first = me.workspaces[0]?.tenant_id;
+  if (me.active_tenant_id !== null || first === undefined) return;
+  await ok(page, "PUT", "/api/me/workspace", { tenant_id: first });
+  await page.reload();
 }
 
 export interface Reply {

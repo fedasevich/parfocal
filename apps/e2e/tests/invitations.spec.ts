@@ -70,6 +70,10 @@ function actions(tenantId: string): string[] {
 test("an invited researcher accepts and lands in the new workspace", async ({ page }) => {
   await signIn(page, "/cases/S26-0101");
   const { subject } = await readSession(page);
+  const home: unknown = Reflect.get(
+    (await call(page, "GET", "/api/me", undefined)).json ?? {},
+    "active_tenant_id",
+  );
   const tenantId = newWorkspace("diagnostic");
   const token = await inviteAsOperator(page, subject, tenantId);
 
@@ -79,6 +83,7 @@ test("an invited researcher accepts and lands in the new workspace", async ({ pa
   const current = await call(page, "GET", "/api/tenant", undefined);
   expect(current.json).toMatchObject({ id: tenantId });
   expect(actions(tenantId)).toEqual(["invitation.created", "invitation.accepted", "member.added"]);
+  if (typeof home === "string") await call(page, "PUT", "/api/me/workspace", { tenant_id: home });
   sql(`DELETE FROM memberships WHERE tenant_id = '${tenantId}'`);
 });
 
