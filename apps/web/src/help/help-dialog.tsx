@@ -42,31 +42,35 @@ export function HelpDialog() {
         </button>
       }
     >
-      <dl className="grid gap-2 text-body-sm">
-        {helpTopics.map((topic) => (
-          <div key={topic.title}>
-            <dt className="font-medium text-fg">{topic.title}</dt>
-            <dd className="text-fg-dim">{topic.text}</dd>
-          </div>
-        ))}
-      </dl>
-      <section aria-labelledby="whats-new-heading" className="mt-4 grid gap-2 text-body-sm">
-        <h3 id="whats-new-heading" className="font-medium text-fg">
-          <Trans>What's new</Trans>
-        </h3>
-        {latestReleases.map((release) => (
-          <div key={release.version}>
-            <h4 className="text-fg-dim">
-              {release.version} ({release.date})
-            </h4>
-            <ul className="list-disc pl-5 text-fg-dim">
-              {release.notes.slice(0, 5).map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </section>
+      <div className="grid gap-4">
+        <dl className="grid gap-2 text-body-sm">
+          {helpTopics.map((topic) => (
+            <div key={topic.title}>
+              <dt className="font-medium text-fg">{topic.title}</dt>
+              <dd className="text-fg-dim">{topic.text}</dd>
+            </div>
+          ))}
+        </dl>
+        <section aria-labelledby="whats-new-heading" className="grid gap-2 text-body-sm">
+          <h3 id="whats-new-heading" className="font-medium text-fg">
+            <Trans>What's new</Trans>
+          </h3>
+          {latestReleases.map((release) => (
+            <details key={release.version} open>
+              <summary className="cursor-pointer text-fg-dim">
+                <h4 className="inline">
+                  {release.version} ({release.date})
+                </h4>
+              </summary>
+              <ul className="list-disc pl-5 text-fg-dim">
+                {release.notes.slice(0, 5).map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </section>
+      </div>
     </SmallModal>
   );
 }
