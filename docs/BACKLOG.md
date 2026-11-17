@@ -5544,16 +5544,21 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when a deployed schedule delivers a test event to a fake receiver set up for the check, a paused target's events are kept and replayable, and the schedule's cost is in `knowledge/platform.md`.
   Depends on REMOTE-003. Size: S.
 
-- [ ] REMOTE-006 · A connected source that stays down notifies the admins
+- [x] REMOTE-006 · A connected source that stays down notifies the admins
   [ADR 0379](adr/0379-remote-sources-read-in-place-signed-webhooks-and-at-least-once-events.md) (remote sources read in place) says a source that stays down for 15 minutes writes one `integration-down` notification. Slides already count failures and keep `remote_failing_since`, but nothing notifies. The catalogue entry for `integration-down` targets a delivery, so this needs a source target kind, a resolver that opens the source for people who hold the integrations permission, one notification per source outage rather than per slide, a check that runs on the hourly event schedule or when a token is minted, and the web inbox line for it.
   Done when an API test keeps a source failing past 15 minutes and finds one notification for the admins, a second check writes none, and a recovered source can notify again.
   Depends on REMOTE-001. Size: S.
 
-- [ ] REMOTE-004 · Watched folder or bucket
+- [x] REMOTE-004 · Watched folder or bucket
   New files in a watched folder or bucket arrive in a project, checked like an upload.
   Done when a test drops files in a bucket fixture and they arrive.
   Depends on REMOTE-001. Refs mock: upload/watch.
   Size: M.
+
+- [ ] REMOTE-007 · Finish the watched folder and the source-down notice
+  REMOTE-004 (watched folder or bucket) and REMOTE-006 (a source that stays down notifies the admins) left gaps. The imports overlay has no on and off switch or source picker wired to `watchSource` and `stopWatchingSource`, and it lists "1 hour" twice. A result file that arrives in a later scan than its slide is never imported. The hourly down check does not probe the source first, so a short outage with nobody reopening the slide can send a notice after the source has recovered.
+  Done when a browser test turns a watch on and off from the overlay with one interval shown, an API test imports a result file that arrives a scan after its slide, and an API test finds no notice when a one-byte probe answers before sending.
+  Depends on REMOTE-004, REMOTE-006. Size: S.
 
 ---
 
