@@ -2,6 +2,14 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.12.1 (2026-11-17)
+
+### Docs
+
+- OPS-032: Log the switch to the eu bucket and move it to review
+- OPS-032: Tick after the deployed check
+- OPS-031: Ask the owner to delete the old US Neon project
+
 ## v0.12.0 (2026-11-17)
 
 ### Features
