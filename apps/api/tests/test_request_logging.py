@@ -105,3 +105,25 @@ def test_every_answer_carries_server_timing_with_its_database_work(output: io.St
     (line,) = finished(output)
     assert (line["queries"], line["transactions"]) == (2, 1)
     assert line["db_ms"] >= line["sql_ms"] >= 0
+
+
+def test_the_log_line_names_the_container_region_and_cloud(
+    output: io.StringIO, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("MODAL_REGION", "eu-west")
+    monkeypatch.setenv("MODAL_CLOUD_PROVIDER", "CLOUD_PROVIDER_AWS")
+    monkeypatch.setenv("MODAL_TASK_ID", "ta-example")
+    app = FastAPI()
+
+    @app.get("/where")
+    async def where() -> dict[str, str]:
+        return {}
+
+    app.add_middleware(RequestLogging)
+    assert TestClient(app).get("/where").status_code == 200
+    (line,) = finished(output)
+    assert (line["region"], line["cloud"], line["container"]) == (
+        "eu-west",
+        "CLOUD_PROVIDER_AWS",
+        "ta-example",
+    )

@@ -7,7 +7,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import exists, func, or_, select, tuple_
+from sqlalchemy import exists, func, or_, select, tuple_, union
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -25,11 +25,15 @@ from parfocal_api.tables import (
     SlideStorage,
     StartMode,
     TaskScope,
+    annotations,
     cases,
+    opinions,
     projects,
     result_sets,
     review_assignments,
     review_decisions,
+    review_edits,
+    review_skips,
     review_task_slides,
     review_tasks,
     slides,
@@ -167,6 +171,55 @@ def worked_on(states: TaskStates, user_id: uuid.UUID) -> bool:
     )
 
 
+async def my_assignments(
+    connection: AsyncConnection, me: uuid.UUID, task_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[tuple[uuid.UUID, bool, bool]]]:
+    worked = union(
+        *(
+            select(table.c.task_id, table.c.slide_id).where(
+                user_column == me, table.c.task_id.in_(task_ids)
+            )
+            for table, user_column in (
+                (review_edits, review_edits.c.user_id),
+                (annotations, annotations.c.created_by_user_id),
+                (review_decisions, review_decisions.c.user_id),
+                (review_skips, review_skips.c.user_id),
+                (opinions, opinions.c.user_id),
+            )
+        )
+    ).subquery()
+    has_work = (
+        select(worked.c.slide_id)
+        .where(
+            worked.c.task_id == review_assignments.c.task_id,
+            worked.c.slide_id == review_assignments.c.slide_id,
+        )
+        .exists()
+    )
+    found: dict[uuid.UUID, list[tuple[uuid.UUID, bool, bool]]] = {}
+    for row in await connection.execute(
+        select(
+            review_assignments.c.task_id,
+            review_assignments.c.slide_id,
+            review_assignments.c.submitted_at.is_not(None).label("submitted"),
+            has_work.label("has_work"),
+        )
+        .join(
+            review_task_slides,
+            (review_task_slides.c.task_id == review_assignments.c.task_id)
+            & (review_task_slides.c.slide_id == review_assignments.c.slide_id),
+        )
+        .where(
+            review_assignments.c.user_id == me,
+            review_assignments.c.released_at.is_(None),
+            review_assignments.c.task_id.in_(task_ids),
+        )
+        .order_by(review_assignments.c.task_id, review_task_slides.c.position)
+    ):
+        found.setdefault(row.task_id, []).append((row.slide_id, row.submitted, row.has_work))
+    return found
+
+
 async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[MyTask]:
     rows = (
         await connection.execute(
@@ -184,6 +237,8 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
             )
         )
     ).all()
+    if not rows:
+        return []
     counted = dict(
         (
             await connection.execute(
@@ -196,20 +251,16 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
             )
         ).all()
     )
+    assigned = await my_assignments(connection, me, [row.id for row in rows])
     tasks: list[MyTask] = []
     for row in rows:
-        states = await states_of(connection, row)
-        mine = [
-            (slide.slide_id, reviewer.submitted_at is not None)
-            for slide in states.slides
-            for reviewer in slide.reviewers
-            if reviewer.user_id == me
-        ]
+        mine = [(slide, done) for slide, done, _ in assigned.get(row.id, [])]
+        worked = any(work and not done for _, done, work in assigned.get(row.id, []))
         submitted = sum(done for _, done in mine)
         status = reviewer_status(
             submitted,
             len(mine),
-            worked_on(states, me) or bool(counted.get(row.id)),
+            worked or bool(counted.get(row.id)),
             row.signed_off_at is not None,
         )
         tasks.append(

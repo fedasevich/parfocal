@@ -29,6 +29,8 @@ ALLOWED_FIELDS = frozenset(
         "queries",
         "transactions",
         "region",
+        "cloud",
+        "container",
         "error_type",
         "error_code",
         "environment",

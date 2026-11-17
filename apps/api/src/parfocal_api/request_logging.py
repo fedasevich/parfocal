@@ -78,5 +78,7 @@ class RequestLogging:
                         "queries": timing.queries,
                         "transactions": timing.transactions,
                         "region": os.environ.get("MODAL_REGION"),
+                        "cloud": os.environ.get("MODAL_CLOUD_PROVIDER"),
+                        "container": os.environ.get("MODAL_TASK_ID"),
                     },
                 )
