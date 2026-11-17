@@ -169,7 +169,8 @@ OPS-031 (move the API and database to the EU) created the Frankfurt project `par
 
 - TODO: the reseed stopped with HTTP 404 because the `NEON_API_KEY` secret in the GitHub environment `production` cannot reach the new project. Please make a Neon API key for the organisation "Vercel: fedasevich's projects" that reaches both projects and replace that secret with it, or say an agent may do so. Until then production stays on the US database.
 - TODO: pinning `ingest` and `events` to `eu` beside the new database adds about $0.07 a month and makes their queries about six times faster. Yes or no.
-- Deleting the old US Neon project `soft-pine-86468744` waits for your separate yes. The Modal secret `parfocal-api-database-us` keeps its connection URL for a rollback until then.
+- TODO: copying the slides into a new bucket in the R2 `eu` jurisdiction costs about $0.43 a month while the old bucket is kept, and changes no speed. It is OPS-032 (slides in an EU jurisdiction bucket). Yes or no.
+- Deleting the old US Neon project `soft-pine-86468744` waits for your separate yes. The Modal secret `parfocal-api-database-us` keeps its connection URL until then. It is only a partial rollback, because the reseed empties `t/` in the bucket, so the US rows will point at slides that are gone.
 
 ### 141. How fast a person turned off in the customer's directory loses access
 
