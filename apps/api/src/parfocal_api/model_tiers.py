@@ -26,9 +26,9 @@ NEEDS: Mapping[TierTask, ModelMakes] = {
 DEFAULTS: Mapping[tuple[TierTask, ModelTier], str] = {
     (TierTask.TUMOR, ModelTier.BEST): "camelyon-tumor",
     (TierTask.OUTLINE, ModelTier.BEST): "pathosam-hovernext",
-    (TierTask.OUTLINE, ModelTier.GOOD): "hovernet",
+    (TierTask.OUTLINE, ModelTier.GOOD): "pathosam-hovernext",
     (TierTask.TYPER, ModelTier.BEST): "pathosam-hovernext",
-    (TierTask.TYPER, ModelTier.GOOD): "hovernet",
+    (TierTask.TYPER, ModelTier.GOOD): "pathosam-hovernext",
 }
 
 
