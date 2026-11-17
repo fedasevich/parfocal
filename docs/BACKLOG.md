@@ -5435,7 +5435,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 47 JOBS · Model runs, the jobs tray and lab models
 
-- [ ] JOBS-000 · Research check
+- [x] JOBS-000 · Research check
   Done when an ADR records the model run contract with Parfocal and lab endpoints, building on AIP-008.
   Depends on AIP-000.
   Size: S.

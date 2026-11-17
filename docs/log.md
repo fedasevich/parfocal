@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- JOBS-000 (research check for the model run contract) done: ADR 0363 (the model run contract with Parfocal and lab endpoints) records names and versions resolved at start, one tile per call through call_endpoint, lab-model-not-allowed and lab-model-changed still to build, and decision 138 asks about tile sharing for clinical projects.
 - PILOT-001 Tour offer, tour card, survey prompt and help topics used tokens that do not exist (bg-surf-raised, rounded-card, text-ink, bg-surface) so they rendered with no background. Moved to surf-panel, rounded-zone, fg and fg-dim. The survey now hides while the tour offer or tour holds the bottom right corner. Disabled and aria-disabled buttons no longer nudge or change colour when pressed, on Fable's advice. help-tour spec checks the offer is opaque and the survey hidden.
 
 ## 2026-11-16
