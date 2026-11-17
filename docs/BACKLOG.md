@@ -5555,7 +5555,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on REMOTE-001. Refs mock: upload/watch.
   Size: M.
 
-- [ ] REMOTE-007 · Finish the watched folder and the source-down notice
+- [x] REMOTE-007 · Finish the watched folder and the source-down notice
   REMOTE-004 (watched folder or bucket) and REMOTE-006 (a source that stays down notifies the admins) left gaps. The imports overlay has no on and off switch or source picker wired to `watchSource` and `stopWatchingSource`, and it lists "1 hour" twice. A result file that arrives in a later scan than its slide is never imported. The hourly down check does not probe the source first, so a short outage with nobody reopening the slide can send a notice after the source has recovered.
   Done when a browser test turns a watch on and off from the overlay with one interval shown, an API test imports a result file that arrives a scan after its slide, and an API test finds no notice when a one-byte probe answers before sending.
   Depends on REMOTE-004, REMOTE-006. Size: S.
