@@ -2,6 +2,28 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.11.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Run focus mode on the engine stage
+- VIEW-075: Show the guided coach marks on the engine stage
+- VIEW-075: Write decision notes with reasons on the engine stage
+
+### Fixes
+
+- VIEW-075: Keep a note's reasons when it is edited on the stage
+
+### Performance
+
+- OPS-033: Read the two factor setting in the session statement and count in batches
+
+### Docs
+
+- OPS-033: Log the deployed numbers
+- VIEW-075: Log focus, coach marks and notes on the engine
+- OPS-033: Tighten the cold container and slide walk readings and note the migration order
+
 ## v0.10.0 (2026-11-17)
 
 ### Features
