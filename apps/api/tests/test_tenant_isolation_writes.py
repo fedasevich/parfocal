@@ -362,6 +362,7 @@ WRITE_ROUTES: dict[str, Write] = {
         body=lambda a: {"source_id": str(a.ids["import_source"]), "names": [SHARED_FILE]},
         owner=None,
     ),
+    "copyRemoteSlide": Write(owner=CONFLICT),
     "importFromLink": Write(
         body=constant({"address": LINK_SITE.url(SHARED_FOLDER), "names": [SHARED_FILE]}),
         linked=True,

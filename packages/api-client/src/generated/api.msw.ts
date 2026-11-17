@@ -37,6 +37,7 @@ import type {
   Comparison,
   CompletedUpload,
   ConfusionMatrix,
+  CopyAsked,
   CosignRequest,
   CreatedReportLink,
   CreatedServiceAccount,
@@ -7343,6 +7344,10 @@ export const getReadInPlaceResponseMock = (
   ),
   ...overrideResponse,
 });
+
+export const getCopyRemoteSlideResponseMock = (
+  overrideResponse: Partial<Extract<CopyAsked, object>> = {},
+): CopyAsked => ({ job_id: faker.string.uuid(), ...overrideResponse });
 
 export const getCreateReviewTaskResponseMock = (
   overrideResponse: Partial<Extract<ReviewTaskDetail, object>> = {},
@@ -22333,6 +22338,28 @@ export const getGetRemoteTileMockHandler = (
   );
 };
 
+export const getCopyRemoteSlideMockHandler = (
+  overrideResponse?:
+    | CopyAsked
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CopyAsked> | CopyAsked),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/copy-in",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCopyRemoteSlideResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateReviewTaskMockHandler = (
   overrideResponse?:
     | ReviewTaskDetail
@@ -27882,6 +27909,7 @@ export const getParfocalAPIMock = () => [
   getReplayEventMockHandler(),
   getReadInPlaceMockHandler(),
   getGetRemoteTileMockHandler(),
+  getCopyRemoteSlideMockHandler(),
   getCreateReviewTaskMockHandler(),
   getListReviewTasksMockHandler(),
   getGetReviewTaskMockHandler(),

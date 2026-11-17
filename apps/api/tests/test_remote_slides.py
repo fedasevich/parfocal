@@ -269,3 +269,54 @@ def test_the_cache_of_a_slide_unread_for_seven_days_is_swept(
     assert sweep(datetime.now(UTC) + timedelta(days=6)) == 0
     assert sweep(datetime.now(UTC) + timedelta(days=8)) >= 1
     assert stored_keys(prefix) == []
+
+
+def stored_original(database: str, slide_id: str) -> tuple[Any, ...]:
+    [row] = query(
+        with_database(OWNER_URL, database),
+        "SELECT storage, original_key, source_id, remote_path, remote_etag FROM slides"
+        f" WHERE id = '{slide_id}'",
+    )
+    return row
+
+
+def test_copying_a_remote_slide_in_keeps_its_id_and_its_annotations(
+    linked: ApiAs, database: str, team: Team, site: Site, tmp_path: Path
+) -> None:
+    data = fixture_path(SLIDE).read_bytes()
+    serve_slide(site, data)
+    source = save_source(linked, team, site)
+    slide_id = opened_in_place(linked, team, source["id"])
+    early = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
+    assert (early.status_code, early.json()["code"]) == (409, "remote-slide-not-ready")
+    inspected(database, team, site, tmp_path)
+    grant = access(linked, team, slide_id)
+    assert read(linked, grant, 0, 1023).status_code == 206
+    ring = [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]]
+    drawn = linked(team.lead).post(
+        f"/api/slides/{slide_id}/annotations",
+        json={"kind": "roi", "geometry": {"type": "Polygon", "coordinates": [ring]}},
+    )
+    assert drawn.status_code == 201, drawn.text
+
+    asked = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
+    assert asked.status_code == 202, asked.text
+    inspected(database, team, site, tmp_path)
+
+    key = f"t/{team.tenant_id}/s/{slide_id}/original.svs"
+    assert stored_original(database, slide_id) == ("uploaded", key, None, None, None)
+    assert read_object(key) == data
+    assert stored_keys(cache_prefix(team.tenant_id, uuid.UUID(slide_id))) == []
+    kept = linked(team.lead).get(f"/api/slides/{slide_id}/annotations").json()
+    assert [annotation["id"] for annotation in kept] == [drawn.json()["id"]]
+
+    site.routes[FILE] = Served(503)
+    copied = access(linked, team, slide_id)
+    assert copied["base_path"] == f"/tiles/{slide_id}/"
+    assert (copied["original"], copied["storage"], copied["offline"]) == (
+        "original.svs",
+        "uploaded",
+        False,
+    )
+    again = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
+    assert (again.status_code, again.json()["code"]) == (409, "slide-not-remote")

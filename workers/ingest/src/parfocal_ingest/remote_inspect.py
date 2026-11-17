@@ -4,7 +4,7 @@ import io
 import re
 import uuid
 from collections import OrderedDict
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
@@ -15,14 +15,27 @@ import tifffile
 from sqlalchemy import func, select, update
 
 from parfocal_api.audit import AuditAction, AuditTarget, record
-from parfocal_api.remote_reads import Remote, fetch_range, source_reach
+from parfocal_api.remote_reads import (
+    Pinned,
+    Remote,
+    cache_prefix,
+    fetch_range,
+    same_file,
+    source_reach,
+)
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import SlideStorage, slides
-from parfocal_common.ingest import Failure, restricted_ranges_key, slide_prefix
+from parfocal_common.ingest import Failure, original_key, restricted_ranges_key, slide_prefix
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.link_fetch import LinkPolicy, LinkRefusal, LinkRefusedError, policy_of
-from parfocal_common.object_store import ObjectStore
-from parfocal_common.remote_inspect import KIND, LEASE_SECONDS, STEP_NAMES
+from parfocal_common.object_store import ObjectStore, StoredPart
+from parfocal_common.remote_inspect import (
+    COPY_KIND,
+    COPY_STEP_NAMES,
+    KIND,
+    LEASE_SECONDS,
+    STEP_NAMES,
+)
 from parfocal_ingest.identify import Format, Identified, identify
 from parfocal_ingest.identifying_text import ranges_file_of
 from parfocal_ingest.parse_jobs import LEVELS_OUTPUT, level_table
@@ -42,12 +55,21 @@ from parfocal_ingest.pyramid import (
 from parfocal_ingest.tile_index import index_document, tile_index
 from parfocal_ingest.workflow import TILE_INDEX_NAME, Resources, resources_from_environment
 
-__all__ = ["REMOTE_INSPECT", "RangedFile", "remote_inspect_workflow"]
+__all__ = [
+    "REMOTE_COPY",
+    "REMOTE_INSPECT",
+    "RangedFile",
+    "remote_copy_workflow",
+    "remote_inspect_workflow",
+]
 
 BLOCK_BYTES = 256 * 1024
 KEPT_BLOCKS = 64
 READ_IN_PLACE = frozenset({Format.APERIO_SVS, Format.GENERIC_TIFF, Format.OME_TIFF})
 REMOTE_FORMAT = "remote-format"
+REMOTE_CHANGED = "remote-slide-changed"
+REMOTE_NOT_READY = "remote-slide-not-ready"
+COPY_PART_BYTES = 16 * 1024 * 1024
 
 type ReadAt = Callable[[int, int], bytes]
 
@@ -271,13 +293,111 @@ async def inspect(step: StepRun, resources: Resources, store: ObjectStore) -> Ma
     }
 
 
-def inspect_step(name: str, resources: Callable[[], Resources]) -> Step:
+async def copied(
+    store: ObjectStore, key: str, remote: Remote, pinned: Pinned, policy: LinkPolicy, seconds: float
+) -> None:
+    upload_id = await store.create_multipart_upload(key)
+    try:
+        parts: list[StoredPart] = []
+        for number, offset in enumerate(range(0, pinned.size, COPY_PART_BYTES), start=1):
+            length = min(COPY_PART_BYTES, pinned.size - offset)
+            body, found = await fetch_range(remote, policy, seconds, offset, length)
+            if not same_file(pinned, found):
+                raise StepFailedError(REMOTE_CHANGED)
+            parts.append(await store.upload_part(key, upload_id, number, body))
+        await store.complete_multipart_upload(key, upload_id, parts)
+    except BaseException:
+        await store.abort_multipart_upload(key, upload_id)
+        raise
+
+
+async def drop_cache(store: ObjectStore, tenant_id: uuid.UUID, slide_id: uuid.UUID) -> None:
+    for key in await store.list_keys(cache_prefix(tenant_id, slide_id)):
+        await store.delete_object(key)
+
+
+async def copy_in(step: StepRun, resources: Resources, store: ObjectStore) -> Mapping[str, Any]:
+    row = await slide_of(step)
+    if row.published_at is None:
+        raise StepFailedError(REMOTE_NOT_READY)
+    if resources.keyring is None:
+        raise StepFailedError(LinkRefusal.STATUS)
+    key = original_key(row.tenant_id, row.id, row.remote_path)
+    pinned = Pinned(row.file_bytes, row.remote_etag)
+    try:
+        async with step.transaction() as connection:
+            remote = await source_reach(
+                connection,
+                resources.keyring,
+                row.tenant_id,
+                row.source_id,
+                row.remote_path,
+                datetime.now(UTC),
+            )
+        await copied(
+            store,
+            key,
+            remote,
+            pinned,
+            policy_of(resources.link_trusted_origins),
+            resources.link_read_seconds,
+        )
+    except TimeoutError as error:
+        raise StepFailedError(LinkRefusal.TIMEOUT) from error
+    except LinkRefusedError as error:
+        raise StepFailedError(error.code) from error
+    async with step.transaction() as connection:
+        await connection.execute(
+            update(slides)
+            .where(slides.c.id == row.id, slides.c.storage == SlideStorage.REMOTE)
+            .values(
+                storage=SlideStorage.UPLOADED,
+                original_key=key,
+                source_id=None,
+                remote_path=None,
+                remote_etag=None,
+                remote_failures=0,
+                remote_failing_since=None,
+                remote_read_at=None,
+            )
+        )
+        await record(
+            connection,
+            SYSTEM,
+            AuditAction.SLIDE_COPIED_IN,
+            AuditTarget.SLIDE,
+            row.id,
+            tenant_id=row.tenant_id,
+            details={"project_id": str(row.project_id), "file_bytes": row.file_bytes},
+        )
+    await drop_cache(store, row.tenant_id, row.id)
+    return {"file_bytes": row.file_bytes}
+
+
+type StepWork = Callable[[StepRun, Resources, ObjectStore], Awaitable[Mapping[str, Any]]]
+
+
+def store_step(name: str, resources: Callable[[], Resources], work: StepWork) -> Step:
     async def run(step: StepRun) -> Mapping[str, Any]:
         chosen = resources()
         async with httpx2.AsyncClient(timeout=httpx2.Timeout(60.0)) as http:
-            return await inspect(step, chosen, chosen.store_class(chosen.storage, http))
+            return await work(step, chosen, chosen.store_class(chosen.storage, http))
 
     return Step(name, run)
+
+
+def inspect_step(name: str, resources: Callable[[], Resources]) -> Step:
+    return store_step(name, resources, inspect)
+
+
+def remote_copy_workflow(
+    resources: Callable[[], Resources], lease_seconds: float = LEASE_SECONDS
+) -> Workflow:
+    return Workflow(
+        kind=COPY_KIND,
+        steps=[store_step(name, resources, copy_in) for name in COPY_STEP_NAMES],
+        lease_seconds=lease_seconds,
+    )
 
 
 def remote_inspect_workflow(
@@ -291,3 +411,4 @@ def remote_inspect_workflow(
 
 
 REMOTE_INSPECT = remote_inspect_workflow(resources_from_environment)
+REMOTE_COPY = remote_copy_workflow(resources_from_environment)

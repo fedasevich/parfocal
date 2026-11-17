@@ -1863,6 +1863,10 @@ export interface ConfusionMatrix {
  */
 export type Content = string;
 
+export interface CopyAsked {
+  job_id: string;
+}
+
 export interface CosignRequest {
   id: string;
   case_id: string;
@@ -37561,6 +37565,151 @@ export function useGetRemoteTile<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type copyRemoteSlideResponse202 = {
+  data: CopyAsked;
+  status: 202;
+};
+
+export type copyRemoteSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type copyRemoteSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type copyRemoteSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type copyRemoteSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type copyRemoteSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type copyRemoteSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type copyRemoteSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type copyRemoteSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type copyRemoteSlideResponseSuccess = copyRemoteSlideResponse202 & {
+  headers: Headers;
+};
+export type copyRemoteSlideResponseError = (
+  | copyRemoteSlideResponse400
+  | copyRemoteSlideResponse401
+  | copyRemoteSlideResponse403
+  | copyRemoteSlideResponse404
+  | copyRemoteSlideResponse409
+  | copyRemoteSlideResponse422
+  | copyRemoteSlideResponse429
+  | copyRemoteSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type copyRemoteSlideResponse = copyRemoteSlideResponseSuccess | copyRemoteSlideResponseError;
+
+export const getCopyRemoteSlideUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/copy-in`;
+};
+
+/**
+ * @summary Copy Remote Slide
+ */
+export const copyRemoteSlide = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<copyRemoteSlideResponse> => {
+  return apiFetch<copyRemoteSlideResponse>(getCopyRemoteSlideUrl(slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCopyRemoteSlideMutationKey = () => ["copyRemoteSlide"] as const;
+
+export const getCopyRemoteSlideMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof copyRemoteSlide>>,
+    TError,
+    CopyRemoteSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof copyRemoteSlide>>,
+  TError,
+  CopyRemoteSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCopyRemoteSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof copyRemoteSlide>>,
+    CopyRemoteSlideMutationVariables
+  > = (props) => {
+    const { slideId } = props ?? {};
+
+    return copyRemoteSlide(slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CopyRemoteSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof copyRemoteSlide>>
+>;
+
+export type CopyRemoteSlideMutationError = Problem;
+export type CopyRemoteSlideMutationVariables = { slideId: string };
+
+/**
+ * @summary Copy Remote Slide
+ */
+export const useCopyRemoteSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof copyRemoteSlide>>,
+      TError,
+      CopyRemoteSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof copyRemoteSlide>>,
+  TError,
+  CopyRemoteSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getCopyRemoteSlideMutationOptions(options), queryClient);
+};
 
 export type createReviewTaskResponse201 = {
   data: ReviewTaskDetail;
