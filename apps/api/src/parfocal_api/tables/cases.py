@@ -399,14 +399,7 @@ slides = Table(
     ),
     Column("published_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("storage", String(10), nullable=False, server_default="uploaded", info=OPERATIONAL),
-    Column(
-        "source_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("import_sources.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-        info=OPERATIONAL,
-    ),
+    Column("source_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("remote_path", String(1024), nullable=True, info=PHI),
     Column("remote_etag", String(200), nullable=True, info=OPERATIONAL),
     Column("remote_failures", SmallInteger, nullable=False, server_default="0", info=OPERATIONAL),
@@ -416,6 +409,7 @@ slides = Table(
     UniqueConstraint("project_id", "barcode"),
     UniqueConstraint("id", "project_id"),
     one_of("storage", SlideStorage),
+    tenant_foreign_key("source_id", "import_sources"),
     CheckConstraint("storage <> 'remote' OR remote_path IS NOT NULL", name="remote_path"),
     tenant_unique(),
     Index(

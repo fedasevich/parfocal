@@ -9,7 +9,7 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 TABLE = "slides"
-SOURCE_KEY = "fk_slides_source_id_import_sources"
+SOURCE_KEY = "fk_slides_source_id_tenant_id_import_sources"
 SOURCE_INDEX = "ix_slides_source_id"
 STORAGE_CHECK = "ck_slides_storage"
 PATH_CHECK = "ck_slides_remote_path"
@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.add_column(TABLE, sa.Column("remote_failing_since", sa.DateTime(timezone=True)))
     op.add_column(TABLE, sa.Column("remote_read_at", sa.DateTime(timezone=True)))
     op.create_foreign_key(
-        SOURCE_KEY, TABLE, "import_sources", ["source_id"], ["id"], ondelete="SET NULL"
+        SOURCE_KEY, TABLE, "import_sources", ["source_id", "tenant_id"], ["id", "tenant_id"]
     )
     op.create_index(SOURCE_INDEX, TABLE, ["source_id"])
     op.create_check_constraint(STORAGE_CHECK, TABLE, "storage IN ('uploaded', 'remote')")

@@ -4,6 +4,7 @@ import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from pathlib import PurePosixPath
 from typing import Any
 
 import httpx2
@@ -35,7 +36,7 @@ MAX_RANGE_BYTES = 16 * 1024 * 1024
 CACHE_FOLDER = "remote-cache/"
 CHUNK_BYTES = 256 * 1024
 CONTENT_RANGE = re.compile(r"^bytes (\d+)-(\d+)/(\d+)$")
-SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]")
+SAFE_SUFFIX = re.compile(r"\.[a-z0-9]{1,10}")
 MAX_FAILURES = 32_000
 
 
@@ -184,8 +185,8 @@ async def cached(store: ObjectStore, key: str) -> bytes | None:
 
 
 def served_name(path: str) -> str:
-    name = SAFE_NAME.sub("_", path.rsplit("/", 1)[-1]).lstrip("._-")
-    return (name or "slide")[:100]
+    suffix = PurePosixPath(path).suffix.lower()
+    return f"slide{suffix}" if SAFE_SUFFIX.fullmatch(suffix) else "slide"
 
 
 def is_offline(row: Any) -> bool:
