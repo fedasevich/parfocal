@@ -35,7 +35,7 @@ async function settledCamera(page: Page) {
     .toBe(true);
   return last;
 }
-const switchTo = (page: Page, name: "Review" | "Annotate") =>
+const switchTo = (page: Page, name: "Full viewer" | "Annotate") =>
   page.getByTestId("workspace-switch").getByRole("radio", { name }).click();
 
 async function dragAcross(page: Page) {
@@ -83,7 +83,7 @@ test("switching workspaces changes the rail and the drag but leaves the camera a
   const before = await settledCamera(page);
   const canvas = await stage(page).locator("canvas").elementHandle();
 
-  await switchTo(page, "Review");
+  await switchTo(page, "Full viewer");
   await expect(stage(page)).toHaveAttribute("data-workspace", "review");
   await expect(page.locator("button[data-tool]")).toHaveCount(5);
   await expect(stage(page)).toHaveAttribute("data-tool", "hand");
@@ -114,7 +114,7 @@ test("a drag pans in Review and draws a marquee without moving the camera in Ann
   await page.mouse.up();
   expect(await cameraOf(page)).toBe(start);
 
-  await switchTo(page, "Review");
+  await switchTo(page, "Full viewer");
   await dragAcross(page);
   await expect(page.getByTestId("select-marquee")).toHaveCount(0);
   await page.mouse.up();

@@ -1,0 +1,241 @@
+import { Trans, useLingui } from "@lingui/react/macro";
+import {
+  type ReviewTaskDetail,
+  useGetMe,
+  useGetSlideNeighbours,
+  useListMySlides,
+} from "@parfocal/api-client";
+import { Button } from "@parfocal/ui/components/button";
+import { Icon } from "@parfocal/ui/components/icon";
+import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
+import { type SlideRowData, SlidesPopover } from "@parfocal/ui/components/review-popovers";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
+import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { type ReactNode, useState } from "react";
+import { ViewingNow } from "../presence/viewing-now.tsx";
+import { formatDue } from "../screens/format.ts";
+import { okData } from "../screens/placeholder.tsx";
+import { AccountMenu } from "../shell/account-menu.tsx";
+import { personOf } from "../shell/global-shell.tsx";
+import type { CaseLoad } from "./case-load.ts";
+import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
+import type { SlideWorkspace } from "./workspace.ts";
+
+const slidePage = 200;
+
+const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
+
+function facts(load: CaseLoad, task: ReviewTaskDetail | undefined): string[] {
+  return [
+    ...(load.task ? [load.project.name] : []),
+    ...(load.case ? [`Case ${load.case.label}`] : []),
+    plural(load.resultSets.length, "result set"),
+    ...(load.task ? [plural(load.decisions.length, "decision")] : []),
+    ...(task?.due_on ? [`due ${formatDue(task.due_on)}`] : []),
+  ];
+}
+
+const statusLabel = (status: string) => {
+  const words = status.replaceAll("-", " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+const scopeHeading = {
+  task: "Slides in this task",
+  case: "Slides in this case",
+  project: "Slides in this project",
+} as const;
+
+function SlidePicker({
+  list,
+  slideId,
+  label,
+  onOpenSlide,
+}: {
+  list: LiveSlideList;
+  slideId: string;
+  label: string;
+  onOpenSlide: (slideId: string) => void;
+}) {
+  const { t } = useLingui();
+  const [open, setOpen] = useState(false);
+  const rows: SlideRowData[] = list.slides.map((slide) => ({
+    id: slide.id,
+    name: slide.label,
+    resultSets: slide.result_sets.length,
+    current: slide.id === slideId,
+    status:
+      slide.id === slideId
+        ? { label: t`Open`, tone: "accent" }
+        : { label: statusLabel(slide.status), tone: "neutral" },
+  }));
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        data-testid="slide-picker"
+        aria-haspopup="dialog"
+        title={t`Slides in this ${list.scope}`}
+        className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
+      >
+        <b className="max-w-56 truncate text-body-sm font-semibold" data-phi="">
+          {label}
+        </b>
+        <Icon name="down" className="text-fg-faint" />
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-auto p-0"
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest('[data-slot="slide-row"]')) setOpen(false);
+        }}
+      >
+        <SlidesPopover
+          caseHeading={scopeHeading[list.scope]}
+          caseSlides={rows}
+          showKeys={false}
+          ariaLabel={scopeHeading[list.scope]}
+          onPick={(id) => {
+            if (id !== slideId) onOpenSlide(id);
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+type LiveTopBarProps = {
+  projectId: string;
+  slideId: string;
+  load: CaseLoad | null;
+  task: ReviewTaskDetail | undefined;
+  workspace: SlideWorkspace;
+  onWorkspace: (next: SlideWorkspace) => void;
+  onOpenSlide: (slideId: string) => void;
+  onSubmit: (() => void) | undefined;
+  percent: number | null;
+  onPeek: () => void;
+  statusRef: (node: HTMLElement | null) => void;
+  storage: ReactNode;
+};
+
+export function LiveTopBar({
+  projectId,
+  slideId,
+  load,
+  task,
+  workspace,
+  onWorkspace,
+  onOpenSlide,
+  onSubmit,
+  percent,
+  onPeek,
+  statusRef,
+  storage,
+}: LiveTopBarProps) {
+  const { t } = useLingui();
+  const navigate = useNavigate();
+  const me = okData(useGetMe().data);
+  const projectSlides =
+    okData(useListMySlides({ project_id: projectId, limit: slidePage }).data)?.slides ?? [];
+  const neighbours = okData(
+    useGetSlideNeighbours(
+      slideId,
+      task === undefined
+        ? { from: "all-slides", project_id: projectId }
+        : { from: "task", task_id: task.id },
+    ).data,
+  );
+  const list = withNeighbours(
+    liveSlideList({
+      slideId,
+      slides: projectSlides,
+      taskSlideIds: task?.slides.map((slide) => slide.slide_id),
+      caseSlideIds: load?.case?.slideIds,
+    }),
+    neighbours,
+  );
+  const reviewTask = task?.kind === "review";
+  const title = load?.task ? `${load.task.code} ${load.task.name}` : (load?.project.name ?? "");
+  const slideLabel = load?.slide?.label ?? t`Slide`;
+  return (
+    <header
+      data-testid="live-top-bar"
+      className="flex h-11 shrink-0 items-center gap-3 border-line border-b bg-chrome px-3 text-body-sm"
+    >
+      <Link
+        to="/my-work"
+        title={t`Back to My work. Every edit is saved`}
+        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-ctl px-2 font-medium text-fg-dim no-underline hover:text-fg"
+      >
+        <Icon name="back" />
+        <span>
+          <Trans>My work</Trans>
+        </span>
+      </Link>
+      <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
+      <div data-testid="case-header" data-phi="" className="flex min-w-0 items-center gap-3">
+        <div className="grid min-w-0 leading-tight">
+          <b className="truncate font-semibold">{title}</b>
+          <small className="truncate text-caption text-fg-dim">
+            {load ? facts(load, task).join(" · ") : ""}
+          </small>
+        </div>
+        <SlidePicker list={list} slideId={slideId} label={slideLabel} onOpenSlide={onOpenSlide} />
+      </div>
+      <span
+        data-testid="slide-progress"
+        className="inline-flex shrink-0 items-center gap-2.5"
+        title={t`Progress on this slide and in the list`}
+      >
+        {percent === null ? null : (
+          <ViewedRing data-testid="viewed-ring" percent={percent} size={34} onClick={onPeek} />
+        )}
+        <span className="grid leading-tight">
+          <b className="font-semibold">
+            {list.position > 0 ? t`Slide ${list.position} of ${list.total}` : t`Slide`}
+          </b>
+          <small className="text-caption text-fg-dim">
+            {percent === null ? t`Opening` : t`${percent}% of the tissue seen`}
+          </small>
+        </span>
+      </span>
+      {storage}
+      <span className="flex-1" />
+      <span ref={statusRef} data-slot="live-save-status" className="min-w-0" />
+      <SegmentedControl
+        aria-label={t`How to review`}
+        data-testid="workspace-switch"
+        className="shrink-0"
+        value={workspace}
+        onValueChange={(next: string) => {
+          if (next === "guided" && task !== undefined) {
+            void navigate({
+              to: "/tasks/$taskId/guided",
+              params: { taskId: task.id },
+              search: { slide: slideId },
+            });
+            return;
+          }
+          if (next === "review" || next === "annotate") onWorkspace(next);
+        }}
+        options={[
+          ...(reviewTask ? [{ value: "guided", label: t`Guided` }] : []),
+          { value: "review", label: t`Full viewer` },
+          { value: "annotate", label: t`Annotate` },
+        ]}
+      />
+      {onSubmit && reviewTask ? (
+        <Button
+          variant="primary"
+          title={t`Open the Slide done card in the Opinion tab`}
+          onClick={onSubmit}
+        >
+          <Trans>Submit</Trans>
+        </Button>
+      ) : null}
+      <ViewingNow slideId={slideId} taskId={task?.id} />
+      <AccountMenu me={me} person={personOf(me)} />
+    </header>
+  );
+}

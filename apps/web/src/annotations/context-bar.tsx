@@ -5,6 +5,9 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { ContextBar, ContextDivider, ContextPill } from "@parfocal/ui/components/viewer-tools";
 import { maxClassKeys } from "./classes.ts";
 import { acceptLabel, type ContextBarModel } from "./context-bar.ts";
+import { ContextExtrasSlot } from "./context-extras.tsx";
+
+const fitted = "max-w-[calc(100%-1.5rem)] flex-wrap justify-center gap-y-1.5 whitespace-normal";
 
 type ClassStripProps = {
   classes: readonly ProjectClass[];
@@ -74,12 +77,14 @@ export function ContextBarView({
   if (proposals !== null) {
     return (
       <ContextBar
+        className={fitted}
         label={model.label === "Auto region" ? model.label : t`Proposals`}
         data-testid="context-bar"
         data-mode="proposals"
         data-proposals={proposals.count}
       >
         {strip}
+        <ContextExtrasSlot />
         <ContextDivider />
         <span className="inline-flex items-center gap-1.5 font-mono">
           <i
@@ -103,12 +108,13 @@ export function ContextBarView({
     );
   }
   return (
-    <ContextBar label={model.label} data-testid="context-bar" data-mode="tool">
+    <ContextBar label={model.label} data-testid="context-bar" data-mode="tool" className={fitted}>
       {model.hints.map((hint) => (
         <ContextPill key={hint}>{hint}</ContextPill>
       ))}
       {strip ? <ContextDivider /> : null}
       {strip}
+      <ContextExtrasSlot />
     </ContextBar>
   );
 }

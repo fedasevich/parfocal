@@ -2,6 +2,7 @@ import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
+const rt14 = "00000000-0000-4000-8007-000000000014";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -66,4 +67,106 @@ test("the Annotate workspace opens its inspector on Display with the layers", as
   await inspector.getByRole("tab", { name: "Objects" }).click();
   await expect(inspector.getByTestId("measurement-list")).toBeVisible();
   await expect(stage.getByTestId("measurement-list")).toHaveCount(0);
+});
+
+test("the live top bar has the slide picker and progress, and the inspector keeps all four tabs across a reload", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  const bar = page.getByTestId("live-top-bar");
+  await expect(bar.getByRole("link", { name: "My work" })).toBeVisible();
+  await expect(bar.getByTestId("slide-progress")).toContainText(/Slide \d+ of \d+/);
+  await bar.getByTestId("slide-picker").click();
+  const rows = page.locator('[data-slot="slide-row"]');
+  await expect(rows.filter({ hasText: "tumor_044" })).toHaveCount(1);
+  expect(await rows.count()).toBeGreaterThan(1);
+  await page.keyboard.press("Escape");
+
+  const inspector = page.getByTestId("stage-inspector");
+  for (const name of ["Objects", "Display", "Comments", "Opinion"]) {
+    await expect(inspector.getByRole("tab", { name })).toBeVisible();
+  }
+  await inspector.getByRole("tab", { name: "Comments" }).click();
+  await expect(page).toHaveURL(/tab=comments/);
+  await expect(inspector.getByTestId("stage-comments")).toBeVisible();
+  await page.reload();
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await expect(inspector.getByRole("tab", { name: "Comments" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await inspector.getByRole("tab", { name: "Opinion" }).click();
+  await expect(inspector.getByTestId("stage-opinion")).toBeVisible();
+
+  await bar.getByTestId("workspace-switch").getByRole("radio", { name: "Annotate" }).click();
+  await expect(stage).toHaveAttribute("data-workspace", "annotate");
+  await expect(inspector.getByRole("tab", { name: "Opinion" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await bar.getByTestId("slide-picker").click();
+  await rows.filter({ hasNotText: "tumor_044" }).first().click();
+  await expect(page).not.toHaveURL(new RegExp(tumor044));
+  await expect(page).toHaveURL(/tab=opinion/);
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await expect(inspector.getByRole("tab", { name: "Opinion" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+test("Submit on a review task opens the Slide done card in the Opinion tab, even with the panel hidden", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?task=${rt14}&as=DH`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  const bar = page.getByTestId("live-top-bar");
+  await expect(
+    bar.getByTestId("workspace-switch").getByRole("radio", { name: "Guided" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Hide the side panel" }).click();
+  await expect(page.getByTestId("inspector-tab")).toBeVisible();
+  await bar.getByRole("button", { name: "Submit" }).click();
+  await expect(page).toHaveURL(/tab=opinion/);
+  const opinion = page.getByTestId("stage-inspector").getByTestId("stage-opinion");
+  await expect(opinion).toBeVisible();
+  await expect(opinion.getByRole("button", { name: "Submit" })).toBeVisible();
+});
+
+test("hide while panning hides the live inspector during a pan and not on a click", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await page.getByLabel("Hide while panning").click();
+  await expect(page.getByLabel("Hide while panning")).toBeChecked();
+  const dock = page.getByTestId("inspector-dock");
+  const box = await boxOf(page, '[data-testid="slide-stage"]');
+  await page.mouse.move(box.x + 300, box.y + 300);
+  await page.mouse.down();
+  await expect(dock).not.toHaveAttribute("data-hidden-while-panning", "true");
+  await page.mouse.move(box.x + 420, box.y + 360, { steps: 8 });
+  await expect(dock).toHaveAttribute("data-hidden-while-panning", "true");
+  await page.mouse.up();
+  await expect(dock).not.toHaveAttribute("data-hidden-while-panning", "true");
+  await page.getByLabel("Hide while panning").click();
+});
+
+test("the save status sits in the top bar and the tool chips sit in the context bar", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=annotate&as=DH`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await page.keyboard.press("s");
+  await expect(stage).toHaveAttribute("data-tool", "smart");
+  const toggle = page.getByTestId("smart-hover-toggle");
+  await expect(page.getByTestId("context-bar").getByTestId("smart-hover-toggle")).toBeVisible();
+  await expect(toggle).toHaveCount(1);
+  await expect(stage.getByTestId("save-status")).toHaveCount(0);
 });

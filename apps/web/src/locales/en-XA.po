@@ -862,8 +862,10 @@ msgstr ""
 msgid "{0} is signed out. It goes to the clinician."
 msgstr ""
 
+#. placeholder {0}: object.object
 #. placeholder {0}: region.object
 #: src/screens/viewer/use-viewer-scene.tsx
+#: src/viewer/stage-opinion.tsx
 msgid "{0} is still open"
 msgstr ""
 
@@ -2041,6 +2043,10 @@ msgstr ""
 #. placeholder {3}: split.open
 #: ../../packages/ui/src/components/progress-meter.tsx
 msgid "{percent}% done: {0} agree, {1} disagree, {2} not sure, {3} open"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "{percent}% of the tissue seen"
 msgstr ""
 
 #: ../../packages/ui/src/components/inspector.tsx
@@ -3511,6 +3517,7 @@ msgstr ""
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/send-step.tsx
 #: src/screens/new-task/steps.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Annotate"
 msgstr ""
 
@@ -3904,6 +3911,10 @@ msgstr ""
 msgid "Back to My work. Every answer is saved"
 msgstr ""
 
+#: src/viewer/live-top-bar.tsx
+msgid "Back to My work. Every edit is saved"
+msgstr ""
+
 #: src/screens/admin/admin-screen.tsx
 #: src/screens/admin/admin-shell.tsx
 msgid "Back to Parfocal"
@@ -3939,7 +3950,6 @@ msgstr ""
 msgid "Back to the map"
 msgstr ""
 
-#: src/routes/projects.$projectId.slides.$slideId_.live.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
@@ -5183,6 +5193,10 @@ msgstr ""
 msgid "Comment on {object}"
 msgstr ""
 
+#: src/viewer/stage-inspector.tsx
+msgid "Comments"
+msgstr ""
+
 #: src/screens/review/object-comments.tsx
 msgid "Comments on this object"
 msgstr ""
@@ -5983,6 +5997,7 @@ msgstr ""
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/new-task/send-step.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/stage-inspector.tsx
 msgid "Display"
 msgstr ""
 
@@ -7267,6 +7282,7 @@ msgstr ""
 #: src/screens/admin/template-editor.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Full viewer"
 msgstr ""
 
@@ -7334,12 +7350,13 @@ msgstr ""
 msgid "Go to"
 msgstr ""
 
+#. placeholder {0}: object.object
 #. placeholder {0}: region.object
 #. placeholder {0}: stepLabel(data, issue.step)
-#. placeholder {0}: thread.anchor
 #: ../../packages/ui/src/components/comments-tab.tsx
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/viewer/use-viewer-scene.tsx
+#: src/viewer/stage-opinion.tsx
 msgid "Go to {0}"
 msgstr ""
 
@@ -7466,6 +7483,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/routes/issue-states.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Guided"
 msgstr ""
 
@@ -7600,6 +7618,7 @@ msgstr ""
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/screens/review/viewer-frame.tsx
 #: src/shell/palette-labels.tsx
+#: src/viewer/slide-stage.tsx
 msgid "Hide the side panel"
 msgstr ""
 
@@ -7743,6 +7762,7 @@ msgid "How the work is split"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "How to review"
 msgstr ""
 
@@ -8745,7 +8765,7 @@ msgstr ""
 #: src/screens/viewer-tools/tool-session.tsx
 #: src/screens/viewer/full-viewer.tsx
 #: src/screens/viewer/viewer-notices.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/stage-loading.tsx
 msgid "Loading the slide"
 msgstr ""
 
@@ -9410,6 +9430,7 @@ msgstr ""
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/my-work-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "My work"
 msgstr ""
 
@@ -9824,6 +9845,10 @@ msgstr ""
 
 #: src/screens/new-task/reviewers-step.tsx
 msgid "No open tasks"
+msgstr ""
+
+#: src/viewer/stage-opinion.tsx
+msgid "No opinion asked"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -10551,6 +10576,7 @@ msgstr ""
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 #: src/viewer/annotate-task-panel.tsx
+#: src/viewer/stage-inspector.tsx
 msgid "Objects"
 msgstr ""
 
@@ -10817,6 +10843,7 @@ msgstr ""
 #: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/viewer-canvas-parts.tsx
 #: src/shell/jobs-tray.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Open"
 msgstr ""
 
@@ -10935,6 +10962,10 @@ msgstr ""
 msgid "Open the slide"
 msgstr ""
 
+#: src/viewer/live-top-bar.tsx
+msgid "Open the Slide done card in the Opinion tab"
+msgstr ""
+
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Open the whole slide"
 msgstr ""
@@ -10962,6 +10993,10 @@ msgstr ""
 
 #: src/flow-map/prototype-bar.tsx
 msgid "Opened from {mapTitle}, as"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Opening"
 msgstr ""
 
 #. placeholder {0}: screenTitles[screen]
@@ -10992,6 +11027,10 @@ msgstr ""
 
 #: src/screens/viewer/full-viewer.tsx
 msgid "Opens the whole slide on the second monitor"
+msgstr ""
+
+#: src/viewer/stage-inspector.tsx
+msgid "Opinion"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
@@ -11760,7 +11799,7 @@ msgstr ""
 msgid "Prefetch ahead of motion"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/review-order-state.tsx
 msgid "Preparing this slide"
 msgstr ""
 
@@ -11905,6 +11944,10 @@ msgstr ""
 
 #: src/shell/account-menu.tsx
 msgid "Profile and signature"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Progress on this slide and in the list"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
@@ -13931,6 +13974,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/screens/review/viewer-frame.tsx
+#: src/viewer/slide-stage.tsx
 msgid "Show the side panel"
 msgstr ""
 
@@ -14307,13 +14351,13 @@ msgid "Skipped, already in this project."
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
-#: src/routes/projects.$projectId.slides.$slideId_.live.tsx
 #: src/screens/clinical-report/modals.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Slide"
 msgstr ""
 
@@ -14323,15 +14367,20 @@ msgstr ""
 msgid "Slide · {0} {1}"
 msgstr ""
 
+#. placeholder {0}: list.position
 #. placeholder {0}: resume.position + 1
+#. placeholder {0}: slidePosition(resume.position, task.slides_assigned)
+#. placeholder {1}: list.total
 #. placeholder {1}: resume.slides_assigned
+#. placeholder {1}: task.slides_assigned
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Slide {0} of {1}"
 msgstr ""
 
-#. placeholder {0}: here.position + 1
-#. placeholder {1}: here.slides_assigned
+#. placeholder {0}: slidePosition(here.position, task.slides_assigned)
+#. placeholder {1}: task.slides_assigned
 #. placeholder {2}: here.case_label
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Slide {0} of {1}, case {2}"
@@ -14427,6 +14476,11 @@ msgstr ""
 
 #: src/screens/project/case-slides-editor.tsx
 msgid "Slides in order"
+msgstr ""
+
+#. placeholder {0}: list.scope
+#: src/viewer/live-top-bar.tsx
+msgid "Slides in this {0}"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -14899,6 +14953,8 @@ msgstr ""
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: ../../packages/ui/src/components/systematic-scan.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/live-top-bar.tsx
+#: src/viewer/stage-opinion.tsx
 msgid "Submit"
 msgstr ""
 
@@ -15566,12 +15622,16 @@ msgstr ""
 msgid "The object in focus"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/review-order-state.tsx
 msgid "The objects are being put in review order. This usually takes under a minute."
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The objects of finished tiles are in the layer and join the check scope."
+msgstr ""
+
+#: src/viewer/stage-opinion.tsx
+msgid "The opinion questions belong to a review task. Open this slide from one to answer them."
 msgstr ""
 
 #: src/screens/viewer/use-viewer-state.tsx
@@ -15716,7 +15776,7 @@ msgstr ""
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/review-order-state.tsx
 msgid "The review order of this slide could not be worked out. Try again in a moment."
 msgstr ""
 
@@ -15975,6 +16035,10 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+#: ../../packages/ui/src/components/account-menu.tsx
+msgid "Theme, settings, log out"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "There is no AI result, so experts only draw."
 msgstr ""
@@ -16112,7 +16176,7 @@ msgstr ""
 msgid "This slide cannot be read"
 msgstr ""
 
-#: src/screens/review/guided-review.tsx
+#: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
 msgstr ""
 
@@ -16430,6 +16494,7 @@ msgstr ""
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/review/guided-review.tsx
+#: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
 #: src/viewer/slide-stage.tsx
@@ -17552,7 +17617,6 @@ msgstr ""
 msgid "Worklist rows"
 msgstr ""
 
-#: src/routes/projects.$projectId.slides.$slideId_.live.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/shell/global-shell.tsx
 #: src/shell/palette-labels.tsx

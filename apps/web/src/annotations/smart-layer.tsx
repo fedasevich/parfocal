@@ -20,6 +20,7 @@ import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { ContextExtra, contextChip } from "./context-extras.tsx";
 import type { AnnotationDocument } from "./document.ts";
 import {
   bindSpacePan,
@@ -430,24 +431,22 @@ export function SmartLayer({
         ) : null}
       </svg>
       {active ? (
-        <button
-          type="button"
-          data-testid="smart-hover-toggle"
-          aria-pressed={hoverOn}
-          onClick={() => setHoverOn(!hoverOn)}
-          className="absolute bottom-16 left-3 rounded-ctl border border-line bg-chrome px-2 py-1 font-mono text-caption aria-pressed:border-accent"
-        >
-          {hoverOn ? t`Hover preview on` : t`Hover preview off`}
-        </button>
-      ) : null}
-      {active && (snapshot.phase === "thinking" || snapshot.message !== null) ? (
-        <div
-          data-testid="smart-status"
-          role="status"
-          className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome px-3 py-1.5 font-mono text-caption"
-        >
-          {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}
-        </div>
+        <ContextExtra>
+          <button
+            type="button"
+            data-testid="smart-hover-toggle"
+            aria-pressed={hoverOn}
+            onClick={() => setHoverOn(!hoverOn)}
+            className={`${contextChip} cursor-pointer aria-pressed:border-accent`}
+          >
+            {hoverOn ? t`Hover preview on` : t`Hover preview off`}
+          </button>
+          {snapshot.phase === "thinking" || snapshot.message !== null ? (
+            <span data-testid="smart-status" role="status" className={contextChip}>
+              {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}
+            </span>
+          ) : null}
+        </ContextExtra>
       ) : null}
     </>
   );
