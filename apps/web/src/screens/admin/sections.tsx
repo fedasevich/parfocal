@@ -101,7 +101,7 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
       },
     );
   };
-  const usage = useGetStorageUsage().data?.data;
+  const usage = okData(useGetStorageUsage().data);
   const taxonomies = okData(useListTaxonomyTemplates().data) ?? [];
   const lab = okData(useGetMySettingLayers().data)?.lab;
   const personOf = usePeople();
@@ -534,7 +534,7 @@ export function ApiSection({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
   const accounts = okData(useListServiceAccounts().data) ?? [];
-  const hooks = useListWebhooks().data?.data ?? [];
+  const hooks = okData(useListWebhooks().data) ?? [];
   const [revoked, setRevoked] = useState<string[]>([]);
   return (
     <>
@@ -703,7 +703,7 @@ export function SecuritySection({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
   const queryClient = useQueryClient();
-  const settings = useGetSecuritySettings().data?.data;
+  const settings = okData(useGetSecuritySettings().data);
   const lab = okData(useGetMySettingLayers().data)?.lab;
   const save = useSetWorkspaceSettings();
   if (settings === undefined && lab === undefined) return null;
@@ -738,7 +738,7 @@ export function SecuritySection({ notify }: { notify: Notify }) {
     <div className="grid grid-cols-2 gap-(--space-zone)">
       <Zone title={t`Sign-in`}>
         <div>{signInRows(settings?.sign_in, lab).map(row)}</div>
-        {settings ? (
+        {settings?.two_factor ? (
           <ProgressBar
             value={percent(settings.two_factor.people, settings.two_factor.of)}
             label={t`People with two factors`}

@@ -348,6 +348,35 @@ export interface AdjudicationObject {
   decision_note: string | null;
 }
 
+export interface AdminOverview {
+  /** @minimum 0 */
+  people: number;
+  /** @minimum 0 */
+  researchers: number;
+  /** @minimum 0 */
+  reviewers: number;
+  /** @minimum 0 */
+  with_admin_rights: number;
+  can_sign_out_user_ids: string[];
+  /** @minimum 0 */
+  projects: number;
+  /** @minimum 0 */
+  invites_waiting: number;
+  /** @minimum 0 */
+  models: number;
+  /** @minimum 0 */
+  runs_now: number;
+  /** @minimum 0 */
+  stored_tb: number;
+  capacity_tb: number | null;
+  /** @minimum 0 */
+  in_place_tb: number;
+  /** @minimum 0 */
+  webhook_calls_today: number;
+  /** @minimum 0 */
+  webhook_rejected_today: number;
+}
+
 export interface AdminRightsChange {
   admin_rights: boolean;
 }
@@ -3252,6 +3281,56 @@ export interface InvitationToken {
   token: string;
 }
 
+export interface InvitedBy {
+  user_id: string;
+  display_name: string;
+  initials: string;
+  /** @minimum 0 */
+  avatar_colour: number;
+  title: string | null;
+}
+
+export interface InviteWorkspace {
+  id: string;
+  name: string;
+}
+
+export interface InviteProject {
+  id: string;
+  code: string;
+  name: string;
+  /** @minimum 0 */
+  colour: number;
+  privacy_mode: PrivacyMode;
+  study_template: string;
+}
+
+export interface InviteTask {
+  id: string;
+  code: string;
+  name: string;
+  /** @minimum 0 */
+  slides: number;
+  hours: number | null;
+  scope: string;
+  due_on: string | null;
+  blinded: boolean;
+  first_slide_id: string;
+}
+
+export interface InvitePreview {
+  token: string;
+  email: string;
+  name: string;
+  invited_by: InvitedBy | null;
+  sent_at: string;
+  workspace: InviteWorkspace;
+  project: InviteProject;
+  task: InviteTask;
+  specialty: string | null;
+  expires_on: string;
+}
+
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 
 export const JobStatus = {
@@ -5053,7 +5132,7 @@ export interface SlideFile {
   remote: string | null;
 }
 
-export interface ProjectStorage {
+export interface ParfocalApiProjectOverviewProjectStorage {
   /** @minimum 0 */
   used_gb: number;
   allowance_gb: number | null;
@@ -5081,7 +5160,7 @@ export interface ProjectOverview {
   case_groups: CaseGroup[];
   slide_files: SlideFile[];
   study_template_id: string | null;
-  storage: ProjectStorage;
+  storage: ParfocalApiProjectOverviewProjectStorage;
   import_failure: ImportFailure | null;
 }
 
@@ -6140,6 +6219,26 @@ export interface SecurityContactChange {
   email: Email | null;
 }
 
+export interface SecuritySetting {
+  key: string;
+  label: string;
+  detail: string;
+  on: boolean;
+  locked: boolean;
+}
+
+export interface TwoFactorShare {
+  /** @minimum 0 */
+  people: number;
+  /** @minimum 0 */
+  of: number;
+}
+
+export interface SecuritySettings {
+  sign_in: SecuritySetting[];
+  two_factor: TwoFactorShare | null;
+}
+
 /**
  * @minimum 1
  * @maximum 365
@@ -6689,6 +6788,83 @@ export interface SplitDraft {
    * @maxItems 26
    */
   parts: SplitPart[];
+}
+
+export interface StoragePart {
+  kind: string;
+  label: string;
+  /** @minimum 0 */
+  tb: number;
+}
+
+export interface StorageProjectRef {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface StorageRule {
+  key: string;
+  label: string;
+  detail: string;
+  on: boolean;
+  locked: boolean;
+}
+
+export type StorageSourceKind = (typeof StorageSourceKind)[keyof typeof StorageSourceKind];
+
+export const StorageSourceKind = {
+  s3: "s3",
+  dicomweb: "dicomweb",
+  https: "https",
+  azure: "azure",
+} as const;
+
+export type StorageSourceNewSlides =
+  (typeof StorageSourceNewSlides)[keyof typeof StorageSourceNewSlides];
+
+export const StorageSourceNewSlides = {
+  copied: "copied",
+  "in-place": "in-place",
+} as const;
+
+export type StorageSourceHealth = (typeof StorageSourceHealth)[keyof typeof StorageSourceHealth];
+
+export const StorageSourceHealth = {
+  answering: "answering",
+  expiring: "expiring",
+} as const;
+
+export interface StorageSource {
+  id: string;
+  name: string;
+  kind: StorageSourceKind;
+  access: string;
+  address: string;
+  new_slides: StorageSourceNewSlides;
+  health: StorageSourceHealth;
+  first_tile_ms: number | null;
+  expires_in_days: number | null;
+}
+
+export interface ParfocalApiAdminConsoleProjectStorage {
+  project: StorageProjectRef;
+  /** @minimum 0 */
+  colour: number;
+  /** @minimum 0 */
+  gb: number;
+  cap_gb: number | null;
+}
+
+export interface StorageUsage {
+  /** @minimum 0 */
+  total_tb: number;
+  /** @minimum 0 */
+  in_place_tb: number;
+  parts: StoragePart[];
+  by_project: ParfocalApiAdminConsoleProjectStorage[];
+  rules: StorageRule[];
+  sources: StorageSource[];
 }
 
 export type StudyKind = (typeof StudyKind)[keyof typeof StudyKind];
@@ -7282,6 +7458,24 @@ export type VersionReason = string;
 
 export interface VersionDraft {
   reason: VersionReason;
+}
+
+export type WebhookDirection = (typeof WebhookDirection)[keyof typeof WebhookDirection];
+
+export const WebhookDirection = {
+  incoming: "incoming",
+  outgoing: "outgoing",
+} as const;
+
+export interface Webhook {
+  id: string;
+  name: string;
+  direction: WebhookDirection;
+  events: string[];
+  /** @minimum 0 */
+  calls_today: number;
+  /** @minimum 0 */
+  rejected_today: number;
 }
 
 export interface WorkspaceAccessRequest {
@@ -18940,6 +19134,901 @@ export function useGetLabModelConnection<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetLabModelConnectionQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getAdminOverviewResponse200 = {
+  data: AdminOverview;
+  status: 200;
+};
+
+export type getAdminOverviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAdminOverviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAdminOverviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAdminOverviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAdminOverviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAdminOverviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAdminOverviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getAdminOverviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAdminOverviewResponseSuccess = getAdminOverviewResponse200 & {
+  headers: Headers;
+};
+export type getAdminOverviewResponseError = (
+  | getAdminOverviewResponse400
+  | getAdminOverviewResponse401
+  | getAdminOverviewResponse403
+  | getAdminOverviewResponse404
+  | getAdminOverviewResponse409
+  | getAdminOverviewResponse422
+  | getAdminOverviewResponse429
+  | getAdminOverviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAdminOverviewResponse =
+  | getAdminOverviewResponseSuccess
+  | getAdminOverviewResponseError;
+
+export const getGetAdminOverviewUrl = () => {
+  return `/api/tenant/overview`;
+};
+
+/**
+ * @summary Get Admin Overview
+ */
+export const getAdminOverview = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAdminOverviewResponse> => {
+  return apiFetch<getAdminOverviewResponse>(getGetAdminOverviewUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAdminOverviewQueryKey = () => {
+  return [`/api/tenant/overview`] as const;
+};
+
+export const getGetAdminOverviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminOverview>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminOverview>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminOverviewQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminOverview>>> = ({ signal }) =>
+    getAdminOverview({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminOverview>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAdminOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminOverview>>>;
+export type GetAdminOverviewQueryError = Problem;
+
+export function useGetAdminOverview<
+  TData = Awaited<ReturnType<typeof getAdminOverview>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminOverview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminOverview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminOverview<
+  TData = Awaited<ReturnType<typeof getAdminOverview>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminOverview>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminOverview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAdminOverview<
+  TData = Awaited<ReturnType<typeof getAdminOverview>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Admin Overview
+ */
+
+export function useGetAdminOverview<
+  TData = Awaited<ReturnType<typeof getAdminOverview>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAdminOverviewQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getStorageUsageResponse200 = {
+  data: StorageUsage;
+  status: 200;
+};
+
+export type getStorageUsageResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getStorageUsageResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getStorageUsageResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getStorageUsageResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getStorageUsageResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getStorageUsageResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getStorageUsageResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getStorageUsageResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getStorageUsageResponseSuccess = getStorageUsageResponse200 & {
+  headers: Headers;
+};
+export type getStorageUsageResponseError = (
+  | getStorageUsageResponse400
+  | getStorageUsageResponse401
+  | getStorageUsageResponse403
+  | getStorageUsageResponse404
+  | getStorageUsageResponse409
+  | getStorageUsageResponse422
+  | getStorageUsageResponse429
+  | getStorageUsageResponse500
+) & {
+  headers: Headers;
+};
+
+export type getStorageUsageResponse = getStorageUsageResponseSuccess | getStorageUsageResponseError;
+
+export const getGetStorageUsageUrl = () => {
+  return `/api/tenant/storage`;
+};
+
+/**
+ * @summary Get Storage Usage
+ */
+export const getStorageUsage = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getStorageUsageResponse> => {
+  return apiFetch<getStorageUsageResponse>(getGetStorageUsageUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStorageUsageQueryKey = () => {
+  return [`/api/tenant/storage`] as const;
+};
+
+export const getGetStorageUsageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStorageUsage>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStorageUsageQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorageUsage>>> = ({ signal }) =>
+    getStorageUsage({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStorageUsage>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetStorageUsageQueryResult = NonNullable<Awaited<ReturnType<typeof getStorageUsage>>>;
+export type GetStorageUsageQueryError = Problem;
+
+export function useGetStorageUsage<
+  TData = Awaited<ReturnType<typeof getStorageUsage>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStorageUsage>>,
+          TError,
+          Awaited<ReturnType<typeof getStorageUsage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStorageUsage<
+  TData = Awaited<ReturnType<typeof getStorageUsage>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStorageUsage>>,
+          TError,
+          Awaited<ReturnType<typeof getStorageUsage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetStorageUsage<
+  TData = Awaited<ReturnType<typeof getStorageUsage>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Storage Usage
+ */
+
+export function useGetStorageUsage<
+  TData = Awaited<ReturnType<typeof getStorageUsage>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getStorageUsage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetStorageUsageQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSecuritySettingsResponse200 = {
+  data: SecuritySettings;
+  status: 200;
+};
+
+export type getSecuritySettingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSecuritySettingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSecuritySettingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSecuritySettingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSecuritySettingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSecuritySettingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSecuritySettingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSecuritySettingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSecuritySettingsResponseSuccess = getSecuritySettingsResponse200 & {
+  headers: Headers;
+};
+export type getSecuritySettingsResponseError = (
+  | getSecuritySettingsResponse400
+  | getSecuritySettingsResponse401
+  | getSecuritySettingsResponse403
+  | getSecuritySettingsResponse404
+  | getSecuritySettingsResponse409
+  | getSecuritySettingsResponse422
+  | getSecuritySettingsResponse429
+  | getSecuritySettingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSecuritySettingsResponse =
+  | getSecuritySettingsResponseSuccess
+  | getSecuritySettingsResponseError;
+
+export const getGetSecuritySettingsUrl = () => {
+  return `/api/tenant/security`;
+};
+
+/**
+ * @summary Get Security Settings
+ */
+export const getSecuritySettings = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSecuritySettingsResponse> => {
+  return apiFetch<getSecuritySettingsResponse>(getGetSecuritySettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSecuritySettingsQueryKey = () => {
+  return [`/api/tenant/security`] as const;
+};
+
+export const getGetSecuritySettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSecuritySettings>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSecuritySettings>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSecuritySettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecuritySettings>>> = ({ signal }) =>
+    getSecuritySettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSecuritySettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSecuritySettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSecuritySettings>>
+>;
+export type GetSecuritySettingsQueryError = Problem;
+
+export function useGetSecuritySettings<
+  TData = Awaited<ReturnType<typeof getSecuritySettings>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritySettings>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecuritySettings>>,
+          TError,
+          Awaited<ReturnType<typeof getSecuritySettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecuritySettings<
+  TData = Awaited<ReturnType<typeof getSecuritySettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritySettings>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecuritySettings>>,
+          TError,
+          Awaited<ReturnType<typeof getSecuritySettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecuritySettings<
+  TData = Awaited<ReturnType<typeof getSecuritySettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritySettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Security Settings
+ */
+
+export function useGetSecuritySettings<
+  TData = Awaited<ReturnType<typeof getSecuritySettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritySettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSecuritySettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listWebhooksResponse200 = {
+  data: Webhook[];
+  status: 200;
+};
+
+export type listWebhooksResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listWebhooksResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listWebhooksResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listWebhooksResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listWebhooksResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listWebhooksResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listWebhooksResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listWebhooksResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listWebhooksResponseSuccess = listWebhooksResponse200 & {
+  headers: Headers;
+};
+export type listWebhooksResponseError = (
+  | listWebhooksResponse400
+  | listWebhooksResponse401
+  | listWebhooksResponse403
+  | listWebhooksResponse404
+  | listWebhooksResponse409
+  | listWebhooksResponse422
+  | listWebhooksResponse429
+  | listWebhooksResponse500
+) & {
+  headers: Headers;
+};
+
+export type listWebhooksResponse = listWebhooksResponseSuccess | listWebhooksResponseError;
+
+export const getListWebhooksUrl = () => {
+  return `/api/tenant/webhooks`;
+};
+
+/**
+ * @summary List Webhooks
+ */
+export const listWebhooks = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listWebhooksResponse> => {
+  return apiFetch<listWebhooksResponse>(getListWebhooksUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListWebhooksQueryKey = () => {
+  return [`/api/tenant/webhooks`] as const;
+};
+
+export const getListWebhooksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listWebhooks>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListWebhooksQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listWebhooks>>> = ({ signal }) =>
+    listWebhooks({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listWebhooks>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListWebhooksQueryResult = NonNullable<Awaited<ReturnType<typeof listWebhooks>>>;
+export type ListWebhooksQueryError = Problem;
+
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWebhooks>>,
+          TError,
+          Awaited<ReturnType<typeof listWebhooks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWebhooks>>,
+          TError,
+          Awaited<ReturnType<typeof listWebhooks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Webhooks
+ */
+
+export function useListWebhooks<TData = Awaited<ReturnType<typeof listWebhooks>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listWebhooks>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListWebhooksQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getInvitePreviewResponse200 = {
+  data: InvitePreview;
+  status: 200;
+};
+
+export type getInvitePreviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getInvitePreviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getInvitePreviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getInvitePreviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getInvitePreviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getInvitePreviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getInvitePreviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getInvitePreviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getInvitePreviewResponseSuccess = getInvitePreviewResponse200 & {
+  headers: Headers;
+};
+export type getInvitePreviewResponseError = (
+  | getInvitePreviewResponse400
+  | getInvitePreviewResponse401
+  | getInvitePreviewResponse403
+  | getInvitePreviewResponse404
+  | getInvitePreviewResponse409
+  | getInvitePreviewResponse422
+  | getInvitePreviewResponse429
+  | getInvitePreviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type getInvitePreviewResponse =
+  | getInvitePreviewResponseSuccess
+  | getInvitePreviewResponseError;
+
+export const getGetInvitePreviewUrl = (token: string) => {
+  return `/api/invitations/${token}/preview`;
+};
+
+/**
+ * @summary Get Invite Preview
+ */
+export const getInvitePreview = async (
+  token: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getInvitePreviewResponse> => {
+  return apiFetch<getInvitePreviewResponse>(getGetInvitePreviewUrl(token), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetInvitePreviewQueryKey = (token: string) => {
+  return [`/api/invitations/${token}/preview`] as const;
+};
+
+export const getGetInvitePreviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInvitePreview>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getInvitePreview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetInvitePreviewQueryKey(token);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getInvitePreview>>> = ({ signal }) =>
+    getInvitePreview(token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: token !== null && token !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getInvitePreview>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetInvitePreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getInvitePreview>>>;
+export type GetInvitePreviewQueryError = Problem;
+
+export function useGetInvitePreview<
+  TData = Awaited<ReturnType<typeof getInvitePreview>>,
+  TError = Problem,
+>(
+  token: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getInvitePreview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInvitePreview>>,
+          TError,
+          Awaited<ReturnType<typeof getInvitePreview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetInvitePreview<
+  TData = Awaited<ReturnType<typeof getInvitePreview>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getInvitePreview>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInvitePreview>>,
+          TError,
+          Awaited<ReturnType<typeof getInvitePreview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetInvitePreview<
+  TData = Awaited<ReturnType<typeof getInvitePreview>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getInvitePreview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Invite Preview
+ */
+
+export function useGetInvitePreview<
+  TData = Awaited<ReturnType<typeof getInvitePreview>>,
+  TError = Problem,
+>(
+  token: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getInvitePreview>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetInvitePreviewQueryOptions(token, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

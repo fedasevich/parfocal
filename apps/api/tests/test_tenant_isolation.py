@@ -2017,6 +2017,13 @@ GET_ROUTES = {
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/model-runs/defaults"
     ),
     "listAiModels": Route(Exposure.TENANT, lambda _: "/api/tenant/models", admin_rights=True),
+    "getAdminOverview": Route(Exposure.TENANT, lambda _: "/api/tenant/overview", admin_rights=True),
+    "getStorageUsage": Route(Exposure.TENANT, lambda _: "/api/tenant/storage", admin_rights=True),
+    "getSecuritySettings": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/security", admin_rights=True
+    ),
+    "listWebhooks": Route(Exposure.TENANT, lambda _: "/api/tenant/webhooks", admin_rights=True),
+    "getInvitePreview": Route(Exposure.PUBLIC, lambda _: "/api/invitations/unknown/preview"),
     "getLabModelConnection": Route(
         Exposure.TENANT, lambda _: "/api/tenant/models/connection", admin_rights=True
     ),

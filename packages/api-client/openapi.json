@@ -8084,6 +8084,570 @@
         "x-permission": "integrations"
       }
     },
+    "/api/tenant/overview": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Get Admin Overview",
+        "operationId": "getAdminOverview",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "workspace-settings"
+      }
+    },
+    "/api/tenant/storage": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Get Storage Usage",
+        "operationId": "getStorageUsage",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageUsage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations"
+      }
+    },
+    "/api/tenant/security": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Get Security Settings",
+        "operationId": "getSecuritySettings",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecuritySettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "workspace-settings"
+      }
+    },
+    "/api/tenant/webhooks": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "List Webhooks",
+        "operationId": "listWebhooks",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Webhook"
+                  },
+                  "type": "array",
+                  "title": "Response Listwebhooks"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations"
+      }
+    },
+    "/api/invitations/{token}/preview": {
+      "get": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Get Invite Preview",
+        "operationId": "getInvitePreview",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        }
+      }
+    },
     "/api/projects/{project_id}/model-runs": {
       "post": {
         "tags": [
@@ -51212,6 +51776,108 @@
         ],
         "title": "AdjudicatorDecision"
       },
+      "AdminOverview": {
+        "properties": {
+          "people": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "People"
+          },
+          "researchers": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Researchers"
+          },
+          "reviewers": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reviewers"
+          },
+          "with_admin_rights": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "With Admin Rights"
+          },
+          "can_sign_out_user_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Can Sign Out User Ids"
+          },
+          "projects": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Projects"
+          },
+          "invites_waiting": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Invites Waiting"
+          },
+          "models": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Models"
+          },
+          "runs_now": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Runs Now"
+          },
+          "stored_tb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Stored Tb"
+          },
+          "capacity_tb": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Tb"
+          },
+          "in_place_tb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "In Place Tb"
+          },
+          "webhook_calls_today": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Webhook Calls Today"
+          },
+          "webhook_rejected_today": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Webhook Rejected Today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "people",
+          "researchers",
+          "reviewers",
+          "with_admin_rights",
+          "can_sign_out_user_ids",
+          "projects",
+          "invites_waiting",
+          "models",
+          "runs_now",
+          "stored_tb",
+          "capacity_tb",
+          "in_place_tb",
+          "webhook_calls_today",
+          "webhook_rejected_today"
+        ],
+        "title": "AdminOverview"
+      },
       "AdminRightsChange": {
         "properties": {
           "admin_rights": {
@@ -58823,6 +59489,248 @@
         ],
         "title": "InvitationToken"
       },
+      "InvitePreview": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "invited_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InvitedBy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/InviteWorkspace"
+          },
+          "project": {
+            "$ref": "#/components/schemas/InviteProject"
+          },
+          "task": {
+            "$ref": "#/components/schemas/InviteTask"
+          },
+          "specialty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialty"
+          },
+          "expires_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Expires On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "email",
+          "name",
+          "invited_by",
+          "sent_at",
+          "workspace",
+          "project",
+          "task",
+          "specialty",
+          "expires_on"
+        ],
+        "title": "InvitePreview"
+      },
+      "InviteProject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "colour": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Colour"
+          },
+          "privacy_mode": {
+            "$ref": "#/components/schemas/PrivacyMode"
+          },
+          "study_template": {
+            "type": "string",
+            "title": "Study Template"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "colour",
+          "privacy_mode",
+          "study_template"
+        ],
+        "title": "InviteProject"
+      },
+      "InviteTask": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides"
+          },
+          "hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "blinded": {
+            "type": "boolean",
+            "title": "Blinded"
+          },
+          "first_slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "First Slide Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "slides",
+          "hours",
+          "scope",
+          "due_on",
+          "blinded",
+          "first_slide_id"
+        ],
+        "title": "InviteTask"
+      },
+      "InviteWorkspace": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "InviteWorkspace"
+      },
+      "InvitedBy": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "initials": {
+            "type": "string",
+            "title": "Initials"
+          },
+          "avatar_colour": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Avatar Colour"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "display_name",
+          "initials",
+          "avatar_colour",
+          "title"
+        ],
+        "title": "InvitedBy"
+      },
       "IssuedToken": {
         "properties": {
           "id": {
@@ -65306,7 +66214,7 @@
             "title": "Study Template Id"
           },
           "storage": {
-            "$ref": "#/components/schemas/ProjectStorage"
+            "$ref": "#/components/schemas/parfocal_api__project_overview__ProjectStorage"
           },
           "import_failure": {
             "anyOf": [
@@ -65437,33 +66345,6 @@
           "result_set_ids"
         ],
         "title": "ProjectSlide"
-      },
-      "ProjectStorage": {
-        "properties": {
-          "used_gb": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Used Gb"
-          },
-          "allowance_gb": {
-            "anyOf": [
-              {
-                "type": "number",
-                "exclusiveMinimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Allowance Gb"
-          }
-        },
-        "type": "object",
-        "required": [
-          "used_gb",
-          "allowance_gb"
-        ],
-        "title": "ProjectStorage"
       },
       "PromotionRequest": {
         "properties": {
@@ -70077,6 +70958,66 @@
         ],
         "title": "SecurityContactChange"
       },
+      "SecuritySetting": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          },
+          "locked": {
+            "type": "boolean",
+            "title": "Locked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "detail",
+          "on",
+          "locked"
+        ],
+        "title": "SecuritySetting"
+      },
+      "SecuritySettings": {
+        "properties": {
+          "sign_in": {
+            "items": {
+              "$ref": "#/components/schemas/SecuritySetting"
+            },
+            "type": "array",
+            "title": "Sign In"
+          },
+          "two_factor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TwoFactorShare"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "sign_in",
+          "two_factor"
+        ],
+        "title": "SecuritySettings"
+      },
       "SelectionGeometry": {
         "oneOf": [
           {
@@ -73407,6 +74348,223 @@
         ],
         "title": "StepStatus"
       },
+      "StoragePart": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "tb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Tb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "tb"
+        ],
+        "title": "StoragePart"
+      },
+      "StorageProjectRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "StorageProjectRef"
+      },
+      "StorageRule": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          },
+          "locked": {
+            "type": "boolean",
+            "title": "Locked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "detail",
+          "on",
+          "locked"
+        ],
+        "title": "StorageRule"
+      },
+      "StorageSource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "s3",
+              "dicomweb",
+              "https",
+              "azure"
+            ],
+            "title": "Kind"
+          },
+          "access": {
+            "type": "string",
+            "title": "Access"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "new_slides": {
+            "type": "string",
+            "enum": [
+              "copied",
+              "in-place"
+            ],
+            "title": "New Slides"
+          },
+          "health": {
+            "type": "string",
+            "enum": [
+              "answering",
+              "expiring"
+            ],
+            "title": "Health"
+          },
+          "first_tile_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Tile Ms"
+          },
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "access",
+          "address",
+          "new_slides",
+          "health",
+          "first_tile_ms",
+          "expires_in_days"
+        ],
+        "title": "StorageSource"
+      },
+      "StorageUsage": {
+        "properties": {
+          "total_tb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Total Tb"
+          },
+          "in_place_tb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "In Place Tb"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/StoragePart"
+            },
+            "type": "array",
+            "title": "Parts"
+          },
+          "by_project": {
+            "items": {
+              "$ref": "#/components/schemas/parfocal_api__admin_console__ProjectStorage"
+            },
+            "type": "array",
+            "title": "By Project"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/StorageRule"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/StorageSource"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_tb",
+          "in_place_tb",
+          "parts",
+          "by_project",
+          "rules",
+          "sources"
+        ],
+        "title": "StorageUsage"
+      },
       "StripSlide": {
         "properties": {
           "id": {
@@ -75893,6 +77051,26 @@
         ],
         "title": "TumorMapJob"
       },
+      "TwoFactorShare": {
+        "properties": {
+          "people": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "People"
+          },
+          "of": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "people",
+          "of"
+        ],
+        "title": "TwoFactorShare"
+      },
       "TypeShares": {
         "properties": {
           "tumor": {
@@ -76873,6 +78051,54 @@
         ],
         "title": "WatchedFolder"
       },
+      "Webhook": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing"
+            ],
+            "title": "Direction"
+          },
+          "events": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "calls_today": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Calls Today"
+          },
+          "rejected_today": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Rejected Today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "direction",
+          "events",
+          "calls_today",
+          "rejected_today"
+        ],
+        "title": "Webhook"
+      },
       "WebhookAbility": {
         "properties": {
           "label": {
@@ -77270,6 +78496,43 @@
         ],
         "title": "ZoomAround"
       },
+      "parfocal_api__admin_console__ProjectStorage": {
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/StorageProjectRef"
+          },
+          "colour": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Colour"
+          },
+          "gb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Gb"
+          },
+          "cap_gb": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Gb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project",
+          "colour",
+          "gb",
+          "cap_gb"
+        ],
+        "title": "ProjectStorage"
+      },
       "parfocal_api__annotation_exports__ExportFormat": {
         "type": "string",
         "enum": [
@@ -77356,6 +78619,33 @@
         "type": "string",
         "maxLength": 80,
         "minLength": 1
+      },
+      "parfocal_api__project_overview__ProjectStorage": {
+        "properties": {
+          "used_gb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Used Gb"
+          },
+          "allowance_gb": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowance Gb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "used_gb",
+          "allowance_gb"
+        ],
+        "title": "ProjectStorage"
       },
       "parfocal_api__project_uploads__Pairings": {
         "properties": {

@@ -19,8 +19,8 @@ const operationsByArea: Record<string, string[]> = {
   ],
   models: [],
   team: [],
-  admin: ["getAdminOverview", "getStorageUsage", "getSecuritySettings", "listWebhooks"],
-  "sign-in": ["getInvitePreview"],
+  admin: [],
+  "sign-in": [],
 };
 
 const areaMap = (areas: Record<string, string[]>) =>

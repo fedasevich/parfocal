@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from parfocal_api import (
     adjudications,
+    admin_console,
     ai_changes,
     ai_corrections,
     ai_usage,
@@ -42,6 +43,7 @@ from parfocal_api import (
     import_sources,
     inbox,
     invitations,
+    invite_preview,
     lab_models,
     link_imports,
     maintenance,
@@ -246,6 +248,8 @@ def create_app(
     app.include_router(project_jobs.router)
     app.include_router(model_area.project_router)
     app.include_router(model_area.tenant_router)
+    app.include_router(admin_console.router)
+    app.include_router(invite_preview.router)
     app.include_router(model_runs.router)
     app.include_router(tumor_maps.router)
     app.include_router(model_tiers.router)

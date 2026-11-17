@@ -15,6 +15,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useState } from "react";
 import { projectColour } from "../palette.ts";
+import { okData } from "../placeholder.tsx";
 import { MoreButton, type Notify, tableClass, tb } from "./common.tsx";
 import { RetentionZone } from "./retention.tsx";
 
@@ -33,7 +34,7 @@ const sourceIcon = (kind: string) =>
 export function StorageSection({ notify }: { notify: Notify }) {
   const { t } = useLingui();
 
-  const usage = useGetStorageUsage().data?.data;
+  const usage = okData(useGetStorageUsage().data);
   const [rules, setRules] = useState<Record<string, boolean>>({});
   if (usage === undefined) return null;
   const used = usage.parts.reduce((sum, part) => sum + part.tb, 0) * 1000;

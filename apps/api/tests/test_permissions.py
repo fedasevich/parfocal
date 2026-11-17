@@ -125,6 +125,7 @@ OPEN_OPERATIONS = {
     "getHealth": "public",
     "getPlatformStatus": "public",
     "getSharedReport": "public",
+    "getInvitePreview": "public",
     **dict.fromkeys(
         (
             "getPasswordSignIn",
@@ -821,6 +822,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "getLabModel": lambda w: Call("GET", f"/api/tenant/models/{seeded(w, 'lab-model')}"),
     "listAiModels": lambda _: Call("GET", "/api/tenant/models"),
+    "getAdminOverview": lambda _: Call("GET", "/api/tenant/overview"),
+    "getStorageUsage": lambda _: Call("GET", "/api/tenant/storage"),
+    "getSecuritySettings": lambda _: Call("GET", "/api/tenant/security"),
+    "listWebhooks": lambda _: Call("GET", "/api/tenant/webhooks"),
     "getLabModelConnection": lambda _: Call("GET", "/api/tenant/models/connection"),
     "testConnectedLabModel": lambda w: Call(
         "POST", f"/api/tenant/models/{seeded(w, 'lab-model')}/test"

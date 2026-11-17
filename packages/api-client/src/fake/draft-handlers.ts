@@ -2,19 +2,11 @@ import type { RequestHandler } from "msw";
 import { getGetMyChecklistMockHandler } from "../generated/api.msw.ts";
 import type { Checklist } from "../generated/api.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
-import { adminDraftOperations } from "./admin-handlers.ts";
 import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { checklist, sampleProject } from "./scenario.ts";
 import { fakeView } from "./view.ts";
 
 export { getGetEvaluationReportMockHandler } from "./adjudication-handlers.ts";
-export {
-  getGetAdminOverviewMockHandler,
-  getGetInvitePreviewMockHandler,
-  getGetSecuritySettingsMockHandler,
-  getGetStorageUsageMockHandler,
-  getListWebhooksMockHandler,
-} from "./admin-handlers.ts";
 export {
   getCosignClinicalReportMockHandler,
   getGetClinicalReportMockHandler,
@@ -41,7 +33,6 @@ export const toChecklist = (): Checklist => ({
 });
 
 export const draftOperations: DraftOperation[] = [
-  ...adminDraftOperations,
   ...clinicalDraftOperations,
   ...adjudicationDraftOperations,
 ];

@@ -10,6 +10,7 @@ import {
   setFakeView,
 } from "../src/fake/index.ts";
 import {
+  type AdminOverview,
   type AiModels,
   askToJoinWorkspace,
   createInvitation,
@@ -19,6 +20,7 @@ import {
   getInvitePreview,
   getMe,
   getStorageUsage,
+  type InvitePreview,
   joinWorkspace,
   listAiModels,
   listInvitations,
@@ -29,6 +31,7 @@ import {
   type ProjectAccessRequest,
   requestProjectAccess,
   resendInvitation,
+  type StorageUsage,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -57,7 +60,7 @@ const okBody = <Body>(response: { status: number; data: unknown }) => {
 };
 
 test("the overview counts what the admin lists hold", async () => {
-  const overview = (await getAdminOverview()).data;
+  const overview = okBody<AdminOverview>(await getAdminOverview());
   const invitations = okBody<unknown[]>(await listInvitations());
   const models = okBody<AiModels>(await listAiModels());
   assert.equal(overview.invites_waiting, invitations.length);
@@ -69,11 +72,11 @@ test("the overview counts what the admin lists hold", async () => {
 });
 
 test("storage parts add up to what the overview says is stored", async () => {
-  const usage = (await getStorageUsage()).data;
-  const overview = (await getAdminOverview()).data;
+  const usage = okBody<StorageUsage>(await getStorageUsage());
+  const overview = okBody<AdminOverview>(await getAdminOverview());
   const stored = usage.parts.reduce((sum, part) => sum + part.tb, 0);
   assert.equal(Math.round(stored * 10) / 10, overview.stored_tb);
-  assert.ok(overview.stored_tb <= overview.capacity_tb);
+  assert.ok(overview.stored_tb <= (overview.capacity_tb ?? 0));
   const largestFirst = usage.by_project.map((row) => row.gb);
   assert.deepEqual(
     largestFirst,
@@ -126,17 +129,19 @@ test("a new invitation joins the waiting list and lowercases the email", async (
   const invitations = okBody<{ email: string }[]>(await listInvitations());
   assert.equal(invitations.length, 4);
   assert.equal(invitations.at(-1)?.email, "new.person@lab.example");
-  assert.equal((await getAdminOverview()).data.invites_waiting, 4);
+  assert.equal(okBody<AdminOverview>(await getAdminOverview()).invites_waiting, 4);
 });
 
 test("the invite preview is RT-14 with the scenario's numbers", async () => {
-  const preview = (await getInvitePreview(scenarioAdmin.inviteSeed.invitation)).data;
+  const preview = okBody<InvitePreview>(
+    await getInvitePreview(scenarioAdmin.inviteSeed.invitation),
+  );
   const task = scenario.reviewTasks.find((item) => item.code === "RT-14");
   assert.equal(preview.task.code, "RT-14");
   assert.equal(preview.task.slides, task?.slides);
   assert.equal(preview.task.due_on, task?.dueOn);
   assert.equal(preview.project.privacy_mode, "de-identified");
-  assert.equal(preview.invited_by.display_name, "Daniel Hruška");
+  assert.equal(preview.invited_by?.display_name, "Daniel Hruška");
 });
 
 test("the invite preview refuses a token that is not the invitation", async () => {
