@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.14.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Draw each compare pane on the engine stage with the real slide
+
+### Docs
+
+- VIEW-075: Log compare on the engine stage and move to review
+- TILES-012: Log the backfill run after the fix
+
+### Tests
+
+- VIEW-075: Check the compare canvas fills its turned host, keep the task in progress
+
 ## v0.13.6 (2026-11-17)
 
 ### Fixes
