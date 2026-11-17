@@ -26,6 +26,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, type ReactNode } from "react";
 import { now } from "../../clock.ts";
+import { setTourOfferSlot } from "../../help/tour-state.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
@@ -679,6 +680,7 @@ export function HomeScreen() {
           {formatLongDay(today)} · {summary}
         </p>
       </header>
+      <div ref={setTourOfferSlot} className="empty:hidden" />
       <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6">
         <div className="grid gap-3">
           {homeBlocks[layout].map((block, index) => (

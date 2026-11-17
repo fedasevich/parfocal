@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import actor_of
-from parfocal_api.auth import SEEDED_SUBJECT_PREFIX
+from parfocal_api.auth import SEEDED_OWNER_NAME, SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.decision_styles import DecisionSettings
 from parfocal_api.principals import MemberPrincipal
@@ -294,7 +294,7 @@ async def add_owner(connection: AsyncConnection, tenant_id: uuid.UUID, email: st
         connection,
         tenant_id,
         subject,
-        "Workspace owner",
+        SEEDED_OWNER_NAME,
         "WO",
         Role.RESEARCHER,
         admin_rights=True,

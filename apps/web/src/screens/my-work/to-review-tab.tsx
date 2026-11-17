@@ -39,16 +39,14 @@ import {
   ThreadsValue,
   useOpenThreads,
 } from "./parts.tsx";
+import { minutesLeft, slidePosition } from "./review-progress.ts";
 import { activeTasks, continuePath, reviewRow } from "./to-review-rows.ts";
 
 export { activeTasks };
 
 export const adjudicationKey = (item: MyAdjudication) => `adj-${item.id}`;
 
-const minutesPerSlide = 16;
-
-const timeLeft = (slides: number) => {
-  const minutes = slides * minutesPerSlide;
+const timeLeft = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   if (hours === 0) return t`about ${rest} min left`;
@@ -60,7 +58,7 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
 
   const goTo = useGoTo();
   const open = () => void goTo(continuePath(task, resume));
-  const left = task.slides_assigned - task.slides_submitted;
+  const minutes = minutesLeft(task.slides_submitted, task.slides_assigned);
   return (
     <div
       data-vt-source=""
@@ -78,9 +76,9 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
         <h3 className="m-0 text-title font-semibold text-fg">{task.name}</h3>
         <p className="m-0 text-body-sm text-fg-dim">
           <Trans>
-            Slide {resume.position + 1} of {resume.slides_assigned}
-          </Trans>{" "}
-          · {timeLeft(left)}
+            Slide {slidePosition(resume.position, task.slides_assigned)} of {task.slides_assigned}
+          </Trans>
+          {minutes === null ? "" : ` · ${timeLeft(minutes)}`}
           {task.due_on ? t` · due ${formatDue(task.due_on)}` : ""}
         </p>
         <ProgressBar
@@ -279,7 +277,7 @@ function TaskPreview({
           icon: "slides",
           label: t`Where`,
           value: here
-            ? t`Slide ${here.position + 1} of ${here.slides_assigned}, case ${here.case_label}`
+            ? t`Slide ${slidePosition(here.position, task.slides_assigned)} of ${task.slides_assigned}, case ${here.case_label}`
             : t`Slide 1 of ${task.slides_assigned}, not started`,
         },
         {

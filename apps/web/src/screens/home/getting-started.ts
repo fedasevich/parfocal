@@ -11,13 +11,38 @@ export type TriedStore = {
   subscribe: (listener: () => void) => () => void;
 };
 
-export function createTriedStore(): TriedStore {
-  let tried: ReadonlySet<StepKey> = new Set();
+const triedStorageKey = "parfocal.checklist-tried";
+
+function savedTried(): StepKey[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(triedStorageKey) ?? "[]");
+    return Array.isArray(parsed)
+      ? parsed.filter((key): key is StepKey => typeof key === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTried(tried: ReadonlySet<StepKey>) {
+  try {
+    localStorage.setItem(triedStorageKey, JSON.stringify([...tried]));
+  } catch {
+    return;
+  }
+}
+
+export function createTriedStore(
+  initial: readonly StepKey[] = [],
+  onChange: (tried: ReadonlySet<StepKey>) => void = () => undefined,
+): TriedStore {
+  let tried: ReadonlySet<StepKey> = new Set(initial);
   const listeners = new Set<() => void>();
   return {
     mark(key) {
       if (tried.has(key)) return;
       tried = new Set([...tried, key]);
+      onChange(tried);
       for (const listener of listeners) listener();
     },
     snapshot: () => tried,
@@ -28,7 +53,7 @@ export function createTriedStore(): TriedStore {
   };
 }
 
-export const triedStore = createTriedStore();
+export const triedStore = createTriedStore(savedTried(), saveTried);
 
 export const markTried = (key: StepKey) => triedStore.mark(key);
 

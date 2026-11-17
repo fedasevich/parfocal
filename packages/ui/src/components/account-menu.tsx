@@ -76,7 +76,11 @@ function AccountMenu({
             variant="ghost"
             size="icon"
             className="rounded-full"
-            title={t`${person.name}: theme, settings, log out`}
+            title={
+              person.name
+                ? t`${person.name}: theme, settings, log out`
+                : t`Theme, settings, log out`
+            }
           />
         }
       >
