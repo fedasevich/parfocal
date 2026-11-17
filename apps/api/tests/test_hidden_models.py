@@ -78,6 +78,7 @@ def test_a_hidden_model_cannot_be_started(api: ApiAs, database: str) -> None:
     lab = admin_lab(api, database)
     ok(api(lab.people["owner"]).put(f"{HIDDEN}/hovernet"))
     assert problem(start(api, lab, **run_with("hovernet"))) == (400, "model-hidden")
+    ok(api(lab.people["owner"]).put(f"{HIDDEN}/pathosam-hovernext"))
     by_tier = start(api, lab, parameters={"tier": {"task": "outline", "tier": "good"}})
     assert problem(by_tier) == (400, "model-hidden")
     assert start(api, lab, **run_with("camelyon-tumor")).status_code == 201

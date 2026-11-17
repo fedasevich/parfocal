@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from parfocal_api.model_catalogue import (
+    BY_NAME,
     CATALOGUE,
     LicenceClass,
     ModelHost,
@@ -26,6 +27,7 @@ from parfocal_api.model_registry import (
     licence_policy_kinds,
     register,
 )
+from parfocal_api.model_tiers import DEFAULTS, NEEDS
 from parfocal_api.tables import TenantKind
 
 OPEN = Licence(
@@ -61,6 +63,17 @@ def test_every_catalogue_model_is_registered_with_its_licences() -> None:
         assert licence.source.startswith("docs/")
         assert licence.data
         assert all(dataset.licence.strip() for dataset in licence.data)
+
+
+def test_every_tier_default_names_a_model_of_the_v1_line_up() -> None:
+    line_up = {"camelyon-tumor", "pathosam-hovernext"}
+    assert set(DEFAULTS.values()) <= line_up
+    for (task, _tier), name in DEFAULTS.items():
+        model = BY_NAME[name]
+        assert NEEDS[task] in model.makes
+        registered_model = REGISTRY[(model.name, model.version)]
+        assert registered_model.status is not ModelStatus.RETIRED
+        assert registered_model.licence.weights.strip()
 
 
 def test_the_typer_carries_its_fitted_temperatures() -> None:

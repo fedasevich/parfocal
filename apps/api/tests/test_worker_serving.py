@@ -39,12 +39,17 @@ def lab(api: ApiAs, database: str) -> Lab:
 @pytest.mark.db
 def test_tiers_and_project_models_show_the_offline_worker(api: ApiAs, lab: Lab) -> None:
     owner = api(lab.people["owner"])
-    with worker_outage(api, "hovernet"):
+    with worker_outage(api, "pathosam-hovernext"):
         tiers = ok(owner.get("/api/tenant/model-tiers"))
         models = ok(owner.get(f"/api/projects/{lab.project}/models"))
     offline_tiers = {(row["task"], row["tier"]) for row in tiers if row["serving"] == "offline"}
-    assert offline_tiers == {("outline", "good"), ("typer", "good")}
-    assert {row["name"] for row in models if row["serving"] == "offline"} == {"hovernet"}
+    assert offline_tiers == {
+        ("outline", "best"),
+        ("outline", "good"),
+        ("typer", "best"),
+        ("typer", "good"),
+    }
+    assert {row["name"] for row in models if row["serving"] == "offline"} == {"pathosam-hovernext"}
     assert {row["serving"] for row in ok(owner.get("/api/tenant/model-tiers"))} == {"ready"}
 
 

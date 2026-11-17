@@ -36,7 +36,7 @@ def test_every_task_has_three_tiers_with_catalogue_defaults(api: ApiAs, database
         "description": "Tumor regions and every cell with a type",
         "label": "PathoSAM + HoVer-NeXt · v1.2",
     }
-    assert tiers[("outline", "good")]["model"]["label"] == "HoVer-Net · v0.9"
+    assert tiers[("outline", "good")]["model"] == best["model"]
     assert tiers[("tumor", "best")]["model"]["name"] == "camelyon-tumor"
     assert [key for key, row in tiers.items() if row["model"] is None] == [
         ("tumor", "good"),
@@ -121,11 +121,11 @@ def test_a_run_by_tier_records_the_exact_model_and_labels_its_stages(
     response = start(api, lab, **run_by_tier("outline", "good"))
     assert response.status_code == 201, response.text
     run = response.json()[0]
-    assert run["parameters"]["detector"] == {"name": "hovernet", "version": "v0.9"}
+    assert run["parameters"]["detector"] == {"name": "pathosam-hovernext", "version": "v1.2"}
     assert run["parameters"]["tier"] == "good"
     execute(database, claim(database, lab, tiled_plan(2)), tier=None)
     assert {row.tier for row in throughput_rows(database, run)} == {"good"}
-    assert {row.model_version for row in throughput_rows(database, run)} == {"v0.9"}
+    assert {row.model_version for row in throughput_rows(database, run)} == {"v1.2"}
 
 
 def test_a_run_by_an_unmapped_tier_or_with_two_detectors_is_refused(
