@@ -8,6 +8,7 @@ export const area = {
   review: "@review",
   annotate: "@annotate",
   signOff: "@sign-off",
+  team: "@team",
 } as const;
 
 export const switchedAreas: readonly string[] = [area.login, area.upload, area.review];
