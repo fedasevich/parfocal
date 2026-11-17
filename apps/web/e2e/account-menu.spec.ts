@@ -53,6 +53,18 @@ test("the status dropdown lists each status with its meaning and picks away and 
   await expect(page.getByRole("menuitem", { name: /^Available/ })).toBeVisible();
 });
 
+test("picking busy from the status dropdown turns the avatar dot busy", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: /^Available/ }).click();
+  const busy = page.getByRole("menuitemradio", { name: /^Busy/ });
+  await expect(busy).toContainText("not taking new review tasks");
+  await busy.click();
+  await expect(page.getByRole("menuitem", { name: /^Busy/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Account menu" }).getByLabel("Busy")).toBeVisible();
+});
+
 test("initials only hides the full name in the menu at once", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Account menu" }).click();

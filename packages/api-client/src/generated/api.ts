@@ -950,6 +950,7 @@ export type Availability = (typeof Availability)[keyof typeof Availability];
 export const Availability = {
   available: "available",
   away: "away",
+  busy: "busy",
 } as const;
 
 /**
@@ -8011,7 +8012,7 @@ export interface WorkspaceDraft {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 54 */
+  /** @maxItems 55 */
   locked?: string[];
 }
 
