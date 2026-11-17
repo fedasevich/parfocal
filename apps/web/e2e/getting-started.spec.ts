@@ -3,7 +3,7 @@ import { expect, test } from "./a11y.ts";
 test("the checklist hides for good through the personal settings", async ({ page }) => {
   await page.goto("/?scene=new");
   const checklist = page.getByRole("region", { name: "Getting started" });
-  await expect(checklist).toContainText("3 of 6");
+  await expect(checklist).toContainText("2 of 6");
   await page.getByRole("button", { name: "Hide the checklist" }).click();
   await expect(checklist).toBeHidden();
   await expect(page.getByRole("heading", { name: /^Welcome to Parfocal/ })).toBeHidden();

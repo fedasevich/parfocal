@@ -2262,12 +2262,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Make every route's search schema fall back to its default, or drop the key, when a value is unknown or malformed, with one shared helper rather than a catch on each field. Drop the invite route's demo token default, so a missing token shows the invalid invite notice.
   Done when a unit test runs every route's search schema against an unknown value for each enum key and none throws, and a browser test opens a project with an unknown tab and sees the slides tab.
   Size: S.
-- [ ] SHELL-020 · Screens stop repeating calls they do not need and show slide thumbnails
+- [x] SHELL-020 · Screens stop repeating calls they do not need and show slide thumbnails
   The production click-through on 2026-11-17 found the viewer asking for `/api/slides/{id}/model-runs` every 5 s for as long as it is open, `/api/slides/{id}/tissue` answering 404, and the shell asking all 22 of its calls again after leaving the viewer, as if it remounted. Project cards on Home and the slide list show blank tiles, and the app never asks for a thumbnail.
   Poll model runs only while one is queued or running and stop when none is, treat a 404 tissue answer as no tissue mask and do not ask again, keep the shell mounted or its queries cached across the viewer route, and request and show slide thumbnails on Home cards and in the slide list, falling back to a neutral tile with the format name when the API has none.
   Done when a browser test counts no model-runs call in 30 s on a slide with no running run, one tissue call for a slide without a mask, no repeat of the shell's calls on leaving the viewer, and a thumbnail image on a Home card and a slide row.
   Size: M.
-- [ ] SHELL-021 · Home and My work tell the truth about the person and their progress
+- [x] SHELL-021 · Home and My work tell the truth about the person and their progress
   The production click-through on 2026-11-17 found the owner named "Workspace owner", a seeded name the account adopted instead of the Zitadel profile name, so Team reads "Workspace owner (you)". The "New here?" tour card covers the Activity panel and clips it. The checklist item "Open the sample project" stays unticked after opening it. My work shows "Slide 2 of 13" beside "0 of 13 slides" and "about 3 h 28 min left" before anything is reviewed.
   Take the display name from the identity provider's profile at sign-in when the stored one is a seeded placeholder, place the tour card so it covers no panel, tick checklist items from what the person actually did, make the slide position and the reviewed count read from one source, and show no time estimate until at least one slide is reviewed.
   Done when unit tests cover the name choice and the estimate rule, and a browser test on Home finds the Activity panel unobscured with the tour card shown and the sample project item ticked after opening it.
