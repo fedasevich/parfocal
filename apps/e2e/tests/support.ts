@@ -36,6 +36,27 @@ export function sql(statement: string): string {
   ).trim();
 }
 
+export function inApiContainer(module: string, args: string[], input?: string): string {
+  return execFileSync(
+    "docker",
+    [
+      "compose",
+      "-f",
+      "compose.yaml",
+      "-f",
+      "infra/local/stack.compose.yaml",
+      "exec",
+      "-T",
+      "server",
+      "python",
+      "-m",
+      module,
+      ...args,
+    ],
+    { cwd: root, encoding: "utf8", ...(input === undefined ? {} : { input }) },
+  ).trim();
+}
+
 export async function signIn(page: Page, deepLink: string): Promise<void> {
   await page.goto(`/sign-in?return_to=${encodeURIComponent(deepLink)}`);
   await page.getByLabel("Work email").fill(username);

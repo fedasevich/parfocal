@@ -1,13 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import {
   deleteZitadelUser,
+  inApiContainer,
   readSession,
-  root,
   sql,
   zitadelIssuer,
   zitadelUserIds,
@@ -24,8 +21,7 @@ const projectOrganisation = process.env["ZITADEL_ORGANIZATION_ID"] ?? "";
 
 let tenantId = "";
 let idpId = "";
-let workdir = "";
-let metadataFile = "";
+let metadata = "";
 
 function docker(...args: string[]): string {
   return execFileSync("docker", args, { encoding: "utf8" }).trim();
@@ -60,12 +56,8 @@ async function idpMetadata(): Promise<string> {
   return metadata;
 }
 
-function tenantCommand(...args: string[]): string {
-  return execFileSync(
-    "uv",
-    ["run", "--package", "parfocal-api", "python", "-m", "parfocal_api.tenant_command", ...args],
-    { cwd: root, encoding: "utf8" },
-  ).trim();
+function tenantCommand(args: string[], input?: string): string {
+  return inApiContainer("parfocal_api.tenant_command", args, input);
 }
 
 function zitadel(path: string, organisation: string, body?: unknown): Promise<Response> {
@@ -92,24 +84,27 @@ async function parfocalProjectId(): Promise<string> {
 
 async function connectSaml(): Promise<{ organisation: string; idp: string }> {
   const connected = tenantCommand(
-    "connect-saml",
-    tenantId,
-    "--metadata-file",
-    metadataFile,
-    "--email-domain",
-    domain,
-    "--project-organisation-id",
-    projectOrganisation,
-    "--project-id",
-    await parfocalProjectId(),
-    "--default-role",
-    "researcher",
-    "--group-role",
-    "group1=reviewer",
-    "--groups-attribute",
-    "eduPersonAffiliation",
-    "--subject-attribute",
-    "uid",
+    [
+      "connect-saml",
+      tenantId,
+      "--metadata-file",
+      "/dev/stdin",
+      "--email-domain",
+      domain,
+      "--project-organisation-id",
+      projectOrganisation,
+      "--project-id",
+      await parfocalProjectId(),
+      "--default-role",
+      "researcher",
+      "--group-role",
+      "group1=reviewer",
+      "--groups-attribute",
+      "eduPersonAffiliation",
+      "--subject-attribute",
+      "uid",
+    ],
+    metadata,
   );
   sql(
     "UPDATE sso_connections SET domain_proofs = jsonb_set(domain_proofs, " +
@@ -169,14 +164,12 @@ test.describe("per-workspace SSO", () => {
       `SELECT tenant_id FROM sso_connections WHERE '${domain}' = ANY(email_domains)`,
     );
     for (const leftover of stale.split("\n").filter(Boolean)) {
-      tenantCommand("deprovision", leftover);
+      tenantCommand(["deprovision", leftover]);
     }
     await forgetPasswordAccounts();
-    workdir = mkdtempSync(join(tmpdir(), "parfocal-sso-"));
     startIdp("http://placeholder.invalid/metadata");
-    metadataFile = join(workdir, "idp-metadata.xml");
-    writeFileSync(metadataFile, await idpMetadata());
-    tenantId = tenantCommand(
+    metadata = await idpMetadata();
+    tenantId = tenantCommand([
       "provision",
       "--organisation-slug",
       slug,
@@ -188,7 +181,7 @@ test.describe("per-workspace SSO", () => {
       "SSO Hospital research",
       "--kind",
       "research",
-    );
+    ]);
     idpId = (await connectSaml()).idp;
     expect(idpId).not.toBe("");
     startIdp(`${zitadelIssuer}/idps/${idpId}/saml/metadata`);
@@ -198,12 +191,9 @@ test.describe("per-workspace SSO", () => {
   test.afterAll(async () => {
     execFileSync("docker", ["rm", "-f", idpContainer], { stdio: "ignore" });
     if (tenantId) {
-      tenantCommand("deprovision", tenantId);
+      tenantCommand(["deprovision", tenantId]);
     }
     await forgetPasswordAccounts();
-    if (workdir) {
-      rmSync(workdir, { recursive: true, force: true });
-    }
   });
 
   test("running connect-saml again updates the connection instead of adding a second one", async () => {

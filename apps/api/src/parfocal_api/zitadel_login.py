@@ -32,6 +32,10 @@ class WrongPasswordError(LoginClientError):
     pass
 
 
+class UserNotFoundError(WrongPasswordError):
+    pass
+
+
 @dataclass(frozen=True)
 class FoundUser:
     user_id: str
@@ -146,6 +150,8 @@ class ZitadelLogin:
                 "lifetime": SESSION_LIFETIME,
             },
         )
+        if response.status_code == 404:
+            raise UserNotFoundError
         if 400 <= response.status_code < 500:
             raise WrongPasswordError
         if response.status_code >= 300:

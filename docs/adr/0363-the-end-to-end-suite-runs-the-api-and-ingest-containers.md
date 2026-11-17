@@ -31,6 +31,8 @@ An upload starts ingest because the completed upload enqueues an `ingest` job an
 - The ingest image is new and is not yet scanned or built in the `images` job. TODO: add it there when the Modal image question in FOUND-015 is settled.
 - The edge Worker stays out, as the task says. Tiles, realtime and edge headers are still not covered by the suite.
 - Production still has no trigger for the ingest function. The resident worker here proves the job path, not the trigger.
+- The SSO spec runs `parfocal_api.tenant_command` inside the API container with `docker compose exec`, and passes the IdP metadata on stdin, since the host no longer holds the API settings.
+- The first full run exposed a race that the old setup hid: a fresh Zitadel can answer 404 when the API opens the first session of a user it has just created. Sign-up now retries that first session on a 404 for up to about 3 s (`NEW_USER_WAITS` in `password_login.py`) and still answers `identity-unavailable` after that.
 - A parallel session runs its own stack by setting `COMPOSE_PROJECT_NAME`, `PARFOCAL_E2E_PORT` and the `PARFOCAL_*_PORT` variables.
 
 ## Reopen when
