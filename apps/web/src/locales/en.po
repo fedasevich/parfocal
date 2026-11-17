@@ -1739,6 +1739,10 @@ msgstr "{added} added."
 msgid "{asker} asked you to decide"
 msgstr "{asker} asked you to decide"
 
+#: src/study/trace/replay-panel.tsx
+msgid "{atSeconds}s / {totalSeconds}s"
+msgstr "{atSeconds}s / {totalSeconds}s"
+
 #. placeholder {0}: templates.length - builtIn
 #: src/screens/admin/templates.tsx
 msgid "{builtIn} come with Parfocal, {0} made here"
@@ -11343,6 +11347,7 @@ msgstr "Patients show full names."
 
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/upload/case-upload-drawer.tsx
+#: src/study/trace/replay-panel.tsx
 msgid "Pause"
 msgstr "Pause"
 
@@ -11595,6 +11600,10 @@ msgstr "Placeholder. The screen is built by {builtBy}."
 msgid "Plain"
 msgstr "Plain"
 
+#: src/study/trace/replay-panel.tsx
+msgid "Play"
+msgstr "Play"
+
 #: src/flow-map/walk-bar.tsx
 msgid "Play all, from upload to the signed report"
 msgstr "Play all, from upload to the signed report"
@@ -11610,6 +11619,10 @@ msgstr "Point marker"
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Pointer"
 msgstr "Pointer"
+
+#: src/study/trace/replay-panel.tsx
+msgid "Pointer only"
+msgstr "Pointer only"
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Polygon"
@@ -12289,6 +12302,18 @@ msgstr "Repeat it"
 #: src/screens/upload/files-step.tsx
 msgid "Replace"
 msgstr "Replace"
+
+#: src/study/study-screen.tsx
+msgid "Replay"
+msgstr "Replay"
+
+#: src/study/trace/replay-panel.tsx
+msgid "Replay position"
+msgstr "Replay position"
+
+#: src/study/trace/replay-panel.tsx
+msgid "Replay screen"
+msgstr "Replay screen"
 
 #: src/screens/my-work/to-review-tab.tsx
 msgid "replied on"
@@ -13812,6 +13837,10 @@ msgstr "Show overlays"
 #: src/annotations/layers-panel.tsx
 msgid "Show overlays (A)"
 msgstr "Show overlays (A)"
+
+#: src/study/trace/replay-panel.tsx
+msgid "Show screen"
+msgstr "Show screen"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Show the AI result"
@@ -15683,6 +15712,10 @@ msgstr "The sample project stays in your workspace as Sample · sentinel nodes a
 #: src/screens/admin/workspace-settings.tsx
 msgid "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
 msgstr "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
+
+#: src/study/study-screen.tsx
+msgid "The screen recorder did not load. An ad blocker may be blocking it. Sessions will record the pointer and keys only, without the screen."
+msgstr "The screen recorder did not load. An ad blocker may be blocking it. Sessions will record the pointer and keys only, without the screen."
 
 #: src/feedback/feedback-dialog.tsx
 msgid "The screenshot that will be sent, with slides and patient details blurred"

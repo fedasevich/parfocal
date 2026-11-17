@@ -1737,6 +1737,10 @@ msgstr ""
 msgid "{asker} asked you to decide"
 msgstr ""
 
+#: src/study/trace/replay-panel.tsx
+msgid "{atSeconds}s / {totalSeconds}s"
+msgstr ""
+
 #. placeholder {0}: templates.length - builtIn
 #: src/screens/admin/templates.tsx
 msgid "{builtIn} come with Parfocal, {0} made here"
@@ -11338,6 +11342,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/upload/case-upload-drawer.tsx
+#: src/study/trace/replay-panel.tsx
 msgid "Pause"
 msgstr ""
 
@@ -11590,6 +11595,10 @@ msgstr ""
 msgid "Plain"
 msgstr ""
 
+#: src/study/trace/replay-panel.tsx
+msgid "Play"
+msgstr ""
+
 #: src/flow-map/walk-bar.tsx
 msgid "Play all, from upload to the signed report"
 msgstr ""
@@ -11604,6 +11613,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Pointer"
+msgstr ""
+
+#: src/study/trace/replay-panel.tsx
+msgid "Pointer only"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -12279,6 +12292,18 @@ msgstr ""
 
 #: src/screens/upload/files-step.tsx
 msgid "Replace"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Replay"
+msgstr ""
+
+#: src/study/trace/replay-panel.tsx
+msgid "Replay position"
+msgstr ""
+
+#: src/study/trace/replay-panel.tsx
+msgid "Replay screen"
 msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
@@ -13802,6 +13827,10 @@ msgstr ""
 
 #: src/annotations/layers-panel.tsx
 msgid "Show overlays (A)"
+msgstr ""
+
+#: src/study/trace/replay-panel.tsx
+msgid "Show screen"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -15673,6 +15702,10 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "The screen recorder did not load. An ad blocker may be blocking it. Sessions will record the pointer and keys only, without the screen."
 msgstr ""
 
 #: src/feedback/feedback-dialog.tsx

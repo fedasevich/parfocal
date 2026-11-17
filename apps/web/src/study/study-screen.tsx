@@ -20,8 +20,14 @@ import {
   summariseRound,
 } from "./study-model.ts";
 import { readStudy, writeStudy } from "./study-storage.ts";
+import { ReplayPanel } from "./trace/replay-panel.tsx";
+import { mergeBatches, type TraceEvent } from "./trace/trace-model.ts";
+import { createRecorder, type FrameTools, type Recorder } from "./trace/trace-recorder.ts";
+import { createBatcher, indexedDbSink } from "./trace/trace-store.ts";
 
 const stamp = () => now().getTime();
+
+const traceClock = () => Math.round(performance.timeOrigin + performance.now());
 
 const timerText = (seconds: number, target: number | undefined): string =>
   target === undefined ? `${seconds}s` : `${seconds}s / ${target}s`;
@@ -76,6 +82,38 @@ export function StudyScreen() {
   const context = useStudyContext();
   const taskWindow = useRef<Window | null>(null);
   const staleDocument = useRef<Document | undefined>(undefined);
+  const recorder = useRef<Recorder | null>(null);
+  const frameTools = useRef<FrameTools | undefined>(undefined);
+  const sink = useRef(indexedDbSink());
+  const [recorderState, setRecorderState] = useState<"loading" | "ready" | "blocked">("loading");
+  const [replay, setReplay] = useState<{ sessionId: string; events: TraceEvent[] } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    import("./trace/dom-frames.ts").then(
+      (module) => {
+        if (cancelled) return;
+        frameTools.current = {
+          captureFrame: (doc) => module.captureFrame(doc),
+          captureHead: (doc) => module.captureHead(doc),
+        };
+        setRecorderState("ready");
+      },
+      () => {
+        if (!cancelled) setRecorderState("blocked");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      void recorder.current?.stop();
+    },
+    [],
+  );
 
   useEffect(() => {
     if (taskStart === null) return;
@@ -97,6 +135,12 @@ export function StudyScreen() {
     const name = participant.trim();
     if (name === "") return;
     const id = `s${state.sessions.length + 1}-${stamp()}`;
+    void recorder.current?.stop();
+    recorder.current = createRecorder({
+      batcher: createBatcher(id, sink.current),
+      now: traceClock,
+      frames: () => frameTools.current,
+    });
     commit(startSession(state, name, id, stamp()));
     setActiveId(id);
     setTaskStart(null);
@@ -105,6 +149,7 @@ export function StudyScreen() {
 
   const finish = (outcome: Outcome, auto = false) => {
     if (active === undefined || current === undefined || taskStart === null) return;
+    recorder.current?.mark(current.id, "end", outcome);
     commit(
       recordResult(state, active.id, {
         taskId: current.id,
@@ -119,9 +164,11 @@ export function StudyScreen() {
 
   const startTask = () => {
     setTaskStart(stamp());
+    if (current !== undefined) recorder.current?.mark(current.id, "start");
     if (startPath === undefined) return;
     taskWindow.current = window.open(startPath, taskWindowName);
     staleDocument.current = documentOf(taskWindow.current);
+    recorder.current?.attach(taskWindow.current);
   };
 
   useEffect(() => {
@@ -150,6 +197,19 @@ export function StudyScreen() {
     setTaskStart(null);
   };
 
+  useEffect(() => {
+    if (active !== undefined && current === undefined && recorder.current !== null) {
+      void recorder.current.stop();
+      recorder.current = null;
+    }
+  });
+
+  const showReplay = async (sessionId: string) => {
+    const batches = await sink.current.read(sessionId);
+    setReplay({ sessionId, events: mergeBatches(batches) });
+  };
+
+  const titles = Object.fromEntries(round.tasks.map((task) => [task.id, task.title]));
   const summary = summariseRound(state, round.number);
 
   return (
@@ -173,6 +233,14 @@ export function StudyScreen() {
         <h2 className="font-semibold text-fg">
           <Trans>Run a session</Trans>
         </h2>
+        {recorderState === "blocked" ? (
+          <p role="alert" className="text-danger" data-testid="study-recorder-warning">
+            <Trans>
+              The screen recorder did not load. An ad blocker may be blocking it. Sessions will
+              record the pointer and keys only, without the screen.
+            </Trans>
+          </p>
+        ) : null}
         {current === undefined || active === undefined ? (
           <div className="flex gap-2">
             <input
@@ -221,6 +289,8 @@ export function StudyScreen() {
                     type="button"
                     className="rounded border border-line px-3 py-1 text-fg"
                     onClick={() => {
+                      recorder.current?.mark(current.id, "start");
+                      recorder.current?.mark(current.id, "end", "skipped");
                       commit(
                         recordResult(state, active.id, {
                           taskId: current.id,
@@ -260,6 +330,7 @@ export function StudyScreen() {
                   onClick={(event) => {
                     event.preventDefault();
                     taskWindow.current = window.open(startPath, taskWindowName);
+                    recorder.current?.attach(taskWindow.current);
                   }}
                 >
                   <Trans>Open start screen</Trans>
@@ -315,7 +386,15 @@ export function StudyScreen() {
           {state.sessions
             .filter((session) => session.round === round.number)
             .map((session) => (
-              <li key={session.id}>
+              <li key={session.id} className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="rounded border border-line px-2 py-0.5 text-fg"
+                  data-testid={`study-replay-${session.id}`}
+                  onClick={() => void showReplay(session.id)}
+                >
+                  <Trans>Replay</Trans>
+                </button>
                 {session.participant}
                 {": "}
                 {session.results
@@ -327,6 +406,9 @@ export function StudyScreen() {
               </li>
             ))}
         </ul>
+        {replay === null ? null : (
+          <ReplayPanel key={replay.sessionId} events={replay.events} titles={titles} />
+        )}
         <button
           type="button"
           className="w-fit rounded border border-line px-3 py-1 text-fg"
