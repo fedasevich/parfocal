@@ -17,17 +17,16 @@ async def no_wake() -> None:
     return None
 
 
-class Wakeup:
-    waker: Waker = staticmethod(no_wake)
+WAKERS: list[Waker] = [no_wake]
 
 
 def set_waker(waker: Waker) -> None:
-    Wakeup.waker = staticmethod(waker)
+    WAKERS[0] = waker
 
 
 async def wake() -> None:
     try:
-        await Wakeup.waker()
+        await WAKERS[0]()
     except Exception:
         logger.warning("event sweep could not be started", exc_info=True)
 
