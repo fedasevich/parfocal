@@ -110,10 +110,22 @@ def run_ingest() -> None:
     asyncio.run(main())
 
 
+def sweep_remote_caches() -> None:
+    import asyncio
+
+    from parfocal_api.remote_cache_sweep import run_once
+    from parfocal_api.settings import ApiSettings
+    from parfocal_common.settings import load_settings
+
+    asyncio.run(run_once(load_settings(ApiSettings)))
+
+
 def run_events(linger_minutes: int = 0) -> None:
     from parfocal_api.event_delivery import main
 
     main(["--linger-minutes", str(linger_minutes)])
+    if linger_minutes == 0:
+        sweep_remote_caches()
 
 
 class EventSpawner:

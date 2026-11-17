@@ -208,3 +208,18 @@ def test_a_failed_spawn_is_tried_again_at_the_next_event() -> None:
         asyncio.run(spawner())
     asyncio.run(spawner())
     assert len(attempts) == 2
+
+
+def test_the_hourly_event_run_also_sweeps_the_remote_tile_caches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import parfocal_api.event_delivery
+
+    calls: list[str] = []
+    monkeypatch.setattr(
+        parfocal_api.event_delivery, "main", lambda argv: calls.append(f"events {argv[-1]}")
+    )
+    monkeypatch.setattr(modal_app, "sweep_remote_caches", lambda: calls.append("caches"))
+    modal_app.run_events()
+    modal_app.run_events(EVENTS_LINGER_MINUTES)
+    assert calls == ["events 0", "caches", f"events {EVENTS_LINGER_MINUTES}"]
