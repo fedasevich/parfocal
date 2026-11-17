@@ -24,7 +24,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.hidden_models import hidden_names, refuse_hidden
-from parfocal_api.lab_models import check_lab_run
+from parfocal_api.lab_models import LabModelChangedError, check_lab_run, saved_lab_model
 from parfocal_api.model_catalogue import (
     BY_NAME,
     CATALOGUE,
@@ -326,29 +326,42 @@ router = APIRouter(prefix="/api/projects", tags=["model-runs"])
 
 
 def resolved(choice: ModelChoice) -> ModelReference:
-    version = choice.version or latest_version(choice.name)
-    if version is None:
+    latest = latest_version(choice.name)
+    if latest is None:
         raise ModelNotFoundError(f"{choice.name!r} is not a Parfocal model")
-    return ModelReference(name=choice.name, version=version)
+    return ModelReference(name=choice.name, version=choice.version or latest)
 
 
 async def detector_of(
-    connection: AsyncConnection, choices: RunChoices, project_id: uuid.UUID
+    connection: AsyncConnection,
+    principal: Principal,
+    choices: RunChoices,
+    project_id: uuid.UUID,
 ) -> ModelReference:
     if choices.tier is not None:
         model = await mapped(connection, choices.tier)
         return ModelReference(name=model.name, version=model.version)
     assert choices.detector is not None
     if latest_version(choices.detector.name) is None:
-        await check_lab_run(connection, project_id, choices.detector.name, choices.detector.version)
+        lab = await check_lab_run(
+            connection, principal, project_id, choices.detector.name, choices.detector.version
+        )
+        if lab is None:
+            raise ModelNotFoundError(
+                f"{choices.detector.name!r} is neither a Parfocal model nor a connected lab model"
+            )
+        return ModelReference(name=lab.name, version=lab.version)
     return resolved(choices.detector)
 
 
 async def parameters_from(
-    connection: AsyncConnection, choices: RunChoices, project_id: uuid.UUID
+    connection: AsyncConnection,
+    principal: Principal,
+    choices: RunChoices,
+    project_id: uuid.UUID,
 ) -> RunParameters:
     return RunParameters(
-        detector=await detector_of(connection, choices, project_id),
+        detector=await detector_of(connection, principal, choices, project_id),
         typer=resolved(choices.typer) if choices.typer is not None else None,
         test_time_views=choices.test_time_views,
         ordering=choices.ordering,
@@ -606,7 +619,7 @@ async def start_model_runs(
     await check_slides(connection, project_id, draft)
     if isinstance(draft.scope, SelectionScope):
         await check_selection(connection, draft.scope)
-    parameters = await parameters_from(connection, draft.parameters, project_id)
+    parameters = await parameters_from(connection, principal, draft.parameters, project_id)
     await refuse_hidden(
         connection,
         {parameters.detector.name} | ({parameters.typer.name} if parameters.typer else set()),
@@ -729,6 +742,15 @@ async def get_model_run(
     return (await runs_of(connection, [row], controls))[0]
 
 
+async def check_lab_still_connected(
+    connection: AsyncConnection, detector: str, version: str
+) -> None:
+    if latest_version(detector) is not None:
+        return
+    if await saved_lab_model(connection, detector, version) is None:
+        raise LabModelChangedError
+
+
 async def control_run(
     connection: AsyncConnection,
     principal: Principal,
@@ -738,6 +760,8 @@ async def control_run(
 ) -> ModelRun:
     row = await readable_run(connection, principal, project_id, run_id)
     await require_controlling(connection, principal, project_id, row.archived_at is not None)
+    if control is not JobControl.CANCEL:
+        await check_lab_still_connected(connection, row.detector, row.detector_version)
     moved = await move(connection, run_id, control)
     if moved is None:
         raise ModelRunNotFoundError

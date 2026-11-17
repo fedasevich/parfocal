@@ -704,7 +704,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {
             "slide_ids": [str(w.slide)],
             "scope": {"kind": "slide"},
-            "parameters": {"detector": {"name": "matrix-detector", "version": "1"}},
+            "parameters": {"detector": {"name": "pathosam-hovernext", "version": "v1.2"}},
         },
     ),
     "listModelRuns": lambda w: Call("GET", f"/api/projects/{w.project}/model-runs"),
