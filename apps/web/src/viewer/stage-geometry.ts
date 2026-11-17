@@ -1,3 +1,6 @@
+import { type ClassPaint, paintFor } from "./class-paint.ts";
+import type { ClassName } from "./viewer-engine.ts";
+
 export type StageStart = { readonly x: number; readonly y: number; readonly scale: number };
 
 export type StageArea = { x: number; y: number; width: number; height: number };
@@ -57,10 +60,13 @@ export function nextOpenObject(
   return rotated.find((id) => id !== after && !decided.has(id)) ?? null;
 }
 
-const engineClasses = ["tumor", "stroma", "immune", "other"] as const;
+const unknownPaint = { className: "other" as ClassName };
 
-export const engineClassOf = (name: string) =>
-  engineClasses.find((item) => item === name.toLowerCase()) ?? "other";
+const paintOf = (paints: readonly (ClassPaint | undefined)[], index: number | null | undefined) =>
+  index === null || index === undefined ? undefined : paints[index];
+
+const painted = (paint: ClassPaint | undefined) =>
+  paint === undefined ? unknownPaint : { className: paint.className, classColour: paint.colour };
 
 type ChunkRows = {
   readonly number: ArrayLike<number>;
@@ -73,12 +79,17 @@ type LiveCells = {
   forEachLive(visit: (chunk: ChunkRows, local: number, classIndex: number) => void): void;
 };
 
-export function chunkCells(setId: string, cells: LiveCells, names: readonly string[]) {
+export function chunkCells(
+  setId: string,
+  cells: LiveCells,
+  paints: readonly (ClassPaint | undefined)[],
+) {
   const drawn: {
     id: string;
     kind: "cell";
     ring: Float32Array;
-    className: (typeof engineClasses)[number];
+    className: ClassName;
+    classColour?: ClassPaint["colour"];
     score: number;
   }[] = [];
   cells.forEachLive((chunk, local, classIndex) => {
@@ -89,7 +100,7 @@ export function chunkCells(setId: string, cells: LiveCells, names: readonly stri
       id: `${setId}:${chunk.number[local] ?? local}`,
       kind: "cell",
       ring: chunk.points.subarray(from, to),
-      className: engineClassOf(names[classIndex] ?? ""),
+      ...painted(paintOf(paints, classIndex)),
       score: (chunk.score[local] ?? 255) / 255,
     });
   });
@@ -106,7 +117,7 @@ type SetRegionRow = {
 export function setRegions(
   setId: string,
   regions: readonly SetRegionRow[],
-  names: readonly string[],
+  paints: readonly (ClassPaint | undefined)[],
 ) {
   return regions
     .filter((region) => region.outline.length >= 6)
@@ -114,11 +125,7 @@ export function setRegions(
       id: `${setId}:region:${region.number}`,
       kind: "region" as const,
       ring: region.outline,
-      className: engineClassOf(
-        region.class_index === null || region.class_index === undefined
-          ? ""
-          : (names[region.class_index] ?? ""),
-      ),
+      ...painted(paintOf(paints, region.class_index)),
       score: region.score ?? 1,
     }));
 }
@@ -176,7 +183,10 @@ export function summaryCells(setId: string, summary: SummaryRows) {
   return cells;
 }
 
-export function placedObjects(objects: readonly Placeable[]) {
+export function placedObjects(
+  objects: readonly Placeable[],
+  projectClasses: readonly { id: string; name: string; colour: string }[] = [],
+) {
   return objects.flatMap((item) =>
     item.outline && item.outline.length >= 6
       ? [
@@ -184,7 +194,7 @@ export function placedObjects(objects: readonly Placeable[]) {
             id: item.object,
             kind: item.kind === "cell" ? ("cell" as const) : ("region" as const),
             ring: item.outline,
-            className: engineClassOf(item.class_name),
+            ...painted(paintFor(item.class_name, projectClasses)),
             score: item.score,
           },
         ]

@@ -311,6 +311,17 @@ test("a result set's cells page in as outlines and its regions draw outside a ta
   const regions = page.locator(`[data-testid="result-set-regions"]${sam}`);
   await expect(regions).toHaveAttribute("data-regions", "2");
   await expect(page.getByTestId("result-set-regions")).toHaveCount(2);
+  await page.getByRole("tab", { name: "Display" }).click();
+  const legend = page.locator(`[data-testid="class-legend"]${sam}`);
+  const rows = legend.getByTestId("class-legend-row");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toHaveAttribute("data-class", "Neoplastic");
+  await expect(rows.nth(1)).toHaveAttribute("data-class", "Inflammatory");
+  const colours = await rows.evaluateAll((items) =>
+    items.map((item) => item.getAttribute("data-colour")),
+  );
+  expect(new Set(colours).size).toBe(2);
+  expect(colours).not.toContain("#fbbf24");
   const toggle = page.getByRole("button", { name: "Hide PathoSAM + HoVer-NeXt" });
   await toggle.click();
   await expect(page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" })).toHaveAttribute(
@@ -319,6 +330,7 @@ test("a result set's cells page in as outlines and its regions draw outside a ta
   );
   await expect(cells).toHaveCount(0);
   await expect(regions).toHaveCount(0);
+  await expect(legend).toHaveCount(0);
   await expect(page.getByTestId("result-set-regions")).toHaveCount(1);
   await page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" }).click();
   await expect(cells).toHaveAttribute("data-drawn", "outlines");

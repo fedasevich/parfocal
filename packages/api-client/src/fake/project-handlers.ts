@@ -21,6 +21,7 @@ import type {
   ProjectImports,
   ProjectOverview,
   ResultSet,
+  ResultSetDetail,
   ReviewTask,
   SlideArea,
   SourceListing,
@@ -244,6 +245,29 @@ export const toSlideResultSets = (
       },
     ];
   });
+};
+
+const fakeSetClassNames: Partial<Record<ResultSetKey, readonly string[]>> = {
+  sam: ["Neoplastic", "Inflammatory"],
+};
+
+export const toResultSetDetail = (setId: string): ResultSetDetail | undefined => {
+  const set = resultSets.find((candidate) => candidate.id === setId);
+  const slide = slides.find((candidate) => set !== undefined && candidate.sets.includes(set.key));
+  if (set === undefined || slide === undefined) return undefined;
+  const listed = toSlideResultSets(slide.id).find((candidate) => candidate.id === setId);
+  if (listed === undefined) return undefined;
+  const names = fakeSetClassNames[set.key] ?? ["Tumor"];
+  return {
+    ...listed,
+    classes: names.map((name, position) => ({
+      position,
+      source_name: name.toLowerCase(),
+      name,
+      class_id: null,
+      object_count: 0,
+    })),
+  };
 };
 
 const fakeAreaBounds = [

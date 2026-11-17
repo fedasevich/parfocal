@@ -63,6 +63,7 @@ import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
 import { pagedCellSource } from "./paged-cell-source.ts";
+import { toResultSetDetail } from "./project-handlers.ts";
 import {
   addedOn,
   addObject,
@@ -606,9 +607,11 @@ export function reviewHandlers(): RequestHandler[] {
       toSlideAgreement(String(params.taskId), String(params.slideId)),
     ),
     ...displayChoiceHandlers((taskId) => taskById(taskId)?.code ?? ""),
-    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) =>
-      aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined,
-    ),
+    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) => {
+      if (aiHiddenForResultSet(params.resultSetId)) return aiHidden();
+      const detail = toResultSetDetail(params.resultSetId);
+      return detail === undefined ? undefined : HttpResponse.json(detail);
+    }),
     http.get<{ resultSetId: string }>(
       "*/api/result-sets/:resultSetId/cell-summary",
       async ({ params }) =>

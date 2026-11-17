@@ -1,6 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import {
+  classPaints,
+  fallbackColour,
+  fallbackPalette,
+  hexToRgba,
+} from "../src/viewer/class-paint.ts";
 import { chunkCells, setRegions, summaryCells } from "../src/viewer/stage-geometry.ts";
+import { classColors } from "../src/viewer/viewer-engine.ts";
+
+const named = (...names: string[]) =>
+  classPaints(
+    names.map((name, position) => ({ position, name })),
+    [],
+  );
 
 test("each summary row becomes a cell dot at its centre with its score", () => {
   const summary = {
@@ -35,12 +48,13 @@ test("loaded chunk cells become class-coloured outlines named by the set's class
       visit(chunk, 1, 0);
     },
   };
-  const drawn = chunkCells("set", cells, ["Tumor", "Lymphocyte"]);
+  const drawn = chunkCells("set", cells, named("Tumor", "Lymphocyte"));
   assert.deepEqual(
     drawn.map((cell) => [cell.id, cell.className, cell.score, Array.from(cell.ring)]),
     [["set:7", "other", 1, [0, 0, 10, 0, 10, 10]]],
   );
-  assert.equal(chunkCells("set", cells, ["Stroma", "TUMOR"])[0]?.className, "tumor");
+  assert.deepEqual(drawn[0]?.classColour, fallbackColour("Lymphocyte"));
+  assert.equal(chunkCells("set", cells, named("Stroma", "TUMOR"))[0]?.className, "tumor");
 });
 
 test("a set's regions keep their outline and take their class colour", () => {
@@ -50,7 +64,7 @@ test("a set's regions keep their outline and take their class colour", () => {
       { number: 1, class_index: 0, score: 0.5, outline: [0, 0, 9, 0, 9, 9] },
       { number: 2, class_index: null, score: null, outline: [1, 1, 2, 2] },
     ],
-    ["Tumor"],
+    named("Tumor"),
   );
   assert.deepEqual(regions, [
     {
@@ -58,7 +72,32 @@ test("a set's regions keep their outline and take their class colour", () => {
       kind: "region",
       ring: [0, 0, 9, 0, 9, 9],
       className: "tumor",
+      classColour: classColors.tumor,
       score: 0.5,
     },
   ]);
+});
+
+test("set classes take the project colour by class id, then by name, then a stable fallback", () => {
+  const project = [
+    { id: "c1", name: "Neoplastic", colour: "#112233" },
+    { id: "c2", name: "Inflammatory", colour: "#445566" },
+  ];
+  const paints = classPaints(
+    [
+      { position: 0, name: "neoplastic", class_id: null },
+      { position: 1, name: "Renamed", class_id: "c2" },
+      { position: 2, name: "Dead" },
+      { position: 3, name: "Stroma" },
+    ],
+    project,
+  );
+  assert.deepEqual(
+    paints.map((paint) => paint.hex),
+    ["#112233", "#445566", paints[2]?.hex, "#6ee7b7"],
+  );
+  assert.ok(fallbackPalette.some((hex) => hex === paints[2]?.hex));
+  assert.deepEqual(classPaints([{ position: 0, name: "dead" }], [])[0]?.hex, paints[2]?.hex);
+  assert.equal(paints[3]?.className, "stroma");
+  assert.equal(hexToRgba("nope"), null);
 });
