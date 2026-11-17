@@ -1,16 +1,18 @@
 import re
+import uuid
 
 import pytest
 from db_support import ApiAs
 from test_home import judge
 from test_my_work import submit, task
-from test_review_tasks import Study, study
+from test_review_tasks import MODEL, Study, add_set, insert_id, study
 from workspace_support import join_project, make_project
 
 pytestmark = pytest.mark.db
 
 ROUTES = ("/api/me/home", "/api/me/review-tasks", "/api/me/notification-preferences")
 HANDFUL = 14
+SLIDES_PAGE = 12
 
 
 def queries(api: ApiAs, s: Study, who: str, route: str) -> int:
@@ -55,3 +57,36 @@ def test_home_and_my_lists_read_a_handful_of_queries_however_much_work_there_is(
     large = counts(api, s)
     assert large == small
     assert max(large.values()) <= HANDFUL
+
+
+def many_slides(database: str, s: Study, count: int) -> list[uuid.UUID]:
+    made = [
+        insert_id(
+            database,
+            "INSERT INTO slides (tenant_id, project_id, label) "
+            f"VALUES ('{s.tenant_id}', '{s.project}', 'bulk-{index}') RETURNING id",
+        )
+        for index in range(count)
+    ]
+    for slide in made:
+        add_set(database, s.tenant_id, s.project, slide, MODEL, "ready")
+    return made
+
+
+def test_my_slides_reads_a_handful_of_queries_however_many_tasks_the_page_touches(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    bulk = [str(slide) for slide in many_slides(database, s, 46)]
+    pair = [s.user("first"), s.user("second")]
+    for name in ("One", "Two", "Three"):
+        task(api, s, name=name, slide_ids=bulk[:10], case_ids=[], reviewer_ids=pair)
+    few = queries(api, s, "owner", "/api/me/slides?limit=50")
+    for index in range(5):
+        chosen = bulk[10 + index * 5 : 15 + index * 5]
+        task(api, s, name=f"More {index}", slide_ids=chosen, case_ids=[], reviewer_ids=pair)
+    many = queries(api, s, "owner", "/api/me/slides?limit=50")
+    rows = api(s.people["owner"]).get("/api/me/slides", params={"limit": 50}).json()["slides"]
+    assert len(rows) == 50
+    assert many == few
+    assert many <= SLIDES_PAGE

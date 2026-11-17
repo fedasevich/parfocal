@@ -4638,6 +4638,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when db tests pin the query counts of the three routes to a handful each, the request log line carries the region, and a result file has before and after numbers from curl and Server-Timing.
   Depends on: OPS-031.
   Size: M.
+- [x] OPS-034 · My slides page reads its review states in batches
+  `/api/me/slides` measured about 70 queries for one page on app.parfocal.eu because the page loaded the full review state of every task one task at a time (the task row, its slides, its disagreement queue and its assignments). The page now loads the states of all the tasks it touches together, so the count no longer grows with the number of tasks.
+  Done when a db test pins `/api/me/slides` for 50 slides under 12 queries however many tasks the page touches, and the slides, sessions and review state tests still pass.
+  Depends on: OPS-033.
+  Size: S.
 
 ---
 
