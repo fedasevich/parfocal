@@ -5,6 +5,7 @@ from pathlib import Path
 import modal
 import pytest
 
+from parfocal_common.db import POOL_OVERFLOW, POOL_SIZE
 from parfocal_common.repository import repository_root
 from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
@@ -17,6 +18,7 @@ from parfocal_deploy.modal_app import (
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
     SECRETS,
+    WEB_CONCURRENCY,
     WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
@@ -96,6 +98,28 @@ def test_the_image_installs_the_app_lock_and_no_workspace_package() -> None:
 
 def test_the_web_function_refuses_requests_without_the_proxy_token() -> None:
     assert WEB_ENDPOINT == {"requires_proxy_auth": True}
+
+
+def test_one_web_container_serves_parallel_requests_within_its_database_pool(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    applied: list[dict[str, int]] = []
+    real_concurrent = modal.concurrent
+
+    def recording_concurrent(**options: int) -> object:
+        applied.append(options)
+        return real_concurrent(**options)
+
+    monkeypatch.setattr(modal, "concurrent", recording_concurrent)
+    try:
+        importlib.reload(modal_app)
+    finally:
+        monkeypatch.undo()
+        importlib.reload(modal_app)
+    assert applied == [WEB_CONCURRENCY]
+    assert WEB_CONCURRENCY["target_inputs"] <= WEB_CONCURRENCY["max_inputs"]
+    assert WEB_CONCURRENCY["max_inputs"] > 1
+    assert 2 * WEB_CONCURRENCY["max_inputs"] <= POOL_SIZE + POOL_OVERFLOW
 
 
 def test_the_app_module_loads_from_the_shallow_path_modal_copies_it_to(

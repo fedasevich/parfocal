@@ -27,6 +27,7 @@ MAX_DEPLOYED_CRONS = 5
 PARSE_LAUNCHER = "parfocal_deploy.parse_sandbox:ingest_launcher"
 
 WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
+WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 10, "target_inputs": 8}
 WEB_OPTIONS: dict[str, Any] = {
     "name": WEB_FUNCTION,
     "memory": (512, 2048),
@@ -97,7 +98,7 @@ def secrets_of(function: str) -> list[modal.Secret]:
 IMAGE = app_image()
 app = modal.App(APP_NAME, image=IMAGE)
 web = app.function(**WEB_OPTIONS, secrets=secrets_of(WEB_FUNCTION))(
-    modal.asgi_app(**WEB_ENDPOINT)(serve)
+    modal.concurrent(**WEB_CONCURRENCY)(modal.asgi_app(**WEB_ENDPOINT)(serve))
 )
 ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
 FUNCTIONS: dict[str, modal.Function] = {WEB_FUNCTION: web, INGEST_FUNCTION: ingest}

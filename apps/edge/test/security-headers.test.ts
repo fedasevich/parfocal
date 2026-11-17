@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { signingKey, WeakSigningKeyError } from "../src/capability.ts";
-import worker, { type EdgeEnv } from "../src/index.ts";
+import worker, { type EdgeEnv, HASHED_ASSET_CACHE } from "../src/index.ts";
 import { ROOM_PROTOCOL } from "../src/room-client.ts";
 import {
   contentSecurityPolicy,
@@ -71,6 +71,17 @@ test("a document gets a fresh nonce in both the CSP and every nonce attribute", 
   assert.equal(html.split(`nonce="${nonce}"`).length - 1, 3);
   assert.deepEqual(headerProblems(first.headers, "document"), []);
   assert.equal(first.headers.get("ETag"), null);
+});
+
+test("hashed build files are cached for a year while documents and other files are not", async () => {
+  const chunk = await get("/assets/index-abc.js");
+  assert.equal(chunk.headers.get("Cache-Control"), HASHED_ASSET_CACHE);
+  assert.equal(chunk.headers.get("ETag"), '"js"');
+  assert.deepEqual(headerProblems(chunk.headers, "resource"), []);
+  const fallback = await get("/assets/index-gone.css");
+  assert.equal(fallback.headers.get("Cache-Control"), "no-store");
+  const unhashed = await get("/sw.js");
+  assert.equal(unhashed.headers.get("Cache-Control"), null);
 });
 
 test("the document CSP allows exactly the app origin and the upload origin to be fetched", async () => {

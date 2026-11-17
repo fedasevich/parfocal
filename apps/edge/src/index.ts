@@ -3,7 +3,7 @@ import { WeakSigningKeyError } from "#capability.ts";
 import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
-import { withSecurityHeaders } from "#security-headers.ts";
+import { isHtml, withSecurityHeaders } from "#security-headers.ts";
 import { createTileSliCounter, flushTileSli, type SliBucket } from "#sli.ts";
 import {
   handleTiles,
@@ -88,8 +88,21 @@ function route(
   if (isDataPath(pathname)) {
     return problem(404, "not-found", "No such file");
   }
-  if (env.ASSETS) return env.ASSETS.fetch(request);
+  if (env.ASSETS) return builtAsset(pathname, env.ASSETS.fetch(request));
   return new Response(null, { status: 404 });
+}
+
+export const HASHED_ASSET_PREFIX = "/assets/";
+export const HASHED_ASSET_CACHE = "public, max-age=31536000, immutable";
+
+async function builtAsset(pathname: string, pending: Promise<Response>): Promise<Response> {
+  const response = await pending;
+  if (!pathname.startsWith(HASHED_ASSET_PREFIX) || response.status !== 200 || isHtml(response)) {
+    return response;
+  }
+  const cached = new Response(response.body, response);
+  cached.headers.set("Cache-Control", HASHED_ASSET_CACHE);
+  return cached;
 }
 
 function rangeCache(context?: ExecutionContext): RangeCache | undefined {
