@@ -25,6 +25,17 @@ uv run --package parfocal-api python -m parfocal_api.tenant_command deprovision 
 
 ## Drill environment run
 
+The local stack is the drill environment for OPS-010 (tenant provisioning automation) ([ADR XXXX](../adr/XXXX-the-local-stack-is-the-drill-environment-for-tenant-provisioning.md), the local stack is the drill environment for tenant provisioning). `apps/api/tests/test_tenant_drill.py` runs the command as a subprocess against the local Zitadel, a scratch database and MinIO, puts three objects under the tenant's prefix, deprovisions the tenant and checks that the organisation, the objects and the keys are gone. It runs only with `PARFOCAL_DRILL=1` and fails, not skips, when the local Zitadel is missing. Postgres and MinIO must already be up, through `pnpm stack:up` or `make dev`, and `zitadel-up.sh` alone starts only Zitadel.
+
+```
+bash infra/local/zitadel-up.sh
+PARFOCAL_DRILL=1 uv run --package parfocal-api pytest apps/api/tests/test_tenant_drill.py -m "db or not db"
+```
+
+It passed on 2026-11-17 with a Zitadel started by `zitadel-up.sh` under its own project name and the long-running local Postgres and MinIO, and left no drill organisation behind.
+
+### Cloud drill
+
 Deprovisioning destroys data, so its cloud check runs in a drill environment as [ADR 0331](../adr/0331-no-staging-environment.md) (no staging environment) describes: a short-lived Neon branch of production, a separate Modal environment and a prefix in the slide bucket, made for the check and deleted after it, with its cost logged.
 
 1. Make the Neon branch and point `DATABASE_URL` at it.
@@ -33,4 +44,4 @@ Deprovisioning destroys data, so its cloud check runs in a drill environment as 
 4. Provision a tenant named `drill-<date>`, then deprovision it, and check that the organisation, the objects and the keys are gone.
 5. Delete the branch, the prefix and the token, and log the run and its cost in `docs/log.md`.
 
-TODO: the drill environment run has not happened yet. It waits for the owner's choice of a Zitadel token for the drill.
+TODO: the cloud drill has not run. It waits for the owner's choice of a Zitadel token for the drill, and should run once before the first real tenant.
