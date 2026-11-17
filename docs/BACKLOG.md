@@ -3688,7 +3688,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-013.
   Size: L.
 
-- [ ] AISEG-022 · Best quality for the auto region tool
+- [x] AISEG-022 · Best quality for the auto region tool
   Decision 118 (whether the auto region tool can run in best quality) lets the outline tier setting choose best quality for the auto layer too, with the residual pass and the five-prompt ensemble of AISEG-016 (prompt-pass fallback), instead of fixing it to fast.
   Done when a unit test shows the auto layer follows the outline tier setting in both tiers and a browser test runs the auto layer once in best quality on a fixture tile.
   Depends on AISEG-016.
