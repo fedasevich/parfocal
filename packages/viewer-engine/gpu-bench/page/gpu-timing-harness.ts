@@ -3,6 +3,7 @@ import {
   createVectorOverlay,
   createViewerEngine,
   type OverlayLayer,
+  type SlideFormatId,
 } from "../../src/index.ts";
 import {
   createPixelSlideOpener,
@@ -19,6 +20,7 @@ export interface CaseRequest {
   readonly diameterPx: number;
   readonly frames: number;
   readonly warmup: number;
+  readonly nucleiUrl?: string;
 }
 
 export interface FrameStats {
@@ -41,7 +43,13 @@ export interface CaseReport {
   readonly fenceWithOverlay: FrameStats;
   readonly fenceWithoutOverlay: FrameStats;
   readonly submitWithOverlayMs: number;
+  readonly drawnLayers: readonly DrawnLayer[];
   readonly errors: readonly string[];
+}
+
+export interface DrawnLayer {
+  readonly id: string;
+  readonly length: number;
 }
 
 export interface GpuInfo {
@@ -55,8 +63,9 @@ export interface GpuInfo {
 }
 
 export interface GpuTimingHarness {
-  open(slideUrl: string): Promise<GpuInfo>;
+  open(slideUrl: string, formatId?: SlideFormatId): Promise<GpuInfo>;
   run(request: CaseRequest): Promise<CaseReport>;
+  withoutAgain(request: CaseRequest): Promise<FrameStats>;
   close(): void;
 }
 
@@ -121,7 +130,7 @@ function glOf(route: VivRoute): WebGL2RenderingContext {
   return device.gl;
 }
 
-async function open(slideUrl: string): Promise<GpuInfo> {
+async function open(slideUrl: string, formatId: SlideFormatId = "ome-tiff"): Promise<GpuInfo> {
   close();
   let route: VivRoute | null = null;
   const factory = vivRendererFactory({
@@ -136,7 +145,7 @@ async function open(slideUrl: string): Promise<GpuInfo> {
       route = factory(container);
       return route;
     },
-    openSlide: createPixelSlideOpener(() => ({ formatId: "ome-tiff", url: slideUrl })),
+    openSlide: createPixelSlideOpener(() => ({ formatId, url: slideUrl })),
   });
   engine.mount(viewer());
   const info = await engine.openSlide({ id: slideUrl });
@@ -190,6 +199,20 @@ function nucleiOverlay(perRow: number, centreX: number, centreY: number): Overla
     kind: "nuclei",
     shapes: { polygons: createPolygonBatch({ positions, starts, colors }) },
   });
+}
+
+function packedNucleiOverlay(packed: ArrayBuffer): { overlay: OverlayLayer; nuclei: number } {
+  const count = new Uint32Array(packed, 0, 1)[0] ?? 0;
+  const starts = new Uint32Array(packed, 4, count + 1);
+  const vertices = starts[count] ?? 0;
+  const positions = new Float32Array(packed, 4 * (count + 2), vertices * 2);
+  const colors = new Uint8Array(count * 4).fill(255);
+  const overlay = createVectorOverlay({
+    id: "nuclei",
+    kind: "nuclei",
+    shapes: { polygons: createPolygonBatch({ positions, starts, colors }) },
+  });
+  return { overlay, nuclei: count };
 }
 
 async function settle(route: VivRoute): Promise<void> {
@@ -272,12 +295,25 @@ async function run(request: CaseRequest): Promise<CaseReport> {
   const { route } = state;
   const centreX = state.width / 2;
   const centreY = state.height / 2;
-  const pixelsPerUnit = request.diameterPx / Math.hypot(side, side);
+  const canvas = route.canvas;
+  const fitted = Math.min(canvas.clientWidth / state.width, canvas.clientHeight / state.height);
+  const pixelsPerUnit =
+    request.nucleiUrl === undefined ? request.diameterPx / Math.hypot(side, side) : fitted;
   const camera = { x: centreX, y: centreY, zoom: Math.log2(pixelsPerUnit) };
   const failures = errors.length;
 
+  const loaded =
+    request.nucleiUrl === undefined
+      ? null
+      : await fetch(request.nucleiUrl).then((response) => response.arrayBuffer());
   const builtFrom = performance.now();
-  const overlay = nucleiOverlay(request.perRow, centreX, centreY);
+  const { overlay, nuclei } =
+    loaded === null
+      ? {
+          overlay: nucleiOverlay(request.perRow, centreX, centreY),
+          nuclei: request.perRow * request.perRow,
+        }
+      : packedNucleiOverlay(loaded);
   const buildBatchMs = performance.now() - builtFrom;
 
   route.setOverlays([]);
@@ -290,13 +326,13 @@ async function run(request: CaseRequest): Promise<CaseReport> {
   await settle(route);
   const withOverlay = await measure(state, request.warmup, request.frames);
 
-  route.setOverlays([]);
+  const drawnLayers = drawnNucleiLayers(route);
   const useQuery = withOverlay.query.length >= request.frames / 2 && without.query.length >= 1;
   const source: TimingSource = useQuery ? "timer-query" : "fence";
   const pick = (measured: Measured) => (useQuery ? measured.query : measured.fence);
   return {
     name: request.name,
-    nuclei: request.perRow * request.perRow,
+    nuclei,
     pixelsPerUnit,
     buildBatchMs,
     source,
@@ -306,8 +342,32 @@ async function run(request: CaseRequest): Promise<CaseReport> {
     fenceWithOverlay: statsOf(withOverlay.fence),
     fenceWithoutOverlay: statsOf(without.fence),
     submitWithOverlayMs: median(withOverlay.submit),
+    drawnLayers,
     errors: errors.slice(failures),
   };
 }
 
-window.gpuTiming = { open, run, close };
+interface InspectedLayer {
+  readonly id: string;
+  readonly props: { readonly visible?: boolean; readonly data?: { readonly length?: number } };
+}
+
+function drawnNucleiLayers(route: VivRoute): DrawnLayer[] {
+  const nested: unknown[] = [route.deck.props.layers];
+  const layers = nested.flat(8) as (InspectedLayer | null)[];
+  return layers
+    .filter((layer): layer is InspectedLayer => layer !== null && layer !== undefined)
+    .filter((layer) => layer.id.startsWith("overlay:nuclei:") && layer.props.visible !== false)
+    .map((layer) => ({ id: layer.id, length: layer.props.data?.length ?? 0 }));
+}
+
+async function withoutAgain(request: CaseRequest): Promise<FrameStats> {
+  const state = current();
+  state.route.setOverlays([]);
+  await settle(state.route);
+  const again = await measure(state, request.warmup, request.frames);
+  const useQuery = again.query.length >= request.frames / 2;
+  return statsOf(useQuery ? again.query : again.fence);
+}
+
+window.gpuTiming = { open, run, withoutAgain, close };
