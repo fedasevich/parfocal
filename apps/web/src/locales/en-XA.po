@@ -120,6 +120,7 @@ msgid " in {projectCode}"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid " or $1"
 msgstr ""
 
@@ -294,6 +295,12 @@ msgstr ""
 #. placeholder {0}: tier.model
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "{0} - offline"
+msgstr ""
+
+#. placeholder {0}: object.object
+#. placeholder {1}: object.class_name
+#: src/viewer/stage-focus.tsx
+msgid "{0} · {1}"
 msgstr ""
 
 #. placeholder {0}: kindLabel(offer.study_kind)
@@ -976,11 +983,6 @@ msgstr ""
 #. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
 #: src/screens/viewer-tools/focus-view.tsx
 msgid "{0} mm across. Still open."
-msgstr ""
-
-#. placeholder {0}: tb(overview.in_place_tb)
-#: src/screens/admin/overview.tsx
-msgid "{0} more read in place"
 msgstr ""
 
 #. placeholder {0}: plural(toFix, "file")
@@ -1938,6 +1940,10 @@ msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "{id} added. It is the largest now and sets the category."
+msgstr ""
+
+#: src/screens/admin/overview.tsx
+msgid "{inPlace} more read in place"
 msgstr ""
 
 #: src/routes/issue-states.tsx
@@ -2962,6 +2968,7 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-object-notes.tsx
 msgid "Add a note"
 msgstr ""
 
@@ -3344,6 +3351,14 @@ msgstr ""
 msgid "AI says: <0>Tumor, 91% sure</0>"
 msgstr ""
 
+#: src/viewer/stage-focus.tsx
+msgid "AI score {score}%. Decided. Press a key again to change it."
+msgstr ""
+
+#: src/viewer/stage-focus.tsx
+msgid "AI score {score}%. Still open."
+msgstr ""
+
 #: src/results/add-result-set.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Alignment"
@@ -3606,6 +3621,10 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "Answer with one of the buttons, or press {answerKeyList}."
+msgstr ""
+
+#: src/viewer/stage-coach.tsx
+msgid "Answer with one of the buttons, or press {keyList}."
 msgstr ""
 
 #: src/study/study-screen.tsx
@@ -4763,7 +4782,7 @@ msgid "Checked by you"
 msgstr ""
 
 #: src/screens/admin/admin-screen.tsx
-msgid "Checking your access…"
+msgid "Checking your access"
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -6171,6 +6190,10 @@ msgstr ""
 msgid "Drag one onto the page, or click it to add it after the selected block."
 msgstr ""
 
+#: src/viewer/stage-coach.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom."
+msgstr ""
+
 #: src/screens/review/guided-review.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
 msgstr ""
@@ -6613,6 +6636,10 @@ msgstr ""
 
 #: src/screens/upload/check-step.tsx
 msgid "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Every hint shows again, once, under its setting."
 msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
@@ -7491,6 +7518,7 @@ msgid "Good"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "Got it, start"
 msgstr ""
 
@@ -7752,6 +7780,10 @@ msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "How each answer counts toward agree, not sure and disagree in the evaluation."
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "How guided review works"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -8760,12 +8792,32 @@ msgstr ""
 msgid "Loading {productName}"
 msgstr ""
 
+#: src/screens/admin/join-settings.tsx
+msgid "Loading join settings"
+msgstr ""
+
+#: src/screens/admin/sections.tsx
+msgid "Loading models"
+msgstr ""
+
+#: src/screens/admin/retention.tsx
+msgid "Loading retention"
+msgstr ""
+
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
 msgstr ""
 
 #: src/screens/project/slides-tab.tsx
 msgid "Loading slides"
+msgstr ""
+
+#: src/screens/admin/storage.tsx
+msgid "Loading storage"
+msgstr ""
+
+#: src/screens/project/tasks-tab.tsx
+msgid "Loading tasks"
 msgstr ""
 
 #: src/screens/team/team-screen.tsx
@@ -8780,6 +8832,10 @@ msgstr ""
 msgid "Loading the messages"
 msgstr ""
 
+#: src/screens/admin/overview.tsx
+msgid "Loading the overview"
+msgstr ""
+
 #: src/screens/project/project-page.tsx
 msgid "Loading the project"
 msgstr ""
@@ -8792,6 +8848,10 @@ msgstr ""
 #: src/screens/review/guided-gate.tsx
 #: src/viewer/first-read-guard.tsx
 msgid "Loading the review"
+msgstr ""
+
+#: src/screens/admin/workspace-settings.tsx
+msgid "Loading the security contact"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -10881,6 +10941,7 @@ msgstr ""
 #: src/screens/review/viewer-frame.tsx
 #: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer/object-table.tsx
+#: src/viewer/stage-focus.tsx
 msgid "open"
 msgstr ""
 
@@ -13513,7 +13574,7 @@ msgid "Search, or press a key to see what it does"
 msgstr ""
 
 #: src/screens/search/search-screen.tsx
-msgid "Searching…"
+msgid "Searching"
 msgstr ""
 
 #: src/session/second-factor-screen.tsx
@@ -13957,6 +14018,11 @@ msgstr ""
 msgid "Show after adding"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
+msgid "Show all hints again"
+msgstr ""
+
 #: src/screens/upload/overlays.tsx
 msgid "Show an example call"
 msgstr ""
@@ -14030,6 +14096,7 @@ msgid "Show the ID tags on the slide"
 msgstr ""
 
 #: src/screens/viewer-tools/focus-view.tsx
+#: src/viewer/stage-focus.tsx
 msgid "Show the interface"
 msgstr ""
 
@@ -14066,6 +14133,10 @@ msgstr ""
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "Show threads"
+msgstr ""
+
+#: src/viewer/stage-focus.tsx
+msgid "show UI"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -15387,6 +15458,7 @@ msgid "The AI found no tumor areas on this slide. Look at all the tissue at {sca
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-coach.tsx
 msgid "The AI found this. It is outlined in white."
 msgstr ""
 
@@ -15688,6 +15760,10 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "The next object comes by itself. The dots take you back to any of them."
+msgstr ""
+
+#: src/viewer/stage-coach.tsx
+msgid "The next open object comes by itself. Previous and Next take you back to any of them."
 msgstr ""
 
 #: src/routes/prototype.tsx

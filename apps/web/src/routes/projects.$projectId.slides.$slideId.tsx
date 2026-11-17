@@ -22,12 +22,13 @@ function SlideView() {
   const navigate = Route.useNavigate();
   const onSearch = (change: Partial<SlideSearch>) =>
     void navigate({ search: (previous) => ({ ...previous, ...change }), replace: true });
-  if (search.focus || isCompareScene(search.scene)) {
+  const prototypeFocus = search.focus === true && search.scene !== undefined;
+  if (prototypeFocus || isCompareScene(search.scene)) {
     const scene = search.scene;
     return (
       <WithToolSession projectId={projectId} slideId={slideId} task={search.task}>
         {(tools) =>
-          search.focus ? (
+          prototypeFocus ? (
             <FocusView
               tools={tools}
               object={search.object}
@@ -64,6 +65,8 @@ function SlideView() {
         tab={search.tab}
         object={search.object}
         start={startOf(search)}
+        focus={search.focus === true}
+        onFocus={(on) => onSearch({ focus: on || undefined, peek: undefined })}
         onOpenSlide={(next) =>
           void navigate({
             to: "/projects/$projectId/slides/$slideId",
