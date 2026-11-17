@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- REMOTE-005 (the event delivery sweep runs in production): emitting an event to a live target spawns the events Modal function, which waits for the commit, delivers and lingers 35 minutes to cover the 1, 5 and 30 minute retries, and an hourly schedule is the safety net for the 2 and 12 hour retries. A failed spawn never fails the request. Events for a paused target are stored as failed and are replayable. Estimated about 0.10 dollars a month on Modal and about 34 of Neon's 100 free CU-hours, in platform.md. 14 deploy and 9 events tests.
 - Integration on 2026-11-17 found and fixed a cross-workspace bug: removeLabModelProject answered 200 for another workspace's project id. It now checks the project first, like addLabModelProject.
 - REMOTE-001 (read in place) API side merged: readInPlace creates a remote slide, a remote-inspect worker job reads ranges and publishes it, /api/remote-tiles/{slide}/ serves from a 7-day per-slide range cache and an offline state, migration 0131, ADR 0383. Left: levels.json and the tile index for remote slides, the remote tag, offline message and E2E, copy into Parfocal, sibling results, the cache sweep schedule.
 - OPS-027 (a project access request notifies the owner): a new request sends the project owner one project-access-asked inbox entry, and its link opens the project settings with a prefilled add confirm that calls setProjectMember. Migration 0132. An API test and a project-settings browser spec.
