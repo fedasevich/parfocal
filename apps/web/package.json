@@ -15,6 +15,7 @@
     "dev": "vite",
     "dev:fake": "PARFOCAL_PUBLIC_APP_ENV=dev PARFOCAL_PUBLIC_FAKE_API=all vite",
     "test:browser": "playwright test",
+    "test:browser:real": "playwright test -c playwright.real.config.ts",
     "bench:hover": "playwright test -c playwright.hover.config.ts",
     "bench:region": "playwright test -c playwright.region.config.ts",
     "smoke": "playwright test -c playwright.smoke.config.ts",

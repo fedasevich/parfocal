@@ -252,6 +252,7 @@ jobs:
       - run: pnpm stack:up
       - run: docker pull --platform linux/amd64 kristophjunge/test-saml-idp:1.15
       - run: pnpm test:e2e
+      - run: pnpm test:e2e:real
       - if: always()
         run: |
           test -f apps/e2e/test-results/report.json || exit 0
