@@ -2,6 +2,26 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.10.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Fall back to the slide's smallest level for the minimap
+
+### Fixes
+
+- TEST-048: Publish fixture folders before a reset and refuse the fixtures fallback when deployed
+
+### Performance
+
+- OPS-033: Batch home and my-work reads and ping only idle pool connections
+
+### Docs
+
+- VIEW-075: Log the minimap fallback and the next steps
+- IAM-032: List the passkey cookie and storage keys in the storage policy
+- OPS-033: Record query counts and the slow container reading
+
 ## v0.9.0 (2026-11-17)
 
 ### Features
