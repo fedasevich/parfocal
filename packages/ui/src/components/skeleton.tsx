@@ -66,5 +66,69 @@ function SkeletonRows({ label, rows = 5, columns = 3, className, ...props }: Ske
   );
 }
 
-export type { SkeletonRowsProps };
-export { Skeleton, SkeletonLine, SkeletonRows };
+type SkeletonCardsProps = React.ComponentProps<"div"> & {
+  label: string;
+  cards?: number;
+  minWidth?: string;
+};
+
+function SkeletonCards({
+  label,
+  cards = 6,
+  minWidth = "240px",
+  className,
+  style,
+  ...props
+}: SkeletonCardsProps) {
+  return (
+    <div
+      role="status"
+      data-slot="skeleton-cards"
+      className={cn("grid w-full gap-3", className)}
+      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${minWidth}, 1fr))`, ...style }}
+      {...props}
+    >
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: cards }, (_, card) => (
+        <div
+          key={card}
+          aria-hidden="true"
+          className="grid gap-2 rounded-zone border border-line bg-surf-panel p-4"
+        >
+          <SkeletonLine width={columnWidths[card % columnWidths.length] ?? "60%"} />
+          <SkeletonLine width="90%" />
+          <SkeletonLine width="40%" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type SkeletonPanelProps = React.ComponentProps<"div"> & {
+  label: string;
+  sections?: number;
+};
+
+function SkeletonPanel({ label, sections = 3, className, ...props }: SkeletonPanelProps) {
+  return (
+    <div
+      role="status"
+      data-slot="skeleton-panel"
+      className={cn("grid w-full content-start gap-5 p-4", className)}
+      {...props}
+    >
+      <span className="sr-only">{label}</span>
+      <SkeletonLine width="45%" className="text-title" />
+      {Array.from({ length: sections }, (_, section) => (
+        <div key={section} aria-hidden="true" className="grid gap-2">
+          <SkeletonLine width="30%" />
+          <Skeleton className="h-9 w-full" />
+          <SkeletonLine width={columnWidths[section % columnWidths.length] ?? "60%"} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export type { SkeletonCardsProps, SkeletonPanelProps, SkeletonRowsProps };
+export { Skeleton, SkeletonCards, SkeletonLine, SkeletonPanel, SkeletonRows };

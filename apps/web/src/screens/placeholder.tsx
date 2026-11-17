@@ -1,5 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { Loader } from "@parfocal/ui/components/loader";
+import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
 import type { ReactNode } from "react";
 
 type PlaceholderProps = {
@@ -36,7 +36,7 @@ type QueryStateProps = {
 export function QueryState({ label, isPending, error, children }: QueryStateProps) {
   const { t } = useLingui();
 
-  if (isPending) return <Loader label={t`Loading ${label}`} />;
+  if (isPending) return <SkeletonPanel label={t`Loading ${label}`} sections={4} />;
   if (error) {
     return (
       <p role="alert" className="text-bad text-body">

@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import { useGetProject } from "@parfocal/api-client";
-import { Loader } from "@parfocal/ui/components/loader";
+import { SkeletonPanel } from "@parfocal/ui/components/skeleton";
 import { useEffect } from "react";
 import { dropStore } from "../../upload/drop-store.ts";
 import { okData } from "../placeholder.tsx";
@@ -24,8 +24,8 @@ export function LivePage({
   }, [projectId]);
   if (project === undefined) {
     return (
-      <main className="grid flex-1 place-items-center p-8">
-        <Loader label={t`Loading the upload`} />
+      <main className="mx-auto w-full max-w-3xl flex-1 p-8">
+        <SkeletonPanel label={t`Loading the upload`} sections={4} />
       </main>
     );
   }

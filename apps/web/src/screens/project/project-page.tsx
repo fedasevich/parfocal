@@ -79,7 +79,8 @@ export function ProjectPage({
   }, [isSample]);
   const format = useFormat();
   const overview = okData(useGetProjectOverview(projectId).data);
-  const tasks = okData(useListReviewTasks(projectId).data) ?? [];
+  const tasksQuery = useListReviewTasks(projectId);
+  const tasks = okData(tasksQuery.data) ?? [];
   const slidesFirst = { query: { enabled: view.tab === "slides" } };
   useListMySlides({ project_id: projectId }, slidesFirst);
   useListCases({ project_id: projectId }, slidesFirst);
@@ -289,7 +290,12 @@ export function ProjectPage({
           {view.tab === "slides" ? (
             <SlidesTab project={project} open={view.open} toast={toast.show} />
           ) : view.tab === "tasks" ? (
-            <TasksTab project={project} tasks={tasks} toast={toast.show} />
+            <TasksTab
+              project={project}
+              tasks={tasks}
+              loading={tasksQuery.isPending}
+              toast={toast.show}
+            />
           ) : (
             <SettingsTab
               project={project}
