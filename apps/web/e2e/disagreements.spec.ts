@@ -58,7 +58,7 @@ const scenes: { path: string; persona: string; sees: string; dialog?: string }[]
   {
     path: "sign-off?scene=ssofail",
     persona: "Daniel Hruška",
-    sees: "Vltava single sign-on did not answer",
+    sees: "Single sign-on did not answer",
     dialog: "Sign off RT-14",
   },
   {

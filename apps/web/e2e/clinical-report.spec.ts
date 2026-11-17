@@ -51,9 +51,7 @@ test("the scenes that open a small modal show it on load", async ({ page }) => {
 
   await page.goto(`${report}?scene=ssofail`);
   const sign = page.getByRole("dialog", { name: "Sign out S26-04812" });
-  await expect(
-    sign.getByText("Vltava single sign-on did not answer. Nothing was signed."),
-  ).toBeVisible();
+  await expect(sign.getByText("Single sign-on did not answer. Nothing was signed.")).toBeVisible();
   await sign.getByRole("button", { name: "Use my password instead" }).click();
   await expect(sign.getByLabel("Password for l.mala@fnvltava.cz")).toBeVisible();
 
@@ -94,7 +92,7 @@ test("Lenka fills Staging, removes a deposit with Undo and signs out with SSO", 
   await flow(page).getByRole("button", { name: "Next" }).click();
   await flow(page).getByRole("button", { name: "Sign out", exact: true }).click();
   const sign = page.getByRole("dialog", { name: "Sign out S26-04812" });
-  await sign.getByRole("button", { name: /Sign with Vltava SSO/ }).click();
+  await sign.getByRole("button", { name: /Sign with single sign-on/ }).click();
   await expect(flow(page).getByText("Signed out 15 Oct 11:42 by Lenka Malá")).toBeVisible();
 });
 
@@ -138,7 +136,7 @@ test("the co-signer sees both values and either returns or co-signs", async ({ p
   await page.goto(`${coSign}?scene=review`);
   await review.getByRole("button", { name: "Co-sign and sign out" }).click();
   const sign = page.getByRole("dialog", { name: "Co-sign and sign out S26-04812" });
-  await sign.getByRole("button", { name: /Sign with Vltava SSO/ }).click();
+  await sign.getByRole("button", { name: /Sign with single sign-on/ }).click();
   await expect(
     page.getByText("Reported by Tomáš Beneš, verified and signed by Lenka Malá").first(),
   ).toBeVisible();

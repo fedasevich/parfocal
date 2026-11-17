@@ -41,7 +41,7 @@ export type Values = {
   comment: string;
 };
 
-export type Signature = { by: string; co: string | null; at: string };
+export type Signature = { by: string; co: string | null; at: string; year: number };
 
 export type Report = {
   values: Values;
@@ -53,7 +53,7 @@ export type Report = {
   sent: { to: string; at: string; id: string } | null;
   signed: Signature | null;
   v1: Values | null;
-  amend: { why: string; at: string } | null;
+  amend: { why: string; at: string; year: number } | null;
   showV1: boolean;
   preview: boolean;
 };
@@ -362,6 +362,7 @@ const extraDepositOn = (data: ReportData): Dep => ({
 });
 
 export const signedAt = "15 Oct 11:42";
+export const sceneYear = 2026;
 
 export function sceneReport(
   data: ReportData,
@@ -395,7 +396,7 @@ export function sceneReport(
   };
   const sign = () => {
     fill();
-    report.signed = { by: data.author_user_id, co: null, at: signedAt };
+    report.signed = { by: data.author_user_id, co: null, at: signedAt, year: sceneYear };
     report.v1 = report.values;
   };
   switch (scene) {
@@ -466,6 +467,7 @@ export function sceneReport(
       report.amend = {
         why: "A deposit in node 2 was missed, measured by hand on a deeper level of A2 at 0.9 mm",
         at: "16 Oct",
+        year: sceneYear,
       };
       break;
     case "unmeasured": {
@@ -697,23 +699,41 @@ export function amendmentChanges(
   ];
 }
 
-const longDate = (at: string) => {
-  const [day, month, time] = at.split(" ");
-  return `${day} ${month === "Oct" ? "October" : month} 2026 at ${time}`;
+const fullMonths: Record<string, string> = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
 };
 
-export const lab = {
-  name: "Fakultní nemocnice Vltava",
-  department: "Department of Pathology",
-  address: "Vltavská 1, 150 00 Praha 5",
-  footer: "Laboratory 0001 · sample data · not a real patient",
+const longDay = (at: string, year: number) => {
+  const [day = "", month = ""] = at.split(" ");
+  return `${day} ${fullMonths[month] ?? month} ${year}`;
 };
+
+const longDate = (at: string, year: number) => {
+  const time = at.split(" ")[2] ?? "";
+  return `${longDay(at, year)} at ${time}`;
+};
+
+const stampWithYear = (at: string, year: number) => at.replace(/^(\d+ \w+) /, `$1 ${year}, `);
+
+const labOf = (name: string) => ({ name, department: "", address: "", footer: "" });
 
 export function documentOf(
   data: ReportData,
   report: Report,
   which: "draft" | "current" | "v1",
   nameOf: (userId: string) => string,
+  labName = "",
 ): ReportDocumentModel {
   const values = which === "v1" && report.v1 ? report.v1 : report.values;
   const signature = report.signed;
@@ -723,8 +743,8 @@ export function documentOf(
     status === "draft"
       ? "Not yet, draft"
       : amended
-        ? `${amended.at} 2026, amended`
-        : (signature?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ");
+        ? `${amended.at} ${amended.year}, amended`
+        : stampWithYear(signature?.at ?? "", signature?.year ?? sceneYear);
   const decisions = data.decisions;
   const yes = decisions.filter((item) => item.counts_as === "agree").length;
   const no = decisions.filter((item) => item.counts_as === "disagree").length;
@@ -756,7 +776,7 @@ export function documentOf(
     : [];
   rows.push([
     "AI-assisted analysis",
-    `CAMELYON tumor model v1.0 flagged ${plural(decisions.length, "region")}. The pathologist confirmed ${yes} and rejected ${no}.`,
+    `The AI model flagged ${plural(decisions.length, "region")}. The pathologist confirmed ${yes} and rejected ${no}.`,
   ]);
   const signer = signature ? nameOf(signature.by) : "";
   const sign =
@@ -764,9 +784,11 @@ export function documentOf(
       ? null
       : {
           by: signature.co
-            ? `Reported by ${nameOf(signature.co)}, verified and signed by MUDr. ${signer}`
-            : `Electronically signed by MUDr. ${signer}`,
-          at: amended ? "16 October 2026, signed again" : longDate(signature.at),
+            ? `Reported by ${nameOf(signature.co)}, verified and signed by ${signer}`
+            : `Electronically signed by ${signer}`,
+          at: amended
+            ? `${longDay(amended.at, amended.year)}, signed again`
+            : longDate(signature.at, signature.year),
         };
   const after = [
     ...(values.microscopic.trim()
@@ -776,7 +798,7 @@ export function documentOf(
   ];
   return {
     status,
-    lab,
+    lab: labOf(labName),
     head: [
       ["Accession", data.case.label],
       ["Received", data.case.received],
@@ -786,10 +808,10 @@ export function documentOf(
     amendment:
       amended && report.v1
         ? {
-            title: `Amendment, ${amended.at} 2026, by MUDr. ${signer}`,
+            title: `Amendment, ${amended.at} ${amended.year}, by ${signer}`,
             reason: amended.why,
             changes: amendmentChanges(data, report.v1, report.values),
-            note: "Version 1 of 15 Oct 2026, 11:42 stays readable in Parfocal.",
+            note: `Version 1 of ${stampWithYear(signature?.at ?? "", signature?.year ?? sceneYear)} stays readable in Parfocal.`,
           }
         : undefined,
     sections: [

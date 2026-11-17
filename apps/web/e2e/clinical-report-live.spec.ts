@@ -62,7 +62,7 @@ test("Lenka fills a report from Findings to Sign out, amends it and the earlier 
 
   await flow(page).getByRole("button", { name: "Sign out", exact: true }).click();
   const sign = page.getByRole("dialog", { name: "Sign out S26-04812" });
-  await sign.getByRole("button", { name: /Sign with Vltava SSO/ }).click();
+  await sign.getByRole("button", { name: /Sign with single sign-on/ }).click();
   await expect(flow(page).getByText(/Signed out .* by Lenka Malá/)).toBeVisible();
   await expect(flow(page).getByRole("button", { name: "Download PDF" })).toBeVisible();
   const download = page.waitForEvent("download");

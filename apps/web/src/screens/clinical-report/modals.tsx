@@ -266,7 +266,10 @@ export function DepositModal({
   );
 }
 
-const signLabel = lazyText(() => ({ sso: t`Sign with Vltava SSO`, typed: t`Sign with password` }));
+const signLabel = lazyText(() => ({
+  sso: t`Sign with single sign-on`,
+  typed: t`Sign with password`,
+}));
 
 export function useSignature({
   failed,
@@ -311,7 +314,7 @@ export function useSignature({
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
-        <FieldNote error={passwordError} help={t`Your Vltava password`} />
+        <FieldNote error={passwordError} help={t`Your password`} />
       </div>
     </SmallModalZone>
   ) : state === "fail" ? (
@@ -334,7 +337,7 @@ export function useSignature({
         </>
       }
     >
-      <Trans>Vltava single sign-on did not answer. Nothing was signed.</Trans>
+      <Trans>Single sign-on did not answer. Nothing was signed.</Trans>
     </InlineError>
   ) : null;
   return {
