@@ -25,6 +25,7 @@
     "bench:sam": "playwright test -c playwright.sam.config.ts sam-variants",
     "bench:instanseg": "playwright test -c playwright.sam.config.ts instanseg",
     "bench:type-learner": "node sam-bench/type-learner-same-images.ts",
+    "parity:fetch": "node sam-bench/fetch-parity.ts",
     "parity:sam": "playwright test -c playwright.sam.config.ts sam-parity",
     "smoke:smart-select": "playwright test -c playwright.sam.config.ts smart-select-accuracy",
     "traces:record": "vite browser/page --open /trace-recorder.html"

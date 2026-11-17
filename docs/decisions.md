@@ -314,7 +314,7 @@ Waits for a green CI run:
 
 Waits for something else, nothing for you now:
 
-- MLEVAL-007 (browser parity tests) is being finished by an agent under decision 107, once the read-only key of decision 132 exists.
+- MLEVAL-007 (browser parity tests) has its files in R2 and the `sam-parity` workflow since 2026-11-18, and waits for that workflow's first green run after merge.
 
 - IAM-021 (lock screen) and SHELL-012 (account menu). The expired sign-in still returns to the slide rather than the object, and SHELL-014 (lock the screen from the account menu) builds the manual lock item.
 - FOUND-009 (local development environment). A cold run on a new machine is owed. The viewer part is done by FOUND-040 (the edge Worker and dev bucket under `make dev`), whose dev check draws the CAMELYON16 slide `test_065`.

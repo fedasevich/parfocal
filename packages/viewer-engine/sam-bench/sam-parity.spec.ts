@@ -2,19 +2,15 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import { graphRunsOn, samGraphs, samVariant } from "../src/index.ts";
+import { samVariant } from "../src/index.ts";
 import { benchOriginVariable, missingGraphs, parityDir } from "./global-setup.ts";
 import { mean } from "./page/parity-measures.ts";
 import type { ParityReport, ParityRequest } from "./page/sam-parity-harness.ts";
+import { parityAisDecoders, parityGraphs } from "./parity-files.ts";
 
 const reportDir = fileURLToPath(new URL("../test-results/sam-parity", import.meta.url));
 const requireVariable = "PARFOCAL_REQUIRE_SAM_PARITY";
 const providers = ["webgpu", "wasm"] as const;
-const aisDecoders = [
-  samGraphs.aisDecoder,
-  samGraphs.aisDecoderInt8Weights,
-  samGraphs.aisDecoderUint8,
-] as const;
 
 function round(value: number, digits = 4): number {
   return Number(value.toFixed(digits));
@@ -30,12 +26,12 @@ for (const provider of providers) {
     page,
   }) => {
     const variant = samVariant(provider);
-    const ais = aisDecoders.filter((graph) => graphRunsOn(graph, provider));
-    const missing = missingGraphs([variant.encoder, variant.decoder, ...ais]);
+    const ais = parityAisDecoders(provider);
+    const missing = missingGraphs(parityGraphs(provider));
     const noFixture = !existsSync(join(parityDir(), "manifest.json"));
     const reason = noFixture
-      ? "run pnpm --filter @parfocal/ml parity:fixture first"
-      : `models not exported: ${missing.join(", ")}`;
+      ? "run pnpm --filter @parfocal/viewer-engine parity:fetch first"
+      : `models missing, run pnpm --filter @parfocal/viewer-engine parity:fetch: ${missing.join(", ")}`;
     if (process.env[requireVariable] === "1") {
       expect(missing, reason).toEqual([]);
       expect(noFixture, reason).toBe(false);
