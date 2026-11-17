@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import { PNG } from "pngjs";
+import { differingPixels } from "./differing-pixels.ts";
 import { gpuOriginVariable } from "./global-setup.ts";
 import type { CustomCaseReport, CustomGpuInfo } from "./page/custom-gpu-timing-harness.ts";
 import type { CaseRequest } from "./page/gpu-timing-harness.ts";
@@ -35,25 +35,6 @@ const cases: readonly CaseRequest[] = [
     warmup: smoke ? 2 : 10,
   },
 ];
-
-const channelTolerance = 4;
-
-function differingPixels(first: Buffer, second: Buffer): number {
-  const a = PNG.sync.read(first);
-  const b = PNG.sync.read(second);
-  if (a.width !== b.width || a.height !== b.height) return a.width * a.height;
-  let differing = 0;
-  for (let at = 0; at < a.data.length; at += 4) {
-    for (let channel = 0; channel < 3; channel++) {
-      const delta = Math.abs((a.data[at + channel] ?? 0) - (b.data[at + channel] ?? 0));
-      if (delta > channelTolerance) {
-        differing += 1;
-        break;
-      }
-    }
-  }
-  return differing;
-}
 
 test.use({ launchOptions: { args: ["--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] } });
 
