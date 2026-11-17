@@ -8695,6 +8695,10 @@ msgstr ""
 msgid "Loading {label}"
 msgstr ""
 
+#: src/session/boot-loader.tsx
+msgid "Loading {productName}"
+msgstr ""
+
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
 msgstr ""
@@ -14017,6 +14021,7 @@ msgstr ""
 msgid "Sign in again"
 msgstr ""
 
+#: src/session/boot-loader.tsx
 #: src/shell/issue-pages.tsx
 msgid "Sign in to go on"
 msgstr ""

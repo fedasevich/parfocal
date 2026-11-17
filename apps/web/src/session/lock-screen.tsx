@@ -1,6 +1,5 @@
-import { useGetMe } from "@parfocal/api-client";
+import type { Me } from "@parfocal/api-client";
 import { LockCard } from "@parfocal/ui/components/auth";
-import { okData } from "../screens/placeholder.tsx";
 import { personOf } from "../shell/global-shell.tsx";
 import { reauthUrl } from "./lock-rules.ts";
 import { startNamedLogin } from "./sign-in-redirect.ts";
@@ -10,16 +9,17 @@ function currentPath(): string {
 }
 
 export default function LockScreen({
+  me,
   minutes,
   reason,
 }: {
+  me: Me;
   minutes: number;
   reason: "idle" | "manual";
 }) {
-  const me = okData(useGetMe().data);
   const unlock = () => window.location.assign(reauthUrl(currentPath()));
   const unlockWithPasskey = () =>
-    void startNamedLogin({ returnTo: currentPath(), loginHint: me?.email, reauth: true });
+    void startNamedLogin({ returnTo: currentPath(), loginHint: me.email, reauth: true });
   return (
     <div className="fixed inset-0 z-[1000]">
       <LockCard

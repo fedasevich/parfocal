@@ -5,6 +5,7 @@ import { useAppliedLocale } from "../i18n/app-i18n.tsx";
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { LabKey } from "../lab/lab-key.tsx";
 import { SessionLock } from "../session/session-lock.tsx";
+import { useSignedInArea } from "../session/signed-in-area.ts";
 import { CommandPalette } from "../shell/command-palette.tsx";
 import { useAppliedDensity } from "../shell/density.ts";
 import { GlobalShell } from "../shell/global-shell.tsx";
@@ -29,9 +30,18 @@ export const Route = createRootRoute({
 });
 
 function Root() {
+  return (
+    <SessionLock>
+      <RootContent />
+    </SessionLock>
+  );
+}
+
+function RootContent() {
   const inShell = useMatches({
     select: (matches) => matches.some(inGlobalShell),
   });
+  const signedIn = useSignedInArea();
   useAppliedDensity();
   useAppliedLocale();
   useAppliedLengthUnits();
@@ -39,25 +49,25 @@ function Root() {
   useReadingReport();
   useAnalyticsConsentSync();
   return (
-    <SessionLock>
-      <KeyBindingsProvider>
-        {inShell ? (
-          <GlobalShell>
-            <Outlet />
-          </GlobalShell>
-        ) : (
+    <KeyBindingsProvider>
+      {inShell ? (
+        <GlobalShell>
           <Outlet />
-        )}
-        <CommandPalette />
-        <ShortcutsKey />
-        <SettingsKey />
-        <LabKey />
-        <FeedbackHost />
-        <StudyGuardHost />
+        </GlobalShell>
+      ) : (
+        <Outlet />
+      )}
+      <CommandPalette />
+      <ShortcutsKey />
+      <SettingsKey />
+      <LabKey />
+      <FeedbackHost />
+      <StudyGuardHost />
+      {signedIn ? (
         <Suspense fallback={null}>
           <TourHost />
         </Suspense>
-      </KeyBindingsProvider>
-    </SessionLock>
+      ) : null}
+    </KeyBindingsProvider>
   );
 }

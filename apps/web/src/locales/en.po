@@ -8700,6 +8700,10 @@ msgstr "Loaded {0}. Left out {1}: {2}"
 msgid "Loading {label}"
 msgstr "Loading {label}"
 
+#: src/session/boot-loader.tsx
+msgid "Loading {productName}"
+msgstr "Loading {productName}"
+
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
 msgstr "Loading sharper tiles · 12 left"
@@ -14026,6 +14030,7 @@ msgstr "Sign in"
 msgid "Sign in again"
 msgstr "Sign in again"
 
+#: src/session/boot-loader.tsx
 #: src/shell/issue-pages.tsx
 msgid "Sign in to go on"
 msgstr "Sign in to go on"

@@ -29,10 +29,10 @@ export function toastsMutationError(error: unknown, handledByCaller: boolean): e
 
 export function createQueryClient(
   onMutationError?: (error: ApiError) => void,
-  onAnyError?: (error: unknown) => void,
+  onAnyError?: (error: unknown, queryKey?: readonly unknown[]) => void,
 ): QueryClient {
   const client: QueryClient = new QueryClient({
-    queryCache: new QueryCache({ onError: (error) => onAnyError?.(error) }),
+    queryCache: new QueryCache({ onError: (error, query) => onAnyError?.(error, query.queryKey) }),
     mutationCache: new MutationCache({
       onError: (error, _variables, _context, mutation) => {
         onAnyError?.(error);

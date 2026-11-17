@@ -1,4 +1,4 @@
-import { ApiError, getPasswordSignIn } from "@parfocal/api-client";
+import { ApiError, getGetMeQueryKey, getPasswordSignIn } from "@parfocal/api-client";
 import type { FakeApiMode } from "../config.ts";
 import { isSessionLocked, locksAt, reauthUrl } from "./lock-rules.ts";
 
@@ -98,15 +98,29 @@ type Browser = {
   sessionStorage: Pick<Storage, "getItem" | "setItem">;
 };
 
-export function signedOutRedirect(browser: Browser, now = Date.now) {
-  return (error: unknown) => {
-    if (!isSignedOut(error)) return;
+export function signInRedirect(browser: Browser, now = Date.now) {
+  return (): boolean => {
     const target = signedOutTarget(browser.location);
-    if (target === null) return;
+    if (target === null) return false;
     const stored = browser.sessionStorage.getItem(lastRedirectKey);
     const at = now();
-    if (!redirectAllowed(stored === null ? null : Number(stored), at)) return;
+    if (!redirectAllowed(stored === null ? null : Number(stored), at)) return false;
     browser.sessionStorage.setItem(lastRedirectKey, String(at));
     browser.location.assign(target);
+    return true;
+  };
+}
+
+const meQueryKey = getGetMeQueryKey()[0];
+
+export function answersWhoIsSignedIn(queryKey: readonly unknown[] | undefined): boolean {
+  return queryKey?.length === 1 && queryKey[0] === meQueryKey;
+}
+
+export function signedOutRedirect(browser: Browser, now = Date.now) {
+  const go = signInRedirect(browser, now);
+  return (error: unknown, queryKey?: readonly unknown[]) => {
+    if (answersWhoIsSignedIn(queryKey) || !isSignedOut(error)) return;
+    go();
   };
 }
