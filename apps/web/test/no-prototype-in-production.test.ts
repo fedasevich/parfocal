@@ -26,9 +26,6 @@ const prototypeUse = [
 ];
 
 const STILL_TO_REPLACE = new Set([
-  "screens/annotate-task/annotate-task-view.tsx",
-  "screens/annotate-task/task-people.ts",
-  "screens/annotate-task/task-shapes.tsx",
   "screens/review/cells-grid.tsx",
   "screens/review/slide-still.tsx",
   "screens/thumbnails.ts",

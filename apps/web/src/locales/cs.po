@@ -1231,11 +1231,6 @@ msgstr ""
 msgid "{0} on the {side}"
 msgstr ""
 
-#. placeholder {0}: visible.length
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "{0} on the slide"
-msgstr ""
-
 #. placeholder {0}: person.openTasks
 #. placeholder {1}: person.openTasks > 1 ? "s" : ""
 #: src/screens/new-task/reviewers-step.tsx
@@ -3318,14 +3313,6 @@ msgstr ""
 msgid "AI result"
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "AI result hidden"
-msgstr ""
-
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "AI result on · {resultName}"
-msgstr ""
-
 #: src/screens/new-task/steps.tsx
 msgid "AI result to check"
 msgstr ""
@@ -3562,7 +3549,6 @@ msgstr ""
 msgid "Annotate by hand"
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Annotate task"
 msgstr ""
@@ -4753,10 +4739,6 @@ msgstr ""
 msgid "Check nothing"
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Check progress"
-msgstr ""
-
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Check that the whole link was copied, or ask the person who shared it for a new one."
 msgstr ""
@@ -5332,8 +5314,6 @@ msgid "Confirm"
 msgstr ""
 
 #. placeholder {0}: selectedAi.object
-#. placeholder {0}: selectedObject?.id
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Confirm {0}"
 msgstr ""
@@ -5909,7 +5889,6 @@ msgid "Defaults that suit most cell models. The test reads the server's own valu
 msgstr ""
 
 #: src/annotations/pin-layer.tsx
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/viewer/guided-check.tsx
 msgid "Delete"
@@ -8901,7 +8880,6 @@ msgstr ""
 msgid "Loading the server details"
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/comments-on-ids.tsx
 #: src/screens/viewer-tools/tool-session.tsx
@@ -10515,10 +10493,6 @@ msgstr ""
 msgid "Nothing is saved. Reviewers get this card for every object."
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Nothing is shown. Turn the AI result on."
-msgstr ""
-
 #. placeholder {0}: filterWord[shown as Exclude<ListFilter, "all">]
 #: src/screens/review/viewer-frame.tsx
 msgid "Nothing marked {0} on this slide."
@@ -10733,7 +10707,6 @@ msgid "Objective detents"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -11695,7 +11668,6 @@ msgstr ""
 msgid "People, models, storage and templates. Adds no access to project data."
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
 #: src/screens/viewer/object-table.tsx
 msgid "Per class"
 msgstr ""
@@ -13561,10 +13533,6 @@ msgstr ""
 #: src/screens/developer/developer-screen.tsx
 #: src/viewer/start-run-panel.tsx
 msgid "Scope"
-msgstr ""
-
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Scope: all AI objects, least sure first"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
@@ -16409,10 +16377,6 @@ msgstr ""
 msgid "This slide could not be prepared"
 msgstr ""
 
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "This slide has no objects."
-msgstr ""
-
 #: src/screens/upload/server-check.tsx
 msgid "This slide is already in the project"
 msgstr ""
@@ -17716,10 +17680,6 @@ msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Who is told"
-msgstr ""
-
-#: src/screens/annotate-task/annotate-task-view.tsx
-msgid "Who made it"
 msgstr ""
 
 #: src/screens/new-task/reviewers-step.tsx
