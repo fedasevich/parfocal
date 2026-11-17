@@ -12,7 +12,11 @@ import { okData } from "../screens/placeholder.tsx";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
-import { RemoteSlideOffline, RemoteSlideTag } from "../viewer/remote-slide-notice.tsx";
+import {
+  CopyIntoParfocal,
+  RemoteSlideOffline,
+  RemoteSlideTag,
+} from "../viewer/remote-slide-notice.tsx";
 import { SlideStage } from "../viewer/slide-stage.tsx";
 import type { SlideStorageNote } from "../viewer/tile-grant.ts";
 import { useCaseLoad } from "../viewer/use-case-load.ts";
@@ -111,6 +115,7 @@ function LiveSlide() {
           </h1>
         )}
         <RemoteSlideTag note={storageNote} />
+        <CopyIntoParfocal slideId={slideId} note={storageNote} canUpload={owner} />
         <span className="flex-1" />
         <SegmentedControl
           aria-label={t`Workspace`}
