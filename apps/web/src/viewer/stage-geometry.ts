@@ -64,10 +64,56 @@ const engineClassOf = (name: string) =>
 
 type Placeable = {
   readonly object: string;
+  readonly kind?: string;
   readonly class_name: string;
   readonly score: number;
   readonly outline?: number[] | null;
 };
+
+export function outlineCentre(
+  outline: readonly number[] | null | undefined,
+): { x: number; y: number; radius: number } | null {
+  const area = outlineArea(outline);
+  if (area === null) return null;
+  return { x: area.x + area.width / 2, y: area.y + area.height / 2, radius: area.width / 4 };
+}
+
+export function slideToScreen(
+  point: { x: number; y: number },
+  camera: { x: number; y: number; zoom: number },
+  size: { width: number; height: number },
+) {
+  const scale = 2 ** camera.zoom;
+  return {
+    x: (point.x - camera.x) * scale + size.width / 2,
+    y: (point.y - camera.y) * scale + size.height / 2,
+  };
+}
+
+type SummaryRows = {
+  readonly count: number;
+  readonly x: ArrayLike<number>;
+  readonly y: ArrayLike<number>;
+  readonly diagonal: ArrayLike<number>;
+  readonly score: ArrayLike<number>;
+};
+
+export function summaryCells(setId: string, summary: SummaryRows) {
+  const cells = [];
+  for (let row = 0; row < summary.count; row += 1) {
+    const x = summary.x[row] ?? 0;
+    const y = summary.y[row] ?? 0;
+    const half = Math.max(1, (summary.diagonal[row] ?? 2) / 2);
+    cells.push({
+      id: `${setId}:${row}`,
+      kind: "cell" as const,
+      ring: [x - half, y - half, x + half, y - half, x + half, y + half, x - half, y + half],
+      className: "other" as const,
+      score: (summary.score[row] ?? 0) / 255,
+    });
+  }
+  return cells;
+}
 
 export function placedObjects(objects: readonly Placeable[]) {
   return objects.flatMap((item) =>
@@ -75,7 +121,7 @@ export function placedObjects(objects: readonly Placeable[]) {
       ? [
           {
             id: item.object,
-            kind: "region" as const,
+            kind: item.kind === "cell" ? ("cell" as const) : ("region" as const),
             ring: item.outline,
             className: engineClassOf(item.class_name),
             score: item.score,

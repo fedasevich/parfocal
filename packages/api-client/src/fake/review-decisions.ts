@@ -13,6 +13,7 @@ import { people, resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
   nextSlideFacts,
+  outlinedCells,
   outlinedObjects,
   reviewDecisionTimes,
   reviewObjects,
@@ -43,6 +44,11 @@ export const outlinedSlide = slideByIndex(4);
 
 const reviewsOutlined = (taskId: string, slideId: string) =>
   slideId === outlinedSlide.id && reviewsA1(taskId, reviewedSlide.id);
+
+export const outlinedCellsSlide = slideByIndex(8);
+
+const reviewsOutlinedCells = (taskId: string, slideId: string) =>
+  slideId === outlinedCellsSlide.id && reviewsA1(taskId, reviewedSlide.id);
 
 const firstReads = new Map<string, FirstRead>();
 const addedObjects = new Map<string, Annotation[]>();
@@ -135,6 +141,7 @@ export const objectsOn = (taskId: string, slideId: string) => {
   if (readsFirst(taskId, slideId)) return reviewObjects;
   if (reviewsA1(taskId, slideId)) return reviewObjects;
   if (reviewsOutlined(taskId, slideId)) return outlinedObjects;
+  if (reviewsOutlinedCells(taskId, slideId)) return outlinedCells;
   if (reviewsNext(taskId, slideId)) {
     return reviewObjects.filter(
       (item, index) => item.kind === "cell" || index < nextSlideFacts.regions,
