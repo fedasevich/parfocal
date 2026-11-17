@@ -4370,7 +4370,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when E2E covers a blocked attempt with its message and log entry, a completing navigation that passes, and a task with no guard.
   Depends on EXP-008. Refs [`poc/study/public/study.js`](https://github.com/fedasevich/pathlogy-poc/blob/master/study/public/study.js), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
-- [ ] EXP-013 · The usability survey appears only when it makes sense
+- [x] EXP-013 · The usability survey appears only when it makes sense
   EXP-005 (in-app SUS and SEQ surveys) showed the ten-question SUS card over the project slide list in production while the owner was exploring, which reads as an interruption. Show SUS only at a natural pause, such as right after a review task is submitted or a session ends, never on top of a list or the viewer while the person works, never in the first sessions, at most once per person per study period, and only when the workspace or a study turned surveys on. SEQ stays right after the defined task it asks about.
   Done when unit tests cover each trigger and suppression rule, and a browser test finds no survey on the slide list or the viewer during work and finds it after submitting a review task when surveys are on.
   Size: S.
