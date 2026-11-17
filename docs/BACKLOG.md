@@ -6375,6 +6375,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Close each remaining difference against the mock's scenes 19 to 29, keep the inspector tab in the address as ADR 0176 (case view state model) says, and make "Hide while panning" hide the overlays during a pan.
   Done when the parity result file lists no open difference, a browser test finds the picker, the progress, all four inspector tabs and the tab kept across a reload, and the viewer golden images still pass.
   Depends on PROTO-022. Size: M.
+- [ ] PROTO-024 · The live viewer steps between slides and opens progress, the report and comment targets
+  PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) left four mock parts unbuilt, named in row 20 of `docs/results/2026-11-17-viewer-mock-parity.md`: Q and E to step to the previous and next slide, the progress popover behind "Slide n of m", "Open report" in clinical projects, and "Go to" on a comment thread that moves the camera to it.
+  Build the four as the mock's scenes 19 to 29 show them, with Q and E in the shortcut registry so they can be rebound.
+  Done when a browser test steps with Q and E, opens the progress popover, opens the report from a clinical project and moves the camera with Go to on a thread.
+  Depends on PROTO-023. Size: S.
 
 ---
 
