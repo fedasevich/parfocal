@@ -18,9 +18,10 @@ from workspace_support import join_project, make_project, make_workspace
 
 from parfocal_api.app import create_app
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.remote_reads import cache_prefix, sweep_remote_cache
+from parfocal_api.remote_cache_sweep import sweep_every_workspace
+from parfocal_api.remote_reads import cache_prefix
 from parfocal_api.tables import Role
-from parfocal_common.db import create_engine, tenant_transaction
+from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.ingest import restricted_ranges_key
 from parfocal_common.object_store import ObjectStore
@@ -269,8 +270,7 @@ def test_the_cache_of_a_slide_unread_for_seven_days_is_swept(
         async def work(store: ObjectStore) -> int:
             engine = create_engine(with_database(OWNER_URL, database))
             try:
-                async with tenant_transaction(engine, team.tenant_id) as connection:
-                    return await sweep_remote_cache(store, connection, at)
+                return await sweep_every_workspace(engine, store, at)
             finally:
                 await engine.dispose()
 
