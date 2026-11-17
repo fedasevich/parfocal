@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import delete, exists, func, insert, select, update
+from sqlalchemy import Select, and_, delete, exists, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
@@ -227,24 +227,33 @@ async def refresh_once(state: AuthState, session_id: str) -> bool:
         return await refresh_session(connection, state, session_id, loaded["tokens"])
 
 
+async def touch_and_count(
+    connection: AsyncConnection,
+    state: AuthState,
+    session_id: str,
+    seen_due: bool,
+    counted: Principal | None,
+) -> int | None:
+    if seen_due:
+        await connection.execute(
+            update(sessions)
+            .where(
+                sessions.c.id_hash == digest(session_id),
+                sessions.c.last_seen_at + SEEN_INTERVAL <= func.now(),
+            )
+            .values(last_seen_at=func.now())
+        )
+    allowed = {} if counted is None else limits_for(counted, state.limits)
+    return await counted_wait(connection, allowed)
+
+
 async def record_use(
     state: AuthState, session_id: str, seen_due: bool, counted: Principal | None
 ) -> int | None:
-    if seen_due:
-        async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
-            await connection.execute(
-                update(sessions)
-                .where(
-                    sessions.c.id_hash == digest(session_id),
-                    sessions.c.last_seen_at + SEEN_INTERVAL <= func.now(),
-                )
-                .values(last_seen_at=func.now())
-            )
-    allowed = {} if counted is None else limits_for(counted, state.limits)
-    if not allowed:
+    if not seen_due and (counted is None or not limits_for(counted, state.limits)):
         return None
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
-        return await counted_wait(connection, allowed)
+        return await touch_and_count(connection, state, session_id, seen_due, counted)
 
 
 @dataclass(frozen=True)
@@ -257,27 +266,75 @@ class Resolved:
     admin_rights: bool = False
 
 
-async def resolve(
-    connection: AsyncConnection, subject: str, active_tenant_id: uuid.UUID | None
-) -> Resolved:
-    user_id = await connection.scalar(select(users.c.id).where(users.c.subject == subject))
-    operator = bool(
-        await connection.scalar(select(exists().where(platform_operators.c.subject == subject)))
-    )
-    membership = None
-    if user_id is not None and active_tenant_id is not None:
-        membership = (
-            await connection.execute(
-                select(memberships.c.role, memberships.c.admin_rights).where(
-                    memberships.c.user_id == user_id, memberships.c.tenant_id == active_tenant_id
-                )
+@dataclass(frozen=True)
+class SessionLimits:
+    idle: timedelta
+    lifetime: timedelta
+
+
+def checked_session_query(session_id: str) -> Select[Any]:
+    return (
+        select(
+            sessions,
+            session_policies.c.idle_lock_minutes,
+            session_policies.c.session_hours,
+            users.c.id.label("user_id"),
+            exists().where(platform_operators.c.subject == sessions.c.subject).label("operator"),
+            memberships.c.role.label("member_role"),
+            memberships.c.admin_rights.label("member_admin_rights"),
+        )
+        .select_from(
+            sessions.outerjoin(
+                session_policies, session_policies.c.tenant_id == sessions.c.active_tenant_id
             )
-        ).one_or_none()
-    if membership is None:
-        return Resolved(subject, user_id, active_tenant_id, operator, None)
-    return Resolved(
-        subject, user_id, active_tenant_id, operator, Role(membership.role), membership.admin_rights
+            .outerjoin(users, users.c.subject == sessions.c.subject)
+            .outerjoin(
+                memberships,
+                and_(
+                    memberships.c.user_id == users.c.id,
+                    memberships.c.tenant_id == sessions.c.active_tenant_id,
+                ),
+            )
+        )
+        .where(sessions.c.id_hash == digest(session_id), sessions.c.expires_at > func.now())
     )
+
+
+@dataclass(frozen=True)
+class CheckedSession:
+    row: Any
+    tokens: dict[str, Any]
+    limits: SessionLimits
+
+    def resolved(self) -> Resolved:
+        row = self.row
+        if row.user_id is None or row.active_tenant_id is None or row.member_role is None:
+            return Resolved(str(row.subject), row.user_id, row.active_tenant_id, row.operator, None)
+        return Resolved(
+            str(row.subject),
+            row.user_id,
+            row.active_tenant_id,
+            row.operator,
+            Role(row.member_role),
+            row.member_admin_rights,
+        )
+
+
+async def read_session(
+    connection: AsyncConnection, state: AuthState, session_id: str
+) -> CheckedSession | None:
+    row = (await connection.execute(checked_session_query(session_id))).one_or_none()
+    if row is None:
+        return None
+    try:
+        tokens = state.cipher.open(row.tokens)
+    except InvalidTag:
+        return None
+    limits = SessionLimits(
+        timedelta(minutes=row.idle_lock_minutes or DEFAULT_IDLE_LOCK_MINUTES),
+        timedelta(hours=row.session_hours or DEFAULT_SESSION_HOURS),
+    )
+    return CheckedSession(row, tokens, limits)
 
 
 def principal_of(resolved: Resolved) -> Principal:
@@ -334,12 +391,6 @@ class SessionLockedError(UnauthenticatedError):
     title = "Your session is locked. Sign in again to continue"
 
 
-@dataclass(frozen=True)
-class SessionLimits:
-    idle: timedelta
-    lifetime: timedelta
-
-
 async def session_limits(connection: AsyncConnection, tenant_id: uuid.UUID | None) -> SessionLimits:
     row = (
         await connection.execute(
@@ -369,39 +420,51 @@ async def authenticate(request: Request) -> Principal:
     needs_second_factor = False
     needs_refresh = False
     seen_due = False
+    wait: int | None = None
+    counted_already = False
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
-        loaded = await load_session(connection, state, session_id)
-        if loaded is not None:
-            row = loaded["row"]
-            limits = await session_limits(connection, row.active_tenant_id)
-            if row.created_at + limits.lifetime <= now():
+        checked = await read_session(connection, state, session_id)
+        if checked is not None:
+            row = checked.row
+            if row.created_at + checked.limits.lifetime <= now():
                 await connection.execute(
                     delete(sessions).where(sessions.c.id_hash == digest(session_id))
                 )
-            elif row.active_at + limits.idle <= now():
+            elif row.active_at + checked.limits.idle <= now():
                 locked = True
             else:
                 needs_refresh = refresh_due(row)
                 seen_due = row.last_seen_at + SEEN_INTERVAL <= now()
-                resolved = await resolve(connection, str(row.subject), row.active_tenant_id)
+                resolved = checked.resolved()
             if (
                 resolved is not None
                 and not resolved.operator
                 and resolved.role is not None
                 and resolved.active_tenant_id is not None
-                and not has_second_factor(loaded["tokens"])
+                and not has_second_factor(checked.tokens)
             ):
                 needs_second_factor = await requires_two_factors(
                     connection, resolved.active_tenant_id
                 )
+            if (
+                resolved is not None
+                and not needs_refresh
+                and not needs_second_factor
+                and (resolved.operator or resolved.user_id is not None)
+            ):
+                wait = await touch_and_count(
+                    connection, state, session_id, seen_due, principal_of(resolved)
+                )
+                counted_already = True
     if locked:
         raise SessionLockedError
     if needs_refresh and not await refresh_once(state, session_id):
         resolved = None
     if resolved is None:
         raise UnauthenticatedError
-    counted = None if needs_second_factor else principal_of(resolved)
-    wait = await record_use(state, session_id, seen_due and not needs_refresh, counted)
+    if not counted_already:
+        counted = None if needs_second_factor else principal_of(resolved)
+        wait = await record_use(state, session_id, seen_due and not needs_refresh, counted)
     if needs_second_factor:
         raise SecondFactorRequiredError
     if wait is not None:
