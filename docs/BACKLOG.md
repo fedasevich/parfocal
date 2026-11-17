@@ -5651,7 +5651,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, JOBS-005, JOBS-006.
   Size: M.
 
-- [ ] ADMIN-006 · Storage, sources, API and webhooks
+- [x] ADMIN-006 · Storage, sources, API and webhooks
   Connected sources and their state (REMOTE-001), API tokens (IAM-011) and webhooks (REMOTE-002, REMOTE-003). Space is one bar split by kind (copied slides, tile cache for remote slides, results and reviews, free) with a legend and sizes, slides read in place as a line under it, and a by-project list largest first. The colours differ in lightness and avoid the tumor red ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when an API test checks the space per kind and per project adds up to the total, component tests render the bar with seeded usage including an empty workspace and a nearly full one, and E2E creates and revokes a token.
   Depends on ADMIN-001, REMOTE-002, IAM-011.

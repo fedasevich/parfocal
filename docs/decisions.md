@@ -171,6 +171,17 @@ IAM-030 (a SCIM-created person signs in through SAML without a duplicate) measur
 
 Your choice: 
 
+### 142. Where a workspace's storage capacity comes from
+
+ADMIN-006 (storage, sources, API and webhooks in the admin console) now shows used space per kind and project in exact bytes, but there is no capacity to draw the bar against, so it shows used space only.
+
+- **A. A constant per plan, such as 100 GB for the pilot plan, kept in code (recommended).** Simple, and changes with a deploy.
+- B. A setting per workspace, editable by the platform owner.
+- C. No capacity, show used space only.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
