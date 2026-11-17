@@ -359,6 +359,7 @@ NEEDS_A_TASK = frozenset(
         "skipObject",
         "clearSkip",
         "getMyDisplay",
+        "getTaskDisplay",
         "chooseMyDisplay",
         "saveOpinion",
         "submitFirstRead",
@@ -1127,6 +1128,23 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/decision-notes"
     ),
     "getReviewOrder": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/order"),
+    "listReviewObjects": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/objects"
+    ),
+    "getSlideAgreement": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/agreement"
+    ),
+    "getTaskDisplay": lambda w: Call("GET", f"/api/review-tasks/{w.task}/display"),
+    "getDisagreementQueue": lambda w: Call("GET", f"/api/review-tasks/{w.task}/disagreement-queue"),
+    "updateQueuedObject": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.queued_task}/disagreement-queue/{w.slide}/T1",
+        {"action": "decide", "raw": "4"},
+    ),
+    "getMyAdjudication": lambda w: Call("GET", f"/api/review-tasks/{w.queued_task}/adjudication"),
+    "decideAdjudication": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.queued_task}/adjudication/{w.slide}/T10", {"raw": "4"}
+    ),
     "saveDecision": lambda w: Call(
         "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions/T1", {"answer": "4"}
     ),
