@@ -39,6 +39,7 @@ export type EngineViewerProps = {
   start?: StageStart | undefined;
   object?: string | undefined;
   guided?: boolean;
+  cells?: boolean;
   tool?: string | undefined;
   focus?: boolean;
   onFocus?: ((on: boolean) => void) | undefined;
@@ -56,6 +57,7 @@ export function EngineViewer({
   start,
   object,
   guided = false,
+  cells = false,
   tool,
   focus = false,
   onFocus,
@@ -140,6 +142,7 @@ export function EngineViewer({
           slideId={slideId}
           object={object}
           guided={guided}
+          cellsGrid={cells}
           focus={focus ? { onShowUi: showUi } : null}
           onCurrent={setCurrentObject}
           onComments={(id) => {

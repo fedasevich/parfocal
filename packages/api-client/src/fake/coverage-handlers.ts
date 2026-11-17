@@ -173,6 +173,16 @@ function thumbnailSvg(slideId: string): string {
   ].join("");
 }
 
+function cellCropSvg(number: number): string {
+  const hue = (number * 47) % 360;
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">',
+    '<rect width="64" height="64" fill="#f3e6ef"/>',
+    `<circle cx="32" cy="32" r="13" fill="hsl(${hue} 40% 42%)"/>`,
+    "</svg>",
+  ].join("");
+}
+
 export const tissueHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/tissue", ({ params }) =>
     maskless(params.slideId)
@@ -191,5 +201,12 @@ export const tissueHandlers = (): RequestHandler[] => [
       : HttpResponse.text(thumbnailSvg(params.slideId), {
           headers: { "Content-Type": "image/svg+xml" },
         }),
+  ),
+  http.get<{ slideId: string; number: string }>(
+    "*/api/slides/:slideId/cell-crops/:number",
+    ({ params }) =>
+      HttpResponse.text(cellCropSvg(Number(params.number)), {
+        headers: { "Content-Type": "image/svg+xml" },
+      }),
   ),
 ];
