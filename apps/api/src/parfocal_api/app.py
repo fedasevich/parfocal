@@ -92,7 +92,10 @@ from parfocal_api import (
     slide_details,
     slide_embeddings,
     slide_moves,
+    slide_result_stats,
+    slide_threads,
     slide_tissue,
+    slide_viewer,
     study_templates,
     task_changes,
     task_report_layout,
@@ -268,6 +271,9 @@ def create_app(
     app.include_router(task_runs.router)
     app.include_router(review_order.router)
     app.include_router(review_objects.router)
+    app.include_router(slide_result_stats.router)
+    app.include_router(slide_viewer.slide_router)
+    app.include_router(slide_viewer.result_set_router)
     app.include_router(disagreement_queue.router)
     app.include_router(disagreement_queue.adjudication_router)
     app.include_router(reviewed_export.router)
@@ -298,6 +304,8 @@ def create_app(
     app.include_router(display.presets_router)
     app.include_router(threads.router)
     app.include_router(threads.slide_router)
+    app.include_router(slide_threads.slide_router)
+    app.include_router(slide_threads.thread_router)
     app.include_router(opinions.router)
     app.include_router(first_reads.router)
     app.include_router(disagreements.router)

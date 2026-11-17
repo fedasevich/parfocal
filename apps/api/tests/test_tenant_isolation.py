@@ -1893,6 +1893,23 @@ GET_ROUTES = {
             f"{a.ids['slide_thread']}"
         ),
     ),
+    "listSlideThreads": Route(Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/threads"),
+    "listThreadComments": Route(
+        Exposure.TENANT, lambda a: f"/api/threads/{a.ids['thread']}/comments"
+    ),
+    "getSlideAiProgress": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/ai-progress"
+    ),
+    "listAnnotationLayers": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotation-layers"
+    ),
+    "getResultSetTyper": Route(
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}/typer"
+    ),
+    "getSlideResultStats": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/result-stats",
+    ),
     "getReviewOrder": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/order",

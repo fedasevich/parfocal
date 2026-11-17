@@ -21,6 +21,13 @@ from parfocal_api.showcase import (
     WORKSPACES,
     seed,
 )
+from parfocal_api.slide_result_stats import get_slide_result_stats
+from parfocal_api.slide_threads import list_slide_threads, list_thread_comments
+from parfocal_api.slide_viewer import (
+    get_result_set_typer,
+    get_slide_ai_progress,
+    list_annotation_layers,
+)
 from parfocal_api.tables import (
     DecisionStyle,
     DecisionValue,
@@ -305,5 +312,42 @@ async def test_the_owner_reviews_the_gallery_tour_on_the_real_review_calls(seede
             )
             saved = await list_decisions(task, slide, principal, connection)
             assert [decision.object for decision in saved] == [first.object]
+    finally:
+        await engine.dispose()
+
+
+async def test_the_owner_opens_a_seeded_slide_on_the_real_viewer_calls(seeded: str) -> None:
+    await run_seed(seeded)
+    task_id, slide_id, set_id, tenant_id, user_id = (
+        await run_sql(
+            seeded,
+            "SELECT t.id, ts.slide_id, ts.result_set_id, t.tenant_id, u.id FROM review_tasks t "
+            "JOIN review_task_slides ts ON ts.task_id = t.id "
+            "JOIN review_assignments a ON a.task_id = t.id AND a.slide_id = ts.slide_id "
+            "JOIN users u ON u.id = a.user_id "
+            f"WHERE t.name = '{GALLERY_TOUR}' AND u.email = 'owner@example.test' "
+            "AND ts.position = 0 LIMIT 1",
+        )
+    )[0]
+    tenant = uuid.UUID(str(tenant_id))
+    principal = MemberPrincipal(
+        "seed:owner@example.test", tenant, uuid.UUID(str(user_id)), Role.RESEARCHER, True
+    )
+    task, slide = uuid.UUID(str(task_id)), uuid.UUID(str(slide_id))
+    engine = create_engine(seeded)
+    try:
+        async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant)) as connection:
+            stats = await get_slide_result_stats(task, slide, principal, connection)
+            assert stats.object_count > 0
+            assert sum(stats.score_bins) > 0
+            progress = await get_slide_ai_progress(slide, principal, connection)
+            assert progress.state == "ready"
+            layers = await list_annotation_layers(slide, principal, connection)
+            assert layers.slide_id == slide
+            typer = await get_result_set_typer(uuid.UUID(str(set_id)), principal, connection)
+            assert typer.name
+            threads = await list_slide_threads(slide, principal, connection)
+            for thread in threads:
+                await list_thread_comments(thread.id, principal, connection)
     finally:
         await engine.dispose()

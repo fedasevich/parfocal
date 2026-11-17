@@ -1207,6 +1207,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listThreadsOnSlide": lambda w: Call("GET", w.slide_threads),
     "listMentionableMembersOnSlide": lambda w: Call("GET", f"{w.slide_threads}/mentionable"),
     "getThreadOnSlide": lambda w: Call("GET", f"{w.slide_threads}/{w.slide_thread}"),
+    "listSlideThreads": lambda w: Call("GET", f"/api/slides/{w.slide}/threads"),
+    "listThreadComments": lambda w: Call("GET", f"/api/threads/{w.thread}/comments"),
+    "getSlideAiProgress": lambda w: Call("GET", f"/api/slides/{w.slide}/ai-progress"),
+    "listAnnotationLayers": lambda w: Call("GET", f"/api/slides/{w.slide}/annotation-layers"),
+    "getResultSetTyper": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/typer"),
+    "getSlideResultStats": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/result-stats"
+    ),
     "createThreadOnSlide": lambda w: Call(
         "POST",
         w.slide_threads,
