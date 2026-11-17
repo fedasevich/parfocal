@@ -1,4 +1,5 @@
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from html import unescape
 from pathlib import PurePosixPath
@@ -120,10 +121,15 @@ def name_of(url: httpx2.URL) -> str:
     return unquote(PurePosixPath(url.path).name) or "download"
 
 
-async def probed(client: httpx2.AsyncClient, address: str, policy: LinkPolicy) -> LinkedFile:
+async def probed(
+    client: httpx2.AsyncClient,
+    address: str,
+    policy: LinkPolicy,
+    headers: Mapping[str, str] | None = None,
+) -> LinkedFile:
     url = httpx2.URL(address)
     try:
-        async with open_link(client, address, policy, "HEAD") as opened:
+        async with open_link(client, address, policy, "HEAD", headers) as opened:
             return LinkedFile(name_of(url), address, declared_size(opened.response))
     except LinkRefusedError:
         return LinkedFile(name_of(url), address, None)
@@ -135,11 +141,14 @@ def listing_kind(opened: Opened) -> str | None:
 
 
 async def list_link(
-    client: httpx2.AsyncClient, address: str, policy: LinkPolicy
+    client: httpx2.AsyncClient,
+    address: str,
+    policy: LinkPolicy,
+    headers: Mapping[str, str] | None = None,
 ) -> list[LinkedFile]:
     opening = replace(policy, max_bytes=None)
     reading = replace(policy, max_bytes=LISTING_MAX_BYTES)
-    async with open_link(client, address, opening) as opened:
+    async with open_link(client, address, opening, "GET", headers) as opened:
         kind = listing_kind(opened)
         if kind is None:
             return [
@@ -150,4 +159,4 @@ async def list_link(
     if kind != "text/html":
         return xml_files(url, body)[:MAX_LISTED]
     links = html_links(url, body)[:MAX_PROBED]
-    return [await probed(client, link, opening) for link in links]
+    return [await probed(client, link, opening, headers) for link in links]

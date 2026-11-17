@@ -16,6 +16,7 @@ from parfocal_api.deidentified import held_privacy, keeps_restricted_images
 from parfocal_api.restricted_images import delete_restricted_images
 from parfocal_api.slide_ingest import SlideFacts, publish_slide, record_refusal, upload_of
 from parfocal_api.tables import UploadStatus, job_steps
+from parfocal_common.envelope import MasterKeyring
 from parfocal_common.ingest import (
     KIND,
     LEASE_SECONDS,
@@ -77,6 +78,7 @@ class Resources:
     link_trusted_origins: tuple[str, ...] = ()
     link_read_seconds: float = 30.0
     link_fetch_seconds: float = 3600.0
+    keyring: MasterKeyring | None = None
     parse_limits: ParseLimits = field(default_factory=ParseLimits)
     parse_tokens: JobTokens = field(default_factory=JobTokens)
 
@@ -91,6 +93,9 @@ def resources_from_environment() -> Resources:
         link_trusted_origins=tuple(settings.link_trusted_origins),
         link_read_seconds=settings.link_read_seconds,
         link_fetch_seconds=settings.link_fetch_seconds,
+        keyring=MasterKeyring.from_setting(settings.master_keys.get_secret_value())
+        if settings.master_keys is not None
+        else None,
         parse_limits=ParseLimits(
             memory_mib=settings.ingest_parse_memory_mib,
             seconds=settings.ingest_parse_seconds,

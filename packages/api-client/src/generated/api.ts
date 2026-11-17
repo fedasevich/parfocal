@@ -784,6 +784,7 @@ export const AuditTarget = {
   "report-link": "report-link",
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
+  "import-source": "import-source",
   "registered-model": "registered-model",
   maintenance: "maintenance",
   feedback: "feedback",
@@ -1475,10 +1476,10 @@ export interface ClassDraft {
  * @minLength 1
  * @maxLength 120
  */
-export type SourceName = string;
+export type SourceNameOutput = string;
 
 export interface ClassMapping {
-  source_name: SourceName;
+  source_name: SourceNameOutput;
   class_id: string;
 }
 
@@ -2699,6 +2700,63 @@ export interface ImportReport {
   problems: RowProblem[];
 }
 
+export type ImportSourceKind = (typeof ImportSourceKind)[keyof typeof ImportSourceKind];
+
+export const ImportSourceKind = {
+  https: "https",
+  storage: "storage",
+} as const;
+
+export interface ImportSource {
+  id: string;
+  name: string;
+  kind: ImportSourceKind;
+  address: string;
+  host: string;
+  region: string | null;
+  header_name: string | null;
+  has_credential: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+export type ParfocalApiImportSourcesSourceName = string;
+
+/**
+ * @pattern ^[a-z0-9-]{1,40}$
+ */
+export type ParfocalApiImportSourcesRegion = string;
+
+/**
+ * @minLength 1
+ * @maxLength 256
+ */
+export type KeyId = string;
+
+/**
+ * @minLength 8
+ * @maxLength 4096
+ */
+export type Secret = string;
+
+export interface ImportSourceDraft {
+  name: ParfocalApiImportSourcesSourceName;
+  kind: ImportSourceKind;
+  address: Address;
+  region?: ParfocalApiImportSourcesRegion | null;
+  header_name?: HeaderName | null;
+  key_id?: KeyId | null;
+  secret?: Secret | null;
+}
+
+export interface ImportSources {
+  sources: ImportSource[];
+}
+
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
 
 export const NotificationKind = {
@@ -2995,12 +3053,6 @@ export interface LabModel {
   created_at: string;
 }
 
-/**
- * @minLength 8
- * @maxLength 4096
- */
-export type Secret = string;
-
 export type TileSize = (typeof TileSize)[keyof typeof TileSize];
 
 export const TileSize = {
@@ -3238,7 +3290,8 @@ export interface LinkImport {
 }
 
 export interface LinkImportRequest {
-  address: Address;
+  address?: Address | null;
+  source_id?: string | null;
   /**
    * @minItems 1
    * @items.maxLength 255
@@ -4518,9 +4571,9 @@ export interface ReassignmentCreate {
   note?: ReassignmentNote | null;
 }
 
-export type Region = (typeof Region)[keyof typeof Region];
+export type RegionOutput = (typeof RegionOutput)[keyof typeof RegionOutput];
 
-export const Region = {
+export const RegionOutput = {
   eu: "eu",
   us: "us",
 } as const;
@@ -6050,7 +6103,7 @@ export interface Tenant {
   slug: string;
   name: string;
   kind: TenantKind;
-  region: Region;
+  region: RegionOutput;
   plan: Plan;
   status: TenantStatus;
   suspended_at: string | null;
@@ -6058,12 +6111,20 @@ export interface Tenant {
   updated_at: string;
 }
 
+export type ParfocalCommonResidencyRegion =
+  (typeof ParfocalCommonResidencyRegion)[keyof typeof ParfocalCommonResidencyRegion];
+
+export const ParfocalCommonResidencyRegion = {
+  eu: "eu",
+  us: "us",
+} as const;
+
 export interface TenantDraft {
   organisation_id: string;
   slug: Slug;
   name: ParfocalApiTenantsName;
   kind: TenantKind;
-  region: Region;
+  region: ParfocalCommonResidencyRegion;
   plan?: Plan;
 }
 
@@ -6326,6 +6387,12 @@ export const ParfocalApiReviewedExportExportFormat = {
   csv: "csv",
 } as const;
 
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type ParfocalApiTaxonomySourceName = string;
+
 export type ListProjectsParams = {
   archived?: boolean;
 };
@@ -6442,11 +6509,8 @@ export type CompleteUploadParams = {
 };
 
 export type ListSourceFilesParams = {
-  /**
-   * @minLength 1
-   * @maxLength 2048
-   */
-  address: string;
+  address?: string | null;
+  source_id?: string | null;
 };
 
 export type ResolveReviewObjectParams = {
@@ -29719,7 +29783,7 @@ export type listSourceFilesResponseError = (
 
 export type listSourceFilesResponse = listSourceFilesResponseSuccess | listSourceFilesResponseError;
 
-export const getListSourceFilesUrl = (projectId: string, params: ListSourceFilesParams) => {
+export const getListSourceFilesUrl = (projectId: string, params?: ListSourceFilesParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -29740,7 +29804,7 @@ export const getListSourceFilesUrl = (projectId: string, params: ListSourceFiles
  */
 export const listSourceFiles = async (
   projectId: string,
-  params: ListSourceFilesParams,
+  params?: ListSourceFilesParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<listSourceFilesResponse> => {
   return apiFetch<listSourceFilesResponse>(getListSourceFilesUrl(projectId, params), {
@@ -29758,7 +29822,7 @@ export const getListSourceFilesQueryOptions = <
   TError = Problem,
 >(
   projectId: string,
-  params: ListSourceFilesParams,
+  params?: ListSourceFilesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -29789,7 +29853,7 @@ export function useListSourceFiles<
   TError = Problem,
 >(
   projectId: string,
-  params: ListSourceFilesParams,
+  params: undefined | ListSourceFilesParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>> &
       Pick<
@@ -29809,7 +29873,7 @@ export function useListSourceFiles<
   TError = Problem,
 >(
   projectId: string,
-  params: ListSourceFilesParams,
+  params?: ListSourceFilesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>> &
       Pick<
@@ -29829,7 +29893,7 @@ export function useListSourceFiles<
   TError = Problem,
 >(
   projectId: string,
-  params: ListSourceFilesParams,
+  params?: ListSourceFilesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -29845,7 +29909,7 @@ export function useListSourceFiles<
   TError = Problem,
 >(
   projectId: string,
-  params: ListSourceFilesParams,
+  params?: ListSourceFilesParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSourceFiles>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -30024,6 +30088,676 @@ export const useImportFromLink = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getImportFromLinkMutationOptions(options), queryClient);
+};
+
+export type listImportSourcesResponse200 = {
+  data: ImportSources;
+  status: 200;
+};
+
+export type listImportSourcesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listImportSourcesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listImportSourcesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listImportSourcesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listImportSourcesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listImportSourcesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listImportSourcesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listImportSourcesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listImportSourcesResponseSuccess = listImportSourcesResponse200 & {
+  headers: Headers;
+};
+export type listImportSourcesResponseError = (
+  | listImportSourcesResponse400
+  | listImportSourcesResponse401
+  | listImportSourcesResponse403
+  | listImportSourcesResponse404
+  | listImportSourcesResponse409
+  | listImportSourcesResponse422
+  | listImportSourcesResponse429
+  | listImportSourcesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listImportSourcesResponse =
+  | listImportSourcesResponseSuccess
+  | listImportSourcesResponseError;
+
+export const getListImportSourcesUrl = () => {
+  return `/api/tenant/import-sources`;
+};
+
+/**
+ * @summary List Import Sources
+ */
+export const listImportSources = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listImportSourcesResponse> => {
+  return apiFetch<listImportSourcesResponse>(getListImportSourcesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListImportSourcesQueryKey = () => {
+  return [`/api/tenant/import-sources`] as const;
+};
+
+export const getListImportSourcesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listImportSources>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listImportSources>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListImportSourcesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listImportSources>>> = ({ signal }) =>
+    listImportSources({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listImportSources>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListImportSourcesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listImportSources>>
+>;
+export type ListImportSourcesQueryError = Problem;
+
+export function useListImportSources<
+  TData = Awaited<ReturnType<typeof listImportSources>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listImportSources>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listImportSources>>,
+          TError,
+          Awaited<ReturnType<typeof listImportSources>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListImportSources<
+  TData = Awaited<ReturnType<typeof listImportSources>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listImportSources>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listImportSources>>,
+          TError,
+          Awaited<ReturnType<typeof listImportSources>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListImportSources<
+  TData = Awaited<ReturnType<typeof listImportSources>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listImportSources>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Import Sources
+ */
+
+export function useListImportSources<
+  TData = Awaited<ReturnType<typeof listImportSources>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listImportSources>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListImportSourcesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type saveImportSourceResponse201 = {
+  data: ImportSource;
+  status: 201;
+};
+
+export type saveImportSourceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveImportSourceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveImportSourceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveImportSourceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveImportSourceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveImportSourceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveImportSourceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveImportSourceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveImportSourceResponseSuccess = saveImportSourceResponse201 & {
+  headers: Headers;
+};
+export type saveImportSourceResponseError = (
+  | saveImportSourceResponse400
+  | saveImportSourceResponse401
+  | saveImportSourceResponse403
+  | saveImportSourceResponse404
+  | saveImportSourceResponse409
+  | saveImportSourceResponse422
+  | saveImportSourceResponse429
+  | saveImportSourceResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveImportSourceResponse =
+  | saveImportSourceResponseSuccess
+  | saveImportSourceResponseError;
+
+export const getSaveImportSourceUrl = () => {
+  return `/api/tenant/import-sources`;
+};
+
+/**
+ * @summary Save Import Source
+ */
+export const saveImportSource = async (
+  importSourceDraft: ImportSourceDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveImportSourceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveImportSourceResponse>(getSaveImportSourceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(importSourceDraft),
+  });
+};
+
+export const getSaveImportSourceMutationKey = () => ["saveImportSource"] as const;
+
+export const getSaveImportSourceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveImportSource>>,
+    TError,
+    SaveImportSourceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveImportSource>>,
+  TError,
+  SaveImportSourceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveImportSourceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveImportSource>>,
+    SaveImportSourceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveImportSource(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveImportSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveImportSource>>
+>;
+export type SaveImportSourceMutationBody = ImportSourceDraft;
+export type SaveImportSourceMutationError = Problem;
+export type SaveImportSourceMutationVariables = { data: ImportSourceDraft };
+
+/**
+ * @summary Save Import Source
+ */
+export const useSaveImportSource = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveImportSource>>,
+      TError,
+      SaveImportSourceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveImportSource>>,
+  TError,
+  SaveImportSourceMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveImportSourceMutationOptions(options), queryClient);
+};
+
+export type changeImportSourceResponse200 = {
+  data: ImportSource;
+  status: 200;
+};
+
+export type changeImportSourceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeImportSourceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeImportSourceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeImportSourceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeImportSourceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeImportSourceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeImportSourceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeImportSourceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeImportSourceResponseSuccess = changeImportSourceResponse200 & {
+  headers: Headers;
+};
+export type changeImportSourceResponseError = (
+  | changeImportSourceResponse400
+  | changeImportSourceResponse401
+  | changeImportSourceResponse403
+  | changeImportSourceResponse404
+  | changeImportSourceResponse409
+  | changeImportSourceResponse422
+  | changeImportSourceResponse429
+  | changeImportSourceResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeImportSourceResponse =
+  | changeImportSourceResponseSuccess
+  | changeImportSourceResponseError;
+
+export const getChangeImportSourceUrl = (sourceId: string) => {
+  return `/api/tenant/import-sources/${sourceId}`;
+};
+
+/**
+ * @summary Change Import Source
+ */
+export const changeImportSource = async (
+  sourceId: string,
+  importSourceDraft: ImportSourceDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeImportSourceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeImportSourceResponse>(getChangeImportSourceUrl(sourceId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(importSourceDraft),
+  });
+};
+
+export const getChangeImportSourceMutationKey = () => ["changeImportSource"] as const;
+
+export const getChangeImportSourceMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeImportSource>>,
+    TError,
+    ChangeImportSourceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeImportSource>>,
+  TError,
+  ChangeImportSourceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeImportSourceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeImportSource>>,
+    ChangeImportSourceMutationVariables
+  > = (props) => {
+    const { sourceId, data } = props ?? {};
+
+    return changeImportSource(sourceId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeImportSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeImportSource>>
+>;
+export type ChangeImportSourceMutationBody = ImportSourceDraft;
+export type ChangeImportSourceMutationError = Problem;
+export type ChangeImportSourceMutationVariables = { sourceId: string; data: ImportSourceDraft };
+
+/**
+ * @summary Change Import Source
+ */
+export const useChangeImportSource = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeImportSource>>,
+      TError,
+      ChangeImportSourceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeImportSource>>,
+  TError,
+  ChangeImportSourceMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeImportSourceMutationOptions(options), queryClient);
+};
+
+export type deleteImportSourceResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteImportSourceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteImportSourceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteImportSourceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteImportSourceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteImportSourceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteImportSourceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteImportSourceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteImportSourceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteImportSourceResponseSuccess = deleteImportSourceResponse204 & {
+  headers: Headers;
+};
+export type deleteImportSourceResponseError = (
+  | deleteImportSourceResponse400
+  | deleteImportSourceResponse401
+  | deleteImportSourceResponse403
+  | deleteImportSourceResponse404
+  | deleteImportSourceResponse409
+  | deleteImportSourceResponse422
+  | deleteImportSourceResponse429
+  | deleteImportSourceResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteImportSourceResponse =
+  | deleteImportSourceResponseSuccess
+  | deleteImportSourceResponseError;
+
+export const getDeleteImportSourceUrl = (sourceId: string) => {
+  return `/api/tenant/import-sources/${sourceId}`;
+};
+
+/**
+ * @summary Delete Import Source
+ */
+export const deleteImportSource = async (
+  sourceId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteImportSourceResponse> => {
+  return apiFetch<deleteImportSourceResponse>(getDeleteImportSourceUrl(sourceId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteImportSourceMutationKey = () => ["deleteImportSource"] as const;
+
+export const getDeleteImportSourceMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteImportSource>>,
+    TError,
+    DeleteImportSourceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteImportSource>>,
+  TError,
+  DeleteImportSourceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteImportSourceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteImportSource>>,
+    DeleteImportSourceMutationVariables
+  > = (props) => {
+    const { sourceId } = props ?? {};
+
+    return deleteImportSource(sourceId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteImportSourceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteImportSource>>
+>;
+
+export type DeleteImportSourceMutationError = Problem;
+export type DeleteImportSourceMutationVariables = { sourceId: string };
+
+/**
+ * @summary Delete Import Source
+ */
+export const useDeleteImportSource = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteImportSource>>,
+      TError,
+      DeleteImportSourceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteImportSource>>,
+  TError,
+  DeleteImportSourceMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteImportSourceMutationOptions(options), queryClient);
 };
 
 export type createReviewTaskResponse201 = {

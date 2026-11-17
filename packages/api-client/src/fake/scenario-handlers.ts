@@ -25,7 +25,7 @@ import type {
 import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
 import { profileChangeHandler, withProfileChanges } from "./profile-changes.ts";
-import { linkImportHandler, sourceFilesHandler } from "./project-handlers.ts";
+import { importSourcesHandler, linkImportHandler, sourceFilesHandler } from "./project-handlers.ts";
 import {
   changeProjectDefaults,
   clinicalRoleOf,
@@ -405,6 +405,7 @@ const projectNotFound = () =>
 export function scenarioHandlers(): RequestHandler[] {
   return [
     sourceFilesHandler(),
+    importSourcesHandler(),
     linkImportHandler(),
     getGetSessionMockHandler(() => toSession()),
     getGetMeMockHandler(() => toMe()),

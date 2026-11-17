@@ -13,6 +13,7 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   ClassMapping,
+  ImportSources,
   LinkImport,
   LinkImportRequest,
   OpinionForm,
@@ -48,6 +49,7 @@ import {
   overviewSeedOf,
   projectImports,
   resultPreview,
+  savedSources,
   sourceFiles,
   sourceListings,
   taxonomyClasses,
@@ -394,11 +396,25 @@ export const getGetUploadBatchMockHandler = (overrideResponse?: UploadBatch) =>
     HttpResponse.json(overrideResponse ?? toUploadBatch(params.projectId)),
   );
 
+const savedSourceListing = (sourceId: string): SourceListing | undefined => {
+  const source = savedSources.find((item) => item.id === sourceId);
+  return source
+    ? { ...toSourceListing(sourceListings.remote.address), address: source.address }
+    : undefined;
+};
+
 export const sourceFilesHandler = (overrideResponse?: SourceListing) =>
-  http.get("*/api/projects/:projectId/source-files", ({ request }) =>
-    HttpResponse.json(
-      overrideResponse ?? toSourceListing(new URL(request.url).searchParams.get("address") ?? ""),
-    ),
+  http.get("*/api/projects/:projectId/source-files", ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const saved = savedSourceListing(params.get("source_id") ?? "");
+    return HttpResponse.json(
+      overrideResponse ?? saved ?? toSourceListing(params.get("address") ?? ""),
+    );
+  });
+
+export const importSourcesHandler = (overrideResponse?: ImportSources) =>
+  http.get("*/api/tenant/import-sources", () =>
+    HttpResponse.json(overrideResponse ?? ({ sources: [...savedSources] } satisfies ImportSources)),
   );
 
 export const linkImportHandler = () =>

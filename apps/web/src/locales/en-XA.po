@@ -13192,6 +13192,10 @@ msgstr ""
 msgid "Saved as you go. You can change it until the researcher signs off."
 msgstr ""
 
+#: src/screens/upload/link-import.tsx
+msgid "Saved sources"
+msgstr ""
+
 #: src/screens/admin/sections.tsx
 msgid "Saved. Members without a second factor are asked to set one up and sign in again."
 msgstr ""

@@ -11,6 +11,7 @@ from workspace_support import join_project, make_project, make_workspace, owner
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.tables import Role
 from parfocal_common.db import create_engine
+from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import work
 from parfocal_common.object_store import ObjectStore
 from parfocal_ingest.link_fetch import link_fetch_workflow
@@ -73,10 +74,14 @@ def status_of(api: ApiAs, who: MemberPrincipal, upload: dict[str, Any]) -> dict[
 
 
 def run_worker(
-    database: str, tenant_id: uuid.UUID, work_dir: Path, trusted: tuple[str, ...] = ()
+    database: str,
+    tenant_id: uuid.UUID,
+    work_dir: Path,
+    trusted: tuple[str, ...] = (),
+    keyring: MasterKeyring | None = None,
 ) -> int:
     def resources() -> Resources:
-        return Resources(TEST_STORAGE, work_dir, link_trusted_origins=trusted)
+        return Resources(TEST_STORAGE, work_dir, link_trusted_origins=trusted, keyring=keyring)
 
     workflows = [
         ingest_workflow(resources),
