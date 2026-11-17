@@ -24,6 +24,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.hidden_models import hidden_names, refuse_hidden
+from parfocal_api.lab_models import check_lab_run
 from parfocal_api.model_catalogue import (
     BY_NAME,
     CATALOGUE,
@@ -331,17 +332,23 @@ def resolved(choice: ModelChoice) -> ModelReference:
     return ModelReference(name=choice.name, version=version)
 
 
-async def detector_of(connection: AsyncConnection, choices: RunChoices) -> ModelReference:
+async def detector_of(
+    connection: AsyncConnection, choices: RunChoices, project_id: uuid.UUID
+) -> ModelReference:
     if choices.tier is not None:
         model = await mapped(connection, choices.tier)
         return ModelReference(name=model.name, version=model.version)
     assert choices.detector is not None
+    if latest_version(choices.detector.name) is None:
+        await check_lab_run(connection, project_id, choices.detector.name, choices.detector.version)
     return resolved(choices.detector)
 
 
-async def parameters_from(connection: AsyncConnection, choices: RunChoices) -> RunParameters:
+async def parameters_from(
+    connection: AsyncConnection, choices: RunChoices, project_id: uuid.UUID
+) -> RunParameters:
     return RunParameters(
-        detector=await detector_of(connection, choices),
+        detector=await detector_of(connection, choices, project_id),
         typer=resolved(choices.typer) if choices.typer is not None else None,
         test_time_views=choices.test_time_views,
         ordering=choices.ordering,
@@ -599,7 +606,7 @@ async def start_model_runs(
     await check_slides(connection, project_id, draft)
     if isinstance(draft.scope, SelectionScope):
         await check_selection(connection, draft.scope)
-    parameters = await parameters_from(connection, draft.parameters)
+    parameters = await parameters_from(connection, draft.parameters, project_id)
     await refuse_hidden(
         connection,
         {parameters.detector.name} | ({parameters.typer.name} if parameters.typer else set()),

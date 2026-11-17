@@ -768,6 +768,11 @@ msgstr ""
 msgid "{0} is a class in {1}, on key {2}"
 msgstr ""
 
+#. placeholder {0}: project.name
+#: src/screens/admin/connect-model.tsx
+msgid "{0} is a clinical project"
+msgstr ""
+
 #. placeholder {0}: pending.combo
 #. placeholder {1}: other.group.toLowerCase()
 #: src/screens/settings/shortcuts-section.tsx
@@ -4940,6 +4945,10 @@ msgstr ""
 msgid "Clinical report"
 msgstr ""
 
+#: src/screens/admin/connect-model.tsx
+msgid "Clinical, its owner confirms sending tiles"
+msgstr ""
+
 #: src/screens/upload/live-wizard.tsx
 msgid "Clinical, patient fields are kept"
 msgstr ""
@@ -6219,6 +6228,10 @@ msgstr ""
 
 #: src/screens/new-task/new-task-screen.tsx
 msgid "Each reviewer gets one email, and the task shows at the top of their My work."
+msgstr ""
+
+#: src/screens/admin/connect-model.tsx
+msgid "Each run of this model sends tiles of the project's slides to {host}. The lab that runs the server sees them. Slide labels and patient details are never sent."
 msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
@@ -11241,6 +11254,10 @@ msgid "Parfocal reads the file and lines it up with A1 before anything is added.
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
+msgid "Parfocal records your confirmation. Removing the model from the project clears it."
+msgstr ""
+
+#: src/screens/admin/connect-model.tsx
 msgid "Parfocal sends"
 msgstr ""
 
@@ -13465,6 +13482,15 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Send the request and continue"
+msgstr ""
+
+#. placeholder {0}: project.name
+#: src/screens/admin/connect-model.tsx
+msgid "Send tiles of {0} to {host}?"
+msgstr ""
+
+#: src/screens/admin/connect-model.tsx
+msgid "Send tiles to this server"
 msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
@@ -16113,6 +16139,11 @@ msgstr ""
 msgid "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
 msgstr ""
 
+#. placeholder {0}: hostOf(form.address)
+#: src/screens/admin/connect-model.tsx
+msgid "Tiles go to {0}"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 msgid "Tiles it gets"
 msgstr ""
@@ -17090,6 +17121,10 @@ msgstr ""
 
 #: src/routes/flow-map.walkthrough.index.tsx
 msgid "What it shows"
+msgstr ""
+
+#: src/screens/admin/connect-model.tsx
+msgid "What leaves Parfocal"
 msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx

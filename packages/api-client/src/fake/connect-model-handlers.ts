@@ -12,7 +12,7 @@ import type {
 } from "../generated/api.ts";
 import { fakeConnectModelScene } from "./connect-model-scene.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { projectByCode } from "./scenario.ts";
+import { projectByCode, projects } from "./scenario.ts";
 import { failedTest, labServer, sampleTiles, sentClasses } from "./scenario-connect-model.ts";
 
 const untested: LabModelConnectionTest = {
@@ -103,6 +103,14 @@ export function toConnectedModel(draft: LabModelDraft): LabModel {
     class_map: draft.class_map,
     who_can_run: draft.who_can_run,
     project_ids: draft.project_ids,
+    tile_sharing: projects
+      .filter((project) => project.privacy === "clinical" && draft.project_ids.includes(project.id))
+      .map((project) => ({
+        project_id: project.id,
+        confirmed_at: draft.confirmed_project_ids?.includes(project.id)
+          ? "2026-11-08T09:00:00Z"
+          : null,
+      })),
     licence: draft.licence ?? null,
     created_at: "2026-11-08T09:00:00Z",
   };
