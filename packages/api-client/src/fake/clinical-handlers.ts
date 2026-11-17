@@ -1,13 +1,11 @@
-import { HttpResponse, http } from "msw";
+import type { RequestHandler } from "msw";
 import {
-  type ClinicalReport,
-  type ClinicalSignature,
-  type CosignReturn,
-  type CosignReview,
-  clinicalReportSchema,
-  cosignReviewSchema,
-} from "../draft/clinical-report.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
+  getCosignClinicalReportMockHandler,
+  getGetClinicalReportMockHandler,
+  getGetCosignReviewMockHandler,
+  getReturnCosignRequestMockHandler,
+} from "../generated/api.msw.ts";
+import type { ClinicalReport, ClinicalSignature, CosignReview } from "../generated/api.ts";
 import { people } from "./scenario.ts";
 import {
   type ClinicalCase,
@@ -29,7 +27,7 @@ export const toClinicalReport = (slideId: string): ClinicalReport => {
   const viewer = fakeView().viewer;
   const template = clinicalTemplates[item.template];
   const seeds = item.deposits[viewer] ?? item.deposits.LM ?? [];
-  return clinicalReportSchema.parse({
+  return {
     id: reportId(item),
     project: clinicalProjectRef(),
     case: {
@@ -64,10 +62,10 @@ export const toClinicalReport = (slideId: string): ClinicalReport => {
       measured_by: object.by,
       state: object.state,
     })),
-    members: Object.keys(clinicalRoles).map((key) => ({
+    members: Object.entries(clinicalRoles).map(([key, role]) => ({
       user_id: people[key as keyof typeof people].id,
-      role: clinicalRoles[key],
-      sign_out: clinicalRoles[key] === "viewer" ? "never" : signRights[key],
+      role,
+      sign_out: role === "viewer" ? "never" : (signRights[key] ?? "never"),
       covers_case: canSignCase(key, item),
     })),
     author_user_id: people[viewer].id,
@@ -87,14 +85,14 @@ export const toClinicalReport = (slideId: string): ClinicalReport => {
       microscopic: viewer === "TB" ? cosignSent.values.microscopic : "",
       comment: "",
     },
-  });
+  };
 };
 
 export const toCosignReview = (): CosignReview => {
   const item = clinicalCaseForSlide("");
   const template = clinicalTemplates[item.template];
   const viewer = fakeView().viewer;
-  return cosignReviewSchema.parse({
+  return {
     id: cosignSent.id,
     project: clinicalProjectRef(),
     case_label: cosignSent.caseLabel,
@@ -113,7 +111,7 @@ export const toCosignReview = (): CosignReview => {
       })),
     },
     co_signer_covers_case: canSignCase(viewer, item),
-  });
+  };
 };
 
 const signedAt = "2026-10-15T11:42:00+02:00";
@@ -125,61 +123,16 @@ const signature = (version: number, reportedBy: string | null): ClinicalSignatur
   signed_at: signedAt,
 });
 
-const reportPath = "*/api/projects/:projectId/slides/:slideId/clinical-report";
-
-export const getGetClinicalReportMockHandler = (overrideResponse?: ClinicalReport) =>
-  http.get<{ projectId: string; slideId: string }>(reportPath, ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toClinicalReport(params.slideId)),
-  );
-
-export const getGetCosignReviewMockHandler = (overrideResponse?: CosignReview) =>
-  http.get(`${reportPath}/cosign-request`, () =>
-    HttpResponse.json(overrideResponse ?? toCosignReview()),
-  );
-
-export const getReturnCosignRequestMockHandler = (overrideResponse?: CosignReturn) =>
-  http.post(`${reportPath}/cosign-request/return`, async ({ request }) => {
+export const clinicalReportHandlers = (): RequestHandler[] => [
+  getGetClinicalReportMockHandler(({ params }) => toClinicalReport(String(params.slideId))),
+  getGetCosignReviewMockHandler(() => toCosignReview()),
+  getReturnCosignRequestMockHandler(async ({ request }) => {
     const body = (await request.json()) as { note?: string };
-    const returned: CosignReturn = overrideResponse ?? {
+    return {
       id: cosignSent.id,
       note: body.note ?? "",
       returned_at: "2026-10-15T11:35:00+02:00",
     };
-    return HttpResponse.json(returned, { status: 201 });
-  });
-
-export const getCosignClinicalReportMockHandler = (overrideResponse?: ClinicalSignature) =>
-  http.post(`${reportPath}/cosign-request/co-sign`, () =>
-    HttpResponse.json(overrideResponse ?? signature(1, people[cosignSent.from].id), {
-      status: 201,
-    }),
-  );
-
-const reportApi = "/api/projects/{project_id}/slides/{slide_id}/clinical-report";
-
-export const clinicalDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getClinicalReport",
-    method: "get",
-    path: reportApi,
-    handler: () => getGetClinicalReportMockHandler(),
-  },
-  {
-    operationId: "getCosignReview",
-    method: "get",
-    path: `${reportApi}/cosign-request`,
-    handler: () => getGetCosignReviewMockHandler(),
-  },
-  {
-    operationId: "returnCosignRequest",
-    method: "post",
-    path: `${reportApi}/cosign-request/return`,
-    handler: () => getReturnCosignRequestMockHandler(),
-  },
-  {
-    operationId: "cosignClinicalReport",
-    method: "post",
-    path: `${reportApi}/cosign-request/co-sign`,
-    handler: () => getCosignClinicalReportMockHandler(),
-  },
+  }),
+  getCosignClinicalReportMockHandler(() => signature(1, people[cosignSent.from].id)),
 ];

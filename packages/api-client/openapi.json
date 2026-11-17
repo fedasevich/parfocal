@@ -5451,6 +5451,558 @@
         "x-permission": "see-slides"
       }
     },
+    "/api/projects/{project_id}/slides/{slide_id}/clinical-report": {
+      "get": {
+        "tags": [
+          "clinical-reports"
+        ],
+        "summary": "Get Clinical Report",
+        "operationId": "getClinicalReport",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/projects/{project_id}/slides/{slide_id}/clinical-report/cosign-request": {
+      "get": {
+        "tags": [
+          "clinical-reports"
+        ],
+        "summary": "Get Cosign Review",
+        "operationId": "getCosignReview",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CosignReview"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/projects/{project_id}/slides/{slide_id}/clinical-report/cosign-request/return": {
+      "post": {
+        "tags": [
+          "clinical-reports"
+        ],
+        "summary": "Return Cosign Request",
+        "operationId": "returnCosignRequest",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CosignReturnRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CosignReturn"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "review",
+        "x-permission-write": true
+      }
+    },
+    "/api/projects/{project_id}/slides/{slide_id}/clinical-report/cosign-request/co-sign": {
+      "post": {
+        "tags": [
+          "clinical-reports"
+        ],
+        "summary": "Cosign Clinical Report",
+        "operationId": "cosignClinicalReport",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CosignSignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalSignature"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "review",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/classes": {
       "get": {
         "tags": [
@@ -36559,6 +37111,129 @@
         "x-permission-emergency": true
       }
     },
+    "/api/review-tasks/{task_id}/evaluation-report": {
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Get Evaluation Report",
+        "operationId": "getEvaluationReport",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
     "/api/review-tasks/{task_id}/evaluation/preview": {
       "get": {
         "tags": [
@@ -53110,6 +53785,64 @@
         ],
         "title": "ClassProbability"
       },
+      "ClinicalCells": {
+        "properties": {
+          "agree": {
+            "type": "integer",
+            "title": "Agree"
+          },
+          "of": {
+            "type": "integer",
+            "title": "Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agree",
+          "of"
+        ],
+        "title": "ClinicalCells"
+      },
+      "ClinicalDeposit": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "slide": {
+            "type": "string",
+            "title": "Slide"
+          },
+          "object_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Object Id"
+          },
+          "size_mm": {
+            "type": "string",
+            "title": "Size Mm"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slide",
+          "object_id",
+          "size_mm",
+          "note"
+        ],
+        "title": "ClinicalDeposit"
+      },
       "ClinicalNoteChange": {
         "properties": {
           "note": {
@@ -53132,6 +53865,377 @@
         ],
         "title": "ClinicalNoteChange"
       },
+      "ClinicalReport": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectRef"
+          },
+          "case": {
+            "$ref": "#/components/schemas/ClinicalReportCase"
+          },
+          "template": {
+            "$ref": "#/components/schemas/ClinicalReportTemplate"
+          },
+          "slide": {
+            "type": "string",
+            "title": "Slide"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicalReportSlide"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicalReportDecision"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicalReportObject"
+            },
+            "type": "array",
+            "title": "Objects"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicalReportMember"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "author_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Author User Id"
+          },
+          "values": {
+            "$ref": "#/components/schemas/ClinicalValues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project",
+          "case",
+          "template",
+          "slide",
+          "slides",
+          "decisions",
+          "objects",
+          "members",
+          "author_user_id",
+          "values"
+        ],
+        "title": "ClinicalReport"
+      },
+      "ClinicalReportCase": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "clinical_history": {
+            "type": "string",
+            "title": "Clinical History"
+          },
+          "received": {
+            "type": "string",
+            "title": "Received"
+          },
+          "requested_by": {
+            "type": "string",
+            "title": "Requested By"
+          },
+          "assigned_user_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Assigned User Ids"
+          },
+          "examined": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Examined"
+          },
+          "cells": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalCells"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "site",
+          "clinical_history",
+          "received",
+          "requested_by",
+          "assigned_user_ids",
+          "examined",
+          "cells"
+        ],
+        "title": "ClinicalReportCase"
+      },
+      "ClinicalReportDecision": {
+        "properties": {
+          "object_id": {
+            "type": "string",
+            "title": "Object Id"
+          },
+          "counts_as": {
+            "$ref": "#/components/schemas/DecisionValue"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "object_id",
+          "counts_as",
+          "why"
+        ],
+        "title": "ClinicalReportDecision"
+      },
+      "ClinicalReportMember": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/ProjectRole"
+          },
+          "sign_out": {
+            "$ref": "#/components/schemas/SignOutRight"
+          },
+          "covers_case": {
+            "type": "boolean",
+            "title": "Covers Case"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "role",
+          "sign_out",
+          "covers_case"
+        ],
+        "title": "ClinicalReportMember"
+      },
+      "ClinicalReportObject": {
+        "properties": {
+          "slide": {
+            "type": "string",
+            "title": "Slide"
+          },
+          "object_id": {
+            "type": "string",
+            "title": "Object Id"
+          },
+          "size_mm": {
+            "type": "number",
+            "title": "Size Mm"
+          },
+          "ai_size_mm": {
+            "type": "number",
+            "title": "Ai Size Mm"
+          },
+          "measured_by": {
+            "type": "string",
+            "enum": [
+              "you",
+              "ai"
+            ],
+            "title": "Measured By"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ObjectState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide",
+          "object_id",
+          "size_mm",
+          "ai_size_mm",
+          "measured_by",
+          "state"
+        ],
+        "title": "ClinicalReportObject"
+      },
+      "ClinicalReportSlide": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "node": {
+            "type": "integer",
+            "title": "Node"
+          },
+          "short": {
+            "type": "string",
+            "title": "Short"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "id",
+          "label",
+          "node",
+          "short"
+        ],
+        "title": "ClinicalReportSlide"
+      },
+      "ClinicalReportStep": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/CaseReportStep"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "ClinicalReportStep"
+      },
+      "ClinicalReportTemplate": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ClinicalTemplate"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicalReportStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "standards": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Standards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "version",
+          "steps",
+          "standards"
+        ],
+        "title": "ClinicalReportTemplate"
+      },
+      "ClinicalSignature": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "signed_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed By User Id"
+          },
+          "reported_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported By User Id"
+          },
+          "signed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Signed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "signed_by_user_id",
+          "reported_by_user_id",
+          "signed_at"
+        ],
+        "title": "ClinicalSignature"
+      },
       "ClinicalTemplate": {
         "type": "string",
         "enum": [
@@ -53139,6 +54243,88 @@
           "lymph-node-excision"
         ],
         "title": "ClinicalTemplate"
+      },
+      "ClinicalValues": {
+        "properties": {
+          "specimen": {
+            "type": "string",
+            "title": "Specimen"
+          },
+          "deposits": {
+            "items": {
+              "$ref": "#/components/schemas/ClinicalDeposit"
+            },
+            "type": "array",
+            "title": "Deposits"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "macro",
+                  "micro",
+                  "itc"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "examined": {
+            "type": "string",
+            "title": "Examined"
+          },
+          "extranodal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "present",
+                  "absent",
+                  "na"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extranodal"
+          },
+          "diagnosis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diagnosis"
+          },
+          "microscopic": {
+            "type": "string",
+            "title": "Microscopic"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "specimen",
+          "deposits",
+          "category",
+          "examined",
+          "extranodal",
+          "diagnosis",
+          "microscopic",
+          "comment"
+        ],
+        "title": "ClinicalValues"
       },
       "Code": {
         "type": "string",
@@ -53417,6 +54603,50 @@
         ],
         "title": "CorrectionsMonth"
       },
+      "CosignAi": {
+        "properties": {
+          "largest_mm": {
+            "type": "number",
+            "title": "Largest Mm"
+          },
+          "deposits": {
+            "items": {
+              "$ref": "#/components/schemas/CosignAiDeposit"
+            },
+            "type": "array",
+            "title": "Deposits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "largest_mm",
+          "deposits"
+        ],
+        "title": "CosignAi"
+      },
+      "CosignAiDeposit": {
+        "properties": {
+          "slide": {
+            "type": "string",
+            "title": "Slide"
+          },
+          "object_id": {
+            "type": "string",
+            "title": "Object Id"
+          },
+          "size_mm": {
+            "type": "number",
+            "title": "Size Mm"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide",
+          "object_id",
+          "size_mm"
+        ],
+        "title": "CosignAiDeposit"
+      },
       "CosignRequest": {
         "properties": {
           "id": {
@@ -53461,6 +54691,161 @@
           "sent_at"
         ],
         "title": "CosignRequest"
+      },
+      "CosignReturn": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "returned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Returned At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "note",
+          "returned_at"
+        ],
+        "title": "CosignReturn"
+      },
+      "CosignReturnRequest": {
+        "properties": {
+          "note": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 10,
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "note"
+        ],
+        "title": "CosignReturnRequest"
+      },
+      "CosignReview": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectRef"
+          },
+          "case_label": {
+            "type": "string",
+            "title": "Case Label"
+          },
+          "template": {
+            "$ref": "#/components/schemas/CosignReviewTemplate"
+          },
+          "from_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From User Id"
+          },
+          "to_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To User Id"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "values": {
+            "$ref": "#/components/schemas/ClinicalValues"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/CosignReviewSlide"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "ai": {
+            "$ref": "#/components/schemas/CosignAi"
+          },
+          "co_signer_covers_case": {
+            "type": "boolean",
+            "title": "Co Signer Covers Case"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project",
+          "case_label",
+          "template",
+          "from_user_id",
+          "to_user_id",
+          "sent_at",
+          "values",
+          "slides",
+          "ai",
+          "co_signer_covers_case"
+        ],
+        "title": "CosignReview"
+      },
+      "CosignReviewSlide": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "node": {
+            "type": "integer",
+            "title": "Node"
+          },
+          "short": {
+            "type": "string",
+            "title": "Short"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "node",
+          "short"
+        ],
+        "title": "CosignReviewSlide"
+      },
+      "CosignReviewTemplate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "CosignReviewTemplate"
+      },
+      "CosignSignRequest": {
+        "properties": {
+          "method": {
+            "$ref": "#/components/schemas/ConfirmedWith",
+            "default": "sso"
+          }
+        },
+        "type": "object",
+        "title": "CosignSignRequest"
       },
       "CountsAs": {
         "items": {
@@ -54847,6 +56232,291 @@
           "reports"
         ],
         "title": "EvaluationOut"
+      },
+      "EvaluationReport": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "task_code": {
+            "type": "string",
+            "title": "Task Code"
+          },
+          "round_name": {
+            "type": "string",
+            "title": "Round Name"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectRef"
+          },
+          "lab": {
+            "$ref": "#/components/schemas/EvaluationReportLab"
+          },
+          "slides": {
+            "type": "integer",
+            "title": "Slides"
+          },
+          "objects": {
+            "type": "integer",
+            "title": "Objects"
+          },
+          "reviewer_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Reviewer Ids"
+          },
+          "adjudicators": {
+            "type": "integer",
+            "title": "Adjudicators"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "signed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed At"
+          },
+          "signed_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed By User Id"
+          },
+          "template": {
+            "$ref": "#/components/schemas/EvaluationReportTemplate"
+          },
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationReportDownload"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "confusion": {
+            "$ref": "#/components/schemas/EvaluationReportConfusion"
+          },
+          "worst": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationReportWorst"
+            },
+            "type": "array",
+            "title": "Worst"
+          },
+          "opinion_question": {
+            "type": "string",
+            "title": "Opinion Question"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationChange"
+            },
+            "type": "array",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "task_code",
+          "round_name",
+          "model",
+          "project",
+          "lab",
+          "slides",
+          "objects",
+          "reviewer_ids",
+          "adjudicators",
+          "version",
+          "signed_at",
+          "signed_by_user_id",
+          "template",
+          "formats",
+          "confusion",
+          "worst",
+          "opinion_question",
+          "changes"
+        ],
+        "title": "EvaluationReport"
+      },
+      "EvaluationReportAnswer": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "raw": {
+            "$ref": "#/components/schemas/DecisionValue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "raw"
+        ],
+        "title": "EvaluationReportAnswer"
+      },
+      "EvaluationReportConfusion": {
+        "properties": {
+          "classes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Classes"
+          },
+          "counts": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Counts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "classes",
+          "counts"
+        ],
+        "title": "EvaluationReportConfusion"
+      },
+      "EvaluationReportDownload": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "EvaluationReportDownload"
+      },
+      "EvaluationReportLab": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "short": {
+            "type": "string",
+            "title": "Short"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "short"
+        ],
+        "title": "EvaluationReportLab"
+      },
+      "EvaluationReportTemplate": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "latest_version": {
+            "type": "integer",
+            "title": "Latest Version"
+          },
+          "retired_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retired On"
+          },
+          "blocks": {
+            "$ref": "#/components/schemas/ReportBlocks"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "latest_version",
+          "retired_on",
+          "blocks",
+          "format"
+        ],
+        "title": "EvaluationReportTemplate"
+      },
+      "EvaluationReportWorst": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "what": {
+            "type": "string",
+            "title": "What"
+          },
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationReportAnswer"
+            },
+            "type": "array",
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "object",
+          "what",
+          "answers"
+        ],
+        "title": "EvaluationReportWorst"
       },
       "EvaluationVersionStarted": {
         "properties": {
@@ -59984,6 +61654,14 @@
           "current"
         ],
         "title": "ObjectResolution"
+      },
+      "ObjectState": {
+        "type": "string",
+        "enum": [
+          "agree",
+          "disagree",
+          "open"
+        ]
       },
       "OpenThreads": {
         "properties": {

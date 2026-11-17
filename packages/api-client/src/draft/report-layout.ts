@@ -1,3 +1,54 @@
+import { z } from "zod";
+
+export const ReportBlockKind = {
+  headline: "headline-numbers",
+  regions: "region-metrics",
+  confusion: "confusion-matrix",
+  agreement: "reviewer-agreement",
+  reasons: "disagreement-reasons",
+  opinions: "opinion-answers",
+  worst: "worst-objects",
+  slides: "slide-table",
+  figure: "slide-figure",
+  text: "text",
+  comparison: "comparison",
+  aiChanges: "ai-changes",
+} as const;
+
+export const reportBlockSchema = z.object({
+  kind: z.enum(ReportBlockKind),
+  title: z.string(),
+  width: z.enum(["full", "half"]),
+  show_title: z.boolean().default(true),
+  page_break: z.boolean().default(false),
+  metrics: z.array(z.string()).optional(),
+  columns: z.array(z.string()).optional(),
+  rows: z.number().int().nullable().optional(),
+  top: z.number().int().nullable().optional(),
+  body: z.string().optional(),
+  caption: z.string().optional(),
+  slide_id: z.string().nullable().optional(),
+  object_id: z.string().nullable().optional(),
+  task_id: z.string().nullable().optional(),
+});
+
+export type EvaluationReportBlock = z.infer<typeof reportBlockSchema>;
+
+export const reportFormatSchema = z.object({
+  paper: z.enum(["a4", "letter"]).default("a4"),
+  orientation: z.enum(["portrait", "landscape"]).default("portrait"),
+  text_size: z.enum(["small", "normal", "large"]).default("normal"),
+  running_header: z.boolean().default(true),
+  page_numbers: z.enum(["none", "page", "page-of"]).default("page-of"),
+  draft_watermark: z.boolean().default(true),
+  signature: z.boolean().default(true),
+  label_language: z.enum(["en", "cs", "de"]).default("en"),
+  decimals: z.number().int().min(0).max(4).default(2),
+  appendices: z.array(z.enum(["objects", "decisions", "methods"])).default(["objects"]),
+});
+
+export type EvaluationReportFormat = z.infer<typeof reportFormatSchema>;
+
 export type LayoutBlock = {
   kind: string;
   width?: "full" | "half" | undefined;

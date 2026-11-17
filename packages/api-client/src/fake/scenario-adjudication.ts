@@ -1,3 +1,4 @@
+import type { ReportBlock } from "../generated/api.ts";
 import type { PersonKey } from "./scenario.ts";
 
 export type QueueValue = "agree" | "disagree" | "unsure";
@@ -241,13 +242,18 @@ export const reportTemplate = {
   latestVersion: 3,
   retiredOn: "2026-10-14",
   blocks: [
-    { kind: "headline-numbers", title: "Results", width: "full" },
+    {
+      kind: "headline-numbers",
+      title: "Results",
+      width: "full",
+      metrics: ["sensitivity", "precision", "dice", "kappa"],
+    },
     { kind: "confusion-matrix", title: "Cell types, AI against the consensus", width: "full" },
     { kind: "disagreement-reasons", title: "Why reviewers disagreed", width: "half" },
     { kind: "opinion-answers", title: "Opinion answers", width: "half" },
     { kind: "worst-objects", title: "Objects, worst first", width: "full" },
     { kind: "text", title: "Methods", width: "full" },
-  ] as const,
+  ] satisfies ReportBlock[] as ReportBlock[],
 };
 
 export const reportFormats = [

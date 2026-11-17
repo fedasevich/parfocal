@@ -32,10 +32,14 @@ import type {
   Checklist,
   ChoiceQuestion,
   ClassMapping,
+  ClinicalReport,
+  ClinicalSignature,
   Comparison,
   CompletedUpload,
   ConfusionMatrix,
   CosignRequest,
+  CosignReturn,
+  CosignReview,
   CreatedReportLink,
   CreatedServiceAccount,
   CreatedUpload,
@@ -51,6 +55,7 @@ import type {
   ErasedPerson,
   Evaluation,
   EvaluationChanges,
+  EvaluationReport,
   EvaluationVersionStarted,
   ExpertChanges,
   ExportReviewedLayer200,
@@ -284,6 +289,7 @@ import {
   NotificationKind,
   ObjectKind,
   ObjectOrder,
+  ObjectState,
   Ordering,
   OriginRoute,
   Outcome,
@@ -2815,6 +2821,204 @@ export const getListMyCosignRequestsResponseMock = (): CosignRequest[] =>
     },
     sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   }));
+
+export const getGetClinicalReportResponseMock = (
+  overrideResponse: Partial<Extract<ClinicalReport, object>> = {},
+): ClinicalReport => ({
+  id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  project: {
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  case: {
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    site: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    clinical_history: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    received: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    requested_by: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    assigned_user_ids: Array.from(
+      { length: faker.number.int({ min: 1, max: 10 }) },
+      (_, i) => i + 1,
+    ).map(() => faker.string.uuid()),
+    examined: faker.helpers.arrayElement([faker.number.int(), null]),
+    cells: faker.helpers.arrayElement([
+      { agree: faker.number.int(), of: faker.number.int() },
+      null,
+    ]),
+  },
+  template: {
+    key: faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    steps: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        key: faker.helpers.arrayElement(Object.values(CaseReportStep)),
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+    standards: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+      ],
+    ),
+  },
+  slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      id: faker.string.uuid(),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      node: faker.number.int(),
+      short: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  decisions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      counts_as: faker.helpers.arrayElement(Object.values(DecisionValue)),
+      why: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      size_mm: faker.number.float({ fractionDigits: 2 }),
+      ai_size_mm: faker.number.float({ fractionDigits: 2 }),
+      measured_by: faker.helpers.arrayElement(["you", "ai"] as const),
+      state: faker.helpers.arrayElement(Object.values(ObjectState)),
+    }),
+  ),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement(Object.values(SignOutRight)),
+      covers_case: faker.datatype.boolean(),
+    }),
+  ),
+  author_user_id: faker.string.uuid(),
+  values: {
+    specimen: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        object_id: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        size_mm: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+    category: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(["macro", "micro", "itc"] as const),
+      null,
+    ]),
+    examined: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    extranodal: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(["present", "absent", "na"] as const),
+      null,
+    ]),
+    diagnosis: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    microscopic: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    comment: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getGetCosignReviewResponseMock = (
+  overrideResponse: Partial<Extract<CosignReview, object>> = {},
+): CosignReview => ({
+  id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  project: {
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  case_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  template: {
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  from_user_id: faker.string.uuid(),
+  to_user_id: faker.string.uuid(),
+  sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  values: {
+    specimen: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        object_id: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        size_mm: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+    category: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(["macro", "micro", "itc"] as const),
+      null,
+    ]),
+    examined: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    extranodal: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(["present", "absent", "na"] as const),
+      null,
+    ]),
+    diagnosis: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    microscopic: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    comment: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      node: faker.number.int(),
+      short: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  ai: {
+    largest_mm: faker.number.float({ fractionDigits: 2 }),
+    deposits: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        object_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        size_mm: faker.number.float({ fractionDigits: 2 }),
+      }),
+    ),
+  },
+  co_signer_covers_case: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getReturnCosignRequestResponseMock = (
+  overrideResponse: Partial<Extract<CosignReturn, object>> = {},
+): CosignReturn => ({
+  id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  returned_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getCosignClinicalReportResponseMock = (
+  overrideResponse: Partial<Extract<ClinicalSignature, object>> = {},
+): ClinicalSignature => ({
+  version: faker.number.int(),
+  signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  reported_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  signed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
 
 export const getListProjectClassesResponseMock = (): ProjectClass[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -11660,6 +11864,305 @@ export const getGetTaskEvaluationResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetEvaluationReportResponseHeadlineNumbersMock = (
+  overrideResponse: Partial<HeadlineNumbers> = {},
+): HeadlineNumbers => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["headline-numbers"] as const),
+    metrics: faker.helpers.arrayElements(Object.values(Metric)),
+    confidence_intervals: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseRegionMetricsMock = (
+  overrideResponse: Partial<RegionMetrics> = {},
+): RegionMetrics => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["region-metrics"] as const),
+    columns: faker.helpers.arrayElements(Object.values(RegionColumn)),
+    sort_by: faker.helpers.arrayElement(Object.values(RegionColumn)),
+    rows: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 500 }), null]),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseConfusionMatrixMock = (
+  overrideResponse: Partial<ConfusionMatrix> = {},
+): ConfusionMatrix => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["confusion-matrix"] as const),
+    classes: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 32 }) }, (_, i) => i + 1).map(() =>
+        faker.string.alpha({ length: { min: 1, max: 80 } }),
+      ),
+      null,
+    ]),
+    values: faker.helpers.arrayElement(["count", "share"] as const),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseReviewerAgreementMock = (
+  overrideResponse: Partial<ReviewerAgreement> = {},
+): ReviewerAgreement => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["reviewer-agreement"] as const),
+    parts: faker.helpers.arrayElements(Object.values(AgreementPart)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseDisagreementReasonsMock = (
+  overrideResponse: Partial<DisagreementReasons> = {},
+): DisagreementReasons => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["disagreement-reasons"] as const),
+    top: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 50 }), null]),
+    style: faker.helpers.arrayElement(Object.values(ChartStyle)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseOpinionAnswersMock = (
+  overrideResponse: Partial<OpinionAnswers> = {},
+): OpinionAnswers => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["opinion-answers"] as const),
+    questions: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 12 }) }, (_, i) => i + 1).map(() =>
+        faker.helpers.fromRegExp("^[a-z][a-z0-9_]{0,39}$"),
+      ),
+      null,
+    ]),
+    style: faker.helpers.arrayElement(Object.values(ChartStyle)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseWorstObjectsMock = (
+  overrideResponse: Partial<WorstObjects> = {},
+): WorstObjects => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["worst-objects"] as const),
+    rows: faker.number.int({ min: 1, max: 100 }),
+    thumbnails: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseSlideTableMock = (
+  overrideResponse: Partial<SlideTable> = {},
+): SlideTable => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["slide-table"] as const),
+    columns: faker.helpers.arrayElements(Object.values(SlideColumn)),
+    sort_by: faker.helpers.arrayElement(Object.values(SlideColumn)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseSlideFigureMock = (
+  overrideResponse: Partial<SlideFigure> = {},
+): SlideFigure => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["slide-figure"] as const),
+    slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    object_id: faker.helpers.arrayElement([
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      null,
+    ]),
+    layers: faker.helpers.arrayElements(Object.values(Layer)),
+    caption: faker.string.alpha({ length: { min: 10, max: 500 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseTextBlockMock = (
+  overrideResponse: Partial<TextBlock> = {},
+): TextBlock => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["text"] as const),
+    body: faker.string.alpha({ length: { min: 10, max: 5000 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseComparisonMock = (
+  overrideResponse: Partial<Comparison> = {},
+): Comparison => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["comparison"] as const),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getGetEvaluationReportResponseMock = (
+  overrideResponse: Partial<Extract<EvaluationReport, object>> = {},
+): EvaluationReport => ({
+  task_id: faker.string.uuid(),
+  task_code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  round_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  model: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  project: {
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  lab: {
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    short: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  },
+  slides: faker.number.int(),
+  objects: faker.number.int(),
+  reviewer_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  adjudicators: faker.number.int(),
+  version: faker.number.int(),
+  signed_at: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  signed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  template: {
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    latest_version: faker.number.int(),
+    retired_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+    blocks: Array.from({ length: faker.number.int({ min: 1, max: 40 }) }, (_, i) => i + 1).map(() =>
+      faker.helpers.arrayElement([
+        { ...getGetEvaluationReportResponseHeadlineNumbersMock() },
+        { ...getGetEvaluationReportResponseRegionMetricsMock() },
+        { ...getGetEvaluationReportResponseConfusionMatrixMock() },
+        { ...getGetEvaluationReportResponseReviewerAgreementMock() },
+        { ...getGetEvaluationReportResponseDisagreementReasonsMock() },
+        { ...getGetEvaluationReportResponseOpinionAnswersMock() },
+        { ...getGetEvaluationReportResponseWorstObjectsMock() },
+        { ...getGetEvaluationReportResponseSlideTableMock() },
+        { ...getGetEvaluationReportResponseSlideFigureMock() },
+        { ...getGetEvaluationReportResponseTextBlockMock() },
+        { ...getGetEvaluationReportResponseComparisonMock() },
+        { ...getGetEvaluationReportResponseExpertChangesMock() },
+      ]),
+    ),
+    format: {
+      paper: faker.helpers.arrayElement(["a4", "letter"] as const),
+      orientation: faker.helpers.arrayElement(["portrait", "landscape"] as const),
+      text_size: faker.helpers.arrayElement(["small", "normal", "large"] as const),
+      logo: faker.datatype.boolean(),
+      title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+      subtitle: faker.string.alpha({ length: { min: 10, max: 200 } }),
+      running_header: faker.datatype.boolean(),
+      page_numbers: faker.helpers.arrayElement(["none", "page", "page-of"] as const),
+      draft_watermark: faker.datatype.boolean(),
+      signature: faker.datatype.boolean(),
+      label_language: faker.helpers.arrayElement(["en", "cs", "de"] as const),
+      decimals: faker.number.int({ min: 0, max: 4 }),
+      appendices: faker.helpers.arrayElements(Object.values(Appendix)),
+      downloads: faker.helpers.arrayElements(Object.values(Download)),
+    },
+  },
+  formats: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  confusion: {
+    classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    counts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.number.int(),
+      ),
+    ),
+  },
+  worst: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    what: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        raw: faker.helpers.arrayElement(Object.values(DecisionValue)),
+      }),
+    ),
+  })),
+  opinion_question: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  changes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      version: faker.number.int(),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      text: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getPreviewTaskEvaluationResponseMock = (
   overrideResponse: Partial<Extract<ReportPreview, object>> = {},
 ): ReportPreview => ({
@@ -18375,6 +18878,102 @@ export const getListMyCosignRequestsMockHandler = (
   );
 };
 
+export const getGetClinicalReportMockHandler = (
+  overrideResponse?:
+    | ClinicalReport
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ClinicalReport> | ClinicalReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/slides/:slideId/clinical-report",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetClinicalReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetCosignReviewMockHandler = (
+  overrideResponse?:
+    | CosignReview
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<CosignReview> | CosignReview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/slides/:slideId/clinical-report/cosign-request",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCosignReviewResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReturnCosignRequestMockHandler = (
+  overrideResponse?:
+    | CosignReturn
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<CosignReturn> | CosignReturn),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/clinical-report/cosign-request/return",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReturnCosignRequestResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCosignClinicalReportMockHandler = (
+  overrideResponse?:
+    | ClinicalSignature
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ClinicalSignature> | ClinicalSignature),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/clinical-report/cosign-request/co-sign",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCosignClinicalReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListProjectClassesMockHandler = (
   overrideResponse?:
     | ProjectClass[]
@@ -23659,6 +24258,30 @@ export const getExportTaskEvaluationMockHandler = (
   );
 };
 
+export const getGetEvaluationReportMockHandler = (
+  overrideResponse?:
+    | EvaluationReport
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<EvaluationReport> | EvaluationReport),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation-report",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetEvaluationReportResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getPreviewTaskEvaluationMockHandler = (
   overrideResponse?:
     | ReportPreview
@@ -25955,6 +26578,10 @@ export const getParfocalAPIMock = () => [
   getAmendCaseReportMockHandler(),
   getDownloadCaseReportPdfMockHandler(),
   getListMyCosignRequestsMockHandler(),
+  getGetClinicalReportMockHandler(),
+  getGetCosignReviewMockHandler(),
+  getReturnCosignRequestMockHandler(),
+  getCosignClinicalReportMockHandler(),
   getListProjectClassesMockHandler(),
   getSetProjectClassesMockHandler(),
   getListClassMappingsMockHandler(),
@@ -26186,6 +26813,7 @@ export const getParfocalAPIMock = () => [
   getListMyAdjudicationsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
+  getGetEvaluationReportMockHandler(),
   getPreviewTaskEvaluationMockHandler(),
   getPreviewStudyTemplateMockHandler(),
   getDownloadStudyTemplatePreviewMockHandler(),

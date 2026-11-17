@@ -28,6 +28,8 @@ The viewer area switched in OPS-022 (viewer area on the real API) and OPS-025 (t
 
 `typeOutlines` lives in `apps/api/src/parfocal_api/outline_types.py` and keeps the draft URL. It sends 1 to 500 rings, each at most 512 px wide in slide pixels, through the warm gate to the `outline-types` runner in the embedder pool (`parfocal_ml.outline_typer`), with the registry's single view temperature for `pathosam-hovernext` v1.2, so the answer is calibrated. Any failure or a reply of the wrong length is 503 `typer-offline`, and the web then leaves the accepts untyped. The runner needs `hovernext-pannuke` v1.2 `typer.onnx` in model artifacts, which is not exported yet, so production answers 503 until it is. The fake answers through `fakeTypeOutlinesHandler` in `viewer-tools-handlers.ts`.
 
+The reports area switched in OPS-024 (models, reports, team and admin areas on the real API). `getEvaluationReport` lives in `apps/api/src/parfocal_api/evaluation_report.py` and keeps the draft URL. It has the same gate as the task evaluation, so a reader who does not see the whole project gets 403 `evaluation-hidden`, and it takes the version, the layout and the changes after sign-off from the same stored rows as the PDF. The round name is the task name, because tasks have no rounds, and the template blocks and format are the real report block and format models. The confusion matrix is always empty, because no AI cell class is stored to compare with the consensus, and the screen shows its empty state. The worst objects are the decided AI objects with the most disagreements first. `getClinicalReport`, `getCosignReview`, `cosignClinicalReport` and `returnCosignRequest` live in `clinical_report_views.py` at the draft slide URLs and find the case through the slide. They read the case report and call the existing return and sign routes, so the state, co-signer, sign out right, audit and note length rules stay in one place. The clinical history comes from the sealed clinical note through the case detail, which records the patient view, so a project reviewer without an assignment in the case gets 404 as on the case route. Neither write takes `values` any more, because report text changes only through the case report routes. The co-sign review answers 404 unless the report waits for a co-sign, and its AI column holds the measured lengths on the case's slides, because no AI size is stored. The requested by field is always empty, because nothing stores it. The fake answers these operations through the generated MSW handlers.
+
 ## Remaining drafts
 
 High priority sits on the home, project, viewer, review and annotate paths.
@@ -44,8 +46,6 @@ High priority sits on the home, project, viewer, review and annotate paths.
 | moveModelRun | job window | none | medium |
 | requestProjectAccess | project page without access | none | medium |
 | listTeamWorkload | team | none | medium |
-| getEvaluationReport | evaluation report | partly, task evaluation | medium |
-| getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |
 | listStudyTemplateReviewDefaults | study templates | none, path swallowed | medium |
 | getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks, listAiModels | admin console | none | low |
 | getLabModelConnection | connect a model | none, path swallowed | low |

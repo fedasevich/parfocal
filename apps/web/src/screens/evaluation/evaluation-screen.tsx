@@ -1,6 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type EvaluationReport,
+  type EvaluationReportFormat,
   reportBlockSchema,
   type TaskReportLayout,
   useGetDisagreementQueue,
@@ -104,7 +105,7 @@ function EvaluationBody({
   const [blocks, setBlocks] = useState<PageBlock[]>(() => fromLayout(layout.blocks));
   const [arranged, setArranged] = useState(layout.own);
   const [format, setFormat] = useState(
-    () => (layout.format ?? report.template.format) as typeof report.template.format,
+    () => (layout.format ?? report.template.format) as EvaluationReportFormat,
   );
   const [templateName, setTemplateName] = useState(report.template.name);
   const [version, setVersion] = useState(report.template.version);

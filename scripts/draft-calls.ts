@@ -18,13 +18,7 @@ const operationsByArea: Record<string, string[]> = {
   ],
   viewer: [],
   review: [],
-  reports: [
-    "getEvaluationReport",
-    "getClinicalReport",
-    "getCosignReview",
-    "cosignClinicalReport",
-    "returnCosignRequest",
-  ],
+  reports: [],
   models: [
     "getModelRunDefaults",
     "moveModelRun",

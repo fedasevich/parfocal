@@ -7,6 +7,7 @@ import { annotationHandlers } from "./annotation-handlers.ts";
 import { passwordSignInHandlers } from "./auth-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { caseReportHandlers, cosignRequestHandlers } from "./case-report-handlers.ts";
+import { clinicalReportHandlers } from "./clinical-handlers.ts";
 import { connectModelHandlers } from "./connect-model-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
 import { correctionsHandlers } from "./corrections-handlers.ts";
@@ -63,6 +64,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...caseHandlers(),
     ...caseReportHandlers(),
     ...cosignRequestHandlers(),
+    ...clinicalReportHandlers(),
     ...createdRecordHandlers(),
     ...uploadHandlers(),
     ...settingsHandlers(),

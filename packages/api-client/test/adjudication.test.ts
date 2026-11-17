@@ -158,7 +158,7 @@ test("the evaluation carries the mock's headline numbers and the retired templat
   assert.ok(evaluation.status === 200);
   assert.equal(evaluation.data.overall[0]?.sensitivity.value, 0.92);
   assert.equal(evaluation.data.mean_kappa, 0.71);
-  const report = (await getEvaluationReport(rt14)).data;
+  const report = body(await getEvaluationReport(rt14));
   assert.equal(report.template.retired_on, "2026-10-14");
   assert.equal(report.confusion.counts[0]?.[0], 412);
   assert.equal(report.changes.length, 1);

@@ -327,6 +327,12 @@ WRITE_ROUTES: dict[str, Write] = {
     ),
     "removeCaseReportDeposit": Write(),
     "returnCaseReport": Write(body=constant({"note": "Please look again"})),
+    "returnCosignRequest": Write(
+        path={"slide_id": seeded("case_slide_0")}, body=constant({"note": "Please look again"})
+    ),
+    "cosignClinicalReport": Write(
+        path={"slide_id": seeded("case_slide_0")}, body=constant({"method": "sso"}), owner=FORBIDDEN
+    ),
     "sendCaseReportForCosign": Write(
         body=lambda a: {"cosigner_user_id": str(a.ids["user"])}, owner=CONFLICT
     ),

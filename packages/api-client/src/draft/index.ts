@@ -1,7 +1,5 @@
 export * from "./admin.ts";
-export * from "./clinical-report.ts";
 export { type DraftQueryOptions, defineDraftQuery } from "./define.ts";
-export * from "./evaluation-report.ts";
 export {
   type GetProjectScopeOptionsQueryError,
   type GetProjectScopeOptionsQueryResult,

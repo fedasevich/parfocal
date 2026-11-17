@@ -1,10 +1,8 @@
 import type { RequestHandler } from "msw";
 import { getGetMyChecklistMockHandler } from "../generated/api.msw.ts";
 import type { Checklist } from "../generated/api.ts";
-import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
 import { authDraftOperations } from "./auth-handlers.ts";
-import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
@@ -13,7 +11,6 @@ import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
 
-export { getGetEvaluationReportMockHandler } from "./adjudication-handlers.ts";
 export {
   getGetAdminOverviewMockHandler,
   getGetInvitePreviewMockHandler,
@@ -31,12 +28,6 @@ export {
   getSignInWithCodeMockHandler,
   getStartSsoMockHandler,
 } from "./auth-handlers.ts";
-export {
-  getCosignClinicalReportMockHandler,
-  getGetClinicalReportMockHandler,
-  getGetCosignReviewMockHandler,
-  getReturnCosignRequestMockHandler,
-} from "./clinical-handlers.ts";
 export { getGetLabModelConnectionMockHandler } from "./connect-model-handlers.ts";
 export {
   getGetModelRunDefaultsMockHandler,
@@ -81,9 +72,7 @@ export const draftOperations: DraftOperation[] = [
   ...teamDraftOperations,
   ...adminDraftOperations,
   ...authDraftOperations,
-  ...clinicalDraftOperations,
   ...connectModelDraftOperations,
-  ...adjudicationDraftOperations,
 ];
 
 export const checklistHandlers = (): RequestHandler[] => [

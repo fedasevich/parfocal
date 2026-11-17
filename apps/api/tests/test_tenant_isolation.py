@@ -439,6 +439,7 @@ async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> Non
 async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     case = await seed_case(connection, seeded.tenant_id)
     seeded.ids["case"] = case.case_id
+    seeded.ids["case_slide_0"] = case.slide_ids[0]
     seeded.ids["project"] = case.project_id
     seeded.ids["patient"] = case.patient_id
     job_id = await connection.scalar(
@@ -1614,6 +1615,11 @@ SEEDERS: dict[str, Seeder] = {
 }
 
 
+def slide_report(seeded: Seeded) -> str:
+    project, slide = seeded.ids["project"], seeded.ids["case_slide_0"]
+    return f"/api/projects/{project}/slides/{slide}/clinical-report"
+
+
 def case_report(seeded: Seeded) -> str:
     return f"/api/projects/{seeded.ids['project']}/cases/{seeded.ids['case']}/clinical-report"
 
@@ -1789,6 +1795,8 @@ GET_ROUTES = {
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "getCaseReport": Route(Exposure.TENANT, lambda a: case_report(a)),
+    "getClinicalReport": Route(Exposure.TENANT, lambda a: slide_report(a)),
+    "getCosignReview": Route(Exposure.TENANT, lambda a: f"{slide_report(a)}/cosign-request"),
     "getCaseReportVersion": Route(Exposure.TENANT, lambda a: f"{case_report(a)}/versions/1"),
     "downloadCaseReportPdf": Route(Exposure.TENANT, lambda a: f"{case_report(a)}/versions/1/pdf"),
     "listMyCosignRequests": Route(Exposure.TENANT, lambda _: "/api/me/cosign-requests"),
@@ -1820,6 +1828,9 @@ GET_ROUTES = {
     "listMySlides": Route(Exposure.TENANT, lambda _: "/api/me/slides"),
     "getTaskEvaluation": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation"
+    ),
+    "getEvaluationReport": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation-report"
     ),
     "getSignOffSummary": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/sign-off-summary"
