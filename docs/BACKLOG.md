@@ -2196,6 +2196,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Show a thin progress bar at the top and dim the old screen on every route change, give every list and table a skeleton of rows while it loads, fetch a screen's queries in parallel instead of in rounds where the data allows, label the viewer stage "Loading slide" until the first tiles or a notice show, stop asking for room access after a 503 and try again only on reconnect or after minutes with backoff, back off on the coverage 409, greet by display name with the email's local part as fallback, and show storage in the largest unit that keeps a non-zero number.
   Done when a browser test with a delayed API finds the progress bar and a skeleton on Home, My work, the project slides tab and Team before the data arrives, a test finds the viewer's loading label before the first tile, a test counts at most two room access calls in a minute after a 503, and unit tests cover the greeting fallback and the storage unit.
   Size: M.
+- [x] SHELL-018 · A key event without a key no longer crashes the screen
+  The production click-through on 2026-11-17 found the project's review tasks tab replaced by "Something went wrong on our side". Chrome sends keydown events without a `key` when it autofills a field, and the shortcut step read the length of that missing key.
+  Ignore a key event that has no key, before any binding is matched.
+  Done when a unit test feeds the shortcut step an event without a key and nothing fires or throws.
+  Size: S.
 
 ---
 

@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- 2026-11-17 SHELL-018 (a key event without a key no longer crashes the screen): found on app.parfocal.eu, the review tasks tab showed the error page with 33 TypeErrors from the shortcut step. Chrome autofill sends keydown with no key. step now ignores such events, with a hotkeys unit test.
 - 2026-11-17 SHELL-016 (signed-out and expired sessions go straight to sign-in, with a loader while the app boots): the shell asks /api/me once before any data query, a 401 goes to sign-in with the return path, the lock card needs a named person, and index.html paints a boot loader. Left: a blank display name is never treated as known, and a second-factor answer to the first /api/me shows only after later calls are refused.
 - 2026-11-17 Production touch: released v0.4.0 (68ef526e) and dispatched deploy run 44046440491 to production, approved by the night run under ADR 0151 (standing approval within 30 dollars a month). Migrations 0127 to 0134 are additive, and 0132 widens a notification kind check. Cost TODO after the run.
 - 2026-11-17 TEST-041 (settings parity check): workers/deploy/tests/test_settings_parity.py fails when an ApiSettings field without a default is missing from the stack env or the bootstrap secret keys, shown failing once with SESSION_KEY and with MASTER_KEYS removed.

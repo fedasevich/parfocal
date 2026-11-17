@@ -168,7 +168,8 @@ export function step(bindings: readonly Binding[], state: KeyState, input: KeyIn
     for (const held of state.sustained) fired.push({ action: held.action, phase: "release" });
     return { state: idleKeys, fired, consumed: false };
   }
-  if (modifierKeys.has(input.key)) return { state, fired: [], consumed: false };
+  if (typeof input.key !== "string" || modifierKeys.has(input.key))
+    return { state, fired: [], consumed: false };
   const combo = comboOf(input);
   const key = baseKey(input.key, input.code);
 

@@ -143,3 +143,9 @@ test("a single key that is also the start of a chord is reported as a conflict",
   ]);
   assert.deepEqual(conflicts(bindings), []);
 });
+
+test("a key event without a key, as Chrome autofill sends, is ignored", () => {
+  const input = { type: "down", at: 0 } as unknown as KeyInput;
+  const result = step(bindings, idleKeys, input);
+  assert.deepEqual(result, { state: idleKeys, fired: [], consumed: false });
+});
