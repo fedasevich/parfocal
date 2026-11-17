@@ -33,7 +33,7 @@ from parfocal_api.problems import (
     TooManyRequestsError,
     UnauthenticatedError,
 )
-from parfocal_api.rate_limits import RateLimits, seconds_to_wait
+from parfocal_api.rate_limits import RateLimits, counted_wait, limits_for, seconds_to_wait
 from parfocal_api.second_factor import (
     SecondFactorRequiredError,
     factors_of,
@@ -176,14 +176,13 @@ def sealed_tokens(
 
 
 async def load_session(
-    connection: AsyncConnection, state: AuthState, session_id: str
+    connection: AsyncConnection, state: AuthState, session_id: str, *, for_update: bool = False
 ) -> dict[str, Any] | None:
+    statement = select(sessions).where(
+        sessions.c.id_hash == digest(session_id), sessions.c.expires_at > func.now()
+    )
     row = (
-        await connection.execute(
-            select(sessions)
-            .where(sessions.c.id_hash == digest(session_id), sessions.c.expires_at > func.now())
-            .with_for_update()
-        )
+        await connection.execute(statement.with_for_update() if for_update else statement)
     ).one_or_none()
     if row is None:
         return None
@@ -212,6 +211,40 @@ async def refresh_session(
         )
     )
     return True
+
+
+def refresh_due(row: Any) -> bool:
+    return bool(row.access_expires_at - REFRESH_MARGIN <= now())
+
+
+async def refresh_once(state: AuthState, session_id: str) -> bool:
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        loaded = await load_session(connection, state, session_id, for_update=True)
+        if loaded is None:
+            return False
+        if not refresh_due(loaded["row"]):
+            return True
+        return await refresh_session(connection, state, session_id, loaded["tokens"])
+
+
+async def record_use(
+    state: AuthState, session_id: str, seen_due: bool, counted: Principal | None
+) -> int | None:
+    if seen_due:
+        async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+            await connection.execute(
+                update(sessions)
+                .where(
+                    sessions.c.id_hash == digest(session_id),
+                    sessions.c.last_seen_at + SEEN_INTERVAL <= func.now(),
+                )
+                .values(last_seen_at=func.now())
+            )
+    allowed = {} if counted is None else limits_for(counted, state.limits)
+    if not allowed:
+        return None
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        return await counted_wait(connection, allowed)
 
 
 @dataclass(frozen=True)
@@ -334,30 +367,22 @@ async def authenticate(request: Request) -> Principal:
     resolved: Resolved | None = None
     locked = False
     needs_second_factor = False
-    wait: int | None = None
+    needs_refresh = False
+    seen_due = False
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
         loaded = await load_session(connection, state, session_id)
         if loaded is not None:
             row = loaded["row"]
-            alive = True
             limits = await session_limits(connection, row.active_tenant_id)
             if row.created_at + limits.lifetime <= now():
                 await connection.execute(
                     delete(sessions).where(sessions.c.id_hash == digest(session_id))
                 )
-                alive = False
             elif row.active_at + limits.idle <= now():
                 locked = True
-                alive = False
-            elif row.access_expires_at - REFRESH_MARGIN <= now():
-                alive = await refresh_session(connection, state, session_id, loaded["tokens"])
-            elif row.last_seen_at + SEEN_INTERVAL <= now():
-                await connection.execute(
-                    update(sessions)
-                    .where(sessions.c.id_hash == digest(session_id))
-                    .values(last_seen_at=func.now())
-                )
-            if alive:
+            else:
+                needs_refresh = refresh_due(row)
+                seen_due = row.last_seen_at + SEEN_INTERVAL <= now()
                 resolved = await resolve(connection, str(row.subject), row.active_tenant_id)
             if (
                 resolved is not None
@@ -369,12 +394,14 @@ async def authenticate(request: Request) -> Principal:
                 needs_second_factor = await requires_two_factors(
                     connection, resolved.active_tenant_id
                 )
-            if resolved is not None and not needs_second_factor:
-                wait = await seconds_to_wait(connection, principal_of(resolved), state.limits)
     if locked:
         raise SessionLockedError
+    if needs_refresh and not await refresh_once(state, session_id):
+        resolved = None
     if resolved is None:
         raise UnauthenticatedError
+    counted = None if needs_second_factor else principal_of(resolved)
+    wait = await record_use(state, session_id, seen_due and not needs_refresh, counted)
     if needs_second_factor:
         raise SecondFactorRequiredError
     if wait is not None:
