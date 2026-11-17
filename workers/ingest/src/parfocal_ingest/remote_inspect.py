@@ -23,6 +23,7 @@ from parfocal_api.remote_reads import (
     same_file,
     source_reach,
 )
+from parfocal_api.result_imports import queue_results_on
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import SlideStorage, slides
 from parfocal_common.ingest import Failure, original_key, restricted_ranges_key, slide_prefix
@@ -289,6 +290,7 @@ async def inspect(step: StepRun, resources: Resources, store: ObjectStore) -> Ma
                 "storage": SlideStorage.REMOTE.value,
             },
         )
+        await queue_results_on(connection, row.id)
     return {
         "format": found.format.value,
         "levels": len(found.pyramid.levels),
@@ -319,7 +321,28 @@ async def drop_cache(store: ObjectStore, tenant_id: uuid.UUID, slide_id: uuid.UU
         await store.delete_object(key)
 
 
+async def already_copied(step: StepRun) -> Any:
+    try:
+        slide_id = uuid.UUID(str(step.input["slide_id"]))
+    except KeyError, ValueError:
+        return None
+    async with step.transaction() as connection:
+        return (
+            await connection.execute(
+                select(slides.c.id, slides.c.tenant_id, slides.c.file_bytes).where(
+                    slides.c.id == slide_id,
+                    slides.c.storage == SlideStorage.UPLOADED,
+                    slides.c.original_key.is_not(None),
+                )
+            )
+        ).first()
+
+
 async def copy_in(step: StepRun, resources: Resources, store: ObjectStore) -> Mapping[str, Any]:
+    done = await already_copied(step)
+    if done is not None:
+        await drop_cache(store, done.tenant_id, done.id)
+        return {"file_bytes": done.file_bytes}
     row = await slide_of(step)
     if row.published_at is None:
         raise StepFailedError(REMOTE_NOT_READY)

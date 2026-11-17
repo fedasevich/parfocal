@@ -80,16 +80,21 @@ def run_worker(
     work_dir: Path,
     trusted: tuple[str, ...] = (),
     keyring: MasterKeyring | None = None,
+    kinds: frozenset[str] | None = None,
 ) -> int:
     def resources() -> Resources:
         return Resources(TEST_STORAGE, work_dir, link_trusted_origins=trusted, keyring=keyring)
 
     workflows = [
-        ingest_workflow(resources),
-        result_import_workflow(resources),
-        link_fetch_workflow(resources),
-        remote_inspect_workflow(resources),
-        remote_copy_workflow(resources),
+        workflow
+        for workflow in (
+            ingest_workflow(resources),
+            result_import_workflow(resources),
+            link_fetch_workflow(resources),
+            remote_inspect_workflow(resources),
+            remote_copy_workflow(resources),
+        )
+        if kinds is None or workflow.kind in kinds
     ]
 
     async def go() -> int:

@@ -348,12 +348,17 @@ def test_a_result_file_next_to_a_slide_read_in_place_is_imported_onto_it(
     [result] = response.json()["results"]
     assert (result["name"], result["kind"]) == (RESULT, "result")
 
-    inspected(database, team, site, tmp_path)
+    keyring = MasterKeyring.from_setting(TEST_MASTER_KEYS)
+    fetched_only = frozenset({"link-fetch", "result-import"})
+    run_worker(database, team.tenant_id, tmp_path / "work", (site.origin,), keyring, fetched_only)
     [row] = query(
         with_database(OWNER_URL, database),
-        f"SELECT status, slide_id, slide_upload_id FROM uploads WHERE id = '{result['upload_id']}'",
+        "SELECT status, slide_id, slide_upload_id, job_id FROM uploads"
+        f" WHERE id = '{result['upload_id']}'",
     )
-    assert row == ("completed", uuid.UUID(slide["slide_id"]), None)
+    assert row == ("completed", uuid.UUID(slide["slide_id"]), None, None)
+
+    inspected(database, team, site, tmp_path)
     imported = query(
         with_database(OWNER_URL, database),
         "SELECT jobs.kind, jobs.status FROM jobs JOIN uploads ON uploads.job_id = jobs.id"
