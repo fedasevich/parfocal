@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Path, Query, Response
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -14,6 +14,7 @@ from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on, require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.event_emit import emit
+from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Grant, Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
@@ -26,6 +27,7 @@ from parfocal_api.tables import (
     ResultObjectKind,
     ResultSource,
     ResultStatus,
+    project_classes,
     projects,
     result_chunks,
     result_objects,
@@ -36,7 +38,7 @@ from parfocal_api.tables import (
     slides,
 )
 from parfocal_api.taxonomy import resolve_names
-from parfocal_common.chunk_store import ChunkEntry, summary_key
+from parfocal_common.chunk_store import ChunkEntry, chunk_key, summary_key
 from parfocal_common.result_imports import HEATMAP_FACTS, HEATMAP_GRID, result_set_prefix
 from parfocal_common.result_store import MissingObjectError
 
@@ -69,6 +71,7 @@ class ResultSetDraft(BaseModel):
 class ResultSetClass(BaseModel):
     position: int
     source_name: str
+    name: str
     class_id: uuid.UUID | None
     object_count: int
 
@@ -185,7 +188,12 @@ async def set_row(connection: AsyncConnection, principal: Principal, set_id: uui
 
 async def classes_of(connection: AsyncConnection, set_id: uuid.UUID) -> list[ResultSetClass]:
     rows = await connection.execute(
-        select(result_set_classes)
+        select(
+            result_set_classes,
+            func.coalesce(project_classes.c.name, result_set_classes.c.source_name).label("name"),
+        )
+        .select_from(result_set_classes)
+        .outerjoin(project_classes, project_classes.c.id == result_set_classes.c.class_id)
         .where(result_set_classes.c.result_set_id == set_id)
         .order_by(result_set_classes.c.position)
     )
@@ -570,6 +578,125 @@ async def get_cell_summary(
             "X-Content-Type-Options": "nosniff",
         },
     )
+
+
+CELL_CHUNK_TYPE = "application/vnd.parfocal.cell-chunk"
+CHUNK_RESPONSE: dict[int | str, dict[str, Any]] = {
+    200: {
+        "description": "One chunk of the set's cell outlines, sent gzip-encoded",
+        "content": {CELL_CHUNK_TYPE: {"schema": {"type": "string", "format": "binary"}}},
+    }
+}
+
+
+class NoCellChunkError(NotFoundError):
+    code = "no-cell-chunk"
+    title = "This result set has no such cell chunk"
+
+
+@router.get(
+    "/{result_set_id}/cell-chunks/{chunk}",
+    operation_id="getCellChunk",
+    response_class=Response,
+    responses=CHUNK_RESPONSE,
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def get_cell_chunk(
+    result_set_id: uuid.UUID,
+    chunk: Annotated[int, Path(ge=0)],
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> Response:
+    row = await set_row(connection, principal, result_set_id)
+    await require_ai_shown(connection, principal, row.project_id, row.slide_id)
+    if row.status != ResultStatus.READY:
+        raise NoCellChunkError
+    known = await connection.scalar(
+        select(result_chunks.c.chunk).where(
+            result_chunks.c.result_set_id == result_set_id, result_chunks.c.chunk == chunk
+        )
+    )
+    if known is None:
+        raise NoCellChunkError
+    prefix = result_set_prefix(row.tenant_id, row.slide_id, result_set_id)
+    try:
+        body = await results.get_packed(chunk_key(prefix, chunk))
+    except MissingObjectError as error:
+        raise NoCellChunkError from error
+    return Response(
+        body,
+        media_type=CELL_CHUNK_TYPE,
+        headers={
+            "Content-Encoding": "gzip",
+            "Cache-Control": "private, max-age=31536000, immutable",
+            "ETag": f'"{result_set_id}-{chunk}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+MAX_REGIONS = 2_000
+
+
+class SetRegion(BaseModel):
+    number: int
+    kind: ResultObjectKind
+    class_index: int | None
+    score: float | None
+    outline: list[float]
+
+
+class SetRegions(BaseModel):
+    regions: list[SetRegion]
+    truncated: bool
+
+
+@router.get(
+    "/{result_set_id}/regions",
+    operation_id="listResultSetRegions",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_result_set_regions(
+    result_set_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    left: float | None = None,
+    top: float | None = None,
+    right: float | None = None,
+    bottom: float | None = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_REGIONS)] = MAX_REGIONS,
+) -> SetRegions:
+    row = await set_row(connection, principal, result_set_id)
+    await require_ai_shown(connection, principal, row.project_id, row.slide_id)
+    query = select(
+        result_objects.c.number,
+        result_objects.c.kind,
+        result_objects.c.class_index,
+        result_objects.c.score,
+        func.ST_AsGeoJSON(result_objects.c.geometry).label("shape"),
+    ).where(result_objects.c.result_set_id == result_set_id)
+    if None not in (left, top, right, bottom):
+        query = query.where(
+            func.ST_Intersects(
+                result_objects.c.geometry, func.ST_MakeEnvelope(left, top, right, bottom)
+            )
+        )
+    rows = (
+        await connection.execute(query.order_by(result_objects.c.number).limit(limit + 1))
+    ).all()
+    regions = [
+        SetRegion(
+            number=item.number,
+            kind=item.kind,
+            class_index=item.class_index,
+            score=None if item.score is None else item.score / 255,
+            outline=outline,
+        )
+        for item in rows[:limit]
+        if (outline := outline_of(item.shape)) is not None
+    ]
+    return SetRegions(regions=regions, truncated=len(rows) > limit)
 
 
 HEATMAP_GRID_TYPE = "application/vnd.parfocal.heatmap-grid"

@@ -24,7 +24,7 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDue } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { lookUrl } from "../thumbnails.ts";
+import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { caseDetailsOf } from "./case-details.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { SlideCounts } from "./review-top.tsx";
@@ -73,7 +73,6 @@ export function useReviewTopPopovers({
   const inTask = new Set((task?.slides ?? []).map((slide) => slide.slide_id));
   const setsOf = (slideId: string) =>
     (resultSets ?? []).filter((set) => set.slide_id === slideId).length;
-  const thumb = lookUrl("overview");
   const pick = (slideId: string) => {
     if (!projectId) return;
     const target = new URL(
@@ -147,7 +146,7 @@ export function useReviewTopPopovers({
     return {
       id: slide.id,
       name: `${slide.label} · ${slide.stain}`,
-      thumb,
+      thumb: slideThumbUrl(slide.id),
       resultSets: setsOf(slide.id),
       current,
       status: statusOf(slide.id, current, queued),
@@ -159,7 +158,7 @@ export function useReviewTopPopovers({
     caseSlides.push({
       id: session.slideId,
       name: session.slideName,
-      thumb,
+      thumb: slideThumbUrl(session.slideId),
       resultSets: setsOf(session.slideId),
       current: true,
       status: { label: "In review", tone: "accent" },
@@ -174,7 +173,7 @@ export function useReviewTopPopovers({
       return {
         id: slideId,
         name: row?.label ?? slideId,
-        thumb,
+        thumb: slideThumbUrl(slideId),
         resultSets: setsOf(slideId),
         status: statusOf(slideId, false, true),
         sub: "No case attached",

@@ -24,6 +24,7 @@ LOGIN_CLIENT = "login-client-user"
 LOGIN_TOKEN = "login-client-token"
 PASSWORD = "Correct-Horse-9-battery"
 CODE = "482913"
+NEW_PASSWORD = "Another-Horse-7-staple"
 
 
 @dataclass
@@ -40,6 +41,7 @@ class FakeZitadel:
     sessions: dict[str, tuple[str, str]] = field(default_factory=dict[str, tuple[str, str]])
     auth_requests: dict[str, str] = field(default_factory=dict[str, str])
     codes_sent: list[str] = field(default_factory=list[str])
+    resets_sent: list[str] = field(default_factory=list[str])
     unseen_checks: int = 0
 
     def add_user(self, email: str, password: str, *, verified: bool) -> str:
@@ -70,12 +72,26 @@ class FakeZitadel:
                     return httpx2.Response(400, json={"code": 3, "message": "code invalid"})
                 self.users[user_id].verified = True
                 return httpx2.Response(200, json={})
+            case ["v2", "users", user_id, "password_reset"]:
+                self.resets_sent.append(user_id)
+                return httpx2.Response(200, json={})
+            case ["v2", "users", user_id, "password"]:
+                return self.set_password(user_id, body)
             case ["v2", "sessions"]:
                 return self.check(body)
             case ["v2", "oidc", "auth_requests", request_id]:
                 return self.finalize(request_id, body)
             case _:
                 return httpx2.Response(404, json={})
+
+    def set_password(self, user_id: str, body: dict[str, Any]) -> httpx2.Response:
+        if user_id not in self.resets_sent or body["verificationCode"] != CODE:
+            return httpx2.Response(400, json={"code": 3, "message": "Code is invalid"})
+        password = body["newPassword"]["password"]
+        if password.isalnum():
+            return httpx2.Response(400, json={"code": 3, "message": "Password must contain symbol"})
+        self.users[user_id].password = password
+        return httpx2.Response(200, json={})
 
     def authorize(self, request: httpx2.Request) -> httpx2.Response:
         if request.headers.get("x-zitadel-login-client") != LOGIN_CLIENT:
@@ -151,6 +167,17 @@ class Visitor:
 
     def confirm(self, email: str = "new.person@example.test", code: str = CODE) -> httpx2.Response:
         return self.client.post("/api/auth/sign-up/confirm", json={"email": email, "code": code})
+
+    def request_reset(self, email: str = "known@example.test") -> httpx2.Response:
+        return self.client.post("/api/auth/password-reset", json={"email": email})
+
+    def reset(
+        self, email: str = "known@example.test", code: str = CODE, password: str = NEW_PASSWORD
+    ) -> httpx2.Response:
+        return self.client.post(
+            "/api/auth/password-reset/confirm",
+            json={"email": email, "code": code, "password": password, "return_to": "/cases"},
+        )
 
     def sign_in(self, email: str, password: str = PASSWORD) -> httpx2.Response:
         return self.client.post(
@@ -349,3 +376,67 @@ def test_sign_in_never_returns_to_another_site(visitor: Visitor) -> None:
         json={"email": "known@example.test", "password": PASSWORD, "return_to": "//evil.test/"},
     )
     assert landed.json() == {"return_to": "/"}
+
+
+def test_a_forgotten_password_is_reset_with_the_emailed_code_and_signs_in(
+    visitor: Visitor,
+) -> None:
+    user_id = visitor.zitadel.add_user("known@example.test", PASSWORD, verified=True)
+    requested = visitor.request_reset("Known@example.test")
+    assert requested.status_code == 200, requested.text
+    assert requested.json()["email"] == "Known@example.test"
+    assert visitor.zitadel.resets_sent == [user_id]
+    landed = visitor.reset()
+    assert landed.status_code == 200, landed.text
+    assert landed.json() == {"return_to": "/cases"}
+    assert signed_in_subject(visitor) == user_id
+    assert visitor.zitadel.users[user_id].password == NEW_PASSWORD
+    visitor.client.cookies.clear()
+    assert visitor.sign_in("known@example.test", PASSWORD).status_code == 401
+    assert visitor.sign_in("known@example.test", NEW_PASSWORD).status_code == 200
+
+
+def test_asking_for_a_reset_does_not_reveal_whether_the_email_has_an_account(
+    visitor: Visitor,
+) -> None:
+    known = visitor.zitadel.add_user("known@example.test", PASSWORD, verified=True)
+    unknown = visitor.request_reset("nobody@example.test")
+    assert unknown.status_code == 200
+    assert visitor.zitadel.resets_sent == []
+    assert visitor.request_reset().json()["email"] == "known@example.test"
+    assert visitor.zitadel.resets_sent == [known]
+
+
+def test_a_wrong_reset_code_is_refused_and_changes_nothing(visitor: Visitor) -> None:
+    user_id = visitor.zitadel.add_user("known@example.test", PASSWORD, verified=True)
+    visitor.request_reset()
+    refused = visitor.reset(code="000000")
+    assert refused.status_code == 401
+    assert refused.json()["code"] == "invalid-code"
+    assert visitor.zitadel.users[user_id].password == PASSWORD
+    assert SESSION_COOKIE not in visitor.client.cookies
+
+
+def test_a_reset_code_for_an_unknown_email_looks_like_a_wrong_code(visitor: Visitor) -> None:
+    refused = visitor.reset(email="nobody@example.test")
+    assert refused.status_code == 401
+    assert refused.json()["code"] == "invalid-code"
+
+
+def test_a_new_password_that_is_too_weak_is_named_on_the_password_field(
+    visitor: Visitor,
+) -> None:
+    user_id = visitor.zitadel.add_user("known@example.test", PASSWORD, verified=True)
+    visitor.request_reset()
+    short = visitor.reset(password="short")
+    assert short.status_code == 422
+    assert short.json()["errors"][0]["location"] == ["body", "password"]
+    plain = visitor.reset(password="OnlyLettersAndDigits123")
+    assert plain.status_code == 422
+    assert plain.json()["errors"][0]["code"] == "weak-password"
+    assert visitor.zitadel.users[user_id].password == PASSWORD
+
+
+def test_resetting_a_password_needs_the_login_client(hosted_only: Visitor) -> None:
+    assert hosted_only.request_reset().status_code == 404
+    assert hosted_only.reset().status_code == 404

@@ -121,7 +121,7 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
-from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
+from parfocal_common.chunk_store import Cell, build_cells, cells_in, chunk_of, packed, write_cells
 from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, scoped_transaction
 from parfocal_common.embedding_cache import (
     EMBEDDING_BYTES,
@@ -181,6 +181,8 @@ def text_of(response: httpx2.Response) -> str:
     if response.headers.get("content-type") == "application/zip":
         with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
             return " ".join(archive.read(name).decode() for name in archive.namelist())
+    if response.headers.get("content-type") == "application/vnd.parfocal.cell-chunk":
+        return " ".join(str(cell.number) for cell in cells_in(*chunk_of(response.content)))
     return response.text
 
 
@@ -721,6 +723,15 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             }
             for entry in entries
         ],
+    )
+    await connection.execute(
+        insert(result_objects).values(
+            tenant_id=seeded.tenant_id,
+            result_set_id=summary_set,
+            kind="region",
+            number=cell_number,
+            geometry="SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))",
+        )
     )
     await connection.execute(
         update(result_sets).where(result_sets.c.id == summary_set).values(status="ready")
@@ -2182,6 +2193,12 @@ GET_ROUTES = {
     "getResultSet": Route(Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}"),
     "getCellSummary": Route(
         Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/cell-summary"
+    ),
+    "getCellChunk": Route(
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/cell-chunks/0"
+    ),
+    "listResultSetRegions": Route(
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/regions"
     ),
     "getHeatmap": Route(
         Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/heatmap"

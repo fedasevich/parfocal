@@ -54,6 +54,7 @@ export interface DrawnObject {
   readonly kind: "cell" | "region";
   readonly ring: ArrayLike<number>;
   readonly className: ClassName;
+  readonly classColour?: Rgba;
   readonly score: number;
   readonly decision?: DecisionName | null;
 }
@@ -117,7 +118,7 @@ export function confidenceTint(score: number): Rgba {
 export function objectColour(object: DrawnObject, by: ColourMode): Rgba {
   if (by === "score") return scoreColour(object.score);
   if (by === "decision") return decisionColours[object.decision ?? "open"];
-  return classColors[object.className];
+  return object.classColour ?? classColors[object.className];
 }
 
 function withAlpha(color: Rgba, alpha: number): Rgba {

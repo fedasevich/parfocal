@@ -465,6 +465,15 @@
       "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text))",
       "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text))",
       []
+    ],
+    [
+      "workspace_settings",
+      "auth_read",
+      "r",
+      true,
+      "(COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text)",
+      null,
+      []
     ]
   ]
 }

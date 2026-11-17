@@ -7,9 +7,9 @@ import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
+import { overviewImageOf } from "../review/slide-picture.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
-import { lookUrl } from "../thumbnails.ts";
 import { CellFocus } from "./cell-focus.tsx";
 import { placeMinimap } from "./minimap-placement.ts";
 import { focusHome, focusSpots, mapBoxOf } from "./minimap-scenes.ts";
@@ -18,8 +18,6 @@ import { SlidePeek, usePeekKey } from "./slide-peek.tsx";
 import { midEdge, seenPercent, seenTrail } from "./tool-geometry.ts";
 import type { ToolSession } from "./tool-session.tsx";
 import { HeldCorner } from "./use-held-corner.tsx";
-
-const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
 const tone = { agree: "ok", disagree: "bad", unsure: "warn" } as const;
 
@@ -160,7 +158,7 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
                 {(place) => (
                   <SmartMinimap
                     data-corner={place.corner}
-                    image={overviewImage}
+                    image={overviewImageOf(session.slideId)}
                     title={
                       <Trans>
                         <b>Whole slide</b> · {seenPercent.reading}% seen

@@ -23,10 +23,10 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { ReviewTop } from "../review/review-top.tsx";
 import { regionShapes } from "../review/slide-geometry.ts";
+import { overviewImageOf } from "../review/slide-picture.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
-import { lookUrl } from "../thumbnails.ts";
 import { placeMinimap } from "./minimap-placement.ts";
 import {
   annotateCentre,
@@ -41,8 +41,6 @@ import { viewportOf } from "./slide-maps.tsx";
 import { autoRegionProposals } from "./tool-geometry.ts";
 import type { ToolSession } from "./tool-session.tsx";
 import { HeldCorner } from "./use-held-corner.tsx";
-
-const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
 const centre = annotateCentre;
 
@@ -344,7 +342,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
                   <SmartMinimap
                     data-corner={place.corner}
                     size="compact"
-                    image={overviewImage}
+                    image={overviewImageOf(session.slideId)}
                     extent={extent}
                     foot="Area 2"
                     footEnd={`${proposals} proposals`}

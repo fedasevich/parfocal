@@ -21,13 +21,15 @@ paths = [
   '''^packages/api-client/test/sign-in\.test\.ts$''',
   '''^apps/web/e2e/sign-in\.spec\.ts$''',
   '''^apps/web/e2e/passkeys\.spec\.ts$''',
+  '''^apps/web/e2e/password-reset\.spec\.ts$''',
+  '''^apps/api/tests/test_password_login\.py$''',
   '''^apps/web/e2e/real\.ts$''',
   '''^packages/api-client/test/sign-up\.test\.ts$''',
   '''^apps/web/e2e/sign-up\.spec\.ts$''',
   '''^apps/web/test/sign-up-rules\.test\.ts$''',
 ]
 regexTarget = "line"
-regexes = ['''(correct-horse|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|password: "short"|twelve-chars|signInSecrets|secrets\.)''']
+regexes = ['''(correct-horse|Another-Horse|OnlyLettersAndDigits|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|password: "short"|twelve-chars|signInSecrets|secrets\.)''']
 
 [[allowlists]]
 description = "Made-up passwords the faked Zitadel in the native sign-in API tests accepts or rejects"

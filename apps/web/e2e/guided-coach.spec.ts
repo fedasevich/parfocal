@@ -4,37 +4,48 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 
 const lastTip = (page: Page) =>
-  page.getByText("The next object comes by itself. The dots take you back to any of them.");
+  page.getByText(
+    "The next open object comes by itself. Previous and Next take you back to any of them.",
+  );
 const firstTip = (page: Page) => page.getByText("The AI found this. It is outlined in white.");
 const gotIt = (page: Page) => page.getByRole("button", { name: "Got it, start" });
+const onStage = `/tasks/${rt14}/guided?slide=${a1}`;
+const objectsReady = (page: Page) =>
+  expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-ready", "true", {
+    timeout: 20_000,
+  });
 
-const coachOnEngine =
-  "The tips belong to the prototype guided screen, which shows them only without a scene, and guided review without a scene is now the engine stage, which has no tips until a follow-up of VIEW-074 brings them over";
-
-test("the four tips show once on a first visit and Got it, start dismisses them for good", async ({
+test("the four tips show once on a first visit to the stage and Got it, start dismisses them for good", async ({
   page,
 }) => {
-  test.fixme(true, coachOnEngine);
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+  await page.goto(onStage);
+  await objectsReady(page);
   await expect(firstTip(page)).toBeVisible();
   await expect(lastTip(page)).toBeVisible();
   await gotIt(page).click();
   await expect(lastTip(page)).toHaveCount(0);
   await expect(firstTip(page)).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText(/The AI says T\d+ is/)).toBeVisible();
+  await objectsReady(page);
+  await expect(page.getByRole("button", { name: "How guided review works" })).toBeVisible();
   await expect(lastTip(page)).toHaveCount(0);
 });
 
-test("How guided review works in the More menu brings the tips back", async ({ page }) => {
-  test.fixme(true, coachOnEngine);
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+test("How guided review works on the stage brings the tips back", async ({ page }) => {
+  await page.goto(onStage);
+  await objectsReady(page);
   await gotIt(page).click();
   await expect(lastTip(page)).toHaveCount(0);
-  await page.getByRole("button", { name: "More" }).click();
-  await page.getByRole("menuitem", { name: "How guided review works" }).click();
+  await page.getByRole("button", { name: "How guided review works" }).click();
   await expect(lastTip(page)).toBeVisible();
   await gotIt(page).click();
+  await expect(lastTip(page)).toHaveCount(0);
+});
+
+test("a deep link to an object on the stage does not open the tips", async ({ page }) => {
+  await page.goto(`${onStage}&object=T2`);
+  await objectsReady(page);
+  await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T2");
   await expect(lastTip(page)).toHaveCount(0);
 });
 
@@ -51,7 +62,7 @@ test("the first scene keeps showing the tips and Got it, start opens the region 
   page,
 }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=first`);
-  await expect(lastTip(page)).toBeVisible();
+  await expect(firstTip(page)).toBeVisible();
   await gotIt(page).click();
   await expect(page).toHaveURL(/scene=region/);
 });

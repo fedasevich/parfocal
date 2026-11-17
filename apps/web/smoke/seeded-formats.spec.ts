@@ -14,7 +14,7 @@ const openedInTheBrowser = [
   ["aperio-svs", "CMU-1-Small-Region.svs"],
   ["hamamatsu-ndpi", "CMU-1.ndpi"],
   ["leica-scn", "Leica-1.scn"],
-  ["ventana-bif", "Ventana-1.bif"],
+  ["ventana-bif", "OS-1.bif"],
   ["philips-tiff", "Philips-4.tiff"],
   ["huron-tiff", "Huron-1-40x.tif"],
   ["argos-avs", "Argos-1.avs"],

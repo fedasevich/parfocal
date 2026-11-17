@@ -16,6 +16,7 @@ import { PinMark } from "../review/pinned-thread.tsx";
 import { useReviewSession } from "../review/review-data.ts";
 import { shownReviewTool } from "../review/review-rail.ts";
 import { countAnswers } from "../review/review-state.ts";
+import { SlidePicture } from "../review/slide-picture.tsx";
 import { magnificationOf, SlideStill } from "../review/slide-still.tsx";
 import { chosenType } from "../review/type-bar.ts";
 import { cellCentre, TypeBar } from "../review/type-bar.tsx";
@@ -48,7 +49,11 @@ export function FullViewer(props: FullViewerProps) {
   const home = okData(useGetMyHome().data);
   const taskId = props.search.task ?? home?.resume?.task_id;
   if (taskId === undefined) return <SlideLoader />;
-  return <ViewerWithTask {...props} taskId={taskId} />;
+  return (
+    <SlidePicture slideId={props.slideId}>
+      <ViewerWithTask {...props} taskId={taskId} />
+    </SlidePicture>
+  );
 }
 
 function ViewerWithTask(props: FullViewerProps & { taskId: string }) {

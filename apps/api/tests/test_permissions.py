@@ -73,6 +73,7 @@ from parfocal_api.tables import (
     project_webhooks,
     projects,
     report_links,
+    result_chunks,
     result_objects,
     result_sets,
     review_assignments,
@@ -95,7 +96,7 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
-from parfocal_common.chunk_store import Cell, build_cells, packed
+from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.embedding_cache import (
     EMBEDDING_BYTES,
@@ -139,6 +140,8 @@ OPEN_OPERATIONS = {
             "createAccount",
             "confirmEmail",
             "resendEmailCode",
+            "requestPasswordReset",
+            "resetPassword",
             "signInWithPassword",
             "startPasskeySignIn",
             "finishPasskeySignIn",
@@ -148,6 +151,7 @@ OPEN_OPERATIONS = {
     "listPasskeys": "signed-in",
     "startPasskeyRegistration": "signed-in",
     "savePasskey": "signed-in",
+    "removePasskey": "signed-in",
     "getSession": "signed-in",
     "lockSession": "signed-in",
     "reportViewerFrames": "signed-in",
@@ -1065,6 +1069,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listProjectResultSets": lambda w: Call("GET", f"/api/projects/{w.project}/result-sets"),
     "getResultSet": lambda w: Call("GET", f"/api/result-sets/{w.result_set}"),
     "getCellSummary": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/cell-summary"),
+    "getCellChunk": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/cell-chunks/0"),
+    "listResultSetRegions": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/regions"),
     "getHeatmap": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/heatmap"),
     "getHeatmapGrid": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/heatmap/grid"),
     "exportSlideObjects": lambda w: Call(
@@ -2115,6 +2121,31 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     for number in (1, 2, 3)
                 ],
             )
+            matrix_cells = build_cells(
+                tenant_id,
+                case.loose_slide_id,
+                result_set,
+                [Cell(1, [0, 0, 9, 0, 9, 9, 0, 9], 0, 100)],
+                1,
+            )
+            await connection.execute(
+                insert(result_chunks),
+                [
+                    {
+                        "tenant_id": tenant_id,
+                        "result_set_id": result_set,
+                        "chunk": entry.chunk,
+                        "x": entry.x,
+                        "y": entry.y,
+                        "width": entry.width,
+                        "height": entry.height,
+                        "cell_count": entry.cell_count,
+                        "vertex_count": entry.vertex_count,
+                        "object_key": entry.object_key,
+                    }
+                    for entry in matrix_cells.entries
+                ],
+            )
             await connection.execute(
                 update(result_sets).where(result_sets.c.id == result_set).values(cell_count=1)
             )
@@ -2575,16 +2606,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             )
             async with httpx2.AsyncClient(timeout=30) as http:
                 store = ObjectStore(TEST_STORAGE, http)
-                matrix_cells = build_cells(
-                    tenant_id,
-                    case.loose_slide_id,
-                    result_set,
-                    [Cell(1, [0, 0, 9, 0, 9, 9, 0, 9], 0, 100)],
-                    1,
-                )
-                await ObjectResultStore(store).put(
-                    matrix_cells.summary.key, matrix_cells.summary.data
-                )
+                await write_cells(ObjectResultStore(store), matrix_cells)
                 heat_prefix = result_set_prefix(tenant_id, case.loose_slide_id, result_set)
                 await ObjectResultStore(store).put(
                     f"{heat_prefix}heatmap.bin", gzip.compress(bytes(4))

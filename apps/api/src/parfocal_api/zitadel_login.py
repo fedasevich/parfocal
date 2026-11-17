@@ -165,6 +165,32 @@ class ZitadelLogin:
         if response.status_code >= 300:
             raise LoginClientError(f"verifying an email answered {response.status_code}")
 
+    async def request_password_reset(self, user_id: str) -> None:
+        await self.ok("POST", f"/v2/users/{user_id}/password_reset", {})
+
+    async def set_password(self, user_id: str, code: str, password: str) -> None:
+        response = await self.call(
+            "POST",
+            f"/v2/users/{user_id}/password",
+            {
+                "newPassword": {"password": password, "changeRequired": False},
+                "verificationCode": code,
+            },
+        )
+        if response.status_code == 400 and "code" not in zitadel_message(response).lower():
+            raise PasswordRejectedError(zitadel_message(response))
+        if 400 <= response.status_code < 500:
+            raise WrongCodeError
+        if response.status_code >= 300:
+            raise LoginClientError(f"setting a password answered {response.status_code}")
+
+    async def remove_passkey(self, user_id: str, passkey_id: str) -> None:
+        response = await self.call("DELETE", f"/v2/users/{user_id}/passkeys/{passkey_id}", {})
+        if response.status_code == 404:
+            raise PasskeyRejectedError
+        if response.status_code >= 300:
+            raise LoginClientError(f"removing a passkey answered {response.status_code}")
+
     async def check_password(self, user_id: str, password: str) -> CheckedSession:
         response = await self.call(
             "POST",

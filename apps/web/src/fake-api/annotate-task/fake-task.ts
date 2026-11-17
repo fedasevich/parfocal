@@ -1,8 +1,8 @@
 import type { CheckState, HistoryEntry, Origin } from "@parfocal/ui/components/annotate-task";
 import type { PersonInfo } from "@parfocal/ui/lib/avatar-colours";
-import { autoRegionProposals } from "../viewer-tools/tool-geometry.ts";
+import { autoRegionProposals } from "../../screens/viewer-tools/tool-geometry.ts";
 
-export type { TaskScene } from "./scene-list.ts";
+export type { TaskScene } from "../../screens/annotate-task/scene-list.ts";
 
 export type TaskPeople = Record<"me" | "anna" | "simona", PersonInfo>;
 

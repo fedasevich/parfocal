@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.announcements import Announcement, current_announcements
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.disagreements import open_count, queue_of
+from parfocal_api.disagreements import open_count, queues_of
 from parfocal_api.my_work import MyStatus, MyTask, ProjectRef, my_review_tasks
 from parfocal_api.notifications import member_of
 from parfocal_api.permissions import Grant, Permission, grant_of, in_project
@@ -259,20 +259,26 @@ async def resume_of(
             .order_by(review_task_slides.c.position)
         )
     ]
-    slide = (
-        await connection.execute(
-            select(slides.c.label, cases.c.label.label("case_label"))
-            .outerjoin(cases, cases.c.id == slides.c.case_id)
-            .where(slides.c.id == slide_id)
-        )
-    ).one()
-    counted = await connection.scalar(
-        select(func.count()).where(
+    counted = (
+        select(func.count())
+        .where(
             review_decisions.c.task_id == task.id,
             review_decisions.c.slide_id == slide_id,
             review_decisions.c.user_id == me,
         )
+        .scalar_subquery()
     )
+    slide = (
+        await connection.execute(
+            select(
+                slides.c.label,
+                cases.c.label.label("case_label"),
+                counted.label("decisions"),
+            )
+            .outerjoin(cases, cases.c.id == slides.c.case_id)
+            .where(slides.c.id == slide_id)
+        )
+    ).one()
     return ResumeTarget(
         task_id=task.id,
         task_code=task.code,
@@ -284,7 +290,7 @@ async def resume_of(
         position=mine.index(slide_id) + 1,
         slides_assigned=len(mine),
         object_id=object_id,
-        decisions_on_slide=int(counted or 0),
+        decisions_on_slide=int(slide.decisions or 0),
         due_on=task.due_on,
         blinded=task.blinded,
         mode=mode,
@@ -302,9 +308,18 @@ def reviewed(slide_column: Any) -> Any:
 async def projects_of(
     connection: AsyncConnection, principal: MemberPrincipal, workspace: Grant
 ) -> tuple[list[HomeProject], int, list[uuid.UUID]]:
+    everyone = project_members.alias("everyone")
     rows = (
         await connection.execute(
-            select(projects, project_members.c.role.label("my_role"))
+            select(
+                projects,
+                project_members.c.role.label("my_role"),
+                select(func.count())
+                .select_from(everyone)
+                .where(everyone.c.project_id == projects.c.id)
+                .scalar_subquery()
+                .label("members"),
+            )
             .join(project_members, project_members.c.project_id == projects.c.id)
             .where(
                 project_members.c.user_id == principal.user_id,
@@ -314,90 +329,111 @@ async def projects_of(
             .order_by(projects.c.number)
         )
     ).all()
-    found: list[HomeProject] = []
-    without_results = 0
-    adjudicated: list[uuid.UUID] = []
-    for row in rows:
-        role = ProjectRole(row.my_role)
-        whole = reads_whole(in_project(workspace, Permission.SEE_SLIDES, role))
-        if whole:
-            adjudicated.append(row.id)
-        visible = [slides.c.project_id == row.id, slides.c.deleted_at.is_(None)]
-        if not whole:
-            visible.append(slides.c.id.in_(assigned_slides(principal)))
-        has_set = exists().where(
-            result_sets.c.slide_id == slides.c.id, result_sets.c.deleted_at.is_(None)
-        )
-        counts = (
-            await connection.execute(
-                select(
-                    func.count(),
-                    func.count().filter(reviewed(slides.c.id)),
-                    func.count().filter(~has_set),
-                ).where(*visible)
+    if not rows:
+        return [], 0, []
+    roles = {row.id: ProjectRole(row.my_role) for row in rows}
+    adjudicated = [
+        project_id
+        for project_id, role in roles.items()
+        if reads_whole(in_project(workspace, Permission.SEE_SLIDES, role))
+    ]
+    visible = (
+        slides.c.project_id.in_(list(roles)),
+        slides.c.deleted_at.is_(None),
+        slides.c.project_id.in_(adjudicated) | slides.c.id.in_(assigned_slides(principal)),
+    )
+    has_set = exists().where(
+        result_sets.c.slide_id == slides.c.id, result_sets.c.deleted_at.is_(None)
+    )
+    sets_on_slide = (
+        select(func.count())
+        .where(result_sets.c.slide_id == slides.c.id, result_sets.c.deleted_at.is_(None))
+        .scalar_subquery()
+    )
+    counts = {
+        row.project_id: row
+        for row in await connection.execute(
+            select(
+                slides.c.project_id,
+                func.count().label("slides"),
+                func.count().filter(reviewed(slides.c.id)).label("reviewed"),
+                func.count().filter(~has_set).label("without_results"),
+                func.coalesce(func.sum(sets_on_slide), 0).label("sets"),
             )
-        ).one()
-        sets = await connection.scalar(
-            select(func.count())
-            .select_from(result_sets)
-            .join(slides, slides.c.id == result_sets.c.slide_id)
-            .where(result_sets.c.deleted_at.is_(None), *visible)
+            .where(*visible)
+            .group_by(slides.c.project_id)
         )
-        members = await connection.scalar(
-            select(func.count()).where(project_members.c.project_id == row.id)
+    }
+    ranked = (
+        select(
+            slides.c.project_id,
+            slides.c.id,
+            slides.c.label,
+            reviewed(slides.c.id).label("reviewed"),
+            func.row_number()
+            .over(partition_by=slides.c.project_id, order_by=(slides.c.created_at, slides.c.id))
+            .label("place"),
         )
-        strip = [
+        .where(*visible)
+        .subquery()
+    )
+    strips: dict[uuid.UUID, list[StripSlide]] = {}
+    for slide in await connection.execute(
+        select(ranked).where(ranked.c.place <= STRIP).order_by(ranked.c.project_id, ranked.c.place)
+    ):
+        strips.setdefault(slide.project_id, []).append(
             StripSlide(id=slide.id, label=slide.label, reviewed=slide.reviewed)
-            for slide in await connection.execute(
-                select(slides.c.id, slides.c.label, reviewed(slides.c.id).label("reviewed"))
-                .where(*visible)
-                .order_by(slides.c.created_at, slides.c.id)
-                .limit(STRIP)
-            )
-        ]
-        without_results += counts[2]
-        found.append(
-            HomeProject(
-                id=row.id,
-                code=project_code(row.number),
-                name=row.name,
-                colour=row.colour,
-                privacy_mode=PrivacyMode(row.privacy_mode),
-                my_role=role,
-                members=int(members or 0),
-                slides=counts[0],
-                result_sets=int(sets or 0),
-                reviewed_slides=counts[1],
-                strip=strip,
-            )
         )
+    found = [
+        HomeProject(
+            id=row.id,
+            code=project_code(row.number),
+            name=row.name,
+            colour=row.colour,
+            privacy_mode=PrivacyMode(row.privacy_mode),
+            my_role=roles[row.id],
+            members=int(row.members or 0),
+            slides=counts[row.id].slides if row.id in counts else 0,
+            result_sets=int(counts[row.id].sets) if row.id in counts else 0,
+            reviewed_slides=counts[row.id].reviewed if row.id in counts else 0,
+            strip=strips.get(row.id, []),
+        )
+        for row in rows
+    ]
+    without_results = sum(row.without_results for row in counts.values())
     return found, without_results, adjudicated
 
 
 async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[uuid.UUID]) -> Week:
-    since = (await connection.execute(select(func.now() - WEEK))).scalar_one()
-    checked, agreed = (
+    since_column = (func.now() - WEEK).label("since")
+    since, checked, agreed = (
         await connection.execute(
             select(
-                func.count(), func.count().filter(review_decisions.c.value == DecisionValue.AGREE)
+                since_column,
+                func.count(),
+                func.count().filter(review_decisions.c.value == DecisionValue.AGREE),
             )
             .join(projects, projects.c.id == review_decisions.c.project_id)
             .where(
-                review_decisions.c.user_id == me, review_decisions.c.updated_at >= since, NOT_SAMPLE
+                review_decisions.c.user_id == me,
+                review_decisions.c.updated_at >= func.now() - WEEK,
+                NOT_SAMPLE,
             )
         )
     ).one()
     open_disagreements: int | None = None
     if adjudicated:
-        open_disagreements = 0
-        for task_id in await connection.scalars(
-            select(review_tasks.c.id).where(
-                review_tasks.c.project_id.in_(adjudicated),
-                review_tasks.c.archived_at.is_(None),
-                review_tasks.c.signed_off_at.is_(None),
+        open_tasks = list(
+            await connection.scalars(
+                select(review_tasks.c.id).where(
+                    review_tasks.c.project_id.in_(adjudicated),
+                    review_tasks.c.archived_at.is_(None),
+                    review_tasks.c.signed_off_at.is_(None),
+                )
             )
-        ):
-            open_disagreements += open_count(await queue_of(connection, task_id))
+        )
+        queues = await queues_of(connection, open_tasks) if open_tasks else {}
+        open_disagreements = sum(open_count(queue) for queue in queues.values())
     return Week(
         since=since,
         objects_checked=checked,

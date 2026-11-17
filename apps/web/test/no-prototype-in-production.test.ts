@@ -25,29 +25,7 @@ const prototypeUse = [
   /Signed off 15 Oct/,
 ];
 
-const STILL_TO_REPLACE = new Set([
-  "screens/annotate-task/annotate-task-view.tsx",
-  "screens/annotate-task/task-people.ts",
-  "screens/annotate-task/task-shapes.tsx",
-  "screens/review/cells-grid.tsx",
-  "screens/review/comments-on-ids.tsx",
-  "screens/review/guided-review.tsx",
-  "screens/review/review-top-popovers.tsx",
-  "screens/review/review-top.tsx",
-  "screens/review/slide-still.tsx",
-  "screens/review/slide-submitted.tsx",
-  "screens/thumbnails.ts",
-  "screens/viewer-tools/annotate-view.tsx",
-  "screens/viewer-tools/cell-focus.tsx",
-  "screens/viewer-tools/compare-view.tsx",
-  "screens/viewer-tools/focus-view.tsx",
-  "screens/viewer-tools/navigator-canvas.tsx",
-  "screens/viewer-tools/slide-peek.tsx",
-  "screens/viewer-tools/viewer-minimap.tsx",
-  "screens/viewer/layer-views.tsx",
-  "screens/viewer/use-viewer-panels.tsx",
-  "screens/viewer/viewer-canvas-parts.tsx",
-]);
+const STILL_TO_REPLACE = new Set<string>();
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

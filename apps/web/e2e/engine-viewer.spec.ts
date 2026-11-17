@@ -145,6 +145,20 @@ test("the minimap shows the slide overview with a viewport box that shrinks on z
   await expect.poll(async () => Number(await box.getAttribute("width"))).toBeLessThan(before);
 });
 
+test("the minimap falls back to the slide's smallest level while the thumbnail is missing", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    (id) => sessionStorage.setItem("parfocal.fake.thumbless-slides", JSON.stringify([id])),
+    tumor044,
+  );
+  await page.goto(fullViewer);
+  await ready(page);
+  const minimap = page.getByTestId("stage-minimap");
+  await expect(minimap).toHaveAttribute("data-source", "overview");
+  await expect(minimap.locator("image")).toHaveAttribute("href", /^data:image\/jpeg/);
+});
+
 test("New comment and the C key arm the comment tool from the Comments tab in annotate", async ({
   page,
 }) => {
@@ -227,4 +241,109 @@ test("guided review on outlined cells moves to the next cell after a type", asyn
   await expect(page.getByTestId("cell-type-bar")).toHaveAttribute("aria-label", "Type for C1");
   await page.keyboard.press("x");
   await expect(card).toHaveAttribute("data-current", "C2");
+});
+
+test("a decision note with a reason is written and saved on the stage", async ({ page }) => {
+  await page.goto(objectsViewer);
+  await ready(page);
+  const row = page.locator('[data-testid="stage-review-object"][data-object="T2"]');
+  await row
+    .getByRole("group", { name: "Your answer on T2" })
+    .getByRole("button", { name: /Disagree/ })
+    .click();
+  await expect(row).toHaveAttribute("data-decision", "disagree");
+  await row.getByRole("button", { name: "Notes and comments" }).click();
+  const notes = page.getByTestId("stage-object-notes");
+  await notes.getByRole("button", { name: "Add a note" }).click();
+  const field = page.getByRole("textbox", { name: "Note on your decision for T2" });
+  await expect(field).toBeFocused();
+  await page.getByRole("button", { name: "Boundary is off" }).click();
+  await field.pressSequentially("Runs past the fold");
+  const put = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      request.url().includes("/decisions/T2") &&
+      (request.postData() ?? "").includes("Runs past the fold"),
+  );
+  await page.keyboard.press("Enter");
+  const body = (await put).postDataJSON() as { note: string; reasons: string[] };
+  expect(body.note).toBe("Runs past the fold");
+  expect(body.reasons).toContain("boundary_off");
+  await expect(field).toHaveCount(0);
+  await expect(notes).toContainText("Note on decision: Disagree");
+  await expect(notes).toContainText("Runs past the fold");
+
+  await notes.getByRole("button", { name: "Edit" }).click();
+  await expect(field).toBeFocused();
+  await expect(page.getByRole("button", { name: "Boundary is off" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(field).toHaveValue("Runs past the fold");
+  await field.fill("Runs past the fold and more");
+  const edited = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      request.url().includes("/decisions/T2") &&
+      (request.postData() ?? "").includes("and more"),
+  );
+  await page.keyboard.press("Enter");
+  const again = (await edited).postDataJSON() as { note: string; reasons: string[] };
+  expect(again.note).toBe("Runs past the fold and more");
+  expect(again.reasons).toContain("boundary_off");
+});
+
+test("a result set's cells page in as outlines and its regions draw outside a task, and both hide", async ({
+  page,
+}) => {
+  const chunks: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/cell-chunks/")) chunks.push(request.url());
+  });
+  await page.goto(`/projects/${p07}/slides/${a1}?as=DH`);
+  await ready(page);
+  const sam = '[data-set="00000000-0000-4000-8006-000000000002"]';
+  const cells = page.locator(`[data-testid="result-set-cells"]${sam}`);
+  await expect(cells).toHaveAttribute("data-drawn", "outlines", { timeout: 15_000 });
+  expect(Number(await cells.getAttribute("data-cells"))).toBeGreaterThan(0);
+  expect(Number(await cells.getAttribute("data-resident"))).toBeGreaterThan(0);
+  expect(chunks.length).toBeGreaterThan(0);
+  const regions = page.locator(`[data-testid="result-set-regions"]${sam}`);
+  await expect(regions).toHaveAttribute("data-regions", "2");
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(2);
+  await page.getByRole("tab", { name: "Display" }).click();
+  const legend = page.locator(`[data-testid="class-legend"]${sam}`);
+  const rows = legend.getByTestId("class-legend-row");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toHaveAttribute("data-class", "Neoplastic");
+  await expect(rows.nth(1)).toHaveAttribute("data-class", "Inflammatory");
+  const colours = await rows.evaluateAll((items) =>
+    items.map((item) => item.getAttribute("data-colour")),
+  );
+  expect(new Set(colours).size).toBe(2);
+  expect(colours).not.toContain("#fbbf24");
+  const toggle = page.getByRole("button", { name: "Hide PathoSAM + HoVer-NeXt" });
+  await toggle.click();
+  await expect(page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(cells).toHaveCount(0);
+  await expect(regions).toHaveCount(0);
+  await expect(legend).toHaveCount(0);
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(1);
+  await page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" }).click();
+  await expect(cells).toHaveAttribute("data-drawn", "outlines");
+});
+
+test("inside a task a result set's cells stay dots and its regions are left to the task", async ({
+  page,
+}) => {
+  await page.goto(`${objectsViewer}&as=DH`);
+  await ready(page);
+  const cells = page.locator(
+    '[data-testid="result-set-cells"][data-set="00000000-0000-4000-8006-000000000002"]',
+  );
+  await expect(cells).toHaveAttribute("data-drawn", "dots", { timeout: 15_000 });
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(0);
 });

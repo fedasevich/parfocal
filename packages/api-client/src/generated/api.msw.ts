@@ -189,6 +189,7 @@ import type {
   Session,
   SessionPolicy,
   SessionSummary,
+  SetRegions,
   SharedAiObjects,
   SharedLayer,
   SharedReport,
@@ -338,6 +339,7 @@ import {
   RegionOutput,
   RestrictedImage,
   ResultFormat,
+  ResultObjectKind,
   ResultSource,
   ResultStatus,
   ResumeMode,
@@ -483,6 +485,22 @@ export const getResendEmailCodeResponseMock = (
 });
 
 export const getSignInWithPasswordResponseMock = (
+  overrideResponse: Partial<Extract<SignInLanding, object>> = {},
+): SignInLanding => ({
+  return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getRequestPasswordResetResponseMock = (
+  overrideResponse: Partial<Extract<AccountCodeSent, object>> = {},
+): AccountCodeSent => ({
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_minutes: faker.number.int(),
+  resend_seconds: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getResetPasswordResponseMock = (
   overrideResponse: Partial<Extract<SignInLanding, object>> = {},
 ): SignInLanding => ({
   return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -6731,6 +6749,7 @@ export const getCreateResultSetResponseMock = (
     () => ({
       position: faker.number.int(),
       source_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
       class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       object_count: faker.number.int(),
     }),
@@ -6834,6 +6853,7 @@ export const getGetResultSetResponseMock = (
     () => ({
       position: faker.number.int(),
       source_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
       class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       object_count: faker.number.int(),
     }),
@@ -6851,6 +6871,27 @@ export const getDeleteResultSetResponseMock = (
 
 export const getGetCellSummaryResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getGetCellChunkResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getListResultSetRegionsResponseMock = (
+  overrideResponse: Partial<Extract<SetRegions, object>> = {},
+): SetRegions => ({
+  regions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      number: faker.number.int(),
+      kind: faker.helpers.arrayElement(Object.values(ResultObjectKind)),
+      class_index: faker.helpers.arrayElement([faker.number.int(), null]),
+      score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  truncated: faker.datatype.boolean(),
+  ...overrideResponse,
+});
 
 export const getGetHeatmapResponseMock = (
   overrideResponse: Partial<Extract<HeatmapFacts, object>> = {},
@@ -19384,6 +19425,54 @@ export const getSignInWithPasswordMockHandler = (
   );
 };
 
+export const getRequestPasswordResetMockHandler = (
+  overrideResponse?:
+    | AccountCodeSent
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AccountCodeSent> | AccountCodeSent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/password-reset",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRequestPasswordResetResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResetPasswordMockHandler = (
+  overrideResponse?:
+    | SignInLanding
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SignInLanding> | SignInLanding),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/password-reset/confirm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResetPasswordResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListPasskeysMockHandler = (
   overrideResponse?:
     | SavedPasskeySummary[]
@@ -19451,6 +19540,25 @@ export const getStartPasskeyRegistrationMockHandler = (
           : getStartPasskeyRegistrationResponseMock(),
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getRemovePasskeyMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/auth/passkeys/:passkeyId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -22280,6 +22388,52 @@ export const getGetCellSummaryMockHandler = (
         status: 200,
         headers: { "Content-Type": "application/octet-stream" },
       });
+    },
+    options,
+  );
+};
+
+export const getGetCellChunkMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/cell-chunks/:chunk",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetCellChunkResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
+export const getListResultSetRegionsMockHandler = (
+  overrideResponse?:
+    | SetRegions
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SetRegions> | SetRegions),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/regions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListResultSetRegionsResponseMock(),
+        { status: 200 },
+      );
     },
     options,
   );
@@ -28660,9 +28814,12 @@ export const getParfocalAPIMock = () => [
   getConfirmEmailMockHandler(),
   getResendEmailCodeMockHandler(),
   getSignInWithPasswordMockHandler(),
+  getRequestPasswordResetMockHandler(),
+  getResetPasswordMockHandler(),
   getListPasskeysMockHandler(),
   getSavePasskeyMockHandler(),
   getStartPasskeyRegistrationMockHandler(),
+  getRemovePasskeyMockHandler(),
   getStartPasskeySignInMockHandler(),
   getFinishPasskeySignInMockHandler(),
   getListSessionsMockHandler(),
@@ -28787,6 +28944,8 @@ export const getParfocalAPIMock = () => [
   getGetResultSetMockHandler(),
   getDeleteResultSetMockHandler(),
   getGetCellSummaryMockHandler(),
+  getGetCellChunkMockHandler(),
+  getListResultSetRegionsMockHandler(),
   getGetHeatmapMockHandler(),
   getGetHeatmapGridMockHandler(),
   getGetResultsSchemaMockHandler(),

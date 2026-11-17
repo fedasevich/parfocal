@@ -34,13 +34,13 @@ import {
 import { useBindings } from "../../keys/personal-keys.ts";
 import type { Fired } from "../../keys/registry.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
-import { ReviewTop } from "../review/review-top.tsx";
-import { hpfSize } from "../review/slide-geometry.ts";
-import { type Camera, SlideStill } from "../review/slide-still.tsx";
-import { ViewerFrame } from "../review/viewer-frame.tsx";
-import { annotateRail } from "../viewer-tools/rails.ts";
-import { coverHome } from "../viewer-tools/tool-maths.ts";
-import type { ToolSession } from "../viewer-tools/tool-session.tsx";
+import { ReviewTop } from "../../screens/review/review-top.tsx";
+import { hpfSize } from "../../screens/review/slide-geometry.ts";
+import { type Camera, SlideStill } from "../../screens/review/slide-still.tsx";
+import { ViewerFrame } from "../../screens/review/viewer-frame.tsx";
+import { annotateRail } from "../../screens/viewer-tools/rails.ts";
+import { coverHome } from "../../screens/viewer-tools/tool-maths.ts";
+import type { ToolSession } from "../../screens/viewer-tools/tool-session.tsx";
 import {
   aiObjectCount,
   cellsPerTile,

@@ -1,6 +1,6 @@
 import { useListTenantMembers } from "@parfocal/api-client";
-import { toPersonInfo } from "../people.ts";
-import { okData } from "../placeholder.tsx";
+import { toPersonInfo } from "../../screens/people.ts";
+import { okData } from "../../screens/placeholder.tsx";
 import type { TaskPeople } from "./fake-task.ts";
 
 export function useTaskPeople(): TaskPeople | undefined {

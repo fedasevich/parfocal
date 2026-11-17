@@ -23,6 +23,8 @@ export const allowedFields: ReadonlySet<string> = new Set([
   "queries",
   "transactions",
   "region",
+  "cloud",
+  "container",
   "error_type",
   "error_code",
   "environment",

@@ -48,7 +48,7 @@ WEB_PRELOAD = (
 )
 
 WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
-WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 10, "target_inputs": 8}
+WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 20, "target_inputs": 16}
 WEB_OPTIONS: dict[str, Any] = {
     "name": WEB_FUNCTION,
     "region": WEB_REGION,

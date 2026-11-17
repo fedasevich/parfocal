@@ -99,7 +99,7 @@ import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
-import { StageInspector, type StageInspectorLink } from "./stage-inspector.tsx";
+import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import { stageToolOf } from "./stage-tools.ts";
@@ -139,6 +139,7 @@ const LabLayer = lazy(() => import("./lab-layer.tsx"));
 type Session = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
+  readonly overview: StageSession["overview"];
   readonly open: SmartServicesContext["open"];
   readonly route: VivRoute | null;
   readonly shownRoute: EngineRouteId;
@@ -197,8 +198,10 @@ export function SlideStage({
   onOpenSlide,
   onStorage,
   inspector,
+  bare = false,
 }: {
   inspector: StageInspectorLink;
+  bare?: boolean;
   slideId: string;
   projectId?: string;
   taskId?: string;
@@ -229,6 +232,7 @@ export function SlideStage({
       onOpenSlide={onOpenSlide}
       onStorage={onStorage}
       inspector={inspector}
+      bare={bare}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -249,8 +253,10 @@ function OpenedSlide({
   onStorage,
   onRetry,
   inspector,
+  bare,
 }: {
   inspector: StageInspectorLink;
+  bare: boolean;
   slideId: string;
   projectId: string | undefined;
   taskId: string | undefined;
@@ -612,6 +618,7 @@ function OpenedSlide({
           setSession({
             engine: viewport.engine,
             module: engine,
+            overview: viewport.overview,
             open,
             route: viewport.route(),
             shownRoute: viewport.shownRoute(),
@@ -706,7 +713,7 @@ function OpenedSlide({
       <InspectorSlotsProvider value={slots}>
         <ContextExtrasHost>
           <div data-slot="viewer-body" className="relative flex size-full min-h-0 bg-chrome">
-            {toolsLayout === "dock" ? null : (
+            {bare || toolsLayout === "dock" ? null : (
               <ToolRail className="justify-between">
                 <div className="grid gap-1">
                   {setup.rail.map((group) => (
@@ -953,7 +960,7 @@ function OpenedSlide({
                       }
                     />
                   ) : null}
-                  {toolsLayout === "dock" ? (
+                  {!bare && toolsLayout === "dock" ? (
                     <div
                       data-slot="stage-tools"
                       className="absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
@@ -1141,17 +1148,19 @@ function OpenedSlide({
                 </div>
               ) : null}
             </div>
-            <StageInspector
-              key={workspace}
-              layout={inspectorLayout}
-              onLayout={setInspectorLayout}
-              tab={tab}
-              onTab={inspector.onTab}
-              panning={panning}
-              comments={inspector.comments}
-              opinion={inspector.opinion}
-              onSlot={placeSlot}
-            />
+            {bare ? null : (
+              <StageInspector
+                key={workspace}
+                layout={inspectorLayout}
+                onLayout={setInspectorLayout}
+                tab={tab}
+                onTab={inspector.onTab}
+                panning={panning}
+                comments={inspector.comments}
+                opinion={inspector.opinion}
+                onSlot={placeSlot}
+              />
+            )}
           </div>
         </ContextExtrasHost>
       </InspectorSlotsProvider>

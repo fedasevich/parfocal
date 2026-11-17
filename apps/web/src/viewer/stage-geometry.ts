@@ -1,3 +1,6 @@
+import { type ClassPaint, paintFor } from "./class-paint.ts";
+import type { ClassName } from "./viewer-engine.ts";
+
 export type StageStart = { readonly x: number; readonly y: number; readonly scale: number };
 
 export type StageArea = { x: number; y: number; width: number; height: number };
@@ -57,10 +60,75 @@ export function nextOpenObject(
   return rotated.find((id) => id !== after && !decided.has(id)) ?? null;
 }
 
-const engineClasses = ["tumor", "stroma", "immune", "other"] as const;
+const unknownPaint = { className: "other" as ClassName };
 
-const engineClassOf = (name: string) =>
-  engineClasses.find((item) => item === name.toLowerCase()) ?? "other";
+const paintOf = (paints: readonly (ClassPaint | undefined)[], index: number | null | undefined) =>
+  index === null || index === undefined ? undefined : paints[index];
+
+const painted = (paint: ClassPaint | undefined) =>
+  paint === undefined ? unknownPaint : { className: paint.className, classColour: paint.colour };
+
+type ChunkRows = {
+  readonly number: ArrayLike<number>;
+  readonly offsets: ArrayLike<number>;
+  readonly points: Float32Array;
+  readonly score: ArrayLike<number>;
+};
+
+type LiveCells = {
+  forEachLive(visit: (chunk: ChunkRows, local: number, classIndex: number) => void): void;
+};
+
+export function chunkCells(
+  setId: string,
+  cells: LiveCells,
+  paints: readonly (ClassPaint | undefined)[],
+) {
+  const drawn: {
+    id: string;
+    kind: "cell";
+    ring: Float32Array;
+    className: ClassName;
+    classColour?: ClassPaint["colour"];
+    score: number;
+  }[] = [];
+  cells.forEachLive((chunk, local, classIndex) => {
+    const from = (chunk.offsets[local] ?? 0) * 2;
+    const to = (chunk.offsets[local + 1] ?? 0) * 2;
+    if (to - from < 6) return;
+    drawn.push({
+      id: `${setId}:${chunk.number[local] ?? local}`,
+      kind: "cell",
+      ring: chunk.points.subarray(from, to),
+      ...painted(paintOf(paints, classIndex)),
+      score: (chunk.score[local] ?? 255) / 255,
+    });
+  });
+  return drawn;
+}
+
+type SetRegionRow = {
+  readonly number: number;
+  readonly class_index?: number | null;
+  readonly score?: number | null;
+  readonly outline: number[];
+};
+
+export function setRegions(
+  setId: string,
+  regions: readonly SetRegionRow[],
+  paints: readonly (ClassPaint | undefined)[],
+) {
+  return regions
+    .filter((region) => region.outline.length >= 6)
+    .map((region) => ({
+      id: `${setId}:region:${region.number}`,
+      kind: "region" as const,
+      ring: region.outline,
+      ...painted(paintOf(paints, region.class_index)),
+      score: region.score ?? 1,
+    }));
+}
 
 type Placeable = {
   readonly object: string;
@@ -115,7 +183,10 @@ export function summaryCells(setId: string, summary: SummaryRows) {
   return cells;
 }
 
-export function placedObjects(objects: readonly Placeable[]) {
+export function placedObjects(
+  objects: readonly Placeable[],
+  projectClasses: readonly { id: string; name: string; colour: string }[] = [],
+) {
   return objects.flatMap((item) =>
     item.outline && item.outline.length >= 6
       ? [
@@ -123,10 +194,37 @@ export function placedObjects(objects: readonly Placeable[]) {
             id: item.object,
             kind: item.kind === "cell" ? ("cell" as const) : ("region" as const),
             ring: item.outline,
-            className: engineClassOf(item.class_name),
+            ...painted(paintFor(item.class_name, projectClasses)),
             score: item.score,
           },
         ]
       : [],
   );
+}
+
+export const regionPageLimit = 2000;
+
+export const regionKeepLimit = 20_000;
+
+export function regionBox([left, top, width, height]: readonly [number, number, number, number]) {
+  const step = 2 ** Math.ceil(Math.log2(Math.max(width, height, 1)));
+  const snapDown = (value: number) => Math.max(0, Math.floor(value / step) * step);
+  const snapUp = (value: number) => Math.max(0, Math.ceil(value / step) * step);
+  return {
+    left: snapDown(left - width / 2),
+    top: snapDown(top - height / 2),
+    right: snapUp(left + width * 1.5),
+    bottom: snapUp(top + height * 1.5),
+  };
+}
+
+export function mergeRegions<Row extends { readonly number: number }>(
+  before: ReadonlyMap<number, Row>,
+  rows: readonly Row[],
+  keep = regionKeepLimit,
+): ReadonlyMap<number, Row> {
+  if (rows.every((row) => before.get(row.number) === row)) return before;
+  const merged = new Map(before.size + rows.length > keep ? [] : before);
+  for (const row of rows) merged.set(row.number, row);
+  return merged;
 }

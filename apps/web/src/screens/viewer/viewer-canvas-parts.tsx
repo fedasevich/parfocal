@@ -20,11 +20,11 @@ export function RunningHeat({ reached }: { reached: number }) {
           <rect x={0} y={0} width={1400} height={1924 * reached} />
         </clipPath>
       </defs>
-      <image
-        href="/mock-assets/tumor-heat.png"
+      <rect
         width={1400}
         height={1924}
-        opacity={0.5}
+        fill="var(--accent)"
+        opacity={0.12}
         clipPath="url(#running-clip)"
       />
       <line

@@ -2,12 +2,10 @@ import { MapTrail, PeekHere, WholeSlidePeek } from "@parfocal/ui/components/smar
 import { useRef } from "react";
 import { useBindings, usePersonalKeys } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
-import { lookUrl } from "../thumbnails.ts";
+import { useOverviewImage } from "../review/slide-picture.tsx";
 import { peekKeyStep } from "./peek-model.ts";
 import { type AreaMark, PeekAreas } from "./slide-maps.tsx";
 import { cropCentre, midViewport, seenPercent, seenTrail } from "./tool-geometry.ts";
-
-const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
 export function SlidePeek({
   slideName,
@@ -26,6 +24,7 @@ export function SlidePeek({
   onClose: () => void;
   onPick: (point: [number, number]) => void;
 }) {
+  const overviewImage = useOverviewImage();
   const here: [number, number, number, number] = atCell
     ? [cropCentre.hpf[0] - 14, cropCentre.hpf[1] - 9, 27, 17]
     : midViewport;

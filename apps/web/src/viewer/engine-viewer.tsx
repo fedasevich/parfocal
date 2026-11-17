@@ -11,9 +11,11 @@ import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-slide-notice.tsx";
 import { SlideStage } from "./slide-stage.tsx";
 import { StageComments } from "./stage-comments.tsx";
+import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
 import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
+import type { NoteRequest } from "./stage-object-notes.tsx";
 import { StageObjectNotes } from "./stage-object-notes.tsx";
 import { StageOpinion } from "./stage-opinion.tsx";
 import { StageResultCells } from "./stage-result-cells.tsx";
@@ -38,6 +40,8 @@ export type EngineViewerProps = {
   object?: string | undefined;
   guided?: boolean;
   tool?: string | undefined;
+  focus?: boolean;
+  onFocus?: ((on: boolean) => void) | undefined;
   onOpenSlide: (slideId: string) => void;
   onWorkspace: (workspace: SlideWorkspace) => void;
   onTab?: ((tab: ViewerTab) => void) | undefined;
@@ -53,10 +57,14 @@ export function EngineViewer({
   object,
   guided = false,
   tool,
+  focus = false,
+  onFocus,
   onOpenSlide,
   onWorkspace,
   onTab: onRouteTab,
 }: EngineViewerProps) {
+  const showUi = () => onFocus?.(false);
+  useFocusKey(() => onFocus?.(!focus));
   const [ownTab, setOwnTab] = useState<ViewerTab | undefined>(undefined);
   const tab = onRouteTab === undefined ? ownTab : routeTab;
   const onTab = onRouteTab ?? setOwnTab;
@@ -83,9 +91,13 @@ export function EngineViewer({
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
   const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
   const [noteObject, setNoteObject] = useState<string | null>(object ?? null);
-  const [focus, setFocus] = useState<{ slideId: string; request: ThreadFocusRequest } | null>(null);
+  const [noteRequest, setNoteRequest] = useState<NoteRequest | null>(null);
+  const [threadFocus, setThreadFocus] = useState<{
+    slideId: string;
+    request: ThreadFocusRequest;
+  } | null>(null);
   const goToThread = (thread: Thread) =>
-    setFocus((before) => ({
+    setThreadFocus((before) => ({
       slideId,
       request: { count: (before?.request.count ?? 0) + 1, anchor: thread.anchor },
     }));
@@ -105,9 +117,21 @@ export function EngineViewer({
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
-      <StageMinimap engine={session.engine} slideId={slideId} />
-      <StageResultCells engine={session.engine} module={session.module} slideId={slideId} />
+      <StageMinimap engine={session.engine} slideId={slideId} overview={session.overview} />
+      <StageResultCells
+        engine={session.engine}
+        module={session.module}
+        slideId={slideId}
+        inTask={task !== undefined}
+      />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
+      {focus ? (
+        <StageFocusPill
+          label={load?.case?.label || load?.slide?.label || ""}
+          detail={currentObject ?? ""}
+          onShowUi={showUi}
+        />
+      ) : null}
       {reviewTask === null ? null : (
         <StageReviewObjects
           engine={session.engine}
@@ -116,8 +140,17 @@ export function EngineViewer({
           slideId={slideId}
           object={object}
           guided={guided}
+          focus={focus ? { onShowUi: showUi } : null}
           onCurrent={setCurrentObject}
           onComments={(id) => {
+            setNoteRequest(null);
+            setNoteObject(id);
+            onTab("comments");
+          }}
+          onNote={(id) => {
+            showUi();
+            setLayout({ hidden: false });
+            setNoteRequest((before) => ({ object: id, count: (before?.count ?? 0) + 1 }));
             setNoteObject(id);
             onTab("comments");
           }}
@@ -128,11 +161,13 @@ export function EngineViewer({
   const inspector = {
     tab,
     onTab,
-    focus: focus?.slideId === slideId ? focus.request : null,
+    focus: threadFocus?.slideId === slideId ? threadFocus.request : null,
     extras,
     comments:
       reviewTask !== null && noteObject !== null ? (
         <StageObjectNotes
+          key={noteObject}
+          editRequest={noteRequest?.object === noteObject ? noteRequest.count : 0}
           taskId={reviewTask}
           slideId={slideId}
           object={noteObject}
@@ -159,34 +194,60 @@ export function EngineViewer({
     ),
   };
   return (
-    <main className="flex h-screen flex-col bg-chrome text-fg">
-      <LiveTopBar
-        projectId={projectId}
-        slideId={slideId}
-        load={load}
-        task={taskDetail}
-        workspace={workspace}
-        onWorkspace={onWorkspace}
-        onOpenSlide={onOpenSlide}
-        onSubmit={() => {
-          setLayout({ hidden: false });
-          onTab("opinion");
-        }}
-        percent={percent}
-        objectTotal={areas.length}
-        onPeek={() => setPeek(true)}
-        statusRef={setStatus}
-        storage={
-          <>
-            <RemoteSlideTag note={storageNote} />
-            <CopyIntoParfocal slideId={slideId} note={storageNote} canUpload={owner} />
-          </>
-        }
-      />
-      {load ? <CasePatientBanner load={load} /> : null}
-      <RemoteSlideOffline note={storageNote} />
-      <div ref={setBanner} data-testid="viewer-banner" className="empty:hidden" />
-      <div className="min-h-0 flex-1">
+    <main
+      className="flex h-screen flex-col bg-chrome text-fg"
+      data-testid={focus ? "focus-mode" : undefined}
+    >
+      {focus ? null : (
+        <LiveTopBar
+          projectId={projectId}
+          slideId={slideId}
+          load={load}
+          task={taskDetail}
+          workspace={workspace}
+          onWorkspace={onWorkspace}
+          onOpenSlide={onOpenSlide}
+          onSubmit={() => {
+            setLayout({ hidden: false });
+            onTab("opinion");
+          }}
+          percent={percent}
+          objectTotal={areas.length}
+          onPeek={() => setPeek(true)}
+          statusRef={setStatus}
+          storage={
+            <>
+              <RemoteSlideTag note={storageNote} />
+              <CopyIntoParfocal slideId={slideId} note={storageNote} canUpload={owner} />
+            </>
+          }
+        />
+      )}
+      {focus ? null : (
+        <>
+          {load ? <CasePatientBanner load={load} /> : null}
+          <RemoteSlideOffline note={storageNote} />
+          <div ref={setBanner} data-testid="viewer-banner" className="empty:hidden" />
+        </>
+      )}
+      <div className="relative min-h-0 flex-1">
+        {focus ? (
+          <div
+            data-testid="focus-notices"
+            className="pointer-events-none absolute top-14 left-1/2 z-20 flex w-[min(760px,calc(100%-2rem))] -translate-x-1/2 flex-col items-center gap-2"
+          >
+            <div
+              ref={setStatus}
+              data-testid="focus-save-status"
+              className="pointer-events-auto empty:hidden"
+            />
+            <div
+              ref={setBanner}
+              data-testid="viewer-banner"
+              className="pointer-events-auto w-full empty:hidden"
+            />
+          </div>
+        ) : null}
         <NoticeSlotsProvider value={notices}>
           <SlideStage
             key={slideId}
@@ -203,6 +264,7 @@ export function EngineViewer({
             onStorage={(note) => setStorage({ slideId, note })}
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
             inspector={inspector}
+            bare={focus}
           />
         </NoticeSlotsProvider>
       </div>

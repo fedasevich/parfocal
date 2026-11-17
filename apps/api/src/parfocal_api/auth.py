@@ -4,7 +4,7 @@ import html
 import json
 import secrets
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, cast
 from urllib.parse import urlencode
@@ -33,12 +33,18 @@ from parfocal_api.problems import (
     TooManyRequestsError,
     UnauthenticatedError,
 )
-from parfocal_api.rate_limits import RateLimits, counted_wait, limits_for, seconds_to_wait
+from parfocal_api.rate_limits import (
+    BatchedCounts,
+    RateLimits,
+    counted_wait,
+    limits_for,
+    seconds_to_wait,
+)
 from parfocal_api.second_factor import (
     SecondFactorRequiredError,
     factors_of,
     has_second_factor,
-    requires_two_factors,
+    two_factors_in,
 )
 from parfocal_api.sso import (
     connection_for_domain,
@@ -60,6 +66,7 @@ from parfocal_api.tables import (
     session_policies,
     sessions,
     users,
+    workspace_settings,
 )
 from parfocal_api.token_keys import decoded_key, listed_keys
 from parfocal_api.zitadel_login import ZitadelLogin
@@ -128,6 +135,7 @@ class AuthState:
     public_origin: str
     limits: RateLimits
     login: ZitadelLogin | None = None
+    counts: BatchedCounts = field(default_factory=BatchedCounts)
 
 
 class Session(BaseModel):
@@ -227,12 +235,23 @@ async def refresh_once(state: AuthState, session_id: str) -> bool:
         return await refresh_session(connection, state, session_id, loaded["tokens"])
 
 
+@dataclass(frozen=True)
+class Claimed:
+    allowed: dict[str, int]
+    counts: dict[str, int] | None
+
+
+def claim_counts(state: AuthState, counted: Principal | None) -> Claimed:
+    allowed = {} if counted is None else limits_for(counted, state.limits)
+    return Claimed(allowed, state.counts.claim(allowed) if allowed else None)
+
+
 async def touch_and_count(
     connection: AsyncConnection,
     state: AuthState,
     session_id: str,
     seen_due: bool,
-    counted: Principal | None,
+    claimed: Claimed,
 ) -> int | None:
     if seen_due:
         await connection.execute(
@@ -243,17 +262,19 @@ async def touch_and_count(
             )
             .values(last_seen_at=func.now())
         )
-    allowed = {} if counted is None else limits_for(counted, state.limits)
-    return await counted_wait(connection, allowed)
+    if claimed.counts is None:
+        return None
+    return await counted_wait(connection, claimed.allowed, claimed.counts, state.counts)
 
 
 async def record_use(
     state: AuthState, session_id: str, seen_due: bool, counted: Principal | None
 ) -> int | None:
-    if not seen_due and (counted is None or not limits_for(counted, state.limits)):
+    claimed = claim_counts(state, counted)
+    if not seen_due and claimed.counts is None:
         return None
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
-        return await touch_and_count(connection, state, session_id, seen_due, counted)
+        return await touch_and_count(connection, state, session_id, seen_due, claimed)
 
 
 @dataclass(frozen=True)
@@ -282,10 +303,14 @@ def checked_session_query(session_id: str) -> Select[Any]:
             exists().where(platform_operators.c.subject == sessions.c.subject).label("operator"),
             memberships.c.role.label("member_role"),
             memberships.c.admin_rights.label("member_admin_rights"),
+            workspace_settings.c["values"].label("workspace_values"),
         )
         .select_from(
             sessions.outerjoin(
                 session_policies, session_policies.c.tenant_id == sessions.c.active_tenant_id
+            )
+            .outerjoin(
+                workspace_settings, workspace_settings.c.tenant_id == sessions.c.active_tenant_id
             )
             .outerjoin(users, users.c.subject == sessions.c.subject)
             .outerjoin(
@@ -443,9 +468,7 @@ async def authenticate(request: Request) -> Principal:
                 and resolved.active_tenant_id is not None
                 and not has_second_factor(checked.tokens)
             ):
-                needs_second_factor = await requires_two_factors(
-                    connection, resolved.active_tenant_id
-                )
+                needs_second_factor = two_factors_in(row.workspace_values)
             if (
                 resolved is not None
                 and not needs_refresh
@@ -453,7 +476,11 @@ async def authenticate(request: Request) -> Principal:
                 and (resolved.operator or resolved.user_id is not None)
             ):
                 wait = await touch_and_count(
-                    connection, state, session_id, seen_due, principal_of(resolved)
+                    connection,
+                    state,
+                    session_id,
+                    seen_due,
+                    claim_counts(state, principal_of(resolved)),
                 )
                 counted_already = True
     if locked:

@@ -7,15 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CellSpot, nearestOpen, panned } from "../review/cell-jump.ts";
 import { cellShapes, regionShapes } from "../review/slide-geometry.ts";
+import { overviewImageOf } from "../review/slide-picture.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { chosenType, typeAnswers, typeChoice, typeOptions } from "../review/type-bar.ts";
 import { cellCentre, TypeBar, useCellArrows } from "../review/type-bar.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
-import { lookUrl } from "../thumbnails.ts";
 import { overviewExtent } from "./minimap-scenes.ts";
 import type { ToolSession } from "./tool-session.tsx";
-
-const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
 const fadedCell = () => ({ stroke: "#ffffff", opacity: 0.12 });
 
@@ -162,7 +160,7 @@ export function CellFocus({
               ) : null}
               <SmartMinimap
                 size="pip"
-                image={overviewImage}
+                image={overviewImageOf(session.slideId)}
                 extent={overviewExtent}
                 title={null}
                 data-testid="cell-locator"

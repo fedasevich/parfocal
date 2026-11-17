@@ -74,6 +74,6 @@ test("the full viewer draws the slide with the Viv canvas and the engine object 
 
 test("the cell view stays on the still", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=grid`);
-  await expect(page.locator('[data-slot="slide-still"] svg image')).toHaveCount(1);
+  await expect(page.locator('[data-slot="slide-still"] svg').first()).toBeVisible();
   await expect(engine(page)).toHaveCount(0);
 });

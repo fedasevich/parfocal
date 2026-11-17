@@ -15,7 +15,7 @@ const problem = (status: number, title: string, code: string, errors?: FieldIssu
 
 const unreadable = () => problem(422, "That request is not complete", "invalid-request");
 
-const landing = (returnTo: string | null): SignInLanding => ({
+export const landing = (returnTo: string | null): SignInLanding => ({
   return_to: returnTo !== null && isSafeReturnPath(returnTo) ? returnTo : defaultReturnPath(),
 });
 
@@ -83,6 +83,12 @@ const newPasskeySchema = z.object({
 
 const passkeyHandlers = (): RequestHandler[] => [
   http.get("*/api/auth/passkeys", () => HttpResponse.json(savedPasskeys)),
+  http.delete("*/api/auth/passkeys/:passkeyId", ({ params }) => {
+    const at = savedPasskeys.findIndex((item) => item.id === params.passkeyId);
+    if (at < 0) return problem(404, "Not found", "not-found");
+    savedPasskeys.splice(at, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
   http.post("*/api/auth/passkeys/registration", () => {
     const creation: PasskeyCreation = {
       passkey: `passkey-${savedPasskeys.length + 1}`,

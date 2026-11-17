@@ -62,6 +62,8 @@ import type {
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
+import { pagedCellSource } from "./paged-cell-source.ts";
+import { toResultSetDetail } from "./project-handlers.ts";
 import {
   addedOn,
   addObject,
@@ -568,6 +570,43 @@ const submittedStates = (taskId: string, slideId: string): TaskStates => ({
   ],
 });
 
+const fakeSetCells = pagedCellSource({ cells: 900, classes: 2 });
+
+const cellBytes = (bytes: Uint8Array<ArrayBuffer>, kind: string) =>
+  new HttpResponse(bytes, { headers: { "Content-Type": `application/vnd.parfocal.${kind}` } });
+
+const fakeSetRegions = [
+  {
+    number: 1,
+    kind: "region",
+    class_index: 0,
+    score: 0.92,
+    outline: [40, 40, 400, 40, 400, 300, 40, 300],
+  },
+  {
+    number: 2,
+    kind: "region",
+    class_index: 1,
+    score: 0.61,
+    outline: [500, 120, 760, 120, 700, 420],
+  },
+];
+
+const insideBox = (outline: readonly number[], query: URLSearchParams) => {
+  const edge = (name: string, fallback: number) => {
+    const value = query.get(name);
+    return value === null ? fallback : Number(value);
+  };
+  const xs = outline.filter((_, index) => index % 2 === 0);
+  const ys = outline.filter((_, index) => index % 2 === 1);
+  return (
+    Math.max(...xs) >= edge("left", -Infinity) &&
+    Math.min(...xs) <= edge("right", Infinity) &&
+    Math.max(...ys) >= edge("top", -Infinity) &&
+    Math.min(...ys) <= edge("bottom", Infinity)
+  );
+};
+
 const aiHidden = () =>
   problem(403, "ai-hidden", "The AI stays hidden on this slide until you record your first read");
 
@@ -583,12 +622,36 @@ export function reviewHandlers(): RequestHandler[] {
       toSlideAgreement(String(params.taskId), String(params.slideId)),
     ),
     ...displayChoiceHandlers((taskId) => taskById(taskId)?.code ?? ""),
-    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) =>
-      aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined,
-    ),
+    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) => {
+      if (aiHiddenForResultSet(params.resultSetId)) return aiHidden();
+      const detail = toResultSetDetail(params.resultSetId);
+      return detail === undefined ? undefined : HttpResponse.json(detail);
+    }),
     http.get<{ resultSetId: string }>(
       "*/api/result-sets/:resultSetId/cell-summary",
-      ({ params }) => (aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined),
+      async ({ params }) =>
+        aiHiddenForResultSet(params.resultSetId)
+          ? aiHidden()
+          : cellBytes(await fakeSetCells.summary(), "cell-summary"),
+    ),
+    http.get<{ resultSetId: string; chunk: string }>(
+      "*/api/result-sets/:resultSetId/cell-chunks/:chunk",
+      async ({ params }) =>
+        aiHiddenForResultSet(params.resultSetId)
+          ? aiHidden()
+          : cellBytes(await fakeSetCells.chunk(Number(params.chunk)), "cell-chunk"),
+    ),
+    http.get<{ resultSetId: string }>(
+      "*/api/result-sets/:resultSetId/regions",
+      ({ params, request }) =>
+        aiHiddenForResultSet(params.resultSetId)
+          ? aiHidden()
+          : HttpResponse.json({
+              regions: fakeSetRegions.filter((region) =>
+                insideBox(region.outline, new URL(request.url).searchParams),
+              ),
+              truncated: false,
+            }),
     ),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
       if (params.taskId === annotateStubTaskId)

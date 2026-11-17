@@ -53,6 +53,7 @@ class PasskeyZitadel(FakeZitadel):
     passkeys: dict[str, dict[str, Passkey]] = field(default_factory=dict[str, dict[str, Passkey]])
     challenges: dict[str, tuple[str, str]] = field(default_factory=dict[str, tuple[str, str]])
     domains: list[str] = field(default_factory=list[str])
+    removed: list[str] = field(default_factory=list[str])
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
         parts = request.url.path.strip("/").split("/")
@@ -62,7 +63,7 @@ class PasskeyZitadel(FakeZitadel):
         body: dict[str, Any] = json.loads(request.content or b"{}")
         match parts:
             case ["v2", "users", user_id, "passkeys", *rest]:
-                return self.passkey_call(user_id, rest, body)
+                return self.passkey_call(user_id, rest, body, request.method)
             case ["v2", "sessions"] if "challenges" in body:
                 return self.challenge(body)
             case ["v2", "sessions", session_id] if request.method == "PATCH":
@@ -70,7 +71,9 @@ class PasskeyZitadel(FakeZitadel):
             case _:
                 return super().handle(request)
 
-    def passkey_call(self, user_id: str, rest: list[str], body: dict[str, Any]) -> httpx2.Response:
+    def passkey_call(
+        self, user_id: str, rest: list[str], body: dict[str, Any], method: str
+    ) -> httpx2.Response:
         owned = self.passkeys.setdefault(user_id, {})
         match rest:
             case ["registration_link"]:
@@ -95,6 +98,11 @@ class PasskeyZitadel(FakeZitadel):
                     if item.credential_id
                 ]
                 return httpx2.Response(200, json={"result": result})
+            case [passkey_id] if method == "DELETE":
+                if owned.pop(passkey_id, None) is None:
+                    return httpx2.Response(404, json={})
+                self.removed.append(passkey_id)
+                return httpx2.Response(200, json={})
             case [passkey_id]:
                 passkey = owned.get(passkey_id)
                 credential = body["publicKeyCredential"]
@@ -287,3 +295,33 @@ def test_finishing_needs_the_challenge_from_the_same_browser(visitor: Visitor) -
     )
     assert refused.status_code == 400
     assert refused.json()["code"] == "passkey-expired"
+
+
+def test_a_saved_passkey_can_be_removed_and_then_no_longer_signs_in(visitor: Visitor) -> None:
+    zitadel = zitadel_of(visitor)
+    zitadel.add_user("known@example.test", PASSWORD, verified=True)
+    password_sign_in(visitor, "known@example.test")
+    saved = save_passkey(visitor).json()
+    removed = visitor.client.delete(f"/api/auth/passkeys/{saved['id']}")
+    assert removed.status_code == 204, removed.text
+    assert zitadel.removed == [saved["id"]]
+    assert visitor.client.get("/api/auth/passkeys").json() == []
+    visitor.client.cookies.clear()
+    gone = visitor.client.post("/api/auth/passkey-sign-in", json={"email": "known@example.test"})
+    assert gone.status_code == 404
+
+
+def test_only_the_callers_own_passkeys_can_be_removed(visitor: Visitor) -> None:
+    zitadel = zitadel_of(visitor)
+    zitadel.add_user("owner@example.test", PASSWORD, verified=True)
+    other = zitadel.add_user("other@example.test", PASSWORD, verified=True)
+    zitadel.passkeys[other] = {"theirs": Passkey("c", "Their phone", "cred-theirs")}
+    password_sign_in(visitor, "owner@example.test")
+    missing = visitor.client.delete("/api/auth/passkeys/theirs")
+    assert missing.status_code == 404
+    assert zitadel.removed == []
+    assert "theirs" in zitadel.passkeys[other]
+
+
+def test_removing_a_passkey_needs_a_session(visitor: Visitor) -> None:
+    assert visitor.client.delete("/api/auth/passkeys/anything").status_code == 401

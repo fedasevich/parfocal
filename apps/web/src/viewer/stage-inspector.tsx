@@ -7,7 +7,7 @@ import { type ViewerTab, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import type { InspectorSection } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { ThreadFocusRequest } from "./thread-focus.tsx";
-import type { ViewerEngine } from "./viewer-engine.ts";
+import type { SlideOverview, ViewerEngine } from "./viewer-engine.ts";
 
 type StageInspectorProps = {
   layout: InspectorLayout;
@@ -32,6 +32,7 @@ export type StageInspectorLink = {
 export type StageSession = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
+  readonly overview: (signal?: AbortSignal) => Promise<SlideOverview | null>;
   readonly armTool: (tool: string) => void;
 };
 

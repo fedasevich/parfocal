@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AnnotateTaskView } from "../screens/annotate-task/annotate-task-view.tsx";
+import { AnnotateTaskView } from "../fake-api/annotate-task/annotate-task-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { annotateTaskSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";

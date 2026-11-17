@@ -4610,6 +4610,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The bucket `parfocal-dev` holds the deployed app's slides with only the best-effort `eeur` hint, and a jurisdiction cannot be added to an existing bucket ([server region options](results/2026-11-17-server-region-options.md)). Create a bucket in the `eu` jurisdiction through OpenTofu, copy the objects, point the Worker binding (`jurisdiction: "eu"`), the S3 endpoint `<account>.eu.r2.cloudflarestorage.com` and bootstrap's config at it, and keep the old bucket until the owner's separate yes. While both exist storage costs about $0.43 a month more, so ask the owner before the copy.
   Done when the deployed app reads and writes slides in the EU bucket, `wrangler r2 bucket info` shows the `eu` jurisdiction, and a deploy test covers the binding and the endpoint.
   Size: M.
+- [ ] OPS-033 · Home under 500 ms and a slide opens in under 3 s on the deployed app
+  After OPS-031 (the API and database moved to the EU), a walk of app.parfocal.eu on 2026-11-17 measured `/api/me/home` at 2.4 s with 59 queries, `/api/me/notification-preferences` at 29 queries and `/api/me/review-tasks` at 32, most calls at 9 to 12 queries in 2 transactions, one web container about 7 times slower than the other on `/api/status`, and a slide that showed "Loading the slide" for more than 10 s. Batch the N+1 reads in those three routes, drop the pool pre-ping round trips if safe with Neon's suspend, log the container's region and cloud in the request log line to explain the slow container, and profile the slide open path from tile access to `levels.json` to the first tiles and fix its biggest wait.
+  Done when db tests pin the query counts of the three routes to a handful each, the request log line carries the region, and a result file has before and after numbers from curl and Server-Timing.
+  Depends on: OPS-031.
+  Size: M.
 
 ---
 
@@ -4852,6 +4857,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Run the cell and region models the ML worker already wraps (for example the InstanSeg cells model and the tumour region model) on CPU or the Mac's GPU over small crops of a few fixture slides that open in the deployed viewer, store the outputs as result files in the project's import formats, and make the showcase seed import them instead of `showcase_shapes.py` where real results exist. Keep the run small enough for a 24 GB Mac and record the timings.
   Done when a result file reports which models ran on which crops with the times, the seed tests pass with the real result files, and after the next reset the demo project shows the real cells and regions in the deployed viewer.
   Depends on TEST-046. Size: M.
+
+- [x] TEST-048 · Format gallery slides open on the deployed app
+  On 2026-11-17 the 39 Format gallery slides on app.parfocal.eu, such as Argos-1.avs in "Scanner format comparison", showed "You cannot open this slide". No deploy or reset step ever ran the TEST-037 publisher (seeded fixture slides get their own folders), so the seed fell back to `fixtures/<file>`, the API signed the folder `fixtures/` and the edge refused it as malformed. Make Reset production publish the `fixture-slides/` folders before it empties anything, make a deployed seed fail loudly instead of falling back, publish the folders once and point the existing rows at them.
+  Done when a test proves every seeded `original_key` yields a folder the edge's shared-folder rule accepts, the reset test proves the publish runs before the truncate, and the tile of a gallery slide on app.parfocal.eu answers 206.
+  Depends on TEST-037. Size: S.
 
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.

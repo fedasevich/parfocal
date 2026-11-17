@@ -17,6 +17,7 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { PitchLayout } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
+import { PasswordResetScene } from "./password-reset-forms.tsx";
 import type { SignInScene } from "./scenes.ts";
 import { EmailForm, type Flow, SsoForm } from "./sign-in-forms.tsx";
 
@@ -107,6 +108,14 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
         lastSaved="just now"
         onSignIn={() => setSigningInAgain(true)}
       />
+    );
+  }
+
+  if (scene === "forgot" || scene === "reset") {
+    return (
+      <PitchLayout>
+        <PasswordResetScene flow={flow} scene={scene} />
+      </PitchLayout>
     );
   }
 
