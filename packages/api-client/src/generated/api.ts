@@ -8217,6 +8217,7 @@ export type GetSlideNeighboursParams = {
   status?: State | null;
   result_set?: string | null;
   reviewer_id?: string | null;
+  storage?: SlideStorage | null;
   q?: string | null;
 };
 

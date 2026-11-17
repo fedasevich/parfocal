@@ -31058,6 +31058,22 @@
             }
           },
           {
+            "name": "storage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SlideStorage"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Storage"
+            }
+          },
+          {
             "name": "q",
             "in": "query",
             "required": false,
