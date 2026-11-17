@@ -299,9 +299,28 @@ describe("the tile gateway", () => {
     assert.deepEqual(bucket.reads, [`${folder}original.svs`]);
   });
 
+  test("a seeded fixture slide reads its own copy in the fixture slides folder", async () => {
+    const bucket = lab();
+    const folder = "fixture-slides/CMU-1-Small-Region-svs/";
+    bucket.put(`${folder}original.svs`, bytesOf(SIZE, 5));
+    const token = await tokenFor({ folder, restricted: [] });
+    const response = await request(bucket, ORIGINAL, token, "bytes=0-99");
+    assert.equal(response.status, 206);
+    assert.deepEqual(new Uint8Array(await response.arrayBuffer()), bytesOf(SIZE, 5).slice(0, 100));
+    assert.deepEqual(bucket.reads, [`${folder}original.svs`]);
+  });
+
   test("a token naming a folder outside the sample files is malformed", async () => {
     const key = await signingKey(SECRET);
-    for (const folder of [`t/${OTHER_TENANT}/s/${OTHER_SLIDE}/`, "samples/camelyon16/../x/", ""]) {
+    for (const folder of [
+      `t/${OTHER_TENANT}/s/${OTHER_SLIDE}/`,
+      "samples/camelyon16/../x/",
+      "fixtures/",
+      "fixture-slides/",
+      "fixture-slides/a.svs/",
+      "fixture-slides/../t/",
+      "",
+    ]) {
       assert.deepEqual(await verifyCapability(await tokenFor({ folder }), key, NOW), {
         ok: false,
         reason: "malformed",

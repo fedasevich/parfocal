@@ -19,7 +19,7 @@ export type CapabilityCheck =
 const TOKEN_VERSION = 1;
 const SPACE = 0x20;
 const STORED_ETAG = /^[A-Za-z0-9-]{1,80}$/;
-const SHARED_FOLDER = /^samples\/camelyon16\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/$/;
+const SHARED_FOLDER = /^(?:samples\/camelyon16|fixture-slides)\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/$/;
 const encoder = new TextEncoder();
 
 export function fromBase64Url(text: string): Uint8Array<ArrayBuffer> | null {

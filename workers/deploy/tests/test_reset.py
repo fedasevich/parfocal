@@ -19,11 +19,13 @@ RESET_STORAGE = StorageLocation(
 KEPT_KEYS = (
     "fixtures/CMU-1-Small-Region.svs",
     "fixtures/manifest.json",
+    "fixture-slides/CMU-1-Small-Region-svs/original.svs",
+    "fixture-slides/CMU-1-Small-Region-svs/levels.json",
     "samples/camelyon16/tumor/tumor_001.tif",
     "tenants/t/not-a-tenant.txt",
 )
 TENANT_KEYS = ("t/one/slides/two/original.svs", "t/three/results/four.geojson")
-UNSEEDED_FORMATS = {Format.OME_TIFF}
+UNSEEDED_FORMATS: set[Format] = set()
 
 
 async def stored_keys_after_reset() -> tuple[int, list[str]]:
