@@ -1,7 +1,8 @@
 # 0357. The view map asks the interactive lane for one view tile at a time
 
 - Date: 2026-11-16
-- Status: Accepted, who may ask amended by [ADR 0365](0365-anyone-who-reads-a-slide-maps-a-view.md) (anyone who can read a slide maps a view)
+- Status: Accepted
+- Amended by: [ADR 0365](0365-anyone-who-reads-a-slide-maps-a-view.md) (anyone who can read a slide maps a view) changes who may ask
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: AITUM-009 (Map this view asks the server for its tiles). Builds on AITUM-004 (view-scoped map on demand), AITUM-008 (the tumor map runs as a job and the API serves it), [ADR 0354](0354-the-api-warms-the-embedder-with-the-modal-sdk.md) (the API warms the embedder with the Modal SDK) and [ADR 0355](0355-the-tumor-map-job-shares-the-detector-good-pool.md) (the tumor map job shares the detector-good T4 pool).
 

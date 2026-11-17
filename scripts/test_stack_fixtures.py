@@ -1,5 +1,11 @@
 import json
+import unittest
 from pathlib import Path
+
+try:
+    import httpx2  # noqa: F401
+except ImportError as missing:
+    raise unittest.SkipTest("needs the uv workspace") from missing
 
 from stack_fixtures import MANIFEST, fixtures_dir, missing_locally, small_files
 

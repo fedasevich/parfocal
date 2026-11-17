@@ -56,6 +56,7 @@ from parfocal_api.tables import (
     invitations,
     job_units,
     jobs,
+    lab_model_projects,
     lab_models,
     legal_holds,
     memberships,
@@ -133,6 +134,7 @@ OPEN_OPERATIONS = {
         "public",
     ),
     "getSession": "signed-in",
+    "lockSession": "signed-in",
     "reportViewerFrames": "signed-in",
     "getMe": "signed-in",
     "updateMe": "signed-in",
@@ -793,6 +795,16 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/tenant/models/{seeded(w, 'lab-model')}/test"
     ),
     "showModel": lambda _: Call("DELETE", "/api/tenant/hidden-models/hovernet"),
+    "addLabModelProject": lambda w: Call(
+        "PUT", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.spare_project}"
+    ),
+    "removeLabModelProject": lambda w: Call(
+        "DELETE", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.spare_project}"
+    ),
+    "confirmLabModelTileSharing": lambda w: Call(
+        "POST", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.project}/tile-sharing"
+    ),
+    "listProjectLabModels": lambda w: Call("GET", f"/api/projects/{w.project}/lab-models"),
     "changeProjectPrivacy": lambda w: Call(
         "POST",
         f"/api/projects/{w.spare_project}/privacy-mode",
@@ -2271,6 +2283,13 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     taxonomy="sentinel-node",
                     class_map=[{"sent": "a", "becomes": None}],
                     who_can_run="researchers",
+                )
+            )
+            await connection.execute(
+                insert(lab_model_projects).values(
+                    lab_model_id=uuid.uuid5(tenant_id, "lab-model"),
+                    project_id=case.project_id,
+                    tenant_id=tenant_id,
                 )
             )
             queued_run, paused_run, failed_run = await seed_runs(
