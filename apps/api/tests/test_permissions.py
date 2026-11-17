@@ -53,6 +53,7 @@ from parfocal_api.tables import (
     clinical_report_versions,
     clinical_reports,
     display_presets,
+    import_sources,
     invitations,
     job_units,
     jobs,
@@ -418,6 +419,8 @@ LINK_OPERATIONS = frozenset(
         "testLabModel",
         "connectLabModel",
         "testConnectedLabModel",
+        "saveImportSource",
+        "changeImportSource",
     }
 )
 
@@ -810,6 +813,32 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/tenant/models/{seeded(w, 'lab-model')}/test"
     ),
     "showModel": lambda _: Call("DELETE", "/api/tenant/hidden-models/hovernet"),
+    "listImportSources": lambda _: Call("GET", "/api/tenant/import-sources"),
+    "saveImportSource": lambda _: Call(
+        "POST",
+        "/api/tenant/import-sources",
+        {
+            "name": f"matrix-{uuid.uuid4().hex[:8]}",
+            "kind": "https",
+            "address": LINK_SITE.url("/scans/"),
+            "header_name": "X-Api-Key",
+            "secret": "matrix-secret",
+        },
+    ),
+    "changeImportSource": lambda w: Call(
+        "PUT",
+        f"/api/tenant/import-sources/{seeded(w, 'import-source')}",
+        {
+            "name": "seeded-import-source",
+            "kind": "https",
+            "address": LINK_SITE.url("/scans/"),
+            "header_name": "X-Api-Key",
+            "secret": "matrix-secret",
+        },
+    ),
+    "deleteImportSource": lambda w: Call(
+        "DELETE", f"/api/tenant/import-sources/{seeded(w, 'spare-import-source')}"
+    ),
     "addLabModelProject": lambda w: Call(
         "PUT", f"/api/tenant/models/{seeded(w, 'lab-model')}/projects/{w.spare_project}"
     ),
@@ -2305,6 +2334,17 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     who_can_run="researchers",
                 )
             )
+            for source in ("import-source", "spare-import-source"):
+                await connection.execute(
+                    insert(import_sources).values(
+                        id=uuid.uuid5(tenant_id, source),
+                        tenant_id=tenant_id,
+                        name=f"seeded-{source}",
+                        kind="https",
+                        address=LINK_SITE.url("/scans/"),
+                        created_by_user_id=colleague,
+                    )
+                )
             await connection.execute(
                 insert(lab_model_projects).values(
                     lab_model_id=uuid.uuid5(tenant_id, "lab-model"),
