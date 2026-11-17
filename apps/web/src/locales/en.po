@@ -4970,10 +4970,6 @@ msgstr "Click to move"
 msgid "Click to open the whole slide (or hold Z)"
 msgstr "Click to open the whole slide (or hold Z)"
 
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Click to zoom in and out"
-msgstr "Click to zoom in and out"
-
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Click, then press the new key"
 msgstr "Click, then press the new key"
@@ -16537,11 +16533,6 @@ msgstr "Try another word, for example zoom, names or preset."
 msgid "Try it"
 msgstr "Try it"
 
-#. placeholder {0}: device?.keys[1]?.[1].toLowerCase() ?? "the wheel"
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Try it. Click to zoom, as with {0}."
-msgstr "Try it. Click to zoom, as with {0}."
-
 #: src/shell/connection-banner.tsx
 msgid "Trying again..."
 msgstr "Trying again..."
@@ -18057,10 +18048,6 @@ msgstr "Zoom out (−)"
 #: src/viewer/start-run-panel.tsx
 msgid "Zoom to a part of the slide first"
 msgstr "Zoom to a part of the slide first"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Zoomed to 10×. Click again to zoom out."
-msgstr "Zoomed to 10×. Click again to zoom out."
 
 #: src/screens/settings/settings-screen.tsx
 msgid "µm and mm"
