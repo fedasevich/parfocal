@@ -1311,7 +1311,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-001, INGEST-003, INGEST-021. Refs mock 4 "From a link", kit W36, kit Flow 7, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: L.
 
-- [ ] INGEST-026 · Saved import sources
+- [x] INGEST-026 · Saved import sources
   Researchers with admin rights save a source once (name, type, address, credentials kept in the secret store), and users pick it when importing. Credentials never reach the browser. In v1 the types are HTTPS and object storage. DICOMweb, SFTP and scanner shares wait for their later epics.
   Done when permission tests restrict editing to researchers with admin rights, a test confirms credentials never appear in API responses or logs, and E2E imports from a saved source.
   Depends on INGEST-025, SEC-013. Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -4320,7 +4320,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs kit Usability test plan, [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] EXP-009 · Study session replay
+- [x] EXP-009 · Study session replay
   In study mode only, record the screen as a DOM recording plus a pointer and key log, with every text field masked. Serve the recorder from our own origin under a neutral name and warn on the start screen when it did not load, because ad blockers block session-recording scripts by URL. Upload in batches at task boundaries and every minute, not every few seconds, because each upload is a storage write. Results show a replay with task chips, a strip of task spans, dead clicks and reloads, and a pointer-only fallback that rebuilds screens from the logged state when the DOM recording is missing.
   Done when E2E records a scripted session and replays it with task jumps, a blocked recorder produces the start-screen warning and a working pointer-only replay, and a test confirms no unmasked text reaches the recording.
   Depends on EXP-008. Refs [`poc/study/`](https://github.com/fedasevich/pathlogy-poc/tree/master/study), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -4474,10 +4474,14 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Switch the remaining areas: the model run defaults and moves, the lab model connection, the evaluation and clinical reports with co-sign, the team workload, the admin console reads and the invite preview. The sign-in drafts that Zitadel replaced are deleted with their screens' dead branches instead of built. Build each route from stored data so it returns what the draft's Zod schema says, add API tests for every route, regenerate `openapi.json` and the client, move the operations out of `packages/api-client/src/draft`, keep the fake answering the now-real operations, and update the area map in `scripts/draft-calls.ts` and the table in `knowledge/draft-calls.md`. Part of OPS-017 (switch each area from the fake to the real API).
   Done when `node scripts/draft-calls.ts` prints a total of zero, API tests cover each new route, and no screen the showcase seed shows calls a draft.
   Depends on OPS-023 (project and upload area on the real API). Size: L.
-- [ ] OPS-025 · The viewer typing tool on a GPU typer runner
+- [x] OPS-025 · The viewer typing tool on a GPU typer runner
   OPS-022 (viewer area on the real API) left `typeOutlines` as the one viewer draft, because no GPU runner types outlines. Add a typer runner to the GPU pool in `workers/ml/src/parfocal_ml/modal_pool.py` that types the outlines it is sent with `parfocal_ml/typer.py`. Add `POST /api/slides/{slide_id}/outline-types`, which reaches the runner through the warm gate the way `view_maps.py` does. It needs slide reading, refuses while the AI is hidden, answers 503 when no worker answers, and is audited. Then delete the draft. Part of OPS-017 (switch each area from the fake to the real API).
   Done when the viewer draft count is 0, API tests cover the route with a fake runner, and an ML test covers the runner.
   Depends on OPS-022. Size: M.
+- [ ] OPS-026 · Export and publish the HoVer-NeXt typer for the viewer
+  OPS-025 (the viewer typing tool on a GPU typer runner) built the `outline-types` runner, but no HoVer-NeXt `typer.onnx` export exists in model storage, so the route answers 503 `typer-offline` in production. Export the typer head to ONNX on the Mac, check it against the PyTorch output on a small fixture, and publish it with its checksum where the embedder pool loads models, through the same path as the other published artifacts.
+  Done when a parity test passes within the tolerance the other exports use, the artifact and checksum are published, and the deployed route types one outline on a seeded slide.
+  Depends on OPS-025. Size: M.
 - [ ] OPS-020 · Pin storage, database and Modal functions per region
   SEC-005 (data residency enforcement) makes every job claim respect the tenant region once `PARFOCAL_RESIDENCY=enforced` is set ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch). Before the switch goes on, deploy the ingest function and the GPU pools with a Modal `region` per tenant region, give EU tenants an R2 bucket in the EU jurisdiction with their objects copied, move or add a Neon project in an EU region, and pin Durable Objects to the EU jurisdiction. Each step raises spend or replaces production resources, so each is asked of the owner. This is the PHI trigger of [ADR 0003](adr/0003-pilot-platform-architecture.md) (pilot platform architecture).
   Done when production runs with the switch on, a worker in each region logs its `MODAL_REGION`, and an EU tenant's slide, rows and GPU work stay in the EU as checked from each provider's console.
@@ -5492,10 +5496,15 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests show the refusal without a confirmation, the audit event on confirming and the reset on removal, and a browser test covers the confirmation dialog.
   Depends on JOBS-000. Size: S.
 
-- [ ] JOBS-009 · Run a connected lab model
+- [x] JOBS-009 · Run a connected lab model
   [ADR 0363](adr/0363-the-model-run-contract-with-parfocal-and-lab-endpoints.md) (the model run contract with Parfocal and lab endpoints) found that a lab model connected by JOBS-005 cannot run: run start knows only Parfocal models and accepts an unknown name when a version is given, and the ML worker has no detector that calls an endpoint. Make run start resolve a lab model by its connection, refuse it with `lab-model-not-allowed` when the project does not allow it or JOBS-008 (confirm tile sharing) has no confirmation, and with `lab-model-changed` when the endpoint changed since the run was planned. Add a worker detector that sends one tile per call through `call_endpoint` and stores what the endpoint returns as a result set.
   Done when API tests cover both refusals and an unknown name, and a worker test runs a lab model against a fake endpoint into a stored result set.
   Depends on JOBS-008. Size: M.
+
+- [ ] JOBS-010 · The GPU pool runs a lab model stage
+  JOBS-009 (run a connected lab model) built the run start checks and `LabDetector` in `workers/ml/src/parfocal_ml/lab_detector.py`, but no deployed worker picks a lab model stage: nothing reads the lab model row, opens its sealed token or calls the detector when the stage starts. Wire the stage into the worker that runs model stages, reading the row and opening the token with the workspace key the way INGEST-026 (saved import sources) opens a source credential, and store region objects as well as cells.
+  Done when a worker test runs a queued lab model stage end to end against a fake endpoint with a sealed token and stores cells and regions, and the token never appears in logs or stored rows.
+  Depends on JOBS-009. Size: M.
 
 ## 48 REMOTE · Remote sources, webhooks and events
 
