@@ -2,6 +2,25 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.5.1 (2026-11-17)
+
+### Performance
+
+- OPS-030: Add Server-Timing with database time, queries and transactions
+- OPS-030: Check the session in one read and count in the same transaction
+
+### Docs
+
+- SHELL-023: Log Fable's recommendation for one-time notes
+- OPS-030: Count the three round trips of the pool ping
+- OPS-030: Log the merge and local database tests
+
+### Other
+
+- OPS-030: Add and claim OPS-030, warm API calls under 300 ms
+- SHELL-022: Add SHELL-022, SHELL-023, SET-015 and TEST-047 from the owner's review
+- OPS-030: Note the next step on the board
+
 ## v0.5.0 (2026-11-17)
 
 ### Features
