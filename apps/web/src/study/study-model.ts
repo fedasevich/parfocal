@@ -23,6 +23,17 @@ export const taskCheckSchema = z
 
 export type TaskCheck = z.infer<typeof taskCheckSchema>;
 
+export const taskGuardSchema = z.object({
+  stayOn: z
+    .array(
+      z.string().min(1).refine(validPattern, { message: "guard.stayOn is not a valid pattern" }),
+    )
+    .min(1),
+  where: z.string().min(1),
+});
+
+export type TaskGuard = z.infer<typeof taskGuardSchema>;
+
 export const studyTaskSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -31,6 +42,7 @@ export const studyTaskSchema = z.object({
   startPath: z.string().startsWith("/").optional(),
   targetSeconds: z.number().int().positive().optional(),
   check: taskCheckSchema.optional(),
+  guard: taskGuardSchema.optional(),
 });
 
 export type StudyTask = z.infer<typeof studyTaskSchema>;
@@ -52,12 +64,24 @@ export type TaskResult = {
   auto?: boolean | undefined;
 };
 
+export type BlockedAttempt = { taskId: string; at: number; to: string };
+
 export type StudySession = {
   id: string;
   round: number;
   participant: string;
   startedAt: number;
   results: TaskResult[];
+  blocks: BlockedAttempt[];
+};
+
+export const taskWindowName = "parfocal-study-task";
+
+export type ActiveGuard = {
+  sessionId: string;
+  taskId: string;
+  where: string;
+  stayOn: string[];
 };
 
 export type Round = { number: number; tasks: StudyTask[] };
@@ -68,6 +92,10 @@ export const studySlide = "tumor_044";
 
 const liveSlide = "/projects/{project}/slides/{slide}/live?task={task}&as=DH";
 const cellFindings = "/projects/{taskProject}/slides/{taskSlide}?task={task}&object=T1·C145";
+const cellGuard: TaskGuard = {
+  stayOn: ["^/projects/{taskProject}/slides/{taskSlide}(/|$)"],
+  where: "This task happens on the slide's cell findings screen. Stay on it until you are done.",
+};
 const areaNav = '[data-testid="area-nav"]';
 
 export const defaultTasks: StudyTask[] = [
@@ -106,6 +134,7 @@ export const defaultTasks: StudyTask[] = [
     instruction: "Open the zone where the AI is least sure.",
     startPath: cellFindings,
     targetSeconds: 45,
+    guard: cellGuard,
   },
   {
     id: "t5",
@@ -113,6 +142,7 @@ export const defaultTasks: StudyTask[] = [
     instruction: "Answer any four cells the AI is unsure about.",
     startPath: cellFindings,
     targetSeconds: 120,
+    guard: cellGuard,
   },
   {
     id: "t6",
@@ -121,6 +151,7 @@ export const defaultTasks: StudyTask[] = [
     startPath: cellFindings,
     targetSeconds: 60,
     check: { text: ": disagree" },
+    guard: cellGuard,
   },
   {
     id: "t7",
@@ -178,6 +209,25 @@ const fillTokens = (template: string, task: StudyTask, context: StudyContext) =>
 
 export const resolveStartPath = (task: StudyTask, context: StudyContext): string | undefined =>
   task.startPath === undefined ? undefined : fillTokens(task.startPath, task, context);
+
+export function resolveGuard(
+  task: StudyTask,
+  sessionId: string,
+  context: StudyContext,
+): ActiveGuard | undefined {
+  if (task.guard === undefined) return undefined;
+  const stayOn = [
+    ...task.guard.stayOn,
+    ...(task.check?.path === undefined ? [] : [task.check.path]),
+  ]
+    .map((pattern) => fillTokens(pattern, task, context))
+    .filter((pattern): pattern is string => pattern !== undefined);
+  if (stayOn.length === 0) return undefined;
+  return { sessionId, taskId: task.id, where: task.guard.where, stayOn };
+}
+
+export const isBlocked = (guard: ActiveGuard, pathname: string): boolean =>
+  !guard.stayOn.some((pattern) => new RegExp(pattern).test(pathname));
 
 export type PageProbe = {
   url: string;
@@ -280,6 +330,7 @@ export function startSession(
     participant,
     startedAt: now,
     results: [],
+    blocks: [],
   };
   return { ...state, sessions: [...state.sessions, session] };
 }
@@ -295,6 +346,25 @@ export function recordResult(state: StudyState, sessionId: string, result: TaskR
   };
 }
 
+export function recordBlock(
+  state: StudyState,
+  sessionId: string,
+  attempt: BlockedAttempt,
+): StudyState {
+  return {
+    ...state,
+    sessions: state.sessions.map((session) =>
+      session.id === sessionId &&
+      !session.blocks.some((known) => known.taskId === attempt.taskId && known.at === attempt.at)
+        ? { ...session, blocks: [...session.blocks, attempt] }
+        : session,
+    ),
+  };
+}
+
+export const blockedCount = (session: StudySession, taskId: string): number =>
+  session.blocks.filter((attempt) => attempt.taskId === taskId).length;
+
 export const nextTask = (round: Round, session: StudySession): StudyTask | undefined =>
   round.tasks.find((task) => !session.results.some((result) => result.taskId === task.id));
 
@@ -306,6 +376,7 @@ export type TaskSummary = {
   sessions: number;
   completed: number;
   medianSeconds: number | undefined;
+  blocked: number;
 };
 
 const median = (values: number[]): number | undefined => {
@@ -331,6 +402,7 @@ export function summariseRound(state: StudyState, round: number): TaskSummary[] 
       sessions: results.length,
       completed: done.length,
       medianSeconds: median(done.map(durationSeconds)),
+      blocked: sessions.reduce((sum, session) => sum + blockedCount(session, task.id), 0),
     };
   });
 }
@@ -343,6 +415,7 @@ const stateSchema = z.object({
       round: z.number().int().positive(),
       participant: z.string(),
       startedAt: z.number(),
+      blocks: z.array(z.object({ taskId: z.string(), at: z.number(), to: z.string() })).default([]),
       results: z.array(
         z.object({
           taskId: z.string(),

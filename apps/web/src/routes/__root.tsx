@@ -16,6 +16,7 @@ import { useReadingReport } from "../shell/reading-report.ts";
 import { SettingsKey } from "../shell/settings-key.tsx";
 import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
+import { StudyGuardHost } from "../study/study-guard-host.tsx";
 import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 
 const TourHost = lazy(() => import("../help/tour-host.tsx"));
@@ -52,6 +53,7 @@ function Root() {
         <SettingsKey />
         <LabKey />
         <FeedbackHost />
+        <StudyGuardHost />
         <Suspense fallback={null}>
           <TourHost />
         </Suspense>
