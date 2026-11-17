@@ -7,6 +7,7 @@ const root = new URL("../src/", import.meta.url).pathname;
 
 const outsideProduction = [
   /^fake-api\//,
+  /^flow-map\//,
   /prototype-scenes\.ts$/,
   /^routes\/prototype\.tsx$/,
   /\.stories\.tsx?$/,
