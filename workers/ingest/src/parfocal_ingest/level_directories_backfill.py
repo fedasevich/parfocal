@@ -24,7 +24,14 @@ from parfocal_common.ingest import folder_of, slide_prefix
 from parfocal_common.jobs import PLATFORM
 from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.settings import load_settings
-from parfocal_ingest.level_directories import directory_offsets, is_located, layout_of, located
+from parfocal_ingest.level_directories import (
+    Directory,
+    directory_of,
+    directory_offsets,
+    is_current,
+    layout_of,
+    located,
+)
 from parfocal_ingest.parse_jobs import LEVELS_OUTPUT
 from parfocal_ingest.workflow import TILE_INDEX_NAME
 
@@ -66,15 +73,23 @@ def unpacked(body: bytes) -> Any:
     return json.loads(gzip.decompress(body) if body[:2] == b"\x1f\x8b" else body)
 
 
-async def stored_sizes(
+async def stored_directories(
     store: ObjectStore, original_key: str, tiles: Mapping[str, Any]
-) -> dict[int, int]:
+) -> dict[int, Directory]:
     layout = layout_of(tiles)
     offsets = directory_offsets(tiles)
     heads = await asyncio.gather(
         *(store.get_range(original_key, offset, layout.count_bytes) for offset in offsets)
     )
-    return {offset: layout.size(head) for offset, head in zip(offsets, heads, strict=True)}
+    tables = await asyncio.gather(
+        *(
+            store.get_range(original_key, offset, layout.size(head))
+            for offset, head in zip(offsets, heads, strict=True)
+        )
+    )
+    return {
+        offset: directory_of(layout, table) for offset, table in zip(offsets, tables, strict=True)
+    }
 
 
 async def locate_levels(store: ObjectStore, slide: StoredSlide) -> str:
@@ -84,14 +99,16 @@ async def locate_levels(store: ObjectStore, slide: StoredSlide) -> str:
     if table_body is None or tiles_body is None:
         return SKIPPED
     table = unpacked(table_body)
-    if is_located(table):
+    if is_current(table):
         return PRESENT
     tiles = unpacked(tiles_body)
-    sizes = (
-        {} if slide.original_key is None else await stored_sizes(store, slide.original_key, tiles)
+    directories = (
+        {}
+        if slide.original_key is None
+        else await stored_directories(store, slide.original_key, tiles)
     )
-    result = located(table, tiles, sizes)
-    if not is_located(result):
+    result = located(table, tiles, directories)
+    if not is_current(result):
         return SKIPPED
     body = json.dumps(result, separators=(",", ":")).encode()
     await store.put_object(table_key, body, "application/json")

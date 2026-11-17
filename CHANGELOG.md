@@ -2,6 +2,35 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.13.4 (2026-11-17)
+
+### Performance
+
+- TILES-012: Read a located slide's directories and tile tables in one round
+
+### Refactoring
+
+- TEST-049: Move the demo result sets and decisions out of the showcase seed
+
+### Tests
+
+- TILES-012: Pin the parallel reads and the primed source's network fallbacks
+
+### Other
+
+- TILES-012: Merge main
+
+## v0.13.3 (2026-11-17)
+
+### Fixes
+
+- TEST-050: Repair three web tests left failing after the engine viewer move
+- VIEW-077: Focus mode opens with no error responses from the fake API
+
+### Docs
+
+- TEST-049: Tick after the deployed smoke passes
+
 ## v0.13.2 (2026-11-17)
 
 ### Fixes
