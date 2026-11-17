@@ -1,10 +1,11 @@
+import logging
 import uuid
 from collections.abc import Iterator
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 from db_support import ApiAs
-from idp_support import Browser, signed_in_browser
+from idp_support import ISSUER, Browser, signed_in_browser
 
 from parfocal_api.principals import MemberPrincipal, ServicePrincipal
 from parfocal_api.tables import Role
@@ -126,18 +127,33 @@ def test_unlocking_asks_for_the_password_and_replaces_the_locked_session(
     assert count == [(1,)]
 
 
-def test_a_passkey_login_names_the_user_to_the_identity_provider(browser: Browser) -> None:
-    started = browser.client.get(
+def test_a_passkey_login_names_the_user_only_to_the_identity_provider(
+    browser: Browser, caplog: pytest.LogCaptureFixture
+) -> None:
+    email = "anna.passkey@lab.test"
+    caplog.set_level(logging.DEBUG)
+    started = browser.client.post(
         "/api/auth/login",
-        params={"return_to": "/", "login_hint": " anna@lab.test ", "reauth": "true"},
+        json={"return_to": "/cases/S26-0009?z=2", "login_hint": f" {email} ", "reauth": True},
     )
-    query = parse_qs(urlparse(started.headers["location"]).query)
-    assert query["login_hint"] == ["anna@lab.test"]
+    assert started.status_code == 200
+    assert email not in str(started.request.url)
+    location = urlparse(started.json()["location"])
+    assert f"{location.scheme}://{location.netloc}" == ISSUER.rstrip("/")
+    query = parse_qs(location.query)
+    assert query["login_hint"] == [email]
     assert query["prompt"] == ["login"]
-    plain = browser.client.get("/api/auth/login", params={"return_to": "/", "login_hint": ""})
-    assert "login_hint" not in parse_qs(urlparse(plain.headers["location"]).query)
-    too_long = browser.client.get("/api/auth/login", params={"login_hint": "a" * 321})
+    assert "parfocal_login" in started.headers["set-cookie"]
+    assert email not in caplog.text
+    hop = browser.login("/cases/S26-0009?z=2")
+    assert "/cases/S26-0009?z=2" in hop.text
+    assert email not in caplog.text
+    plain = browser.client.post("/api/auth/login", json={"login_hint": " "})
+    assert "login_hint" not in parse_qs(urlparse(plain.json()["location"]).query)
+    too_long = browser.client.post("/api/auth/login", json={"login_hint": "a" * 321})
     assert too_long.status_code == 422
+    hinted_get = browser.client.get("/api/auth/login", params={"login_hint": email})
+    assert "login_hint" not in parse_qs(urlparse(hinted_get.headers["location"]).query)
 
 
 def test_the_workspace_sets_the_session_lifetime(browser: Browser) -> None:

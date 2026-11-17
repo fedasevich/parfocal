@@ -11,9 +11,9 @@ from urllib.parse import urlencode
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from pydantic import BaseModel, StringConstraints
 from sqlalchemy import delete, exists, func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
@@ -566,17 +566,35 @@ async def redirect_to_identity(
 
 @router.get("/login", include_in_schema=False)
 async def start_login(
-    request: Request,
-    return_to: str = "/",
-    reauth: bool = False,
-    login_hint: Annotated[str | None, Query(max_length=LOGIN_HINT_LENGTH)] = None,
+    request: Request, return_to: str = "/", reauth: bool = False
 ) -> RedirectResponse:
-    return await redirect_to_identity(
+    return await redirect_to_identity(request, return_to, prompt="login" if reauth else None)
+
+
+class NamedLogin(BaseModel):
+    return_to: Annotated[str, StringConstraints(max_length=2048)] = "/"
+    reauth: bool = False
+    login_hint: Annotated[str, StringConstraints(max_length=LOGIN_HINT_LENGTH)] = ""
+
+
+class LoginLocation(BaseModel):
+    location: str
+
+
+@router.post("/login", include_in_schema=False)
+async def start_named_login(attempt: NamedLogin, request: Request) -> JSONResponse:
+    started = await redirect_to_identity(
         request,
-        return_to,
-        prompt="login" if reauth else None,
-        login_hint=login_hint.strip() if login_hint else None,
+        attempt.return_to,
+        prompt="login" if attempt.reauth else None,
+        login_hint=attempt.login_hint.strip() or None,
     )
+    response = JSONResponse(
+        LoginLocation(location=started.headers["location"]).model_dump(),
+        headers={"Cache-Control": "no-store"},
+    )
+    response.headers.append("set-cookie", started.headers["set-cookie"])
+    return response
 
 
 @router.get("/second-factor", include_in_schema=False)

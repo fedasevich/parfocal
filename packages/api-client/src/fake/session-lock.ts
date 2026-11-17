@@ -38,6 +38,15 @@ export function sessionLockHandlers() {
       resetFakeSessionLock();
       return redirectTo(safeReturnPath(new URL(request.url).searchParams.get("return_to")));
     }),
+    http.post("*/api/auth/login", async ({ request }) => {
+      resetFakeSessionLock();
+      const body: unknown = await request.json().catch(() => null);
+      const returnTo =
+        typeof body === "object" && body !== null && "return_to" in body
+          ? String(body.return_to)
+          : null;
+      return HttpResponse.json({ location: safeReturnPath(returnTo) });
+    }),
     http.get("*/api/auth/logout", () => {
       resetFakeSessionLock();
       return redirectTo("/sign-in");

@@ -57,6 +57,14 @@ export function inApiContainer(module: string, args: string[], input?: string): 
   ).trim();
 }
 
+export function apiLogs(): string {
+  return execFileSync(
+    "docker",
+    ["compose", "-f", "compose.yaml", "-f", "infra/local/stack.compose.yaml", "logs", "server"],
+    { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+}
+
 export async function signIn(page: Page, deepLink: string): Promise<void> {
   await page.goto(`/sign-in?return_to=${encodeURIComponent(deepLink)}`);
   await page.getByLabel("Work email").fill(username);

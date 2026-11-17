@@ -8,6 +8,7 @@ import {
   redirectPauseMs,
   signedOutRedirect,
   signedOutTarget,
+  startNamedLogin,
 } from "../src/session/sign-in-redirect.ts";
 
 function fakeBrowser(pathname: string, search = "") {
@@ -45,12 +46,38 @@ test("a signed-out visitor goes to the app's sign-in page with the page to come 
   assert.equal(loginUrl("/"), "/api/auth/login?return_to=%2F");
 });
 
-test("a passkey sign-in names the typed email to the identity provider", () => {
-  assert.equal(
-    loginUrl("/cases", " anna@lab.test "),
-    "/api/auth/login?return_to=%2Fcases&login_hint=anna%40lab.test",
+test("a passkey login sends the email in the body and never in our URL", async () => {
+  const sent: { url: string; body: string }[] = [];
+  const visited: string[] = [];
+  const send = (url: string, init: RequestInit) => {
+    sent.push({ url, body: typeof init.body === "string" ? init.body : "" });
+    return Promise.resolve(
+      Response.json({ location: "https://id.test/authorize?login_hint=anna%40lab.test" }),
+    );
+  };
+  await startNamedLogin(
+    { returnTo: "/cases", loginHint: " anna@lab.test ", reauth: true },
+    (url) => visited.push(url),
+    send,
   );
-  assert.equal(loginUrl("/", "  "), "/api/auth/login?return_to=%2F");
+  assert.equal(sent[0]?.url, "/api/auth/login");
+  assert.deepEqual(JSON.parse(sent[0]?.body ?? "{}"), {
+    return_to: "/cases",
+    reauth: true,
+    login_hint: "anna@lab.test",
+  });
+  assert.deepEqual(visited, ["https://id.test/authorize?login_hint=anna%40lab.test"]);
+});
+
+test("a failed passkey login falls back to the plain login without the email", async () => {
+  const visited: string[] = [];
+  const failing = () => Promise.reject(new Error("offline"));
+  await startNamedLogin(
+    { returnTo: "/", loginHint: "anna@lab.test" },
+    (url) => visited.push(url),
+    failing,
+  );
+  assert.deepEqual(visited, ["/api/auth/login?return_to=%2F"]);
 });
 
 test("public pages never redirect", () => {

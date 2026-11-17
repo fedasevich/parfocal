@@ -111,11 +111,16 @@ test("a passkey unlocks a locked slide to the same camera position", async ({ pa
   const lock = page.getByRole("region", { name: "Locked" });
   await expect(lock).toBeVisible();
 
-  const login = page.waitForRequest((request) => request.url().includes("/api/auth/login"));
+  const login = page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().includes("/api/auth/login"),
+  );
   await lock.getByRole("button", { name: "Unlock with a passkey" }).click();
-  const started = new URL((await login).url());
-  expect(started.searchParams.get("reauth")).toBe("true");
-  expect(started.searchParams.get("login_hint")).toMatch(/@/);
+  const started = await login;
+  const body = started.postDataJSON() as { reauth: boolean; login_hint: string };
+  expect(body.reauth).toBe(true);
+  expect(body.login_hint).toMatch(/@/);
+  expect(started.url()).not.toContain(encodeURIComponent(body.login_hint));
+  expect(started.url()).not.toContain(body.login_hint);
   await expect(lock).toBeHidden();
   await expect(page).toHaveURL(lockedAt);
   await expect
@@ -130,10 +135,18 @@ test("a passkey unlocks a locked slide to the same camera position", async ({ pa
 test("sign in with a passkey starts the login with the typed email", async ({ page }) => {
   await page.goto("/sign-in?return_to=%2Fprojects");
   await page.getByLabel("Work email").fill("anna@lab.test");
-  const login = page.waitForRequest((request) => request.url().includes("/api/auth/login"));
+  const requested: string[] = [];
+  page.on("request", (request) => requested.push(request.url()));
+  const login = page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().includes("/api/auth/login"),
+  );
   await page.getByRole("button", { name: "Sign in with a passkey" }).click();
-  const started = new URL((await login).url());
-  expect(started.searchParams.get("login_hint")).toBe("anna@lab.test");
-  expect(started.searchParams.get("return_to")).toBe("/projects");
+  const started = await login;
+  expect(started.postDataJSON()).toMatchObject({
+    login_hint: "anna@lab.test",
+    return_to: "/projects",
+  });
   await expect(page).toHaveURL(/\/projects$/);
+  const ours = requested.filter((url) => new URL(url).origin === new URL(page.url()).origin);
+  expect(ours.filter((url) => url.includes("anna") || url.includes("lab.test"))).toEqual([]);
 });

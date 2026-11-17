@@ -1,6 +1,6 @@
 import { ApiError, getPasswordSignIn } from "@parfocal/api-client";
 import type { FakeApiMode } from "../config.ts";
-import { isSessionLocked, locksAt } from "./lock-rules.ts";
+import { isSessionLocked, locksAt, reauthUrl } from "./lock-rules.ts";
 
 export const redirectPauseMs = 10_000;
 const lastRedirectKey = "parfocal.sign-in-redirect-at";
@@ -9,11 +9,44 @@ export function isSignedOut(error: unknown): boolean {
   return error instanceof ApiError && error.kind === "unauthenticated" && !isSessionLocked(error);
 }
 
-export function loginUrl(returnTo: string, loginHint?: string | null): string {
-  const query = new URLSearchParams({ return_to: returnTo });
-  const hint = loginHint?.trim();
-  if (hint) query.set("login_hint", hint);
-  return `/api/auth/login?${query.toString()}`;
+export function loginUrl(returnTo: string): string {
+  return `/api/auth/login?${new URLSearchParams({ return_to: returnTo }).toString()}`;
+}
+
+export type NamedLogin = { returnTo: string; loginHint?: string | null; reauth?: boolean };
+
+type Send = (url: string, init: RequestInit) => Promise<Response>;
+
+function plainLoginUrl(login: NamedLogin): string {
+  return login.reauth ? reauthUrl(login.returnTo) : loginUrl(login.returnTo);
+}
+
+function locationOf(body: unknown): string | null {
+  if (typeof body !== "object" || body === null || !("location" in body)) return null;
+  return typeof body.location === "string" ? body.location : null;
+}
+
+export async function startNamedLogin(
+  login: NamedLogin,
+  go: (url: string) => void = (url) => window.location.assign(url),
+  send: Send = (url, init) => fetch(url, init),
+): Promise<void> {
+  try {
+    const response = await send("/api/auth/login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        return_to: login.returnTo,
+        reauth: login.reauth ?? false,
+        login_hint: login.loginHint?.trim() ?? "",
+      }),
+    });
+    const location = response.ok ? locationOf(await response.json()) : null;
+    go(location ?? plainLoginUrl(login));
+  } catch {
+    go(plainLoginUrl(login));
+  }
 }
 
 export function signInPageUrl(returnTo: string): string {

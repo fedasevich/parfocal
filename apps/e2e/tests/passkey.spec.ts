@@ -1,6 +1,15 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./harness.ts";
-import { call, idOf, readSession, sql, username, zitadelAdmin, zitadelIssuer } from "./support.ts";
+import {
+  apiLogs,
+  call,
+  idOf,
+  readSession,
+  sql,
+  username,
+  zitadelAdmin,
+  zitadelIssuer,
+} from "./support.ts";
 
 interface ZitadelUser {
   userId: string;
@@ -113,12 +122,21 @@ test("a passkey signs in and unlocks a locked slide to the same camera position"
     await expect(lock).toBeVisible();
     const lockedAt = page.url();
     expect(new URL(lockedAt).searchParams.get("z")).not.toBeNull();
-    const login = page.waitForRequest((request) => request.url().includes("/api/auth/login"));
+    const login = page.waitForRequest(
+      (request) => request.method() === "POST" && request.url().includes("/api/auth/login"),
+    );
     await lock.getByRole("button", { name: "Unlock with a passkey" }).click();
-    expect(new URL((await login).url()).searchParams.get("login_hint")).toBe(username);
+    const started = await login;
+    expect(started.postDataJSON()).toMatchObject({ login_hint: username, reauth: true });
+    expect(started.url()).not.toContain(username);
+    expect(started.url()).not.toContain(encodeURIComponent(username));
     await answerWithPasskey(page);
     await expect(page).toHaveURL(lockedAt, { timeout: 30_000 });
     await expect(page.getByRole("region", { name: "Locked" })).toBeHidden();
+    const logs = apiLogs();
+    expect(logs).toContain("/api/auth/login");
+    expect(logs).not.toContain(username);
+    expect(logs).not.toContain(encodeURIComponent(username));
   } finally {
     await forgetPasskeys(user.userId);
   }

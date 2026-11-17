@@ -38,10 +38,8 @@ export function idleCheckDue(lastInput: number, at: number, idleMinutes: number)
   return at - lastInput >= idleMinutes * 60_000;
 }
 
-export function reauthUrl(returnTo: string, loginHint?: string | null): string {
+export function reauthUrl(returnTo: string): string {
   const query = new URLSearchParams({ reauth: "true", return_to: returnTo });
-  const hint = loginHint?.trim();
-  if (hint) query.set("login_hint", hint);
   return `/api/auth/login?${query.toString()}`;
 }
 
