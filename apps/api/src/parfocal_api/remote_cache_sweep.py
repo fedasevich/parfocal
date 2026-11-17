@@ -45,8 +45,8 @@ async def run_once(settings: ApiSettings) -> int:
         async with httpx2.AsyncClient(timeout=30) as http:
             store = ObjectStore(settings.storage(), http)
             removed = await sweep_every_workspace(engine, store, now)
-            await notice_every_workspace(engine, now)
             keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
+            await notice_every_workspace(engine, now, keyring, settings)
             await scan_every_workspace(engine, keyring, settings, store, now)
         return removed
     finally:

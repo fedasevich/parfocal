@@ -24,8 +24,10 @@ import type {
   ReviewTask,
   SlideArea,
   SourceListing,
+  SourceWatchDraft,
   Template,
   UploadBatch,
+  WatchedFolder,
 } from "../generated/api.ts";
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
@@ -329,11 +331,56 @@ export const toSourceListing = (address: string): SourceListing => {
   };
 };
 
+const watchedSources = new Map<string, string | null>();
+
+const watchedFolderOf = (projectId: string): WatchedFolder => {
+  const sourceId = watchedSources.get(projectId);
+  if (sourceId === undefined) return projectImports.watchedFolder;
+  const source = savedSources.find((item) => item.id === sourceId);
+  if (source === undefined) return { address: "", slides: "", results: "", every: "", on: false };
+  return {
+    address: `${source.name}, ${source.host}`,
+    slides: "Copy into Parfocal",
+    results: projectImports.watchedFolder.results,
+    every: "1 hour",
+    on: true,
+  };
+};
+
+const watchHandlers = (): RequestHandler[] => [
+  http.put("*/api/projects/:projectId/watch", async ({ params, request }) => {
+    const { source_id } = (await request.json()) as SourceWatchDraft;
+    const source = savedSources.find((item) => item.id === source_id);
+    if (source === undefined) {
+      return HttpResponse.json(
+        { type: "about:blank", title: "Not found", status: 404, code: "not-found" },
+        { status: 404 },
+      );
+    }
+    const project = projectOf(String(params.projectId));
+    watchedSources.set(project.id, source_id);
+    return HttpResponse.json({
+      project_id: project.id,
+      source_id,
+      source_name: source.name,
+      host: source.host,
+      every_minutes: 60,
+      files_seen: 0,
+      scanned_at: null,
+      created_at: "2026-11-17T09:00:00Z",
+    });
+  }),
+  http.delete("*/api/projects/:projectId/watch", ({ params }) => {
+    watchedSources.set(projectOf(String(params.projectId)).id, null);
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
 export const toProjectImports = (idOrCode: string): ProjectImports => {
   const project = projectOf(idOrCode);
   return {
     project_id: project.id,
-    watched_folder: projectImports.watchedFolder,
+    watched_folder: watchedFolderOf(project.id),
     webhook: {
       url: projectImports.webhook.url,
       secret_end: projectImports.webhook.secretEnd,
@@ -443,6 +490,7 @@ export function projectHandlers(): RequestHandler[] {
     }),
     getGetProjectOverviewMockHandler(({ params }) => toProjectOverview(String(params.projectId))),
     getGetUploadBatchMockHandler(({ params }) => toUploadBatch(String(params.projectId))),
+    ...watchHandlers(),
     getGetProjectImportsMockHandler(({ params }) => toProjectImports(String(params.projectId))),
     getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params.projectId))),
     getListReviewTasksMockHandler(({ params }) => toProjectReviewTasks(String(params.projectId))),

@@ -1,6 +1,8 @@
 import logging
 import uuid
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
+from typing import Any
 
 from sqlalchemy import ColumnElement, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
@@ -8,16 +10,25 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from parfocal_api.event_delivery import admins_of
 from parfocal_api.notification_catalogue import TargetKind
 from parfocal_api.notifications import notify
-from parfocal_api.remote_reads import OFFLINE_AFTER_FAILURES
+from parfocal_api.remote_reads import (
+    OFFLINE_AFTER_FAILURES,
+    RemoteSlideChangedError,
+    probed_offline,
+)
+from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import NotificationKind, SlideStorage, import_sources, slides, tenants
 from parfocal_common.db import DatabaseScope, scoped_transaction
+from parfocal_common.envelope import MasterKeyring
 from parfocal_common.jobs import PLATFORM
+from parfocal_common.link_fetch import policy_of
 
 DOWN_AFTER = timedelta(minutes=15)
 TITLE = "Connected source down"
 ACTION = "Open storage"
 
 logger = logging.getLogger("parfocal.api.remote")
+
+type Reachable = Callable[[AsyncConnection, uuid.UUID, datetime], Awaitable[bool]]
 
 
 def detail_of(name: str) -> str:
@@ -27,8 +38,50 @@ def detail_of(name: str) -> str:
     )
 
 
+def reachable_with(keyring: MasterKeyring, settings: ApiSettings) -> Reachable:
+    async def reachable(connection: AsyncConnection, source_id: uuid.UUID, now: datetime) -> bool:
+        row: Any = (
+            await connection.execute(
+                select(slides)
+                .where(
+                    slides.c.source_id == source_id,
+                    slides.c.deleted_at.is_(None),
+                    slides.c.storage == SlideStorage.REMOTE,
+                    slides.c.remote_failing_since.is_not(None),
+                )
+                .order_by(slides.c.remote_failing_since)
+                .limit(1)
+            )
+        ).first()
+        if row is None:
+            return False
+        try:
+            offline = await probed_offline(
+                connection,
+                keyring,
+                row,
+                row.id,
+                policy_of(settings.link_trusted_origins),
+                settings.link_read_seconds,
+            )
+        except RemoteSlideChangedError:
+            offline = False
+        if not offline:
+            await connection.execute(
+                update(slides)
+                .where(slides.c.source_id == source_id)
+                .values(remote_failures=0, remote_failing_since=None)
+            )
+        return not offline
+
+    return reachable
+
+
 async def notice_outages(
-    connection: AsyncConnection, now: datetime, only: ColumnElement[bool] | None = None
+    connection: AsyncConnection,
+    now: datetime,
+    only: ColumnElement[bool] | None = None,
+    reachable: Reachable | None = None,
 ) -> int:
     since = func.min(slides.c.remote_failing_since)
     failing = (
@@ -47,6 +100,8 @@ async def notice_outages(
         failing = failing.where(only)
     noticed = 0
     for outage in (await connection.execute(failing)).all():
+        if reachable is not None and await reachable(connection, outage.source_id, now):
+            continue
         claimed = (
             await connection.execute(
                 update(import_sources)
@@ -88,13 +143,17 @@ async def notice_if_down(connection: AsyncConnection, slide_id: uuid.UUID, now: 
     return await notice_outages(connection, now, slides.c.source_id == source_id)
 
 
-async def notice_every_workspace(engine: AsyncEngine, now: datetime) -> int:
+async def notice_every_workspace(
+    engine: AsyncEngine, now: datetime, keyring: MasterKeyring, settings: ApiSettings
+) -> int:
     async with scoped_transaction(engine, PLATFORM) as connection:
         tenant_ids = list(await connection.scalars(select(tenants.c.id).order_by(tenants.c.id)))
     noticed = 0
     for tenant_id in tenant_ids:
         async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant_id)) as connection:
-            noticed += await notice_outages(connection, now)
+            noticed += await notice_outages(
+                connection, now, reachable=reachable_with(keyring, settings)
+            )
     if noticed:
         logger.info("connected sources down", extra={"count": noticed})
     return noticed

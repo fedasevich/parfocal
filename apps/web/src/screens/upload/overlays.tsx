@@ -5,40 +5,16 @@ import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
 import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@parfocal/ui/components/select";
 import { Switch } from "@parfocal/ui/components/switch";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { okData } from "../placeholder.tsx";
-import { FileList } from "./parts.tsx";
+import { Field, FileList, ReadOnly } from "./parts.tsx";
+import { WatchedFolder } from "./watched-folder.tsx";
 
 type ImportsTab = "watch" | "hook" | "out" | "api";
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid gap-1.5">
-      <span className="text-body-sm font-semibold text-fg">{label}</span>
-      {children}
-    </div>
-  );
-}
-
-function ReadOnly({ value, end }: { value: string; end?: ReactNode }) {
-  return (
-    <div className="flex min-h-8 items-center gap-2 rounded-ctl border border-line-strong bg-surf-field px-2.5">
-      <span className="min-w-0 flex-1 truncate font-mono text-body-sm text-fg">{value}</span>
-      {end}
-    </div>
-  );
-}
 
 const codeClass =
   "m-0 overflow-hidden rounded-[10px] border border-line bg-chrome px-4 py-3.5 font-mono text-caption leading-[1.6] whitespace-pre text-fg-dim";
@@ -57,63 +33,12 @@ function ImportsBody({
   const [example, setExample] = useState(false);
   const [fresh, setFresh] = useState(false);
   if (tab === "watch") {
-    const folder = imports.watched_folder;
     return (
-      <Zone
-        title={t`Watched folder`}
-        sub={t`New files in this folder arrive in ${projectCode} on their own, checked like an upload.`}
-        end={<Switch defaultChecked={folder.on} aria-label={t`Watched folder on`} />}
-      >
-        <Field label={t`Folder`}>
-          <ReadOnly
-            value={folder.address}
-            end={
-              <StatusTag tone="ok">
-                <Trans>Connected</Trans>
-              </StatusTag>
-            }
-          />
-        </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t`New slides`}>
-            <Select defaultValue={folder.slides}>
-              <SelectTrigger aria-label={t`New slides`} className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Read in place">Read in place</SelectItem>
-                <SelectItem value="Copy into Parfocal">Copy into Parfocal</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label={t`Result files`}>
-            <Select defaultValue={folder.results}>
-              <SelectTrigger aria-label={t`Result files`} className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={folder.results}>{folder.results}</SelectItem>
-                <SelectItem value="Same name only">Same name only</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
-        <div className="flex items-center gap-2.5 text-body-sm text-fg">
-          <span>
-            <Trans>Look for new files every</Trans>
-          </span>
-          <Select defaultValue={folder.every}>
-            <SelectTrigger size="sm" aria-label={t`How often`} className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5 minutes">5 minutes</SelectItem>
-              <SelectItem value={folder.every}>{folder.every}</SelectItem>
-              <SelectItem value="1 hour">1 hour</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </Zone>
+      <WatchedFolder
+        projectId={imports.project_id}
+        projectCode={projectCode}
+        folder={imports.watched_folder}
+      />
     );
   }
   if (tab === "hook") {
