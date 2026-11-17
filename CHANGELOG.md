@@ -2,6 +2,40 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.16.0 (2026-11-17)
+
+### Features
+
+- VIEW-078: Queue a crop job when a review order is written
+
+### Performance
+
+- OPS-028: Snapshot the database driver and HTTP stack and log web startup phases
+
+### Docs
+
+- VIEW-078: Add the review claim file
+
+### Build and CI
+
+- TEST-020: Run the seeded formats smoke spec in the deploy browser smoke
+
+## v0.15.0 (2026-11-17)
+
+### Features
+
+- VIEW-075: Cut cell crops in the parse sandbox and serve them per slide
+- VIEW-075: Show stored cell crops in a cells grid on the engine stage
+
+### Docs
+
+- OPS-033: Add deployed v0.13.5 numbers and close the task
+- OPS-033: Release the claim file
+- TILES-012: Tick after the deployed waterfall shows two rounds
+- IAM-033: Prove reset email delivery on the deployed app, tick IAM-032 and IAM-033
+- TEST-019: Triage the review queue, tick 15 tasks and note what the rest still needs
+- VIEW-075: Log real cell crops, add VIEW-078 and move to review
+
 ## v0.14.0 (2026-11-17)
 
 ### Features

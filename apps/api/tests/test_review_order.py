@@ -10,6 +10,7 @@ from order_support import retry_order, run_orders
 from test_annotations import make_slide
 from workspace_support import join_project, make_project, make_workspace, owner
 
+from parfocal_api.cell_crop_jobs import CROP_PLAN
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.review_order import ORDER_PLAN
 from parfocal_api.review_order_job import REVIEW_ORDER
@@ -19,6 +20,7 @@ from parfocal_common.chunk_store import chunk_key
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.scope import sample
 from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
+from parfocal_ingest.cell_crop_job import CELL_CROPS
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -464,6 +466,32 @@ def test_the_queued_plan_matches_the_worker_workflow() -> None:
         [step.name for step in REVIEW_ORDER.steps],
     )
     assert "parfocal_api.review_order_job:REVIEW_ORDER" in DEFAULT_WORKFLOWS
+
+
+def crop_jobs_of(database: str, slide: uuid.UUID) -> list[tuple[Any, ...]]:
+    return owner(
+        database,
+        "SELECT status FROM jobs "
+        f"WHERE kind = 'cell-crops' AND input->>'slide_id' = '{slide}' ORDER BY created_at",
+    )
+
+
+def test_a_written_order_queues_one_crop_job_for_its_slide(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    assert crop_jobs_of(database, o.slides[0]) == [("queued",)]
+    task = made(api, o, {"kind": "inside-rois"})
+    run_orders(database, o.tenant)
+    assert shared(api, o, task)
+    assert crop_jobs_of(database, o.slides[0]) == [("queued",)]
+    assert crop_jobs_of(database, o.slides[1]) == [("queued",)]
+
+
+def test_the_crop_plan_matches_the_worker_workflow() -> None:
+    assert (CROP_PLAN.kind, [step.name for step in CROP_PLAN.steps]) == (
+        CELL_CROPS.kind,
+        [step.name for step in CELL_CROPS.steps],
+    )
+    assert "parfocal_ingest.cell_crop_job:CELL_CROPS" in DEFAULT_WORKFLOWS
 
 
 def typer_run(database: str, o: Ordered, typer: str, version: str, views: int) -> uuid.UUID:
