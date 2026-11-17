@@ -3,12 +3,14 @@ import { test } from "node:test";
 import { ApiError } from "@parfocal/api-client";
 import { cameraFromSearch, cameraToSearch } from "../src/screens/review/camera-search.ts";
 import {
+  canShowLock,
   createActivityThrottle,
   idleCheckDue,
   isSessionLocked,
   locksAt,
   needsSecondFactor,
   reauthUrl,
+  sessionGate,
 } from "../src/session/lock-rules.ts";
 
 const locked = new ApiError("unauthenticated", 401, {
@@ -86,4 +88,31 @@ test("the camera survives a trip through the search keys", () => {
     y: 1,
     z: 20,
   });
+});
+
+const signedOut = new ApiError("unauthenticated", 401);
+
+test("no screen opens on a guarded page until the API says who is signed in", () => {
+  const waiting = { guarded: true, known: false, settled: false, error: null };
+  assert.equal(sessionGate(waiting), "wait");
+  assert.equal(sessionGate({ ...waiting, known: true, settled: true }), "open");
+  assert.equal(sessionGate({ ...waiting, guarded: false }), "open");
+});
+
+test("a 401 before anyone is known goes to sign-in, locked or not", () => {
+  const failed = { guarded: true, known: false, settled: true };
+  assert.equal(sessionGate({ ...failed, error: signedOut }), "sign-in");
+  assert.equal(sessionGate({ ...failed, error: locked }), "sign-in");
+  assert.equal(sessionGate({ ...failed, error: new ApiError("server", 503) }), "open");
+});
+
+test("a known person stays in the app when a later call is refused", () => {
+  assert.equal(sessionGate({ guarded: true, known: true, settled: true, error: locked }), "open");
+});
+
+test("the lock card shows only for a person with a name", () => {
+  assert.equal(canShowLock(undefined), false);
+  assert.equal(canShowLock({ display_name: "" }), false);
+  assert.equal(canShowLock({ display_name: "  " }), false);
+  assert.equal(canShowLock({ display_name: "Dana Novak" }), true);
 });

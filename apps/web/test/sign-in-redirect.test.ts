@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ApiError } from "@parfocal/api-client";
+import { ApiError, getGetMeQueryKey } from "@parfocal/api-client";
 import {
   isSignedOut,
+  leaveFor,
   loginUrl,
   passwordSignInAvailable,
   redirectPauseMs,
   signedOutRedirect,
   signedOutTarget,
+  signInRedirect,
   startNamedLogin,
 } from "../src/session/sign-in-redirect.ts";
 
@@ -105,6 +107,32 @@ test("the home page sends a signed-out visitor to login once, not in a loop", ()
   at += redirectPauseMs;
   redirect(unauthenticated);
   assert.equal(browser.visited.length, 2);
+});
+
+test("the answer to who is signed in is left to the session gate", () => {
+  const browser = fakeBrowser("/");
+  const redirect = signedOutRedirect(browser);
+  redirect(unauthenticated, getGetMeQueryKey());
+  assert.deepEqual(browser.visited, []);
+  redirect(unauthenticated, ["/api/projects"]);
+  assert.deepEqual(browser.visited, ["/sign-in?return_to=%2F"]);
+});
+
+test("the session gate's redirect says when the pause holds it back", () => {
+  const browser = fakeBrowser("/my-work");
+  const go = signInRedirect(browser, () => 1_000);
+  assert.equal(go(), true);
+  assert.equal(go(), false);
+  assert.deepEqual(browser.visited, ["/sign-in?return_to=%2Fmy-work"]);
+  assert.equal(signInRedirect(fakeBrowser("/sign-in"))(), false);
+});
+
+test("leaving for the hosted login never lets the sign-in page render", async () => {
+  const visited: string[] = [];
+  const left = leaveFor(loginUrl("/"), (url) => void visited.push(url));
+  const settled = await Promise.race([left.then(() => true), Promise.resolve(false)]);
+  assert.equal(settled, false);
+  assert.deepEqual(visited, ["/api/auth/login?return_to=%2F"]);
 });
 
 test("other failures do not redirect", () => {

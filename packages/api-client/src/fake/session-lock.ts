@@ -32,8 +32,35 @@ function safeReturnPath(value: string | null): string {
 const redirectTo = (location: string) =>
   new HttpResponse(null, { status: 302, headers: { location } });
 
+const fakeSessionKey = "parfocal.fake-session";
+
+type FakeSession = "signed-out" | "expired";
+
+function fakeSession(): FakeSession | null {
+  const value = globalThis.sessionStorage?.getItem(fakeSessionKey);
+  return value === "signed-out" || value === "expired" ? value : null;
+}
+
+const signedOutProblem = {
+  type: "about:blank",
+  title: "Sign in to continue",
+  status: 401,
+};
+
+function answersSignedOut(pathname: string): boolean {
+  return !pathname.startsWith("/api/auth/") && pathname !== "/api/status";
+}
+
 export function sessionLockHandlers() {
   return [
+    http.all("*/api/*", ({ request }) => {
+      const session = fakeSession();
+      if (session === null || !answersSignedOut(new URL(request.url).pathname)) return undefined;
+      return HttpResponse.json(session === "expired" ? lockedProblem : signedOutProblem, {
+        status: 401,
+        headers: { "content-type": problemMediaType },
+      });
+    }),
     http.get("*/api/auth/login", ({ request }) => {
       resetFakeSessionLock();
       return redirectTo(safeReturnPath(new URL(request.url).searchParams.get("return_to")));

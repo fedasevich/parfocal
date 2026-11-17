@@ -43,6 +43,25 @@ export function reauthUrl(returnTo: string): string {
   return `/api/auth/login?${query.toString()}`;
 }
 
+type SessionGate = "open" | "wait" | "sign-in";
+
+type GateInput = {
+  guarded: boolean;
+  known: boolean;
+  settled: boolean;
+  error: unknown;
+};
+
+export function sessionGate({ guarded, known, settled, error }: GateInput): SessionGate {
+  if (!guarded || known) return "open";
+  if (error instanceof ApiError && error.kind === "unauthenticated") return "sign-in";
+  return settled ? "open" : "wait";
+}
+
+export function canShowLock(person: { display_name: string } | undefined): boolean {
+  return person !== undefined && person.display_name.trim() !== "";
+}
+
 const publicPaths = ["/sign-in", "/sign-up", "/invite", "/shared-reports"];
 
 export function locksAt(pathname: string): boolean {

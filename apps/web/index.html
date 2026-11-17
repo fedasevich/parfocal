@@ -6,9 +6,48 @@
     <link rel="preload" href="../../packages/tokens/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="../../packages/tokens/fonts/ibm-plex-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <title>Parfocal</title>
+    <style>
+      .boot-loader {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 14px;
+        background: var(--page, #121212);
+        color: var(--fg-dim, #cccccc);
+        font: 600 18px/1.2 "IBM Plex Sans", system-ui, sans-serif;
+        letter-spacing: 0.02em;
+      }
+      .boot-loader-bar {
+        width: 96px;
+        height: 2px;
+        border-radius: 1px;
+        overflow: hidden;
+        background: color-mix(in srgb, currentColor 18%, transparent);
+      }
+      .boot-loader-bar::after {
+        content: "";
+        display: block;
+        width: 40%;
+        height: 100%;
+        background: currentColor;
+        animation: boot-loader-slide 1.1s ease-in-out infinite;
+      }
+      @keyframes boot-loader-slide {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(250%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-loader-bar::after { animation: none; }
+      }
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme]) .boot-loader { background: #ececec; color: #4d4d4d; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot-loader" data-testid="boot-loader" role="status" aria-label="Loading Parfocal"><span>Parfocal</span><span class="boot-loader-bar"></span></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

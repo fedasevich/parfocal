@@ -1,6 +1,7 @@
 import {
   getSession,
   lockSession,
+  type Me,
   recordActivity,
   useGetMe,
   useGetSessionPolicy,
@@ -9,8 +10,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
+import { BootLoader, SignInPrompt } from "./boot-loader.tsx";
 import {
   activityIntervalMs,
+  canShowLock,
   createActivityThrottle,
   defaultIdleLockMinutes,
   idleCheckDue,
@@ -18,7 +21,9 @@ import {
   lockRequestEvent,
   locksAt,
   needsSecondFactor,
+  sessionGate,
 } from "./lock-rules.ts";
+import { signedOutTarget, signInRedirect } from "./sign-in-redirect.ts";
 
 const inputEvents = ["keydown", "pointerdown", "wheel", "touchstart"] as const;
 
@@ -75,16 +80,62 @@ function useActivity(active: boolean, idleMinutes: number, onLocked: () => void)
 const LockScreen = lazy(() => import("./lock-screen.tsx"));
 const SecondFactorScreen = lazy(() => import("./second-factor-screen.tsx"));
 
+function SignInNeeded() {
+  const tried = useRef(false);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (tried.current) return;
+    tried.current = true;
+    if (!signInRedirect(window)()) setPaused(true);
+  }, []);
+  if (!paused) return <BootLoader />;
+  return <SignInPrompt href={signedOutTarget(window.location) ?? "/sign-in"} />;
+}
+
 export function SessionLock({ children }: { children: ReactNode }) {
   const pathname = useLocation({ select: (location) => location.pathname });
   const guarded = locksAt(pathname);
+  const me = useGetMe({ query: { enabled: guarded } });
+  const person = okData(me.data);
+  const [remembered, remember] = useState<Me | undefined>(undefined);
+  const known = canShowLock(person) ? person : remembered;
+  if (known !== remembered) remember(known);
+  const gate = sessionGate({
+    guarded,
+    known: known !== undefined,
+    settled: me.status !== "pending",
+    error: me.error,
+  });
+  if (gate === "wait") return <BootLoader />;
+  if (gate === "sign-in") return <SignInNeeded />;
+  return (
+    <LockGuard guarded={guarded} person={known}>
+      {children}
+    </LockGuard>
+  );
+}
+
+function LockGuard({
+  guarded,
+  person,
+  children,
+}: {
+  guarded: boolean;
+  person: Me | undefined;
+  children: ReactNode;
+}) {
   const [locked, setLocked] = useState<"idle" | "manual" | null>(null);
   const [secondFactor, setSecondFactor] = useState(false);
   const lock = () => {
-    if (guarded) setLocked((current) => current ?? "idle");
+    if (!guarded) return;
+    if (person === undefined) {
+      signInRedirect(window)();
+      return;
+    }
+    setLocked((current) => current ?? "idle");
   };
   const lockNow = () => {
-    if (guarded)
+    if (guarded && person !== undefined)
       void lockSession().then(
         () => setLocked("manual"),
         () => undefined,
@@ -100,7 +151,6 @@ export function SessionLock({ children }: { children: ReactNode }) {
   const askForSecondFactor = () => {
     if (guarded) setSecondFactor(true);
   };
-  useGetMe({ query: { enabled: guarded } });
   const policy = okData(useGetSessionPolicy({ query: { enabled: guarded } }).data);
   const minutes = policy?.idle_lock_minutes ?? defaultIdleLockMinutes;
   useRefusedByApi(isSessionLocked, lock);
@@ -112,9 +162,9 @@ export function SessionLock({ children }: { children: ReactNode }) {
       <div inert={covered} aria-hidden={covered || undefined} className="contents">
         {children}
       </div>
-      {locked !== null ? (
+      {locked !== null && person !== undefined ? (
         <Suspense fallback={null}>
-          <LockScreen minutes={minutes} reason={locked} />
+          <LockScreen me={person} minutes={minutes} reason={locked} />
         </Suspense>
       ) : secondFactor ? (
         <Suspense fallback={null}>

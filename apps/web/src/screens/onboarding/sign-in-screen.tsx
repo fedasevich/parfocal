@@ -9,7 +9,7 @@ import {
 import { LockCard, PasskeySheet } from "@parfocal/ui/components/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { defaultIdleLockMinutes } from "../../session/lock-rules.ts";
+import { canShowLock, defaultIdleLockMinutes } from "../../session/lock-rules.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { NoAccessPage, SessionExpiredPage } from "../../shell/issue-pages.tsx";
@@ -30,8 +30,9 @@ type Props = {
 const defaultSessionHours = 8;
 
 export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Props) {
-  const me = okData(useGetMe().data);
   const signedInScene = scene === "lock" || scene === "lockkey" || scene === "expired";
+  const needsPerson = signedInScene || scene === "passkey" || scene === "passkeyqr";
+  const me = okData(useGetMe({ query: { enabled: needsPerson } }).data);
   const policy = okData(useGetSessionPolicy({ query: { enabled: signedInScene } }).data);
   const goTo = useGoTo();
   const queryClient = useQueryClient();
@@ -48,7 +49,7 @@ export function SignInScreen({ scene, change, returnTo, ssoUnknown = false }: Pr
   const toast = (text: string) => show(text);
   const flow: Flow = { email, setEmail, returnTo, change, land, ssoUnknown };
 
-  if (scene === "lock" || scene === "lockkey") {
+  if ((scene === "lock" || scene === "lockkey") && canShowLock(me)) {
     return (
       <div
         className="relative h-dvh overflow-hidden bg-cover bg-center"
