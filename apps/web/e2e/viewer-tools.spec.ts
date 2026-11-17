@@ -4,6 +4,11 @@ import { inPart, parts } from "./parts.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
+const focusModeAnswers = [
+  { status: 403, path: /^\/api\/result-sets\/[\w-]+(\/cell-summary)?$/ },
+  { status: 409, path: /^\/api\/slides\/[\w-]+\/coverage$/ },
+];
+
 const toolLink =
   /^(Smart minimap|Measuring|Annotate workspace|Compare slides|Focus mode|Whole-slide peek)/;
 
@@ -50,7 +55,7 @@ const shows: Record<string, string> = {
   "Annotate workspace · Choosing a model": "Model for outlining nuclei",
   "Compare slides · Slides picked": "Slides on screen",
   "Compare slides · Picking the right side": "Show on the right",
-  "Focus mode": "T5 · Tumor region",
+  "Focus mode": "AI score 52%. Still open.",
   "Whole-slide peek": "26% of tissue seen",
 };
 
@@ -61,7 +66,13 @@ for (const part of parts) {
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("response", (response) => {
       const path = new URL(response.url()).pathname;
-      if (response.status() >= 400 && path !== "/favicon.ico") {
+      const inFocusMode = new URL(page.url()).searchParams.get("focus") === "true";
+      const expected =
+        inFocusMode &&
+        focusModeAnswers.some(
+          (answer) => answer.status === response.status() && answer.path.test(path),
+        );
+      if (response.status() >= 400 && path !== "/favicon.ico" && !expected) {
         errors.push(`${response.status()} ${path}`);
       }
     });
@@ -70,6 +81,11 @@ for (const part of parts) {
     for (const { name, href } of inPart(links, part)) {
       await page.goto(href);
       await expect(page.getByText(shows[name] ?? "").first(), name).toBeVisible();
+      if (name === "Focus mode") {
+        await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+          timeout: 30_000,
+        });
+      }
       await expect(page.getByText(/^Placeholder\. The screen is built by/), name).toHaveCount(0);
     }
     expect(errors).toEqual([]);

@@ -59,6 +59,8 @@ export function report(problems: readonly Problem[]): string {
     .join("\n");
 }
 
+const NAVIGATION_ABORT = "net::ERR_ABORTED";
+
 export type Watch = {
   problems: Problem[];
   step: (name: string) => void;
@@ -105,6 +107,7 @@ export async function watch(context: BrowserContext, origin: string): Promise<Wa
     page.on("requestfailed", (request) => {
       if (!isApiCall(request.url(), origin)) return;
       if (blocksWrite(request.method(), request.url(), origin)) return;
+      if (request.failure()?.errorText === NAVIGATION_ABORT) return;
       problems.push({
         kind: "api",
         where,
