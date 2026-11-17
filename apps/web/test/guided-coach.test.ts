@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
-import { hasSeenGuidedCoach, markGuidedCoachSeen } from "../src/screens/review/guided-coach.ts";
+import {
+  coachShown,
+  hasSeenGuidedCoach,
+  markGuidedCoachSeen,
+} from "../src/screens/review/guided-coach.ts";
 
 const memory = new Map<string, string>();
 let changes = 0;
@@ -55,4 +59,10 @@ test("damaged storage reads as not seen and does not throw", () => {
   assert.equal(hasSeenGuidedCoach("user-a"), false);
   memory.set("parfocal.guided-coach", "[1,2]");
   assert.equal(hasSeenGuidedCoach("user-a"), false);
+});
+
+test("the tips wait for a slide with AI objects to point at", () => {
+  assert.equal(coachShown(true, 0), false);
+  assert.equal(coachShown(true, 3), true);
+  assert.equal(coachShown(false, 3), false);
 });
