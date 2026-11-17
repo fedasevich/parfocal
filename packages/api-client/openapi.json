@@ -69076,6 +69076,14 @@
             },
             "type": "array",
             "title": "Left Out"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/StartedFile"
+            },
+            "type": "array",
+            "title": "Results",
+            "default": []
           }
         },
         "type": "object",

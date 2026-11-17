@@ -7342,6 +7342,14 @@ export const getReadInPlaceResponseMock = (
   left_out: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
     faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
+  results: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      upload_id: faker.string.uuid(),
+      kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+      job_id: faker.string.uuid(),
+    }),
+  ),
   ...overrideResponse,
 });
 

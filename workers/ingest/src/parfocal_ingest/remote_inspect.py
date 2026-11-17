@@ -269,6 +269,9 @@ async def inspect(step: StepRun, resources: Resources, store: ObjectStore) -> Ma
                 width=found.width,
                 height=found.height,
                 level_count=len(found.pyramid.levels),
+                mpp_x=found.pyramid.scale.mpp_x,
+                mpp_y=found.pyramid.scale.mpp_y,
+                objective_power=found.pyramid.scale.objective_power,
                 published_at=func.coalesce(slides.c.published_at, func.now()),
             )
         )

@@ -5381,6 +5381,7 @@ export interface SlideInPlace {
 export interface ReadInPlace {
   opened: SlideInPlace[];
   left_out: string[];
+  results?: StartedFile[];
 }
 
 export interface ReadInPlaceRequest {

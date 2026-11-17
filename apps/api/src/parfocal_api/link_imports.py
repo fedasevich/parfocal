@@ -1,5 +1,6 @@
 import json
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
@@ -310,6 +311,7 @@ async def start_file(
     planned: Planned,
     slide_uploads: dict[str, uuid.UUID],
     reach: Reach,
+    slide_ids: Mapping[str, uuid.UUID] | None = None,
 ) -> StartedFile:
     file = planned.file
     size = file.size or 0
@@ -319,12 +321,17 @@ async def start_file(
     storage_upload_id = await store.create_multipart_upload(key)
     result: dict[str, Any] = {}
     if planned.kind is UploadKind.RESULT and planned.paired_with is not None:
+        placed = slide_ids or {}
         result = {
             "kind": UploadKind.RESULT,
             "result_format": format_of(file.name),
-            "slide_upload_id": slide_uploads[planned.paired_with],
             "pairing_rule": planned.rule,
             "pairing_certainty": planned.certainty,
+            **(
+                {"slide_id": placed[planned.paired_with]}
+                if planned.paired_with in placed
+                else {"slide_upload_id": slide_uploads[planned.paired_with]}
+            ),
         }
     row = (
         await connection.execute(

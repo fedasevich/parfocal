@@ -35,6 +35,16 @@ SLIDE = "CMU-1-Small-Region.svs"
 FILE = f"/scans/{SLIDE}"
 HEADER_VALUE = "source-token-9c41aa0e72"
 ETAG = '"first-version"'
+RESULT = "CMU-1-Small-Region.geojson"
+REGIONS = (
+    Path(__file__).resolve().parents[3]
+    / "workers"
+    / "ingest"
+    / "tests"
+    / "fixtures"
+    / "results"
+    / "regions.geojson"
+).read_bytes()
 
 
 @dataclass(frozen=True)
@@ -320,3 +330,38 @@ def test_copying_a_remote_slide_in_keeps_its_id_and_its_annotations(
     )
     again = linked(team.lead).post(f"/api/slides/{slide_id}/copy-in")
     assert (again.status_code, again.json()["code"]) == (409, "slide-not-remote")
+
+
+def test_a_result_file_next_to_a_slide_read_in_place_is_imported_onto_it(
+    linked: ApiAs, database: str, team: Team, site: Site, tmp_path: Path
+) -> None:
+    serve_slide(site, fixture_path(SLIDE).read_bytes())
+    site.index("/scans/", [SLIDE, RESULT])
+    site.file(f"/scans/{RESULT}", REGIONS)
+    source = save_source(linked, team, site)
+    response = linked(team.lead).post(
+        f"/api/projects/{team.project}/remote-slides",
+        json={"source_id": source["id"], "names": [SLIDE]},
+    )
+    assert response.status_code == 202, response.text
+    [slide] = response.json()["opened"]
+    [result] = response.json()["results"]
+    assert (result["name"], result["kind"]) == (RESULT, "result")
+
+    inspected(database, team, site, tmp_path)
+    [row] = query(
+        with_database(OWNER_URL, database),
+        f"SELECT status, slide_id, slide_upload_id FROM uploads WHERE id = '{result['upload_id']}'",
+    )
+    assert row == ("completed", uuid.UUID(slide["slide_id"]), None)
+    imported = query(
+        with_database(OWNER_URL, database),
+        "SELECT jobs.kind, jobs.status FROM jobs JOIN uploads ON uploads.job_id = jobs.id"
+        f" WHERE uploads.id = '{result['upload_id']}'",
+    )
+    assert imported == [("result-import", "done")]
+    [scale] = query(
+        with_database(OWNER_URL, database),
+        f"SELECT mpp_x, objective_power FROM slides WHERE id = '{slide['slide_id']}'",
+    )
+    assert scale == (pytest.approx(0.499), 20)
