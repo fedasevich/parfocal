@@ -1400,7 +1400,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on TILES-010.
   Size: M.
 
-- [ ] TILES-012 · The slide's ranges arrive in two rounds after levels.json
+- [x] TILES-012 · The slide's ranges arrive in two rounds after levels.json
   TILES-011 (a slide opens in under 3 s from navigation) found that a located open reads levels.json, then the TIFF header, then all directories at once, then a re-read of the last directory, then the tile byte count arrays, then the first tile, five rounds after levels.json at about 400 ms each deployed. Carry the header facts in levels.json, drop the re-read, and ask for the byte counts with the directories.
   Done when the latency proxy test shows a located open in at most three rounds after levels.json, a Philips fixture included, and Viv golden and engine tests still pass.
   Depends on TILES-011.
