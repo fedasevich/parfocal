@@ -13,6 +13,7 @@ Both are set by the API, are HttpOnly and Secure, and cannot be read by scripts.
 | `__Host-parfocal_login` | Binds a sign-in in progress to this browser, SameSite=Lax | 10 minutes | API, [ADR 0025](../adr/0025-zitadel-bff-login.md) |
 | `__Host-parfocal_signup` | Binds a sign-up waiting for its email code to this browser, sealed so it cannot be read, SameSite=Strict | 30 minutes | API, [ADR 0294](../adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md) |
 | `__Host-parfocal_session` | The random session id, stored on the server only as a hash, SameSite=Strict | The session, which ends after 12 hours by default and on sign-out | API, [ADR 0025](../adr/0025-zitadel-bff-login.md) |
+| `__Host-parfocal_passkey` | Binds a passkey sign-in or passkey setup in progress to this browser, sealed so it cannot be read, SameSite=Strict | 5 minutes | API, IAM-032 (passkeys on the app's own origin) |
 
 ## Local and session storage
 
@@ -35,6 +36,8 @@ All are set by the web app for features the user uses, hold no name or contact d
 | `parfocal.length-units` | localStorage | `auto` or `um` | Keeps whether lengths switch to mm automatically or always show in µm |
 | `parfocal.smart-hover-preview` | localStorage | `on` or `off` | Keeps whether smart select previews the outline under the pointer |
 | `parfocal.hints-seen` | localStorage | The names of the hints and first-time tips this browser has seen, such as `settings.tools`, `viewer.tool.ruler`, `coach.guided` or `checklist.open-sample`. No names or patient data | Shows each explanation, tool hint, guided review tip and getting started step once. It holds the hints of a guest, and the hints a signed-in person used before the server list loaded, which are then moved into their personal settings and removed here. The old keys `parfocal.tool-hints-seen`, `parfocal.guided-coach` and `parfocal.checklist-tried` are folded into this one the first time the app loads and then deleted. Removed by clearing site data, or by Show all hints again |
+| `parfocal.passkey-email` | localStorage | The work email of the last person who signed in with a passkey on this browser | Offers that person's passkey on the sign-in page at once. Removed by clearing site data |
+| `parfocal.passkey-offer-declined` | localStorage | The word yes after someone clicks Not now on the offer to save a passkey | Stops the offer from showing again on this browser. Settings, Privacy, Add a passkey still works. Removed by clearing site data |
 | `parfocal.inspector-panel` | localStorage | The opaque id of the signed-in user, the side panel width, whether it is hidden and the hide while panning option | Keeps the viewer's side panel as the person left it, and keeps people on a shared workstation apart. No name or patient data |
 | `parfocal.pseudo-locale` | localStorage | `1` or absent, set by hand or by a test and read only in development builds | Shows the `en-XA` pseudo locale so untranslated screen text stands out. The app never writes it |
 | `parfocal.uploads.interrupted` | sessionStorage | Project and case ids, file name, size and modification time of unfinished uploads | Offers to resume an upload after a reload. File names may identify a patient, so this stays in `sessionStorage`, which the browser clears when the tab closes |
