@@ -17,7 +17,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import readable_slide
 from parfocal_api.projects import code_of as project_code
-from parfocal_api.review_states import State, TaskStates, states_of, task_of
+from parfocal_api.review_states import State, TaskStates, states_of, states_of_many, tasks_of
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
     ResultSource,
@@ -410,13 +410,18 @@ async def describe(
         .order_by(review_tasks.c.created_at)
     ):
         tasks_by_slide.setdefault(item.slide_id, []).append(item)
+    wanted = list(
+        {task.id for found in tasks_by_slide.values() for task in found}.difference(cache)
+    )
+    if wanted:
+        cache.update(await states_of_many(connection, await tasks_of(connection, wanted)))
     described: list[SlideRow] = []
     for row in rows:
         reviews: list[SlideReview] = []
         status = without_tasks(sets.get(row.id, []), sources)
         for task in tasks_by_slide.get(row.id, []):
             if task.id not in cache:
-                cache[task.id] = await states_of(connection, await task_of(connection, task.id))
+                continue
             for slide in cache[task.id].slides:
                 if slide.slide_id != row.id:
                     continue
