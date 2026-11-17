@@ -69,6 +69,7 @@ def test_a_coarser_grid_keeps_every_tissue_cell() -> None:
 class Lab:
     api: ApiAs
     people: dict[str, Any]
+    tenant: uuid.UUID
     slide: uuid.UUID
     bare: uuid.UUID
 
@@ -98,7 +99,7 @@ def lab(database: str, storage: StorageLocation) -> Iterator[Lab]:
         owner(database, f"UPDATE slides SET width = {WIDTH}, height = {HEIGHT} WHERE id = '{made}'")
     put_object(f"{slide_prefix(workspace.tenant_id, slide)}tissue.png", ingest_png(blob(20, 15)))
     with api_as(database) as api:
-        yield Lab(api, people, slide, bare)
+        yield Lab(api, people, workspace.tenant_id, slide, bare)
 
 
 @pytest.mark.db
@@ -124,3 +125,29 @@ def test_a_person_who_cannot_read_the_slide_gets_no_mask(lab: Lab) -> None:
     response = lab.api(lab.people["unassigned"]).get(lab.path())
     assert response.status_code == 404, response.text
     assert response.json()["code"] != "tissue-mask-missing"
+
+
+THUMBNAIL = b"\xff\xd8\xff\xe0thumbnail"
+
+
+@pytest.mark.db
+def test_the_stored_thumbnail_is_served_as_a_jpeg(lab: Lab) -> None:
+    put_object(f"{slide_prefix(lab.tenant, lab.slide)}thumbnail.jpg", THUMBNAIL)
+    response = lab.api(lab.people["owner"]).get(f"/api/slides/{lab.slide}/thumbnail")
+    assert response.status_code == 200, response.text
+    assert response.content == THUMBNAIL
+    assert response.headers["content-type"] == "image/jpeg"
+    assert "max-age" in response.headers["cache-control"]
+
+
+@pytest.mark.db
+def test_a_slide_without_a_thumbnail_answers_missing(lab: Lab) -> None:
+    response = lab.api(lab.people["owner"]).get(f"/api/slides/{lab.bare}/thumbnail")
+    assert (response.status_code, response.json()["code"]) == (404, "thumbnail-missing")
+
+
+@pytest.mark.db
+def test_a_person_who_cannot_read_the_slide_gets_no_thumbnail(lab: Lab) -> None:
+    response = lab.api(lab.people["unassigned"]).get(f"/api/slides/{lab.slide}/thumbnail")
+    assert response.status_code == 404, response.text
+    assert response.json()["code"] != "thumbnail-missing"

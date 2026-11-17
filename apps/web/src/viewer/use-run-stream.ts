@@ -15,7 +15,6 @@ import {
 } from "./viewer-engine.ts";
 
 const runStreamOverlayPrefix = "run-stream:";
-const watchMs = 5000;
 const watchedStatuses = ["queued", "running"] as const;
 const finishedStatuses = ["done", "cancelled", "cancelling"] as const;
 const tilesOverlayId = `${runStreamOverlayPrefix}finished-tiles`;
@@ -175,17 +174,12 @@ export function useRunStream(options: {
   }, [find, attach]);
 
   useEffect(() => {
-    let stopped = false;
-    const look = async () => {
-      if (stopped) return;
-      await watchNow();
+    void watchNow();
+    const lookWhenShown = () => {
+      if (document.visibilityState === "visible") void watchNow();
     };
-    void look();
-    const timer = setInterval(() => void look(), watchMs);
-    return () => {
-      stopped = true;
-      clearInterval(timer);
-    };
+    document.addEventListener("visibilitychange", lookWhenShown);
+    return () => document.removeEventListener("visibilitychange", lookWhenShown);
   }, [watchNow]);
 
   const loadLast = useCallback(async (): Promise<boolean> => {

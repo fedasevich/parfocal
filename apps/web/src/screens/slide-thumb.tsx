@@ -1,0 +1,37 @@
+import { useState } from "react";
+import { formatNameOf } from "./format-name.ts";
+
+export function SlideThumb({
+  slideId,
+  file,
+  className,
+}: {
+  slideId: string;
+  file: string;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (failed === slideId) {
+    return (
+      <span
+        aria-hidden="true"
+        data-testid="slide-thumb-fallback"
+        className={`grid place-content-center bg-surf-section font-mono text-caption text-fg-faint ${className ?? ""}`}
+      >
+        {formatNameOf(file)}
+      </span>
+    );
+  }
+  return (
+    <img
+      alt=""
+      aria-hidden="true"
+      data-testid="slide-thumb"
+      src={`/api/slides/${slideId}/thumbnail`}
+      loading="lazy"
+      draggable={false}
+      onError={() => setFailed(slideId)}
+      className={`object-cover ${className ?? ""}`}
+    />
+  );
+}

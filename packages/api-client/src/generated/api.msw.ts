@@ -19009,6 +19009,9 @@ export const getGetSlideTissueResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSlideThumbnailResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getGetSlideEmbeddingsResponseMock = (
   overrideResponse: Partial<Extract<SlideEmbeddings, object>> = {},
 ): SlideEmbeddings => ({
@@ -28328,6 +28331,30 @@ export const getGetSlideTissueMockHandler = (
   );
 };
 
+export const getGetSlideThumbnailMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/thumbnail",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideThumbnailResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    },
+    options,
+  );
+};
+
 export const getGetSlideEmbeddingsMockHandler = (
   overrideResponse?:
     | SlideEmbeddings
@@ -28870,6 +28897,7 @@ export const getParfocalAPIMock = () => [
   getGetSlideCoverageMockHandler(),
   getRecordSlideCoverageMockHandler(),
   getGetSlideTissueMockHandler(),
+  getGetSlideThumbnailMockHandler(),
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),
