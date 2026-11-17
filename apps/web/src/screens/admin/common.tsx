@@ -6,8 +6,9 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { now } from "../../clock.ts";
 import { daysBetween } from "../format.ts";
 import { modelStatus } from "./model-status.ts";
+import { storageSize } from "./storage-size.ts";
 
-export const tb = (value: number) => `${+value.toFixed(1)} TB`;
+export const tb = (value: number) => storageSize(value);
 
 export function lastActive(at: string | null): string {
   if (at === null) return "Not yet";

@@ -6,7 +6,9 @@ import {
   type CoverageTimers,
   cellsInArea,
   coverageGrid,
+  coverageMaxBackoffMs,
   coveragePercent,
+  coverageRetryMs,
   coverageShare,
   createCoverageTracker,
   decodeBits,
@@ -180,6 +182,29 @@ test("a failed batch stays queued and goes again on the next flush", async () =>
   await tracker.flush();
   assert.equal(tracker.pending(), 0);
   assert.equal(coverageShare(server.stored).seen, 512);
+});
+
+test("failed batches wait longer each time and the wait resets after a success", async () => {
+  const server = fakeServer();
+  const { timers, due } = manualTimers();
+  let fail = true;
+  const tracker = createCoverageTracker({
+    grid,
+    micronsPerPixel,
+    timers,
+    send: (cells) => (fail ? Promise.reject(new Error("refused")) : server.send(cells)),
+  });
+  tracker.observe(panPath[0] as Camera, viewport);
+  assert.equal(due[0]?.ms, 4000);
+  await tracker.flush();
+  assert.equal(due[0]?.ms, 8000);
+  await tracker.flush();
+  assert.equal(due[0]?.ms, 16000);
+  fail = false;
+  await tracker.flush();
+  tracker.observe(panPath[1] as Camera, viewport);
+  assert.equal(due[0]?.ms, 4000);
+  assert.equal(coverageRetryMs(4000, 20), coverageMaxBackoffMs);
 });
 
 test("coverage from the server merges into the local raster", () => {

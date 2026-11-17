@@ -30,7 +30,15 @@ import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
-import { formatDue, formatLongDay, formatWeekday, greeting, percent, plural } from "../format.ts";
+import {
+  formatDue,
+  formatLongDay,
+  formatWeekday,
+  greeting,
+  greetingName,
+  percent,
+  plural,
+} from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -542,7 +550,7 @@ export function HomeScreen() {
       </div>
     );
   }
-  const firstName = me.display_name.split(" ")[0] ?? me.display_name;
+  const firstName = greetingName(me);
   if (home === undefined) {
     return (
       <HomeWithoutData

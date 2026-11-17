@@ -17,6 +17,12 @@ import {
 
 export const coverageFlushMs = 4000;
 export const coverageBatchLimit = 4096;
+export const coverageMaxBackoffMs = 5 * 60_000;
+
+export function coverageRetryMs(flushMs: number, failures: number): number {
+  if (failures === 0) return flushMs;
+  return Math.min(flushMs * 2 ** failures, Math.max(flushMs, coverageMaxBackoffMs));
+}
 
 export interface CoverageTimers {
   set(callback: () => void, ms: number): unknown;
@@ -64,6 +70,7 @@ export function createCoverageTracker(options: CoverageTrackerOptions): Coverage
   let timer: unknown = null;
   let sending: Promise<void> | null = null;
   let disposed = false;
+  let failures = 0;
   const listeners = new Set<() => void>();
   const notify = () => {
     for (const listener of listeners) listener();
@@ -71,10 +78,13 @@ export function createCoverageTracker(options: CoverageTrackerOptions): Coverage
 
   const schedule = () => {
     if (timer !== null || disposed || queued.length === 0) return;
-    timer = timers.set(() => {
-      timer = null;
-      void flush();
-    }, flushMs);
+    timer = timers.set(
+      () => {
+        timer = null;
+        void flush();
+      },
+      coverageRetryMs(flushMs, failures),
+    );
   };
 
   const sendOnce = async () => {
@@ -85,8 +95,10 @@ export function createCoverageTracker(options: CoverageTrackerOptions): Coverage
       if (answer !== null) mergeCoverage(raster, answer);
     } catch {
       queued = [...batch, ...queued];
+      failures += 1;
       return false;
     }
+    failures = 0;
     notify();
     return true;
   };
