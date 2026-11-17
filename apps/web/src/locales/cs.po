@@ -2045,7 +2045,7 @@ msgstr ""
 msgid "{percent}% done: {0} agree, {1} disagree, {2} not sure, {3} open"
 msgstr ""
 
-#: src/viewer/live-top-bar.tsx
+#: src/viewer/live-progress.tsx
 msgid "{percent}% of the tissue seen"
 msgstr ""
 
@@ -8765,7 +8765,7 @@ msgstr ""
 #: src/screens/viewer-tools/tool-session.tsx
 #: src/screens/viewer/full-viewer.tsx
 #: src/screens/viewer/viewer-notices.tsx
-#: src/viewer/stage-loading.tsx
+#: src/viewer/stage-opening.tsx
 msgid "Loading the slide"
 msgstr ""
 
@@ -9800,6 +9800,7 @@ msgstr ""
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/viewer/live-progress.tsx
 msgid "No due date"
 msgstr ""
 
@@ -10899,6 +10900,7 @@ msgid "Open on the slide"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Open report"
 msgstr ""
 
@@ -10929,6 +10931,7 @@ msgid "Open the case"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Open the clinical report of this case"
 msgstr ""
 
@@ -10995,7 +10998,7 @@ msgstr ""
 msgid "Opened from {mapTitle}, as"
 msgstr ""
 
-#: src/viewer/live-top-bar.tsx
+#: src/viewer/live-progress.tsx
 msgid "Opening"
 msgstr ""
 
@@ -11951,6 +11954,7 @@ msgid "Progress on this slide and in the list"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/viewer/live-progress.tsx
 msgid "Progress on this slide and in the whole task"
 msgstr ""
 
@@ -14357,6 +14361,7 @@ msgstr ""
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/live-progress.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Slide"
 msgstr ""
@@ -14367,15 +14372,12 @@ msgstr ""
 msgid "Slide · {0} {1}"
 msgstr ""
 
-#. placeholder {0}: list.position
 #. placeholder {0}: resume.position + 1
 #. placeholder {0}: slidePosition(resume.position, task.slides_assigned)
-#. placeholder {1}: list.total
 #. placeholder {1}: resume.slides_assigned
 #. placeholder {1}: task.slides_assigned
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Slide {0} of {1}"
 msgstr ""
 
@@ -14384,6 +14386,11 @@ msgstr ""
 #. placeholder {2}: here.case_label
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Slide {0} of {1}, case {2}"
+msgstr ""
+
+#. placeholder {0}: list.total
+#: src/viewer/live-progress.tsx
+msgid "Slide {position} of {0}"
 msgstr ""
 
 #: src/screens/review/slide-submitted.tsx

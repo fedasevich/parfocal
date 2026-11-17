@@ -1,4 +1,4 @@
-import { useGetProject, useGetReviewTask } from "@parfocal/api-client";
+import { type Thread, useGetProject, useGetReviewTask } from "@parfocal/api-client";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
@@ -19,6 +19,7 @@ import { SlideStage } from "../viewer/slide-stage.tsx";
 import { StageComments } from "../viewer/stage-comments.tsx";
 import { NoticeSlotsProvider } from "../viewer/stage-notices.tsx";
 import { StageOpinion } from "../viewer/stage-opinion.tsx";
+import type { ThreadFocusRequest } from "../viewer/thread-focus.tsx";
 import type { SlideStorageNote } from "../viewer/tile-grant.ts";
 import { useCaseLoad } from "../viewer/use-case-load.ts";
 import { useSlideAreas } from "../viewer/use-slide-areas.ts";
@@ -67,11 +68,19 @@ function LiveSlide() {
     void navigate({ search: (previous) => ({ ...previous, workspace: next }), replace: true });
   const showTab = (next: ViewerTab) =>
     void navigate({ search: (previous) => ({ ...previous, tab: next }), replace: true });
+  const [focus, setFocus] = useState<{ slideId: string; request: ThreadFocusRequest } | null>(null);
+  const goToThread = (thread: Thread) =>
+    setFocus((before) => ({
+      slideId,
+      request: { count: (before?.request.count ?? 0) + 1, anchor: thread.anchor },
+    }));
   const inspector = {
     tab,
     onTab: showTab,
+    focus: focus?.slideId === slideId ? focus.request : null,
     comments: (
       <StageComments
+        onGoTo={goToThread}
         projectId={projectId}
         taskId={task}
         taskName={taskDetail?.name}
@@ -103,6 +112,7 @@ function LiveSlide() {
           showTab("opinion");
         }}
         percent={percent}
+        objectTotal={areas.length}
         onPeek={() => setPeek(true)}
         statusRef={setStatus}
         storage={

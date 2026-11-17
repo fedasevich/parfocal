@@ -102,6 +102,7 @@ import { StageInspector, type StageInspectorLink } from "./stage-inspector.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import { stageToolOf } from "./stage-tools.ts";
+import { ThreadFocus } from "./thread-focus.tsx";
 import { grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
@@ -1070,6 +1071,13 @@ function OpenedSlide({
               ) : null}
               {session ? (
                 <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
+              ) : null}
+              {session ? (
+                <ThreadFocus
+                  engine={session.engine}
+                  areas={areas}
+                  request={inspector.focus ?? null}
+                />
               ) : null}
               {session && hostNode && systematicScan ? (
                 <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />

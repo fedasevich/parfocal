@@ -5,6 +5,7 @@ import { InspectorDock } from "../screens/review/inspector-dock.tsx";
 import type { InspectorLayout, InspectorLayoutChange } from "../screens/review/inspector-layout.ts";
 import { type ViewerTab, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import type { InspectorSection } from "./inspector-slots.tsx";
+import type { ThreadFocusRequest } from "./thread-focus.tsx";
 
 type StageInspectorProps = {
   layout: InspectorLayout;
@@ -22,6 +23,7 @@ export type StageInspectorLink = {
   readonly onTab: (tab: ViewerTab) => void;
   readonly comments: ReactNode;
   readonly opinion: ReactNode;
+  readonly focus?: ThreadFocusRequest | null;
 };
 
 const slotClass = "flex flex-col gap-3";
