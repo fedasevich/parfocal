@@ -6,6 +6,7 @@ import {
   useGetDisagreementQueue,
   useGetProject,
   useGetReviewTask,
+  useGetSignOffSummary,
   useListProjectClasses,
   useNudgeReviewer,
   useSendToAdjudicator,
@@ -36,7 +37,7 @@ import { destinations } from "../../shell/destinations.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
-import { useMockToast } from "../project/mock-toast.tsx";
+import { useScreenToast } from "../project/screen-toast.tsx";
 import { type ReviewStyle, toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf } from "../review/decision-style.ts";
 import { fromMentionTokens } from "../review/mention-picking.ts";
@@ -87,6 +88,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   const { t } = useLingui();
 
   const queue = okData(useGetDisagreementQueue(taskId).data);
+  const summary = okData(useGetSignOffSummary(taskId).data);
   const task = okData(useGetReviewTask(taskId).data);
   const project = okData(
     useGetProject(task?.project_id ?? "", { query: { enabled: Boolean(task) } }).data,
@@ -106,7 +108,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   const renderLink = useRouterLink();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const toast = useMockToast();
+  const toast = useScreenToast();
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [selectedKey, setSelectedKey] = useState(firstSelected(scene));
   const [checked, setChecked] = useState<string[]>(
@@ -343,7 +345,10 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 />
               </div>
               <EvidenceList>
-                <EvidenceRow icon="smart" title={t`AI · CAMELYON v1.0`}>
+                <EvidenceRow
+                  icon="smart"
+                  title={summary?.result_set.name ? t`AI · ${summary.result_set.name}` : t`AI`}
+                >
                   {claimText(row.ai)}
                 </EvidenceRow>
                 {row.answers.map((answer) => (

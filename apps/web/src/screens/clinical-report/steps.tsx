@@ -16,6 +16,7 @@ import { TokenField } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
 import { CheckRow, FieldNote, RadioRows } from "../new-task/parts.tsx";
+import { useLabName } from "./lab-name.ts";
 import {
   type Category,
   categoryNames,
@@ -780,6 +781,7 @@ export function SentPanel({ data, report, person }: StepProps) {
 
 export function DonePanel({ data, report, person, update }: StepProps) {
   const { t } = useLingui();
+  const labName = useLabName();
 
   const signature = report.signed;
   if (!signature) return null;
@@ -824,7 +826,7 @@ export function DonePanel({ data, report, person, update }: StepProps) {
       </Zone>
       <ReportDocument
         data-version={showV1 ? "v1" : "current"}
-        model={documentOf(data, report, showV1 ? "v1" : "current", name)}
+        model={documentOf(data, report, showV1 ? "v1" : "current", name, labName)}
       />
     </>
   );

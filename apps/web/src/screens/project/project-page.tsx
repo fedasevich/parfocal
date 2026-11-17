@@ -31,8 +31,8 @@ import { readDropped } from "../../upload/drop.ts";
 import { dropStore } from "../../upload/drop-store.ts";
 import { markTried } from "../home/getting-started.ts";
 import { okData } from "../placeholder.tsx";
-import { useMockToast } from "./mock-toast.tsx";
 import { usePeople } from "./people.ts";
+import { useScreenToast } from "./screen-toast.tsx";
 import { SettingsTab } from "./settings-tab.tsx";
 import { SlidesTab } from "./slides-tab.tsx";
 import { TasksTab } from "./tasks-tab.tsx";
@@ -86,7 +86,7 @@ export function ProjectPage({
   useListProjectResultSets(projectId, slidesFirst);
   const people = usePeople();
   const navigate = useNavigate();
-  const toast = useMockToast();
+  const toast = useScreenToast();
   const [bannerShut, setBannerShut] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const failure = view.importFailed && !bannerShut ? overview?.import_failure : null;
@@ -255,16 +255,6 @@ export function ProjectPage({
                 >
                   <Icon name="link" />
                   <Trans>Automatic imports</Trans>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    toast.show(
-                      t`Downloads decisions per object and every result set of the project (mock)`,
-                    )
-                  }
-                >
-                  <Icon name="download" />
-                  <Trans>Export decisions and results</Trans>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => goTab("settings")}>

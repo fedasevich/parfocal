@@ -339,28 +339,10 @@ export function SlidesTab({
                           sets={sets}
                           viewers={viewersOf(slide.id)}
                           expanded={open === slide.id}
-                          toast={toast}
                           onMove={owner ? () => setMoving(slide) : undefined}
                         />
                       ))
                     : null}
-                  {expanded && group.count > group.slides.length ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-2.5 pr-4 pl-18">
-                        <button
-                          type="button"
-                          className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
-                          onClick={() =>
-                            toast(
-                              t`Loads the other ${group.count - group.slides.length} slides of ${group.key} (mock)`,
-                            )
-                          }
-                        >
-                          <Trans>Show all {group.count} slides</Trans>
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
                 </Fragment>
               );
             })}
@@ -396,7 +378,6 @@ function SlideRow({
   sets,
   viewers,
   expanded,
-  toast,
   onMove,
 }: {
   project: Project;
@@ -404,7 +385,6 @@ function SlideRow({
   sets: ResultSet[];
   viewers: string[];
   expanded: boolean;
-  toast: (message: ReactNode) => void;
   onMove: (() => void) | undefined;
 }) {
   const { t } = useLingui();
@@ -541,20 +521,12 @@ function SlideRow({
           </Button>
         </TableCell>
       </TableRow>
-      {expanded ? <ResultSetDetail project={project} slide={slide} toast={toast} /> : null}
+      {expanded ? <ResultSetDetail project={project} slide={slide} /> : null}
     </>
   );
 }
 
-function ResultSetDetail({
-  project,
-  slide,
-  toast,
-}: {
-  project: Project;
-  slide: ProjectSlide;
-  toast: (message: ReactNode) => void;
-}) {
+function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectSlide }) {
   const { t } = useLingui();
 
   const sets = okData(useListSlideResultSets(slide.id).data) ?? [];
@@ -603,16 +575,6 @@ function ResultSetDetail({
                 <Button size="sm" variant="ghost" onClick={view}>
                   <Icon name="slides" />
                   <Trans>Compare</Trans>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    toast(t`Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)`)
-                  }
-                >
-                  <Icon name="download" />
-                  <Trans>Export</Trans>
                 </Button>
               </span>
             </div>

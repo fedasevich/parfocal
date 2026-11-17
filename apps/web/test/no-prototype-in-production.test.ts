@@ -26,14 +26,8 @@ const prototypeUse = [
 
 const STILL_TO_REPLACE = new Set([
   "screens/annotate-task/annotate-task-view.tsx",
-  "screens/annotate-task/new-annotate-task.tsx",
   "screens/annotate-task/task-people.ts",
   "screens/annotate-task/task-shapes.tsx",
-  "screens/disagreements/adjudicator-view.tsx",
-  "screens/disagreements/queue-screen.tsx",
-  "screens/evaluation/evaluation-screen.tsx",
-  "screens/evaluation/report-pages.tsx",
-  "screens/project/project-page.tsx",
   "screens/review/cells-grid.tsx",
   "screens/review/cells-on-slide.tsx",
   "screens/review/comments-on-ids.tsx",
@@ -42,7 +36,6 @@ const STILL_TO_REPLACE = new Set([
   "screens/review/review-top.tsx",
   "screens/review/slide-still.tsx",
   "screens/review/slide-submitted.tsx",
-  "screens/sign-off/sign-off-screen.tsx",
   "screens/thumbnails.ts",
   "screens/viewer-tools/annotate-view.tsx",
   "screens/viewer-tools/cell-focus.tsx",
@@ -55,7 +48,6 @@ const STILL_TO_REPLACE = new Set([
   "screens/viewer/use-viewer-panels.tsx",
   "screens/viewer/viewer-canvas-parts.tsx",
   "screens/viewer/viewer-notices.tsx",
-  "worklist-live/connect-worklist-live.ts",
 ]);
 
 function sourceFiles(dir: string): string[] {
