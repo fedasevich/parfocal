@@ -235,7 +235,7 @@ OPERATIONS: dict[str, Operation] = {
             json={
                 "slide_ids": [str(s.slide)],
                 "scope": {"kind": "slide"},
-                "parameters": {"detector": {"name": "roles-detector", "version": "1"}},
+                "parameters": {"detector": {"name": "hovernet", "version": "v0.9"}},
             },
         ),
         runs_models,

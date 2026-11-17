@@ -1,6 +1,7 @@
 import uuid
 from collections import Counter
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
@@ -21,7 +22,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import ensure_keys, load_keys, open_field, seal_field
 from parfocal_api.model_catalogue import ModelVersion
 from parfocal_api.model_registry import LicenceIn, licence_in_of, licence_of, licence_values
-from parfocal_api.permissions import Permission, member_of, require
+from parfocal_api.permissions import Grant, Permission, grant_of, member_of, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
@@ -138,6 +139,11 @@ class LabModelNotAllowedError(ForbiddenError):
 class LabModelTilesUnconfirmedError(ForbiddenError):
     code = "lab-model-tiles-unconfirmed"
     title = "The project's owner has not confirmed that its tiles go to this server"
+
+
+class LabModelChangedError(ConflictError):
+    code = "lab-model-changed"
+    title = "The lab model this run named is no longer connected. Start a new run"
 
 
 class LabModelExistsError(ConflictError):
@@ -477,29 +483,63 @@ async def project_rows_of(
     return rows.all()
 
 
-async def check_lab_run(
-    connection: AsyncConnection, project_id: uuid.UUID, name: str, version: str | None
-) -> None:
-    statement = select(lab_models.c.id).where(lab_models.c.name == name)
+@dataclass(frozen=True)
+class LabRunModel:
+    id: uuid.UUID
+    name: str
+    version: str
+
+
+async def saved_lab_model(
+    connection: AsyncConnection, name: str, version: str | None
+) -> LabRunModel | None:
+    statement = select(lab_models.c.id, lab_models.c.name, lab_models.c.version).where(
+        lab_models.c.name == name
+    )
     if version is not None:
         statement = statement.where(lab_models.c.version == version)
-    model_id = await connection.scalar(statement.order_by(lab_models.c.created_at.desc()).limit(1))
-    if model_id is None:
-        return
+    row = (
+        await connection.execute(statement.order_by(lab_models.c.created_at.desc()).limit(1))
+    ).first()
+    return LabRunModel(row.id, row.name, row.version) if row is not None else None
+
+
+def may_run(principal: Principal, who_can_run: str) -> bool:
+    if LabModelRunners(who_can_run) is LabModelRunners.RESEARCHERS:
+        return True
+    return grant_of(principal, Permission.INTEGRATIONS) is Grant.ALL
+
+
+async def check_lab_run(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    name: str,
+    version: str | None,
+) -> LabRunModel | None:
+    model = await saved_lab_model(connection, name, version)
+    if model is None:
+        return None
     allowed = (
         await connection.execute(
-            select(lab_model_projects.c.tiles_confirmed_at, projects.c.privacy_mode)
+            select(
+                lab_model_projects.c.tiles_confirmed_at,
+                projects.c.privacy_mode,
+                lab_models.c.who_can_run,
+            )
             .join(projects, projects.c.id == lab_model_projects.c.project_id)
+            .join(lab_models, lab_models.c.id == lab_model_projects.c.lab_model_id)
             .where(
-                lab_model_projects.c.lab_model_id == model_id,
+                lab_model_projects.c.lab_model_id == model.id,
                 lab_model_projects.c.project_id == project_id,
             )
         )
     ).first()
-    if allowed is None:
+    if allowed is None or not may_run(principal, allowed.who_can_run):
         raise LabModelNotAllowedError
     if allowed.privacy_mode == PrivacyMode.CLINICAL and allowed.tiles_confirmed_at is None:
         raise LabModelTilesUnconfirmedError
+    return model
 
 
 async def model_row(connection: AsyncConnection, model_id: uuid.UUID) -> Row[Any]:

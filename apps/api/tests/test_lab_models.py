@@ -526,3 +526,100 @@ def test_the_owner_sees_a_pending_confirmation_an_admin_left_and_confirms_it(
     [confirmed] = ok(confirming.get(listed))
     assert confirmed["confirmed_at"] is not None
     assert problem(linked(lab.people["stranger"]).get(listed))[0] in {403, 404}
+
+
+def lab_project(database: str, lab: Lab) -> tuple[uuid.UUID, uuid.UUID]:
+    project = make_project(database, lab.tenant, "de-identified")
+    join_project(database, project, lab.people["owner"], "owner")
+    join_project(database, project, lab.people["colleague"], "owner")
+    return project, make_slide(database, lab.tenant, project, "Lab slide")
+
+
+def start_run(
+    api: ApiAs, lab: Lab, project: uuid.UUID, slide: uuid.UUID, who: str, **parameters: Any
+) -> Any:
+    return api(lab.people[who]).post(
+        f"/api/projects/{project}/model-runs",
+        json={"slide_ids": [str(slide)], "scope": {"kind": "slide"}, "parameters": parameters},
+    )
+
+
+def test_a_connected_lab_model_starts_a_run_under_its_saved_name_and_version(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    project, slide = lab_project(database, lab)
+    body = draft(site, lab, name="lab-hovernet", project_ids=[str(project)])
+    ok(linked(lab.people["owner"]).post(MODELS, json=body))
+    started = start_run(linked, lab, project, slide, "colleague", detector={"name": "lab-hovernet"})
+    assert started.status_code == 201, started.text
+    [run] = started.json()
+    rows = owner(
+        database, f"SELECT detector, detector_version FROM model_runs WHERE job_id = '{run['id']}'"
+    )
+    assert [tuple(row) for row in rows] == [("lab-hovernet", "v2.1")]
+    listed = ok(linked(lab.people["colleague"]).get(f"/api/projects/{project}/model-runs"))
+    assert [item["id"] for item in listed] == [run["id"]]
+
+
+def test_an_unknown_model_is_refused_even_with_a_version(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    project, slide = lab_project(database, lab)
+    body = draft(site, lab, name="lab-hovernet", project_ids=[str(project)])
+    ok(linked(lab.people["owner"]).post(MODELS, json=body))
+    for detector in (
+        {"name": "no-such-model", "version": "v1"},
+        {"name": "lab-hovernet", "version": "v9"},
+    ):
+        refused_start = start_run(linked, lab, project, slide, "owner", detector=detector)
+        assert problem(refused_start) == (400, "model-not-found")
+    typer = start_run(
+        linked,
+        lab,
+        project,
+        slide,
+        "owner",
+        detector={"name": "hovernet"},
+        typer={"name": "no-such-typer", "version": "v1"},
+    )
+    assert problem(typer) == (400, "model-not-found")
+
+
+def test_a_lab_model_is_refused_outside_its_projects_and_its_runners(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    project, slide = lab_project(database, lab)
+    acting = linked(lab.people["owner"])
+    ok(acting.post(MODELS, json=draft(site, lab, name="lab-hovernet")))
+    assert problem(lab_run(linked, lab, project, slide)) == (403, "lab-model-not-allowed")
+    body = draft(
+        site,
+        lab,
+        name="lab-hovernet",
+        version="v3",
+        who_can_run="admins",
+        project_ids=[str(project)],
+    )
+    ok(acting.post(MODELS, json=body))
+    admins_only = {"name": "lab-hovernet", "version": "v3"}
+    refused_start = start_run(linked, lab, project, slide, "colleague", detector=admins_only)
+    assert problem(refused_start) == (403, "lab-model-not-allowed")
+    assert start_run(linked, lab, project, slide, "owner", detector=admins_only).status_code == 201
+
+
+def test_resuming_or_retrying_a_lab_run_whose_model_is_gone_is_refused_as_changed(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    project, slide = lab_project(database, lab)
+    body = draft(site, lab, name="lab-hovernet", project_ids=[str(project)])
+    model = ok(linked(lab.people["owner"]).post(MODELS, json=body))
+    [run] = ok(lab_run(linked, lab, project, slide))
+    owner(
+        database,
+        f"UPDATE jobs SET status = 'failed', finished_at = now() WHERE id = '{run['id']}'",
+    )
+    owner(database, f"DELETE FROM lab_models WHERE id = '{model['id']}'")
+    runs = f"/api/projects/{project}/model-runs/{run['id']}"
+    acting = linked(lab.people["owner"])
+    assert problem(acting.post(f"{runs}/retry")) == (409, "lab-model-changed")
+    assert problem(acting.post(f"{runs}/resume")) == (409, "lab-model-changed")

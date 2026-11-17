@@ -129,13 +129,22 @@ def sample_tile(size: int) -> bytes:
     )
 
 
-def request_body(tile_size: int, magnification: int) -> dict[str, Any]:
-    encoded = base64.b64encode(sample_tile(tile_size)).decode()
+@dataclass(frozen=True)
+class SentTile:
+    png: bytes
+    origin: tuple[int, int]
+
+
+def request_body(
+    tile_size: int, magnification: int, tile: SentTile | None = None
+) -> dict[str, Any]:
+    sent = tile or SentTile(sample_tile(tile_size), SAMPLE_ORIGIN)
+    encoded = base64.b64encode(sent.png).decode()
     return {
         "tile": f"data:image/png;base64,{encoded}",
         "size": tile_size,
         "magnification": magnification,
-        "origin": list(SAMPLE_ORIGIN),
+        "origin": list(sent.origin),
     }
 
 
@@ -208,6 +217,7 @@ async def call_endpoint(
     timeout_seconds: float,
     tile_size: int,
     magnification: int,
+    tile: SentTile | None = None,
 ) -> Answer:
     try:
         url = httpx2.URL(endpoint.address)
@@ -224,7 +234,7 @@ async def call_endpoint(
             "POST",
             target.url,
             headers={**target.headers, **endpoint.auth_headers()},
-            json=request_body(tile_size, magnification),
+            json=request_body(tile_size, magnification, tile),
             extensions=target.extensions,
         )
         try:
