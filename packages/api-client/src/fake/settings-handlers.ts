@@ -30,18 +30,19 @@ export const toMyAvailability = (): MemberAvailability => ({
   user_id: people[fakeView().viewer].id,
   status: myAvailability.status,
   until: myAvailability.status === "away" ? (myAvailability.until ?? null) : null,
-  note: myAvailability.status === "away" ? (myAvailability.note ?? null) : null,
+  note: myAvailability.status === "available" ? null : (myAvailability.note ?? null),
 });
 
 const allowedAvailability = (change: AvailabilityChange) =>
   !(change.status === "available" && (change.until || change.note)) &&
+  !(change.status === "busy" && change.until) &&
   !(change.until && new Date(change.until).getTime() <= Date.now());
 
 const invalidAvailability = () =>
   HttpResponse.json(
     {
       type: "about:blank",
-      title: "Only away takes an end or a note, and the end must be ahead",
+      title: "Only away takes an end, only away and busy take a note, and the end must be ahead",
       status: 400,
       code: "invalid-availability",
     },

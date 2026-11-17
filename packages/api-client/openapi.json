@@ -56840,7 +56840,8 @@
         "type": "string",
         "enum": [
           "available",
-          "away"
+          "away",
+          "busy"
         ],
         "title": "Availability"
       },
@@ -83109,7 +83110,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 54
+        "maxProperties": 55
       },
       "VersionCheck": {
         "properties": {
@@ -83636,7 +83637,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 54,
+            "maxItems": 55,
             "title": "Locked",
             "default": []
           }

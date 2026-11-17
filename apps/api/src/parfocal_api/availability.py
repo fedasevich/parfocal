@@ -37,7 +37,7 @@ class MembersOnlyError(ForbiddenError):
 
 class InvalidAvailabilityError(BadRequestError):
     code = "invalid-availability"
-    title = "Only away takes an end or a note, and the end must be ahead"
+    title = "Only away takes an end, only away and busy take a note, and the end must be ahead"
 
 
 def effective(row: Any, now: datetime) -> MemberAvailability:
@@ -98,6 +98,8 @@ async def set_my_availability(
     if change.until is not None and change.until <= now:
         raise InvalidAvailabilityError
     if change.status is Availability.AVAILABLE and (change.until or change.note):
+        raise InvalidAvailabilityError
+    if change.status is Availability.BUSY and change.until is not None:
         raise InvalidAvailabilityError
     await connection.execute(
         update(memberships)
