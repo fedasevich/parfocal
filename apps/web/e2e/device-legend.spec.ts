@@ -26,6 +26,7 @@ for (const [device, name] of devices) {
     await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
       timeout: 15_000,
     });
+    await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
     const legend = page.getByTestId("device-legend");
     await expect(legend).toHaveAttribute("data-device", device);
     await expect(legend).toContainText(name);

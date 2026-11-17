@@ -65,6 +65,7 @@ import { ReasonModal } from "../screens/clinical-report/modals.tsx";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { GuidedCheck } from "./guided-check.tsx";
+import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const guideActionList = [guideAction];
@@ -101,6 +102,7 @@ export function AnnotateTaskPanel({
   onOpenSlide,
 }: AnnotateTaskPanelProps) {
   const { t } = useLingui();
+  const docked = useDocked();
   const { taskId, slideId } = task;
   const queryClient = useQueryClient();
   const me = okData(useGetMe().data)?.user_id ?? null;
@@ -266,214 +268,223 @@ export function AnnotateTaskPanel({
           colourOf={colourOf}
         />
       ) : null}
-      <section
-        aria-label={t`Annotate task`}
-        data-testid="annotate-task-panel"
-        data-step={step}
-        data-ai={view.shown ? "shown" : view.available ? "hidden" : "none"}
-        className="absolute top-4 left-16 grid max-h-[calc(100%-48px)] w-80 gap-2 overflow-auto rounded-ctl border border-line bg-chrome p-3"
-      >
-        <p className="m-0 text-body-sm text-fg-dim" data-testid="task-progress">
-          {progress.line}
-        </p>
-        {view.available ? (
-          <AiResultToggle
-            checked={view.shown}
-            onCheckedChange={(on) => setAiHidden(!on)}
-            resultName={aiList?.result_name ?? t`AI result`}
-            count={ai.length}
-          />
-        ) : (
-          <p className="m-0 text-body-sm text-fg-dim" data-testid="no-result-set">
-            <Trans>{view.label}. Draw the objects by hand.</Trans>
-          </p>
-        )}
-        {view.available && ai.length > 0 ? (
-          <CheckProgress counts={counts} scope="AI objects" />
-        ) : null}
-        <ul aria-label={t`Counts per class`} className="m-0 grid list-none gap-1 p-0 text-body-sm">
-          {classCounts.map((item) => (
-            <li key={item.id} className="flex items-center gap-2" data-testid="class-count">
-              <i
-                aria-hidden="true"
-                className="size-2.5 rounded-full"
-                style={{ background: colourOf(item.id) }}
-              />
-              {item.name}
-              <span className="ml-auto font-mono text-fg-dim">{item.count}</span>
-            </li>
-          ))}
-        </ul>
-        <ul
-          aria-label={t`Objects`}
-          className="m-0 grid max-h-64 list-none gap-0.5 overflow-auto p-0"
+      <DockCard section="objects" order={0}>
+        <section
+          aria-label={t`Annotate task`}
+          data-testid="annotate-task-panel"
+          data-step={step}
+          data-ai={view.shown ? "shown" : view.available ? "hidden" : "none"}
+          className={
+            docked
+              ? dockedCard
+              : "absolute top-4 left-16 grid max-h-[calc(100%-48px)] w-80 gap-2 overflow-auto rounded-ctl border border-line bg-chrome p-3"
+          }
         >
-          {shownAi.map((object) => (
-            <li key={object.object}>
-              <button
-                type="button"
-                aria-pressed={object.object === selected}
-                data-testid="task-object"
-                data-origin={object.origin}
-                onClick={() =>
-                  setSelected((now) => selectionAfterRowClick(guided, now, object.object))
-                }
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-1.5 py-1 text-left text-body-sm text-fg hover:bg-chrome-3 aria-pressed:bg-accent-soft"
-              >
-                <span className="w-9 shrink-0 font-mono">{object.object}</span>
-                <OriginMark
-                  origin={object.origin}
-                  author={
-                    object.copy === undefined
-                      ? undefined
-                      : personOf(originMarkOf(object.copy).authorId)
-                  }
-                />
-                <CheckStateTag state={object.check} className="ml-auto" />
-              </button>
-            </li>
-          ))}
-          {drawn.map((object) => (
-            <li
-              key={object.id}
-              data-testid="task-object"
-              data-origin={object.origin}
-              className="flex items-center gap-2 px-1.5 py-1 text-body-sm"
-            >
-              <span className="w-9 shrink-0 font-mono">{object.code}</span>
-              <OriginMark origin="human" author={personOf(originMarkOf(object).authorId)} />
-            </li>
-          ))}
-        </ul>
-        {guidedAvailable(view.shown, ai.length, locked) ? (
-          guided ? (
-            orderQuery.isPending ? (
-              <div data-testid="guided-loading">
-                <Loader label={t`Loading the check order`} />
-              </div>
-            ) : (
-              <GuidedCheck
-                engine={engine}
-                objects={ai}
-                storedOrder={storedOrder}
-                locked={locked}
-                canReclass={classes.length > 1}
-                onCurrent={setSelected}
-                onConfirm={confirmSelected}
-                onDelete={deleteSelected}
-                onReclass={reclassSelected}
-                onLeave={toggleGuide}
-              />
-            )
+          <p className="m-0 text-body-sm text-fg-dim" data-testid="task-progress">
+            {progress.line}
+          </p>
+          {view.available ? (
+            <AiResultToggle
+              checked={view.shown}
+              onCheckedChange={(on) => setAiHidden(!on)}
+              resultName={aiList?.result_name ?? t`AI result`}
+              count={ai.length}
+            />
           ) : (
-            <Button size="sm" onClick={toggleGuide}>
-              <Trans>Guided check</Trans> <Keycap action={guideAction} keys="⇧G" size="sm" />
-            </Button>
-          )
-        ) : null}
-        {selectedAi && !locked ? (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="primary"
-              disabled={selectedAi.check !== "unchecked"}
-              onClick={confirmSelected}
-            >
-              <Trans>Confirm {selectedAi.object}</Trans>{" "}
-              <Keycap action={confirmAction} keys="D" size="sm" />
-            </Button>
-            <Button size="sm" disabled={selectedAi.check === "deleted"} onClick={deleteSelected}>
-              <Trans>Delete {selectedAi.object}</Trans>
-            </Button>
-          </div>
-        ) : null}
-        {newRuns.length > 0 && (!locked || task.owner) ? (
-          <ul aria-label={t`Runs to add`} className="m-0 grid list-none gap-1 p-0">
-            {newRuns.map((set) => (
-              <li key={set.id}>
-                <Button
-                  size="sm"
-                  data-testid="add-run"
-                  onClick={() => (locked ? setAddingRun(set.id) : addRunNow(set.id))}
-                >
-                  <Trans>Add the run {set.name}</Trans>
-                </Button>
+            <p className="m-0 text-body-sm text-fg-dim" data-testid="no-result-set">
+              <Trans>{view.label}. Draw the objects by hand.</Trans>
+            </p>
+          )}
+          {view.available && ai.length > 0 ? (
+            <CheckProgress counts={counts} scope="AI objects" />
+          ) : null}
+          <ul
+            aria-label={t`Counts per class`}
+            className="m-0 grid list-none gap-1 p-0 text-body-sm"
+          >
+            {classCounts.map((item) => (
+              <li key={item.id} className="flex items-center gap-2" data-testid="class-count">
+                <i
+                  aria-hidden="true"
+                  className="size-2.5 rounded-full"
+                  style={{ background: colourOf(item.id) }}
+                />
+                {item.name}
+                <span className="ml-auto font-mono text-fg-dim">{item.count}</span>
               </li>
             ))}
           </ul>
-        ) : null}
-        {addingSet ? (
-          <ReasonModal
-            title={t`Add a run to a signed-off slide`}
-            subtitle={t`This slide is signed off`}
-            whatLabel={t`What changes`}
-            what={t`The run ${addingSet.name} joins this slide`}
-            label={t`Reason`}
-            placeholder={t`For example, a newer model run finished`}
-            help={t`The reason goes into the history of the layer.`}
-            hint={t`The change is listed with the evaluation.`}
-            primary={t`Add the run`}
-            tooShort={t`Give a reason of at least 10 characters.`}
-            onClose={() => setAddingRun(null)}
-            onSubmit={(reason) => {
-              setAddingRun(null);
-              addRunNow(addingSet.id, reason);
-            }}
-          />
-        ) : null}
-        {aiQuery.isError ? (
-          <p role="alert" className="m-0 text-body-sm text-danger">
-            <Trans>The AI result did not load. Reload the slide to try again.</Trans>
-          </p>
-        ) : null}
-        {refusal ? (
-          <p role="alert" className="m-0 text-body-sm text-danger">
-            {refusal}
-          </p>
-        ) : null}
-        {step === "open" ? (
-          <Button
-            variant="primary"
-            disabled={!loaded}
-            onClick={() =>
-              void run(() =>
-                checkSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),
-              )
-            }
+          <ul
+            aria-label={t`Objects`}
+            className="m-0 grid max-h-64 list-none gap-0.5 overflow-auto p-0"
           >
-            {nothingToMark ? t`Nothing to mark` : t`Mark slide checked`}
-          </Button>
-        ) : null}
-        {step !== "open" ? (
-          <CheckedCard
-            nothingToMark={
-              status?.experts.find((expert) => expert.user_id === me)?.nothing_to_mark ?? false
-            }
-            summary={summary}
-            {...(locked ? {} : { onUndo: () => void run(() => uncheckSlide(taskId, slideId)) })}
-            {...(next === null || onOpenSlide === undefined
-              ? {}
-              : { onNext: () => onOpenSlide(next) })}
-          />
-        ) : null}
-        {status && (canSignOff(status, task.owner) || locked) ? (
-          <SignOffCard
-            slideName="this slide"
-            openThreads={status.open_threads}
-            signedOff={locked}
-            experts={status.experts.map((expert) => ({
-              person: personOf(expert.user_id) ?? {
-                initials: "?",
-                name: "Expert",
-                color: "var(--fg-dim)",
-              },
-              checked: expert.checked_at !== null,
-              sub: expert.nothing_to_mark ? "Nothing to mark" : "Checked",
-            }))}
-            onSignOff={() => void run(() => signOffSlide(taskId, slideId))}
-          />
-        ) : null}
-      </section>
+            {shownAi.map((object) => (
+              <li key={object.object}>
+                <button
+                  type="button"
+                  aria-pressed={object.object === selected}
+                  data-testid="task-object"
+                  data-origin={object.origin}
+                  onClick={() =>
+                    setSelected((now) => selectionAfterRowClick(guided, now, object.object))
+                  }
+                  className="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-1.5 py-1 text-left text-body-sm text-fg hover:bg-chrome-3 aria-pressed:bg-accent-soft"
+                >
+                  <span className="w-9 shrink-0 font-mono">{object.object}</span>
+                  <OriginMark
+                    origin={object.origin}
+                    author={
+                      object.copy === undefined
+                        ? undefined
+                        : personOf(originMarkOf(object.copy).authorId)
+                    }
+                  />
+                  <CheckStateTag state={object.check} className="ml-auto" />
+                </button>
+              </li>
+            ))}
+            {drawn.map((object) => (
+              <li
+                key={object.id}
+                data-testid="task-object"
+                data-origin={object.origin}
+                className="flex items-center gap-2 px-1.5 py-1 text-body-sm"
+              >
+                <span className="w-9 shrink-0 font-mono">{object.code}</span>
+                <OriginMark origin="human" author={personOf(originMarkOf(object).authorId)} />
+              </li>
+            ))}
+          </ul>
+          {guidedAvailable(view.shown, ai.length, locked) ? (
+            guided ? (
+              orderQuery.isPending ? (
+                <div data-testid="guided-loading">
+                  <Loader label={t`Loading the check order`} />
+                </div>
+              ) : (
+                <GuidedCheck
+                  engine={engine}
+                  objects={ai}
+                  storedOrder={storedOrder}
+                  locked={locked}
+                  canReclass={classes.length > 1}
+                  onCurrent={setSelected}
+                  onConfirm={confirmSelected}
+                  onDelete={deleteSelected}
+                  onReclass={reclassSelected}
+                  onLeave={toggleGuide}
+                />
+              )
+            ) : (
+              <Button size="sm" onClick={toggleGuide}>
+                <Trans>Guided check</Trans> <Keycap action={guideAction} keys="⇧G" size="sm" />
+              </Button>
+            )
+          ) : null}
+          {selectedAi && !locked ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={selectedAi.check !== "unchecked"}
+                onClick={confirmSelected}
+              >
+                <Trans>Confirm {selectedAi.object}</Trans>{" "}
+                <Keycap action={confirmAction} keys="D" size="sm" />
+              </Button>
+              <Button size="sm" disabled={selectedAi.check === "deleted"} onClick={deleteSelected}>
+                <Trans>Delete {selectedAi.object}</Trans>
+              </Button>
+            </div>
+          ) : null}
+          {newRuns.length > 0 && (!locked || task.owner) ? (
+            <ul aria-label={t`Runs to add`} className="m-0 grid list-none gap-1 p-0">
+              {newRuns.map((set) => (
+                <li key={set.id}>
+                  <Button
+                    size="sm"
+                    data-testid="add-run"
+                    onClick={() => (locked ? setAddingRun(set.id) : addRunNow(set.id))}
+                  >
+                    <Trans>Add the run {set.name}</Trans>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {addingSet ? (
+            <ReasonModal
+              title={t`Add a run to a signed-off slide`}
+              subtitle={t`This slide is signed off`}
+              whatLabel={t`What changes`}
+              what={t`The run ${addingSet.name} joins this slide`}
+              label={t`Reason`}
+              placeholder={t`For example, a newer model run finished`}
+              help={t`The reason goes into the history of the layer.`}
+              hint={t`The change is listed with the evaluation.`}
+              primary={t`Add the run`}
+              tooShort={t`Give a reason of at least 10 characters.`}
+              onClose={() => setAddingRun(null)}
+              onSubmit={(reason) => {
+                setAddingRun(null);
+                addRunNow(addingSet.id, reason);
+              }}
+            />
+          ) : null}
+          {aiQuery.isError ? (
+            <p role="alert" className="m-0 text-body-sm text-danger">
+              <Trans>The AI result did not load. Reload the slide to try again.</Trans>
+            </p>
+          ) : null}
+          {refusal ? (
+            <p role="alert" className="m-0 text-body-sm text-danger">
+              {refusal}
+            </p>
+          ) : null}
+          {step === "open" ? (
+            <Button
+              variant="primary"
+              disabled={!loaded}
+              onClick={() =>
+                void run(() =>
+                  checkSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),
+                )
+              }
+            >
+              {nothingToMark ? t`Nothing to mark` : t`Mark slide checked`}
+            </Button>
+          ) : null}
+          {step !== "open" ? (
+            <CheckedCard
+              nothingToMark={
+                status?.experts.find((expert) => expert.user_id === me)?.nothing_to_mark ?? false
+              }
+              summary={summary}
+              {...(locked ? {} : { onUndo: () => void run(() => uncheckSlide(taskId, slideId)) })}
+              {...(next === null || onOpenSlide === undefined
+                ? {}
+                : { onNext: () => onOpenSlide(next) })}
+            />
+          ) : null}
+          {status && (canSignOff(status, task.owner) || locked) ? (
+            <SignOffCard
+              slideName="this slide"
+              openThreads={status.open_threads}
+              signedOff={locked}
+              experts={status.experts.map((expert) => ({
+                person: personOf(expert.user_id) ?? {
+                  initials: "?",
+                  name: "Expert",
+                  color: "var(--fg-dim)",
+                },
+                checked: expert.checked_at !== null,
+                sub: expert.nothing_to_mark ? "Nothing to mark" : "Checked",
+              }))}
+              onSignOff={() => void run(() => signOffSlide(taskId, slideId))}
+            />
+          ) : null}
+        </section>
+      </DockCard>
     </>
   );
 }

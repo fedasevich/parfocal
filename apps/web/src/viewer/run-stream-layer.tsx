@@ -4,6 +4,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { useCallback } from "react";
 import type { AnnotateTask } from "../annotations/annotate-task.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { DockCard, useDocked } from "./inspector-slots.tsx";
 import { canRunModels, canTuneRun, type ViewRect, viewScopeOf } from "./run-options.ts";
 import { RunTilesMap } from "./run-tiles-map.tsx";
 import { StartRunPanel } from "./start-run-panel.tsx";
@@ -68,6 +69,7 @@ function RunStreamPanel({
   slide: { readonly width: number; readonly height: number } | null;
 }) {
   const { t } = useLingui();
+  const docked = useDocked();
   const cancelling = controls.progress?.cancelRequested === true;
   return (
     <section
@@ -77,7 +79,11 @@ function RunStreamPanel({
       data-status={controls.progress?.status ?? "queued"}
       data-drawn={controls.drawn}
       data-done={controls.progress?.done ?? 0}
-      className="pointer-events-auto absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
+      className={
+        docked
+          ? "flex items-center gap-2 rounded-ctl border border-line bg-surf-panel px-3 py-2 text-caption"
+          : "pointer-events-auto absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
+      }
     >
       <RunTilesMap tiles={controls.tiles} slide={slide} />
       <span role="status" data-testid="run-stream-status">
@@ -118,7 +124,7 @@ function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId
     return viewScopeOf(viewArea(engine.getCamera(), { width, height }), slide);
   }, [engine, stage]);
   return (
-    <>
+    <DockCard section="objects" order={1}>
       {runStreamVisible(controls) ? (
         <RunStreamPanel controls={controls} slide={engine.getSlide()} />
       ) : null}
@@ -139,7 +145,7 @@ function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId
           onLoadLast={controls.loadLast}
         />
       )}
-    </>
+    </DockCard>
   );
 }
 
@@ -156,6 +162,7 @@ function TaskRunLine({ join }: { join: TaskRunJoin }) {
 }
 
 function TaskRunStatus({ join, streamed }: { join: TaskRunJoin; streamed: number }) {
+  const docked = useDocked();
   return (
     <p
       role="status"
@@ -163,7 +170,11 @@ function TaskRunStatus({ join, streamed }: { join: TaskRunJoin; streamed: number
       data-phase={join.phase}
       data-run={join.runId ?? ""}
       data-streamed={streamed}
-      className="pointer-events-none absolute bottom-28 left-3 z-10 m-0 rounded-md bg-chrome px-2 py-1 text-caption text-fg-dim empty:hidden"
+      className={
+        docked
+          ? "m-0 text-caption text-fg-dim empty:hidden"
+          : "pointer-events-none absolute bottom-28 left-3 z-10 m-0 rounded-md bg-chrome px-2 py-1 text-caption text-fg-dim empty:hidden"
+      }
     >
       <TaskRunLine join={join} />
     </p>

@@ -1,5 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
+import { useDocked } from "../viewer/inspector-slots.tsx";
 import { deviceNames, type LegendContext, type LegendDevice, legendRows } from "./device-legend.ts";
 
 export function DeviceLegend({
@@ -10,6 +11,7 @@ export function DeviceLegend({
   context: LegendContext;
 }) {
   const { t } = useLingui();
+  const docked = useDocked();
 
   return (
     <section
@@ -17,7 +19,11 @@ export function DeviceLegend({
       data-testid="device-legend"
       data-device={device}
       data-context={context}
-      className="absolute top-4 left-4 z-10 grid w-64 gap-2.5 rounded-zone border border-line bg-chrome p-4 text-body-sm shadow-lg"
+      className={
+        docked
+          ? "grid gap-2.5 rounded-ctl border border-line bg-surf-panel p-3 text-body-sm"
+          : "absolute top-4 left-4 z-10 grid w-64 gap-2.5 rounded-zone border border-line bg-chrome p-4 text-body-sm shadow-lg"
+      }
     >
       <div className="flex items-center gap-2 font-semibold text-body">
         <Icon name={device === "footswitch" ? "keyboard" : device} size="md" />

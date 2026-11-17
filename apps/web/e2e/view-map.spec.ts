@@ -26,6 +26,7 @@ test("the view map is computed on demand and asking again after a pan rescores n
   page,
 }) => {
   const stage = await openReviewSlide(page);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
   const panel = page.getByTestId("view-map");
   await expect(panel).toHaveAttribute("data-phase", "empty");
   await page.keyboard.press("Alt+5");

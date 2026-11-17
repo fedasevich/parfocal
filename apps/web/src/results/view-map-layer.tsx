@@ -4,6 +4,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { DockCard, useDocked } from "../viewer/inspector-slots.tsx";
 import {
   colorizeHeatmap,
   defaultHeatmapLook,
@@ -47,6 +48,7 @@ type ViewMapPanelProps = {
 
 function ViewMapPanel({ engine, stage, session }: ViewMapPanelProps) {
   const { t } = useLingui();
+  const docked = useDocked();
   const state = useSyncExternalStore(session.subscribe, session.getState);
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
@@ -82,29 +84,35 @@ function ViewMapPanel({ engine, stage, session }: ViewMapPanelProps) {
           }}
         />
       )}
-      <section
-        aria-label={t`Tumor map for this view`}
-        data-testid="view-map"
-        data-phase={state.phase}
-        data-tiles={state.map.tiles.size}
-        className="pointer-events-auto absolute right-3 bottom-3 z-10 flex items-center gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
-      >
-        <span role="status" data-testid="view-map-status">
-          <PhaseText phase={state.phase} />
-        </span>
-        <Button
-          size="sm"
-          data-testid="view-map-ask"
-          disabled={state.phase === "scoring"}
-          onClick={ask}
+      <DockCard section="display" order={2}>
+        <section
+          aria-label={t`Tumor map for this view`}
+          data-testid="view-map"
+          data-phase={state.phase}
+          data-tiles={state.map.tiles.size}
+          className={
+            docked
+              ? "flex items-center gap-2 rounded-ctl border border-line bg-surf-panel px-3 py-2 text-caption"
+              : "pointer-events-auto absolute right-3 bottom-3 z-10 flex items-center gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
+          }
         >
-          {state.map.tiles.size === 0 ? (
-            <Trans>Map this view</Trans>
-          ) : (
-            <Trans>Extend the map</Trans>
-          )}
-        </Button>
-      </section>
+          <span role="status" data-testid="view-map-status">
+            <PhaseText phase={state.phase} />
+          </span>
+          <Button
+            size="sm"
+            data-testid="view-map-ask"
+            disabled={state.phase === "scoring"}
+            onClick={ask}
+          >
+            {state.map.tiles.size === 0 ? (
+              <Trans>Map this view</Trans>
+            ) : (
+              <Trans>Extend the map</Trans>
+            )}
+          </Button>
+        </section>
+      </DockCard>
     </>
   );
 }

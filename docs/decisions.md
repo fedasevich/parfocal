@@ -192,6 +192,16 @@ WL-018 (Assigned by me tab) lists the tasks you created, while Team lists tasks 
 
 Your choice: 
 
+### 144. Where the live viewer's save, live changes and conflict notices go
+
+PROTO-022 (the viewers match the frozen mock again) docked every card of the live viewer, but three small notices still sit on the slide: the save status, the marker for a colleague's new changes and the edit conflict notice. The mock shows such states as toasts or as the one banner under the top bar, and no ADR places them ([result](results/2026-11-17-viewer-mock-parity.md)).
+
+- **A. Move all three into the one banner under the top bar, with the save status as a quiet word in the top bar (recommended).** Nothing stays on the slide but the mock's own bars.
+- B. Keep them as small notices on the slide, since they show only while something happens.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.

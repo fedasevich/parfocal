@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { type ModelRunDraft, startModelRuns } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useState } from "react";
+import { useDocked } from "./inspector-slots.tsx";
 import {
   buildRunDraft,
   defaultRunOptions,
@@ -32,6 +33,7 @@ function Notices({ notice }: { notice: Notice }) {
 
 export function StartRunPanel(props: StartRunPanelProps) {
   const { t } = useLingui();
+  const docked = useDocked();
   const [options, setOptions] = useState<RunOptions>(defaultRunOptions);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -77,7 +79,11 @@ export function StartRunPanel(props: StartRunPanelProps) {
     <section
       aria-label={t`Find nuclei`}
       data-testid="start-run"
-      className="pointer-events-auto absolute bottom-14 left-3 z-10 flex flex-col gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
+      className={
+        docked
+          ? "flex flex-col gap-2 rounded-ctl border border-line bg-surf-panel px-3 py-2 text-caption"
+          : "pointer-events-auto absolute bottom-14 left-3 z-10 flex flex-col gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
+      }
     >
       <div className="flex items-center gap-2">
         <Button
