@@ -32,7 +32,8 @@ Can the BFF login reach a passkey prompt on the pinned Zitadel, what does `login
 | User verification refused | The page shows "The operation either timed out or was not allowed" and keeps "Login with passwordless" and "Login with password" |
 | E2E, cancelled window then retry from the app's sign-in page | Passed |
 | E2E, passkey sign-in to a slide deep link | Signed in to the slide path |
-| E2E, lock and unlock with a passkey | Not reached. The full viewer showed "Loading the slide" without the account menu, so the spec now locks with the same `lock-screen` event the menu sends. Not run again |
+| E2E, lock and unlock with a passkey | Not reached. The full viewer showed "Loading the slide" without the account menu, so the spec now waits for the profile, locks with the same `lock-screen` event the menu sends and checks the hint. Not run again |
+| Fake E2E, passkey unlock compares the slide's viewBox | Passed 3 times in a row. The older account menu lock spec failed 2 of 4 repeats, once with and once without the session lock change, a flake in that spec |
 
 ## Interpretation
 

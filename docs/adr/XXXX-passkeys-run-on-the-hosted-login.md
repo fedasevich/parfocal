@@ -22,5 +22,8 @@ Option 2. `GET /api/auth/login` takes an optional `login_hint` of at most 320 ch
 
 - The user presses Zitadel's "Login with passwordless" before the browser's passkey window opens. The browser's own window offers the phone QR code and security keys.
 - The hosted login only finds passkeys enrolled on Zitadel's pages (the console or a registration link). A passkey added through the user API v2 with an explicit `domain` stores that relying party ID, and the hosted login does not offer it. The E2E spec enrols through a registration link for this reason.
-- A user without a passkey who presses the button lands on Zitadel's password page, which is still a way in.
+- A user without a passkey who presses the button should land on Zitadel's password page. `TODO`: the spike did not run that case.
+- The lock screen takes the email from the profile, which the session lock now loads on every guarded page. A lock screen with no profile loaded sends no hint, and the user types the login name at Zitadel first.
+- The email travels in the query string of `/api/auth/login`, so it can reach request logs.
+- Every measurement used the v1 hosted login, because the local compose sets `LOGINV2_REQUIRED` to false. `TODO`: check which login Zitadel Cloud serves in production.
 - The in-app look of the mock passkey sheet (`PasskeySheet` in `packages/ui`) stays a prototype scene. Moving the ceremony in-app later means moving enrolment too, which needs a new decision.

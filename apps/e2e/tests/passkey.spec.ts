@@ -100,16 +100,22 @@ test("a passkey signs in and unlocks a locked slide to the same camera position"
     await page.goto(`/sign-in?return_to=${encodeURIComponent(`${slidePath}?x=0.3&y=0.4&z=2`)}`);
     await page.getByLabel("Work email").fill(username);
     await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+    const profile = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === "/api/me" && response.ok(),
+    );
     await answerWithPasskey(page);
     await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe(slidePath);
     expect((await readSession(page)).email).toBe(username);
+    await profile;
 
-    await expect(page).toHaveURL(/[?&]z=/);
-    const lockedAt = page.url();
     await page.evaluate('window.dispatchEvent(new Event("lock-screen"))');
     const lock = page.getByRole("region", { name: "Locked" });
     await expect(lock).toBeVisible();
+    const lockedAt = page.url();
+    expect(new URL(lockedAt).searchParams.get("z")).not.toBeNull();
+    const login = page.waitForRequest((request) => request.url().includes("/api/auth/login"));
     await lock.getByRole("button", { name: "Unlock with a passkey" }).click();
+    expect(new URL((await login).url()).searchParams.get("login_hint")).toBe(username);
     await answerWithPasskey(page);
     await expect(page).toHaveURL(lockedAt, { timeout: 30_000 });
     await expect(page.getByRole("region", { name: "Locked" })).toBeHidden();

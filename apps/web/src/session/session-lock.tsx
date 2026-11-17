@@ -1,4 +1,10 @@
-import { getSession, lockSession, recordActivity, useGetSessionPolicy } from "@parfocal/api-client";
+import {
+  getSession,
+  lockSession,
+  recordActivity,
+  useGetMe,
+  useGetSessionPolicy,
+} from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
@@ -94,6 +100,7 @@ export function SessionLock({ children }: { children: ReactNode }) {
   const askForSecondFactor = () => {
     if (guarded) setSecondFactor(true);
   };
+  useGetMe({ query: { enabled: guarded } });
   const policy = okData(useGetSessionPolicy({ query: { enabled: guarded } }).data);
   const minutes = policy?.idle_lock_minutes ?? defaultIdleLockMinutes;
   useRefusedByApi(isSessionLocked, lock);

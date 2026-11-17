@@ -118,10 +118,13 @@ test("a passkey unlocks a locked slide to the same camera position", async ({ pa
   expect(started.searchParams.get("login_hint")).toMatch(/@/);
   await expect(lock).toBeHidden();
   await expect(page).toHaveURL(lockedAt);
-  const after = await viewBoxOf(still);
-  for (const [index, value] of after.entries()) {
-    expect(value).toBeCloseTo(before[index] ?? Number.NaN, 0);
-  }
+  await expect
+    .poll(async () => {
+      await page.clock.runFor(100);
+      const after = await viewBoxOf(still);
+      return Math.max(...after.map((value, index) => Math.abs(value - (before[index] ?? 0))));
+    })
+    .toBeLessThan(0.5);
 });
 
 test("sign in with a passkey starts the login with the typed email", async ({ page }) => {
