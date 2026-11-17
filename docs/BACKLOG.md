@@ -4621,7 +4621,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the four specs pass locally three times in a row and in one CI run.
   Size: S.
 
-- [ ] TEST-026 · Core browser specs against the real API
+- [x] TEST-026 · Core browser specs against the real API
   165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Tag the core flows of each area `@real` now, starting with the review loop and the annotation path, so they run on the fake in the web browser job and assert only what the real API will do. Add a Playwright project that runs the `@real` specs of switched areas with `PARFOCAL_PUBLIC_FAKE_API=off` against the TEST-040 (API container under the end-to-end suite) stack and a seeded database ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches). The draft count moved to TEST-038 (draft call ratchet).
   Done when `@real` specs cover login, upload, guided review with a decision, an annotate task and sign-off and pass on the fake, the real-API project runs in CI for the areas already switched (login and upload today), every spec that passes on the fake and fails on the real API is logged as a bug in one of the two, and `knowledge/agent-workflow.md` states the one `@real` spec per new screen rule.
   Depends on TEST-004.
