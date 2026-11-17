@@ -39,6 +39,7 @@ from parfocal_api.showcase import (
     WORKSPACES,
     MissingFixtureFoldersError,
     seed,
+    viewer_emails_of,
 )
 from parfocal_api.slide_result_stats import get_slide_result_stats
 from parfocal_api.slide_threads import list_slide_threads, list_thread_comments
@@ -355,6 +356,42 @@ async def test_seeded_people_are_fake(seeded: str) -> None:
         assert str(email) in {"", "owner@example.test"} or str(email).endswith(".invalid")
     assert FIXTURES_MANIFEST.is_file()
     assert await values(seeded, "SELECT count(*) FROM slides WHERE barcode IS NOT NULL") == {"0"}
+
+
+async def test_a_viewer_email_gets_a_read_only_seat_on_the_first_gallery_project(
+    seeded: str,
+) -> None:
+    for _ in range(2):
+        await seed(
+            seeded,
+            EmptyStore(),  # type: ignore[arg-type]
+            RESULTS,
+            "owner@example.test",
+            viewer_emails=["Smoke-Walk@Example.test"],
+        )
+    seats = await run_sql(
+        seeded,
+        "SELECT t.slug, m.role, m.admin_rights, p.name, pm.role FROM users u "
+        "JOIN memberships m ON m.user_id = u.id JOIN tenants t ON t.id = m.tenant_id "
+        "JOIN project_members pm ON pm.user_id = u.id JOIN projects p ON p.id = pm.project_id "
+        "WHERE u.email = 'smoke-walk@example.test'",
+    )
+    assert seats == [(WORKSPACES[0].slug, "reviewer", False, WORKSPACES[0].gallery, "viewer")]
+    memberships_held = await run_sql(
+        seeded,
+        "SELECT count(*) FROM memberships m JOIN users u ON u.id = m.user_id "
+        "WHERE u.email = 'smoke-walk@example.test'",
+    )
+    assert memberships_held == [(1,)]
+
+
+def test_viewer_emails_split_on_commas_and_semicolons() -> None:
+    assert viewer_emails_of(" a@x.test, b@x.test;;c@x.test ,") == [
+        "a@x.test",
+        "b@x.test",
+        "c@x.test",
+    ]
+    assert viewer_emails_of("") == []
 
 
 async def test_the_owner_takes_over_the_seeded_account_on_first_sign_in(seeded: str) -> None:

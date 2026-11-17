@@ -3,7 +3,7 @@ import asyncio
 import json
 import os
 import uuid
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -235,6 +235,13 @@ def fixture_facts(manifest: Path = FIXTURES_MANIFEST) -> dict[str, Mapping[str, 
     return {entry["file"]: entry for entry in [*listed["remote"], *listed["synthetic"]]}
 
 
+SEEDED_VIEWER_NAME = "Smoke Viewer"
+
+
+def viewer_emails_of(text: str) -> list[str]:
+    return [item.strip() for item in text.replace(";", ",").split(",") if item.strip()]
+
+
 def placeholder_subject(email: str) -> str:
     return f"{PLACEHOLDER_PREFIX}{email.strip().lower()}"
 
@@ -341,6 +348,38 @@ async def add_owner(connection: AsyncConnection, tenant_id: uuid.UUID, email: st
         Role.RESEARCHER,
         admin_rights=True,
         email=address,
+    )
+
+
+async def add_viewer(connection: AsyncConnection, tenant_id: uuid.UUID, email: str) -> uuid.UUID:
+    address = email.strip().lower()
+    signed_in = await connection.scalar(
+        select(users.c.subject).where(func.lower(users.c.email) == address).limit(1)
+    )
+    return await add_member(
+        connection,
+        tenant_id,
+        signed_in or placeholder_subject(address),
+        SEEDED_VIEWER_NAME,
+        "SV",
+        Role.REVIEWER,
+        admin_rights=False,
+        email=address,
+    )
+
+
+async def seat_viewer_on_gallery(
+    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID, gallery: str
+) -> None:
+    project_id = await connection.scalar(select(projects.c.id).where(projects.c.name == gallery))
+    if project_id is None:
+        return
+    await connection.execute(
+        upsert(project_members)
+        .values(
+            tenant_id=tenant_id, project_id=project_id, user_id=user_id, role=ProjectRole.VIEWER
+        )
+        .on_conflict_do_nothing()
     )
 
 
@@ -1100,6 +1139,7 @@ async def seed(
     owner_email: str | None,
     manifest: Mapping[str, Mapping[str, Any]] | None = None,
     *,
+    viewer_emails: Sequence[str] = (),
     require_fixture_folders: bool = False,
 ) -> list[uuid.UUID]:
     if require_fixture_folders and (missing := await unpublished_gallery(store)):
@@ -1150,6 +1190,17 @@ async def seed(
                     facts,
                     workspace.gallery,
                 )
+        for email in viewer_emails:
+            async with scoped_transaction(
+                engine, DatabaseScope(platform=True, auth=True)
+            ) as connection:
+                viewer = await add_viewer(connection, tenant_ids[0], email)
+            async with scoped_transaction(
+                engine, DatabaseScope(tenant_id=tenant_ids[0], user_id=viewer)
+            ) as connection:
+                await seat_viewer_on_gallery(
+                    connection, tenant_ids[0], viewer, WORKSPACES[0].gallery
+                )
         return tenant_ids
     finally:
         await engine.dispose()
@@ -1189,6 +1240,7 @@ async def main() -> None:
             store,
             ObjectResultStore(store),
             os.environ.get("SEED_OWNER_EMAIL") or None,
+            viewer_emails=viewer_emails_of(os.environ.get("SEED_VIEWER_EMAILS", "")),
             require_fixture_folders=settings.app_env in DEPLOYED_ENVS,
         )
     print(f"seeded {len(tenant_ids)} ČVUT workspaces")

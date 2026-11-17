@@ -29,6 +29,7 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       SEED_OWNER_EMAIL: ${{ secrets.SEED_OWNER_EMAIL }}
+      SEED_VIEWER_EMAILS: ${{ vars.SEED_VIEWER_EMAILS }}
       RESET_CONFIRM: ${{ inputs.confirm }}
     steps:
       - uses: actions/checkout@v7
