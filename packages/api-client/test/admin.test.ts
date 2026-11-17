@@ -25,6 +25,7 @@ import {
   listMemberActivity,
   listStudyTemplates,
   listTenantMembers,
+  type ProjectAccessRequest,
   requestProjectAccess,
   resendInvitation,
 } from "../src/index.ts";
@@ -161,7 +162,7 @@ test("study templates carry their report blocks in order", async () => {
 
 test("asking for access names the project's owner", async () => {
   const project = scenario.projectByCode("P03");
-  const asked = (await requestProjectAccess(project.id)).data;
+  const asked = okBody<ProjectAccessRequest>(await requestProjectAccess(project.id));
   assert.equal(asked.project_id, project.id);
   assert.equal(asked.owner_id, scenario.people.LM.id);
 });

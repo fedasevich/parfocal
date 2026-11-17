@@ -69,7 +69,7 @@ export const toProjectSlides = (projectId: string): ProjectSlide[] =>
             slide.caseLabel === null
               ? null
               : {
-                  id: taskCaseId(slide.caseLabel),
+                  id: taskCaseId(slide.caseLabel) ?? "",
                   label: slide.caseLabel,
                   specimen: slide.specimen ?? "",
                 },

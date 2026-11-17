@@ -17,6 +17,13 @@ import {
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
 
+function body<Response extends { status: number; data: unknown }>(
+  response: Response,
+): Extract<Response, { status: 200 }>["data"] {
+  assert.equal(response.status, 200);
+  return (response as Extract<Response, { status: 200 }>).data;
+}
+
 before(() => {
   server.listen({ onUnhandledFrame: "error" });
   patchedFetch = globalThis.fetch;
@@ -32,8 +39,8 @@ after(() => {
 const p07 = scenario.projectByCode("P07");
 
 test("the defaults pick 12 slides and 9 of them carry CAMELYON v1.0", async () => {
-  const defaults = (await getReviewTaskDefaults(p07.id)).data;
-  const slides = (await listProjectSlides(p07.id)).data;
+  const defaults = body(await getReviewTaskDefaults(p07.id));
+  const slides = body(await listProjectSlides(p07.id));
   const picked = slides.filter((slide) => defaults.slide_ids.includes(slide.id));
   assert.equal(defaults.code, "RT-16");
   assert.equal(picked.length, 12);
@@ -48,7 +55,7 @@ test("the defaults pick 12 slides and 9 of them carry CAMELYON v1.0", async () =
 });
 
 test("the defaults' result sets are the project's own", async () => {
-  const defaults = (await getReviewTaskDefaults(p07.id)).data;
+  const defaults = body(await getReviewTaskDefaults(p07.id));
   const sets = await listProjectResultSets(p07.id);
   assert.equal(sets.status, 200);
   const ids = sets.status === 200 ? sets.data.map((set) => set.id) : [];
@@ -56,14 +63,14 @@ test("the defaults' result sets are the project's own", async () => {
 });
 
 test("the defaults name Lenka Malá and Simona Marková, due on 30 October", async () => {
-  const defaults = (await getReviewTaskDefaults(p07.id)).data;
+  const defaults = body(await getReviewTaskDefaults(p07.id));
   assert.deepEqual(defaults.reviewer_ids, [scenario.people.LM.id, scenario.people.SM.id]);
   assert.equal(defaults.due_on, "2026-10-30");
   assert.ok(defaults.today < defaults.due_on);
 });
 
 test("another project has no slides to pick", async () => {
-  assert.deepEqual((await listProjectSlides(scenario.projectByCode("P09").id)).data, []);
+  assert.deepEqual(body(await listProjectSlides(scenario.projectByCode("P09").id)), []);
 });
 
 test("study templates and their review defaults line up one to one", async () => {
@@ -104,7 +111,7 @@ test("Petra Králová is away until 22 October and has no open tasks", async () 
 });
 
 test("the project offers five ROIs and five unsure zones", async () => {
-  const options = (await getProjectScopeOptions(p07.id)).data;
+  const options = body(await getProjectScopeOptions(p07.id));
   assert.equal(options.rois.length, 5);
   assert.deepEqual(
     options.unsure_zones.map((zone) => zone.key),
@@ -113,7 +120,7 @@ test("the project offers five ROIs and five unsure zones", async () => {
 });
 
 test("creating the task answers RT-16 with what was sent", async () => {
-  const defaults = (await getReviewTaskDefaults(p07.id)).data;
+  const defaults = body(await getReviewTaskDefaults(p07.id));
   const response = await createReviewTask(p07.id, {
     name: "Round 3 · CAMELYON v1.0",
     reviewer_ids: defaults.reviewer_ids,

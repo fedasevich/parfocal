@@ -135,15 +135,15 @@ export function useTaskData(projectId: string): {
   const pending = all.some((query) => query.isPending) || layers.isPending;
   const failed = all.some((query) => query.isError);
   const project = okData(queries.project.data);
-  const defaults = queries.defaults.data?.data;
-  const projectSlides = queries.slides.data?.data;
+  const defaults = okData(queries.defaults.data);
+  const projectSlides = okData(queries.slides.data);
   const resultSets = okData(queries.resultSets.data);
   const templates = okData(queries.templates.data);
   const templateDefaults = queries.templateDefaults.data?.data;
   const members = okData(queries.members.data);
   const availability = okData(queries.availability.data) ?? [];
   const workload = queries.workload.data?.data;
-  const scopeOptions = queries.scopeOptions.data?.data;
+  const scopeOptions = okData(queries.scopeOptions.data);
   if (
     !project ||
     !defaults ||

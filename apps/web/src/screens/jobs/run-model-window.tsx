@@ -45,7 +45,7 @@ export function RunModelWindow({
   const { t } = useLingui();
 
   const project = okData(useGetProject(projectId).data);
-  const slides = useListProjectSlides(projectId).data?.data;
+  const slides = okData(useListProjectSlides(projectId).data);
   const models = okData(useListProjectModels(projectId).data);
   const defaults = useGetModelRunDefaults(projectId).data?.data;
   const sets = okData(useListProjectResultSets(projectId).data) ?? [];

@@ -49,7 +49,14 @@ def test_project_slides_show_ready_sets_and_only_assigned_slides_to_a_reviewer(
             "result_set_ids": [str(r.result_set)],
         }
     ]
-    assert [item["id"] for item in api(r.people["first"]).get(url).json()] == [str(r.slide)]
+    seen = api(r.people["first"]).get(url).json()
+    assert [(item["id"], item["result_set_ids"]) for item in seen] == [
+        (str(r.slide), [str(r.result_set)])
+    ]
+    owner(database, f"UPDATE review_tasks SET ai_hidden_first_read = true WHERE id = '{r.task}'")
+    hidden = api(r.people["first"]).get(url).json()
+    assert [(item["id"], item["result_set_ids"]) for item in hidden] == [(str(r.slide), [])]
+    assert api(r.people["owner"]).get(url).json()[0]["result_set_ids"] == [str(r.result_set)]
     assert api(r.people["third"]).get(url).json() == []
 
 

@@ -270,7 +270,7 @@ export const toUploadBatch = (idOrCode: string): UploadBatch => {
       steps_done: slide.stepsDone,
       running: slide.running,
       progress: slide.progress,
-      extra_result: uploadExtraResults[index],
+      extra_result: uploadExtraResults[index] ?? { name: "", detail: "" },
     })),
     results: uploadResults.map((result) => ({
       name: result.name,
@@ -283,7 +283,7 @@ export const toUploadBatch = (idOrCode: string): UploadBatch => {
     })),
     folder_tree: uploadFolderTree,
     problems: uploadProblems.map((problem) => ({ ...problem, lines: [...problem.lines] })),
-    new_classes: uploadNewClasses,
+    new_classes: uploadNewClasses.map((item) => ({ ...item })),
     unscored_rows: uploadUnscored,
     duplicate: { slide: uploadDuplicate.slide, uploaded_on: uploadDuplicate.uploadedOn },
     storage: {
@@ -295,8 +295,14 @@ export const toUploadBatch = (idOrCode: string): UploadBatch => {
     },
     source_outage: uploadSourceOutage,
     done: { minutes: uploadDone.minutes, first_ids: uploadDone.firstIds },
-    result_preview: resultPreview,
-    format_check: formatCheck,
+    result_preview: {
+      ...resultPreview,
+      shift: [resultPreview.shift[0] ?? 0, resultPreview.shift[1] ?? 0],
+    },
+    format_check: {
+      ...formatCheck,
+      findings: formatCheck.findings.map((finding) => ({ ...finding })),
+    },
   };
 };
 
