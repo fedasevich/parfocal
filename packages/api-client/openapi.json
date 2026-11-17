@@ -45270,6 +45270,22 @@
             }
           },
           {
+            "name": "storage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SlideStorage"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Storage"
+            }
+          },
+          {
             "name": "q",
             "in": "query",
             "required": false,
@@ -77239,6 +77255,9 @@
           "status": {
             "$ref": "#/components/schemas/State"
           },
+          "storage": {
+            "$ref": "#/components/schemas/SlideStorage"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -77255,6 +77274,7 @@
           "result_sets",
           "reviews",
           "status",
+          "storage",
           "created_at"
         ],
         "title": "SlideRow"
@@ -77319,6 +77339,14 @@
           "reviewers"
         ],
         "title": "SlideState"
+      },
+      "SlideStorage": {
+        "type": "string",
+        "enum": [
+          "uploaded",
+          "remote"
+        ],
+        "title": "SlideStorage"
       },
       "SlideTable": {
         "properties": {

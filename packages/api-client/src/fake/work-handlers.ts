@@ -155,6 +155,7 @@ export const toSlideRow = (slideId: string): SlideRow => {
     result_sets: sets,
     reviews,
     status: slideStatus({ sets, reviews }),
+    storage: "uploaded",
     created_at: "2026-10-12T09:00:00+02:00",
   };
 };
@@ -509,6 +510,7 @@ export function workHandlers(): RequestHandler[] {
       const status = params.get("status");
       const resultSet = params.get("result_set");
       const reviewer = params.get("reviewer_id");
+      const storage = params.get("storage");
       const scenarioRows = myWorkSlideIds.map(toSlideRow);
       const rows = [...scenarioRows, ...bulkSlideRows(scenarioRows, bulkSlideCount)];
       return {
@@ -518,7 +520,8 @@ export function workHandlers(): RequestHandler[] {
             (project === null || row.project.id === project) &&
             (status === null || row.status === status) &&
             (resultSet === null || row.result_sets.some((set) => set.name === resultSet)) &&
-            (reviewer === null || row.reviews.some((review) => review.user_id === reviewer)),
+            (reviewer === null || row.reviews.some((review) => review.user_id === reviewer)) &&
+            (storage === null || row.storage === storage),
         ),
         next_cursor: null,
       };

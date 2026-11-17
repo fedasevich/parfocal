@@ -7000,6 +7000,13 @@ export interface SlideReview {
   state: State;
 }
 
+export type SlideStorage = (typeof SlideStorage)[keyof typeof SlideStorage];
+
+export const SlideStorage = {
+  uploaded: "uploaded",
+  remote: "remote",
+} as const;
+
 export interface SlideRow {
   id: string;
   label: string;
@@ -7009,6 +7016,7 @@ export interface SlideRow {
   result_sets: SetRef[];
   reviews: SlideReview[];
   status: State;
+  storage: SlideStorage;
   created_at: string;
 }
 
@@ -8324,6 +8332,7 @@ export type ListMySlidesParams = {
   status?: State | null;
   result_set?: string | null;
   reviewer_id?: string | null;
+  storage?: SlideStorage | null;
   q?: string | null;
   cursor?: string | null;
   /**

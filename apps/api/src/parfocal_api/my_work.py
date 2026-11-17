@@ -22,6 +22,7 @@ from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
     ResultSource,
     ResultStatus,
+    SlideStorage,
     StartMode,
     TaskScope,
     cases,
@@ -120,6 +121,7 @@ class SlideRow(BaseModel):
     result_sets: list[SetRef]
     reviews: list[SlideReview]
     status: State
+    storage: SlideStorage
     created_at: datetime
 
 
@@ -387,6 +389,7 @@ async def describe(
                 result_sets=sets.get(row.id, []),
                 reviews=reviews,
                 status=status,
+                storage=SlideStorage(row.storage),
                 created_at=row.created_at,
             )
         )
@@ -401,6 +404,7 @@ async def list_my_slides(
     status: State | None = None,
     result_set: Annotated[str | None, Query(max_length=120)] = None,
     reviewer_id: uuid.UUID | None = None,
+    storage: SlideStorage | None = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = PAGE,
@@ -412,6 +416,7 @@ async def list_my_slides(
             slides.c.label,
             slides.c.case_id,
             slides.c.created_at,
+            slides.c.storage,
             slides.c.project_id,
             projects.c.number.label("project_number"),
             projects.c.name.label("project_name"),
@@ -435,6 +440,8 @@ async def list_my_slides(
                 func.lower(result_sets.c.name) == result_set.lower(),
             )
         )
+    if storage is not None:
+        statement = statement.where(slides.c.storage == storage)
     if reviewer_id is not None:
         statement = statement.where(
             exists().where(

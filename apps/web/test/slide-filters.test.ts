@@ -4,18 +4,15 @@ import type { SlideRow } from "@parfocal/api-client";
 import {
   activeFilterCount,
   filterChoices,
+  noSlideFilters,
   type SlideFilterValues,
   slideQuery,
   statusChoices,
+  storageChoices,
   withFilter,
 } from "../src/screens/my-work/slide-filters.ts";
 
-const none: SlideFilterValues = {
-  project: undefined,
-  status: undefined,
-  set: undefined,
-  reviewer: undefined,
-};
+const none: SlideFilterValues = noSlideFilters;
 
 const row = (id: string, project: string, setNames: string[], reviewers: string[]): SlideRow => ({
   id,
@@ -31,6 +28,7 @@ const row = (id: string, project: string, setNames: string[], reviewers: string[
     state: "in-review",
   })),
   status: "ready",
+  storage: "uploaded",
   created_at: "2026-10-12T09:00:00+02:00",
 });
 
@@ -44,13 +42,17 @@ test("each filter maps to its API parameter and they combine with the search", (
   assert.deepEqual(slideQuery({ ...none, set: "Nuclei 2.1" }, ""), { result_set: "Nuclei 2.1" });
   assert.deepEqual(slideQuery({ ...none, reviewer: "u2" }, ""), { reviewer_id: "u2" });
   assert.deepEqual(
-    slideQuery({ project: "p7", status: "submitted", set: "Nuclei 2.1", reviewer: "u2" }, "tum"),
+    slideQuery(
+      { project: "p7", status: "submitted", set: "Nuclei 2.1", reviewer: "u2", storage: "remote" },
+      "tum",
+    ),
     {
       q: "tum",
       project_id: "p7",
       status: "submitted",
       result_set: "Nuclei 2.1",
       reviewer_id: "u2",
+      storage: "remote",
     },
   );
 });
@@ -89,4 +91,17 @@ test("the choices list each project, result set and reviewer once, sorted", () =
 test("the status choices cover every state a slide can be in", () => {
   assert.equal(new Set(statusChoices.map((choice) => choice.value)).size, statusChoices.length);
   assert.ok(statusChoices.some((choice) => choice.value === "disagreement-queue"));
+});
+
+test("the storage filter picks copied or read in place slides", () => {
+  assert.deepEqual(slideQuery({ ...none, storage: "remote" }, ""), { storage: "remote" });
+  assert.deepEqual(slideQuery({ ...none, storage: "uploaded" }, ""), { storage: "uploaded" });
+  assert.deepEqual(
+    storageChoices.map((choice) => [choice.value, choice.label]),
+    [
+      ["uploaded", "Copied"],
+      ["remote", "Read in place"],
+    ],
+  );
+  assert.equal(activeFilterCount(withFilter(none, "storage", "remote")), 1);
 });

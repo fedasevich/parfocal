@@ -34,8 +34,10 @@ import {
 import {
   activeFilterCount,
   filterChoices,
+  noSlideFilters,
   type SlideFilterValues,
   statusChoices,
+  storageChoices,
   withFilter,
 } from "./slide-filters.ts";
 
@@ -417,19 +419,22 @@ export function AllSlidesTab({
           value={filters.reviewer}
           onValueChange={(value) => onFilters(withFilter(filters, "reviewer", value))}
         />
+        <FilterChip
+          label={t`Storage`}
+          options={storageChoices}
+          value={filters.storage}
+          onValueChange={(value) =>
+            onFilters(
+              withFilter(
+                filters,
+                "storage",
+                storageChoices.find((choice) => choice.value === value)?.value,
+              ),
+            )
+          }
+        />
         {active > 0 ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              onFilters({
-                project: undefined,
-                status: undefined,
-                set: undefined,
-                reviewer: undefined,
-              })
-            }
-          >
+          <Button size="sm" variant="ghost" onClick={() => onFilters(noSlideFilters)}>
             <Trans>Clear filters</Trans>
           </Button>
         ) : null}

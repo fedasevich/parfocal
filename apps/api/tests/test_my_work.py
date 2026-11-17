@@ -122,6 +122,23 @@ def test_all_slides_filters_by_project_set_reviewer_status_and_label(
     assert slide_ids(api, s, "third") == []
 
 
+def test_all_slides_filters_by_storage(api: ApiAs, database: str) -> None:
+    s = study(database)
+    owner(
+        database,
+        "UPDATE slides SET storage = 'remote', remote_path = 'scans/a.svs' "
+        f"WHERE id = '{s.slides[1]}'",
+    )
+    assert slide_ids(api, s, "owner", storage="remote") == [str(s.slides[1])]
+    copied = slide_ids(api, s, "owner", storage="uploaded")
+    assert str(s.slides[1]) not in copied
+    assert len(copied) == len(s.slides) - 1
+    rows = api(s.people["owner"]).get("/api/me/slides").json()["slides"]
+    assert {row["id"]: row["storage"] for row in rows}[str(s.slides[1])] == "remote"
+    bad = api(s.people["owner"]).get("/api/me/slides", params={"storage": "elsewhere"})
+    assert bad.status_code == 422
+
+
 def test_all_slides_pages_with_a_cursor(api: ApiAs, database: str) -> None:
     s = study(database)
     client = api(s.people["owner"])
