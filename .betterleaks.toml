@@ -20,6 +20,7 @@ paths = [
   '''^packages/api-client/src/fake/scenario-admin\.ts$''',
   '''^packages/api-client/test/sign-in\.test\.ts$''',
   '''^apps/web/e2e/sign-in\.spec\.ts$''',
+  '''^apps/web/e2e/passkeys\.spec\.ts$''',
   '''^apps/web/e2e/real\.ts$''',
   '''^packages/api-client/test/sign-up\.test\.ts$''',
   '''^apps/web/e2e/sign-up\.spec\.ts$''',

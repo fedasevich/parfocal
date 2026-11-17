@@ -851,6 +851,14 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   The sign-up and sign-in screens run against draft auth calls that only the fake backend answers, so in production nobody can create an account from the app ([ADR 0267](adr/0267-sign-up-and-setup-flow.md), the sign-up and setup flow, says the screens swap their calls without a redesign). The API creates the person in Zitadel through its user API, Zitadel or the app's mail sends the six-digit code, confirming it verifies the email, and the person lands signed in on the first setup step. Sign-in with a password from the app's own screen goes through Zitadel's session API and finishes the OIDC request, so the BFF cookie stays as [ADR 0025](adr/0025-zitadel-bff-login.md) (Zitadel login through the BFF) built it. The service user and its key for production are created only after the owner's yes.
   Done when API tests cover create, code check, resend, an existing account and a wrong password against a faked Zitadel, an E2E signs up and reaches setup, and a manual run against the real Zitadel creates an account from app.parfocal.eu.
   Depends on IAM-002, ONB-002. Size: L.
+- [ ] IAM-032 · Passkeys and sign-in emails work on the deployed app
+  The owner reported on 2026-11-17 that passkeys do not work on app.parfocal.eu and that he still types a password. Adding a passkey after sign-in or in settings saves it in the macOS or iCloud Keychain with the right relying party for app.parfocal.eu, the sign-in page offers a saved passkey through the browser's autofill (`autocomplete="username webauthn"`), and verification, password reset and passkey setup emails are sent from the deployed app.
+  Done when unit and API tests cover passkey registration and passkey sign-in against a faked Zitadel, a Playwright spec with a virtual authenticator adds a passkey and signs in with it, and the Zitadel and Resend settings that send the emails are recorded.
+  Depends on IAM-023, IAM-027. Size: M.
+- [ ] IAM-033 · Reset a forgotten password and manage passkeys from the app
+  IAM-027 (real sign-up and sign-in from the app's own screens) dropped Forgot password from the app's sign-in page, so a person who forgets the password has no way back without the hosted Zitadel page. The app asks Zitadel for a reset code (`POST /v2/users/{id}/password_reset` with a returned or emailed code, sent through the Resend SMTP provider), takes the code and a new password on its own screen and signs in. Settings also lists saved passkeys with their device names and removes one, and an email can send a passkey setup link for another device.
+  Done when API tests against a faked Zitadel cover the reset request, a wrong code and a new password, an E2E resets a password and removes a passkey, and one reset email sent from app.parfocal.eu to an agent test mailbox shows as delivered in Resend.
+  Depends on IAM-032. Size: M.
 
 ---
 

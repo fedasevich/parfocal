@@ -2971,6 +2971,10 @@ msgstr "Add a note"
 msgid "Add a note, type @ to mention someone"
 msgstr "Add a note, type @ to mention someone"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Add a passkey"
+msgstr "Add a passkey"
+
 #. placeholder {0}: stemOf(slide.path)
 #: src/screens/upload/live-wizard.tsx
 msgid "Add a result file for {0}"
@@ -5501,9 +5505,18 @@ msgstr "Could not create the account."
 msgid "Could not load {label}."
 msgstr "Could not load {label}."
 
+#: src/screens/onboarding/sign-in-forms.tsx
+#: src/screens/settings/settings-screen.tsx
+msgid "Could not save the passkey. Try again."
+msgstr "Could not save the passkey. Try again."
+
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not send the code."
 msgstr "Could not send the code."
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Could not sign in with a passkey. Try again."
+msgstr "Could not sign in with a passkey. Try again."
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Could not sign in. Try again."
@@ -6464,6 +6477,10 @@ msgstr "Enter the size."
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter your password."
 msgstr "Enter your password."
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Enter your work email, then choose Sign in with a passkey."
+msgstr "Enter your work email, then choose Sign in with a passkey."
 
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/result-problems.tsx
@@ -10099,6 +10116,10 @@ msgstr "None added yet."
 msgid "None picked"
 msgstr "None picked"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "None saved"
+msgstr "None saved"
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/my-work/all-slides-tab.tsx
@@ -10180,6 +10201,7 @@ msgid "Not matched yet"
 msgstr "Not matched yet"
 
 #: src/help/tour-host.tsx
+#: src/screens/onboarding/sign-in-forms.tsx
 #: src/shell/survey-prompt.tsx
 msgid "Not now"
 msgstr "Not now"
@@ -11410,6 +11432,14 @@ msgstr "Parfocal's models are always here. Connect your lab's own models next to
 #: src/study/study-screen.tsx
 msgid "Participant code"
 msgstr "Participant code"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Passkey saved. Next time sign in with it instead of your password"
+msgstr "Passkey saved. Next time sign in with it instead of your password"
+
+#: src/shell/palette-labels.tsx
+msgid "Passkeys"
+msgstr "Passkeys"
 
 #: ../../packages/ui/src/components/auth.tsx
 #: src/screens/onboarding/invite-screen.tsx
@@ -13305,6 +13335,14 @@ msgstr "Samples"
 msgid "Save"
 msgstr "Save"
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Save a passkey"
+msgstr "Save a passkey"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Save a passkey in your iCloud Keychain or password manager. Next time you sign in with Touch ID, your phone or a security key."
+msgstr "Save a passkey in your iCloud Keychain or password manager. Next time you sign in with Touch ID, your phone or a security key."
+
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "Save a preset"
 msgstr "Save a preset"
@@ -14131,6 +14169,10 @@ msgstr "Sign in with a passkey"
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Sign in with your organisation"
 msgstr "Sign in with your organisation"
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in without a password next time"
+msgstr "Sign in without a password next time"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx

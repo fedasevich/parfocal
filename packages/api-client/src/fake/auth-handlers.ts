@@ -1,7 +1,8 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { z } from "zod";
-import type { SignInLanding } from "../generated/api.ts";
+import type { PasskeyCreation, SavedPasskeySummary, SignInLanding } from "../generated/api.ts";
 import { defaultReturnPath, isSafeReturnPath } from "./admin-handlers.ts";
+import { people } from "./scenario.ts";
 import { signInSecrets } from "./scenario-admin.ts";
 
 type FieldIssue = { location: string[]; message: string; code: string };
@@ -54,4 +55,84 @@ const passwordSignInHandler = () =>
     return HttpResponse.json(landing(parsed.data.return_to ?? null));
   });
 
-export const passwordSignInHandlers = (): RequestHandler[] => [passwordSignInHandler()];
+const randomChallenge = () => {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
+};
+
+const fakePasskeyUser = "ZmFrZS11c2Vy";
+
+const savedPasskeys: SavedPasskeySummary[] = [];
+
+const knownEmail = (email: string) =>
+  Object.values(people).some((person) => person.email.toLowerCase() === email.trim().toLowerCase());
+
+const passkeySignInSchema = z.object({ email: z.string() });
+const passkeyFinishSchema = z.object({
+  credential: z.looseObject({ id: z.string() }),
+  return_to: z.string().nullable().optional(),
+});
+const newPasskeySchema = z.object({
+  passkey: z.string(),
+  name: z.string().optional(),
+  credential: z.looseObject({ id: z.string() }),
+});
+
+const passkeyHandlers = (): RequestHandler[] => [
+  http.get("*/api/auth/passkeys", () => HttpResponse.json(savedPasskeys)),
+  http.post("*/api/auth/passkeys/registration", () => {
+    const creation: PasskeyCreation = {
+      passkey: `passkey-${savedPasskeys.length + 1}`,
+      options: {
+        challenge: randomChallenge(),
+        rp: { id: location.hostname, name: "Parfocal" },
+        user: { id: fakePasskeyUser, name: "you@parfocal.test", displayName: "You" },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 },
+          { type: "public-key", alg: -257 },
+        ],
+        authenticatorSelection: { userVerification: "required" },
+        attestation: "none",
+      },
+    };
+    return HttpResponse.json(creation);
+  }),
+  http.post("*/api/auth/passkeys", async ({ request }) => {
+    const parsed = newPasskeySchema.safeParse(await request.json());
+    if (!parsed.success) return unreadable();
+    const saved = { id: parsed.data.passkey, name: parsed.data.name ?? "Passkey" };
+    savedPasskeys.push(saved);
+    return HttpResponse.json(saved);
+  }),
+  http.post("*/api/auth/passkey-sign-in", async ({ request }) => {
+    const parsed = passkeySignInSchema.safeParse(await request.json());
+    if (!parsed.success) return unreadable();
+    if (!knownEmail(parsed.data.email)) {
+      return problem(
+        404,
+        "No passkey is saved for this email. Sign in with your password, then save one",
+        "no-passkey",
+      );
+    }
+    return HttpResponse.json({
+      options: {
+        challenge: randomChallenge(),
+        rpId: location.hostname,
+        userVerification: "required",
+      },
+    });
+  }),
+  http.post("*/api/auth/passkey-sign-in/finish", async ({ request }) => {
+    const parsed = passkeyFinishSchema.safeParse(await request.json());
+    if (!parsed.success) return unreadable();
+    return HttpResponse.json(landing(parsed.data.return_to ?? null));
+  }),
+];
+
+export const passwordSignInHandlers = (): RequestHandler[] => [
+  passwordSignInHandler(),
+  ...passkeyHandlers(),
+];

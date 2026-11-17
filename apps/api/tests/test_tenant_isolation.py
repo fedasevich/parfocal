@@ -2251,6 +2251,7 @@ GET_ROUTES = {
     "listTeamWorkload": Route(Exposure.TENANT, lambda _: "/api/me/team"),
     "listReviewerWorkload": Route(Exposure.TENANT, lambda _: "/api/tenant/workload"),
     "listSessions": Route(Exposure.PUBLIC, lambda _: "/api/auth/sessions"),
+    "listPasskeys": Route(Exposure.PUBLIC, lambda _: "/api/auth/passkeys"),
     "getMyEmailSchedule": Route(Exposure.PUBLIC, lambda _: "/api/me/email-schedule"),
     "getMyDisplay": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/my-display"

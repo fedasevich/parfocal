@@ -2969,6 +2969,10 @@ msgstr ""
 msgid "Add a note, type @ to mention someone"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Add a passkey"
+msgstr ""
+
 #. placeholder {0}: stemOf(slide.path)
 #: src/screens/upload/live-wizard.tsx
 msgid "Add a result file for {0}"
@@ -5499,8 +5503,17 @@ msgstr ""
 msgid "Could not load {label}."
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+#: src/screens/settings/settings-screen.tsx
+msgid "Could not save the passkey. Try again."
+msgstr ""
+
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not send the code."
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Could not sign in with a passkey. Try again."
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -6458,6 +6471,10 @@ msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Enter your password."
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Enter your work email, then choose Sign in with a passkey."
 msgstr ""
 
 #: src/screens/upload/check-step.tsx
@@ -10094,6 +10111,10 @@ msgstr ""
 msgid "None picked"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "None saved"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/my-work/all-slides-tab.tsx
@@ -10175,6 +10196,7 @@ msgid "Not matched yet"
 msgstr ""
 
 #: src/help/tour-host.tsx
+#: src/screens/onboarding/sign-in-forms.tsx
 #: src/shell/survey-prompt.tsx
 msgid "Not now"
 msgstr ""
@@ -11404,6 +11426,14 @@ msgstr ""
 
 #: src/study/study-screen.tsx
 msgid "Participant code"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Passkey saved. Next time sign in with it instead of your password"
+msgstr ""
+
+#: src/shell/palette-labels.tsx
+msgid "Passkeys"
 msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx
@@ -13296,6 +13326,14 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Save a passkey"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Save a passkey in your iCloud Keychain or password manager. Next time you sign in with Touch ID, your phone or a security key."
+msgstr ""
+
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "Save a preset"
 msgstr ""
@@ -14121,6 +14159,10 @@ msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Sign in with your organisation"
+msgstr ""
+
+#: src/screens/onboarding/sign-in-forms.tsx
+msgid "Sign in without a password next time"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx

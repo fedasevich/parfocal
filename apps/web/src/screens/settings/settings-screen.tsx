@@ -3,6 +3,7 @@ import {
   getGetMeQueryKey,
   getGetMySettingLayersQueryKey,
   getListNotificationPreferencesQueryKey,
+  getListPasskeysQueryKey,
   getListSessionsQueryKey,
   type MySettingLayers,
   type NotificationKind,
@@ -14,6 +15,7 @@ import {
   useGetMySettingLayers,
   useGetSessionPolicy,
   useListNotificationPreferences,
+  useListPasskeys,
   useListSessions,
   useSetMySettingLayers,
   useSetNotificationPreferences,
@@ -60,6 +62,7 @@ import { useActiveTourStep } from "../../help/tour-state.ts";
 import { useHintsSeen } from "../../hints/hints-seen.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
+import { addPasskey, PasskeyCancelledError, rememberPasskeyEmail } from "../../session/passkeys.ts";
 import { applyDensity } from "../../shell/density.ts";
 import { readDeviceSettings, writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
@@ -243,6 +246,8 @@ function LoadedSettings({
   const touring = useActiveTourStep() !== null;
   const me = okData(useGetMe().data);
   const sessions = okData(useListSessions().data) ?? [];
+  const passkeys = okData(useListPasskeys().data) ?? [];
+  const [addingPasskey, setAddingPasskey] = useState(false);
   const policy = okData(useGetSessionPolicy().data);
   const preferences = okData(useListNotificationPreferences().data) ?? [];
   const queryClient = useQueryClient();
@@ -790,6 +795,40 @@ function LoadedSettings({
           ),
     lockAfter: () => lockAfterText(policy?.idle_lock_minutes),
     patientBanner: () => patientBannerText(layers.lab),
+    passkeys: () => (
+      <span className="inline-flex items-center gap-3">
+        <span className="text-body text-fg">
+          {passkeys.length === 0 ? (
+            <Trans>None saved</Trans>
+          ) : (
+            passkeys.map((item) => item.name).join(", ")
+          )}
+        </span>
+        <Button
+          disabled={addingPasskey}
+          onClick={() => {
+            setAddingPasskey(true);
+            addPasskey().then(
+              () => {
+                setAddingPasskey(false);
+                if (me?.email) rememberPasskeyEmail(me.email);
+                notify(t`Passkey saved. Next time sign in with it instead of your password`);
+                void queryClient.invalidateQueries({ queryKey: getListPasskeysQueryKey() });
+              },
+              (error: unknown) => {
+                setAddingPasskey(false);
+                if (!(error instanceof PasskeyCancelledError)) {
+                  notify(t`Could not save the passkey. Try again.`);
+                }
+              },
+            );
+          }}
+        >
+          <Icon name="key" />
+          <Trans>Add a passkey</Trans>
+        </Button>
+      </span>
+    ),
     otherDevices: () =>
       others.length === 0 ? (
         <span className="text-body text-fg">

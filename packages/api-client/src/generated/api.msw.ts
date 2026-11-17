@@ -129,6 +129,8 @@ import type {
   PaintedMapContent,
   PaintedMapVersion,
   ParfocalApiResultPairingPairings,
+  PasskeyCreation,
+  PasskeyRequest,
   PasswordSignInAvailability,
   PatchExportStarted,
   PatientData,
@@ -177,6 +179,7 @@ import type {
   RoomAccess,
   RunAreas,
   SavedEventTarget,
+  SavedPasskeySummary,
   ScaleQuestion,
   SearchResults,
   SecurityContact,
@@ -480,6 +483,39 @@ export const getResendEmailCodeResponseMock = (
 });
 
 export const getSignInWithPasswordResponseMock = (
+  overrideResponse: Partial<Extract<SignInLanding, object>> = {},
+): SignInLanding => ({
+  return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListPasskeysResponseMock = (): SavedPasskeySummary[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  }));
+
+export const getSavePasskeyResponseMock = (
+  overrideResponse: Partial<Extract<SavedPasskeySummary, object>> = {},
+): SavedPasskeySummary => ({
+  id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getStartPasskeyRegistrationResponseMock = (
+  overrideResponse: Partial<Extract<PasskeyCreation, object>> = {},
+): PasskeyCreation => ({
+  passkey: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  options: {},
+  ...overrideResponse,
+});
+
+export const getStartPasskeySignInResponseMock = (
+  overrideResponse: Partial<Extract<PasskeyRequest, object>> = {},
+): PasskeyRequest => ({ options: {}, ...overrideResponse });
+
+export const getFinishPasskeySignInResponseMock = (
   overrideResponse: Partial<Extract<SignInLanding, object>> = {},
 ): SignInLanding => ({
   return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -19348,6 +19384,126 @@ export const getSignInWithPasswordMockHandler = (
   );
 };
 
+export const getListPasskeysMockHandler = (
+  overrideResponse?:
+    | SavedPasskeySummary[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SavedPasskeySummary[]> | SavedPasskeySummary[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/auth/passkeys",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPasskeysResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSavePasskeyMockHandler = (
+  overrideResponse?:
+    | SavedPasskeySummary
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SavedPasskeySummary> | SavedPasskeySummary),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSavePasskeyResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStartPasskeyRegistrationMockHandler = (
+  overrideResponse?:
+    | PasskeyCreation
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyCreation> | PasskeyCreation),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkeys/registration",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartPasskeyRegistrationResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStartPasskeySignInMockHandler = (
+  overrideResponse?:
+    | PasskeyRequest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PasskeyRequest> | PasskeyRequest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkey-sign-in",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartPasskeySignInResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getFinishPasskeySignInMockHandler = (
+  overrideResponse?:
+    | SignInLanding
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SignInLanding> | SignInLanding),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/passkey-sign-in/finish",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getFinishPasskeySignInResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListSessionsMockHandler = (
   overrideResponse?:
     | SessionSummary[]
@@ -28504,6 +28660,11 @@ export const getParfocalAPIMock = () => [
   getConfirmEmailMockHandler(),
   getResendEmailCodeMockHandler(),
   getSignInWithPasswordMockHandler(),
+  getListPasskeysMockHandler(),
+  getSavePasskeyMockHandler(),
+  getStartPasskeyRegistrationMockHandler(),
+  getStartPasskeySignInMockHandler(),
+  getFinishPasskeySignInMockHandler(),
   getListSessionsMockHandler(),
   getRecordActivityMockHandler(),
   getLockSessionMockHandler(),

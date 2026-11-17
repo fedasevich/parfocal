@@ -667,8 +667,19 @@ UNAIMED_WRITES: dict[str, str] = {
     "createProject": "makes a project in the caller's workspace",
     "createSampleProject": "makes the sample project in the caller's workspace",
     **dict.fromkeys(
-        ("createAccount", "confirmEmail", "resendEmailCode", "signInWithPassword"),
+        (
+            "createAccount",
+            "confirmEmail",
+            "resendEmailCode",
+            "signInWithPassword",
+            "startPasskeySignIn",
+            "finishPasskeySignIn",
+        ),
         "answers the anonymous caller about their own account and names no other row",
+    ),
+    **dict.fromkeys(
+        ("startPasskeyRegistration", "savePasskey"),
+        "adds a passkey to the caller's own identity and names no other row",
     ),
     "recordActivity": "stamps the caller's own session",
     "lockSession": "locks the caller's own session",

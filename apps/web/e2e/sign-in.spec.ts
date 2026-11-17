@@ -1,6 +1,12 @@
 import { expect, test } from "./a11y.ts";
 
 const password = "correct-horse-staple";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() =>
+    window.localStorage.setItem("parfocal.passkey-offer-declined", "yes"),
+  );
+});
 const slideUrl = /\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=[0-9a-f-]+/;
 
 test("a password signs in and lands on the demo slide, a wrong one says so", async ({ page }) => {
