@@ -3,11 +3,24 @@ from db_support import ApiAs
 from order_support import run_orders
 from submit_support import submitted as finished_submit
 from test_adjudications import queued, send
+from test_annotate_layer import shared_layer
 from test_review_order import made, ordered
 from test_reviewed_layer import review
 from workspace_support import owner
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
+
+
+def test_an_annotate_task_slide_lists_its_facts_without_review_objects(
+    api: ApiAs, database: str
+) -> None:
+    layer = shared_layer(api, database)
+    listed = api(layer.people["first"]).get(
+        f"/api/review-tasks/{layer.task}/slides/{layer.slide}/objects"
+    )
+    assert listed.status_code == 200, listed.text
+    assert listed.json()["objects"] == []
+    assert listed.json()["slide"]["stain"]
 
 
 def test_review_objects_follow_the_order_with_the_ai_call(api: ApiAs, database: str) -> None:

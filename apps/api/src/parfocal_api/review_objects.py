@@ -18,7 +18,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.review_order import Results, order_state, temperature_of
 from parfocal_api.review_tasks import code_of
-from parfocal_api.reviewed_layer import review_slide
+from parfocal_api.reviewed_layer import review_slide, task_slide
 from parfocal_api.tables import (
     AnnotationKind,
     annotations,
@@ -331,7 +331,7 @@ async def list_review_objects(
     connection: TenantConnection,
     results: Results,
 ) -> ReviewObjects:
-    row = await review_slide(connection, principal, task_id, slide_id)
+    row = await task_slide(connection, principal, task_id, slide_id)
     facts = await slide_facts(connection, slide_id)
     added = await added_objects(connection, principal, task_id, slide_id)
     if await ai_hidden_on(connection, principal, row.project_id, slide_id):
