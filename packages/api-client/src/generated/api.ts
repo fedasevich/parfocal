@@ -7159,7 +7159,7 @@ export interface SlideThreadCreate {
 export interface SlideTissue {
   slide_id: string;
   grid: CoverageGrid;
-  tissue: string;
+  tissue: string | null;
   tissue_cells: number;
 }
 

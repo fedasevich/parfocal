@@ -24,12 +24,13 @@ from parfocal_common.object_store import StorageError
 TISSUE_FILE = "tissue.png"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 TISSUE_HEADERS = {"Cache-Control": "private, max-age=3600"}
+NO_TISSUE_HEADERS = {"Cache-Control": "private, max-age=60"}
 
 
 class SlideTissue(BaseModel):
     slide_id: uuid.UUID
     grid: CoverageGrid
-    tissue: str
+    tissue: str | None
     tissue_cells: int
 
 
@@ -148,9 +149,10 @@ async def get_slide_tissue(
     try:
         stored = await store.get_object(f"{slide_prefix(row.tenant_id, slide_id)}{TISSUE_FILE}")
     except StorageError as error:
-        if error.status == 404:
-            raise TissueMaskMissingError from error
-        raise
+        if error.status != 404:
+            raise
+        response.headers.update(NO_TISSUE_HEADERS)
+        return SlideTissue(slide_id=slide_id, grid=grid, tissue=None, tissue_cells=0)
     try:
         bits = tissue_bits(grid, read_mask(stored))
     except (TissueMaskUnreadableError, zlib.error, struct.error, IndexError) as error:

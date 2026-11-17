@@ -19081,7 +19081,7 @@ export const getGetSlideTissueResponseMock = (
     columns: faker.number.int({ min: 1, max: 1024 }),
     rows: faker.number.int({ min: 1, max: 1024 }),
   },
-  tissue: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tissue: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   tissue_cells: faker.number.int(),
   ...overrideResponse,
 });

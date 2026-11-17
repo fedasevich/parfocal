@@ -56,7 +56,7 @@ test("the fake tissue mask is the dev slide's stored mask on its coverage grid",
   if (read.status !== 200) return;
   assert.deepEqual(read.data.grid, { cell: 64, columns: 16, rows: 12 });
   assert.equal(read.data.tissue_cells, 104);
-  const bytes = Buffer.from(read.data.tissue, "base64");
+  const bytes = Buffer.from(read.data.tissue ?? "", "base64");
   assert.equal(bytes.length, 24);
   assert.equal(bytes[0], 0b1111);
   assert.equal(bytes[23], 0xff);

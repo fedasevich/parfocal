@@ -79554,7 +79554,14 @@
             "$ref": "#/components/schemas/CoverageGrid"
           },
           "tissue": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Tissue"
           },
           "tissue_cells": {

@@ -34,6 +34,21 @@ test("a 404 tissue answer is remembered and not asked again", async () => {
   assert.equal(calls.length, 1);
 });
 
+test("a 200 answer with no mask is remembered and not asked again", async () => {
+  const calls: string[] = [];
+  globalThis.fetch = (input) => {
+    calls.push(input instanceof Request ? input.url : input.toString());
+    const grid = { cell: 64, columns: 2, rows: 2 };
+    const body = JSON.stringify({ slide_id: "s", grid, tissue: null, tissue_cells: 0 });
+    return Promise.resolve(
+      new Response(body, { status: 200, headers: { "content-type": "application/json" } }),
+    );
+  };
+  assert.equal(await storedTissue("slide-with-null-mask"), null);
+  assert.equal(await storedTissue("slide-with-null-mask"), null);
+  assert.equal(calls.length, 1);
+});
+
 test("a server error is not remembered", async () => {
   const calls: string[] = [];
   answerWith(500, calls);

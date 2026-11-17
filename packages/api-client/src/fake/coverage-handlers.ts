@@ -186,10 +186,12 @@ function cellCropSvg(number: number): string {
 export const tissueHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/tissue", ({ params }) =>
     maskless(params.slideId)
-      ? HttpResponse.json(
-          { status: 404, code: "tissue-mask-missing", title: "No tissue mask" },
-          { status: 404 },
-        )
+      ? HttpResponse.json({
+          slide_id: params.slideId,
+          grid: fakeTissueGrid,
+          tissue: null,
+          tissue_cells: 0,
+        } satisfies SlideTissue)
       : HttpResponse.json(toSlideTissue(params.slideId)),
   ),
   http.get<{ slideId: string }>("*/api/slides/:slideId/thumbnail", ({ params }) =>
