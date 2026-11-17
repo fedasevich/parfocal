@@ -2,6 +2,39 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.12.0 (2026-11-17)
+
+### Features
+
+- OPS-031: Pin the ingest and events functions to the eu region
+- OPS-032: Add the parfocal-dev-eu bucket in the R2 eu jurisdiction
+- OPS-032: Point production storage at the eu bucket with its own app key
+- VIEW-076: Serve cell chunks and regions and draw whole result sets on the stage
+- IAM-033: Reset a forgotten password and remove a passkey from the app
+- VIEW-076: Colour result set classes from the project list with a stable fallback and legend
+- VIEW-076: Show save notices in focus mode, open notes with Shift+N and bind the focus key
+- VIEW-076: Page a result set's regions by the viewport and keep them by number
+
+### Fixes
+
+- OPS-033: Allow the cloud and container fields in web telemetry too
+
+### Refactoring
+
+- VIEW-075: Show real slide thumbnails in review tops and keep the paged probe fake-only
+- VIEW-075: Move the prototype annotate task scenes under fake-api
+- VIEW-075: Draw the slide's own thumbnail in prototype viewers and delete thumbnails.ts
+
+### Docs
+
+- OPS-032: Log the eu copy and the locked t/ objects, add the bucket to platform
+- OPS-033: Log the v0.11.0 numbers
+
+### Tests
+
+- VIEW-076: List use-paged-review on STILL_TO_REPLACE and log the step
+- VIEW-075: Check the cell view still without a prototype picture and log the cleanup
+
 ## v0.11.0 (2026-11-17)
 
 ### Features
