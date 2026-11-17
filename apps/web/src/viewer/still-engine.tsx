@@ -184,6 +184,7 @@ export function StillEngine({
       <div
         ref={host}
         data-testid="still-engine"
+        data-slide={slideId}
         data-state={ready ? "ready" : live === null ? "loading" : "opening"}
         data-objects={placed.length}
         data-overlays={drawn.overlays}
