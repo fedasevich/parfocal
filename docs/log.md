@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-17
 
+- 2026-11-17 Production touch: released v0.4.0 (68ef526e) and dispatched deploy run 44046440491 to production, approved by the night run under ADR 0151 (standing approval within 30 dollars a month). Migrations 0127 to 0134 are additive, and 0132 widens a notification kind check. Cost TODO after the run.
 - 2026-11-17 TEST-041 (settings parity check): workers/deploy/tests/test_settings_parity.py fails when an ApiSettings field without a default is missing from the stack env or the bootstrap secret keys, shown failing once with SESSION_KEY and with MASTER_KEYS removed.
 - 2026-11-17 TEST-040 (API container under the end-to-end suite) and TEST-004 (E2E harness) accepted: the e2e stack job is green on main in CI run 44039460942.
 - 2026-11-17 VIEW-028 (overlay level of detail) Mac run with 81,278 real Huron-1-40x nuclei at overview on the Viv route: overlay share 0.43 and 0.05 ms against 1 ms. VIEW-029 (cull grid for overlays) Viv route at 1.6M nuclei and detail zoom: 1.60 ms a frame against 6 ms in three runs, with a new route-level cull test. TEST-028 (model accuracy tests that cannot be skipped unseen) first full test:accuracy run on the Mac: 396 of 397 passed with none skipped, 33 min and 9.5 GB. The one failure was the whole-slide main path timing benchmark, which now carries a bench marker that test:accuracy leaves out. VIEW-028, VIEW-029 and TEST-028 accepted under the owner's night-run instruction.
