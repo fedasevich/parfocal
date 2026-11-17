@@ -10,7 +10,6 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { type SlideRowData, SlidesPopover } from "@parfocal/ui/components/review-popovers";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { ViewingNow } from "../presence/viewing-now.tsx";
@@ -19,6 +18,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "../shell/account-menu.tsx";
 import { personOf } from "../shell/global-shell.tsx";
 import type { CaseLoad } from "./case-load.ts";
+import { LiveProgress, useSlideStepKeys } from "./live-progress.tsx";
 import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
 import type { SlideWorkspace } from "./workspace.ts";
 
@@ -114,6 +114,7 @@ type LiveTopBarProps = {
   onOpenSlide: (slideId: string) => void;
   onSubmit: (() => void) | undefined;
   percent: number | null;
+  objectTotal: number;
   onPeek: () => void;
   statusRef: (node: HTMLElement | null) => void;
   storage: ReactNode;
@@ -129,6 +130,7 @@ export function LiveTopBar({
   onOpenSlide,
   onSubmit,
   percent,
+  objectTotal,
   onPeek,
   statusRef,
   storage,
@@ -158,6 +160,8 @@ export function LiveTopBar({
   const reviewTask = task?.kind === "review";
   const title = load?.task ? `${load.task.code} ${load.task.name}` : (load?.project.name ?? "");
   const slideLabel = load?.slide?.label ?? t`Slide`;
+  const reportCaseId = load?.clinical ? load.case?.id : undefined;
+  useSlideStepKeys(list, slideId, onOpenSlide);
   return (
     <header
       data-testid="live-top-bar"
@@ -188,17 +192,17 @@ export function LiveTopBar({
         className="inline-flex shrink-0 items-center gap-2.5"
         title={t`Progress on this slide and in the list`}
       >
-        {percent === null ? null : (
-          <ViewedRing data-testid="viewed-ring" percent={percent} size={34} onClick={onPeek} />
-        )}
-        <span className="grid leading-tight">
-          <b className="font-semibold">
-            {list.position > 0 ? t`Slide ${list.position} of ${list.total}` : t`Slide`}
-          </b>
-          <small className="text-caption text-fg-dim">
-            {percent === null ? t`Opening` : t`${percent}% of the tissue seen`}
-          </small>
-        </span>
+        <LiveProgress
+          list={list}
+          slideId={slideId}
+          slideLabel={slideLabel}
+          load={load}
+          task={task}
+          percent={percent}
+          objectTotal={objectTotal}
+          onPeek={onPeek}
+          onOpenSlide={onOpenSlide}
+        />
       </span>
       {storage}
       <span className="flex-1" />
@@ -225,7 +229,20 @@ export function LiveTopBar({
           { value: "annotate", label: t`Annotate` },
         ]}
       />
-      {onSubmit && reviewTask ? (
+      {reportCaseId !== undefined ? (
+        <Button
+          variant="primary"
+          title={t`Open the clinical report of this case`}
+          onClick={() =>
+            void navigate({
+              to: "/projects/$projectId/cases/$caseId/report",
+              params: { projectId, caseId: reportCaseId },
+            })
+          }
+        >
+          <Trans>Open report</Trans>
+        </Button>
+      ) : onSubmit && reviewTask ? (
         <Button
           variant="primary"
           title={t`Open the Slide done card in the Opinion tab`}

@@ -2047,7 +2047,7 @@ msgstr "{percent}% · {0} of {1}{left}"
 msgid "{percent}% done: {0} agree, {1} disagree, {2} not sure, {3} open"
 msgstr "{percent}% done: {0} agree, {1} disagree, {2} not sure, {3} open"
 
-#: src/viewer/live-top-bar.tsx
+#: src/viewer/live-progress.tsx
 msgid "{percent}% of the tissue seen"
 msgstr "{percent}% of the tissue seen"
 
@@ -8770,7 +8770,7 @@ msgstr "Loading the server details"
 #: src/screens/viewer-tools/tool-session.tsx
 #: src/screens/viewer/full-viewer.tsx
 #: src/screens/viewer/viewer-notices.tsx
-#: src/viewer/stage-loading.tsx
+#: src/viewer/stage-opening.tsx
 msgid "Loading the slide"
 msgstr "Loading the slide"
 
@@ -9805,6 +9805,7 @@ msgstr "No deposit yet. Add one from an object on a slide, or measure one by han
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/viewer/live-progress.tsx
 msgid "No due date"
 msgstr "No due date"
 
@@ -10904,6 +10905,7 @@ msgid "Open on the slide"
 msgstr "Open on the slide"
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Open report"
 msgstr "Open report"
 
@@ -10934,6 +10936,7 @@ msgid "Open the case"
 msgstr "Open the case"
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Open the clinical report of this case"
 msgstr "Open the clinical report of this case"
 
@@ -11000,7 +11003,7 @@ msgstr "Opened from {issueStatesTitle}, as"
 msgid "Opened from {mapTitle}, as"
 msgstr "Opened from {mapTitle}, as"
 
-#: src/viewer/live-top-bar.tsx
+#: src/viewer/live-progress.tsx
 msgid "Opening"
 msgstr "Opening"
 
@@ -11960,6 +11963,7 @@ msgid "Progress on this slide and in the list"
 msgstr "Progress on this slide and in the list"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/viewer/live-progress.tsx
 msgid "Progress on this slide and in the whole task"
 msgstr "Progress on this slide and in the whole task"
 
@@ -14366,6 +14370,7 @@ msgstr "Skipped, already in this project."
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/live-progress.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Slide"
 msgstr "Slide"
@@ -14376,15 +14381,12 @@ msgstr "Slide"
 msgid "Slide · {0} {1}"
 msgstr "Slide · {0} {1}"
 
-#. placeholder {0}: list.position
 #. placeholder {0}: resume.position + 1
 #. placeholder {0}: slidePosition(resume.position, task.slides_assigned)
-#. placeholder {1}: list.total
 #. placeholder {1}: resume.slides_assigned
 #. placeholder {1}: task.slides_assigned
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Slide {0} of {1}"
 msgstr "Slide {0} of {1}"
 
@@ -14394,6 +14396,11 @@ msgstr "Slide {0} of {1}"
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Slide {0} of {1}, case {2}"
 msgstr "Slide {0} of {1}, case {2}"
+
+#. placeholder {0}: list.total
+#: src/viewer/live-progress.tsx
+msgid "Slide {position} of {0}"
+msgstr "Slide {position} of {0}"
 
 #: src/screens/review/slide-submitted.tsx
 msgid "Slide {position} submitted"
