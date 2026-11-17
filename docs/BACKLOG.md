@@ -473,7 +473,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   On hold since 2026-10-08. The owner does not need licence checks or dependency update automation for now. Notes for when it resumes are in the log entry of that date.
   Size: M.
 
-- [ ] FOUND-015 · Container images
+- [x] FOUND-015 · Container images
   Modal image definitions for the API, ingest and ML (CUDA base) functions with pinned versions, plus a multi-stage Dockerfile for the API so it can run on another host ([ADR 0003](adr/0003-pilot-platform-architecture.md)). The web app is static assets on Cloudflare. Non-root, pinned digests, SBOM output. The Dockerfile and the Modal image both install from `uv.lock`, because `app_image()` in `workers/deploy/src/parfocal_deploy/modal_app.py` installs the version ranges from `pyproject.toml`, so production can run versions no test saw.
   Done when the API image and the Modal images build in CI, a container scan of the API image reports no critical vulnerabilities, the API container migrates an empty compose database on start and answers `/api/health`, and a test fails when the Modal requirement list differs from the lock.
   Size: M.
@@ -493,7 +493,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when component tests cover each error kind and an axe check passes.
   Depends on FOUND-012 and the final UI shell.
 
-- [ ] FOUND-018 · Contract check and image builds in CI
+- [x] FOUND-018 · Contract check and image builds in CI
   Split from FOUND-007. Add the web, API and Modal image builds as jobs that `ci-ok` requires. The API contract test and the generated-client check already run in the `test` job since FOUND-008.
   The image build job reuses the API image build of the TEST-040 (API container under the end-to-end suite) job instead of building a second time.
   Done when a pull request that changes the API schema without regenerating the client fails, and image builds run on every pull request.
@@ -618,7 +618,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 The thinnest end-to-end slice. Every piece is minimal and later epics deepen it. The point is to prove the stack, the deployment and the test pipeline together before breadth.
 
-- [ ] SKEL-001 · Production environment exists
+- [x] SKEL-001 · Production environment exists
   Minimal infrastructure from OPS-001 to OPS-004 with one tenant. Production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
   Done when `https://app.<domain>` serves the web app and `/api/health` over TLS with COOP and COEP headers.
   Depends on OPS-001, OPS-002.
@@ -1039,7 +1039,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-026.
   Size: L.
 
-- [ ] SEC-048 · Rotation commands for the keys secret
+- [x] SEC-048 · Rotation commands for the keys secret
   Bootstrap writes the Modal secret `parfocal-api-keys` only when it is missing and then generates every key in it, so deleting it to rotate one value makes every tenant's encrypted fields unreadable ([knowledge/secrets.md](knowledge/secrets.md)). Add a deploy command that changes one value and keeps the rest: prepend a master key, retire one after `key_rotation check-retire` passes, replace the session or a token key in the secret and the Worker together, and reset the `parfocal_app` password with the new `DATABASE_URL`.
   Done when tests against fakes show each command keeps every other value, refuses to drop a master key that still wraps tenant keys, and never passes a secret as a command argument.
   Depends on SEC-013.
@@ -1392,13 +1392,13 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on TILES-002.
   Size: S.
 
-- [ ] TILES-010 · A slide opens in under 3 s: the directory offsets come with levels.json
+- [x] TILES-010 · A slide opens in under 3 s: the directory offsets come with levels.json
   OPS-033 (home under 500 ms and a slide opens in under 3 s) measured test_065 on the deployed app: tile-access 0.8 to 1.1 s, levels.json 0.29 s, then 9 TIFF directory blocks read one after another, 2.6 s warm and 4.8 s cold. Ingest records every directory offset and size in levels.json so the viewer reads all directories at once, tile-access starts before the viewer code loads and runs fewer queries, and a backfill writes the offsets for the slides already stored.
   Done when engine tests show an indexed open reads the directories in parallel with no chain walk, Viv golden and engine tests still pass, the backfill is tested, and a result file holds the before and after numbers.
   Depends on OPS-033.
   Size: M.
 
-- [ ] TILES-011 · A slide opens in under 3 s from navigation
+- [x] TILES-011 · A slide opens in under 3 s from navigation
   On v0.12.2 the owner opened test_065 from a fresh navigation: tile-access done at 3.87 s, levels.json at 4.09 s and the 10 original.tif ranges at 6.15 s, so the app boot and the calls before tile-access are now the larger part. The route loader asks for tile access before the viewer code and the session check finish, the viewer waits on as few API calls as it can, and the original's ranges are checked to run in parallel. The per-set Hide and Show buttons at the bottom left of the stage are clipped and get room.
   Done when a Playwright check shows tile-access starts before the viewer chunk arrives and the set buttons sit fully inside the stage, Viv golden tests still pass, and a result file holds the before and after numbers.
   Depends on TILES-010.
@@ -2287,7 +2287,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Add `busy` to the availability enum, a migration that widens the memberships availability check so Busy takes no end and an optional note, the regenerated client and fake handler, and a Busy row with its meaning in the dropdown. Team and the new task form keep treating only Away as absent.
   Done when an API test sets and reads Busy and the check refuses an end on Busy, and a browser test picks Busy from the availability dropdown and sees the avatar dot turn Busy.
   Depends on SHELL-022. Size: S.
-- [ ] SHELL-025 · Fixes from the walk after the EU move
+- [x] SHELL-025 · Fixes from the walk after the EU move
   A walk of app.parfocal.eu on 2026-11-17 found six faults. The Home Activity panel shows rows with no text. The Home "Start here" row prints a double separator when a part is empty. Review task progress differs between My work, its list and Team. The viewer's Result sets names are clipped. The project slides Reviews column repeats one person per task. The admin overview prints "0 TB more read in place".
   Fix each with one source of truth or by dropping empty parts, and give each fix a unit or browser test.
   Done when each of the six has a test that fails before and passes after.
@@ -3663,7 +3663,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-002.
   Size: M.
 
-- [ ] AIP-021 · Pre-warm trigger from a slow device through the API
+- [x] AIP-021 · Pre-warm trigger from a slow device through the API
   AIP-007 (priority gate) built `parfocal_ml.priority_gate`: interactive kinds run only in the `embedder` pool, job kinds never do, and `InteractiveGate.activate` sends at most one throttled `warm` call per 240 s. Nothing calls it yet. The web needs a slow-device check when the segmentation tool opens, the API needs a route that calls the gate under a member's rights, and the API needs a Modal client, which is an ADR choice (Modal SDK in the API image or a call through the ML app). The `embed` runner in the Modal entry also needs the real PathoSAM weights. Also count other tenants' runs on the shared GPU in `queue_minutes` without leaking them, which `jobs.md` left to AIP-007.
   Done when an API test shows a slow device's activation sends one warm call through a fake Modal client and a fast device's sends none, a web test shows the tool open calls the route only on a slow device, and the queue estimate counts other tenants' runs as one number.
   Depends on AIP-007.
@@ -3941,13 +3941,13 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-008.
   Size: M.
 
-- [ ] AITUM-010 · The tumor map job reads stored slides and runs the tumor model in its pool
+- [x] AITUM-010 · The tumor map job reads stored slides and runs the tumor model in its pool
   AITUM-008 (tumor map job and route) takes a slide opener and a scorer as seams, and the GPU pool entry has no runner for the `tumor-map` kind yet. Open a stored slide's level 0 regions and thumbnail from the object store, run the MONAI ResNet18 of ADR 0351 (the v1 tumor model) in the detector-good T4 pool, and start the claim loop for the kind.
   Done when a worker test runs the job on a stored small fixture slide through the real opener, and a Modal stand-in test on CPU runs one tumor map call in the pool.
   Depends on AITUM-008.
   Size: M.
 
-- [ ] AITUM-011 · The tumor map pool is ready to deploy
+- [x] AITUM-011 · The tumor map pool is ready to deploy
   AITUM-010 (stored slides and the tumor model in the pool) runs the tumor map locally, but the pool image lacks `onnxruntime-gpu`, OpenSlide and a cuDNN base, the `camelyon-tumor` ONNX artifact is only in a local cache, the pool has no secrets for the object store, and nothing spawns the pool call when a map is queued. Lock the pool image, publish the artifact with its SHA-256 where the other model artifacts live, wire the secrets, and spawn the call on enqueue. ADR 0356 (the tumor map worker runs the ResNet18 as ONNX) records the runtime.
   Done when the image lock and a spawn-on-enqueue test pass, the published artifact's SHA-256 matches the local export, and the runbook says what the first deploy after the train merges will start. Publishing the artifact is an additive production write under ADR 0151 (standing approval within $30 a month), and the deploy itself waits for the merge.
   Depends on AITUM-010.
@@ -4629,7 +4629,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Add a Server-Timing header with database time, query count and handler time to every API answer, measure the slow routes on the deployed app, find where Modal runs and where Neon runs, and cut the time at no added monthly cost: fewer round trips per request (one transaction for the session check where safe, batched or joined queries, no N+1), pool settings, and moving Modal next to Neon if region selection costs nothing extra on the current plan. Record the before and after numbers in a result file.
   Done when a result file reports Server-Timing for the ten slowest routes before and after, measured on the deployed app, and warm `/api/me`, `/api/projects` and `/api/me/home` each answer in under 300 ms at the median of ten calls.
   Size: M.
-- [ ] OPS-031 · Move the API and database to the EU
+- [x] OPS-031 · Move the API and database to the EU
   Decision 140 (moving production's API and database to Europe) chose option A without the warm container. Create a Neon project in Frankfurt (`aws-eu-central-1`) on the Free plan with the same roles and pooler setup, run the migrations and reseed it under [ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md) (the deployed app is dev). Deploy the Modal web function under a new name with `region="eu"` and `routing_region="eu-west"`, point the edge `API_ORIGIN`, the Modal secrets and the GitHub production environment at the new function and database, and leave ingest, events and GPU functions unpinned. A slice of OPS-020 (pin storage, database and Modal functions per region) without the R2 EU jurisdiction or GPU parts. The old US Neon project is deleted only after the owner's separate yes.
   Done when a warm signed-in call measured from Europe is in the result file, the web function logs an EU `MODAL_REGION`, and the app reads and writes a Neon database in Frankfurt.
   Size: M.
@@ -4752,7 +4752,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on ONB-007, TEST-012.
   Size: L.
 
-- [ ] TEST-019 · Application performance on main paths
+- [x] TEST-019 · Application performance on main paths
   The thesis assignment asks for the performance of the application as a whole, not only the renderer ([ADR 0114](adr/0114-thesis-assignment-tasks.md), tasks the thesis assignment adds). Scripts measure opening a slide to the first fitted image, a jump to a sharp viewport, importing result sets of 10,000 and 1,000,000 cells, a model run on a whole slide with its throughput, and the time from a decision to the next object on screen. Each path has a budget fixed before measuring, and runs repeat after a warm-up with the median and p95 reported.
   Done when the scripts run locally against the full stack, a result file records the numbers with the machine, browser, data and method, and CI runs the CPU-side paths against their budgets.
   Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
@@ -6519,7 +6519,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Read every value from the real API, keep fakes only behind the fake API's own entry, use real dates and people, and show an honest empty state where the API has nothing. Remove each fixed file from the guard's list.
   Done when none of these files is in the guard's list, the clinical report and search screens print no fixed date or name, and their unit and browser tests pass.
   Size: M.
-- [ ] PROTO-027 · The prototype scene harness is not reachable in the deployed app
+- [x] PROTO-027 · The prototype scene harness is not reachable in the deployed app
   PROTO-025 (main screens show real data and real images) found that `?scene=` still switches production screens into prototype scenes, for example `/projects/$projectId/upload?scene=X` renders the upload mock with its "Mock only" tag and "Jump to the end" button. About 108 route lines read a scene.
   Let scenes run only in the fake API build and Storybook, ignore the `scene` search value in the deployed app, and remove the mock-only controls from production paths. Extend `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates) so a production route that reads a scene fails it.
   Done when a browser test against the production build opens a screen with `?scene=` and sees the real screen, and the guard covers scenes.
