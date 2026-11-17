@@ -3,7 +3,7 @@
 - Date: 2026-11-17
 - Backlog: PROTO-022 (the viewers match the frozen mock again)
 - Kind: check
-- Commit: 3d0dd477 for the inventory and the before shots
+- Commit: 3d0dd477 for the inventory and the before shots, the PROTO-022 layout commits for the after shots
 - Environment: MacBook, macOS 15, Chrome through Playwright, 1440x900 at scale 0.5, light theme
 - Data: the fake API's sample project `00000000-0000-4000-8003-000000000007` and its fictional slide `tumor_044`, and the frozen mock's fictional demo slide. No PHI
 
@@ -56,6 +56,15 @@ Before, the live viewer in review and in an annotate task, beside the mock's cas
 | ![Live review before](2026-11-17-viewer-mock-parity/before-live-review.png) | ![Mock case at low power](2026-11-17-viewer-mock-parity/mock-case.png) |
 | ![Live annotate before](2026-11-17-viewer-mock-parity/before-live-annotate.png) | ![Mock annotate workspace](2026-11-17-viewer-mock-parity/mock-annotate.png) |
 
+After, the same two views beside the same mock screens. The rail is a docked column, the inspector is docked on the right with Objects and Display tabs, and the only bar over the slide is the context bar and the magnification bar:
+
+| Live viewer after | Mock |
+|---|---|
+| ![Live review after](2026-11-17-viewer-mock-parity/after-live-review.png) | ![Mock case at low power](2026-11-17-viewer-mock-parity/mock-case.png) |
+| ![Live annotate after](2026-11-17-viewer-mock-parity/after-live-annotate.png) | ![Mock annotate workspace](2026-11-17-viewer-mock-parity/mock-annotate.png) |
+
+The Review workspace opens the inspector on Objects, as the mock's case screen does, and the Annotate workspace opens it on Display, as the mock's annotate screen does, unless a task is open, whose checks sit in Objects. Each card stays mounted on the stage and draws into its tab through a portal (`apps/web/src/viewer/inspector-slots.tsx`), so area keys, painted maps and run streams keep working while their tab is hidden.
+
 No ADR in `docs/adr` and no result in `docs/results` justifies a card floating over the slide. The two ADRs that could have been read that way are ADR 0138 (settings catalogue) and ADR 0195 (slide brightness as a slide layer tint), and both are only Proposed, so neither can keep a difference.
 
 ## Interpretation
@@ -67,3 +76,5 @@ The drift came from building each live feature as its own card on the stage, one
 - TODO the top bar's slide picker and "Slide n of m" progress on the live viewer.
 - TODO the smart and auto tool chips move into the context bar.
 - TODO the owner decides whether the save, live changes and conflict notices join the one banner.
+- The viewer goldens in `packages/golden-images` render overlay layers in their own harness and import no app code, so the layout change moves none of them and none were updated. One run passed 132, skipped 2 and failed 1, the id-labels layer over CMU-1.svs, which this change cannot reach. TODO check it on main.
+- Browser specs updated for the tabs: `device-legend`, `outline-modes`, `painted-map`, `view-map`, `count-markers`, `measurement-list`, `area-nav-live` and `zoom-to-selection` select their tab first. `viewer-mock-layout.spec.ts` is new and checks the docked rail, the docked inspector and that no card sits on the stage.
