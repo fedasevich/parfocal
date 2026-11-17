@@ -379,15 +379,16 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
 
 async def seed_sso_connections(connection: AsyncConnection, seeded: Seeded) -> None:
     organisation = f"idp-org-{uuid.uuid4().hex[:12]}"
+    domain = f"sso-{uuid.uuid4().hex[:10]}.example.test"
     await connection.execute(
         insert(sso_connections).values(
             tenant_id=seeded.tenant_id,
             idp_organisation_id=organisation,
             idp_id=f"idp-{uuid.uuid4().hex[:12]}",
-            email_domains=[f"sso-{uuid.uuid4().hex[:10]}.example.test"],
+            email_domains=[domain],
         )
     )
-    seeded.markers.add(organisation)
+    seeded.markers.update({organisation, domain})
 
 
 async def seed_linked_subjects(connection: AsyncConnection, seeded: Seeded) -> None:
