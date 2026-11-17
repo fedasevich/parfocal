@@ -1074,6 +1074,7 @@ async def seed_projects(
     principal = principal_of(seeded, "ada", Role.RESEARCHER, True)
     samples = [await stored_sample_file(store, label) for label in SAMPLE_SLIDES]
     sample = next((found for found in samples if found is not None), None)
+    detection = (await built_in_templates(connection, seeded.tenant_id))[BuiltInTemplate.DETECTION]
     for mode in PrivacyMode:
         project = await create_project(
             ProjectDraft(
@@ -1084,6 +1085,9 @@ async def seed_projects(
             ),
             principal,
             connection,
+        )
+        await connection.execute(
+            update(projects).where(projects.c.id == project.id).values(study_template_id=detection)
         )
         await join(
             connection,

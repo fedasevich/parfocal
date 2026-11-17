@@ -493,6 +493,18 @@ async def test_the_demo_tasks_use_templates_that_match_their_results(seeded: str
         f"WHERE p.name = '{WORKSPACES[0].gallery}'",
     )
     assert defaults == {"regions"}
+    every = await run_sql(
+        seeded,
+        "SELECT t.scope, coalesce(v.study_kind, '') FROM review_tasks t "
+        "LEFT JOIN study_template_versions v ON v.template_id = t.study_template_id "
+        "AND v.version = t.study_template_version WHERE t.kind = 'review'",
+    )
+    assert {(str(scope), str(study)) for scope, study in every} == {
+        ("all-regions", "regions"),
+        ("random-cells", "cells"),
+    }
+    unset = await values(seeded, "SELECT count(*) FROM projects WHERE study_template_id IS NULL")
+    assert unset == {"0"}
 
 
 async def test_every_demo_slide_has_a_regions_and_a_cells_result(seeded: str) -> None:
