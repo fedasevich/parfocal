@@ -1,10 +1,10 @@
 const queued = defineDraftQuery(
-  "getDisagreementQueue",
+  "listTeamWorkload",
   url,
   schema,
 );
 const update = defineDraftMutation(
-  "updateQueuedObject",
+  "listReviewerWorkload",
   url,
   schema,
 );

@@ -9,7 +9,7 @@ test("counts operations per area across files and split lines", () => {
   const count = countDraftCalls(fixtures);
   assert.deepEqual(count.areas, {
     admin: ["getAdminOverview", "getStorageUsage"],
-    review: ["getDisagreementQueue", "updateQueuedObject"],
+    team: ["listTeamWorkload", "listReviewerWorkload"],
     other: ["somethingNew"],
   });
   assert.equal(count.total, 5);
@@ -19,7 +19,7 @@ test("prints each area and the total", () => {
   const text = formatDraftCount(countDraftCalls(fixtures));
   assert.equal(
     text,
-    ["draft calls per area", "  admin: 2", "  other: 1", "  review: 2", "  total: 5"].join("\n"),
+    ["draft calls per area", "  admin: 2", "  other: 1", "  team: 2", "  total: 5"].join("\n"),
   );
 });
 

@@ -1897,6 +1897,23 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/order",
     ),
+    "listReviewObjects": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/objects",
+    ),
+    "getSlideAgreement": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/agreement",
+    ),
+    "getTaskDisplay": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/display"
+    ),
+    "getDisagreementQueue": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/disagreement-queue"
+    ),
+    "getMyAdjudication": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/adjudication"
+    ),
     "getReviewTaskStates": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/states"
     ),

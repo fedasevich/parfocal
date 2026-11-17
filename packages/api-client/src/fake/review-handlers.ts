@@ -1,7 +1,4 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type SlideAgreement, slideAgreementSchema } from "../draft/get-slide-agreement.ts";
-import { type TaskDisplay, taskDisplaySchema } from "../draft/get-task-display.ts";
-import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-objects.ts";
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
   getAddReviewObjectMockHandler,
@@ -13,12 +10,15 @@ import {
   getDeleteThreadOnSlideMockHandler,
   getGetOpinionMockHandler,
   getGetReviewedLayerMockHandler,
+  getGetSlideAgreementMockHandler,
   getGetSlideNeighboursMockHandler,
+  getGetTaskDisplayMockHandler,
   getGetThreadMockHandler,
   getGetThreadOnSlideMockHandler,
   getListMentionableMembersMockHandler,
   getListMentionableMembersOnSlideMockHandler,
   getListProjectClassesMockHandler,
+  getListReviewObjectsMockHandler,
   getListThreadsMockHandler,
   getListThreadsOnSlideMockHandler,
   getMoveThreadMockHandler,
@@ -47,7 +47,10 @@ import type {
   PinMove,
   ProjectClass,
   ReviewDecisionDraft,
+  ReviewObjects,
+  SlideAgreement,
   SlideThreadCreate,
+  TaskDisplay,
   TaskStates,
   Thread,
   ThreadCreate,
@@ -121,35 +124,34 @@ const slideSummary = (slideId: string) => {
   };
 };
 
-export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects =>
-  reviewObjectsSchema.parse({
-    task_id: taskId,
-    slide_id: slideId,
-    slide: slideSummary(slideId),
-    objects: objectsOn(taskId, slideId).map((item, index) => ({
-      object: item.object,
-      kind: item.kind,
-      number: index + 1,
-      class_name: item.className,
-      score: item.score,
-      size_mm: item.sizeMm,
-      other_class: item.otherClass,
-      detector_score: item.detectorScore,
-      foreground: item.foreground,
-      outline: item.outline ?? null,
-    })),
-    added:
-      taskId === rt17.id
-        ? addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null }))
-        : reviewsA1(taskId, slideId)
-          ? addedByLenka
-          : [],
-  });
+export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects => ({
+  task_id: taskId,
+  slide_id: slideId,
+  slide: slideSummary(slideId),
+  objects: objectsOn(taskId, slideId).map((item, index) => ({
+    object: item.object,
+    kind: item.kind,
+    number: index + 1,
+    class_name: item.className,
+    score: item.score,
+    size_mm: item.sizeMm,
+    other_class: item.otherClass,
+    detector_score: item.detectorScore,
+    foreground: item.foreground,
+    outline: item.outline ?? null,
+  })),
+  added:
+    taskId === rt17.id
+      ? addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null }))
+      : reviewsA1(taskId, slideId)
+        ? addedByLenka
+        : [],
+});
 
 export const toTaskDisplay = (taskId: string): TaskDisplay => {
   const task = taskById(taskId);
   const display = taskDisplay[task?.code ?? ""] ?? { locks: [], presets: [] };
-  return taskDisplaySchema.parse({
+  return {
     task_id: taskId,
     task_code: task?.code ?? "",
     locks: display.locks.map((lock) => ({
@@ -157,7 +159,7 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
       value: lock.setting === "order" ? "ai" : "hidden",
     })),
     presets: display.presets,
-  });
+  };
 };
 
 const postedKey = "parfocal.fake.posted-threads";
@@ -468,14 +470,13 @@ export const toMentionable = (taskId: string): Mentionable[] => {
     }));
 };
 
-export const toSlideAgreement = (taskId: string, slideId: string): SlideAgreement =>
-  slideAgreementSchema.parse({
-    task_id: taskId,
-    slide_id: slideId,
-    with_user_id: reviewsA1(taskId, slideId) ? people[agreementWithSimona.with].id : null,
-    agree: reviewsA1(taskId, slideId) ? agreementWithSimona.agree : 0,
-    total: reviewsA1(taskId, slideId) ? agreementWithSimona.total : 0,
-  });
+export const toSlideAgreement = (taskId: string, slideId: string): SlideAgreement => ({
+  task_id: taskId,
+  slide_id: slideId,
+  with_user_id: reviewsA1(taskId, slideId) ? people[agreementWithSimona.with].id : null,
+  agree: reviewsA1(taskId, slideId) ? agreementWithSimona.agree : 0,
+  total: reviewsA1(taskId, slideId) ? agreementWithSimona.total : 0,
+});
 
 const savedOpinions = new Map<string, Record<string, unknown>>();
 
@@ -555,54 +556,17 @@ const submittedStates = (taskId: string, slideId: string): TaskStates => ({
   ],
 });
 
-export const getListReviewObjectsMockHandler = (overrideResponse?: ReviewObjects) =>
-  http.get<{ taskId: string; slideId: string }>(
-    "*/api/review-tasks/:taskId/slides/:slideId/objects",
-    ({ params }) =>
-      HttpResponse.json(overrideResponse ?? toReviewObjects(params.taskId, params.slideId)),
-  );
-
-export const getGetTaskDisplayMockHandler = (overrideResponse?: TaskDisplay) =>
-  http.get<{ taskId: string }>("*/api/review-tasks/:taskId/display", ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toTaskDisplay(params.taskId)),
-  );
-
 export const getListThreadCommentsMockHandler = (overrideResponse?: ThreadComment[]) =>
   http.get<{ threadId: string }>("*/api/threads/:threadId/comments", ({ params }) =>
     HttpResponse.json(overrideResponse ?? toThreadComments(params.threadId)),
   );
 
-export const getGetSlideAgreementMockHandler = (overrideResponse?: SlideAgreement) =>
-  http.get<{ taskId: string; slideId: string }>(
-    "*/api/review-tasks/:taskId/slides/:slideId/agreement",
-    ({ params }) =>
-      HttpResponse.json(overrideResponse ?? toSlideAgreement(params.taskId, params.slideId)),
-  );
-
 export const reviewDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listReviewObjects",
-    method: "get",
-    path: "/api/review-tasks/{task_id}/slides/{slide_id}/objects",
-    handler: () => getListReviewObjectsMockHandler(),
-  },
-  {
-    operationId: "getTaskDisplay",
-    method: "get",
-    path: "/api/review-tasks/{task_id}/display",
-    handler: () => getGetTaskDisplayMockHandler(),
-  },
   {
     operationId: "listThreadComments",
     method: "get",
     path: "/api/threads/{thread_id}/comments",
     handler: () => getListThreadCommentsMockHandler(),
-  },
-  {
-    operationId: "getSlideAgreement",
-    method: "get",
-    path: "/api/review-tasks/{task_id}/slides/{slide_id}/agreement",
-    handler: () => getGetSlideAgreementMockHandler(),
   },
 ];
 
@@ -611,6 +575,13 @@ const aiHidden = () =>
 
 export function reviewHandlers(): RequestHandler[] {
   return [
+    getListReviewObjectsMockHandler(({ params }) =>
+      toReviewObjects(String(params.taskId), String(params.slideId)),
+    ),
+    getGetTaskDisplayMockHandler(({ params }) => toTaskDisplay(String(params.taskId))),
+    getGetSlideAgreementMockHandler(({ params }) =>
+      toSlideAgreement(String(params.taskId), String(params.slideId)),
+    ),
     ...displayChoiceHandlers((taskId) => taskById(taskId)?.code ?? ""),
     http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) =>
       aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined,

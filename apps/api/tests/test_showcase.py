@@ -8,6 +8,9 @@ from db_support import OWNER_URL, migrated_database, run_sql, with_database
 from sqlalchemy import select
 
 from parfocal_api.auth import sign_in_user
+from parfocal_api.principals import MemberPrincipal
+from parfocal_api.review_decisions import ReviewDecisionDraft, list_decisions, save_decision
+from parfocal_api.review_objects import list_review_objects
 from parfocal_api.review_states import State, states_of, task_of
 from parfocal_api.showcase import (
     FIXTURES_MANIFEST,
@@ -263,3 +266,44 @@ async def test_an_unverified_email_does_not_take_over_the_seeded_account(seeded:
         seeded, "SELECT subject FROM users WHERE email = 'unverified@example.test'"
     )
     assert owner == {"seed:unverified@example.test"}
+
+
+async def test_the_owner_reviews_the_gallery_tour_on_the_real_review_calls(seeded: str) -> None:
+    await run_seed(seeded)
+    task_id, slide_id, tenant_id, user_id = (
+        await run_sql(
+            seeded,
+            "SELECT t.id, ts.slide_id, t.tenant_id, u.id FROM review_tasks t "
+            "JOIN review_task_slides ts ON ts.task_id = t.id "
+            "JOIN review_assignments a ON a.task_id = t.id AND a.slide_id = ts.slide_id "
+            "JOIN users u ON u.id = a.user_id "
+            f"WHERE t.name = '{GALLERY_TOUR}' AND u.email = 'owner@example.test' "
+            "AND ts.position = 0 LIMIT 1",
+        )
+    )[0]
+    tenant = uuid.UUID(str(tenant_id))
+    principal = MemberPrincipal(
+        "seed:owner@example.test", tenant, uuid.UUID(str(user_id)), Role.RESEARCHER, True
+    )
+    task, slide = uuid.UUID(str(task_id)), uuid.UUID(str(slide_id))
+    results = UnusedResults()
+    engine = create_engine(seeded)
+    try:
+        async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant)) as connection:
+            listed = await list_review_objects(task, slide, principal, connection, results)  # type: ignore[arg-type]
+            assert listed.objects
+            first = listed.objects[0]
+            assert first.class_name
+            await save_decision(
+                task,
+                slide,
+                first.object,
+                ReviewDecisionDraft(value=DecisionValue.AGREE),
+                principal,
+                connection,
+                results,  # type: ignore[arg-type]
+            )
+            saved = await list_decisions(task, slide, principal, connection)
+            assert [decision.object for decision in saved] == [first.object]
+    finally:
+        await engine.dispose()

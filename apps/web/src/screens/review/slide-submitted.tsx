@@ -4,6 +4,7 @@ import { SlideSubmittedDialog } from "@parfocal/ui/components/slide-submitted-di
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { usePeople } from "../people.ts";
+import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import { GuidedReview } from "./guided-review.tsx";
 import { useReviewSession } from "./review-data.ts";
@@ -35,11 +36,13 @@ function NextSlideCard({ taskId, slideId }: SlideSubmittedProps) {
   const session = useReviewSession(taskId, slideId);
   const navigate = useNavigate();
   const person = usePeople();
-  const agreement = useGetSlideAgreement(taskId, slideId).data?.data;
+  const agreement = okData(useGetSlideAgreement(taskId, slideId).data);
   const next = session.neighbours?.next ?? null;
-  const nextObjects = useListReviewObjects(taskId, next?.id ?? "", {
-    query: { enabled: next !== null },
-  }).data?.data;
+  const nextObjects = okData(
+    useListReviewObjects(taskId, next?.id ?? "", {
+      query: { enabled: next !== null },
+    }).data,
+  );
   const [left, setLeft] = useState(autoOpenSeconds);
   const [stopped, setStopped] = useState(false);
   const position = session.neighbours?.position ?? 0;

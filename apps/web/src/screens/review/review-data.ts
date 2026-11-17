@@ -78,7 +78,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const task = okData(useGetReviewTask(taskId).data);
   const projectId = task?.project_id ?? "";
   const objectsQuery = useListReviewObjects(taskId, slideId);
-  const reviewObjects = objectsQuery.data?.data;
+  const reviewObjects = okData(objectsQuery.data);
   const decisions = okData(useListDecisions(taskId, slideId).data) ?? [];
   const person = usePeople();
   const nameOf = (userId: string) => person(userId)?.name;

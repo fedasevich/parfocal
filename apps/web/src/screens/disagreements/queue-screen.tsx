@@ -139,7 +139,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
     update.mutate({
       taskId,
       slideId: target.slide_id,
-      object: target.object,
+      objectId: target.object,
       data: {
         action: "decide",
         raw,
@@ -440,7 +440,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                     update.mutate({
                       taskId,
                       slideId: row.slide_id,
-                      object: row.object,
+                      objectId: row.object,
                       data: { action: "leave-open", note: notes[row.key]?.trim() || null },
                     });
                     toast.show(t`${rowLabel(row)} is left open. Sign-off counts it on purpose.`);
@@ -460,7 +460,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                     update.mutate({
                       taskId,
                       slideId: row.slide_id,
-                      object: row.object,
+                      objectId: row.object,
                       data: { action: "look-again" },
                     });
                     toast.show(t`Both reviewers have ${row.object} open again`);
@@ -469,7 +469,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                     update.mutate({
                       taskId,
                       slideId: row.slide_id,
-                      object: row.object,
+                      objectId: row.object,
                       data: { action: "keep-decisions" },
                     })
                   }

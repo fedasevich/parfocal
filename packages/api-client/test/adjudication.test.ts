@@ -46,6 +46,13 @@ const { people, reviewTasks } = scenario;
 const rt14 = reviewTasks.find((task) => task.code === "RT-14")?.id ?? "";
 const open = { ...defaultFakeQueueScene, stage: "open" as const };
 
+function body<Response extends { status: number; data: unknown }>(
+  response: Response,
+): Extract<Response, { status: 200 }>["data"] {
+  assert.equal(response.status, 200);
+  return (response as Extract<Response, { status: 200 }>).data;
+}
+
 const summaryOf = async (taskId: string) => {
   const response = await getSignOffSummary(taskId);
   assert.ok(response.status === 200);
@@ -54,7 +61,7 @@ const summaryOf = async (taskId: string) => {
 
 test("the queue holds the mock's seven objects with five where reviewers differ", async () => {
   setFakeQueueScene(open);
-  const queue = (await getDisagreementQueue(rt14)).data;
+  const queue = body(await getDisagreementQueue(rt14));
   assert.equal(queue.locked, null);
   assert.deepEqual(
     queue.rows.map((row) => `${row.slide_label}:${row.object}`),
@@ -65,7 +72,7 @@ test("the queue holds the mock's seven objects with five where reviewers differ"
 });
 
 test("the queue is locked until Simona submits her last 8 slides", async () => {
-  const queue = (await getDisagreementQueue(rt14)).data;
+  const queue = body(await getDisagreementQueue(rt14));
   assert.deepEqual(queue.locked, { user_id: people.SM.id, slides_left: 8 });
   const summary = await summaryOf(rt14);
   assert.equal(summary.reviews.total - summary.reviews.submitted, 13);
@@ -74,14 +81,14 @@ test("the queue is locked until Simona submits her last 8 slides", async () => {
 
 test("objects sent to Anna reach her anonymously and her decisions resolve them", async () => {
   setFakeQueueScene(open);
-  const queue = (await getDisagreementQueue(rt14)).data;
+  const queue = body(await getDisagreementQueue(rt14));
   const picked = queue.rows.filter((row) => ["T4", "T5", "T1·C145"].includes(row.object));
   await sendToAdjudicator(rt14, {
     adjudicator_user_id: people.AK.id,
     note: "Please look at the edges",
     objects: picked.map((row) => ({ slide_id: row.slide_id, object: row.object })),
   });
-  const mine = (await getMyAdjudication(rt14)).data;
+  const mine = body(await getMyAdjudication(rt14));
   assert.equal(mine.note, "Please look at the edges");
   assert.equal(mine.objects.length, 3);
   assert.equal(mine.asked_by_user_id, people.DH.id);
@@ -89,18 +96,16 @@ test("objects sent to Anna reach her anonymously and her decisions resolve them"
   const [first] = mine.objects;
   assert.ok(first);
   assert.equal(first.reviewer_a.reason, "Not tumor");
-  await decideAdjudication({
-    taskId: rt14,
-    slideId: first.slide_id,
-    object: first.object,
-    data: { raw: "disagree", note: "Crush artefact, not tumor" },
+  await decideAdjudication(rt14, first.slide_id, first.object, {
+    raw: "disagree",
+    note: "Crush artefact, not tumor",
   });
-  const decided = (await getMyAdjudication(rt14)).data.objects.find(
+  const decided = body(await getMyAdjudication(rt14)).objects.find(
     (item) => item.object === first.object,
   );
   assert.equal(decided?.decision, "disagree");
   assert.equal(decided?.decision_note, "Crush artefact, not tumor");
-  const row = (await getDisagreementQueue(rt14)).data.rows.find(
+  const row = body(await getDisagreementQueue(rt14)).rows.find(
     (item) => item.object === first.object,
   );
   assert.equal(row?.state, "adjudicated");
@@ -132,17 +137,16 @@ test("deciding and leaving open count as resolved, and signing freezes the task"
 
 test("a decision in the queue is stored next to both reviewers", async () => {
   setFakeQueueScene(open);
-  const queue = (await getDisagreementQueue(rt14)).data;
+  const queue = body(await getDisagreementQueue(rt14));
   const t2 = queue.rows[0];
   assert.ok(t2);
-  const row = (
-    await updateQueuedObject({
-      taskId: rt14,
-      slideId: t2.slide_id,
-      object: t2.object,
-      data: { action: "decide", raw: "disagree", note: "Past the fold" },
-    })
-  ).data;
+  const row = body(
+    await updateQueuedObject(rt14, t2.slide_id, t2.object, {
+      action: "decide",
+      raw: "disagree",
+      note: "Past the fold",
+    }),
+  );
   assert.equal(row.state, "decided");
   assert.equal(row.decision?.by_user_id, people.DH.id);
   assert.equal(row.answers.length, 2);

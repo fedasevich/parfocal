@@ -27,6 +27,7 @@ from parfocal_api import (
     clinical_notes,
     clinical_reports,
     decision_notes,
+    disagreement_queue,
     disagreements,
     display,
     emergency,
@@ -69,6 +70,7 @@ from parfocal_api import (
     result_sets,
     retention,
     review_decisions,
+    review_objects,
     review_order,
     review_skips,
     review_states,
@@ -265,6 +267,9 @@ def create_app(
     app.include_router(annotate_sign_off.router)
     app.include_router(task_runs.router)
     app.include_router(review_order.router)
+    app.include_router(review_objects.router)
+    app.include_router(disagreement_queue.router)
+    app.include_router(disagreement_queue.adjudication_router)
     app.include_router(reviewed_export.router)
     app.include_router(annotation_exports.router)
     app.include_router(announcements.router)

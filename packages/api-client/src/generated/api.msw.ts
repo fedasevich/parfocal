@@ -12,6 +12,7 @@ import type {
   AcceptedInvitation,
   AccountCodeSent,
   AdjudicatedObject,
+  AdjudicationObject,
   AiChanges,
   AiCorrections,
   AiUsage,
@@ -39,6 +40,7 @@ import type {
   CreatedUpload,
   DecisionNote,
   DeletedProject,
+  DisagreementQueue,
   DisagreementReasons,
   DisplayPreset,
   EmailSchedule,
@@ -90,6 +92,7 @@ import type {
   MultiPolygonGeometry,
   Mute,
   MyAdjudication,
+  MyAdjudicationTask,
   MyDisplay,
   MyJob,
   MySettingLayers,
@@ -121,6 +124,7 @@ import type {
   ProjectModel,
   Question,
   QueuedObject,
+  QueueRow,
   Reassignment,
   RegionMetrics,
   RegistryEntry,
@@ -136,6 +140,7 @@ import type {
   ReviewEdit,
   ReviewedLayer,
   ReviewerAgreement,
+  ReviewObjects,
   ReviewOrder,
   ReviewTask,
   ReviewTaskDetail,
@@ -159,6 +164,7 @@ import type {
   SignOutSet,
   SiteValidation,
   Skip,
+  SlideAgreement,
   SlideArea,
   SlideCopies,
   SlideCoverage,
@@ -176,6 +182,7 @@ import type {
   StudyTemplateSummary,
   StudyTemplateVersion,
   Target,
+  TaskDisplay,
   TaskReportLayout,
   TaskSlide,
   TaskStates,
@@ -264,6 +271,7 @@ import {
   MyStatus,
   NodeCategory,
   NotificationKind,
+  ObjectKind,
   ObjectOrder,
   Ordering,
   OriginRoute,
@@ -271,6 +279,8 @@ import {
   Plan,
   PrivacyMode,
   ProjectRole,
+  QueueRowState,
+  QueueTag,
   Read,
   ReassignWhat,
   Region,
@@ -7395,6 +7405,308 @@ export const getGetReviewOrderResponseMock = (
       number: faker.number.int(),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getListReviewObjectsResponseMock = (
+  overrideResponse: Partial<Extract<ReviewObjects, object>> = {},
+): ReviewObjects => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  slide: {
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    case_label: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    stain: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    width: faker.helpers.arrayElement([faker.number.int(), null]),
+    height: faker.helpers.arrayElement([faker.number.int(), null]),
+  },
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      kind: faker.helpers.arrayElement(["region", "cell"] as const),
+      number: faker.number.int(),
+      class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      score: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      other_class: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      detector_score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      foreground: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      outline: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          faker.number.float({ fractionDigits: 2 }),
+        ),
+        null,
+      ]),
+    }),
+  ),
+  added: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  })),
+  ...overrideResponse,
+});
+
+export const getGetSlideAgreementResponseMock = (
+  overrideResponse: Partial<Extract<SlideAgreement, object>> = {},
+): SlideAgreement => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  with_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  agree: faker.number.int(),
+  total: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getGetTaskDisplayResponseMock = (
+  overrideResponse: Partial<Extract<TaskDisplay, object>> = {},
+): TaskDisplay => ({
+  task_id: faker.string.uuid(),
+  task_code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  locks: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    setting: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    value: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      faker.number.float({ fractionDigits: 2 }),
+      faker.datatype.boolean(),
+    ]),
+    reason: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  })),
+  presets: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      settings: {
+        [faker.string.alphanumeric(5)]: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          faker.number.float({ fractionDigits: 2 }),
+          faker.datatype.boolean(),
+        ]),
+      },
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getGetDisagreementQueueResponseMock = (
+  overrideResponse: Partial<Extract<DisagreementQueue, object>> = {},
+): DisagreementQueue => ({
+  task_id: faker.string.uuid(),
+  total_objects: faker.number.int(),
+  locked: faker.helpers.arrayElement([
+    { user_id: faker.string.uuid(), slides_left: faker.number.int() },
+    null,
+  ]),
+  rows: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slide_id: faker.string.uuid(),
+    slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+    ai: {
+      class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      score: faker.number.float({ fractionDigits: 2 }),
+    },
+    size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    tag: faker.helpers.arrayElement(Object.values(QueueTag)),
+    answers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        reason: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      }),
+    ),
+    state: faker.helpers.arrayElement(Object.values(QueueRowState)),
+    decision: faker.helpers.arrayElement([
+      {
+        raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        by_user_id: faker.string.uuid(),
+        at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      },
+      null,
+    ]),
+    adjudicator: faker.helpers.arrayElement([
+      {
+        user_id: faker.string.uuid(),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      null,
+    ]),
+    edited: faker.helpers.arrayElement([
+      { by_user_id: faker.string.uuid(), on: faker.date.past().toISOString().slice(0, 10) },
+      null,
+    ]),
+  })),
+  ...overrideResponse,
+});
+
+export const getUpdateQueuedObjectResponseMock = (
+  overrideResponse: Partial<Extract<QueueRow, object>> = {},
+): QueueRow => ({
+  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slide_id: faker.string.uuid(),
+  slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+  ai: {
+    class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    score: faker.number.float({ fractionDigits: 2 }),
+  },
+  size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  tag: faker.helpers.arrayElement(Object.values(QueueTag)),
+  answers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  state: faker.helpers.arrayElement(Object.values(QueueRowState)),
+  decision: faker.helpers.arrayElement([
+    {
+      raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      by_user_id: faker.string.uuid(),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  adjudicator: faker.helpers.arrayElement([
+    {
+      user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
+  edited: faker.helpers.arrayElement([
+    { by_user_id: faker.string.uuid(), on: faker.date.past().toISOString().slice(0, 10) },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getGetMyAdjudicationResponseMock = (
+  overrideResponse: Partial<Extract<MyAdjudicationTask, object>> = {},
+): MyAdjudicationTask => ({
+  task_id: faker.string.uuid(),
+  asked_by_user_id: faker.string.uuid(),
+  note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slide_id: faker.string.uuid(),
+      slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+      ai: {
+        class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        score: faker.number.float({ fractionDigits: 2 }),
+      },
+      size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      reviewer_a: {
+        raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        reason: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      reviewer_b: {
+        raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        reason: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      decision: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      decision_note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getDecideAdjudicationResponseMock = (
+  overrideResponse: Partial<Extract<AdjudicationObject, object>> = {},
+): AdjudicationObject => ({
+  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slide_id: faker.string.uuid(),
+  slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+  ai: {
+    class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    score: faker.number.float({ fractionDigits: 2 }),
+  },
+  size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  reviewer_a: {
+    raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  },
+  reviewer_b: {
+    raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  },
+  decision: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  decision_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -20339,6 +20651,170 @@ export const getGetReviewOrderMockHandler = (
   );
 };
 
+export const getListReviewObjectsMockHandler = (
+  overrideResponse?:
+    | ReviewObjects
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReviewObjects> | ReviewObjects),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/objects",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListReviewObjectsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetSlideAgreementMockHandler = (
+  overrideResponse?:
+    | SlideAgreement
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideAgreement> | SlideAgreement),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/agreement",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideAgreementResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetTaskDisplayMockHandler = (
+  overrideResponse?:
+    | TaskDisplay
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TaskDisplay> | TaskDisplay),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/display",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTaskDisplayResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetDisagreementQueueMockHandler = (
+  overrideResponse?:
+    | DisagreementQueue
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DisagreementQueue> | DisagreementQueue),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/disagreement-queue",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetDisagreementQueueResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUpdateQueuedObjectMockHandler = (
+  overrideResponse?:
+    | QueueRow
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<QueueRow> | QueueRow),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/disagreement-queue/:slideId/:objectId",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getUpdateQueuedObjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetMyAdjudicationMockHandler = (
+  overrideResponse?:
+    | MyAdjudicationTask
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<MyAdjudicationTask> | MyAdjudicationTask),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/adjudication",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetMyAdjudicationResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDecideAdjudicationMockHandler = (
+  overrideResponse?:
+    | AdjudicationObject
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AdjudicationObject> | AdjudicationObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/adjudication/:slideId/:objectId",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDecideAdjudicationResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getExportReviewedLayerMockHandler = (
   overrideResponse?:
     | ExportReviewedLayer200
@@ -24753,6 +25229,13 @@ export const getParfocalAPIMock = () => [
   getSignOffAnnotateSlideMockHandler(),
   getAddRunToTaskSlideMockHandler(),
   getGetReviewOrderMockHandler(),
+  getListReviewObjectsMockHandler(),
+  getGetSlideAgreementMockHandler(),
+  getGetTaskDisplayMockHandler(),
+  getGetDisagreementQueueMockHandler(),
+  getUpdateQueuedObjectMockHandler(),
+  getGetMyAdjudicationMockHandler(),
+  getDecideAdjudicationMockHandler(),
   getExportReviewedLayerMockHandler(),
   getExportSlideObjectsMockHandler(),
   getListAnnouncementsMockHandler(),

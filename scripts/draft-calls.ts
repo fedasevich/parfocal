@@ -25,15 +25,7 @@ const operationsByArea: Record<string, string[]> = {
     "typeOutlines",
     "listAnnotationLayers",
   ],
-  review: [
-    "listReviewObjects",
-    "getSlideAgreement",
-    "getTaskDisplay",
-    "getDisagreementQueue",
-    "getMyAdjudication",
-    "decideAdjudication",
-    "updateQueuedObject",
-  ],
+  review: [],
   reports: [
     "getEvaluationReport",
     "getClinicalReport",
