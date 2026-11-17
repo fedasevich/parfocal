@@ -125,7 +125,7 @@ def async_database_url(url: str) -> str:
 
 
 POOL_SIZE = 10
-POOL_OVERFLOW = 10
+POOL_OVERFLOW = 30
 PING_AFTER_IDLE_SECONDS = 30.0
 LAST_USED = "parfocal_last_used"
 
