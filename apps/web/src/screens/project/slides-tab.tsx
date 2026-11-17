@@ -41,6 +41,7 @@ import { okData } from "../placeholder.tsx";
 import { SlideThumb } from "../slide-thumb.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
+import { ResultSetDeleteDialog } from "./result-set-delete-dialog.tsx";
 import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
 import { moveTitle } from "./slide-move-model.ts";
@@ -533,6 +534,7 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
   const people = usePeople();
   const format = useFormat();
   const navigate = useNavigate();
+  const [deleting, setDeleting] = useState<ResultSet | undefined>();
   const view = () =>
     void navigate({
       to: "/projects/$projectId/slides/$slideId",
@@ -576,6 +578,14 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
                   <Icon name="slides" />
                   <Trans>Compare</Trans>
                 </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={t`Delete ${set.name}`}
+                  onClick={() => setDeleting(set)}
+                >
+                  <Trans>Delete</Trans>
+                </Button>
               </span>
             </div>
           ))}
@@ -610,6 +620,9 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
             </Button>
           </div>
         </div>
+        {deleting ? (
+          <ResultSetDeleteDialog set={deleting} onClose={() => setDeleting(undefined)} />
+        ) : null}
       </TableCell>
     </TableRow>
   );

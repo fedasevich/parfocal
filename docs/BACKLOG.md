@@ -4959,6 +4959,11 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   `PUT /api/projects/{id}/classes` checked only task annotations before it deleted a class, so a class used by a person's own annotation, an imported result set, a review edit, a skip or a decision broke a foreign key and answered 500. The write isolation suite of SEC-043 (every write route is sent as another workspace) found it when the owner of a seeded project replaced its class list. Check every column that points at a class without a cascade.
   Done when an API test removes a class that a person's own annotation uses and gets 409 `class-in-use`, and a test pins the list of columns the check reads.
   Size: S.
+- [x] PROJ-013 · New project opens its drawer anywhere and an empty result layer can be deleted
+  On 2026-11-17 the owner found on app.parfocal.eu that the New project button sends them to the first project in the list instead of opening the create drawer, and that the result sets tab of a project has no way to delete an empty result layer.
+  Open the create-project drawer over the current page wherever the button is (projects list, home, palette) with no navigation to any project, and go to the new project after creating. Give an empty result layer or set a visible delete action with a confirm, and let the API allow it. A layer with results keeps its current rules.
+  Done when unit tests cover both, API tests with `uv run pytest -m db` cover deleting an empty layer, and one Playwright spec for each bug passes.
+  Size: S.
 
 ---
 
