@@ -38,6 +38,7 @@ class Family(StrEnum):
     TYPER_BEST = "typer-best"
     TYPER_GOOD = "typer-good"
     EMBEDDER = "embedder"
+    LAB_MODEL = "lab-model"
 
 
 @dataclass(frozen=True)
@@ -121,6 +122,17 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=60,
         scaledown_window_seconds=INTERACTIVE_SCALEDOWN_SECONDS,
+    ),
+    PoolLimits(
+        family=Family.LAB_MODEL,
+        gpu=None,
+        gpu_memory_budget_mib=0,
+        memory_request_mib=1024,
+        memory_limit_mib=2048,
+        max_inputs=1,
+        max_containers=1,
+        timeout_seconds=MAX_TIMEOUT_SECONDS,
+        scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
     ),
 )
 

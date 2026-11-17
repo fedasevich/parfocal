@@ -2,11 +2,8 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-overview.ts";
 import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
 import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
-import { type SignInOptions, signInOptionsSchema } from "../draft/get-sign-in-options.ts";
 import { type StorageUsage, storageUsageSchema } from "../draft/get-storage-usage.ts";
-import { type AiModels, aiModelsSchema } from "../draft/list-ai-models.ts";
 import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
-import { type AccessRequest, accessRequestSchema } from "../draft/request-project-access.ts";
 import {
   getAcceptInvitationMockHandler,
   getAskToJoinWorkspaceMockHandler,
@@ -17,17 +14,20 @@ import {
   getGetSessionPolicyMockHandler,
   getInviteTaskReviewerMockHandler,
   getJoinWorkspaceMockHandler,
+  getListAiModelsMockHandler,
   getListAuditEventsMockHandler,
   getListInvitationsMockHandler,
   getListJoinableWorkspacesMockHandler,
   getListMemberActivityMockHandler,
   getListServiceAccountsMockHandler,
+  getRequestProjectAccessMockHandler,
   getResendInvitationMockHandler,
   getRevokeInvitationMockHandler,
   getSetMemberAdminRightsMockHandler,
 } from "../generated/api.msw.ts";
 import type {
   AcceptedInvitation,
+  AiModels,
   AuditExport,
   Invitation,
   InvitationDraft,
@@ -35,6 +35,7 @@ import type {
   Member,
   MemberActivity,
   NamedAuditEvent,
+  ProjectAccessRequest,
   ServiceAccount,
   SessionPolicy,
   TaskInvitationDraft,
@@ -52,7 +53,6 @@ import {
   reviewTasks,
   scenarioNow,
   slideOf,
-  slides,
   workspaces,
 } from "./scenario.ts";
 import {
@@ -64,8 +64,6 @@ import {
   auditPseudonym,
   auditToday,
   canSignOut,
-  expiredSession,
-  institutions,
   invitations,
   inviteSeed,
   joinableWorkspaces,
@@ -183,32 +181,31 @@ function withVisibility(model: AiModelSeed): AiModelSeed {
     : { ...model, shown: true, status: "active", whoCanRun: "Researchers" };
 }
 
-export const toAiModels = (): AiModels =>
-  aiModelsSchema.parse({
-    models: aiModels.map(withVisibility).map((model) => ({
-      id: model.id,
-      name: model.name,
-      version: model.version,
-      source: model.source,
-      catalogue_name: model.catalogueName,
-      makes: model.makes,
-      description: model.description,
-      runs_on: model.runsOn,
-      who_can_run: model.whoCanRun,
-      result_sets: model.resultSets,
-      shown: model.shown,
-      status: model.status,
-      latency_ms: model.latencyMs,
-    })),
-    running: runningNow.map((run) => ({
-      id: run.id,
-      model: run.model,
-      project: ref(run.project),
-      slides: run.slides,
-      slides_done: run.slidesDone,
-      started_by: people[run.by].id,
-    })),
-  });
+export const toAiModels = (): AiModels => ({
+  models: aiModels.map(withVisibility).map((model) => ({
+    id: model.id,
+    name: model.name,
+    version: model.version,
+    source: model.source,
+    catalogue_name: model.catalogueName,
+    makes: model.makes,
+    description: model.description,
+    runs_on: model.runsOn,
+    who_can_run: model.whoCanRun,
+    result_sets: model.resultSets,
+    shown: model.shown,
+    status: model.status,
+    latency_ms: model.latencyMs,
+  })),
+  running: runningNow.map((run) => ({
+    id: run.id,
+    model: run.model,
+    project: ref(run.project),
+    slides: run.slides,
+    slides_done: run.slidesDone,
+    started_by: people[run.by].id,
+  })),
+});
 
 export const toStorageUsage = (): StorageUsage =>
   storageUsageSchema.parse({
@@ -265,8 +262,6 @@ const brandOf = (index: number) => {
   };
 };
 
-const slideTarget = /^\/projects\/([^/?#]+)\/slides\/([^/?#]+)(?:\?(.*))?$/;
-
 export const isSafeReturnPath = (value: string) =>
   value.startsWith("/") &&
   !value.startsWith("//") &&
@@ -278,51 +273,6 @@ export const defaultReturnPath = () => {
   const task = reviewTasks.find((item) => item.code === signInDeepLink.task);
   return `/projects/${projectByCode("P07").id}/slides/${slide.id}?task=${task?.id ?? ""}`;
 };
-
-const deepLinkOf = (returnTo: string | null): SignInOptions["deep_link"] => {
-  const path = returnTo === null ? defaultReturnPath() : returnTo;
-  if (!isSafeReturnPath(path)) return null;
-  const match = slideTarget.exec(path);
-  const project = projects.find((item) => item.id === match?.[1]);
-  const slide = slides.find((item) => item.id === match?.[2] && item.project === project?.code);
-  if (project === undefined || slide === undefined) return null;
-  const taskId = new URLSearchParams(match?.[3] ?? "").get("task");
-  const task = reviewTasks.find((item) => item.id === taskId);
-  return {
-    path,
-    task_id: task?.id ?? null,
-    task_code: task?.code ?? null,
-    project_id: project.id,
-    slide_id: slide.id,
-    slide_label: slide.label,
-    case_label: slide.caseLabel ?? "Standalone",
-  };
-};
-
-export const toSignInOptions = (returnTo: string | null = null): SignInOptions =>
-  signInOptionsSchema.parse({
-    workspace: (({ domain: _domain, ...rest }) => rest)(brandOf(0)),
-    email: people.LM.email,
-    institutions: institutions.map((item) => {
-      const brand = brandOf(item.workspace);
-      return {
-        workspace_id: brand.id,
-        name: brand.name,
-        short_name: workspaces[item.workspace]?.organisation ?? brand.name,
-        logo: brand.logo,
-        colour: brand.colour,
-        protocol: item.protocol,
-        domain: item.domain,
-        matches_email: item.matches,
-      };
-    }),
-    methods: { sso: true, password: true, link: true, passkey: true },
-    link_minutes: 15,
-    idle_lock_minutes: sessionPolicy.idleLockMinutes,
-    session_hours: expiredSession.hours,
-    deep_link: deepLinkOf(returnTo),
-    last_decision: expiredSession.lastDecision,
-  });
 
 export const toJoinableWorkspaces = (): JoinableWorkspace[] =>
   joinableWorkspaces.map((item) => {
@@ -573,7 +523,11 @@ const joinedWorkspace = (): AcceptedInvitation => {
 
 export function adminHandlers(): RequestHandler[] {
   return [
+    getListAiModelsMockHandler(() => toAiModels()),
     getListInvitationsMockHandler(() => toInvitations()),
+    getRequestProjectAccessMockHandler(({ params }) =>
+      toProjectAccessRequest(String(params.projectId)),
+    ),
     getCreateInvitationMockHandler(async ({ request }) => {
       const body = (await request.json()) as InvitationDraft;
       const invitation: Invitation = {
@@ -657,9 +611,6 @@ export function adminHandlers(): RequestHandler[] {
 export const getGetAdminOverviewMockHandler = (overrideResponse?: AdminOverview) =>
   http.get("*/api/tenant/overview", () => HttpResponse.json(overrideResponse ?? toAdminOverview()));
 
-export const getListAiModelsMockHandler = (overrideResponse?: AiModels) =>
-  http.get("*/api/tenant/models", () => HttpResponse.json(overrideResponse ?? toAiModels()));
-
 export const getGetStorageUsageMockHandler = (overrideResponse?: StorageUsage) =>
   http.get("*/api/tenant/storage", () => HttpResponse.json(overrideResponse ?? toStorageUsage()));
 
@@ -681,27 +632,16 @@ export const getGetInvitePreviewMockHandler = (overrideResponse?: InvitePreview)
       : HttpResponse.json(overrideResponse ?? toInvitePreview()),
   );
 
-export const getGetSignInOptionsMockHandler = (overrideResponse?: SignInOptions) =>
-  http.get("*/api/auth/sign-in-options", ({ request }) =>
-    HttpResponse.json(
-      overrideResponse ?? toSignInOptions(new URL(request.url).searchParams.get("return_to")),
-    ),
-  );
-
-export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequest) =>
-  http.post<{ projectId: string }>("*/api/projects/:projectId/access-requests", ({ params }) => {
-    const project = projects.find((item) => item.id === params.projectId) ?? projects[0];
-    return HttpResponse.json(
-      overrideResponse ??
-        accessRequestSchema.parse({
-          id: "00000000-0000-4000-8069-000000000002",
-          project_id: project?.id ?? params.projectId,
-          user_id: people.AK.id,
-          owner_id: people[project?.owner ?? "LM"].id,
-          asked_at: scenarioNow,
-        }),
-    );
-  });
+export const toProjectAccessRequest = (projectId: string): ProjectAccessRequest => {
+  const project = projects.find((item) => item.id === projectId) ?? projects[0];
+  return {
+    id: "00000000-0000-4000-8069-000000000002",
+    project_id: project?.id ?? projectId,
+    user_id: people.AK.id,
+    owner_id: people[project?.owner ?? "LM"].id,
+    asked_at: scenarioNow,
+  };
+};
 
 export const adminDraftOperations: DraftOperation[] = [
   {
@@ -709,12 +649,6 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/tenant/overview",
     handler: () => getGetAdminOverviewMockHandler(),
-  },
-  {
-    operationId: "listAiModels",
-    method: "get",
-    path: "/api/tenant/models",
-    handler: () => getListAiModelsMockHandler(),
   },
   {
     operationId: "getStorageUsage",
@@ -739,17 +673,5 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/invitations/{token}/preview",
     handler: () => getGetInvitePreviewMockHandler(),
-  },
-  {
-    operationId: "getSignInOptions",
-    method: "get",
-    path: "/api/auth/sign-in-options",
-    handler: () => getGetSignInOptionsMockHandler(),
-  },
-  {
-    operationId: "requestProjectAccess",
-    method: "post",
-    path: "/api/projects/{project_id}/access-requests",
-    handler: () => getRequestProjectAccessMockHandler(),
   },
 ];

@@ -1,22 +1,19 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import {
-  type LabModelConnection,
-  type LabModelConnectionTest,
-  labModelConnectionSchema,
-} from "../draft/get-lab-model-connection.ts";
+import { getGetLabModelConnectionMockHandler } from "../generated/api.msw.ts";
 import type {
+  LabConnectionTest,
   LabModel,
+  LabModelConnection,
   LabModelDraft,
   LabModelTest,
   LabModelTestRequest,
   ProjectLabModel,
 } from "../generated/api.ts";
 import { fakeConnectModelScene } from "./connect-model-scene.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { projectByCode, projects } from "./scenario.ts";
 import { failedTest, labServer, sampleTiles, sentClasses } from "./scenario-connect-model.ts";
 
-const untested: LabModelConnectionTest = {
+const untested: LabConnectionTest = {
   outcome: "untested",
   sample_slide: labServer.sampleSlide,
   returns: [],
@@ -61,28 +58,27 @@ const failingTest: LabModelTest = {
 
 export const brokenLabServer = "broken";
 
-function toLabModelTest(): LabModelConnectionTest {
+function toLabModelTest(): LabConnectionTest {
   const scene = fakeConnectModelScene();
   if (scene === "failed") return failingTest;
   if (scene === "untested") return untested;
   return passingTest;
 }
 
-export const toLabModelConnection = (): LabModelConnection =>
-  labModelConnectionSchema.parse({
-    address: labServer.address,
-    host: labServer.host,
-    sign_in: labServer.signIn,
-    last_four: labServer.lastFour,
-    tile_size: labServer.tileSize,
-    magnification: labServer.magnification,
-    tiles_at_once: labServer.tilesAtOnce,
-    health_check_minutes: labServer.healthCheckMinutes,
-    taxonomy: labServer.taxonomy,
-    who_can_run: labServer.whoCanRun,
-    project_ids: labServer.projects.map((code) => projectByCode(code).id),
-    test: toLabModelTest(),
-  });
+export const toLabModelConnection = (): LabModelConnection => ({
+  address: labServer.address,
+  host: labServer.host,
+  sign_in: labServer.signIn,
+  last_four: labServer.lastFour,
+  tile_size: labServer.tileSize,
+  magnification: labServer.magnification,
+  tiles_at_once: labServer.tilesAtOnce,
+  health_check_minutes: labServer.healthCheckMinutes,
+  taxonomy: labServer.taxonomy,
+  who_can_run: labServer.whoCanRun,
+  project_ids: labServer.projects.map((code) => projectByCode(code).id),
+  test: toLabModelTest(),
+});
 
 export function toTestedLabModel(request: LabModelTestRequest): LabModelTest {
   return new URL(request.address).host.includes(brokenLabServer) ? failingTest : passingTest;
@@ -156,6 +152,7 @@ const projectLabModels = (projectId: string): ProjectLabModel[] =>
 export function connectModelHandlers(): RequestHandler[] {
   sharedConfirmedAt = null;
   return [
+    getGetLabModelConnectionMockHandler(() => toLabModelConnection()),
     http.get<{ projectId: string }>("*/api/projects/:projectId/lab-models", ({ params }) =>
       HttpResponse.json(projectLabModels(params.projectId)),
     ),
@@ -184,17 +181,3 @@ export function connectModelHandlers(): RequestHandler[] {
     }),
   ];
 }
-
-export const getGetLabModelConnectionMockHandler = (overrideResponse?: LabModelConnection) =>
-  http.get("*/api/tenant/models/connection", () =>
-    HttpResponse.json(overrideResponse ?? toLabModelConnection()),
-  );
-
-export const connectModelDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getLabModelConnection",
-    method: "get",
-    path: "/api/tenant/models/connection",
-    handler: () => getGetLabModelConnectionMockHandler(),
-  },
-];

@@ -3400,6 +3400,866 @@
         "x-permission-write": true
       }
     },
+    "/api/projects/{project_id}/overview": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Project Overview",
+        "operationId": "getProjectOverview",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOverview"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/projects/{project_id}/slides": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Project Slides",
+        "operationId": "listProjectSlides",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectSlide"
+                  },
+                  "title": "Response Listprojectslides"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/projects/{project_id}/scope-options": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Project Scope Options",
+        "operationId": "getProjectScopeOptions",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectScopeOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases"
+      }
+    },
+    "/api/projects/{project_id}/review-tasks/defaults": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Review Task Defaults",
+        "operationId": "getReviewTaskDefaults",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewTaskDefaults"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases"
+      }
+    },
+    "/api/projects/{project_id}/access-requests": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Request Project Access",
+        "operationId": "requestProjectAccess",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAccessRequest"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides"
+      }
+    },
+    "/api/projects/{project_id}/imports": {
+      "get": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Get Project Imports",
+        "operationId": "getProjectImports",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectImports"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides"
+      }
+    },
+    "/api/projects/{project_id}/upload-batch": {
+      "get": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Get Upload Batch",
+        "operationId": "getUploadBatch",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "upload-slides"
+      }
+    },
     "/api/projects/sample": {
       "post": {
         "tags": [
@@ -6762,6 +7622,468 @@
         "x-permission-emergency": true
       }
     },
+    "/api/projects/{project_id}/model-runs/defaults": {
+      "get": {
+        "tags": [
+          "model-runs"
+        ],
+        "summary": "Get Model Run Defaults",
+        "operationId": "getModelRunDefaults",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRunDefaults"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
+    "/api/tenant/models": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "List Ai Models",
+        "operationId": "listAiModels",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiModels"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations"
+      },
+      "post": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Connect Lab Model",
+        "operationId": "connectLabModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabModelDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations",
+        "x-permission-write": true
+      }
+    },
+    "/api/tenant/models/connection": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Get Lab Model Connection",
+        "operationId": "getLabModelConnection",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabModelConnection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations"
+      }
+    },
     "/api/projects/{project_id}/model-runs": {
       "post": {
         "tags": [
@@ -7534,6 +8856,149 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "run-models",
+        "x-permission-write": true
+      }
+    },
+    "/api/projects/{project_id}/model-runs/{run_id}/move": {
+      "post": {
+        "tags": [
+          "model-runs"
+        ],
+        "summary": "Move Model Run",
+        "operationId": "moveModelRun",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelRunMove"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -9174,127 +10639,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LabModelTest"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request is not valid",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in to continue",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "You do not have access to this",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "This changed since you loaded it",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many requests, try again shortly",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "The request is not valid",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Something went wrong",
-            "content": {
-              "application/problem+json": {},
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        },
-        "x-permission": "integrations",
-        "x-permission-write": true
-      }
-    },
-    "/api/tenant/models": {
-      "post": {
-        "tags": [
-          "tenant"
-        ],
-        "summary": "Connect Lab Model",
-        "operationId": "connectLabModel",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LabModelDraft"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LabModel"
                 }
               }
             }
@@ -16411,7 +17755,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Pairings"
+                  "$ref": "#/components/schemas/parfocal_api__result_pairing__Pairings"
                 }
               }
             }
@@ -39163,6 +40507,116 @@
         }
       }
     },
+    "/api/study-templates/review-defaults": {
+      "get": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "List Study Template Review Defaults",
+        "operationId": "listStudyTemplateReviewDefaults",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplateReviewDefaults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "report-templates"
+      }
+    },
     "/api/study-templates": {
       "get": {
         "tags": [
@@ -49713,6 +51167,180 @@
         ],
         "title": "AiCorrections"
       },
+      "AiModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "parfocal",
+              "lab"
+            ],
+            "title": "Source"
+          },
+          "catalogue_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalogue Name"
+          },
+          "makes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Makes"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "runs_on": {
+            "type": "string",
+            "title": "Runs On"
+          },
+          "who_can_run": {
+            "type": "string",
+            "title": "Who Can Run"
+          },
+          "result_sets": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Result Sets"
+          },
+          "shown": {
+            "type": "boolean",
+            "title": "Shown"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "answering",
+              "offline",
+              "imports-only",
+              "hidden"
+            ],
+            "title": "Status"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "source",
+          "catalogue_name",
+          "makes",
+          "description",
+          "runs_on",
+          "who_can_run",
+          "result_sets",
+          "shown",
+          "status",
+          "latency_ms"
+        ],
+        "title": "AiModel"
+      },
+      "AiModelRun": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectRef"
+          },
+          "slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides"
+          },
+          "slides_done": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides Done"
+          },
+          "started_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "model",
+          "project",
+          "slides",
+          "slides_done",
+          "started_by"
+        ],
+        "title": "AiModelRun"
+      },
+      "AiModels": {
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/AiModel"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "running": {
+            "items": {
+              "$ref": "#/components/schemas/AiModelRun"
+            },
+            "type": "array",
+            "title": "Running"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models",
+          "running"
+        ],
+        "title": "AiModels"
+      },
       "AiObjectAgreement": {
         "properties": {
           "object": {
@@ -50823,6 +52451,39 @@
           "methods"
         ]
       },
+      "Arrival": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "code": {
+            "type": "integer",
+            "title": "Code"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "event",
+          "file",
+          "code",
+          "result"
+        ],
+        "title": "Arrival"
+      },
       "Asked": {
         "type": "string",
         "enum": [
@@ -51146,6 +52807,132 @@
         ],
         "title": "BandRecord"
       },
+      "BatchDone": {
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "first_ids": {
+            "type": "string",
+            "title": "First Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "minutes",
+          "first_ids"
+        ],
+        "title": "BatchDone"
+      },
+      "BatchFailure": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "failure_class": {
+            "type": "string",
+            "enum": [
+              "transient",
+              "permanent"
+            ],
+            "title": "Failure Class"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "message",
+          "failure_class"
+        ],
+        "title": "BatchFailure"
+      },
+      "BatchProgress": {
+        "properties": {
+          "percent": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "tiles",
+              "accent"
+            ],
+            "title": "Tone"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "percent",
+          "tone",
+          "text"
+        ],
+        "title": "BatchProgress"
+      },
+      "BatchStep": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "detail"
+        ],
+        "title": "BatchStep"
+      },
+      "BatchStorage": {
+        "properties": {
+          "needed_gb": {
+            "type": "number",
+            "title": "Needed Gb"
+          },
+          "left_gb": {
+            "type": "number",
+            "title": "Left Gb"
+          },
+          "allowance_gb": {
+            "type": "number",
+            "title": "Allowance Gb"
+          },
+          "trimmed_gb": {
+            "type": "number",
+            "title": "Trimmed Gb"
+          },
+          "trimmed_slides": {
+            "type": "integer",
+            "title": "Trimmed Slides"
+          }
+        },
+        "type": "object",
+        "required": [
+          "needed_gb",
+          "left_gb",
+          "allowance_gb",
+          "trimmed_gb",
+          "trimmed_slides"
+        ],
+        "title": "BatchStorage"
+      },
       "BlockClassName": {
         "type": "string",
         "maxLength": 80,
@@ -51415,6 +53202,30 @@
           "label"
         ],
         "title": "CaseDraft"
+      },
+      "CaseGroup": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "specimen": {
+            "type": "string",
+            "title": "Specimen"
+          },
+          "slide_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slide Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "specimen",
+          "slide_count"
+        ],
+        "title": "CaseGroup"
       },
       "CaseImport": {
         "properties": {
@@ -53801,6 +55612,32 @@
         ],
         "title": "DecisionCounts"
       },
+      "DecisionDefaults": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/DecisionKind"
+          },
+          "agree_from": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 2.0,
+            "title": "Agree From"
+          },
+          "disagree_to": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Disagree To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "agree_from",
+          "disagree_to"
+        ],
+        "title": "DecisionDefaults"
+      },
       "DecisionDraft": {
         "properties": {
           "answer": {
@@ -53844,6 +55681,16 @@
           "answer"
         ],
         "title": "DecisionDraft"
+      },
+      "DecisionKind": {
+        "type": "string",
+        "enum": [
+          "certainty5",
+          "agree",
+          "yesno",
+          "blind"
+        ],
+        "title": "DecisionKind"
       },
       "DecisionNote": {
         "properties": {
@@ -54150,6 +55997,117 @@
         ],
         "title": "DisplayChoice"
       },
+      "DisplayDefaults": {
+        "properties": {
+          "draw": {
+            "type": "string",
+            "enum": [
+              "outline",
+              "fill",
+              "dots"
+            ],
+            "title": "Draw"
+          },
+          "width": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Width"
+          },
+          "opacity": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 20.0,
+            "title": "Opacity"
+          },
+          "colorBy": {
+            "type": "string",
+            "enum": [
+              "class",
+              "score",
+              "decision"
+            ],
+            "title": "Colorby"
+          },
+          "ids": {
+            "type": "boolean",
+            "title": "Ids"
+          },
+          "conf": {
+            "type": "string",
+            "enum": [
+              "number",
+              "word",
+              "color",
+              "hidden"
+            ],
+            "title": "Conf"
+          },
+          "heat": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Heat"
+          },
+          "cutoff": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Cutoff"
+          },
+          "sets": {
+            "$ref": "#/components/schemas/OtherSetsShown"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "size",
+              "leastsure",
+              "random"
+            ],
+            "title": "Order"
+          },
+          "zoom": {
+            "type": "string",
+            "enum": [
+              "fit",
+              "tight",
+              "context"
+            ],
+            "title": "Zoom"
+          },
+          "auto": {
+            "type": "boolean",
+            "title": "Auto"
+          },
+          "buttons": {
+            "type": "string",
+            "enum": [
+              "right",
+              "bottom"
+            ],
+            "title": "Buttons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "draw",
+          "width",
+          "opacity",
+          "colorBy",
+          "ids",
+          "conf",
+          "heat",
+          "cutoff",
+          "sets",
+          "order",
+          "zoom",
+          "auto",
+          "buttons"
+        ],
+        "title": "DisplayDefaults"
+      },
       "DisplayLock": {
         "properties": {
           "setting": {
@@ -54362,6 +56320,25 @@
         "type": "string",
         "maxLength": 1024,
         "minLength": 1
+      },
+      "Duplicate": {
+        "properties": {
+          "slide": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slide"
+          },
+          "uploaded_on": {
+            "type": "string",
+            "title": "Uploaded On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide",
+          "uploaded_on"
+        ],
+        "title": "Duplicate"
       },
       "EditDraft": {
         "properties": {
@@ -54885,6 +56862,37 @@
         ],
         "title": "EvaluationVersionStarted"
       },
+      "EventsOut": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "last_call": {
+            "type": "integer",
+            "title": "Last Call"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/OutgoingEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "last_call",
+          "events",
+          "on"
+        ],
+        "title": "EventsOut"
+      },
       "ExpertChanges": {
         "properties": {
           "title": {
@@ -55107,6 +57115,24 @@
         ],
         "title": "ExportedEvent"
       },
+      "ExtraResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "detail"
+        ],
+        "title": "ExtraResult"
+      },
       "ExtraScopes": {
         "items": {
           "$ref": "#/components/schemas/Scope"
@@ -55299,6 +57325,29 @@
         ],
         "title": "FirstRead"
       },
+      "FolderEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "depth": {
+            "type": "number",
+            "title": "Depth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "note",
+          "depth"
+        ],
+        "title": "FolderEntry"
+      },
       "FormChange": {
         "properties": {
           "questions": {
@@ -55341,6 +57390,54 @@
           "created_at"
         ],
         "title": "FormVersion"
+      },
+      "FormatCheck": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/FormatFinding"
+            },
+            "type": "array",
+            "title": "Findings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "detail",
+          "findings"
+        ],
+        "title": "FormatCheck"
+      },
+      "FormatFinding": {
+        "properties": {
+          "tone": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warn"
+            ],
+            "title": "Tone"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tone",
+          "text"
+        ],
+        "title": "FormatFinding"
       },
       "FrameMs": {
         "type": "number",
@@ -55867,6 +57964,35 @@
         "type": "object",
         "title": "ImportChoices"
       },
+      "ImportFailure": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "slide_label": {
+            "type": "string",
+            "title": "Slide Label"
+          },
+          "objects": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Objects"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "slide_label",
+          "objects",
+          "reason"
+        ],
+        "title": "ImportFailure"
+      },
       "ImportProblem": {
         "properties": {
           "code": {
@@ -56138,6 +58264,37 @@
           "sources"
         ],
         "title": "ImportSources"
+      },
+      "ImportWebhook": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "secret_end": {
+            "type": "string",
+            "title": "Secret End"
+          },
+          "abilities": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookAbility"
+            },
+            "type": "array",
+            "title": "Abilities"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "secret_end",
+          "abilities",
+          "on"
+        ],
+        "title": "ImportWebhook"
       },
       "InboxCounts": {
         "properties": {
@@ -56908,6 +59065,94 @@
         ],
         "title": "KindCount"
       },
+      "LabConnectionTest": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "untested",
+              "follows-contract",
+              "not-contract"
+            ],
+            "title": "Outcome"
+          },
+          "sample_slide": {
+            "type": "string",
+            "title": "Sample Slide"
+          },
+          "returns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Returns"
+          },
+          "answered_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered Ms"
+          },
+          "server_software": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Software"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/SampleTile"
+            },
+            "type": "array",
+            "title": "Tiles"
+          },
+          "missing_geometry": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Missing Geometry"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LabTestModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/SentClass"
+            },
+            "type": "array",
+            "title": "Classes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome",
+          "sample_slide",
+          "returns",
+          "answered_ms",
+          "server_software",
+          "tiles",
+          "missing_geometry",
+          "model",
+          "classes"
+        ],
+        "title": "LabConnectionTest"
+      },
       "LabModel": {
         "properties": {
           "id": {
@@ -57029,6 +59274,90 @@
           "created_at"
         ],
         "title": "LabModel"
+      },
+      "LabModelConnection": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "host": {
+            "type": "string",
+            "title": "Host"
+          },
+          "sign_in": {
+            "type": "string",
+            "enum": [
+              "none",
+              "token",
+              "header"
+            ],
+            "title": "Sign In"
+          },
+          "last_four": {
+            "type": "string",
+            "title": "Last Four"
+          },
+          "tile_size": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Tile Size"
+          },
+          "magnification": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Magnification"
+          },
+          "tiles_at_once": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Tiles At Once"
+          },
+          "health_check_minutes": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Health Check Minutes"
+          },
+          "taxonomy": {
+            "type": "string",
+            "title": "Taxonomy"
+          },
+          "who_can_run": {
+            "type": "string",
+            "enum": [
+              "admins",
+              "researchers"
+            ],
+            "title": "Who Can Run"
+          },
+          "project_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Project Ids"
+          },
+          "test": {
+            "$ref": "#/components/schemas/LabConnectionTest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "host",
+          "sign_in",
+          "last_four",
+          "tile_size",
+          "magnification",
+          "tiles_at_once",
+          "health_check_minutes",
+          "taxonomy",
+          "who_can_run",
+          "project_ids",
+          "test"
+        ],
+        "title": "LabModelConnection"
       },
       "LabModelDraft": {
         "properties": {
@@ -57300,10 +59629,46 @@
         ],
         "title": "LabSettings"
       },
+      "LabTestModel": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "LabTestModel"
+      },
       "Label": {
         "type": "string",
         "maxLength": 200,
         "minLength": 1
+      },
+      "LastArrival": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "what": {
+            "type": "string",
+            "title": "What"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "what"
+        ],
+        "title": "LastArrival"
       },
       "Laterality": {
         "type": "string",
@@ -58862,6 +61227,28 @@
         ],
         "title": "ModelRun"
       },
+      "ModelRunDefaults": {
+        "properties": {
+          "slide_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Slide Ids"
+          },
+          "model_id": {
+            "type": "string",
+            "title": "Model Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_ids",
+          "model_id"
+        ],
+        "title": "ModelRunDefaults"
+      },
       "ModelRunDraft": {
         "properties": {
           "slide_ids": {
@@ -58901,6 +61288,21 @@
           "parameters"
         ],
         "title": "ModelRunDraft"
+      },
+      "ModelRunMove": {
+        "properties": {
+          "server": {
+            "type": "string",
+            "const": "Parfocal GPU",
+            "title": "Server"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "server"
+        ],
+        "title": "ModelRunMove"
       },
       "ModelShown": {
         "properties": {
@@ -59730,6 +62132,36 @@
         ],
         "title": "NewCaseReportDeposit"
       },
+      "NewClass": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cells": {
+            "type": "number",
+            "title": "Cells"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "cells",
+          "to"
+        ],
+        "title": "NewClass"
+      },
       "NewPatient": {
         "properties": {
           "name": {
@@ -60226,6 +62658,61 @@
         ],
         "title": "OpinionForm"
       },
+      "OpinionFormChoice": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/OpinionFormQuestion"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "questions"
+        ],
+        "title": "OpinionFormChoice"
+      },
+      "OpinionFormQuestion": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "scale",
+              "choice",
+              "yesno",
+              "text"
+            ],
+            "title": "Kind"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "kind",
+          "required"
+        ],
+        "title": "OpinionFormQuestion"
+      },
       "OpinionOut": {
         "properties": {
           "key": {
@@ -60459,6 +62946,29 @@
         "type": "object",
         "title": "OtherSets"
       },
+      "OtherSetsShown": {
+        "properties": {
+          "cam": {
+            "type": "boolean",
+            "title": "Cam"
+          },
+          "sam": {
+            "type": "boolean",
+            "title": "Sam"
+          },
+          "rev": {
+            "type": "boolean",
+            "title": "Rev"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cam",
+          "sam",
+          "rev"
+        ],
+        "title": "OtherSetsShown"
+      },
       "Outcome": {
         "type": "string",
         "enum": [
@@ -60467,6 +62977,29 @@
           "unmatched"
         ],
         "title": "Outcome"
+      },
+      "OutgoingEvent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "text",
+          "on"
+        ],
+        "title": "OutgoingEvent"
       },
       "OutlineCell": {
         "properties": {
@@ -60837,6 +63370,44 @@
         ],
         "title": "PairedSlide"
       },
+      "Pairing": {
+        "properties": {
+          "slide": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide"
+          },
+          "how": {
+            "type": "string",
+            "title": "How"
+          },
+          "warn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide",
+          "how",
+          "warn"
+        ],
+        "title": "Pairing"
+      },
       "PairingRequest": {
         "properties": {
           "project_id": {
@@ -60876,38 +63447,6 @@
           "files"
         ],
         "title": "PairingRequest"
-      },
-      "Pairings": {
-        "properties": {
-          "slides": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Slides"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/ResultPairing"
-            },
-            "type": "array",
-            "title": "Results"
-          },
-          "others": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Others"
-          }
-        },
-        "type": "object",
-        "required": [
-          "slides",
-          "results",
-          "others"
-        ],
-        "title": "Pairings"
       },
       "PasswordSignIn": {
         "properties": {
@@ -61824,6 +64363,29 @@
         ],
         "title": "Problem"
       },
+      "ProblemLine": {
+        "properties": {
+          "line": {
+            "type": "string",
+            "title": "Line"
+          },
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "object",
+          "error"
+        ],
+        "title": "ProblemLine"
+      },
       "ProfileChange": {
         "properties": {
           "display_name": {
@@ -62025,6 +64587,44 @@
         ],
         "title": "Project"
       },
+      "ProjectAccessRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Id"
+          },
+          "asked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Asked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "user_id",
+          "owner_id",
+          "asked_at"
+        ],
+        "title": "ProjectAccessRequest"
+      },
       "ProjectChange": {
         "properties": {
           "name": {
@@ -62202,6 +64802,55 @@
         ],
         "title": "ProjectDraft"
       },
+      "ProjectImports": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "watched_folder": {
+            "$ref": "#/components/schemas/WatchedFolder"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/ImportWebhook"
+          },
+          "events_out": {
+            "$ref": "#/components/schemas/EventsOut"
+          },
+          "token": {
+            "$ref": "#/components/schemas/TokenEnd"
+          },
+          "last_arrival": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastArrival"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "arrivals": {
+            "items": {
+              "$ref": "#/components/schemas/Arrival"
+            },
+            "type": "array",
+            "title": "Arrivals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "watched_folder",
+          "webhook",
+          "events_out",
+          "token",
+          "last_arrival",
+          "arrivals"
+        ],
+        "title": "ProjectImports"
+      },
       "ProjectLabModel": {
         "properties": {
           "id": {
@@ -62364,6 +65013,107 @@
         "maxLength": 120,
         "minLength": 1
       },
+      "ProjectOverview": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "cases": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cases"
+          },
+          "slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides"
+          },
+          "result_sets": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Result Sets"
+          },
+          "objects": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Objects"
+          },
+          "reviewed_percent": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Reviewed Percent"
+          },
+          "needs_review": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Needs Review"
+          },
+          "no_results": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "No Results"
+          },
+          "case_groups": {
+            "items": {
+              "$ref": "#/components/schemas/CaseGroup"
+            },
+            "type": "array",
+            "title": "Case Groups"
+          },
+          "slide_files": {
+            "items": {
+              "$ref": "#/components/schemas/SlideFile"
+            },
+            "type": "array",
+            "title": "Slide Files"
+          },
+          "study_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Template Id"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/ProjectStorage"
+          },
+          "import_failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "cases",
+          "slides",
+          "result_sets",
+          "objects",
+          "reviewed_percent",
+          "needs_review",
+          "no_results",
+          "case_groups",
+          "slide_files",
+          "study_template_id",
+          "storage",
+          "import_failure"
+        ],
+        "title": "ProjectOverview"
+      },
       "ProjectRef": {
         "properties": {
           "id": {
@@ -62396,6 +65146,101 @@
           "viewer"
         ],
         "title": "ProjectRole"
+      },
+      "ProjectScopeOptions": {
+        "properties": {
+          "rois": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeRoi"
+            },
+            "type": "array",
+            "title": "Rois"
+          },
+          "unsure_zones": {
+            "items": {
+              "$ref": "#/components/schemas/UnsureZone"
+            },
+            "type": "array",
+            "title": "Unsure Zones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rois",
+          "unsure_zones"
+        ],
+        "title": "ProjectScopeOptions"
+      },
+      "ProjectSlide": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "stain": {
+            "type": "string",
+            "title": "Stain"
+          },
+          "case": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlideCase"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result_set_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Result Set Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "stain",
+          "case",
+          "result_set_ids"
+        ],
+        "title": "ProjectSlide"
+      },
+      "ProjectStorage": {
+        "properties": {
+          "used_gb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Used Gb"
+          },
+          "allowance_gb": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowance Gb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "used_gb",
+          "allowance_gb"
+        ],
+        "title": "ProjectStorage"
       },
       "PromotionRequest": {
         "properties": {
@@ -63941,6 +66786,82 @@
         ],
         "title": "ResultPairing"
       },
+      "ResultPreview": {
+        "properties": {
+          "slide_label": {
+            "type": "string",
+            "title": "Slide Label"
+          },
+          "case_label": {
+            "type": "string",
+            "title": "Case Label"
+          },
+          "beside": {
+            "type": "string",
+            "title": "Beside"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "scale": {
+            "type": "number",
+            "title": "Scale"
+          },
+          "shift": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Shift"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_label",
+          "case_label",
+          "beside",
+          "file",
+          "detail",
+          "model",
+          "version",
+          "checks",
+          "level",
+          "scale",
+          "shift"
+        ],
+        "title": "ResultPreview"
+      },
       "ResultSet": {
         "properties": {
           "id": {
@@ -65425,6 +68346,81 @@
         ],
         "title": "ReviewTask"
       },
+      "ReviewTaskDefaults": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/SetName"
+            },
+            "type": "array",
+            "title": "Names"
+          },
+          "slide_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Slide Ids"
+          },
+          "result_set_id": {
+            "type": "string",
+            "title": "Result Set Id"
+          },
+          "reviewer_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Reviewer Ids"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Due On"
+          },
+          "reminder_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Reminder Days"
+          },
+          "study_template_id": {
+            "type": "string",
+            "title": "Study Template Id"
+          },
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "task_id",
+          "names",
+          "slide_ids",
+          "result_set_id",
+          "reviewer_ids",
+          "due_on",
+          "reminder_days",
+          "study_template_id",
+          "today"
+        ],
+        "title": "ReviewTaskDefaults"
+      },
       "ReviewTaskDetail": {
         "properties": {
           "id": {
@@ -66363,6 +69359,24 @@
         ],
         "title": "RunStage"
       },
+      "RunningStep": {
+        "properties": {
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "percent",
+          "text"
+        ],
+        "title": "RunningStep"
+      },
       "SampleProject": {
         "properties": {
           "id": {
@@ -66569,6 +69583,69 @@
           "kind"
         ],
         "title": "Scope"
+      },
+      "ScopeKindKey": {
+        "type": "string",
+        "enum": [
+          "regions",
+          "cells",
+          "low",
+          "roi",
+          "unsure"
+        ],
+        "title": "ScopeKindKey"
+      },
+      "ScopeOptions": {
+        "properties": {
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "rois": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rois"
+          },
+          "unsure_zones": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unsure Zones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cells",
+          "low",
+          "rois",
+          "unsure_zones"
+        ],
+        "title": "ScopeOptions"
+      },
+      "ScopeRoi": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "ScopeRoi"
       },
       "Score": {
         "type": "integer",
@@ -67125,6 +70202,25 @@
           "locked"
         ],
         "title": "SessionSummary"
+      },
+      "SetName": {
+        "properties": {
+          "result_set_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Set Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result_set_id",
+          "name"
+        ],
+        "title": "SetName"
       },
       "SetRef": {
         "properties": {
@@ -68113,6 +71209,30 @@
         ],
         "title": "SlideArea"
       },
+      "SlideCase": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "specimen": {
+            "type": "string",
+            "title": "Specimen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "specimen"
+        ],
+        "title": "SlideCase"
+      },
       "SlideChanges": {
         "properties": {
           "slide_id": {
@@ -68692,6 +71812,42 @@
           "kind"
         ],
         "title": "SlideFigure"
+      },
+      "SlideFile": {
+        "properties": {
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "stain": {
+            "type": "string",
+            "title": "Stain"
+          },
+          "remote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_id",
+          "file",
+          "stain",
+          "remote"
+        ],
+        "title": "SlideFile"
       },
       "SlideMove": {
         "properties": {
@@ -69664,6 +72820,29 @@
         "maxLength": 120,
         "minLength": 1
       },
+      "SourceOutage": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "waiting": {
+            "type": "integer",
+            "title": "Waiting"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "at",
+          "waiting"
+        ],
+        "title": "SourceOutage"
+      },
       "SourceResult": {
         "properties": {
           "name": {
@@ -70170,6 +73349,30 @@
           "presets"
         ],
         "title": "StudyTemplateDraft"
+      },
+      "StudyTemplateReviewDefaults": {
+        "properties": {
+          "templates": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateReviewDefaults"
+            },
+            "type": "array",
+            "title": "Templates"
+          },
+          "opinion_forms": {
+            "items": {
+              "$ref": "#/components/schemas/OpinionFormChoice"
+            },
+            "type": "array",
+            "title": "Opinion Forms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "templates",
+          "opinion_forms"
+        ],
+        "title": "StudyTemplateReviewDefaults"
       },
       "StudyTemplateSummary": {
         "properties": {
@@ -71372,6 +74575,44 @@
         ],
         "title": "TemplatePreviewDraft"
       },
+      "TemplateReviewDefaults": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "title": "Template Id"
+          },
+          "scope_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeKindKey"
+            },
+            "type": "array",
+            "title": "Scope Kinds"
+          },
+          "scope_options": {
+            "$ref": "#/components/schemas/ScopeOptions"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionDefaults"
+          },
+          "display": {
+            "$ref": "#/components/schemas/DisplayDefaults"
+          },
+          "opinion_form": {
+            "type": "string",
+            "title": "Opinion Form"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_id",
+          "scope_kinds",
+          "scope_options",
+          "decision",
+          "display",
+          "opinion_form"
+        ],
+        "title": "TemplateReviewDefaults"
+      },
       "Tenant": {
         "properties": {
           "id": {
@@ -72111,6 +75352,19 @@
         "maximum": 365.0,
         "minimum": 1.0
       },
+      "TokenEnd": {
+        "properties": {
+          "end": {
+            "type": "string",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "end"
+        ],
+        "title": "TokenEnd"
+      },
       "TokenRequest": {
         "properties": {
           "expires_in_days": {
@@ -72339,6 +75593,210 @@
         ],
         "title": "UncheckedExport"
       },
+      "UnsureZone": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "cells_per_slide": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cells Per Slide"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "cells_per_slide"
+        ],
+        "title": "UnsureZone"
+      },
+      "UploadBatch": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/UploadBatchSlide"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/UploadBatchResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "folder_tree": {
+            "items": {
+              "$ref": "#/components/schemas/FolderEntry"
+            },
+            "type": "array",
+            "title": "Folder Tree"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/UploadProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "new_classes": {
+            "items": {
+              "$ref": "#/components/schemas/NewClass"
+            },
+            "type": "array",
+            "title": "New Classes"
+          },
+          "unscored_rows": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unscored Rows"
+          },
+          "duplicate": {
+            "$ref": "#/components/schemas/Duplicate"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/BatchStorage"
+          },
+          "source_outage": {
+            "$ref": "#/components/schemas/SourceOutage"
+          },
+          "done": {
+            "$ref": "#/components/schemas/BatchDone"
+          },
+          "result_preview": {
+            "$ref": "#/components/schemas/ResultPreview"
+          },
+          "format_check": {
+            "$ref": "#/components/schemas/FormatCheck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "slides",
+          "results",
+          "folder_tree",
+          "problems",
+          "new_classes",
+          "unscored_rows",
+          "duplicate",
+          "storage",
+          "source_outage",
+          "done",
+          "result_preview",
+          "format_check"
+        ],
+        "title": "UploadBatch"
+      },
+      "UploadBatchResult": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "pairings": {
+            "$ref": "#/components/schemas/parfocal_api__project_uploads__Pairings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "detail",
+          "pairings"
+        ],
+        "title": "UploadBatchResult"
+      },
+      "UploadBatchSlide": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "size_gb": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Size Gb"
+          },
+          "case_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Label"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/BatchStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "steps_done": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Steps Done"
+          },
+          "running": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunningStep"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress": {
+            "$ref": "#/components/schemas/BatchProgress"
+          },
+          "extra_result": {
+            "$ref": "#/components/schemas/ExtraResult"
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatchFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "format",
+          "size_gb",
+          "case_label",
+          "steps",
+          "steps_done",
+          "running",
+          "progress",
+          "extra_result"
+        ],
+        "title": "UploadBatchSlide"
+      },
       "UploadDraft": {
         "properties": {
           "filename": {
@@ -72476,6 +75934,58 @@
           "size"
         ],
         "title": "UploadMetadata"
+      },
+      "UploadProblem": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "read-error",
+              "scale",
+              "new-classes"
+            ],
+            "title": "Kind"
+          },
+          "result": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Result"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ProblemLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "fix": {
+            "type": "string",
+            "title": "Fix"
+          },
+          "fixed": {
+            "type": "string",
+            "title": "Fixed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "result",
+          "title",
+          "text",
+          "lines",
+          "fix",
+          "fixed"
+        ],
+        "title": "UploadProblem"
       },
       "UploadState": {
         "properties": {
@@ -72857,6 +76367,57 @@
           "cell-typing"
         ],
         "title": "ViewerPart"
+      },
+      "WatchedFolder": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "slides": {
+            "type": "string",
+            "title": "Slides"
+          },
+          "results": {
+            "type": "string",
+            "title": "Results"
+          },
+          "every": {
+            "type": "string",
+            "title": "Every"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "slides",
+          "results",
+          "every",
+          "on"
+        ],
+        "title": "WatchedFolder"
+      },
+      "WebhookAbility": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "on"
+        ],
+        "title": "WebhookAbility"
       },
       "Week": {
         "properties": {
@@ -73324,10 +76885,62 @@
         "maxLength": 80,
         "minLength": 1
       },
+      "parfocal_api__project_uploads__Pairings": {
+        "properties": {
+          "auto": {
+            "$ref": "#/components/schemas/Pairing"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Pairing"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Pairing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "auto",
+          "name",
+          "id"
+        ],
+        "title": "Pairings"
+      },
       "parfocal_api__projects__Colour": {
         "type": "integer",
         "maximum": 11.0,
         "minimum": 0.0
+      },
+      "parfocal_api__result_pairing__Pairings": {
+        "properties": {
+          "slides": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ResultPairing"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "others": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Others"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slides",
+          "results",
+          "others"
+        ],
+        "title": "Pairings"
       },
       "parfocal_api__result_sets__Name": {
         "type": "string",

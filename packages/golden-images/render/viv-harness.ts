@@ -20,6 +20,13 @@ import type { VivGoldenScene } from "./viv-scenes.ts";
 
 export const harnessRoot = fileURLToPath(new URL("../harness/viv", import.meta.url));
 
+const workerCacheDir = fileURLToPath(
+  new URL(
+    `../node_modules/.vite/worker-${process.env["TEST_PARALLEL_INDEX"] ?? "0"}`,
+    import.meta.url,
+  ),
+);
+
 const fixturePrefix = "/fixtures/";
 
 export type FixtureAvailability =
@@ -107,6 +114,7 @@ export async function startVivHarness(
 ): Promise<ViteDevServer> {
   const server = await createServer({
     root: harnessRoot,
+    cacheDir: workerCacheDir,
     configFile: false,
     logLevel: "error",
     clearScreen: false,

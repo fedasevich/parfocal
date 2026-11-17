@@ -9,6 +9,13 @@ from sqlalchemy import select
 
 from parfocal_api.auth import sign_in_user
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.project_overview import (
+    get_project_overview,
+    get_project_scope_options,
+    get_review_task_defaults,
+    list_project_slides,
+)
+from parfocal_api.project_uploads import get_project_imports, get_upload_batch
 from parfocal_api.review_decisions import ReviewDecisionDraft, list_decisions, save_decision
 from parfocal_api.review_objects import list_review_objects
 from parfocal_api.review_states import State, states_of, task_of
@@ -350,5 +357,41 @@ async def test_the_owner_opens_a_seeded_slide_on_the_real_viewer_calls(seeded: s
             threads = await list_slide_threads(slide, principal, connection)
             for thread in threads:
                 await list_thread_comments(thread.id, principal, connection)
+    finally:
+        await engine.dispose()
+
+
+async def test_the_owner_opens_a_seeded_project_on_the_real_project_calls(seeded: str) -> None:
+    await run_seed(seeded)
+    project_id, tenant_id, user_id = (
+        await run_sql(
+            seeded,
+            "SELECT t.project_id, t.tenant_id, u.id FROM review_tasks t "
+            "JOIN review_assignments a ON a.task_id = t.id "
+            "JOIN users u ON u.id = a.user_id "
+            f"WHERE t.name = '{GALLERY_TOUR}' AND u.email = 'owner@example.test' LIMIT 1",
+        )
+    )[0]
+    tenant = uuid.UUID(str(tenant_id))
+    principal = MemberPrincipal(
+        "seed:owner@example.test", tenant, uuid.UUID(str(user_id)), Role.RESEARCHER, True
+    )
+    project = uuid.UUID(str(project_id))
+    engine = create_engine(seeded)
+    try:
+        async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant)) as connection:
+            overview = await get_project_overview(project, principal, connection)
+            assert overview.slides > 0
+            assert overview.result_sets > 0
+            slides = await list_project_slides(project, principal, connection)
+            assert len(slides) == overview.slides
+            assert any(slide.result_set_ids for slide in slides)
+            await get_project_scope_options(project, principal, connection)
+            defaults = await get_review_task_defaults(project, principal, connection)
+            assert defaults.slide_ids
+            imports = await get_project_imports(project, principal, connection)
+            assert imports.project_id == project
+            batch = await get_upload_batch(project, principal, connection)
+            assert batch.project_id == project
     finally:
         await engine.dispose()

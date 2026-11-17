@@ -45,9 +45,9 @@ export function RunModelWindow({
   const { t } = useLingui();
 
   const project = okData(useGetProject(projectId).data);
-  const slides = useListProjectSlides(projectId).data?.data;
+  const slides = okData(useListProjectSlides(projectId).data);
   const models = okData(useListProjectModels(projectId).data);
-  const defaults = useGetModelRunDefaults(projectId).data?.data;
+  const defaults = okData(useGetModelRunDefaults(projectId).data);
   const sets = okData(useListProjectResultSets(projectId).data) ?? [];
   if (!project || !slides || !models || !defaults) return null;
   const labModel = models.find((model) => model.host === "lab");

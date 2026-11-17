@@ -4466,7 +4466,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Switch the viewer area: `getSlideAiProgress`, `getSlideResultStats`, `getResultSetTyper`, `listSlideThreads`, `listThreadComments`, `typeOutlines`, `listAnnotationLayers` and the rest counted under viewer. Build each route from stored data so it returns what the draft's Zod schema says, add API tests for every route, regenerate `openapi.json` and the client, move the operations out of `packages/api-client/src/draft`, keep the fake answering the now-real operations, and update the area map in `scripts/draft-calls.ts` and the table in `knowledge/draft-calls.md`. Part of OPS-017 (switch each area from the fake to the real API).
   Done when the viewer count is zero, API tests cover each new route, and the full viewer and the annotate view open a seeded slide with the fake off and show no "not available yet".
   Depends on OPS-021 (review area on the real API). Size: L.
-- [ ] OPS-023 · Project and upload area on the real API
+- [x] OPS-023 · Project and upload area on the real API
   Switch the project area: `getProjectOverview`, `listProjectSlides`, `getProjectImports`, `getUploadBatch`, `getProjectScopeOptions`, `getReviewTaskDefaults`, `requestProjectAccess` and the rest counted under project. Build each route from stored data so it returns what the draft's Zod schema says, add API tests for every route, regenerate `openapi.json` and the client, move the operations out of `packages/api-client/src/draft`, keep the fake answering the now-real operations, and update the area map in `scripts/draft-calls.ts` and the table in `knowledge/draft-calls.md`. Part of OPS-017 (switch each area from the fake to the real API).
   Done when the project count is zero, API tests cover each new route, and the project page, upload and new task work with the fake off against the seeded local API.
   Depends on OPS-022 (viewer area on the real API). Size: L.
@@ -4482,6 +4482,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   OPS-025 (the viewer typing tool on a GPU typer runner) built the `outline-types` runner, but no HoVer-NeXt `typer.onnx` export exists in model storage, so the route answers 503 `typer-offline` in production. Export the typer head to ONNX on the Mac, check it against the PyTorch output on a small fixture, and publish it with its checksum where the embedder pool loads models, through the same path as the other published artifacts.
   Done when a parity test passes within the tolerance the other exports use, the artifact and checksum are published, and the deployed route types one outline on a seeded slide.
   Depends on OPS-025. Size: M.
+- [ ] OPS-027 · A project access request notifies the owner
+  OPS-023 (project and upload area on the real API) stores a request for project access as a `project.access-asked` audit event, but nobody is told. Add a `project-access-asked` notification kind, send it to the project owner, and let the owner add the person from it with one action.
+  Done when the owner gets an inbox entry for a request, an API test covers sending and adding, and asking twice still makes one request.
+  Depends on OPS-023. Size: S.
 - [ ] OPS-020 · Pin storage, database and Modal functions per region
   SEC-005 (data residency enforcement) makes every job claim respect the tenant region once `PARFOCAL_RESIDENCY=enforced` is set ([ADR 0345](adr/0345-job-claims-respect-the-tenant-region.md), job claims respect the tenant region behind one switch). Before the switch goes on, deploy the ingest function and the GPU pools with a Modal `region` per tenant region, give EU tenants an R2 bucket in the EU jurisdiction with their objects copied, move or add a Neon project in an EU region, and pin Durable Objects to the EU jurisdiction. Each step raises spend or replaces production resources, so each is asked of the owner. This is the PHI trigger of [ADR 0003](adr/0003-pilot-platform-architecture.md) (pilot platform architecture).
   Done when production runs with the switch on, a worker in each region logs its `MODAL_REGION`, and an EU tenant's slide, rows and GPU work stay in the EU as checked from each provider's console.
@@ -5501,14 +5505,14 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests cover both refusals and an unknown name, and a worker test runs a lab model against a fake endpoint into a stored result set.
   Depends on JOBS-008. Size: M.
 
-- [ ] JOBS-010 · The GPU pool runs a lab model stage
+- [x] JOBS-010 · The GPU pool runs a lab model stage
   JOBS-009 (run a connected lab model) built the run start checks and `LabDetector` in `workers/ml/src/parfocal_ml/lab_detector.py`, but no deployed worker picks a lab model stage: nothing reads the lab model row, opens its sealed token or calls the detector when the stage starts. Wire the stage into the worker that runs model stages, reading the row and opening the token with the workspace key the way INGEST-026 (saved import sources) opens a source credential, and store region objects as well as cells.
   Done when a worker test runs a queued lab model stage end to end against a fake endpoint with a sealed token and stores cells and regions, and the token never appears in logs or stored rows.
   Depends on JOBS-009. Size: M.
 
 ## 48 REMOTE · Remote sources, webhooks and events
 
-- [ ] REMOTE-000 · Research check
+- [x] REMOTE-000 · Research check
   Done when an ADR records read in place with a tile cache, the webhook signature and the event delivery guarantees.
   Depends on INGEST-026.
   Size: M.

@@ -613,7 +613,6 @@ export const signInSecrets = {
   minPasswordLength: 12,
   previousPasswords: ["spring-meadow-2025", "correct-horse-battery"],
   leakedPasswords: ["password1234", "qwertyuiop12"],
-  linkMinutes: 15,
   resendSeconds: 42,
 };
 
@@ -623,13 +622,6 @@ export const workspaceBrands = [
   { logo: "FV", colour: "#0f766e", domain: "fnvltava.example" },
   { logo: "CU", colour: "#7c3aed", domain: "cuni.example" },
 ];
-
-export const institutions = [
-  { workspace: 0, protocol: "SAML", domain: "fnvltava.example", matches: true },
-  { workspace: 1, protocol: "OpenID Connect", domain: "cuni.example", matches: false },
-];
-
-export const expiredSession = { hours: sessionPolicy.sessionHours, lastDecision: "T5 on A1" };
 
 export const noAccess = { viewer: "SM" as PersonKey, project: "P03" as ProjectCode };
 

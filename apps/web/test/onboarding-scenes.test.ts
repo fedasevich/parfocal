@@ -9,6 +9,8 @@ import {
   sectionOf,
 } from "../src/screens/onboarding/scenes.ts";
 
+const replacedByHostedLogin = ["magic", "sso", "forgot", "reset"];
+
 test("the sign-in, sign-up, invite, setup and admin scenes match the PROTO-001 inventory", () => {
   const inventory = readFileSync(
     new URL("../../../docs/design/prototype-inventory.md", import.meta.url),
@@ -19,7 +21,9 @@ test("the sign-in, sign-up, invite, setup and admin scenes match the PROTO-001 i
     assert.ok(row, `the inventory lists ${screen}`);
     const cell = row.split("|")[3] ?? "";
     assert.deepEqual(
-      [...cell.matchAll(/`(\w+)`/g)].map((match) => match[1]),
+      [...cell.matchAll(/`(\w+)`/g)]
+        .map((match) => match[1])
+        .filter((scene) => screen !== "signin" || !replacedByHostedLogin.includes(scene ?? "")),
       [...scenes],
       screen,
     );

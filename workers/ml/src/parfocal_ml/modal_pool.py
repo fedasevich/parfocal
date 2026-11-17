@@ -26,6 +26,7 @@ DATABASE_SECRET = "parfocal-api-keys"
 STORAGE_SECRET = "parfocal-api-config"
 TUMOR_MAP_SECRETS = (DATABASE_SECRET, STORAGE_SECRET)
 VIEW_MAP_SECRETS = (STORAGE_SECRET,)
+LAB_MODEL_SECRETS = (DATABASE_SECRET, STORAGE_SECRET)
 LOCK_PATH = "workers/deploy/locks/ml.txt"
 UV_VERSION = "0.13.8"
 LOCKED_INSTALL_OPTIONS = "--require-hashes --no-deps"
@@ -55,6 +56,7 @@ def pool_image() -> modal.Image:
 type Runner = Callable[[Mapping[str, object]], Mapping[str, object]]
 TUMOR_MAP_FAMILY = Family.DETECTOR_GOOD
 VIEW_MAP_FAMILY = Family.EMBEDDER
+LAB_MODEL_FAMILY = Family.LAB_MODEL
 
 
 def tumor_map_runner(pool: PoolLimits) -> Runner:
@@ -80,9 +82,17 @@ def outline_types_runner(call: Mapping[str, object]) -> Mapping[str, object]:
     return answer_outline_types_call(call)
 
 
+def lab_model_runner(call: Mapping[str, object]) -> Mapping[str, object]:
+    from parfocal_ml.lab_model_worker import run_lab_models
+
+    return run_lab_models(call)
+
+
 def secret_names(pool: PoolLimits) -> tuple[str, ...]:
     if pool.family is TUMOR_MAP_FAMILY:
         return TUMOR_MAP_SECRETS
+    if pool.family is LAB_MODEL_FAMILY:
+        return LAB_MODEL_SECRETS
     if pool.family is VIEW_MAP_FAMILY:
         return VIEW_MAP_SECRETS
     return ()
@@ -93,6 +103,8 @@ def default_runners(pool: PoolLimits) -> dict[str, Runner]:
         return {Kind.TUMOR_MAP: tumor_map_runner(pool)}
     if pool.family is VIEW_MAP_FAMILY:
         return {Kind.VIEW_MAP: view_map_runner, Kind.OUTLINE_TYPES: outline_types_runner}
+    if pool.family is LAB_MODEL_FAMILY:
+        return {Kind.LAB_MODEL: lab_model_runner}
     return {}
 
 

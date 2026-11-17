@@ -326,8 +326,11 @@ async def claim(
     tenant_id: uuid.UUID | None = None,
     *,
     placement: Placement = UNPINNED,
+    only: ColumnElement[bool] | None = None,
 ) -> tuple[Claimed, Workflow] | None:
     mine = jobs.c.kind.in_(list(kinds))
+    if only is not None:
+        mine = mine & only
     if tenant_id is not None:
         mine = mine & (jobs.c.tenant_id == tenant_id)
     if placement.enforced:

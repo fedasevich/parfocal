@@ -9,6 +9,7 @@ import {
   setFakeJobsScene,
 } from "../src/fake/index.ts";
 import {
+  type AiModels,
   cancelModelRun,
   getModelRunDefaults,
   hideModel,
@@ -16,11 +17,18 @@ import {
   listModelRuns,
   listMyJobs,
   listProjectModels,
+  type ModelRunDefaults,
   moveModelRun,
   resumeModelRun,
   showModel,
   startModelRuns,
 } from "../src/index.ts";
+
+const defaultsFor = async (project: string): Promise<ModelRunDefaults> => {
+  const response = await getModelRunDefaults(project);
+  assert.equal(response.status, 200);
+  return response.data;
+};
 
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
@@ -72,7 +80,7 @@ test("the tray before a run shows the upload and the paused CAMELYON run", async
 });
 
 test("the defaults pick tumor_052 and tumor_060 with PathoSAM", async () => {
-  const defaults = (await getModelRunDefaults(p07)).data;
+  const defaults = await defaultsFor(p07);
   const listed = await listProjectModels(p07);
   assert.ok(listed.status === 200);
   const models = listed.data;
@@ -91,7 +99,7 @@ test("the defaults pick tumor_052 and tumor_060 with PathoSAM", async () => {
 });
 
 test("starting a run adds it to the tray with one run per slide", async () => {
-  const defaults = (await getModelRunDefaults(p07)).data;
+  const defaults = await defaultsFor(p07);
   const started = await startModelRuns(p07, {
     slide_ids: defaults.slide_ids,
     scope: { kind: "slide" },
@@ -187,9 +195,9 @@ test("a hidden Parfocal model leaves Run a model and the admin list, and showing
     hidden_by: scenario.people.DH.id,
   });
   assert.deepEqual(await names(), ["pathosam-hovernext", "hovernet", "lab-hovernet-fork"]);
-  const defaults = await getModelRunDefaults(p07);
-  assert.notEqual(defaults.data.model_id, scenarioJobs.modelByKey("cam").id);
-  const admin = (await listAiModels()).data.models.find(
+  const defaults = await defaultsFor(p07);
+  assert.notEqual(defaults.model_id, scenarioJobs.modelByKey("cam").id);
+  const admin = ((await listAiModels()).data as AiModels).models.find(
     (model) => model.catalogue_name === "camelyon-tumor",
   );
   assert.equal(admin?.shown, false);

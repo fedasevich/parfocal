@@ -13,7 +13,11 @@ export function loginUrl(returnTo: string): string {
   return `/api/auth/login?${new URLSearchParams({ return_to: returnTo }).toString()}`;
 }
 
-export type NamedLogin = { returnTo: string; loginHint?: string | null; reauth?: boolean };
+export type NamedLogin = {
+  returnTo: string;
+  loginHint?: string | null | undefined;
+  reauth?: boolean;
+};
 
 type Send = (url: string, init: RequestInit) => Promise<Response>;
 

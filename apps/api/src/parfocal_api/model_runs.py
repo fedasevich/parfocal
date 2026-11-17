@@ -18,11 +18,13 @@ from pydantic import (
 )
 from sqlalchemy import ColumnElement, func, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection
+from starlette.concurrency import run_in_threadpool
 
 from parfocal_api.annotations import MultiPolygonGeometry, PolygonGeometry, checked
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden, ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.gpu_warm import gpu_pools_of
 from parfocal_api.hidden_models import hidden_names, refuse_hidden
 from parfocal_api.lab_models import LabModelChangedError, check_lab_run, saved_lab_model
 from parfocal_api.model_catalogue import (
@@ -70,8 +72,10 @@ from parfocal_common.model_runs import (
     RunScopeKind,
     RunSettings,
     enqueue_model_run,
+    wake_lab_model_pool,
 )
 from parfocal_common.object_ids import Letter, ObjectIdError, parse
+from parfocal_common.warm_gate import Pools
 
 MAX_SLIDES = 200
 MAX_OBJECTS = 10_000
@@ -613,6 +617,7 @@ async def start_model_runs(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     probe: Annotated[WorkerProbe, Depends(probe_of)],
+    pools: Annotated[Pools, Depends(gpu_pools_of)],
 ) -> list[ModelRun]:
     project = await visible(connection, principal, project_id)
     await require_controlling(connection, principal, project_id, project.archived_at is not None)
@@ -630,6 +635,7 @@ async def start_model_runs(
     settings = settings_from(draft, parameters)
     batch_id = uuid.uuid4()
     actor = actor_of(principal)
+    lab_model = latest_version(parameters.detector.name) is None
     job_ids: list[uuid.UUID] = []
     for slide_id in draft.slide_ids:
         job_id = await enqueue_model_run(
@@ -641,6 +647,7 @@ async def start_model_runs(
             batch_id=batch_id,
             task_id=draft.task_id,
             started_by=started_by(principal),
+            lab_model=lab_model,
         )
         result_set_id = await insert_result_set(
             connection,
@@ -674,6 +681,8 @@ async def start_model_runs(
                 "tier": settings.tier.value if settings.tier else None,
             },
         )
+    if lab_model:
+        await run_in_threadpool(wake_lab_model_pool, pools)
     rows = (
         await connection.execute(
             run_query()
@@ -825,6 +834,43 @@ async def retry_model_run(
     connection: TenantConnection,
 ) -> ModelRun:
     return await control_run(connection, principal, project_id, run_id, JobControl.RETRY)
+
+
+class ModelRunMove(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    server: Literal["Parfocal GPU"]
+
+
+class LabModelCannotMoveError(ConflictError):
+    code = "lab-model-cannot-move"
+    title = "A lab model runs only on its own server, so its run cannot move to the Parfocal GPU"
+
+
+class ModelRunNotMovableError(ConflictError):
+    code = "model-run-not-movable"
+    title = "Only a paused run can move to the Parfocal GPU"
+
+
+@router.post(
+    "/{project_id}/model-runs/{run_id}/move",
+    operation_id="moveModelRun",
+    **require(Permission.RUN_MODELS, write=True),
+)
+async def move_model_run(
+    project_id: uuid.UUID,
+    run_id: uuid.UUID,
+    change: ModelRunMove,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ModelRun:
+    row = await readable_run(connection, principal, project_id, run_id)
+    await require_controlling(connection, principal, project_id, row.archived_at is not None)
+    if latest_version(row.detector) is None:
+        raise LabModelCannotMoveError
+    if JobStatus(row.status) is not JobStatus.PAUSED:
+        raise ModelRunNotMovableError(f"The run is {row.status}")
+    return await control_run(connection, principal, project_id, run_id, JobControl.RESUME)
 
 
 def first_start() -> Any:

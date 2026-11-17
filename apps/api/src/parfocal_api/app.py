@@ -45,6 +45,7 @@ from parfocal_api import (
     lab_models,
     link_imports,
     maintenance,
+    model_area,
     model_registry,
     model_run_progress,
     model_runs,
@@ -63,6 +64,8 @@ from parfocal_api import (
     patch_exports,
     personal_data,
     project_jobs,
+    project_overview,
+    project_uploads,
     projects,
     report_links,
     report_preview,
@@ -104,6 +107,7 @@ from parfocal_api import (
     task_runs,
     taxonomy,
     template_offers,
+    template_review_defaults,
     tenants,
     threads,
     tile_access,
@@ -230,6 +234,8 @@ def create_app(
     app.include_router(password_login.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
+    app.include_router(project_overview.router)
+    app.include_router(project_uploads.router)
     app.include_router(sample_project.router)
     app.include_router(sign_out.router)
     app.include_router(clinical_reports.router)
@@ -237,6 +243,8 @@ def create_app(
     app.include_router(taxonomy.router)
     app.include_router(opinion_forms.router)
     app.include_router(project_jobs.router)
+    app.include_router(model_area.project_router)
+    app.include_router(model_area.tenant_router)
     app.include_router(model_runs.router)
     app.include_router(tumor_maps.router)
     app.include_router(model_tiers.router)
@@ -328,6 +336,7 @@ def create_app(
     app.include_router(evaluation_versions.router)
     app.include_router(report_links.router)
     app.include_router(report_links.public_router)
+    app.include_router(template_review_defaults.router)
     app.include_router(study_templates.router)
     app.include_router(template_offers.router)
     app.include_router(my_work.router)

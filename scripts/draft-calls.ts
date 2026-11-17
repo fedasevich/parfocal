@@ -7,15 +7,7 @@ export const draftFolder = fileURLToPath(
 );
 
 const operationsByArea: Record<string, string[]> = {
-  project: [
-    "getProjectOverview",
-    "listProjectSlides",
-    "getProjectImports",
-    "getProjectScopeOptions",
-    "getReviewTaskDefaults",
-    "requestProjectAccess",
-    "getUploadBatch",
-  ],
+  project: [],
   viewer: [],
   review: [],
   reports: [
@@ -25,24 +17,10 @@ const operationsByArea: Record<string, string[]> = {
     "cosignClinicalReport",
     "returnCosignRequest",
   ],
-  models: [
-    "getModelRunDefaults",
-    "moveModelRun",
-    "getLabModelConnection",
-    "listStudyTemplateReviewDefaults",
-    "listAiModels",
-  ],
+  models: [],
   team: ["listTeamWorkload", "listReviewerWorkload"],
   admin: ["getAdminOverview", "getStorageUsage", "getSecuritySettings", "listWebhooks"],
-  "sign-in": [
-    "getInvitePreview",
-    "getSignInOptions",
-    "signInWithCode",
-    "requestSignInLink",
-    "startSso",
-    "requestPasswordReset",
-    "resetPassword",
-  ],
+  "sign-in": ["getInvitePreview"],
 };
 
 const areaOf = new Map<string, string>(

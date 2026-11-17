@@ -1,4 +1,3 @@
-import { type SignInOptions, useGetSignInOptions } from "@parfocal/api-client";
 import { AuthLayout, AuthPitchSide, type AuthWorkspace } from "@parfocal/ui/components/auth";
 import type { ReactNode } from "react";
 
@@ -11,23 +10,12 @@ const pitchIds = [
   { id: "R2⁺", text: "ROI by a reviewer", x: 320, y: 360 },
 ];
 
-export function useSignInOptions(returnTo: string | null = null): SignInOptions | undefined {
-  return useGetSignInOptions(returnTo).data?.data;
-}
-
-export function workspaceOf(options: SignInOptions | undefined): AuthWorkspace {
-  return {
-    name: options?.workspace.name ?? "",
-    logo: options?.workspace.logo ?? "",
-    colour: options?.workspace.colour ?? "transparent",
-  };
-}
+export const pitchWorkspace: AuthWorkspace = { name: "", logo: "", colour: "transparent" };
 
 export function PitchLayout({ children }: { children: ReactNode }) {
-  const options = useSignInOptions();
   return (
     <AuthLayout
-      side={<AuthPitchSide workspace={workspaceOf(options)} imageUrl={slideImage} ids={pitchIds} />}
+      side={<AuthPitchSide workspace={pitchWorkspace} imageUrl={slideImage} ids={pitchIds} />}
     >
       {children}
     </AuthLayout>

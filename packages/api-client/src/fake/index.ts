@@ -95,7 +95,6 @@ export {
   resetAdminActions,
   toAiModels,
   toInvitePreview,
-  toSignInOptions,
 } from "./admin-handlers.ts";
 export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.ts";
 export { resetSlideEdits } from "./case-handlers.ts";

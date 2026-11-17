@@ -4,11 +4,13 @@ from dataclasses import replace
 
 import pytest
 
+from parfocal_common.model_runs import LAB_POOL_FUNCTION, lab_drain_call
 from parfocal_common.tumor_maps import POOL_FUNCTION, drain_call, wake_tumor_map_pool
 from parfocal_ml.gpu_pool import POOLS, Family, PoolLimitError, cpu_stand_in
 from parfocal_ml.modal_pool import (
     APP_NAME,
     DATABASE_SECRET,
+    LAB_MODEL_SECRETS,
     STORAGE_SECRET,
     TUMOR_MAP_SECRETS,
     VIEW_MAP_SECRETS,
@@ -81,9 +83,31 @@ def test_the_api_wakes_the_pool_that_runs_tumor_maps_with_a_call_it_accepts() ->
 
 def test_the_tumor_map_pool_reads_the_database_and_the_view_map_pool_only_storage() -> None:
     held = {pool.family: secret_names(pool) for pool in POOLS if secret_names(pool)}
-    assert held == {POOL_FAMILY: TUMOR_MAP_SECRETS, Family.EMBEDDER: VIEW_MAP_SECRETS}
+    assert held == {
+        POOL_FAMILY: TUMOR_MAP_SECRETS,
+        Family.EMBEDDER: VIEW_MAP_SECRETS,
+        Family.LAB_MODEL: LAB_MODEL_SECRETS,
+    }
     assert VIEW_MAP_SECRETS == (STORAGE_SECRET,)
     assert DATABASE_SECRET in TUMOR_MAP_SECRETS
+    assert DATABASE_SECRET in LAB_MODEL_SECRETS
+
+
+def test_lab_model_runs_go_to_a_cpu_pool_with_their_own_runner() -> None:
+    pool = next(pool for pool in POOLS if pool.family is Family.LAB_MODEL)
+    assert pool.gpu is None
+    assert pool.hourly_usd_at_max == 0.0
+    assert set(default_runners(pool)) == {Kind.LAB_MODEL}
+    assert {p.family for p in POOLS if Kind.LAB_MODEL in default_runners(p)} == {Family.LAB_MODEL}
+    calls: list[Mapping[str, object]] = []
+
+    def runner(call: Mapping[str, object]) -> Mapping[str, object]:
+        calls.append(call)
+        return {"finished": 2}
+
+    reply = pool_entry(pool, {Kind.LAB_MODEL: runner})({"kind": "lab-model"})
+    assert reply == {"family": "lab-model", "kind": "lab-model", "finished": 2}
+    assert calls == [{"kind": "lab-model"}]
 
 
 class Pools:
@@ -112,3 +136,12 @@ def test_a_gpu_pool_refuses_to_score_on_the_cpu() -> None:
     refuse_cpu_on_a_gpu(("CPUExecutionProvider",), None)
     with pytest.raises(NoCudaError, match="T4"):
         refuse_cpu_on_a_gpu(("CPUExecutionProvider",), "T4")
+
+
+def test_the_api_wakes_the_lab_model_pool_with_a_call_it_runs() -> None:
+    pool = next(pool for pool in POOLS if pool.family is Family.LAB_MODEL)
+    assert pool.function_name == LAB_POOL_FUNCTION
+    assert LAB_POOL_FUNCTION in pool_functions
+    assert accepts(pool, str(lab_drain_call()["kind"]))
+    assert str(lab_drain_call()["kind"]) in default_runners(pool)
+    assert drain_of(lab_drain_call()) == Drain()
