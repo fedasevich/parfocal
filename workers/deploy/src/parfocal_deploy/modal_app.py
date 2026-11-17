@@ -1,6 +1,8 @@
+import importlib
+import os
 import time
 import tomllib
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +34,13 @@ WORKSPACE_PREFIX = "parfocal-"
 INGEST_IDLE_EXIT_SECONDS = 30.0
 MAX_DEPLOYED_CRONS = 5
 PARSE_LAUNCHER = "parfocal_deploy.parse_sandbox:ingest_launcher"
+PRELOAD_VARIABLE = "PARFOCAL_PRELOAD"
+WEB_PRELOAD = (
+    "parfocal_api.app",
+    "parfocal_api.event_emit",
+    "parfocal_common.jobs",
+    "parfocal_common.warm_gate",
+)
 
 WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
 WEB_CONCURRENCY: dict[str, int] = {"max_inputs": 10, "target_inputs": 8}
@@ -42,6 +51,7 @@ WEB_OPTIONS: dict[str, Any] = {
     "max_containers": 4,
     "scaledown_window": 300,
     "timeout": 300,
+    "enable_memory_snapshot": True,
 }
 INGEST_PERIOD_MINUTES = 60
 INGEST_SPAWN_GAP_SECONDS = 15.0
@@ -99,15 +109,28 @@ def app_image() -> modal.Image:
     )
 
 
+def web_image(image: modal.Image) -> modal.Image:
+    return image.env({PRELOAD_VARIABLE: WEB_FUNCTION})
+
+
+def preload(
+    environ: Mapping[str, str] = os.environ,
+    load: Callable[[str], object] = importlib.import_module,
+) -> None:
+    if environ.get(PRELOAD_VARIABLE) == WEB_FUNCTION:
+        for module in WEB_PRELOAD:
+            load(module)
+
+
 def serve() -> Any:
-    from parfocal_api.app import create_app
+    import parfocal_api.app
     from parfocal_api.event_emit import set_waker
     from parfocal_common.jobs import set_job_waker
     from parfocal_common.warm_gate import ModalPools, WarmGate
 
     set_waker(spawn_events())
     set_job_waker(spawn_ingest())
-    app = create_app()
+    app = parfocal_api.app.create_app()
     pools = ModalPools()
     app.state.gpu_pools = pools
     app.state.warm_gate = WarmGate(pools)
@@ -192,9 +215,10 @@ def secrets_of(function: str) -> list[modal.Secret]:
     return [modal.Secret.from_name(name) for name in FUNCTION_SECRETS[function]]
 
 
+preload()
 IMAGE = app_image()
 app = modal.App(APP_NAME, image=IMAGE)
-web = app.function(**WEB_OPTIONS, secrets=secrets_of(WEB_FUNCTION))(
+web = app.function(**WEB_OPTIONS, image=web_image(IMAGE), secrets=secrets_of(WEB_FUNCTION))(
     modal.concurrent(**WEB_CONCURRENCY)(modal.asgi_app(**WEB_ENDPOINT)(serve))
 )
 ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
