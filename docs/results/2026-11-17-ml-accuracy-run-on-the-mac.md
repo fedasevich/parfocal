@@ -4,7 +4,7 @@
 - Backlog: TEST-028 (model accuracy tests that cannot be skipped unseen)
 - Kind: check
 - Commit: 0ca625b2, with no change under `workers/ml`
-- Environment: MacBook with Apple M4 (24 GB), Darwin 24.6.0, Python 3.14 from `uv sync --all-packages` in a fresh worktree, CPU only. One-minute load average 2.69 before and 7.16 after, and up to about 14 during the run while other agents worked. No browser or other test ran at the same time.
+- Environment: MacBook with Apple M4 (24 GB), Darwin 24.6.0, Python 3.14 from `uv sync --all-packages` in a fresh worktree, CPU only. One-minute load average 2.69 before and 7.16 after, and 8.94 two minutes before the end, when the 15-minute average was 14.03, while other agents worked. No browser or other test ran at the same time.
 - Data: model weights, ONNX graphs and datasets from `~/.cache/parfocal` (public datasets such as TNBC, NuInsSeg, CryoNuSeg, MoNuSeg and PanNuke, and the POC caches). No PHI.
 
 ## Question

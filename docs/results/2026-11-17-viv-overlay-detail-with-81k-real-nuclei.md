@@ -29,8 +29,8 @@ Real nuclei, two runs, 120 frames each, 0 errors:
 
 | Run | Median with overlay (p95) | Median without, before | Median without, after | Overlay share | Pixels the overlay changed | Layers drawn | Budget | Outcome |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 1.23 ms (2.67) | 0.79 ms | 1.31 ms | 0.44 ms | 1,808,752 | density raster, 333 large shapes outlined | 1 ms | within |
-| 2 | 1.37 ms (2.67) | 1.31 ms | 1.31 ms | 0.06 ms | 1,808,752 | density raster, 333 large shapes outlined | 1 ms | within |
+| 1 | 1.23 ms (2.67) | 0.79 ms | 1.31 ms | 0.43 ms | 1,808,752 | density raster, 333 large shapes outlined | 1 ms | within |
+| 2 | 1.37 ms (2.67) | 1.31 ms | 1.31 ms | 0.05 ms | 1,808,752 | density raster, 333 large shapes outlined | 1 ms | within |
 
 Building the polygon batch from the file took 95 and 90 ms on the main thread.
 
@@ -44,7 +44,7 @@ Synthetic grid, 81,225 squares, density tier, three runs:
 
 ## Interpretation
 
-The overlay at overview costs at most 0.44 ms of GPU time a frame with the real nuclei, within the 1 ms budget in both runs, and it draws: the density raster and the 333 shapes above the large size change 1.8M of the 5.2M canvas pixels.
+The overlay at overview costs at most 0.43 ms of GPU time a frame with the real nuclei, within the 1 ms budget in both runs, and it draws: the density raster and the 333 shapes above the large size change 1.8M of the 5.2M canvas pixels.
 
 The frame medians fall on a few levels, about 0.62, 1.12, 1.31 and 1.60 ms, with and without the overlay alike, and the same case moves between levels from run to run. That looks like the GPU's clock states, not overlay work, so differences under about half a millisecond are within what this method can resolve. The synthetic case even ran faster with its overlay in two runs. The budget still holds by the bound: in every run the whole frame with the overlay, slide tiles included, has a median of 1.37 ms or less, and the overlay's share by either baseline is 0.53 ms or less.
 
