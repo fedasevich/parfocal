@@ -75,6 +75,7 @@ INGEST_DRAINED_KINDS = frozenset(
         "remote-copy",
         "review-order",
         "patch-export",
+        "cell-crops",
     }
 )
 INGEST_OPTIONS: dict[str, Any] = {
