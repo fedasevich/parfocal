@@ -36,6 +36,7 @@ export default defineConfig({
         ...devices["Desktop Firefox"],
         viewport,
         deviceScaleFactor: 1,
+        headless: process.env["BROWSERS_FIREFOX_HEADED"] !== "1",
         launchOptions: { firefoxUserPrefs: FIREFOX_SOFTWARE_WEBGL_PREFS },
       },
     },
