@@ -1,13 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { ReportScreen } from "../screens/clinical-report/report-screen.tsx";
-import { mockScenes } from "../screens/scenes.ts";
-
-const clinicalReportSearch = z.object({
-  scene: z.enum(mockScenes.creport).optional(),
-  step: z.enum(["findings", "staging", "text", "sign"]).optional(),
-  modal: z.enum(["deposit", "sign", "amend"]).optional(),
-});
+import { clinicalReportSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/cases/$caseId/report")({
   validateSearch: clinicalReportSearch,

@@ -1,17 +1,18 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
+import { lenientSearch } from "../search/lenient-search.ts";
 
 export const personaKeys = ["LM", "AK", "SM", "JR", "TB", "PK", "HL", "MV", "DH"] as const;
 
 export type PersonaKey = (typeof personaKeys)[number];
 
-export const overlaySearch = z.object({
+export const overlaySearch = lenientSearch({
   open: z.enum(["notifications", "palette"]).optional(),
   find: z.string().optional(),
   as: z.enum(personaKeys).optional(),
 });
 
-export type Overlay = NonNullable<z.infer<typeof overlaySearch>["open"]>;
+export type Overlay = NonNullable<ReturnType<typeof overlaySearch.read>["open"]>;
 
 export function useOverlay() {
   const search = useSearch({ strict: false });

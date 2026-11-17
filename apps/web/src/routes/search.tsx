@@ -1,21 +1,11 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { z } from "zod";
 import { SearchScreen } from "../screens/search/search-screen.tsx";
+import { searchPageSearch } from "../search/route-searches.ts";
 import { handoffText } from "../shell/search-handoff.ts";
-import { searchScopes } from "../shell/search-hits.ts";
-
-const scopeValues = searchScopes.map((scope) => scope.value) as [
-  (typeof searchScopes)[number]["value"],
-  ...(typeof searchScopes)[number]["value"][],
-];
-
-const searchPage = z.object({
-  scope: z.enum(scopeValues).optional(),
-});
 
 export const Route = createFileRoute("/search")({
-  validateSearch: searchPage,
+  validateSearch: searchPageSearch,
   component: SearchPage,
 });
 

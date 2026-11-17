@@ -1,13 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { NewTaskScreen } from "../screens/new-task/new-task-screen.tsx";
-import { mockScenes } from "../screens/scenes.ts";
-
-const newTaskSearch = z.object({
-  scene: z.enum(mockScenes.task).optional(),
-  step: z.enum(["kind", "slides", "reviewers", "check", "how", "send", "sent"]).optional(),
-  modal: z.enum(["addslides", "dpreview"]).optional(),
-});
+import { newTaskSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/tasks/new")({
   validateSearch: newTaskSearch,

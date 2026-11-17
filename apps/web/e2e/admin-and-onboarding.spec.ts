@@ -28,9 +28,13 @@ const scenes: { path: string; heading: string; shows: string }[] = [
   },
   { path: "/sign-up", heading: "Create your Parfocal account", shows: "Review AI results" },
   { path: "/sign-up?scene=verify", heading: "Confirm your email", shows: "Resend the code" },
-  { path: "/invite", heading: "You're invited", shows: "Round 2 · CAMELYON v1.0" },
   {
-    path: "/invite?scene=account",
+    path: "/invite?token=rt14-simona",
+    heading: "You're invited",
+    shows: "Round 2 · CAMELYON v1.0",
+  },
+  {
+    path: "/invite?token=rt14-simona&scene=account",
     heading: "Join Sentinel node AI evaluation",
     shows: "from the invite",
   },
@@ -109,6 +113,17 @@ test("the invite joins in one step and opens the first slide", async ({ page }) 
   await expect(page.getByRole("textbox", { name: "Email" })).toHaveValue("simona@fnvltava.example");
   await page.getByRole("button", { name: "Join and open my first slide" }).click();
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=/);
+});
+
+test("an invite address without a token says the link does not work", async ({ page }) => {
+  await page.goto("/invite");
+  await expect(page.getByRole("heading", { name: "This invite link does not work" })).toBeVisible();
+});
+
+test("a project address with an unknown tab opens the slides tab", async ({ page }) => {
+  await page.goto("/projects/00000000-0000-4000-8003-000000000007?tab=review-tasks");
+  await expect(page.getByText("Something went wrong on our side")).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: /Slides/ })).toHaveAttribute("aria-selected", "true");
 });
 
 test("an invite link that does not work says so and offers sign in", async ({ page }) => {

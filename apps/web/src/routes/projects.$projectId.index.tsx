@@ -1,25 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { ProjectPage, type ProjectTab } from "../screens/project/project-page.tsx";
 import { useResultsSlide } from "../screens/project/scene.ts";
-import { mockScenes } from "../screens/scenes.ts";
-
-const projectSearch = z.object({
-  tab: z.enum(["slides", "results", "tasks", "report", "settings", "people"]).default("slides"),
-  status: z.string().optional(),
-  q: z.string().optional(),
-  sets: z.string().optional(),
-  modal: z.enum(["addcls"]).optional(),
-  add: z.string().optional(),
-  scene: z.enum(mockScenes.project).optional(),
-});
+import { type ProjectSearch, projectSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/projects/$projectId/")({
   validateSearch: projectSearch,
   component: ProjectRoute,
 });
 
-const tabOf = (tab: z.infer<typeof projectSearch>["tab"]): ProjectTab =>
+const tabOf = (tab: ProjectSearch["tab"]): ProjectTab =>
   tab === "tasks" || tab === "settings" ? tab : tab === "people" ? "settings" : "slides";
 
 function ProjectRoute() {

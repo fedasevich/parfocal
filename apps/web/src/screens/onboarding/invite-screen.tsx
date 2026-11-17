@@ -29,7 +29,11 @@ import { PitchLayout } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
 import type { InviteScene } from "./scenes.ts";
 
-type Props = { token: string; scene: InviteScene; change: (scene: InviteScene) => void };
+type Props = {
+  token: string | undefined;
+  scene: InviteScene;
+  change: (scene: InviteScene) => void;
+};
 
 const inviteSteps = (scene: InviteScene) => [
   { label: t`Invite`, why: t`Accept the invite first.` },
@@ -60,7 +64,9 @@ function Fact({
 export function InviteScreen({ token, scene, change }: Props) {
   const { t } = useLingui();
 
-  const previewQuery = useGetInvitePreview(token, { query: { retry: false } });
+  const previewQuery = useGetInvitePreview(token ?? "", {
+    query: { retry: false, enabled: token !== undefined },
+  });
   const preview = okData(previewQuery.data);
   const accept = useAcceptInvitation();
   const goTo = useGoTo();
@@ -73,7 +79,7 @@ export function InviteScreen({ token, scene, change }: Props) {
       className="mb-1"
     />
   );
-  if (previewQuery.isError)
+  if (token === undefined || previewQuery.isError)
     return (
       <PitchLayout>
         <AuthForm>

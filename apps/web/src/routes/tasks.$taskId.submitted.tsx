@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { SlideSubmitted } from "../screens/review/slide-submitted.tsx";
-
-const submittedSearch = z.object({
-  slide: z.string().optional(),
-});
+import { submittedSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/tasks/$taskId/submitted")({
   validateSearch: submittedSearch,

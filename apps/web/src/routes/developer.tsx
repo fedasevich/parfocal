@@ -1,23 +1,15 @@
 import { Trans } from "@lingui/react/macro";
 import { useGetMe } from "@parfocal/api-client";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { z } from "zod";
 import { canUseDeveloperMode } from "../lab/developer-access.ts";
 import { setLabSetting, useLabSettings } from "../lab/lab-settings.ts";
 import {
   rendererOfDeveloperScene,
   sectionOfDeveloperScene,
 } from "../screens/developer/developer-data.ts";
-import { developerSectionKeys, rendererKeys } from "../screens/developer/developer-keys.ts";
 import { DeveloperScreen } from "../screens/developer/developer-screen.tsx";
 import { okData } from "../screens/placeholder.tsx";
-import { mockScenes } from "../screens/scenes.ts";
-
-const developerSearch = z.object({
-  scene: z.enum(mockScenes.developer).optional(),
-  section: z.enum(developerSectionKeys).optional(),
-  renderer: z.enum(rendererKeys).optional(),
-});
+import { developerSearch } from "../search/route-searches.ts";
 
 export const Route = createFileRoute("/developer")({
   validateSearch: developerSearch,

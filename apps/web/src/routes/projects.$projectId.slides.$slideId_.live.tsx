@@ -4,11 +4,11 @@ import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
-import { z } from "zod";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
 import { ViewingNow } from "../presence/viewing-now.tsx";
 import { okData } from "../screens/placeholder.tsx";
+import { liveSearch } from "../search/route-searches.ts";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
@@ -27,11 +27,6 @@ import {
   workspaceSetups,
   workspaces,
 } from "../viewer/workspace.ts";
-
-const liveSearch = z.object({
-  task: z.string().optional(),
-  workspace: z.enum(workspaces).optional(),
-});
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live")({
   validateSearch: liveSearch,

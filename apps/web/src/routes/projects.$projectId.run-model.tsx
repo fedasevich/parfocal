@@ -1,14 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { z } from "zod";
 import { ProjectBackground } from "../screens/jobs/project-background.tsx";
 import { RunModelWindow } from "../screens/jobs/run-model-window.tsx";
-import { mockScenes } from "../screens/scenes.ts";
+import { runModelSearch } from "../search/route-searches.ts";
 import { useJobsTray, useOpenJobsTray } from "../shell/jobs-tray.tsx";
-
-const runModelSearch = z.object({
-  scene: z.enum(mockScenes.runmodel).optional(),
-  slides: z.array(z.string()).optional(),
-});
 
 export const Route = createFileRoute("/projects/$projectId/run-model")({
   validateSearch: runModelSearch,

@@ -55,7 +55,7 @@ export const onboardingPrototypeLinks = [
     key: `invite-${scene}`,
     label: `Invite · ${scene}`,
     note: scene === "landing" ? "Daniel invites Simona to RT-14" : "Join in one step",
-    link: linkOptions({ to: "/invite", search: { scene } }),
+    link: linkOptions({ to: "/invite", search: { token: "rt14-simona", scene } }),
   })),
   ...onboardingScenes.setup.map((step) => ({
     key: `setup-${step}`,
