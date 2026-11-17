@@ -1,4 +1,4 @@
-# XXXX. SAML sign-in links a SCIM user by email inside the workspace organisation
+# 0386. SAML sign-in links a SCIM user by email inside the workspace organisation
 
 - Date: 2026-11-17
 - Status: Accepted

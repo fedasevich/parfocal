@@ -35,4 +35,4 @@ IAM-012 asks for SAML or OIDC federation per tenant with just-in-time provisioni
 
 ## Amendment 2026-11-17: linking by email inside the organisation
 
-IAM-030 (a SCIM-created person signs in through SAML without a duplicate) turns linking on. The IdP now has `isLinkingAllowed` and auto-linking by email, so a SAML sign-in attaches to a user with that email in the workspace's own organisation instead of creating a second one. [ADR XXXX](XXXX-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) (SAML sign-in links a SCIM user by email inside the workspace organisation) has the details and the test.
+IAM-030 (a SCIM-created person signs in through SAML without a duplicate) turns linking on. The IdP now has `isLinkingAllowed` and auto-linking by email, so a SAML sign-in attaches to a user with that email in the workspace's own organisation instead of creating a second one. [ADR 0386](0386-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) (SAML sign-in links a SCIM user by email inside the workspace organisation) has the details and the test.

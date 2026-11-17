@@ -160,6 +160,17 @@ The night run measured production on 2026-11-17 ([result](results/2026-11-17-pro
 
 Your choice: 
 
+### 141. How fast a person turned off in the customer's directory loses access
+
+IAM-030 (a SCIM-created person signs in through SAML without a duplicate) measured this on the local Zitadel ([result](results/2026-11-17-scim-saml-linking.md)). When a customer's directory deactivates someone over SCIM, Zitadel refuses their next sign-in and token refresh at once, but a session already open in Parfocal keeps working until its access token expires, 12 hours locally. The production token lifetime on Zitadel Cloud was not read.
+
+- **A. Accept up to the token lifetime for now and revisit before the first customer with SCIM (recommended).** No work and no cost.
+- B. Shorten the access token lifetime to about 15 minutes in the Zitadel organisation settings, a production setting change with more frequent refreshes.
+- C. Build our own SCIM endpoint in front of Zitadel that ends Parfocal sessions at once, about a week of work.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.

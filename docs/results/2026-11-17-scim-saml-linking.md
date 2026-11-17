@@ -53,6 +53,6 @@ Linking by email removes the duplicate, and Zitadel limits it to the organisatio
 
 ## Follow-ups
 
-- `docs/adr/XXXX-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md` records the decision.
+- `docs/adr/0386-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md` records the decision.
 - `TODO`: read `accessTokenLifetime` from the production OIDC settings.
 - `TODO`: check the linking options on Zitadel Cloud before a customer uses SCIM and SAML together.

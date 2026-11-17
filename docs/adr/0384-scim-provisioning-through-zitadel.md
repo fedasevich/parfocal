@@ -36,7 +36,7 @@ Option 1.
 
 ## Amendment 2026-11-17: SAML sign-in, a borrowed token and deactivation were tried
 
-IAM-030 (a SCIM-created person signs in through SAML without a duplicate) answered three of the points above on the local Zitadel, as [ADR XXXX](XXXX-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) (SAML sign-in links a SCIM user by email inside the workspace organisation) records.
+IAM-030 (a SCIM-created person signs in through SAML without a duplicate) answered three of the points above on the local Zitadel, as [ADR 0386](0386-saml-sign-in-links-a-scim-user-by-email-in-its-organisation.md) (SAML sign-in links a SCIM user by email inside the workspace organisation) records.
 
 - Without linking, the first SAML sign-in of a SCIM user did not collide. Zitadel created a second user with the same email. `connect-saml` now turns on linking by email, and the person signs in as the SCIM user.
 - A token from one workspace gets 404 `membership not found` at another workspace's `/scim/v2/<organisationId>`, for listing and for creating users.

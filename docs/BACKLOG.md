@@ -835,7 +835,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ADMIN-009, IAM-001.
   Size: M.
 
-- [ ] IAM-030 · A SCIM-created person signs in through SAML without a duplicate
+- [x] IAM-030 · A SCIM-created person signs in through SAML without a duplicate
   IAM-013 (SCIM provisioning) creates people through Zitadel's own SCIM server, but a SCIM-created user's first SAML sign-in may collide with Zitadel's auto-creation because linking is off. Configure the SAML provider to link by email to the SCIM user, and check that one workspace's SCIM token cannot reach another workspace's endpoint and how fast an open session ends after deactivation.
   Done when a test on the local Zitadel creates a user by SCIM, signs them in through a test SAML provider into the same user, and refuses a cross-workspace SCIM token.
   Depends on IAM-013. Size: S.
@@ -4474,7 +4474,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Switch the project area: `getProjectOverview`, `listProjectSlides`, `getProjectImports`, `getUploadBatch`, `getProjectScopeOptions`, `getReviewTaskDefaults`, `requestProjectAccess` and the rest counted under project. Build each route from stored data so it returns what the draft's Zod schema says, add API tests for every route, regenerate `openapi.json` and the client, move the operations out of `packages/api-client/src/draft`, keep the fake answering the now-real operations, and update the area map in `scripts/draft-calls.ts` and the table in `knowledge/draft-calls.md`. Part of OPS-017 (switch each area from the fake to the real API).
   Done when the project count is zero, API tests cover each new route, and the project page, upload and new task work with the fake off against the seeded local API.
   Depends on OPS-022 (viewer area on the real API). Size: L.
-- [ ] OPS-024 · Models, reports, team and admin areas on the real API
+- [x] OPS-024 · Models, reports, team and admin areas on the real API
   Switch the remaining areas: the model run defaults and moves, the lab model connection, the evaluation and clinical reports with co-sign, the team workload, the admin console reads and the invite preview. The sign-in drafts that Zitadel replaced are deleted with their screens' dead branches instead of built. Build each route from stored data so it returns what the draft's Zod schema says, add API tests for every route, regenerate `openapi.json` and the client, move the operations out of `packages/api-client/src/draft`, keep the fake answering the now-real operations, and update the area map in `scripts/draft-calls.ts` and the table in `knowledge/draft-calls.md`. Part of OPS-017 (switch each area from the fake to the real API).
   Done when `node scripts/draft-calls.ts` prints a total of zero, API tests cover each new route, and no screen the showcase seed shows calls a draft.
   Depends on OPS-023 (project and upload area on the real API). Size: L.
