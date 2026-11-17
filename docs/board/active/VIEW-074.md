@@ -1,4 +1,4 @@
-status: in-progress
+status: review
 by: claude parallel run
 since: 2026-11-17
-note: next: rerun viewer specs m to z with PARFOCAL_E2E_PORT set to a free port, port decision notes and compare to the engine, shrink STILL_TO_REPLACE
+note: 2026-11-17 VIEW-074 merged: engine stage on task viewer, decision notes, minimap, new comment, hide while panning, SHELL-023 viewer hints. Left: golden images, compare, focus, coach marks, cells on engine, writing decision notes, clear STILL_TO_REPLACE.

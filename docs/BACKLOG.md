@@ -2240,7 +2240,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Use a gear for every settings entry, make availability a dropdown that lists each status with its meaning, lay the slide row's actions out in one row that never overlaps, show the main reticle loader full screen when a whole page loads, and give every list, table, card grid and side panel a skeleton shaped like its content, outside the viewer stage, which VIEW-074 owns.
   Done when a guard test finds no `sun` icon on a settings entry, a browser test picks Busy from the availability dropdown, the slide row buttons do not overlap at 1280 and 1920 px wide, and a browser test with a delayed API finds a skeleton or the full screen loader on every top-level route before data arrives.
   Size: M.
-- [ ] SHELL-023 · A screen's explanatory notes show once and stay findable afterwards
+- [x] SHELL-023 · A screen's explanatory notes show once and stay findable afterwards
   On 2026-11-17 the owner asked that the helper sentences printed on screens, such as "Team shows you as away, so tasks can be reassigned" and the viewer's tool hint bars, show once and then hide, and asked Fable where they should live afterwards. The viewer already shows hint bars once per tool per device (`apps/web/src/annotations/hints-once.ts`).
   Apply Fable's recommendation recorded in the log to every such note outside the settings screens, which SET-015 owns: one show-once mechanism, one place the note lives afterwards, a way to reset all hints, and warnings and irreversible actions kept always visible.
   Done when a unit test covers the seen state and the reset, and a browser test sees a note the first time, not the second time, and finds it again in its afterwards place.
