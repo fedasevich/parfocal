@@ -8696,6 +8696,10 @@ msgstr "Loaded {0} changed keys from {1}"
 msgid "Loaded {0}. Left out {1}: {2}"
 msgstr "Loaded {0}. Left out {1}: {2}"
 
+#: src/shell/route-progress.tsx
+msgid "Loading"
+msgstr "Loading"
+
 #: src/screens/placeholder.tsx
 msgid "Loading {label}"
 msgstr "Loading {label}"
@@ -8703,6 +8707,10 @@ msgstr "Loading {label}"
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Loading sharper tiles · 12 left"
 msgstr "Loading sharper tiles · 12 left"
+
+#: src/screens/project/slides-tab.tsx
+msgid "Loading slides"
+msgstr "Loading slides"
 
 #: src/screens/team/team-screen.tsx
 msgid "Loading Team"
@@ -8750,6 +8758,10 @@ msgstr "Loading the upload"
 #: src/screens/home/home-screen.tsx
 msgid "Loading your home"
 msgstr "Loading your home"
+
+#: src/screens/my-work/my-work-screen.tsx
+msgid "Loading your work"
+msgstr "Loading your work"
 
 #. placeholder {0}: group.count - group.slides.length
 #. placeholder {1}: group.key

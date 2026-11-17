@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
+import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import {
   Table,
   TableBody,
@@ -75,9 +76,15 @@ const headRow = "[&>th]:sticky [&>th]:top-0 [&>th]:z-1 [&>th]:bg-surf-panel";
 const headCell = "px-4 py-(--density-head-y)";
 
 export function useProjectSlides(projectId: string): ProjectSlide[] {
-  const rows = okData(useListMySlides({ project_id: projectId }).data)?.slides ?? [];
-  const files = okData(useGetProjectOverview(projectId).data)?.slide_files ?? [];
-  return rows.map((row) => {
+  return useProjectSlideRows(projectId).slides;
+}
+
+function useProjectSlideRows(projectId: string): { slides: ProjectSlide[]; loading: boolean } {
+  const rowsQuery = useListMySlides({ project_id: projectId });
+  const overviewQuery = useGetProjectOverview(projectId);
+  const rows = okData(rowsQuery.data)?.slides ?? [];
+  const files = okData(overviewQuery.data)?.slide_files ?? [];
+  const slides = rows.map((row) => {
     const file = files.find((item) => item.slide_id === row.id);
     return {
       ...row,
@@ -86,6 +93,7 @@ export function useProjectSlides(projectId: string): ProjectSlide[] {
       remote: file?.remote ?? null,
     };
   });
+  return { slides, loading: rowsQuery.isPending || overviewQuery.isPending };
 }
 
 function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefined): Group[] {
@@ -145,7 +153,7 @@ export function SlidesTab({
 }) {
   const { t } = useLingui();
 
-  const slides = useProjectSlides(project.id);
+  const { slides, loading } = useProjectSlideRows(project.id);
   const viewersOf = useProjectViewers(project.id);
   const overview = okData(useGetProjectOverview(project.id).data);
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
@@ -251,6 +259,13 @@ export function SlidesTab({
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="p-0">
+                  <SkeletonRows label={t`Loading slides`} rows={6} columns={4} />
+                </TableCell>
+              </TableRow>
+            ) : null}
             {filtering && groups.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="px-4 py-6 text-center text-fg-dim">
@@ -258,7 +273,7 @@ export function SlidesTab({
                 </TableCell>
               </TableRow>
             ) : null}
-            {groups.map((group, index) => {
+            {(loading ? [] : groups).map((group, index) => {
               const expanded = isOpen(group, index);
               return (
                 <Fragment key={group.key}>

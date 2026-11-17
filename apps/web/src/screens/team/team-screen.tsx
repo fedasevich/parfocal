@@ -13,7 +13,6 @@ import {
   useListReviewerWorkload,
   useListTeamWorkload,
 } from "@parfocal/api-client";
-import { Loader } from "@parfocal/ui/components/loader";
 import type { PersonInfo } from "@parfocal/ui/components/person";
 import {
   Select,
@@ -22,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
+import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import {
   ConfirmInButton,
@@ -144,8 +144,13 @@ export function TeamScreen({
 
   if (!team) {
     return (
-      <main className="px-8 pt-5.5 pl-7">
-        <Loader label={t`Loading Team`} />
+      <main className="grid content-start gap-(--density-flow-gap) px-8 pt-5.5 pl-7">
+        <h1 className="m-0 text-page-title font-semibold text-fg">
+          <Trans>Team</Trans>
+        </h1>
+        <div className="rounded-zone border border-line bg-surf-panel">
+          <SkeletonRows label={t`Loading Team`} rows={5} columns={4} />
+        </div>
       </main>
     );
   }

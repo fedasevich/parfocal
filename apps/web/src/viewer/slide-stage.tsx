@@ -741,7 +741,9 @@ function OpenedSlide({
         {opened?.route && hostNode ? (
           <FailedTilePlaceholders engine={opened.engine} route={opened.route} stage={hostNode} />
         ) : null}
-        {phase.state === "failed" ? null : <TileHintChip route={opened?.route ?? null} />}
+        {phase.state === "failed" ? null : (
+          <TileHintChip route={opened?.route ?? null} opening={phase.state === "loading"} />
+        )}
         {session && developerMode ? (
           <Suspense fallback={null}>
             <LabLayer
@@ -1099,8 +1101,16 @@ function OpenedSlide({
           </div>
         ) : null}
         {phase.state === "loading" ? (
-          <div className="absolute top-4 left-4">
-            <Loader label={t`Loading the slide`} size="inline" />
+          <div
+            data-testid="stage-loading"
+            className="pointer-events-none absolute inset-0 grid place-items-center"
+          >
+            <div className="flex items-center gap-2.5 rounded-ctl border border-line bg-chrome/90 px-3.5 py-2 text-body-sm text-fg-dim shadow-pop">
+              <Loader label={t`Loading the slide`} size="inline" />
+              <span aria-hidden="true">
+                <Trans>Loading the slide</Trans>
+              </span>
+            </div>
           </div>
         ) : null}
         {chosenDevice === undefined ? null : (

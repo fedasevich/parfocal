@@ -4,7 +4,7 @@ const sampleProject = "00000000-0000-4000-8003-000000000001";
 const tumor001 = "00000000-0000-4000-8005-000000000101";
 const livePath = `/projects/${sampleProject}/slides/${tumor001}/live`;
 
-test("a delayed tile server shows the loading hint after a second and the slow source after five", async ({
+test("a delayed tile server labels the stage as loading before the first tile and shows the slow source after five", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -18,15 +18,17 @@ test("a delayed tile server shows the loading hint after a second and the slow s
   await page.goto(livePath);
   const stage = page.getByTestId("slide-stage");
   const hint = page.getByTestId("tile-hint");
+  const label = page.getByTestId("stage-loading");
   await expect(stage).toHaveAttribute("data-state", "loading", { timeout: 15_000 });
-  await expect(hint).toHaveAttribute("data-kind", "opening", { timeout: 4000 });
-  await expect(hint).toContainText("Loading the slide");
+  await expect(label).toBeVisible({ timeout: 4000 });
+  await expect(label).toContainText("Loading the slide");
   const sawOpening = Date.now();
   await expect(hint).toHaveAttribute("data-kind", "slow", { timeout: 7000 });
   expect(Date.now() - sawOpening).toBeGreaterThanOrEqual(3000);
   await expect(hint).toContainText(/Slow source\. The slide storage answers in \d+\.\d s\./);
   await expect(hint.getByRole("button", { name: "Source status" })).toBeVisible();
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  await expect(label).toBeHidden();
   await expect(hint).toBeHidden({ timeout: 5000 });
 });
 

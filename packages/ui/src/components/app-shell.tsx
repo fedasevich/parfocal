@@ -283,9 +283,10 @@ function SidebarLink({
 type AppShellProps = React.ComponentProps<"div"> & {
   top: React.ReactNode;
   side?: React.ReactNode;
+  pending?: boolean;
 };
 
-function AppShell({ top, side, className, children, ...props }: AppShellProps) {
+function AppShell({ top, side, pending = false, className, children, ...props }: AppShellProps) {
   const { t } = useLingui();
 
   return (
@@ -302,7 +303,9 @@ function AppShell({ top, side, className, children, ...props }: AppShellProps) {
         {side}
         <div
           {...scrollRegionProps(t`Page content`)}
-          className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
+          aria-busy={pending || undefined}
+          data-pending={pending || undefined}
+          className="min-h-0 overflow-auto transition-opacity duration-(--motion-slow) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid data-pending:opacity-60 data-pending:delay-(--motion-fast)"
         >
           {children}
         </div>
