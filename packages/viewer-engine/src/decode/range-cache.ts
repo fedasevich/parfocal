@@ -44,6 +44,13 @@ const startOf = (contentRange: string | null): number | null => {
   return match ? Number(match[1]) : null;
 };
 
+class RefusedBlocksError extends Error {
+  constructor() {
+    super("The server refused a whole block run");
+    this.name = "RefusedBlocksError";
+  }
+}
+
 export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
   const blockSize = options.blockSize ?? TIFF_BLOCK_SIZE;
   const maxBlocks = options.maxBlocks ?? defaultCachedBlocks;
@@ -52,6 +59,7 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
   const pending = new Map<string, Promise<Block>>();
   const plain = new Map<string, Promise<RangeReply>>();
   const totals = new Map<string, number>();
+  const refused = new Set<string>();
   const counts = { fetches: 0, bytes: 0, blockHits: 0, blockJoins: 0 };
 
   const blockKey = (url: string, index: number) => `${index}@${url}`;
@@ -83,6 +91,10 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
       const total = totalOf(contentRange);
       if (total !== null) totals.set(url, total);
       if (response.status === 416) return new Uint8Array(0);
+      if (response.status === 403) {
+        for (let index = first; index <= last; index++) refused.add(blockKey(url, index));
+        throw new RefusedBlocksError();
+      }
       if (response.status !== 206 || startOf(contentRange) !== first * blockSize) {
         throw new Error(`The server answered a range request with status ${response.status}`);
       }
@@ -166,7 +178,26 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     if (known !== undefined && start >= known) return unsatisfiable(known);
     const first = Math.floor(start / blockSize);
     const last = Math.floor((known === undefined ? end : Math.min(end, known - 1)) / blockSize);
-    if (last - first >= maxBlocks) return uncached(url, `bytes=${start}-${end}`);
+    const exact = `bytes=${start}-${end}`;
+    if (last - first >= maxBlocks) return uncached(url, exact);
+    for (let index = first; index <= last; index++) {
+      if (refused.has(blockKey(url, index))) return uncached(url, exact);
+    }
+    try {
+      return await fromBlocks(url, start, end, first, last);
+    } catch (error) {
+      if (error instanceof RefusedBlocksError) return uncached(url, exact);
+      throw error;
+    }
+  };
+
+  const fromBlocks = async (
+    url: string,
+    start: number,
+    end: number,
+    first: number,
+    last: number,
+  ): Promise<RangeReply> => {
     const parts: (Promise<Block> | Block)[] = [];
     let missingFrom: number | null = null;
     const flush = (until: number) => {

@@ -1,0 +1,341 @@
+{
+  "CMU-1-Small-Region.svs": {
+    "levels": {
+      "reader": "openslide",
+      "levels": [
+        {
+          "index": 0,
+          "downsample": 1,
+          "width": 2220,
+          "height": 2967,
+          "stored": {
+            "width": 2220,
+            "height": 2967,
+            "tile_width": 240,
+            "tile_height": 240,
+            "compression": "jpeg",
+            "photometric": "rgb"
+          },
+          "page": 0,
+          "subIfd": null,
+          "ifdOffset": 1275950,
+          "ifdBytes": 198,
+          "siblings": [],
+          "valueRanges": [
+            [258, 1276148, 6],
+            [324, 1276776, 520],
+            [325, 1277296, 520],
+            [347, 1277816, 289]
+          ]
+        }
+      ],
+      "scale": {
+        "mpp_x": 0.499,
+        "mpp_y": 0.499,
+        "objective_power": 20.0,
+        "notices": []
+      },
+      "planes": 1,
+      "notices": [],
+      "littleEndian": true,
+      "bigTiff": false
+    },
+    "restricted": [[1278105, 1474362], [1475813, 1850194], [1850954, 1938212]]
+  },
+  "Philips-4.tiff": {
+    "levels": {
+      "reader": "openslide",
+      "levels": [
+        {
+          "index": 0,
+          "downsample": 1,
+          "width": 91136,
+          "height": 68096,
+          "stored": {
+            "width": 91136,
+            "height": 68096,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 0,
+          "subIfd": null,
+          "ifdOffset": 196162682,
+          "ifdBytes": 336,
+          "siblings": [],
+          "valueRanges": [[324, 196352410, 189392], [325, 196163018, 189392], [347, 196541802, 574]]
+        },
+        {
+          "index": 1,
+          "downsample": 2,
+          "width": 45568,
+          "height": 34048,
+          "stored": {
+            "width": 45568,
+            "height": 34304,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 1,
+          "subIfd": null,
+          "ifdOffset": 260511982,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 260560042, 47704], [325, 260512338, 47704], [347, 260607746, 574]]
+        },
+        {
+          "index": 2,
+          "downsample": 4,
+          "width": 22784,
+          "height": 17024,
+          "stored": {
+            "width": 23040,
+            "height": 17408,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 2,
+          "subIfd": null,
+          "ifdOffset": 281664116,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 281676712, 12240], [325, 281664472, 12240], [347, 281688952, 574]]
+        },
+        {
+          "index": 3,
+          "downsample": 8,
+          "width": 11392,
+          "height": 8512,
+          "stored": {
+            "width": 11776,
+            "height": 8704,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 3,
+          "subIfd": null,
+          "ifdOffset": 288200916,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 288204400, 3128], [325, 288201272, 3128], [347, 288207528, 574]]
+        },
+        {
+          "index": 4,
+          "downsample": 16,
+          "width": 5696,
+          "height": 4256,
+          "stored": {
+            "width": 6144,
+            "height": 4608,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 4,
+          "subIfd": null,
+          "ifdOffset": 290120352,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 290121572, 864], [325, 290120708, 864], [347, 290122436, 574]]
+        },
+        {
+          "index": 5,
+          "downsample": 32,
+          "width": 2848,
+          "height": 2128,
+          "stored": {
+            "width": 3072,
+            "height": 2560,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 5,
+          "subIfd": null,
+          "ifdOffset": 290645578,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 290646174, 240], [325, 290645934, 240], [347, 290646414, 574]]
+        },
+        {
+          "index": 6,
+          "downsample": 64,
+          "width": 1424,
+          "height": 1064,
+          "stored": {
+            "width": 1536,
+            "height": 1536,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 6,
+          "subIfd": null,
+          "ifdOffset": 290787804,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 290788232, 72], [325, 290788160, 72], [347, 290788304, 574]]
+        },
+        {
+          "index": 7,
+          "downsample": 128,
+          "width": 712,
+          "height": 532,
+          "stored": {
+            "width": 1024,
+            "height": 1024,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 7,
+          "subIfd": null,
+          "ifdOffset": 290833338,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[324, 290833726, 32], [325, 290833694, 32], [347, 290833758, 574]]
+        },
+        {
+          "index": 8,
+          "downsample": 256,
+          "width": 356,
+          "height": 266,
+          "stored": {
+            "width": 512,
+            "height": 512,
+            "tile_width": 512,
+            "tile_height": 512,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 8,
+          "subIfd": null,
+          "ifdOffset": 290846638,
+          "ifdBytes": 356,
+          "siblings": [],
+          "valueRanges": [[347, 290846994, 574]]
+        }
+      ],
+      "scale": {
+        "mpp_x": 0.25,
+        "mpp_y": 0.25,
+        "objective_power": 40.0,
+        "notices": ["objective-estimated"]
+      },
+      "planes": 1,
+      "notices": ["objective-estimated"],
+      "littleEndian": true,
+      "bigTiff": true
+    },
+    "restricted": [[290847615, 290924953]]
+  },
+  "CMU-1.ndpi": {
+    "levels": {
+      "reader": "openslide",
+      "levels": [
+        {
+          "index": 0,
+          "downsample": 1,
+          "width": 51200,
+          "height": 38144,
+          "stored": {
+            "width": 51200,
+            "height": 38144,
+            "tile_width": 2048,
+            "tile_height": 8,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 0,
+          "subIfd": null,
+          "ifdOffset": 184062235,
+          "ifdBytes": 322,
+          "siblings": [],
+          "valueRanges": []
+        },
+        {
+          "index": 1,
+          "downsample": 4,
+          "width": 12800,
+          "height": 9536,
+          "stored": {
+            "width": 12800,
+            "height": 9536,
+            "tile_width": 512,
+            "tile_height": 8,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 1,
+          "subIfd": null,
+          "ifdOffset": 197055203,
+          "ifdBytes": 322,
+          "siblings": [],
+          "valueRanges": []
+        },
+        {
+          "index": 2,
+          "downsample": 16,
+          "width": 3200,
+          "height": 2384,
+          "stored": {
+            "width": 3200,
+            "height": 2384,
+            "tile_width": 128,
+            "tile_height": 8,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 2,
+          "subIfd": null,
+          "ifdOffset": 197918647,
+          "ifdBytes": 322,
+          "siblings": [],
+          "valueRanges": []
+        },
+        {
+          "index": 3,
+          "downsample": 64,
+          "width": 800,
+          "height": 596,
+          "stored": {
+            "width": 800,
+            "height": 596,
+            "tile_width": null,
+            "tile_height": null,
+            "compression": "jpeg",
+            "photometric": "ycbcr"
+          },
+          "page": 3,
+          "subIfd": null,
+          "ifdOffset": 197972969,
+          "ifdBytes": 298,
+          "siblings": [],
+          "valueRanges": []
+        }
+      ],
+      "scale": {
+        "mpp_x": 0.45641259698767683,
+        "mpp_y": 0.4550625711035267,
+        "objective_power": 20.0,
+        "notices": []
+      },
+      "planes": 1,
+      "notices": [],
+      "littleEndian": true,
+      "bigTiff": false
+    },
+    "restricted": [[197973459, 198030603]]
+  }
+}
