@@ -2,6 +2,17 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.17.5 (2026-11-17)
+
+### Performance
+
+- OPS-030: Pin the web function to GCP in eu-west
+
+### Docs
+
+- OPS-030: Record that Modal cannot pin Azure and the per-cloud eu-west numbers
+- OPS-030: Log the eu-west numbers per cloud
+
 ## v0.17.4 (2026-11-17)
 
 ### Performance
