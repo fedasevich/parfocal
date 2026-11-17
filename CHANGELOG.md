@@ -2,6 +2,24 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.16.0 (2026-11-17)
+
+### Features
+
+- VIEW-078: Queue a crop job when a review order is written
+
+### Performance
+
+- OPS-028: Snapshot the database driver and HTTP stack and log web startup phases
+
+### Docs
+
+- VIEW-078: Add the review claim file
+
+### Build and CI
+
+- TEST-020: Run the seeded formats smoke spec in the deploy browser smoke
+
 ## v0.15.0 (2026-11-17)
 
 ### Features
