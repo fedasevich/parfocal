@@ -144,7 +144,7 @@ async def result_set_counts(connection: AsyncConnection) -> dict[str, int]:
         .where(result_sets.c.deleted_at.is_(None))
         .group_by(result_sets.c.name)
     )
-    return {row.name: row.count for row in rows}
+    return {str(name): int(count) for name, count in rows}
 
 
 async def running_now(connection: AsyncConnection) -> list[AiModelRun]:
