@@ -649,13 +649,15 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         update(result_sets).where(result_sets.c.id == set_id).values(status="ready", region_count=1)
     )
     seeded.ids["result_set"] = set_id
+    summary_name = f"Cells {uuid.uuid4().hex[:8]}"
+    seeded.markers.add(summary_name)
     summary_set = await connection.scalar(
         insert(result_sets)
         .values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
             slide_id=case.loose_slide_id,
-            name=f"Cells {uuid.uuid4().hex[:8]}",
+            name=summary_name,
             source="import",
             cell_count=1,
         )
@@ -1941,7 +1943,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotation-layers"
     ),
     "getResultSetTyper": Route(
-        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['result_set']}/typer"
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/typer"
     ),
     "getSlideResultStats": Route(
         Exposure.TENANT,
@@ -2004,6 +2006,9 @@ GET_ROUTES = {
     ),
     "listProjectModels": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
+    ),
+    "listProjectLabModels": Route(
+        Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/lab-models"
     ),
     "getModelRunDefaults": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/model-runs/defaults"

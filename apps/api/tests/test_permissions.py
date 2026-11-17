@@ -1547,7 +1547,7 @@ WRITES = {
     name
     for name, call in GUARDED_CALLS.items()
     if call(replace(PLACEHOLDER, invitations=[uuid.uuid4()])).method != "GET"
-} - {"offerStudyTemplate"} | {"listTemplateOffers"}
+} - {"offerStudyTemplate", "requestProjectAccess"} | {"listTemplateOffers"}
 
 
 def writes() -> set[str]:
@@ -2598,7 +2598,7 @@ async def seed_patch_job(
 async def seed_runs(
     connection: AsyncConnection, tenant_id: uuid.UUID, project_id: uuid.UUID, slide_id: uuid.UUID
 ) -> list[uuid.UUID]:
-    settings = RunSettings(RunScopeKind.SLIDE, None, "matrix-detector", "1")
+    settings = RunSettings(RunScopeKind.SLIDE, None, "hovernet", "v0.9")
     runs = [
         await enqueue_model_run(
             connection, tenant_id, project_id, slide_id, settings, batch_id=uuid.uuid4()
