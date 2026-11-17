@@ -5,6 +5,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 ## 2026-11-18
 
 - OPS-016 (browser check after every deploy) test run against a deliberately broken build, 2026-11-18, nothing deployed and no production touch, no cost. Two throwaway local Node servers served a broken page (an error screen with a console error and a 500 from /api/me, the v0.1.4 symptom) and a healthy sign-in page. Running the real smoke spec apps/web/smoke/deployed.spec.ts with PARFOCAL_SMOKE_URL pointed at each: the broken build FAILED the signed-out test (no sign-in shown, exit 1, failure screenshot and trace kept under apps/web/test-results/smoke) and the healthy page PASSED (1 passed, exit 0). The same spec passes against the real app.parfocal.eu in the deploy workflow browser-smoke job since v0.17.6, and the e2e self-test deploy-smoke-selftest.spec.ts covers the console, api and write problem kinds. The Done when holds (deploy workflow runs it, a broken build fails it, screenshots are kept as artifacts), so OPS-016 is ticked.
+- OPS-009 (storage lifecycle and cost controls) production touch: targeted additive tofu apply on dev and prod roots (lifecycle rule tier-old-tenant-objects plus bucket lock keep-tenant-objects on t/, 1 added 1 changed 0 destroyed each, policy.sh plan passed, later plans clean, rules read back from the R2 API), cost $0. No expiry rule written, so no expiry drill. First costs report failed: the Cloudflare token lacks account analytics read, so OPS-009 stays in review and the owner step is in decisions.md.
 
 ## 2026-11-17
 
