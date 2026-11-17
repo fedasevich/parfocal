@@ -13,6 +13,7 @@ type StageCommentsProps = {
   slideId: string;
   slideLabel: string;
   onGoTo: (thread: Thread) => void;
+  onNewComment: () => void;
 };
 
 export function StageComments({
@@ -22,6 +23,7 @@ export function StageComments({
   slideId,
   slideLabel,
   onGoTo,
+  onNewComment,
 }: StageCommentsProps) {
   const person = usePeople();
   const onTask = useListThreads(taskId ?? "", slideId, undefined, {
@@ -50,6 +52,7 @@ export function StageComments({
       data-testid="stage-comments"
       slideLabel={slideLabel}
       threads={cards}
+      onNewComment={onNewComment}
       onGoTo={(id) => {
         const thread = threads.find((item) => item.id === id);
         if (thread) onGoTo(thread);

@@ -123,10 +123,10 @@ export function InspectorDock({
       data-hidden-while-panning={panning ? "true" : undefined}
       className={cn(
         "relative isolate z-4 flex min-h-0 shrink-0",
-        panning && "pointer-events-none opacity-0",
+        panning && "pointer-events-none overflow-hidden opacity-0",
         collapsed && "opacity-50",
       )}
-      style={{ width: collapsed ? 0 : width }}
+      style={{ width: collapsed || panning ? 0 : width }}
     >
       <hr
         aria-orientation="vertical"

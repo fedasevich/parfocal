@@ -29,7 +29,11 @@ export type StageInspectorLink = {
   readonly extras?: (session: StageSession) => ReactNode;
 };
 
-export type StageSession = { readonly engine: ViewerEngine; readonly module: ViewerModule };
+export type StageSession = {
+  readonly engine: ViewerEngine;
+  readonly module: ViewerModule;
+  readonly armTool: (tool: string) => void;
+};
 
 const slotClass = "flex flex-col gap-3";
 

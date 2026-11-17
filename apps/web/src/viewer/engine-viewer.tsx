@@ -1,5 +1,5 @@
 import { type Thread, useGetProject, useGetReviewTask } from "@parfocal/api-client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -11,11 +11,13 @@ import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-s
 import { SlideStage } from "./slide-stage.tsx";
 import { StageComments } from "./stage-comments.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
+import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import { StageObjectNotes } from "./stage-object-notes.tsx";
 import { StageOpinion } from "./stage-opinion.tsx";
 import { StageReviewObjects } from "./stage-review-objects.tsx";
 import { type StageStart, StageStartCamera } from "./stage-start.tsx";
+import { type ArmTool, StageToolLink } from "./stage-tool-link.tsx";
 import type { ThreadFocusRequest } from "./thread-focus.tsx";
 import type { SlideStorageNote } from "./tile-grant.ts";
 import { useCaseLoad } from "./use-case-load.ts";
@@ -83,9 +85,12 @@ export function EngineViewer({
       slideId,
       request: { count: (before?.request.count ?? 0) + 1, anchor: thread.anchor },
     }));
+  const toolLink = useRef<ArmTool | null>(null);
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
+      <StageMinimap engine={session.engine} slideId={slideId} />
+      <StageToolLink armTool={session.armTool} link={toolLink} />
       {reviewTask === null ? null : (
         <StageReviewObjects
           engine={session.engine}
@@ -118,6 +123,7 @@ export function EngineViewer({
       ) : (
         <StageComments
           onGoTo={goToThread}
+          onNewComment={() => toolLink.current?.("comment")}
           projectId={projectId}
           taskId={task}
           taskName={taskDetail?.name}

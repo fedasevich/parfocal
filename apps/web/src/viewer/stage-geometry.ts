@@ -14,6 +14,16 @@ export function startCamera(
   };
 }
 
+export function viewportRect(
+  camera: { x: number; y: number; zoom: number },
+  size: { width: number; height: number },
+): [number, number, number, number] {
+  const scale = 2 ** camera.zoom;
+  const width = size.width / scale;
+  const height = size.height / scale;
+  return [camera.x - width / 2, camera.y - height / 2, width, height];
+}
+
 export function outlineArea(outline: readonly number[] | null | undefined): StageArea | null {
   if (!outline || outline.length < 4) return null;
   let left = Number.POSITIVE_INFINITY;

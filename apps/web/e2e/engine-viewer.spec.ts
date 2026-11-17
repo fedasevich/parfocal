@@ -124,3 +124,60 @@ test("a deep link opens the full viewer at its camera", async ({ page }) => {
   expect(x).toBeLessThan(fitX);
   expect(y).toBeGreaterThan(fitY);
 });
+
+test("the minimap shows the slide overview with a viewport box that shrinks on zoom", async ({
+  page,
+}) => {
+  await page.goto(fullViewer);
+  const stage = await ready(page);
+  const minimap = page.getByTestId("stage-minimap");
+  await expect(minimap).toBeVisible();
+  await expect(minimap.locator("image")).toHaveAttribute(
+    "href",
+    `/api/slides/${tumor044}/thumbnail`,
+  );
+  const box = minimap.locator('[data-slot="map-viewport"]').first();
+  await expect(box).toBeAttached();
+  const before = Number(await box.getAttribute("width"));
+  const area = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+  await page.mouse.wheel(0, -600);
+  await expect.poll(async () => Number(await box.getAttribute("width"))).toBeLessThan(before);
+});
+
+test("New comment and the C key arm the comment tool from the Comments tab in annotate", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&workspace=annotate`);
+  const stage = await ready(page);
+  await page.getByRole("tab", { name: "Comments" }).click();
+  await page.getByRole("button", { name: /New comment/ }).click();
+  await expect(stage).toHaveAttribute("data-tool", "comment");
+  await page.keyboard.press("Escape");
+  await expect(stage).not.toHaveAttribute("data-tool", "comment");
+  await page.getByRole("tab", { name: "Comments" }).click();
+  await page.keyboard.press("c");
+  await expect(stage).toHaveAttribute("data-tool", "comment");
+});
+
+test("hide while panning takes the whole side panel away during a drag and brings it back", async ({
+  page,
+}) => {
+  await page.goto(fullViewer);
+  const stage = await ready(page);
+  await page.getByLabel("Hide while panning").click();
+  await expect(page.getByLabel("Hide while panning")).toBeChecked();
+  const dock = page.getByTestId("inspector-dock");
+  const width = async () => (await dock.boundingBox())?.width ?? 0;
+  const open = await width();
+  expect(open).toBeGreaterThan(200);
+  await page.keyboard.press("h");
+  const area = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  await page.mouse.move(area.x + 300, area.y + 300);
+  await page.mouse.down();
+  await page.mouse.move(area.x + 200, area.y + 250, { steps: 8 });
+  await expect(dock).toHaveAttribute("data-hidden-while-panning", "true");
+  await expect.poll(width).toBeLessThan(2);
+  await page.mouse.up();
+  await expect.poll(width).toBeGreaterThan(200);
+});

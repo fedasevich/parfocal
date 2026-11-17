@@ -17518,6 +17518,7 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/stage-minimap.tsx
 #: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr ""
