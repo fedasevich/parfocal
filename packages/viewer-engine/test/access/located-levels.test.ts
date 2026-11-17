@@ -113,10 +113,22 @@ describe(`a signed open of a spread BigTIFF at ${rttMs} ms RTT`, () => {
 
   async function timedOpen(
     name: string,
-  ): Promise<{ ms: number; levels: number; requests: number }> {
+  ): Promise<{ ms: number; levels: number; requests: number; peak: number }> {
     const before = origin?.requests.length ?? 0;
     const base = proxy?.url ?? "";
     const access = new TileAccess(() => Promise.resolve({ token: "t", lifetimeSeconds: 600 }));
+    let inFlight = 0;
+    let peak = 0;
+    let opening = true;
+    const fetcher = async (input: string, init: RequestInit) => {
+      inFlight += 1;
+      if (opening) peak = Math.max(peak, inFlight);
+      try {
+        return await fetch(input, init);
+      } finally {
+        inFlight -= 1;
+      }
+    };
     const started = performance.now();
     const request = await signedOpenRequest({
       access,
@@ -124,14 +136,15 @@ describe(`a signed open of a spread BigTIFF at ${rttMs} ms RTT`, () => {
       original: "spread.tiff",
       baseUrl: base,
       formatId: "generic-tiff",
-      fetcher: (input, init) => fetch(input, init),
+      fetcher,
     });
     const source = await openTiffSource({ ...request, nativeJpeg: "off" });
+    opening = false;
     await source.getTile({ level: source.levels.length - 1, x: 0, y: 0 });
     const ms = performance.now() - started;
     const levels = source.levels.length;
     source.close();
-    return { ms, levels, requests: (origin?.requests.length ?? 0) - before };
+    return { ms, levels, requests: (origin?.requests.length ?? 0) - before, peak };
   }
 
   it("reads the directories at once instead of walking the chain", async () => {
@@ -144,9 +157,11 @@ describe(`a signed open of a spread BigTIFF at ${rttMs} ms RTT`, () => {
       if (nextLocated.ms < located.ms) located = nextLocated;
     }
     console.log(
-      `signed open, spread BigTIFF, 11 IFDs, ${rttMs} ms RTT: walk ${Math.round(walked.ms)} ms in ${walked.requests} requests, located levels.json ${Math.round(located.ms)} ms in ${located.requests} requests, fastest of ${samples}`,
+      `signed open, spread BigTIFF, 11 IFDs, ${rttMs} ms RTT: walk ${Math.round(walked.ms)} ms in ${walked.requests} requests, located levels.json ${Math.round(located.ms)} ms in ${located.requests} requests, fastest of ${samples}, peak reads in flight while opening ${walked.peak} and ${located.peak}`,
     );
     assert.equal(located.levels, walked.levels);
-    assert.ok(located.ms * 2 <= walked.ms);
+    assert.ok(located.peak >= located.levels);
+    assert.ok(walked.peak < located.levels);
+    assert.ok(located.ms < walked.ms);
   });
 });

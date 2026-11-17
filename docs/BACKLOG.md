@@ -1389,7 +1389,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Size: S.
 
 - [ ] TILES-010 · A slide opens in under 3 s: the directory offsets come with levels.json
-  OPS-033 (home under 500 ms and a slide opens in under 3 s) measured test_065 on the deployed app: tile-access 0.8 to 1.1 s, levels.json 0.29 s, then 9 TIFF directory blocks read one after another, 2.6 s warm and 4.8 s cold. Ingest records every directory offset and size in levels.json so the viewer reads all directories at once, tile-access carries the level table and starts before the viewer code loads, tile-access itself runs fewer queries, and a backfill writes the offsets for the slides already stored.
+  OPS-033 (home under 500 ms and a slide opens in under 3 s) measured test_065 on the deployed app: tile-access 0.8 to 1.1 s, levels.json 0.29 s, then 9 TIFF directory blocks read one after another, 2.6 s warm and 4.8 s cold. Ingest records every directory offset and size in levels.json so the viewer reads all directories at once, tile-access starts before the viewer code loads and runs fewer queries, and a backfill writes the offsets for the slides already stored.
   Done when engine tests show an indexed open reads the directories in parallel with no chain walk, Viv golden and engine tests still pass, the backfill is tested, and a result file holds the before and after numbers.
   Depends on OPS-033.
   Size: M.
