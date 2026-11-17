@@ -1,15 +1,12 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type ReviewerWorkload, reviewerWorkloadSchema } from "../draft/list-reviewer-workload.ts";
 import {
-  type StudyTemplateReviewDefaults,
-  studyTemplateReviewDefaultsSchema,
-} from "../draft/list-study-template-review-defaults.ts";
-import {
   getCreateReviewTaskMockHandler,
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
   getListAvailabilityMockHandler,
   getListProjectSlidesMockHandler,
+  getListStudyTemplateReviewDefaultsMockHandler,
   getListStudyTemplatesMockHandler,
 } from "../generated/api.msw.ts";
 import type {
@@ -18,9 +15,12 @@ import type {
   ProjectSlide,
   ReviewTaskDefaults,
   ReviewTaskDetail,
+  ScopeKindKey,
+  StudyTemplateReviewDefaults,
   StudyTemplateSummary,
   TaskChange,
   TaskDraft,
+  TemplateReviewDefaults,
 } from "../generated/api.ts";
 import { setAnnotateBlindFirst } from "./annotate-task-listing.ts";
 import {
@@ -107,7 +107,7 @@ export const toReviewerWorkload = (): ReviewerWorkload[] =>
     reviewerWorkloadSchema.parse({ user_id: people[item.key].id, open_tasks: item.openTasks }),
   );
 
-const scopeKeysOf = (kind: string) =>
+const scopeKeysOf = (kind: string): ScopeKindKey[] =>
   kind === "all-regions"
     ? ["regions"]
     : kind === "random-cells"
@@ -118,7 +118,7 @@ const scopeKeysOf = (kind: string) =>
           ? ["unsure"]
           : ["roi"];
 
-const reviewDefaultsOfAdded = () =>
+const reviewDefaultsOfAdded = (): TemplateReviewDefaults[] =>
   listedStudyTemplates()
     .filter((template) => !studyTemplates.some((item) => item.id === template.id))
     .map((template) => ({
@@ -139,30 +139,29 @@ const reviewDefaultsOfAdded = () =>
       opinion_form: "default",
     }));
 
-export const toStudyTemplateReviewDefaults = (): StudyTemplateReviewDefaults =>
-  studyTemplateReviewDefaultsSchema.parse({
-    templates: [
-      ...studyTemplates.map((template) => ({
-        template_id: template.id,
-        scope_kinds: template.scope,
-        scope_options: {
-          cells: 50,
-          low: 0.6,
-          rois: ["R1", "R2", "R3", "R4"],
-          unsure_zones: ["Z1", "Z2", "Z3"],
-        },
-        decision: { kind: template.decision, agree_from: 4, disagree_to: 2 },
-        display: {
-          ...displayDefault,
-          sets: { ...displayDefault.sets },
-          ...template.display,
-        },
-        opinion_form: template.form,
-      })),
-      ...reviewDefaultsOfAdded(),
-    ],
-    opinion_forms: opinionForms,
-  });
+export const toStudyTemplateReviewDefaults = (): StudyTemplateReviewDefaults => ({
+  templates: [
+    ...studyTemplates.map((template) => ({
+      template_id: template.id,
+      scope_kinds: template.scope,
+      scope_options: {
+        cells: 50,
+        low: 0.6,
+        rois: ["R1", "R2", "R3", "R4"],
+        unsure_zones: ["Z1", "Z2", "Z3"],
+      },
+      decision: { kind: template.decision, agree_from: 4, disagree_to: 2 },
+      display: {
+        ...displayDefault,
+        sets: { ...displayDefault.sets },
+        ...template.display,
+      },
+      opinion_form: template.form,
+    })),
+    ...reviewDefaultsOfAdded(),
+  ],
+  opinion_forms: opinionForms,
+});
 
 const scopeKindOf = (kinds: string[]) =>
   kinds.includes("regions")
@@ -257,25 +256,12 @@ export const getListReviewerWorkloadMockHandler = (overrideResponse?: ReviewerWo
     HttpResponse.json(overrideResponse ?? toReviewerWorkload()),
   );
 
-export const getListStudyTemplateReviewDefaultsMockHandler = (
-  overrideResponse?: StudyTemplateReviewDefaults,
-) =>
-  http.get("*/api/study-templates/review-defaults", () =>
-    HttpResponse.json(overrideResponse ?? toStudyTemplateReviewDefaults()),
-  );
-
 export const taskDraftOperations: DraftOperation[] = [
   {
     operationId: "listReviewerWorkload",
     method: "get",
     path: "/api/tenant/workload",
     handler: () => getListReviewerWorkloadMockHandler(),
-  },
-  {
-    operationId: "listStudyTemplateReviewDefaults",
-    method: "get",
-    path: "/api/study-templates/review-defaults",
-    handler: () => getListStudyTemplateReviewDefaultsMockHandler(),
   },
 ];
 
@@ -314,6 +300,7 @@ export function taskHandlers(): RequestHandler[] {
   return [
     changeTask,
     getListStudyTemplatesMockHandler(() => listedStudyTemplates()),
+    getListStudyTemplateReviewDefaultsMockHandler(() => toStudyTemplateReviewDefaults()),
     ...studyTemplateHandlers(toStudyTemplates),
     getListAvailabilityMockHandler(toAvailability()),
     getListProjectSlidesMockHandler(({ params }) => toProjectSlides(String(params.projectId))),

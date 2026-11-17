@@ -197,6 +197,7 @@ import type {
   Sorting,
   SourceListing,
   StudyTemplate,
+  StudyTemplateReviewDefaults,
   StudyTemplateSummary,
   StudyTemplateVersion,
   Target,
@@ -260,6 +261,7 @@ import {
   ConfidenceBand,
   ConfidenceShown,
   Decision,
+  DecisionKind,
   DecisionReason,
   DecisionStyle,
   DecisionValue,
@@ -314,6 +316,7 @@ import {
   Retired,
   Role,
   Rule,
+  ScopeKindKey,
   ServiceScope,
   ServiceStatus,
   Serving,
@@ -4533,6 +4536,153 @@ export const getRetryModelRunResponseMock = (
     { ...getRetryModelRunResponseSlideScopeMock() },
     { ...getRetryModelRunResponseViewScopeMock() },
     { ...getRetryModelRunResponseSelectionScopeMock() },
+  ]),
+  parameters: {
+    detector: {
+      name: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
+      version: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
+    },
+    typer: faker.helpers.arrayElement([
+      {
+        name: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
+        version: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
+      },
+      null,
+    ]),
+    test_time_views: faker.helpers.arrayElement([1, 8] as const),
+    ordering: faker.helpers.arrayElement(Object.values(Ordering)),
+    tier: faker.helpers.arrayElement([faker.helpers.arrayElement(Object.values(ModelTier)), null]),
+  },
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  started_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  attempts: faker.number.int(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  finished_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      status: faker.helpers.arrayElement(Object.values(StepStatus)),
+      runs: faker.number.int(),
+      units_done: faker.number.int(),
+      units_total: faker.helpers.arrayElement([faker.number.int(), null]),
+      started_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      finished_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      waiting_reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  actions: faker.helpers.arrayElements(Object.values(JobControl)),
+  ...overrideResponse,
+});
+
+export const getMoveModelRunResponseSlideScopeMock = (
+  overrideResponse: Partial<SlideScope> = {},
+): SlideScope => ({
+  ...{ kind: faker.helpers.arrayElement(["slide"] as const) },
+  ...overrideResponse,
+});
+
+export const getMoveModelRunResponseViewScopeMock = (
+  overrideResponse: Partial<ViewScope> = {},
+): ViewScope => ({
+  ...{
+    kind: faker.helpers.arrayElement(["view"] as const),
+    x: faker.number.int({ min: 0, max: 10000000 }),
+    y: faker.number.int({ min: 0, max: 10000000 }),
+    width: faker.number.int({ min: 1, max: 10000000 }),
+    height: faker.number.int({ min: 1, max: 10000000 }),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveModelRunResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveModelRunResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveModelRunResponseSelectionScopeMock = (
+  overrideResponse: Partial<SelectionScope> = {},
+): SelectionScope => ({
+  ...{
+    kind: faker.helpers.arrayElement(["selection"] as const),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getMoveModelRunResponsePolygonGeometryMock() },
+        { ...getMoveModelRunResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    objects: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10000 }) }, (_, i) => i + 1).map(() =>
+        faker.string.alpha({ length: { min: 1, max: 40 } }),
+      ),
+      null,
+    ]),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveModelRunResponseMock = (
+  overrideResponse: Partial<Extract<ModelRun, object>> = {},
+): ModelRun => ({
+  id: faker.string.uuid(),
+  batch_id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  status: faker.helpers.arrayElement(Object.values(JobStatus)),
+  error_code: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  pause_reason: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  scope: faker.helpers.arrayElement([
+    { ...getMoveModelRunResponseSlideScopeMock() },
+    { ...getMoveModelRunResponseViewScopeMock() },
+    { ...getMoveModelRunResponseSelectionScopeMock() },
   ]),
   parameters: {
     detector: {
@@ -13081,6 +13231,67 @@ export const getGetSharedReportResponseMock = (
   ...overrideResponse,
 });
 
+export const getListStudyTemplateReviewDefaultsResponseMock = (
+  overrideResponse: Partial<Extract<StudyTemplateReviewDefaults, object>> = {},
+): StudyTemplateReviewDefaults => ({
+  templates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      template_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      scope_kinds: faker.helpers.arrayElements(Object.values(ScopeKindKey)),
+      scope_options: {
+        cells: faker.number.int(),
+        low: faker.number.float({ fractionDigits: 2 }),
+        rois: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+        ),
+        unsure_zones: Array.from(
+          { length: faker.number.int({ min: 1, max: 10 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+      },
+      decision: {
+        kind: faker.helpers.arrayElement(Object.values(DecisionKind)),
+        agree_from: faker.number.int({ min: 2, max: 5 }),
+        disagree_to: faker.number.int({ min: 1, max: 4 }),
+      },
+      display: {
+        draw: faker.helpers.arrayElement(["outline", "fill", "dots"] as const),
+        width: faker.number.int({ min: 1, max: 3 }),
+        opacity: faker.number.int({ min: 20, max: 100 }),
+        colorBy: faker.helpers.arrayElement(["class", "score", "decision"] as const),
+        ids: faker.datatype.boolean(),
+        conf: faker.helpers.arrayElement(["number", "word", "color", "hidden"] as const),
+        heat: faker.number.int({ min: 0, max: 100 }),
+        cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        sets: {
+          cam: faker.datatype.boolean(),
+          sam: faker.datatype.boolean(),
+          rev: faker.datatype.boolean(),
+        },
+        order: faker.helpers.arrayElement(["ai", "size", "leastsure", "random"] as const),
+        zoom: faker.helpers.arrayElement(["fit", "tight", "context"] as const),
+        auto: faker.datatype.boolean(),
+        buttons: faker.helpers.arrayElement(["right", "bottom"] as const),
+      },
+      opinion_form: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  opinion_forms: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      questions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          kind: faker.helpers.arrayElement(["scale", "choice", "yesno", "text"] as const),
+          required: faker.datatype.boolean(),
+        }),
+      ),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getListStudyTemplatesResponseHeadlineNumbersMock = (
   overrideResponse: Partial<HeadlineNumbers> = {},
 ): HeadlineNumbers => ({
@@ -19476,6 +19687,28 @@ export const getRetryModelRunMockHandler = (
   );
 };
 
+export const getMoveModelRunMockHandler = (
+  overrideResponse?:
+    | ModelRun
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<ModelRun> | ModelRun),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/model-runs/:runId/move",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMoveModelRunResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListProjectModelsMockHandler = (
   overrideResponse?:
     | ProjectModel[]
@@ -24839,6 +25072,30 @@ export const getGetSharedReportMockHandler = (
   );
 };
 
+export const getListStudyTemplateReviewDefaultsMockHandler = (
+  overrideResponse?:
+    | StudyTemplateReviewDefaults
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<StudyTemplateReviewDefaults> | StudyTemplateReviewDefaults),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/study-templates/review-defaults",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListStudyTemplateReviewDefaultsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListStudyTemplatesMockHandler = (
   overrideResponse?:
     | StudyTemplateSummary[]
@@ -26701,6 +26958,7 @@ export const getParfocalAPIMock = () => [
   getCancelModelRunMockHandler(),
   getResumeModelRunMockHandler(),
   getRetryModelRunMockHandler(),
+  getMoveModelRunMockHandler(),
   getListProjectModelsMockHandler(),
   getStartTumorMapMockHandler(),
   getListModelTiersMockHandler(),
@@ -26935,6 +27193,7 @@ export const getParfocalAPIMock = () => [
   getListReportLinksMockHandler(),
   getRevokeReportLinkMockHandler(),
   getGetSharedReportMockHandler(),
+  getListStudyTemplateReviewDefaultsMockHandler(),
   getListStudyTemplatesMockHandler(),
   getCreateStudyTemplateMockHandler(),
   getGetStudyTemplateMockHandler(),

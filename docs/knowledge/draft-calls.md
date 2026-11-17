@@ -10,8 +10,6 @@ When `fakeApi` is `off`, `apps/web/src/main.tsx` calls `setDraftsAnswered(false)
 - An object query fails without a toast and without a retry. A screen can show the shared notice with `notAvailable(query)` and `<NotAvailableYet what="..." />` from `apps/web/src/shell/not-available.tsx`. The team screen does this.
 - A mutation shows one toast saying the action is not available yet.
 
-One draft path sits under a real route with a path parameter, so the real API answers 422 instead of 404 and the call fails as an ordinary error. It is `listStudyTemplateReviewDefaults` (under `/api/study-templates/{id}`).
-
 ## Counting them
 
 `node scripts/draft-calls.ts` counts the operations in `packages/api-client/src/draft` per area and prints the total. `pnpm verify` runs it as its last step and never fails on the count, because the count may grow while the UI is built on fakes ([ADR 0295](../adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes). OPS-017 (switch each area to the real API) reads the count of an area to show it is fully switched. A new operation must be added to the area map in the script, and `scripts/draft-calls.test.ts` fails until it is.
@@ -30,6 +28,10 @@ The viewer area switched in OPS-022 (viewer area on the real API) and OPS-025 (t
 
 OPS-024 (models, reports, team and admin areas on the real API) switched three model calls, all in `apps/api/src/parfocal_api/model_area.py` and registered before the routes with a path parameter. `getModelRunDefaults` offers the project's slides that have no result set yet and the first catalogue model that is not hidden. `listAiModels` lists the catalogue models with their hidden state and the tenant's lab models, counts result sets by the name a run gives them, and lists the run batches that still have a queued or running slide. `getLabModelConnection` prefills the connect form from the latest connected lab model and answers 404 when there is none, so the screen starts blank. Its test is always `untested`, and `tiles_at_once` and `health_check_minutes` are the constants the screen already showed, because nothing stores them yet.
 
+`moveModelRun` lives in `model_runs.py` and keeps the draft URL. It moves a paused run of a Parfocal model back onto the Parfocal GPU queue through the resume control, so it keeps its finished tiles and its audit event is a resume. The body names the Parfocal GPU and nothing else. A lab model runs only on its own server, so a lab run answers 409 `lab-model-cannot-move`, and a run that is not paused answers 409 `model-run-not-movable`.
+
+`listStudyTemplateReviewDefaults` lives in `template_review_defaults.py`, registered before the study template routes with a path parameter, so the new task page works with the fake off. It maps each template's stored presets to the draft shape: the scope kind, the cell count and score or 50 and 0.6, the decision style with the first score counted as agree and the last counted as disagree, and the display settings under the draft's short names. ROIs and unsure zones stay empty, because they belong to a project and the page reads them from `getProjectScopeOptions`. The opinion forms are the three built-in forms plus one per template whose own questions match none of them.
+
 The project area switched in OPS-023 (project and upload area on the real API). `getProjectOverview`, `listProjectSlides`, `getProjectScopeOptions`, `getReviewTaskDefaults` and `requestProjectAccess` live in `apps/api/src/parfocal_api/project_overview.py`, and `getProjectImports` and `getUploadBatch` in `project_uploads.py`. They keep the draft URLs and shapes, need no migration and are built from stored data.
 
 - The overview, scope options, defaults, imports and upload batch answer only a reader who sees the whole project, so blinding never applies to them. The project slide list also answers a reviewer, with only their assigned slides and no result set IDs while the AI is hidden for a first read.
@@ -44,15 +46,13 @@ The fake answers these operations through the generated MSW handlers.
 
 ## Remaining drafts
 
-No draft is left on the home, project, viewer, review and annotate paths. The new task page still fails with the fake off, because `listStudyTemplateReviewDefaults` answers 422 under a real path, which OPS-024 (models, reports, team and admin areas on the real API) fixes.
+No draft is left on the home, project, viewer, review, annotate, model run and new task paths.
 
 | Operation | Screen | Real equivalent | Priority |
 |---|---|---|---|
-| moveModelRun | job window | none | medium |
 | listTeamWorkload | team | none | medium |
 | getEvaluationReport | evaluation report | partly, task evaluation | medium |
 | getClinicalReport, getCosignReview, cosignClinicalReport, returnCosignRequest | clinical report and cosign | partly, case reports | medium |
-| listStudyTemplateReviewDefaults | study templates | none, path swallowed | medium |
 | getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks | admin console | none | low |
 | getInvitePreview | invitation page | partly, invitations | low |
 

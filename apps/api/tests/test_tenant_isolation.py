@@ -1654,6 +1654,9 @@ GET_ROUTES = {
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
     "getPlatformStatus": Route(Exposure.PUBLIC, lambda _: "/api/status"),
     "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
+    "listStudyTemplateReviewDefaults": Route(
+        Exposure.TENANT, lambda _: "/api/study-templates/review-defaults"
+    ),
     "getStudyTemplate": Route(
         Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}"
     ),

@@ -139,7 +139,7 @@ export function useTaskData(projectId: string): {
   const projectSlides = okData(queries.slides.data);
   const resultSets = okData(queries.resultSets.data);
   const templates = okData(queries.templates.data);
-  const templateDefaults = queries.templateDefaults.data?.data;
+  const templateDefaults = okData(queries.templateDefaults.data);
   const members = okData(queries.members.data);
   const availability = okData(queries.availability.data) ?? [];
   const workload = queries.workload.data?.data;

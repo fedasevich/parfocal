@@ -8960,6 +8960,149 @@
         "x-permission-write": true
       }
     },
+    "/api/projects/{project_id}/model-runs/{run_id}/move": {
+      "post": {
+        "tags": [
+          "model-runs"
+        ],
+        "summary": "Move Model Run",
+        "operationId": "moveModelRun",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelRunMove"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "run-models",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/models": {
       "get": {
         "tags": [
@@ -40364,6 +40507,116 @@
         }
       }
     },
+    "/api/study-templates/review-defaults": {
+      "get": {
+        "tags": [
+          "study-templates"
+        ],
+        "summary": "List Study Template Review Defaults",
+        "operationId": "listStudyTemplateReviewDefaults",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyTemplateReviewDefaults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "report-templates"
+      }
+    },
     "/api/study-templates": {
       "get": {
         "tags": [
@@ -55359,6 +55612,32 @@
         ],
         "title": "DecisionCounts"
       },
+      "DecisionDefaults": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/DecisionKind"
+          },
+          "agree_from": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 2.0,
+            "title": "Agree From"
+          },
+          "disagree_to": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Disagree To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "agree_from",
+          "disagree_to"
+        ],
+        "title": "DecisionDefaults"
+      },
       "DecisionDraft": {
         "properties": {
           "answer": {
@@ -55402,6 +55681,16 @@
           "answer"
         ],
         "title": "DecisionDraft"
+      },
+      "DecisionKind": {
+        "type": "string",
+        "enum": [
+          "certainty5",
+          "agree",
+          "yesno",
+          "blind"
+        ],
+        "title": "DecisionKind"
       },
       "DecisionNote": {
         "properties": {
@@ -55707,6 +55996,117 @@
           "settings"
         ],
         "title": "DisplayChoice"
+      },
+      "DisplayDefaults": {
+        "properties": {
+          "draw": {
+            "type": "string",
+            "enum": [
+              "outline",
+              "fill",
+              "dots"
+            ],
+            "title": "Draw"
+          },
+          "width": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Width"
+          },
+          "opacity": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 20.0,
+            "title": "Opacity"
+          },
+          "colorBy": {
+            "type": "string",
+            "enum": [
+              "class",
+              "score",
+              "decision"
+            ],
+            "title": "Colorby"
+          },
+          "ids": {
+            "type": "boolean",
+            "title": "Ids"
+          },
+          "conf": {
+            "type": "string",
+            "enum": [
+              "number",
+              "word",
+              "color",
+              "hidden"
+            ],
+            "title": "Conf"
+          },
+          "heat": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Heat"
+          },
+          "cutoff": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Cutoff"
+          },
+          "sets": {
+            "$ref": "#/components/schemas/OtherSetsShown"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "size",
+              "leastsure",
+              "random"
+            ],
+            "title": "Order"
+          },
+          "zoom": {
+            "type": "string",
+            "enum": [
+              "fit",
+              "tight",
+              "context"
+            ],
+            "title": "Zoom"
+          },
+          "auto": {
+            "type": "boolean",
+            "title": "Auto"
+          },
+          "buttons": {
+            "type": "string",
+            "enum": [
+              "right",
+              "bottom"
+            ],
+            "title": "Buttons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "draw",
+          "width",
+          "opacity",
+          "colorBy",
+          "ids",
+          "conf",
+          "heat",
+          "cutoff",
+          "sets",
+          "order",
+          "zoom",
+          "auto",
+          "buttons"
+        ],
+        "title": "DisplayDefaults"
       },
       "DisplayLock": {
         "properties": {
@@ -60889,6 +61289,21 @@
         ],
         "title": "ModelRunDraft"
       },
+      "ModelRunMove": {
+        "properties": {
+          "server": {
+            "type": "string",
+            "const": "Parfocal GPU",
+            "title": "Server"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "server"
+        ],
+        "title": "ModelRunMove"
+      },
       "ModelShown": {
         "properties": {
           "name": {
@@ -62243,6 +62658,61 @@
         ],
         "title": "OpinionForm"
       },
+      "OpinionFormChoice": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/OpinionFormQuestion"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "questions"
+        ],
+        "title": "OpinionFormChoice"
+      },
+      "OpinionFormQuestion": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "scale",
+              "choice",
+              "yesno",
+              "text"
+            ],
+            "title": "Kind"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "kind",
+          "required"
+        ],
+        "title": "OpinionFormQuestion"
+      },
       "OpinionOut": {
         "properties": {
           "key": {
@@ -62475,6 +62945,29 @@
         "additionalProperties": false,
         "type": "object",
         "title": "OtherSets"
+      },
+      "OtherSetsShown": {
+        "properties": {
+          "cam": {
+            "type": "boolean",
+            "title": "Cam"
+          },
+          "sam": {
+            "type": "boolean",
+            "title": "Sam"
+          },
+          "rev": {
+            "type": "boolean",
+            "title": "Rev"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cam",
+          "sam",
+          "rev"
+        ],
+        "title": "OtherSetsShown"
       },
       "Outcome": {
         "type": "string",
@@ -69091,6 +69584,51 @@
         ],
         "title": "Scope"
       },
+      "ScopeKindKey": {
+        "type": "string",
+        "enum": [
+          "regions",
+          "cells",
+          "low",
+          "roi",
+          "unsure"
+        ],
+        "title": "ScopeKindKey"
+      },
+      "ScopeOptions": {
+        "properties": {
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "rois": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rois"
+          },
+          "unsure_zones": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unsure Zones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cells",
+          "low",
+          "rois",
+          "unsure_zones"
+        ],
+        "title": "ScopeOptions"
+      },
       "ScopeRoi": {
         "properties": {
           "key": {
@@ -72812,6 +73350,30 @@
         ],
         "title": "StudyTemplateDraft"
       },
+      "StudyTemplateReviewDefaults": {
+        "properties": {
+          "templates": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateReviewDefaults"
+            },
+            "type": "array",
+            "title": "Templates"
+          },
+          "opinion_forms": {
+            "items": {
+              "$ref": "#/components/schemas/OpinionFormChoice"
+            },
+            "type": "array",
+            "title": "Opinion Forms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "templates",
+          "opinion_forms"
+        ],
+        "title": "StudyTemplateReviewDefaults"
+      },
       "StudyTemplateSummary": {
         "properties": {
           "name": {
@@ -74012,6 +74574,44 @@
           "blocks"
         ],
         "title": "TemplatePreviewDraft"
+      },
+      "TemplateReviewDefaults": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "title": "Template Id"
+          },
+          "scope_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeKindKey"
+            },
+            "type": "array",
+            "title": "Scope Kinds"
+          },
+          "scope_options": {
+            "$ref": "#/components/schemas/ScopeOptions"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionDefaults"
+          },
+          "display": {
+            "$ref": "#/components/schemas/DisplayDefaults"
+          },
+          "opinion_form": {
+            "type": "string",
+            "title": "Opinion Form"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_id",
+          "scope_kinds",
+          "scope_options",
+          "decision",
+          "display",
+          "opinion_form"
+        ],
+        "title": "TemplateReviewDefaults"
       },
       "Tenant": {
         "properties": {

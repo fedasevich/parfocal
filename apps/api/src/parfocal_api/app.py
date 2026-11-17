@@ -107,6 +107,7 @@ from parfocal_api import (
     task_runs,
     taxonomy,
     template_offers,
+    template_review_defaults,
     tenants,
     threads,
     tile_access,
@@ -335,6 +336,7 @@ def create_app(
     app.include_router(evaluation_versions.router)
     app.include_router(report_links.router)
     app.include_router(report_links.public_router)
+    app.include_router(template_review_defaults.router)
     app.include_router(study_templates.router)
     app.include_router(template_offers.router)
     app.include_router(my_work.router)

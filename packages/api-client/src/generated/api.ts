@@ -1975,6 +1975,29 @@ export interface DecisionCounts {
   answers: DecisionCountsAnswers;
 }
 
+export type DecisionKind = (typeof DecisionKind)[keyof typeof DecisionKind];
+
+export const DecisionKind = {
+  certainty5: "certainty5",
+  agree: "agree",
+  yesno: "yesno",
+  blind: "blind",
+} as const;
+
+export interface DecisionDefaults {
+  kind: DecisionKind;
+  /**
+   * @minimum 2
+   * @maximum 5
+   */
+  agree_from: number;
+  /**
+   * @minimum 1
+   * @maximum 4
+   */
+  disagree_to: number;
+}
+
 /**
  * @maxLength 500
  */
@@ -2192,6 +2215,95 @@ export interface DisplaySettings {
 export interface DisplayChoice {
   preset_id?: string | null;
   settings: DisplaySettings;
+}
+
+export type DisplayDefaultsDraw = (typeof DisplayDefaultsDraw)[keyof typeof DisplayDefaultsDraw];
+
+export const DisplayDefaultsDraw = {
+  outline: "outline",
+  fill: "fill",
+  dots: "dots",
+} as const;
+
+export type DisplayDefaultsColorBy =
+  (typeof DisplayDefaultsColorBy)[keyof typeof DisplayDefaultsColorBy];
+
+export const DisplayDefaultsColorBy = {
+  class: "class",
+  score: "score",
+  decision: "decision",
+} as const;
+
+export type DisplayDefaultsConf = (typeof DisplayDefaultsConf)[keyof typeof DisplayDefaultsConf];
+
+export const DisplayDefaultsConf = {
+  number: "number",
+  word: "word",
+  color: "color",
+  hidden: "hidden",
+} as const;
+
+export type DisplayDefaultsOrder = (typeof DisplayDefaultsOrder)[keyof typeof DisplayDefaultsOrder];
+
+export const DisplayDefaultsOrder = {
+  ai: "ai",
+  size: "size",
+  leastsure: "leastsure",
+  random: "random",
+} as const;
+
+export type DisplayDefaultsZoom = (typeof DisplayDefaultsZoom)[keyof typeof DisplayDefaultsZoom];
+
+export const DisplayDefaultsZoom = {
+  fit: "fit",
+  tight: "tight",
+  context: "context",
+} as const;
+
+export type DisplayDefaultsButtons =
+  (typeof DisplayDefaultsButtons)[keyof typeof DisplayDefaultsButtons];
+
+export const DisplayDefaultsButtons = {
+  right: "right",
+  bottom: "bottom",
+} as const;
+
+export interface OtherSetsShown {
+  cam: boolean;
+  sam: boolean;
+  rev: boolean;
+}
+
+export interface DisplayDefaults {
+  draw: DisplayDefaultsDraw;
+  /**
+   * @minimum 1
+   * @maximum 3
+   */
+  width: number;
+  /**
+   * @minimum 20
+   * @maximum 100
+   */
+  opacity: number;
+  colorBy: DisplayDefaultsColorBy;
+  ids: boolean;
+  conf: DisplayDefaultsConf;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  heat: number;
+  /**
+   * @minimum 0
+   * @maximum 1
+   */
+  cutoff: number;
+  sets: OtherSetsShown;
+  order: DisplayDefaultsOrder;
+  zoom: DisplayDefaultsZoom;
+  auto: boolean;
+  buttons: DisplayDefaultsButtons;
 }
 
 export type SettingValue = string | number | boolean;
@@ -4025,6 +4137,11 @@ export interface ModelRunDraft {
   parameters: RunChoices;
 }
 
+export const ModelRunMoveValue = {
+  server: "Parfocal GPU",
+} as const;
+export type ModelRunMove = typeof ModelRunMoveValue;
+
 export interface ModelShown {
   name: string;
   title: string;
@@ -4318,6 +4435,28 @@ export interface OpinionForm {
   version: number;
   questions: Question[];
   created_at: string;
+}
+
+export type OpinionFormQuestionKind =
+  (typeof OpinionFormQuestionKind)[keyof typeof OpinionFormQuestionKind];
+
+export const OpinionFormQuestionKind = {
+  scale: "scale",
+  choice: "choice",
+  yesno: "yesno",
+  text: "text",
+} as const;
+
+export interface OpinionFormQuestion {
+  label: string;
+  kind: OpinionFormQuestionKind;
+  required: boolean;
+}
+
+export interface OpinionFormChoice {
+  key: string;
+  name: string;
+  questions: OpinionFormQuestion[];
 }
 
 export interface OrderedObject {
@@ -5940,6 +6079,23 @@ export interface SchemaProblem {
   message: string;
 }
 
+export type ScopeKindKey = (typeof ScopeKindKey)[keyof typeof ScopeKindKey];
+
+export const ScopeKindKey = {
+  regions: "regions",
+  cells: "cells",
+  low: "low",
+  roi: "roi",
+  unsure: "unsure",
+} as const;
+
+export interface ScopeOptions {
+  cells: number;
+  low: number;
+  rois: string[];
+  unsure_zones: string[];
+}
+
 export interface SearchHit {
   kind: HitKind;
   id: string;
@@ -6566,6 +6722,20 @@ export interface StudyTemplateDraft {
   blocks: ReportBlocks;
   format?: ReportFormat;
   presets: Presets;
+}
+
+export interface TemplateReviewDefaults {
+  template_id: string;
+  scope_kinds: ScopeKindKey[];
+  scope_options: ScopeOptions;
+  decision: DecisionDefaults;
+  display: DisplayDefaults;
+  opinion_form: string;
+}
+
+export interface StudyTemplateReviewDefaults {
+  templates: TemplateReviewDefaults[];
+  opinion_forms: OpinionFormChoice[];
 }
 
 export interface StudyTemplateSummary {
@@ -19705,6 +19875,176 @@ export const useRetryModelRun = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRetryModelRunMutationOptions(options), queryClient);
+};
+
+export type moveModelRunResponse200 = {
+  data: ModelRun;
+  status: 200;
+};
+
+export type moveModelRunResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type moveModelRunResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type moveModelRunResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type moveModelRunResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type moveModelRunResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type moveModelRunResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type moveModelRunResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type moveModelRunResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type moveModelRunResponseSuccess = moveModelRunResponse200 & {
+  headers: Headers;
+};
+export type moveModelRunResponseError = (
+  | moveModelRunResponse400
+  | moveModelRunResponse401
+  | moveModelRunResponse403
+  | moveModelRunResponse404
+  | moveModelRunResponse409
+  | moveModelRunResponse422
+  | moveModelRunResponse429
+  | moveModelRunResponse500
+) & {
+  headers: Headers;
+};
+
+export type moveModelRunResponse = moveModelRunResponseSuccess | moveModelRunResponseError;
+
+export const getMoveModelRunUrl = (projectId: string, runId: string) => {
+  return `/api/projects/${projectId}/model-runs/${runId}/move`;
+};
+
+/**
+ * @summary Move Model Run
+ */
+export const moveModelRun = async (
+  projectId: string,
+  runId: string,
+  modelRunMove: ModelRunMove,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<moveModelRunResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<moveModelRunResponse>(getMoveModelRunUrl(projectId, runId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(modelRunMove),
+  });
+};
+
+export const getMoveModelRunMutationKey = () => ["moveModelRun"] as const;
+
+export const getMoveModelRunMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moveModelRun>>,
+    TError,
+    MoveModelRunMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moveModelRun>>,
+  TError,
+  MoveModelRunMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMoveModelRunMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moveModelRun>>,
+    MoveModelRunMutationVariables
+  > = (props) => {
+    const { projectId, runId, data } = props ?? {};
+
+    return moveModelRun(projectId, runId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MoveModelRunMutationResult = NonNullable<Awaited<ReturnType<typeof moveModelRun>>>;
+export type MoveModelRunMutationBody = ModelRunMove;
+export type MoveModelRunMutationError = Problem;
+export type MoveModelRunMutationVariables = {
+  projectId: string;
+  runId: string;
+  data: ModelRunMove;
+};
+
+/**
+ * @summary Move Model Run
+ */
+export const useMoveModelRun = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof moveModelRun>>,
+      TError,
+      MoveModelRunMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof moveModelRun>>,
+  TError,
+  MoveModelRunMutationVariables,
+  TContext
+> => {
+  return useMutation(getMoveModelRunMutationOptions(options), queryClient);
 };
 
 export type listProjectModelsResponse200 = {
@@ -62294,6 +62634,201 @@ export function useGetSharedReport<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetSharedReportQueryOptions(token, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listStudyTemplateReviewDefaultsResponse200 = {
+  data: StudyTemplateReviewDefaults;
+  status: 200;
+};
+
+export type listStudyTemplateReviewDefaultsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listStudyTemplateReviewDefaultsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listStudyTemplateReviewDefaultsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listStudyTemplateReviewDefaultsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listStudyTemplateReviewDefaultsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listStudyTemplateReviewDefaultsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listStudyTemplateReviewDefaultsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listStudyTemplateReviewDefaultsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listStudyTemplateReviewDefaultsResponseSuccess =
+  listStudyTemplateReviewDefaultsResponse200 & {
+    headers: Headers;
+  };
+export type listStudyTemplateReviewDefaultsResponseError = (
+  | listStudyTemplateReviewDefaultsResponse400
+  | listStudyTemplateReviewDefaultsResponse401
+  | listStudyTemplateReviewDefaultsResponse403
+  | listStudyTemplateReviewDefaultsResponse404
+  | listStudyTemplateReviewDefaultsResponse409
+  | listStudyTemplateReviewDefaultsResponse422
+  | listStudyTemplateReviewDefaultsResponse429
+  | listStudyTemplateReviewDefaultsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listStudyTemplateReviewDefaultsResponse =
+  | listStudyTemplateReviewDefaultsResponseSuccess
+  | listStudyTemplateReviewDefaultsResponseError;
+
+export const getListStudyTemplateReviewDefaultsUrl = () => {
+  return `/api/study-templates/review-defaults`;
+};
+
+/**
+ * @summary List Study Template Review Defaults
+ */
+export const listStudyTemplateReviewDefaults = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listStudyTemplateReviewDefaultsResponse> => {
+  return apiFetch<listStudyTemplateReviewDefaultsResponse>(
+    getListStudyTemplateReviewDefaultsUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListStudyTemplateReviewDefaultsQueryKey = () => {
+  return [`/api/study-templates/review-defaults`] as const;
+};
+
+export const getListStudyTemplateReviewDefaultsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStudyTemplateReviewDefaultsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>> = ({
+    signal,
+  }) => listStudyTemplateReviewDefaults({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListStudyTemplateReviewDefaultsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>
+>;
+export type ListStudyTemplateReviewDefaultsQueryError = Problem;
+
+export function useListStudyTemplateReviewDefaults<
+  TData = Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyTemplateReviewDefaults<
+  TData = Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+          TError,
+          Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListStudyTemplateReviewDefaults<
+  TData = Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Study Template Review Defaults
+ */
+
+export function useListStudyTemplateReviewDefaults<
+  TData = Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listStudyTemplateReviewDefaults>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListStudyTemplateReviewDefaultsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

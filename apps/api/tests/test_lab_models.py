@@ -623,3 +623,21 @@ def test_resuming_or_retrying_a_lab_run_whose_model_is_gone_is_refused_as_change
     acting = linked(lab.people["owner"])
     assert problem(acting.post(f"{runs}/retry")) == (409, "lab-model-changed")
     assert problem(acting.post(f"{runs}/resume")) == (409, "lab-model-changed")
+
+
+def test_a_paused_lab_run_cannot_move_to_the_parfocal_gpu(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    project, slide = lab_project(database, lab)
+    body = draft(site, lab, name="lab-hovernet", project_ids=[str(project)])
+    ok(linked(lab.people["owner"]).post(MODELS, json=body))
+    [run] = ok(lab_run(linked, lab, project, slide))
+    owner(
+        database,
+        "UPDATE jobs SET status = 'paused', pause_reason = 'lab-endpoint-unreachable' "
+        f"WHERE id = '{run['id']}'",
+    )
+    moved = linked(lab.people["owner"]).post(
+        f"/api/projects/{project}/model-runs/{run['id']}/move", json={"server": "Parfocal GPU"}
+    )
+    assert problem(moved) == (409, "lab-model-cannot-move")

@@ -75,9 +75,11 @@ test("another project has no slides to pick", async () => {
 
 test("study templates and their review defaults line up one to one", async () => {
   const templates = await listStudyTemplates();
-  const defaults = (await listStudyTemplateReviewDefaults()).data;
+  const answered = await listStudyTemplateReviewDefaults();
   assert.equal(templates.status, 200);
+  assert.equal(answered.status, 200);
   const list = templates.status === 200 ? templates.data : [];
+  const defaults = answered.status === 200 ? answered.data : { templates: [], opinion_forms: [] };
   assert.deepEqual(
     list.map((template) => template.id),
     defaults.templates.map((template) => template.template_id),

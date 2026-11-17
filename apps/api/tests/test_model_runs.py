@@ -436,6 +436,34 @@ def test_a_paused_run_says_why_and_resumes_where_it_stopped(
     assert tiles.processed == [0, 1, 2, 3]
 
 
+def test_a_paused_run_moves_to_the_parfocal_gpu_and_picks_up_where_it_stopped(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    moving = f"{lab.runs}/{run['id']}/move"
+    gpu = {"server": "Parfocal GPU"}
+
+    def owner_of() -> Any:
+        return api(lab.people["owner"])
+
+    assert problem(owner_of().post(moving, json=gpu)) == (409, "model-run-not-movable")
+    tiles = Tiles(pause_at=3)
+    plan = tiles.plan()
+    execute(database, claim(database, lab, plan))
+    assert owner_of().post(moving, json={"server": "Elsewhere"}).status_code == 422
+    assert problem(api(lab.people["viewer"]).post(moving, json=gpu)) == (
+        403,
+        "running-models-not-allowed",
+    )
+    moved = ok(owner_of().post(moving, json=gpu))
+    assert (moved["status"], moved["pause_reason"]) == ("queued", None)
+    execute(database, claim(database, lab, plan))
+    assert ok(read(api, lab, run))["status"] == "done"
+    assert tiles.processed == [0, 1, 2, 3]
+    missing = f"{lab.runs}/{uuid.uuid4()}/move"
+    assert problem(owner_of().post(missing, json=gpu)) == (404, "model-run-not-found")
+
+
 def test_cancelling_a_running_run_waits_for_the_worker_to_stop(
     api: ApiAs, database: str, lab: Lab
 ) -> None:

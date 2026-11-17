@@ -298,6 +298,7 @@ class Workspace:
     ready_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     signed_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     patch_job: uuid.UUID = field(default_factory=uuid.uuid4)
+    movable_run: uuid.UUID = field(default_factory=uuid.uuid4)
     layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -630,6 +631,9 @@ async def seed_case_reports(
 
 GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listStudyTemplates": lambda _: Call("GET", "/api/study-templates"),
+    "listStudyTemplateReviewDefaults": lambda _: Call(
+        "GET", "/api/study-templates/review-defaults"
+    ),
     "getStudyTemplate": lambda w: Call("GET", f"/api/study-templates/{w.study_template}"),
     "listStudyTemplateVersions": lambda w: Call(
         "GET", f"/api/study-templates/{w.study_template}/versions"
@@ -743,6 +747,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "resumeModelRun": lambda w: Call(
         "POST", f"/api/projects/{w.project}/model-runs/{w.paused_run}/resume"
+    ),
+    "moveModelRun": lambda w: Call(
+        "POST",
+        f"/api/projects/{w.project}/model-runs/{w.movable_run}/move",
+        {"server": "Parfocal GPU"},
     ),
     "retryModelRun": lambda w: Call(
         "POST", f"/api/projects/{w.project}/model-runs/{w.failed_run}/retry"
@@ -2374,7 +2383,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     tenant_id=tenant_id,
                 )
             )
-            queued_run, paused_run, failed_run = await seed_runs(
+            queued_run, paused_run, failed_run, movable_run = await seed_runs(
                 connection, tenant_id, case.project_id, case.loose_slide_id
             )
             await connection.execute(
@@ -2551,6 +2560,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             declined_offer=declined_offer,
             doomed_preset=doomed_preset,
             declinable=declinable,
+            movable_run=movable_run,
             adjudicator=adjudicator,
             report_link=report_link,
             annotate_task=annotate_task,
@@ -2625,7 +2635,13 @@ async def seed_runs(
     await connection.execute(
         update(jobs).where(jobs.c.id == runs[2]).values(status="failed", error_code="matrix")
     )
-    return runs
+    movable = await enqueue_model_run(
+        connection, tenant_id, project_id, slide_id, settings, batch_id=uuid.uuid4()
+    )
+    await connection.execute(
+        update(jobs).where(jobs.c.id == movable).values(status="paused", pause_reason="matrix")
+    )
+    return [*runs, movable]
 
 
 async def seed_upload(
