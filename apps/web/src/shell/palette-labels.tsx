@@ -70,6 +70,7 @@ export function usePaletteLabels(): Record<string, string> {
     home: t`Open Home`,
     notifications: t`Notifications`,
     feedback: t`Send feedback`,
+    "show-all-hints": t`Show all hints again`,
     "open-settings": t`Open Settings`,
   };
 }

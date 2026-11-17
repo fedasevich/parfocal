@@ -4,6 +4,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { SkeletonRows } from "@parfocal/ui/components/skeleton";
 import { type ReactNode, useEffect, useState } from "react";
+import { useHintsSeen } from "../../hints/hints-seen.ts";
 import { setDeveloperMode, useDeveloperMode } from "../../shell/developer-mode.ts";
 import { useOverlay } from "../../shell/overlays.ts";
 import { matchCommand } from "../../shell/palette-match.ts";
@@ -64,6 +65,7 @@ export function SearchScreen({
   const overlay = useOverlay();
   const [draft, setDraft] = useState(state.q);
   const developerMode = useDeveloperMode();
+  const hints = useHintsSeen();
   const paletteEntries = useActionSource();
   const projects = okData(useListProjects().data) ?? [];
   const trimmed = state.q.trim();
@@ -84,6 +86,7 @@ export function SearchScreen({
           measure: () => {},
           openNotifications: () => void overlay.set("notifications"),
           setDeveloperMode,
+          showAllHints: hints.showAllAgain,
         }).flatMap((entry) => {
           if (entry.group !== "Actions") return [];
           const match = matchCommand(entry.label, entry.keywords, trimmed);

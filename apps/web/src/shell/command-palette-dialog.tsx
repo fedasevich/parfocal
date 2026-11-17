@@ -5,6 +5,7 @@ import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
 import { useParams, useRouter, useRouterState } from "@tanstack/react-router";
 import { type KeyboardEvent, useState } from "react";
+import { useHintsSeen } from "../hints/hints-seen.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "./destinations.ts";
 import { setDeveloperMode, useDeveloperMode } from "./developer-mode.ts";
@@ -76,6 +77,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
   const params = useParams({ strict: false });
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const developerMode = useDeveloperMode();
+  const hints = useHintsSeen();
   const projects = okData(useListProjects().data) ?? [];
   const trimmed = query.trim();
   const places = usePlaces(trimmed, close);
@@ -100,6 +102,10 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
     openNotifications: () => void overlay.set("notifications"),
     setDeveloperMode: (on) => {
       setDeveloperMode(on);
+      close();
+    },
+    showAllHints: () => {
+      hints.showAllAgain();
       close();
     },
   });

@@ -244,7 +244,7 @@ function GuidedBody({
   );
   const { answers: opinion, change: changeOpinion } = useOpinionDraft(session, setup.dropAnswers);
   const [failed, setFailed] = useState(setup.submitFail);
-  const coach = useGuidedCoach(session.meId, scene === undefined && objectId === undefined);
+  const coach = useGuidedCoach(scene === undefined && objectId === undefined);
   const coachOn = coachShown(setup.coach || coach.open, objects.length);
   const slideShort = session.slideName.split(" ")[0] ?? "";
   const creatorName = person(session.task?.created_by_user_id)?.name;
