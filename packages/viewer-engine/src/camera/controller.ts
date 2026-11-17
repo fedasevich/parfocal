@@ -61,6 +61,7 @@ export interface CameraController {
   readonly panBy: (dx: number, dy: number) => void;
   readonly zoomTo: (zoom: number, anchor?: ScreenOffset, options?: ZoomOptions) => void;
   readonly zoomBy: (octaves: number, anchor?: ScreenOffset, options?: ZoomOptions) => void;
+  readonly zoomGoal: () => number;
   readonly startDrag: (x: number, y: number) => void;
   readonly dragTo: (x: number, y: number, time?: number) => void;
   readonly endDrag: () => void;
@@ -274,10 +275,11 @@ export function createCameraController(host: CameraControllerHost): CameraContro
     begin({ kind: "zooming", target, anchor: at, point, zoom: from, time: host.now() });
   };
 
+  const zoomGoal = () => (state.kind === "zooming" ? state.target : host.getCamera().zoom);
+
   const zoomBy = (octaves: number, anchor = viewportCentre, options: ZoomOptions = {}) => {
     if (!Number.isFinite(octaves)) return;
-    const base = state.kind === "zooming" ? state.target : host.getCamera().zoom;
-    zoomTo(base + octaves, anchor, options);
+    zoomTo(zoomGoal() + octaves, anchor, options);
   };
 
   const panBy = (dx: number, dy: number) => {
@@ -361,6 +363,7 @@ export function createCameraController(host: CameraControllerHost): CameraContro
     panBy,
     zoomTo,
     zoomBy,
+    zoomGoal,
     startDrag,
     dragTo,
     endDrag,

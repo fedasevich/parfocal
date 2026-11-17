@@ -564,6 +564,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       controller.zoomBy(octaves, anchorOf(at), zoomOptions);
     },
     zoomToMagnification,
+    getZoomGoal: () => controller.zoomGoal(),
     startDrag: (at) => {
       assertAlive();
       fitPending = false;

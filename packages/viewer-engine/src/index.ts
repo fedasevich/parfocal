@@ -272,6 +272,14 @@ export type {
   ViewerEngineOptions,
 } from "./engine/types.ts";
 export {
+  applyDetents,
+  type DetentContext,
+  type DetentResult,
+  type DetentState,
+  detentMagnifications,
+  freshDetentState,
+} from "./input/detents.ts";
+export {
   bindViewerInput,
   createMagnificationToggle,
   defaultCursors,

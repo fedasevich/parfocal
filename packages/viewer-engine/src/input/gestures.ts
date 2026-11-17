@@ -1,4 +1,5 @@
 import { type CameraProfile, defaultCameraProfile } from "../camera/profile.ts";
+import { applyDetents, type DetentContext, type DetentState, freshDetentState } from "./detents.ts";
 import { createTapRecognizer, type TouchTuning, touchTuning } from "./touch.ts";
 import {
   classifyWheel,
@@ -82,6 +83,8 @@ export interface GestureHooks {
   readonly panModifierHeld?: () => boolean;
   readonly hitsEditableShape?: (at: InputPoint) => boolean;
   readonly cameraProfile?: () => CameraProfile;
+  readonly objectiveDetents?: () => DetentContext | null;
+  readonly now?: () => number;
   readonly doubleClick?: () => DoubleClickBehaviour;
   readonly touchTuning?: TouchTuning;
 }
@@ -139,6 +142,8 @@ export function createGestureInterpreter(
   let gesture: Gesture = noGesture;
   let mode = initialMode;
   let classifier: WheelClassifier = freshWheelClassifier;
+  let detents: DetentState = freshDetentState;
+  const clock = hooks.now ?? (() => performance.now());
 
   const twoPointers = (): readonly [InputPoint, InputPoint] | null => {
     const [a, b] = [...pointers.values()];
@@ -270,6 +275,17 @@ export function createGestureInterpreter(
     return [release];
   };
 
+  const detentOctaves = (octaves: number): number => {
+    const context = hooks.objectiveDetents?.() ?? null;
+    if (context === null) {
+      detents = freshDetentState;
+      return octaves;
+    }
+    const result = applyDetents(detents, context, octaves, clock(), cameraProfile());
+    detents = result.state;
+    return result.octaves;
+  };
+
   const wheel = (input: WheelInput): InputAction[] => {
     classifier = classifyWheel(classifier, input);
     const intent = wheelIntent(mode, classifier.device, input, cameraProfile());
@@ -283,9 +299,11 @@ export function createGestureInterpreter(
     if (intent.octaves === 0) return actions;
     const dragging = gesture.kind === "drag" ? pointers.get(gesture.pointerId) : undefined;
     if (gesture.kind === "pinch") return actions;
+    const octaves = detentOctaves(intent.octaves);
+    if (octaves === 0) return actions;
     actions.push({
       kind: "zoom",
-      octaves: intent.octaves,
+      octaves,
       at: point(input),
       animate: intent.animate && !dragging,
     });

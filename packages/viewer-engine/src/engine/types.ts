@@ -145,6 +145,7 @@ export interface ViewerEngine {
     at?: ClientPoint,
     options?: ZoomOptions,
   ) => boolean;
+  readonly getZoomGoal: () => number;
   readonly startDrag: (at: ClientPoint) => void;
   readonly dragTo: (at: ClientPoint, ageMs?: number) => void;
   readonly endDrag: () => void;

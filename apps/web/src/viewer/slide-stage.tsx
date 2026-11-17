@@ -562,6 +562,12 @@ function OpenedSlide({
         input: {
           wheelMode: engineWheelMode(readNavigation().wheel),
           doubleClick: () => doubleClick.current,
+          objectiveDetents: () => {
+            if (!readNavigation().objectiveDetents) return null;
+            const micronsPerPixel = viewport.engine.getSlide()?.micronsPerPixel ?? null;
+            if (micronsPerPixel === null) return null;
+            return { zoom: viewport.engine.getZoomGoal(), micronsPerPixel };
+          },
         },
         resolve: open,
       });

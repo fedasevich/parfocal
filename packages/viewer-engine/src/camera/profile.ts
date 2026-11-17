@@ -18,6 +18,8 @@ export interface CameraProfile extends ThrowFeel, FlightTiming {
   readonly wheelOctavesPerPixel: number;
   readonly pinchOctavesPerPixel: number;
   readonly maxOctavesPerEvent: number;
+  readonly detentHoldMs: number;
+  readonly detentReleaseOctaves: number;
   readonly keyPanStepPx: number;
   readonly keyPanRampMs: number;
   readonly zoomAnchor: ZoomAnchor;
@@ -37,6 +39,8 @@ const smooth: CameraProfile = {
   wheelOctavesPerPixel: pocWheelNatsPerPixel / Math.LN2,
   pinchOctavesPerPixel: pocPinchNatsPerPixel / Math.LN2,
   maxOctavesPerEvent: 0.5,
+  detentHoldMs: 300,
+  detentReleaseOctaves: 0.5,
   keyPanStepPx: pocKeyPanStepPx,
   keyPanRampMs: 120,
   zoomAnchor: "cursor",
