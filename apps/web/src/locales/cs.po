@@ -3113,6 +3113,14 @@ msgstr ""
 msgid "Add slides or result files first."
 msgstr ""
 
+#: src/viewer/live-slides-popover.tsx
+msgid "Add slides to this case"
+msgstr ""
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Add slides to this project"
+msgstr ""
+
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 msgid "Add slides, result files or both to go on."
@@ -4470,7 +4478,9 @@ msgid "case {0}"
 msgstr ""
 
 #. placeholder {0}: group.label
+#. placeholder {0}: load.case.label
 #: src/screens/upload/live-wizard.tsx
+#: src/viewer/live-slides-popover.tsx
 msgid "Case {0}"
 msgstr ""
 
@@ -5308,6 +5318,7 @@ msgid "Compact"
 msgstr ""
 
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/live-slides-popover.tsx
 msgid "Compare"
 msgstr ""
 
@@ -9146,6 +9157,11 @@ msgstr ""
 msgid "Loose slides"
 msgstr ""
 
+#. placeholder {0}: task.code
+#: src/viewer/live-slides-popover.tsx
+msgid "Loose slides in task {0}"
+msgstr ""
+
 #: src/screens/upload/live-wizard.tsx
 msgid "Loose slides, no case"
 msgstr ""
@@ -11091,7 +11107,6 @@ msgstr ""
 #: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/viewer-canvas-parts.tsx
 #: src/shell/jobs-tray.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Open"
 msgstr ""
 
@@ -11214,6 +11229,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Open the whole slide"
+msgstr ""
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Open this slide beside another one"
 msgstr ""
 
 #: src/popout/popout-screen.tsx
@@ -12928,6 +12947,10 @@ msgstr ""
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/project/slides-tab.tsx
 msgid "Result sets"
+msgstr ""
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Result sets of {slideLabel}"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -14684,6 +14707,7 @@ msgstr ""
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/viewer/live-progress.tsx
+#: src/viewer/live-slides-popover.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Slide"
 msgstr ""
@@ -15670,6 +15694,10 @@ msgstr ""
 #: src/screens/review/guided-review.tsx
 #: src/viewer/stage-coach.tsx
 msgid "The AI found this. It is outlined in white."
+msgstr ""
+
+#: src/viewer/live-slides-popover.tsx
+msgid "The AI is reading"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
@@ -17508,6 +17536,10 @@ msgstr ""
 #: src/screens/clinical-report/modals.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Waiting for single sign-on…"
+msgstr ""
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Waiting for the AI"
 msgstr ""
 
 #: src/viewer/run-stream-layer.tsx

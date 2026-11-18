@@ -3115,6 +3115,14 @@ msgstr "Add slides by name or case"
 msgid "Add slides or result files first."
 msgstr "Add slides or result files first."
 
+#: src/viewer/live-slides-popover.tsx
+msgid "Add slides to this case"
+msgstr "Add slides to this case"
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Add slides to this project"
+msgstr "Add slides to this project"
+
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 msgid "Add slides, result files or both to go on."
@@ -4472,7 +4480,9 @@ msgid "case {0}"
 msgstr "case {0}"
 
 #. placeholder {0}: group.label
+#. placeholder {0}: load.case.label
 #: src/screens/upload/live-wizard.tsx
+#: src/viewer/live-slides-popover.tsx
 msgid "Case {0}"
 msgstr "Case {0}"
 
@@ -5310,6 +5320,7 @@ msgid "Compact"
 msgstr "Compact"
 
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/live-slides-popover.tsx
 msgid "Compare"
 msgstr "Compare"
 
@@ -9151,6 +9162,11 @@ msgstr "Loose"
 msgid "Loose slides"
 msgstr "Loose slides"
 
+#. placeholder {0}: task.code
+#: src/viewer/live-slides-popover.tsx
+msgid "Loose slides in task {0}"
+msgstr "Loose slides in task {0}"
+
 #: src/screens/upload/live-wizard.tsx
 msgid "Loose slides, no case"
 msgstr "Loose slides, no case"
@@ -11096,7 +11112,6 @@ msgstr "open"
 #: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/viewer-canvas-parts.tsx
 #: src/shell/jobs-tray.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Open"
 msgstr "Open"
 
@@ -11220,6 +11235,10 @@ msgstr "Open the Slide done card in the Opinion tab"
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Open the whole slide"
 msgstr "Open the whole slide"
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Open this slide beside another one"
+msgstr "Open this slide beside another one"
 
 #: src/popout/popout-screen.tsx
 msgid "Open this window from the viewer."
@@ -12938,6 +12957,10 @@ msgstr "Result set and IDs fixed"
 #: src/screens/project/slides-tab.tsx
 msgid "Result sets"
 msgstr "Result sets"
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Result sets of {slideLabel}"
+msgstr "Result sets of {slideLabel}"
 
 #: src/screens/sign-off/sign-off-screen.tsx
 #: src/study/study-screen.tsx
@@ -14693,6 +14716,7 @@ msgstr "Skipped, already in this project."
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/viewer/live-progress.tsx
+#: src/viewer/live-slides-popover.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Slide"
 msgstr "Slide"
@@ -15680,6 +15704,10 @@ msgstr "The AI found no tumor areas on this slide. Look at all the tissue at {sc
 #: src/viewer/stage-coach.tsx
 msgid "The AI found this. It is outlined in white."
 msgstr "The AI found this. It is outlined in white."
+
+#: src/viewer/live-slides-popover.tsx
+msgid "The AI is reading"
+msgstr "The AI is reading"
 
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "The AI is still reading"
@@ -17518,6 +17546,10 @@ msgstr "waiting for its admin"
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Waiting for single sign-on…"
 msgstr "Waiting for single sign-on…"
+
+#: src/viewer/live-slides-popover.tsx
+msgid "Waiting for the AI"
+msgstr "Waiting for the AI"
 
 #: src/viewer/run-stream-layer.tsx
 msgid "Waiting for the first tile"
