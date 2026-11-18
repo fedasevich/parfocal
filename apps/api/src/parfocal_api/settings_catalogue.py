@@ -188,6 +188,8 @@ CATALOGUE: tuple[Setting, ...] = (
     switch("hide_side_panel", False, PERSONAL),
     choice("panel_while_moving", "pinned", ("pinned", "auto"), PERSONAL),
     choice("minimap", "useful", ("useful", "always", "never"), PERSONAL),
+    choice("minimap_corner", "auto", ("auto", "br", "bl", "tr", "tl"), PERSONAL),
+    choice("minimap_corner_cells", "auto", ("auto", "br", "bl", "tr", "tl"), PERSONAL),
     switch("slide_strip", False, PERSONAL),
     choice(
         "confidence_wording",
