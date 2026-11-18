@@ -14,10 +14,13 @@ import { type ReactNode, useState } from "react";
 import { ViewingNow } from "../presence/viewing-now.tsx";
 import { formatDue } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { useReviewSession } from "../screens/review/review-data.ts";
+import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
 import { AccountMenu } from "../shell/account-menu.tsx";
 import { personOf } from "../shell/global-shell.tsx";
 import type { CaseLoad } from "./case-load.ts";
 import { LiveProgress, useSlideStepKeys } from "./live-progress.tsx";
+import { type LiveReview, liveReview } from "./live-review.ts";
 import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
 import { LiveSlidesPopover } from "./live-slides-popover.tsx";
 import type { SlideWorkspace } from "./workspace.ts";
@@ -27,12 +30,12 @@ const slidePage = 200;
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
 function facts(load: CaseLoad, task: ReviewTaskDetail | undefined): string[] {
+  if (load.task) {
+    return [load.project.name, ...(task?.due_on ? [`due ${formatDue(task.due_on)}`] : [])];
+  }
   return [
-    ...(load.task ? [load.project.name] : []),
     ...(load.case ? [`Case ${load.case.label}`] : []),
     plural(load.resultSets.length, "result set"),
-    ...(load.task ? [plural(load.decisions.length, "decision")] : []),
-    ...(task?.due_on ? [`due ${formatDue(task.due_on)}`] : []),
   ];
 }
 
@@ -53,8 +56,14 @@ function SlidePicker({
         data-testid="slide-picker"
         aria-haspopup="dialog"
         title={t`Slides in this ${list.scope}`}
-        className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
+        className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border border-line-strong bg-btn-bg pr-2.5 pl-1.5 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
       >
+        <span
+          aria-hidden="true"
+          data-slot="slide-thumb"
+          className="h-5.5 w-7.5 shrink-0 rounded-[4px] bg-[#f1eef2] bg-cover bg-center"
+          style={{ backgroundImage: `url(${slideThumbUrl(slideId)})` }}
+        />
         <b className="max-w-56 truncate text-body-sm font-semibold" data-phi="">
           {label}
         </b>
@@ -91,7 +100,20 @@ type LiveTopBarProps = {
   storage: ReactNode;
 };
 
-export function LiveTopBar({
+function ReviewTopBar({ taskId, ...props }: LiveTopBarProps & { taskId: string }) {
+  const review = liveReview(useReviewSession(taskId, props.slideId));
+  return <TopBar {...props} review={review} />;
+}
+
+export function LiveTopBar(props: LiveTopBarProps) {
+  return props.task?.kind === "review" ? (
+    <ReviewTopBar {...props} taskId={props.task.id} />
+  ) : (
+    <TopBar {...props} review={undefined} />
+  );
+}
+
+function TopBar({
   projectId,
   slideId,
   load,
@@ -107,7 +129,8 @@ export function LiveTopBar({
   onPeek,
   statusRef,
   storage,
-}: LiveTopBarProps) {
+  review,
+}: LiveTopBarProps & { review: LiveReview | undefined }) {
   const { t } = useLingui();
   const navigate = useNavigate();
   const me = okData(useGetMe().data);
@@ -131,8 +154,8 @@ export function LiveTopBar({
     neighbours,
   );
   const reviewTask = task?.kind === "review";
-  const title = load?.task ? `${load.task.code} ${load.task.name}` : (load?.project.name ?? "");
-  const slideLabel = load?.slide?.label ?? t`Slide`;
+  const title = load?.task?.name ?? load?.project.name ?? "";
+  const slideLabel = review?.slideName || (load?.slide?.label ?? t`Slide`);
   const reportCaseId = load?.clinical ? load.case?.id : undefined;
   useSlideStepKeys(list, slideId, onOpenSlide);
   return (
@@ -142,7 +165,7 @@ export function LiveTopBar({
     >
       <Link
         to="/my-work"
-        title={t`Back to My work. Every edit is saved`}
+        title={t`Back to My work. Every answer is saved`}
         className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-ctl px-2 font-medium text-fg-dim no-underline hover:text-fg"
       >
         <Icon name="back" />
@@ -153,7 +176,12 @@ export function LiveTopBar({
       <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
       <div data-testid="case-header" data-phi="" className="flex min-w-0 items-center gap-3">
         <div className="grid min-w-0 leading-tight">
-          <b className="truncate font-semibold">{title}</b>
+          <b
+            className="truncate font-semibold"
+            title={load?.task ? `${load.task.code} · ${load.task.name}` : undefined}
+          >
+            {title}
+          </b>
           <small className="truncate text-caption text-fg-dim">
             {load ? facts(load, task).join(" · ") : ""}
           </small>
@@ -183,6 +211,7 @@ export function LiveTopBar({
           slideLabel={slideLabel}
           load={load}
           task={task}
+          review={review}
           percent={percent}
           objectTotal={objectTotal}
           onPeek={onPeek}
@@ -211,7 +240,9 @@ export function LiveTopBar({
         options={[
           ...(reviewTask ? [{ value: "guided", label: t`Guided` }] : []),
           { value: "review", label: t`Full viewer` },
-          { value: "annotate", label: t`Annotate` },
+          ...(reviewTask && workspace !== "annotate"
+            ? []
+            : [{ value: "annotate", label: t`Annotate` }]),
         ]}
       />
       {reportCaseId !== undefined ? (
@@ -230,14 +261,20 @@ export function LiveTopBar({
       ) : onSubmit && reviewTask ? (
         <Button
           variant="primary"
-          title={t`Open the Slide done card in the Opinion tab`}
+          data-testid="top-submit"
+          disabled={review === undefined || review.submitReason !== undefined}
+          title={
+            review === undefined
+              ? t`Opening the objects of this slide`
+              : (review.submitReason ?? t`Open the Slide done card in the Opinion tab`)
+          }
           onClick={onSubmit}
         >
           <Trans>Submit</Trans>
         </Button>
       ) : null}
       <ViewingNow slideId={slideId} taskId={task?.id} />
-      <AccountMenu me={me} person={personOf(me)} />
+      <AccountMenu me={me} person={personOf(me)} home />
     </header>
   );
 }
