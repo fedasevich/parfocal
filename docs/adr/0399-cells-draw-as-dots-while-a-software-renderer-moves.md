@@ -1,7 +1,7 @@
 # 0399. Cells draw as dots while a software renderer moves
 
 - Date: 2026-11-18
-- Status: Proposed
+- Status: Accepted
 - Deciders: agent (VIEW-079)
 - Backlog: VIEW-079
 
@@ -23,3 +23,5 @@ Option 1. The Viv route detects a software renderer the way the shader warmup al
 ## Consequences
 
 People on a machine without a GPU see cells as dots while they pan and outlines once they stop, which they already see when zoomed out. The deck.gl WebGPU route is unchanged, because it never runs on a software renderer.
+
+On CI's SwiftShader the pan frames of tumor_044 dropped to 117 to 150 ms, from 333 to 450 ms, and the first move of a page costs one long task of about 600 ms while the dot layer is built. The result file has the CI numbers.
