@@ -171,6 +171,7 @@ FORMAT_GALLERY = (
     GallerySlide("Leica-1.scn", "leica-scn", "bigtiff"),
     GallerySlide("OS-1.bif", "ventana-bif", "bigtiff"),
     GallerySlide("Philips-4.tiff", "philips-tiff", "bigtiff"),
+    GallerySlide("Philips-3.tiff", "philips-tiff", "bigtiff"),
     GallerySlide("Huron-1-40x.tif", "huron-tiff", "bigtiff"),
     GallerySlide("Argos-1.avs", "argos-avs", "bigtiff"),
     GallerySlide("CMU-1.tiff", "generic-tiff", "tiff"),

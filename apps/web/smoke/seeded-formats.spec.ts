@@ -10,6 +10,7 @@ const openedInTheBrowser = [
   ["leica-scn", "Leica-1.scn"],
   ["ventana-bif", "OS-1.bif"],
   ["philips-tiff", "Philips-4.tiff"],
+  ["philips-tiff-13-gigapixels", "Philips-3.tiff"],
   ["huron-tiff", "Huron-1-40x.tif"],
   ["argos-avs", "Argos-1.avs"],
   ["generic-tiff", "CMU-1.tiff"],
