@@ -11,6 +11,8 @@ const guided = `/tasks/${rt14}/guided?slide=${tumor044}&as=DH`;
 const a1 = "00000000-0000-4000-8005-000000000001";
 const objectsViewer = `/projects/${p07}/slides/${a1}?task=${rt14}`;
 const objectsGuided = `/tasks/${rt14}/guided?slide=${a1}`;
+const annotateTask = "00000000-0000-4000-8007-000000000021";
+const annotateTaskViewer = `/projects/${p07}/slides/${tumor044}/annotate-task?task=${annotateTask}&as=DH`;
 
 async function ready(page: Page) {
   const stage = page.getByTestId("slide-stage");
@@ -33,6 +35,7 @@ async function noPrototypePictures(page: Page) {
 for (const [name, path] of [
   ["full viewer in a task", fullViewer],
   ["guided review", guided],
+  ["annotate task", annotateTaskViewer],
 ] as const) {
   test(`the ${name} draws the real slide and pans and zooms it`, async ({ page }) => {
     await page.goto(path);
@@ -81,6 +84,19 @@ test("the full viewer decides an AI object on the real stage", async ({ page }) 
   const answers = row.getByRole("group").getByRole("button");
   await answers.first().click();
   await expect(row).not.toHaveAttribute("data-decision", "");
+});
+
+test("the annotate task decides an AI object on the real stage", async ({ page }) => {
+  await page.goto(annotateTaskViewer);
+  await ready(page);
+  await noPrototypePictures(page);
+  await expect(page.getByTestId("ai-object")).toHaveCount(6);
+  await page.keyboard.press("Shift+G");
+  const guide = page.getByTestId("guided-check");
+  await expect(guide).toHaveAttribute("data-current", "C1");
+  await page.keyboard.press("d");
+  await expect(guide).toHaveAttribute("data-current", "C2");
+  await expect(page.getByRole("progressbar", { name: "1 of 6 AI objects checked" })).toBeVisible();
 });
 
 test("guided review decides the current object and steps to the next open one", async ({
