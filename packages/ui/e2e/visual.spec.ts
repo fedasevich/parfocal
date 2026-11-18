@@ -75,6 +75,16 @@ for (const storyId of storyIds) {
           `/iframe.html?id=${storyId}&viewMode=story&globals=theme:${theme};density:${density};a11y.manual:!true`,
         );
         await page.locator("#storybook-root > *").first().waitFor();
+        await page.waitForFunction(
+          ([wantedTheme, wantedDensity]) => {
+            const root = document.documentElement;
+            return (
+              root.getAttribute("data-theme") === wantedTheme &&
+              root.getAttribute("data-density") === wantedDensity
+            );
+          },
+          [theme, density],
+        );
         await page.evaluate(() => document.fonts.ready.then(() => undefined));
         const actual = decodePng(
           await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" }),
