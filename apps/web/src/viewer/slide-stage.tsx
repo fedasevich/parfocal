@@ -5,6 +5,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRail, ToolRailButton, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
 import { useSharedSmartServices } from "../aiseg/shared-smart-services.ts";
 import {
   loadSmartServices,
@@ -278,7 +279,8 @@ function OpenedSlide({
   const doubleClick = useRef<"zoom" | "toggle">("zoom");
   const settings = useResolvedSettings();
   doubleClick.current = settings?.double_click ?? "zoom";
-  const outlineTier = settings?.tier_outline ?? "best";
+  const [pickedTier, setPickedTier] = useState<OutlineTier | null>(null);
+  const outlineTier = pickedTier ?? settings?.tier_outline ?? "best";
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);
   const pageServices = useSharedSmartServices();
@@ -884,6 +886,8 @@ function OpenedSlide({
                     activeClass={activeClass}
                     loader={sharedServices}
                     openRequest={session.open}
+                    tier={outlineTier}
+                    onTierChange={setPickedTier}
                     onDocumentChange={setAnnotations}
                   />
                   <AutoLayer
@@ -895,6 +899,7 @@ function OpenedSlide({
                     loader={sharedServices}
                     openRequest={session.open}
                     tier={outlineTier}
+                    onTierChange={setPickedTier}
                     onDocumentChange={setAnnotations}
                   />
                   <ProposalLayer

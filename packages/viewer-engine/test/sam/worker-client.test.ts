@@ -6,6 +6,7 @@ import {
   type SamGraph,
   type SamReply,
   type SamRequest,
+  SamStartError,
   type SamWorker,
   SamWorkerError,
   samGraphs,
@@ -182,6 +183,23 @@ describe("inference worker client", () => {
     const { worker } = linkedWorker(new FakeRuntime({ failProviders: ["webgpu", "wasm"] }));
     const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });
     await assert.rejects(client.ready, SamWorkerError);
+  });
+
+  it("answers requests after a failed start with the start failure, not a not-started error", async () => {
+    const { worker } = linkedWorker(new FakeRuntime({ failProviders: ["webgpu", "wasm"] }));
+    const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });
+    const started = await client.ready.then(
+      () => null,
+      (error: unknown) => error,
+    );
+    assert.ok(started instanceof SamStartError);
+    const later = await client.prompt("view-a", { points: [] }).then(
+      () => null,
+      (error: unknown) => error,
+    );
+    assert.equal(later, started);
+    assert.ok(later instanceof Error);
+    assert.doesNotMatch(later.message, /has not been started/);
   });
 
   it("rejects pending requests and later ones after close", async () => {

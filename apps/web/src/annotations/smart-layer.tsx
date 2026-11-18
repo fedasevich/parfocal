@@ -2,7 +2,8 @@ import { useLingui } from "@lingui/react/macro";
 import { isTwoFingerClick, secondaryButton } from "@parfocal/viewer-engine";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useHoverPreview } from "../aiseg/hover-preview-setting.ts";
-import { modelNotStartedText, plainFailure } from "../aiseg/plain-message.ts";
+import { canStartModel, plainFailure } from "../aiseg/plain-message.ts";
+import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
 import { createPrewarmTrigger } from "../aiseg/smart-prewarm.ts";
 import { nextRunId, smartRunFinished, withSmartRun } from "../aiseg/smart-run.ts";
 import { classifyPress, type SmartPoint } from "../aiseg/smart-select.ts";
@@ -23,6 +24,7 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { ContextExtra, contextChip } from "./context-extras.tsx";
 import type { AnnotationDocument } from "./document.ts";
+import { ModelTierChoice } from "./model-tier-choice.tsx";
 import {
   bindSpacePan,
   buttonReleased,
@@ -44,6 +46,8 @@ type SmartLayerProps = {
   activeClass: string | null;
   loader: SmartServicesLoader;
   openRequest: SmartServicesContext["open"];
+  tier?: OutlineTier;
+  onTierChange?: (tier: OutlineTier) => void;
   onDocumentChange: (next: AnnotationDocument) => void;
 };
 
@@ -91,6 +95,8 @@ export function SmartLayer({
   activeClass,
   loader,
   openRequest,
+  tier = "best",
+  onTierChange,
   onDocumentChange,
 }: SmartLayerProps) {
   const { t } = useLingui();
@@ -138,6 +144,7 @@ export function SmartLayer({
       const context: SmartServicesContext = {
         slide: { width: slide?.width ?? 0, height: slide?.height ?? 0 },
         slideId,
+        tier,
         open: latest.current.openRequest,
       };
       services.current = latest.current.loader(context);
@@ -159,7 +166,7 @@ export function SmartLayer({
       );
     }
     return session.current;
-  }, [slideId, show]);
+  }, [slideId, tier, show]);
 
   const startModel = useCallback(() => {
     const pending = session.current;
@@ -190,6 +197,13 @@ export function SmartLayer({
     },
     [],
   );
+
+  const loadedTier = useRef(tier);
+  useEffect(() => {
+    if (loadedTier.current === tier) return;
+    loadedTier.current = tier;
+    if (session.current !== null) startModel();
+  }, [tier, startModel]);
 
   useEffect(() => {
     syncRun(shown.current, activeClass);
@@ -449,6 +463,7 @@ export function SmartLayer({
           />
         ) : null}
       </svg>
+      {active && onTierChange ? <ModelTierChoice tier={tier} onTierChange={onTierChange} /> : null}
       {active ? (
         <ContextExtra>
           <button
@@ -463,7 +478,7 @@ export function SmartLayer({
           {snapshot.phase === "thinking" || snapshot.message !== null ? (
             <span data-testid="smart-status" role="status" className={contextChip}>
               {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}
-              {snapshot.message === modelNotStartedText ? (
+              {canStartModel(snapshot.message) ? (
                 <button
                   type="button"
                   data-testid="smart-start-model"

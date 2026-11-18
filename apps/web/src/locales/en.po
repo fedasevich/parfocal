@@ -5087,6 +5087,7 @@ msgstr "close"
 #: ../../packages/ui/src/components/sheet.tsx
 #: ../../packages/ui/src/components/small-modal.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/context-bar.tsx
 #: src/help/help-dialog.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/evaluation/share-links.tsx
@@ -5121,6 +5122,10 @@ msgstr "Close settings"
 msgid "Close the cells"
 msgstr "Close the cells"
 
+#: src/annotations/context-bar.tsx
+msgid "Close the hint"
+msgstr "Close the hint"
+
 #: src/screens/review/redraw-layer.tsx
 msgid "Close the outline"
 msgstr "Close the outline"
@@ -5142,6 +5147,10 @@ msgstr "Close the whole slide"
 #: ../../packages/ui/src/components/thread-popover.tsx
 msgid "Close thread"
 msgstr "Close thread"
+
+#: ../../packages/ui/src/components/small-modal.tsx
+msgid "Close without saving? What you entered here will be lost."
+msgstr "Close without saving? What you entered here will be lost."
 
 #: src/screens/jobs/job-window-screen.tsx
 msgid "Close, it keeps going"
@@ -6077,10 +6086,15 @@ msgstr "Disagreements in {taskCode}"
 msgid "disagreements open"
 msgstr "disagreements open"
 
+#: ../../packages/ui/src/components/small-modal.tsx
 #: src/annotations/context-bar.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "Discard"
 msgstr "Discard"
+
+#: ../../packages/ui/src/components/small-modal.tsx
+msgid "Discard your changes?"
+msgstr "Discard your changes?"
 
 #: ../../packages/ui/src/components/error-toast.tsx
 #: ../../packages/ui/src/components/viewer-notices.tsx
@@ -6396,6 +6410,10 @@ msgstr "Each switch is written to the audit log."
 #: src/screens/project/settings-tab.tsx
 msgid "each task can change them"
 msgstr "each task can change them"
+
+#: src/help/tool-hints-section.tsx
+msgid "Each tool shows its hint once. Show one again to see it on the slide."
+msgstr "Each tool shows its hint once. Show one again to see it on the slide."
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Earcut triangulation"
@@ -8400,6 +8418,10 @@ msgstr "Keep audit events for"
 msgid "Keep both"
 msgstr "Keep both"
 
+#: ../../packages/ui/src/components/small-modal.tsx
+msgid "Keep editing"
+msgstr "Keep editing"
+
 #: src/feedback/feedback-dialog.tsx
 msgid "Keep it under {maxLength} characters"
 msgstr "Keep it under {maxLength} characters"
@@ -9449,6 +9471,7 @@ msgstr "Model"
 msgid "Model bench page"
 msgstr "Model bench page"
 
+#: src/annotations/model-tier-choice.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "Model for outlining nuclei"
 msgstr "Model for outlining nuclei"
@@ -14125,6 +14148,10 @@ msgstr "Show activity"
 msgid "Show after adding"
 msgstr "Show after adding"
 
+#: src/help/tool-hints-section.tsx
+msgid "Show again"
+msgstr "Show again"
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Show all hints again"
@@ -14180,6 +14207,11 @@ msgstr "Show overlays (A)"
 #: src/study/trace/replay-panel.tsx
 msgid "Show screen"
 msgstr "Show screen"
+
+#. placeholder {0}: entry.label
+#: src/help/tool-hints-section.tsx
+msgid "Show the {0} hint again"
+msgstr "Show the {0} hint again"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Show the AI result"
@@ -15054,6 +15086,10 @@ msgstr "Start systematic scan"
 msgid "Start task"
 msgstr "Start task"
 
+#: src/annotations/smart-layer.tsx
+msgid "Start the model"
+msgstr "Start the model"
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Start v2"
 msgstr "Start v2"
@@ -15832,6 +15868,10 @@ msgstr "the first object"
 #: src/routes/prototype.tsx
 msgid "The four lanes, each box opens its screen in its scene"
 msgstr "The four lanes, each box opens its screen in its scene"
+
+#: src/annotations/model-tier-choice.tsx
+msgid "The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
+msgstr "The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
 
 #: src/screens/new-task/send-step.tsx
 msgid "The full viewer"
@@ -16744,6 +16784,10 @@ msgstr "Tokens and webhooks for pipelines"
 #: src/screens/new-task/send-step.tsx
 msgid "Told just now"
 msgstr "Told just now"
+
+#: src/help/tool-hints-section.tsx
+msgid "Tool hints"
+msgstr "Tool hints"
 
 #: ../../packages/ui/src/components/tool-rail-button.tsx
 #: src/screens/settings/settings-screen.tsx
@@ -17871,6 +17915,10 @@ msgstr "Wide"
 #: src/screens/new-task/how-step.tsx
 msgid "Width"
 msgstr "Width"
+
+#: src/help/tool-hints-section.tsx
+msgid "Will show"
+msgstr "Will show"
 
 #. placeholder {0}: plural(changed.length, "change")
 #: src/screens/clinical-report/cosign-screen.tsx

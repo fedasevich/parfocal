@@ -22,6 +22,7 @@ import {
 import { edgeDevFor, edgeWorker, edgeWorkerPrefixes } from "./vite/edge-dev.ts";
 import { fontPreloadInBuildOnly } from "./vite/font-preload.ts";
 import { assetsWithinWorkersLimit } from "./vite/large-assets.ts";
+import { localModels } from "./vite/local-models.ts";
 import { publicEnvOnly, publicEnvPrefix } from "./vite/public-env.ts";
 
 const crossOriginIsolation = {
@@ -128,6 +129,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
       mockAssetsWithDevTools(devTools),
       fontPreloadInBuildOnly(),
       ...(edgeDev ? [] : [fixtureTilesWithDevTools(devTools)]),
+      localModels(),
       noAppPageForMissingData(edgeDev ? edgeWorkerPrefixes : []),
       assetsWithinWorkersLimit(),
       edgeWorker(edgeDev, process.env),

@@ -2,7 +2,9 @@ import type { SamClient } from "@parfocal/viewer-engine";
 import { readBuildConfig } from "../config.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { type EmbedderWarmOptions, warmEmbedderIfSlow } from "./embedder-warm.ts";
+import { usesServerEmbeddings } from "./one-click-tiers.ts";
 import { createPresetPatchReader } from "./patch-reader.ts";
+import type { OutlineTier } from "./prompt-fallback.ts";
 import type { RegionSam } from "./region-pass.ts";
 import { type PresetPatchPlan, planPresetPatch, type ScalePresetId } from "./scale-presets.ts";
 import {
@@ -27,8 +29,11 @@ export type SmartOpenRequest = Awaited<
 export interface SmartServicesContext {
   readonly slide: { readonly width: number; readonly height: number };
   readonly slideId?: string;
+  readonly tier?: OutlineTier;
   readonly open: () => Promise<SmartOpenRequest>;
 }
+
+const serverFirst = (context: SmartServicesContext) => usesServerEmbeddings(context.tier ?? "best");
 
 export type SmartServicesLoader = (context: SmartServicesContext) => Promise<SmartServices>;
 
@@ -61,11 +66,13 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
     cache: engine.rangeCacheFor(opened),
   });
   const local = engine.createSamClient({ modelsUrl: modelsUrl() });
-  const server = createServerEmbeddings(httpEmbeddingTransport());
-  const sam = withServerEmbeddings(local, server);
   const presets = createPresetPatchReader(inner);
+  const server = serverFirst(context) ? createServerEmbeddings(httpEmbeddingTransport()) : null;
+  const sam = server === null ? local : withServerEmbeddings(local, server);
   const reader =
-    context.slideId === undefined ? presets : withServerTiles(presets, server, context.slideId);
+    context.slideId === undefined || server === null
+      ? presets
+      : withServerTiles(presets, server, context.slideId);
   return {
     reader,
     sam,
@@ -82,7 +89,8 @@ export function withEmbedderWarm(
   options: EmbedderWarmOptions = {},
 ): SmartServicesLoader {
   return (context) => {
-    if (context.slideId !== undefined) void warmEmbedderIfSlow(context.slideId, options);
+    if (context.slideId !== undefined && serverFirst(context))
+      void warmEmbedderIfSlow(context.slideId, options);
     return loader(context);
   };
 }
@@ -96,26 +104,32 @@ export const loadSmartServices: SmartServicesLoader = (context) => {
   return loadWarmedRealServices(context);
 };
 
+type SharedEntry = { readonly loaded: Promise<SmartServices>; holders: number };
+
 export function shareServices(loader: SmartServicesLoader): SmartServicesLoader {
-  let shared: Promise<SmartServices> | null = null;
-  let holders = 0;
+  const shared = new Map<string, SharedEntry>();
   return (context) => {
-    shared ??= loader(context);
-    holders += 1;
+    const key = serverFirst(context) ? "server-first" : "browser";
+    let entry = shared.get(key);
+    if (entry === undefined) {
+      const created: SharedEntry = { loaded: loader(context), holders: 0 };
+      created.loaded.catch(() => {
+        if (shared.get(key) === created) shared.delete(key);
+      });
+      shared.set(key, created);
+      entry = created;
+    }
+    const held = entry;
+    held.holders += 1;
     let released = false;
-    const loaded = shared;
-    loaded.catch(() => {
-      if (shared === loaded) shared = null;
-      holders = 0;
-    });
-    return loaded.then((services) => ({
+    return held.loaded.then((services) => ({
       ...services,
       close: () => {
         if (released) return;
         released = true;
-        holders -= 1;
-        if (holders > 0) return;
-        if (shared === loaded) shared = null;
+        held.holders -= 1;
+        if (held.holders > 0) return;
+        if (shared.get(key) === held) shared.delete(key);
         services.close();
       },
     }));

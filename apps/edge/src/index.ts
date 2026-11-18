@@ -1,5 +1,6 @@
 import { type ApiEnv, handleApi, isApiPath } from "#api-proxy.ts";
 import { WeakSigningKeyError } from "#capability.ts";
+import { handleModels, isModelsPath } from "#models.ts";
 import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
@@ -84,6 +85,9 @@ function route(
   }
   if (isApiPath(pathname)) {
     return handleApi(request, env);
+  }
+  if (isModelsPath(pathname)) {
+    return handleModels(request, env);
   }
   if (isDataPath(pathname)) {
     return problem(404, "not-found", "No such file");

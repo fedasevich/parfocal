@@ -873,6 +873,7 @@ export {
   type SamClient,
   SamClientClosedError,
   type SamClientOptions,
+  SamStartError,
   type SamWorker,
   SamWorkerError,
   spawnSamWorker,
