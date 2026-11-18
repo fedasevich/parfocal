@@ -35,7 +35,7 @@ Can production's Postgres be recovered from the provider's own history into a se
 
 ## Interpretation
 
-At 47 MiB a point-in-time branch is usable in seconds, because Neon branches copy on write and do not move data. The time will not stay this small as a share of the recovery: an outage also needs the API and edge pointed at the branch, which this drill did not do. That step replaces the live database, so it is the owner's to run (see decision 149 in `docs/decisions.md`).
+At 47 MiB a point-in-time branch is usable in seconds, because Neon branches copy on write and do not move data. The time will not stay this small as a share of the recovery: an outage also needs the API and edge pointed at the branch, which this drill did not do. That step replaces the live database, so it is the owner's to run (see decision 152 in `docs/decisions.md`).
 
 The comparison is of the branch against live `main` a few minutes later, and it matched exactly, which holds only because the development database was idle in that window. A busier database would show differences for rows written after the timestamp. The 6 hour history window is the real recovery point limit on this plan. Nothing older than 6 hours can be restored from Neon itself.
 
@@ -44,5 +44,5 @@ The drill branch could not be deleted by the agent, because the destructive-acti
 ## Follow-ups
 
 - Objectives and the runbook are in [disaster-recovery.md](../knowledge/disaster-recovery.md).
-- Decision 149 in `docs/decisions.md` asks about the cross-region copy and the promotion step.
+- Decision 152 in `docs/decisions.md` asks about the cross-region copy and the promotion step.
 - TODO: a drill of the object side (R2 lock recovery of tenant objects) and a first run of the monthly restore workflow, both still open under SEC-014 (backups and restore testing).

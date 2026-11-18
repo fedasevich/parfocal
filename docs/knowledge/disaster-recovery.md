@@ -4,12 +4,12 @@ What can be restored, how far back, and the steps. Owner: OPS-008 (backups and d
 
 ## Objectives
 
-These are proposed, not yet confirmed by the owner (decision 149 in `docs/decisions.md`).
+These are proposed, not yet confirmed by the owner (decision 152 in `docs/decisions.md`).
 
 | Part | Recovery point | Recovery time | Where it comes from |
 | --- | --- | --- | --- |
 | Postgres, last 6 hours | seconds | 1 hour proposed, a point-in-time branch was usable in 1.5 s at 47 MiB (measured) | Neon history on the Free plan |
-| Postgres, older than 6 hours | up to the age of the last logical dump | 1 hour proposed, not yet measured for a dump restore | the monthly restore check dump, once it keeps a copy (decision 149) |
+| Postgres, older than 6 hours | up to the age of the last logical dump | 1 hour proposed, not yet measured for a dump restore | the monthly restore check dump, once it keeps a copy (decision 152) |
 | Tenant objects under `t/` in R2 | 7 days of lock against delete and overwrite | minutes, not yet drilled | bucket lock `keep-tenant-objects` from SEC-014 |
 
 ## Restore Postgres from Neon history
@@ -27,6 +27,6 @@ Run the steps above with a branch that expires the same day, then check row coun
 
 ## Not covered yet
 
-- A copy of the data outside Neon and outside the same region. Residency rules keep personal data in the EU, so the copy must be an EU bucket (decision 149).
+- A copy of the data outside Neon and outside the same region. Residency rules keep personal data in the EU, so the copy must be an EU bucket (decision 152).
 - A drill that restores the logical dump.
 - The R2 object recovery drill.
