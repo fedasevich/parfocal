@@ -203,6 +203,20 @@ Recommendation A, because production holds only test data until the first real u
 
 Your choice: 
 
+### 153. The one-time step that gives agents the seeded test account on app.parfocal.eu
+
+You asked, in your answer to decision 147 (how an agent checks the viewer typing tool), for a way for agents to use a seeded account on the dev app without typing a password. ADR 0397 (agents sign in to the dev app as a seeded test account by script) and OPS-035 (agents get a signed-in session on the dev app) built it: `python3 scripts/agent_session.py` signs the account in through the app's own sign-in call, checks that it holds only the seeded ČVUT workspaces and saves a Playwright session in `~/.config/parfocal/`. It refuses any account or host not listed in `infra/app-environments.json`. The one step no agent may take is making the account and its password:
+
+1. In the Zitadel console of the Parfocal organisation, add a human user `agent-walk@parfocal.eu`, named Agent Tester, with the email marked verified and a long random password. Give it no Zitadel roles.
+2. On the Mac, write `~/.config/parfocal/agent-account.env` with two lines, `PARFOCAL_AGENT_EMAIL=agent-walk@parfocal.eu` and `PARFOCAL_AGENT_PASSWORD=<the password>`, then run `chmod 600 ~/.config/parfocal/agent-account.env`.
+3. Write "done" below. An agent then sets the repository variable `SEED_AGENT_EMAILS=agent-walk@parfocal.eu`, which is additive, adds the seats with the next seed or by hand as the smoke account got them, runs the script once and logs it. Cost 0.
+
+- A. Do the three steps (recommended).
+- B. Use the smoke account instead. Put its email and password in the same file, and agents share the smoke account's view-only seat.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
