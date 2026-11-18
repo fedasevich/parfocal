@@ -55,6 +55,16 @@ def test_the_minimap_is_personal_and_shows_when_useful_by_default() -> None:
         assert setting.problem(stale) is not None
 
 
+def test_the_minimap_corner_is_kept_per_person_for_the_viewer_and_for_cell_review() -> None:
+    for key in ("minimap_corner", "minimap_corner_cells"):
+        setting = BY_KEY[key]
+        assert setting.layers == {Layer.PERSONAL}
+        assert setting.default == "auto"
+        for corner in ("auto", "br", "bl", "tr", "tl"):
+            assert setting.problem(corner) is None
+        assert setting.problem("centre") is not None
+
+
 def test_confidence_wording_offers_frequency_and_keeps_words_by_default() -> None:
     setting = BY_KEY["confidence_wording"]
     assert setting.layers == {Layer.PERSONAL}

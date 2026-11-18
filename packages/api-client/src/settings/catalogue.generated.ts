@@ -21,6 +21,8 @@ export type SettingValues = {
   hide_side_panel: boolean;
   panel_while_moving: "pinned" | "auto";
   minimap: "useful" | "always" | "never";
+  minimap_corner: "auto" | "br" | "bl" | "tr" | "tl";
+  minimap_corner_cells: "auto" | "br" | "bl" | "tr" | "tl";
   slide_strip: boolean;
   confidence_wording: "words" | "numbers" | "frequency" | "colour" | "hidden";
   outline_mode: "fade" | "mark-unsure" | "bands";
@@ -203,6 +205,34 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
       "useful",
       "always",
       "never"
+    ]
+  },
+  "minimap_corner": {
+    "kind": "choice",
+    "default": "auto",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "auto",
+      "br",
+      "bl",
+      "tr",
+      "tl"
+    ]
+  },
+  "minimap_corner_cells": {
+    "kind": "choice",
+    "default": "auto",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "auto",
+      "br",
+      "bl",
+      "tr",
+      "tl"
     ]
   },
   "slide_strip": {

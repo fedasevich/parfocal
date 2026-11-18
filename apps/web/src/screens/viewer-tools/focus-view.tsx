@@ -5,6 +5,7 @@ import { MapTrail, MapViewport, SmartMinimap } from "@parfocal/ui/components/sma
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
+import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
 import { overviewImageOf } from "../review/slide-picture.tsx";
@@ -43,6 +44,7 @@ export function FocusView(props: FocusViewProps) {
 
 function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusViewProps) {
   const { t } = useLingui();
+  const minimapOff = useResolvedSettings()?.minimap === "never";
   const [held, setHeld] = useState(false);
   usePeekKey(
     peekOpen,
@@ -155,25 +157,27 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
                 />
               ) : null}
               <HeldCorner fresh={fresh} camera={shown}>
-                {(place) => (
-                  <SmartMinimap
-                    data-corner={place.corner}
-                    image={overviewImageOf(session.slideId)}
-                    title={
-                      <Trans>
-                        <b>Whole slide</b> · {seenPercent.reading}% seen
-                      </Trans>
-                    }
-                    foot={`T2 of ${areas.length}`}
-                    footEnd={`10× · ${regions.filter((region) => answer(region.object)).length} of ${areas.length} decided`}
-                    onOpen={() => onPeekChange(true)}
-                    style={{ left: place.x, top: place.y }}
-                  >
-                    <MapTrail rects={seenTrail} />
-                    <MinimapAreas areas={areas} checked={["T1"]} current="T2" />
-                    <MapViewport rect={viewportOf("mid", shown, size)} />
-                  </SmartMinimap>
-                )}
+                {(place) =>
+                  minimapOff ? null : (
+                    <SmartMinimap
+                      data-corner={place.corner}
+                      image={overviewImageOf(session.slideId)}
+                      title={
+                        <Trans>
+                          <b>Whole slide</b> · {seenPercent.reading}% seen
+                        </Trans>
+                      }
+                      foot={`T2 of ${areas.length}`}
+                      footEnd={`10× · ${regions.filter((region) => answer(region.object)).length} of ${areas.length} decided`}
+                      onOpen={() => onPeekChange(true)}
+                      style={{ left: place.x, top: place.y }}
+                    >
+                      <MapTrail rects={seenTrail} />
+                      <MinimapAreas areas={areas} checked={["T1"]} current="T2" />
+                      <MapViewport rect={viewportOf("mid", shown, size)} />
+                    </SmartMinimap>
+                  )
+                }
               </HeldCorner>
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                 <MagnificationBar

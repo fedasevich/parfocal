@@ -33,7 +33,7 @@ import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { useConnection } from "../../shell/connection.ts";
 import { ConnectionBanner } from "../../shell/connection-banner.tsx";
-import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
+import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { engineBehindStill, noResultsOn, useStillBackdrop } from "../../viewer/still-backdrop.tsx";
@@ -175,6 +175,7 @@ function GuidedBody({
   );
   const objects = setup.issue === "noresults" ? [] : orderedObjects;
   const noResults = noResultsOn(true, objects);
+  const minimapOff = useResolvedSettings()?.minimap === "never";
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
   const base = baseAnswers(
@@ -973,7 +974,7 @@ function GuidedBody({
             showIds={settings.ids}
             failed={tileFail}
             bare={noResults}
-            minimap={!noResults}
+            minimap={!noResults && !minimapOff}
             hint={!showDone && !noResults}
             slideName={session.slideName}
             onPointPick={redraw === null ? undefined : pickPoint}

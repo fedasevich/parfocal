@@ -3,6 +3,7 @@ import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { openPopout, useMainPopoutSync } from "../popout/popout-channel.ts";
 import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
+import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { viewportRect } from "./stage-geometry.ts";
 import type { StageSession } from "./stage-inspector.tsx";
@@ -59,6 +60,7 @@ export function StageMinimap({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const image = useMinimapImage(slideId, overview);
+  const off = useResolvedSettings()?.minimap === "never";
   useEffect(() => {
     const node = frame.current;
     if (node === null) return;
@@ -84,7 +86,7 @@ export function StageMinimap({
   });
   return (
     <div ref={frame} className="pointer-events-none absolute inset-0">
-      {slide === null || image === null ? null : (
+      {slide === null || image === null || off ? null : (
         <SmartMinimap
           data-testid="stage-minimap"
           data-source={image.source}

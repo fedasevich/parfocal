@@ -25,13 +25,27 @@ import {
 } from "../review/slide-still.tsx";
 import { mmBetween } from "./edge-cues.ts";
 import { minimapContent } from "./minimap-content.ts";
-import { pinnedMinimap, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
+import {
+  type Corner,
+  choiceOfCorner,
+  chosenPlacement,
+  cornerOfChoice,
+  cornerOfPoint,
+  fitsCanvas,
+  pinnedMinimap,
+  placeMinimap,
+  type ScreenRect,
+  stepCorner,
+} from "./minimap-placement.ts";
 import { viewerSpots } from "./minimap-scenes.ts";
 import { type AreaMark, MinimapAreas } from "./slide-maps.tsx";
 import { tissueShareOnScreen } from "./tissue-share.ts";
 import { seenTrail } from "./tool-geometry.ts";
 import { boxCentre, fromOverview, viewportOf } from "./tool-maths.ts";
 import { useHeldCorner } from "./use-held-corner.tsx";
+import { type MinimapSurface, useMinimapCorner } from "./use-minimap-corner.ts";
+
+const landingCorners: Corner[] = ["top-left", "top-right", "bottom-left", "bottom-right"];
 
 const slideExtent: MapRect = [0, 0, overviewSize.width, overviewSize.height];
 
@@ -50,6 +64,7 @@ export function ViewerMinimap({
   openThread = null,
   cellsPanel = null,
   travelTo = null,
+  surface = "viewer",
   onOpen,
   onPopOut,
   onMoveView,
@@ -68,6 +83,7 @@ export function ViewerMinimap({
   openThread?: ScreenRect | null;
   cellsPanel?: ScreenRect | null;
   travelTo?: string | null;
+  surface?: MinimapSurface;
   onOpen: () => void;
   onPopOut: () => void;
   onMoveView: (camera: Camera) => void;
@@ -110,11 +126,17 @@ export function ViewerMinimap({
     cellsPanel,
   });
   const motion = useArm("minimap_motion");
+  const [choice, setChoice] = useMinimapCorner(surface);
+  const chosen = cornerOfChoice(choice);
+  const scored = placeMinimap(size, sized, spots.hot, spots.blocked);
   const fresh =
-    motion === "pinned"
-      ? pinnedMinimap(size, sized)
-      : placeMinimap(size, sized, spots.hot, spots.blocked);
+    chosen !== null
+      ? chosenPlacement(scored, chosen)
+      : motion === "pinned"
+        ? pinnedMinimap(size, sized)
+        : scored;
   const place = useHeldCorner(fresh, camera);
+  const [dragging, setDragging] = useState(false);
 
   const [host, setHost] = useState<HTMLElement | null>(null);
   const attach = useCallback(
@@ -160,6 +182,7 @@ export function ViewerMinimap({
   }, [onPopOut]);
 
   if (minimap.size === null) return null;
+  if (surface === "cells" && !fitsCanvas(size, scored)) return null;
   const position = Math.max(1, areas.findIndex((item) => item.object === current) + 1);
   const targetShape = travelTo === null ? undefined : regionShapes[shapeKey(travelTo)];
   const here: MapPoint = [viewport[0] + viewport[2] / 2, viewport[1] + viewport[3] / 2];
@@ -187,42 +210,84 @@ export function ViewerMinimap({
         : null,
   });
   const shows = (layer: (typeof content.layers)[number]) => content.layers.includes(layer);
+  const toCheck = cells.filter((cell) => !cell.decided).length;
   return (
-    <SmartMinimap
-      ref={attach}
-      data-corner={place.corner}
-      data-motion={motion}
-      data-mode={minimap.mode}
-      size={minimap.size}
-      image={overviewImage}
-      extent={extent}
-      faded={minimap.faded}
-      title={
-        <>
-          <b>{content.title.strong}</b>
-          {content.title.rest}
-        </>
-      }
-      foot={content.foot}
-      footEnd={content.footEnd}
-      viewport={viewport}
-      onOpen={onOpen}
-      onPopOut={popOut}
-      onMoveView={minimap.size === "pip" ? undefined : moveView}
-      style={{ left: place.x, top: place.y }}
-    >
-      {shows("trail") ? <MapTrail rects={seenTrail} /> : null}
-      {shows("areas") ? <MinimapAreas areas={areas} checked={checked} current={current} /> : null}
-      {shows("outline") ? <MapOutline path={regionShapes[current]?.path ?? ""} /> : null}
-      {content.dots ? (
-        <MapDots
-          dots={content.dots.points}
-          done={content.dots.done}
-          current={content.dots.current}
-        />
-      ) : null}
-      {content.route ? <MapRoute from={content.route.from} to={content.route.to} /> : null}
-      {shows("viewport") ? <MapViewport rect={viewport} /> : null}
-    </SmartMinimap>
+    <>
+      {dragging
+        ? landingCorners.map((corner) => {
+            const landing = pinnedMinimap(size, sized, corner);
+            return (
+              <span
+                key={corner}
+                aria-hidden="true"
+                data-landing={corner}
+                className="pointer-events-none absolute z-2 rounded-zone border border-dashed border-white/50 bg-white/5"
+                style={{
+                  left: landing.x,
+                  top: landing.y,
+                  width: sized.width,
+                  height: sized.height,
+                }}
+              />
+            );
+          })
+        : null}
+      <SmartMinimap
+        ref={attach}
+        data-corner={place.corner}
+        data-placed={chosen === null ? "auto" : "pinned"}
+        move={{
+          pinned: chosen !== null,
+          onDragChange: setDragging,
+          onDrop: (centre) => {
+            const bounds = host?.getBoundingClientRect();
+            if (!bounds) return;
+            setChoice(
+              choiceOfCorner(
+                cornerOfPoint(size, [centre[0] - bounds.left, centre[1] - bounds.top]),
+              ),
+            );
+          },
+          onStep: (key) => setChoice(choiceOfCorner(stepCorner(chosen ?? place.corner, key))),
+          onAuto: () => setChoice("auto"),
+        }}
+        data-motion={motion}
+        data-mode={minimap.mode}
+        size={minimap.size}
+        image={overviewImage}
+        extent={extent}
+        faded={minimap.faded}
+        title={
+          <>
+            <b>{content.title.strong}</b>
+            {content.title.rest}
+          </>
+        }
+        foot={content.foot}
+        footEnd={
+          surface === "cells" && minimap.mode !== "reading"
+            ? `${toCheck} to check`
+            : content.footEnd
+        }
+        viewport={viewport}
+        onOpen={onOpen}
+        onPopOut={popOut}
+        onMoveView={minimap.size === "pip" ? undefined : moveView}
+        style={{ left: place.x, top: place.y }}
+      >
+        {shows("trail") ? <MapTrail rects={seenTrail} /> : null}
+        {shows("areas") ? <MinimapAreas areas={areas} checked={checked} current={current} /> : null}
+        {shows("outline") ? <MapOutline path={regionShapes[current]?.path ?? ""} /> : null}
+        {content.dots ? (
+          <MapDots
+            dots={content.dots.points}
+            done={content.dots.done}
+            current={content.dots.current}
+          />
+        ) : null}
+        {content.route ? <MapRoute from={content.route.from} to={content.route.to} /> : null}
+        {shows("viewport") ? <MapViewport rect={viewport} /> : null}
+      </SmartMinimap>
+    </>
   );
 }

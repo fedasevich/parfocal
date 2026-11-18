@@ -53,13 +53,76 @@ export function placeMinimap(
 export function pinnedMinimap(
   canvas: { width: number; height: number },
   box: { width: number; height: number },
+  corner: Corner = "bottom-right",
 ): Placement {
+  const [side, edge] = corner.split("-");
   return {
-    corner: "bottom-right",
-    x: canvas.width - box.width - margin,
-    y: canvas.height - box.height - margin,
+    corner,
+    x: edge === "left" ? margin : canvas.width - box.width - margin,
+    y: side === "top" ? margin : canvas.height - box.height - margin,
     score: 0,
   };
+}
+
+export const blockedScore = blockedCost;
+
+export const narrowCanvas = 480;
+
+export type CornerChoice = "auto" | "br" | "bl" | "tr" | "tl";
+
+const choiceCorner: Record<Exclude<CornerChoice, "auto">, Corner> = {
+  br: "bottom-right",
+  bl: "bottom-left",
+  tr: "top-right",
+  tl: "top-left",
+};
+
+export function cornerOfChoice(choice: CornerChoice): Corner | null {
+  return choice === "auto" ? null : choiceCorner[choice];
+}
+
+export function choiceOfCorner(corner: Corner): Exclude<CornerChoice, "auto"> {
+  return corner === "bottom-right"
+    ? "br"
+    : corner === "bottom-left"
+      ? "bl"
+      : corner === "top-right"
+        ? "tr"
+        : "tl";
+}
+
+export function cornerOfPoint(
+  canvas: { width: number; height: number },
+  point: readonly [number, number],
+): Corner {
+  const side = point[1] < canvas.height / 2 ? "top" : "bottom";
+  const edge = point[0] < canvas.width / 2 ? "left" : "right";
+  return `${side}-${edge}`;
+}
+
+export function stepCorner(corner: Corner, key: string): Corner {
+  const [side, edge] = corner.split("-");
+  if (key === "ArrowLeft") return `${side}-left` as Corner;
+  if (key === "ArrowRight") return `${side}-right` as Corner;
+  if (key === "ArrowUp") return `top-${edge}` as Corner;
+  if (key === "ArrowDown") return `bottom-${edge}` as Corner;
+  return corner;
+}
+
+export function chosenPlacement(
+  scored: Placement & { ranked: Placement[] },
+  chosen: Corner | null,
+): Placement {
+  if (chosen === null) return scored;
+  const wanted = scored.ranked.find((place) => place.corner === chosen);
+  return wanted === undefined || wanted.score >= blockedCost ? scored : wanted;
+}
+
+export function fitsCanvas(
+  canvas: { width: number; height: number },
+  scored: { ranked: Placement[] },
+): boolean {
+  return canvas.width >= narrowCanvas && scored.ranked.some((place) => place.score < blockedCost);
 }
 
 export function pathPoints(path: string): [number, number][] {

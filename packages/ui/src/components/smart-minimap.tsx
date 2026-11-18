@@ -217,6 +217,37 @@ function MapViewport({ rect, tinyBelow = 8 }: { rect: MapRect; tinyBelow?: numbe
   );
 }
 
+type MinimapMove = {
+  pinned: boolean;
+  onDragChange?: ((dragging: boolean) => void) | undefined;
+  onDrop: (centre: MapPoint) => void;
+  onStep: (key: string) => void;
+  onAuto: () => void;
+};
+
+const dragStartPx = 4;
+
+function GripGlyph({ pinned }: { pinned: boolean }) {
+  return pinned ? (
+    <svg aria-hidden="true" viewBox="0 0 10 10" className="size-2.5" data-glyph="pin">
+      <path
+        d="M3.2 1h3.6l-.5 3 1.5 1.6H2.2L3.7 4zM5 5.6V9.2"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth={0.9}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" viewBox="0 0 10 10" className="size-2.5" data-glyph="grip">
+      {[2, 5, 8].flatMap((y) =>
+        [3, 7].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r={0.9} fill="currentColor" />),
+      )}
+    </svg>
+  );
+}
+
 type SmartMinimapProps = Omit<React.ComponentProps<"div">, "title"> & {
   size?: MinimapSize;
   image: MapImage;
@@ -229,6 +260,7 @@ type SmartMinimapProps = Omit<React.ComponentProps<"div">, "title"> & {
   onPopOut?: (() => void) | undefined;
   viewport?: MapRect | undefined;
   onMoveView?: ((centre: MapPoint) => void) | undefined;
+  move?: MinimapMove | undefined;
   children?: React.ReactNode;
 };
 
@@ -244,6 +276,7 @@ function SmartMinimap({
   onPopOut,
   viewport,
   onMoveView,
+  move,
   children,
   className,
   style,
@@ -252,6 +285,54 @@ function SmartMinimap({
   const { t } = useLingui();
 
   const [pointer, setPointer] = useState(false);
+  const [carried, setCarried] = useState<{ left: number; top: number } | null>(null);
+  const moveRef = useRef(move);
+  moveRef.current = move;
+  const dropped = useRef(false);
+  const startGrab = (event: React.PointerEvent<HTMLElement>, anywhere: boolean) => {
+    if (!move || event.button !== 0) return;
+    const target = event.target as HTMLElement;
+    if (!anywhere && target.closest("button:not([data-slot=minimap-grip])")) return;
+    const box = target.closest<HTMLElement>("[data-slot=smart-minimap]");
+    if (!box) return;
+    const from = { x: event.clientX, y: event.clientY, left: box.offsetLeft, top: box.offsetTop };
+    let started = false;
+    const carry = (moved: PointerEvent) => {
+      const dx = moved.clientX - from.x;
+      const dy = moved.clientY - from.y;
+      if (!started) {
+        if (Math.hypot(dx, dy) < dragStartPx) return;
+        started = true;
+        moveRef.current?.onDragChange?.(true);
+      }
+      setCarried({ left: from.left + dx, top: from.top + dy });
+    };
+    const drop = () => {
+      window.removeEventListener("pointermove", carry);
+      window.removeEventListener("pointerup", drop);
+      window.removeEventListener("pointercancel", drop);
+      if (!started) return;
+      dropped.current = true;
+      window.setTimeout(() => {
+        dropped.current = false;
+      }, 0);
+      const bounds = box.getBoundingClientRect();
+      setCarried(null);
+      moveRef.current?.onDragChange?.(false);
+      moveRef.current?.onDrop([bounds.left + bounds.width / 2, bounds.top + bounds.height / 2]);
+    };
+    window.addEventListener("pointermove", carry);
+    window.addEventListener("pointerup", drop);
+    window.addEventListener("pointercancel", drop);
+    event.stopPropagation();
+    if (anywhere) event.preventDefault();
+  };
+  const handle = move
+    ? {
+        "data-handle": true,
+        onPointerDown: (event: React.PointerEvent<HTMLElement>) => startGrab(event, false),
+      }
+    : {};
   const drag = useRef<{ moved: boolean } | null>(null);
   const box: MapRect = extent ?? [0, 0, image.width, image.height];
   const sizes = minimapBox(size, box);
@@ -293,18 +374,36 @@ function SmartMinimap({
     <div
       data-slot="smart-minimap"
       data-size={size}
-      data-faded={faded || pointer || undefined}
+      data-faded={carried ? undefined : faded || pointer || undefined}
+      data-carried={carried ? true : undefined}
+      data-pinned={move?.pinned || undefined}
       className={cn(
-        "absolute z-3 rounded-zone border border-line bg-chrome p-1.5 shadow-pop transition-[left,top,opacity] duration-(--motion-slow) data-faded:opacity-28 motion-reduce:transition-none",
+        "absolute z-3 rounded-zone border border-line bg-chrome p-1.5 shadow-pop transition-[left,top,opacity] duration-(--motion-slow) data-carried:cursor-grabbing data-carried:transition-none data-faded:opacity-28 motion-reduce:transition-none",
         className,
       )}
-      style={{ width: sizes.width, ...style }}
+      style={{
+        width: sizes.width,
+        ...style,
+        ...(carried ? { ...carried, right: "auto", bottom: "auto" } : {}),
+      }}
       onPointerEnter={() => setPointer(true)}
       onPointerLeave={() => setPointer(false)}
+      onPointerDownCapture={(event) => {
+        if (event.altKey) startGrab(event, true);
+      }}
+      onClickCapture={(event) => {
+        if (!dropped.current) return;
+        dropped.current = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
       {...props}
     >
       {head ? (
-        <div className="mx-0.5 mb-1.25 flex items-center justify-between gap-1 text-caption whitespace-nowrap text-fg-dim">
+        <div
+          {...handle}
+          className="mx-0.5 mb-1.25 flex items-center justify-between gap-1 text-caption whitespace-nowrap text-fg-dim data-handle:cursor-grab data-handle:select-none"
+        >
           <span className="min-w-0 truncate tracking-[-0.01em] [&_b]:font-semibold [&_b]:text-fg">
             {title}
           </span>
@@ -364,9 +463,45 @@ function SmartMinimap({
         ) : null}
       </div>
       {footShown ? (
-        <div className="mx-0.5 mt-1.25 flex justify-between gap-2 text-caption whitespace-nowrap text-fg-faint">
-          <span>{foot}</span>
-          <span>{footEnd}</span>
+        <div
+          {...handle}
+          className="mx-0.5 mt-1.25 flex items-center justify-between gap-2 text-caption whitespace-nowrap text-fg-faint data-handle:cursor-grab data-handle:select-none"
+        >
+          <span className="inline-flex min-w-0 items-center gap-1">
+            {move ? (
+              <button
+                type="button"
+                data-slot="minimap-grip"
+                aria-label={
+                  move.pinned ? t`Move the minimap. It stays in this corner` : t`Move the minimap`
+                }
+                title={
+                  move.pinned
+                    ? t`Drag to another corner. Double-click to place it automatically`
+                    : t`Drag to another corner, or use the arrow keys`
+                }
+                onDoubleClick={move.onAuto}
+                onKeyDown={(event) => {
+                  if (event.key.startsWith("Arrow")) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    move.onStep(event.key);
+                  } else if (event.key === "Backspace" || event.key === "Delete") {
+                    event.preventDefault();
+                    move.onAuto();
+                  }
+                }}
+                className={cn(
+                  "-ml-0.5 grid size-3.5 shrink-0 cursor-grab place-items-center rounded-[3px] border-0 bg-transparent p-0 outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
+                  move.pinned ? "text-accent" : "text-fg-faint",
+                )}
+              >
+                <GripGlyph pinned={move.pinned} />
+              </button>
+            ) : null}
+            <span>{foot}</span>
+          </span>
+          <span className="min-w-0 truncate">{footEnd}</span>
         </div>
       ) : null}
     </div>
@@ -622,6 +757,7 @@ export {
   MapRoute,
   MapTrail,
   MapViewport,
+  type MinimapMove,
   type MinimapSize,
   minimapBox,
   PeekArea,
