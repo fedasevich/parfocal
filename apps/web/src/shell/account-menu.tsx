@@ -35,9 +35,12 @@ const openHelp = () => window.dispatchEvent(new Event("help"));
 
 export const logOutUrl = "/api/auth/logout";
 
-function useEntries() {
+function useEntries(home: boolean) {
   const { t } = useLingui();
   return [
+    ...(home
+      ? [{ icon: "home" as const, label: t`Parfocal home`, href: destinations.home() }]
+      : []),
     { icon: "gear", label: t`Settings`, href: destinations.settings("display"), keys: "⌘," },
     {
       icon: "keyboard",
@@ -102,8 +105,16 @@ function ViewAs({ current }: { current: string | undefined }) {
   );
 }
 
-export function AccountMenu({ me, person }: { me: Me | undefined; person: PersonInfo }) {
-  const entries = useEntries();
+export function AccountMenu({
+  me,
+  person,
+  home = false,
+}: {
+  me: Me | undefined;
+  person: PersonInfo;
+  home?: boolean;
+}) {
+  const entries = useEntries(home);
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const initialsOnly = useShell((state) => state.initialsOnly);
   const goTo = useGoTo();

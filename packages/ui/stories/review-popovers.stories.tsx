@@ -25,6 +25,7 @@ const progressBody = (guided: boolean) => (
     taskSub="Sentinel node AI evaluation"
     slideName="A1 · H&E"
     slide={{ ...split, decided: 30, total: 55 }}
+    added={["T6⁺"]}
     seenPercent={38}
     onWholeSlide={() => undefined}
     position={8}
