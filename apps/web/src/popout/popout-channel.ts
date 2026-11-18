@@ -4,9 +4,11 @@ export type PopoutKind = "minimap" | "inspector";
 
 export type MapViewport = [number, number, number, number];
 
+export type SlideExtent = [number, number];
+
 export type PopoutMessage =
   | { type: "hello" }
-  | { type: "view"; viewport: MapViewport; magnification: number }
+  | { type: "view"; viewport: MapViewport; magnification: number; extent?: SlideExtent }
   | { type: "move"; centre: [number, number] }
   | { type: "select"; tab: string | null; object: string | null };
 
@@ -75,15 +77,17 @@ export function openPopoutChannel(): BroadcastChannel {
 export function useMainPopoutSync({
   viewport,
   magnification,
+  extent,
   onMoveTo,
 }: {
   viewport: MapViewport;
   magnification: number;
+  extent?: SlideExtent;
   onMoveTo: (centre: [number, number]) => void;
 }): void {
   const channel = useRef<BroadcastChannel | null>(null);
-  const latest = useRef({ viewport, magnification });
-  latest.current = { viewport, magnification };
+  const latest = useRef(viewMessage(viewport, magnification, extent));
+  latest.current = viewMessage(viewport, magnification, extent);
   const move = useRef(onMoveTo);
   move.current = onMoveTo;
 
@@ -92,7 +96,7 @@ export function useMainPopoutSync({
     channel.current = opened;
     opened.onmessage = (event: MessageEvent<PopoutMessage>) => {
       if (event.data.type === "move") move.current(event.data.centre);
-      if (event.data.type === "hello") opened.postMessage({ type: "view", ...latest.current });
+      if (event.data.type === "hello") opened.postMessage(latest.current);
     };
     return () => {
       opened.close();
@@ -101,13 +105,28 @@ export function useMainPopoutSync({
   }, []);
 
   const [x, y, width, height] = viewport;
+  const [slideWidth, slideHeight] = extent ?? [];
   useEffect(() => {
-    channel.current?.postMessage({
-      type: "view",
-      viewport: [x, y, width, height],
-      magnification,
-    } satisfies PopoutMessage);
-  }, [x, y, width, height, magnification]);
+    channel.current?.postMessage(
+      viewMessage(
+        [x, y, width, height],
+        magnification,
+        slideWidth === undefined || slideHeight === undefined
+          ? undefined
+          : [slideWidth, slideHeight],
+      ),
+    );
+  }, [x, y, width, height, magnification, slideWidth, slideHeight]);
+}
+
+function viewMessage(
+  viewport: MapViewport,
+  magnification: number,
+  extent: SlideExtent | undefined,
+): PopoutMessage {
+  return extent === undefined
+    ? { type: "view", viewport, magnification }
+    : { type: "view", viewport, magnification, extent };
 }
 
 export function useSelectionSync({
@@ -167,6 +186,7 @@ export function useSelectionSync({
 export type PopoutState = {
   viewport: MapViewport | null;
   magnification: number;
+  extent: SlideExtent | null;
   moveTo: (centre: [number, number]) => void;
 };
 
@@ -174,6 +194,7 @@ export function usePopoutState(): PopoutState {
   const channel = useRef<BroadcastChannel | null>(null);
   const [viewport, setViewport] = useState<MapViewport | null>(null);
   const [magnification, setMagnification] = useState(0);
+  const [extent, setExtent] = useState<SlideExtent | null>(null);
 
   useEffect(() => {
     const opened = openPopoutChannel();
@@ -182,6 +203,7 @@ export function usePopoutState(): PopoutState {
       if (event.data.type !== "view") return;
       setViewport(event.data.viewport);
       setMagnification(event.data.magnification);
+      setExtent(event.data.extent ?? null);
     };
     opened.postMessage({ type: "hello" } satisfies PopoutMessage);
     return () => {
@@ -193,6 +215,7 @@ export function usePopoutState(): PopoutState {
   return {
     viewport,
     magnification,
+    extent,
     moveTo: (centre) =>
       channel.current?.postMessage({ type: "move", centre } satisfies PopoutMessage),
   };

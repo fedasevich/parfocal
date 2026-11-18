@@ -119,7 +119,12 @@ export function EngineViewer({
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
-      <StageMinimap engine={session.engine} slideId={slideId} overview={session.overview} />
+      <StageMinimap
+        engine={session.engine}
+        slideId={slideId}
+        overview={session.overview}
+        units={session.module}
+      />
       <StageResultCells
         engine={session.engine}
         module={session.module}

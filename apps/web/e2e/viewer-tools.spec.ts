@@ -310,15 +310,14 @@ test("focus mode opens from the More menu of the annotate workspace", async ({ p
   await expect(page.locator("header")).toHaveCount(0);
 });
 
-test("a layer set on one side draws only in that pane", async ({ page }) => {
+test("a layer set on one side moves with its slide when the sides swap", async ({ page }) => {
   const links = await toolLinks(page);
   await page.goto(hrefOf(links, "Compare slides · Slides picked"));
-  const left = page.getByRole("region", { name: /^Left:/ });
-  const right = page.getByRole("region", { name: /^Right:/ });
-  const outline = (pane: typeof left) => pane.locator("path[stroke='var(--c-tumor)']");
-  await expect(outline(left)).toHaveCount(1);
-  await expect(outline(right)).toHaveCount(0);
+  const onSide = (side: "left" | "right") =>
+    page.getByRole("button", { name: `Tumor map outline on the ${side}` });
+  await expect(onSide("left")).toHaveAttribute("aria-pressed", "true");
+  await expect(onSide("right")).toHaveAttribute("aria-pressed", "false");
   await page.getByRole("button", { name: "Swap sides" }).click();
-  await expect(outline(left)).toHaveCount(0);
-  await expect(outline(right)).toHaveCount(1);
+  await expect(onSide("left")).toHaveAttribute("aria-pressed", "false");
+  await expect(onSide("right")).toHaveAttribute("aria-pressed", "true");
 });
