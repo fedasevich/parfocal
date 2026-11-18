@@ -248,7 +248,10 @@ export function ViewerMinimap({
               ),
             );
           },
-          onStep: (key) => setChoice(choiceOfCorner(stepCorner(chosen ?? place.corner, key))),
+          onStep: (key) =>
+            setChoice((current) =>
+              choiceOfCorner(stepCorner(cornerOfChoice(current) ?? place.corner, key)),
+            ),
           onAuto: () => setChoice("auto"),
         }}
         data-motion={motion}

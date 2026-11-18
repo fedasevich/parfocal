@@ -291,9 +291,18 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   await expect(page.locator('[data-slot="side-panel"]')).toHaveCount(0);
   await expect(page.locator('[data-slot="floating-pill"]')).toBeVisible();
   await expect(page.locator('[data-slot="focus-card"]')).toBeVisible();
-  await expect(minimap(page)).toBeVisible();
   await expect(page.locator('[data-slot="magnification-bar"]')).toBeVisible();
   expect(await chromeShare(page)).toBe(0);
+  await expect(minimap(page)).toHaveCount(0);
+  const stage = await page.getByTestId("slide-stage").boundingBox();
+  if (stage === null) throw new Error("the stage has no box");
+  await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2);
+  for (let step = 0; step < 5; step += 1) {
+    await page.mouse.wheel(0, -600);
+    await page.waitForTimeout(60);
+  }
+  await expect(minimap(page)).toBeVisible();
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
 
   await page.keyboard.press("Control+Backslash");
   await expect(page.getByTestId("focus-mode")).toHaveCount(0);

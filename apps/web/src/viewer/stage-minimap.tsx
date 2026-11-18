@@ -85,24 +85,36 @@ function useStageBlocks(frame: React.RefObject<HTMLElement | null>): ScreenRect[
     const node = frame.current;
     const host = node?.closest<HTMLElement>('[data-testid="slide-stage"]') ?? node?.parentElement;
     if (!node || !host) return;
+    const watched = new Set<HTMLElement>();
     const measure = () => {
       const origin = node.getBoundingClientRect();
-      const next = [...host.querySelectorAll<HTMLElement>(blockSelector)].map(
-        (element): ScreenRect => {
-          const box = element.getBoundingClientRect();
-          return [
-            Math.round(box.left - origin.left),
-            Math.round(box.top - origin.top),
-            Math.round(box.width),
-            Math.round(box.height),
-          ];
-        },
-      );
+      const elements = [...host.querySelectorAll<HTMLElement>(blockSelector)];
+      for (const element of watched) {
+        if (!elements.includes(element)) {
+          resized.unobserve(element);
+          watched.delete(element);
+        }
+      }
+      for (const element of elements) {
+        if (!watched.has(element)) {
+          watched.add(element);
+          resized.observe(element);
+        }
+      }
+      const next = elements.map((element): ScreenRect => {
+        const box = element.getBoundingClientRect();
+        return [
+          Math.round(box.left - origin.left),
+          Math.round(box.top - origin.top),
+          Math.round(box.width),
+          Math.round(box.height),
+        ];
+      });
       setBlocks((before) => (sameRects(before, next) ? before : next));
     };
-    measure();
     const resized = new ResizeObserver(measure);
     resized.observe(host);
+    measure();
     const changed = new MutationObserver(measure);
     changed.observe(host, { childList: true, subtree: true });
     return () => {
@@ -224,7 +236,10 @@ export function StageMinimap({
                 ),
               );
             },
-            onStep: (key) => setChoice(choiceOfCorner(stepCorner(chosen ?? place.corner, key))),
+            onStep: (key) =>
+              setChoice((current) =>
+                choiceOfCorner(stepCorner(cornerOfChoice(current) ?? place.corner, key)),
+              ),
             onAuto: () => setChoice("auto"),
           }}
           style={{ left: place.x, top: place.y }}
