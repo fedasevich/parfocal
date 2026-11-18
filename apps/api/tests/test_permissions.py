@@ -406,6 +406,7 @@ NEEDS_A_TASK = frozenset(
         "createSharedObject",
         "importSharedObjects",
         "changeAiObject",
+        "changeAiObjects",
         "confirmAiObject",
         "undoAiConfirm",
         "addRunToTaskSlide",
@@ -1114,6 +1115,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "changeAiObject": lambda w: Call("PUT", f"{w.shared_layer}/ai/T1", {"deleted": True}),
     "confirmAiObject": lambda w: Call("POST", f"{w.shared_layer}/ai/T2/confirm", {}),
+    "changeAiObjects": lambda w: Call(
+        "POST", f"{w.shared_layer}/ai-changes", {"changes": [{"object": "T3", "deleted": True}]}
+    ),
     "undoAiConfirm": lambda w: Call("DELETE", f"{w.shared_layer}/ai/T3/confirm?version=1"),
     "addRunToTaskSlide": lambda w: Call(
         "POST",
