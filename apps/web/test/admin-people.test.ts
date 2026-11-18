@@ -19,6 +19,8 @@ const activity = (email: string | null): MemberActivity => ({
   email,
   last_active_at: null,
   project_codes: [],
+  deactivates_on: null,
+  deactivated_at: null,
 });
 
 test("the admin switch is absent on reviewers and locked for the last holder", () => {

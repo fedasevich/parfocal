@@ -2205,6 +2205,48 @@ export interface DatasetLicenceOut {
   licence_class: LicenceClass;
 }
 
+export type DeactivationState = (typeof DeactivationState)[keyof typeof DeactivationState];
+
+export const DeactivationState = {
+  deactivated: "deactivated",
+  scheduled: "scheduled",
+} as const;
+
+export interface Deactivation {
+  user_id: string;
+  state: DeactivationState;
+  ends_on: string | null;
+  handed_over: number;
+}
+
+export type OpenWorkKind = (typeof OpenWorkKind)[keyof typeof OpenWorkKind];
+
+export const OpenWorkKind = {
+  "review-slides": "review-slides",
+  "owned-task": "owned-task",
+  adjudication: "adjudication",
+  "open-thread": "open-thread",
+} as const;
+
+export type HandoverAction = (typeof HandoverAction)[keyof typeof HandoverAction];
+
+export const HandoverAction = {
+  reassign: "reassign",
+  return: "return",
+} as const;
+
+export interface Handover {
+  kind: OpenWorkKind;
+  id: string;
+  action: HandoverAction;
+  to_user_id?: string | null;
+}
+
+export interface DeactivationDraft {
+  ends_on?: string | null;
+  handovers?: Handover[];
+}
+
 export type Decision = (typeof Decision)[keyof typeof Decision];
 
 export const Decision = {
@@ -4602,6 +4644,8 @@ export interface MemberActivity {
   email: string | null;
   last_active_at: string | null;
   project_codes: string[];
+  deactivates_on: string | null;
+  deactivated_at: string | null;
 }
 
 export interface MemberAvailability {
@@ -5117,6 +5161,19 @@ export interface OpenUpload {
   case_id: string | null;
   size: number;
   created_at: string;
+}
+
+export interface OpenWorkItem {
+  kind: OpenWorkKind;
+  id: string;
+  task_id: string | null;
+  label: string;
+  count: number;
+}
+
+export interface OpenWork {
+  user_id: string;
+  items: OpenWorkItem[];
 }
 
 export type OpinionAnswersProperty = { [key: string]: unknown };
@@ -77968,6 +78025,516 @@ export const useSetMemberAdminRights = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetMemberAdminRightsMutationOptions(options), queryClient);
+};
+
+export type getMemberOpenWorkResponse200 = {
+  data: OpenWork;
+  status: 200;
+};
+
+export type getMemberOpenWorkResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMemberOpenWorkResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMemberOpenWorkResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMemberOpenWorkResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMemberOpenWorkResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMemberOpenWorkResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMemberOpenWorkResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMemberOpenWorkResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMemberOpenWorkResponseSuccess = getMemberOpenWorkResponse200 & {
+  headers: Headers;
+};
+export type getMemberOpenWorkResponseError = (
+  | getMemberOpenWorkResponse400
+  | getMemberOpenWorkResponse401
+  | getMemberOpenWorkResponse403
+  | getMemberOpenWorkResponse404
+  | getMemberOpenWorkResponse409
+  | getMemberOpenWorkResponse422
+  | getMemberOpenWorkResponse429
+  | getMemberOpenWorkResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMemberOpenWorkResponse =
+  | getMemberOpenWorkResponseSuccess
+  | getMemberOpenWorkResponseError;
+
+export const getGetMemberOpenWorkUrl = (userId: string) => {
+  return `/api/tenant/members/${userId}/open-work`;
+};
+
+/**
+ * @summary Get Member Open Work
+ */
+export const getMemberOpenWork = async (
+  userId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMemberOpenWorkResponse> => {
+  return apiFetch<getMemberOpenWorkResponse>(getGetMemberOpenWorkUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMemberOpenWorkQueryKey = (userId: string) => {
+  return [`/api/tenant/members/${userId}/open-work`] as const;
+};
+
+export const getGetMemberOpenWorkQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMemberOpenWork>>,
+  TError = Problem,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMemberOpenWork>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMemberOpenWorkQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMemberOpenWork>>> = ({ signal }) =>
+    getMemberOpenWork(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: userId !== null && userId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getMemberOpenWork>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetMemberOpenWorkQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMemberOpenWork>>
+>;
+export type GetMemberOpenWorkQueryError = Problem;
+
+export function useGetMemberOpenWork<
+  TData = Awaited<ReturnType<typeof getMemberOpenWork>>,
+  TError = Problem,
+>(
+  userId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMemberOpenWork>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMemberOpenWork>>,
+          TError,
+          Awaited<ReturnType<typeof getMemberOpenWork>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMemberOpenWork<
+  TData = Awaited<ReturnType<typeof getMemberOpenWork>>,
+  TError = Problem,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMemberOpenWork>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMemberOpenWork>>,
+          TError,
+          Awaited<ReturnType<typeof getMemberOpenWork>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMemberOpenWork<
+  TData = Awaited<ReturnType<typeof getMemberOpenWork>>,
+  TError = Problem,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMemberOpenWork>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Member Open Work
+ */
+
+export function useGetMemberOpenWork<
+  TData = Awaited<ReturnType<typeof getMemberOpenWork>>,
+  TError = Problem,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMemberOpenWork>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMemberOpenWorkQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type deactivateMemberResponse200 = {
+  data: Deactivation;
+  status: 200;
+};
+
+export type deactivateMemberResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deactivateMemberResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deactivateMemberResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deactivateMemberResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deactivateMemberResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deactivateMemberResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deactivateMemberResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deactivateMemberResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deactivateMemberResponseSuccess = deactivateMemberResponse200 & {
+  headers: Headers;
+};
+export type deactivateMemberResponseError = (
+  | deactivateMemberResponse400
+  | deactivateMemberResponse401
+  | deactivateMemberResponse403
+  | deactivateMemberResponse404
+  | deactivateMemberResponse409
+  | deactivateMemberResponse422
+  | deactivateMemberResponse429
+  | deactivateMemberResponse500
+) & {
+  headers: Headers;
+};
+
+export type deactivateMemberResponse =
+  | deactivateMemberResponseSuccess
+  | deactivateMemberResponseError;
+
+export const getDeactivateMemberUrl = (userId: string) => {
+  return `/api/tenant/members/${userId}/deactivation`;
+};
+
+/**
+ * @summary Deactivate Member
+ */
+export const deactivateMember = async (
+  userId: string,
+  deactivationDraft: DeactivationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deactivateMemberResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<deactivateMemberResponse>(getDeactivateMemberUrl(userId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(deactivationDraft),
+  });
+};
+
+export const getDeactivateMemberMutationKey = () => ["deactivateMember"] as const;
+
+export const getDeactivateMemberMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivateMember>>,
+    TError,
+    DeactivateMemberMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deactivateMember>>,
+  TError,
+  DeactivateMemberMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeactivateMemberMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deactivateMember>>,
+    DeactivateMemberMutationVariables
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return deactivateMember(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeactivateMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deactivateMember>>
+>;
+export type DeactivateMemberMutationBody = DeactivationDraft;
+export type DeactivateMemberMutationError = Problem;
+export type DeactivateMemberMutationVariables = { userId: string; data: DeactivationDraft };
+
+/**
+ * @summary Deactivate Member
+ */
+export const useDeactivateMember = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deactivateMember>>,
+      TError,
+      DeactivateMemberMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deactivateMember>>,
+  TError,
+  DeactivateMemberMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeactivateMemberMutationOptions(options), queryClient);
+};
+
+export type cancelMemberDeactivationResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type cancelMemberDeactivationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type cancelMemberDeactivationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type cancelMemberDeactivationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type cancelMemberDeactivationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type cancelMemberDeactivationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type cancelMemberDeactivationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type cancelMemberDeactivationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type cancelMemberDeactivationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type cancelMemberDeactivationResponseSuccess = cancelMemberDeactivationResponse204 & {
+  headers: Headers;
+};
+export type cancelMemberDeactivationResponseError = (
+  | cancelMemberDeactivationResponse400
+  | cancelMemberDeactivationResponse401
+  | cancelMemberDeactivationResponse403
+  | cancelMemberDeactivationResponse404
+  | cancelMemberDeactivationResponse409
+  | cancelMemberDeactivationResponse422
+  | cancelMemberDeactivationResponse429
+  | cancelMemberDeactivationResponse500
+) & {
+  headers: Headers;
+};
+
+export type cancelMemberDeactivationResponse =
+  | cancelMemberDeactivationResponseSuccess
+  | cancelMemberDeactivationResponseError;
+
+export const getCancelMemberDeactivationUrl = (userId: string) => {
+  return `/api/tenant/members/${userId}/deactivation`;
+};
+
+/**
+ * @summary Cancel Member Deactivation
+ */
+export const cancelMemberDeactivation = async (
+  userId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<cancelMemberDeactivationResponse> => {
+  return apiFetch<cancelMemberDeactivationResponse>(getCancelMemberDeactivationUrl(userId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getCancelMemberDeactivationMutationKey = () => ["cancelMemberDeactivation"] as const;
+
+export const getCancelMemberDeactivationMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelMemberDeactivation>>,
+    TError,
+    CancelMemberDeactivationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelMemberDeactivation>>,
+  TError,
+  CancelMemberDeactivationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCancelMemberDeactivationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelMemberDeactivation>>,
+    CancelMemberDeactivationMutationVariables
+  > = (props) => {
+    const { userId } = props ?? {};
+
+    return cancelMemberDeactivation(userId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelMemberDeactivationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelMemberDeactivation>>
+>;
+
+export type CancelMemberDeactivationMutationError = Problem;
+export type CancelMemberDeactivationMutationVariables = { userId: string };
+
+/**
+ * @summary Cancel Member Deactivation
+ */
+export const useCancelMemberDeactivation = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelMemberDeactivation>>,
+      TError,
+      CancelMemberDeactivationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelMemberDeactivation>>,
+  TError,
+  CancelMemberDeactivationMutationVariables,
+  TContext
+> => {
+  return useMutation(getCancelMemberDeactivationMutationOptions(options), queryClient);
 };
 
 export type addMemberResponse201 = {
