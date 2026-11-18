@@ -72,6 +72,9 @@ export type SavedAnnotations = {
   readonly loaded: boolean;
   readonly saveState: SaveState;
   readonly unsaved: number;
+  readonly saveAttempt: number;
+  readonly refusedSaves: number;
+  readonly retrySave: () => void;
   readonly conflicts: readonly SaveConflict[];
   readonly resolveConflict: (conflict: SaveConflict, choice: Choice) => void;
   readonly incoming: readonly ChangeSummary[];
@@ -410,6 +413,9 @@ export function useSavedAnnotations(
     loaded,
     saveState: status.phase,
     unsaved: status.waiting,
+    saveAttempt: status.attempt,
+    refusedSaves: status.refused,
+    retrySave: queue.flushNow,
     conflicts,
     resolveConflict,
     incoming,

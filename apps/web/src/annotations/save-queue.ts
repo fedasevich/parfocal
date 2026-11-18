@@ -33,6 +33,7 @@ export type QueueStatus = {
   readonly waiting: number;
   readonly attempt: number;
   readonly conflicts: number;
+  readonly refused: number;
 };
 
 export type Conflict<Body> = {
@@ -101,7 +102,8 @@ export function createSaveQueue<Body>(
   let draining = false;
   let attempt = 0;
   let phase: QueuePhase = "idle";
-  let snapshot: QueueStatus = { phase, waiting: 0, attempt: 0, conflicts: 0 };
+  let refused = 0;
+  let snapshot: QueueStatus = { phase, waiting: 0, attempt: 0, conflicts: 0, refused };
 
   const publish = () => {
     const waiting = pending.length + (inFlight === null ? 0 : 1);
@@ -110,10 +112,11 @@ export function createSaveQueue<Body>(
       snapshot.phase === phase &&
       snapshot.waiting === waiting &&
       snapshot.attempt === attempt &&
-      snapshot.conflicts === conflicts
+      snapshot.conflicts === conflicts &&
+      snapshot.refused === refused
     )
       return;
-    snapshot = { phase, waiting, attempt, conflicts };
+    snapshot = { phase, waiting, attempt, conflicts, refused };
     for (const listener of listeners) listener();
   };
 
@@ -176,7 +179,10 @@ export function createSaveQueue<Body>(
         return;
       }
       attempt = 0;
-      if (result.kind === "rejected") rejected = true;
+      if (result.kind === "rejected") {
+        rejected = true;
+        refused += 1;
+      }
       if (result.kind === "conflict" && operation.kind !== "create") {
         open = [
           ...open,

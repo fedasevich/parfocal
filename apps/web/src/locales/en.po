@@ -1981,9 +1981,9 @@ msgstr "{lockedCount} settings"
 msgid "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
 msgstr "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
 
-#: src/annotations/conflict-notice.tsx
-msgid "{more} more waiting."
-msgstr "{more} more waiting."
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{more, plural, one {# more conflict follows this one.} other {# more conflicts follow this one.}}"
+msgstr "{more, plural, one {# more conflict follows this one.} other {# more conflicts follow this one.}}"
 
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "{object}: not a nucleus, counts as disagree"
@@ -2197,10 +2197,6 @@ msgstr "{templateName} v{version} "
 msgid "{templateName} v{version} was retired on {0}"
 msgstr "{templateName} v{version} was retired on {0}"
 
-#: src/annotations/live-changes-marker.tsx
-msgid "{text}. Show changes"
-msgstr "{text}. Show changes"
-
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "{tilesDone} of {tilesTotal} tiles finished"
 msgstr "{tilesDone} of {tilesTotal} tiles finished"
@@ -2212,6 +2208,14 @@ msgstr "{title} is back to Parfocal's choice."
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} uses your choice now."
 msgstr "{title} uses your choice now."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{title}. Choose Keep mine or Keep theirs in the banner under the top bar."
+msgstr "{title}. Choose Keep mine or Keep theirs in the banner under the top bar."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{title}. Choose Keep theirs in the banner under the top bar."
+msgstr "{title}. Choose Keep theirs in the banner under the top bar."
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "{title}.pdf"
@@ -2250,9 +2254,17 @@ msgstr "{total}. Choose this file again to continue where it stopped"
 msgid "{trimmed} is already a member here."
 msgstr "{trimmed} is already a member here."
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{unsaved, plural, one {Not connected, # edit waiting to save} other {Not connected, # edits waiting to save}}"
+msgstr "{unsaved, plural, one {Not connected, # edit waiting to save} other {Not connected, # edits waiting to save}}"
+
 #: src/screens/admin/people.tsx
 msgid "{waiting} invites waiting"
 msgstr "{waiting} invites waiting"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{waiting}. They stay in this tab and save when the connection returns."
+msgstr "{waiting}. They stay in this tab and save when the connection returns."
 
 #: src/shell/not-available.tsx
 msgid "{what} is not available yet. This part of Parfocal is still being built."
@@ -2573,21 +2585,25 @@ msgstr "A case is optional. It groups the slides of one specimen so they are rev
 msgid "A change from now on is an amendment with a reason."
 msgstr "A change from now on is an amendment with a reason."
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague already deleted this shape"
 msgstr "A colleague already deleted this shape"
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague changed the shape you changed"
 msgstr "A colleague changed the shape you changed"
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague changed the shape you deleted"
 msgstr "A colleague changed the shape you deleted"
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague deleted the shape you changed"
 msgstr "A colleague deleted the shape you changed"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "a colleague's new changes"
+msgstr "a colleague's new changes"
 
 #: src/screens/admin/templates.tsx
 msgid "A copy of one from the library, to change."
@@ -3393,6 +3409,10 @@ msgstr "All decided"
 msgid "All decided. Open the Slide done card"
 msgstr "All decided. Open the Slide done card"
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "All edits saved"
+msgstr "All edits saved"
+
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "All my tasks"
 msgstr "All my tasks"
@@ -3499,6 +3519,10 @@ msgstr "Amended and signed again. Version 1 stays readable."
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "AMENDED REPORT"
 msgstr "AMENDED REPORT"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "an edit conflict"
+msgstr "an edit conflict"
 
 #: src/screens/admin/templates.tsx
 msgid "An empty page"
@@ -4202,6 +4226,10 @@ msgstr "Both"
 #: ../../packages/ui/src/components/team.tsx
 msgid "Both are told by email."
 msgstr "Both are told by email."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Both of you deleted it."
+msgstr "Both of you deleted it."
 
 #: src/screens/upload/viewer-flow.tsx
 msgid "Both result sets draw on A1, each in its own color"
@@ -6055,6 +6083,7 @@ msgid "Discard"
 msgstr "Discard"
 
 #: ../../packages/ui/src/components/error-toast.tsx
+#: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Dismiss"
 msgstr "Dismiss"
 
@@ -6403,6 +6432,10 @@ msgstr "Edited"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Edited by"
 msgstr "Edited by"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "edits that were not saved"
+msgstr "edits that were not saved"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Eight averages rotated and flipped copies of each tile"
@@ -8375,7 +8408,7 @@ msgstr "Keep it under {maxLength} characters"
 msgid "Keep me signed in on this computer"
 msgstr "Keep me signed in on this computer"
 
-#: src/annotations/conflict-notice.tsx
+#: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Keep mine"
 msgstr "Keep mine"
 
@@ -8387,7 +8420,7 @@ msgstr "Keep the decisions"
 msgid "Keep the pointer over this pad"
 msgstr "Keep the pointer over this pad"
 
-#: src/annotations/conflict-notice.tsx
+#: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Keep theirs"
 msgstr "Keep theirs"
 
@@ -9921,6 +9954,10 @@ msgstr "No clinical note"
 #: src/screens/review/object-comments.tsx
 msgid "No comments on {object} yet. Write the first one below."
 msgstr "No comments on {object} yet. Write the first one below."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "no connection"
+msgstr "no connection"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "No decisions yet."
@@ -13526,6 +13563,7 @@ msgstr "Saved. Members without a second factor are asked to set one up and sign 
 msgid "Saved. Two factors are no longer required for everyone."
 msgstr "Saved. Two factors are no longer required for everyone."
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
 #: src/screens/input-traces/input-traces.tsx
 msgid "Saving"
 msgstr "Saving"
@@ -14086,6 +14124,10 @@ msgstr "Show all hints again"
 msgid "Show an example call"
 msgstr "Show an example call"
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Show changes"
+msgstr "Show changes"
+
 #: ../../packages/ui/src/components/jobs.tsx
 msgid "Show every step"
 msgstr "Show every step"
@@ -14220,6 +14262,10 @@ msgstr "showing the regions, your added region and the cells with a note or a di
 #: src/screens/admin/workspace-settings.tsx
 msgid "Shown"
 msgstr "Shown"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Shown next: {list}."
+msgstr "Shown next: {list}."
 
 #. placeholder {0}: imports.token.end
 #: src/screens/upload/overlays.tsx
@@ -14786,6 +14832,18 @@ msgstr "So far"
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Soft lock"
 msgstr "Soft lock"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Some edits were not saved"
+msgstr "Some edits were not saved"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Some edits were not saved."
+msgstr "Some edits were not saved."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Some edits were not saved. The server refused them, so a reload shows the last saved version."
+msgstr "Some edits were not saved. The server refused them, so a reload shows the last saved version."
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Some things need finishing first."
@@ -15684,6 +15742,10 @@ msgstr "The CSV files still download."
 msgid "The cutoff is {value}%."
 msgstr "The cutoff is {value}%."
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The dashed orange outline is theirs. Yours is deleted."
+msgstr "The dashed orange outline is theirs. Yours is deleted."
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "The decision cutoff is {value}%."
 msgstr "The decision cutoff is {value}%."
@@ -16093,6 +16155,10 @@ msgstr "The server is fetching {0}. They are checked and published like any uplo
 msgid "The server refused it ({code})"
 msgstr "The server refused it ({code})"
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The server refused them, so a reload shows the last saved version."
+msgstr "The server refused them, so a reload shows the last saved version."
+
 #: src/screens/upload/server-check.tsx
 msgid "The server sorts this file differently"
 msgstr "The server sorts this file differently"
@@ -16129,6 +16195,10 @@ msgstr "The slide is still being inspected at its source."
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
 msgstr "The slides without results are picked for you."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The solid blue outline is yours. Theirs is deleted."
+msgstr "The solid blue outline is yours. Theirs is deleted."
 
 #: src/viewer/remote-slide-notice.tsx
 msgid "The source is not answering, so the slide cannot be copied now."
@@ -16293,6 +16363,10 @@ msgstr "They join as reviewers without anyone saying yes."
 #: src/screens/disagreements/send-modal.tsx
 msgid "They see it in My work."
 msgstr "They see it in My work."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "They stay in this tab and save when the connection returns."
+msgstr "They stay in this tab and save when the connection returns."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "They stay open after the sign-off."
@@ -16735,6 +16809,10 @@ msgstr "Try another word, for example zoom, names or preset."
 #: src/shell/palette-labels.tsx
 msgid "Try it"
 msgstr "Try it"
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Try now"
+msgstr "Try now"
 
 #: src/shell/connection-banner.tsx
 msgid "Trying again..."
@@ -18119,9 +18197,9 @@ msgstr "Your other projects and your work are not affected."
 msgid "Your outline"
 msgstr "Your outline"
 
-#: src/annotations/conflict-notice.tsx
-msgid "Your outline in blue and your colleague's outline in orange"
-msgstr "Your outline in blue and your colleague's outline in orange"
+#: src/annotations/conflict-preview.tsx
+msgid "Your outline, solid blue, over your colleague's outline, dashed orange"
+msgstr "Your outline, solid blue, over your colleague's outline, dashed orange"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Your password"
@@ -18187,9 +18265,9 @@ msgstr "Your workspace"
 msgid "Your workspace · sign-in managed by its IT"
 msgstr "Your workspace · sign-in managed by its IT"
 
-#: src/annotations/conflict-notice.tsx
-msgid "Yours is blue, theirs is orange."
-msgstr "Yours is blue, theirs is orange."
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Yours is the solid blue outline, theirs is the dashed orange one."
+msgstr "Yours is the solid blue outline, theirs is the dashed orange one."
 
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Zone "

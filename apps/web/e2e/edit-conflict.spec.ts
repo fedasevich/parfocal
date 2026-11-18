@@ -77,6 +77,11 @@ async function conflictOver(page: Page) {
     "A colleague changed the shape you changed",
   );
   await expect(page.getByTestId("conflict-preview")).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: "A colleague changed the shape you changed" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("notice-alert")).toContainText("Choose Keep mine or Keep theirs");
+  await expect(page.getByTestId("save-status")).toHaveCount(0);
   return stage;
 }
 
@@ -98,6 +103,7 @@ test("keep mine saves the expert's move over the colleague's version", async ({ 
   const colleague = await saved(page);
   await page.getByRole("button", { name: "Keep mine" }).click();
   await expect(page.getByTestId("conflict-notice")).toHaveCount(0);
+  await expect(page.getByTestId("notice-alert")).toHaveText("");
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   const mine = await saved(page);
   expect(mine.version).toBe(3);

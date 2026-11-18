@@ -1979,8 +1979,8 @@ msgstr ""
 msgid "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
-msgid "{more} more waiting."
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{more, plural, one {# more conflict follows this one.} other {# more conflicts follow this one.}}"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-state.tsx
@@ -2195,10 +2195,6 @@ msgstr ""
 msgid "{templateName} v{version} was retired on {0}"
 msgstr ""
 
-#: src/annotations/live-changes-marker.tsx
-msgid "{text}. Show changes"
-msgstr ""
-
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "{tilesDone} of {tilesTotal} tiles finished"
 msgstr ""
@@ -2209,6 +2205,14 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} uses your choice now."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{title}. Choose Keep mine or Keep theirs in the banner under the top bar."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{title}. Choose Keep theirs in the banner under the top bar."
 msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
@@ -2248,8 +2252,16 @@ msgstr ""
 msgid "{trimmed} is already a member here."
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{unsaved, plural, one {Not connected, # edit waiting to save} other {Not connected, # edits waiting to save}}"
+msgstr ""
+
 #: src/screens/admin/people.tsx
 msgid "{waiting} invites waiting"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{waiting}. They stay in this tab and save when the connection returns."
 msgstr ""
 
 #: src/shell/not-available.tsx
@@ -2571,20 +2583,24 @@ msgstr ""
 msgid "A change from now on is an amendment with a reason."
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague already deleted this shape"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague changed the shape you changed"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague changed the shape you deleted"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
+#: src/annotations/conflict-preview.tsx
 msgid "A colleague deleted the shape you changed"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "a colleague's new changes"
 msgstr ""
 
 #: src/screens/admin/templates.tsx
@@ -3391,6 +3407,10 @@ msgstr ""
 msgid "All decided. Open the Slide done card"
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "All edits saved"
+msgstr ""
+
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "All my tasks"
 msgstr ""
@@ -3496,6 +3516,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "AMENDED REPORT"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "an edit conflict"
 msgstr ""
 
 #: src/screens/admin/templates.tsx
@@ -4199,6 +4223,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
 msgid "Both are told by email."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Both of you deleted it."
 msgstr ""
 
 #: src/screens/upload/viewer-flow.tsx
@@ -6050,6 +6078,7 @@ msgid "Discard"
 msgstr ""
 
 #: ../../packages/ui/src/components/error-toast.tsx
+#: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Dismiss"
 msgstr ""
 
@@ -6397,6 +6426,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Edited by"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "edits that were not saved"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -8370,7 +8403,7 @@ msgstr ""
 msgid "Keep me signed in on this computer"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
+#: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Keep mine"
 msgstr ""
 
@@ -8382,7 +8415,7 @@ msgstr ""
 msgid "Keep the pointer over this pad"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
+#: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Keep theirs"
 msgstr ""
 
@@ -9915,6 +9948,10 @@ msgstr ""
 
 #: src/screens/review/object-comments.tsx
 msgid "No comments on {object} yet. Write the first one below."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "no connection"
 msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -13517,6 +13554,7 @@ msgstr ""
 msgid "Saved. Two factors are no longer required for everyone."
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
 #: src/screens/input-traces/input-traces.tsx
 msgid "Saving"
 msgstr ""
@@ -14077,6 +14115,10 @@ msgstr ""
 msgid "Show an example call"
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Show changes"
+msgstr ""
+
 #: ../../packages/ui/src/components/jobs.tsx
 msgid "Show every step"
 msgstr ""
@@ -14210,6 +14252,10 @@ msgstr ""
 #: src/screens/admin/sections.tsx
 #: src/screens/admin/workspace-settings.tsx
 msgid "Shown"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Shown next: {list}."
 msgstr ""
 
 #. placeholder {0}: imports.token.end
@@ -14776,6 +14822,18 @@ msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Soft lock"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Some edits were not saved"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Some edits were not saved."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Some edits were not saved. The server refused them, so a reload shows the last saved version."
 msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
@@ -15675,6 +15733,10 @@ msgstr ""
 msgid "The cutoff is {value}%."
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The dashed orange outline is theirs. Yours is deleted."
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "The decision cutoff is {value}%."
 msgstr ""
@@ -16084,6 +16146,10 @@ msgstr ""
 msgid "The server refused it ({code})"
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The server refused them, so a reload shows the last saved version."
+msgstr ""
+
 #: src/screens/upload/server-check.tsx
 msgid "The server sorts this file differently"
 msgstr ""
@@ -16119,6 +16185,10 @@ msgstr ""
 
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The solid blue outline is yours. Theirs is deleted."
 msgstr ""
 
 #: src/viewer/remote-slide-notice.tsx
@@ -16283,6 +16353,10 @@ msgstr ""
 
 #: src/screens/disagreements/send-modal.tsx
 msgid "They see it in My work."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "They stay in this tab and save when the connection returns."
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -16725,6 +16799,10 @@ msgstr ""
 
 #: src/shell/palette-labels.tsx
 msgid "Try it"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Try now"
 msgstr ""
 
 #: src/shell/connection-banner.tsx
@@ -18110,8 +18188,8 @@ msgstr ""
 msgid "Your outline"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
-msgid "Your outline in blue and your colleague's outline in orange"
+#: src/annotations/conflict-preview.tsx
+msgid "Your outline, solid blue, over your colleague's outline, dashed orange"
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -18178,8 +18256,8 @@ msgstr ""
 msgid "Your workspace · sign-in managed by its IT"
 msgstr ""
 
-#: src/annotations/conflict-notice.tsx
-msgid "Yours is blue, theirs is orange."
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Yours is the solid blue outline, theirs is the dashed orange one."
 msgstr ""
 
 #: ../../packages/ui/src/components/findings-panel.tsx

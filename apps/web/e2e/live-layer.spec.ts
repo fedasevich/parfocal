@@ -44,7 +44,7 @@ test("a colleague's polygon waits behind the changes marker and appears on a cli
   await expect(marker).toContainText("added 1");
   await expect(lenka.getByTestId("polygon-shape")).toHaveCount(0);
 
-  await marker.click();
+  await marker.getByRole("button", { name: "Show changes" }).click();
   await expect(lenka.getByTestId("polygon-shape")).toHaveCount(1);
   await expect(marker).toHaveCount(0);
   await expect(lenkaStage).toHaveAttribute("data-save-state", /idle|saved/);
