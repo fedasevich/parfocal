@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-18
 
+- VIEW-074 to review: e2e/engine-viewer.spec.ts now pans, zooms, measures and arms select and comment on the real stage in the annotate task too, and decides an AI object there by guided check. Spec 21 of 21 and guard 5 of 5 pass on Linux. Overlay and CMU-1 goldens skip here because openslide.cs.cmu.edu is blocked. Left: the two text goldens green in Linux CI and the signed-in walk of a review task's Huron-1-40x.tif on app.parfocal.eu.
 - SKEL-002 The v0.19.0 smoke failed twice on test bugs. The account button's name comes from its content, so the check now matches its title. The typer request came from page.request with no Origin, which the new cross-origin write check refuses, so it now sends the app origin. The real app sends Origin on every write.
 - OPS-028 Closed under decision 145: the owner accepted 2 to 6 s on the first call after idle with min_containers 0. Last measurements after the cuts were 2.18, 6.39 and 3.99 s.
 - AITUM-014 Dropped by the owner: no training of any kind. A linear probe on Midnight features would be a trained head, so the task closes without a probe and the tumor map stays on the MONAI ResNet18. The Midnight embedder code and the weights measurement stay on main unused. The 4.5 GB of Midnight weights in ~/.cache/huggingface can be deleted.
