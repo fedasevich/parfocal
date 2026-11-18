@@ -89,6 +89,25 @@ def test_assigned_by_me_shows_each_reviewer_and_the_task_status(api: ApiAs, data
     assert statuses == ["signed-off"]
 
 
+def test_assigned_by_me_follows_project_ownership_not_who_created_the_task(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    task(api, s, slide_ids=[str(s.slides[0])], case_ids=[], reviewer_ids=[s.user("first")])
+    assert len(api(s.people["owner"]).get("/api/me/assigned-tasks").json()) == 1
+    assert api(s.people["viewer"]).get("/api/me/assigned-tasks").json() == []
+    owner(
+        database,
+        f"UPDATE project_members SET role = 'viewer' WHERE user_id = '{s.user('owner')}'",
+    )
+    owner(
+        database,
+        f"UPDATE project_members SET role = 'owner' WHERE user_id = '{s.user('viewer')}'",
+    )
+    assert api(s.people["owner"]).get("/api/me/assigned-tasks").json() == []
+    assert len(api(s.people["viewer"]).get("/api/me/assigned-tasks").json()) == 1
+
+
 def slide_ids(api: ApiAs, s: Study, who: str, **params: Any) -> list[str]:
     response = api(s.people[who]).get("/api/me/slides", params=params)
     assert response.status_code == 200, response.text
