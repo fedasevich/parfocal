@@ -249,11 +249,36 @@ async function createTask(
   return created.id;
 }
 
+async function seededTask(page: Page, kind: "review" | "annotate"): Promise<TaskOnSlide> {
+  for (const project of await openProjects(page)) {
+    const listed = await ok<TaskRow[]>(page, "GET", `/api/projects/${project.id}/review-tasks`);
+    for (const row of listed.filter((task) => task.kind === kind && task.slide_count > 0)) {
+      const detail = await ok<TaskDetail>(page, "GET", `/api/review-tasks/${row.id}`);
+      const slide = detail.slides[0]?.slide_id;
+      if (slide !== undefined) return { project: detail.project_id, task: row.id, slide };
+    }
+  }
+  throw new Error(`No ${kind} task in an open project has a slide`);
+}
+
+async function seededTaskReadyToSign(page: Page): Promise<string> {
+  for (const project of await openProjects(page)) {
+    const listed = await ok<TaskRow[]>(page, "GET", `/api/projects/${project.id}/review-tasks`);
+    for (const row of listed.filter((task) => task.kind === "review")) {
+      const states = await ok<TaskStates>(page, "GET", `/api/review-tasks/${row.id}/states`);
+      const allIn = states.slides.every(({ state }) => state === "submitted");
+      if (states.signed_off_at === null && states.slides.length > 0 && allIn) return row.id;
+    }
+  }
+  throw new Error("No unsigned review task has every review in");
+}
+
 export async function viewableTask(
   page: Page,
   kind: "review" | "annotate",
   fresh = false,
 ): Promise<TaskOnSlide> {
+  if (!onRealApi) return seededTask(page, kind);
   const found = await slideWithTiles(page);
   const { project, slide } = found;
   const name = fresh ? `${OWN_TASK} ${kind} ${Date.now()}` : `${OWN_TASK} ${kind}`;
@@ -265,6 +290,7 @@ export async function viewableTask(
 }
 
 export async function taskWithEveryReviewIn(page: Page): Promise<string> {
+  if (!onRealApi) return seededTaskReadyToSign(page);
   const found = await slideWithTiles(page);
   const { slide } = found;
   const task = await createTask(page, found, "review", `${OWN_TASK} sign-off ${Date.now()}`);

@@ -107,7 +107,7 @@ test(
   "a nudge from Assigned by me is stored and Undo takes it back",
   realTags(area.team),
   async ({ page }) => {
-    await signIn(page, "/my-work");
+    await signIn(page, "/my-work?tab=assigned");
     await arrangeOtherReviewers(page);
     const me = (await ok<{ user_id: string }>(page, "GET", "/api/me")).user_id;
     const assigned = await ok<Assigned[]>(page, "GET", "/api/me/assigned-tasks");
