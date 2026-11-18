@@ -11,6 +11,7 @@ MAX_SCALEDOWN_SECONDS = 300
 MAX_CONTAINERS_PER_POOL = 4
 MAX_HOURLY_SPEND_USD = 5.0
 MAX_TIMEOUT_SECONDS = 3600
+EU_POOL_REGION = "eu"
 
 
 class Gpu(StrEnum):
@@ -78,6 +79,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=2,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
+        region=EU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.DETECTOR_GOOD,
@@ -89,6 +91,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=2,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
+        region=EU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.TYPER_BEST,
@@ -100,6 +103,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
+        region=EU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.TYPER_GOOD,
@@ -111,6 +115,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
+        region=EU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.EMBEDDER,
@@ -122,6 +127,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=60,
         scaledown_window_seconds=INTERACTIVE_SCALEDOWN_SECONDS,
+        region=EU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.LAB_MODEL,
@@ -133,6 +139,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
+        region=EU_POOL_REGION,
     ),
 )
 

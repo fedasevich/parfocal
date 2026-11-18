@@ -147,8 +147,8 @@ def test_cpu_stand_in_keeps_the_family_and_drops_the_gpu() -> None:
     validate_pools((stand_in,))
 
 
-def test_pools_are_not_pinned_to_a_region_during_the_pilot() -> None:
-    assert all("region" not in function_options(pool) for pool in POOLS)
+def test_pools_are_pinned_to_the_eu() -> None:
+    assert all(function_options(pool).get("region") == "eu" for pool in POOLS)
 
 
 def test_a_pinned_pool_passes_its_region_to_modal() -> None:
