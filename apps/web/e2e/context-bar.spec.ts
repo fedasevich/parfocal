@@ -4,7 +4,7 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 
 const tools: { keys: string; label: string; hints: number; strip: boolean }[] = [
   { keys: "v", label: "Select", hints: 3, strip: false },
-  { keys: "s", label: "Smart select", hints: 4, strip: true },
+  { keys: "s", label: "Smart select", hints: 3, strip: true },
   { keys: "p", label: "Polygon", hints: 3, strip: true },
   { keys: "Shift+P", label: "Freehand", hints: 2, strip: true },
   { keys: "r", label: "Rectangle", hints: 2, strip: true },

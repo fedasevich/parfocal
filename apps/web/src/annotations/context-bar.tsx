@@ -61,6 +61,7 @@ type ContextBarViewProps = {
   activeClass: string | null;
   onPick: (classKey: string) => void;
   proposals: ProposalActions | null;
+  onCloseHints?: () => void;
 };
 
 export function ContextBarView({
@@ -69,6 +70,7 @@ export function ContextBarView({
   activeClass,
   onPick,
   proposals,
+  onCloseHints,
 }: ContextBarViewProps) {
   const { t } = useLingui();
   const strip = model.classStrip ? (
@@ -115,6 +117,18 @@ export function ContextBarView({
       {strip ? <ContextDivider /> : null}
       {strip}
       <ContextExtrasSlot />
+      {model.hints.length > 0 && onCloseHints ? (
+        <button
+          type="button"
+          data-testid="hint-close"
+          title={t`Close the hint`}
+          onClick={onCloseHints}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-ctl border border-line px-1.5 py-0.5 text-fg-dim hover:text-fg"
+        >
+          <Trans>Close</Trans>
+          <Keycap size="sm" keys="⇧I" />
+        </button>
+      ) : null}
     </ContextBar>
   );
 }

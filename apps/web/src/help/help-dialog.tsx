@@ -6,6 +6,7 @@ import { destinations } from "../shell/destinations.ts";
 import { useGoTo } from "../shell/router-link.tsx";
 import { helpTopics } from "./help-topics.ts";
 import { latestReleases } from "./release-notes-source.ts";
+import { ToolHintsSection } from "./tool-hints-section.tsx";
 import { closeHelp, startTour, useHelpOpen } from "./tour-state.ts";
 import { progressOf, resumeIndex, tourLength } from "./tour-steps.ts";
 
@@ -51,6 +52,7 @@ export function HelpDialog() {
             </div>
           ))}
         </dl>
+        <ToolHintsSection />
         <section aria-labelledby="whats-new-heading" className="grid gap-2 text-body-sm">
           <h3 id="whats-new-heading" className="font-medium text-fg">
             <Trans>What's new</Trans>
