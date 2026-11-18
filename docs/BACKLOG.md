@@ -4118,7 +4118,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.
 
-- [ ] MLEVAL-007 · Browser parity tests
+- [x] MLEVAL-007 · Browser parity tests
   Quantised browser graphs must match server outputs within tolerance.
   Done when CI compares ONNX outputs to PyTorch on a fixed patch set.
   Size: M.
