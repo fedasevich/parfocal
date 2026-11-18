@@ -121,7 +121,7 @@ export function StageObjectNotes({
         onEdit={openNote}
       />
     ) : shown ? (
-      <Button size="sm" variant="ghost" className="justify-self-start" onClick={openNote}>
+      <Button size="sm" variant="secondary" className="justify-self-start" onClick={openNote}>
         <Trans>Add a note</Trans>
       </Button>
     ) : null);
@@ -141,7 +141,7 @@ export function StageObjectNotes({
     ) : null;
   return (
     <div data-testid="stage-object-notes" className="grid gap-3 p-3">
-      <Button size="sm" variant="ghost" className="justify-self-start" onClick={onAllComments}>
+      <Button size="sm" variant="secondary" className="justify-self-start" onClick={onAllComments}>
         <Trans>All comments on this slide</Trans>
       </Button>
       <ObjectComments

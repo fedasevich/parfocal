@@ -110,6 +110,7 @@ type LiveTopBarProps = {
   load: CaseLoad | null;
   task: ReviewTaskDetail | undefined;
   workspace: SlideWorkspace;
+  guided?: boolean;
   onWorkspace: (next: SlideWorkspace) => void;
   onOpenSlide: (slideId: string) => void;
   onSubmit: (() => void) | undefined;
@@ -126,6 +127,7 @@ export function LiveTopBar({
   load,
   task,
   workspace,
+  guided = false,
   onWorkspace,
   onOpenSlide,
   onSubmit,
@@ -211,7 +213,7 @@ export function LiveTopBar({
         aria-label={t`How to review`}
         data-testid="workspace-switch"
         className="shrink-0"
-        value={workspace}
+        value={guided ? "guided" : workspace}
         onValueChange={(next: string) => {
           if (next === "guided" && task !== undefined) {
             void navigate({

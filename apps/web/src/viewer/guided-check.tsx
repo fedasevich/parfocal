@@ -110,7 +110,7 @@ export function GuidedCheck({
           </Button>
         </div>
       )}
-      <Button size="sm" variant="ghost" onClick={onLeave}>
+      <Button size="sm" variant="secondary" onClick={onLeave}>
         <Trans>Leave the guided check</Trans>
       </Button>
     </section>

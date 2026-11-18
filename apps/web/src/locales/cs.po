@@ -4293,6 +4293,14 @@ msgstr ""
 msgid "Brush"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
+msgid "Brush your own map"
+msgstr ""
+
+#: src/results/painted-map-layer.tsx
+msgid "Brush your own map of the tissue on the slide, then name, save and export it"
+msgstr ""
+
 #. placeholder {0}: classListNames(taxonomies)
 #: src/screens/admin/sections.tsx
 msgid "Built-in lists: {0}. Each project can change its own classes."
@@ -5208,9 +5216,21 @@ msgstr ""
 msgid "Colour map of {0}"
 msgstr ""
 
+#: src/results/view-map-layer.tsx
+msgid "Colour more of the slide"
+msgstr ""
+
 #. placeholder {0}: row.name
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Colour of {0}"
+msgstr ""
+
+#: src/results/view-map-layer.tsx
+msgid "Colour tumor in this view"
+msgstr ""
+
+#: src/results/view-map-layer.tsx
+msgid "Colours the tissue in view by how likely the AI thinks it is tumor"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -6888,10 +6908,6 @@ msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Exported marked as not checked"
-msgstr ""
-
-#: src/results/view-map-layer.tsx
-msgid "Extend the map"
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
@@ -9204,10 +9220,6 @@ msgid "Manage"
 msgstr ""
 
 #: src/results/view-map-layer.tsx
-msgid "Map this view"
-msgstr ""
-
-#: src/results/view-map-layer.tsx
 msgid "Mapping this view"
 msgstr ""
 
@@ -11428,10 +11440,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Pages of the report"
-msgstr ""
-
-#: src/results/painted-map-layer.tsx
-msgid "Paint a map"
 msgstr ""
 
 #: src/results/painted-map-layer.tsx

@@ -4295,6 +4295,14 @@ msgstr "Brightness"
 msgid "Brush"
 msgstr "Brush"
 
+#: src/results/painted-map-layer.tsx
+msgid "Brush your own map"
+msgstr "Brush your own map"
+
+#: src/results/painted-map-layer.tsx
+msgid "Brush your own map of the tissue on the slide, then name, save and export it"
+msgstr "Brush your own map of the tissue on the slide, then name, save and export it"
+
 #. placeholder {0}: classListNames(taxonomies)
 #: src/screens/admin/sections.tsx
 msgid "Built-in lists: {0}. Each project can change its own classes."
@@ -5210,10 +5218,22 @@ msgstr "Colormap"
 msgid "Colour map of {0}"
 msgstr "Colour map of {0}"
 
+#: src/results/view-map-layer.tsx
+msgid "Colour more of the slide"
+msgstr "Colour more of the slide"
+
 #. placeholder {0}: row.name
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Colour of {0}"
 msgstr "Colour of {0}"
+
+#: src/results/view-map-layer.tsx
+msgid "Colour tumor in this view"
+msgstr "Colour tumor in this view"
+
+#: src/results/view-map-layer.tsx
+msgid "Colours the tissue in view by how likely the AI thinks it is tumor"
+msgstr "Colours the tissue in view by how likely the AI thinks it is tumor"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Comes from your sign-in"
@@ -6894,10 +6914,6 @@ msgstr "Exported {0}, signed with {1}."
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Exported marked as not checked"
 msgstr "Exported marked as not checked"
-
-#: src/results/view-map-layer.tsx
-msgid "Extend the map"
-msgstr "Extend the map"
 
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/steps.tsx
@@ -9209,10 +9225,6 @@ msgid "Manage"
 msgstr "Manage"
 
 #: src/results/view-map-layer.tsx
-msgid "Map this view"
-msgstr "Map this view"
-
-#: src/results/view-map-layer.tsx
 msgid "Mapping this view"
 msgstr "Mapping this view"
 
@@ -11434,10 +11446,6 @@ msgstr "Pages"
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Pages of the report"
 msgstr "Pages of the report"
-
-#: src/results/painted-map-layer.tsx
-msgid "Paint a map"
-msgstr "Paint a map"
 
 #: src/results/painted-map-layer.tsx
 msgid "Painted map"
