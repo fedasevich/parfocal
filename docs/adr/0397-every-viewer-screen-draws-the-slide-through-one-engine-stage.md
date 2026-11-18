@@ -1,4 +1,4 @@
-# 0391. Every viewer screen draws the slide through one engine stage
+# 0397. Every viewer screen draws the slide through one engine stage
 
 - Date: 2026-11-17
 - Status: Accepted
