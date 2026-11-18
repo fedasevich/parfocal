@@ -186,6 +186,19 @@ Your choice: a
 - Decision 136 (whether a linear probe on frozen foundation model features counts as training), option A. AITUM-014 (a foundation model probe for the tumor map) may fit a linear probe on frozen H-optimus-0 features.
 - Decision 137 (how production gets past the migration squash), asked in chat on 2026-11-16 and answered "Recreate the database". Production was at revision 0110 from v0.2.0, and FOUND-035 (squash the migrations into one baseline) replaced that chain with a baseline at 0115, so the next deploy could not migrate it. The database `neondb` is dropped and recreated under ADR 0293 (production only until the first real user), the next tag is deployed onto the empty database and the "Reset production" workflow seeds it. The owner's test data in production is lost.
 
+## Open decisions from the UX consistency pass of 2026-11-18
+
+### 155. Which extra settings the Display tab gets
+
+PROTO-031 (every Settings row draws and previews what it really does) added the Motion row (normal, slower for presenting, reduced), the only Display setting an ADR promised. Three more are common in viewers but no ADR or mock promises them.
+
+- **A. None for now (recommended).** Keep the Display tab as it is and add any of these when a user asks.
+- **B. Text size.** Small, default and large, stored per device.
+- **C. A colour-blind-safe palette for class colours.** One switch that swaps the class colours for a palette safe for the common colour vision types.
+- **D. Switch on Czech.** The Czech locale exists but is disabled in the language picker.
+
+Your choice (one or more letters): 
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-18 after a sweep of stale tasks. Tasks an agent can finish went back to the ready list. What is left in review waits on you or on the next release.
