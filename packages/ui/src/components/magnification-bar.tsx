@@ -124,7 +124,7 @@ function MagnificationBar({
       data-open={shown || undefined}
       role="toolbar"
       tabIndex={tabIndex}
-      aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or Alt+1 to Alt+6 for the presets`}
+      aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or ⌥1 to ⌥6 for the presets`}
       className={cn(
         "inline-flex min-h-9 items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
         shown ? "pl-1.5" : "pl-2.5",
@@ -158,7 +158,7 @@ function MagnificationBar({
             <button
               key={preset}
               type="button"
-              title={t`Alt+${index + 1}`}
+              title={t`⌥${index + 1}`}
               aria-pressed={preset === near}
               onClick={() => onPreset?.(preset)}
               className="cursor-pointer rounded-md border-0 bg-transparent px-1.5 py-1 font-mono text-caption text-fg-dim hover:text-fg aria-pressed:bg-accent-soft aria-pressed:text-fg"

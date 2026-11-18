@@ -33,7 +33,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     read: [
       ["Pan", "Drag, or middle-drag"],
       ["Zoom", "Wheel, to the cursor"],
-      ["Preset", "Alt+1 to Alt+6"],
+      ["Preset", "⌥1 to ⌥6"],
       ["Next area", "]"],
     ],
     review: [
@@ -53,7 +53,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     read: [
       ["Pan", "Two fingers"],
       ["Zoom", "Pinch"],
-      ["Preset", "Alt+1 to Alt+6"],
+      ["Preset", "⌥1 to ⌥6"],
       ["Whole slide", "Hold Z"],
     ],
     review: [
@@ -133,7 +133,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     read: [
       ["Pan", "Arrows, Shift for 3x"],
       ["Zoom", "+ and -"],
-      ["Preset", "Alt+1 to Alt+6"],
+      ["Preset", "⌥1 to ⌥6"],
       ["Area", "G then a number"],
     ],
     review: [

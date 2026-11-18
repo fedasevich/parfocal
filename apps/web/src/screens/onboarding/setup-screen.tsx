@@ -114,7 +114,7 @@ const devices: { key: Device; label: string; keys: [string, string][] }[] = lazy
     keys: [
       ["Pan", t`Drag, or middle-drag`],
       [t`Zoom`, t`Wheel, to the cursor`],
-      [t`Preset`, t`Alt+1 to Alt+6`],
+      [t`Preset`, t`⌥1 to ⌥6`],
       [t`Next area`, "]"],
     ],
   },
@@ -124,7 +124,7 @@ const devices: { key: Device; label: string; keys: [string, string][] }[] = lazy
     keys: [
       ["Pan", t`Two fingers`],
       [t`Zoom`, t`Pinch`],
-      [t`Preset`, t`Alt+1 to Alt+6`],
+      [t`Preset`, t`⌥1 to ⌥6`],
       [t`Whole slide`, "Hold Z"],
     ],
   },
@@ -164,7 +164,7 @@ const devices: { key: Device; label: string; keys: [string, string][] }[] = lazy
     keys: [
       ["Pan", t`Arrows, Shift for 3x`],
       [t`Zoom`, t`+ and -`],
-      [t`Preset`, t`Alt+1 to Alt+6`],
+      [t`Preset`, t`⌥1 to ⌥6`],
       [t`Area`, t`G then a number`],
     ],
   },

@@ -2434,6 +2434,15 @@ msgstr ""
 msgid "⌘K with a search typed"
 msgstr ""
 
+#. placeholder {0}: index + 1
+#: ../../packages/ui/src/components/magnification-bar.tsx
+msgid "⌥{0}"
+msgstr ""
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "⌥1 to ⌥6"
+msgstr ""
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "0 0 0 1.5px #ffffff"
 msgstr ""
@@ -3473,15 +3482,6 @@ msgstr ""
 #. placeholder {0}: viewers.map((person) => person.name).join(", ")
 #: src/presence/viewing-now.tsx
 msgid "Also viewing now: {0}"
-msgstr ""
-
-#. placeholder {0}: index + 1
-#: ../../packages/ui/src/components/magnification-bar.tsx
-msgid "Alt+{0}"
-msgstr ""
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Alt+1 to Alt+6"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -9165,7 +9165,7 @@ msgid "Magnification"
 msgstr ""
 
 #: ../../packages/ui/src/components/magnification-bar.tsx
-msgid "Magnification {current}, scale {scaleLabel}. Hover or Alt+1 to Alt+6 for the presets"
+msgid "Magnification {current}, scale {scaleLabel}. Hover or ⌥1 to ⌥6 for the presets"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -14661,7 +14661,7 @@ msgid "Slide brightness"
 msgstr ""
 
 #: ../../packages/ui/src/components/brightness-popover.tsx
-msgid "Slide brightness (Alt+↑ / Alt+↓)"
+msgid "Slide brightness (⌥↑ / ⌥↓)"
 msgstr ""
 
 #: ../../packages/ui/src/components/brightness-popover.tsx
@@ -16462,6 +16462,10 @@ msgstr ""
 
 #: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
+msgstr ""
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "This slide has no tumor map"
 msgstr ""
 
 #: src/screens/upload/server-check.tsx

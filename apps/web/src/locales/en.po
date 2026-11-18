@@ -2436,6 +2436,15 @@ msgstr "<0>Whole slide</0> · {openThreads} threads"
 msgid "⌘K with a search typed"
 msgstr "⌘K with a search typed"
 
+#. placeholder {0}: index + 1
+#: ../../packages/ui/src/components/magnification-bar.tsx
+msgid "⌥{0}"
+msgstr "⌥{0}"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "⌥1 to ⌥6"
+msgstr "⌥1 to ⌥6"
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "0 0 0 1.5px #ffffff"
 msgstr "0 0 0 1.5px #ffffff"
@@ -3476,15 +3485,6 @@ msgstr "Already listed"
 #: src/presence/viewing-now.tsx
 msgid "Also viewing now: {0}"
 msgstr "Also viewing now: {0}"
-
-#. placeholder {0}: index + 1
-#: ../../packages/ui/src/components/magnification-bar.tsx
-msgid "Alt+{0}"
-msgstr "Alt+{0}"
-
-#: src/screens/onboarding/setup-screen.tsx
-msgid "Alt+1 to Alt+6"
-msgstr "Alt+1 to Alt+6"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Always"
@@ -9170,8 +9170,8 @@ msgid "Magnification"
 msgstr "Magnification"
 
 #: ../../packages/ui/src/components/magnification-bar.tsx
-msgid "Magnification {current}, scale {scaleLabel}. Hover or Alt+1 to Alt+6 for the presets"
-msgstr "Magnification {current}, scale {scaleLabel}. Hover or Alt+1 to Alt+6 for the presets"
+msgid "Magnification {current}, scale {scaleLabel}. Hover or ⌥1 to ⌥6 for the presets"
+msgstr "Magnification {current}, scale {scaleLabel}. Hover or ⌥1 to ⌥6 for the presets"
 
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
@@ -14670,8 +14670,8 @@ msgid "Slide brightness"
 msgstr "Slide brightness"
 
 #: ../../packages/ui/src/components/brightness-popover.tsx
-msgid "Slide brightness (Alt+↑ / Alt+↓)"
-msgstr "Slide brightness (Alt+↑ / Alt+↓)"
+msgid "Slide brightness (⌥↑ / ⌥↓)"
+msgstr "Slide brightness (⌥↑ / ⌥↓)"
 
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Slide brightness {value}%"
@@ -16472,6 +16472,10 @@ msgstr "This slide cannot be read"
 #: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
 msgstr "This slide could not be prepared"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "This slide has no tumor map"
+msgstr "This slide has no tumor map"
 
 #: src/screens/upload/server-check.tsx
 msgid "This slide is already in the project"

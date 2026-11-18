@@ -37,7 +37,7 @@ function BrightnessPopover({
     >
       <PopoverTrigger
         aria-label={t`Slide brightness ${value}%`}
-        title={t`Slide brightness (Alt+↑ / Alt+↓)`}
+        title={t`Slide brightness (⌥↑ / ⌥↓)`}
         className={cn(
           "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-ctl border border-line-strong bg-btn-bg px-2 text-body-sm text-fg outline-none hover:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
           changed && "border-accent text-accent",
@@ -89,8 +89,8 @@ function BrightnessPopover({
         <p className="m-0 text-caption leading-[1.45] text-fg-dim">
           <Trans>
             Like the light dial on a microscope. Changes the slide only, never the interface or the
-            monitor's calibration. Remembered on this computer. <Keycap keys="Alt+↑" />{" "}
-            <Keycap keys="Alt+↓" /> <Keycap keys="Alt+0" />
+            monitor's calibration. Remembered on this computer. <Keycap keys="⌥↑" />{" "}
+            <Keycap keys="⌥↓" /> <Keycap keys="⌥0" />
           </Trans>
         </p>
       </PopoverContent>
