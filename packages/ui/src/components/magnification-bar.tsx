@@ -126,7 +126,7 @@ function MagnificationBar({
       tabIndex={tabIndex}
       aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or ⌥1 to ⌥6 for the presets`}
       className={cn(
-        "inline-flex min-h-9 items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
+        "inline-flex min-h-9 max-w-full items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
         shown ? "pl-1.5" : "pl-2.5",
         className,
       )}

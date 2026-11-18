@@ -775,16 +775,16 @@
       "measures": "The result import job, step start to step end, of a generated 10,000 cell GeoJSON uploaded through the API and imported by a real worker process, fastest of three imports",
       "kind": "ms",
       "unit": "ms",
-      "baseline": 1374,
-      "limit": 4100,
-      "headroom": 3,
-      "headroomReason": "The baseline is the fastest of 20 imports on an Apple M4 shared with three other agents. The step is CPU work in Python plus a few Postgres and MinIO round trips on loopback, which a hosted runner with service containers can slow by up to three times. The thesis budget of 5,000 ms for the p95 stays above the limit.",
+      "baseline": 4349,
+      "limit": 5000,
+      "headroom": 1.15,
+      "headroomReason": "The baseline is the hosted runner number of CI run 44249901062 on 2026-11-18, the fastest of three while four pytest workers shared the runner. The local baseline on an Apple M4 was 1,374 ms and the import code has not changed since, so the runner is about three times slower and noisy, which the earlier limit of three times the M4 number did not cover. The limit equals the thesis budget of 5,000 ms for the p95, which it must not pass.",
       "rttMs": 0,
-      "environment": "Postgres and MinIO containers, FastAPI test client in process, the worker as its own process",
+      "environment": "GitHub-hosted ubuntu-24.04 runner in the db job, Postgres and MinIO containers, FastAPI test client in process, the worker as its own process",
       "check": "apps/api/tests/test_large_result_imports.py",
       "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md",
-      "todo": "Record the hosted-runner number from the first CI run and tighten the headroom."
+      "todo": "Print the fastest import of a few more CI runs and lower the baseline to their median."
     },
     {
       "id": "app.model-run-stand-in-ms",

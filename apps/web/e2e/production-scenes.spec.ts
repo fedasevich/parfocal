@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { build, type PreviewServer, preview } from "vite";
 import { expect, test } from "./a11y.ts";
 
-const port = Number(process.env["PARFOCAL_E2E_PORT"] ?? 5183) + 2;
-const origin = `http://127.0.0.1:${port}`;
+const firstPort = Number(process.env["PARFOCAL_E2E_PORT"] ?? 5183) + 2;
+let origin = "";
 
 let outDir = "";
 let server: PreviewServer | undefined;
@@ -20,8 +20,11 @@ test.beforeAll(async () => {
   server = await preview({
     logLevel: "silent",
     build: { outDir },
-    preview: { port, strictPort: true, host: "127.0.0.1" },
+    preview: { port: firstPort, strictPort: false, host: "127.0.0.1" },
   });
+  const address = server.httpServer.address();
+  if (address === null || typeof address === "string") throw new Error("The preview has no port");
+  origin = `http://127.0.0.1:${address.port}`;
 });
 
 test.afterAll(async () => {

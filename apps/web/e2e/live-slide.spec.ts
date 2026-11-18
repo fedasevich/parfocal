@@ -10,7 +10,8 @@ test("a slide whose file cannot be read says so and offers another try", async (
   await page.goto(livePath);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "failed");
-  await expect(page.getByRole("alert")).toContainText("The slide file is not available");
+  const failure = page.getByRole("alert").and(page.locator(":not([data-testid='notice-alert'])"));
+  await expect(failure).toContainText("The slide file is not available");
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   expect(tileRequests.some((url) => url.endsWith("/tiles/missing-1/levels.json"))).toBe(true);
   await expect(stage.locator("canvas")).toHaveCount(1);

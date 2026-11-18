@@ -69,11 +69,11 @@ The CPU-side paths have `ms` budgets under ADR 0154 (one budget file and the reg
 
 | Budget id | Test | Local baseline | Limit |
 |---|---|---:|---:|
-| `app.import-10k-cells-ms` | `apps/api/tests/test_large_result_imports.py`, db job | 1,374 ms | 4,100 ms |
+| `app.import-10k-cells-ms` | `apps/api/tests/test_large_result_imports.py`, db job | 1,374 ms | 5,000 ms |
 | `app.model-run-stand-in-ms` | `workers/ml/tests/test_whole_slide_main_path.py`, one 1536 px tile | 763 ms | 2,200 ms |
 | `app.decision-next-object-ms` | `apps/web/e2e/decision-next-object.spec.ts`, 8 decisions | 42 ms | 126 ms |
 
-A second local run measured 1,269 ms, 968 ms and 40 ms. None of the three limits has run on a hosted runner yet, and the db job runs with four pytest workers, so the import limit of three times an M4 baseline may be tight there. Open and jump are already asserted in CI by the TEST-006 budgets at 200 ms RTT.
+A second local run measured 1,269 ms, 968 ms and 40 ms. None of the three limits has run on a hosted runner yet, and the db job runs with four pytest workers, so the import limit of three times an M4 baseline may be tight there. On 2026-11-18 it was: CI run 44249901062 measured 4,349 ms against the old 4,100 ms limit with no change to the import code, so the budget now uses that runner number as its baseline and the thesis budget of 5,000 ms as its limit. Open and jump are already asserted in CI by the TEST-006 budgets at 200 ms RTT.
 
 ## Conclusion
 

@@ -1105,15 +1105,17 @@ function OpenedSlide({
               {session ? (
                 <div
                   data-slot="stage-magnification"
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2"
+                  className="pointer-events-none absolute inset-x-4 bottom-4 flex justify-center"
                 >
-                  <MagnificationControl
-                    engine={session.engine}
-                    units={session.module}
-                    brightness={brightness}
-                    onBrightnessChange={setBrightness}
-                    labelAs={magnificationLabel}
-                  />
+                  <div className="pointer-events-auto flex max-w-full">
+                    <MagnificationControl
+                      engine={session.engine}
+                      units={session.module}
+                      brightness={brightness}
+                      onBrightnessChange={setBrightness}
+                      labelAs={magnificationLabel}
+                    />
+                  </div>
                 </div>
               ) : null}
               {phase.state === "loading" ? <StageOpening /> : null}
