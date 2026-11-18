@@ -6,9 +6,9 @@ Last consolidated: 2026-11-15
 
 ## In progress
 
-A cloud run on 2026-11-15 on the branch `claude/quirky-pascal-htseil` handed back 20 tasks without browser runs and touched no production, and the owner dropped staging for good ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment). The branch is not merged to `main` yet. Two things come first now: SKEL-001 (production environment exists), which is in review with its production smoke check passing and one tenant still unverified, and TEST-044 (web specs green on the built app), where `font-preload.spec.ts` still fails on the built app. Most of the run's tasks sit in review until a green ci run confirms the specs they wrote. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+State on 2026-11-18. The deployed app runs in Europe, and `app.parfocal.eu` is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The owner answered decisions 138 to 154 on 2026-11-18, which put database backups on hold. Most tasks in review now wait for one owner step, the password of the agent test account of decision 153, after which an agent walks the deployed app signed in and ticks them. Main CI is being repaired on a branch. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open questions are decisions 105 to 110 and the Mac checks in [decisions.md](decisions.md), which starts with what to do next in order.
+The owner's open steps and the Mac checks are in [decisions.md](decisions.md), which starts with what to do next in order.
 
 ## Where we are now
 
