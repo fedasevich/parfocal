@@ -70,6 +70,13 @@ export async function signIn(page: Page, deepLink: string): Promise<void> {
   await page.getByLabel("Work email").fill(username);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const later = page.getByRole("button", { name: "Not now", exact: true });
+  await expect
+    .poll(async () => (await later.isVisible()) || new URL(page.url()).pathname !== "/sign-in", {
+      timeout: 30_000,
+    })
+    .toBe(true);
+  if (await later.isVisible()) await later.click();
   await expect
     .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
     .toBe(deepLink.split("?")[0]);

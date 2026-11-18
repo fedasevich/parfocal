@@ -1,15 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./harness.ts";
-import {
-  apiLogs,
-  call,
-  idOf,
-  readSession,
-  sql,
-  username,
-  zitadelAdmin,
-  zitadelIssuer,
-} from "./support.ts";
+import { apiLogs, call, idOf, readSession, sql, username, zitadelAdmin } from "./support.ts";
 
 interface ZitadelUser {
   userId: string;
@@ -66,27 +57,29 @@ async function addAuthenticator(page: Page) {
 
 async function enrolPasskey(page: Page, user: ZitadelUser): Promise<void> {
   await forgetPasskeys(user.userId);
-  const response = await zitadelAdmin(`/v2/users/${user.userId}/passkeys/registration_link`, {
-    method: "POST",
-    body: JSON.stringify({ returnCode: {} }),
-  });
-  const { code } = (await response.json()) as { code: { id: string; code: string } };
-  const query = new URLSearchParams({
-    userID: user.userId,
-    orgID: user.details.resourceOwner,
-    codeID: code.id,
-    code: code.code,
-  });
-  await page.goto(`${zitadelIssuer}/ui/login/login/passwordless/init?${query.toString()}`);
-  await page.locator("input[name=name]").fill("E2E passkey");
-  await page.locator("#btn-register").click();
+  await page.goto("/settings/privacy");
+  await page.getByRole("button", { name: "Add a passkey" }).click();
+  await expect(page.getByText("Passkey saved.", { exact: false })).toBeVisible();
   await expect.poll(async () => (await passkeyIds(user.userId)).length).toBe(1);
 }
 
-async function answerWithPasskey(page: Page): Promise<void> {
-  await expect(page).toHaveURL(new RegExp(`^${zitadelIssuer}/ui/login/`));
-  await page.locator("#btn-login").click();
+async function signOut(page: Page): Promise<void> {
+  await page.goto("/api/auth/logout");
+  await expect.poll(() => new URL(page.url()).pathname, { timeout: 15_000 }).toBe("/sign-in");
 }
+
+function originsVisited(page: Page): Set<string> {
+  const origins = new Set<string>();
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) origins.add(new URL(frame.url()).origin);
+  });
+  return origins;
+}
+
+const passkeyRequest = (page: Page, path: string) =>
+  page.waitForRequest(
+    (request) => request.method() === "POST" && new URL(request.url()).pathname === path,
+  );
 
 test("a passkey signs in and unlocks a locked slide to the same camera position", async ({
   page,
@@ -104,15 +97,18 @@ test("a passkey signs in and unlocks a locked slide to the same camera position"
     const slidePath = `/projects/${projectId}/slides/${slideId}`;
     await enrolPasskey(page, user);
 
-    await page.goto("/api/auth/logout");
-    await expect.poll(() => new URL(page.url()).pathname, { timeout: 15_000 }).toBe("/sign-in");
+    await signOut(page);
+    const origins = originsVisited(page);
     await page.goto(`/sign-in?return_to=${encodeURIComponent(`${slidePath}?x=0.3&y=0.4&z=2`)}`);
     await page.getByLabel("Work email").fill(username);
-    await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+    const started = passkeyRequest(page, "/api/auth/passkey-sign-in");
     const profile = page.waitForResponse(
       (response) => new URL(response.url()).pathname === "/api/me" && response.ok(),
     );
-    await answerWithPasskey(page);
+    await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+    const start = await started;
+    expect(start.postDataJSON()).toEqual({ email: username });
+    expect(start.url()).not.toContain(encodeURIComponent(username));
     await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe(slidePath);
     expect((await readSession(page)).email).toBe(username);
     await profile;
@@ -122,19 +118,18 @@ test("a passkey signs in and unlocks a locked slide to the same camera position"
     await expect(lock).toBeVisible();
     const lockedAt = page.url();
     expect(new URL(lockedAt).searchParams.get("z")).not.toBeNull();
-    const login = page.waitForRequest(
-      (request) => request.method() === "POST" && request.url().includes("/api/auth/login"),
-    );
+    const unlocked = passkeyRequest(page, "/api/auth/passkey-sign-in/finish");
     await lock.getByRole("button", { name: "Unlock with a passkey" }).click();
-    const started = await login;
-    expect(started.postDataJSON()).toMatchObject({ login_hint: username, reauth: true });
-    expect(started.url()).not.toContain(username);
-    expect(started.url()).not.toContain(encodeURIComponent(username));
-    await answerWithPasskey(page);
+    const finish = await unlocked;
+    const lockedPath = new URL(lockedAt);
+    expect(finish.postDataJSON()).toMatchObject({
+      return_to: `${lockedPath.pathname}${lockedPath.search}`,
+    });
     await expect(page).toHaveURL(lockedAt, { timeout: 30_000 });
     await expect(page.getByRole("region", { name: "Locked" })).toBeHidden();
+    expect([...origins]).toEqual([new URL(page.url()).origin]);
     const logs = apiLogs();
-    expect(logs).toContain("/api/auth/login");
+    expect(logs).toContain("/api/auth/passkey-sign-in");
     expect(logs).not.toContain(username);
     expect(logs).not.toContain(encodeURIComponent(username));
   } finally {
@@ -142,29 +137,37 @@ test("a passkey signs in and unlocks a locked slide to the same camera position"
   }
 });
 
-test("a cancelled passkey window leaves the sign-in page usable", async ({ page }) => {
+test("a cancelled passkey window leaves the sign-in page usable", async ({
+  page,
+  researcher: _signedIn,
+}) => {
   const user = await testUser();
   const authenticator = await addAuthenticator(page);
   try {
     await enrolPasskey(page, user);
+    await signOut(page);
+    const origins = originsVisited(page);
     await page.goto("/sign-in?return_to=%2F");
-    await page.getByLabel("Work email").fill(username);
-    await page.getByRole("button", { name: "Sign in with a passkey" }).click();
-    await authenticator.verifies(false);
-    await answerWithPasskey(page);
-    await expect(page.getByText(/timed out or was not allowed/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Login with password" })).toBeVisible();
-
-    await page.goBack();
-    await expect.poll(() => new URL(page.url()).pathname).toBe("/sign-in");
     const email = page.getByLabel("Work email");
+    await email.fill(username);
+    await authenticator.verifies(false);
+    const passkey = page.getByRole("button", { name: "Sign in with a passkey" });
+    const finished = page.waitForRequest(
+      (request) => new URL(request.url()).pathname === "/api/auth/passkey-sign-in/finish",
+      { timeout: 5_000 },
+    );
+    await passkey.click();
+    await expect(finished).rejects.toThrow();
+    expect(new URL(page.url()).pathname).toBe("/sign-in");
     await expect(email).toBeEditable();
+    await expect(passkey).toBeEnabled();
+
     await email.fill(username);
     await authenticator.verifies(true);
-    await page.getByRole("button", { name: "Sign in with a passkey" }).click();
-    await answerWithPasskey(page);
+    await passkey.click();
     await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe("/");
     expect((await readSession(page)).email).toBe(username);
+    expect([...origins]).toEqual([new URL(page.url()).origin]);
   } finally {
     await forgetPasskeys(user.userId);
   }
