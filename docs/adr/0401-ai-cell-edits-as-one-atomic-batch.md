@@ -1,4 +1,4 @@
-# XXXX. Edits of AI cells go to the shared layer as one atomic batch
+# 0401. Edits of AI cells go to the shared layer as one atomic batch
 
 - Date: 2026-11-18
 - Status: Accepted
