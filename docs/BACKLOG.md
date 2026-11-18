@@ -4020,7 +4020,8 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-009.
   Size: S.
 
-- [ ] AITUM-014 · A foundation model probe for the tumor map
+- [x] AITUM-014 · A foundation model probe for the tumor map
+  Dropped by the owner on 2026-11-18. Nothing is trained in this project, and a probe on frozen features is still a trained head, so the tumor map stays on the MONAI ResNet18. The Midnight embedder and its weights measurement stay as they are, unused.
   Decision 151 (the foundation model for the tumor probe) replaced H-optimus-0 of decision 125 with Midnight from kaiko.ai (MIT, about 1.1B parameters, no Hugging Face form or token). Download the weights, check their size and peak RAM first, and compare a tumor probe on its features with the MONAI ResNet18 on CAMELYON16 test slides. The probe needs training, which decision 136 (training a probe) asks about first.
   Done when a result file compares FROC and per-slide numbers of both on the same test slides.
   Depends on AITUM-000.
