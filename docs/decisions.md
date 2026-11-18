@@ -8,9 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Finish decision 153 (the seeded test account for agents). Run this in a terminal on the Mac. It makes a random password, writes `~/.config/parfocal/agent-account.env` with mode 600 and puts the password on your clipboard:
-   `umask 077; mkdir -p ~/.config/parfocal; P="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-20)Aa1!"; printf 'PARFOCAL_AGENT_EMAIL=agent-walk@parfocal.eu\nPARFOCAL_AGENT_PASSWORD=%s\n' "$P" > ~/.config/parfocal/agent-account.env; printf %s "$P" | pbcopy; unset P`
-   Then sign in to the Zitadel console as the instance admin, open Users, New, and add `agent-walk@parfocal.eu`, first name Agent, last name Tester, email verified on, paste the password and turn off "change password on first sign-in". Give it no roles. Then write "done" here.
+1. Say when the lead may run "Reset production" after the next release. It empties the app tables of app.parfocal.eu and reseeds, which gives the agent test account of decision 153 its seats.
 2. Click Approve on the production deploy of the next tag when the lead starts it, as decision 137 (how production gets past the migration squash) describes.
 3. Give the Cloudflare ops token the "Account Analytics: Read" permission, for OPS-009 (storage lifecycle and cost controls).
 4. When convenient, the two Kaggle downloads of decision 131 (CryoNuSeg and Lizard).
@@ -105,7 +103,7 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 - Decision 150 (whether merging to main deploys production), on hold with option A. Releases stay tagged and approved, and SKEL-009 (CI deploys main to production) is on hold.
 - Decision 151 (the foundation model for the tumor probe), Midnight from kaiko.ai instead of H-optimus-0. It is MIT licensed and needs no Hugging Face form or token, so decision 125 (gated foundation models) is replaced and AITUM-014 (a foundation model probe for the tumor map) now uses Midnight, with the RAM check first. The Mac has about 72 GB free, so the weights fit.
 - Decision 152 (recovery objectives and backups), other. Database backups are on hold, so OPS-008 (backups and disaster recovery) and SEC-014 (backups and restore testing) go on hold and production relies on Neon's 6 hours of history until you reopen it.
-- Decision 153 (the seeded test account for agents on the dev app), option A. The lead tried the Zitadel console in your Chrome, but it is signed in as your personal account, which may not add users, and agents never type passwords, so step 1 of "What you need to do next" is yours.
+- Decision 153 (the seeded test account for agents on the dev app), option A. Done on 2026-11-18. The Zitadel user `agent-walk@parfocal.eu` exists, `~/.config/parfocal/agent-account.env` holds its password with mode 600, the repository variable `SEED_AGENT_EMAILS` is set, and `scripts/agent_session.py` signs it in. It has no workspace yet, so it gets its seats with the next reseed, step 1 of "What you need to do next".
 - Decision 154 (whether the EU GPU price counts against the $5 hourly cap), other. What matters is staying under $30 a month on Modal, which the Modal usage limit of $30 already enforces as a hard cap. The $5 hourly guard stays a base-price guard. No work.
 
 ## Open decisions from cutting staging (ADR 0293, production only until the first real user)
