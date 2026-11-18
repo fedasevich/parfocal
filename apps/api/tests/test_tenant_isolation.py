@@ -1825,6 +1825,11 @@ GET_ROUTES = {
     "listMemberActivity": Route(
         Exposure.TENANT, lambda _: "/api/tenant/members/activity", admin_rights=True
     ),
+    "getMemberOpenWork": Route(
+        Exposure.TENANT,
+        lambda s: f"/api/tenant/members/{s.ids['user']}/open-work",
+        admin_rights=True,
+    ),
     "listAuditEvents": Route(
         Exposure.TENANT, lambda _: "/api/tenant/audit-events", admin_rights=True
     ),
