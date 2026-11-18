@@ -70,15 +70,20 @@ export function EmailForm({ flow }: { flow: Flow }) {
   const { land } = flow;
   const landRef = useRef(land);
   landRef.current = land;
+  const autofillSettled = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     const remembered = rememberedPasskeyEmail();
     if (remembered === null) return;
     const controller = new AbortController();
     setAutofill(controller);
-    void autofillAvailable().then((available) => {
+    autofillSettled.current = autofillAvailable().then(async (available) => {
       if (!available || controller.signal.aborted) return;
-      signInWithPasskey({ email: remembered, returnTo, conditional: controller.signal }).then(
+      await signInWithPasskey({
+        email: remembered,
+        returnTo,
+        conditional: controller.signal,
+      }).then(
         (landing) => landRef.current(landing),
         () => undefined,
       );
@@ -94,16 +99,18 @@ export function EmailForm({ flow }: { flow: Flow }) {
       setFailure(t`Enter your work email, then choose Sign in with a passkey.`);
       return;
     }
-    signInWithPasskey({ email: typed, returnTo }).then(
-      (landing) => {
-        rememberPasskeyEmail(typed);
-        land(landing);
-      },
-      (error: unknown) => {
-        if (error instanceof PasskeyCancelledError) return;
-        setFailure(problemText(error, t`Could not sign in with a passkey. Try again.`));
-      },
-    );
+    autofillSettled.current
+      .then(() => signInWithPasskey({ email: typed, returnTo }))
+      .then(
+        (landing) => {
+          rememberPasskeyEmail(typed);
+          land(landing);
+        },
+        (error: unknown) => {
+          if (error instanceof PasskeyCancelledError) return;
+          setFailure(problemText(error, t`Could not sign in with a passkey. Try again.`));
+        },
+      );
   };
 
   const afterPassword = async (landing: SignInLanding) => {
