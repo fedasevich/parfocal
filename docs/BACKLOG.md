@@ -6644,7 +6644,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Shorten the title to the task name over project and due date, draw the chip as thumbnail and "A1 · H&E", show the decision ring with the time left and keep tissue seen inside the progress popover, disable Submit with the mock's reason while objects or required questions are open, fix the checked choice in guided review, make the popover count the same objects as the Opinion tab with its Added row, and add "Parfocal home" to the account menu.
   Done when a browser test on RT-14 reads "A1 · H&E", "87%" and a disabled Submit whose reason names 7 objects, decides the open objects and sees Submit enabled, and reads the same counts in the popover and the Opinion tab.
   Size: S.
-- [ ] PROTO-042 · The slides popover shows the case, loose slides and its three actions
+- [x] PROTO-042 · The slides popover shows the case, loose slides and its three actions
   The slides popover lists two slides with a count and a pill. The mock's popover has a case head with "Open the case", the groups "Slides in this case" and "Loose slides in task RT-14", rows with thumbnail, stain, result set names, a build progress bar and status, the Q and E key caps, and the actions "Result sets of A1", "Compare" and "Add slides" (rows 35 to 38). The mock's version exists in `screens/review/review-top-popovers.tsx`.
   Draw that popover on the engine viewer from the task's and the case's slides, and wire its three actions to the Display tab, compare and the upload flow.
   Done when a browser test opens the popover on RT-14, reads the case head, both groups and the three actions, opens a loose slide from it, and steps with Q and E.

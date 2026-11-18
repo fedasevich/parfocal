@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-19
+
+- PROTO-042 (the slides popover shows the case, loose slides and its three actions): the engine viewer's slides popover now shows the case head with Open the case, Slides in this case and Loose slides in task RT-14, rows with thumbnail, stain, result sets, build progress and status, the Q and E key caps, and the actions Result sets of A1, Compare and Add slides. The fake RT-14 gained two loose slides. Compare opens the older slide route where compare lives.
+
 ## 2026-11-18
 
 - PROTO-038 (the viewer frame's small parts match the mock) closes drift rows 10 to 16: tab counts, the mock's white panel with grey cards, no panel foot, Compare slides at the rail's foot, Select on open with an empty drag that still pans, a 38 px magnification bar with 1.25x steps and one-line hint bars. Result in docs/results/2026-11-18-viewer-frame-parts.md. The panel pop-out button left with the foot, the popout window still opens by address.
