@@ -6609,7 +6609,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Show the smart minimap from NAV-006 (smart minimap state machine) and NAV-007 (minimap placement scoring) in cell review as it shows in the full viewer, following the Minimap setting, let the reviewer drag it to another corner and keep that place, and keep Z as the hold to see the whole slide.
   Done when a browser test in cell review sees the minimap appear after zooming in under When useful, always under Always and never under Never, drags it to another corner and finds it there after a reload.
   Depends on PROTO-029. Size: S.
-- [ ] PROTO-035 · Experts edit any imported or seeded cell, its outline and its type
+- [x] PROTO-035 · Experts edit any imported or seeded cell, its outline and its type
   On 2026-11-18 the owner found that imported and seeded cells and their types cannot be changed.
   Let an expert select any cell from an imported result set or the seed, change its type from the class list or by key, move or reshape its outline, delete it, and change many at once by a lasso or by type. Store each change as an edit on the shared layer with the original kept, as ADR 0237 (annotate tasks on one shared layer) describes, so an AI result is never rewritten in place.
   Done when a browser test changes the type of one seeded cell by key and of several by lasso, reshapes one outline, deletes one, reloads and sees every change, and an API test shows the original result set unchanged.
