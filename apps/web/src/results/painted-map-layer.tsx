@@ -227,10 +227,12 @@ function PaintedMapPanel({ engine, stage, session }: PanelProps) {
             <Button
               size="sm"
               data-testid="painted-map-toggle"
+              variant="secondary"
+              title={t`Brush your own map of the tissue on the slide, then name, save and export it`}
               aria-pressed={open}
               onClick={() => setOpen((value) => !value)}
             >
-              {open ? <Trans>Stop painting</Trans> : <Trans>Paint a map</Trans>}
+              {open ? <Trans>Stop painting</Trans> : <Trans>Brush your own map</Trans>}
             </Button>
             <span role="status" data-testid="painted-map-status">
               {state.phase === "changed" ? (

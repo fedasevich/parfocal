@@ -110,7 +110,7 @@ function ObjectRow({
         aiClass={object.class_name}
         label={t`Your answer on ${object.object}`}
       />
-      <Button size="sm" variant="ghost" className="justify-self-start" onClick={onComments}>
+      <Button size="sm" variant="secondary" className="justify-self-start" onClick={onComments}>
         {t`Notes and comments`}
       </Button>
     </li>
@@ -279,7 +279,7 @@ export function StageReviewObjects({
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
-                variant="ghost"
+                variant="secondary"
                 disabled={index <= 0}
                 onClick={() => pick(order[index - 1] ?? null)}
               >
@@ -287,14 +287,14 @@ export function StageReviewObjects({
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="secondary"
                 disabled={index < 0 || index >= order.length - 1}
                 onClick={() => pick(order[index + 1] ?? null)}
               >
                 {t`Next`}
               </Button>
               {coachOn ? null : (
-                <Button size="sm" variant="ghost" onClick={coach.reopen}>
+                <Button size="sm" variant="secondary" onClick={coach.reopen}>
                   {t`How guided review works`}
                 </Button>
               )}
@@ -303,7 +303,7 @@ export function StageReviewObjects({
           {hasCells ? (
             <Button
               size="sm"
-              variant="ghost"
+              variant="secondary"
               className="justify-self-start"
               aria-pressed={gridOpen}
               onClick={() => setGridOpen((open) => !open)}

@@ -213,6 +213,7 @@ export function EngineViewer({
           load={load}
           task={taskDetail}
           workspace={workspace}
+          guided={guided}
           onWorkspace={onWorkspace}
           onOpenSlide={onOpenSlide}
           onSubmit={() => {

@@ -102,13 +102,15 @@ function ViewMapPanel({ engine, stage, session }: ViewMapPanelProps) {
           <Button
             size="sm"
             data-testid="view-map-ask"
+            variant="secondary"
+            title={t`Colours the tissue in view by how likely the AI thinks it is tumor`}
             disabled={state.phase === "scoring"}
             onClick={ask}
           >
             {state.map.tiles.size === 0 ? (
-              <Trans>Map this view</Trans>
+              <Trans>Colour tumor in this view</Trans>
             ) : (
-              <Trans>Extend the map</Trans>
+              <Trans>Colour more of the slide</Trans>
             )}
           </Button>
         </section>
