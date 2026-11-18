@@ -36,7 +36,7 @@ test("reviewing a slide and signing it out sends slide, area and cell times", as
   await expect(page).toHaveURL(/\/submitted\?/);
 
   await page.goto(`/tasks/${rt14}/sign-off?scene=ready`);
-  await page.getByRole("button", { name: /^Sign with Vltava SSO/ }).click();
+  await page.getByRole("button", { name: /^Sign with single sign-on/ }).click();
   await expect
     .poll(async () => named(await logged(page), "task_finished").length, { timeout: 15_000 })
     .toBe(2);

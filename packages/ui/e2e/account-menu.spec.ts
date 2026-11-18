@@ -11,12 +11,15 @@ test("the menu shows the name, role and workspace", async ({ page }) => {
   await expect(signedIn).toContainText("Institute of Pathology");
 });
 
-test("the status row switches availability and keeps the menu open", async ({ page }) => {
+test("the status dropdown lists each status and switches availability", async ({ page }) => {
   await page.goto(story(open));
-  await page.getByRole("menuitem", { name: /Available/ }).click();
-  await expect(page.getByRole("menuitem", { name: /Away/ })).toBeVisible();
-  await page.getByRole("menuitem", { name: /Away/ }).click();
-  await expect(page.getByRole("menuitem", { name: /Available/ })).toBeVisible();
+  await page.getByRole("menuitem", { name: /^Available/ }).click();
+  const available = page.getByRole("menuitemradio", { name: /^Available/ });
+  const away = page.getByRole("menuitemradio", { name: /^Away/ });
+  await expect(available).toHaveAttribute("aria-checked", "true");
+  await expect(away).toHaveAttribute("aria-checked", "false");
+  await away.click();
+  await expect(page.getByRole("menuitem", { name: /^Away/ })).toBeVisible();
 });
 
 test("the status row waits while the change is saving", async ({ page }) => {

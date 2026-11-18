@@ -64,7 +64,7 @@ test("sign out: the report dialog is reached, kept inside and closed without a p
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Sign out S26-04812" });
   await expect(dialog).toBeVisible();
-  const sso = dialog.getByRole("button", { name: /Sign with Vltava SSO/ });
+  const sso = dialog.getByRole("button", { name: /Sign with single sign-on/ });
   await sso.focus();
   await expect(sso).toBeFocused();
   for (let step = 0; step < 12; step++) {
