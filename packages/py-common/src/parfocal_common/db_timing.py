@@ -55,6 +55,18 @@ def timed_transaction() -> Generator[None]:
             timing.transaction_seconds += time.perf_counter() - started
 
 
+@contextmanager
+def timed_statement() -> Generator[None]:
+    timing = current_timing.get()
+    started = time.perf_counter()
+    try:
+        yield
+    finally:
+        if timing is not None:
+            timing.queries += 1
+            timing.query_seconds += time.perf_counter() - started
+
+
 def before_query(connection: Any, *_: Any) -> None:
     connection.info[STARTED] = time.perf_counter()
 

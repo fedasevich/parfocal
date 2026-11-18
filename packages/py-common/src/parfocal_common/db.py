@@ -1,7 +1,7 @@
 import time
 import uuid
 from collections.abc import AsyncGenerator, Callable
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -16,12 +16,12 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.exc import DisconnectionError
+from sqlalchemy.exc import DBAPIError, DisconnectionError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from parfocal_common.data_classes import OPERATIONAL
-from parfocal_common.db_timing import time_queries, timed_transaction
+from parfocal_common.db_timing import time_queries, timed_statement, timed_transaction
 
 TENANT_SETTING = "app.tenant_id"
 PLATFORM_SETTING = "app.platform"
@@ -169,14 +169,59 @@ async def require_row_security(engine: AsyncEngine) -> None:
         raise UnsafeDatabaseRoleError(role)
 
 
+def literal_setting(value: str) -> str:
+    if value not in ("", "on"):
+        value = str(uuid.UUID(value))
+    return f"'{value}'"
+
+
+def begin_in_scope(scope: DatabaseScope) -> str:
+    settings = scope.parameters()
+    values = ", ".join(
+        f"set_config('{name}', {literal_setting(settings[key])}, true)"
+        for key, name in (
+            ("tenant", TENANT_SETTING),
+            ("user", USER_SETTING),
+            ("platform", PLATFORM_SETTING),
+            ("auth", AUTH_SETTING),
+        )
+    )
+    return f"BEGIN; SELECT {values}"
+
+
+async def driver_statement(connection: AsyncConnection, statement: str) -> None:
+    raw = await connection.get_raw_connection()
+    adapted: Any = raw.dbapi_connection
+    try:
+        await adapted.driver_connection.execute(statement)
+    except Exception as error:
+        await connection.invalidate()
+        try:
+            adapted._handle_exception(error)
+        except Exception as translated:
+            raise DBAPIError.instance(
+                statement, None, translated, connection.dialect.loaded_dbapi.Error
+            ) from error
+        raise
+
+
 @asynccontextmanager
 async def scoped_transaction(
     engine: AsyncEngine, scope: DatabaseScope
 ) -> AsyncGenerator[AsyncConnection]:
     with timed_transaction():
-        async with engine.begin() as connection:
-            await connection.execute(SET_SCOPE, scope.parameters())
-            yield connection
+        async with engine.connect() as connection:
+            await connection.execution_options(isolation_level="AUTOCOMMIT")
+            with timed_statement():
+                await driver_statement(connection, begin_in_scope(scope))
+            try:
+                yield connection
+            except BaseException:
+                if not connection.invalidated:
+                    with suppress(DBAPIError):
+                        await driver_statement(connection, "ROLLBACK")
+                raise
+            await driver_statement(connection, "COMMIT")
 
 
 def tenant_transaction(
