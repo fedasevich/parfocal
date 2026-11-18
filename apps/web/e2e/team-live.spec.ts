@@ -121,11 +121,12 @@ test(
     test.skip(task === undefined, "No task of mine has a reviewer with slides left");
     if (task === undefined) return;
     await page.goto("/my-work?tab=assigned");
-    await page
+    const nudgeButton = page
       .getByRole("row")
       .filter({ hasText: task.code })
-      .getByRole("button", { name: "Nudge" })
-      .click();
+      .getByRole("button", { name: "Nudge" });
+    await expect(nudgeButton).not.toHaveAttribute("title", "Nudge a reviewer");
+    await nudgeButton.click();
     const dialog = page.getByRole("dialog", { name: "Nudge" });
     await expect(dialog.getByRole("textbox", { name: "Message" })).toHaveValue(/^Hi .+, /);
     const sent = posted(page, new RegExp(`/api/review-tasks/${task.id}/nudges$`), "POST");
