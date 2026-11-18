@@ -254,6 +254,19 @@ Recommendation B, because it repeats on every release and needs no new account o
 
 Your choice: 
 
+### 148. Whether the 51 MB of UI visual baselines go into git
+
+TEST-008 (visual regression for the UI) is built, but its tests skip until baselines are committed. CI run 44202176522 on 2026-11-18 produced them: 1142 PNG files, 51 MB, every Storybook story in both themes and both densities. The repository has no Git LFS, and history is never rewritten, so whatever is committed stays in every clone for good, and each later baseline update adds its changed images again.
+
+- A. Commit all 1142 images as they are.
+- B. Keep the baselines in R2 `parfocal-dev` under `fixtures/ui-visual/` and have CI fetch them with the read-only key of decision 132, the same way the browser parity test does, so git holds only a pinned checksum list.
+- C. Commit only one theme and one density (about 285 images, roughly 13 MB) and test the other combinations by a smaller sample.
+- Other.
+
+Recommendation B, because it keeps clones small and follows a pattern that already runs in CI.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
