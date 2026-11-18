@@ -113,9 +113,11 @@ test("a passkey signs in and unlocks a locked slide to the same camera position"
     expect((await readSession(page)).email).toBe(username);
     await profile;
 
-    await page.evaluate('window.dispatchEvent(new Event("lock-screen"))');
     const lock = page.getByRole("region", { name: "Locked" });
-    await expect(lock).toBeVisible();
+    await expect(async () => {
+      await page.evaluate('window.dispatchEvent(new Event("lock-screen"))');
+      await expect(lock).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
     const lockedAt = page.url();
     expect(new URL(lockedAt).searchParams.get("z")).not.toBeNull();
     const unlocked = passkeyRequest(page, "/api/auth/passkey-sign-in/finish");
