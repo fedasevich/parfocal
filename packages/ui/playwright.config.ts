@@ -19,6 +19,23 @@ export default defineConfig({
     headless: true,
     trace: process.env.CI ? "off" : "retain-on-failure",
   },
+  projects: [
+    { name: "ui", testIgnore: /visual\.spec\.ts/ },
+    {
+      name: "visual",
+      testMatch: /visual\.spec\.ts/,
+      use: {
+        launchOptions: {
+          args: [
+            "--font-render-hinting=none",
+            "--disable-lcd-text",
+            "--disable-font-subpixel-positioning",
+            "--force-color-profile=srgb",
+          ],
+        },
+      },
+    },
+  ],
   webServer: {
     command: `vite preview --outDir storybook-static --port ${port} --strictPort`,
     url: `http://localhost:${port}/iframe.html`,

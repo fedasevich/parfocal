@@ -81,6 +81,17 @@ async function capture(
   return page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
 }
 
+test.beforeEach(async ({ context }) => {
+  await context.route("**/*.css", async (route) => {
+    const response = await route.fetch();
+    const css = (await response.text())
+      .replaceAll("font-display:optional", "font-display:block")
+      .replaceAll(/(--font-ui:\s*"IBM Plex Sans"),[^;}]*/g, "$1")
+      .replaceAll(/(--font-data:\s*"IBM Plex Mono"),[^;}]*/g, "$1");
+    await route.fulfill({ response, body: css });
+  });
+});
+
 test.use({ reducedMotion: "reduce", viewport: { width: 1280, height: 800 } });
 
 test("every committed UI baseline belongs to a story", () => {
