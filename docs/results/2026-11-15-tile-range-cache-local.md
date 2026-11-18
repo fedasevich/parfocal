@@ -37,4 +37,12 @@ Client wall time in milliseconds. Worker p50 is the `r2` duration on a miss and 
 
 - Owed for TILES-002 (CDN in front of slide storage): deploy, then measure warm p95 on `app.parfocal.eu` from a client in the colo's region over HTTP/2 and HTTP/3, including a hit from a second colo. This is a deploy under ADR 0151 (standing approval within $30 a month).
 - Owed: `tofu apply` of the `http3 = "on"` zone setting added to `infra/tofu/global/zone.tf`.
+- Update 2026-11-18: the HTTP/3 zone setting is applied. The result is in the section "Update 2026-11-18" at the end of this file. The edge deploy and the p95 measurement are still owed.
 - Closed for originals by TILES-009 (a rewritten original never comes from a stale edge cache), which signs the original's ETag into the token and the cache key. Other files can still be served stale for up to 10 minutes.
+
+## Update 2026-11-18: HTTP/3 applied
+
+- A targeted additive `tofu apply` of `cloudflare_zone_setting.main["http3"]` in the global root ran after a plan of 2 to add, 0 to change, 0 to destroy. Result: 1 added, 0 changed, 0 destroyed, $0 on the Free zone.
+- The other planned addition, zone HSTS, was left for SEC-002 (encryption in transit and at rest).
+- `curl -I https://app.parfocal.eu/` now returns `alt-svc: h3=":443"; ma=86400`, served over HTTP/2 from AMS. The local curl has no HTTP/3 client.
+- Still owed: the edge deploy and the warm p95 on `app.parfocal.eu` over HTTP/2 and HTTP/3. No latency number was measured, because the deploy was out of scope for this run.
