@@ -1057,7 +1057,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on TEST-019.
   Size: S.
 
-- [ ] SEC-051 · Carry a slide into the parse sandbox once per job
+- [x] SEC-051 · Carry a slide into the parse sandbox once per job
   SEC-045 (isolate the remaining parse steps) starts one Modal sandbox per parse step and copies the fetched file into each. On the 1.1 GB `test_001.tif` the five copies took 81 and 90 percent of the sandboxed parse time in two runs, 63 of 77 s and 138 of 154 s, against 15 s for the same five steps as a local child ([result](results/2026-11-18-parse-sandbox-real-slide.md)). Carry the file once per job, either with one sandbox kept for the job's parse steps or with one per-job `modal.Volume` mounted read-only into each sandbox, and keep the network block, the memory cap and the per-step deadline.
   Done when the slide probe shows the file carried once for the five steps on a real 1 GB slide, the isolation tests still pass, and ADR 0325 (isolated parsing of uploaded files) names the chosen way.
   Depends on SEC-045.

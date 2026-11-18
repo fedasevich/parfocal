@@ -42,6 +42,7 @@ from parfocal_ingest.isolation import (
     output_folder,
     parse_isolated,
     read_output,
+    release_parse,
     required_output,
 )
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME
@@ -219,6 +220,7 @@ async def parsed(
         context.folder,
         context.resources.parse_limits,
         context.resources.parse_tokens,
+        keep=True,
     )
 
 
@@ -391,7 +393,7 @@ async def publish(context: Context) -> Mapping[str, Any]:
     if not kept:
         await delete_restricted_images(context.store, upload.tenant_id, slide_id)
     await context.store.delete_object(upload.object_key)
-    shutil.rmtree(context.folder, ignore_errors=True)
+    await finished(context)
     return {"slide_id": str(slide_id), "published": published}
 
 
@@ -399,6 +401,11 @@ async def refuse(context: Context, code: str) -> None:
     async with context.step.transaction() as connection:
         await record_refusal(connection, context.upload.row, code)
     await context.store.delete_object(context.upload.object_key)
+    await finished(context)
+
+
+async def finished(context: Context) -> None:
+    await release_parse(context.resources.parse_limits, context.folder)
     shutil.rmtree(context.folder, ignore_errors=True)
 
 

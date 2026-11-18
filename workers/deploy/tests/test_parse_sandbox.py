@@ -66,6 +66,7 @@ class FakeSandbox:
         self.copied_in: list[Path] = []
         self.copied_out: list[Path] = []
         self.made: list[Path] = []
+        self.removed: list[Path] = []
         self.terminated = False
         self.process: asyncio.subprocess.Process | None = None
 
@@ -93,6 +94,9 @@ class FakeSandbox:
         assert local == remote
         self.copied_out.append(remote)
 
+    async def remove(self, remote: Path) -> None:
+        self.removed.append(remote)
+
     async def entries(self, remote: Path) -> list[RemoteEntry]:
         if self.listed is not None:
             return list(self.listed)
@@ -106,6 +110,7 @@ class FakeSandbox:
             self.process.kill()
             await self.process.wait()
         self.terminated = True
+        self.code = 137 if self.code is None else self.code
 
 
 class RefusingSandbox(FakeSandbox):
@@ -290,3 +295,123 @@ async def test_declared_inputs_are_passed_into_the_sandbox_before_the_parse(
         inputs=(extra,),
     )
     assert sandbox.copied_in == [extra, slide]
+
+
+SYNTHETIC = modal_app.REPOSITORY / "packages/test-fixtures/synthetic/synthetic-jpeg.tiff"
+
+
+class Factory:
+    def __init__(self) -> None:
+        self.made: list[FakeSandbox] = []
+        self.now = 0.0
+
+    async def create(self) -> FakeSandbox:
+        sandbox = FakeSandbox()
+        self.made.append(sandbox)
+        return sandbox
+
+    def launcher(self) -> SandboxLauncher:
+        return SandboxLauncher(self.create, clock=lambda: self.now)
+
+
+async def job_parse(
+    launcher: SandboxLauncher, work: Path, parser: str, arguments: Mapping[str, Any]
+) -> dict[str, Any]:
+    async def fetcher(key: str) -> Path:
+        assert key == UPLOAD_KEY
+        return SYNTHETIC
+
+    return await parse_isolated(
+        f"parfocal_ingest.parse_jobs:{parser}",
+        {"key": UPLOAD_KEY, **arguments},
+        SCOPE,
+        fetcher,
+        work,
+        ParseLimits(launcher=launcher),
+        keep=True,
+    )
+
+
+async def five_steps(launcher: SandboxLauncher, work: Path) -> None:
+    identified = await job_parse(launcher, work, "identify_upload", {"name": SYNTHETIC.name})
+    await job_parse(launcher, work, "scan_upload", identified)
+    await job_parse(launcher, work, "validate_upload", identified)
+    index = output_folder(work, "index")
+    await job_parse(launcher, work, "index_upload", {**identified, "out": str(index)})
+    derive = output_folder(work, "derive")
+    wanted = {"previews": True, "tissue": True, "restricted": False}
+    await job_parse(launcher, work, "derive_upload", {**identified, **wanted, "out": str(derive)})
+
+
+async def test_the_five_steps_of_one_job_share_one_sandbox_and_one_copy_of_the_slide(
+    tmp_path: Path,
+) -> None:
+    factory = Factory()
+    launcher = factory.launcher()
+    work = tmp_path / "job"
+    await five_steps(launcher, work)
+    [sandbox] = factory.made
+    assert sandbox.copied_in == [SYNTHETIC]
+    assert not sandbox.terminated
+    outputs = work / "outputs"
+    assert sandbox.removed == [outputs / "index", outputs / "derive", outputs / "index"]
+    await launcher.release(work)
+    assert sandbox.terminated
+    assert launcher.kept == {}
+
+
+async def test_two_jobs_never_share_a_sandbox(tmp_path: Path) -> None:
+    factory = Factory()
+    launcher = factory.launcher()
+    await job_parse(launcher, tmp_path / "a", "identify_upload", {"name": SYNTHETIC.name})
+    await job_parse(launcher, tmp_path / "b", "identify_upload", {"name": SYNTHETIC.name})
+    first, second = factory.made
+    assert first.copied_in == second.copied_in == [SYNTHETIC]
+
+
+async def test_a_failed_step_ends_its_sandbox_and_the_next_step_starts_a_fresh_one(
+    tmp_path: Path,
+) -> None:
+    factory = Factory()
+    launcher = factory.launcher()
+    work = tmp_path / "job"
+    await job_parse(launcher, work, "identify_upload", {"name": SYNTHETIC.name})
+    with pytest.raises(StepFailedError):
+        await job_parse(launcher, work, "scan_upload", {"format": "no-such-format"})
+    await job_parse(launcher, work, "identify_upload", {"name": SYNTHETIC.name})
+    first, second = factory.made
+    assert first.terminated
+    assert second.copied_in == [SYNTHETIC]
+
+
+async def test_a_sandbox_that_died_or_nears_its_lifetime_is_replaced(tmp_path: Path) -> None:
+    factory = Factory()
+    launcher = factory.launcher()
+    work = tmp_path / "job"
+    await job_parse(launcher, work, "identify_upload", {"name": SYNTHETIC.name})
+    factory.made[0].code = 137
+    await job_parse(launcher, work, "identify_upload", {"name": SYNTHETIC.name})
+    factory.now = launcher.lifetime - launcher.step_seconds
+    await job_parse(launcher, work, "identify_upload", {"name": SYNTHETIC.name})
+    assert len(factory.made) == 3
+    assert all(sandbox.copied_in == [SYNTHETIC] for sandbox in factory.made)
+    assert factory.made[1].terminated
+
+
+async def test_a_single_parse_never_keeps_its_sandbox(tmp_path: Path) -> None:
+    factory = Factory()
+    launcher = factory.launcher()
+
+    async def fetcher(_key: str) -> Path:
+        return SYNTHETIC
+
+    await parse_isolated(
+        "parfocal_ingest.parse_jobs:identify_upload",
+        {"key": UPLOAD_KEY, "name": SYNTHETIC.name},
+        SCOPE,
+        fetcher,
+        tmp_path,
+        ParseLimits(launcher=launcher),
+    )
+    assert factory.made[0].terminated
+    assert launcher.kept == {}

@@ -25,6 +25,7 @@ SLIDE_FETCHED = Path("/tmp/parse-slide-probe/fetched")
 TENANT = uuid.UUID("00000000-0000-4000-8000-000000000001")
 SLIDE = uuid.UUID("00000000-0000-4000-8000-00000000000b")
 COPIES: list[dict[str, Any]] = []
+CREATED: list[float] = []
 
 IMAGE = app_image()
 app = modal.App(PROBE_APP, image=IMAGE)
@@ -52,6 +53,9 @@ class TimedSandbox:
     async def copy_out(self, remote: Path, local: Path) -> None:
         await self.inner.copy_out(remote, local)
 
+    async def remove(self, remote: Path) -> None:
+        await self.inner.remove(remote)
+
     async def entries(self, remote: Path) -> list[RemoteEntry]:
         return await self.inner.entries(remote)
 
@@ -66,7 +70,10 @@ def timed_launcher() -> SandboxLauncher:
     from parfocal_deploy.parse_slide_probe import IMAGE, app
 
     async def create() -> TimedSandbox:
-        return TimedSandbox(await ModalSandbox.create(app, hydrated_image(IMAGE)))
+        started = time.monotonic()
+        sandbox = TimedSandbox(await ModalSandbox.create(app, hydrated_image(IMAGE)))
+        CREATED.append(round(time.monotonic() - started, 3))
+        return sandbox
 
     return SandboxLauncher(create)
 
@@ -91,6 +98,7 @@ async def five_steps(
         launcher_of,
         output_folder,
         parse_isolated,
+        release_parse,
     )
 
     key = f"t/{TENANT}/q/slide-probe/original{slide.suffix}"
@@ -113,6 +121,7 @@ async def five_steps(
                 fetcher,
                 work,
                 limits,
+                keep=True,
             )
         )
         timings[name] = round(time.monotonic() - started, 3)
@@ -121,6 +130,7 @@ async def five_steps(
     identified = await step("identify", "identify_upload", {"name": slide.name})
     found["identify"] = {name: identified.get(name) for name in ("format", "raised", "code")}
     if "raised" in identified:
+        await release_parse(limits, work)
         return timings, found
     scanned = await step("scan", "scan_upload", identified)
     found["scan"] = {name: scanned.get(name) for name in ("raised", "code")}
@@ -137,6 +147,7 @@ async def five_steps(
         {**identified, **wanted, "out": str(output_folder(work, "derive"))},
     )
     found["derive"] = {name: derived.get(name) for name in ("raised", "code")}
+    await release_parse(limits, work)
     timings["total"] = round(sum(timings.values()), 3)
     return timings, found
 
@@ -159,7 +170,12 @@ async def slide_probe(name: str) -> dict[str, Any]:
     sandbox_timings, sandbox_found = await five_steps(
         slide, f"{__name__}:timed_launcher", Path("/tmp/parse-slide-probe/sandbox")
     )
-    report["sandbox"] = {"timings": sandbox_timings, "found": sandbox_found, "copies": COPIES}
+    report["sandbox"] = {
+        "timings": sandbox_timings,
+        "found": sandbox_found,
+        "sandboxes_created": CREATED,
+        "copies": COPIES,
+    }
     local_timings, local_found = await five_steps(slide, None, Path("/tmp/parse-slide-probe/local"))
     report["local"] = {"timings": local_timings, "found": local_found}
     report["sandboxes_left"] = [

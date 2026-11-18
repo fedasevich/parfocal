@@ -35,6 +35,7 @@ __all__ = [
     "output_folder",
     "parse_isolated",
     "read_output",
+    "release_parse",
     "required_output",
 ]
 
@@ -64,13 +65,19 @@ class ChildProcess(Protocol):
 
     async def collect(self) -> None: ...
 
-    async def stop(self) -> None: ...
+    async def stop(self, clean: bool = False) -> None: ...
 
 
 class Launcher(Protocol):
     async def start(
-        self, command: Sequence[str], environment: Mapping[str, str], work_dir: Path
+        self,
+        command: Sequence[str],
+        environment: Mapping[str, str],
+        work_dir: Path,
+        keep: bool = False,
     ) -> ChildProcess: ...
+
+    async def release(self, work_dir: Path) -> None: ...
 
 
 def launcher_of(path: str | None) -> Launcher | None:
@@ -275,7 +282,7 @@ class LocalChild:
     async def collect(self) -> None:
         return None
 
-    async def stop(self) -> None:
+    async def stop(self, clean: bool = False) -> None:
         stop(self.process)
         await self.process.wait()
 
@@ -285,7 +292,11 @@ class LocalLauncher:
     limits: ParseLimits = field(default_factory=ParseLimits)
 
     async def start(
-        self, command: Sequence[str], environment: Mapping[str, str], work_dir: Path
+        self,
+        command: Sequence[str],
+        environment: Mapping[str, str],
+        work_dir: Path,
+        keep: bool = False,
     ) -> ChildProcess:
         user = self.limits.user
         if user is not None:
@@ -302,6 +313,9 @@ class LocalLauncher:
             user=user,
         )
         return LocalChild(process, self.limits)
+
+    async def release(self, work_dir: Path) -> None:
+        return None
 
 
 class Conversation:
@@ -368,6 +382,7 @@ async def supervised(
 ) -> dict[str, Any]:
     talking = asyncio.ensure_future(talk)
     watching = asyncio.ensure_future(child.over_memory())
+    clean = False
     try:
         done, _ = await asyncio.wait(
             {talking, watching}, timeout=limits.seconds, return_when=asyncio.FIRST_COMPLETED
@@ -377,15 +392,17 @@ async def supervised(
         if talking not in done:
             raise StepFailedError(Failure.PARSE_TOO_SLOW)
         try:
-            return talking.result()
+            result = talking.result()
         except StepFailedError as failure:
             if failure.code == Refusal.UNREADABLE and await child.killed_for_memory():
                 raise StepFailedError(Failure.PARSE_TOO_LARGE) from None
             raise
+        clean = True
+        return result
     finally:
         for task in (talking, watching):
             task.cancel()
-        await child.stop()
+        await child.stop(clean)
 
 
 async def parse_isolated(
@@ -398,6 +415,7 @@ async def parse_isolated(
     tokens: JobTokens | None = None,
     paths: Sequence[str] = (),
     inputs: Sequence[Path] = (),
+    keep: bool = False,
 ) -> dict[str, Any]:
     chosen = limits or ParseLimits()
     issuer = tokens or JobTokens()
@@ -407,6 +425,7 @@ async def parse_isolated(
         (sys.executable, "-I", CHILD_SCRIPT),
         child_environment(issuer.issue(scope), work_dir),
         work_dir,
+        keep,
     )
     try:
         for path in inputs:
@@ -421,3 +440,8 @@ async def parse_isolated(
         "paths": [*import_paths(), *paths],
     }
     return await supervised(child, conversation.run(request), chosen)
+
+
+async def release_parse(limits: ParseLimits, work_dir: Path) -> None:
+    if limits.launcher is not None:
+        await limits.launcher.release(work_dir)

@@ -1,8 +1,9 @@
 import asyncio
 import contextlib
 import os
+import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -18,10 +19,13 @@ from parfocal_ingest.settings import PARSE_MEMORY_MIB, PARSE_SECONDS
 OUTPUTS = "outputs"
 KILLED_EXIT_CODES = frozenset({137, -9})
 EXIT_WAIT_SECONDS = 10.0
+JOB_SANDBOX_SECONDS = 3 * int(PARSE_SECONDS)
+IDLE_SANDBOX_SECONDS = 300
 PARSE_SANDBOX_OPTIONS: dict[str, Any] = {
     "block_network": True,
     "memory": (PARSE_MEMORY_MIB, PARSE_MEMORY_MIB),
-    "timeout": int(PARSE_SECONDS),
+    "timeout": JOB_SANDBOX_SECONDS,
+    "idle_timeout": IDLE_SANDBOX_SECONDS,
 }
 
 
@@ -51,6 +55,8 @@ class Sandbox(Protocol):
 
     async def copy_out(self, remote: Path, local: Path) -> None: ...
 
+    async def remove(self, remote: Path) -> None: ...
+
     async def entries(self, remote: Path) -> list[RemoteEntry]: ...
 
     async def exit_code(self) -> int | None: ...
@@ -59,6 +65,19 @@ class Sandbox(Protocol):
 
 
 type SandboxFactory = Callable[[], Awaitable[Sandbox]]
+
+
+async def terminated(sandbox: Sandbox) -> None:
+    with contextlib.suppress(Exception):
+        await sandbox.terminate()
+
+
+@dataclass
+class JobSandbox:
+    sandbox: Sandbox
+    expires: float
+    delivered: set[Path] = field(default_factory=set)
+    used: bool = False
 
 
 def plain_name(name: str) -> bool:
@@ -90,6 +109,8 @@ class SandboxChild:
         process: RemoteProcess,
         work_dir: Path,
         output_limit: int = OUTPUT_LIMIT_BYTES,
+        delivered: set[Path] | None = None,
+        kept: Callable[[], None] | None = None,
     ) -> None:
         self.sandbox = sandbox
         self.process = process
@@ -97,7 +118,8 @@ class SandboxChild:
         self.work_dir = work_dir
         self.output_limit = output_limit
         self.pending = b""
-        self.delivered: set[Path] = set()
+        self.delivered = set() if delivered is None else delivered
+        self.kept = kept
 
     async def write(self, data: bytes) -> None:
         try:
@@ -155,29 +177,89 @@ class SandboxChild:
                 if total > self.output_limit:
                     raise StepFailedError(Failure.PARSE_TOO_LARGE)
 
-    async def stop(self) -> None:
-        with contextlib.suppress(Exception):
-            await self.sandbox.terminate()
+    async def exited_cleanly(self) -> bool:
+        try:
+            return await asyncio.wait_for(self.process.wait(), EXIT_WAIT_SECONDS) == 0
+        except Exception:
+            return False
+
+    async def stop(self, clean: bool = False) -> None:
+        if clean and self.kept is not None and await self.exited_cleanly():
+            self.kept()
+            return
+        await terminated(self.sandbox)
 
 
-@dataclass(frozen=True)
+@dataclass
 class SandboxLauncher:
     create: SandboxFactory
+    lifetime: float = JOB_SANDBOX_SECONDS
+    step_seconds: float = PARSE_SECONDS
+    clock: Callable[[], float] = time.monotonic
+    kept: dict[Path, JobSandbox] = field(default_factory=dict)
 
-    async def start(
-        self, command: Sequence[str], environment: Mapping[str, str], work_dir: Path
+    async def fresh(self) -> JobSandbox:
+        return JobSandbox(await self.create(), self.clock() + self.lifetime)
+
+    async def reusable(self, work_dir: Path) -> JobSandbox | None:
+        held = self.kept.pop(work_dir, None)
+        if held is None:
+            return None
+        if held.expires - self.clock() > self.step_seconds:
+            try:
+                if await asyncio.wait_for(held.sandbox.exit_code(), EXIT_WAIT_SECONDS) is None:
+                    return held
+            except Exception:
+                pass
+        await terminated(held.sandbox)
+        return None
+
+    async def opened(
+        self,
+        held: JobSandbox,
+        command: Sequence[str],
+        environment: Mapping[str, str],
+        work_dir: Path,
+        keep: bool,
     ) -> ChildProcess:
-        sandbox = await self.create()
+        sandbox = held.sandbox
         try:
             await sandbox.make_directory(work_dir)
             for folder in output_folders(work_dir):
+                if held.used:
+                    with contextlib.suppress(Exception):
+                        await sandbox.remove(folder)
                 await sandbox.make_directory(folder)
             process = await sandbox.exec(command, environment, work_dir)
         except BaseException:
-            with contextlib.suppress(Exception):
-                await sandbox.terminate()
+            await terminated(sandbox)
             raise
-        return SandboxChild(sandbox, process, work_dir)
+
+        def kept() -> None:
+            held.used = True
+            self.kept[work_dir] = held
+
+        return SandboxChild(
+            sandbox, process, work_dir, delivered=held.delivered, kept=kept if keep else None
+        )
+
+    async def start(
+        self,
+        command: Sequence[str],
+        environment: Mapping[str, str],
+        work_dir: Path,
+        keep: bool = False,
+    ) -> ChildProcess:
+        held = await self.reusable(work_dir) if keep else None
+        if held is not None:
+            with contextlib.suppress(Exception):
+                return await self.opened(held, command, environment, work_dir, keep)
+        return await self.opened(await self.fresh(), command, environment, work_dir, keep)
+
+    async def release(self, work_dir: Path) -> None:
+        held = self.kept.pop(work_dir, None)
+        if held is not None:
+            await terminated(held.sandbox)
 
 
 class ModalProcess:
@@ -226,6 +308,9 @@ class ModalSandbox:
 
     async def copy_out(self, remote: Path, local: Path) -> None:
         await self.sandbox.filesystem.copy_to_local.aio(str(remote), local)
+
+    async def remove(self, remote: Path) -> None:
+        await self.sandbox.filesystem.remove.aio(str(remote), recursive=True)
 
     async def entries(self, remote: Path) -> list[RemoteEntry]:
         found = await self.sandbox.filesystem.list_files.aio(str(remote))

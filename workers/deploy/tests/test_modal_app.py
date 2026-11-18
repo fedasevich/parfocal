@@ -162,7 +162,8 @@ def test_the_parse_sandbox_blocks_the_network_and_carries_no_secret() -> None:
     assert PARSE_SANDBOX_OPTIONS["block_network"] is True
     assert "secrets" not in PARSE_SANDBOX_OPTIONS
     assert PARSE_SANDBOX_OPTIONS["memory"] == (PARSE_MEMORY_MIB, PARSE_MEMORY_MIB)
-    assert PARSE_SANDBOX_OPTIONS["timeout"] == PARSE_SECONDS
+    assert PARSE_SANDBOX_OPTIONS["timeout"] >= 3 * PARSE_SECONDS
+    assert PARSE_SANDBOX_OPTIONS["idle_timeout"] < PARSE_SECONDS
     assert "block_network" in inspect.signature(modal.App.function).parameters
 
 
