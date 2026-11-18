@@ -25,11 +25,17 @@ async function seededOutline(): Promise<number[]> {
   return points as number[];
 }
 
-async function typeOne(page: Page, slideId: string, points: number[]): Promise<TypedOutlines> {
+async function typeOne(
+  page: Page,
+  origin: string,
+  slideId: string,
+  points: number[],
+): Promise<TypedOutlines> {
   const deadline = Date.now() + typerWaitMs;
   for (;;) {
     const response = await page.request.post(`/api/slides/${slideId}/outline-types`, {
       data: { outlines: [{ points }] },
+      headers: { origin },
       timeout: typerWaitMs,
     });
     if (response.ok()) return (await response.json()) as TypedOutlines;
@@ -75,7 +81,7 @@ test("the viewer typing tool types one seeded outline on the deployed app", asyn
   expect(await errorScreenShown(page), "the viewer shows an error screen").toBeNull();
 
   seen.step("typing");
-  const answer = await typeOne(page, slideId, await seededOutline());
+  const answer = await typeOne(page, origin, slideId, await seededOutline());
   expect(typingProblem(answer, slideId), JSON.stringify(answer).slice(0, 300)).toBeNull();
   info.annotations.push({
     type: "typed",

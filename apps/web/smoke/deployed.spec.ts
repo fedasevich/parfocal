@@ -50,7 +50,7 @@ test("a signed-in person opens home, a workspace, a case and the viewer", async 
   seen.signedIn();
 
   await visit(page, seen, info, "home", "/");
-  await expect(page.getByRole("button", { name: /\S.*: theme, settings, log out$/ })).toBeVisible();
+  await expect(page.getByTitle(/\S.*: theme, settings, log out$/)).toBeVisible();
 
   const projects = await readJson<Listed[]>(page, "/api/projects");
   const project = projects[0];
