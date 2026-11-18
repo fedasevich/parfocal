@@ -26,7 +26,14 @@ export {
   selectFixtures,
   syntheticDir,
 } from "./manifest.ts";
-export { type FixtureMirror, fixtureMirror, mirrorUrl, presignUrl } from "./r2.ts";
+export {
+  type FixtureMirror,
+  fixtureBucket,
+  fixtureMirror,
+  fixturePrefix,
+  mirrorUrl,
+  presignUrl,
+} from "./r2.ts";
 
 function remoteFixture(file: string): RemoteFixture {
   const fixture = loadManifest().remote.find((entry) => entry.file === file);

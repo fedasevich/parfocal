@@ -34,7 +34,8 @@ Comparison option 2, approval option 2 and density option 2.
 - Storybook gains a `density` global beside `theme`, which sets `data-density` on the root element.
 - `packages/ui/e2e/visual.spec.ts` captures each story full page at 1280 x 800 with reduced motion, disabled animations and a fixed clock, in comfortable then compact, for both themes. Baselines live in `packages/ui/visual`. A mismatch writes `actual` and `diff` PNGs, which CI uploads as the `ui-visual-diff` artifact.
 - While no baseline is committed the visual tests skip, so CI stays green until the first approval. Once any baseline exists, a missing or stale one fails.
-- To approve, run `gh workflow run ci --ref BRANCH -f update_goldens=true`, then replace `packages/ui/visual` with the `ui-visual-baselines` artifact (`rm -rf packages/ui/visual` and `gh run download RUN -n ui-visual-baselines -D packages/ui/visual`) and commit it.
+- Decision 148 (where the baselines live), option B: the PNGs are not in git. They are write-once objects in R2 `parfocal-dev` at `fixtures/ui-visual/<sha256>.png`, and `packages/ui/visual-baselines.json` pins every file name with its SHA-256 and size. The Playwright global setup `e2e/visual-setup.ts` fetches them into `packages/ui/visual` with the read-only key of decision 132, verifies each checksum, drops any file not listed, and fails when the key is missing and `PARFOCAL_REQUIRE_VISUAL=1` (set in CI except for Dependabot).
+- To approve, run `gh workflow run ci --ref BRANCH -f update_goldens=true`, `gh run download RUN -n ui-visual-baselines -D DIRECTORY`, then `pnpm --filter @parfocal/ui visual:publish DIRECTORY` with the write key in `R2_ENDPOINT`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`. It uploads each new image with `If-None-Match: *`, never overwrites or deletes, and rewrites `visual-baselines.json`, which is the only file committed. The CI update run also puts a fresh `visual-baselines.json` in the artifact.
 
 ## Consequences
 

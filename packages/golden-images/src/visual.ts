@@ -16,7 +16,7 @@ export const UI_TOLERANCE: Tolerance = {
 };
 
 export const VISUAL_APPROVE_COMMAND =
-  "gh workflow run ci --ref BRANCH -f update_goldens=true, then replace packages/ui/visual with the ui-visual-baselines artifact";
+  "gh workflow run ci --ref BRANCH -f update_goldens=true, then gh run download RUN -n ui-visual-baselines -D DIRECTORY, pnpm --filter @parfocal/ui visual:publish DIRECTORY, and commit packages/ui/visual-baselines.json";
 
 export interface VisualCase {
   readonly storyId: string;

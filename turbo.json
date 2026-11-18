@@ -29,6 +29,10 @@
       "cache": false,
       "passThroughEnv": [
         "PARFOCAL_REQUIRE_FIXTURES",
+        "PARFOCAL_REQUIRE_VISUAL",
+        "PARFOCAL_FIXTURES_R2_ENDPOINT",
+        "PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID",
+        "PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY",
         "PARFOCAL_FIXTURES_DIR",
         "XDG_CACHE_HOME",
         "GOLDEN_UPDATE",
