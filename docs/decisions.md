@@ -374,3 +374,16 @@ Waits for something else, nothing for you now:
 - The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads), `0046` (model runs), `0047` (slide ingest) from INGEST-017 (publish step and slide status), and `0048` (result uploads) from RSET-004 (pairing results with slides), and `0049` (job tries) from AIP-018 (claim cap for failing jobs).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
 - The upload spike broke one browser test on `main` because the latency proxy gained an upload byte counter. It was fixed the same hour.
+
+### 149. Recovery objectives, where the extra backup copy lives and who promotes a restore
+
+OPS-008 (backups and disaster recovery) drilled a Neon point-in-time branch on 2026-11-18: usable in 1.5 s, 99 tables and 10635 rows identical (result `2026-11-18-neon-pitr-drill.md`). Neon's Free plan keeps only 6 hours of history, so anything older needs a copy of our own. Promoting a restore into production replaces live data, so no agent may do it.
+
+- A. Objectives: recovery point 6 hours, recovery time 1 hour. Keep the monthly restore check dump in an EU R2 bucket for 35 days, as the cross-region copy within the residency rules, about 50 MB so 0 dollars today. You run any promotion.
+- B. Same objectives, and the dump runs nightly so the recovery point of older damage is 24 hours. Cost still 0 dollars at this size.
+- C. Pay for a longer Neon history. This raises a plan limit, so it is yours to approve, and it passes the $30 a month.
+- Other.
+
+Recommendation A, because production holds only test data until the first real user, and B is a one-line change when that day comes.
+
+Your choice: 
