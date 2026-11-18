@@ -1,7 +1,9 @@
 import { useLingui } from "@lingui/react/macro";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { openPopout, useMainPopoutSync } from "../popout/popout-channel.ts";
 import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
+import type { ViewerModule } from "./magnification-control.tsx";
 import { viewportRect } from "./stage-geometry.ts";
 import type { StageSession } from "./stage-inspector.tsx";
 import type { SlideOverview, ViewerEngine } from "./viewer-engine.ts";
@@ -45,10 +47,12 @@ export function StageMinimap({
   engine,
   slideId,
   overview,
+  units,
 }: {
   engine: ViewerEngine;
   slideId: string;
   overview?: StageSession["overview"];
+  units?: Pick<ViewerModule, "effectiveMagnification">;
 }) {
   const { t } = useLingui();
   const frame = useRef<HTMLDivElement>(null);
@@ -66,6 +70,18 @@ export function StageMinimap({
   }, []);
   const slide = engine.getSlide();
   const viewport = viewportRect(camera, size);
+  const magnification =
+    units?.effectiveMagnification(camera.zoom, slide?.micronsPerPixel ?? null) ?? 2 ** camera.zoom;
+  const moveView = useCallback(
+    ([x, y]: [number, number]) => engine.setCamera({ ...engine.getCamera(), x, y }),
+    [engine],
+  );
+  useMainPopoutSync({
+    viewport,
+    magnification,
+    ...(slide === null ? {} : { extent: [slide.width, slide.height] }),
+    onMoveTo: moveView,
+  });
   return (
     <div ref={frame} className="pointer-events-none absolute inset-0">
       {slide === null || image === null ? null : (
@@ -77,7 +93,8 @@ export function StageMinimap({
           image={{ src: image.src ?? "", width: slide.width, height: slide.height }}
           title={<b>{t`Whole slide`}</b>}
           viewport={viewport}
-          onMoveView={([x, y]) => engine.setCamera({ ...engine.getCamera(), x, y })}
+          onMoveView={moveView}
+          onPopOut={() => void openPopout("minimap")}
           style={{ right: 16, top: 16 }}
         >
           <MapViewport rect={viewport} />

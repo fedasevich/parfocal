@@ -5,17 +5,17 @@ import { overviewSize } from "../screens/review/slide-geometry.ts";
 import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
 import { FullViewer, type ViewerSearch } from "../screens/viewer/full-viewer.tsx";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
-import { usePopoutState } from "./popout-channel.ts";
+import { type SlideExtent, usePopoutState } from "./popout-channel.ts";
 
-function overviewImageOf(slideId: string) {
-  return {
-    src: slideThumbUrl(slideId),
-    width: overviewSize.width,
-    height: overviewSize.height,
-  };
+function overviewImageOf(slideId: string, extent: SlideExtent | null) {
+  const [width, height] = extent ?? [overviewSize.width, overviewSize.height];
+  return { src: slideThumbUrl(slideId), width, height };
 }
 
-const slideExtent: MapRect = [0, 0, overviewSize.width, overviewSize.height];
+function slideExtentOf(extent: SlideExtent | null): MapRect {
+  const [width, height] = extent ?? [overviewSize.width, overviewSize.height];
+  return [0, 0, width, height];
+}
 
 type PopoutSearch = {
   kind?: "minimap" | "inspector" | undefined;
@@ -35,7 +35,7 @@ export function PopoutScreen({
   onSearch: (change: Partial<ViewerSearch>) => void;
 }) {
   const { t } = useLingui();
-  const { viewport, magnification, moveTo } = usePopoutState();
+  const { viewport, magnification, extent, moveTo } = usePopoutState();
   if (search.kind === "inspector") {
     if (search.project === undefined || search.slide === undefined) {
       return (
@@ -78,8 +78,8 @@ export function PopoutScreen({
           </p>
           <SmartMinimap
             size="full"
-            image={overviewImageOf(search.slide)}
-            extent={slideExtent}
+            image={overviewImageOf(search.slide, extent)}
+            extent={slideExtentOf(extent)}
             viewport={viewport}
             title={t`Whole slide`}
             onOpen={() => (window.opener as Window | null)?.focus()}
