@@ -70,6 +70,7 @@ function Frame({ facts, unsaved = 0 }: { facts: NoticeFacts; unsaved?: number })
                 title: titles[0] ?? "",
                 preview: <Sketch />,
                 more: facts.conflicts - 1,
+                outlines: { mine: true, theirs: true },
                 onKeepMine: () => {},
                 onKeepTheirs: () => {},
               }
@@ -117,6 +118,25 @@ export const ConflictWithOthersWaiting: Story = {
   ),
 };
 
+export const ConflictBothDeleted: Story = {
+  render: () => (
+    <ViewerNotices
+      plan={planNotices({ ...calm, phase: "conflict", conflicts: 1 })}
+      unsaved={0}
+      conflict={{
+        id: "gone",
+        title: "A colleague already deleted this shape",
+        preview: null,
+        more: 0,
+        outlines: { mine: false, theirs: false },
+        onKeepTheirs: () => {},
+      }}
+      onRetry={() => {}}
+      onDismissNotSaved={() => {}}
+    />
+  ),
+};
+
 function Session() {
   const [conflicts, setConflicts] = useState(0);
   const [incoming, setIncoming] = useState(0);
@@ -159,6 +179,7 @@ function Session() {
                 title: titles[2 - conflicts] ?? "",
                 preview: <Sketch />,
                 more: conflicts - 1,
+                outlines: { mine: true, theirs: conflicts === 2 },
                 onKeepMine: resolve("mine"),
                 onKeepTheirs: resolve("theirs"),
               }

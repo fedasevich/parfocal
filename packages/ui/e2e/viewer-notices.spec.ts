@@ -50,6 +50,20 @@ test("a conflict is shown alone and names what waits behind it", async ({ page }
   await expect(page.getByTestId("notice-alert")).toContainText("Choose Keep mine or Keep theirs");
 });
 
+test("a shape both deleted offers only Keep theirs, in the buttons, the legend and the alert", async ({
+  page,
+}) => {
+  await page.goto(story("conflict-both-deleted"));
+  const notice = page.getByTestId("conflict-notice");
+  await expect(notice).toContainText("Both of you deleted it.");
+  await expect(notice).not.toContainText("solid blue");
+  await expect(page.getByRole("button", { name: "Keep mine" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Keep theirs" })).toBeVisible();
+  await expect(page.getByTestId("notice-alert")).toHaveText(
+    "A colleague already deleted this shape. Choose Keep theirs in the banner under the top bar.",
+  );
+});
+
 test("the keyboard resolves two conflicts one at a time and a second Enter never hits the next", async ({
   page,
 }) => {

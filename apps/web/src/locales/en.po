@@ -2213,6 +2213,10 @@ msgstr "{title} uses your choice now."
 msgid "{title}. Choose Keep mine or Keep theirs in the banner under the top bar."
 msgstr "{title}. Choose Keep mine or Keep theirs in the banner under the top bar."
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{title}. Choose Keep theirs in the banner under the top bar."
+msgstr "{title}. Choose Keep theirs in the banner under the top bar."
+
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "{title}.pdf"
 msgstr "{title}.pdf"
@@ -4222,6 +4226,10 @@ msgstr "Both"
 #: ../../packages/ui/src/components/team.tsx
 msgid "Both are told by email."
 msgstr "Both are told by email."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Both of you deleted it."
+msgstr "Both of you deleted it."
 
 #: src/screens/upload/viewer-flow.tsx
 msgid "Both result sets draw on A1, each in its own color"
@@ -15734,6 +15742,10 @@ msgstr "The CSV files still download."
 msgid "The cutoff is {value}%."
 msgstr "The cutoff is {value}%."
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The dashed orange outline is theirs. Yours is deleted."
+msgstr "The dashed orange outline is theirs. Yours is deleted."
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "The decision cutoff is {value}%."
 msgstr "The decision cutoff is {value}%."
@@ -16183,6 +16195,10 @@ msgstr "The slide is still being inspected at its source."
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
 msgstr "The slides without results are picked for you."
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The solid blue outline is yours. Theirs is deleted."
+msgstr "The solid blue outline is yours. Theirs is deleted."
 
 #: src/viewer/remote-slide-notice.tsx
 msgid "The source is not answering, so the slide cannot be copied now."

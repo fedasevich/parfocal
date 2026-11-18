@@ -1,6 +1,6 @@
 import { SaveStatusWord, ViewerNotices } from "@parfocal/ui/components/viewer-notices";
 import { planNotices } from "@parfocal/ui/lib/viewer-notices";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 import { createPortal } from "react-dom";
 import { ConflictPreview, conflictId, conflictText } from "../annotations/conflict-preview.tsx";
 import type { ChangeSummary } from "../annotations/live-batch.ts";
@@ -27,6 +27,7 @@ type StageNoticesProps = {
   saveState: SaveState;
   unsaved: number;
   attempt: number;
+  refused: number;
   onRetry: () => void;
   incoming: readonly ChangeSummary[];
   onShowIncoming: () => void;
@@ -41,7 +42,12 @@ function conflictView(
   const conflict = conflicts[0];
   if (conflict === undefined) return undefined;
   const hasMine = conflict.action === "update" || !conflict.theirs.deleted;
+  const outlines = {
+    mine: conflict.mine !== null,
+    theirs: !conflict.theirs.deleted,
+  };
   return {
+    outlines,
     id: conflictId(conflict),
     title: conflictText(conflict),
     preview: <ConflictPreview conflict={conflict} />,
@@ -56,6 +62,7 @@ export function StageNotices({
   saveState,
   unsaved,
   attempt,
+  refused,
   onRetry,
   incoming,
   onShowIncoming,
@@ -64,15 +71,12 @@ export function StageNotices({
 }: StageNoticesProps) {
   const slots = useContext(NoticeSlotsContext);
   const personOf = usePeople();
-  const [lost, setLost] = useState(false);
-  useEffect(() => {
-    if (saveState === "failed") setLost(true);
-  }, [saveState]);
+  const [dismissed, setDismissed] = useState(0);
   const plan = planNotices({
     phase: saveState,
     attempt,
     conflicts: conflicts.length,
-    lost,
+    lost: refused > dismissed,
     incoming: incoming.length,
   });
   const changes =
@@ -94,7 +98,7 @@ export function StageNotices({
           conflict={conflictView(conflicts, onResolve)}
           changes={changes}
           onRetry={onRetry}
-          onDismissNotSaved={() => setLost(false)}
+          onDismissNotSaved={() => setDismissed(refused)}
         />
       </Into>
     </>

@@ -2211,6 +2211,10 @@ msgstr ""
 msgid "{title}. Choose Keep mine or Keep theirs in the banner under the top bar."
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "{title}. Choose Keep theirs in the banner under the top bar."
+msgstr ""
+
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "{title}.pdf"
 msgstr ""
@@ -4219,6 +4223,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
 msgid "Both are told by email."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "Both of you deleted it."
 msgstr ""
 
 #: src/screens/upload/viewer-flow.tsx
@@ -15725,6 +15733,10 @@ msgstr ""
 msgid "The cutoff is {value}%."
 msgstr ""
 
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The dashed orange outline is theirs. Yours is deleted."
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "The decision cutoff is {value}%."
 msgstr ""
@@ -16173,6 +16185,10 @@ msgstr ""
 
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-notices.tsx
+msgid "The solid blue outline is yours. Theirs is deleted."
 msgstr ""
 
 #: src/viewer/remote-slide-notice.tsx

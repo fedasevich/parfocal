@@ -6542,7 +6542,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a unit test covers the priority and the two-at-once cases, a Storybook browser test covers the keyboard path through two conflicts and the live regions, the autosave, edit conflict and live layer browser specs pass, and a result file says what changed and why.
   Depends on PROTO-023. Size: S.
 - [ ] PROTO-029 · The slide stays under the pointer when the live viewer's banner opens or closes
-  PROTO-028 (the live viewer's one banner shows one notice at a time) measured in `docs/results/2026-11-18-viewer-notice-banner.md` that the banner sits in the page flow, so the canvas loses 85 px of height when the conflict notice opens and a shape moves 42.5 px on screen. A colleague's changes can open the banner in the middle of an outline.
+  PROTO-028 (the live viewer's one banner shows one notice at a time) measured in `docs/results/2026-11-18-viewer-notice-banner.md` that the banner sits in the page flow, so the canvas loses 85 px of height when the conflict notice opens and a shape moves 42.5 px on screen. A colleague's changes, edits not saved and a long offline spell can each open the banner in the middle of an outline.
   Keep option A of question 144 in `docs/decisions.md` (the notices sit in the one banner under the top bar) and shift the camera by the height change, or hold the banner until the pointer is up, so that the tissue under the pointer does not move.
   Done when a browser test draws a shape, opens and closes the banner and finds the shape's screen position unchanged within 1 px.
   Depends on PROTO-028. Size: S.

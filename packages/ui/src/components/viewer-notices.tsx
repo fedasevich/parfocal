@@ -47,6 +47,7 @@ type ConflictView = {
   readonly title: string;
   readonly preview: ReactNode;
   readonly more: number;
+  readonly outlines: { readonly mine: boolean; readonly theirs: boolean };
   readonly onKeepMine?: (() => void) | undefined;
   readonly onKeepTheirs: () => void;
 };
@@ -85,6 +86,15 @@ function Waiting({ line }: { line: string | null }) {
       {line}
     </span>
   );
+}
+
+function Legend({ mine, theirs }: { mine: boolean; theirs: boolean }) {
+  if (mine && theirs) {
+    return <Trans>Yours is the solid blue outline, theirs is the dashed orange one.</Trans>;
+  }
+  if (mine) return <Trans>The solid blue outline is yours. Theirs is deleted.</Trans>;
+  if (theirs) return <Trans>The dashed orange outline is theirs. Yours is deleted.</Trans>;
+  return <Trans>Both of you deleted it.</Trans>;
 }
 
 function ConflictBanner({ conflict, line }: { conflict: ConflictView; line: string | null }) {
@@ -134,7 +144,7 @@ function ConflictBanner({ conflict, line }: { conflict: ConflictView; line: stri
             {conflict.title}
           </span>
           <span className="block text-caption text-fg-dim">
-            <Trans>Yours is the solid blue outline, theirs is the dashed orange one.</Trans>
+            <Legend mine={conflict.outlines.mine} theirs={conflict.outlines.theirs} />
             {more > 0 ? " " : null}
             {more > 0
               ? plural(more, {
@@ -155,7 +165,9 @@ function useNoticeText(props: ViewerNoticesProps): string {
   const { plan, unsaved, conflict, changes } = props;
   if (plan.shown === "conflict") {
     const title = conflict?.title ?? "";
-    return t`${title}. Choose Keep mine or Keep theirs in the banner under the top bar.`;
+    return conflict?.onKeepMine === undefined
+      ? t`${title}. Choose Keep theirs in the banner under the top bar.`
+      : t`${title}. Choose Keep mine or Keep theirs in the banner under the top bar.`;
   }
   if (plan.shown === "not-saved") {
     return t`Some edits were not saved. The server refused them, so a reload shows the last saved version.`;
