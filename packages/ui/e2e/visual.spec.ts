@@ -85,7 +85,15 @@ for (const storyId of storyIds) {
           },
           [theme, density],
         );
-        await page.evaluate(() => document.fonts.ready.then(() => undefined));
+        await page.evaluate(async () => {
+          const twoFrames = () =>
+            new Promise<void>((done) =>
+              requestAnimationFrame(() => requestAnimationFrame(() => done())),
+            );
+          await document.fonts.ready;
+          await twoFrames();
+          await document.fonts.ready;
+        });
         const actual = decodePng(
           await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" }),
         );
