@@ -280,6 +280,17 @@ OPS-006 (observability stack) is built and tested on fakes and stays on hold und
 - B. Do the Grafana, Sentry and PostHog sign-ups now so an agent can run the drill.
 - Other.
 
+### 149. Whether merging to main deploys production, or releases stay tagged and approved
+
+SKEL-009 (CI deploys main to production) is done when merging to main deploys automatically and the skeleton end to end suite then runs against production. Today that is not what happens. Every release is tagged with `pnpm release`, then `deploy.yml` is dispatched on the tag with environment production and approved at the production environment gate, then the browser smoke runs. The latest such run is https://github.com/fedasevich/parfocal/actions/runs/44200148067 (v0.18.0, deploy and browser smoke both green). The workflow already deploys on every green push to main, but only when the repository variable `DEPLOY_ON_MAIN` is `true`, and it is not set (the repository variables are the Cloudflare account, the Neon project, the smoke email, the Zitadel organisation and the seed viewer emails). Every run triggered by a push to main in the last day shows as skipped, for example https://github.com/fedasevich/parfocal/actions/runs/44205297093. Setting a repository variable is a GitHub repository setting, so an agent does not do it.
+
+- A. Keep tagged releases with approval as the way to deploy, and change the SKEL-009 Done line to say so. The browser smoke after each release is the end to end check.
+- B. Set `DEPLOY_ON_MAIN` to `true` so every green main deploys by itself. Main is merged many times an hour, so each merge would run a production deploy and the browser smoke, and the approval gate on the production environment would also have to be removed or relaxed for push runs.
+- C. Set `DEPLOY_ON_MAIN` to `true` but deploy on a schedule or batch (for example the head of main once an hour), which needs a small change to `deploy.yml` that an agent can make once you choose.
+- Other.
+
+Recommendation A, because the app is a development environment (ADR 0390) and a tagged, approved release has worked for the last releases, while deploying every merge multiplies runs and the Modal and Neon cost for no user.
+
 Your choice: 
 
 ## What your answers of 2026-11-16 changed
