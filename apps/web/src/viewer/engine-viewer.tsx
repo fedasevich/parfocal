@@ -6,6 +6,7 @@ import { useRememberResume } from "../screens/home/remember-resume.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
+import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-slide-notice.tsx";
@@ -81,6 +82,8 @@ export function EngineViewer({
   const [, setLayout] = useInspectorLayout();
   const storageNote = storage?.slideId === slideId ? storage.note : null;
   const closePeek = useCallback(() => setPeek(false), []);
+  const openPeek = useCallback(() => setPeek(true), []);
+  usePeekKey(peek, openPeek, closePeek);
   const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent };
   const load = loaded.state === "ready" ? loaded.load : null;
   const flagged = load !== null && load.resultSets.length > 0;
@@ -131,6 +134,8 @@ export function EngineViewer({
         slideId={slideId}
         overview={session.overview}
         units={session.module}
+        surface={cells ? "cells" : "viewer"}
+        onOpen={openPeek}
       />
       <StageResultCells
         engine={session.engine}

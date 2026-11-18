@@ -6604,12 +6604,12 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Give quiet buttons in the review panel enough contrast to read as buttons at a glance, rename or explain "Map this view" and "Paint a map" so a first-time user knows the result before clicking, and make the Guided button start guided review on the current slide's objects.
   Done when an axe and contrast check passes on the review panel stories, a browser test starts guided review from the Guided button and decides an object, and the new labels are in the locale files.
   Depends on PROTO-029. Size: S.
-- [ ] PROTO-034 · Cell review follows the Minimap setting with a movable smart minimap
+- [x] PROTO-034 · Cell review follows the Minimap setting with a movable smart minimap
   On 2026-11-18 the owner found that in cell review the Z key opens the full slide map and no minimap appears when it would help, though the Layout setting offers When useful, Always and Never.
   Show the smart minimap from NAV-006 (smart minimap state machine) and NAV-007 (minimap placement scoring) in cell review as it shows in the full viewer, following the Minimap setting, let the reviewer drag it to another corner and keep that place, and keep Z as the hold to see the whole slide.
   Done when a browser test in cell review sees the minimap appear after zooming in under When useful, always under Always and never under Never, drags it to another corner and finds it there after a reload.
   Depends on PROTO-029. Size: S.
-- [ ] PROTO-035 · Experts edit any imported or seeded cell, its outline and its type
+- [x] PROTO-035 · Experts edit any imported or seeded cell, its outline and its type
   On 2026-11-18 the owner found that imported and seeded cells and their types cannot be changed.
   Let an expert select any cell from an imported result set or the seed, change its type from the class list or by key, move or reshape its outline, delete it, and change many at once by a lasso or by type. Store each change as an edit on the shared layer with the original kept, as ADR 0237 (annotate tasks on one shared layer) describes, so an AI result is never rewritten in place.
   Done when a browser test changes the type of one seeded cell by key and of several by lasso, reshapes one outline, deletes one, reloads and sees every change, and an API test shows the original result set unchanged.
@@ -6639,7 +6639,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Wire the stage's minimap to the NAV-006 (smart minimap state machine) states and the NAV-007 (minimap placement scoring) corners, and add the head and foot texts and the guided inset.
   Done when a browser test sees no minimap at whole slide zoom under When useful, sees it at the bottom right after zooming in, reads the head and foot texts in a task, and sees the inset in guided review.
   Depends on PROTO-034. Size: S.
-- [ ] PROTO-041 · The top bar's title, slide chip, decision ring and Submit match the mock
+- [x] PROTO-041 · The top bar's title, slide chip, decision ring and Submit match the mock
   The top bar's parts are in the mock's order, but the title is 513 px wide with the task number, case, result set count and decision count, the slide chip is "A1" without stain or thumbnail, the ring shows tissue seen where the mock shows decisions, the switch offers Annotate on review screens and checks Full viewer in guided review, Submit is always enabled, and the progress popover counts 48 of 48 while the Opinion tab counts 48 of 55 (rows 26 to 34).
   Shorten the title to the task name over project and due date, draw the chip as thumbnail and "A1 · H&E", show the decision ring with the time left and keep tissue seen inside the progress popover, disable Submit with the mock's reason while objects or required questions are open, fix the checked choice in guided review, make the popover count the same objects as the Opinion tab with its Added row, and add "Parfocal home" to the account menu.
   Done when a browser test on RT-14 reads "A1 · H&E", "87%" and a disabled Submit whose reason names 7 objects, decides the open objects and sees Submit enabled, and reads the same counts in the popover and the Opinion tab.

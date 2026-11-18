@@ -361,3 +361,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0399](0399-cells-draw-as-dots-while-a-software-renderer-moves.md) | Cells draw as dots while a software renderer moves | Accepted | 2026-11-18 |
 | [0397](0397-agents-sign-in-to-the-dev-app-as-a-seeded-test-account-by-script.md) | Agents sign in to the dev app as a seeded test account by script | Accepted | 2026-11-18 |
 | [0400](0400-a-transaction-begins-and-sets-its-scope-in-one-round-trip.md) | A transaction begins and sets its scope in one round trip | Accepted | 2026-11-18 |
+| [0401](0401-ai-cell-edits-as-one-atomic-batch.md) | Edits of AI cells go to the shared layer as one atomic batch | Accepted | 2026-11-18 |

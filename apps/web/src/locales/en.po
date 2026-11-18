@@ -2201,6 +2201,10 @@ msgstr "{templateName} v{version} was retired on {0}"
 msgid "{tilesDone} of {tilesTotal} tiles finished"
 msgstr "{tilesDone} of {tilesTotal} tiles finished"
 
+#: src/viewer/live-progress.tsx
+msgid "{timeLeft} left"
+msgstr "{timeLeft} left"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} is back to Parfocal's choice."
 msgstr "{title} is back to Parfocal's choice."
@@ -3161,6 +3165,11 @@ msgstr "Added by you: {reason}. It sits outside the scope and is counted apart."
 msgid "Added to the email the reviewers get."
 msgstr "Added to the email the reviewers get."
 
+#. placeholder {0}: added.join(", ")
+#: ../../packages/ui/src/components/review-popovers.tsx
+msgid "Added, {0}"
+msgstr "Added, {0}"
+
 #: src/results/add-result-set.tsx
 msgid "Adding the result set to the slide"
 msgstr "Adding the result set to the slide"
@@ -3961,12 +3970,9 @@ msgid "Back to My work"
 msgstr "Back to My work"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Back to My work. Every answer is saved"
 msgstr "Back to My work. Every answer is saved"
-
-#: src/viewer/live-top-bar.tsx
-msgid "Back to My work. Every edit is saved"
-msgstr "Back to My work. Every edit is saved"
 
 #: src/screens/admin/admin-screen.tsx
 #: src/screens/admin/admin-shell.tsx
@@ -5032,6 +5038,10 @@ msgstr "Click around it. Click the first point or press Finish to close it. The 
 #: src/screens/review/first-read.tsx
 msgid "Click around the object on the slide to outline it."
 msgstr "Click around the object on the slide to outline it."
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Click keeps only this type. Shift and click drops it."
+msgstr "Click keeps only this type. Shift and click drops it."
 
 #: src/annotations/count-panel.tsx
 msgid "Click to drop a marker. Shift-click removes one."
@@ -6263,6 +6273,14 @@ msgstr "Draft. Not for clinical use until it is signed."
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Drag one onto the page, or click it to add it after the selected block."
 msgstr "Drag one onto the page, or click it to add it after the selected block."
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Drag to another corner, or use the arrow keys"
+msgstr "Drag to another corner, or use the arrow keys"
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Drag to another corner. Double-click to place it automatically"
+msgstr "Drag to another corner. Double-click to place it automatically"
 
 #: src/viewer/stage-coach.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom."
@@ -8505,6 +8523,10 @@ msgstr "Keyboard"
 msgid "Keyboard shortcuts"
 msgstr "Keyboard shortcuts"
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "Keys 1 to 9 retype the selection, X deletes it, J goes to the next cell."
+msgstr "Keys 1 to 9 retype the selection, X deletes it, J goes to the next cell."
+
 #. placeholder {0}: u.keys
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Keys follow {0} where they can. Every key can be changed later."
@@ -9597,6 +9619,14 @@ msgstr "Move on by itself"
 #: src/screens/project/slide-move-dialog.tsx
 msgid "Move slide"
 msgstr "Move slide"
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Move the minimap"
+msgstr "Move the minimap"
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Move the minimap. It stays in this corner"
+msgstr "Move the minimap. It stays in this corner"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Move up"
@@ -10937,6 +10967,10 @@ msgstr "on your home"
 msgid "One agrees, one disagrees"
 msgstr "One agrees, one disagrees"
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them."
+msgstr "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them."
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "One finger"
 msgstr "One finger"
@@ -11215,6 +11249,10 @@ msgstr "Opened from {mapTitle}, as"
 #: src/viewer/live-progress.tsx
 msgid "Opening"
 msgstr "Opening"
+
+#: src/viewer/live-top-bar.tsx
+msgid "Opening the objects of this slide"
+msgstr "Opening the objects of this slide"
 
 #. placeholder {0}: screenTitles[screen]
 #: src/routes/issue-states.tsx
@@ -11532,6 +11570,7 @@ msgid "Parfocal could not read this link."
 msgstr "Parfocal could not read this link."
 
 #: ../../packages/ui/src/components/app-shell.tsx
+#: src/shell/account-menu.tsx
 msgid "Parfocal home"
 msgstr "Parfocal home"
 
@@ -12870,6 +12909,10 @@ msgstr "Restore"
 msgid "Restore {0}"
 msgstr "Restore {0}"
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "Restore the AI original"
+msgstr "Restore the AI original"
+
 #: src/results/add-result-set.tsx
 msgid "Result file"
 msgstr "Result file"
@@ -13803,6 +13846,10 @@ msgstr "Select the block {0}"
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "selected"
 msgstr "selected"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Selected cells"
+msgstr "Selected cells"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Selection"
@@ -16544,6 +16591,10 @@ msgstr "This slide is already stored in Parfocal."
 msgid "This slide is signed off"
 msgstr "This slide is signed off"
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "This slide is signed off and its layer is locked."
+msgstr "This slide is signed off and its layer is locked."
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "This slide, {slideName}"
 msgstr "This slide, {slideName}"
@@ -17060,6 +17111,7 @@ msgstr "Under the slide"
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
+#: src/viewer/annotate-task-panel.tsx
 msgid "Undo"
 msgstr "Undo"
 

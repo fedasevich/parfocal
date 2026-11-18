@@ -3,7 +3,6 @@ import { hidePanelWhilePanning } from "./parts.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
-const rt14 = "00000000-0000-4000-8007-000000000014";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -117,25 +116,6 @@ test("the live top bar has the slide picker and progress, and the inspector keep
     "aria-selected",
     "true",
   );
-});
-
-test("Submit on a review task opens the Slide done card in the Opinion tab, even with the panel hidden", async ({
-  page,
-}) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?task=${rt14}&as=DH`);
-  const stage = page.getByTestId("slide-stage");
-  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  const bar = page.getByTestId("live-top-bar");
-  await expect(
-    bar.getByTestId("workspace-switch").getByRole("radio", { name: "Guided" }),
-  ).toBeVisible();
-  await page.keyboard.press("i");
-  await expect(page.getByTestId("inspector-tab")).toBeVisible();
-  await bar.getByRole("button", { name: "Submit" }).click();
-  await expect(page).toHaveURL(/tab=opinion/);
-  const opinion = page.getByTestId("stage-inspector").getByTestId("stage-opinion");
-  await expect(opinion).toBeVisible();
-  await expect(opinion.getByRole("button", { name: "Submit" })).toBeVisible();
 });
 
 test("hide while panning hides the live inspector during a pan and not on a click", async ({

@@ -1,10 +1,9 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import type { Camera } from "../review/slide-still.tsx";
 import { heldPlacement } from "./minimap-weights.ts";
 
 export const cornerRestMs = 200;
 
-export function useHeldCorner<T>(fresh: T, camera: Camera): T {
+export function useHeldCorner<T>(fresh: T, camera: object): T {
   const shown = useRef<T | null>(null);
   const [resting, setResting] = useState(true);
   const last = useRef(camera);
@@ -26,7 +25,7 @@ export function HeldCorner<T>({
   children,
 }: {
   fresh: T;
-  camera: Camera;
+  camera: object;
   children: (place: T) => ReactNode;
 }) {
   return <>{children(useHeldCorner(fresh, camera))}</>;

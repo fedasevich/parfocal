@@ -42,6 +42,7 @@ import { SelectLayer } from "../annotations/select-layer.tsx";
 import type { ShapeId } from "../annotations/shapes.ts";
 import { SmartLayer } from "../annotations/smart-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
+import { useAiBridge } from "../annotations/use-ai-bridge.ts";
 import { useLiveGuardFeed } from "../annotations/use-live-guard.ts";
 import { useProposals } from "../annotations/use-proposals.ts";
 import {
@@ -90,7 +91,7 @@ import {
 } from "./inspector-slots.tsx";
 import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
-import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
+import { StageMagnification, type ViewerModule } from "./magnification-control.tsx";
 import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
@@ -390,19 +391,22 @@ function OpenedSlide({
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
   const { undo: undoEdit, redo: redoEdit } = saved;
+  const { bridge: aiBridge, onMarquee: onAiMarquee, aiIsNewer } = useAiBridge(annotations);
   const onUndoKey = useCallback(
     ({ phase, action }: { phase: string; action: string }) => {
       if (phase !== "press") return;
+      const aiFirst = aiIsNewer();
       if (action === "redo") {
-        redoEdit();
+        if (!aiFirst || !aiBridge.current.redo()) redoEdit();
         return;
       }
       if (action !== "undo") return;
       const draft = draftControl.current;
       if (draft !== null && draft.depth() > 0) draft.pop();
-      else if (textControl.current?.restore() !== true) undoEdit();
+      else if (textControl.current?.restore() === true) return;
+      else if (!aiFirst || !aiBridge.current.undo()) undoEdit();
     },
-    [undoEdit, redoEdit],
+    [undoEdit, redoEdit, aiBridge, aiIsNewer],
   );
   useHotkeys(undoBindings, onUndoKey);
   const [projectClasses, setProjectClasses] = useState<readonly ProjectClass[]>([]);
@@ -864,6 +868,7 @@ function OpenedSlide({
                     onCommit={saved.commit}
                     onEditText={(id) => textControl.current?.edit(id)}
                     onSelectionChange={setSelectedIds}
+                    onMarquee={onAiMarquee}
                     pinRegistry={pinRegistry}
                     emptyDrag={setup.dragBehaviour}
                   />
@@ -961,6 +966,8 @@ function OpenedSlide({
                       classes={classes}
                       saveState={saved.saveState}
                       colourOf={colourOf}
+                      selecting={tool === "select"}
+                      bridge={aiBridge}
                       onOpenSlide={onOpenSlide}
                     />
                   ) : null}
@@ -1122,20 +1129,13 @@ function OpenedSlide({
                 <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
               ) : null}
               {session ? (
-                <div
-                  data-slot="stage-magnification"
-                  className="pointer-events-none absolute inset-x-4 bottom-3 flex justify-center"
-                >
-                  <div className="pointer-events-auto flex max-w-full">
-                    <MagnificationControl
-                      engine={session.engine}
-                      units={session.module}
-                      brightness={brightness}
-                      onBrightnessChange={setBrightness}
-                      labelAs={magnificationLabel}
-                    />
-                  </div>
-                </div>
+                <StageMagnification
+                  engine={session.engine}
+                  units={session.module}
+                  brightness={brightness}
+                  onBrightnessChange={setBrightness}
+                  labelAs={magnificationLabel}
+                />
               ) : null}
               {phase.state === "loading" ? <StageOpening /> : null}
               {chosenDevice === undefined ? null : (

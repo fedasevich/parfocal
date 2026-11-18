@@ -2199,6 +2199,10 @@ msgstr ""
 msgid "{tilesDone} of {tilesTotal} tiles finished"
 msgstr ""
 
+#: src/viewer/live-progress.tsx
+msgid "{timeLeft} left"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} is back to Parfocal's choice."
 msgstr ""
@@ -3159,6 +3163,11 @@ msgstr ""
 msgid "Added to the email the reviewers get."
 msgstr ""
 
+#. placeholder {0}: added.join(", ")
+#: ../../packages/ui/src/components/review-popovers.tsx
+msgid "Added, {0}"
+msgstr ""
+
 #: src/results/add-result-set.tsx
 msgid "Adding the result set to the slide"
 msgstr ""
@@ -3959,11 +3968,8 @@ msgid "Back to My work"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-msgid "Back to My work. Every answer is saved"
-msgstr ""
-
 #: src/viewer/live-top-bar.tsx
-msgid "Back to My work. Every edit is saved"
+msgid "Back to My work. Every answer is saved"
 msgstr ""
 
 #: src/screens/admin/admin-screen.tsx
@@ -5029,6 +5035,10 @@ msgstr ""
 
 #: src/screens/review/first-read.tsx
 msgid "Click around the object on the slide to outline it."
+msgstr ""
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Click keeps only this type. Shift and click drops it."
 msgstr ""
 
 #: src/annotations/count-panel.tsx
@@ -6257,6 +6267,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Drag one onto the page, or click it to add it after the selected block."
+msgstr ""
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Drag to another corner, or use the arrow keys"
+msgstr ""
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Drag to another corner. Double-click to place it automatically"
 msgstr ""
 
 #: src/viewer/stage-coach.tsx
@@ -8500,6 +8518,10 @@ msgstr ""
 msgid "Keyboard shortcuts"
 msgstr ""
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "Keys 1 to 9 retype the selection, X deletes it, J goes to the next cell."
+msgstr ""
+
 #. placeholder {0}: u.keys
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Keys follow {0} where they can. Every key can be changed later."
@@ -9591,6 +9613,14 @@ msgstr ""
 
 #: src/screens/project/slide-move-dialog.tsx
 msgid "Move slide"
+msgstr ""
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Move the minimap"
+msgstr ""
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Move the minimap. It stays in this corner"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
@@ -10932,6 +10962,10 @@ msgstr ""
 msgid "One agrees, one disagrees"
 msgstr ""
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them."
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "One finger"
 msgstr ""
@@ -11209,6 +11243,10 @@ msgstr ""
 
 #: src/viewer/live-progress.tsx
 msgid "Opening"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Opening the objects of this slide"
 msgstr ""
 
 #. placeholder {0}: screenTitles[screen]
@@ -11527,6 +11565,7 @@ msgid "Parfocal could not read this link."
 msgstr ""
 
 #: ../../packages/ui/src/components/app-shell.tsx
+#: src/shell/account-menu.tsx
 msgid "Parfocal home"
 msgstr ""
 
@@ -12861,6 +12900,10 @@ msgstr ""
 msgid "Restore {0}"
 msgstr ""
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "Restore the AI original"
+msgstr ""
+
 #: src/results/add-result-set.tsx
 msgid "Result file"
 msgstr ""
@@ -13793,6 +13836,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "selected"
+msgstr ""
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Selected cells"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -16535,6 +16582,10 @@ msgstr ""
 msgid "This slide is signed off"
 msgstr ""
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "This slide is signed off and its layer is locked."
+msgstr ""
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "This slide, {slideName}"
 msgstr ""
@@ -17051,6 +17102,7 @@ msgstr ""
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
+#: src/viewer/annotate-task-panel.tsx
 msgid "Undo"
 msgstr ""
 

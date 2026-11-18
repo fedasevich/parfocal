@@ -57,7 +57,7 @@ test("a slide with no task opens in Annotate with the full rail and a marquee on
 
 test("an annotate task opens in Annotate", async ({ page }) => {
   await openSlide(page, `?task=${annotateTask}`);
-  await expect(page.getByTestId("case-header")).toContainText("RT-13");
+  await expect(page.getByTestId("case-header")).toContainText("Certainty re-read · CAMELYON v1.0");
   await expect(stage(page)).toHaveAttribute("data-workspace", "annotate");
   await expect(
     page.getByTestId("workspace-switch").getByRole("radio", { name: "Annotate" }),

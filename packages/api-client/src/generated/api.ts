@@ -532,6 +532,23 @@ export interface AiModels {
   running: AiModelRun[];
 }
 
+export interface AiObjectChange {
+  /** @maxLength 32 */
+  object: string;
+  geometry?: Geometry | null;
+  class_id?: string | null;
+  deleted?: boolean;
+  version?: number | null;
+}
+
+export interface AiObjectChanges {
+  /**
+   * @minItems 1
+   * @maxItems 5000
+   */
+  changes: AiObjectChange[];
+}
+
 export interface AiObjectConfirm {
   geometry?: Geometry | null;
 }
@@ -1500,6 +1517,31 @@ export const ChangeGroup = {
  * @maxLength 500
  */
 export type ChangeReason = string;
+
+export type LayerObjectGeometry = { [key: string]: unknown };
+
+export interface LayerObject {
+  id: string;
+  slide_id: string;
+  kind: AnnotationKind;
+  number: number;
+  code: string;
+  origin: AnnotationOrigin;
+  source: string | null;
+  geometry: LayerObjectGeometry;
+  class_id: string | null;
+  text: string | null;
+  version: number;
+  created_by_user_id: string | null;
+  changed_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface ChangedAiObjects {
+  objects: LayerObject[];
+}
 
 export type ChartStyle = (typeof ChartStyle)[keyof typeof ChartStyle];
 
@@ -4393,27 +4435,6 @@ export interface LayerImport {
    */
   file_name: string;
   content: LayerImportContent;
-}
-
-export type LayerObjectGeometry = { [key: string]: unknown };
-
-export interface LayerObject {
-  id: string;
-  slide_id: string;
-  kind: AnnotationKind;
-  number: number;
-  code: string;
-  origin: AnnotationOrigin;
-  source: string | null;
-  geometry: LayerObjectGeometry;
-  class_id: string | null;
-  text: string | null;
-  version: number;
-  created_by_user_id: string | null;
-  changed_by_user_id: string | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
 }
 
 export interface SkippedFeature {
@@ -8105,7 +8126,7 @@ export interface WorkspaceDraft {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 55 */
+  /** @maxItems 57 */
   locked?: string[];
 }
 
@@ -8300,6 +8321,10 @@ export type CreateSharedObjectParams = {
 };
 
 export type ChangeAiObjectParams = {
+  reason?: string | null;
+};
+
+export type ChangeAiObjectsParams = {
   reason?: string | null;
 };
 
@@ -44329,6 +44354,196 @@ export const useChangeAiObject = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getChangeAiObjectMutationOptions(options), queryClient);
+};
+
+export type changeAiObjectsResponse200 = {
+  data: ChangedAiObjects;
+  status: 200;
+};
+
+export type changeAiObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type changeAiObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type changeAiObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type changeAiObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type changeAiObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type changeAiObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type changeAiObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type changeAiObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type changeAiObjectsResponseSuccess = changeAiObjectsResponse200 & {
+  headers: Headers;
+};
+export type changeAiObjectsResponseError = (
+  | changeAiObjectsResponse400
+  | changeAiObjectsResponse401
+  | changeAiObjectsResponse403
+  | changeAiObjectsResponse404
+  | changeAiObjectsResponse409
+  | changeAiObjectsResponse422
+  | changeAiObjectsResponse429
+  | changeAiObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type changeAiObjectsResponse = changeAiObjectsResponseSuccess | changeAiObjectsResponseError;
+
+export const getChangeAiObjectsUrl = (
+  taskId: string,
+  slideId: string,
+  params?: ChangeAiObjectsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai-changes?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai-changes`;
+};
+
+/**
+ * @summary Change Ai Objects
+ */
+export const changeAiObjects = async (
+  taskId: string,
+  slideId: string,
+  aiObjectChanges: AiObjectChanges,
+  params?: ChangeAiObjectsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<changeAiObjectsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<changeAiObjectsResponse>(getChangeAiObjectsUrl(taskId, slideId, params), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(aiObjectChanges),
+  });
+};
+
+export const getChangeAiObjectsMutationKey = () => ["changeAiObjects"] as const;
+
+export const getChangeAiObjectsMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeAiObjects>>,
+    TError,
+    ChangeAiObjectsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeAiObjects>>,
+  TError,
+  ChangeAiObjectsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeAiObjectsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeAiObjects>>,
+    ChangeAiObjectsMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data, params } = props ?? {};
+
+    return changeAiObjects(taskId, slideId, data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangeAiObjectsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeAiObjects>>
+>;
+export type ChangeAiObjectsMutationBody = AiObjectChanges;
+export type ChangeAiObjectsMutationError = Problem;
+export type ChangeAiObjectsMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: AiObjectChanges;
+  params?: ChangeAiObjectsParams;
+};
+
+/**
+ * @summary Change Ai Objects
+ */
+export const useChangeAiObjects = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeAiObjects>>,
+      TError,
+      ChangeAiObjectsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeAiObjects>>,
+  TError,
+  ChangeAiObjectsMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeAiObjectsMutationOptions(options), queryClient);
 };
 
 export type confirmAiObjectResponse201 = {

@@ -125,6 +125,37 @@ class LayerObject(BaseModel):
     deleted_at: datetime | None
 
 
+MAX_AI_BATCH = 5000
+
+
+class AiObjectChange(BaseModel):
+    object: str = Field(max_length=32)
+    geometry: Geometry | None = None
+    class_id: uuid.UUID | None = None
+    deleted: bool = False
+    version: int | None = Field(default=None, ge=1)
+
+    @model_validator(mode="after")
+    def valid_shape(self) -> AiObjectChange:
+        if self.geometry is not None:
+            checked(self.geometry)
+        return self
+
+
+class AiObjectChanges(BaseModel):
+    changes: list[AiObjectChange] = Field(min_length=1, max_length=MAX_AI_BATCH)
+
+    @model_validator(mode="after")
+    def one_change_per_object(self) -> AiObjectChanges:
+        if len({change.object for change in self.changes}) != len(self.changes):
+            raise ValueError("Change each AI object once in a batch")
+        return self
+
+
+class ChangedAiObjects(BaseModel):
+    objects: list[LayerObject]
+
+
 class SharedLayer(BaseModel):
     task_id: uuid.UUID
     slide_id: uuid.UUID
@@ -547,6 +578,87 @@ async def change_ai_object(
     logged_as = LayerChange.DELETED if draft.deleted else LayerChange.EDITED
     await logged(connection, principal, row, found.text(ascii=True), logged_as, reason)
     return await layer_object(connection, task_id, slide_id, made)
+
+
+async def rewrite(
+    connection: AsyncConnection,
+    principal: Principal,
+    copy: LayerObject,
+    values: dict[str, Any],
+    change: AnnotationChange,
+) -> uuid.UUID:
+    saved = await connection.scalar(
+        update(annotations)
+        .where(annotations.c.id == copy.id, annotations.c.version == copy.version)
+        .values(version=annotations.c.version + 1, updated_at=func.now(), **values)
+        .returning(annotations.c.id)
+    )
+    if saved is None:
+        raise LayerObjectChangedError(copy)
+    await record_versions(connection, [copy.id], change, principal)
+    return copy.id
+
+
+async def change_one(
+    connection: AsyncConnection,
+    principal: Principal,
+    row: Any,
+    draft: AiObjectChange,
+) -> tuple[uuid.UUID, str, LayerChange]:
+    found, kind = await source_of(connection, row, draft.object)
+    existing = await copy_of(connection, row, kind, found.number)
+    change = AnnotationChange.DELETED if draft.deleted else AnnotationChange.EDITED
+    logged_as = LayerChange.DELETED if draft.deleted else LayerChange.EDITED
+    values: dict[str, Any] = {
+        "origin": AnnotationOrigin.AI_EDITED,
+        "deleted_at": func.now() if draft.deleted else None,
+    }
+    if existing is None or undone(existing):
+        values["geometry"] = await ai_shape(connection, row, kind, found, draft.geometry)
+        values["class_id"] = draft.class_id
+        made = (
+            await copy_in(connection, principal, row, kind, found, values, change)
+            if existing is None
+            else await revive(connection, principal, existing, values, change)
+        )
+        return made, found.text(ascii=True), logged_as
+    if draft.version != existing.version:
+        raise LayerObjectChangedError(existing)
+    if draft.geometry is not None:
+        values["geometry"] = await outline(connection, kind, draft.geometry)
+    if "class_id" in draft.model_fields_set:
+        values["class_id"] = draft.class_id
+    made = await rewrite(connection, principal, existing, values, change)
+    return made, found.text(ascii=True), logged_as
+
+
+@router.post(
+    "/ai-changes",
+    operation_id="changeAiObjects",
+    **require(Permission.REVIEW, write=True),
+)
+async def change_ai_objects(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    batch: AiObjectChanges,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
+) -> ChangedAiObjects:
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
+    class_ids = {change.class_id for change in batch.changes if change.class_id is not None}
+    if class_ids:
+        await check_classes(connection, row.project_id, class_ids)
+    saved: list[LayerObject] = []
+    async with connection.begin_nested():
+        for draft in batch.changes:
+            made, code, logged_as = await change_one(connection, principal, row, draft)
+            await announce(connection, background, live, row, made)
+            await logged(connection, principal, row, code, logged_as, reason)
+            saved.append(await layer_object(connection, task_id, slide_id, made))
+    return ChangedAiObjects(objects=saved)
 
 
 @router.post(

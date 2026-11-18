@@ -8,6 +8,7 @@ import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
 import { flushSync } from "react-dom";
+import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { viewTransitions } from "../../shell/view-transitions.ts";
 import { taskTimer } from "../../telemetry/app-events.ts";
 import { useCellTiming } from "../../telemetry/use-task-timing.ts";
@@ -15,6 +16,10 @@ import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { NoteBlock, type NoteState } from "../viewer/objects-panel.tsx";
+import { MeasuredBlock } from "../viewer-tools/measured-block.tsx";
+import type { ScreenRect } from "../viewer-tools/minimap-placement.ts";
+import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
+import { ViewerMinimap } from "../viewer-tools/viewer-minimap.tsx";
 import { CellsGrid } from "./cells-grid.tsx";
 import { answersOf, cardText, countsAs, rawFor, showsClaim } from "./decision-style.ts";
 import { DisplayTab } from "./display-tab.tsx";
@@ -24,10 +29,25 @@ import { answerLabel, SavedNote } from "./object-card.tsx";
 import { ObjectComments } from "./object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
+import { cellShapes } from "./slide-geometry.ts";
 import { type Camera, SlideStill } from "./slide-still.tsx";
 import { AiSays, ObjectList, ObjectsSummary, ViewerFrame } from "./viewer-frame.tsx";
 
 export type GalleryScene = SceneOf<"gallery">;
+
+const peekPickReach = 70;
+
+function cellNear(point: readonly [number, number], objects: string[]): string | undefined {
+  let best: { object: string; distance: number } | undefined;
+  for (const object of objects) {
+    const shape = cellShapes[object];
+    if (!shape) continue;
+    const distance = Math.hypot(shape.x - point[0], shape.y - point[1]);
+    if (distance <= peekPickReach && (best === undefined || distance < best.distance))
+      best = { object, distance };
+  }
+  return best?.object;
+}
 
 type CellsOnSlideProps = {
   taskId: string;
@@ -77,6 +97,19 @@ function CellsBody({
   const [shut, setShut] = useState(false);
   const [confirming, setConfirming] = useState(scene === "rest");
   const [camera, setCamera] = useState<Camera | null>(null);
+  const minimapSetting = useResolvedSettings()?.minimap ?? "useful";
+  const [gridRect, setGridRect] = useState<ScreenRect | null>(null);
+  const [peek, setPeek] = useState<{ held: boolean } | null>(null);
+  usePeekKey(
+    peek !== null,
+    (held) => setPeek({ held }),
+    () => setPeek(null),
+  );
+  const regions = objects.filter((item) => item.kind === "region");
+  const areas = regions.map((region) => ({ object: region.object, size: region.size_mm ?? 0 }));
+  const checkedAreas = regions
+    .filter((region) => answer(region.object))
+    .map((region) => region.object);
   const setName = useSetName(session);
   const counts = countAnswers(objects, answer);
   const object = cells.find((cell) => cell.object === current);
@@ -170,6 +203,29 @@ function CellsBody({
       tool="select"
       tab={tab}
       onTabChange={setTab}
+      overlay={
+        peek ? (
+          <SlidePeek
+            slideName={session.slideName}
+            areas={areas}
+            checked={checkedAreas}
+            atCell
+            held={peek.held}
+            onClose={() => setPeek(null)}
+            onPick={(point) => {
+              const picked = cellNear(
+                point,
+                cells.map((cell) => cell.object),
+              );
+              if (picked !== undefined) {
+                setCurrent(picked);
+                setCamera(null);
+              }
+              setPeek(null);
+            }}
+          />
+        ) : null
+      }
       tabs={[
         {
           value: "objects",
@@ -255,59 +311,82 @@ function CellsBody({
         minimap={false}
         hint={false}
         slideName={session.slideName}
-        overlay={() => (
+        overlay={(still) => (
           <>
+            <ViewerMinimap
+              surface="cells"
+              setting={minimapSetting}
+              view={{ kind: "cell", object: current }}
+              camera={still.camera}
+              size={still.size}
+              areas={areas}
+              checked={checkedAreas}
+              blockLeft
+              blockToast={false}
+              cells={cells.map((cell) => ({
+                object: cell.object,
+                decided: answer(cell.object) !== undefined,
+              }))}
+              cellsPanel={shut ? null : gridRect}
+              onMoveView={setCamera}
+              onOpen={() => setPeek({ held: false })}
+              onPopOut={() => undefined}
+            />
             {shut ? null : (
-              <CellsGrid
-                slideId={session.slideId}
+              <MeasuredBlock
                 className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
-                cells={cells}
-                current={current}
-                answer={answer}
-                answerKeys={keys}
-                claimHidden={!showsClaim(style)}
-                folded={folded}
-                confirming={confirming}
-                onPick={(picked) =>
-                  void viewTransitions.run(
-                    () =>
-                      flushSync(() => {
-                        setCurrent(picked);
-                        setCamera(null);
-                      }),
-                    "focus",
-                  )
-                }
-                onNotNucleus={(flagged) => {
-                  const cell = cells.find((item) => item.object === flagged);
-                  if (cell === undefined) return;
-                  setOverrides(
-                    new Map(overrides).set(flagged, {
-                      value: "disagree",
-                      raw: rawFor(style, "disagree", cell),
-                      reasons: ["Not a cell"],
-                      note: null,
-                    }),
-                  );
-                }}
-                onAgreeRest={() => setConfirming(true)}
-                onCancelRest={() => setConfirming(false)}
-                onApplyRest={() => {
-                  const next = new Map(overrides);
-                  for (const cell of openCells) {
-                    next.set(cell.object, {
-                      value: "agree",
-                      raw: rawFor(style, "agree", cell),
-                      reasons: [],
-                      note: null,
-                    });
+                onRect={setGridRect}
+              >
+                <CellsGrid
+                  slideId={session.slideId}
+                  cells={cells}
+                  current={current}
+                  answer={answer}
+                  answerKeys={keys}
+                  claimHidden={!showsClaim(style)}
+                  folded={folded}
+                  confirming={confirming}
+                  onPick={(picked) =>
+                    void viewTransitions.run(
+                      () =>
+                        flushSync(() => {
+                          setCurrent(picked);
+                          setCamera(null);
+                        }),
+                      "focus",
+                    )
                   }
-                  setOverrides(next);
-                  setConfirming(false);
-                }}
-                onFoldChange={setFolded}
-                onClose={() => setShut(true)}
-              />
+                  onNotNucleus={(flagged) => {
+                    const cell = cells.find((item) => item.object === flagged);
+                    if (cell === undefined) return;
+                    setOverrides(
+                      new Map(overrides).set(flagged, {
+                        value: "disagree",
+                        raw: rawFor(style, "disagree", cell),
+                        reasons: ["Not a cell"],
+                        note: null,
+                      }),
+                    );
+                  }}
+                  onAgreeRest={() => setConfirming(true)}
+                  onCancelRest={() => setConfirming(false)}
+                  onApplyRest={() => {
+                    const next = new Map(overrides);
+                    for (const cell of openCells) {
+                      next.set(cell.object, {
+                        value: "agree",
+                        raw: rawFor(style, "agree", cell),
+                        reasons: [],
+                        note: null,
+                      });
+                    }
+                    setOverrides(next);
+                    setConfirming(false);
+                  }}
+                  onFoldChange={setFolded}
+                  onClose={() => setShut(true)}
+                />
+              </MeasuredBlock>
             )}
             <Button size="lg" className="absolute bottom-4 left-4" onClick={() => setShut(false)}>
               <Icon name="expand" />

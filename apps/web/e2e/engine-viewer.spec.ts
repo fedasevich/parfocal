@@ -148,6 +148,12 @@ test("the minimap shows the slide overview with a viewport box that shrinks on z
   await page.goto(fullViewer);
   const stage = await ready(page);
   const minimap = page.getByTestId("stage-minimap");
+  const middle = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  await page.mouse.move(middle.x + middle.width / 2, middle.y + middle.height / 2);
+  for (let step = 0; step < 5; step += 1) {
+    await page.mouse.wheel(0, -600);
+    await page.waitForTimeout(60);
+  }
   await expect(minimap).toBeVisible();
   await expect(minimap.locator("image")).toHaveAttribute(
     "href",
@@ -170,8 +176,14 @@ test("the minimap falls back to the slide's smallest level while the thumbnail i
     tumor044,
   );
   await page.goto(fullViewer);
-  await ready(page);
+  const stage = await ready(page);
   const minimap = page.getByTestId("stage-minimap");
+  const middle = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  await page.mouse.move(middle.x + middle.width / 2, middle.y + middle.height / 2);
+  for (let step = 0; step < 5; step += 1) {
+    await page.mouse.wheel(0, -600);
+    await page.waitForTimeout(60);
+  }
   await expect(minimap).toHaveAttribute("data-source", "overview");
   await expect(minimap.locator("image")).toHaveAttribute("href", /^data:image\/jpeg/);
 });

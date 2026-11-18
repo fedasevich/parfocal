@@ -107,3 +107,16 @@ export function MagnificationControl({
     />
   );
 }
+
+export function StageMagnification(props: MagnificationControlProps) {
+  return (
+    <div
+      data-slot="stage-magnification"
+      className="pointer-events-none absolute inset-x-4 bottom-3 flex justify-center"
+    >
+      <div className="pointer-events-auto flex max-w-full">
+        <MagnificationControl {...props} />
+      </div>
+    </div>
+  );
+}

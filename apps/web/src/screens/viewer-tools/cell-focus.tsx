@@ -4,6 +4,7 @@ import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
 import { FloatingPill } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useRef, useState } from "react";
+import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CellSpot, nearestOpen, panned } from "../review/cell-jump.ts";
 import { cellShapes, regionShapes } from "../review/slide-geometry.ts";
@@ -29,6 +30,7 @@ export function CellFocus({
   onLeave: () => void;
 }) {
   const { t } = useLingui();
+  const minimapOff = useResolvedSettings()?.minimap === "never";
   const { session, answer, setAnswer, paged } = tools;
   const decisions = useDecisionSaves(session, session.style);
   const [camera, setCamera] = useState<Camera | null>(null);
@@ -158,16 +160,18 @@ export function CellFocus({
                   onChoose={(option) => decide(option.id)}
                 />
               ) : null}
-              <SmartMinimap
-                size="pip"
-                image={overviewImageOf(session.slideId)}
-                extent={overviewExtent}
-                title={null}
-                data-testid="cell-locator"
-                className="top-3.5 right-3.5"
-              >
-                <MapViewport rect={locator} />
-              </SmartMinimap>
+              {minimapOff ? null : (
+                <SmartMinimap
+                  size="pip"
+                  image={overviewImageOf(session.slideId)}
+                  extent={overviewExtent}
+                  title={null}
+                  data-testid="cell-locator"
+                  className="top-3.5 right-3.5"
+                >
+                  <MapViewport rect={locator} />
+                </SmartMinimap>
+              )}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                 <MagnificationBar
                   magnification={40}

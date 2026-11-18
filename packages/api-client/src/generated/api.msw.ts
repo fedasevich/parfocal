@@ -31,6 +31,7 @@ import type {
   CaseReport,
   CaseReportVersion,
   CaseSummary,
+  ChangedAiObjects,
   Checklist,
   ChoiceQuestion,
   ClassMapping,
@@ -8642,6 +8643,41 @@ export const getChangeAiObjectResponseMock = (
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
   ]),
+  ...overrideResponse,
+});
+
+export const getChangeAiObjectsResponseMock = (
+  overrideResponse: Partial<Extract<ChangedAiObjects, object>> = {},
+): ChangedAiObjects => ({
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+      number: faker.number.int(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+      source: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      geometry: {},
+      class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      text: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      version: faker.number.int(),
+      created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      deleted_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -23841,6 +23877,30 @@ export const getChangeAiObjectMockHandler = (
   );
 };
 
+export const getChangeAiObjectsMockHandler = (
+  overrideResponse?:
+    | ChangedAiObjects
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ChangedAiObjects> | ChangedAiObjects),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/ai-changes",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getChangeAiObjectsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getConfirmAiObjectMockHandler = (
   overrideResponse?:
     | LayerObject
@@ -29134,6 +29194,7 @@ export const getParfocalAPIMock = () => [
   getGetSharedLayerMockHandler(),
   getCreateSharedObjectMockHandler(),
   getChangeAiObjectMockHandler(),
+  getChangeAiObjectsMockHandler(),
   getConfirmAiObjectMockHandler(),
   getUndoAiConfirmMockHandler(),
   getChangeSharedObjectMockHandler(),
