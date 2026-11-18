@@ -1,14 +1,8 @@
-import { expect, type Page, test } from "@playwright/test";
-import { email, password, readJson, signIn } from "./session.ts";
+import { expect, test } from "@playwright/test";
+import { email, galleryProject, password, seededSlide, signIn } from "./session.ts";
 import { errorScreenShown, report, watch } from "./watch.ts";
 
 const enabled = process.env["PARFOCAL_SMOKE_SEEDED_FORMATS"] === "1";
-
-const galleryProjects = new Set([
-  "Scanner format comparison",
-  "Whole-slide format survey",
-  "Vendor format robustness",
-]);
 
 const openedInTheBrowser = [
   ["aperio-svs", "CMU-1-Small-Region.svs"],
@@ -26,26 +20,6 @@ const notInTheBrowserYet = [
   ["mirax", "CMU-1-Saved-1_16.zip"],
   ["dicom", "CMU-1-JP2K-33005-v2.zip"],
 ] as const;
-
-type Project = { id: string; name: string };
-type SlidePage = { slides: { id: string; label: string }[] };
-
-async function galleryProject(page: Page): Promise<Project> {
-  const projects = await readJson<Project[]>(page, "/api/projects");
-  const gallery = projects.find((project) => galleryProjects.has(project.name));
-  expect(gallery, "the signed-in owner sees a seeded format gallery").toBeDefined();
-  return gallery as Project;
-}
-
-async function seededSlide(page: Page, project: Project, label: string): Promise<string> {
-  const listed = await readJson<SlidePage>(
-    page,
-    `/api/me/slides?project_id=${project.id}&limit=200`,
-  );
-  const slide = listed.slides.find((found) => found.label === label);
-  expect(slide, `the gallery holds ${label}`).toBeDefined();
-  return (slide as { id: string }).id;
-}
 
 test.describe.configure({ timeout: 600_000 });
 
