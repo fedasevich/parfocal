@@ -72,6 +72,10 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 - Deactivation is `PATCH` with `{"op": "replace", "value": {"active": false}}`, which leaves the user `USER_STATE_INACTIVE`. Our membership row stays, and roles still come from SAML groups at sign-in.
 - The SCIM PAT user needs `ORG_USER_MANAGER` in that organisation only.
 
+## Deactivating a member
+
+[ADR 0396](../adr/0396-deactivation-keeps-the-membership-and-hands-work-over-first.md) (deactivation keeps the membership row) has the design. `GET /api/tenant/members/{id}/open-work` lists the items, `POST .../deactivation` takes `ends_on` and one hand-over per item, and `DELETE .../deactivation` cancels a scheduled one. `deactivation.finish_due_deactivations(engine, today)` finishes due ones, and `python -m parfocal_api.deactivation` runs it once. The session check and sign-in skip a membership with `deactivated_at` set, so a new query that picks a person's workspace must filter it too.
+
 ## Row-level security skips rows silently
 
 An `UPDATE` that row-level security filters out changes nothing and raises nothing, so a route can answer 200 while nothing was written. Workspace settings that members may change belong in a tenant-owned table such as `session_policies`, never in `tenants`, which only the platform scope writes. Tests should read a change back. Source: IAM-009 log entry.

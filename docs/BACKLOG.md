@@ -800,7 +800,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-010. Refs kit W49, kit W62, kit Flow 21, [ADR 0023](adr/0023-gap-review-backend-first.md).
   Size: M.
 
-- [ ] IAM-020 · Deactivation with hand-over
+- [x] IAM-020 · Deactivation with hand-over
   Deactivating a person first lists their open work: review tasks they are on, tasks they own, adjudications and open threads. Each item must be reassigned or returned before the deactivation is accepted, either now or at a chosen end date. At the end date their sessions are revoked and they cannot sign in. Their decisions, sign-offs and audit history stay.
   Done when API tests refuse a deactivation with open work, apply one with every item moved, run a scheduled end date with a fake clock, and confirm signed-off evaluations still verify.
   Depends on IAM-014, TASK-007, ADJ-003. Refs kit W51, kit Flow 25.
@@ -3917,7 +3917,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AINUC-002, AINUC-008, AISEG-005. Refs doc 29.
   Size: S.
 
-- [ ] AINUC-015 · Score newer nucleus models on the Mac
+- [x] AINUC-015 · Score newer nucleus models on the Mac
   Decision 123 (newer nucleus models) allows downloading InstanSeg and the PathoSAM ViT-L decoder to score them against the kept PathoSAM AIS and HoVer-Net line-up. Check each file size and the peak memory of one inference before any full run, and keep a run under about 8 GB of RAM on the 24 GB Mac, one ML run at a time. The aim is the best model the thesis can run, not the fastest.
   Done when a result file scores both candidates and the kept line-up on TNBC and NuInsSeg with the same metrics as AINUC-000 (nuclei detector and typer research check), with CryoNuSeg added once MLEVAL-010 (loaders for datasets behind a sign-in) has its archive, and records each model's file size and peak RAM.
   Depends on AINUC-000.
@@ -4118,7 +4118,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.
 
-- [ ] MLEVAL-007 · Browser parity tests
+- [x] MLEVAL-007 · Browser parity tests
   Quantised browser graphs must match server outputs within tolerance.
   Done when CI compares ONNX outputs to PyTorch on a fixed patch set.
   Size: M.

@@ -183,6 +183,8 @@ export const toMemberActivity = (): MemberActivity[] =>
     email: people[row.key].email,
     last_active_at: row.lastActiveAt,
     project_codes: projectsOf(row.key),
+    deactivates_on: null,
+    deactivated_at: null,
   }));
 
 function withVisibility(model: AiModelSeed): AiModelSeed {

@@ -29,6 +29,7 @@ from parfocal_api import (
     clinical_notes,
     clinical_report_views,
     clinical_reports,
+    deactivation,
     decision_notes,
     disagreement_queue,
     disagreements,
@@ -380,6 +381,7 @@ def create_app(
     app.include_router(workspace_access.me_router)
     app.include_router(workspace_access.tenant_router)
     app.include_router(users.tenant_router)
+    app.include_router(deactivation.router)
     app.include_router(users.platform_router)
     app.include_router(audit_trail.router)
     app.include_router(service_accounts.router)

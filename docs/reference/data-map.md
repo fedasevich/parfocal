@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `phi` | 50 |
 | `personal` | 100 |
 | `secret` | 15 |
-| `operational` | 876 |
+| `operational` | 878 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -582,6 +582,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `availability` | operational |
 | `available_again_at` | operational |
 | `availability_note` | personal |
+| `deactivates_on` | operational |
+| `deactivated_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

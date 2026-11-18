@@ -229,6 +229,44 @@ No recommendation, because it trades budget against the first call.
 
 Your choice: 
 
+### 146. Whether PathoSAM ViT-L replaces ViT-B as the nucleus detector for the Best tier
+
+AINUC-015 (score newer nucleus models on the Mac) scored both on the same path and scorer ([result](results/2026-11-16-newer-nucleus-models-on-the-mac.md)). ViT-L's pooled PQ is 0.854 against 0.828 on TNBC and 0.554 against 0.524 on NuInsSeg, but 0.481 against 0.483 on CryoNuSeg, the frozen-section set. It takes about 1.4 times ViT-B's time per image, a 1.25 GB file instead of 0.38 GB, and peaked at 8.7 to 9.0 GB on the Mac over a full set. Its weights have no licence found, the same as ViT-B's. ADR 0349 (nucleus detector and typer per tier) lets ViT-L return to Best once it beats 0.828 on TNBC, which it does, while the stricter bar set for AINUC-015 asked for a gain on every set and is not met.
+
+- A. Keep ViT-B everywhere. The gain is two sets of three and the frozen-section set does not move.
+- B. Use ViT-L for the Best tier on the server only, as ADR 0349 allows, and keep ViT-B for the other tiers.
+- Other.
+
+Recommendation A, because the bar fixed before the runs was not met and ViT-L costs more on every run.
+
+Your choice: 
+
+### 147. How an agent checks the viewer typing tool on the deployed app
+
+OPS-026 (export and publish the HoVer-NeXt typer) is done except its last check, that the deployed route types one outline on a seeded slide. The release of 2026-11-17 (commit `fb427c23`) carries the route and the `parfocal-gpu-pool` embedder with the typer runner, and `typer.onnx` is in R2 `parfocal-dev`. But no agent can sign in to `app.parfocal.eu`: there is no agent test account, and the smoke account's password lives only in a GitHub secret. ADR 0390 (the deployed app is dev) allows test users, yet an agent should not make one or type a password into the hosted login without your word in this file.
+
+- A. Agents may create their own Zitadel test user in the Parfocal organisation, keep its password in `~/.config/parfocal/` (mode 600), add it to one seeded workspace and delete nothing else.
+- B. The deploy's browser smoke types one outline as the smoke account after every deploy, so the check runs in CI. The smoke account needs a seeded slide with visible AI cells.
+- C. You type one outline in the viewer yourself and write the status here.
+- Other.
+
+Recommendation B, because it repeats on every release and needs no new account or password on the Mac.
+
+Your choice: 
+
+### 148. Whether the 51 MB of UI visual baselines go into git
+
+TEST-008 (visual regression for the UI) is built, but its tests skip until baselines are committed. CI run 44202176522 on 2026-11-18 produced them: 1142 PNG files, 51 MB, every Storybook story in both themes and both densities. The repository has no Git LFS, and history is never rewritten, so whatever is committed stays in every clone for good, and each later baseline update adds its changed images again.
+
+- A. Commit all 1142 images as they are.
+- B. Keep the baselines in R2 `parfocal-dev` under `fixtures/ui-visual/` and have CI fetch them with the read-only key of decision 132, the same way the browser parity test does, so git holds only a pinned checksum list.
+- C. Commit only one theme and one density (about 285 images, roughly 13 MB) and test the other combinations by a smaller sample.
+- Other.
+
+Recommendation B, because it keeps clones small and follows a pattern that already runs in CI.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
