@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.20.1 (2026-11-18)
+
+### Fixes
+
+- OPS-026: Open a seeded slide for the typer from the folder beside its original
+
+### Docs
+
+- OPS-026: Log the v0.20.0 deploy and the seeded slide typer failure
+
 ## v0.20.0 (2026-11-18)
 
 ### Features
