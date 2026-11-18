@@ -20,6 +20,7 @@ type ProgressPopoverProps = {
   taskSub: string;
   slideName: string;
   slide: DecisionSplit & { decided: number; total: number };
+  added?: readonly string[] | undefined;
   seenPercent?: number | undefined;
   onWholeSlide?: (() => void) | undefined;
   wholeSlideTitle?: string | undefined;
@@ -45,7 +46,13 @@ const legendRows = [
   },
 ] as const;
 
-function DecisionLegend({ split }: { split: DecisionSplit }) {
+function DecisionLegend({
+  split,
+  added = [],
+}: {
+  split: DecisionSplit;
+  added?: readonly string[] | undefined;
+}) {
   const { t } = useLingui();
 
   return (
@@ -60,6 +67,16 @@ function DecisionLegend({ split }: { split: DecisionSplit }) {
           <dd className="m-0 font-semibold text-fg tabular-nums">{split[row.key]}</dd>
         </div>
       ))}
+      {added.length > 0 ? (
+        <div
+          data-slot="legend-added"
+          className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 text-body-sm text-fg-dim"
+        >
+          <i aria-hidden="true" className="size-2.5 rounded-full bg-accent-fill" />
+          <dt className="truncate">{t`Added, ${added.join(", ")}`}</dt>
+          <dd className="m-0 font-semibold text-fg tabular-nums">{added.length}</dd>
+        </div>
+      ) : null}
     </dl>
   );
 }
@@ -70,6 +87,7 @@ function ReviewProgressPopover({
   taskSub,
   slideName,
   slide,
+  added,
   seenPercent,
   onWholeSlide,
   wholeSlideTitle,
@@ -115,7 +133,7 @@ function ReviewProgressPopover({
           </span>
         }
       >
-        <DecisionLegend split={slide} />
+        <DecisionLegend split={slide} added={added} />
         {seenPercent === undefined ? null : (
           <div className="flex items-center gap-2 border-t border-line pt-2.5 text-body-sm leading-snug text-fg-dim">
             <Icon name="eye" className="text-fg-faint" />

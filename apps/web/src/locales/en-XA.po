@@ -2199,6 +2199,10 @@ msgstr ""
 msgid "{tilesDone} of {tilesTotal} tiles finished"
 msgstr ""
 
+#: src/viewer/live-progress.tsx
+msgid "{timeLeft} left"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} is back to Parfocal's choice."
 msgstr ""
@@ -3159,6 +3163,11 @@ msgstr ""
 msgid "Added to the email the reviewers get."
 msgstr ""
 
+#. placeholder {0}: added.join(", ")
+#: ../../packages/ui/src/components/review-popovers.tsx
+msgid "Added, {0}"
+msgstr ""
+
 #: src/results/add-result-set.tsx
 msgid "Adding the result set to the slide"
 msgstr ""
@@ -3959,11 +3968,8 @@ msgid "Back to My work"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-msgid "Back to My work. Every answer is saved"
-msgstr ""
-
 #: src/viewer/live-top-bar.tsx
-msgid "Back to My work. Every edit is saved"
+msgid "Back to My work. Every answer is saved"
 msgstr ""
 
 #: src/screens/admin/admin-screen.tsx
@@ -11224,6 +11230,10 @@ msgstr ""
 msgid "Opening"
 msgstr ""
 
+#: src/viewer/live-top-bar.tsx
+msgid "Opening the objects of this slide"
+msgstr ""
+
 #. placeholder {0}: screenTitles[screen]
 #: src/routes/issue-states.tsx
 msgid "Opens {0} in this state"
@@ -11540,6 +11550,7 @@ msgid "Parfocal could not read this link."
 msgstr ""
 
 #: ../../packages/ui/src/components/app-shell.tsx
+#: src/shell/account-menu.tsx
 msgid "Parfocal home"
 msgstr ""
 
