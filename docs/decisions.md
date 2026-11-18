@@ -267,6 +267,21 @@ Recommendation B, because it keeps clones small and follows a pattern that alrea
 
 Your choice: 
 
+### 149. When to switch on observability export, the owner steps OPS-006 still needs
+
+OPS-006 (observability stack) is built and tested on fakes and stays on hold under decision 113 (how often the alert cycle runs, nothing scheduled while observability is paused). Its Done line, dashboards exist and a synthetic error appears in alerting, needs services an agent cannot sign in to. Nothing below costs more than the free tiers.
+
+- Create a Grafana Cloud free stack, import `infra/grafana/parfocal-overview.json`, and put its OTLP endpoint and header in the production secrets as `OTLP_ENDPOINT` and `OTLP_HEADERS`.
+- Authorize the Sentry and PostHog connectors with `/mcp` so an agent can create the projects and DSNs, and set the DSNs in the production secrets.
+- Say when to run the production drill: `POST /api/platform/drills/synthetic-error` three times, then check the alert mail and the Grafana panel.
+- Schedule the alert cycle only after the choice in decision 113 is reopened.
+
+- A. Do these steps when observability is unpaused, and leave everything off until then (recommended).
+- B. Do the Grafana, Sentry and PostHog sign-ups now so an agent can run the drill.
+- Other.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
