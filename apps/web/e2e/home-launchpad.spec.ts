@@ -58,7 +58,6 @@ test("each Start something tile goes where its line says", async ({ page }) => {
     ["Upload", /\/projects\/[0-9a-f-]+\/upload$/],
     ["Run a model", /\/projects\/[0-9a-f-]+\/run-model$/],
     ["New review task", /\/projects\/[0-9a-f-]+\/tasks\/new$/],
-    ["New project", /\/projects\/new$/],
   ];
   for (const [title, url] of goes) {
     await page.goto("/");
@@ -71,6 +70,13 @@ test("each Start something tile goes where its line says", async ({ page }) => {
       .click();
     await expect(page).toHaveURL(url);
   }
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: /^New project/ })
+    .filter({ hasText: /\w{4}/ })
+    .first()
+    .click();
+  await expect(page.getByRole("dialog", { name: "New project" })).toBeVisible();
   await page.goto("/");
   await page.getByRole("button", { name: /^Find an object/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();

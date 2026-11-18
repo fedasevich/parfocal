@@ -40,10 +40,10 @@ import { FilterChip, StatusTag } from "@parfocal/ui/components/tag";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
-import { useGoTo } from "../../shell/router-link.tsx";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import type { SetupRole as Role } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
@@ -230,7 +230,7 @@ export function SetupScreen({ step, change }: Props) {
   const askToJoin = useAskToJoinWorkspace();
   const createWorkspace = useCreateMyWorkspace();
   const createSample = useCreateSampleProject();
-  const goTo = useGoTo();
+  const router = useRouter();
   const [failed, setFailed] = useState("");
   const [moved, setMoved] = useState("");
   const index = onboardingScenes.setup.indexOf(step);
@@ -637,7 +637,7 @@ export function SetupScreen({ step, change }: Props) {
       writeDeviceSetting("wheel_mode", wheelModeOf(u.device));
       const sample = u.first === "sample" ? await createSample.mutateAsync() : undefined;
       if (sample !== undefined && sample.status !== 201) throw new Error("No sample project");
-      void goTo(firstDestination(u.first, sample?.data.id));
+      void router.navigate({ href: firstDestination(u.first, sample?.data.id) });
     } catch {
       setFailed(t`Setup could not be finished. Try again.`);
     }
