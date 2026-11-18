@@ -79,7 +79,7 @@ After PROTO-023, the live viewer in review at 1440x900 and scale 0.5. It differs
 ## Follow-ups
 
 - Done in PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock): the top bar's slide picker and "Slide n of m" progress, the smart and auto chips in the context bar, the notices in the top bar and the one banner, the hint-only bar shown once, the inspector tab in the `tab` search param, Comments and Opinion tabs, "Hide while panning" hiding the inspector while the camera moves under a held pointer, and the panel key toggling the inspector. A click that does not move the camera, such as a marquee in Annotate, leaves the inspector in place.
-- TODO the owner answers question 144 in `docs/decisions.md` (where the save, live changes and conflict notices go). The build follows option A, so option B would move them back.
+- The owner answered question 144 in `docs/decisions.md` (where the save, live changes and conflict notices go) with option A. PROTO-028 (the live viewer's one banner shows one notice at a time) reviewed and rebuilt the placement within it, see [the notice banner result](2026-11-18-viewer-notice-banner.md).
 - The Comments tab lists threads but has no Go to, because the live viewer finds pins on the slide itself through the comment tool.
 - A slide opened from the project page lands in the Annotate workspace, so Areas, Measurements and Find nuclei start behind the Objects tab there.
 - About 40 other specs that open the live viewer were not run in either change.

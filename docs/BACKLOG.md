@@ -6536,6 +6536,16 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Let scenes run only in the fake API build and Storybook, ignore the `scene` search value in the deployed app, and remove the mock-only controls from production paths. Extend `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates) so a production route that reads a scene fails it.
   Done when a browser test against the production build opens a screen with `?scene=` and sees the real screen, and the guard covers scenes.
   Depends on VIEW-074, PROTO-026. Size: M.
+- [x] PROTO-028 · The live viewer's one banner shows what a reviewer must notice, one notice at a time
+  The owner answered question 144 in `docs/decisions.md` (where the save, live changes and conflict notices go) with option A and asked for the best version of it. PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) put all three in place, but lost edits are only a quiet word that the next save overwrites, the conflict notice claims to be a dialog without taking focus, the colleague marker is never announced, and two notices stack with no order.
+  Keep option A. Show one notice at a time in the banner by priority (edit conflict, edits not saved, long offline, a colleague's changes) with a line naming what else waits, keep "not saved" until dismissed, keep a short network blip as a quiet word, announce through live regions without moving focus during drawing, and tell the two outlines apart by more than colour.
+  Done when a unit test covers the priority and the two-at-once cases, a Storybook browser test covers the keyboard path through two conflicts and the live regions, the autosave, edit conflict and live layer browser specs pass, and a result file says what changed and why.
+  Depends on PROTO-023. Size: S.
+- [ ] PROTO-029 · The slide stays under the pointer when the live viewer's banner opens or closes
+  PROTO-028 (the live viewer's one banner shows one notice at a time) measured in `docs/results/2026-11-18-viewer-notice-banner.md` that the banner sits in the page flow, so the canvas loses 85 px of height when the conflict notice opens and a shape moves 42.5 px on screen. A colleague's changes can open the banner in the middle of an outline.
+  Keep option A of question 144 in `docs/decisions.md` (the notices sit in the one banner under the top bar) and shift the camera by the height change, or hold the banner until the pointer is up, so that the tissue under the pointer does not move.
+  Done when a browser test draws a shape, opens and closes the banner and finds the shape's screen position unchanged within 1 px.
+  Depends on PROTO-028. Size: S.
 
 ---
 
