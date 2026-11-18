@@ -336,7 +336,7 @@ describe("smart select session", () => {
     opened.push(failing);
     await failing.press(click(1000, 1000));
     assert.equal(failing.snapshot().phase, "failed");
-    assert.equal(failing.snapshot().message, "no memory");
+    assert.equal(failing.snapshot().message, "Smart select could not outline that");
   });
 });
 

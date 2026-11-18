@@ -237,6 +237,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["overlays", "Show or hide overlays", ["A"], "qp"],
       ["fill", "Fill outlines", ["F"], "qp"],
       ["tumormap", "Tumor map", ["⇧H"], "new"],
+      ["hidehint", "Close the tool hint", ["⇧I"], "new"],
       ["search", "Find any action", ["⌘K"], "fig", { scope: "global", inInputs: true }],
       ["sheet", "Shortcut sheet", ["?"], "fig", { scope: "global" }],
       ["settings", "Settings", ["⌘,"], "fig", { scope: "global", inInputs: true }],

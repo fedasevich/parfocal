@@ -46,12 +46,7 @@ export const toolHints: Record<string, string[]> = {
     "Double-click an edge to add a point",
   ],
   hand: ["Drag to pan", "Space+drag pans in any tool"],
-  smart: [
-    "PathoSAM · hover preview on",
-    "Click a nucleus",
-    "⇧click adds, right-click removes",
-    "Enter accepts",
-  ],
+  smart: ["Click a nucleus", "⇧click adds, right-click removes", "Enter accepts"],
   poly: ["Click to add points", "Enter or double-click closes", "⇧ snaps to 45°"],
   free: ["Drag to draw", "Release to close the shape"],
   rect: ["Drag corner to corner", "⇧ makes a square"],
