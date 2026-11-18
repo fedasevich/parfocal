@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.21.0 (2026-11-18)
+
+### Features
+
+- TEST-048: Seed the 13 gigapixel Philips-3 TIFF in the format gallery
+
+### Docs
+
+- TEST-051: Add the task to seed only real inference results
+
 ## v0.20.3 (2026-11-18)
 
 ### Docs
