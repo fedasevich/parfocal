@@ -35,6 +35,7 @@ export type RowKey =
   | "theme"
   | "brightness"
   | "density"
+  | "motion"
   | "patientNames"
   | "lengths"
   | "magnificationLabel"
@@ -109,6 +110,12 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Changes the slide only, never the interface or the monitor. ⌥↑ and ⌥↓ do the same on the slide.",
     ),
     row("density", "Density", "personal", "Compact fits more rows on a laptop screen."),
+    row(
+      "motion",
+      "Motion",
+      "device",
+      "Slower stretches every transition to three times as long, for presenting. Reduced cuts them all. Reduced motion in your system always wins.",
+    ),
     row(
       "patientNames",
       "Patient names",

@@ -48,6 +48,8 @@ import { now } from "../../clock.ts";
 import {
   type Calibration,
   calibrationDefaults,
+  calibrationRanges,
+  type Range,
   readCalibration,
   writeCalibration,
 } from "../../devices/calibration.ts";
@@ -67,6 +69,7 @@ import { addPasskey, PasskeyCancelledError, rememberPasskeyEmail } from "../../s
 import { applyDensity } from "../../shell/density.ts";
 import { readDeviceSettings, writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
+import { chooseMotion, type MotionChoice, readMotion } from "../../shell/motion.ts";
 import { readStatNotice, writeStatChannel, writeStatSound } from "../../shell/notification-gate.ts";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
@@ -76,7 +79,13 @@ import {
   outlineModeLabels,
   useOutlineMode,
 } from "../../viewer/outline-mode.ts";
-import { setSlideBrightness, useSlideBrightness } from "../../viewer/slide-brightness.ts";
+import {
+  brightnessStep,
+  maxBrightness,
+  minBrightness,
+  setSlideBrightness,
+  useSlideBrightness,
+} from "../../viewer/slide-brightness.ts";
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
@@ -166,37 +175,45 @@ function Segments({
   );
 }
 
+const brightnessRange: Range = {
+  min: minBrightness,
+  max: maxBrightness,
+  step: brightnessStep,
+};
+
 function Stepper({
   label,
   value,
   unit,
+  range,
   onChange,
 }: {
   label: string;
   value: number;
   unit: string;
+  range: Range;
   onChange: (value: number) => void;
 }) {
   const { t } = useLingui();
 
-  const step = (delta: number) => onChange(Math.max(20, Math.min(140, value + delta)));
+  const step = (delta: number) => onChange(Math.max(range.min, Math.min(range.max, value + delta)));
   return (
     <div className="flex items-center gap-2.5">
-      <Button size="icon-sm" aria-label={t`Lower ${label}`} onClick={() => step(-10)}>
+      <Button size="icon-sm" aria-label={t`Lower ${label}`} onClick={() => step(-range.step)}>
         <Icon name="minus" size="xs" />
       </Button>
       <Slider
         className="data-[orientation=horizontal]:w-[180px]"
-        min={20}
-        max={140}
-        step={10}
+        min={range.min}
+        max={range.max}
+        step={range.step}
         value={[value]}
         getAriaLabel={() => label}
         onValueChange={(next: number | readonly number[]) =>
           onChange(typeof next === "number" ? next : (next[0] ?? value))
         }
       />
-      <Button size="icon-sm" aria-label={t`Raise ${label}`} onClick={() => step(10)}>
+      <Button size="icon-sm" aria-label={t`Raise ${label}`} onClick={() => step(range.step)}>
         <Icon name="plus" size="xs" />
       </Button>
       <span className="min-w-10 font-mono text-body-sm text-fg">
@@ -285,6 +302,7 @@ function LoadedSettings({
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
+  const [motionChoice, setMotionChoice] = useState<MotionChoice>(() => readMotion());
   const [slideBrightness] = useSlideBrightness();
   const [stat, setStat] = useState(readStatNotice);
   const savePreferences = useSetNotificationPreferences({
@@ -427,11 +445,27 @@ function LoadedSettings({
         }}
       />
     ),
+    motion: () => (
+      <Segments
+        label={t`Motion`}
+        value={motionChoice}
+        pairs={[
+          ["normal", t`Normal`],
+          ["presenting", t`Slower`],
+          ["reduced", t`Reduced`],
+        ]}
+        onChange={(value) => {
+          setMotionChoice(value as MotionChoice);
+          chooseMotion(value as MotionChoice);
+        }}
+      />
+    ),
     brightness: () => (
       <Stepper
         label={t`Slide brightness`}
         value={slideBrightness}
         unit="%"
+        range={brightnessRange}
         onChange={setSlideBrightness}
       />
     ),
@@ -714,6 +748,7 @@ function LoadedSettings({
         label={t`Pan and zoom speed`}
         value={device.speed}
         unit=""
+        range={calibrationRanges.speed}
         onChange={(value) => changeCalibration({ speed: value })}
       />
     ),
@@ -722,6 +757,7 @@ function LoadedSettings({
         label={t`Dead zone`}
         value={device.deadZone}
         unit="%"
+        range={calibrationRanges.deadZone}
         onChange={(value) => changeCalibration({ deadZone: value })}
       />
     ),
@@ -769,7 +805,7 @@ function LoadedSettings({
       toggle(t`Objective detents`, navigation.objectiveDetents, (value) =>
         changeNavigation({ objectiveDetents: value }),
       ),
-    feelPreview: () => <FeelPreview navigation={navigation} />,
+    feelPreview: () => <FeelPreview navigation={navigation} calibration={device} />,
     noticeTask: () => notice("noticeTask", t`A task is given to me`),
     noticeMention: () => notice("noticeMention", t`Someone mentions me`),
     noticeReply: () => notice("noticeReply", t`Someone replies to me`),

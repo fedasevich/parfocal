@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { drawsContextBar } from "../src/annotations/hints-once.ts";
 import { liveSlideList, withNeighbours } from "../src/viewer/live-slides.ts";
-import { movedWhileDown } from "../src/viewer/use-pan-hide.ts";
+import { movedWhileDown, slidOnly } from "../src/viewer/use-pan-hide.ts";
 
 const row = (id: string, caseId: string | null = null) => ({
   id,
@@ -63,4 +63,10 @@ test("a pan is a camera move while the pointer is down", () => {
   assert.equal(movedWhileDown(null, { x: 1, y: 1 }), false);
   assert.equal(movedWhileDown({ x: 1, y: 1 }, { x: 1, y: 1 }), false);
   assert.equal(movedWhileDown({ x: 1, y: 1 }, { x: 1.2, y: 1 }), true);
+});
+
+test("a camera change that keeps the zoom is a slide and a zoom is not", () => {
+  assert.equal(slidOnly({ x: 0, y: 0, zoom: 1 }, { x: 5, y: 0, zoom: 1 }), true);
+  assert.equal(slidOnly({ x: 0, y: 0, zoom: 1 }, { x: 5, y: 0, zoom: 1.2 }), false);
+  assert.equal(slidOnly({ x: 3, y: 3, zoom: 1 }, { x: 3, y: 3, zoom: 1 }), false);
 });

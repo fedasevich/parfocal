@@ -37,6 +37,12 @@ test("the live example follows the chosen wording", () => {
   assert.match(wordingExample("numbers"), /72%/);
   assert.match(wordingExample("colour"), /colour/);
   assert.match(wordingExample("hidden"), /Nothing/);
+  assert.equal(wordingExample("words"), "probably Tumor");
+  assert.equal(wordingExample("numbers"), "Tumor 72%");
+  assert.equal(wordingExample("frequency"), "Tumor, right about 8 in 10 times");
+  assert.equal(wordingExample("colour"), "Tumor, shown in the likely colour.");
+  const all = (["words", "numbers", "frequency", "colour", "hidden"] as const).map(wordingExample);
+  assert.equal(new Set(all).size, 5);
 });
 
 test("the workspace cutoff change keeps the locks and reads back as a number", () => {
