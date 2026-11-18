@@ -5898,6 +5898,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-010.
   Size: M.
 
+- [x] ADMIN-012 · Workspace storage capacity constant
+  Decision 142 (where a workspace's storage capacity comes from), option A: capacity is a constant per plan kept in API code, 1 TB per workspace for now. The overview and the storage usage routes return it as `capacity_tb`, and the Space bar in Admin draws used space against it.
+  Done when an API test reads 1 TB from both routes and a web test measures the bar, its warning and its full state against 1 TB.
+  Depends on ADMIN-006.
+  Size: S.
+
 ---
 
 ## 51 VIZ · Layers and visualization
