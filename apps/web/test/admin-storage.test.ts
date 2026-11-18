@@ -60,6 +60,14 @@ test("a nearly full workspace warns and measures the bar against its capacity", 
   assert.equal(fullness(usage([["copied-slides", 1e12]], null)), "roomy");
 });
 
+test("the bar is measured against the 1 TB workspace capacity", () => {
+  const roomy = usage([["copied-slides", 0.4e12]], 1);
+  assert.equal(barTotalTb(roomy), 1);
+  assert.equal(fullness(roomy), "roomy");
+  assert.equal(fullness(usage([["copied-slides", 0.95e12]], 1)), "nearly-full");
+  assert.equal(fullness(usage([["copied-slides", 1e12]], 1)), "full");
+});
+
 test("each kind keeps its own storage colour and none is the tumor red", () => {
   const parts = spaceParts(
     usage(

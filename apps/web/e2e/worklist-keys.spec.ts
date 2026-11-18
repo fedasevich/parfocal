@@ -59,6 +59,7 @@ test("Assigned by me selects with the keys and Enter opens what the task waits f
   for (let step = 0; step < target; step++) await press(page, "j");
   await press(page, "Enter");
   await expect(page).toHaveURL(/\/tasks\/[^/]+\/disagreements$/);
+  await expect(page.locator('[data-slot="queue-row"]').first()).toBeVisible();
 });
 
 test("All slides walks the table with the preview following and Enter opens the slide", async ({

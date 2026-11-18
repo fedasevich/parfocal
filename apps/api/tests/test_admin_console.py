@@ -8,6 +8,8 @@ from test_review_tasks import study
 from test_task_invitations import invite_to, task_of, token_of
 from workspace_support import make_project, owner
 
+from parfocal_api.admin_console import WORKSPACE_CAPACITY_TB
+
 pytestmark = pytest.mark.db
 
 
@@ -30,7 +32,7 @@ def test_the_overview_counts_people_projects_invites_and_stored_slides(
     assert overview["can_sign_out_user_ids"] == []
     assert overview["models"] > 0
     assert overview["stored_tb"] > 0
-    assert overview["capacity_tb"] is None
+    assert overview["capacity_tb"] == WORKSPACE_CAPACITY_TB == 1.0
     assert (overview["webhook_calls_today"], overview["webhook_rejected_today"]) == (0, 0)
     assert api(s.people["first"]).get("/api/tenant/overview").status_code == 403
 
@@ -91,7 +93,7 @@ def test_space_per_kind_and_per_project_adds_up_to_the_total(api: ApiAs, databas
     assert [row["project"]["id"] for row in usage["by_project"]] == [str(second), str(s.project)]
     assert usage["by_project"][0]["bytes"] == 7000000000
     assert usage["in_place_bytes"] == 1800000000000
-    assert usage["capacity_tb"] is None
+    assert usage["capacity_tb"] == WORKSPACE_CAPACITY_TB == 1.0
     health = {source["name"]: source for source in usage["sources"]}
     assert health["answering"]["health"] == "answering"
     assert health["answering"]["new_slides"] == "in-place"

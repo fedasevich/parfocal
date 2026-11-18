@@ -7,3 +7,8 @@ reason = "[medium] deepmerge 4.3.1 under the shadcn CLI, which runs only on a de
 id = "GHSA-mrhx-c7xc-m3w5"
 effectiveUntil = 2026-12-09T00:00:00Z
 reason = "[high] zod 3.25.76 under @vivjs/loaders 0.23.0, the newest Viv, which needs zod 3. The fix exists only in zod 4.6.6. The worst case is a memory spike in the user's own tab while Viv validates slide metadata. Re-check for a Viv release on zod 4 before expiry."
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+effectiveUntil = 2026-12-18T00:00:00Z
+reason = "[high] picomatch 2.3.2 and 4.0.7, a ReDoS through repeated extglobs. No fixed release exists, 4.0.7 is the newest and the advisory marks it last affected. Both copies sit only in build and developer tools (Lingui CLI, Vite and Rolldown plugins, Storybook, Orval, the shadcn CLI, and Vite pulled in by msw for the fake API) that match the repository's own glob patterns, so no user input reaches them and nothing ships to the browser or the API. Upgrade when picomatch publishes a fix."

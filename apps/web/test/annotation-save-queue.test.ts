@@ -184,6 +184,29 @@ describe("save queue", () => {
     assert.equal(queue.status().waiting, 0);
   });
 
+  test("a refused edit is still counted when a later edit in the same run has to retry", async () => {
+    const answers: Outcome<{ id: string; version: number }>[] = [
+      { kind: "rejected" },
+      { kind: "retry" },
+      { kind: "done", value: { id: "server-good", version: 1 } },
+    ];
+    const transport: Transport<string> = {
+      create: () => Promise.resolve(answers.shift() ?? { kind: "rejected" }),
+      update: () => Promise.resolve({ kind: "done", value: { version: 2 } }),
+      remove: () => Promise.resolve({ kind: "done", value: null }),
+    };
+    const { timers, fire } = manualTimers();
+    const queue = createSaveQueue(transport, { timers });
+    queue.enqueueCreate(fresh(), "bad");
+    queue.enqueueCreate(fresh(), "good");
+    await fire();
+    assert.equal(queue.status().phase, "retrying");
+    assert.equal(queue.status().refused, 1);
+    await fire();
+    assert.equal(queue.status().phase, "saved");
+    assert.equal(queue.status().refused, 1);
+  });
+
   test("listeners hear every change", async () => {
     const server = fakeServer();
     const { timers, fire } = manualTimers();

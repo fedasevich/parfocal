@@ -3,7 +3,7 @@ import { expect, type Page, test } from "./a11y.ts";
 const p07 = "00000000-0000-4000-8003-000000000007";
 
 async function openUnflaggedSlide(page: Page) {
-  await page.setViewportSize({ width: 320, height: 420 });
+  await page.setViewportSize({ width: 320, height: 560 });
   await page.goto(`/projects/${p07}?tab=slides`);
   await page.getByTestId("slide-row").filter({ hasText: "tumor_052" }).click();
   const stage = page.getByTestId("slide-stage");

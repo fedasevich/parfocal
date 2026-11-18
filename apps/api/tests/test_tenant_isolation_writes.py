@@ -94,6 +94,11 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
         "test_project_webhooks",
         "test_a_case_outside_the_project_and_a_bad_body_are_refused_and_logged",
     ),
+    "resetPassword": (
+        "test_password_login",
+        "test_a_reset_link_for_an_unknown_user_or_wrong_code_is_refused",
+    ),
+    "removePasskey": ("test_passkeys", "test_only_the_callers_own_passkeys_can_be_removed"),
 }
 
 CONFLICT = frozenset({409})
@@ -598,6 +603,8 @@ WRITE_ROUTES: dict[str, Write] = {
     ),
     "releaseLegalHold": Write(admin_rights=True),
     "setMemberAdminRights": Write(body=constant({"admin_rights": True}), admin_rights=True),
+    "deactivateMember": Write(body=constant({}), admin_rights=True, owner=CONFLICT),
+    "cancelMemberDeactivation": Write(path={"user_id": seeded("colleague")}, admin_rights=True),
     "changeMemberRole": Write(
         body=constant({"role": "reviewer"}), admin_rights=True, owner=CONFLICT
     ),
@@ -672,7 +679,6 @@ UNAIMED_WRITES: dict[str, str] = {
             "confirmEmail",
             "resendEmailCode",
             "requestPasswordReset",
-            "resetPassword",
             "signInWithPassword",
             "startPasskeySignIn",
             "finishPasskeySignIn",
@@ -680,7 +686,7 @@ UNAIMED_WRITES: dict[str, str] = {
         "answers the anonymous caller about their own account and names no other row",
     ),
     **dict.fromkeys(
-        ("startPasskeyRegistration", "savePasskey", "removePasskey"),
+        ("startPasskeyRegistration", "savePasskey"),
         "adds a passkey to the caller's own identity and names no other row",
     ),
     "recordActivity": "stamps the caller's own session",

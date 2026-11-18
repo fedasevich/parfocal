@@ -15,7 +15,7 @@ test("every Team scene opens on fake data as Daniel Hruška", async ({ page }) =
     { scene: "nudge", shows: "4 of 12 slides done", dialog: "Nudge" },
     { scene: "reassign", shows: "The 8 slides not started", dialog: "Reassign slides" },
     { scene: "sent", shows: "3 open tasks" },
-    { scene: "signoff", shows: "8 slides left · about 2 h 40 min" },
+    { scene: "signoff", shows: "8 slides left · about 2 h 8 min" },
     { scene: "overdue", shows: "Due Fri 23 Oct · overdue by 1 day" },
     { scene: "away", shows: "RT-15 waits for Anna. Reassign if it cannot." },
     {

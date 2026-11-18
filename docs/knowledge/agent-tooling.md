@@ -29,6 +29,7 @@ Checked on 2026-10-31. Follow the production rules in `AGENTS.md` before any wri
 | Zitadel | OpenTofu in `infra/tofu` with the `parfocal-tofu` service user key | Works as before |
 | GitHub | `gh`. Reading billing needs the `user` scope, which the owner adds with `gh auth refresh -h github.com -s user` | Billing not readable from the CLI yet |
 | Billing pages | The owner's Chrome through Claude in Chrome, where the owner is signed in to Modal, Vercel, Cloudflare, Zitadel and GitHub | Works while the owner's sessions last |
+| The deployed app as a person | `python3 scripts/agent_session.py` signs the test account in `~/.config/parfocal/agent-account.env` in through `/api/auth/sign-in` and saves a Playwright storage state to `~/.config/parfocal/agent-session.json`. Load it with `browser.newContext({ storageState })`. It refuses hosts not declared development in `infra/app-environments.json`, accounts not listed there and accounts in any workspace outside the seeded ČVUT ones ([ADR 0397](../adr/0397-agents-sign-in-to-the-dev-app-as-a-seeded-test-account-by-script.md), agents sign in to the dev app as a seeded test account by script). Never print or open the credential file | Waits for the owner's account in decision 153 (the one-time owner step for the agent test account) |
 
 ## What agents are refused
 

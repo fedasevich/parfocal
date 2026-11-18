@@ -225,7 +225,7 @@ test("setup ends on the new project form when you choose to create a project", a
   await page.getByRole("button", { name: "Next: Viewer" }).click();
   await page.getByRole("button", { name: "Next: Done" }).click();
   await page.getByRole("button", { name: "Create my first project" }).click();
-  await expect(page).toHaveURL(/\/projects\/new$/);
+  await expect(page.getByRole("dialog", { name: "New project" })).toBeVisible();
 });
 
 test("setup ends on the home when you choose to wait for an invite", async ({ page }) => {

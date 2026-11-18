@@ -41,6 +41,7 @@ from parfocal_common.db import CURRENT_TENANT
 
 TERABYTE = 1000**4
 GIGABYTE = 1000**3
+WORKSPACE_CAPACITY_TB = 1.0
 
 
 class AdminOverview(BaseModel):
@@ -286,7 +287,7 @@ async def get_admin_overview(connection: TenantConnection) -> AdminOverview:
         models=await model_count(connection),
         runs_now=len(await running_now(connection)),
         stored_tb=terabytes(copied),
-        capacity_tb=None,
+        capacity_tb=WORKSPACE_CAPACITY_TB,
         in_place_tb=terabytes(in_place),
         webhook_calls_today=calls,
         webhook_rejected_today=rejected,
@@ -313,7 +314,7 @@ async def get_storage_usage(connection: TenantConnection) -> StorageUsage:
     return StorageUsage(
         total_tb=terabytes(copied),
         total_bytes=copied,
-        capacity_tb=None,
+        capacity_tb=WORKSPACE_CAPACITY_TB,
         in_place_tb=terabytes(in_place),
         in_place_bytes=in_place,
         parts=[

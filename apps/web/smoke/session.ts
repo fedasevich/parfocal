@@ -29,3 +29,29 @@ export async function signIn(page: Page, origin: string) {
   const app = new URL(origin).origin;
   await page.waitForURL((url) => url.origin === app && !url.pathname.startsWith("/sign-in"));
 }
+
+const galleryProjects = new Set([
+  "Scanner format comparison",
+  "Whole-slide format survey",
+  "Vendor format robustness",
+]);
+
+export type Project = { id: string; name: string };
+type SlidePage = { slides: { id: string; label: string }[] };
+
+export async function galleryProject(page: Page): Promise<Project> {
+  const projects = await readJson<Project[]>(page, "/api/projects");
+  const gallery = projects.find((project) => galleryProjects.has(project.name));
+  expect(gallery, "the signed-in owner sees a seeded format gallery").toBeDefined();
+  return gallery as Project;
+}
+
+export async function seededSlide(page: Page, project: Project, label: string): Promise<string> {
+  const listed = await readJson<SlidePage>(
+    page,
+    `/api/me/slides?project_id=${project.id}&limit=200`,
+  );
+  const slide = listed.slides.find((found) => found.label === label);
+  expect(slide, `the gallery holds ${label}`).toBeDefined();
+  return (slide as { id: string }).id;
+}

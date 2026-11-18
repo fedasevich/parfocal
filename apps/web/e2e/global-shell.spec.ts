@@ -39,7 +39,7 @@ test("search opens the palette, New project and Upload navigate", async ({ page 
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await top.getByRole("button", { name: "New project" }).click();
-  await expect(page).toHaveURL(/\/projects\/new/);
+  await expect(page.getByRole("dialog", { name: "New project" })).toBeVisible();
 });
 
 test("every top bar control and the sidebar links take focus from the keyboard", async ({

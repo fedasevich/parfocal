@@ -2126,6 +2126,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 )
                 for name in ("Matrix set", "Doomed set")
             ]
+            assert result_set is not None
             await connection.execute(
                 insert(result_objects),
                 [

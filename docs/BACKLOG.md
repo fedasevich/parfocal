@@ -2496,6 +2496,11 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on WL-001, TASK-007. Refs mock: worklist/assigned.
   Size: M.
 
+- [x] WL-021 · Assigned by me lists the tasks of projects you own
+  The Assigned by me tab lists every open task in a project the person owns, like Team, instead of only the tasks they created (owner's answer to decision 143, which tasks the tab lists), so Reassign slides always finds the task.
+  Done when an API test shows a task leaving the tab of a person who no longer owns its project and joining the new owner's tab.
+  Depends on WL-018. Size: S.
+
 - [x] WL-019 · All slides tab
   Every slide the person can see, with project and case, result sets, reviews by person and status, a search that filters as you type and the filters of WL-017. A row opens the slide.
   Done when component tests cover the filters and the search, and the table virtualises 10,000 rows.
@@ -3964,7 +3969,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the image lock and a spawn-on-enqueue test pass, the published artifact's SHA-256 matches the local export, and the runbook says what the first deploy after the train merges will start. Publishing the artifact is an additive production write under ADR 0151 (standing approval within $30 a month), and the deploy itself waits for the merge.
   Depends on AITUM-010.
   Size: M.
-- [ ] AITUM-012 · The interactive pool answers view map calls
+- [x] AITUM-012 · The interactive pool answers view map calls
   AITUM-009 (Map this view asks the server for its tiles) sends a `view-map` call to the embedder pool, which accepts the kind but has no runner, so on the real API every "Map this view" click ends in "This view could not be mapped". Give the embedder pool entry a `view-map` runner that calls `parfocal_ml.view_map.answer_view_tile` with the stored slide opener and the ResNet18 of AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool), and measure one view tile's time on the T4.
   Done when a Modal stand-in test on CPU answers one view tile through the pool entry with 256 cell bytes, and a result file holds the T4 time of one view tile.
   Depends on AITUM-009, AITUM-010.
@@ -4578,7 +4583,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] OPS-014 · Prepare production for the first real user
   There is no staging environment, now or later ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment). The environments are local development and production. What staging was to guard is done in production itself before the first real user's data enters it, where the first real user is the first pilot user other than the owner. No account is made for such a user until this is ticked.
-  Move production's slides from the shared bucket `parfocal-dev` to `parfocal-prod`. Take the E2E account with its shared password out of production's user directory. Empty production of fixture and test data. Deploy production only from a tag with approval ([ADR 0050](adr/0050-deploy-pipeline-and-previews.md), deploy pipeline and previews). End the standing yes to reset production in `AGENTS.md`. Remove the unused `staging` OpenTofu root, asking the owner before anything in the cloud is deleted.
+  Move production's slides from the shared bucket `parfocal-dev` to `parfocal-prod`. Take the E2E account with its shared password out of production's user directory. Empty production of fixture and test data. Deploy production only from a tag with approval ([ADR 0050](adr/0050-deploy-pipeline-and-previews.md), deploy pipeline and previews). End the standing yes to reset production in `AGENTS.md`. Remove the unused `staging` OpenTofu root, asking the owner before anything in the cloud is deleted. Set `app.parfocal.eu` to `production` in `infra/app-environments.json`, drop `SEED_AGENT_EMAILS` and delete the agent test account `agent-walk@parfocal.eu` ([ADR 0397](adr/0397-agents-sign-in-to-the-dev-app-as-a-seeded-test-account-by-script.md), agents sign in to the dev app as a seeded test account by script).
   Done when production deploys only from a tag with approval, production holds no test account and no fixture or test data, its slides live in `parfocal-prod`, the `staging` root is gone and `AGENTS.md` no longer carries the reseed yes.
   Size: L.
 
@@ -4618,6 +4623,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   OPS-025 (the viewer typing tool on a GPU typer runner) built the `outline-types` runner, but no HoVer-NeXt `typer.onnx` export exists in model storage, so the route answers 503 `typer-offline` in production. Export the typer head to ONNX on the Mac, check it against the PyTorch output on a small fixture, and publish it with its checksum where the embedder pool loads models, through the same path as the other published artifacts.
   Done when a parity test passes within the tolerance the other exports use, the artifact and checksum are published, and the deployed route types one outline on a seeded slide.
   Depends on OPS-025. Size: M.
+- [ ] OPS-035 · Agents get a signed-in session on the dev app
+  The owner asked on 2026-11-18, answering decision 147 (how an agent checks the viewer typing tool), for a way for local agents to use a seeded account on `app.parfocal.eu` without typing a password into a browser ([ADR 0397](adr/0397-agents-sign-in-to-the-dev-app-as-a-seeded-test-account-by-script.md), agents sign in to the dev app as a seeded test account by script). `scripts/agent_session.py` posts a test account's password from `~/.config/parfocal/agent-account.env` (mode 600) to `/api/auth/sign-in`, refuses hosts not declared development in `infra/app-environments.json`, accounts not listed there and accounts holding any workspace outside the seeded ČVUT ones, and saves a Playwright storage state. The seed seats `SEED_AGENT_EMAILS` as admin researchers and project owners in the seeded workspaces.
+  Done when script tests cover each refusal against a local HTTP server, a seed test covers the agent seat, and after the owner's step in decision 153 (the one-time owner step for the agent test account) one run against `app.parfocal.eu` saves a session that opens a seeded slide in Playwright.
+  Depends on OPS-016. Size: S.
 - [x] OPS-027 · A project access request notifies the owner
   OPS-023 (project and upload area on the real API) stores a request for project access as a `project.access-asked` audit event, but nobody is told. Add a `project-access-asked` notification kind, send it to the project owner, and let the owner add the person from it with one action.
   Done when the owner gets an inbox entry for a request, an API test covers sending and adding, and asking twice still makes one request.
@@ -5898,6 +5907,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-010.
   Size: M.
 
+- [x] ADMIN-012 · Workspace storage capacity constant
+  Decision 142 (where a workspace's storage capacity comes from), option A: capacity is a constant per plan kept in API code, 1 TB per workspace for now. The overview and the storage usage routes return it as `capacity_tb`, and the Space bar in Admin draws used space against it.
+  Done when an API test reads 1 TB from both routes and a web test measures the bar, its warning and its full state against 1 TB.
+  Depends on ADMIN-006.
+  Size: S.
+
 ---
 
 ## 51 VIZ · Layers and visualization
@@ -6536,6 +6551,16 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Let scenes run only in the fake API build and Storybook, ignore the `scene` search value in the deployed app, and remove the mock-only controls from production paths. Extend `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates) so a production route that reads a scene fails it.
   Done when a browser test against the production build opens a screen with `?scene=` and sees the real screen, and the guard covers scenes.
   Depends on VIEW-074, PROTO-026. Size: M.
+- [x] PROTO-028 · The live viewer's one banner shows what a reviewer must notice, one notice at a time
+  The owner answered question 144 in `docs/decisions.md` (where the save, live changes and conflict notices go) with option A and asked for the best version of it. PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) put all three in place, but lost edits are only a quiet word that the next save overwrites, the conflict notice claims to be a dialog without taking focus, the colleague marker is never announced, and two notices stack with no order.
+  Keep option A. Show one notice at a time in the banner by priority (edit conflict, edits not saved, long offline, a colleague's changes) with a line naming what else waits, keep "not saved" until dismissed, keep a short network blip as a quiet word, announce through live regions without moving focus during drawing, and tell the two outlines apart by more than colour.
+  Done when a unit test covers the priority and the two-at-once cases, a Storybook browser test covers the keyboard path through two conflicts and the live regions, the autosave, edit conflict and live layer browser specs pass, and a result file says what changed and why.
+  Depends on PROTO-023. Size: S.
+- [x] PROTO-029 · The slide stays under the pointer when the live viewer's banner opens or closes
+  PROTO-028 (the live viewer's one banner shows one notice at a time) measured in `docs/results/2026-11-18-viewer-notice-banner.md` that the banner sits in the page flow, so the canvas loses 85 px of height when the conflict notice opens and a shape moves 42.5 px on screen. A colleague's changes, edits not saved and a long offline spell can each open the banner in the middle of an outline.
+  Keep option A of question 144 in `docs/decisions.md` (the notices sit in the one banner under the top bar) and shift the camera by the height change, or hold the banner until the pointer is up, so that the tissue under the pointer does not move.
+  Done when a browser test draws a shape, opens and closes the banner and finds the shape's screen position unchanged within 1 px.
+  Depends on PROTO-028. Size: S.
 
 ---
 

@@ -1129,6 +1129,9 @@ function OpenedSlide({
                 showSave={phase.state !== "loading"}
                 saveState={saved.saveState}
                 unsaved={saved.unsaved}
+                attempt={saved.saveAttempt}
+                refused={saved.refusedSaves}
+                onRetry={saved.retrySave}
                 incoming={saved.incoming}
                 onShowIncoming={saved.showIncoming}
                 conflicts={saved.conflicts}

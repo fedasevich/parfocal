@@ -103,7 +103,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   await expect(lenka.getByTestId("follow-view")).toHaveCount(0);
 
   await anna.bringToFront();
-  await anna.mouse.move(700, 450);
+  await anna.mouse.move(400, 450);
   await anna.mouse.wheel(0, -600);
   await expect.poll(() => cameraOf(annaHost)).not.toBe(await cameraOf(lenkaHost));
   await anna.getByTestId("share-view").click();
@@ -156,7 +156,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   expect(followed.some((sample) => sample.camera === last?.camera)).toBe(true);
 
   await lenka.bringToFront();
-  await lenka.mouse.move(700, 450);
+  await lenka.mouse.move(400, 450);
   await lenka.mouse.wheel(0, 400);
   await expect(follow).toHaveText("Follow Anna");
   await expect.poll(() => settled(lenkaHost)).toBe(true);
@@ -164,7 +164,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   const hers = await cameraOf(annaHost);
   expect(mine).not.toBe(hers);
   await anna.bringToFront();
-  await anna.mouse.move(700, 450);
+  await anna.mouse.move(400, 450);
   await anna.mouse.wheel(0, -300);
   await expect.poll(() => cameraOf(annaHost)).not.toBe(hers);
   await lenka.waitForTimeout(400);

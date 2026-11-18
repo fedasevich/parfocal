@@ -1,0 +1,18 @@
+{
+  "apps": {
+    "app.parfocal.eu": {
+      "environment": "development",
+      "record": "docs/adr/0390-app-parfocal-eu-is-a-development-environment.md"
+    },
+    "localhost": {
+      "environment": "development",
+      "record": "infra/local"
+    },
+    "127.0.0.1": {
+      "environment": "development",
+      "record": "infra/local"
+    }
+  },
+  "test_accounts": ["agent-walk@parfocal.eu", "smoke-walk@parfocal.eu"],
+  "seeded_workspaces": ["cvut-biomedical", "cvut-imaging", "cvut-ml"]
+}

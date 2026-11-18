@@ -64,8 +64,11 @@ test("the slides tab folds a case open and shows a slide's result sets", async (
     .click();
   await expect(page).toHaveURL(/sets=/);
   await expect(page.getByTestId("result-sets")).toContainText("PathoSAM + HoVer-NeXt");
-  await page.getByRole("row", { name: /Case S26-04769/ }).click();
-  await expect(page.getByText("Show all 9 slides")).toBeVisible();
+  const caseRow = page.getByRole("row", { name: /Case S26-04769/ });
+  const toggle = caseRow.getByRole("button", { expanded: false });
+  await expect(toggle).toBeVisible();
+  await caseRow.click();
+  await expect(caseRow.getByRole("button", { expanded: true })).toBeVisible();
 });
 
 test("Add a class checks the name and key and adds the class", async ({ page }) => {

@@ -11,14 +11,18 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript((key) => localStorage.setItem(key, "1"), pseudoLocaleKey);
 });
 
-async function openFromPrototype(page: Page, name: string | RegExp) {
+async function openFromPrototype(
+  page: Page,
+  name: string | RegExp,
+  options: { engine?: boolean } = {},
+) {
   const probe = await page.context().newPage();
   await probe.goto("/prototype");
   const link = probe.getByRole("list", { name: "Screens" }).getByRole("link", { name }).first();
   await expect(link).toBeVisible({ timeout: 20_000 });
   const href = (await link.getAttribute("href")) ?? "";
   await probe.close();
-  await page.goto(href);
+  await page.goto(options.engine ? href.replace(/&scene=[^&]*/, "") : href);
 }
 
 test("the review screen shows no English in the en-XA pseudo locale", async ({ page }) => {
@@ -40,11 +44,13 @@ test("the viewer screen shows no English in the en-XA pseudo locale", async ({ p
 });
 
 test("the annotate screen shows no English in the en-XA pseudo locale", async ({ page }) => {
-  await openFromPrototype(page, /^Annotate task ·/);
-  const viewer = page.getByTestId("full-viewer");
-  await expect(viewer).toBeVisible({ timeout: 20_000 });
-  await expect(viewer).not.toContainText("on the slide");
-  await expect(viewer).not.toContainText("Who made it");
+  await openFromPrototype(page, /^Annotate task ·/, { engine: true });
+  const screen = page.getByRole("main");
+  await expect(screen.getByRole("button", { name: "Select (V)" })).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(screen).not.toContainText("Submit");
+  await expect(screen).not.toContainText("Full viewer");
 });
 
 test("the compare screen shows no English in the en-XA pseudo locale", async ({ page }) => {

@@ -27,8 +27,15 @@ The script builds a `ViewMapService` with the ResNet18 scorer loaded once, answe
 | Cells in the reply | 256 |
 | CPU, three runs | 6.415 s, 5.465 s, 5.362 s |
 | CPU, median | 5.465 s |
-| T4 in the embedder pool | TODO, not measured, nothing was deployed |
+| T4, first call (CUDA warm-up) | 1.314 s |
+| T4, seven warm calls | 0.768, 0.743, 0.741, 0.744, 0.738, 0.740, 0.749 s |
+| T4, warm median | 0.743 s |
+| T4, scorer load | 1.809 s, CUDAExecutionProvider active |
+
+## T4 measurement
+
+2026-11-18, Modal environment `main`, one throwaway ephemeral app (`parfocal-spike-view-tile-t4`, `workers/ml/spike/time_view_tile_t4.py`) on a T4 with the pool image of `modal_pool.pool_image()` (CUDA 13.3.1, onnxruntime-gpu 1.31.1) and the same `ViewMapService` and `OnnxTumorScorer` code as the pool entry's `view-map` runner. The same synthetic slide was held in memory, so the times hold scoring and halving only, no slide download and no queue or cold container start. The deployed pool app was not touched. The app stopped when the run ended and no container of it was left. The cost is TODO, not read from the Modal usage page, and at about 25 s of T4 time it is well under $0.01.
 
 ## Reading
 
-On CPU one view tile takes about 5.5 s, well above the 1 s target, so the pool must run on its GPU for the panel to feel live. The T4 time needs one deploy of the pool app with the AITUM-011 (the tumor map pool ready to deploy) image and storage secrets, then one timed `view-map` call. ADR 0357 expects about 1.4 s from 4 job tiles at the 0.34 s a tile measured on a laptop GPU, which is an estimate and not a T4 number.
+On CPU one view tile takes about 5.5 s. On the T4 it takes 0.743 s warm, which meets the 1 s target of ADR 0357, and 1.3 s on the first call after the scorer loads. ADR 0357 estimated about 1.4 s, so the T4 is faster than that estimate. The number is the work inside the pool only. A real call adds slide reads from storage, the lane hop and a possible cold start, which a deployed pool run would still have to time end to end.
