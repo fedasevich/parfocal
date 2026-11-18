@@ -2496,6 +2496,11 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on WL-001, TASK-007. Refs mock: worklist/assigned.
   Size: M.
 
+- [x] WL-021 · Assigned by me lists the tasks of projects you own
+  The Assigned by me tab lists every open task in a project the person owns, like Team, instead of only the tasks they created (owner's answer to decision 143, which tasks the tab lists), so Reassign slides always finds the task.
+  Done when an API test shows a task leaving the tab of a person who no longer owns its project and joining the new owner's tab.
+  Depends on WL-018. Size: S.
+
 - [x] WL-019 · All slides tab
   Every slide the person can see, with project and case, result sets, reviews by person and status, a search that filters as you type and the filters of WL-017. A row opens the slide.
   Done when component tests cover the filters and the search, and the table virtualises 10,000 rows.

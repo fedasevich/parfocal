@@ -20,6 +20,7 @@ from parfocal_api.projects import code_of as project_code
 from parfocal_api.review_states import State, TaskStates, states_of, states_of_many, tasks_of
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.tables import (
+    ProjectRole,
     ResultSource,
     ResultStatus,
     SlideStorage,
@@ -28,6 +29,7 @@ from parfocal_api.tables import (
     annotations,
     cases,
     opinions,
+    project_members,
     projects,
     result_sets,
     review_assignments,
@@ -309,10 +311,12 @@ async def list_tasks_assigned_by_me(
         await connection.execute(
             select(*TASK_COLUMNS)
             .join(projects, projects.c.id == review_tasks.c.project_id)
+            .join(project_members, project_members.c.project_id == projects.c.id)
             .where(
                 review_tasks.c.archived_at.is_(None),
                 projects.c.deleted_at.is_(None),
-                review_tasks.c.created_by_user_id == me,
+                project_members.c.user_id == me,
+                project_members.c.role == ProjectRole.OWNER,
             )
             .order_by(review_tasks.c.created_at.desc())
         )
