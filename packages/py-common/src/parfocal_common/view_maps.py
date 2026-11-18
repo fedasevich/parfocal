@@ -3,6 +3,7 @@ import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from parfocal_common.ingest import SlideFolderError, slide_folder_in
 from parfocal_common.tumor_maps import MODEL, MODEL_VERSION
 
 KIND = "view-map"
@@ -19,15 +20,19 @@ class ViewTile:
     slide_id: uuid.UUID
     column: int
     row: int
+    folder: str | None = None
 
     def call(self) -> dict[str, object]:
-        return {
+        call: dict[str, object] = {
             "kind": KIND,
             "tenant_id": str(self.tenant_id),
             "slide_id": str(self.slide_id),
             "column": self.column,
             "row": self.row,
         }
+        if self.folder is not None:
+            call["folder"] = self.folder
+        return call
 
 
 class ViewTileCallError(ValueError):
@@ -38,8 +43,16 @@ def view_tile_of(call: Mapping[str, object]) -> ViewTile:
     column, row = call.get("column"), call.get("row")
     if call.get("kind") != KIND or not isinstance(column, int) or not isinstance(row, int):
         raise ViewTileCallError("A view map call names its kind, column and row")
+    try:
+        folder = slide_folder_in(call.get("folder"))
+    except SlideFolderError as error:
+        raise ViewTileCallError(str(error)) from error
     return ViewTile(
-        uuid.UUID(str(call.get("tenant_id"))), uuid.UUID(str(call.get("slide_id"))), column, row
+        uuid.UUID(str(call.get("tenant_id"))),
+        uuid.UUID(str(call.get("slide_id"))),
+        column,
+        row,
+        folder,
     )
 
 

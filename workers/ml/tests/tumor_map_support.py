@@ -71,7 +71,9 @@ def levels_json(path: Path) -> bytes:
 
 
 def opener(slide: SlideImage):
-    async def open_slide(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> SlideImage:
+    async def open_slide(
+        tenant_id: uuid.UUID, slide_id: uuid.UUID, folder: str | None = None
+    ) -> SlideImage:
         return slide
 
     return open_slide

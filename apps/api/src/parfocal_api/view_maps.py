@@ -16,6 +16,7 @@ from parfocal_api.model_runs import ModelOfflineError
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
 from parfocal_api.slide_coverage import readable_slide
+from parfocal_common.ingest import folder_of
 from parfocal_common.view_maps import (
     MODEL,
     MODEL_VERSION,
@@ -86,7 +87,8 @@ async def score_view_map_tile(
     if column >= columns or row >= rows:
         raise ViewTileOutsideError
     width, height = tile_size(slide.width, slide.height, column, row)
-    tile = ViewTile(slide.tenant_id, slide_id, column, row)
+    folder = None if slide.original_key is None else folder_of(slide.original_key)
+    tile = ViewTile(slide.tenant_id, slide_id, column, row, folder)
     scored = await scored_tile(gate, tile, width, height)
     await record(
         connection,

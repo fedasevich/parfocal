@@ -37,7 +37,7 @@ async def answer_view_tile(
     call: Mapping[str, object], open_slide: SlideOpener, scorer: Scorer
 ) -> dict[str, object]:
     tile = view_tile_of(call)
-    slide = await open_slide(tile.tenant_id, tile.slide_id)
+    slide = await open_slide(tile.tenant_id, tile.slide_id, tile.folder)
     width, height = tile_size(slide.width, slide.height, tile.column, tile.row)
     if width <= 0 or height <= 0:
         raise ValueError(f"View tile {tile.column},{tile.row} is outside the slide")

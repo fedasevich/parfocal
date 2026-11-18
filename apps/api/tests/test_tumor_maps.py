@@ -10,9 +10,10 @@ from storage_support import TEST_STORAGE, with_store
 from test_model_runs import Lab, make_lab, ok, problem
 from test_tumor_map_job import mapped_in_one_pass
 from tumor_map_support import STORED_SLIDE, CentreScorer, fixture_slide, levels_json, opener
+from workspace_support import owner
 
 from parfocal_common.db import create_engine
-from parfocal_common.ingest import slide_prefix
+from parfocal_common.ingest import sample_folder, slide_prefix
 from parfocal_common.jobs import claim, run_job
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ObjectResultStore
@@ -97,6 +98,29 @@ def test_only_members_who_run_models_start_a_tumor_map(api: ApiAs, database: str
     assert not work(database, lab.tenant)
 
 
+def test_the_job_input_names_the_folder_beside_the_slide_original(
+    api: ApiAs, database: str, lab: Lab
+):
+    owner(
+        database,
+        f"UPDATE slides SET original_key = NULL WHERE id = '{lab.slides[0]}' RETURNING id",
+    )
+    plain = ok(start(api, lab))
+    owner(
+        database,
+        "UPDATE slides SET original_key = 'samples/camelyon16/test_065/original.tif' "
+        f"WHERE id = '{lab.slides[0]}' RETURNING id",
+    )
+    seeded = ok(start(api, lab))
+    rows = owner(
+        database,
+        "SELECT id::text, input->>'folder' FROM jobs "
+        f"WHERE id IN ('{plain['job_id']}', '{seeded['job_id']}')",
+    )
+    inputs = {row[0]: row[1] for row in rows}
+    assert inputs == {plain["job_id"]: None, seeded["job_id"]: "samples/camelyon16/test_065/"}
+
+
 def test_a_tumor_map_needs_a_slide_of_the_project(api: ApiAs, lab: Lab):
     assert problem(start(api, lab, slide=uuid.uuid4())) == (400, "slide-not-in-project")
 
@@ -147,22 +171,35 @@ def stand_in_pool_call(database: str, tenant: uuid.UUID, scorer: Scorer) -> dict
 
 
 @pytest.mark.parametrize(
-    "scorer_name", ["centre", pytest.param("resnet18", marks=pytest.mark.weights)]
+    ("scorer_name", "seeded"),
+    [
+        ("centre", False),
+        ("centre", True),
+        pytest.param("resnet18", False, marks=pytest.mark.weights),
+    ],
 )
 def test_one_pool_call_maps_a_stored_slide_on_a_cpu_stand_in(
-    api: ApiAs, database: str, lab: Lab, scorer_name: str
+    api: ApiAs, database: str, lab: Lab, scorer_name: str, seeded: bool
 ):
     pytest.importorskip("openslide")
     scorer = chosen_scorer(scorer_name)
     path = fixture_path(STORED_SLIDE)
     prefix = slide_prefix(lab.tenant, lab.slides[0])
+    if seeded:
+        prefix = sample_folder(f"test-{uuid.uuid4().hex[:12]}")
+        owner(
+            database,
+            f"UPDATE slides SET original_key = '{prefix}original.svs' "
+            f"WHERE id = '{lab.slides[0]}' RETURNING id",
+        )
 
     async def put(storage: ObjectStore) -> None:
         await storage.put_object(f"{prefix}original.svs", path.read_bytes(), "image/tiff")
         await storage.put_object(f"{prefix}levels.json", levels_json(path), "application/json")
 
     async def remove(storage: ObjectStore) -> None:
-        for key in await storage.list_keys(f"t/{lab.tenant}/"):
+        tenant_keys = await storage.list_keys(f"t/{lab.tenant}/")
+        for key in {*tenant_keys, *await storage.list_keys(prefix)}:
             await storage.delete_object(key)
 
     with_store(put)

@@ -275,3 +275,20 @@ def fixture_original_key(name: str) -> str:
 
 def folder_of(key: str) -> str:
     return f"{PurePosixPath(key).parent}/"
+
+
+class SlideFolderError(ValueError):
+    pass
+
+
+def slide_folder_in(value: object) -> str | None:
+    if value is None:
+        return None
+    if (
+        not isinstance(value, str)
+        or not value.endswith("/")
+        or value.startswith("/")
+        or ".." in value.split("/")
+    ):
+        raise SlideFolderError("The slide folder is a storage prefix ending in a slash")
+    return value

@@ -57,7 +57,7 @@ class SlideImage:
         return tissue_cells(self.thumbnail, self.downsample, self.width, self.height)
 
 
-type SlideOpener = Callable[[uuid.UUID, uuid.UUID], Awaitable[SlideImage]]
+type SlideOpener = Callable[[uuid.UUID, uuid.UUID, str | None], Awaitable[SlideImage]]
 
 
 class Progress(Protocol):
@@ -137,7 +137,7 @@ def tumor_map_workflow(
 ) -> Workflow:
     async def scored(step: StepRun) -> Mapping[str, Any]:
         job = claimed_input(step)
-        slide = await open_slide(step.tenant_id, job.slide_id)
+        slide = await open_slide(step.tenant_id, job.slide_id, job.folder)
         prefix = tiles_prefix(step.tenant_id, job.slide_id, step.job_id)
         started = time.perf_counter()
         ran = await score_tiles(slide, scorer, store, prefix, StepProgress(step), max_tiles)
@@ -146,7 +146,7 @@ def tumor_map_workflow(
 
     async def stored(step: StepRun) -> Mapping[str, Any]:
         job = claimed_input(step)
-        slide = await open_slide(step.tenant_id, job.slide_id)
+        slide = await open_slide(step.tenant_id, job.slide_id, job.folder)
         tiles = tiles_prefix(step.tenant_id, job.slide_id, step.job_id)
         tumor_map = await assembled(slide, store, tiles)
         prefix = result_set_prefix(step.tenant_id, job.slide_id, job.result_set_id)

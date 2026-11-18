@@ -8,6 +8,8 @@ import pytest
 from tumor_map_support import STORED_SLIDE, CentreScorer, opener
 from view_map_support import view_slide
 
+from parfocal_common.ingest import sample_folder, slide_prefix
+from parfocal_common.jobs import StepFailedError
 from parfocal_common.object_store import Downloaded, ObjectStore
 from parfocal_common.view_maps import TILE_CELLS, ViewTile, cells_in, seconds_in
 from parfocal_ml.gpu_pool import POOLS, Family, cpu_stand_in
@@ -24,8 +26,10 @@ SLIDE = uuid.UUID("00000000-0000-4000-8000-000000000002")
 EMBEDDER = next(pool for pool in POOLS if pool.family is Family.EMBEDDER)
 
 
-def first_tile_call(tenant: uuid.UUID = TENANT, slide: uuid.UUID = SLIDE) -> dict[str, object]:
-    return ViewTile(tenant, slide, 0, 0).call()
+def first_tile_call(
+    tenant: uuid.UUID = TENANT, slide: uuid.UUID = SLIDE, folder: str | None = None
+) -> dict[str, object]:
+    return ViewTile(tenant, slide, 0, 0, folder).call()
 
 
 class CountedSetup:
@@ -126,3 +130,45 @@ def test_a_stored_slide_answers_its_edge_tile_and_is_downloaded_once(tmp_path: P
     assert cells_in(again, 9, 12) == cells_in(first, 9, 12)
     assert len(downloads) == 1
     assert not any(path.is_file() for path in tmp_path.rglob("*"))
+
+
+def test_a_slide_seeded_in_a_sample_folder_answers_its_tile_from_that_folder(
+    tmp_path: Path,
+) -> None:
+    pytest.importorskip("openslide")
+    from test_stored_slides import LOCAL_STORAGE, stored
+
+    tenant, slide = uuid.uuid4(), uuid.uuid4()
+    folder = sample_folder(f"test-{slide.hex[:12]}")
+
+    async def setup(stack: AsyncExitStack) -> tuple[SlideOpener, Scorer]:
+        http = await stack.enter_async_context(httpx2.AsyncClient(timeout=60.0))
+        storage = ObjectStore(LOCAL_STORAGE, http)
+        try:
+            await storage.create_bucket()
+        except httpx2.TransportError:
+            pytest.skip(f"MinIO is not running at {LOCAL_STORAGE.endpoint}")
+
+        async def cleaned() -> None:
+            for key in await storage.list_keys(folder):
+                await storage.delete_object(key)
+
+        stack.push_async_callback(cleaned)
+        await stored(storage, tenant, slide, STORED_SLIDE, None)
+        for key in await storage.list_keys(slide_prefix(tenant, slide)):
+            name = key.removeprefix(slide_prefix(tenant, slide))
+            await storage.put_object(
+                f"{folder}{name}", await storage.get_object(key), "application/octet-stream"
+            )
+            await storage.delete_object(key)
+        return await stored_opener(storage, tmp_path, stack), CentreScorer()
+
+    service = ViewMapService(setup)
+    try:
+        with pytest.raises(StepFailedError):
+            service.answer(first_tile_call(tenant, slide))
+        seeded = service.answer(first_tile_call(tenant, slide, folder))
+    finally:
+        service.close()
+    assert (seeded["width"], seeded["height"]) == (9, 12)
+    assert cells_in(seeded, 9, 12) is not None

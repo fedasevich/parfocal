@@ -6,6 +6,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_common.ingest import slide_folder_in
 from parfocal_common.jobs import Claimed, Step, StepFunction, StepRun, Workflow, enqueue
 from parfocal_common.warm_gate import Pools
 
@@ -34,13 +35,21 @@ def tile_key(prefix: str, index: int) -> str:
 class TumorMapInput:
     slide_id: uuid.UUID
     result_set_id: uuid.UUID
+    folder: str | None = None
 
     def described(self) -> dict[str, str]:
-        return {"slide_id": str(self.slide_id), "result_set_id": str(self.result_set_id)}
+        described = {"slide_id": str(self.slide_id), "result_set_id": str(self.result_set_id)}
+        if self.folder is not None:
+            described["folder"] = self.folder
+        return described
 
 
 def input_of(values: Mapping[str, Any]) -> TumorMapInput:
-    return TumorMapInput(uuid.UUID(values["slide_id"]), uuid.UUID(values["result_set_id"]))
+    return TumorMapInput(
+        uuid.UUID(values["slide_id"]),
+        uuid.UUID(values["result_set_id"]),
+        slide_folder_in(values.get("folder")),
+    )
 
 
 def claimed_input(job: Claimed | StepRun) -> TumorMapInput:

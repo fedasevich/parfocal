@@ -71,3 +71,14 @@ def test_a_view_tile_outside_the_slide_or_a_broken_call_is_refused() -> None:
     with pytest.raises(ViewTileCallError):
         view_tile_of({"kind": "view-map", "column": "0", "row": 0})
     assert (WIDTH, HEIGHT) == (4096, 4608)
+
+
+def test_the_view_tile_call_carries_the_slide_folder_and_refuses_a_bad_one() -> None:
+    plain = ViewTile(TENANT, SLIDE, 0, 0)
+    seeded = ViewTile(TENANT, SLIDE, 0, 0, "samples/camelyon16/test_065/")
+    assert "folder" not in plain.call()
+    assert view_tile_of(plain.call()) == plain
+    assert view_tile_of(seeded.call()) == seeded
+    for folder in ("samples/x", "/samples/x/", "samples/../t/x/", 7):
+        with pytest.raises(ViewTileCallError):
+            view_tile_of({**plain.call(), "folder": folder})

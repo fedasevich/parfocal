@@ -69,6 +69,18 @@ def test_one_view_tile_comes_back_as_its_256_cell_bytes(
     assert len(edge.content) == 2 * 16
 
 
+def test_the_view_map_call_names_the_folder_beside_the_slide_original(
+    api: ApiAs, database: str, lab: Lab, pools: StandInPools
+) -> None:
+    owner(
+        database,
+        "UPDATE slides SET original_key = 'samples/camelyon16/test_065/original.tif' "
+        f"WHERE id = '{lab.slides[0]}' RETURNING id",
+    )
+    assert ask(api, lab).status_code == 200
+    assert [call.get("folder") for _, call in pools.calls] == ["samples/camelyon16/test_065/"]
+
+
 def test_a_tile_outside_the_slide_or_a_slide_without_size_is_refused(
     api: ApiAs, lab: Lab, pools: StandInPools
 ) -> None:

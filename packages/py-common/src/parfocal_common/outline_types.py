@@ -4,6 +4,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import cast
 
+from parfocal_common.ingest import SlideFolderError, slide_folder_in
+
 KIND = "outline-types"
 TYPER = "pathosam-hovernext"
 TYPER_VERSION = "v1.2"
@@ -103,16 +105,10 @@ def outline_types_call_of(call: Mapping[str, object]) -> OutlineTypesCall:
 
 
 def folder_in(value: object) -> str | None:
-    if value is None:
-        return None
-    if (
-        not isinstance(value, str)
-        or not value.endswith("/")
-        or value.startswith("/")
-        or ".." in value.split("/")
-    ):
-        raise OutlineTypesCallError("The slide folder is a storage prefix ending in a slash")
-    return value
+    try:
+        return slide_folder_in(value)
+    except SlideFolderError as error:
+        raise OutlineTypesCallError(str(error)) from error
 
 
 def typed_outline(typed: object) -> bool:

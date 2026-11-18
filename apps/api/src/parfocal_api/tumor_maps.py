@@ -28,6 +28,7 @@ from parfocal_api.projects import visible
 from parfocal_api.result_sets import ResultSetDraft, insert_result_set
 from parfocal_api.tables import PrivacyMode, ResultSource, jobs, projects, slides
 from parfocal_api.worker_serving import Serving, WorkerProbe, probe_of, serving_of
+from parfocal_common.ingest import folder_of
 from parfocal_common.jobs import JobStatus
 from parfocal_common.tumor_maps import (
     MODEL,
@@ -59,16 +60,21 @@ def result_set_draft() -> ResultSetDraft:
     return ResultSetDraft(name=f"{title} {MODEL_VERSION} map", model_version=MODEL_VERSION)
 
 
-async def slide_in(connection: AsyncConnection, project_id: uuid.UUID, slide_id: uuid.UUID) -> None:
-    found = await connection.scalar(
-        select(slides.c.id).where(
-            slides.c.id == slide_id,
-            slides.c.project_id == project_id,
-            slides.c.deleted_at.is_(None),
+async def slide_folder_in(
+    connection: AsyncConnection, project_id: uuid.UUID, slide_id: uuid.UUID
+) -> str | None:
+    found = (
+        await connection.execute(
+            select(slides.c.original_key).where(
+                slides.c.id == slide_id,
+                slides.c.project_id == project_id,
+                slides.c.deleted_at.is_(None),
+            )
         )
-    )
+    ).one_or_none()
     if found is None:
         raise SlideNotInProjectError
+    return None if found.original_key is None else folder_of(found.original_key)
 
 
 @router.post(
@@ -87,12 +93,12 @@ async def start_tumor_map(
 ) -> TumorMapJob:
     project = await visible(connection, principal, project_id)
     await require_controlling(connection, principal, project_id, project.archived_at is not None)
-    await slide_in(connection, project_id, slide_id)
+    folder = await slide_folder_in(connection, project_id, slide_id)
     await refuse_hidden(connection, {MODEL})
     if serving_of(probe, MODEL) is Serving.OFFLINE:
         raise ModelOfflineError(f"{MODEL} has no worker answering right now")
     set_id = uuid.uuid4()
-    job_input = TumorMapInput(slide_id, set_id)
+    job_input = TumorMapInput(slide_id, set_id, folder)
     job_id = await enqueue_tumor_map(connection, project.tenant_id, project_id, job_input)
     actor = actor_of(principal)
     await insert_result_set(
