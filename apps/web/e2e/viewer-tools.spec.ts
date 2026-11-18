@@ -321,3 +321,26 @@ test("a layer set on one side moves with its slide when the sides swap", async (
   await expect(onSide("left")).toHaveAttribute("aria-pressed", "false");
   await expect(onSide("right")).toHaveAttribute("aria-pressed", "true");
 });
+
+test("the tumor map outline draws on each side whose toggle is on", async ({ page }) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Compare slides · Slides picked"));
+  const toggle = (side: "left" | "right") =>
+    page.getByRole("button", { name: `Tumor map outline on the ${side}` });
+  const engineOn = (side: "left" | "right") =>
+    page.locator(`[data-pane="${side}"]`).getByTestId("still-engine");
+  const drawn = (side: "left" | "right") =>
+    engineOn(side)
+      .getAttribute("data-overlays")
+      .then((value) => Number(value ?? 0));
+  await expect(engineOn("left")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await expect(engineOn("right")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await expect.poll(() => drawn("left")).toBeGreaterThan(0);
+  expect(await drawn("right")).toBe(0);
+  await page.getByRole("button", { name: "Swap sides" }).click();
+  await expect(engineOn("right")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  await expect.poll(() => drawn("right")).toBeGreaterThan(0);
+  await expect.poll(() => drawn("left")).toBe(0);
+  await toggle("right").click();
+  await expect.poll(() => drawn("right")).toBe(0);
+});

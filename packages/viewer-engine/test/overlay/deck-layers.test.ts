@@ -322,6 +322,27 @@ test("between 2 and 7 px nuclei are dots and their fills and outlines are hidden
   assert.equal((dots.data as { length: number }).length, 600);
 });
 
+test("while moving, nuclei that would draw outlines draw as dots and come back at rest", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(600, 400);
+  const large = [
+    "overlay:n:large-fills",
+    "overlay:n:large-outline-casings",
+    "overlay:n:large-outlines",
+  ];
+  const moving = builder.build([layer], nucleusPx(9), undefined, true);
+  assert.deepEqual(visibleIds(moving), ["overlay:n:dots", ...large]);
+  assert.equal(propsOf(moving[0]).getRadius, 2.2);
+  assert.notEqual(
+    builder.lodKey([layer], nucleusPx(9), undefined, true),
+    builder.lodKey([layer], nucleusPx(9)),
+  );
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(9))), detailedIds);
+  assert.deepEqual(visibleIds(builder.build([nuclei(499)], nucleusPx(9), undefined, true)), [
+    ...detailedIds,
+  ]);
+});
+
 test("under 2 px nuclei are one density texture", () => {
   const builder = createOverlayLayerBuilder();
   const layers = builder.build([nuclei(600)], nucleusPx(1));
