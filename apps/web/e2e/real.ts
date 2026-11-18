@@ -190,8 +190,21 @@ export interface TaskOnSlide {
 
 const OWN_TASK = "Real API check";
 
+interface TileGrant {
+  token: string;
+  base_path: string;
+  original: string;
+}
+
 async function hasTiles(page: Page, slide: string): Promise<boolean> {
-  return (await call(page, "GET", `/api/slides/${slide}/tile-access`)).status === 200;
+  const access = await call(page, "GET", `/api/slides/${slide}/tile-access`);
+  if (access.status !== 200) return false;
+  return page.evaluate(async ({ token, base_path, original }: TileGrant) => {
+    const response = await fetch(`${base_path}${encodeURIComponent(original)}`, {
+      headers: { Authorization: `Bearer ${token}`, Range: "bytes=0-15" },
+    });
+    return response.ok;
+  }, access.json as TileGrant);
 }
 
 async function openProjects(page: Page): Promise<ProjectRow[]> {
@@ -203,6 +216,13 @@ interface FoundSlide {
   project: string;
   slide: string;
   resultSet: string;
+}
+
+async function opensInViewer(page: Page, project: string, slide: string): Promise<boolean> {
+  await page.goto(`/projects/${project}/slides/${slide}`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", /^(ready|failed)$/, { timeout: 45_000 });
+  return (await stage.getAttribute("data-state")) === "ready";
 }
 
 async function slideWithTiles(page: Page): Promise<FoundSlide> {
@@ -217,7 +237,8 @@ async function slideWithTiles(page: Page): Promise<FoundSlide> {
         `/api/slides/${slide.id}/result-sets`,
       );
       const ready = sets.find((set) => set.status === "ready");
-      if (ready !== undefined) return { project: project.id, slide: slide.id, resultSet: ready.id };
+      if (ready === undefined || !(await opensInViewer(page, project.id, slide.id))) continue;
+      return { project: project.id, slide: slide.id, resultSet: ready.id };
     }
   }
   throw new Error("No slide in a project the user owns has a file the viewer can open");
@@ -281,12 +302,12 @@ export async function viewableTask(
   if (!onRealApi) return seededTask(page, kind);
   const found = await slideWithTiles(page);
   const { project, slide } = found;
-  const name = fresh ? `${OWN_TASK} ${kind} ${Date.now()}` : `${OWN_TASK} ${kind}`;
+  const own = `${OWN_TASK} ${kind} ${slide.slice(0, 8)}`;
+  const name = fresh ? `${own} ${Date.now()}` : own;
   const listed = await ok<TaskRow[]>(page, "GET", `/api/projects/${project}/review-tasks`);
   const existing = listed.find((task) => task.name === name && task.kind === kind);
   const task = existing?.id ?? (await createTask(page, found, kind, name));
-  const detail = await ok<TaskDetail>(page, "GET", `/api/review-tasks/${task}`);
-  return { project: detail.project_id, task, slide: detail.slides[0]?.slide_id ?? slide };
+  return { project, task, slide };
 }
 
 export async function taskWithEveryReviewIn(page: Page): Promise<string> {
