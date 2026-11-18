@@ -267,6 +267,18 @@ Recommendation B, because it keeps clones small and follows a pattern that alrea
 
 Your choice: 
 
+### 149. What the H-optimus-0 tumor probe still needs on the Mac
+
+AITUM-014 (a foundation model probe for the tumor map) has its probe code and tests, but nothing could run on 2026-11-18. `HF_TOKEN` is still missing from `.env` (decision 125, gated foundation models), so the weights answer 401. The weights file alone is 4.54 GB and the Mac had 6.8 GB free. The bundle's training patches come from 268 CAMELYON16 slides, and only `tumor_009` is on the Mac, so the probe trains on a subset fetched one slide at a time and deleted after its features are saved.
+
+- A. You add `HF_TOKEN` and free about 15 GB, and an agent trains the probe on 10 training slides (5 tumor, 5 normal) streamed one at a time, then scores it on the four MLEVAL-005 test slides.
+- B. The same subset, but the features are computed on a Modal GPU at a cost not yet measured, so the Mac needs no free space beyond the token.
+- Other.
+
+Recommendation A, because it costs nothing and the owner allowed the Mac GPU for this.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
