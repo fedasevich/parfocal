@@ -4632,7 +4632,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   OPS-022 (viewer area on the real API) left `typeOutlines` as the one viewer draft, because no GPU runner types outlines. Add a typer runner to the GPU pool in `workers/ml/src/parfocal_ml/modal_pool.py` that types the outlines it is sent with `parfocal_ml/typer.py`. Add `POST /api/slides/{slide_id}/outline-types`, which reaches the runner through the warm gate the way `view_maps.py` does. It needs slide reading, refuses while the AI is hidden, answers 503 when no worker answers, and is audited. Then delete the draft. Part of OPS-017 (switch each area from the fake to the real API).
   Done when the viewer draft count is 0, API tests cover the route with a fake runner, and an ML test covers the runner.
   Depends on OPS-022. Size: M.
-- [ ] OPS-026 · Export and publish the HoVer-NeXt typer for the viewer
+- [x] OPS-026 · Export and publish the HoVer-NeXt typer for the viewer
   OPS-025 (the viewer typing tool on a GPU typer runner) built the `outline-types` runner, but no HoVer-NeXt `typer.onnx` export exists in model storage, so the route answers 503 `typer-offline` in production. Export the typer head to ONNX on the Mac, check it against the PyTorch output on a small fixture, and publish it with its checksum where the embedder pool loads models, through the same path as the other published artifacts.
   Done when a parity test passes within the tolerance the other exports use, the artifact and checksum are published, and the deployed route types one outline on a seeded slide.
   Depends on OPS-025. Size: M.
