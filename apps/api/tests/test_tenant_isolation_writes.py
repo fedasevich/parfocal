@@ -604,7 +604,7 @@ WRITE_ROUTES: dict[str, Write] = {
     "releaseLegalHold": Write(admin_rights=True),
     "setMemberAdminRights": Write(body=constant({"admin_rights": True}), admin_rights=True),
     "deactivateMember": Write(body=constant({}), admin_rights=True, owner=CONFLICT),
-    "cancelMemberDeactivation": Write(admin_rights=True, owner=None),
+    "cancelMemberDeactivation": Write(path={"user_id": seeded("colleague")}, admin_rights=True),
     "changeMemberRole": Write(
         body=constant({"role": "reviewer"}), admin_rights=True, owner=CONFLICT
     ),

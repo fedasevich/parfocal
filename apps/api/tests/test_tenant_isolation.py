@@ -8,7 +8,7 @@ import uuid
 import zipfile
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from enum import Enum, auto
 from functools import cache
 from typing import Any
@@ -937,8 +937,15 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         .returning(users.c.id)
     )
     await connection.execute(
-        insert(memberships).values(tenant_id=seeded.tenant_id, user_id=colleague, role="researcher")
+        insert(memberships).values(
+            tenant_id=seeded.tenant_id,
+            user_id=colleague,
+            role="researcher",
+            deactivates_on=date(2099, 1, 1),
+        )
     )
+    assert isinstance(colleague, uuid.UUID)
+    seeded.ids["colleague"] = colleague
     await connection.execute(
         insert(project_members).values(
             tenant_id=seeded.tenant_id,
