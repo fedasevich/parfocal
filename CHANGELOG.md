@@ -2,15 +2,23 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
-## v0.19.2 (2026-11-18)
+## v0.20.0 (2026-11-18)
 
 ### Features
 
 - VIEW-074: Test the annotate task on the real engine stage
+- TEST-008: Fetch UI visual baselines from R2 against a pinned checksum list
+- TEST-008: Pin the regenerated UI visual baselines
+- TEST-008: Pin the visual baselines regenerated after the font wait
+- TEST-008: Pin the baselines regenerated with deterministic text rendering
 
 ### Fixes
 
 - AITUM-014: Delete the board file of the dropped task
+- TEST-008: Wait for the theme and density to apply before each visual capture
+- TEST-008: Wait two frames and for fonts again before each visual capture
+- TEST-008: Recapture a story on a mismatch and agree two loads when updating
+- TEST-008: Render visual captures with fixed text flags and only the bundled Plex fonts
 
 ### Performance
 
@@ -20,10 +28,18 @@ Every release of Parfocal, generated from Conventional Commits by git-cliff. Run
 
 - VIEW-074: Log the annotate task stage tests and what is left
 - IAM-034: Move the reset link task to review, live check left
+- TEST-008: Log the R2 baseline upload and the open visual stability work
+- TEST-008: Record the flake measurements and CI state at the night stop
+- TEST-008: Tick the visual regression task after two green ui runs
 
 ### Build and CI
 
 - FOUND-018: Stop the db job after 60 minutes
+
+### Other
+
+- TEST-008: Merge origin/main into the visual branch
+- TEST-008: Merge origin/main into the visual branch
 
 ## v0.19.1 (2026-11-18)
 
