@@ -37,6 +37,7 @@ export default function FeedbackDialog({
   return (
     <SmallModal
       open
+      dirty={!sent && trimmed !== ""}
       onOpenChange={(next) => {
         if (!next) onClose();
       }}

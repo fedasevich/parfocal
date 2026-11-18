@@ -54,7 +54,7 @@ test("the More menu in the annotate top bar opens settings from an item", async 
   await page.getByRole("button", { name: "More" }).click();
   await expect(page.getByRole("menuitem", { name: /Ask for a second opinion/ })).toBeVisible();
   await page.getByRole("menuitem", { name: /Keyboard shortcuts/ }).click();
-  await expect(page).toHaveURL(/\/settings\/shortcuts/);
+  await expect(page).toHaveURL(/settings=shortcuts/);
 });
 
 test("the adjudicator's slide chip lists the slides queued for them", async ({ page }) => {

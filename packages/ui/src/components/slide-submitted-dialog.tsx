@@ -2,6 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { useEffect } from "react";
 
 type NextSlideInfo = {
   thumbUrl: string;
@@ -19,6 +20,7 @@ type SlideSubmittedDialogProps = {
   onPrimary: () => void;
   onDiffer: () => void;
   onBreak: () => void;
+  onClose?: (() => void) | undefined;
 };
 
 function SlideSubmittedDialog({
@@ -30,14 +32,33 @@ function SlideSubmittedDialog({
   onPrimary,
   onDiffer,
   onBreak,
+  onClose,
 }: SlideSubmittedDialogProps) {
+  useEffect(() => {
+    if (!onClose) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-black/40">
+      {onClose ? (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden="true"
+          data-slot="slide-submitted-scrim"
+          onClick={onClose}
+          className="absolute inset-0 cursor-default border-0 bg-transparent"
+        />
+      ) : null}
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="slide-submitted-title"
-        className="grid w-140 max-w-[calc(100vw-32px)] gap-4 rounded-zone border border-line bg-chrome p-5.5 text-fg shadow-pop"
+        className="relative grid w-140 max-w-[calc(100vw-32px)] gap-4 rounded-zone border border-line bg-chrome p-5.5 text-fg shadow-pop"
       >
         <div className="flex items-center gap-2.5">
           <Icon name="check" size="md" className="text-ok" />

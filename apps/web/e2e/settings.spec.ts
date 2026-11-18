@@ -91,15 +91,15 @@ test("the account menu opens Settings and Shortcuts, and close goes back", async
   await page.goto("/");
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: /Keyboard shortcuts/ }).click();
-  await expect(page).toHaveURL(/\/settings\/shortcuts$/);
+  await expect(page).toHaveURL(/settings=shortcuts/);
   await expect(dialog(page).getByRole("heading", { name: "Shortcuts" })).toBeVisible();
   await dialog(page).getByRole("button", { name: "Close settings" }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: /^Settings/ }).click();
-  await expect(page).toHaveURL(/\/settings\/display$/);
+  await expect(page).toHaveURL(/settings=display/);
   await dialog(page).getByRole("button", { name: "Layout" }).click();
-  await expect(page).toHaveURL(/\/settings\/layout$/);
+  await expect(page).toHaveURL(/settings=layout/);
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/$/);
 });
@@ -222,8 +222,8 @@ test("Cmd+comma opens Settings over the live screen and a backdrop click closes 
 }) => {
   await page.goto("/");
   await expect(async () => {
-    if (!/\/settings\/display$/.test(page.url())) await page.keyboard.press("Meta+,");
-    await expect(page).toHaveURL(/\/settings\/display$/, { timeout: 1000 });
+    if (!/settings=display/.test(page.url())) await page.keyboard.press("Meta+,");
+    await expect(page).toHaveURL(/settings=display/, { timeout: 1000 });
   }).toPass();
   await expect(dialog(page).getByText("Who a setting applies to")).toBeVisible();
   await page.mouse.click(4, 4);
@@ -254,7 +254,7 @@ test("the question mark key opens Shortcuts with the source badges", async ({ pa
   await page.goto("/");
   await expect(async () => {
     if (!/\/settings\/shortcuts$/.test(page.url())) await page.keyboard.press("Shift+?");
-    await expect(page).toHaveURL(/\/settings\/shortcuts$/, { timeout: 1000 });
+    await expect(page).toHaveURL(/settings=shortcuts/, { timeout: 1000 });
   }).toPass();
   const shortcuts = dialog(page);
   await expect(shortcuts.getByRole("heading", { name: "Shortcuts" })).toBeVisible();

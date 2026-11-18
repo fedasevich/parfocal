@@ -1,5 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
+import { settingsSectionKeys } from "../screens/settings/sections.ts";
 import { lenientSearch } from "../search/lenient-search.ts";
 
 export const personaKeys = ["LM", "AK", "SM", "JR", "TB", "PK", "HL", "MV", "DH"] as const;
@@ -8,6 +9,7 @@ export type PersonaKey = (typeof personaKeys)[number];
 
 export const overlaySearch = lenientSearch({
   open: z.enum(["notifications", "palette"]).optional(),
+  settings: z.enum(settingsSectionKeys).optional(),
   find: z.string().optional(),
   as: z.enum(personaKeys).optional(),
 });

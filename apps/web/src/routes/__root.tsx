@@ -16,6 +16,7 @@ import { overlaySearch } from "../shell/overlays.ts";
 import { useReadingReport } from "../shell/reading-report.ts";
 import { RouteProgress } from "../shell/route-progress.tsx";
 import { SettingsKey } from "../shell/settings-key.tsx";
+import { SettingsOverlayHost } from "../shell/settings-overlay.tsx";
 import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 import { SurveyHost } from "../shell/survey-host.tsx";
@@ -63,6 +64,7 @@ function RootContent() {
       <CommandPalette />
       <ShortcutsKey />
       <SettingsKey />
+      <SettingsOverlayHost />
       <LabKey />
       <FeedbackHost />
       <StudyGuardHost />
