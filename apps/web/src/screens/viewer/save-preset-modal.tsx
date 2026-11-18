@@ -40,6 +40,7 @@ export function SavePresetModal({
   return (
     <SmallModal
       open={open}
+      dirty={name.trim() !== ""}
       onOpenChange={(next) => {
         if (!next) onClose();
       }}

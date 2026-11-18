@@ -45,6 +45,7 @@ export function AddClassModal({
   return (
     <SmallModal
       open={open}
+      dirty={name !== "" || key !== ""}
       onOpenChange={(next) => {
         if (!next) {
           reset();

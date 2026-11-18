@@ -47,6 +47,7 @@ export function SendToAdjudicatorModal({
   return (
     <SmallModal
       open
+      dirty={note.trim() !== ""}
       onOpenChange={closeOn(onClose)}
       title={t`Send to an adjudicator`}
       subtitle={`${andJoin(labels)} · ${taskCode}`}

@@ -43,7 +43,7 @@ test("a setting is found by loose letters, shows its keys and opens its section"
   await palette.getByRole("combobox").fill("mswhl");
   await expect(palette.getByRole("option").first()).toHaveText(/Mouse wheel/);
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/settings\/navigation$/);
+  await expect(page).toHaveURL(/settings=navigation/);
 });
 
 test("Measure shows only on a slide and arms the ruler", async ({ page }) => {

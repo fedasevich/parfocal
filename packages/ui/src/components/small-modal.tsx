@@ -1,6 +1,6 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { t } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   BeforeYouList,
   type Blocker,
@@ -30,6 +30,7 @@ type SmallModalProps = Omit<DialogPrimitive.Root.Props, "children"> & {
   onPrimary?: () => void;
   primaryDisabled?: boolean;
   primaryBusy?: boolean;
+  dirty?: boolean;
   blockers?: Blocker[];
   blockersTitle?: string;
   cancelLabel?: string;
@@ -50,6 +51,7 @@ function SmallModal({
   onPrimary,
   primaryDisabled = false,
   primaryBusy = false,
+  dirty = false,
   blockers = [],
   blockersTitle = t`Before you can`,
   cancelLabel = t`Cancel`,
@@ -69,7 +71,28 @@ function SmallModal({
   const listId = `${whyId}-list`;
   const reasonId = `${whyId}-reason`;
   const describedBy = blockers.length > 1 ? listId : reason ? reasonId : undefined;
+  const { onOpenChange, ...rootProps } = props;
+  const [asking, setAsking] = React.useState(false);
+  const pendingClose = React.useRef<Parameters<NonNullable<typeof onOpenChange>>[1] | null>(null);
   const bodyRef = React.useRef<HTMLDivElement>(null);
+
+  const handleOpenChange: NonNullable<typeof onOpenChange> = (next, details) => {
+    const dismissed = details.reason === "outside-press" || details.reason === "escape-key";
+    if (!next && dirty && dismissed && !asking) {
+      details.cancel();
+      pendingClose.current = details;
+      setAsking(true);
+      return;
+    }
+    setAsking(false);
+    onOpenChange?.(next, details);
+  };
+
+  const discard = () => {
+    setAsking(false);
+    const details = pendingClose.current;
+    if (details) onOpenChange?.(false, details);
+  };
   const primaryRef = React.useRef<HTMLButtonElement>(null);
 
   const focusStart = () => {
@@ -90,7 +113,7 @@ function SmallModal({
   };
 
   return (
-    <DialogPrimitive.Root {...props}>
+    <DialogPrimitive.Root {...rootProps} onOpenChange={handleOpenChange}>
       {trigger ? <DialogPrimitive.Trigger render={trigger} /> : null}
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim duration-(--motion-fast) data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0" />
@@ -129,39 +152,57 @@ function SmallModal({
                 <BeforeYouList id={listId} title={blockersTitle} blockers={blockers} />
               </div>
             ) : null}
-            <div className="flex flex-wrap items-center gap-2 px-5 py-3.5">
-              <div className="grid min-w-0 flex-1 gap-2 text-body-sm leading-[1.45] text-fg-dim">
-                {footerStart}
-                {reason ? <span id={reasonId}>{reason}</span> : hint}
-              </div>
-              {showCancel && onCancel ? (
-                <Button variant="ghost" onClick={onCancel}>
-                  {cancelLabel}
-                </Button>
-              ) : showCancel ? (
-                <DialogPrimitive.Close render={<Button />}>
-                  {cancelLabel}
-                  <Keycap keys="Esc" size="sm" />
-                </DialogPrimitive.Close>
-              ) : null}
-              {secondaryAction}
-              <Button
-                ref={primaryRef}
-                variant="primary"
-                disabled={off}
-                aria-describedby={describedBy}
-                onClick={onPrimary}
+            {asking ? (
+              <div
+                role="alertdialog"
+                aria-label={t`Discard your changes?`}
+                className="flex flex-wrap items-center gap-2 px-5 py-3.5"
               >
-                {primaryBusy ? (
-                  <span
-                    aria-hidden="true"
-                    className="size-3 animate-spin rounded-full border-2 border-white/35 border-t-on-accent"
-                  />
+                <span className="min-w-0 flex-1 text-body-sm text-fg">
+                  <Trans>Close without saving? What you entered here will be lost.</Trans>
+                </span>
+                <Button variant="ghost" autoFocus onClick={() => setAsking(false)}>
+                  <Trans>Keep editing</Trans>
+                </Button>
+                <Button variant="destructive" onClick={discard}>
+                  <Trans>Discard</Trans>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2 px-5 py-3.5">
+                <div className="grid min-w-0 flex-1 gap-2 text-body-sm leading-[1.45] text-fg-dim">
+                  {footerStart}
+                  {reason ? <span id={reasonId}>{reason}</span> : hint}
+                </div>
+                {showCancel && onCancel ? (
+                  <Button variant="ghost" onClick={onCancel}>
+                    {cancelLabel}
+                  </Button>
+                ) : showCancel ? (
+                  <DialogPrimitive.Close render={<Button />}>
+                    {cancelLabel}
+                    <Keycap keys="Esc" size="sm" />
+                  </DialogPrimitive.Close>
                 ) : null}
-                {primaryLabel}
-                <Keycap keys="↵" size="sm" />
-              </Button>
-            </div>
+                {secondaryAction}
+                <Button
+                  ref={primaryRef}
+                  variant="primary"
+                  disabled={off}
+                  aria-describedby={describedBy}
+                  onClick={onPrimary}
+                >
+                  {primaryBusy ? (
+                    <span
+                      aria-hidden="true"
+                      className="size-3 animate-spin rounded-full border-2 border-white/35 border-t-on-accent"
+                    />
+                  ) : null}
+                  {primaryLabel}
+                  <Keycap keys="↵" size="sm" />
+                </Button>
+              </div>
+            )}
           </div>
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>

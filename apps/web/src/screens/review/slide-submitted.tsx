@@ -123,6 +123,7 @@ function NextSlideCard({ taskId, slideId }: SlideSubmittedProps) {
       onPrimary={openNext}
       onDiffer={seeDifferences}
       onBreak={() => void navigate({ to: "/my-work" })}
+      onClose={() => void navigate({ to: "/my-work" })}
     />
   );
 }

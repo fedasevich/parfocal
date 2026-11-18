@@ -2,7 +2,7 @@ import { useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 type DrawerPanelProps = {
   label: string;
@@ -28,6 +28,15 @@ function DrawerPanel({
   testId,
 }: DrawerPanelProps) {
   const { t } = useLingui();
+
+  useEffect(() => {
+    if (!scrim) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [scrim, onClose]);
 
   const panel = (
     <aside
