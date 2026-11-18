@@ -11,7 +11,11 @@ import {
   updateShape,
 } from "../src/annotations/document.ts";
 import { runFromProposals } from "../src/annotations/runs.ts";
-import { createSelectTool, type SelectTool } from "../src/annotations/select-tool.ts";
+import {
+  createSelectTool,
+  type EmptyDrag,
+  type SelectTool,
+} from "../src/annotations/select-tool.ts";
 import { at, type ShapeId } from "../src/annotations/shapes.ts";
 import type {
   TraceDoubleClickEvent,
@@ -90,7 +94,11 @@ interface Rig {
   readonly ids: () => readonly ShapeId[];
 }
 
-function rig(setup: (doc: AnnotationDocument) => AnnotationDocument, pixelSize = 1): Rig {
+function rig(
+  setup: (doc: AnnotationDocument) => AnnotationDocument,
+  pixelSize = 1,
+  emptyDrag: EmptyDrag = "marquee",
+): Rig {
   let doc = setup(createDocument());
   const commits: string[] = [];
   const tool = createSelectTool({
@@ -101,6 +109,7 @@ function rig(setup: (doc: AnnotationDocument) => AnnotationDocument, pixelSize =
     toSlide: (point) => ({ x: point.clientX, y: point.clientY }),
     pixelSize: () => pixelSize,
     commit: (_before, _after, label) => commits.push(label),
+    emptyDrag: () => emptyDrag,
   });
   return {
     tool,
@@ -1015,5 +1024,29 @@ describe("select tool under a moving camera", () => {
     assert.deepEqual(consumed, [false]);
     assert.deepEqual(pointsOf(r.doc(), 1).slice(0, 2), [100, 100]);
     assert.equal(r.tool.state().gesture, "idle");
+  });
+});
+
+describe("select tool where an empty drag pans", () => {
+  test("a drag on empty space is left to the camera and keeps the selection", () => {
+    const r = rig(twoSquares, 1, "pan");
+    r.replay(click(200, 200));
+    const consumed = r.replay(drag([900, 900], [700, 700]));
+    assert.ok(consumed.every((taken) => !taken));
+    assert.equal(r.tool.state().marquee, null);
+    assert.deepEqual(r.ids(), [1]);
+  });
+
+  test("a click on empty space still clears the selection", () => {
+    const r = rig(twoSquares, 1, "pan");
+    r.replay(click(200, 200));
+    assert.deepEqual(r.replay(click(900, 900)), [false, false]);
+    assert.deepEqual(r.ids(), []);
+  });
+
+  test("a drag that starts on a shape still moves it", () => {
+    const r = rig(twoSquares, 1, "pan");
+    r.replay(drag([200, 200], [260, 200]));
+    assert.deepEqual(pointsOf(r.doc(), 1).slice(0, 2), [160, 100]);
   });
 });

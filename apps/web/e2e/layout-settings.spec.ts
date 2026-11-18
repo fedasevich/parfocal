@@ -36,21 +36,38 @@ test("hiding the panel in Settings leaves the floating tab on the slide", async 
   );
 });
 
-test("Hide while panning on the slide is the Panel while moving setting", async ({ page }) => {
-  await openViewer(page);
-  await page.getByRole("checkbox", { name: "Hide while panning" }).click();
-  await expect(page.getByRole("checkbox", { name: "Hide while panning" })).toBeChecked();
-  await page.reload();
+async function panelHidesOnDrag(page: Page) {
+  const dock = page.getByTestId("inspector-dock");
+  const box = (await page.locator("[data-vt-target]").boundingBox()) ?? { x: 0, y: 0 };
+  await page.mouse.move(box.x + 200, box.y + 200);
+  await page.mouse.down();
+  await page.waitForTimeout(300);
+  const hidden = (await dock.getAttribute("data-hidden-while-panning")) === "true";
+  await page.mouse.up();
+  return hidden;
+}
+
+test("the Panel while moving setting hides the panel during a drag, with no checkbox on the slide", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
   await page.goto("/settings/layout");
-  await expect(
-    group(page, "Panel while moving").getByRole("radio", { name: "Hides while panning" }),
-  ).toBeChecked();
+  const hides = group(page, "Panel while moving").getByRole("radio", {
+    name: "Hides while panning",
+  });
+  await hides.click();
+  await expect(hides).toBeChecked();
+  await page.reload();
+  await openViewer(page);
+  await expect(page.getByRole("checkbox", { name: "Hide while panning" })).toHaveCount(0);
+  expect(await panelHidesOnDrag(page)).toBe(true);
+  await page.goto("/settings/layout");
   const stays = group(page, "Panel while moving").getByRole("radio", { name: "Stays put" });
   await stays.click();
   await expect(stays).toBeChecked();
   await page.reload();
   await openViewer(page);
-  await expect(page.getByRole("checkbox", { name: "Hide while panning" })).not.toBeChecked();
+  expect(await panelHidesOnDrag(page)).toBe(false);
 });
 
 test("the pinned slide strip is off by default and stays on after a reload", async ({ page }) => {

@@ -39,6 +39,13 @@ test("the label is the objective by default and a percent of the 40x objective w
   assert.equal(formatMagnification(10), "10×");
   assert.equal(formatMagnification(2.5, "objective"), "2.5×");
   assert.deepEqual(
+    magnificationPresets.map((preset) => formatMagnification(preset)),
+    ["1.25×", "2.5×", "5×", "10×", "20×", "40×"],
+  );
+  assert.equal(formatMagnification(0.294), "0.29×");
+  assert.equal(formatMagnification(3.04), "3.0×");
+  assert.equal(formatMagnification(20.5), "21×");
+  assert.deepEqual(
     magnificationPresets.map((preset) => formatMagnification(preset, "zoom-percent")),
     ["3%", "6%", "13%", "25%", "50%", "100%"],
   );

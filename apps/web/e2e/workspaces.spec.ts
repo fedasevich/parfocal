@@ -68,7 +68,7 @@ test("a review task opens in Review with the short rail and a pan on drag", asyn
   await openSlide(page, `?task=${rt14}`);
   await expect(stage(page)).toHaveAttribute("data-workspace", "review");
   await expect(stage(page)).toHaveAttribute("data-drag", "pan");
-  await expect(stage(page)).toHaveAttribute("data-tool", "hand");
+  await expect(stage(page)).toHaveAttribute("data-tool", "select");
   await expect(page.locator("button[data-tool]")).toHaveCount(5);
   await expect(page.locator('button[data-tool="poly"]')).toHaveCount(0);
 });
@@ -86,7 +86,7 @@ test("switching workspaces changes the rail and the drag but leaves the camera a
   await switchTo(page, "Full viewer");
   await expect(stage(page)).toHaveAttribute("data-workspace", "review");
   await expect(page.locator("button[data-tool]")).toHaveCount(5);
-  await expect(stage(page)).toHaveAttribute("data-tool", "hand");
+  await expect(stage(page)).toHaveAttribute("data-tool", "select");
   await expect(page).toHaveURL(/workspace=review/);
   expect(await cameraOf(page)).toBe(before);
   expect(await canvas?.evaluate((node) => node.isConnected)).toBe(true);
@@ -126,10 +126,10 @@ test("the Review rail ignores the drawing keys and the marker panel stays out of
 }) => {
   await openSlide(page, "?workspace=review");
   await page.keyboard.press("p");
-  await expect(stage(page)).toHaveAttribute("data-tool", "hand");
+  await expect(stage(page)).toHaveAttribute("data-tool", "select");
   await page.keyboard.press("l");
   await expect(stage(page)).toHaveAttribute("data-tool", "ruler");
   await page.keyboard.press("Escape");
-  await expect(stage(page)).toHaveAttribute("data-tool", "hand");
+  await expect(stage(page)).toHaveAttribute("data-tool", "select");
   await expect(page.getByTestId("count-panel")).toHaveCount(0);
 });

@@ -6,6 +6,7 @@ import type { InspectorLayout, InspectorLayoutChange } from "../screens/review/i
 import { type ViewerTab, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import type { InspectorSection } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
+import type { StageTabCounts } from "./stage-tab-counts.ts";
 import type { ThreadFocusRequest } from "./thread-focus.tsx";
 import type { SlideOverview, ViewerEngine } from "./viewer-engine.ts";
 
@@ -15,6 +16,7 @@ type StageInspectorProps = {
   tab: ViewerTab;
   onTab: (tab: ViewerTab) => void;
   panning: boolean;
+  counts: StageTabCounts;
   comments: ReactNode;
   opinion: ReactNode;
   onSlot: (section: InspectorSection, node: HTMLElement | null) => void;
@@ -23,6 +25,7 @@ type StageInspectorProps = {
 export type StageInspectorLink = {
   readonly tab: ViewerTab | undefined;
   readonly onTab: (tab: ViewerTab) => void;
+  readonly counts?: StageTabCounts;
   readonly comments: ReactNode;
   readonly opinion: ReactNode;
   readonly focus?: ThreadFocusRequest | null;
@@ -47,6 +50,7 @@ export function StageInspector({
   tab,
   onTab,
   panning,
+  counts,
   comments,
   opinion,
   onSlot,
@@ -72,7 +76,7 @@ export function StageInspector({
       onLayout={onLayout}
       panning={panning}
       tabLabel={labels[tab]}
-      tabCount={undefined}
+      tabCount={counts[tab]}
     >
       <SidePanel
         data-testid="stage-inspector"
@@ -86,6 +90,7 @@ export function StageInspector({
           {
             value: "objects",
             label: labels.objects,
+            ...(counts.objects ? { count: counts.objects } : {}),
             body: <div ref={objectsRef} data-testid="inspector-objects" className={slotClass} />,
           },
           {
@@ -93,7 +98,12 @@ export function StageInspector({
             label: labels.display,
             body: <div ref={displayRef} data-testid="inspector-display" className={slotClass} />,
           },
-          { value: "comments", label: labels.comments, body: comments },
+          {
+            value: "comments",
+            label: labels.comments,
+            ...(counts.comments ? { count: counts.comments } : {}),
+            body: comments,
+          },
           { value: "opinion", label: labels.opinion, body: opinion },
         ]}
       />

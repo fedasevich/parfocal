@@ -12,7 +12,7 @@ const SlotsContext = createContext<InspectorSlots | null>(null);
 export const InspectorSlotsProvider = SlotsContext.Provider;
 
 export const dockedCard =
-  "grid gap-2 rounded-ctl border border-line bg-surf-panel p-3 text-caption";
+  "grid gap-2 rounded-zone border border-surf-edge bg-surf-section p-3 text-caption";
 
 export function useDocked(): boolean {
   return useContext(SlotsContext) !== null;

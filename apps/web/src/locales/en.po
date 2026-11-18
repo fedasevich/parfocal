@@ -5310,6 +5310,7 @@ msgstr "Compare and share"
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/routes/issue-states.tsx
 #: src/screens/review/viewer-frame.tsx
+#: src/viewer/stage-compare.tsx
 msgid "Compare slides"
 msgstr "Compare slides"
 
@@ -7779,9 +7780,7 @@ msgid "Hide the panel"
 msgstr "Hide the panel"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/screens/review/viewer-frame.tsx
 #: src/shell/palette-labels.tsx
-#: src/viewer/slide-stage.tsx
 msgid "Hide the side panel"
 msgstr "Hide the side panel"
 
@@ -7797,10 +7796,6 @@ msgstr "Hide the steps"
 #: src/screens/onboarding/auth-inputs.tsx
 msgid "Hide what you typed"
 msgstr "Hide what you typed"
-
-#: src/screens/review/inspector-dock.tsx
-msgid "Hide while panning"
-msgstr "Hide while panning"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Hides while panning"
@@ -9617,10 +9612,6 @@ msgstr "Moved to the {parfocalGpu}. It picks up from tile {0}, about {1} min lef
 msgid "moves on by itself"
 msgstr "moves on by itself"
 
-#: ../../packages/ui/src/components/magnification-bar.tsx
-msgid "mr-0 max-w-0 opacity-0"
-msgstr "mr-0 max-w-0 opacity-0"
-
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "My presets"
 msgstr "My presets"
@@ -11182,10 +11173,6 @@ msgstr "Open the sample project"
 #: src/help/help-dialog.tsx
 msgid "Open the shortcut sheet"
 msgstr "Open the shortcut sheet"
-
-#: src/screens/review/inspector-dock.tsx
-msgid "Open the side panel on the second monitor"
-msgstr "Open the side panel on the second monitor"
 
 #: src/screens/jobs/job-window-screen.tsx
 #: src/screens/upload/progress-step.tsx
@@ -14260,8 +14247,6 @@ msgid "Show the motion vector"
 msgstr "Show the motion vector"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/screens/review/viewer-frame.tsx
-#: src/viewer/slide-stage.tsx
 msgid "Show the side panel"
 msgstr "Show the side panel"
 

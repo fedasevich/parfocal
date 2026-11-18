@@ -81,7 +81,7 @@ export function StartRunPanel(props: StartRunPanelProps) {
       data-testid="start-run"
       className={
         docked
-          ? "flex flex-col gap-2 rounded-ctl border border-line bg-surf-panel px-3 py-2 text-caption"
+          ? "flex flex-col gap-2 rounded-zone border border-surf-edge bg-surf-section px-3 py-2 text-caption"
           : "pointer-events-auto absolute bottom-14 left-3 z-10 flex flex-col gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
       }
     >

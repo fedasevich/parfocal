@@ -169,7 +169,7 @@ export function AddResultSet({ projectId, slideId, onClose, onPreview }: AddResu
       data-testid="add-result-set-panel"
       className={
         docked
-          ? "grid gap-3 rounded-ctl border border-line bg-surf-panel p-3"
+          ? "grid gap-3 rounded-zone border border-surf-edge bg-surf-section p-3"
           : "absolute top-4 left-20 z-10 grid max-h-[calc(100%-2rem)] w-96 gap-3 overflow-auto rounded-ctl border border-line bg-chrome p-3 shadow-pop"
       }
     >

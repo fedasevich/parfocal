@@ -21,6 +21,7 @@ import { StageOpinion } from "./stage-opinion.tsx";
 import { StageResultCells } from "./stage-result-cells.tsx";
 import { StageReviewObjects } from "./stage-review-objects.tsx";
 import { type StageStart, StageStartCamera } from "./stage-start.tsx";
+import { useStageTabCounts } from "./stage-tab-counts.ts";
 import { type ArmTool, StageToolLink } from "./stage-tool-link.tsx";
 import type { ThreadFocusRequest } from "./thread-focus.tsx";
 import type { SlideStorageNote } from "./tile-grant.ts";
@@ -92,6 +93,12 @@ export function EngineViewer({
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
   const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
+  const tabCounts = useStageTabCounts({
+    projectId,
+    taskId: task,
+    reviewTaskId: reviewTask,
+    slideId,
+  });
   const [noteObject, setNoteObject] = useState<string | null>(object ?? null);
   const [noteRequest, setNoteRequest] = useState<NoteRequest | null>(null);
   const [threadFocus, setThreadFocus] = useState<{
@@ -169,6 +176,7 @@ export function EngineViewer({
   const inspector = {
     tab,
     onTab,
+    counts: tabCounts,
     focus: threadFocus?.slideId === slideId ? threadFocus.request : null,
     extras,
     comments:

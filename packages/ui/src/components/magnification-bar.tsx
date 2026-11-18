@@ -126,7 +126,7 @@ function MagnificationBar({
       tabIndex={tabIndex}
       aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or ⌥1 to ⌥6 for the presets`}
       className={cn(
-        "inline-flex min-h-9 max-w-full items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
+        "inline-flex min-h-9 max-w-full items-center rounded-[10px] border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
         shown ? "pl-1.5" : "pl-2.5",
         className,
       )}
@@ -173,18 +173,18 @@ function MagnificationBar({
         data-part="current"
         className={cn(
           "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow)",
-          shown ? t`mr-0 max-w-0 opacity-0` : `mr-2.5 max-w-[90px] opacity-100`,
+          shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[90px] opacity-100",
         )}
       >
         {current}
       </span>
-      <span className="inline-flex items-center gap-1.5">
+      <span data-part="scale" className="inline-flex flex-col items-start gap-0.5">
         <i
           aria-hidden="true"
-          className="h-1.5 border-x-2 border-b-2 border-fg"
+          className="block h-1.25 border-x-2 border-b-2 border-fg"
           style={{ width: scalePx }}
         />
-        <span className="font-mono text-caption">{scaleLabel}</span>
+        <span className="font-mono text-label leading-none text-fg-dim">{scaleLabel}</span>
       </span>
       <span
         data-part="readout"
@@ -200,7 +200,11 @@ function MagnificationBar({
         <span
           data-part="brightness"
           inert={!showBrightness}
-          className={cn(slide, showBrightness ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0")}
+          className={cn(
+            slide,
+            "[&>button]:h-7",
+            showBrightness ? "max-w-[120px] opacity-100" : "max-w-0 opacity-0",
+          )}
         >
           <span aria-hidden="true" className="ml-2.5 h-6 w-px shrink-0 bg-line" />
           <BrightnessPopover

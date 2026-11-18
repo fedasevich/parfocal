@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { hidePanelWhilePanning } from "./parts.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
@@ -44,7 +45,7 @@ test("the live viewer docks its rail and inspector beside the slide like the moc
   await expect(inspector.getByTestId("painted-map")).toBeVisible();
   await expect(stage.getByTestId("area-nav")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Hide the side panel" }).click();
+  await page.keyboard.press("i");
   const tab = page.getByTestId("inspector-tab");
   await expect(tab).toBeVisible();
   const tabBox = await boxOf(page, '[data-testid="inspector-tab"]');
@@ -128,7 +129,7 @@ test("Submit on a review task opens the Slide done card in the Opinion tab, even
   await expect(
     bar.getByTestId("workspace-switch").getByRole("radio", { name: "Guided" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Hide the side panel" }).click();
+  await page.keyboard.press("i");
   await expect(page.getByTestId("inspector-tab")).toBeVisible();
   await bar.getByRole("button", { name: "Submit" }).click();
   await expect(page).toHaveURL(/tab=opinion/);
@@ -140,11 +141,10 @@ test("Submit on a review task opens the Slide done card in the Opinion tab, even
 test("hide while panning hides the live inspector during a pan and not on a click", async ({
   page,
 }) => {
+  await hidePanelWhilePanning(page, "DH");
   await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await page.getByLabel("Hide while panning").click();
-  await expect(page.getByLabel("Hide while panning")).toBeChecked();
   const dock = page.getByTestId("inspector-dock");
   const box = await boxOf(page, '[data-testid="slide-stage"]');
   await page.mouse.move(box.x + 300, box.y + 300);
@@ -154,7 +154,6 @@ test("hide while panning hides the live inspector during a pan and not on a clic
   await expect(dock).toHaveAttribute("data-hidden-while-panning", "true");
   await page.mouse.up();
   await expect(dock).not.toHaveAttribute("data-hidden-while-panning", "true");
-  await page.getByLabel("Hide while panning").click();
 });
 
 test("the save status sits in the top bar and the tool chips sit in the context bar", async ({

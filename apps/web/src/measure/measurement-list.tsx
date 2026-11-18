@@ -3,6 +3,7 @@ import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useMemo, useRef } from "react";
 import type { AnnotationDocument } from "../annotations/document.ts";
 import type { ShapeId } from "../annotations/shapes.ts";
+import { useDocked } from "../viewer/inspector-slots.tsx";
 import { useLengthUnits } from "./length-units.ts";
 import {
   buildMeasurementRows,
@@ -23,6 +24,7 @@ export function MeasurementList({
   onRemove?: (id: ShapeId) => void;
 }) {
   const { t } = useLingui();
+  const docked = useDocked();
 
   const times = useRef<ReadonlyMap<ShapeId, number>>(new Map());
   times.current = noteDrawnTimes(times.current, doc, Date.now());
@@ -37,7 +39,11 @@ export function MeasurementList({
     <section
       aria-label={t`Measurements`}
       data-testid="measurement-list"
-      className="grid gap-1.5 rounded-ctl border border-line bg-chrome p-2"
+      className={
+        docked
+          ? "grid gap-1.5 rounded-zone border border-surf-edge bg-surf-section p-3"
+          : "grid gap-1.5 rounded-ctl border border-line bg-chrome p-2"
+      }
     >
       <h2 className="m-0 text-body-sm font-semibold">
         <Trans>

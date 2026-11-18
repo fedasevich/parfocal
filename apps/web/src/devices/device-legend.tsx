@@ -21,7 +21,7 @@ export function DeviceLegend({
       data-context={context}
       className={
         docked
-          ? "grid gap-2.5 rounded-ctl border border-line bg-surf-panel p-3 text-body-sm"
+          ? "grid gap-2.5 rounded-zone border border-surf-edge bg-surf-section p-3 text-body-sm"
           : "absolute top-4 left-4 z-10 grid w-64 gap-2.5 rounded-zone border border-line bg-chrome p-4 text-body-sm shadow-lg"
       }
     >

@@ -12,6 +12,7 @@ import type { Point } from "./polygon-draft.ts";
 import { handlesOf, isReshapable } from "./reshape.ts";
 import {
   createSelectTool,
+  type EmptyDrag,
   fastNudgeStepPx,
   type Hover,
   nudgeStepPx,
@@ -37,6 +38,7 @@ type SelectLayerProps = {
   onEditText?: (id: ShapeId) => void;
   onSelectionChange?: (ids: readonly ShapeId[]) => void;
   pinRegistry?: PinRegistry;
+  emptyDrag?: EmptyDrag;
 };
 
 type Screen = { x: number; y: number };
@@ -115,9 +117,10 @@ export function useSelectTool(
   onCommit?: SelectLayerProps["onCommit"],
   onEditText?: SelectLayerProps["onEditText"],
   pinRegistry?: PinRegistry,
+  emptyDrag: EmptyDrag = "marquee",
 ): SelectTool {
-  const latest = useRef({ doc, onDocumentChange, onCommit, onEditText });
-  latest.current = { doc, onDocumentChange, onCommit, onEditText };
+  const latest = useRef({ doc, onDocumentChange, onCommit, onEditText, emptyDrag });
+  latest.current = { doc, onDocumentChange, onCommit, onEditText, emptyDrag };
   return useMemo(
     () =>
       createSelectTool({
@@ -130,6 +133,7 @@ export function useSelectTool(
         pixelSize: () => 1 / screenScale(engine.getCamera()),
         commit: (before, after, label) => latest.current.onCommit?.(before, after, label),
         editText: (id) => latest.current.onEditText?.(id),
+        emptyDrag: () => latest.current.emptyDrag,
         ...(pinRegistry
           ? {
               pins: {
@@ -154,6 +158,7 @@ export function SelectLayer({
   onEditText,
   onSelectionChange,
   pinRegistry,
+  emptyDrag,
 }: SelectLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
@@ -165,6 +170,7 @@ export function SelectLayer({
     onCommit,
     onEditText,
     pinRegistry,
+    emptyDrag,
   );
   const state = useSyncExternalStore(tool.subscribe, tool.state);
   const escRegistry = useEscRegistry();

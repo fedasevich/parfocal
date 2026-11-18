@@ -20,7 +20,7 @@ test("a slide with no task opens in Annotate and a chosen workspace wins", () =>
 
 test("Review pans on drag and Annotate draws a marquee on drag", () => {
   assert.equal(workspaceSetups.review.dragBehaviour, "pan");
-  assert.equal(workspaceSetups.review.restingTool, "hand");
+  assert.equal(workspaceSetups.review.restingTool, "select");
   assert.equal(workspaceSetups.annotate.dragBehaviour, "marquee");
   assert.equal(workspaceSetups.annotate.restingTool, "select");
 });

@@ -81,7 +81,7 @@ function RunStreamPanel({
       data-done={controls.progress?.done ?? 0}
       className={
         docked
-          ? "flex items-center gap-2 rounded-ctl border border-line bg-surf-panel px-3 py-2 text-caption"
+          ? "flex items-center gap-2 rounded-zone border border-surf-edge bg-surf-section px-3 py-2 text-caption"
           : "pointer-events-auto absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
       }
     >

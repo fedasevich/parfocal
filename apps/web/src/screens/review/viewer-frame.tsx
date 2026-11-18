@@ -116,7 +116,6 @@ export function ViewerFrame({
   panelTab,
 }: ViewerFrameProps) {
   const { t } = useLingui();
-  const panelKey = useKeyLabel("panel");
   useRailKeys(railGroups, onToolChange, railKeys);
   const [layout, setLayout] = useInspectorLayout();
   const toolsLayout = useToolsLayout();
@@ -193,14 +192,6 @@ export function ViewerFrame({
                   onPressedChange={onCompare}
                 />
               ) : null}
-              <ToolRailButton
-                icon="panel"
-                label={layout.hidden ? t`Show the side panel` : t`Hide the side panel`}
-                tipSide={tipSide}
-                pressed={!layout.hidden}
-                onPressedChange={() => setLayout((current) => ({ hidden: !current.hidden }))}
-                {...(panelKey === null ? {} : { keyHint: panelKey })}
-              />
             </ToolRailGroup>
           </ToolRail>
         )}
@@ -238,14 +229,6 @@ export function ViewerFrame({
                       onPressedChange={onCompare}
                     />
                   ) : null}
-                  <ToolRailButton
-                    icon="panel"
-                    label={layout.hidden ? t`Show the side panel` : t`Hide the side panel`}
-                    tipSide={tipSide}
-                    pressed={!layout.hidden}
-                    onPressedChange={() => setLayout((current) => ({ hidden: !current.hidden }))}
-                    {...(panelKey === null ? {} : { keyHint: panelKey })}
-                  />
                 </ToolRailGroup>
               </ToolRail>
             ) : null}

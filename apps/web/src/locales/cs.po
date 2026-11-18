@@ -5308,6 +5308,7 @@ msgstr ""
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/routes/issue-states.tsx
 #: src/screens/review/viewer-frame.tsx
+#: src/viewer/stage-compare.tsx
 msgid "Compare slides"
 msgstr ""
 
@@ -7774,9 +7775,7 @@ msgid "Hide the panel"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/screens/review/viewer-frame.tsx
 #: src/shell/palette-labels.tsx
-#: src/viewer/slide-stage.tsx
 msgid "Hide the side panel"
 msgstr ""
 
@@ -7791,10 +7790,6 @@ msgstr ""
 #: src/screens/admin/connect-model.tsx
 #: src/screens/onboarding/auth-inputs.tsx
 msgid "Hide what you typed"
-msgstr ""
-
-#: src/screens/review/inspector-dock.tsx
-msgid "Hide while panning"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -9612,10 +9607,6 @@ msgstr ""
 msgid "moves on by itself"
 msgstr ""
 
-#: ../../packages/ui/src/components/magnification-bar.tsx
-msgid "mr-0 max-w-0 opacity-0"
-msgstr ""
-
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "My presets"
 msgstr ""
@@ -11176,10 +11167,6 @@ msgstr ""
 
 #: src/help/help-dialog.tsx
 msgid "Open the shortcut sheet"
-msgstr ""
-
-#: src/screens/review/inspector-dock.tsx
-msgid "Open the side panel on the second monitor"
 msgstr ""
 
 #: src/screens/jobs/job-window-screen.tsx
@@ -14251,8 +14238,6 @@ msgid "Show the motion vector"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/screens/review/viewer-frame.tsx
-#: src/viewer/slide-stage.tsx
 msgid "Show the side panel"
 msgstr ""
 

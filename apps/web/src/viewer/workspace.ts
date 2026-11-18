@@ -20,7 +20,7 @@ export const workspaceSetups: Record<SlideWorkspace, WorkspaceSetup> = {
   review: {
     label: "Review",
     rail: reviewRail,
-    restingTool: "hand",
+    restingTool: "select",
     dragBehaviour: "pan",
     countPanel: "when-markers",
   },

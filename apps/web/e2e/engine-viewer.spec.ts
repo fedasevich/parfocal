@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { hidePanelWhilePanning } from "./parts.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
@@ -193,10 +194,9 @@ test("New comment and the C key arm the comment tool from the Comments tab in an
 test("hide while panning takes the whole side panel away during a drag and brings it back", async ({
   page,
 }) => {
+  await hidePanelWhilePanning(page, "DH");
   await page.goto(fullViewer);
   const stage = await ready(page);
-  await page.getByLabel("Hide while panning").click();
-  await expect(page.getByLabel("Hide while panning")).toBeChecked();
   const dock = page.getByTestId("inspector-dock");
   const width = async () => (await dock.boundingBox())?.width ?? 0;
   const open = await width();

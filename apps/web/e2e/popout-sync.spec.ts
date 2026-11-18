@@ -67,9 +67,16 @@ test("an object selected in the side panel window is selected in the main window
     .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
   await page.goto((await link.getAttribute("href")) ?? "");
   await expect(page.getByTestId("full-viewer")).toBeVisible();
-  const opened = page.context().waitForEvent("page");
-  await page.getByTestId("inspector-popout").click();
-  const second = await opened;
+  const here = new URL(page.url());
+  const [, project = "", slide = ""] =
+    /\/projects\/([^/]+)\/slides\/([^/?]+)/.exec(here.pathname) ?? [];
+  const query = new URLSearchParams({ kind: "inspector", project, slide });
+  for (const key of ["task", "scene", "tab", "object"]) {
+    const value = here.searchParams.get(key);
+    if (value) query.set(key, value);
+  }
+  const second = await page.context().newPage();
+  await second.goto(`/popout?${query.toString()}`);
   const panel = second.getByRole("complementary", { name: "Side panel" });
   await second.bringToFront();
   await panel.getByRole("button", { name: /^T5 Tumor region/ }).click();

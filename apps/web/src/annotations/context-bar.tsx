@@ -7,7 +7,11 @@ import { maxClassKeys } from "./classes.ts";
 import { acceptLabel, type ContextBarModel } from "./context-bar.ts";
 import { ContextExtrasSlot } from "./context-extras.tsx";
 
-const fitted = "max-w-[calc(100%-1.5rem)] flex-wrap justify-center gap-y-1.5 whitespace-normal";
+const centred = "right-3 left-3 mx-auto w-fit max-w-[calc(100%-1.5rem)] translate-x-0";
+
+const fitted = `${centred} flex-wrap justify-center gap-y-1.5 whitespace-normal`;
+
+const oneLine = `${centred} [&>*]:shrink-0`;
 
 type ClassStripProps = {
   classes: readonly ProjectClass[];
@@ -110,10 +114,19 @@ export function ContextBarView({
     );
   }
   return (
-    <ContextBar label={model.label} data-testid="context-bar" data-mode="tool" className={fitted}>
-      {model.hints.map((hint) => (
-        <ContextPill key={hint}>{hint}</ContextPill>
-      ))}
+    <ContextBar label={model.label} data-testid="context-bar" data-mode="tool" className={oneLine}>
+      {model.hints.length > 0 ? (
+        <span
+          data-testid="context-hints"
+          className="flex min-w-0 shrink! items-center gap-2.5 overflow-hidden"
+        >
+          {model.hints.map((hint) => (
+            <ContextPill key={hint} className="shrink-0">
+              {hint}
+            </ContextPill>
+          ))}
+        </span>
+      ) : null}
       {strip ? <ContextDivider /> : null}
       {strip}
       <ContextExtrasSlot />

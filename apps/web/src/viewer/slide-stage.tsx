@@ -100,9 +100,11 @@ import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
+import { StageCompareButton } from "./stage-compare.tsx";
 import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
+import type { StageTabCounts } from "./stage-tab-counts.ts";
 import { stageToolOf } from "./stage-tools.ts";
 import { ThreadFocus } from "./thread-focus.tsx";
 import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
@@ -238,6 +240,8 @@ export function SlideStage({
     />
   );
 }
+
+const noCounts: StageTabCounts = {};
 
 function OpenedSlide({
   slideId,
@@ -710,16 +714,15 @@ function OpenedSlide({
       />
     );
   };
-  const panelLabel = inspectorLayout.hidden ? t`Show the side panel` : t`Hide the side panel`;
-  const panelButton = (
-    <ToolRailButton
-      icon="panel"
-      label={panelLabel}
-      tipSide={toolsLayout === "dock" ? "top" : "right"}
-      pressed={!inspectorLayout.hidden}
-      onPressedChange={() => setInspectorLayout((current) => ({ hidden: !current.hidden }))}
-    />
-  );
+  const compareButton =
+    projectId === undefined ? null : (
+      <StageCompareButton
+        projectId={projectId}
+        slideId={slideId}
+        taskId={taskId}
+        tipSide={toolsLayout === "dock" ? "top" : "right"}
+      />
+    );
   const tab =
     inspector.tab ?? (taskId === undefined && workspace === "annotate" ? "display" : "objects");
 
@@ -737,7 +740,7 @@ function OpenedSlide({
                     </ToolRailGroup>
                   ))}
                 </div>
-                <ToolRailGroup>{panelButton}</ToolRailGroup>
+                {compareButton ? <ToolRailGroup>{compareButton}</ToolRailGroup> : null}
               </ToolRail>
             )}
             <div
@@ -862,6 +865,7 @@ function OpenedSlide({
                     onEditText={(id) => textControl.current?.edit(id)}
                     onSelectionChange={setSelectedIds}
                     pinRegistry={pinRegistry}
+                    emptyDrag={setup.dragBehaviour}
                   />
                   <PinLayer
                     engine={session.engine}
@@ -992,7 +996,7 @@ function OpenedSlide({
                           {group.map(railButtons)}
                         </div>
                       ))}
-                      <div className="flex px-1">{panelButton}</div>
+                      {compareButton ? <div className="flex px-1">{compareButton}</div> : null}
                     </div>
                   ) : null}
                   <DockCard section="display" order={1}>
@@ -1120,7 +1124,7 @@ function OpenedSlide({
               {session ? (
                 <div
                   data-slot="stage-magnification"
-                  className="pointer-events-none absolute inset-x-4 bottom-4 flex justify-center"
+                  className="pointer-events-none absolute inset-x-4 bottom-3 flex justify-center"
                 >
                   <div className="pointer-events-auto flex max-w-full">
                     <MagnificationControl
@@ -1180,6 +1184,7 @@ function OpenedSlide({
                 tab={tab}
                 onTab={inspector.onTab}
                 panning={panning}
+                counts={inspector.counts ?? noCounts}
                 comments={inspector.comments}
                 opinion={inspector.opinion}
                 onSlot={placeSlot}

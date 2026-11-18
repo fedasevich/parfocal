@@ -37,7 +37,9 @@ export function presetForDigit(digit: number): MagnificationPreset | null {
 }
 
 function formatNumber(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  if (Number.isInteger(value)) return String(value);
+  if (value >= 10) return value.toFixed(0);
+  return value >= 2 ? value.toFixed(1) : String(Number(value.toFixed(2)));
 }
 
 export function formatReadout(

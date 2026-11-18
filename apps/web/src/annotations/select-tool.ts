@@ -64,6 +64,8 @@ export interface PinHost {
   readonly remove: (threadIds: readonly string[], proceed: () => void) => void;
 }
 
+export type EmptyDrag = "marquee" | "pan";
+
 export interface SelectHost {
   readonly pins?: PinHost;
   readonly document: () => AnnotationDocument;
@@ -72,6 +74,7 @@ export interface SelectHost {
   readonly pixelSize: () => number;
   readonly commit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   readonly editText?: (id: ShapeId) => void;
+  readonly emptyDrag?: () => EmptyDrag;
 }
 
 export type SelectInput = PointerInput | DoubleClickInput;
@@ -158,6 +161,7 @@ export function lockAxis(from: Point, to: Point): Point {
 export function createSelectTool(host: SelectHost): SelectTool {
   let state: SelectState = idle;
   let gesture: Gesture | null = null;
+  let passed: { pointerId: number; screen: Point; shift: boolean } | null = null;
   const listeners = new Set<() => void>();
 
   const set = (patch: Partial<SelectState>) => {
@@ -401,9 +405,23 @@ export function createSelectTool(host: SelectHost): SelectTool {
       });
       return true;
     }
+    if (host.emptyDrag?.() === "pan") {
+      passed = { pointerId: press.pointerId, screen: press.screen, shift: press.shift };
+      return false;
+    }
     gesture = { ...press, kind: "empty" };
     set({ gesture: "press" });
     return true;
+  };
+
+  const releasePassed = (input: PointerInput) => {
+    const press = passed;
+    if (press === null || press.pointerId !== input.pointerId) return;
+    passed = null;
+    const travelled = Math.hypot(input.clientX - press.screen.x, input.clientY - press.screen.y);
+    if (travelled >= minimumDragScreenPixels || press.shift) return;
+    if (state.editing !== null) set({ vertices: [] });
+    else set({ ids: [], pinIds: [] });
   };
 
   const slideDelta = (current: Gesture, at: Point, shift: boolean): Point => {
@@ -596,6 +614,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
 
   const up = (input: PointerInput): boolean => {
     const current = gesture;
+    if (current === null) releasePassed(input);
     if (current === null || input.pointerId !== current.pointerId) return false;
     gesture = null;
     if (!current.moved) finishClick(current);

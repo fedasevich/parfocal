@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
+import { hidePanelWhilePanning } from "./parts.ts";
 
 const panel = (page: Page) => page.getByRole("complementary", { name: "Side panel" });
 const handle = (page: Page) => page.getByRole("separator", { name: "Resize the side panel" });
@@ -64,17 +65,16 @@ test("dragging below 220 hides the panel, a floating tab names the section and b
   await expect(tab(page)).toHaveCount(0);
 });
 
-test("I and the rail button hide and restore the panel", async ({ page }) => {
+test("I hides and restores the panel and the rail has no panel button", async ({ page }) => {
   await openViewer(page);
   await page.keyboard.press("i");
   await expect(panel(page)).toHaveCount(0);
   await expect(tab(page)).toBeVisible();
   await page.keyboard.press("i");
   await expect(panel(page)).toBeVisible();
-  await page.getByRole("button", { name: /^Hide the side panel/ }).click();
-  await expect(panel(page)).toHaveCount(0);
-  await page.getByRole("button", { name: "Show the side panel (I)", exact: true }).click();
-  await expect(panel(page)).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Hide the side panel/ })).toHaveCount(0);
+  await expect(page.getByLabel("Hide while panning")).toHaveCount(0);
+  await expect(page.getByTestId("inspector-popout")).toHaveCount(0);
 });
 
 test("the width and the hidden state survive a reload", async ({ page }) => {
@@ -105,31 +105,9 @@ test("the arrow keys resize the focused handle", async ({ page }) => {
   await expect.poll(() => widthOf(page)).toBe(320);
 });
 
-test("the hide while panning checkbox has a 24 pixel hit area that nothing covers", async ({
-  page,
-}) => {
-  await openViewer(page);
-  const checkbox = page.getByLabel("Hide while panning");
-  const box = await checkbox.boundingBox();
-  if (!box) throw new Error("no checkbox");
-  expect(box.width).toBeGreaterThanOrEqual(24);
-  expect(box.height).toBeGreaterThanOrEqual(24);
-  const covered = await checkbox.evaluate((input) => {
-    const rect = input.getBoundingClientRect();
-    return [
-      [rect.left + 1, rect.top + 1],
-      [rect.right - 1, rect.top + 1],
-      [rect.left + 1, rect.bottom - 1],
-      [rect.right - 1, rect.bottom - 1],
-    ].some(([x, y]) => document.elementFromPoint(x ?? 0, y ?? 0) !== input);
-  });
-  expect(covered).toBe(false);
-});
-
 test("hide while panning fades the panel only during a drag on the slide", async ({ page }) => {
+  await hidePanelWhilePanning(page);
   await openViewer(page);
-  await page.getByLabel("Hide while panning").click();
-  await expect(page.getByLabel("Hide while panning")).toBeChecked();
   const dock = page.getByTestId("inspector-dock");
   await expect(dock).not.toHaveAttribute("data-hidden-while-panning", "true");
   const stage = page.locator("[data-vt-target]");

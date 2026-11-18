@@ -1,11 +1,9 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { BottomSheet } from "@parfocal/ui/components/bottom-sheet";
-import { Icon } from "@parfocal/ui/components/icon";
 import { TabCount } from "@parfocal/ui/components/tabs";
 import type { SheetHeight, SheetPixels } from "@parfocal/ui/lib/sheet-gesture";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type KeyboardEvent, type PointerEvent, type ReactNode, useRef, useState } from "react";
-import { openPopout } from "../../popout/popout-channel.ts";
 import {
   dragInspector,
   type InspectorLayout,
@@ -46,7 +44,6 @@ export function InspectorDock({
   children,
 }: InspectorDockProps) {
   const { t } = useLingui();
-  const popoutLabel = t`Open the side panel on the second monitor`;
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const edge = useRef<number>(0);
   const width = dragWidth ?? layout.width;
@@ -145,36 +142,6 @@ export function InspectorDock({
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 overflow-hidden [&>aside]:w-full!">{children}</div>
-        <div className="flex items-center gap-2 border-t border-l border-line bg-chrome px-3 py-0.5 text-caption text-fg-dim">
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-0.5">
-            <span className="relative grid size-6 shrink-0 place-items-center">
-              <input
-                type="checkbox"
-                data-testid="hide-while-panning"
-                className="peer absolute inset-0 z-10 m-0 size-6 cursor-pointer opacity-0"
-                checked={layout.hideWhilePanning}
-                onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
-              />
-              <span
-                aria-hidden="true"
-                className="grid size-3.5 place-items-center rounded-[3px] border border-line-strong bg-chrome text-white peer-checked:border-(--accent-fill) peer-checked:bg-(--accent-fill) peer-focus-visible:outline-2 peer-focus-visible:outline-accent"
-              >
-                {layout.hideWhilePanning ? <Icon name="check" size="xs" /> : null}
-              </span>
-            </span>
-            <Trans>Hide while panning</Trans>
-          </label>
-          <button
-            type="button"
-            data-testid="inspector-popout"
-            aria-label={popoutLabel}
-            title={popoutLabel}
-            onClick={() => void openPopout("inspector")}
-            className="-my-1 grid size-5 shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
-          >
-            <Icon name="popout" size="xs" />
-          </button>
-        </div>
       </div>
     </div>
   );
