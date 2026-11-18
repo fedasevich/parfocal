@@ -2,6 +2,17 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.20.2 (2026-11-18)
+
+### Fixes
+
+- OPS-036: Open a seeded slide for view maps and tumor maps from the folder beside its original
+
+### Docs
+
+- OPS-026: Tick the typer task after the deployed smoke typed an outline
+- OPS-026: Remove the board file of the finished task
+
 ## v0.20.1 (2026-11-18)
 
 ### Fixes
