@@ -444,7 +444,6 @@ export function createVivRoute(
     cancelRest = null;
     movingDetail = false;
     if (overlayDetailMoved() && failure === null) applyLayers();
-    else changed();
   };
 
   const noteMotion = () => {

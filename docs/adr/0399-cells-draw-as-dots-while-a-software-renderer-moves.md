@@ -1,13 +1,13 @@
 # 0399. Cells draw as dots while a software renderer moves
 
 - Date: 2026-11-18
-- Status: Accepted
+- Status: Proposed
 - Deciders: agent (VIEW-079)
 - Backlog: VIEW-079
 
 ## Context
 
-On CI's software renderer (SwiftShader) each pan frame of tumor_044 took about 400 ms, so the keyboard pan spec and the follow view spec failed. The fake API now shows a result set's 900 cells on that slide, and the level of detail draws them as outlines because each cell is over 7 px on screen. Their casing and outline path layers hold 12,600 segments each, and with a 1 px scissor the frame still took about 280 ms, so the cost is vertex work and only fewer instances help. A hardware GPU draws the same frame in a few milliseconds. The [result file](../results/2026-11-18-software-renderer-pan-frames.md) has the numbers.
+On CI's software renderer (SwiftShader) each pan frame of tumor_044 took about 400 ms, so the keyboard pan spec failed. The fake API now shows a result set's 900 cells on that slide, and the level of detail draws them as outlines because each cell is over 7 px on screen. Their casing and outline path layers hold 12,600 segments each, and with a 1 px scissor the frame still took about 280 ms, so the cost is vertex work and only fewer instances help. A hardware GPU draws the same frame in a few milliseconds. The [result file](../results/2026-11-18-software-renderer-pan-frames.md) has the numbers.
 
 ## Options considered
 

@@ -7,14 +7,14 @@
 
 ## Before
 
-The gap between animation frames during the pan was 383 to 450 ms, with one long task of the same length per frame. A Chrome trace put the time in `GLES2::ReadPixels` on the renderer main thread waiting for `WebGL CommandBuffer::Flush` on the GPU thread.
+The gap between animation frames during the pan was 333 to 450 ms, with one long task of the same length per frame. A Chrome trace put the time in `GLES2::ReadPixels` on the renderer main thread waiting for `WebGL CommandBuffer::Flush` on the GPU thread.
 
 Each frame drew 23 tile quads, two path layers of 12,600 instances (the casing and outline of the result set's 900 cells) and two of 11 instances (its two regions).
 
 | Change to the frame | Frame gap |
 | --- | --- |
-| None | 383 to 450 ms |
-| Skip every bitmap tile draw | 383 to 450 ms |
+| None | 333 to 450 ms |
+| Skip every bitmap tile draw | 333 to 450 ms |
 | Skip the two 12,600 instance path draws | 17 to 33 ms |
 | Draw them inside a 1 by 1 px scissor | about 283 ms |
 

@@ -322,7 +322,9 @@ test("a layer set on one side moves with its slide when the sides swap", async (
   await expect(onSide("right")).toHaveAttribute("aria-pressed", "true");
 });
 
-test("the tumor map outline draws on each side whose toggle is on", async ({ page }) => {
+test("the tumor map outline draws on the side that holds the task slide and follows a swap", async ({
+  page,
+}) => {
   const links = await toolLinks(page);
   await page.goto(hrefOf(links, "Compare slides · Slides picked"));
   const toggle = (side: "left" | "right") =>
