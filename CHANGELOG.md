@@ -2,6 +2,112 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.19.0 (2026-11-18)
+
+### Features
+
+- SEC-045: Measure a real 1.1 GB slide through the parse sandbox
+- IAM-020: Deactivate a member with hand-over of open work and a scheduled end date
+- AITUM-014: Add the foundation model probe pipeline for the tumor map, blocked on the HF token
+- PROTO-028: Show one viewer notice at a time and keep lost edits until dismissed
+- ADMIN-012: Add 1 TB workspace storage capacity constant
+- WL-021: List tasks of projects you own under Assigned by me
+- OPS-035: Sign agents in to the dev app as a seeded test account by script
+- AITUM-012: Measure one view tile at 0.743 s on a T4
+- PROTO-029: Overlay the viewer notice banner so the slide stays put
+- VIEW-080: Draw the compare tumor map outline on a slide outside the task
+- OPS-020: Pin GPU pools, backfills and parse sandbox to the EU and record pin costs
+- AITUM-014: Add the Midnight embedder for the tumor probe
+
+### Fixes
+
+- VIEW-076: Narrow the seeded result set id before building cells in the permissions test
+- IAM-020: Probe deactivation routes across workspaces, send id-taking auth writes to their tests
+- SEC-015: Allowlist the picomatch ReDoS advisory, which has no fixed release, for 30 days
+- IAM-020: Probe cancelling a deactivation against a seeded scheduled one
+- SEC-015: Name msw's Vite among the picomatch holders in the allowlist reason
+- PROJ-013: Open the New project drawer from setup and check the drawer in the old specs
+- TILES-011: Keep a signed-out boot to one who-is-signed-in call
+- IAM-033: Give Forgot your password a 24 px target on the sign-in page
+- PROTO-028: Count refused edits in the queue and word one-sided conflicts truthfully
+- VIEW-078: End a crop job whose original is missing instead of stopping the ingest worker
+- OPS-017: Let the @real helpers use seeded tasks on the fake API
+- IAM-032: Start a passkey sign-in only after the keychain offer's challenge settles
+- IAM-032: Run the passkey e2e spec through the app's own passkey screens
+- IAM-032: Retry the lock request until the shell knows who is signed in
+- OPS-035: Run the agent session tests under unittest like the other script tests
+- OPS-017: Pick a slide for @real specs only when the viewer really opens it
+- OPS-017: Nudge from Assigned by me only once the reviewer's name has loaded
+- VIEW-074: Sync the engine stage minimap with the pop-out window in slide pixels
+- PROTO-023: Cap the side panel at half the viewer so a narrow stage keeps its width
+- VIEW-079: Draw cells as dots while a software renderer pans and redraw the compare outline
+- SHELL-022: Follow the availability dropdown in the account menu story spec
+- TEST-040: Follow renamed sign button and engine annotate screen, rescan transient contrast
+- PROTO-024: Size the live progress popover to its content
+- NAV-003: Show the Option key as ⌥ in brightness and preset hints
+- OPS-017: Keep the magnification bar off the tool rail and steady three CI checks
+
+### Performance
+
+- SEC-051: Keep one parse sandbox per ingest job so a slide is copied in once
+
+### Docs
+
+- OPS-029: Log that the deploy is live and the signed-in check is left
+- REMOTE-005: Log that the deploy and live receiver check are what is left
+- TEST-008: Log the baseline-generating ci run and what is left
+- REMOTE-005: Tick the event delivery sweep after the live receiver check
+- AINUC-015: Confirm ViT-L gains with a same-path ViT-B rerun and ask about Best
+- OPS-026: Confirm the live release carries the typer and ask how agents sign in
+- MLEVAL-007: Tick browser parity after the first green runner run
+- TEST-008: Ask where the 51 MB of UI baselines should live
+- OPS-008: Drill a Neon point-in-time restore and write the recovery runbook
+- OPS-006: Ask the owner when to switch on observability export
+- SKEL-009: Ask whether main deploys itself or releases stay tagged
+- TILES-002: Apply HTTP/3 zone setting and record it, deploy and p95 still owed
+- OPS-008: Renumber the four decisions the night agents all filed as 149
+- OPS-008: Record the owner's answers to decisions 138 and 140 to 148
+- VIEW-074: Renumber the one engine stage ADR to 0397 and index it
+- VIEW-074: Move the one engine stage ADR to 0398, since OPS-035 took 0397
+- IAM-020: Log the main CI repair on fix/main-green-ci
+- JOBS-008: Note that decision 138 was already built under ADR 0370
+- OPS-017: Log the e2e, passkey race and fake @real helper fixes
+- OPS-017: Log what CI showed for the e2e and @real fixes and what is left
+- VIEW-079: Record that CI still fails both specs and add the compare outline follow-up
+- VIEW-079: Record the CI frame measurements, accept ADR 0399 and tick the task
+- OPS-008: Log the end of the night run
+- PROTO-024: Log the popover and Option key fixes
+- AITUM-014: Apply the owner's decisions of 2026-11-18
+- OPS-035: Give the owner the agent account steps
+- OPS-028: Sweep stale board tasks and refresh the current state
+- OPS-009: Rewrite the review column after the stale task sweep
+- AITUM-014: Record the Midnight weights size and batch memory
+- AITUM-014: Point the Midnight result at the pushed commit
+- OPS-035: Record the agent test account and the reseed step
+- AITUM-014: Drop the probe because nothing is trained
+- OPS-028: Close the cold start task under decision 145
+
+### Tests
+
+- IAM-033: Match specs to the reset scenes, the engine stage, SHELL-025 times and real case rows
+- OPS-026: Type one seeded outline in the post-deploy browser smoke
+- VIEW-075: Fit viewer specs to the engine stage, the Objects tab and runs started in the app
+- VIEW-079: Add temporary CI frame diagnostics to the pan and follow specs
+- VIEW-079: Log frame sources and long tasks and hold the pan key until it moves
+- VIEW-079: Keep the follower page in front while it is timed
+- VIEW-079: Remove the temporary CI frame diagnostics
+- SKEL-002: Assert the signed-in smoke account's name shows in the top bar
+- VIEW-079: Hold the pan key until it moves and time the follower in front
+
+### Build and CI
+
+- MLEVAL-007: Compare WebAssembly ONNX outputs to PyTorch with files from R2
+
+### Other
+
+- IAM-020: Merge origin/main
+- OPS-008: Track the in-progress card
+
 ## v0.18.0 (2026-11-17)
 
 ### Features
