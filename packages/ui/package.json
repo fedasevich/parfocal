@@ -16,6 +16,8 @@
     "test:browser": "storybook build --quiet && playwright test",
     "storybook": "storybook dev --port 6006",
     "build-storybook": "storybook build",
+    "visual:publish": "node scripts/visual-baselines-cli.ts publish",
+    "visual:list": "node scripts/visual-baselines-cli.ts list",
     "shadcn:add": "shadcn add --yes",
     "shadcn:adopt": "node scripts/adopt.ts"
   },
@@ -46,6 +48,7 @@
     "@lingui/vite-plugin": "6.11.0",
     "@parfocal/api-client": "workspace:*",
     "@parfocal/golden-images": "workspace:*",
+    "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.65.1",
     "@rolldown/plugin-babel": "0.2.4",

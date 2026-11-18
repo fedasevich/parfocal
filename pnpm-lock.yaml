@@ -529,6 +529,9 @@ importers:
       '@parfocal/golden-images':
         specifier: workspace:*
         version: link:../golden-images
+      '@parfocal/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
       '@parfocal/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
