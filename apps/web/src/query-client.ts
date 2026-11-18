@@ -69,6 +69,7 @@ export function createQueryClient(
   for (const queryKey of shellQueryKeys()) {
     client.setQueryDefaults(queryKey, { staleTime: shellStaleMs });
   }
+  client.setQueryDefaults(getGetMeQueryKey(), { staleTime: shellStaleMs, retryOnMount: false });
   return client;
 }
 
