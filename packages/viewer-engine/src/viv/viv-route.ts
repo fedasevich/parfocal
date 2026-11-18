@@ -60,23 +60,6 @@ const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null 
 export const vivViewId = "slide";
 export const movingDetailRestMs = 200;
 
-type CiDiag = {
-  draws: [number, number][];
-  drawStart: number;
-  motions: number;
-  movingMotions: number;
-  device?: unknown;
-  software?: boolean;
-};
-const ciDiagHost = globalThis as { __vivDiag?: CiDiag };
-const ciDiag: CiDiag = ciDiagHost.__vivDiag ?? {
-  draws: [],
-  drawStart: 0,
-  motions: 0,
-  movingMotions: 0,
-};
-ciDiagHost.__vivDiag = ciDiag;
-
 const stableSelections = [{ z: 0, t: 0, c: 0 }];
 
 const channelInputs = new WeakMap<
@@ -268,15 +251,7 @@ export function createVivRoute(
         if (!gpuUsable() || deviceIsLost(created)) return;
         reportError(error);
       },
-      onBeforeRender: () => {
-        ciDiag.drawStart = performance.now();
-      },
       onAfterRender: () => {
-        const end = performance.now();
-        if (ciDiag.draws.length < 2000)
-          ciDiag.draws.push([Math.round(ciDiag.drawStart), Math.round(end - ciDiag.drawStart)]);
-        ciDiag.device = deviceInfoOf(created);
-        ciDiag.software = !warmupPaysOff(deviceInfoOf(created));
         renderedChanges = changes;
         afterRender();
       },
@@ -472,9 +447,7 @@ export function createVivRoute(
   };
 
   const noteMotion = () => {
-    ciDiag.motions += 1;
     if (warmupPaysOff(deviceInfoOf(deck))) return;
-    ciDiag.movingMotions += 1;
     movingDetail = true;
     cancelRest?.();
     cancelRest = systemTimers.after(restDetail, movingDetailRestMs);
