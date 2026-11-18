@@ -6619,6 +6619,76 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Add the mock's model picker to the smart select and one-click tools, listing the models the workspace can run with their size and where they run, load the chosen model in the browser or call the worker, and make a click on a nucleus draw an accepted outline on the real slide.
   Done when a browser test picks a model, clicks a nucleus on a fixture slide and accepts an outline that is saved, and the deployed app does the same on a seeded slide.
   Depends on PROTO-029. Size: M.
+- [ ] PROTO-037 · The Objects tab shows the mock's summary, filters, compact rows and one object card
+  The engine viewer's Objects tab lists every review object as a 148 px card with its own three buttons, 8,634 px for 55 objects, and has no summary, no filter and no way to the first open object (rows 1 to 9 of the 2026-11-18 drift result). The mock's panel exists as `screens/viewer/objects-panel.tsx` and `screens/review/object-card.tsx` but is drawn only in prototype scenes.
+  Draw the mock's Objects panel on the engine stage from the task's review objects: the "Objects on A1" card with the decision ring and counts, the "AI says" card, the filter chips, 58 px rows with ID, kind, score, size and the decision line, one "Cells, 50 sampled" row, measurements as rows, and "Go to T5, the first open object". Selecting a row flies to the object and docks one object card at the foot with the sentence "The AI says T5 is tumor, 52% sure." and three stacked answer buttons. Picking a cell in the cells panel does the same for the cell and shows its crop.
+  Done when a browser test on the fake task RT-14 finds the summary counts, filters to Open and sees 7 rows, clicks T5, sees the camera move and the card, decides it with K and sees the row and the ring change, and the list for 55 objects is under 900 px tall before scrolling.
+  Depends on PROTO-033. Size: M.
+- [ ] PROTO-038 · The viewer frame's small parts match the mock
+  The frame from PROTO-022 holds, but seven details differ (rows 10 to 16): the tabs carry no counts, the panel is white where the mock is grey with white cards, the panel has a foot with "Hide while panning" and a pop-out button, the rail's foot holds "Hide the side panel" where the mock has "Compare slides", the viewer opens on Pan where the mock opens on Select, the magnification bar is 151x42 with "1.3×" where the mock is 216x38 with "1.25×", and hint bars wrap to three lines.
+  Add the counts, use the mock's panel colours, leave "Hide while panning" to the Layout setting and drop the panel's foot, put Compare slides at the rail's foot, open review on Select, match the magnification bar's size and labels, and keep a hint bar to one line.
+  Done when a browser test reads "Objects 55" and "Comments 3" on the tabs, finds Compare slides in the rail and Select pressed on open, and a `shot --against` of the inspector and the magnification bar compares by number against new baselines.
+  Size: S.
+- [ ] PROTO-039 · The slide shows region tags, one chip for the sampled cells and a Whole slide button, and nothing else floats
+  On the slide the mock draws each region's outline with a tag such as "T1 97%", one chip "50 sampled cells · 44 decided, 6 open" at low power, and a "Whole slide" button once the view is on an object. The app draws every cell of the result set over the whole slide, shows no chip, no tags on the fake slide and no button, and floats a "Hide PathoSAM + HoVer-NeXt" chip at the bottom left (rows 17 to 21).
+  In a review task draw the regions with their tags and only the sampled cells, collapse the sample into the mock's chip while the cells are under about 7 px, add the "Whole slide" button, and move the result set switch into the Display tab. Outside a task a whole result set keeps drawing as VIEW-076 (every cell of a result set draws on the engine stage) built it.
+  Done when a browser test on RT-14 sees five tags and one chip at whole slide zoom, clicks the chip and lands on the cells, clicks "Whole slide" and is back, finds no result set chip over the slide, and the viewer golden images pass.
+  Size: M.
+- [ ] PROTO-040 · The minimap hides, sits and labels itself as the mock and ADR 0185 say
+  The minimap shows at the top right of every viewer screen, also while the whole slide is on screen, with the head "Whole slide" and no foot (rows 22 to 25). The mock and ADR 0185 (smart minimap state machine and placement) hide it while most of the tissue is on screen, prefer the bottom right corner, and give it a head such as "Whole slide · 21% seen" and a foot such as "T2 of 5" and "10× · 1 of 5 decided". Guided review has a small inset "Click to move".
+  Wire the stage's minimap to the NAV-006 (smart minimap state machine) states and the NAV-007 (minimap placement scoring) corners, and add the head and foot texts and the guided inset.
+  Done when a browser test sees no minimap at whole slide zoom under When useful, sees it at the bottom right after zooming in, reads the head and foot texts in a task, and sees the inset in guided review.
+  Depends on PROTO-034. Size: S.
+- [ ] PROTO-041 · The top bar's title, slide chip, decision ring and Submit match the mock
+  The top bar's parts are in the mock's order, but the title is 513 px wide with the task number, case, result set count and decision count, the slide chip is "A1" without stain or thumbnail, the ring shows tissue seen where the mock shows decisions, the switch offers Annotate on review screens and checks Full viewer in guided review, Submit is always enabled, and the progress popover counts 48 of 48 while the Opinion tab counts 48 of 55 (rows 26 to 34).
+  Shorten the title to the task name over project and due date, draw the chip as thumbnail and "A1 · H&E", show the decision ring with the time left and keep tissue seen inside the progress popover, disable Submit with the mock's reason while objects or required questions are open, fix the checked choice in guided review, make the popover count the same objects as the Opinion tab with its Added row, and add "Parfocal home" to the account menu.
+  Done when a browser test on RT-14 reads "A1 · H&E", "87%" and a disabled Submit whose reason names 7 objects, decides the open objects and sees Submit enabled, and reads the same counts in the popover and the Opinion tab.
+  Size: S.
+- [ ] PROTO-042 · The slides popover shows the case, loose slides and its three actions
+  The slides popover lists two slides with a count and a pill. The mock's popover has a case head with "Open the case", the groups "Slides in this case" and "Loose slides in task RT-14", rows with thumbnail, stain, result set names, a build progress bar and status, the Q and E key caps, and the actions "Result sets of A1", "Compare" and "Add slides" (rows 35 to 38). The mock's version exists in `screens/review/review-top-popovers.tsx`.
+  Draw that popover on the engine viewer from the task's and the case's slides, and wire its three actions to the Display tab, compare and the upload flow.
+  Done when a browser test opens the popover on RT-14, reads the case head, both groups and the three actions, opens a loose slide from it, and steps with Q and E.
+  Size: S.
+- [ ] PROTO-043 · Guided review has the mock's own panel
+  Guided review in the app is the full viewer with one card in the Objects tab, the tool rail and four tabs (rows 39 to 48). The mock's guided screen has no rail, a taller top bar, a 469 px panel with the tabs Review, Comments and Display, a strip of dots for the objects with a "Cells 44 of 50" chip, the question as a heading, three 58 px answer buttons, "Add something the AI missed", "Previous" and "Skip for now", and the slide done card in the Review tab. It exists as `screens/review/guided-review.tsx` on prototype data.
+  Draw that layout on the engine stage for `/tasks/$taskId/guided`, fed by the stage's review objects and decisions, with decision notes and the cells panel as ADR 0398 (one engine stage) lists them.
+  Done when a browser test opens guided review on RT-14, finds no tool rail, reads the heading for T5, answers with K, sees the next open object and its dot change, skips one, goes back with Previous, finishes the slide and sees "Slide 8 is done" in the Review tab.
+  Depends on PROTO-033. Size: M.
+- [ ] PROTO-044 · Guided review has its own stage controls
+  On the slide the mock's guided review shows "Back to T5", a zoom group with minus, the magnification and plus, a "Whole slide" toggle, a pan hint chip and the first run tips beside what they explain, and no magnification bar (rows 49 to 51). The app shows the full viewer's magnification bar and puts tips 3 and 4 in the panel.
+  Add the three controls at the bottom left of the guided stage, hide the magnification bar there, show the pan hint, and place each tip beside its target.
+  Done when a browser test pans away, clicks "Back to T5" and is centred on T5 again, zooms with plus and minus and reads the new magnification, toggles "Whole slide", and a first run shows four tips each next to its control.
+  Depends on PROTO-043. Size: S.
+- [ ] PROTO-045 · The viewer's Display tab has the mock's preset and groups
+  The Display tab in a review task holds one switch (Fade, Mark unsure, Bands) and the buttons "Map this view" and "Paint a map". The mock's tab has a Preset select, "How objects draw" (Draw as, Width, Opacity, Color by, ID labels) and "What the AI shows" (Confidence, Heatmap, Score cutoff, Result sets) (rows 52 to 55). ADR 0268 (how display state reaches the overlay system) is the accepted path for these values. It was not read for this audit.
+  Draw the mock's groups in the stage's Display tab, bind each control to the display state the overlays read, keep the two map buttons under "What the AI shows", and show the result sets in both workspaces. Record in `docs/decisions.md` any control whose behaviour ADR 0132 (display settings, presets and task locks, Proposed) leaves open.
+  Done when a browser test switches Draw as to Dots and Fill, changes width and opacity, colours by decision, hides ID labels, moves the score cutoff and sees each change in the overlay's reported state, and the viewer golden images pass.
+  Size: M.
+- [ ] PROTO-046 · Comments, decision notes and the Opinion checklist read as in the mock
+  The Comments tab has no "Your decision notes" list, its button says "New comment" where the mock says "New comment on an ID", "Notes and comments" replaces the whole tab where the mock opens a thread beside its pin, and the Opinion tab's "Before you submit" list has one row per open cell where the mock has one row for all cells (rows 56 to 59).
+  Add the notes list under the threads as ADR 0285 (a decision note stays on the decision) describes, open a thread as a popover at its pin with the list kept, rename the button, and fold the open cells into one checklist row that opens the cells panel.
+  Done when a browser test writes a note on a Disagree, finds it under "Your decision notes", opens a thread from the list and sees the popover at the pin with the list still shown, and reads one cells row in "Before you submit".
+  Size: S.
+- [ ] PROTO-047 · The annotate workspace opens on Display and its auto region bar offers accept and discard
+  With a task open the annotate workspace opens on the Objects tab's review list where the mock opens on Display with the layer tree, and the auto region bar shows only class swatches where the mock shows the tier pill, the scale, "Discard Esc" and "Accept as tumor ↵" (rows 60 and 61).
+  Open annotate on Display, and draw the tier pill, scale and the accept and discard buttons in the bar while proposals wait, as ADR 0255 (smart select gestures and proposals) puts them.
+  Done when a browser test switches to Annotate and finds the Display tab selected with the Layers block, runs auto region on the fixture slide and accepts with Enter and discards with Esc from the bar.
+  Depends on PROTO-036. Size: S.
+- [ ] PROTO-048 · The viewer's issue states show the mock's cards
+  No results on a slide, a slide that cannot be read at high power, a withdrawn task, a signed off task and an AI run still reading each have a card or panel in the mock with one sentence and one or two actions (row 62). Their components exist in `screens/viewer/viewer-notices.tsx` and `screens/viewer/objects-panel.tsx`, and the engine viewer draws none of them.
+  Draw each state on the engine viewer from the real task, slide and run status: the card on the slide with its actions, the read only banner through the one banner of PROTO-028 (the live viewer's one banner), disabled answer buttons with the reason, and the "Still reading this slide" panel with "Tell me when it is ready".
+  Done when a browser test sets each of the five states through the fake API, reads its sentence, uses its first action, and finds the answer buttons disabled with the reason in the withdrawn and signed off states.
+  Size: M.
+- [ ] PROTO-049 · The command palette passes its contrast check during a route change
+  PROTO-033 (the review panel's buttons are visible) found that `apps/web/e2e/command-palette.spec.ts` fails an axe colour contrast check because the My work page text, 13 px #8d8d8d on #ececec, is still on screen while the palette changes route.
+  Give that text a colour that passes WCAG AA on its background, and check the other quiet text tokens of the light theme the same way.
+  Done when `command-palette.spec.ts` passes with axe on, and a unit test checks the contrast of every quiet text token against its surfaces in both themes.
+  Size: S.
+- [ ] PROTO-050 · A second drift audit covers the bottom dock, compare, peek, the shortcuts sheet and dark theme
+  The audit in `docs/results/2026-11-18-viewer-mock-drift.md` (the viewer's drift from the mock) did not compare the bottom dock, compare, the peek overlay, the shortcuts sheet and dark theme, and could not check region outlines on the fake slide.
+  Compare those against the mock's scenes the same way, and add a backlog task for each group of differences.
+  Done when a result file lists every difference in those parts with kept or fixed and its reason, and each open one has a task.
+  Depends on PROTO-037, PROTO-043. Size: S.
 ---
 
 ## Later epics (not in v1, kept for planning)
