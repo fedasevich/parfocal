@@ -2,6 +2,29 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.19.2 (2026-11-18)
+
+### Features
+
+- VIEW-074: Test the annotate task on the real engine stage
+
+### Fixes
+
+- AITUM-014: Delete the board file of the dropped task
+
+### Performance
+
+- OPS-030: Begin each transaction and set its scope in one round trip
+
+### Docs
+
+- VIEW-074: Log the annotate task stage tests and what is left
+- IAM-034: Move the reset link task to review, live check left
+
+### Build and CI
+
+- FOUND-018: Stop the db job after 60 minutes
+
 ## v0.19.1 (2026-11-18)
 
 ### Fixes
