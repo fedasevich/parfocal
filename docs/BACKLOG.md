@@ -6579,7 +6579,41 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Keep option A of question 144 in `docs/decisions.md` (the notices sit in the one banner under the top bar) and shift the camera by the height change, or hold the banner until the pointer is up, so that the tissue under the pointer does not move.
   Done when a browser test draws a shape, opens and closes the banner and finds the shape's screen position unchanged within 1 px.
   Depends on PROTO-028. Size: S.
-
+- [ ] PROTO-030 · Every dialog closes on an outside click and Settings opens over the current screen
+  On 2026-11-18 the owner found that modals do not close on a click outside them, that Settings and some other panels navigate away from the screen you were on though they could open anywhere as an overlay, and that the Settings icon in the navigation looks broken.
+  Make every dialog, sheet and small modal in `packages/ui` close on a click outside and on Escape, except where an unsaved form or a running step would be lost, which asks first. Open Settings, and any other panel that only shows settings or help, as an overlay over the current screen with its section kept in the address so a link and a reload still land on it, and closing returns to the same view with the camera unchanged. Redraw the Settings icon in the navigation so it reads cleanly at its size.
+  Done when a Storybook browser test closes each dialog kind by an outside click and by Escape, a browser test opens Settings from the live viewer and from Home and closes it back to the same screen and camera, and a screenshot of the navigation compares by number against the new baseline.
+  Depends on PROTO-029. Size: M.
+- [ ] PROTO-031 · Every Settings row draws, explains and previews what it really does
+  On 2026-11-18 the owner found that the option drawings in Settings, Layout (Home, Tools, Side panel width, Panel while moving and Minimap) are unclear and badly drawn, that the Frequency choice of Confidence wording shows "Example: Tumor 72%" like Numbers does, that the Dead zone slider ends at 50% halfway along its track, that the navigation "Try it" preview does not follow the real settings, and that the Display tab lacks settings it was meant to have.
+  Redraw each Layout option drawing so it shows the one thing that changes, at a size and contrast that reads. Make each Confidence wording choice show its own real example. Make each slider's track span its real range. Drive the Try it preview from the same camera code and settings as the viewer. List the display settings the design and ADRs promise, add the missing ones to the Display tab, and record any that need an owner choice in `docs/decisions.md`.
+  Done when unit tests cover the wording examples and slider ranges, a browser test changes speed, dead zone, invert and camera feel and sees the Try it preview follow, and Storybook screenshots of the Layout and Display sections compare by number against new baselines.
+  Depends on PROTO-029. Size: M.
+- [ ] PROTO-032 · Tool hint bars close, show once and can be found again in Help
+  On 2026-11-18 the owner found that tool hint bars, such as the Rectangle bar and the Smart select bar, stay on the slide with no way to close them, and that the Smart select bar prints the raw engine message "The inference engine has not been started".
+  Give every tool hint bar a close button and a key, show each one once per person until closed, keep the tool's state chips that change behaviour (such as hover preview) in the tool's own settings popover, and list every hint under one Help entry where it can be read and shown again. Replace raw engine messages with plain words and a next step, such as starting the model.
+  Done when a unit test covers hint seen state, a browser test closes the Rectangle and Smart select hints, reloads and does not see them, then opens them from Help, and no raw engine message reaches the screen.
+  Depends on PROTO-029. Size: S.
+- [ ] PROTO-033 · The review panel's buttons are visible, say what they do, and Guided works
+  On 2026-11-18 the owner found that the review panel's quiet buttons ("Previous", "How guided review works", "Hide the cells grid") are nearly invisible, that "Map this view" and "Paint a map" do not say what they do, and that the Guided button does nothing, so every check happens in the full viewer.
+  Give quiet buttons in the review panel enough contrast to read as buttons at a glance, rename or explain "Map this view" and "Paint a map" so a first-time user knows the result before clicking, and make the Guided button start guided review on the current slide's objects.
+  Done when an axe and contrast check passes on the review panel stories, a browser test starts guided review from the Guided button and decides an object, and the new labels are in the locale files.
+  Depends on PROTO-029. Size: S.
+- [ ] PROTO-034 · Cell review follows the Minimap setting with a movable smart minimap
+  On 2026-11-18 the owner found that in cell review the Z key opens the full slide map and no minimap appears when it would help, though the Layout setting offers When useful, Always and Never.
+  Show the smart minimap from NAV-006 (smart minimap state machine) and NAV-007 (minimap placement scoring) in cell review as it shows in the full viewer, following the Minimap setting, let the reviewer drag it to another corner and keep that place, and keep Z as the hold to see the whole slide.
+  Done when a browser test in cell review sees the minimap appear after zooming in under When useful, always under Always and never under Never, drags it to another corner and finds it there after a reload.
+  Depends on PROTO-029. Size: S.
+- [ ] PROTO-035 · Experts edit any imported or seeded cell, its outline and its type
+  On 2026-11-18 the owner found that imported and seeded cells and their types cannot be changed.
+  Let an expert select any cell from an imported result set or the seed, change its type from the class list or by key, move or reshape its outline, delete it, and change many at once by a lasso or by type. Store each change as an edit on the shared layer with the original kept, as ADR 0237 (annotate tasks on one shared layer) describes, so an AI result is never rewritten in place.
+  Done when a browser test changes the type of one seeded cell by key and of several by lasso, reshapes one outline, deletes one, reloads and sees every change, and an API test shows the original result set unchanged.
+  Depends on PROTO-029. Size: M.
+- [ ] PROTO-036 · One-click annotation has its model picker and works end to end
+  On 2026-11-18 the owner found that the model select for one-click annotations, shown in the frozen mock, is missing, and that one-click annotations do not work at all.
+  Add the mock's model picker to the smart select and one-click tools, listing the models the workspace can run with their size and where they run, load the chosen model in the browser or call the worker, and make a click on a nucleus draw an accepted outline on the real slide.
+  Done when a browser test picks a model, clicks a nucleus on a fixture slide and accepts an outline that is saved, and the deployed app does the same on a seeded slide.
+  Depends on PROTO-029. Size: M.
 ---
 
 ## Later epics (not in v1, kept for planning)
