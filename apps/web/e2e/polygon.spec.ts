@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "./a11y.ts";
-import { printFrameDiag, startFrameDiag } from "./ci-diag.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const slideReady = 25_000;
@@ -119,13 +118,11 @@ test("a keyboard pan during a draft keeps the rubber band end under the cursor",
   await page.mouse.click(box.x + 420, box.y + 170);
   await page.mouse.move(box.x + 300, box.y + 300);
   const before = await vertexPositions(page);
-  await startFrameDiag(page);
   await page.keyboard.down("ArrowRight");
   await expect
     .poll(() => vertexPositions(page).then((v) => v[0]?.x ?? 0), { intervals: [50] })
     .toBeLessThan((before[0]?.x ?? 0) - 20);
   await page.keyboard.up("ArrowRight");
-  await printFrameDiag(page, "polygon pan");
   const end = await rubberEnd(page);
   expect(Math.abs(end.x - 300)).toBeLessThan(0.5);
   expect(Math.abs(end.y - 300)).toBeLessThan(0.5);

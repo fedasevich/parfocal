@@ -1,5 +1,4 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { printFrameDiag, startFrameDiag } from "./ci-diag.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const byHand = "00000000-0000-4000-8005-000000000014";
@@ -119,8 +118,6 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   await lenka.bringToFront();
   const before = await cameraOf(annaHost);
   const leadingFrom = await anna.evaluate(() => Date.now());
-  await startFrameDiag(anna);
-  await startFrameDiag(lenka);
   await anna.mouse.move(520, 380);
   for (let step = 0; step < leaderSteps; step += 1) {
     const from = await cameraOf(annaHost);
@@ -135,11 +132,6 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   expect(moves.length).toBeGreaterThan(3);
   const { relaySent } = await stampsOf(anna);
   const { relayApplied } = await stampsOf(lenka);
-  await printFrameDiag(anna, "follow leader");
-  await printFrameDiag(lenka, "follow follower");
-  console.log(
-    `[ci-diag follow samples] ${JSON.stringify({ moves, followed: followed.slice(-20), relaySent, relayApplied })}`,
-  );
   const legs = moves.flatMap((move) => {
     const shown = firstAt(followed, move.camera);
     const sentAt = firstAt(relaySent, move.camera);
