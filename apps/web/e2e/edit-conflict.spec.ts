@@ -109,3 +109,20 @@ test("keep mine saves the expert's move over the colleague's version", async ({ 
   expect(mine.version).toBe(3);
   expect(mine.first).toBeLessThan(colleague.first);
 });
+
+test("the banner opening and closing never moves the drawn shape on screen", async ({ page }) => {
+  const stage = await conflictOver(page);
+  const polygon = page.getByTestId("polygon-shape");
+  const stageOpen = await stage.boundingBox();
+  const open = await polygon.boundingBox();
+  await page.getByRole("button", { name: "Keep mine" }).click();
+  await expect(page.getByTestId("conflict-notice")).toHaveCount(0);
+  const closed = await polygon.boundingBox();
+  const stageClosed = await stage.boundingBox();
+  expect(open).not.toBeNull();
+  expect(closed).not.toBeNull();
+  expect(Math.abs((closed?.y ?? 0) - (open?.y ?? 0))).toBeLessThanOrEqual(1);
+  expect(Math.abs((closed?.x ?? 0) - (open?.x ?? 0))).toBeLessThanOrEqual(1);
+  expect(stageClosed?.y).toBe(stageOpen?.y);
+  expect(stageClosed?.height).toBe(stageOpen?.height);
+});

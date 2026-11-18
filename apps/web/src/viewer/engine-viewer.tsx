@@ -230,7 +230,13 @@ export function EngineViewer({
         <>
           {load ? <CasePatientBanner load={load} /> : null}
           <RemoteSlideOffline note={storageNote} />
-          <div ref={setBanner} data-testid="viewer-banner" className="empty:hidden" />
+          <div className="relative z-20 h-0">
+            <div
+              ref={setBanner}
+              data-testid="viewer-banner"
+              className="absolute inset-x-0 top-0 empty:hidden"
+            />
+          </div>
         </>
       )}
       <div className="relative min-h-0 flex-1">
