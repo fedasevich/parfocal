@@ -1858,7 +1858,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a pan frame of tumor_044 on SwiftShader takes under 100 ms, the settled frame and the Viv golden images are unchanged, the two specs pass in CI, and the compare spec asserts the outline draws on each side.
   Size: S.
 
-- [ ] VIEW-080 · The compare tumor map outline draws on a slide outside the task
+- [x] VIEW-080 · The compare tumor map outline draws on a slide outside the task
   VIEW-079 draws the compare pane's "Tumor map outline" from the task's review objects, so it draws on the task slide's side only. A second slide that is not in the task has a toggle that draws nothing.
   Draw that slide's tumor regions from its ready result sets (`useListResultSetRegions`) when the task has none for it.
   Done when a browser test turns the outline on for the second slide in compare and sees it drawn.
