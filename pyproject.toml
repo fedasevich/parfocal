@@ -44,6 +44,7 @@ pythonpath = ["scripts", "apps/api/tests", "workers/ingest/tests", "workers/ml/t
 testpaths = ["apps/api/tests", "workers/ingest/tests", "workers/ml/tests", "workers/deploy/tests", "packages/py-common/tests", "scripts"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+faulthandler_timeout = 300
 
 [tool.basedpyright]
 typeCheckingMode = "strict"
