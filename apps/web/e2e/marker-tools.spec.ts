@@ -18,6 +18,7 @@ async function openSlide(page: Page) {
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   return { stage, box };
 }

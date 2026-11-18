@@ -32,7 +32,6 @@ const scenes: [string, [number, number], [number, number]][] = [
   ["Smart minimap · Reading at 10x", [500, 400], [-260, -200]],
   ["Smart minimap · Checking cells at 40x", [500, 400], [-200, -150]],
   ["Annotate workspace · Auto region", [600, 450], [-200, -120]],
-  ["Focus mode", [500, 400], [-260, -200]],
 ];
 
 for (const [name, from, by] of scenes) {
@@ -43,3 +42,20 @@ for (const [name, from, by] of scenes) {
     await expect(minimap(page)).toBeVisible();
   });
 }
+
+test("the focus mode minimap stays pinned while its view rectangle follows a pan", async ({
+  page,
+}) => {
+  await openScene(page, "Focus mode");
+  const pinned = await minimap(page).boundingBox();
+  const viewport = minimap(page).locator('[data-slot="map-viewport"]');
+  const startBox = await viewport.boundingBox();
+  await page.mouse.move(500, 400);
+  await page.mouse.down();
+  for (let step = 1; step <= 6; step += 1) {
+    await page.mouse.move(500 - (260 * step) / 6, 400 - (200 * step) / 6);
+    expect(await minimap(page).boundingBox()).toEqual(pinned);
+  }
+  await page.mouse.up();
+  await expect.poll(() => viewport.boundingBox()).not.toEqual(startBox);
+});
