@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.20.3 (2026-11-18)
+
+### Docs
+
+- PROTO-030: Add the owner's UX consistency tasks from 2026-11-18
+- PROTO-031: Add the Hides while panning bug the owner found
+
+### Tests
+
+- OPS-036: Score one view map tile on a seeded slide in the deployed smoke
+
+### Other
+
+- PROTO-030: Claim PROTO-030 PROTO-031 for the parallel run
+
 ## v0.20.2 (2026-11-18)
 
 ### Fixes
