@@ -41,10 +41,12 @@ function facts(load: CaseLoad, task: ReviewTaskDetail | undefined): string[] {
 
 function SlidePicker({
   list,
+  slideId,
   label,
   children,
 }: {
   list: LiveSlideList;
+  slideId: string;
   label: string;
   children: ReactNode;
 }) {
@@ -186,11 +188,11 @@ function TopBar({
             {load ? facts(load, task).join(" · ") : ""}
           </small>
         </div>
-        <SlidePicker list={list} label={slideLabel}>
+        <SlidePicker list={list} slideId={slideId} label={slideLabel}>
           <LiveSlidesPopover
             projectId={projectId}
             slideId={slideId}
-            slideLabel={slideLabel}
+            slideLabel={load?.slide?.label ?? slideLabel}
             list={list}
             slides={projectSlides}
             load={load}

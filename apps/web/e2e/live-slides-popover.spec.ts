@@ -34,9 +34,9 @@ test("the slides popover on RT-14 shows the case, the loose slides and its three
   await expect(popover).toContainText("Slides in this case");
   await expect(popover).toContainText("Loose slides in task RT-14");
   await expect(popover.locator("kbd")).toHaveText(["Q", "E"]);
-  const box = await popover.boundingBox();
-  expect(box?.width).toBe(460);
-  expect(box?.height).toBeGreaterThan(450);
+  const size = await popover.evaluate((node: HTMLElement) => [node.offsetWidth, node.offsetHeight]);
+  expect(size[0]).toBe(460);
+  expect(size[1]).toBeGreaterThan(450);
 
   const rows = popover.locator('[data-slot="slide-row"]');
   const current = rows.filter({ hasText: "A1 · H&E" }).first();
