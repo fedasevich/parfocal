@@ -47,8 +47,8 @@
     },
     {
       "file": "components-ai-wording--uncalibrated-typer--light--comfortable.png",
-      "sha256": "c419b34ee2a37606a869b721079f73bbd33329f4482066823574e39fd1330e05",
-      "bytes": 150060
+      "sha256": "3dd1e5e6081791715bc88d987fe4cfc13362e486a47cebae99578f471ca7c7ac",
+      "bytes": 150005
     },
     {
       "file": "components-analysis-cards--cell-review--dark--comfortable.png",
@@ -367,8 +367,8 @@
     },
     {
       "file": "components-connect-a-model--tile-previews--light--comfortable.png",
-      "sha256": "6f154a9ca95541343eee982bb7940476740d551a91c8d68438cb4d982a916c2e",
-      "bytes": 665010
+      "sha256": "f66db1f3b645aa1b1c808f9e78b255600e8cc8ccc5b0f33ff3818a413967799a",
+      "bytes": 665017
     },
     {
       "file": "components-decision-buttons--four-styles-compact--dark--comfortable.png",
@@ -579,11 +579,6 @@
       "file": "components-evaluation-report--panel-tiles--light--comfortable.png",
       "sha256": "e4bba2ccd1a70c234568a58030b4fc64757fe9895a268206420bfc2af1d04a33",
       "bytes": 20864
-    },
-    {
-      "file": "components-evaluation-report--panel-tiles--light--compact.png",
-      "sha256": "f331422d5bba2faabe6ef4c6f1e32735a6eae75690f5638d3ba05bf9d0369f6d",
-      "bytes": 21579
     },
     {
       "file": "components-evaluation-report--pdf-with-pages--dark--comfortable.png",
@@ -1171,14 +1166,14 @@
       "bytes": 74540
     },
     {
-      "file": "components-foundations--type-scale--dark--compact.png",
-      "sha256": "e331f0704ed0b709f006f3a9934b4a15f62caa969668037a60b07ce31c906eee",
-      "bytes": 73326
-    },
-    {
       "file": "components-foundations--type-scale--light--comfortable.png",
       "sha256": "16be39ae5c143fbdfe1a71c92760caaad04ff5caa4b5206e7d83ab003bf5a3bb",
       "bytes": 71719
+    },
+    {
+      "file": "components-foundations--type-scale--light--compact.png",
+      "sha256": "be3e8aea4e62afccd217041dc0e0d823b308b5f92c485c33aae5a95ae4a06785",
+      "bytes": 70378
     },
     {
       "file": "components-gallery-tile--current--dark--comfortable.png",
@@ -1187,8 +1182,8 @@
     },
     {
       "file": "components-gallery-tile--current--light--comfortable.png",
-      "sha256": "0da543a9c099573eeb812b8820d6f3556cecbaedd6656f5e57a2759667e5476e",
-      "bytes": 60799
+      "sha256": "f05302a881bd99ad5993b9583fc335b4ac19e6b8b95e3af51303615d4019b56b",
+      "bytes": 60846
     },
     {
       "file": "components-gallery-tile--done--dark--comfortable.png",
@@ -1217,8 +1212,8 @@
     },
     {
       "file": "components-gallery-tile--may-not-be-a-nucleus--light--comfortable.png",
-      "sha256": "598e35f28b18c48d0e5a10e9ae55fd5e1eaa13d9295a0044c8a8c5a670d3a07f",
-      "bytes": 18232
+      "sha256": "6264f7724a214ed940153ff7428d9d2fbe3b910064fa48f6e7d8d3f722fdb63f",
+      "bytes": 18265
     },
     {
       "file": "components-gallery-tile--pick-and-decide--dark--comfortable.png",
@@ -1227,8 +1222,8 @@
     },
     {
       "file": "components-gallery-tile--pick-and-decide--light--comfortable.png",
-      "sha256": "2b93563702896876cc7e4703247359a5a05a3d348076f9977efc686cfcbc1adf",
-      "bytes": 67460
+      "sha256": "bb07b8e76b86c7453d06a3b48601b7764b17c79361d52227805db24b8959613a",
+      "bytes": 67486
     },
     {
       "file": "components-gallery-tile--to-check--dark--comfortable.png",
@@ -1237,8 +1232,8 @@
     },
     {
       "file": "components-gallery-tile--to-check--light--comfortable.png",
-      "sha256": "e1be99576c03b395a97637927f23f5050ed110113dd429cedc50d46ef4ae10d3",
-      "bytes": 59328
+      "sha256": "99e9f5a1ce95a00fde831488d8b93f54823d75dc9266c7e833c73c598a81f616",
+      "bytes": 59354
     },
     {
       "file": "components-guided-review--cells-launcher-and-cluster--dark--comfortable.png",
@@ -1252,8 +1247,8 @@
     },
     {
       "file": "components-guided-review--cells-panel-agree-with-the-rest--dark--comfortable.png",
-      "sha256": "bbb6f39e7955fbfeeb249bc6a1002495913acd02e60f4c6ab3f6d4d68640edf7",
-      "bytes": 216933
+      "sha256": "87a0508832afc874f4c22aa589b311eeb34103e7c07e0cc17f9e8a7814c79ff1",
+      "bytes": 216808
     },
     {
       "file": "components-guided-review--cells-panel-agree-with-the-rest--light--comfortable.png",
@@ -1262,8 +1257,8 @@
     },
     {
       "file": "components-guided-review--cells-panel-blind--dark--comfortable.png",
-      "sha256": "5bdd2d8a41636a5dc93fa6dec9e96a1e2d269f1aaf51164f4ba6bdc998740db7",
-      "bytes": 203073
+      "sha256": "66342cefad525429844c9778655965f3898c21efd0eaff8113e993a66e02fed5",
+      "bytes": 202889
     },
     {
       "file": "components-guided-review--cells-panel-blind--light--comfortable.png",
@@ -1287,8 +1282,8 @@
     },
     {
       "file": "components-guided-review--cells-panel-open--light--comfortable.png",
-      "sha256": "6e3301f09df47cca2107428096ea78d8f05e38e7291cf8bb24b36202a05464ca",
-      "bytes": 207159
+      "sha256": "e4321f439e723017aab11b8d4707961be62e13829619a9ef1d55b4d4fac69ad2",
+      "bytes": 207886
     },
     {
       "file": "components-guided-review--comment-with-a-mention--dark--comfortable.png",
@@ -1672,8 +1667,8 @@
     },
     {
       "file": "components-modals-and-flow-pages--nudge-480--dark--comfortable.png",
-      "sha256": "5383aface44e5317cafd93d7da0747d163a30a47249d47b2c6948971ffd31c68",
-      "bytes": 38318
+      "sha256": "27ffe5ce82f7e9603dd79990d20ee46ad4dbbc7861889563b53b18d0458b3efd",
+      "bytes": 38326
     },
     {
       "file": "components-modals-and-flow-pages--nudge-480--light--comfortable.png",
@@ -1722,8 +1717,8 @@
     },
     {
       "file": "components-modals-and-flow-pages--token-field-first--dark--comfortable.png",
-      "sha256": "9b64c75d9aad99598e44e1c82de5a28f8fe0bc3e0c5740661cd4e9b3a573526a",
-      "bytes": 26170
+      "sha256": "9606a7c1d7011021b7cd5e37a84ac538a4f1062a50722f8454430809e60c93f3",
+      "bytes": 26169
     },
     {
       "file": "components-modals-and-flow-pages--token-field-first--light--comfortable.png",
@@ -2032,8 +2027,8 @@
     },
     {
       "file": "components-overlay-states--menu-empty--dark--comfortable.png",
-      "sha256": "93fa42b77789682d1128405a4e62f93eb5fa601e2fb70edeb9a83467fa63506b",
-      "bytes": 12385
+      "sha256": "4cae78fc914f32b09fa7bef5e75fe634a9caa46238d498fe95d3c7f4e8805098",
+      "bytes": 12377
     },
     {
       "file": "components-overlay-states--menu-empty--light--comfortable.png",
@@ -2517,8 +2512,8 @@
     },
     {
       "file": "components-review--gallery-tiles--light--comfortable.png",
-      "sha256": "bc252f91a7163ee8778e589adeacfa3f1082264ffca14587ea8f69820dbcc23d",
-      "bytes": 167458
+      "sha256": "479bbcf9889f9759f2f2602339e2d597efec99df4297f0ce2f8f8f4cc183196a",
+      "bytes": 167480
     },
     {
       "file": "components-review--inspector-primitives--dark--comfortable.png",
@@ -2677,8 +2672,8 @@
     },
     {
       "file": "components-review-popovers--slides-many-with-long-names--light--comfortable.png",
-      "sha256": "96614a78e15d515b297b056deb2b89f6abad507c596546c7becc648932fcd4e2",
-      "bytes": 112898
+      "sha256": "025444e6173bfdbfab5e7ac33bb6f563c03854094f7d18483c4e1637309851c0",
+      "bytes": 112903
     },
     {
       "file": "components-review-popovers--slides-one-slide-no-loose--dark--comfortable.png",
@@ -2977,8 +2972,8 @@
     },
     {
       "file": "components-surfaces--every-level--dark--compact.png",
-      "sha256": "adf22923e57bbf72ec2e1039c7635eb37d7163b8811b94d2ac8159cd47100634",
-      "bytes": 88481
+      "sha256": "a3bdd9fc4b9d0deff79e05cf0401c039c003151532c4a84cbd10d860ae0e9d6d",
+      "bytes": 88482
     },
     {
       "file": "components-surfaces--every-level--light--comfortable.png",
@@ -4922,8 +4917,8 @@
     },
     {
       "file": "patterns-app-patterns--flow-map-lanes--dark--comfortable.png",
-      "sha256": "ae620c3f881c48ffb2df5ae85f4627c03b7dfa1df999bef21789bb753be8b1ad",
-      "bytes": 88987
+      "sha256": "ed770a5e7a0700b7cd51190be7010baedf69e989a4bbd2f5f011c22d9d806d3c",
+      "bytes": 89003
     },
     {
       "file": "patterns-app-patterns--flow-map-lanes--light--comfortable.png",
@@ -4997,8 +4992,8 @@
     },
     {
       "file": "patterns-app-patterns--pdf--light--comfortable.png",
-      "sha256": "d66393712253bedc710aabf42d8fc298bb84ab60e09f7390cbfdf59aee0fa1c5",
-      "bytes": 16529
+      "sha256": "18c9b27e39131c3d27cc8232834e3de061b4a51757fc92f3f231d6da0d1c184a",
+      "bytes": 16526
     },
     {
       "file": "patterns-app-patterns--pdf-failed--dark--comfortable.png",
