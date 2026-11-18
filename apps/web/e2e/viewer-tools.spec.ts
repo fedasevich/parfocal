@@ -346,3 +346,67 @@ test("the tumor map outline draws on the side that holds the task slide and foll
   await toggle("right").click();
   await expect.poll(() => drawn("right")).toBe(0);
 });
+
+const outlineSetOf = (slide: string, id: string) => ({
+  id,
+  project_id: "00000000-0000-4000-8003-000000000007",
+  slide_id: slide,
+  name: "Outside model",
+  model_version: null,
+  source: "import",
+  source_file: "outside.geojson",
+  produced_at: null,
+  status: "ready",
+  error_code: null,
+  cell_count: 0,
+  region_count: 2,
+  zone_count: 0,
+  created_by_user_id: null,
+  created_at: "2026-11-15T09:00:00+01:00",
+});
+
+test("the tumor map outline draws a slide outside the task from its own result set", async ({
+  page,
+}) => {
+  const links = await toolLinks(page);
+  const compare = hrefOf(links, "Compare slides · Slides picked");
+  await page.goto(compare);
+  const engine = page.locator('[data-pane="right"]').getByTestId("still-engine");
+  await expect(engine).toBeAttached({ timeout: 30_000 });
+  const slide = (await engine.getAttribute("data-slide")) ?? "";
+  const setId = "00000000-0000-4000-8009-0000000000d1";
+  await page.addInitScript(
+    ({ set, status }) => {
+      (window as unknown as { __parfocalFake: unknown }).__parfocalFake = {
+        statuses: { "outside-run": status },
+        chosen: [],
+        left: [],
+        sets: [set],
+      };
+    },
+    {
+      set: outlineSetOf(slide, setId),
+      status: { kind: "result", status: "ready", slide_id: slide, result_set_id: setId },
+    },
+  );
+  await page.goto(compare);
+  const toggle = page.getByRole("button", { name: "Tumor map outline on the right" });
+  await expect(toggle).toBeEnabled({ timeout: 30_000 });
+  await expect(engine).toHaveAttribute("data-objects", "0");
+  await toggle.click();
+  await expect
+    .poll(async () => Number(await engine.getAttribute("data-objects")))
+    .toBeGreaterThan(0);
+  await toggle.click();
+  await expect(engine).toHaveAttribute("data-objects", "0");
+});
+
+test("the tumor map outline toggle of a slide with no tumor map is disabled with a reason", async ({
+  page,
+}) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Compare slides · Slides picked"));
+  const toggle = page.getByRole("button", { name: "Tumor map outline on the right" });
+  await expect(toggle).toBeDisabled({ timeout: 30_000 });
+  await expect(toggle).toHaveAttribute("title", "This slide has no tumor map");
+});

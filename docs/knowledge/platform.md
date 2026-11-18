@@ -22,6 +22,22 @@ Presigned URLs work only on `<account>.r2.cloudflarestorage.com`, not on a custo
 
 `cache.put` refuses 206 responses, so byte-range reads of a large SVS cannot be cached as-is. If caching is needed, store each range as a full response under a synthetic key built from object, offset and length, without the token. For an original the key also holds the signed size and, when the token carries one, the original's ETag, so a same-size rewrite misses, and a token whose ETag no longer matches R2 is served but never cached. The S3 ETag the API signs equals the binding's `etag`, multipart ones included ([result](../results/2026-11-16-r2-multipart-etag-matches-the-worker.md)). geotiff.js requests tile-aligned ranges, so keys repeat across users. The stored copy needs `public` in `Cache-Control`, because `cache.put` refuses responses that say not to cache. `RangeCache` in `apps/edge/src/tiles.ts` does this, and it works on `workers.dev` as well as on a custom domain. A hit takes about 10 ms inside the Worker against about 60 ms for an R2 read ([result](../results/2026-11-02-tile-gateway-latency.md)). Source: ADR 0003.
 
+## What each region pin costs
+
+Estimated on 2026-11-18 for OPS-020 (pin storage, database and Modal functions per region) from the multipliers above and base rates already in the repository. Not measured, and nothing is deployed by this change. The web function is the only narrow pin (`eu-west`, 1.75 times, plus `routing_region` `eu-west`). Everything else is the broad `eu` (1.15 times). An idle function costs nothing at any multiplier because every one scales to zero.
+
+| Pin | Region | Multiplier | Extra cost over unpinned |
+|---|---|---|---|
+| Web function `web-eu` | `eu-west` | 1.75 | $0.075 on a $0.10 month of review hours, so about $0.18 in all |
+| `ingest` and `events` | `eu` | 1.15 | 15 percent of a few minutes of CPU a day, under $0.05 a month |
+| Three backfills | `eu` | 1.15 | Run by hand, about $0.01 a run |
+| Parse sandbox | `eu` | 1.15 | 15 percent of a 2 GiB sandbox for seconds per slide, under $0.01 a slide |
+| GPU pools, all six | `eu` | 1.15 | T4 $0.59 becomes $0.68 an hour and L4 $0.80 becomes $0.92. Base worst case $4.76 an hour becomes $5.47 with every pool at its cap (decision 154, whether that exceeds the $5 cap that counts base prices) |
+| Neon `still-field-25034761` | Frankfurt | none | $0, free plan |
+| R2 `parfocal-dev-eu` | EU jurisdiction | none | $0, same $0.015 per GB |
+
+Modal may have no free T4 or L4 in `eu` at a given hour, so a GPU job can wait longer than it would unpinned. TODO: measure it on the first EU GPU run. The US counterparts are not built because no US tenant exists.
+
 ## The Workers free plan runs out on tile traffic
 
 The free plan allows 100,000 requests a day, and one pan can fetch hundreds of tiles through the gateway. Use Workers Paid ($5 a month, 10 million requests included) from day one. Source: ADR 0003.

@@ -13,6 +13,7 @@ import parfocal_common.jobs
 from parfocal_common.db import POOL_OVERFLOW, POOL_SIZE
 from parfocal_common.jobs import enqueue, load_workflow, no_job_wake
 from parfocal_common.repository import repository_root
+from parfocal_common.residency import Region, home_of
 from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
@@ -49,6 +50,7 @@ from parfocal_deploy.modal_app import (
     IngestSpawner,
     app,
 )
+from parfocal_deploy.parse_sandbox import PARSE_SANDBOX_REGION
 from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
 from parfocal_ingest.settings import (
     INGEST_MEMORY_LIMIT_MIB,
@@ -56,7 +58,7 @@ from parfocal_ingest.settings import (
     PARSE_MEMORY_MIB,
     PARSE_SECONDS,
 )
-from parfocal_ml.gpu_pool import POOLS
+from parfocal_ml.gpu_pool import POOLS, function_options
 
 
 def test_the_app_registers_the_web_and_ingest_functions() -> None:
@@ -100,6 +102,34 @@ def test_ingest_and_events_run_in_the_eu_beside_the_database() -> None:
     assert WORKER_REGION == "eu"
     for options in (INGEST_OPTIONS, EVENTS_OPTIONS):
         assert options["region"] == WORKER_REGION
+
+
+def test_every_function_the_app_registers_is_pinned_to_an_eu_region() -> None:
+    options = {
+        WEB_FUNCTION: WEB_OPTIONS,
+        INGEST_FUNCTION: INGEST_OPTIONS,
+        EVENTS_FUNCTION: EVENTS_OPTIONS,
+    }
+    for name in FUNCTIONS:
+        region = options[name]["region"] if name in options else WORKER_REGION
+        assert home_of(region) is Region.EU
+    assert set(options) <= set(FUNCTIONS)
+
+
+def test_the_backfills_and_the_parse_sandbox_run_in_the_worker_region() -> None:
+    assert PARSE_SANDBOX_REGION == WORKER_REGION
+    assert PARSE_SANDBOX_OPTIONS["region"] == WORKER_REGION
+    assert "region" in inspect.signature(modal.Sandbox.create).parameters
+    source = Path(modal_app.__file__).read_text()
+    assert source.count("region=WORKER_REGION") == 3
+
+
+def test_every_gpu_pool_is_pinned_to_the_eu_next_to_the_database() -> None:
+    assert POOLS
+    for pool in POOLS:
+        assert pool.region == WORKER_REGION
+        assert function_options(pool).get("region") == WORKER_REGION
+        assert home_of(pool.region) is Region.EU
 
 
 def test_only_the_web_function_restores_from_a_memory_snapshot() -> None:

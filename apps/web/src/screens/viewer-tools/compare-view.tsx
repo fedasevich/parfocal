@@ -1,11 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import {
-  type ProjectSlide,
-  type ReviewObject,
-  useGetMe,
-  useListProjectSlides,
-  useListReviewObjects,
-} from "@parfocal/api-client";
+import { type ProjectSlide, useGetMe, useListProjectSlides } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -39,9 +33,13 @@ import { LiveCursor } from "../../presence/live-cursor.tsx";
 import { cursorSender } from "../../presence/shared-cursor.ts";
 import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
-import { type StillDrawChoices, StillEngine, type StillLink } from "../../viewer/still-engine.tsx";
+import {
+  type StillDrawChoices,
+  StillEngine,
+  type StillLink,
+  type StillObject,
+} from "../../viewer/still-engine.tsx";
 import type { StillFrame } from "../../viewer/still-frame.ts";
-import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { useWebglAvailable } from "../../viewer/webgl.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
@@ -66,6 +64,7 @@ import {
   paneSides,
   panesOf,
 } from "./compare-layout.ts";
+import { type SlideOutline, useSlideOutline } from "./compare-outline.ts";
 import {
   carryPoint,
   pointOfScreen,
@@ -163,6 +162,24 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     chosen,
     { left: session.slideId, right: fallbackRight?.id },
   );
+  const outlineWanted = (side: PaneSide) =>
+    layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
+  const outlines = {
+    left: useSlideOutline(session.taskId, ids.left, outlineWanted("left")),
+    right: useSlideOutline(session.taskId, ids.right, outlineWanted("right")),
+    bottomLeft: useSlideOutline(session.taskId, ids.bottomLeft, outlineWanted("bottomLeft")),
+    bottomRight: useSlideOutline(session.taskId, ids.bottomRight, outlineWanted("bottomRight")),
+  } satisfies Record<PaneSide, SlideOutline>;
+  const noOutline = t`This slide has no tumor map`;
+  const layerRows = layers.map((row) => {
+    if (row.key !== "outline") return row;
+    const unavailable = Object.fromEntries(
+      (["left", "right"] as const)
+        .filter((side) => outlines[side].available === false)
+        .map((side) => [side, noOutline]),
+    );
+    return { ...row, unavailable };
+  });
   const blinded = useBlindedOn(session.taskId, session.slideId);
   const { cursors: liveCursors, send: sendCursor } = useRoomCursors(
     session.slideId,
@@ -344,7 +361,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const slide = slideOn(side);
     if (slide === undefined) return null;
     const rotation = rotationOf(side);
-    const outline = layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
+    const outline = outlineWanted(side) && outlines[side].available === true;
     return (
       <section
         data-pane={side}
@@ -367,9 +384,8 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                     >
                       <PaneEngine
                         key={slide.id}
-                        taskId={session.taskId}
                         slideId={slide.id}
-                        outline={outline}
+                        objects={outline ? outlines[side].objects : null}
                         camera={camera}
                         onReady={(ready) => {
                           onReady(ready);
@@ -468,7 +484,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         }
       >
         <SideToggles
-          rows={layers}
+          rows={layerRows}
           onToggle={(key, side) =>
             setLayers(layers.map((row) => (row.key === key ? { ...row, [side]: !row[side] } : row)))
           }
@@ -607,34 +623,24 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
 
 const noClasses: ReadonlySet<string> = new Set();
 
-const noDecision = () => undefined;
-
-const isTumorRegion = (item: ReviewObject) =>
-  item.kind === "region" && item.class_name.toLowerCase() === "tumor";
-
 function PaneEngine({
-  taskId,
   slideId,
-  outline,
+  objects,
   camera,
   onReady,
   onTiles,
 }: {
-  taskId: string;
   slideId: string;
-  outline: boolean;
+  objects: readonly StillObject[] | null;
   camera: Camera;
   onReady: (link: StillLink | null) => void;
   onTiles: (failed: number) => void;
 }) {
-  const listed = useListReviewObjects(taskId, slideId, { query: { enabled: outline } });
-  const tumor = (okData(listed.data)?.objects ?? []).filter(isTumorRegion);
-  const { objects } = useStillObjects(tumor, noDecision, null);
   return (
     <StillEngine
       slideId={slideId}
       camera={camera}
-      objects={outline ? objects : null}
+      objects={objects}
       choices={plainSlide}
       hiddenClasses={noClasses}
       onReady={onReady}

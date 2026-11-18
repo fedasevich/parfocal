@@ -219,6 +219,17 @@ You asked, in your answer to decision 147 (how an agent checks the viewer typing
 
 Your choice: 
 
+### 154. Whether the GPU pools may cost more per hour in the EU than the $5 cap counts
+
+OPS-020 (pin storage, database and Modal functions per region) pinned every GPU pool to the Modal region `eu`, which Modal bills at 1.15 times. The hourly spend guard in `gpu_pool.py` adds base prices only. With every pool at its container cap that is $4.76 an hour, under the $5 cap, but at 1.15 times it is $5.47, over it. Nothing runs all the time and a job set that fills every pool at once is unlikely in the pilot. Raising a limit is yours to decide.
+
+- A. Keep the $5 cap as a base-price cap and say so in the guard (recommended, cost 0 now).
+- B. Count the 1.15 times in the guard and lower `max_containers` on one pool so the worst case stays under $5.
+- C. Raise the cap to $6.
+- Other.
+
+Your choice:
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.

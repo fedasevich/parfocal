@@ -701,7 +701,13 @@ function SlidesOnScreenPanel({
   );
 }
 
-type SideToggleRow = { key: string; name: string; left: boolean; right: boolean };
+type SideToggleRow = {
+  key: string;
+  name: string;
+  left: boolean;
+  right: boolean;
+  unavailable?: Partial<Record<LayerSide, string>>;
+};
 
 function SideToggles({
   rows,
@@ -726,8 +732,10 @@ function SideToggles({
               type="button"
               aria-pressed={row[side]}
               aria-label={t`${row.name} on the ${side}`}
+              disabled={row.unavailable?.[side] !== undefined}
+              title={row.unavailable?.[side]}
               onClick={() => onToggle(row.key, side)}
-              className="grid size-5 cursor-pointer place-items-center justify-self-center rounded-[5px] border-[1.5px] border-line-strong bg-transparent p-0 text-white aria-pressed:border-accent-fill aria-pressed:bg-accent-fill"
+              className="grid size-5 cursor-pointer place-items-center disabled:cursor-not-allowed disabled:opacity-40 justify-self-center rounded-[5px] border-[1.5px] border-line-strong bg-transparent p-0 text-white aria-pressed:border-accent-fill aria-pressed:bg-accent-fill"
             >
               {row[side] ? <Icon name="check" size="xs" /> : null}
             </button>
