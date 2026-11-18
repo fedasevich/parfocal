@@ -3964,7 +3964,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the image lock and a spawn-on-enqueue test pass, the published artifact's SHA-256 matches the local export, and the runbook says what the first deploy after the train merges will start. Publishing the artifact is an additive production write under ADR 0151 (standing approval within $30 a month), and the deploy itself waits for the merge.
   Depends on AITUM-010.
   Size: M.
-- [ ] AITUM-012 · The interactive pool answers view map calls
+- [x] AITUM-012 · The interactive pool answers view map calls
   AITUM-009 (Map this view asks the server for its tiles) sends a `view-map` call to the embedder pool, which accepts the kind but has no runner, so on the real API every "Map this view" click ends in "This view could not be mapped". Give the embedder pool entry a `view-map` runner that calls `parfocal_ml.view_map.answer_view_tile` with the stored slide opener and the ResNet18 of AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool), and measure one view tile's time on the T4.
   Done when a Modal stand-in test on CPU answers one view tile through the pool entry with 256 cell bytes, and a result file holds the T4 time of one view tile.
   Depends on AITUM-009, AITUM-010.
