@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Say when the lead may run "Reset production" after the next release. It empties the app tables of app.parfocal.eu and reseeds, which gives the agent test account of decision 153 its seats.
+1. Give the R2 API token behind the `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` repository secrets read and write access to the EU bucket `parfocal-dev-eu`, or make a new token scoped to it and put it in those secrets. You approved "Reset production" on 2026-11-18, but its run from v0.21.0 stopped in the fixture publish step with 403 on every object in `parfocal-dev-eu`, before it emptied anything. The reseed gives the agent test account of decision 153 its seats and the gallery its Philips-3 slide, and OPS-036 (view maps and tumor maps on seeded slides) needs it for its deployed tumor map check.
 2. Click Approve on the production deploy of the next tag when the lead starts it, as decision 137 (how production gets past the migration squash) describes.
 3. Give the Cloudflare ops token the "Account Analytics: Read" permission, for OPS-009 (storage lifecycle and cost controls).
 4. When convenient, the two Kaggle downloads of decision 131 (CryoNuSeg and Lizard).
