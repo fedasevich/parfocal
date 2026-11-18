@@ -18,6 +18,13 @@ export async function startFrameDiag(page: Page) {
     const gaps: [number, number][] = [];
     w.__rafGaps = gaps;
     w.__diagFrom = performance.now();
+    const longTasks: [number, number][] = [];
+    (w as unknown as { __longTasks: [number, number][] }).__longTasks = longTasks;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        longTasks.push([Math.round(entry.startTime), Math.round(entry.duration)]);
+      }
+    }).observe({ type: "longtask" });
     let last = performance.now();
     const tick = (at: number) => {
       gaps.push([Math.round(at), Math.round(at - last)]);
@@ -49,6 +56,14 @@ export async function printFrameDiag(page: Page, label: string) {
       software: viv?.software,
       motions: viv?.motions,
       movingMotions: viv?.movingMotions,
+      longTasks: (w as unknown as { __longTasks?: [number, number][] }).__longTasks ?? [],
+      sources: ((w as unknown as { __frameSources?: [number, string][] }).__frameSources ?? [])
+        .filter(([at, source]) => at >= from && source !== "fromFrame")
+        .slice(0, 60),
+      fromFrames: (
+        (w as unknown as { __frameSources?: [number, string][] }).__frameSources ?? []
+      ).filter(([at, source]) => at >= from && source === "fromFrame").length,
+      timeOrigin: Math.round(performance.timeOrigin),
       rafGaps: (w.__rafGaps ?? []).slice(0, 80),
       draws: (viv?.draws ?? []).filter(([at]) => at >= from).slice(0, 80),
     };

@@ -43,6 +43,11 @@ export function createGuardedFrames(options: GuardedFramesOptions): GuardedFrame
     entry.disarm?.();
     entries.delete(id);
     counts[source] += 1;
+    const host = globalThis as { __frameSources?: [number, string][] };
+    host.__frameSources ??= [];
+    if (host.__frameSources.length < 4000) {
+      host.__frameSources.push([Math.round(performance.now()), source]);
+    }
     entry.callback();
   };
 
