@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-16
+Last updated: 2026-11-18
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -8,10 +8,11 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Click Approve on the production deploy of the next tag when the lead starts it, as decision 137 (how production gets past the migration squash) describes.
-2. When convenient, the Hugging Face token of decision 125 (gated foundation models) and the two Kaggle downloads of decision 131 (CryoNuSeg and Lizard).
-3. The checks on your Mac listed under "The review column" below, when you have a few minutes.
-4. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
+1. Finish decision 153 (the seeded test account for agents). In the Zitadel console tab the lead opened, set a password for `agent-walk@parfocal.eu` and save. The command the lead gave you in chat writes that password to `~/.config/parfocal/agent-account.env` with mode 600. Then write "done" here.
+2. Click Approve on the production deploy of the next tag when the lead starts it, as decision 137 (how production gets past the migration squash) describes.
+3. When convenient, the two Kaggle downloads of decision 131 (CryoNuSeg and Lizard).
+4. The checks on your Mac listed under "The review column" below, when you have a few minutes.
+5. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
 ## What your answers of 2026-11-04 changed
 
@@ -96,6 +97,14 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 - Decision 147 (how an agent checks the viewer typing tool), option B. The post-deploy browser smoke types one outline as the smoke account. You also asked for a way for agents to use a seeded account on app.parfocal.eu without typing a password, since the app is dev and is reseeded, so an agent designs that with an ADR.
 - Decision 148 (where the UI visual baselines live), option B. The baselines go to R2 `parfocal-dev` under `fixtures/ui-visual/`, and CI fetches them with the read-only key of decision 132.
 
+- Decision 139 (whether a one-factor member can switch out of a workspace that requires a second factor), option A. They set up a factor or log out, as IAM-025 (second factor at sign-in) already does. No work.
+- Decision 149 (when to switch on observability export), option A. OPS-006 (observability stack) stays on hold and nothing is signed up until you unpause observability.
+- Decision 150 (whether merging to main deploys production), on hold with option A. Releases stay tagged and approved, and SKEL-009 (CI deploys main to production) is on hold.
+- Decision 151 (the foundation model for the tumor probe), Midnight from kaiko.ai instead of H-optimus-0. It is MIT licensed and needs no Hugging Face form or token, so decision 125 (gated foundation models) is replaced and AITUM-014 (a foundation model probe for the tumor map) now uses Midnight, with the RAM check first. The Mac has about 72 GB free, so the weights fit.
+- Decision 152 (recovery objectives and backups), other. Database backups are on hold, so OPS-008 (backups and disaster recovery) and SEC-014 (backups and restore testing) go on hold and production relies on Neon's 6 hours of history until you reopen it.
+- Decision 153 (the seeded test account for agents on the dev app), option A. The lead opened the Zitadel console with the user form filled in. The password is yours to set, see step 1 of "What you need to do next".
+- Decision 154 (whether the EU GPU price counts against the $5 hourly cap), other. What matters is staying under $30 a month on Modal, which the Modal usage limit of $30 already enforces as a hard cap. The $5 hourly guard stays a base-price guard. No work.
+
 ## Open decisions from cutting staging (ADR 0293, production only until the first real user)
 
 ### 91. Delete the GitHub environment `staging` and the staging tokens
@@ -139,96 +148,6 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 - Other.
 
 Your choice: a
-
-## Open decisions from the night run of 2026-11-17
-
-### 139. Whether a one-factor member can switch out of a workspace that requires a second factor
-
-IAM-025 (ask for a second factor at sign-in when a workspace requires it) refuses a session without a second factor in a workspace with "two-factor required" on, and also refuses switching into one. A member who lands in such a workspace after sign-in, joining or an invitation can then only set up a factor or log out.
-
-- **A. Keep it, they set up a factor or log out (recommended).** It is the strict reading of the switch and the simplest to audit.
-- B. Let them switch out to a workspace that does not require a second factor.
-- Other.
-
-Your choice: a
-
-### 149. When to switch on observability export, the owner steps OPS-006 still needs
-
-OPS-006 (observability stack) is built and tested on fakes and stays on hold under decision 113 (how often the alert cycle runs, nothing scheduled while observability is paused). Its Done line, dashboards exist and a synthetic error appears in alerting, needs services an agent cannot sign in to. Nothing below costs more than the free tiers.
-
-- Create a Grafana Cloud free stack, import `infra/grafana/parfocal-overview.json`, and put its OTLP endpoint and header in the production secrets as `OTLP_ENDPOINT` and `OTLP_HEADERS`.
-- Authorize the Sentry and PostHog connectors with `/mcp` so an agent can create the projects and DSNs, and set the DSNs in the production secrets.
-- Say when to run the production drill: `POST /api/platform/drills/synthetic-error` three times, then check the alert mail and the Grafana panel.
-- Schedule the alert cycle only after the choice in decision 113 is reopened.
-
-- A. Do these steps when observability is unpaused, and leave everything off until then (recommended).
-- B. Do the Grafana, Sentry and PostHog sign-ups now so an agent can run the drill.
-- Other.
-
-- A
-
-### 150. Whether merging to main deploys production, or releases stay tagged and approved
-
-SKEL-009 (CI deploys main to production) is done when merging to main deploys automatically and the skeleton end to end suite then runs against production. Today that is not what happens. Every release is tagged with `pnpm release`, then `deploy.yml` is dispatched on the tag with environment production and approved at the production environment gate, then the browser smoke runs. The latest such run is https://github.com/fedasevich/parfocal/actions/runs/44200148067 (v0.18.0, deploy and browser smoke both green). The workflow already deploys on every green push to main, but only when the repository variable `DEPLOY_ON_MAIN` is `true`, and it is not set (the repository variables are the Cloudflare account, the Neon project, the smoke email, the Zitadel organisation and the seed viewer emails). Every run triggered by a push to main in the last day shows as skipped, for example https://github.com/fedasevich/parfocal/actions/runs/44205297093. Setting a repository variable is a GitHub repository setting, so an agent does not do it.
-
-- A. Keep tagged releases with approval as the way to deploy, and change the SKEL-009 Done line to say so. The browser smoke after each release is the end to end check.
-- B. Set `DEPLOY_ON_MAIN` to `true` so every green main deploys by itself. Main is merged many times an hour, so each merge would run a production deploy and the browser smoke, and the approval gate on the production environment would also have to be removed or relaxed for push runs.
-- C. Set `DEPLOY_ON_MAIN` to `true` but deploy on a schedule or batch (for example the head of main once an hour), which needs a small change to `deploy.yml` that an agent can make once you choose.
-- Other.
-
-Recommendation A, because the app is a development environment (ADR 0390) and a tagged, approved release has worked for the last releases, while deploying every merge multiplies runs and the Modal and Neon cost for no user.
-
-Your choice: put thid task on hold so A
-
-### 151. What the H-optimus-0 tumor probe still needs on the Mac
-
-AITUM-014 (a foundation model probe for the tumor map) has its probe code and tests, but nothing could run on 2026-11-18. `HF_TOKEN` is still missing from `.env` (decision 125, gated foundation models), so the weights answer 401. The weights file alone is 4.54 GB and the Mac had 6.8 GB free. The bundle's training patches come from 268 CAMELYON16 slides, and only `tumor_009` is on the Mac, so the probe trains on a subset fetched one slide at a time and deleted after its features are saved.
-
-- A. You add `HF_TOKEN` and free about 15 GB, and an agent trains the probe on 10 training slides (5 tumor, 5 normal) streamed one at a time, then scores it on the four MLEVAL-005 test slides.
-- B. The same subset, but the features are computed on a Modal GPU at a cost not yet measured, so the Mac needs no free space beyond the token.
-- Other.
-
-Recommendation A, because it costs nothing and the owner allowed the Mac GPU for this.
-
-Your choice: 
-
-### 152. Recovery objectives, where the extra backup copy lives and who promotes a restore
-
-OPS-008 (backups and disaster recovery) drilled a Neon point-in-time branch on 2026-11-18: usable in 1.5 s, 99 tables and 10635 rows identical (result `2026-11-18-neon-pitr-drill.md`). Neon's Free plan keeps only 6 hours of history, so anything older needs a copy of our own. Promoting a restore into production replaces live data, so no agent may do it.
-
-- A. Objectives: recovery point 6 hours, recovery time 1 hour. Keep the monthly restore check dump in an EU R2 bucket for 35 days, as the cross-region copy within the residency rules, about 50 MB so 0 dollars today. You run any promotion.
-- B. Same objectives, and the dump runs nightly so the recovery point of older damage is 24 hours. Cost still 0 dollars at this size.
-- C. Pay for a longer Neon history. This raises a plan limit, so it is yours to approve, and it passes the $30 a month.
-- Other.
-
-Recommendation A, because production holds only test data until the first real user, and B is a one-line change when that day comes.
-
-Your choice: 
-
-### 153. The one-time step that gives agents the seeded test account on app.parfocal.eu
-
-You asked, in your answer to decision 147 (how an agent checks the viewer typing tool), for a way for agents to use a seeded account on the dev app without typing a password. ADR 0397 (agents sign in to the dev app as a seeded test account by script) and OPS-035 (agents get a signed-in session on the dev app) built it: `python3 scripts/agent_session.py` signs the account in through the app's own sign-in call, checks that it holds only the seeded ČVUT workspaces and saves a Playwright session in `~/.config/parfocal/`. It refuses any account or host not listed in `infra/app-environments.json`. The one step no agent may take is making the account and its password:
-
-1. In the Zitadel console of the Parfocal organisation, add a human user `agent-walk@parfocal.eu`, named Agent Tester, with the email marked verified and a long random password. Give it no Zitadel roles.
-2. On the Mac, write `~/.config/parfocal/agent-account.env` with two lines, `PARFOCAL_AGENT_EMAIL=agent-walk@parfocal.eu` and `PARFOCAL_AGENT_PASSWORD=<the password>`, then run `chmod 600 ~/.config/parfocal/agent-account.env`.
-3. Write "done" below. An agent then sets the repository variable `SEED_AGENT_EMAILS=agent-walk@parfocal.eu`, which is additive, adds the seats with the next seed or by hand as the smoke account got them, runs the script once and logs it. Cost 0.
-
-- A. Do the three steps (recommended).
-- B. Use the smoke account instead. Put its email and password in the same file, and agents share the smoke account's view-only seat.
-- Other.
-
-Your choice: 
-
-### 154. Whether the GPU pools may cost more per hour in the EU than the $5 cap counts
-
-OPS-020 (pin storage, database and Modal functions per region) pinned every GPU pool to the Modal region `eu`, which Modal bills at 1.15 times. The hourly spend guard in `gpu_pool.py` adds base prices only. With every pool at its container cap that is $4.76 an hour, under the $5 cap, but at 1.15 times it is $5.47, over it. Nothing runs all the time and a job set that fills every pool at once is unlikely in the pilot. Raising a limit is yours to decide.
-
-- A. Keep the $5 cap as a base-price cap and say so in the guard (recommended, cost 0 now).
-- B. Count the 1.15 times in the guard and lower `max_containers` on one pool so the worst case stays under $5.
-- C. Raise the cap to $6.
-- Other.
-
-Your choice:
 
 ## What your answers of 2026-11-16 changed
 
