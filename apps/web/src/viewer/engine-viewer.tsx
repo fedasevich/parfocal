@@ -225,6 +225,10 @@ export function EngineViewer({
             setLayout({ hidden: false });
             onTab("opinion");
           }}
+          onResultSets={() => {
+            setLayout({ hidden: false });
+            onTab("display");
+          }}
           percent={percent}
           objectTotal={areas.length}
           onPeek={() => setPeek(true)}

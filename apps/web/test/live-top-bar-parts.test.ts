@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { drawsContextBar } from "../src/annotations/hints-once.ts";
-import { liveSlideList, withNeighbours } from "../src/viewer/live-slides.ts";
+import { liveSlideGroups, liveSlideList, withNeighbours } from "../src/viewer/live-slides.ts";
 import { movedWhileDown, slidOnly } from "../src/viewer/use-pan-hide.ts";
 
 const row = (id: string, caseId: string | null = null) => ({
@@ -69,4 +69,81 @@ test("a camera change that keeps the zoom is a slide and a zoom is not", () => {
   assert.equal(slidOnly({ x: 0, y: 0, zoom: 1 }, { x: 5, y: 0, zoom: 1 }), true);
   assert.equal(slidOnly({ x: 0, y: 0, zoom: 1 }, { x: 5, y: 0, zoom: 1.2 }), false);
   assert.equal(slidOnly({ x: 3, y: 3, zoom: 1 }, { x: 3, y: 3, zoom: 1 }), false);
+});
+
+test("the slides popover groups the case's slides and the task's loose slides", () => {
+  const known = [
+    { ...row("a", "c1"), result_sets: [{ name: "old" }] },
+    {
+      ...row("b", "c1"),
+      result_sets: [{ name: "cam" }],
+      reviews: [{ task_id: "t", state: "submitted" }],
+    },
+    { ...row("p", "c1"), status: "ai-running" },
+    { ...row("c"), result_sets: [{ name: "sam" }] },
+    row("d"),
+    row("other", "c2"),
+  ];
+  const taskSlideIds = ["a", "b", "c", "d", "other"];
+  const groups = liveSlideGroups({
+    slideId: "a",
+    list: liveSlideList({ slideId: "a", slides: known, taskSlideIds, caseSlideIds: ["a", "b"] }),
+    slides: known,
+    caseSlides: [
+      { id: "a", label: "A1", stain: "H&E" },
+      { id: "b", label: "A2", stain: "H&E" },
+      { id: "p", label: "A3", stain: "CK" },
+    ],
+    task: { id: "t", slideIds: taskSlideIds },
+    currentSetNames: ["cam", "sam"],
+  });
+  assert.deepEqual(
+    groups.caseRows.map((item) => [item.name, item.sub, item.resultSets, item.status.label]),
+    [
+      ["A1 · H&E", "cam · sam", 2, "In review"],
+      ["A2 · H&E", "cam", 1, "Submitted"],
+      ["A3 · CK", undefined, 0, "Processing"],
+    ],
+  );
+  assert.deepEqual(
+    groups.caseRows.map((item) => [item.current, item.building]),
+    [
+      [true, false],
+      [false, false],
+      [false, true],
+    ],
+  );
+  assert.deepEqual(
+    groups.looseRows.map((item) => [item.id, item.sub, item.status.label]),
+    [
+      ["c", "sam, no case attached", "To review"],
+      ["d", "No case attached", "To review"],
+    ],
+  );
+});
+
+test("a slide with no case lists its scope in one group, with the slide's own state", () => {
+  const list = liveSlideList({
+    slideId: "c",
+    slides,
+    taskSlideIds: undefined,
+    caseSlideIds: undefined,
+  });
+  const groups = liveSlideGroups({
+    slideId: "c",
+    list,
+    slides,
+    caseSlides: undefined,
+    task: undefined,
+  });
+  assert.deepEqual(
+    groups.caseRows.map((item) => [item.id, item.status.label]),
+    [
+      ["a", "Ready"],
+      ["b", "Ready"],
+      ["c", "Open"],
+      ["d", "Ready"],
+    ],
+  );
+  assert.deepEqual(groups.looseRows, []);
 });

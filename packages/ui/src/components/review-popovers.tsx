@@ -271,6 +271,7 @@ type SlidesPopoverProps = {
     onResultSets?: (() => void) | undefined;
     resultSetsLabel?: string;
     onCompare?: (() => void) | undefined;
+    compareLabel?: string | undefined;
     compareTitle?: string | undefined;
     onAddSlides?: (() => void) | undefined;
     addSlidesTitle?: string | undefined;
@@ -459,7 +460,7 @@ function SlidesPopover({
               title={footer.compareTitle}
             >
               <Icon name="slides" />
-              <Trans>Compare slides</Trans>
+              {footer.compareLabel ?? <Trans>Compare slides</Trans>}
             </Button>
           ) : null}
           {footer.onAddSlides || footer.addSlidesTitle ? (

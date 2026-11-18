@@ -1,9 +1,12 @@
+import { submittedStates } from "../presence/blinded.ts";
+
 export type LiveSlideRow = {
   readonly id: string;
   readonly label: string;
   readonly case_id: string | null;
   readonly status: string;
-  readonly result_sets: readonly unknown[];
+  readonly result_sets: readonly { readonly name: string }[];
+  readonly reviews?: readonly { readonly task_id: string; readonly state: string }[];
 };
 
 export type LiveSlideScope = "task" | "case" | "project";
@@ -105,5 +108,93 @@ export function withNeighbours(
     total: neighbours.total,
     previousId: neighbours.previous?.id ?? null,
     nextId: neighbours.next?.id ?? null,
+  };
+}
+
+export type LivePopoverRow = {
+  readonly id: string;
+  readonly name: string;
+  readonly sub?: string;
+  readonly resultSets: number;
+  readonly current: boolean;
+  readonly building: boolean;
+  readonly status: { readonly label: string; readonly tone: "neutral" | "accent" | "ok" };
+};
+
+export type LiveSlideGroups = {
+  readonly caseRows: readonly LivePopoverRow[];
+  readonly looseRows: readonly LivePopoverRow[];
+};
+
+const buildingStates: ReadonlySet<string> = new Set(["uploaded", "ai-running"]);
+
+const sentence = (status: string) => {
+  const words = status.replaceAll("-", " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+export function liveSlideGroups(input: {
+  readonly slideId: string;
+  readonly list: LiveSlideList;
+  readonly slides: readonly LiveSlideRow[];
+  readonly caseSlides:
+    | readonly { readonly id: string; readonly label: string; readonly stain?: string }[]
+    | undefined;
+  readonly task: { readonly id: string; readonly slideIds: readonly string[] } | undefined;
+  readonly currentSetNames?: readonly string[] | undefined;
+}): LiveSlideGroups {
+  const byId = new Map(
+    [...input.list.slides, ...input.slides].map((slide): [string, LiveSlideRow] => [
+      slide.id,
+      slide,
+    ]),
+  );
+  const inTask = new Set(input.task?.slideIds ?? []);
+  const row = (id: string, name: string, loose: boolean): LivePopoverRow => {
+    const known = byId.get(id);
+    const current = id === input.slideId;
+    const building = !current && buildingStates.has(known?.status ?? "");
+    const names =
+      current && input.currentSetNames !== undefined
+        ? input.currentSetNames
+        : (known?.result_sets ?? []).map((set) => set.name);
+    const mine = known?.reviews?.find((review) => review.task_id === input.task?.id)?.state;
+    const status: LivePopoverRow["status"] = current
+      ? { label: input.task ? "In review" : "Open", tone: "accent" }
+      : building
+        ? { label: "Processing", tone: "neutral" }
+        : mine !== undefined && submittedStates.has(mine)
+          ? { label: "Submitted", tone: "ok" }
+          : input.task === undefined
+            ? { label: sentence(known?.status ?? ""), tone: "neutral" }
+            : inTask.has(id)
+              ? { label: "To review", tone: "neutral" }
+              : { label: "Not in task", tone: "neutral" };
+    const listed = names.join(" · ");
+    const sub = loose ? (listed ? `${listed}, no case attached` : "No case attached") : listed;
+    return {
+      id,
+      name,
+      ...(sub ? { sub } : {}),
+      resultSets: names.length,
+      current,
+      building,
+      status,
+    };
+  };
+  if (input.caseSlides === undefined || input.caseSlides.length === 0) {
+    return {
+      caseRows: input.list.slides.map((slide) => row(slide.id, slide.label, false)),
+      looseRows: [],
+    };
+  }
+  const inCase = new Set(input.caseSlides.map((slide) => slide.id));
+  return {
+    caseRows: input.caseSlides.map((slide) =>
+      row(slide.id, slide.stain ? `${slide.label} · ${slide.stain}` : slide.label, false),
+    ),
+    looseRows: [...inTask]
+      .filter((id) => !inCase.has(id) && (byId.get(id)?.case_id ?? null) === null)
+      .map((id) => row(id, byId.get(id)?.label ?? "Slide", true)),
   };
 }

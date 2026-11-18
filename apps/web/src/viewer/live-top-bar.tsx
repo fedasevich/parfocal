@@ -8,7 +8,6 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
-import { type SlideRowData, SlidesPopover } from "@parfocal/ui/components/review-popovers";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
@@ -20,6 +19,7 @@ import { personOf } from "../shell/global-shell.tsx";
 import type { CaseLoad } from "./case-load.ts";
 import { LiveProgress, useSlideStepKeys } from "./live-progress.tsx";
 import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
+import { LiveSlidesPopover } from "./live-slides-popover.tsx";
 import type { SlideWorkspace } from "./workspace.ts";
 
 const slidePage = 200;
@@ -36,40 +36,17 @@ function facts(load: CaseLoad, task: ReviewTaskDetail | undefined): string[] {
   ];
 }
 
-const statusLabel = (status: string) => {
-  const words = status.replaceAll("-", " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
-};
-
-const scopeHeading = {
-  task: "Slides in this task",
-  case: "Slides in this case",
-  project: "Slides in this project",
-} as const;
-
 function SlidePicker({
   list,
-  slideId,
   label,
-  onOpenSlide,
+  children,
 }: {
   list: LiveSlideList;
-  slideId: string;
   label: string;
-  onOpenSlide: (slideId: string) => void;
+  children: ReactNode;
 }) {
   const { t } = useLingui();
   const [open, setOpen] = useState(false);
-  const rows: SlideRowData[] = list.slides.map((slide) => ({
-    id: slide.id,
-    name: slide.label,
-    resultSets: slide.result_sets.length,
-    current: slide.id === slideId,
-    status:
-      slide.id === slideId
-        ? { label: t`Open`, tone: "accent" }
-        : { label: statusLabel(slide.status), tone: "neutral" },
-  }));
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
@@ -87,18 +64,10 @@ function SlidePicker({
         align="start"
         className="w-auto p-0"
         onClick={(event) => {
-          if ((event.target as HTMLElement).closest('[data-slot="slide-row"]')) setOpen(false);
+          if ((event.target as HTMLElement).closest("button")) setOpen(false);
         }}
       >
-        <SlidesPopover
-          caseHeading={scopeHeading[list.scope]}
-          caseSlides={rows}
-          showKeys={false}
-          ariaLabel={scopeHeading[list.scope]}
-          onPick={(id) => {
-            if (id !== slideId) onOpenSlide(id);
-          }}
-        />
+        {children}
       </PopoverContent>
     </Popover>
   );
@@ -114,6 +83,7 @@ type LiveTopBarProps = {
   onWorkspace: (next: SlideWorkspace) => void;
   onOpenSlide: (slideId: string) => void;
   onSubmit: (() => void) | undefined;
+  onResultSets?: (() => void) | undefined;
   percent: number | null;
   objectTotal: number;
   onPeek: () => void;
@@ -131,6 +101,7 @@ export function LiveTopBar({
   onWorkspace,
   onOpenSlide,
   onSubmit,
+  onResultSets,
   percent,
   objectTotal,
   onPeek,
@@ -187,7 +158,19 @@ export function LiveTopBar({
             {load ? facts(load, task).join(" · ") : ""}
           </small>
         </div>
-        <SlidePicker list={list} slideId={slideId} label={slideLabel} onOpenSlide={onOpenSlide} />
+        <SlidePicker list={list} label={slideLabel}>
+          <LiveSlidesPopover
+            projectId={projectId}
+            slideId={slideId}
+            slideLabel={slideLabel}
+            list={list}
+            slides={projectSlides}
+            load={load}
+            task={task}
+            onPick={onOpenSlide}
+            onResultSets={onResultSets}
+          />
+        </SlidePicker>
       </div>
       <span
         data-testid="slide-progress"

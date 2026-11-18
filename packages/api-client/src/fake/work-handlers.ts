@@ -242,9 +242,14 @@ const resultSetOf = (key: ResultSetKey) => {
   return set;
 };
 
+const looseTaskSlides: Record<string, number[]> = { "RT-14": [4, 5] };
+
 export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail => {
   const project = projectByCode(task.project);
-  const own = slides.filter((slide) => slide.project === task.project).slice(0, 2);
+  const own = [
+    ...slides.filter((slide) => slide.project === task.project).slice(0, 2),
+    ...(looseTaskSlides[task.code] ?? []).map(slideByIndex),
+  ];
   return {
     id: task.id,
     project_id: project.id,
