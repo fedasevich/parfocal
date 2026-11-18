@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.19.1 (2026-11-18)
+
+### Fixes
+
+- SKEL-002: Match the account tooltip and send the app origin in the deploy smoke
+
+### Docs
+
+- SKEL-002: Log the smoke fixes
+
 ## v0.19.0 (2026-11-18)
 
 ### Features
