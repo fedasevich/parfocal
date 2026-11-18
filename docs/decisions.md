@@ -199,6 +199,15 @@ PROTO-031 (every Settings row draws and previews what it really does) added the 
 
 Your choice (one or more letters): 
 
+### 156. What the Best model does for one-click outlines
+
+PROTO-036 (one-click annotation has its model picker) shows two rows, Best and Good, as ADR 0202 (the v1 model line-up per tier) lists. For a click on a nucleus both run PathoSAM ViT-B today, Best on the server and Good in the browser, so they give the same outline.
+
+- **A. Keep both on ViT-B for now (recommended).** Best differs only in where it runs. No new cost.
+- **B. Give Best PathoSAM ViT-L on the server.** Better outlines on hard nuclei, a GPU call on Modal per click session within the $30 budget, and a new export task.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-18 after a sweep of stale tasks. Tasks an agent can finish went back to the ready list. What is left in review waits on you or on the next release.
