@@ -119,11 +119,10 @@ test("a keyboard pan during a draft keeps the rubber band end under the cursor",
   await page.mouse.move(box.x + 300, box.y + 300);
   const before = await vertexPositions(page);
   await page.keyboard.down("ArrowRight");
-  await page.waitForTimeout(250);
-  await page.keyboard.up("ArrowRight");
   await expect
-    .poll(() => vertexPositions(page).then((v) => v[0]?.x ?? 0))
+    .poll(() => vertexPositions(page).then((v) => v[0]?.x ?? 0), { intervals: [50] })
     .toBeLessThan((before[0]?.x ?? 0) - 20);
+  await page.keyboard.up("ArrowRight");
   const end = await rubberEnd(page);
   expect(Math.abs(end.x - 300)).toBeLessThan(0.5);
   expect(Math.abs(end.y - 300)).toBeLessThan(0.5);

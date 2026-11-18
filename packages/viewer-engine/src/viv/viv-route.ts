@@ -58,6 +58,7 @@ import { createVivLevels, type VivLevels } from "./viv-levels.ts";
 const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null };
 
 export const vivViewId = "slide";
+export const movingDetailRestMs = 200;
 
 const stableSelections = [{ z: 0, t: 0, c: 0 }];
 
@@ -223,6 +224,8 @@ export function createVivRoute(
   let warmup: "cold" | "warming" | "done" = "cold";
   let warmLayers: Layer[] = [];
   let afterRender = () => {};
+  let movingDetail = false;
+  let cancelRest: (() => void) | null = null;
 
   const deviceIsLost = (candidate: Deck<OrthographicView>): boolean => {
     const device = (candidate as unknown as { device?: { isLost?: boolean } | null }).device;
@@ -302,14 +305,14 @@ export function createVivRoute(
     cameraViewRect(camera, canvas.clientWidth, canvas.clientHeight);
 
   const overlayDetailMoved = (): boolean =>
-    overlayBuilder.lodKey(overlays, 2 ** camera.zoom, viewRect()) !== overlayLod;
+    overlayBuilder.lodKey(overlays, 2 ** camera.zoom, viewRect(), movingDetail) !== overlayLod;
 
   const applyLayers = () => {
     if (failure !== null) return;
     const pixelsPerUnit = 2 ** camera.zoom;
     const rect = viewRect();
-    overlayLod = overlayBuilder.lodKey(overlays, pixelsPerUnit, rect);
-    overlayLayers = overlayBuilder.build(overlays, pixelsPerUnit, rect);
+    overlayLod = overlayBuilder.lodKey(overlays, pixelsPerUnit, rect, movingDetail);
+    overlayLayers = overlayBuilder.build(overlays, pixelsPerUnit, rect, movingDetail);
     if (gpuUsable()) deck.setProps({ layers: stackedLayers() });
     changed();
   };
@@ -437,8 +440,22 @@ export function createVivRoute(
     applyLayers();
   };
 
+  const restDetail = () => {
+    cancelRest = null;
+    movingDetail = false;
+    if (overlayDetailMoved() && failure === null) applyLayers();
+  };
+
+  const noteMotion = () => {
+    if (warmupPaysOff(deviceInfoOf(deck))) return;
+    movingDetail = true;
+    cancelRest?.();
+    cancelRest = systemTimers.after(restDetail, movingDetailRestMs);
+  };
+
   const setCamera = (next: Camera) => {
     camera = next;
+    noteMotion();
     shown?.reader?.setFocus({ x: camera.x, y: camera.y });
     shown?.prefetcher?.update(camera);
     if (gpuUsable()) deck.setProps({ viewState: vivViewState(camera) });
@@ -455,7 +472,7 @@ export function createVivRoute(
 
   const settled = (): boolean => {
     if (failure !== null) return true;
-    if (!gpuUsable()) return false;
+    if (!gpuUsable() || movingDetail) return false;
     if (tileFade.active()) {
       fadeWasActive = true;
       return false;
@@ -645,6 +662,7 @@ export function createVivRoute(
     destroy: () => {
       if (destroyed) return;
       destroyed = true;
+      cancelRest?.();
       release();
       guard.destroy();
       stopObservingPixelRatio();

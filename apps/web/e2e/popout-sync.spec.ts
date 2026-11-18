@@ -39,8 +39,10 @@ async function drag(page: Page, target: Locator) {
 test("the second window follows the main camera and moves it back", async ({ context }) => {
   const main = await context.newPage();
   await openScene(main, "Full viewer, one object · An open region, T5");
+  const [, project = "", slide = ""] =
+    /\/projects\/([^/]+)\/slides\/([^/?]+)/.exec(new URL(main.url()).pathname) ?? [];
   const second = await context.newPage();
-  await second.goto("/popout");
+  await second.goto(`/popout?kind=minimap&project=${project}&slide=${slide}`);
   await expect(second.getByTestId("popout-status")).toHaveAttribute("data-following", "true");
   await expect(viewportOf(second)).toBeVisible();
 

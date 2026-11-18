@@ -16,23 +16,14 @@ async function openStreamingSlide(page: Page): Promise<string> {
   return tumor044;
 }
 
-async function startRun(page: Page, slideId: string): Promise<void> {
-  const status = await page.evaluate(
-    async ({ project, slide }) => {
-      const response = await fetch(`/api/projects/${project}/model-runs`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          slide_ids: [slide],
-          scope: { kind: "slide" },
-          parameters: { detector: { name: "hovernet" } },
-        }),
-      });
-      return response.status;
-    },
-    { project: p07, slide: slideId },
+async function startWholeSlideRun(page: Page): Promise<void> {
+  const started = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().endsWith(`/projects/${p07}/model-runs`),
   );
-  expect(status).toBe(201);
+  await page.getByTestId("start-run-find").click();
+  expect((await started).status()).toBe(201);
 }
 
 const numberOf = async (panel: Locator, name: string) => Number(await panel.getAttribute(name));
@@ -40,11 +31,11 @@ const numberOf = async (panel: Locator, name: string) => Number(await panel.getA
 test("a whole-slide run streams objects before it ends, and cancel keeps them", async ({
   page,
 }) => {
-  const slideId = await openStreamingSlide(page);
+  await openStreamingSlide(page);
   const panel = page.getByTestId("run-stream");
   await expect(panel).toHaveCount(0);
 
-  await startRun(page, slideId);
+  await startWholeSlideRun(page);
   await expect(panel).toHaveAttribute("data-status", "running", { timeout: 15_000 });
   await expect.poll(() => numberOf(panel, "data-drawn"), { timeout: 15_000 }).toBeGreaterThan(0);
   expect(await numberOf(panel, "data-done")).toBeLessThan(tiles);

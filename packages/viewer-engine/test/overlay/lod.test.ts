@@ -53,6 +53,14 @@ test("a nucleus under 2 px is density, from 2 px dots and from 7 px outlines", (
   assert.equal(chooseLod(stats, scaleFor(0.01)).tier, "density");
 });
 
+test("a moving camera turns the outline tier into dots and leaves density alone", () => {
+  const stats = lodStats(squares(600));
+  assert.deepEqual(chooseLod(stats, scaleFor(40), true), { tier: "dots", dotRadiusPx: 2.2 });
+  assert.equal(chooseLod(stats, scaleFor(5), true).tier, "dots");
+  assert.equal(chooseLod(stats, scaleFor(1), true).tier, "density");
+  assert.deepEqual(chooseLod(lodStats(squares(499)), scaleFor(40), true), fullDetail);
+});
+
 test("the tier borders are exact when the size is exact", () => {
   const stats = { nucleusSize: 1, smallCount: 500, large: new Uint32Array(0), engaged: true };
   assert.equal(chooseLod(stats, 2).tier, "dots");

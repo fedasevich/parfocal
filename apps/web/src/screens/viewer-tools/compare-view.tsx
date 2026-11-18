@@ -33,7 +33,12 @@ import { LiveCursor } from "../../presence/live-cursor.tsx";
 import { cursorSender } from "../../presence/shared-cursor.ts";
 import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
-import { type StillDrawChoices, StillEngine } from "../../viewer/still-engine.tsx";
+import {
+  type StillDrawChoices,
+  StillEngine,
+  type StillLink,
+  type StillObject,
+} from "../../viewer/still-engine.tsx";
 import type { StillFrame } from "../../viewer/still-frame.ts";
 import { useWebglAvailable } from "../../viewer/webgl.ts";
 import { okData } from "../placeholder.tsx";
@@ -53,11 +58,13 @@ import {
   type CompareLayout,
   gridOf,
   isCompareLayout,
+  layerSideOf,
   layoutOptions,
   paneName,
   paneSides,
   panesOf,
 } from "./compare-layout.ts";
+import { type SlideOutline, useSlideOutline } from "./compare-outline.ts";
 import {
   carryPoint,
   pointOfScreen,
@@ -155,6 +162,24 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     chosen,
     { left: session.slideId, right: fallbackRight?.id },
   );
+  const outlineWanted = (side: PaneSide) =>
+    layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
+  const outlines = {
+    left: useSlideOutline(session.taskId, ids.left, outlineWanted("left")),
+    right: useSlideOutline(session.taskId, ids.right, outlineWanted("right")),
+    bottomLeft: useSlideOutline(session.taskId, ids.bottomLeft, outlineWanted("bottomLeft")),
+    bottomRight: useSlideOutline(session.taskId, ids.bottomRight, outlineWanted("bottomRight")),
+  } satisfies Record<PaneSide, SlideOutline>;
+  const noOutline = t`This slide has no tumor map`;
+  const layerRows = layers.map((row) => {
+    if (row.key !== "outline") return row;
+    const unavailable = Object.fromEntries(
+      (["left", "right"] as const)
+        .filter((side) => outlines[side].available === false)
+        .map((side) => [side, noOutline]),
+    );
+    return { ...row, unavailable };
+  });
   const blinded = useBlindedOn(session.taskId, session.slideId);
   const { cursors: liveCursors, send: sendCursor } = useRoomCursors(
     session.slideId,
@@ -336,6 +361,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const slide = slideOn(side);
     if (slide === undefined) return null;
     const rotation = rotationOf(side);
+    const outline = outlineWanted(side) && outlines[side].available === true;
     return (
       <section
         data-pane={side}
@@ -356,13 +382,11 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                       className="pointer-events-none absolute"
                       style={turnedHost(rotation, size)}
                     >
-                      <StillEngine
+                      <PaneEngine
                         key={slide.id}
                         slideId={slide.id}
+                        objects={outline ? outlines[side].objects : null}
                         camera={camera}
-                        objects={null}
-                        choices={plainSlide}
-                        hiddenClasses={noClasses}
                         onReady={(ready) => {
                           onReady(ready);
                           setFrames((known) => frameKept(known, side, ready?.frame));
@@ -460,7 +484,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         }
       >
         <SideToggles
-          rows={layers}
+          rows={layerRows}
           onToggle={(key, side) =>
             setLayers(layers.map((row) => (row.key === key ? { ...row, [side]: !row[side] } : row)))
           }
@@ -598,6 +622,32 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
 }
 
 const noClasses: ReadonlySet<string> = new Set();
+
+function PaneEngine({
+  slideId,
+  objects,
+  camera,
+  onReady,
+  onTiles,
+}: {
+  slideId: string;
+  objects: readonly StillObject[] | null;
+  camera: Camera;
+  onReady: (link: StillLink | null) => void;
+  onTiles: (failed: number) => void;
+}) {
+  return (
+    <StillEngine
+      slideId={slideId}
+      camera={camera}
+      objects={objects}
+      choices={plainSlide}
+      hiddenClasses={noClasses}
+      onReady={onReady}
+      onTiles={onTiles}
+    />
+  );
+}
 
 function frameKept(
   known: Partial<Record<PaneSide, StillFrame>>,

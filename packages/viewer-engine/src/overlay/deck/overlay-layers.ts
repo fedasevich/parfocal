@@ -72,11 +72,13 @@ export interface OverlayLayerBuilder {
     overlays: readonly OverlayLayer[],
     pixelsPerUnit?: number,
     view?: ViewRect,
+    moving?: boolean,
   ) => Layer[];
   readonly lodKey: (
     overlays: readonly OverlayLayer[],
     pixelsPerUnit: number,
     view?: ViewRect,
+    moving?: boolean,
   ) => string;
   readonly invalidate: (id: string) => void;
 }
@@ -321,9 +323,13 @@ function cullKey(parts: VectorParts, choice: LodChoice, view: ViewRect | undefin
   return cells === undefined ? lodKey(choice) : `${lodKey(choice)}:${cellsKey(cells)}`;
 }
 
-function lodChoice(parts: VectorParts, pixelsPerUnit: number | undefined): LodChoice {
+function lodChoice(
+  parts: VectorParts,
+  pixelsPerUnit: number | undefined,
+  moving: boolean,
+): LodChoice {
   if (parts.lod === null || pixelsPerUnit === undefined) return fullDetail;
-  return chooseLod(parts.lod.stats, pixelsPerUnit);
+  return chooseLod(parts.lod.stats, pixelsPerUnit, moving);
 }
 
 function withoutPolygons(parts: VectorParts): VectorParts {
@@ -660,6 +666,7 @@ export function createOverlayLayerBuilder(): OverlayLayerBuilder {
     overlay: OverlayDescription,
     pixelsPerUnit: number | undefined,
     view: ViewRect | undefined,
+    moving: boolean,
   ): Layer[] => {
     const { parts, generation } = entryFor(overlay);
     const suffix = generation === 0 ? "" : `:${generation}`;
@@ -667,7 +674,7 @@ export function createOverlayLayerBuilder(): OverlayLayerBuilder {
     if (isPinOverlay(overlay)) return pinLayers(overlay, parts as PinParts, suffix);
     if (isLabelOverlay(overlay)) return labelLayers(overlay, parts as LabelParts, suffix);
     const vector = parts as VectorParts;
-    const choice = lodChoice(vector, pixelsPerUnit);
+    const choice = lodChoice(vector, pixelsPerUnit, moving);
     if (vector.lod && view !== undefined) {
       cullWindowCells(vector.lod, choice, view);
       return culledLayers(overlay, vector, vector.lod, choice, suffix);
@@ -679,18 +686,20 @@ export function createOverlayLayerBuilder(): OverlayLayerBuilder {
     !isRasterOverlay(overlay) && !isPinOverlay(overlay) && !isLabelOverlay(overlay);
 
   return {
-    lodKey: (overlays, pixelsPerUnit, view) =>
+    lodKey: (overlays, pixelsPerUnit, view, moving = false) =>
       overlays
         .filter(isOverlayDescription)
         .filter(isVector)
         .map((overlay) => {
           const parts = entryFor(overlay).parts as VectorParts;
-          return cullKey(parts, lodChoice(parts, pixelsPerUnit), view);
+          return cullKey(parts, lodChoice(parts, pixelsPerUnit, moving), view);
         })
         .join("|"),
-    build: (overlays, pixelsPerUnit, view) => {
+    build: (overlays, pixelsPerUnit, view, moving = false) => {
       const described = overlays.filter(isOverlayDescription);
-      const layers = described.flatMap((overlay) => layersFor(overlay, pixelsPerUnit, view));
+      const layers = described.flatMap((overlay) =>
+        layersFor(overlay, pixelsPerUnit, view, moving),
+      );
       const alive = new Set(described.map((overlay) => overlay.id));
       for (const id of [...cache.keys()]) if (!alive.has(id)) cache.delete(id);
       for (const id of [...generations.keys()]) if (!alive.has(id)) generations.delete(id);

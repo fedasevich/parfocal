@@ -294,18 +294,21 @@ ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run
 events = app.function(**EVENTS_OPTIONS, secrets=secrets_of(EVENTS_FUNCTION))(run_events)
 backfill_thumbnails = app.function(
     name=BACKFILL_FUNCTION,
+    region=WORKER_REGION,
     memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
     timeout=3600,
     secrets=secrets_of(BACKFILL_FUNCTION),
 )(run_thumbnail_backfill)
 backfill_cell_crops = app.function(
     name=CROPS_BACKFILL_FUNCTION,
+    region=WORKER_REGION,
     memory=(INGEST_MEMORY_MIB, INGEST_MEMORY_LIMIT_MIB),
     timeout=3600,
     secrets=secrets_of(CROPS_BACKFILL_FUNCTION),
 )(run_cell_crops_backfill)
 backfill_level_directories = app.function(
     name=LEVELS_BACKFILL_FUNCTION,
+    region=WORKER_REGION,
     timeout=3600,
     secrets=secrets_of(LEVELS_BACKFILL_FUNCTION),
 )(run_level_directories_backfill)

@@ -1852,6 +1852,18 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a worker test writes an order for cells without crops and finds their crops stored under the slide, and a browser test opens the cells grid of a fresh task with every tile answered by the crop route.
   Depends on VIEW-075. Size: M.
 
+- [x] VIEW-079 · Panning stays prompt on a software renderer with many cell outlines
+  On CI's software renderer each pan frame of tumor_044 took about 400 ms, so `polygon.spec.ts` (a keyboard pan during a polygon draft) and `follow-view.spec.ts` (a follower within 300 ms) failed. VIEW-077 (focus mode without fake API errors) made the fake show a result set's 900 cells on that slide, and their casing and outline path layers, 12,600 segments each, cost almost all of the frame in vertex work. The slide-reading change of TILES-012 is inert there, because the dev tile server's level table has no primed ranges. Compare on the engine stage also stopped drawing the per side "Tumor map outline" although its toggles remain.
+  While the camera moves on a software renderer, draw cells that would show as outlines as dots and bring the outlines back once it rests. Draw the tumor map outline on each compare side again.
+  Done when a pan frame of tumor_044 on SwiftShader takes under 100 ms, the settled frame and the Viv golden images are unchanged, the two specs pass in CI, and the compare spec asserts the outline draws on each side.
+  Size: S.
+
+- [x] VIEW-080 · The compare tumor map outline draws on a slide outside the task
+  VIEW-079 draws the compare pane's "Tumor map outline" from the task's review objects, so it draws on the task slide's side only. A second slide that is not in the task has a toggle that draws nothing.
+  Draw that slide's tumor regions from its ready result sets (`useListResultSetRegions`) when the task has none for it.
+  Done when a browser test turns the outline on for the second slide in compare and sees it drawn.
+  Depends on VIEW-079. Size: S.
+
 - [x] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).

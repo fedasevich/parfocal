@@ -80,11 +80,13 @@ export function lodStats(batch: PolygonBatch): LodStats {
   };
 }
 
-export function chooseLod(stats: LodStats, pixelsPerUnit: number): LodChoice {
+export function chooseLod(stats: LodStats, pixelsPerUnit: number, moving = false): LodChoice {
   if (!stats.engaged || !Number.isFinite(pixelsPerUnit)) return fullDetail;
   const sizePx = stats.nucleusSize * pixelsPerUnit;
   if (sizePx < lodDensityBelowPx) return { tier: "density", dotRadiusPx: 0 };
-  if (sizePx < lodDotsBelowPx) return { tier: "dots", dotRadiusPx: lodDotRadiusPx(sizePx) };
+  if (sizePx < lodDotsBelowPx || moving) {
+    return { tier: "dots", dotRadiusPx: lodDotRadiusPx(sizePx) };
+  }
   return fullDetail;
 }
 
