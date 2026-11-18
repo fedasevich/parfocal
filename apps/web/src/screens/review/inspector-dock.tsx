@@ -126,7 +126,7 @@ export function InspectorDock({
         panning && "pointer-events-none overflow-hidden opacity-0",
         collapsed && "opacity-50",
       )}
-      style={{ width: collapsed || panning ? 0 : width }}
+      style={{ width: collapsed || panning ? 0 : width, maxWidth: "50%" }}
     >
       <hr
         aria-orientation="vertical"
