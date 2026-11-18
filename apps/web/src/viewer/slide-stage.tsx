@@ -42,6 +42,7 @@ import { SelectLayer } from "../annotations/select-layer.tsx";
 import type { ShapeId } from "../annotations/shapes.ts";
 import { SmartLayer } from "../annotations/smart-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
+import { useAiBridge } from "../annotations/use-ai-bridge.ts";
 import { useLiveGuardFeed } from "../annotations/use-live-guard.ts";
 import { useProposals } from "../annotations/use-proposals.ts";
 import {
@@ -386,19 +387,22 @@ function OpenedSlide({
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
   const { undo: undoEdit, redo: redoEdit } = saved;
+  const { bridge: aiBridge, onMarquee: onAiMarquee, aiIsNewer } = useAiBridge(annotations);
   const onUndoKey = useCallback(
     ({ phase, action }: { phase: string; action: string }) => {
       if (phase !== "press") return;
+      const aiFirst = aiIsNewer();
       if (action === "redo") {
-        redoEdit();
+        if (!aiFirst || !aiBridge.current.redo()) redoEdit();
         return;
       }
       if (action !== "undo") return;
       const draft = draftControl.current;
       if (draft !== null && draft.depth() > 0) draft.pop();
-      else if (textControl.current?.restore() !== true) undoEdit();
+      else if (textControl.current?.restore() === true) return;
+      else if (!aiFirst || !aiBridge.current.undo()) undoEdit();
     },
-    [undoEdit, redoEdit],
+    [undoEdit, redoEdit, aiBridge, aiIsNewer],
   );
   useHotkeys(undoBindings, onUndoKey);
   const [projectClasses, setProjectClasses] = useState<readonly ProjectClass[]>([]);
@@ -861,6 +865,7 @@ function OpenedSlide({
                     onCommit={saved.commit}
                     onEditText={(id) => textControl.current?.edit(id)}
                     onSelectionChange={setSelectedIds}
+                    onMarquee={onAiMarquee}
                     pinRegistry={pinRegistry}
                   />
                   <PinLayer
@@ -957,6 +962,8 @@ function OpenedSlide({
                       classes={classes}
                       saveState={saved.saveState}
                       colourOf={colourOf}
+                      selecting={tool === "select"}
+                      bridge={aiBridge}
                       onOpenSlide={onOpenSlide}
                     />
                   ) : null}

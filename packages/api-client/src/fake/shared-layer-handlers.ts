@@ -1,5 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type {
+  AiObjectChanges,
   AiObjectEdit,
   AnnotateSlideStatus,
   AnnotationDraft,
@@ -91,7 +92,7 @@ const aiCells: SharedAiObject[] = [0.42, 0.61, 0.73, 0.88, 0.55, 0.94].map((scor
     class_id: annotateTaskClasses[position]?.id ?? null,
     probability: position === index % 2 ? score : 1 - score,
   })),
-  geometry: square(2200 + index * 140, 2400 + (index % 3) * 120, 60),
+  geometry: square(420 + index * 90, 380 + (index % 3) * 80, 50),
   check: "unchecked",
 }));
 
@@ -456,6 +457,48 @@ const layerHandlers = (): RequestHandler[] => [
       return HttpResponse.json(made, { status: 201 });
     },
   ),
+  http.post<Params>(`${base}/shared-layer/ai-changes`, async ({ params, request }) => {
+    if (isSignedOff(params)) return signedOff();
+    const { changes } = (await request.json()) as AiObjectChanges;
+    const sources = aiObjectsOf(params.taskId, params.slideId);
+    let objects = layerOf(readStore(), keyOf(params.taskId, params.slideId));
+    const saved: LayerObject[] = [];
+    for (const change of changes) {
+      const source = sources.find((cell) => cell.object === change.object);
+      if (source === undefined) return new HttpResponse(null, { status: 404 });
+      const found = objects.find((item) => item.source === change.object);
+      if (found !== undefined && found.version !== change.version)
+        return problem(409, "annotation-changed", "This shape changed since you loaded it");
+      const made: LayerObject = {
+        ...(found ??
+          newObject(params.slideId, objects, {
+            kind: source.kind,
+            geometry: source.geometry,
+            class_id: null,
+            origin: "ai-edited",
+            source: source.object,
+            code: source.object,
+          })),
+        origin: "ai-edited",
+        geometry: (change.geometry ??
+          found?.geometry ??
+          source.geometry) as LayerObject["geometry"],
+        class_id: change.class_id === undefined ? (found?.class_id ?? null) : change.class_id,
+        deleted_at: change.deleted ? stamp() : null,
+        version: (found?.version ?? 0) + 1,
+        changed_by_user_id: viewerId(),
+        updated_at: stamp(),
+      };
+      objects =
+        found === undefined
+          ? [...objects, made]
+          : objects.map((item) => (item === found ? made : item));
+      saved.push(made);
+    }
+    const next = objects;
+    writeLayer(params, () => next);
+    return HttpResponse.json({ objects: saved });
+  }),
   http.post<Params & { objectId: string }>(
     `${base}/shared-layer/ai/:objectId/confirm`,
     ({ params }) => {

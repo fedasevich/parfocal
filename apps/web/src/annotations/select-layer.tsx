@@ -36,6 +36,7 @@ type SelectLayerProps = {
   onCommit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   onEditText?: (id: ShapeId) => void;
   onSelectionChange?: (ids: readonly ShapeId[]) => void;
+  onMarquee?: (area: Extent, additive: boolean) => void;
   pinRegistry?: PinRegistry;
 };
 
@@ -153,6 +154,7 @@ export function SelectLayer({
   onCommit,
   onEditText,
   onSelectionChange,
+  onMarquee,
   pinRegistry,
 }: SelectLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
@@ -168,6 +170,8 @@ export function SelectLayer({
   );
   const state = useSyncExternalStore(tool.subscribe, tool.state);
   const escRegistry = useEscRegistry();
+  const latestMarquee = useRef(onMarquee);
+  latestMarquee.current = onMarquee;
 
   useEffect(() => {
     onSelectionChange?.(state.ids);
@@ -210,7 +214,12 @@ export function SelectLayer({
       }
       const released = event.type === "pointermove" && dragging && buttonReleased(event);
       const input = pointerInput(event);
+      const area = tool.state().marquee;
       const consumed = tool.handle(released ? { ...input, kind: "up" } : input);
+      const ended = released || event.type === "pointerup";
+      if (ended && area !== null && tool.state().marquee === null) {
+        latestMarquee.current?.(area, event.shiftKey);
+      }
       if (!consumed) return;
       event.stopImmediatePropagation();
       event.preventDefault();

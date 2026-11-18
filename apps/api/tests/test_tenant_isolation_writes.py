@@ -479,6 +479,12 @@ WRITE_ROUTES: dict[str, Write] = {
         query=constant_query(reason=REASON),
         owner=BAD_REQUEST,
     ),
+    "changeAiObjects": Write(
+        path=ON_ANNOTATE_TASK,
+        body=constant({"changes": [{"object": "T1", "deleted": True}]}),
+        query=constant_query(reason=REASON),
+        owner=BAD_REQUEST,
+    ),
     "confirmAiObject": Write(
         path=AI_OBJECT, body=constant({}), query=constant_query(reason=REASON), owner=BAD_REQUEST
     ),
