@@ -9520,6 +9520,11 @@ msgstr "More: share, focus mode, shortcuts, settings"
 msgid "Most unsure first. Open a zone to go through its cells."
 msgstr "Most unsure first. Open a zone to go through its cells."
 
+#: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
+msgid "Motion"
+msgstr "Motion"
+
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
@@ -10259,6 +10264,7 @@ msgid "None yet"
 msgstr "None yet"
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Normal"
 msgstr "Normal"
 
@@ -12468,6 +12474,10 @@ msgstr "Rectangle"
 #: src/screens/review/object-card.tsx
 msgid "Redraw the outline"
 msgstr "Redraw the outline"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Reduced"
+msgstr "Reduced"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Refreshes every 250 ms"
@@ -14783,6 +14793,10 @@ msgstr "Slides, result files or a whole folder."
 msgid "SlimSAM-77 weights · 38 MB"
 msgstr "SlimSAM-77 weights · 38 MB"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Slower"
+msgstr "Slower"
+
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Slowest tenth"
 msgstr "Slowest tenth"
@@ -15129,6 +15143,14 @@ msgstr "Steps for area {number}"
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "Steps to settle"
 msgstr "Steps to settle"
+
+#: src/screens/settings/feel-preview.tsx
+msgid "Stick"
+msgstr "Stick"
+
+#: src/screens/settings/feel-preview.tsx
+msgid "Stick preview"
+msgstr "Stick preview"
 
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "Still not sure"

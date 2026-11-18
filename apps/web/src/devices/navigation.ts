@@ -10,7 +10,7 @@ import {
   readDeviceSettings,
   writeDeviceSetting,
 } from "../shell/device-settings.ts";
-import { type Calibration, readCalibration } from "./calibration.ts";
+import { type Calibration, calibrationDefaults, readCalibration } from "./calibration.ts";
 import { calibratedProfile } from "./intents.ts";
 
 export type WheelChoice = "detect" | "zoom" | "pan";
@@ -131,8 +131,12 @@ export type PreviewMotion = {
 
 const previewNotchPixels = 100;
 
-export function previewMotion(navigation: Navigation, reducedMotion = false): PreviewMotion {
-  const profile = feelProfile(navigation);
+export function previewMotion(
+  navigation: Navigation,
+  reducedMotion = false,
+  calibration: Calibration = calibrationDefaults,
+): PreviewMotion {
+  const profile = navigationProfile(navigation, calibration);
   return {
     zoomMs: reducedMotion ? 0 : profile.zoomEaseMs,
     jumpMs: reducedMotion ? 0 : profile.longestFlightMs,

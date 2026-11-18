@@ -10,6 +10,13 @@ export const calibrationKey = "calibration";
 
 export const calibrationDefaults: Calibration = { deadZone: 10, speed: 60 };
 
+export type Range = { min: number; max: number; step: number };
+
+export const calibrationRanges: Record<keyof Calibration, Range> = {
+  deadZone: { min: 0, max: 50, step: 5 },
+  speed: { min: 10, max: 200, step: 10 },
+};
+
 const clamp = (value: number, low: number, high: number) =>
   Math.min(high, Math.max(low, Math.round(value)));
 
@@ -17,10 +24,14 @@ const sanitized = (raw: unknown): Calibration => {
   const entry = typeof raw === "object" && raw !== null ? (raw as Partial<Calibration>) : {};
   return {
     deadZone: Number.isFinite(entry.deadZone)
-      ? clamp(entry.deadZone as number, 0, 50)
+      ? clamp(
+          entry.deadZone as number,
+          calibrationRanges.deadZone.min,
+          calibrationRanges.deadZone.max,
+        )
       : calibrationDefaults.deadZone,
     speed: Number.isFinite(entry.speed)
-      ? clamp(entry.speed as number, 10, 200)
+      ? clamp(entry.speed as number, calibrationRanges.speed.min, calibrationRanges.speed.max)
       : calibrationDefaults.speed,
   };
 };

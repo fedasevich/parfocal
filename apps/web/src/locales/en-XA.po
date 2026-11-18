@@ -9515,6 +9515,11 @@ msgstr ""
 msgid "Most unsure first. Open a zone to go through its cells."
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
+msgid "Motion"
+msgstr ""
+
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
@@ -10254,6 +10259,7 @@ msgid "None yet"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Normal"
 msgstr ""
 
@@ -12458,6 +12464,10 @@ msgstr ""
 
 #: src/screens/review/object-card.tsx
 msgid "Redraw the outline"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Reduced"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -14774,6 +14784,10 @@ msgstr ""
 msgid "SlimSAM-77 weights · 38 MB"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Slower"
+msgstr ""
+
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Slowest tenth"
 msgstr ""
@@ -15119,6 +15133,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "Steps to settle"
+msgstr ""
+
+#: src/screens/settings/feel-preview.tsx
+msgid "Stick"
+msgstr ""
+
+#: src/screens/settings/feel-preview.tsx
+msgid "Stick preview"
 msgstr ""
 
 #: ../../packages/ui/src/components/slide-done-card.tsx

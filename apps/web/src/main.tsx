@@ -15,6 +15,7 @@ import { locksAt } from "./session/lock-rules.ts";
 import { signedOutRedirect } from "./session/sign-in-redirect.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 import { installNameMask } from "./shell/hide-names.ts";
+import { installMotion } from "./shell/motion.ts";
 import { installTheme } from "./shell/theme.ts";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
 import { viewTransitions } from "./shell/view-transitions.ts";
@@ -26,6 +27,7 @@ const config = readBuildConfig();
 setDraftsAnswered(config.fakeApi !== "off");
 
 installTheme();
+installMotion();
 
 installDebugHandle(window, config.appEnv);
 provideDebug(benchmarkDebug(window));

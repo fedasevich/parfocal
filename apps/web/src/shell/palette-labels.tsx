@@ -6,6 +6,7 @@ export function usePaletteLabels(): Record<string, string> {
     "setting-theme": t`Theme`,
     "setting-brightness": t`Slide brightness`,
     "setting-density": t`Density`,
+    "setting-motion": t`Motion`,
     "setting-patientNames": t`Patient names`,
     "setting-lengths": t`Lengths`,
     "setting-magnificationLabel": t`Magnification label`,

@@ -20,8 +20,12 @@ export const observeElementResize: ResizeObserve = (container, onResize) => {
 
 export const systemClock: Clock = () => globalThis.performance.now();
 
+const motionForcedReduced = (): boolean =>
+  typeof document !== "undefined" && document.documentElement?.dataset["motion"] === "reduced";
+
 export const prefersReducedMotion = (): boolean =>
-  typeof globalThis.matchMedia === "function" &&
-  globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  motionForcedReduced() ||
+  (typeof globalThis.matchMedia === "function" &&
+    globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 export const screenPixelRatio = (): number => globalThis.devicePixelRatio || 1;
