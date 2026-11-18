@@ -6,7 +6,6 @@ from contextlib import AsyncExitStack
 import numpy as np
 import pytest
 from test_tumor_map import ArraySlide
-from tumor_map_support import opener
 
 from parfocal_common.outline_types import (
     MAX_OUTLINE_SPAN,
@@ -34,6 +33,15 @@ SLIDE = uuid.UUID("00000000-0000-4000-8000-000000000002")
 EMBEDDER = next(pool for pool in POOLS if pool.family is Family.EMBEDDER)
 NEOPLASTIC, CONNECTIVE = 1, 3
 WIDTH, HEIGHT = 2048, 1536
+
+
+def opener(slide: SlideImage, folders: list[str | None] | None = None):
+    async def open_slide(tenant_id: uuid.UUID, slide_id: uuid.UUID, folder: str | None):
+        if folders is not None:
+            folders.append(folder)
+        return slide
+
+    return open_slide
 
 
 def small_slide(mpp: float | None = 0.25) -> tuple[SlideImage, ArraySlide]:
@@ -143,6 +151,21 @@ def test_a_slide_without_a_scale_is_refused() -> None:
     slide, _ = small_slide(mpp=None)
     with pytest.raises(SlideWithoutScaleError):
         typed(slide, call_for(square(110, 110)))
+
+
+def test_the_slide_is_opened_from_the_folder_the_call_names() -> None:
+    slide, _ = small_slide()
+    folders: list[str | None] = []
+    sample = OutlineTypesCall(TENANT, SLIDE, (square(110, 110),), folder="samples/x/").call()
+    for call in (call_for(square(110, 110)), sample):
+        asyncio.run(answer_outline_types(call, opener(slide, folders), dark_is_neoplastic))
+    assert folders == [None, "samples/x/"]
+
+
+def test_the_call_refuses_a_folder_that_is_not_a_storage_prefix() -> None:
+    for folder in ("samples/x", "/samples/x/", "samples/../t/x/", 7):
+        with pytest.raises(OutlineTypesCallError):
+            outline_types_call_of({**call_for(square(0, 0)), "folder": folder})
 
 
 def test_the_call_refuses_rings_that_are_not_small_nuclei() -> None:

@@ -160,6 +160,22 @@ def test_the_job_maps_a_stored_slide_through_the_real_opener_and_resumes(tmp_pat
     assert grid[tissue].max() > 0
 
 
+def test_a_slide_kept_in_a_shared_folder_opens_from_that_folder(tmp_path: Path):
+    async def work(storage, slides, tenant, slide_id):
+        folder = f"t/{tenant}/shared/{slide_id}/"
+        for key in await storage.list_keys(slide_prefix(tenant, slide_id)):
+            name = key.removeprefix(slide_prefix(tenant, slide_id))
+            await storage.put_object(
+                f"{folder}{name}", await storage.get_object(key), "application/octet-stream"
+            )
+            await storage.delete_object(key)
+        with pytest.raises(StepFailedError):
+            await slides.open(tenant, slide_id)
+        return await slides.open(tenant, slide_id, folder)
+
+    assert in_minio(work, tmp_path).width == 2220
+
+
 def test_a_slide_without_an_original_fails_as_missing(tmp_path: Path):
     async def work(storage, slides, tenant, slide_id):
         with pytest.raises(StepFailedError) as raised:

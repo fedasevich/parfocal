@@ -100,6 +100,26 @@ def test_each_outline_comes_back_typed_and_calibrated_in_order(
     assert rows == [(3, False)]
 
 
+def test_the_typer_is_sent_the_folder_beside_the_slide_original(
+    api: ApiAs, database: str, lab: Lab, typer: FakeTyper
+) -> None:
+    owner(
+        database,
+        f"UPDATE slides SET original_key = NULL WHERE id = '{lab.slides[0]}' RETURNING id",
+    )
+    assert ask(api, lab, [SQUARE]).status_code == 200
+    owner(
+        database,
+        "UPDATE slides SET original_key = 'samples/camelyon16/test_065/original.tif' "
+        f"WHERE id = '{lab.slides[0]}' RETURNING id",
+    )
+    assert ask(api, lab, [SQUARE]).status_code == 200
+    assert [call.get("folder") for _, call in typer.calls] == [
+        None,
+        "samples/camelyon16/test_065/",
+    ]
+
+
 def test_outlines_that_are_not_small_closed_rings_are_refused(
     api: ApiAs, lab: Lab, typer: FakeTyper
 ) -> None:

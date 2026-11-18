@@ -28,15 +28,19 @@ class OutlineTypesCall:
     slide_id: uuid.UUID
     outlines: tuple[Points, ...]
     temperature: float = 1.0
+    folder: str | None = None
 
     def call(self) -> dict[str, object]:
-        return {
+        call: dict[str, object] = {
             "kind": KIND,
             "tenant_id": str(self.tenant_id),
             "slide_id": str(self.slide_id),
             "outlines": [list(points) for points in self.outlines],
             "temperature": self.temperature,
         }
+        if self.folder is not None:
+            call["folder"] = self.folder
+        return call
 
 
 def span_of(points: Sequence[float]) -> float:
@@ -94,7 +98,21 @@ def outline_types_call_of(call: Mapping[str, object]) -> OutlineTypesCall:
         uuid.UUID(str(call.get("slide_id"))),
         tuple(points_of(outline) for outline in outlines),
         temperature,
+        folder_in(call.get("folder")),
     )
+
+
+def folder_in(value: object) -> str | None:
+    if value is None:
+        return None
+    if (
+        not isinstance(value, str)
+        or not value.endswith("/")
+        or value.startswith("/")
+        or ".." in value.split("/")
+    ):
+        raise OutlineTypesCallError("The slide folder is a storage prefix ending in a slash")
+    return value
 
 
 def typed_outline(typed: object) -> bool:

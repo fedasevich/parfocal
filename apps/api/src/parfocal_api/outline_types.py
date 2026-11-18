@@ -18,6 +18,7 @@ from parfocal_api.model_registry import temperatures_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.slide_coverage import readable_slide
+from parfocal_common.ingest import folder_of
 from parfocal_common.outline_types import (
     MAX_OUTLINE_SPAN,
     MAX_OUTLINES,
@@ -126,6 +127,7 @@ async def type_outlines(
         slide_id,
         tuple(tuple(outline.points) for outline in body.outlines),
         1.0 if temperature is None else temperature,
+        None if slide.original_key is None else folder_of(slide.original_key),
     )
     typed, gpu_seconds = await typed_outlines(gate, request)
     await record(

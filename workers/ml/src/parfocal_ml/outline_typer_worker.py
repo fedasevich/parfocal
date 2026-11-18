@@ -16,16 +16,15 @@ from parfocal_common.object_store import ObjectStore
 from parfocal_common.outline_types import TYPER_VERSION, TYPER_WEIGHTS
 from parfocal_common.settings import StorageSettings, load_settings
 from parfocal_common.view_maps import timed
-from parfocal_ml.outline_typer import answer_outline_types
-from parfocal_ml.tumor_map_job import SlideOpener
+from parfocal_ml.outline_typer import FolderOpener, answer_outline_types
+from parfocal_ml.stored_slides import StoredSlides
 from parfocal_ml.tumor_map_worker import PROVIDERS, STORAGE_TIMEOUT_SECONDS
 from parfocal_ml.typer import ClassMap, Model
-from parfocal_ml.view_map_worker import stored_opener
 
 WEIGHTS_NAME = "typer.onnx"
 INPUT_NAME = "pixels"
 
-type Setup = Callable[[AsyncExitStack], Awaitable[tuple[SlideOpener, Model]]]
+type Setup = Callable[[AsyncExitStack], Awaitable[tuple[FolderOpener, Model]]]
 
 
 class OnnxTyper:
@@ -48,7 +47,7 @@ class OutlineTyperService:
         self.lock = threading.Lock()
         self.loop = asyncio.Runner()
         self.stack = AsyncExitStack()
-        self.ready: tuple[SlideOpener, Model] | None = None
+        self.ready: tuple[FolderOpener, Model] | None = None
 
     def answer(self, call: Mapping[str, object]) -> dict[str, object]:
         with self.lock:
@@ -78,13 +77,19 @@ async def fetched_typer(storage: ObjectStore, folder: Path) -> OnnxTyper:
     return OnnxTyper(weights)
 
 
-async def stored_setup(stack: AsyncExitStack) -> tuple[SlideOpener, Model]:
+def stored_opener(storage: ObjectStore, folder: Path, stack: AsyncExitStack) -> FolderOpener:
+    slides = StoredSlides(storage, folder)
+    stack.callback(slides.close)
+    return slides.open
+
+
+async def stored_setup(stack: AsyncExitStack) -> tuple[FolderOpener, Model]:
     location = load_settings(StorageSettings).storage()
     http = await stack.enter_async_context(httpx2.AsyncClient(timeout=STORAGE_TIMEOUT_SECONDS))
     folder = Path(stack.enter_context(tempfile.TemporaryDirectory()))
     storage = ObjectStore(location, http)
     model = await fetched_typer(storage, folder)
-    return await stored_opener(storage, folder / "slides", stack), model
+    return stored_opener(storage, folder / "slides", stack), model
 
 
 @cache

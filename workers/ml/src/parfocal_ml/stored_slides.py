@@ -110,11 +110,13 @@ class StoredSlides:
         self.folder = folder
         self.held: tuple[uuid.UUID, uuid.UUID, SlideImage] | None = None
 
-    async def open(self, tenant_id: uuid.UUID, slide_id: uuid.UUID) -> SlideImage:
+    async def open(
+        self, tenant_id: uuid.UUID, slide_id: uuid.UUID, stored_in: str | None = None
+    ) -> SlideImage:
         if self.held is not None and self.held[:2] == (tenant_id, slide_id):
             return self.held[2]
         self.close()
-        prefix = slide_prefix(tenant_id, slide_id)
+        prefix = slide_prefix(tenant_id, slide_id) if stored_in is None else stored_in
         keys = await self.storage.list_keys(f"{prefix}{ORIGINAL_STEM}")
         name = original_name(keys, prefix)
         if name is None:

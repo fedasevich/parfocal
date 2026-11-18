@@ -1,18 +1,21 @@
 import math
-from collections.abc import Mapping, Sequence
+import uuid
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 import numpy as np
 from skimage.draw import polygon
 
 from parfocal_common.outline_types import Points, outline_types_call_of
-from parfocal_ml.tumor_map_job import SlideImage, SlideOpener
+from parfocal_ml.tumor_map_job import SlideImage
 from parfocal_ml.type_evaluation import VIEWER_CLASSES
 from parfocal_ml.typer import TYPER_MPP, Model, Outline, TypedNucleus, type_nuclei, typed
 
 WINDOW = 1024
 MARGIN = 16
 LEAST_TYPER_PIXELS = 256
+
+type FolderOpener = Callable[[uuid.UUID, uuid.UUID, str | None], Awaitable[SlideImage]]
 
 
 class SlideWithoutScaleError(ValueError):
@@ -114,10 +117,10 @@ def typed_in_window(
 
 
 async def answer_outline_types(
-    call: Mapping[str, object], open_slide: SlideOpener, model: Model
+    call: Mapping[str, object], open_slide: FolderOpener, model: Model
 ) -> dict[str, object]:
     request = outline_types_call_of(call)
-    slide = await open_slide(request.tenant_id, request.slide_id)
+    slide = await open_slide(request.tenant_id, request.slide_id, request.folder)
     nuclei: list[TypedNucleus | None] = [None] * len(request.outlines)
     for indices in grouped(request.outlines):
         chosen = [request.outlines[index] for index in indices]
