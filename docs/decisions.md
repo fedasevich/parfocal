@@ -83,6 +83,19 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 - Decision 104 (how close a converted JPEG 2000 slide stays to its source), option A. Fable agreed lossless is right for slides that must look correct, and added two things: the INGEST-009 check (seams and correctness) becomes exact equality for converted slides, and each pyramid level comes from the source's own level where it has one, not from a fresh downsample. The storage size is measured in a result file.
 - Review checklist. TILES-003 (same-origin data path), VIEW-044 (prefetch where the view is heading) and MEAS-000 (research check for measurements) are ticked. For MEAS-000 Fable agreed AJCC and ICCR are enough, since CAP follows the AJCC pN categories, and ADR 0298 already scopes the categories to breast. The CAP check stays a TODO in that ADR. I18N-001 (string externalisation) is ticked as the setup slice, and yes, everything gets converted after it: I18N-004 (viewer, review and annotate screens) and I18N-005 (the remaining screens, then the baseline list is deleted) do that.
 
+## What your answers of 2026-11-18 changed
+
+- Decision 138 (tile sharing when a lab model runs on a clinical project), option A. Connecting a lab model to a clinical project asks the project owner to confirm once that tiles go to the named server, and the confirmation is audited. Built as a new task.
+- Decision 140 (moving production to Europe) is done under option A without the warm container. Two cleanups wait for you: delete the old US Neon project `soft-pine-86468744` (`neonctl projects delete soft-pine-86468744`), and later say whether to empty the old bucket `parfocal-dev`.
+- Decision 141 (how fast a person turned off in the customer's directory loses access), option A. Access lasts up to the token lifetime, revisited before the first customer with SCIM. No work.
+- Decision 142 (where a workspace's storage capacity comes from), option A with 1 TB. Capacity is a constant in code, 1 TB per workspace for now.
+- Decision 143 (which tasks the "Assigned by me" tab lists), option A. The tab lists tasks in projects you own, like Team.
+- Decision 144 (where the live viewer's save, live changes and conflict notices go), option A, which PROTO-023 already built. On your word, Fable reviews the placement for the best version and an agent builds what it advises.
+- Decision 145 (a warm API container), option A. `min_containers` stays 0 and the API may scale to zero, with 2 to 6 s on the first call after idle.
+- Decision 146 (PathoSAM ViT-L for the Best tier), option A. ViT-B stays everywhere.
+- Decision 147 (how an agent checks the viewer typing tool), option B. The post-deploy browser smoke types one outline as the smoke account. You also asked for a way for agents to use a seeded account on app.parfocal.eu without typing a password, since the app is dev and is reseeded, so an agent designs that with an ADR.
+- Decision 148 (where the UI visual baselines live), option B. The baselines go to R2 `parfocal-dev` under `fixtures/ui-visual/`, and CI fetches them with the read-only key of decision 132.
+
 ## Open decisions from cutting staging (ADR 0293, production only until the first real user)
 
 ### 91. Delete the GitHub environment `staging` and the staging tokens
@@ -129,16 +142,6 @@ Your choice: a
 
 ## Open decisions from the night run of 2026-11-17
 
-### 138. Tile sharing when a lab model runs on a clinical project
-
-JOBS-000 (research check for the model run contract) recorded the contract in [ADR 0363](adr/0363-the-model-run-contract-with-parfocal-and-lab-endpoints.md). A lab model is a server the lab runs, so when it runs on a clinical project every tile it scores leaves Parfocal for that server. Today a project only lists which lab models it may use.
-
-- **A. Connecting a lab model to a clinical project asks the project owner to confirm, once, that tiles will be sent to the named server, and the confirmation is audited (recommended).** It makes the data leaving Parfocal an explicit, recorded choice at little cost.
-- B. The per-project allowed list is enough.
-- Other.
-
-Your choice: a
-
 ### 139. Whether a one-factor member can switch out of a workspace that requires a second factor
 
 IAM-025 (ask for a second factor at sign-in when a workspace requires it) refuses a session without a second factor in a workspace with "two-factor required" on, and also refuses switching into one. A member who lands in such a workspace after sign-in, joining or an invitation can then only set up a factor or log out.
@@ -146,124 +149,6 @@ IAM-025 (ask for a second factor at sign-in when a workspace requires it) refuse
 - **A. Keep it, they set up a factor or log out (recommended).** It is the strict reading of the switch and the simplest to audit.
 - B. Let them switch out to a workspace that does not require a second factor.
 - Other.
-
-Your choice: 
-
-### 140. Moving production's API and database to Europe, and keeping one API container warm
-
-The night run measured production on 2026-11-17 ([result](results/2026-11-17-production-latency.md)). A warm `/api/health` costs the app under 1 ms but 140 to 570 ms in your browser, because Cloudflare in Amsterdam calls Modal and Neon in the US. A cold start costs 5.7 s. The code causes (one request per container, an R2 write on the request path, uncached assets) are fixed and go out with the next deploy. Two setting changes remain, each a production change that moves money between budget lines within the $30.
-
-OPS-030 (a warm API call answers in under 300 ms) found on 2026-11-17 that the API is not next to the database at all ([result](results/2026-11-17-warm-api-round-trips.md)). With no region pin Modal ran one API container on Azure `eu-west` and one on Azure `us-west`, while Neon is in AWS `us-east-1`. A connect to Neon took 89 ms and 60 ms from them, and a signed-in call makes an estimated 20 to 40 database round trips, which is why `/api/me` takes 2.4 s and home 7.5 s. Code cuts remove an estimated third of them. Only putting both in one region gets a warm call under 300 ms. The API (`parfocal-api`) cost $0.145 of Modal compute from 1 to 17 November, about $0.26 a month. A broad region pin costs 1.15 times and a narrow one 1.75 times, so pinning it adds about $0.04 or $0.19 a month at today's use. A broad `us` pin is not enough, because it can still land in `us-west`, 60 ms away.
-
-- **A0. Pin the Modal functions that use the database to a narrow region beside Neon `us-east-1`, such as `us-east`, now (recommended).** Every round trip drops from 60 to 90 ms to a few ms, about $0.19 a month more at today's use. Calls from Europe still cross the Atlantic once, about 110 ms. TODO: confirm on Modal's region page that `us-east` is the right name and that it is billed at the narrow rate.
-- **A. Move Modal to region `eu` and make a new Neon project in an EU region, reseeded under ADR 0293 (production only until the first real user), and keep one API container warm on weekdays 08:00 to 18:00.** About 110 ms less on the trip from Europe to the API, and with both in the EU the database round trips stay short as in A0 and no cold start in working hours. About $2.20 a month for the warm hours plus 15% more on Modal compute. The old US Neon project is deleted only after your separate yes.
-- B. Only the weekday warm container, about $2.20 a month.
-- C. Neither for now.
-- Other.
-
-Prices and facts for four ways to place the servers, read from the vendors on 2026-11-17, are in [server region options](results/2026-11-17-server-region-options.md). It recommends option A without the warm container, entering Modal at Dublin, over A0, because the EU pin is cheaper (1.15 times against 1.75) and the move is cheap only while the database can be reseeded.
-
-Your choice: A without the warm container, the EU move (owner in chat, 2026-11-17). The web function goes to `eu` entering at Dublin, a new Neon project in Frankfurt is reseeded, and the old US project is deleted only after a separate yes.
-
-OPS-031 (move the API and database to the EU) created the Frankfurt project `parfocal-eu` (`still-field-25034761`) on 2026-11-17 ([result](results/2026-11-17-eu-move.md)). Three things wait for you:
-
-- TODO: the reseed stopped with HTTP 404 because the `NEON_API_KEY` secret in the GitHub environment `production` cannot reach the new project. Please make a Neon API key for the organisation "Vercel: fedasevich's projects" that reaches both projects and replace that secret with it, or say an agent may do so. Until then production stays on the US database.
-- Pinning `ingest` and `events` to `eu` beside the new database, about $0.07 a month: your yes (in chat, 2026-11-17), done in v0.12.0.
-- Copying the slides into a new bucket in the R2 `eu` jurisdiction: your yes (in chat, 2026-11-17). OPS-032 (slides in an EU jurisdiction bucket) made `parfocal-dev-eu` with its own app key `parfocal-app-eu`, copied every object, and production reads and writes it from v0.12.0. Storage while both buckets exist is 34.3 GB more, about $0.51 a month. The old bucket `parfocal-dev` stays, for local development, previews and the fixture token, until your separate yes.
-- TODO for you: you said yes to deleting the old US Neon project `soft-pine-86468744`, but the SEC-031 hook (hard stops for destructive agent actions) lets only you run it. Nothing points at it any more: production has run on Frankfurt `still-field-25034761` since 2026-11-17 14:20 UTC, and the slides moved to `parfocal-dev-eu` at 16:46 UTC. Delete it in the Neon console (organisation "Vercel: fedasevich's projects", project `parfocal`, Settings, Delete project), or from your terminal run `neonctl projects delete soft-pine-86468744`. It costs nothing, and Neon can recover it for 7 days. The old bucket `parfocal-dev` stays as the rollback until you also decide to empty it. Earlier note: deleting the old US Neon project `soft-pine-86468744` waits for your separate yes. The Modal secret `parfocal-api-database-us` keeps its connection URL until then. It is only a partial rollback, because the reseed empties `t/` in the bucket, so the US rows will point at slides that are gone.
-
-### 141. How fast a person turned off in the customer's directory loses access
-
-IAM-030 (a SCIM-created person signs in through SAML without a duplicate) measured this on the local Zitadel ([result](results/2026-11-17-scim-saml-linking.md)). When a customer's directory deactivates someone over SCIM, Zitadel refuses their next sign-in and token refresh at once, but a session already open in Parfocal keeps working until its access token expires, 12 hours locally. The production token lifetime on Zitadel Cloud was not read.
-
-- **A. Accept up to the token lifetime for now and revisit before the first customer with SCIM (recommended).** No work and no cost.
-- B. Shorten the access token lifetime to about 15 minutes in the Zitadel organisation settings, a production setting change with more frequent refreshes.
-- C. Build our own SCIM endpoint in front of Zitadel that ends Parfocal sessions at once, about a week of work.
-- Other.
-
-Your choice: 
-
-### 142. Where a workspace's storage capacity comes from
-
-ADMIN-006 (storage, sources, API and webhooks in the admin console) now shows used space per kind and project in exact bytes, but there is no capacity to draw the bar against, so it shows used space only.
-
-- **A. A constant per plan, such as 100 GB for the pilot plan, kept in code (recommended).** Simple, and changes with a deploy.
-- B. A setting per workspace, editable by the platform owner.
-- C. No capacity, show used space only.
-- Other.
-
-Your choice: 
-
-### 143. Which tasks the "Assigned by me" tab lists
-
-WL-018 (Assigned by me tab) lists the tasks you created, while Team lists tasks in the projects you own. When a task is on the first list but not the second, such as one you created in a project someone else owns, "Reassign slides" opens Team without that task.
-
-- **A. List tasks in projects you own, like Team, so both screens agree (recommended).** Tasks you created in other people's projects leave the tab.
-- B. Keep listing the tasks you created, and hide "Reassign slides" on rows Team cannot show.
-- Other.
-
-Your choice: 
-
-### 144. Where the live viewer's save, live changes and conflict notices go
-
-PROTO-022 (the viewers match the frozen mock again) docked every card of the live viewer, but three small notices still sit on the slide: the save status, the marker for a colleague's new changes and the edit conflict notice. The mock shows such states as toasts or as the one banner under the top bar, and no ADR places them ([result](results/2026-11-17-viewer-mock-parity.md)).
-
-- **A. Move all three into the one banner under the top bar, with the save status as a quiet word in the top bar (recommended).** Nothing stays on the slide but the mock's own bars.
-- B. Keep them as small notices on the slide, since they show only while something happens.
-- Other.
-
-PROTO-023 (the live viewer's top bar, tabs and hints match the frozen mock) built option A to follow the mock, so B means moving them back.
-
-Your choice: 
-
-### 145. Whether the API keeps one container warm so the first call after idle stays under 3 s
-
-OPS-028 (the API answers its first call after idle in under 3 s) moved the API's imports and startup into a Modal memory snapshot. The app's own startup now takes 0.1 to 0.6 s, but a restored cold start still took 2.18, 6.39 and 3.99 s, because Modal needs 1 to 2 s to place a container and 1.3 to 3.6 s to restore it ([result](results/2026-11-17-api-cold-start.md)). After each deploy the first several cold starts also build new snapshots and take 2.7 to 15 s. Only a warm container removes this.
-
-- A. Keep `min_containers` at 0 and accept 2 to 6 s on the first call after 5 idle minutes, with no cost.
-- B. Set `min_containers` to 1 for the web function during working hours only, through a schedule. TODO: cost measured after a week.
-- C. Set `min_containers` to 1 all the time. An estimate from Modal's list prices for 0.125 core and 512 MiB is about $7 a month of the $30 budget. TODO: confirm on the Modal usage page.
-- Other.
-
-No recommendation, because it trades budget against the first call.
-
-Your choice: 
-
-### 146. Whether PathoSAM ViT-L replaces ViT-B as the nucleus detector for the Best tier
-
-AINUC-015 (score newer nucleus models on the Mac) scored both on the same path and scorer ([result](results/2026-11-16-newer-nucleus-models-on-the-mac.md)). ViT-L's pooled PQ is 0.854 against 0.828 on TNBC and 0.554 against 0.524 on NuInsSeg, but 0.481 against 0.483 on CryoNuSeg, the frozen-section set. It takes about 1.4 times ViT-B's time per image, a 1.25 GB file instead of 0.38 GB, and peaked at 8.7 to 9.0 GB on the Mac over a full set. Its weights have no licence found, the same as ViT-B's. ADR 0349 (nucleus detector and typer per tier) lets ViT-L return to Best once it beats 0.828 on TNBC, which it does, while the stricter bar set for AINUC-015 asked for a gain on every set and is not met.
-
-- A. Keep ViT-B everywhere. The gain is two sets of three and the frozen-section set does not move.
-- B. Use ViT-L for the Best tier on the server only, as ADR 0349 allows, and keep ViT-B for the other tiers.
-- Other.
-
-Recommendation A, because the bar fixed before the runs was not met and ViT-L costs more on every run.
-
-Your choice: 
-
-### 147. How an agent checks the viewer typing tool on the deployed app
-
-OPS-026 (export and publish the HoVer-NeXt typer) is done except its last check, that the deployed route types one outline on a seeded slide. The release of 2026-11-17 (commit `fb427c23`) carries the route and the `parfocal-gpu-pool` embedder with the typer runner, and `typer.onnx` is in R2 `parfocal-dev`. But no agent can sign in to `app.parfocal.eu`: there is no agent test account, and the smoke account's password lives only in a GitHub secret. ADR 0390 (the deployed app is dev) allows test users, yet an agent should not make one or type a password into the hosted login without your word in this file.
-
-- A. Agents may create their own Zitadel test user in the Parfocal organisation, keep its password in `~/.config/parfocal/` (mode 600), add it to one seeded workspace and delete nothing else.
-- B. The deploy's browser smoke types one outline as the smoke account after every deploy, so the check runs in CI. The smoke account needs a seeded slide with visible AI cells.
-- C. You type one outline in the viewer yourself and write the status here.
-- Other.
-
-Recommendation B, because it repeats on every release and needs no new account or password on the Mac.
-
-Your choice: 
-
-### 148. Whether the 51 MB of UI visual baselines go into git
-
-TEST-008 (visual regression for the UI) is built, but its tests skip until baselines are committed. CI run 44202176522 on 2026-11-18 produced them: 1142 PNG files, 51 MB, every Storybook story in both themes and both densities. The repository has no Git LFS, and history is never rewritten, so whatever is committed stays in every clone for good, and each later baseline update adds its changed images again.
-
-- A. Commit all 1142 images as they are.
-- B. Keep the baselines in R2 `parfocal-dev` under `fixtures/ui-visual/` and have CI fetch them with the read-only key of decision 132, the same way the browser parity test does, so git holds only a pinned checksum list.
-- C. Commit only one theme and one density (about 285 images, roughly 13 MB) and test the other combinations by a smaller sample.
-- Other.
-
-Recommendation B, because it keeps clones small and follows a pattern that already runs in CI.
 
 Your choice: 
 
@@ -290,6 +175,9 @@ SKEL-009 (CI deploys main to production) is done when merging to main deploys au
 - Other.
 
 Recommendation A, because the app is a development environment (ADR 0390) and a tagged, approved release has worked for the last releases, while deploying every merge multiplies runs and the Modal and Neon cost for no user.
+
+Your choice: 
+
 ### 151. What the H-optimus-0 tumor probe still needs on the Mac
 
 AITUM-014 (a foundation model probe for the tumor map) has its probe code and tests, but nothing could run on 2026-11-18. `HF_TOKEN` is still missing from `.env` (decision 125, gated foundation models), so the weights answer 401. The weights file alone is 4.54 GB and the Mac had 6.8 GB free. The bundle's training patches come from 268 CAMELYON16 slides, and only `tumor_009` is on the Mac, so the probe trains on a subset fetched one slide at a time and deleted after its features are saved.
