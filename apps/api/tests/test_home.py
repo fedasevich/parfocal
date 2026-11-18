@@ -170,6 +170,20 @@ def test_every_member_gets_a_home_with_the_announcements(api: ApiAs, database: s
         ]
 
 
+def test_home_announcements_match_the_announcement_list_newest_first(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    for text in ("First", "Second", "Third"):
+        posted = api(s.people["admin"]).post(
+            "/api/announcements", json={"kind": "model", "text": text}
+        )
+        assert posted.status_code == 201, posted.text
+    listed = api(s.people["first"]).get("/api/announcements").json()
+    assert [entry["text"] for entry in listed] == ["Third", "Second", "First"]
+    assert home(api, s, "first")["announcements"] == listed
+
+
 def put_resume(api: ApiAs, s: Study, who: str, **body: Any) -> Any:
     return api(s.people[who]).put("/api/me/resume", json=body)
 

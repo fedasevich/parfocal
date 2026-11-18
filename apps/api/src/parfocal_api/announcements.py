@@ -4,7 +4,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import func, insert, or_, select, update
+from sqlalchemy import cast, func, insert, literal, literal_column, or_, select, update
+from sqlalchemy.dialects.postgresql import JSONB, aggregate_order_by
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
@@ -65,13 +66,41 @@ def is_current() -> Any:
     return or_(announcements.c.ends_at.is_(None), announcements.c.ends_at > func.now())
 
 
-async def current_announcements(connection: AsyncConnection) -> list[Announcement]:
-    rows = await connection.execute(
+def current_query() -> Any:
+    return (
         select(announcements)
         .where(is_current())
         .order_by(announcements.c.created_at.desc(), announcements.c.id)
         .limit(CURRENT_LIMIT)
     )
+
+
+def current_as_json() -> Any:
+    newest = current_query().subquery("newest")
+    return (
+        select(
+            func.coalesce(
+                func.jsonb_agg(
+                    aggregate_order_by(
+                        func.to_jsonb(literal_column("newest")),
+                        newest.c.created_at.desc(),
+                        newest.c.id,
+                    )
+                ),
+                cast(literal("[]"), JSONB),
+            )
+        )
+        .select_from(newest)
+        .scalar_subquery()
+    )
+
+
+def announcements_from_json(found: list[dict[str, Any]]) -> list[Announcement]:
+    return [Announcement.model_validate(item) for item in found]
+
+
+async def current_announcements(connection: AsyncConnection) -> list[Announcement]:
+    rows = await connection.execute(current_query())
     return [announcement_of(row) for row in rows]
 
 

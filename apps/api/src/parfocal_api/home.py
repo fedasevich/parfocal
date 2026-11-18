@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.announcements import Announcement, current_announcements
+from parfocal_api.announcements import Announcement, announcements_from_json, current_as_json
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import open_disagreements as count_open_disagreements
 from parfocal_api.my_work import Assigned, MyStatus, MyTask, ProjectRef, my_review_tasks_with_slides
@@ -461,14 +461,17 @@ async def projects_of(
     return list(found.values()), without_results, adjudicated
 
 
-async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[uuid.UUID]) -> Week:
+async def week_of(
+    connection: AsyncConnection, me: uuid.UUID, adjudicated: list[uuid.UUID]
+) -> tuple[Week, list[Announcement]]:
     since_column = (func.now() - WEEK).label("since")
-    since, checked, agreed = (
+    since, checked, agreed, announced = (
         await connection.execute(
             select(
                 since_column,
                 func.count(),
                 func.count().filter(review_decisions.c.value == DecisionValue.AGREE),
+                current_as_json().label("announcements"),
             )
             .join(projects, projects.c.id == review_decisions.c.project_id)
             .where(
@@ -488,13 +491,14 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
                 review_tasks.c.signed_off_at.is_(None),
             ),
         )
-    return Week(
+    week = Week(
         since=since,
         objects_checked=checked,
         agreed=agreed,
         agree_share=agreed / checked if checked else None,
         open_disagreements=open_disagreements,
     )
+    return week, announcements_from_json(announced)
 
 
 @router.get("/home", operation_id="getMyHome")
@@ -509,13 +513,15 @@ async def get_my_home(principal: CurrentPrincipal, connection: TenantConnection)
     if workspace is not Grant.NONE:
         tasks, assigned = await my_review_tasks_with_slides(connection, person.user_id)
         found, without_results, adjudicated = await projects_of(connection, person, workspace)
+    resume = await resume_of(connection, person.user_id, tasks, assigned) if tasks else None
+    week, announcements = await week_of(connection, person.user_id, adjudicated)
     return Home(
-        resume=await resume_of(connection, person.user_id, tasks, assigned) if tasks else None,
+        resume=resume,
         tasks=open_tasks(tasks),
         projects=found,
         slides_without_results=without_results,
-        week=await week_of(connection, person.user_id, adjudicated),
-        announcements=await current_announcements(connection),
+        week=week,
+        announcements=announcements,
     )
 
 

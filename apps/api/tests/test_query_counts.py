@@ -11,7 +11,7 @@ from workspace_support import join_project, make_project
 pytestmark = pytest.mark.db
 
 ROUTES = ("/api/me/home", "/api/me/review-tasks", "/api/me/notification-preferences")
-LIMITS = {"/api/me/home": 9, "/api/me/review-tasks": 4, "/api/me/notification-preferences": 3}
+LIMITS = {"/api/me/home": 8, "/api/me/review-tasks": 4, "/api/me/notification-preferences": 3}
 SLIDES_PAGE = 12
 
 
