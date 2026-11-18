@@ -50,5 +50,5 @@ uv run --package parfocal-ml python workers/ml/spike/publish_typer_onnx.py \
 ## Limits
 
 - Fetched and run from a Mac on the CPU provider. The CUDA provider in the embedder pool is not tested.
-- The deployed route has not typed an outline on a seeded slide yet. That needs the next deploy.
+- The deployed route has not typed an outline on a seeded slide yet. The release of 2026-11-17 at 23:31 UTC (commit `fb427c23`) carries the route and the `parfocal-gpu-pool` embedder with the runner, but no agent can sign in to `app.parfocal.eu`. Decision 147 (how an agent checks the viewer typing tool on the deployed app) asks the owner.
 - An input smaller than 32 px on a side cannot be padded reflectively. The runner never sends one, because it widens every window to at least 256 px unless the slide itself is smaller.

@@ -241,6 +241,19 @@ Recommendation A, because the bar fixed before the runs was not met and ViT-L co
 
 Your choice: 
 
+### 147. How an agent checks the viewer typing tool on the deployed app
+
+OPS-026 (export and publish the HoVer-NeXt typer) is done except its last check, that the deployed route types one outline on a seeded slide. The release of 2026-11-17 (commit `fb427c23`) carries the route and the `parfocal-gpu-pool` embedder with the typer runner, and `typer.onnx` is in R2 `parfocal-dev`. But no agent can sign in to `app.parfocal.eu`: there is no agent test account, and the smoke account's password lives only in a GitHub secret. ADR 0390 (the deployed app is dev) allows test users, yet an agent should not make one or type a password into the hosted login without your word in this file.
+
+- A. Agents may create their own Zitadel test user in the Parfocal organisation, keep its password in `~/.config/parfocal/` (mode 600), add it to one seeded workspace and delete nothing else.
+- B. The deploy's browser smoke types one outline as the smoke account after every deploy, so the check runs in CI. The smoke account needs a seeded slide with visible AI cells.
+- C. You type one outline in the viewer yourself and write the status here.
+- Other.
+
+Recommendation B, because it repeats on every release and needs no new account or password on the Mac.
+
+Your choice: 
+
 ## What your answers of 2026-11-16 changed
 
 - Decision 105 (older Ventana archives with several scan areas), option A. The refusal stays with its own message, and area placement waits for the DP 200 and DP 600 join direction.
