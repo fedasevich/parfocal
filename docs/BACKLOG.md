@@ -6584,7 +6584,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Keep option A of question 144 in `docs/decisions.md` (the notices sit in the one banner under the top bar) and shift the camera by the height change, or hold the banner until the pointer is up, so that the tissue under the pointer does not move.
   Done when a browser test draws a shape, opens and closes the banner and finds the shape's screen position unchanged within 1 px.
   Depends on PROTO-028. Size: S.
-- [ ] PROTO-030 · Every dialog closes on an outside click and Settings opens over the current screen
+- [x] PROTO-030 · Every dialog closes on an outside click and Settings opens over the current screen
   On 2026-11-18 the owner found that modals do not close on a click outside them, that Settings and some other panels navigate away from the screen you were on though they could open anywhere as an overlay, and that the Settings icon in the navigation looks broken.
   Make every dialog, sheet and small modal in `packages/ui` close on a click outside and on Escape, except where an unsaved form or a running step would be lost, which asks first. Open Settings, and any other panel that only shows settings or help, as an overlay over the current screen with its section kept in the address so a link and a reload still land on it, and closing returns to the same view with the camera unchanged. Redraw the Settings icon in the navigation so it reads cleanly at its size.
   Done when a Storybook browser test closes each dialog kind by an outside click and by Escape, a browser test opens Settings from the live viewer and from Home and closes it back to the same screen and camera, and a screenshot of the navigation compares by number against the new baseline.
