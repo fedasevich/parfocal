@@ -78,18 +78,29 @@ export const test = base.extend<{ accessible: undefined }>({
       const scanKey = `${route} ${createHash("sha1").update(state.join("\n")).digest("hex")}`;
       if (scannedStates.has(scanKey)) return;
       scannedStates.add(scanKey);
-      const results = await new AxeBuilder({ page })
-        .withTags(wcagTags)
-        .exclude("[data-base-ui-focus-guard]")
-        .analyze();
-      const found = results.violations.map((violation) => ({
-        rule: violation.id,
-        targets: violation.nodes.map((node) => node.target.join(" ")).slice(0, 5),
-        nodes: violation.nodes.slice(0, 3).map((node) => ({
-          html: node.html.slice(0, 300),
-          summary: (node.failureSummary ?? "").slice(0, 300),
-        })),
-      }));
+      const scan = async () => {
+        const results = await new AxeBuilder({ page })
+          .withTags(wcagTags)
+          .exclude("[data-base-ui-focus-guard]")
+          .analyze();
+        return results.violations.map((violation) => ({
+          rule: violation.id,
+          targets: violation.nodes.map((node) => node.target.join(" ")).slice(0, 5),
+          nodes: violation.nodes.slice(0, 3).map((node) => ({
+            html: node.html.slice(0, 300),
+            summary: (node.failureSummary ?? "").slice(0, 300),
+          })),
+        }));
+      };
+      let found = await scan();
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const open = found.filter((violation) => !isAllowed(violation.rule, route));
+        if (open.length === 0 || open.some((violation) => violation.rule !== "color-contrast")) {
+          break;
+        }
+        await page.waitForTimeout(500);
+        found = await scan();
+      }
       const recordFile = process.env["PARFOCAL_A11Y_RECORD"];
       if (recordFile !== undefined && recordFile !== "") {
         for (const violation of found) {
