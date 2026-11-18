@@ -358,4 +358,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0395](0395-home-reads-in-batches-and-the-session-check-carries-the-workspace-status.md) | Home reads in batches and the session check carries the workspace status | Accepted | 2026-11-17 |
 | [0396](0396-deactivation-keeps-the-membership-and-hands-work-over-first.md) | Deactivation keeps the membership row, hands open work over first and ends sessions at the end date | Accepted | 2026-11-18 |
 | [0398](0398-every-viewer-screen-draws-the-slide-through-one-engine-stage.md) | Every viewer screen draws the slide through one engine stage | Accepted | 2026-11-17 |
+| [0399](0399-cells-draw-as-dots-while-a-software-renderer-moves.md) | Cells draw as dots while a software renderer moves | Proposed | 2026-11-18 |
 | [0397](0397-agents-sign-in-to-the-dev-app-as-a-seeded-test-account-by-script.md) | Agents sign in to the dev app as a seeded test account by script | Accepted | 2026-11-18 |

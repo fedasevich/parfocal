@@ -1,5 +1,11 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type ProjectSlide, useGetMe, useListProjectSlides } from "@parfocal/api-client";
+import {
+  type ProjectSlide,
+  type ReviewObject,
+  useGetMe,
+  useListProjectSlides,
+  useListReviewObjects,
+} from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -33,8 +39,9 @@ import { LiveCursor } from "../../presence/live-cursor.tsx";
 import { cursorSender } from "../../presence/shared-cursor.ts";
 import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
-import { type StillDrawChoices, StillEngine } from "../../viewer/still-engine.tsx";
+import { type StillDrawChoices, StillEngine, type StillLink } from "../../viewer/still-engine.tsx";
 import type { StillFrame } from "../../viewer/still-frame.ts";
+import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { useWebglAvailable } from "../../viewer/webgl.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
@@ -53,6 +60,7 @@ import {
   type CompareLayout,
   gridOf,
   isCompareLayout,
+  layerSideOf,
   layoutOptions,
   paneName,
   paneSides,
@@ -336,6 +344,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const slide = slideOn(side);
     if (slide === undefined) return null;
     const rotation = rotationOf(side);
+    const outline = layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
     return (
       <section
         data-pane={side}
@@ -356,13 +365,12 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                       className="pointer-events-none absolute"
                       style={turnedHost(rotation, size)}
                     >
-                      <StillEngine
+                      <PaneEngine
                         key={slide.id}
+                        taskId={session.taskId}
                         slideId={slide.id}
+                        outline={outline}
                         camera={camera}
-                        objects={null}
-                        choices={plainSlide}
-                        hiddenClasses={noClasses}
                         onReady={(ready) => {
                           onReady(ready);
                           setFrames((known) => frameKept(known, side, ready?.frame));
@@ -598,6 +606,42 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
 }
 
 const noClasses: ReadonlySet<string> = new Set();
+
+const noDecision = () => undefined;
+
+const isTumorRegion = (item: ReviewObject) =>
+  item.kind === "region" && item.class_name.toLowerCase() === "tumor";
+
+function PaneEngine({
+  taskId,
+  slideId,
+  outline,
+  camera,
+  onReady,
+  onTiles,
+}: {
+  taskId: string;
+  slideId: string;
+  outline: boolean;
+  camera: Camera;
+  onReady: (link: StillLink | null) => void;
+  onTiles: (failed: number) => void;
+}) {
+  const listed = useListReviewObjects(taskId, slideId, { query: { enabled: outline } });
+  const tumor = (okData(listed.data)?.objects ?? []).filter(isTumorRegion);
+  const { objects } = useStillObjects(tumor, noDecision, null);
+  return (
+    <StillEngine
+      slideId={slideId}
+      camera={camera}
+      objects={outline ? objects : null}
+      choices={plainSlide}
+      hiddenClasses={noClasses}
+      onReady={onReady}
+      onTiles={onTiles}
+    />
+  );
+}
 
 function frameKept(
   known: Partial<Record<PaneSide, StillFrame>>,
