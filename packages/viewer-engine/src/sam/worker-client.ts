@@ -35,6 +35,13 @@ export class SamWorkerError extends Error {
   }
 }
 
+export class SamStartError extends SamWorkerError {
+  constructor(message: string) {
+    super(message);
+    this.name = "SamStartError";
+  }
+}
+
 export class SamClientClosedError extends Error {
   constructor() {
     super("The inference client was closed");
@@ -60,6 +67,7 @@ export function createSamClient(options: SamClientOptions): SamClient {
   let nextRequestId = 0;
   let closed = false;
   let failure: SamWorkerError | null = null;
+  let startFailure: SamStartError | null = null;
 
   const ready = new Promise<SamReady>((resolve, reject) => {
     onWorkerFailure(worker, "inference", (reason) => {
@@ -84,7 +92,8 @@ export function createSamClient(options: SamClientOptions): SamClient {
         return;
       }
       if (reply.type === "failed" && reply.requestId === null) {
-        reject(new SamWorkerError(reply.message));
+        startFailure = new SamStartError(reply.message);
+        reject(startFailure);
         return;
       }
       const requestId = reply.requestId;
@@ -115,6 +124,9 @@ export function createSamClient(options: SamClientOptions): SamClient {
     }
     if (failure !== null) {
       return Promise.reject(failure);
+    }
+    if (startFailure !== null) {
+      return Promise.reject(startFailure);
     }
     return new Promise<SamReply>((resolve, reject) => {
       const requestId = nextRequestId++;

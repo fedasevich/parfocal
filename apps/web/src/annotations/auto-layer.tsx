@@ -23,6 +23,7 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { ContextExtra, contextChip } from "./context-extras.tsx";
 import { type AnnotationDocument, addRun, removeRun } from "./document.ts";
+import { ModelTierChoice } from "./model-tier-choice.tsx";
 import { runFromProposals } from "./runs.ts";
 import {
   buttonReleased,
@@ -49,6 +50,7 @@ type AutoLayerProps = {
   loader: SmartServicesLoader;
   openRequest: SmartServicesContext["open"];
   tier: OutlineTier;
+  onTierChange?: (tier: OutlineTier) => void;
   onDocumentChange: (next: AnnotationDocument) => void;
 };
 
@@ -83,6 +85,7 @@ export function AutoLayer({
   loader,
   openRequest,
   tier,
+  onTierChange,
   onDocumentChange,
 }: AutoLayerProps) {
   const { t } = useLingui();
@@ -119,6 +122,19 @@ export function AutoLayer({
     writeRunNow.current(activeClass);
   }, [active, activeClass]);
 
+  const loadedTier = useRef(tier);
+  useEffect(() => {
+    if (loadedTier.current === tier) return;
+    loadedTier.current = tier;
+    if (controller.current !== null) return;
+    const loaded = services.current;
+    services.current = null;
+    void loaded?.then(
+      (value) => value.close(),
+      () => undefined,
+    );
+  }, [tier]);
+
   useEffect(
     () => () => {
       controller.current?.abort();
@@ -142,6 +158,7 @@ export function AutoLayer({
       const slide = latest.current.engine.getSlide();
       const context: SmartServicesContext = {
         slide: { width: slide?.width ?? 0, height: slide?.height ?? 0 },
+        tier: latest.current.tier,
         open: latest.current.openRequest,
       };
       services.current ??= latest.current.loader(context);
@@ -326,6 +343,7 @@ export function AutoLayer({
           />
         )}
       </svg>
+      {active && onTierChange ? <ModelTierChoice tier={tier} onTierChange={onTierChange} /> : null}
       {active && (progress !== null || status.message !== null) ? (
         <ContextExtra>
           <span

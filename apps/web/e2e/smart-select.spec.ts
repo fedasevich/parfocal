@@ -138,3 +138,30 @@ test("Escape discards the proposal and keeps the tool", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(stage).toHaveAttribute("data-tool", "select");
 });
+
+test("picking a model, clicking a nucleus and accepting saves the outline", async ({ page }) => {
+  test.slow();
+  const { stage, centre } = await openSmart(page);
+  const choice = page.getByTestId("model-tier");
+  await expect(choice).toHaveAttribute("data-tier", "best");
+  await choice.getByRole("button").click();
+  const picker = page.getByTestId("model-tier-picker");
+  await expect(picker.getByText("Model for outlining nuclei")).toBeVisible();
+  await expect(picker.getByRole("radio")).toHaveCount(2);
+  const good = picker.getByRole("radio", { name: /Good/ });
+  await good.hover();
+  await expect(picker.getByText(/PathoSAM ViT-B · on this computer/)).toBeVisible();
+  await expect(picker.getByText(/\d+ MB, downloaded once/)).toBeVisible();
+  await good.click();
+  await expect(picker).toHaveCount(0);
+  await expect(choice).toHaveAttribute("data-tier", "good");
+  await page.mouse.click(centre.x, centre.y);
+  await settled(page);
+  await expect(proposals(page)).toHaveAttribute("data-proposals", "1");
+  await page.getByTestId("proposal-accept").click();
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+  await page.reload();
+  await expect(stage).toHaveAttribute("data-annotations", "loaded", { timeout: 15_000 });
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+});

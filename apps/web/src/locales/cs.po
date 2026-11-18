@@ -5093,6 +5093,7 @@ msgstr ""
 #: ../../packages/ui/src/components/sheet.tsx
 #: ../../packages/ui/src/components/small-modal.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
+#: src/annotations/context-bar.tsx
 #: src/help/help-dialog.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/evaluation/share-links.tsx
@@ -5127,6 +5128,10 @@ msgstr ""
 msgid "Close the cells"
 msgstr ""
 
+#: src/annotations/context-bar.tsx
+msgid "Close the hint"
+msgstr ""
+
 #: src/screens/review/redraw-layer.tsx
 msgid "Close the outline"
 msgstr ""
@@ -5147,6 +5152,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/thread-popover.tsx
 msgid "Close thread"
+msgstr ""
+
+#: ../../packages/ui/src/components/small-modal.tsx
+msgid "Close without saving? What you entered here will be lost."
 msgstr ""
 
 #: src/screens/jobs/job-window-screen.tsx
@@ -6092,9 +6101,14 @@ msgstr ""
 msgid "disagreements open"
 msgstr ""
 
+#: ../../packages/ui/src/components/small-modal.tsx
 #: src/annotations/context-bar.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "Discard"
+msgstr ""
+
+#: ../../packages/ui/src/components/small-modal.tsx
+msgid "Discard your changes?"
 msgstr ""
 
 #: ../../packages/ui/src/components/error-toast.tsx
@@ -6410,6 +6424,10 @@ msgstr ""
 
 #: src/screens/project/settings-tab.tsx
 msgid "each task can change them"
+msgstr ""
+
+#: src/help/tool-hints-section.tsx
+msgid "Each tool shows its hint once. Show one again to see it on the slide."
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -8411,6 +8429,10 @@ msgstr ""
 msgid "Keep both"
 msgstr ""
 
+#: ../../packages/ui/src/components/small-modal.tsx
+msgid "Keep editing"
+msgstr ""
+
 #: src/feedback/feedback-dialog.tsx
 msgid "Keep it under {maxLength} characters"
 msgstr ""
@@ -9456,6 +9478,7 @@ msgstr ""
 msgid "Model bench page"
 msgstr ""
 
+#: src/annotations/model-tier-choice.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "Model for outlining nuclei"
 msgstr ""
@@ -14124,6 +14147,10 @@ msgstr ""
 msgid "Show after adding"
 msgstr ""
 
+#: src/help/tool-hints-section.tsx
+msgid "Show again"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Show all hints again"
@@ -14178,6 +14205,11 @@ msgstr ""
 
 #: src/study/trace/replay-panel.tsx
 msgid "Show screen"
+msgstr ""
+
+#. placeholder {0}: entry.label
+#: src/help/tool-hints-section.tsx
+msgid "Show the {0} hint again"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -15053,6 +15085,10 @@ msgstr ""
 msgid "Start task"
 msgstr ""
 
+#: src/annotations/smart-layer.tsx
+msgid "Start the model"
+msgstr ""
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Start v2"
 msgstr ""
@@ -15830,6 +15866,10 @@ msgstr ""
 
 #: src/routes/prototype.tsx
 msgid "The four lanes, each box opens its screen in its scene"
+msgstr ""
+
+#: src/annotations/model-tier-choice.tsx
+msgid "The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
 msgstr ""
 
 #: src/screens/new-task/send-step.tsx
@@ -16742,6 +16782,10 @@ msgstr ""
 
 #: src/screens/new-task/send-step.tsx
 msgid "Told just now"
+msgstr ""
+
+#: src/help/tool-hints-section.tsx
+msgid "Tool hints"
 msgstr ""
 
 #: ../../packages/ui/src/components/tool-rail-button.tsx
@@ -17869,6 +17913,10 @@ msgstr ""
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Width"
+msgstr ""
+
+#: src/help/tool-hints-section.tsx
+msgid "Will show"
 msgstr ""
 
 #. placeholder {0}: plural(changed.length, "change")
