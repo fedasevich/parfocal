@@ -48,6 +48,12 @@ test("the progress popover shows the task, the slide and the way to the neighbou
   await expect(popover).toContainText("Task RT-14");
   await expect(popover).toContainText("Round 2");
   await expect(popover.getByRole("button", { name: "Whole slide" })).toBeVisible();
+  const spill = await popover.evaluate((dialog) => {
+    const box = dialog.parentElement?.getBoundingClientRect();
+    const content = dialog.getBoundingClientRect();
+    return box ? content.right - box.right : Number.POSITIVE_INFINITY;
+  });
+  expect(spill).toBeLessThanOrEqual(0);
 });
 
 test("Open report takes the place of Submit in a clinical project", async ({ page }) => {

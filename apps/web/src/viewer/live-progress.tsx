@@ -91,7 +91,7 @@ export function LiveProgress({
           {heading}
           <Icon name="down" className="text-fg-faint" />
         </PopoverTrigger>
-        <PopoverContent align="start">
+        <PopoverContent align="start" className="w-auto p-4.5">
           <ReviewProgressPopover
             taskCode={load.task.code}
             taskName={load.task.name}
