@@ -116,6 +116,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   await expect(follow).toHaveText("Following Anna");
   await expect.poll(() => inStep(lenkaHost, annaHost), { timeout: 5000 }).toBe(true);
 
+  await lenka.bringToFront();
   const before = await cameraOf(annaHost);
   const leadingFrom = await anna.evaluate(() => Date.now());
   await startFrameDiag(anna);
