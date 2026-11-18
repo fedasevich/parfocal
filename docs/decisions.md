@@ -85,7 +85,7 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 
 ## What your answers of 2026-11-18 changed
 
-- Decision 138 (tile sharing when a lab model runs on a clinical project), option A. Connecting a lab model to a clinical project asks the project owner to confirm once that tiles go to the named server, and the confirmation is audited. Built as a new task.
+- Decision 138 (tile sharing when a lab model runs on a clinical project), option A. Connecting a lab model to a clinical project asks the project owner to confirm once that tiles go to the named server, and the confirmation is audited. Already built as JOBS-008 (confirm tile sharing before a lab model joins a clinical project) on 2026-11-17 under ADR 0370, where the model may be added but cannot run until the owner confirms.
 - Decision 140 (moving production to Europe) is done under option A without the warm container. Two cleanups wait for you: delete the old US Neon project `soft-pine-86468744` (`neonctl projects delete soft-pine-86468744`), and later say whether to empty the old bucket `parfocal-dev`.
 - Decision 141 (how fast a person turned off in the customer's directory loses access), option A. Access lasts up to the token lifetime, revisited before the first customer with SCIM. No work.
 - Decision 142 (where a workspace's storage capacity comes from), option A with 1 TB. Capacity is a constant in code, 1 TB per workspace for now.
@@ -150,7 +150,7 @@ IAM-025 (ask for a second factor at sign-in when a workspace requires it) refuse
 - B. Let them switch out to a workspace that does not require a second factor.
 - Other.
 
-Your choice: 
+Your choice: a
 
 ### 149. When to switch on observability export, the owner steps OPS-006 still needs
 
@@ -165,6 +165,8 @@ OPS-006 (observability stack) is built and tested on fakes and stays on hold und
 - B. Do the Grafana, Sentry and PostHog sign-ups now so an agent can run the drill.
 - Other.
 
+- A
+
 ### 150. Whether merging to main deploys production, or releases stay tagged and approved
 
 SKEL-009 (CI deploys main to production) is done when merging to main deploys automatically and the skeleton end to end suite then runs against production. Today that is not what happens. Every release is tagged with `pnpm release`, then `deploy.yml` is dispatched on the tag with environment production and approved at the production environment gate, then the browser smoke runs. The latest such run is https://github.com/fedasevich/parfocal/actions/runs/44200148067 (v0.18.0, deploy and browser smoke both green). The workflow already deploys on every green push to main, but only when the repository variable `DEPLOY_ON_MAIN` is `true`, and it is not set (the repository variables are the Cloudflare account, the Neon project, the smoke email, the Zitadel organisation and the seed viewer emails). Every run triggered by a push to main in the last day shows as skipped, for example https://github.com/fedasevich/parfocal/actions/runs/44205297093. Setting a repository variable is a GitHub repository setting, so an agent does not do it.
@@ -176,7 +178,7 @@ SKEL-009 (CI deploys main to production) is done when merging to main deploys au
 
 Recommendation A, because the app is a development environment (ADR 0390) and a tagged, approved release has worked for the last releases, while deploying every merge multiplies runs and the Modal and Neon cost for no user.
 
-Your choice: 
+Your choice: put thid task on hold so A
 
 ### 151. What the H-optimus-0 tumor probe still needs on the Mac
 
