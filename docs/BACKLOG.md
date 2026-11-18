@@ -6604,7 +6604,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Give quiet buttons in the review panel enough contrast to read as buttons at a glance, rename or explain "Map this view" and "Paint a map" so a first-time user knows the result before clicking, and make the Guided button start guided review on the current slide's objects.
   Done when an axe and contrast check passes on the review panel stories, a browser test starts guided review from the Guided button and decides an object, and the new labels are in the locale files.
   Depends on PROTO-029. Size: S.
-- [ ] PROTO-034 · Cell review follows the Minimap setting with a movable smart minimap
+- [x] PROTO-034 · Cell review follows the Minimap setting with a movable smart minimap
   On 2026-11-18 the owner found that in cell review the Z key opens the full slide map and no minimap appears when it would help, though the Layout setting offers When useful, Always and Never.
   Show the smart minimap from NAV-006 (smart minimap state machine) and NAV-007 (minimap placement scoring) in cell review as it shows in the full viewer, following the Minimap setting, let the reviewer drag it to another corner and keep that place, and keep Z as the hold to see the whole slide.
   Done when a browser test in cell review sees the minimap appear after zooming in under When useful, always under Always and never under Never, drags it to another corner and finds it there after a reload.

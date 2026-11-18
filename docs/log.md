@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-18
 
+- PROTO-034 (cell review follows the Minimap setting with a movable smart minimap): the live StageMinimap reuses the minimap state machine, placement scoring and corner setting, the handle drags it to a corner saved in minimap_corner and minimap_corner_cells, Z or a click opens the whole slide, Never hides every minimap, and every live viewer now hides the map at fit zoom under When useful. The live map shows the whole slide with no area crop.
 - PROTO-030 Fable audited the viewer against the mock (docs/results/2026-11-18-viewer-mock-drift.md): 62 differences, none justified by an accepted ADR, grouped into PROTO-037 to PROTO-048. PROTO-049 (command palette contrast) and PROTO-050 (second audit of dock, compare, peek, shortcuts and dark theme) added.
 - PROTO-036 Production touch: uploaded pathosam.encoder_q4.onnx, pathosam.encoder_uint8.onnx, pathosam.decoder.onnx and pathosam.decoder_window32.onnx (about 206 MB) to R2 parfocal-dev-eu/models/ with wrangler, additive, storage cost under one cent a month. The Best model choice is decision 156.
 - PROTO-036 (one-click model picker, works end to end): /models/*.onnx always answered 404, so the engine never started. The edge Worker now serves models/ from the slides bucket and Vite serves the local model cache, Smart select and Auto region get the mock's tier pill with Best and Good rows, and a browser test picks Good, clicks a nucleus, accepts and finds the outline after a reload.
