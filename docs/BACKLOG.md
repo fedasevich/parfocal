@@ -6599,7 +6599,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Give every tool hint bar a close button and a key, show each one once per person until closed, keep the tool's state chips that change behaviour (such as hover preview) in the tool's own settings popover, and list every hint under one Help entry where it can be read and shown again. Replace raw engine messages with plain words and a next step, such as starting the model.
   Done when a unit test covers hint seen state, a browser test closes the Rectangle and Smart select hints, reloads and does not see them, then opens them from Help, and no raw engine message reaches the screen.
   Depends on PROTO-029. Size: S.
-- [ ] PROTO-033 · The review panel's buttons are visible, say what they do, and Guided works
+- [x] PROTO-033 · The review panel's buttons are visible, say what they do, and Guided works
   On 2026-11-18 the owner found that the review panel's quiet buttons ("Previous", "How guided review works", "Hide the cells grid") are nearly invisible, that "Map this view" and "Paint a map" do not say what they do, and that the Guided button does nothing, so every check happens in the full viewer.
   Give quiet buttons in the review panel enough contrast to read as buttons at a glance, rename or explain "Map this view" and "Paint a map" so a first-time user knows the result before clicking, and make the Guided button start guided review on the current slide's objects.
   Done when an axe and contrast check passes on the review panel stories, a browser test starts guided review from the Guided button and decides an object, and the new labels are in the locale files.
