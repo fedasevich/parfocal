@@ -4727,7 +4727,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the 20-slide test runs nightly on hosted runners with software rendering and a pass threshold.
   Size: M.
 
-- [ ] TEST-008 · Visual regression for UI
+- [x] TEST-008 · Visual regression for UI
   Component stories in both themes and densities.
   Done when a visual diff blocks a pull request until approved.
   Size: M.
