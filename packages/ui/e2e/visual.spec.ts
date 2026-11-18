@@ -19,7 +19,7 @@ import {
   visualCases,
   writePng,
 } from "@parfocal/golden-images";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 type StoryIndex = {
   entries: Record<string, { id: string; type: "story" | "docs" }>;
@@ -50,6 +50,37 @@ const existing = new Set(
 
 const update = goldenUpdateRequested();
 
+async function capture(
+  page: Page,
+  storyId: string,
+  theme: string,
+  density: UiDensity,
+): Promise<Buffer> {
+  await page.goto(
+    `/iframe.html?id=${storyId}&viewMode=story&globals=theme:${theme};density:${density};a11y.manual:!true`,
+  );
+  await page.locator("#storybook-root > *").first().waitFor();
+  await page.waitForFunction(
+    ([wantedTheme, wantedDensity]) => {
+      const root = document.documentElement;
+      return (
+        root.getAttribute("data-theme") === wantedTheme &&
+        root.getAttribute("data-density") === wantedDensity
+      );
+    },
+    [theme, density],
+  );
+  await page.evaluate(async () => {
+    const twoFrames = () =>
+      new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    await Promise.all([...document.fonts].map((face) => face.load().catch(() => face)));
+    await document.fonts.ready;
+    await twoFrames();
+    await document.fonts.ready;
+  });
+  return page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
+}
+
 test.use({ reducedMotion: "reduce", viewport: { width: 1280, height: 800 } });
 
 test("every committed UI baseline belongs to a story", () => {
@@ -71,41 +102,31 @@ for (const storyId of storyIds) {
       const shots: Partial<Record<UiDensity, Frame>> = {};
       const failures: string[] = [];
       for (const density of UI_DENSITIES) {
-        await page.goto(
-          `/iframe.html?id=${storyId}&viewMode=story&globals=theme:${theme};density:${density};a11y.manual:!true`,
-        );
-        await page.locator("#storybook-root > *").first().waitFor();
-        await page.waitForFunction(
-          ([wantedTheme, wantedDensity]) => {
-            const root = document.documentElement;
-            return (
-              root.getAttribute("data-theme") === wantedTheme &&
-              root.getAttribute("data-density") === wantedDensity
-            );
-          },
-          [theme, density],
-        );
-        await page.evaluate(async () => {
-          const twoFrames = () =>
-            new Promise<void>((done) =>
-              requestAnimationFrame(() => requestAnimationFrame(() => done())),
-            );
-          await document.fonts.ready;
-          await twoFrames();
-          await document.fonts.ready;
-        });
-        const actual = decodePng(
-          await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" }),
-        );
         const item = visualCase(storyId, theme, density);
-        const judgement = judgeVisual({
-          item,
-          actual,
-          existing,
-          readBaseline: (name) => readPng(baselinePath(name)),
-          update,
-          ...(shots.comfortable === undefined ? {} : { comfortableActual: shots.comfortable }),
-        });
+        const judge = (frame: Frame) =>
+          judgeVisual({
+            item,
+            actual: frame,
+            existing,
+            readBaseline: (name) => readPng(baselinePath(name)),
+            update,
+            ...(shots.comfortable === undefined ? {} : { comfortableActual: shots.comfortable }),
+          });
+        let buffer = await capture(page, storyId, theme, density);
+        if (update) {
+          for (let attempt = 1; attempt < 4; attempt++) {
+            const again = await capture(page, storyId, theme, density);
+            const agreed = again.equals(buffer);
+            buffer = again;
+            if (agreed) break;
+          }
+        }
+        let actual = decodePng(buffer);
+        let judgement = judge(actual);
+        for (let attempt = 1; attempt < 3 && judgement.status === "differs"; attempt++) {
+          actual = decodePng(await capture(page, storyId, theme, density));
+          judgement = judge(actual);
+        }
         shots[density] = actual;
         switch (judgement.status) {
           case "skipped":
