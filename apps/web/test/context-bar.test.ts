@@ -18,12 +18,7 @@ const mockTable: Record<string, { label: string; hints: string[] }> = {
   hand: { label: "Pan", hints: ["Drag to pan", "Space+drag pans in any tool"] },
   smart: {
     label: "Smart select",
-    hints: [
-      "PathoSAM · hover preview on",
-      "Click a nucleus",
-      "⇧click adds, right-click removes",
-      "Enter accepts",
-    ],
+    hints: ["Click a nucleus", "⇧click adds, right-click removes", "Enter accepts"],
   },
   auto: { label: "Auto region", hints: [] },
   poly: {

@@ -9,6 +9,7 @@ import {
   slideToModel,
 } from "@parfocal/viewer-engine";
 import type { PresetPatch, PresetPatchQuery } from "./patch-reader.ts";
+import { plainFailure } from "./plain-message.ts";
 import type { ScalePresetId } from "./scale-presets.ts";
 import {
   anchorOf,
@@ -276,7 +277,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
       );
     } catch (error) {
       if (mine !== version) return;
-      settle("failed", error instanceof Error ? error.message : "Smart select failed");
+      settle("failed", plainFailure(error, "Smart select could not outline that"));
     }
   }
 

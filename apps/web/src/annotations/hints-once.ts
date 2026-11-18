@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { railToolOf } from "../viewer/stage-tools.ts";
 
@@ -12,7 +12,12 @@ export function drawsContextBar(need: ContextBarNeed): boolean {
   return need.proposals > 0 || need.classStrip || need.hintsShown;
 }
 
-export function useHintsOnce(tool: string, hintOnly: boolean): boolean {
+export type HintsOnce = {
+  readonly shown: boolean;
+  readonly dismiss: () => void;
+};
+
+export function useHintsOnce(tool: string, wanted: boolean): HintsOnce {
   const rail = railToolOf(tool);
   const { ready, seen, markSeen } = useHintsSeen();
   const [shown, setShown] = useState<string | null>(null);
@@ -29,7 +34,7 @@ export function useHintsOnce(tool: string, hintOnly: boolean): boolean {
   }, []);
   useEffect(() => {
     const id = toolHintId(rail);
-    if (!hintOnly || !ready || seenRef.current.has(id)) {
+    if (!wanted || !ready || seenRef.current.has(id)) {
       setShown(null);
       return;
     }
@@ -37,6 +42,10 @@ export function useHintsOnce(tool: string, hintOnly: boolean): boolean {
     return () => {
       if (!leaving.current) markRef.current([id]);
     };
-  }, [rail, hintOnly, ready]);
-  return hintOnly && shown === rail;
+  }, [rail, wanted, ready]);
+  const dismiss = useCallback(() => {
+    markRef.current([toolHintId(rail)]);
+    setShown(null);
+  }, [rail]);
+  return { shown: wanted && shown === rail, dismiss };
 }

@@ -2,6 +2,7 @@ import { useLingui } from "@lingui/react/macro";
 import { isTwoFingerClick, secondaryButton } from "@parfocal/viewer-engine";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useHoverPreview } from "../aiseg/hover-preview-setting.ts";
+import { modelNotStartedText, plainFailure } from "../aiseg/plain-message.ts";
 import { createPrewarmTrigger } from "../aiseg/smart-prewarm.ts";
 import { nextRunId, smartRunFinished, withSmartRun } from "../aiseg/smart-run.ts";
 import { classifyPress, type SmartPoint } from "../aiseg/smart-select.ts";
@@ -153,12 +154,30 @@ export function SmartLayer({
         show({
           ...idle,
           phase: "failed",
-          message: error instanceof Error ? error.message : "Smart select could not start",
+          message: plainFailure(error, "Smart select could not start"),
         }),
       );
     }
     return session.current;
   }, [slideId, show]);
+
+  const startModel = useCallback(() => {
+    const pending = session.current;
+    const loaded = services.current;
+    session.current = null;
+    services.current = null;
+    void pending?.then(
+      (value) => value.close(),
+      () => undefined,
+    );
+    void loaded?.then(
+      (value) => value.close(),
+      () => undefined,
+    );
+    show(idle);
+    const centre = screenToSlide(camera, rect, rect.width / 2, rect.height / 2);
+    void sessionPromise().then((value) => value.prewarm(centre));
+  }, [camera, rect, sessionPromise, show]);
 
   useEffect(
     () => () => {
@@ -444,6 +463,16 @@ export function SmartLayer({
           {snapshot.phase === "thinking" || snapshot.message !== null ? (
             <span data-testid="smart-status" role="status" className={contextChip}>
               {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}
+              {snapshot.message === modelNotStartedText ? (
+                <button
+                  type="button"
+                  data-testid="smart-start-model"
+                  onClick={startModel}
+                  className="ml-2 cursor-pointer text-accent underline"
+                >
+                  {t`Start the model`}
+                </button>
+              ) : null}
             </span>
           ) : null}
         </ContextExtra>

@@ -440,8 +440,17 @@ function OpenedSlide({
     activeName: activeInfo?.name ?? null,
     counted: markerTotal,
   });
-  const hintOnly = !contextModel.classStrip && (workspace === "annotate" || tool !== restingTool);
-  const hintsShown = useHintsOnce(tool, hintOnly);
+  const wantsHints = workspace === "annotate" || tool !== restingTool;
+  const { shown: hintsShown, dismiss: dismissHints } = useHintsOnce(tool, wantsHints);
+  const hintBindings = useBindings(["viewer"], ["hidehint"], hintsShown);
+  const onHintKey = useCallback(
+    ({ phase }: { phase: string }) => {
+      if (phase === "press") dismissHints();
+    },
+    [dismissHints],
+  );
+  useHotkeys(hintBindings, onHintKey);
+  const barModel = hintsShown ? contextModel : { ...contextModel, hints: [] };
   const {
     pending: pendingProposals,
     accept: acceptProposals,
@@ -948,7 +957,8 @@ function OpenedSlide({
                   ) : null}
                   {drawsContextBar({ ...contextModel, proposals: proposalCount, hintsShown }) ? (
                     <ContextBarView
-                      model={contextModel}
+                      model={barModel}
+                      onCloseHints={dismissHints}
                       classes={classes}
                       activeClass={activeClass}
                       onPick={pickClassKey}

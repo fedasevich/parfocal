@@ -10,6 +10,7 @@ import {
   noteHintsSeen,
   readGuestHints,
   toolHintId,
+  withoutSeen,
   withSeen,
   writeGuestHints,
 } from "../src/hints/hints-seen.ts";
@@ -112,5 +113,14 @@ describe("hints seen", () => {
     assert.deepEqual(readGuestHints(storage), ["coach.guided", "viewer.tool.ruler"]);
     writeGuestHints([], storage);
     assert.deepEqual(readGuestHints(storage), []);
+  });
+
+  it("closing a tool hint keeps it seen and showing it again from Help clears only that one", () => {
+    const storage = memory();
+    noteHintsSeen([toolHintId("rect"), toolHintId("smart")], storage);
+    assert.deepEqual(readGuestHints(storage), ["viewer.tool.rect", "viewer.tool.smart"]);
+    writeGuestHints(withoutSeen(readGuestHints(storage), [toolHintId("rect")]), storage);
+    assert.deepEqual(readGuestHints(storage), ["viewer.tool.smart"]);
+    assert.deepEqual(withoutSeen(["a"], ["b"]), ["a"]);
   });
 });

@@ -1,6 +1,7 @@
 import { useLingui } from "@lingui/react/macro";
 import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AisOutliner, createAisOutliner } from "../aiseg/ais-outliner.ts";
+import { plainFailure } from "../aiseg/plain-message.ts";
 import { autoFallback, type OutlineTier, qualityForTier } from "../aiseg/prompt-fallback.ts";
 import {
   clickTile,
@@ -187,7 +188,7 @@ export function AutoLayer({
       else
         setStatus({
           progress: null,
-          message: error instanceof Error ? error.message : "Auto region could not run",
+          message: plainFailure(error, "Auto region could not run"),
         });
     } finally {
       controller.current = null;

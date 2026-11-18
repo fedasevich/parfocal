@@ -51,6 +51,10 @@ export function withSeen(seen: readonly string[], ids: readonly string[]): strin
   return fresh.length === 0 ? [...seen] : [...seen, ...fresh].slice(-mostHints);
 }
 
+export function withoutSeen(seen: readonly string[], ids: readonly string[]): string[] {
+  return seen.filter((id) => !ids.includes(id));
+}
+
 export function readGuestHints(storage: HintStorage | undefined = browserStorage()): string[] {
   try {
     return parseList(storage?.getItem(guestHintsKey));
@@ -161,6 +165,7 @@ export type HintsSeen = {
   seen: ReadonlySet<string>;
   markSeen: (ids: readonly string[]) => void;
   showAllAgain: () => void;
+  showAgain: (ids: readonly string[]) => void;
 };
 
 const serverSeen = (response: getMySettingLayersResponse | undefined): string[] | undefined =>
@@ -212,6 +217,18 @@ export function useHintsSeen(): HintsSeen {
     }
     store(() => []);
   }, [store]);
+  const showAgain = useCallback(
+    (ids: readonly string[]) => {
+      const guest = readGuestHints();
+      const remaining = withoutSeen(guest, ids);
+      if (!sameList(guest, remaining)) {
+        writeGuestHints(remaining);
+        notifyLocal();
+      }
+      store((current) => withoutSeen(current, ids));
+    },
+    [store],
+  );
   const joined = [...(server ?? []), ...local].join("\n");
   const seen = useMemo(() => new Set(joined === "" ? [] : joined.split("\n")), [joined]);
 
@@ -222,5 +239,5 @@ export function useHintsSeen(): HintsSeen {
     store((current) => withSeen(current, local));
   }, [signedIn, local, store]);
 
-  return { ready: signedIn || !query.isPending, seen, markSeen, showAllAgain };
+  return { ready: signedIn || !query.isPending, seen, markSeen, showAllAgain, showAgain };
 }
