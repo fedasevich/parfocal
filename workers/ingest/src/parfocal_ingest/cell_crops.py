@@ -18,7 +18,7 @@ from parfocal_common.cell_crops import CROP_MICRONS, CROP_SIDE, crop_folder, cro
 from parfocal_common.chunk_store import CellSummary, read_summary
 from parfocal_common.jobs import StepFailedError
 from parfocal_common.object_ids import Letter
-from parfocal_common.object_store import ObjectStore
+from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import MissingObjectError, ObjectResultStore
 from parfocal_common.review_order import unpack
@@ -45,6 +45,8 @@ CUT = "cut"
 PRESENT = "present"
 NONE = "none"
 UNREADABLE = "unreadable"
+MISSING = "missing"
+NOT_FOUND = 404
 
 
 @dataclass(frozen=True)
@@ -185,6 +187,11 @@ async def crop_slide(
             await store.put_object(crop_key(tenant_id, slide_id, spot.number), body, "image/jpeg")
     except StepFailedError:
         return UNREADABLE
+    except StorageError as error:
+        if error.status != NOT_FOUND:
+            raise
+        logger.warning("crop original missing", extra={"slide_id": str(slide_id)})
+        return MISSING
     finally:
         await asyncio.to_thread(shutil.rmtree, folder, True)
     return CUT

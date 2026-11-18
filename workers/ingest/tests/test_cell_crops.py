@@ -13,9 +13,10 @@ from PIL import Image
 
 from parfocal_common.cell_crops import CROP_SIDE, crop_folder, crop_key
 from parfocal_common.ingest import original_key
-from parfocal_common.object_store import ObjectStore
+from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_ingest.cell_crops import (
     CUT,
+    MISSING,
     NONE,
     PRESENT,
     UNREADABLE,
@@ -117,3 +118,28 @@ async def test_a_slide_without_cells_or_pixels_stores_nothing(tmp_path: Path) ->
     )
     assert state == UNREADABLE
     assert broken.objects == {}
+
+
+async def test_a_slide_whose_original_is_gone_ends_without_crops(tmp_path: Path) -> None:
+    class Gone(Store):
+        async def download(self, key: str, target: Path) -> None:
+            raise StorageError(404, "NoSuchKey")
+
+    gone = Gone()
+    state = await crop_slide(
+        cast("ObjectStore", gone), TENANT, SLIDE_ID, KEY, [spot(1, 0, 9)], tmp_path
+    )
+    assert state == MISSING
+    assert gone.objects == {}
+    assert await asyncio.to_thread(lambda: list(tmp_path.iterdir())) == []
+
+
+async def test_other_storage_errors_still_reach_the_job(tmp_path: Path) -> None:
+    class Down(Store):
+        async def download(self, key: str, target: Path) -> None:
+            raise StorageError(503, "SlowDown")
+
+    with pytest.raises(StorageError):
+        await crop_slide(
+            cast("ObjectStore", Down()), TENANT, SLIDE_ID, KEY, [spot(1, 0, 9)], tmp_path
+        )
