@@ -142,7 +142,7 @@ export function EmailForm({ flow }: { flow: Flow }) {
         />
       </AuthField>
       <AuthFoot>
-        <AuthLink onClick={() => flow.change("forgot")}>
+        <AuthLink className="min-h-6" onClick={() => flow.change("forgot")}>
           <Trans>Forgot your password?</Trans>
         </AuthLink>
       </AuthFoot>
