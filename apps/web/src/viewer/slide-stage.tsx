@@ -984,12 +984,12 @@ function OpenedSlide({
                   {!bare && !inspector.guided && toolsLayout === "dock" ? (
                     <div
                       data-slot="stage-tools"
-                      className="absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
+                      className="absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 items-center gap-0.5 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
                     >
                       {setup.rail.map((group) => (
                         <div
                           key={group.map((item) => item.tool).join("-")}
-                          className="flex border-r border-line px-1 last:border-r-0"
+                          className="flex gap-0.5 border-r border-line px-1 last:border-r-0"
                         >
                           {group.map(railButtons)}
                         </div>

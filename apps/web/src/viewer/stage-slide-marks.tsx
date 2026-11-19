@@ -198,7 +198,7 @@ export function StageSlideMarks({
         />
       ) : null}
       {wholeShown && onWholeSlide !== null ? (
-        <div className="pointer-events-auto absolute bottom-16 left-4 flex gap-2">
+        <div className="pointer-events-auto absolute bottom-4 left-4 flex gap-2">
           <WholeSlideButton testId="whole-slide-button" onClick={onWholeSlide} />
         </div>
       ) : null}
