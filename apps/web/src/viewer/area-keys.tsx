@@ -81,6 +81,12 @@ export function AreaKeys({
           </section>
         </DockCard>
       ) : null}
+      <span
+        hidden
+        data-testid="area-visits"
+        data-current={nav.current ?? ""}
+        data-visited={[...nav.visited].sort().join(" ")}
+      />
     </>
   );
 }
