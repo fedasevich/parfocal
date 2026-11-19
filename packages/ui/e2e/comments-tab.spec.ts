@@ -66,3 +66,16 @@ test("each thread says whether it lives on the slide or on a task", async ({ pag
   await expect(cards(page).nth(1).locator('[data-slot="thread-scope"]')).toHaveText("Slide");
   await expect(cards(page).nth(1)).toContainText("Is this the fold we saw last week?");
 });
+
+test("the button asks for a comment on an ID and the notes list shows each decision note", async ({
+  page,
+}) => {
+  await page.goto(story("components-comments-tab--with-decision-notes"));
+  await expect(page.getByRole("button", { name: /New comment on an ID/ })).toBeVisible();
+  const notes = page.locator('[data-slot="decision-notes"]');
+  await expect(notes).toContainText("Your decision notes");
+  await expect(notes.locator('[data-slot="decision-note-card"]')).toHaveCount(1);
+  await expect(notes).toContainText("Disagree");
+  await expect(notes).toContainText("Runs past the fold");
+  await expect(cards(page)).toHaveCount(3);
+});

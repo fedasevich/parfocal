@@ -54,7 +54,25 @@ const threads: CommentThreadCard[] = [
   },
 ];
 
-function Tab({ items, start }: { items: CommentThreadCard[]; start?: string }) {
+const decisionNotes = [
+  {
+    id: "T2",
+    anchor: "T2",
+    decision: "Disagree",
+    author: people.SM,
+    text: "Boundary is off \u00b7 Runs past the fold",
+  },
+];
+
+function Tab({
+  items,
+  start,
+  notes,
+}: {
+  items: CommentThreadCard[];
+  start?: string;
+  notes?: typeof decisionNotes;
+}) {
   const [selected, setSelected] = useState(start);
   const [went, setWent] = useState("");
   const [created, setCreated] = useState(0);
@@ -63,6 +81,7 @@ function Tab({ items, start }: { items: CommentThreadCard[]; start?: string }) {
       <CommentsTab
         slideLabel="A1"
         threads={items}
+        notes={notes}
         selectedId={selected}
         onSelect={setSelected}
         onGoTo={(id) => setWent(items.find((item) => item.id === id)?.anchor ?? "")}
@@ -79,6 +98,10 @@ function Tab({ items, start }: { items: CommentThreadCard[]; start?: string }) {
 }
 
 export const OpenThreads: Story = { render: () => <Tab items={threads} start="t2" /> };
+
+export const WithDecisionNotes: Story = {
+  render: () => <Tab items={threads} start="t2" notes={decisionNotes} />,
+};
 
 export const OnlyResolved: Story = {
   render: () => <Tab items={threads.map((thread) => ({ ...thread, resolved: true }))} />,

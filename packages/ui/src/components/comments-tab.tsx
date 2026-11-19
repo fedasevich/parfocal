@@ -26,6 +26,14 @@ type CommentThreadCard = {
   resolved: boolean;
 };
 
+type DecisionNoteCard = {
+  id: string;
+  anchor: string;
+  decision: string;
+  author?: PersonInfo | undefined;
+  text: string;
+};
+
 type CommentsTabProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   threads: CommentThreadCard[];
   selectedId?: string | undefined;
@@ -35,6 +43,8 @@ type CommentsTabProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
   onSelect?: (id: string) => void;
   onGoTo?: (id: string) => void;
   onNewComment?: () => void;
+  notes?: DecisionNoteCard[] | undefined;
+  onSelectNote?: ((id: string) => void) | undefined;
   slideLabel?: string;
 };
 
@@ -110,6 +120,35 @@ function ThreadCardRow({
   );
 }
 
+function DecisionNoteRow({
+  note,
+  onSelect,
+}: {
+  note: DecisionNoteCard;
+  onSelect: (() => void) | undefined;
+}) {
+  return (
+    <li data-slot="decision-note-card">
+      <button
+        type="button"
+        onClick={onSelect}
+        className="grid w-full min-w-0 cursor-pointer gap-1.5 rounded-zone border border-transparent bg-transparent p-2 text-left text-fg outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
+      >
+        <span className="flex items-center gap-2.5">
+          <ObjectIdTag>{note.anchor}</ObjectIdTag>
+          <b className="min-w-0 flex-1 truncate text-body-sm font-semibold">{note.decision}</b>
+        </span>
+        <span className="flex items-start gap-2 text-body-sm text-fg">
+          {note.author ? <Person person={note.author} size={20} /> : null}
+          <span className="min-w-0 flex-1" data-phi="">
+            {note.text}
+          </span>
+        </span>
+      </button>
+    </li>
+  );
+}
+
 function CommentsTab({
   threads,
   selectedId,
@@ -119,6 +158,8 @@ function CommentsTab({
   onSelect,
   onGoTo,
   onNewComment,
+  notes = [],
+  onSelectNote,
   slideLabel,
   className,
   ...props
@@ -173,11 +214,34 @@ function CommentsTab({
       <Button block onClick={onNewComment}>
         <Icon name="comment" />
         <Trans>
-          New comment <Keycap keys="C" size="sm" />
+          New comment on an ID <Keycap keys="C" size="sm" />
         </Trans>
       </Button>
+      {notes.length ? (
+        <section
+          data-slot="decision-notes"
+          aria-label={t`Your decision notes`}
+          className="grid gap-1"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-body-sm font-semibold">
+              <Trans>Your decision notes</Trans>
+            </span>
+            <span className="font-mono text-caption text-fg-dim">{notes.length}</span>
+          </div>
+          <ul className="m-0 grid list-none gap-1 p-0">
+            {notes.map((note) => (
+              <DecisionNoteRow
+                key={note.id}
+                note={note}
+                onSelect={onSelectNote ? () => onSelectNote(note.id) : undefined}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
 
-export { CommentsTab, type CommentsTabProps, type CommentThreadCard };
+export { CommentsTab, type CommentsTabProps, type CommentThreadCard, type DecisionNoteCard };
