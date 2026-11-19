@@ -2,6 +2,33 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.23.0 (2026-11-19)
+
+### Features
+
+- PROTO-057: Add the mock's display rows to Settings, Display, kept per device
+- PROTO-058: Widen Help, show the running version and list user facing changes
+- OPS-038: Answer a GPU call still waiting for an EU GPU with a pollable wait and Cancel
+
+### Docs
+
+- OPS-036: Ask what a GPU job does when the EU has no GPU free
+- PROTO-058: Add and claim the wider Help with user facing notes
+- PROTO-057: Log and tick after merge
+- OPS-038: Apply the owner's answers to decisions 159 and 160
+- PROTO-058: Log and tick after merge
+- OPS-038: Log and move to review after merge
+
+### Tests
+
+- PROTO-056: Approve the UI baselines after the drift merges
+
+### Other
+
+- PROTO-057: Claim PROTO-057
+- AISEG-024: Claim AISEG-024
+- OPS-038: Claim OPS-038
+
 ## v0.22.0 (2026-11-19)
 
 ### Features
