@@ -92,12 +92,21 @@ function AuthPitchSide({
   points = defaultPoints,
   ids = [],
 }: AuthPitchSideProps) {
+  const { t } = useLingui();
   return (
     <aside
       data-slot="auth-side"
-      className="relative flex flex-col gap-5 overflow-hidden bg-[#0c111c] bg-cover bg-center px-9 py-8 text-[#f5f5f5]"
-      style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
+      className="relative flex flex-col gap-5 overflow-hidden bg-[#0c111c] px-9 py-8 text-[#f5f5f5]"
     >
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={t`A tissue sample with model outlines`}
+          data-slot="auth-side-image"
+          decoding="async"
+          className="absolute inset-0 size-full object-cover max-lg:hidden"
+        />
+      ) : null}
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,12,20,.6)_0%,rgba(9,12,20,.3)_38%,rgba(9,12,20,.94)_72%)]"

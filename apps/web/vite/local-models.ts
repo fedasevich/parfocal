@@ -1,7 +1,11 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
+
+const signInArtPath = "/models/signin-slide-v1.webp";
+const signInArtFallback = join(dirname(fileURLToPath(import.meta.url)), "signin-slide-dev.webp");
 
 const modelPath = /^\/models\/([a-z0-9][a-z0-9_-]{0,63}(?:\.[a-z0-9_-]{1,32}){0,3}\.onnx)$/;
 
@@ -15,6 +19,12 @@ export function localModelsDir(env: NodeJS.ProcessEnv = process.env): string {
 function serveFrom(dir: () => string): Connect.NextHandleFunction {
   return (request, response, next) => {
     const pathname = new URL(request.url ?? "/", "http://dev").pathname;
+    if (pathname === signInArtPath) {
+      response.setHeader("Content-Type", "image/webp");
+      response.setHeader("Cache-Control", "no-cache");
+      createReadStream(signInArtFallback).pipe(response);
+      return;
+    }
     const file = modelPath.exec(pathname)?.[1];
     if (file === undefined) return next();
     const path = join(dir(), file);

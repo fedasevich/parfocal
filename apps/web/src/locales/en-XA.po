@@ -2892,6 +2892,10 @@ msgstr ""
 msgid "A text, such as an ID, does not match the expected pattern."
 msgstr ""
 
+#: ../../packages/ui/src/components/auth.tsx
+msgid "A tissue sample with model outlines"
+msgstr ""
+
 #: src/screens/upload/formats-drawer.tsx
 msgid "A value has the wrong type, such as text where a number goes."
 msgstr ""
@@ -17062,7 +17066,7 @@ msgstr ""
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/open-failure-alert.tsx
 msgid "Try again"
 msgstr ""
 

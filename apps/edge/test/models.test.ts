@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import worker, { type EdgeEnv } from "../src/index.ts";
-import { MODEL_CACHE_CONTROL, modelKey } from "../src/models.ts";
+import { MODEL_CACHE_CONTROL, modelKey, SIGNIN_ART_CACHE_CONTROL } from "../src/models.ts";
 
 const SECRET = btoa("k".repeat(32));
 const BYTES = new Uint8Array([8, 7, 18, 4, 1, 2, 3, 4]);
@@ -38,7 +38,10 @@ function envWith(slides: R2Bucket): EdgeEnv {
   };
 }
 
-const stored: Stored = { "models/pathosam.decoder.onnx": { bytes: BYTES, etag: "v1" } };
+const stored: Stored = {
+  "models/pathosam.decoder.onnx": { bytes: BYTES, etag: "v1" },
+  "models/signin-slide-v1.webp": { bytes: BYTES, etag: "w1" },
+};
 
 async function fetchModel(path: string, init: RequestInit = {}, reads: string[] = []) {
   return worker.fetch(
@@ -95,4 +98,19 @@ test("only plain onnx file names under /models/ reach the bucket", async () => {
 test("writes to a model path are refused", async () => {
   const response = await fetchModel("/models/pathosam.decoder.onnx", { method: "PUT", body: "x" });
   assert.equal(response.status, 405);
+});
+
+test("the sign-in picture is served as an image with a year long cache", async () => {
+  const response = await fetchModel("/models/signin-slide-v1.webp");
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Content-Type"), "image/webp");
+  assert.equal(response.headers.get("Cache-Control"), SIGNIN_ART_CACHE_CONTROL);
+  assert.match(SIGNIN_ART_CACHE_CONTROL, /max-age=31536000/);
+});
+
+test("no other image name under /models/ reaches the bucket", async () => {
+  const reads: string[] = [];
+  const response = await fetchModel("/models/other.webp", {}, reads);
+  assert.equal(response.status, 404);
+  assert.deepEqual(reads, []);
 });

@@ -79,3 +79,18 @@ test("no access shows the shared page and the request turns into Asked", async (
   await shown.getByRole("button", { name: "Ask for access" }).click();
   await expect(shown.getByRole("button", { name: "Asked Lenka Malá" })).toBeDisabled();
 });
+
+test("the sign-in page shows the annotated slide picture on wide screens and hides it on narrow ones", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/sign-in");
+  const picture = page.getByRole("img", { name: "A tissue sample with model outlines" });
+  await expect(picture).toBeVisible();
+  await expect
+    .poll(() => picture.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(picture).toHaveAttribute("src", "/models/signin-slide-v1.webp");
+  await page.setViewportSize({ width: 700, height: 900 });
+  await expect(picture).toBeHidden();
+});
