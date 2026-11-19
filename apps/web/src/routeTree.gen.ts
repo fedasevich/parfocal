@@ -16,6 +16,7 @@ import { Route as InviteRouteImport } from "./routes/invite.tsx";
 import { Route as IssueStatesRouteImport } from "./routes/issue-states.tsx";
 import { Route as KpiRouteImport } from "./routes/kpi.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
+import { Route as NotificationsRouteImport } from "./routes/notifications.tsx";
 import { Route as PopoutRouteImport } from "./routes/popout.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
 import { Route as SearchRouteImport } from "./routes/search.tsx";
@@ -91,6 +92,11 @@ const KpiRoute = KpiRouteImport.update({
 const MyWorkRoute = MyWorkRouteImport.update({
   id: "/my-work",
   path: "/my-work",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: "/notifications",
+  path: "/notifications",
   getParentRoute: () => rootRouteImport,
 } as any);
 const PopoutRoute = PopoutRouteImport.update({
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   "/issue-states": typeof IssueStatesRoute;
   "/kpi": typeof KpiRoute;
   "/my-work": typeof MyWorkRoute;
+  "/notifications": typeof NotificationsRoute;
   "/popout": typeof PopoutRoute;
   "/prototype": typeof PrototypeRoute;
   "/search": typeof SearchRoute;
@@ -371,6 +378,7 @@ export interface FileRoutesByTo {
   "/issue-states": typeof IssueStatesRoute;
   "/kpi": typeof KpiRoute;
   "/my-work": typeof MyWorkRoute;
+  "/notifications": typeof NotificationsRoute;
   "/popout": typeof PopoutRoute;
   "/prototype": typeof PrototypeRoute;
   "/search": typeof SearchRoute;
@@ -422,6 +430,7 @@ export interface FileRoutesById {
   "/issue-states": typeof IssueStatesRoute;
   "/kpi": typeof KpiRoute;
   "/my-work": typeof MyWorkRoute;
+  "/notifications": typeof NotificationsRoute;
   "/popout": typeof PopoutRoute;
   "/prototype": typeof PrototypeRoute;
   "/search": typeof SearchRoute;
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | "/issue-states"
     | "/kpi"
     | "/my-work"
+    | "/notifications"
     | "/popout"
     | "/prototype"
     | "/search"
@@ -524,6 +534,7 @@ export interface FileRouteTypes {
     | "/issue-states"
     | "/kpi"
     | "/my-work"
+    | "/notifications"
     | "/popout"
     | "/prototype"
     | "/search"
@@ -574,6 +585,7 @@ export interface FileRouteTypes {
     | "/issue-states"
     | "/kpi"
     | "/my-work"
+    | "/notifications"
     | "/popout"
     | "/prototype"
     | "/search"
@@ -625,6 +637,7 @@ export interface RootRouteChildren {
   IssueStatesRoute: typeof IssueStatesRoute;
   KpiRoute: typeof KpiRoute;
   MyWorkRoute: typeof MyWorkRoute;
+  NotificationsRoute: typeof NotificationsRoute;
   PopoutRoute: typeof PopoutRoute;
   PrototypeRoute: typeof PrototypeRoute;
   SearchRoute: typeof SearchRoute;
@@ -717,6 +730,13 @@ declare module "@tanstack/react-router" {
       path: "/my-work";
       fullPath: "/my-work";
       preLoaderRoute: typeof MyWorkRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/notifications": {
+      id: "/notifications";
+      path: "/notifications";
+      fullPath: "/notifications";
+      preLoaderRoute: typeof NotificationsRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/popout": {
@@ -1017,6 +1037,7 @@ const rootRouteChildren: RootRouteChildren = {
   IssueStatesRoute: IssueStatesRoute,
   KpiRoute: KpiRoute,
   MyWorkRoute: MyWorkRoute,
+  NotificationsRoute: NotificationsRoute,
   PopoutRoute: PopoutRoute,
   PrototypeRoute: PrototypeRoute,
   SearchRoute: SearchRoute,

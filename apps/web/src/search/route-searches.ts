@@ -228,6 +228,10 @@ export const signInSearch = lenientSearch({
   user_id: z.unknown().optional(),
 });
 
+export const notificationsSearch = lenientSearch({
+  size: z.coerce.number().int().min(1).max(200).optional(),
+});
+
 export const teamSearch = lenientSearch({
   scene: sceneField(mockScenes.team, ["reassign", "nudge", "signoff"]),
   tab: z.enum(["open", "done"]).optional(),

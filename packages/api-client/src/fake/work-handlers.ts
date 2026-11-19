@@ -392,13 +392,20 @@ export function createInbox() {
     created_at: item.createdAt,
   });
 
-  const list = (url: URL): InboxItem[] => {
+  const list = (url: URL): { notifications: InboxItem[]; next_cursor: string | null } => {
     const kinds = url.searchParams.getAll("kind");
     const readParam = url.searchParams.get("read");
-    return mine()
+    const limit = Number(url.searchParams.get("limit") ?? "50");
+    const start = Number(url.searchParams.get("cursor") ?? "0");
+    const matching = mine()
       .map(toItem)
       .filter((item) => kinds.length === 0 || kinds.includes(item.kind))
       .filter((item) => readParam === null || String(item.read) === readParam);
+    const end = start + limit;
+    return {
+      notifications: matching.slice(start, end),
+      next_cursor: end < matching.length ? String(end) : null,
+    };
   };
 
   const counts = (): InboxCounts => {
@@ -571,10 +578,7 @@ export function workHandlers(): RequestHandler[] {
         hidesRt17SetsOnProject(request) ? sets.filter((set) => set.id !== rt17SetId()) : sets,
       );
     }),
-    getListNotificationsMockHandler(({ request }) => ({
-      notifications: inbox.list(new URL(request.url)),
-      next_cursor: null,
-    })),
+    getListNotificationsMockHandler(({ request }) => inbox.list(new URL(request.url))),
     getGetNotificationCountsMockHandler(() => inbox.counts()),
     getMarkNotificationsReadMockHandler(async ({ request }) =>
       inbox.mark((await request.json()) as MarkRead),

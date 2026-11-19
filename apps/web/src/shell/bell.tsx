@@ -45,7 +45,7 @@ const groupOf = (item: InboxItem): NotificationItem["group"] => {
   return "other";
 };
 
-const toNotification = (item: InboxItem): NotificationItem => {
+export const toNotification = (item: InboxItem): NotificationItem => {
   const quote = payloadText(item, "quote");
   const objectId = payloadText(item, "object_id");
   return {
@@ -118,7 +118,7 @@ function InboxPanel({ onClose }: { onClose: () => void }) {
       onMarkAllRead={() => void markAll()}
       onSeeAll={() => {
         onClose();
-        void goTo(destinations.myWork());
+        void goTo(destinations.notifications());
       }}
       onClose={onClose}
       loading={!loaded}

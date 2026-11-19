@@ -171,6 +171,7 @@ function NotificationsPanel({
 export {
   type NotificationGroup,
   type NotificationItem,
+  NotificationRow,
   NotificationsPanel,
   type NotificationsPanelProps,
 };
