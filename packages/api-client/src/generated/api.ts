@@ -7167,7 +7167,7 @@ export interface SlideEmbeddings {
 }
 
 export interface SlideMove {
-  case_id: string;
+  case_id: string | null;
   /**
    * @minLength 10
    * @maxLength 500
@@ -7178,7 +7178,7 @@ export interface SlideMove {
 export interface SlideMoved {
   slide_id: string;
   from_case_id: string | null;
-  to_case_id: string;
+  to_case_id: string | null;
   result_set_ids: string[];
   task_ids: string[];
   block_cleared: boolean;

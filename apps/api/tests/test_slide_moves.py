@@ -130,6 +130,27 @@ def test_a_move_waits_while_a_task_holding_the_slide_is_signed_off(
     assert [len(moves_logged(database, case)) for case in (source, target)] == [1, 1]
 
 
+def test_a_slide_leaves_its_case_for_the_loose_slides_and_comes_back(
+    api: ApiAs, database: str
+) -> None:
+    r, _ = queued_review(api, database)
+    source, _, mover = cases_for(database, r)
+    path = f"/api/slides/{r.slide}/move"
+
+    loose = api(mover).post(path, json={"case_id": None, "reason": MOVE_REASON})
+    assert loose.status_code == 200, loose.text
+    assert (loose.json()["from_case_id"], loose.json()["to_case_id"]) == (str(source), None)
+    assert owner(database, f"SELECT case_id FROM slides WHERE id = '{r.slide}'") == [(None,)]
+    assert [entry["direction"] for entry in moves_logged(database, source)] == ["out"]
+    again = api(mover).post(path, json={"case_id": None, "reason": MOVE_REASON})
+    assert (again.status_code, again.json()["code"]) == (400, "slide-already-in-case")
+
+    back = api(mover).post(path, json={"case_id": str(source), "reason": MOVE_REASON})
+    assert back.status_code == 200, back.text
+    assert (back.json()["from_case_id"], back.json()["to_case_id"]) == (None, str(source))
+    assert [entry["direction"] for entry in moves_logged(database, source)] == ["out", "in"]
+
+
 def test_a_move_needs_a_reason_an_owner_and_another_case_of_the_project(
     api: ApiAs, database: str
 ) -> None:

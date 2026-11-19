@@ -2195,11 +2195,6 @@ msgstr ""
 msgid "{slideTitle} has no case yet."
 msgstr ""
 
-#. placeholder {0}: choices.find((item) => item.id === caseId)?.label
-#: src/screens/project/slide-move-dialog.tsx
-msgid "{slideTitle} is now in case {0}"
-msgstr ""
-
 #: src/screens/project/slide-move-dialog.tsx
 msgid "{slideTitle} sits in case {caseLabel}."
 msgstr ""
@@ -2263,6 +2258,14 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} is back to Parfocal's choice."
+msgstr ""
+
+#: src/screens/project/slide-move-action.ts
+msgid "{title} is now a loose slide"
+msgstr ""
+
+#: src/screens/project/slide-move-action.ts
+msgid "{title} is now in case {label}"
 msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
@@ -5255,10 +5258,6 @@ msgstr ""
 msgid "Close (Esc)"
 msgstr ""
 
-#: ../../packages/ui/src/components/drawer-panel.tsx
-msgid "Close {label}"
-msgstr ""
-
 #: ../../packages/ui/src/components/developer-drawer.tsx
 msgid "Close developer mode"
 msgstr ""
@@ -6495,6 +6494,10 @@ msgstr ""
 #. placeholder {0}: project.code
 #: src/screens/project/slides-tab.tsx
 msgid "Drop files anywhere here to upload into {0}"
+msgstr ""
+
+#: src/screens/project/slides-tab.tsx
+msgid "Drop here to take a slide out of its case"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
@@ -9333,6 +9336,7 @@ msgstr ""
 msgid "Loose slides in task {0}"
 msgstr ""
 
+#: src/screens/project/slide-move-dialog.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Loose slides, no case"
 msgstr ""
@@ -16248,6 +16252,10 @@ msgstr ""
 
 #: src/screens/project/slide-move-dialog.tsx
 msgid "The move and the reason are kept in the audit log."
+msgstr ""
+
+#: src/screens/project/slide-move-action.ts
+msgid "The move was not undone"
 msgstr ""
 
 #: src/screens/new-task/new-task-screen.tsx

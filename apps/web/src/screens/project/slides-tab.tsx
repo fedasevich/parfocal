@@ -41,11 +41,13 @@ import { dotJoin } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { SlideThumb } from "../slide-thumb.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
+import { failureText } from "./new-forms-model.ts";
 import { usePeople } from "./people.ts";
 import { ResultSetDeleteDialog } from "./result-set-delete-dialog.tsx";
 import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
+import { type SlideToast, useSlideMove } from "./slide-move-action.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
-import { moveTitle } from "./slide-move-model.ts";
+import { canDrop, dragReason, moveTitle, slideDragType } from "./slide-move-model.ts";
 import { reviewersOf } from "./slide-reviews.ts";
 
 type ProjectSlide = SlideRowData & {
@@ -153,7 +155,7 @@ export function SlidesTab({
 }: {
   project: Project;
   open: string | undefined;
-  toast: (message: ReactNode) => void;
+  toast: SlideToast;
 }) {
   const { t } = useLingui();
 
@@ -168,6 +170,34 @@ export function SlidesTab({
   const caseList = okData(useListCases({ project_id: project.id }).data) ?? [];
   const caseIdOf = (label: string) => caseList.find((item) => item.label === label)?.id;
   const owner = project.my_role === "owner";
+  const move = useSlideMove(toast);
+  const [dragged, setDragged] = useState<ProjectSlide | undefined>();
+  const [over, setOver] = useState<string | undefined>();
+  const labelOf = (group: Group) => (group.key === "loose" ? null : group.key);
+  const takes = (group: Group) =>
+    dragged !== undefined &&
+    canDrop(dragged.case_label, labelOf(group)) &&
+    (group.key === "loose" || caseIdOf(group.key) !== undefined);
+  const endDrag = () => {
+    setDragged(undefined);
+    setOver(undefined);
+  };
+  const dropOn = (group: Group) => {
+    const slide = dragged;
+    endDrag();
+    if (slide === undefined || !takes(group)) return;
+    const label = labelOf(group);
+    void move(
+      {
+        id: slide.id,
+        title: slideTitle(slide),
+        fromCaseId: slide.case_label === null ? null : (caseIdOf(slide.case_label) ?? null),
+        fromLabel: slide.case_label,
+      },
+      { caseId: label === null ? null : (caseIdOf(label) ?? null), label },
+      dragReason(label),
+    ).catch((error: unknown) => toast(failureText(error).failure));
+  };
   const [filters, setFilters] = useState<SlideFilters>(noFilters);
   const filtering = isFiltering(filters);
   const shown = slides.filter((slide) => matchesFilters(slide, filters));
@@ -182,6 +212,15 @@ export function SlidesTab({
         : group,
     )
     .filter((group) => !filtering || group.slides.length > 0);
+  if (dragged !== undefined && !groups.some((group) => group.key === "loose")) {
+    groups.push({
+      key: "loose",
+      label: t`Loose slides`,
+      sub: t`Drop here to take a slide out of its case`,
+      count: 0,
+      slides: [],
+    });
+  }
   const isOpen = (group: Group, index: number) => {
     if (filtering) return true;
     if (shut[group.key] === undefined) return index === 0 || group.key === "loose";
@@ -189,8 +228,8 @@ export function SlidesTab({
   };
   return (
     <>
-      <div className="flex flex-none items-center gap-2.5">
-        <div className="relative w-70">
+      <div className="flex flex-none flex-wrap items-center gap-2.5">
+        <div className="relative w-70 max-w-full">
           <Icon
             name="search"
             className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg-faint"
@@ -237,12 +276,15 @@ export function SlidesTab({
           <Trans>No results</Trans> <span className="font-mono">{overview?.no_results ?? 0}</span>
         </FilterChip>
         <span className="flex-1" />
-        <span className="inline-flex items-center gap-1.5 text-body-sm text-fg-dim">
+        <span className="inline-flex min-w-0 items-center gap-1.5 text-body-sm text-fg-dim">
           <Icon name="upload" />
           <Trans>Drop files anywhere here to upload into {project.code}</Trans>
         </span>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto rounded-zone border border-line bg-surf-panel">
+      <div
+        data-testid="slides-table"
+        className="min-h-0 flex-1 overflow-auto rounded-zone border border-line bg-surf-panel"
+      >
         <Table containerClassName="overflow-visible">
           <TableHeader>
             <TableRow className={headRow}>
@@ -282,14 +324,36 @@ export function SlidesTab({
               return (
                 <Fragment key={group.key}>
                   <TableRow
+                    data-testid="case-group"
+                    data-group={group.key}
+                    data-drop={dragged === undefined ? undefined : takes(group) ? "ready" : "off"}
                     className="cursor-pointer"
                     onClick={() => setShut({ ...shut, [group.key]: expanded })}
+                    onDragOver={(event) => {
+                      if (!takes(group)) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                      if (over !== group.key) setOver(group.key);
+                    }}
+                    onDragLeave={() => {
+                      if (over === group.key) setOver(undefined);
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      dropOn(group);
+                    }}
                   >
                     <TableCell
                       colSpan={4}
-                      className="bg-surf-section px-4 py-2.5 whitespace-normal"
+                      className={cn(
+                        "bg-surf-section px-4 py-2.5 whitespace-normal",
+                        dragged !== undefined &&
+                          takes(group) &&
+                          "outline-1 -outline-offset-1 outline-dashed outline-line-strong",
+                        over === group.key && "bg-surf-hl outline-2 outline-solid outline-accent",
+                      )}
                     >
-                      <span className="flex items-center gap-2.5 text-fg-dim">
+                      <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-fg-dim">
                         <button
                           type="button"
                           aria-expanded={expanded}
@@ -343,6 +407,8 @@ export function SlidesTab({
                           viewers={viewersOf(slide.id)}
                           expanded={open === slide.id}
                           onMove={owner ? () => setMoving(slide) : undefined}
+                          onDragStart={owner ? () => setDragged(slide) : undefined}
+                          onDragEnd={endDrag}
                         />
                       ))
                     : null}
@@ -382,6 +448,8 @@ function SlideRow({
   viewers,
   expanded,
   onMove,
+  onDragStart,
+  onDragEnd,
 }: {
   project: Project;
   slide: ProjectSlide;
@@ -389,6 +457,8 @@ function SlideRow({
   viewers: string[];
   expanded: boolean;
   onMove: (() => void) | undefined;
+  onDragStart: (() => void) | undefined;
+  onDragEnd: () => void;
 }) {
   const { t } = useLingui();
 
@@ -410,6 +480,15 @@ function SlideRow({
     <>
       <TableRow
         data-testid="slide-row"
+        draggable={onDragStart !== undefined}
+        onDragStart={(event) => {
+          if (onDragStart === undefined) return;
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData(slideDragType, slide.id);
+          event.dataTransfer.setData("text/plain", slideTitle(slide));
+          onDragStart();
+        }}
+        onDragEnd={onDragEnd}
         className={cn(
           "group cursor-pointer [&>td]:px-4 [&>td]:py-(--density-list-row-y) [&>td]:whitespace-normal",
           expanded && "border-b-transparent [&>td]:bg-surf-hl",
@@ -417,14 +496,19 @@ function SlideRow({
         onClick={open}
       >
         <TableCell>
-          <span className="inline-flex items-center gap-3">
+          <span className="flex min-w-0 items-center gap-3">
             <SlideThumb
               slideId={slide.id}
               file={slide.file}
               className="h-7.5 w-11 flex-none overflow-hidden rounded-md border border-line"
             />
             <span className="grid min-w-0 gap-0.5">
-              <b className="font-semibold text-fg">{slideTitle(slide)}</b>
+              <b
+                data-testid="slide-title"
+                className="font-semibold [overflow-wrap:anywhere] text-fg"
+              >
+                {slideTitle(slide)}
+              </b>
               <small className="max-w-70 truncate font-mono text-caption text-fg-faint">
                 {slide.file}
               </small>
@@ -451,13 +535,14 @@ function SlideRow({
                 event.stopPropagation();
                 toggle();
               }}
-              className="-m-1 inline-flex cursor-pointer flex-nowrap items-center gap-1.5 rounded-ctl border-0 bg-transparent p-1 text-fg-dim hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)]"
+              className="-m-1 inline-flex max-w-full cursor-pointer flex-wrap items-center gap-1.5 rounded-ctl text-left border-0 bg-transparent p-1 text-fg-dim hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)]"
             >
               {own.map((set) => (
                 <span
                   key={set.id}
                   title={`${withVersion(set.name, set.model_version)} · ${set.source === "import" ? t`imported from ${set.source_file ?? "a file"}` : "run here"}`}
-                  className="inline-flex h-5.5 items-center gap-1.25 rounded-md border border-line bg-surf-section px-2 text-caption font-medium whitespace-nowrap text-fg"
+                  data-testid="result-set-chip"
+                  className="inline-flex min-h-5.5 max-w-full min-w-0 items-center gap-1.25 rounded-md border border-line bg-surf-section px-2 py-0.5 text-caption font-medium [overflow-wrap:anywhere] text-fg"
                 >
                   <Icon name="layers" size="xs" />
                   {setName(set)}

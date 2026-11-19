@@ -2197,11 +2197,6 @@ msgstr "{slideShort} has no {setName} result in {taskCodeOrThis}. Look at it wit
 msgid "{slideTitle} has no case yet."
 msgstr "{slideTitle} has no case yet."
 
-#. placeholder {0}: choices.find((item) => item.id === caseId)?.label
-#: src/screens/project/slide-move-dialog.tsx
-msgid "{slideTitle} is now in case {0}"
-msgstr "{slideTitle} is now in case {0}"
-
 #: src/screens/project/slide-move-dialog.tsx
 msgid "{slideTitle} sits in case {caseLabel}."
 msgstr "{slideTitle} sits in case {caseLabel}."
@@ -2266,6 +2261,14 @@ msgstr "{timeLeft} left"
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} is back to Parfocal's choice."
 msgstr "{title} is back to Parfocal's choice."
+
+#: src/screens/project/slide-move-action.ts
+msgid "{title} is now a loose slide"
+msgstr "{title} is now a loose slide"
+
+#: src/screens/project/slide-move-action.ts
+msgid "{title} is now in case {label}"
+msgstr "{title} is now in case {label}"
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "{title} uses your choice now."
@@ -5257,10 +5260,6 @@ msgstr "Close"
 msgid "Close (Esc)"
 msgstr "Close (Esc)"
 
-#: ../../packages/ui/src/components/drawer-panel.tsx
-msgid "Close {label}"
-msgstr "Close {label}"
-
 #: ../../packages/ui/src/components/developer-drawer.tsx
 msgid "Close developer mode"
 msgstr "Close developer mode"
@@ -6501,6 +6500,10 @@ msgstr "Drop a result file"
 #: src/screens/project/slides-tab.tsx
 msgid "Drop files anywhere here to upload into {0}"
 msgstr "Drop files anywhere here to upload into {0}"
+
+#: src/screens/project/slides-tab.tsx
+msgid "Drop here to take a slide out of its case"
+msgstr "Drop here to take a slide out of its case"
 
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -9338,6 +9341,7 @@ msgstr "Loose slides"
 msgid "Loose slides in task {0}"
 msgstr "Loose slides in task {0}"
 
+#: src/screens/project/slide-move-dialog.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Loose slides, no case"
 msgstr "Loose slides, no case"
@@ -16258,6 +16262,10 @@ msgstr "The model could not be added. Try again."
 #: src/screens/project/slide-move-dialog.tsx
 msgid "The move and the reason are kept in the audit log."
 msgstr "The move and the reason are kept in the audit log."
+
+#: src/screens/project/slide-move-action.ts
+msgid "The move was not undone"
+msgstr "The move was not undone"
 
 #: src/screens/new-task/new-task-screen.tsx
 msgid "the new review task"
