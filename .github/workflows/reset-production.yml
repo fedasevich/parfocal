@@ -28,9 +28,12 @@ jobs:
       NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
       SEED_OWNER_EMAIL: ${{ secrets.SEED_OWNER_EMAIL }}
       SEED_VIEWER_EMAILS: ${{ vars.SEED_VIEWER_EMAILS }}
       SEED_AGENT_EMAILS: ${{ vars.SEED_AGENT_EMAILS }}
+      PUBLIC_ORIGIN: https://app.parfocal.eu
       RESET_CONFIRM: ${{ inputs.confirm }}
     steps:
       - uses: actions/checkout@v7
