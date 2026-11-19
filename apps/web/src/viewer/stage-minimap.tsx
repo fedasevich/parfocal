@@ -1,7 +1,12 @@
 import { useLingui } from "@lingui/react/macro";
 import { useListDecisions, useListReviewObjects } from "@parfocal/api-client";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
-import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/minimap-box";
+import {
+  type MapRect,
+  type MinimapSetting,
+  type MinimapSize,
+  minimapBox,
+} from "@parfocal/ui/lib/minimap-box";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { openPopout, useMainPopoutSync } from "../popout/popout-channel.ts";
@@ -83,7 +88,10 @@ const blockSelector = [
 const sameRects = (a: ScreenRect[], b: ScreenRect[]) =>
   a.length === b.length && a.every((rect, index) => rect.join() === b[index]?.join());
 
-function useStageBlocks(frame: React.RefObject<HTMLElement | null>): ScreenRect[] {
+export function useStageBlocks(
+  frame: React.RefObject<HTMLElement | null>,
+  selector: string = blockSelector,
+): ScreenRect[] {
   const [blocks, setBlocks] = useState<ScreenRect[]>([]);
   useEffect(() => {
     const node = frame.current;
@@ -92,7 +100,9 @@ function useStageBlocks(frame: React.RefObject<HTMLElement | null>): ScreenRect[
     const watched = new Set<HTMLElement>();
     const measure = () => {
       const origin = node.getBoundingClientRect();
-      const elements = [...host.querySelectorAll<HTMLElement>(blockSelector)];
+      const elements = [...host.querySelectorAll<HTMLElement>(selector)].filter(
+        (element) => !node.contains(element),
+      );
       for (const element of watched) {
         if (!elements.includes(element)) {
           resized.unobserve(element);
@@ -120,13 +130,55 @@ function useStageBlocks(frame: React.RefObject<HTMLElement | null>): ScreenRect[
     resized.observe(host);
     measure();
     const changed = new MutationObserver(measure);
-    changed.observe(host, { childList: true, subtree: true });
+    changed.observe(host, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["style"],
+    });
     return () => {
       resized.disconnect();
       changed.disconnect();
     };
-  }, [frame]);
+  }, [frame, selector]);
   return blocks;
+}
+
+type Extra = { width: number; height: number };
+
+const noExtra: Extra = { width: 0, height: 0 };
+
+const extraStep = 8;
+
+function useDrawnExtra(drawnAs: MinimapSize, slideRect: MapRect) {
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  const [extra, setExtra] = useState<Extra>(noExtra);
+  const expected = useRef({ drawnAs, slideRect });
+  expected.current = { drawnAs, slideRect };
+  useEffect(() => {
+    if (element === null) return;
+    const measure = () => {
+      const planned = minimapBox(expected.current.drawnAs, expected.current.slideRect);
+      const step = (overflow: number) => Math.max(0, Math.ceil(overflow / extraStep) * extraStep);
+      const width = step(element.offsetWidth - planned.width);
+      const height = step(element.offsetHeight - planned.height);
+      setExtra((before) =>
+        width <= before.width && height <= before.height
+          ? before
+          : { width: Math.max(width, before.width), height: Math.max(height, before.height) },
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+  return [extra, setElement] as const;
+}
+
+function outerBox(wanted: MinimapSize, slideRect: MapRect, extra: Extra) {
+  const box = minimapBox(wanted, slideRect);
+  return { ...box, width: box.width + extra.width, height: box.height + extra.height };
 }
 
 export type MinimapReview = { taskId: string; current: string | null };
@@ -242,7 +294,8 @@ const PlacedMinimap = memo(function PlacedMinimap({
   useEffect(() => {
     send({ type: "CAMERA", tissueShare, magnification });
   }, [send, tissueShare, magnification]);
-  const boxSize = guided || minimap.size === "pip" ? "compact" : (minimap.size ?? "full");
+  const preferred: MinimapSize =
+    guided || minimap.size === "pip" ? "compact" : (minimap.size ?? "full");
   const power = `${Math.round(magnification)}×`;
   const foot =
     guided && progress !== null
@@ -255,10 +308,15 @@ const PlacedMinimap = memo(function PlacedMinimap({
     : progress === null
       ? power
       : t`${power} · ${progress.decided} of ${progress.total} decided`;
-  const sized = minimapBox(boxSize, slideRect);
   const blocks = useStageBlocks(frame);
+  const drawnAs = useRef<MinimapSize>(preferred);
+  const [extra, drawn] = useDrawnExtra(drawnAs.current, slideRect);
+  const wanted = placeMinimap(size, outerBox(preferred, slideRect, extra), [], blocks);
+  const boxSize: MinimapSize = fitsCanvas(size, wanted) ? preferred : "pip";
+  drawnAs.current = boxSize;
+  const sized = outerBox(boxSize, slideRect, extra);
   const chosen = cornerOfChoice(choice);
-  const scored = placeMinimap(size, sized, [], blocks);
+  const scored = boxSize === preferred ? wanted : placeMinimap(size, sized, [], blocks);
   const place = useHeldCorner(chosenPlacement(scored, chosen), camera);
   const [dragging, setDragging] = useState(false);
   const shown = measured && minimap.size !== null && fitsCanvas(size, scored);
@@ -291,6 +349,7 @@ const PlacedMinimap = memo(function PlacedMinimap({
         : null}
       {slide === null || image === null || !shown ? null : (
         <SmartMinimap
+          ref={drawn}
           data-testid="stage-minimap"
           data-source={image.source}
           data-corner={place.corner}

@@ -3,7 +3,15 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { TypeId, TypeOption } from "../screens/review/type-bar.ts";
 import { TypeBar } from "../screens/review/type-bar.tsx";
 import { outlineCentre, slideToScreen } from "./stage-geometry.ts";
+import { useStageBlocks } from "./stage-minimap.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
+
+const barBlocks = [
+  '[data-testid="stage-cells-grid"]',
+  '[data-slot="magnification-bar"]',
+  '[data-testid="whole-slide-button"]',
+  "[data-minimap-block]",
+].join(",");
 
 export function StageCellTypeBar({
   engine,
@@ -28,6 +36,7 @@ export function StageCellTypeBar({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+  const blocked = useStageBlocks(frame, barBlocks);
   const spot = outlineCentre(cell.outline);
   const ready = spot !== null && size.width > 0;
   return (
@@ -41,6 +50,7 @@ export function StageCellTypeBar({
           size={size}
           chosen={chosen}
           onChoose={onChoose}
+          blocked={blocked}
         />
       ) : null}
     </div>

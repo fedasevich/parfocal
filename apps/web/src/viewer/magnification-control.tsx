@@ -5,6 +5,7 @@ import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { loadViewerEngine } from "./load-engine.ts";
 import { brightnessAfterKey, brightnessKeyIds } from "./slide-brightness.ts";
+import { useStageBlocks } from "./stage-minimap.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 export type ViewerModule = Awaited<ReturnType<typeof loadViewerEngine>>;
@@ -108,11 +109,18 @@ export function MagnificationControl({
   );
 }
 
+const sideButtons = '[data-testid="whole-slide-button"]';
+
 export function StageMagnification(props: MagnificationControlProps) {
+  const frame = useRef<HTMLDivElement>(null);
+  const beside = useStageBlocks(frame, sideButtons);
+  const room = Math.max(0, ...beside.map(([x, , width]) => x + width + 8));
   return (
     <div
+      ref={frame}
       data-slot="stage-magnification"
       className="pointer-events-none absolute inset-x-4 bottom-3 flex justify-center"
+      style={room > 0 ? { paddingLeft: room, paddingRight: room } : undefined}
     >
       <div className="pointer-events-auto flex max-w-full">
         <MagnificationControl {...props} />

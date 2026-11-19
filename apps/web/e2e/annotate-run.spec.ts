@@ -84,6 +84,50 @@ test("a model run on a drawn selection streams onto the slide, joins the task an
   await expect(objects).toHaveCount(before - 1);
 });
 
+test("the cells of an added run are confirmed, deleted and undone and the counters follow", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await openByHandSlide(page);
+  await page.getByTestId("start-run-options").click();
+  await page.getByTestId("start-run-scope").selectOption("view");
+  await page.getByTestId("start-run-find").click();
+  const joined = page.getByTestId("annotate-run");
+  await expect(joined).toHaveAttribute("data-phase", "joined", { timeout: 30_000 });
+  const objects = page.getByTestId("ai-object");
+  await expect.poll(() => objects.count(), { timeout: 15_000 }).toBeGreaterThan(1);
+  const panel = page.getByTestId("annotate-task-panel");
+  await expect(panel.getByText("0 confirmed")).toBeVisible();
+
+  const changes: number[] = [];
+  page.on("response", (response) => {
+    if (/\/shared-layer\/ai(\/[^/]+\/confirm|-changes)$/.test(new URL(response.url()).pathname))
+      changes.push(response.status());
+  });
+  const listed = page.getByRole("button", { name: /^C\d+/ });
+  const nameOf = async (index: number) =>
+    ((await listed.nth(index).textContent()) ?? "").match(/^C\d+/)?.[0] ?? "";
+  const first = await nameOf(0);
+  await listed.nth(0).click();
+  await page.keyboard.press("d");
+  await expect(page.getByRole("button", { name: new RegExp(`^${first}\\b`) })).toHaveAttribute(
+    "data-origin",
+    "ai-confirmed",
+  );
+  await expect(panel.getByText("1 confirmed")).toBeVisible();
+
+  const second = await nameOf(1);
+  await page.getByRole("button", { name: new RegExp(`^${second}\\b`) }).click();
+  await page.getByRole("button", { name: `Delete ${second}` }).click();
+  await expect(panel.getByText("1 deleted")).toBeVisible();
+
+  await page.getByTestId("ai-notice").getByRole("button", { name: "Undo" }).click();
+  await expect(panel.getByText("0 deleted")).toBeVisible();
+  await expect(panel.getByText("1 confirmed")).toBeVisible();
+  expect(changes.length).toBeGreaterThanOrEqual(3);
+  expect(changes.every((status) => status < 300)).toBe(true);
+});
+
 test("a model run on the current view sends the view scope with the task", async ({ page }) => {
   await openByHandSlide(page);
   await page.getByTestId("start-run-options").click();

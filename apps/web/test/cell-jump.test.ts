@@ -63,6 +63,21 @@ test("the bar goes below the cell, above it near the bottom, and never touches i
   assert.ok(placeBar(lower, 30, bar, size).top < lower.y);
 });
 
+test("the type bar leaves a blocked rect such as the cells grid and stays on the stage", () => {
+  const size = { width: 632, height: 656 };
+  const bar = { width: 600, height: 48 };
+  const grid = [16, 454, 600, 130] as const;
+  const cell = { x: 300, y: 380 };
+  const below = placeBar(cell, 20, bar, size, 14, 12, [grid]);
+  assert.equal(below.top + bar.height <= grid[1] || below.top >= grid[1] + grid[3], true);
+  assert.ok(below.top < cell.y);
+  const walled = placeBar({ x: 300, y: 40 }, 20, bar, size, 14, 12, [
+    [0, 80, 632, 60],
+    [0, 0, 632, 30],
+  ]);
+  assert.ok(walled.top >= 12);
+});
+
 test("a jump reaches an undecided cell far away before a decided one close by", () => {
   const far: CellSpot[] = [
     { object: "A", x: 0, y: 0, decided: false },

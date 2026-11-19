@@ -5,7 +5,14 @@ import { useBindings } from "../../keys/personal-keys.ts";
 import type { Fired } from "../../keys/registry.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { inLayer } from "./answer-keys.ts";
-import { type CellSpot, type Direction, jumpTarget, type Point, placeBar } from "./cell-jump.ts";
+import {
+  type BlockRect,
+  type CellSpot,
+  type Direction,
+  jumpTarget,
+  type Point,
+  placeBar,
+} from "./cell-jump.ts";
 import { cellShapes } from "./slide-geometry.ts";
 import { type TypeId, type TypeOption, typeOptions } from "./type-bar.ts";
 
@@ -22,6 +29,7 @@ type TypeBarProps = {
   chosen: TypeId | undefined;
   onChoose: (option: TypeOption) => void;
   disabledReason?: string | undefined;
+  blocked?: readonly BlockRect[] | undefined;
 };
 
 export function TypeBar({
@@ -33,10 +41,19 @@ export function TypeBar({
   chosen,
   onChoose,
   disabledReason,
+  blocked,
 }: TypeBarProps) {
   const { t } = useLingui();
   const width = Math.min(size.width - 24, typeOptions.length * buttonWidth + 16);
-  const box = placeBar(centre, radius ?? ringRadius * scale, { width, height: barHeight }, size);
+  const box = placeBar(
+    centre,
+    radius ?? ringRadius * scale,
+    { width, height: barHeight },
+    size,
+    undefined,
+    undefined,
+    blocked,
+  );
   return (
     <div
       role="toolbar"
