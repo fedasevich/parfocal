@@ -24,16 +24,16 @@ const option = (id: string) => {
   return found;
 };
 
-test("the bar holds Keep, the four types and Not a cell on K, 1 to 4 and X", () => {
+test("the bar holds Agree, the four types and Disagree on K, 1 to 4 and X", () => {
   assert.deepEqual(
     typeOptions.map((item) => [item.label, item.key]),
     [
-      ["Keep", "K"],
+      ["Agree", "K"],
       ["Tumor", "1"],
       ["Stroma", "2"],
       ["Immune", "3"],
       ["Other", "4"],
-      ["Not a cell", "X"],
+      ["Disagree", "X"],
     ],
   );
   assert.ok(typeAnswers.some((item) => item.raw === "unsure"));

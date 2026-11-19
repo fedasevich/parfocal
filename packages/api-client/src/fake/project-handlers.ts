@@ -85,7 +85,11 @@ const classUuid = (project: ProjectCode, key: number) =>
   `00000000-0000-4000-8016-${String(Number(project.slice(1)) * 100 + key).padStart(12, "0")}`;
 
 const taxonomyOf = (project: ScenarioProject) =>
-  project.taxonomy === "PanNuke" ? taxonomyClasses.pannuke : taxonomyClasses["sentinel-node"];
+  project.taxonomy === "No classes"
+    ? []
+    : project.taxonomy === "PanNuke"
+      ? taxonomyClasses.pannuke
+      : taxonomyClasses["sentinel-node"];
 
 export const toProjectClasses = (idOrCode: string): ProjectClass[] => {
   const project = projectOf(idOrCode);

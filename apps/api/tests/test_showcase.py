@@ -654,6 +654,20 @@ async def test_every_demo_slide_has_the_results_its_model_runs_made(seeded: str)
     assert len(WITH_CELLS) >= len(FORMAT_GALLERY) - 1
 
 
+async def test_every_seeded_project_with_cells_or_results_has_classes(seeded: str) -> None:
+    await run_seed(seeded)
+    rows = await run_sql(
+        seeded,
+        "SELECT p.name, count(DISTINCT c.id) FROM projects p "
+        "JOIN slides s ON s.project_id = p.id "
+        "JOIN result_sets r ON r.slide_id = s.id AND r.status = 'ready' "
+        "LEFT JOIN project_classes c ON c.project_id = p.id GROUP BY p.name",
+    )
+    assert rows
+    assert all(int(str(count)) >= 4 for _, count in rows)
+    assert WORKSPACES[0].gallery in {str(name) for name, _ in rows}
+
+
 async def test_the_tour_opens_the_slides_that_open_first(seeded: str) -> None:
     await run_seed(seeded)
     _, _, slide_ids = await owner_task(seeded, GALLERY_TOUR)

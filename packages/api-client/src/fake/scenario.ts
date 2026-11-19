@@ -226,7 +226,7 @@ export const projects: ScenarioProject[] = [
     privacy: "de-identified",
     template: "none",
     studyTemplate: "Detection study",
-    taxonomy: "Colon",
+    taxonomy: "No classes",
     colour: 3,
     owner: "JR",
     members: ["JR", "DH"],

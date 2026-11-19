@@ -17,14 +17,20 @@ type ClassStripProps = {
   classes: readonly ProjectClass[];
   activeClass: string | null;
   onPick: (classKey: string) => void;
+  forSelection?: boolean;
 };
 
-export function ClassStrip({ classes, activeClass, onPick }: ClassStripProps) {
+export function ClassStrip({
+  classes,
+  activeClass,
+  onPick,
+  forSelection = false,
+}: ClassStripProps) {
   const { t } = useLingui();
   if (classes.length === 0) return null;
   return (
     <fieldset
-      aria-label={t`Class for new shapes`}
+      aria-label={forSelection ? t`Class for the selection` : t`Class for new shapes`}
       data-testid="class-strip"
       className="m-0 flex min-w-0 gap-1 border-0 p-0"
     >
@@ -67,6 +73,7 @@ type ContextBarViewProps = {
   classes: readonly ProjectClass[];
   activeClass: string | null;
   onPick: (classKey: string) => void;
+  forSelection?: boolean;
   proposals: ProposalActions | null;
   onCloseHints?: () => void;
 };
@@ -76,12 +83,18 @@ export function ContextBarView({
   classes,
   activeClass,
   onPick,
+  forSelection = false,
   proposals,
   onCloseHints,
 }: ContextBarViewProps) {
   const { t } = useLingui();
   const strip = model.classStrip ? (
-    <ClassStrip classes={classes} activeClass={activeClass} onPick={onPick} />
+    <ClassStrip
+      classes={classes}
+      activeClass={activeClass}
+      onPick={onPick}
+      forSelection={forSelection}
+    />
   ) : null;
   if (proposals !== null) {
     return (

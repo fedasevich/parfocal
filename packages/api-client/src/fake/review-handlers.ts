@@ -525,7 +525,10 @@ export const toOpinion = (taskId = "", slideId = ""): Opinion => ({
 });
 
 export const toProjectClasses = (projectId: string): ProjectClass[] =>
-  sentinelClasses.map((item) => ({
+  (projects.find((item) => item.id === projectId)?.taxonomy === "No classes"
+    ? []
+    : sentinelClasses
+  ).map((item) => ({
     id: `${projectId}-class-${item.key}`,
     key: item.key,
     name: item.name,

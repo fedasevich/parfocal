@@ -817,7 +817,11 @@ async def seed_gallery(
     name: str,
 ) -> None:
     project = await create_project(
-        ProjectDraft(name=name, privacy_mode=PrivacyMode.DE_IDENTIFIED),
+        ProjectDraft(
+            name=name,
+            privacy_mode=PrivacyMode.DE_IDENTIFIED,
+            taxonomy=TaxonomyTemplate.SENTINEL_NODE,
+        ),
         principal,
         connection,
     )
