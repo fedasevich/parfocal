@@ -121,6 +121,7 @@ async def test_the_smoke_account_sees_ai_cells_and_types_an_outline_on_the_sampl
                 principal,
                 connection,
                 GpuCalls(WarmGate(OneClassTyper()), None),  # type: ignore[arg-type]
+                None,
             )
         assert isinstance(typed, OutlineTypes)
         assert typed.slide_id == slide
