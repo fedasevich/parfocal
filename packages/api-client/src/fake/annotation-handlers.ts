@@ -89,7 +89,58 @@ const staleProblem = () =>
     { status: 409, headers: { "content-type": "application/problem+json" } },
   );
 
+const exportSuffixes: Record<string, string> = {
+  geojson: "geojson",
+  flatgeobuf: "fgb",
+  parfocal: "json",
+};
+
+const exportMedia: Record<string, string> = {
+  geojson: "application/geo+json",
+  flatgeobuf: "application/flatgeobuf",
+  parfocal: "application/json",
+};
+
+function exportBody(format: string, slideId: string, saved: Annotation[]): string {
+  if (format === "geojson") {
+    return JSON.stringify({
+      type: "FeatureCollection",
+      features: saved.map((item) => ({
+        type: "Feature",
+        geometry: item.geometry,
+        properties: { id: item.id, kind: item.kind, class_id: item.class_id, text: item.text },
+      })),
+    });
+  }
+  if (format === "flatgeobuf") return `fgb:${slideId}:${saved.length}`;
+  return JSON.stringify({
+    format: "parfocal-results",
+    version: 1,
+    objects: saved.map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      geometry: item.geometry,
+      class: item.class_id,
+      text: item.text ?? null,
+    })),
+  });
+}
+
 export const annotationHandlers = (): RequestHandler[] => [
+  http.get<{ slideId: string }>("*/api/slides/:slideId/export", ({ params, request }) => {
+    const query = new URL(request.url).searchParams;
+    const format = query.get("format") ?? "geojson";
+    const taskId = query.get("task_id");
+    const saved = (readStore()[params.slideId] ?? []).filter(
+      (item) => taskId === null || item.task_id === taskId || item.task_id === null,
+    );
+    return new HttpResponse(exportBody(format, params.slideId, saved), {
+      headers: {
+        "content-type": exportMedia[format] ?? "application/octet-stream",
+        "content-disposition": `attachment; filename="parfocal-export.${exportSuffixes[format] ?? "bin"}"`,
+      },
+    });
+  }),
   http.get<{ slideId: string }>("*/api/slides/:slideId/layer-groups", ({ params }) =>
     HttpResponse.json(readGroups()[params.slideId] ?? { groups: [], members: [] }),
   ),

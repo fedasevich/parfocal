@@ -1,4 +1,3 @@
-import type { MessageDescriptor } from "@lingui/core";
 import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
@@ -546,6 +545,7 @@ type MoreItem = {
   icon: IconName;
   label: string;
   keys?: string;
+  note?: string;
   onSelect?: (() => void) | undefined;
   title?: string | undefined;
   separatorBefore?: boolean;

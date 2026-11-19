@@ -15,7 +15,7 @@ import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { AutoLayer } from "../annotations/auto-layer.tsx";
 import { BrushLayer } from "../annotations/brush-layer.tsx";
 import { maxClassKeys } from "../annotations/classes.ts";
-import { contextBarOf, takesActiveClass } from "../annotations/context-bar.ts";
+import { contextBarOf } from "../annotations/context-bar.ts";
 import { ContextBarView } from "../annotations/context-bar.tsx";
 import { ContextExtrasHost } from "../annotations/context-extras.tsx";
 import { CountLayer } from "../annotations/count-layer.tsx";
@@ -692,7 +692,6 @@ function OpenedSlide({
   }, [session, brightness]);
 
   useFrameMonitor(hostNode, session?.shownRoute, appFrameReporter);
-
   const railButtons = (item: (typeof setup.rail)[number][number]) => {
     const stageTool = stageToolOf(item.tool);
     const hint = hintsSeen.seen.has(toolHintId(item.tool)) ? toolHintText(item.tool) : undefined;

@@ -253,7 +253,14 @@ function ReviewTopBar({
                 {item.separatorBefore ? <DropdownMenuSeparator /> : null}
                 <DropdownMenuItem onClick={item.onSelect} title={item.title} className="gap-2.5">
                   <Icon name={item.icon} />
-                  <span>{item.label}</span>
+                  {item.note ? (
+                    <span className="grid">
+                      <span>{item.label}</span>
+                      <small className="text-caption text-fg-dim">{item.note}</small>
+                    </span>
+                  ) : (
+                    <span>{item.label}</span>
+                  )}
                   {item.keys ? <DropdownMenuShortcut>{item.keys}</DropdownMenuShortcut> : null}
                 </DropdownMenuItem>
               </Fragment>

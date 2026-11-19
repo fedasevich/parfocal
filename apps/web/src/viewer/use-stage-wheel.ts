@@ -75,8 +75,8 @@ export function useStageWheel(host: HTMLElement | null) {
     view.addEventListener("gesturestart", blockGesture);
     view.addEventListener("gesturechange", blockGesture);
     return () => {
-      body.removeEventListener("wheel", forward, options);
-      view.removeEventListener("wheel", blockPageZoom, options);
+      body.removeEventListener("wheel", forward);
+      view.removeEventListener("wheel", blockPageZoom);
       view.removeEventListener("gesturestart", blockGesture);
       view.removeEventListener("gesturechange", blockGesture);
     };
