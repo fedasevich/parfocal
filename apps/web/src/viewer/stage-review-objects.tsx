@@ -23,7 +23,14 @@ import {
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
-import { type CalmCamera, type CalmStep, calmStep, stageCalmView } from "./calm-camera.ts";
+import {
+  type CalmCamera,
+  type CalmStep,
+  calmStep,
+  landingCamera,
+  landingPower,
+  stageCalmView,
+} from "./calm-camera.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageAiReading } from "./stage-ai-reading.tsx";
@@ -227,9 +234,30 @@ export function StageReviewObjects({
     setDone(false);
     setCurrent(id);
     if (move.kind === "stay") return;
-    stepGoal.current = move.kind === "pan" ? move.camera : null;
-    if (move.kind === "pan") void engine.flyTo(move.camera);
-    else flyTo(id);
+    if (move.kind === "fly") return landOnCell(id);
+    stepGoal.current = move.camera;
+    void engine.flyTo(move.camera);
+  };
+  const landOnCell = (id: string) => {
+    const cell = outlineCentre(objects.find((item) => item.object === id)?.outline);
+    const spacing = engine.getSlide()?.micronsPerPixel ?? null;
+    const power = landingPower(
+      module.scanObjective(spacing) ?? module.effectiveMagnification(0, spacing),
+    );
+    if (cell === null || spacing === null || power === null) {
+      stepGoal.current = null;
+      flyTo(id);
+      return;
+    }
+    const zoom = module.zoomForMagnification(spacing, power);
+    const goal = landingCamera(stageCalmView(), cell, zoom);
+    stepGoal.current = goal;
+    void engine.flyTo(goal);
+  };
+  const pickInStrip = (id: string) => {
+    setDone(false);
+    setCurrent(id);
+    landOnCell(id);
   };
   const ready = session.ready && objects.length > 0;
   const orderWait = pendingOrder(session.order, session.ready);
@@ -400,7 +428,7 @@ export function StageReviewObjects({
           saves={saves}
           slideId={slideId}
           current={current}
-          onPick={pick}
+          onPick={pickInStrip}
           onStep={stepTo}
           onClose={() => setGridOpen(false)}
         />

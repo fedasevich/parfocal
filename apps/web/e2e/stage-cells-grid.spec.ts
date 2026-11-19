@@ -120,15 +120,43 @@ test("the arrow keys step one cell each and the camera stays put while the cell 
   expect(await picked(page, "C1")).toEqual(second);
 });
 
-test("a cell too small to judge is flown to and fitted as before", async ({ page }) => {
+async function landFromFarOut(page: Page) {
   const opened = await openCells(page);
   for (let press = 0; press < 3; press += 1) await page.keyboard.press("-");
   const out = await settledCamera(page);
   expect(out[2] ?? 0).toBeLessThan((opened[2] ?? 0) - 0.5);
   await page.keyboard.press("ArrowRight");
-  const [x = 0, , zoom = 0] = await picked(page, "C1");
-  expect(Math.abs(x - 300)).toBeLessThan(1);
-  expect(zoom).toBeGreaterThan(opened[2] ?? 0);
+  const landed = await picked(page, "C1");
+  expect(Math.abs((landed[0] ?? 0) - 300)).toBeLessThan(1);
+  return landed;
+}
+
+test("a cell too small to judge on a 20x slide is flown to at 20x", async ({ page }) => {
+  const landed = await landFromFarOut(page);
+  await expect(page.getByTestId("magnification-bar")).toHaveAttribute(
+    "aria-label",
+    /^Magnification 20×/,
+  );
+  await page.keyboard.press("ArrowRight");
+  expect((await picked(page, "C2"))[2]).toBe(landed[2]);
+});
+
+test("a cell too small to judge on a 40x slide is flown to at 40x and later steps keep it", async ({
+  page,
+}) => {
+  await page.context().route("**/levels.json", async (route) => {
+    const response = await route.fetch();
+    const table = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({ response, json: { ...table, scale: { mpp_x: 0.25, mpp_y: 0.25 } } });
+  });
+  const landed = await landFromFarOut(page);
+  const bar = page.getByTestId("magnification-bar");
+  await expect(bar).toHaveAttribute("aria-label", /^Magnification 40×/);
+  await page.keyboard.press("ArrowRight");
+  expect((await picked(page, "C2"))[2]).toBe(landed[2]);
+  await page.keyboard.press("ArrowDown");
+  expect((await picked(page, "C3"))[2]).toBe(landed[2]);
+  await expect(bar).toHaveAttribute("aria-label", /^Magnification 40×/);
 });
 
 test("the strip follows the tissue and keeps its order after a reload", async ({ page }) => {

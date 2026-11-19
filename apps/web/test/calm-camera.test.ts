@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { calmStep } from "../src/viewer/calm-camera.ts";
+import { calmStep, landingCamera, landingPower } from "../src/viewer/calm-camera.ts";
 
 const view = { width: 1000, height: 800, bottomInset: 200 };
 const camera = { x: 5000, y: 5000, zoom: 0 };
@@ -35,4 +35,17 @@ test("a cell too small or too large to judge flies and fits as before", () => {
       kind: "fly",
     },
   );
+});
+
+test("a flight lands at 40x, or at the scan power when the slide is scanned lower", () => {
+  assert.equal(landingPower(40), 40);
+  assert.equal(landingPower(80), 40);
+  assert.equal(landingPower(20), 20);
+  assert.equal(landingPower(null), null);
+  assert.equal(landingPower(0), null);
+});
+
+test("the landing keeps the cell centred above the strip at the landing zoom", () => {
+  assert.deepEqual(landingCamera(view, { x: 300, y: 400 }, 1), { x: 300, y: 450, zoom: 1 });
+  assert.deepEqual(landingCamera(null, { x: 300, y: 400 }, -1), { x: 300, y: 400, zoom: -1 });
 });
