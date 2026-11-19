@@ -148,10 +148,11 @@ class ModalPools:
 
     def outcome(self, call_id: str, hold: float | None) -> dict[str, object] | None:
         failures: Any = importlib.import_module("modal.exception")
+        still_running = (TimeoutError, failures.TimeoutError)
         try:
             return self.handle(call_id).get(timeout=hold)
-        except failures.TimeoutError as error:
-            if type(error) is failures.TimeoutError:
+        except still_running as error:
+            if type(error) in still_running:
                 return None
             raise
 
