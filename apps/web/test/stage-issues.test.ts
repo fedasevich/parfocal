@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   highPowerFailed,
   isWithdrawn,
+  nothingFoundOf,
   othersReviewOf,
   resultMissingOf,
   signedOffOf,
@@ -23,6 +24,15 @@ describe("stage issues", () => {
     );
     assert.equal(stageIssueOf({ ...calm, failedLevels: [1], resultMissing: true }), "slidefail");
     assert.equal(stageIssueOf({ ...calm, resultMissing: true }), "noresults");
+  });
+
+  it("says the AI found nothing only when the result exists and lists no objects", () => {
+    assert.equal(stageIssueOf({ ...calm, nothingFound: true }), "nothingfound");
+    assert.equal(stageIssueOf({ ...calm, resultMissing: true, nothingFound: true }), "noresults");
+    assert.equal(stageIssueOf({ ...calm, withdrawn: true, nothingFound: true }), "withdrawn");
+    assert.equal(nothingFoundOf({ objects: [] }), true);
+    assert.equal(nothingFoundOf({ objects: [{}] }), false);
+    assert.equal(nothingFoundOf(undefined), false);
   });
 
   it("counts only the two highest magnifications as a slide that cannot be read", () => {

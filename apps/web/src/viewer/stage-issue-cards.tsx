@@ -104,7 +104,7 @@ export function useAnswersOff(
   if (issue === "withdrawn") return t`This task was withdrawn. There is nothing left to decide.`;
   if (issue === "slidefail")
     return t`${slideLabel} can't be read at the highest magnifications yet. Retry, or ask the researcher.`;
-  if (issue === "noresults") return t`Nothing to decide here yet.`;
+  if (issue === "noresults" || issue === "nothingfound") return t`Nothing to decide here yet.`;
   return undefined;
 }
 
@@ -160,6 +160,23 @@ export function StageIssueCard({
         >
           <Trans>Your decided slides are kept and show in the report.</Trans>
         </CanvasNotice>
+      ) : issue === "nothingfound" ? (
+        <CanvasNotice
+          icon="smart"
+          title={t`The AI found nothing to decide on ${slideLabel}.`}
+          actions={
+            <>
+              {onNext === null ? null : (
+                <Button variant="primary" onClick={onNext}>
+                  <Trans>Next slide</Trans>
+                </Button>
+              )}
+              {ask}
+            </>
+          }
+        >
+          <Trans>Look over the slide yourself, or go on to the next slide.</Trans>
+        </CanvasNotice>
       ) : (
         <CanvasNotice
           icon="smart"
@@ -198,6 +215,7 @@ export function StageIssueLayer({
   withdrawn,
   unreadable,
   resultMissing,
+  nothingFound = false,
   signedOff,
   slideLabel,
   reviewers = null,
@@ -210,6 +228,7 @@ export function StageIssueLayer({
   withdrawn: boolean;
   unreadable: boolean;
   resultMissing: boolean;
+  nothingFound?: boolean;
   signedOff: boolean;
   slideLabel: string;
   reviewers?: string | null;
@@ -225,6 +244,7 @@ export function StageIssueLayer({
     failedLevels,
     unreadable: unreadable && retried !== slideId,
     resultMissing,
+    nothingFound,
   });
   const answersOff = useAnswersOff(issue, signedOff, slideLabel, reviewers);
   const retry = () => {

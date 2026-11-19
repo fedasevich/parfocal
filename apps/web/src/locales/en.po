@@ -9402,6 +9402,10 @@ msgstr "Logo letters"
 msgid "Look at the slide without AI, or ask the researcher to run the model."
 msgstr "Look at the slide without AI, or ask the researcher to run the model."
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "Look over the slide yourself, or go on to the next slide."
+msgstr "Look over the slide yourself, or go on to the next slide."
+
 #. placeholder {0}: folder.every
 #: src/screens/upload/watched-folder.tsx
 msgid "Looks for new files every {0}."
@@ -16159,6 +16163,10 @@ msgstr "The AI found no tumor area on this slide."
 #: ../../packages/ui/src/components/systematic-scan.tsx
 msgid "The AI found no tumor areas on this slide. Look at all the tissue at {scanMagnification}×, one field at a time in reading order, before you decide."
 msgstr "The AI found no tumor areas on this slide. Look at all the tissue at {scanMagnification}×, one field at a time in reading order, before you decide."
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "The AI found nothing to decide on {slideLabel}."
+msgstr "The AI found nothing to decide on {slideLabel}."
 
 #: src/screens/review/guided-review.tsx
 #: src/viewer/stage-coach.tsx
