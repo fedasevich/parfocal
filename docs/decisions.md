@@ -226,6 +226,16 @@ In guided check, the next object appears when the server confirms the decision. 
 
 Your choice: 
 
+### 159. Two extras the mock does not draw: Send feedback and the Open and Resolved switch
+
+PROTO-056 (the last small ends of both drift audits) kept two things the mock leaves out, because removing them loses a function.
+
+- **A. Keep both (recommended).** "Send feedback" stays in the account menu, since help text and the command palette point to it and it is the only visible way to reach the team. The Open and Resolved switch stays on the Comments tab, since without it a resolved thread cannot be reopened.
+- **B. Remove "Send feedback"** and leave feedback to the command palette only.
+- **C. Remove the switch** and show resolved threads folded at the end of the list.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-18 after a sweep of stale tasks. Tasks an agent can finish went back to the ready list. What is left in review waits on you or on the next release.
