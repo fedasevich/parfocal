@@ -148,7 +148,7 @@ test("picking a model, clicking a nucleus and accepting saves the outline", asyn
   const picker = page.getByTestId("model-tier-picker");
   await expect(picker.getByText("Model for outlining nuclei")).toBeVisible();
   await expect(picker.getByRole("radio")).toHaveCount(2);
-  const good = picker.getByRole("radio", { name: /Good/ });
+  const good = picker.getByRole("radio", { name: /^Good/ });
   await good.hover();
   await expect(picker.getByText(/PathoSAM ViT-B · on this computer/)).toBeVisible();
   await expect(picker.getByText(/\d+ MB, downloaded once/)).toBeVisible();
