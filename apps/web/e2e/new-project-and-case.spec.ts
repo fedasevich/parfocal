@@ -53,8 +53,7 @@ test("a clinical project and a case with fake patient fields are created through
   await expect(page.getByRole("heading", { name: "Fake study, model B" })).toBeVisible();
   await expect(page.getByTestId("project-page")).toContainText("Clinical");
 
-  await page.getByRole("button", { name: "More project actions" }).click();
-  await page.getByRole("menuitem", { name: "New case" }).click();
+  await page.getByRole("button", { name: "New case" }).click();
   const caseDrawer = page.getByRole("dialog", { name: "New case" });
   await expect(caseDrawer.getByTestId("case-patient")).toContainText("This is a clinical project");
   await caseDrawer.getByLabel("Case ID").fill("S26-90001");

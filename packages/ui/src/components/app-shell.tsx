@@ -132,7 +132,7 @@ function TopBar({
       <button
         type="button"
         onClick={onSearch}
-        className="flex w-105 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 py-1.5 text-left text-body-sm text-fg-faint"
+        className="flex w-105 min-w-40 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 py-1.5 text-left text-body-sm text-fg-faint"
       >
         <Icon name="search" />
         <span className="flex-1 truncate">
@@ -294,7 +294,7 @@ function AppShell({ top, side, pending = false, className, children, ...props }:
     <div
       data-slot="app-shell"
       className={cn(
-        "grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] bg-surf-page text-fg",
+        "grid h-full min-h-0 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] bg-surf-page text-fg",
         className,
       )}
       {...props}

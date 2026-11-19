@@ -125,7 +125,7 @@ function SmallModal({
           onKeyDown={runPrimaryOnEnter}
           className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100%-48px)] max-w-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-[14px] border border-line bg-surf-panel text-body-sm text-fg shadow-pop outline-none duration-(--motion-fast) data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95"
         >
-          <div className="flex items-start gap-3 px-5 pt-5">
+          <div className="flex flex-none items-start gap-3 px-5 pt-5">
             <div className="grid min-w-0 flex-1 gap-1">
               <DialogPrimitive.Title className="m-0 text-title-sm leading-[1.3] font-semibold text-fg">
                 {title}
@@ -146,9 +146,9 @@ function SmallModal({
           <div ref={bodyRef} className="grid min-h-0 content-start gap-5 overflow-auto p-5">
             {children}
           </div>
-          <div className="border-t border-line">
+          <div className="flex-none border-t border-line">
             {blockers.length > 1 ? (
-              <div className="px-5 pt-3.5">
+              <div className="max-h-[30dvh] overflow-auto px-5 pt-3.5">
                 <BeforeYouList id={listId} title={blockersTitle} blockers={blockers} />
               </div>
             ) : null}
