@@ -6849,7 +6849,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-19 the owner found the disagreements screen draws only outlines on an empty canvas with no slide image, Preview the adjudicator view is a dashed prototype button, and the adjudicator view at scene=adjudicate says Nothing is queued for you with an empty stage. Production must not carry mock views. Draw the slide region under each object, make Send to an adjudicator create a real queue, give the adjudicator a real route that lists and decides the queued objects on the slide, remove the preview button and the scene switch, and store each adjudication beside the reviewers' decisions.
   Done when a real API e2e spec makes a disagreement, sends it to an adjudicator, signs in as the adjudicator, decides it on a drawn slide, and the task's evaluation and sign off show the adjudication, and no disagreements route reads a scene parameter.
   Depends on PROTO-065. Size: M.
-- [ ] PROTO-079 · The deployed app carries no prototype scenes or mock views
+- [x] PROTO-079 · The deployed app carries no prototype scenes or mock views
   The owner said on 2026-11-19 that the deployed app is to be treated as production for features and must not show mock views. Eleven screens still hold prototype-scenes files and routes such as /prototype, /flow-map, /kpi, /spikes, /issue-states and /developer ship in the build. List every scene and mock route a signed in person can reach on the deployed app, make each one a real feature on real data or keep it only behind the dev tools flag that the deployed build turns off, and make the build fail if a scene parameter is read outside dev tools.
   Done when a unit test lists every route and scene, a build check fails on a scene read outside dev tools, a spec on the deployed build config finds none of the mock routes, and the disagreements work stays with PROTO-078.
   Depends on PROTO-078. Size: M.
@@ -6861,6 +6861,22 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Decision 162 (whether annotator and read-only viewer are roles of their own), option A: Researcher and Reviewer stay, with admin rights, and the owner says the reviewer doctor is also the annotator. Show a table in Admin, People and roles, of what each role and admin rights may do, read from the permission matrix, naming annotating under Reviewer.
   Done when a spec opens People and roles and finds the table, and a unit test checks every permission in the matrix appears in it.
   Depends on PROTO-072. Size: S.
+- [ ] PROTO-082 · The task timing page reads recorded timing events
+  From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): `/kpi` falls back to a seeded sample and is dev tools only since PROTO-079. Read the recorded timing events from the API so the page works on the deployed app.
+  Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
+  Depends on PROTO-079. Size: S.
+- [ ] PROTO-083 · Guided review shows withdrawn, signed off, failed and empty states from the real task
+  From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These states exist only as scenes. Check whether the real screen reaches each from the task state and build what is missing.
+  Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
+  Depends on PROTO-079. Size: S.
+- [ ] PROTO-084 · Upload warns about duplicates, unmatched files and full storage from the real API
+  From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These warnings exist only as scenes. Check whether the real upload answers carry them and build what is missing.
+  Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
+  Depends on PROTO-079. Size: S.
+- [ ] PROTO-085 · Sign-in shows expired links and no access from the real auth answers
+  From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These pages exist only as scenes. Check whether the real auth answers reach them and build what is missing.
+  Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
+  Depends on PROTO-079. Size: S.
 
 ---
 
