@@ -145,7 +145,7 @@ export function CanvasNotice({
   children: ReactNode;
 }) {
   return (
-    <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
+    <div className="absolute top-4 left-1/2 z-30 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
       <InlineState
         icon={icon}
         title={title}
