@@ -15,6 +15,7 @@ function required(name: string): string {
 export const username = required("ZITADEL_TEST_USERNAME");
 export const password = required("ZITADEL_TEST_PASSWORD");
 export const outbox = required("EMAIL_OUTBOX");
+export const adjudicatorUsername = process.env["ZITADEL_ADJUDICATOR_USERNAME"] ?? "";
 
 export function sql(statement: string): string {
   return execFileSync(
@@ -65,9 +66,13 @@ export function apiLogs(): string {
   );
 }
 
-export async function signIn(page: Page, deepLink: string): Promise<void> {
+export async function signIn(
+  page: Page,
+  deepLink: string,
+  email: string = username,
+): Promise<void> {
   await page.goto(`/sign-in?return_to=${encodeURIComponent(deepLink)}`);
-  await page.getByLabel("Work email").fill(username);
+  await page.getByLabel("Work email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   const later = page.getByRole("button", { name: "Not now", exact: true });

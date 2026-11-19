@@ -57,6 +57,7 @@ umask 077
   echo "ZITADEL_ADMIN_TOKEN=$TF_VAR_zitadel_access_token"
   echo "ZITADEL_TEST_USERNAME=e2e-pathologist@parfocal.test"
   echo "ZITADEL_TEST_PASSWORD=$TF_VAR_test_user_password"
+  echo "ZITADEL_ADJUDICATOR_USERNAME=e2e-adjudicator@parfocal.test"
   echo "MAILPIT_URL=http://localhost:${PARFOCAL_MAILPIT_PORT:-8025}"
 } > "$state/e2e.env"
 

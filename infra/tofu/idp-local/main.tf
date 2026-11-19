@@ -59,6 +59,11 @@ module "identity" {
       first_name = "E2E"
       last_name  = "Pathologist"
     }
+    adjudicator = {
+      email      = "e2e-adjudicator@parfocal.test"
+      first_name = "E2E"
+      last_name  = "Adjudicator"
+    }
   }
 }
 

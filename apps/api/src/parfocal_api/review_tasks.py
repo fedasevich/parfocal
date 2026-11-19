@@ -36,7 +36,7 @@ from parfocal_api.notifications import deliver_after_commit
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
-from parfocal_api.project_access import project_grant, reads_whole
+from parfocal_api.project_access import adjudicated_slides, project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
 from parfocal_api.realtime import RealtimeClient
 from parfocal_api.review_decisions import recount
@@ -796,7 +796,14 @@ async def readable_task(
         mine = select(review_assignments.c.slide_id).where(
             review_assignments.c.task_id == task_id, own_assignments(principal)
         )
-        if not await connection.scalar(select(mine.exists())):
+        judged = (
+            adjudicated_slides(principal).where(review_tasks.c.id == task_id)
+            if isinstance(principal, MemberPrincipal)
+            else None
+        )
+        assigned = await connection.scalar(select(mine.exists()))
+        adjudicating = judged is not None and await connection.scalar(select(judged.exists()))
+        if not assigned and not adjudicating:
             raise NotFoundError("Review task not found")
     return row, whole
 
