@@ -5,7 +5,9 @@ export const defaultTileFadeMs = 200;
 export interface TileFade {
   readonly durationMs: number;
   readonly opacityOf: (content: object) => number;
+  readonly opaque: (content: object) => boolean;
   readonly active: () => boolean;
+  readonly endsAt: () => number;
 }
 
 export function createTileFade(
@@ -21,13 +23,25 @@ export function createTileFade(
     if (start === undefined) {
       start = current;
       starts.set(content, start);
-      lastEnd = Math.max(lastEnd, current + durationMs);
+      if (durationMs > 0) lastEnd = Math.max(lastEnd, current + durationMs);
     }
     if (durationMs <= 0) return 1;
     return Math.min(1, Math.max(0, (current - start) / durationMs));
   };
 
-  return { durationMs, opacityOf, active: () => now() < lastEnd };
+  const opaque = (content: object): boolean => {
+    if (durationMs <= 0) return true;
+    const start = starts.get(content);
+    return start !== undefined && now() - start >= durationMs;
+  };
+
+  return {
+    durationMs,
+    opacityOf,
+    opaque,
+    active: () => now() < lastEnd,
+    endsAt: () => lastEnd,
+  };
 }
 
 interface FadingBitmapLayer {

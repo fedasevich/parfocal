@@ -547,7 +547,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
       assertAlive();
       controller.setProfile(profile);
     },
-    stopMotion: () => controller.cancel(),
+    stopMotion: () => controller.halt(),
     panBy: (dx, dy) => {
       assertAlive();
       fitPending = false;

@@ -207,6 +207,21 @@ test("any new input cancels a flight where it is", async () => {
   }
 });
 
+test("halting stops a flight at the camera on screen without catching up", async () => {
+  const { controller, camera, clock, applied } = setup({ x: 0, y: 0, zoom: -2 });
+  const end = controller.flyTo({ x: 30_000, y: 0, zoom: -2 });
+  clock.time += 100;
+  controller.step();
+  const onScreen = camera();
+  const applies = applied.length;
+  clock.time += 60;
+  controller.halt();
+  assert.equal(await end, "cancelled");
+  assert.equal(controller.motion(), "idle");
+  assert.deepEqual(camera(), onScreen);
+  assert.equal(applied.length, applies);
+});
+
 test("interrupting stops a coast but leaves an eased zoom to finish", () => {
   const { controller, clock, run, camera } = setup({ x: 0, y: 0, zoom: 0 });
   controller.startDrag(0, 0);

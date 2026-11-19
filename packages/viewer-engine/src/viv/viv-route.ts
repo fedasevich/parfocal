@@ -30,6 +30,7 @@ import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
 import { createDeckSleep, type DeckSleep } from "./deck-sleep.ts";
 import { disposeDeck } from "./dispose-deck.ts";
+import { drawCurrentView, layersNeedUpdate } from "./draw-once.ts";
 import type { FailedTile } from "./failed-tiles.ts";
 import {
   createGpuGuard,
@@ -45,6 +46,7 @@ import {
 } from "./interpolation.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
 import { createPrefetcher, type Prefetcher } from "./prefetch.ts";
+import { SlideImageLayer } from "./slide-image-layer.ts";
 import { createTileFade, installTileFade, tileFadeProp } from "./tile-fade.ts";
 import type { TileLoadState } from "./tile-wait.ts";
 import {
@@ -190,10 +192,8 @@ export function createVivRoute(
   const host = hostElement(container);
   installTileInterpolation(BitmapLayer);
   installTileFade(DeckBitmapLayer);
-  const tileFade = createTileFade(
-    options.tileFade?.now ?? systemClock,
-    options.tileFade?.durationMs,
-  );
+  const fadeClock = options.tileFade?.now ?? systemClock;
+  const tileFade = createTileFade(fadeClock, options.tileFade?.durationMs);
   const interpolationRule = options.interpolation ?? defaultInterpolationRule;
   const reportError =
     options.onError ??
@@ -226,6 +226,8 @@ export function createVivRoute(
   let afterRender = () => {};
   let movingDetail = false;
   let cancelRest: (() => void) | null = null;
+  let drawQueued = false;
+  let drawStartedAt = Number.POSITIVE_INFINITY;
 
   const deviceIsLost = (candidate: Deck<OrthographicView>): boolean => {
     const device = (candidate as unknown as { device?: { isLost?: boolean } | null }).device;
@@ -250,6 +252,9 @@ export function createVivRoute(
       onError: (error) => {
         if (!gpuUsable() || deviceIsLost(created)) return;
         reportError(error);
+      },
+      onBeforeRender: () => {
+        drawStartedAt = fadeClock();
       },
       onAfterRender: () => {
         renderedChanges = changes;
@@ -295,10 +300,19 @@ export function createVivRoute(
     shown = null;
   };
 
+  const drawChanges = () => {
+    drawQueued = false;
+    if (gpuUsable() && !documentVisibility.hidden()) {
+      drawCurrentView(deck, "parfocal route change");
+    }
+  };
+
   const changed = () => {
     changes++;
-    if (gpuUsable() && !documentVisibility.hidden()) deck.redraw("parfocal route change");
     sleep?.wake("change");
+    if (drawQueued) return;
+    drawQueued = true;
+    queueMicrotask(drawChanges);
   };
 
   const viewRect = (): ViewRect | undefined =>
@@ -374,7 +388,7 @@ export function createVivRoute(
         ...extras,
       } as never) as Layer;
     }
-    return new MultiscaleImageLayer<[]>({
+    return new SlideImageLayer({
       id: `slide-${current.slide.id}`,
       loader: [...(current.rgb?.levels ?? [])],
       selections: stableSelections,
@@ -383,7 +397,7 @@ export function createVivRoute(
       dtype: "Uint8",
       ...extras,
       ...{ tintColor: slideTint(brightness) },
-    }) as Layer;
+    });
   };
 
   const channelShown = (slide: PixelSlide, reader: WorkerRegionReader | null): Shown => {
@@ -468,23 +482,17 @@ export function createVivRoute(
     if (overlayDetailMoved()) applyLayers();
   };
 
-  let fadeWasActive = false;
-
   const settled = (): boolean => {
     if (failure !== null) return true;
     if (!gpuUsable() || movingDetail) return false;
-    if (tileFade.active()) {
-      fadeWasActive = true;
-      return false;
-    }
-    if (fadeWasActive) {
-      fadeWasActive = false;
+    if (tileFade.active()) return false;
+    if (tileFade.endsAt() > drawStartedAt) {
       changes++;
       deck.redraw("parfocal tile fade end");
       return false;
     }
     if (renderedChanges !== changes) return false;
-    if (deck.needsRedraw({ clearRedrawFlags: false })) return false;
+    if (deck.needsRedraw({ clearRedrawFlags: false }) || layersNeedUpdate(deck)) return false;
     if (shown === null) return true;
     return (
       shown.layer.isLoaded &&

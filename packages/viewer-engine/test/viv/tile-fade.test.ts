@@ -37,6 +37,31 @@ describe("tile fade", () => {
     assert.equal(fade.opacityOf(second), 0.5);
   });
 
+  it("calls a tile opaque only once its own fade has finished", () => {
+    const { fade, advance } = clocked(200);
+    const tile = {};
+    assert.equal(fade.opaque(tile), false);
+    fade.opacityOf(tile);
+    advance(199);
+    assert.equal(fade.opaque(tile), false);
+    advance(1);
+    assert.equal(fade.opaque(tile), true);
+    assert.equal(clocked(0).fade.opaque({}), true);
+  });
+
+  it("tells when the last fade ends so a draw from before it can be repeated", () => {
+    const { fade, advance } = clocked(200);
+    assert.equal(fade.endsAt(), 0);
+    fade.opacityOf({});
+    assert.equal(fade.endsAt(), 5200);
+    advance(50);
+    fade.opacityOf({});
+    assert.equal(fade.endsAt(), 5250);
+    const instant = clocked(0).fade;
+    instant.opacityOf({});
+    assert.equal(instant.endsAt(), 0);
+  });
+
   it("stays active until the last fade ends so the deck keeps drawing", () => {
     const { fade, advance } = clocked(200);
     assert.equal(fade.active(), false);

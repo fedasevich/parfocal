@@ -57,6 +57,7 @@ export interface CameraController {
   readonly step: () => boolean;
   readonly interrupt: () => void;
   readonly cancel: () => void;
+  readonly halt: () => void;
   readonly settle: () => void;
   readonly panBy: (dx: number, dy: number) => void;
   readonly zoomTo: (zoom: number, anchor?: ScreenOffset, options?: ZoomOptions) => void;
@@ -236,6 +237,10 @@ export function createCameraController(host: CameraControllerHost): CameraContro
     stop("cancelled");
   };
 
+  const halt = () => {
+    stop("cancelled");
+  };
+
   const interrupt = () => {
     if (state.kind === "flying" || state.kind === "coasting") cancel();
   };
@@ -359,6 +364,7 @@ export function createCameraController(host: CameraControllerHost): CameraContro
     step,
     interrupt,
     cancel,
+    halt,
     settle,
     panBy,
     zoomTo,
