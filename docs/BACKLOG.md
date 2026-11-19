@@ -6694,6 +6694,32 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Add a withdrawn status to review tasks that keeps the task and its objects readable, and a slide flag set at ingest or on the first failed high power read, and drive the two viewer cards from them in the real and fake API.
   Done when an API test withdraws a task and reads it back with its objects, a browser test sees the withdrawn card with disabled answer buttons and their reason, and the unreadable card shows from the flag through the fake API.
   Depends on PROTO-048. Size: S.
+- [ ] PROTO-052 · The whole slide peek shows the slide, the AI areas, the checks and where you are
+  The peek on the engine viewer draws blue blocks for seen tissue on a grey box and nothing else, covers only the slide and says "100% of the tissue seen" while part of its map has no tint (rows 76 to 80 of the 2026-11-19 drift result). The mock's peek covers everything under the top bar and shows the slide's picture in its own proportions with the seen tint, the AI areas with their numbers, a mark on checked ones and a frame for the current view, under the subtitle "A1 · H&E · 5 tumor regions, 4 decided · 26% of tissue seen".
+  Draw those layers in `viewer/viewed-peek.tsx` from the stage's thumbnail, review objects and camera, size the map to the slide, cover the rail and the panel, and make the percentage in the peek and in the progress popover the share the map shows.
+  Done when a browser test on RT-14 taps Z, finds the slide picture, five numbered areas, a check on each decided one and the view frame, reads the subtitle with the regions and decided counts, clicks an area and lands on it, and the seen percentage equals the tinted share within one point.
+  Size: M.
+- [ ] PROTO-053 · The bottom dock moves the magnification bar to the top right and nothing overlaps it
+  With Tools set to Bottom dock the tools sit where the mock has them, but the magnification bar stays at the bottom centre above the dock, the cells panel covers it, the "Linked" pill of compare lies on the dock, and the dock is 4 px wider and 2 px taller than the mock's (rows 63 to 66). The "Whole slide" button sits 48 px above the bar's row in both layouts (row 67).
+  In dock layout place the magnification bar 12 px under the top bar at the right edge of the slide as the mock does, lift the "Linked" pill above the dock, use 36 px tools, and put "Whole slide" level with the bar in the rail layout and at the bottom left in the dock layout.
+  Done when a browser test sets Bottom dock, finds the magnification bar at the top right in the viewer and in annotate, opens the cells panel and still clicks "10×", opens compare and finds no overlap between the pill and the dock, and reads the "Whole slide" button's place in both layouts.
+  Size: S.
+- [ ] PROTO-054 · Compare slides wears the viewer's top bar and the mock's panel
+  Compare still draws the top bar that PROTO-041 (the top bar's title, slide chip, decision ring and Submit match the mock) replaced in the viewer, drops the "Objects on A1" card from the panel, wraps the three panel blocks in cards, says "panes" in the picker beside a "Swap sides" button, adds a switch to the "Linked" pill, and counts 4 comments where the viewer counts 3 (rows 68 to 70 and 73 to 75). Rotation, the crosshair and "Line up automatically" stay, as ADR 0271 (linked compare panes keep a per-pane offset) records them.
+  Draw compare under the engine viewer's top bar, keep the summary card above "Slides on screen", use the mock's plain section labels, say "sides" everywhere, match the pill, and feed the Comments count from the same threads as the viewer.
+  Done when a browser test opens compare from the rail on RT-14, reads "My work", the 138 px chip "A1 · H&E" and only Guided and Full viewer, finds "Objects on A1" above "Slides on screen", reads the same Comments count as in the viewer, and the compare specs still pass.
+  Size: S.
+- [ ] PROTO-055 · The area around the slide uses the canvas colour in both themes
+  Around the slide the app paints the chrome colour, white in light and 29, 29, 29 in dark, where the mock paints its canvas colour, 207, 207, 207 and 42, 42, 42. Compare panes are 23, 23, 23 in both themes, and the slide chip in the top bar is drawn as a button where the mock's is quieter (rows 85 to 87).
+  Give the stage and the compare panes the canvas token of the theme, and the slide chip the mock's quiet tone and border.
+  Done when a browser test reads the stage background in light and dark on the viewer, guided review and compare and finds the canvas token each time, and the viewer golden images pass.
+  Size: S.
+- [ ] PROTO-056 · The last small ends of both drift audits are tied off
+  Eight rows of the first audit are partly fixed and five small rows are new: the filter chips run past the panel, a reason shows as "boundary_off", an "Areas, largest first" card follows the object list and sits with a Measurements card and a "Show the cells grid" button in guided review, the minimap has no head and its foot texts overlap, "Send feedback" is an extra menu row, the Comments tab keeps an Open and Resolved switch, a seeded thread opens no popover, T6⁺ has no tag on the slide, zoom in shows "+" where the mock has "=", and the cell keys hint differs (rows 3, 4, 8, 24, 34, 57 and 58 of the first result and rows 81, 84 and 88 to 90 of this one).
+  Wrap the chips, print reasons in words, move or remove the Areas card and the guided extras, add the minimap's head and stop its foot from overlapping, open any thread at its object when it has no pin, tag added objects, and match the two shortcut rows. Record in `docs/decisions.md` whether "Send feedback" and the Open and Resolved switch stay.
+  Done when a browser test on RT-14 sees all six chips inside the panel, reads "boundary is off" on T2, finds no Areas card in guided review, reads the minimap's head and both foot texts without overlap, opens T2's seeded thread and sees its popover, and finds a T6⁺ tag on the slide.
+  Size: S.
+  Row 62 needs no new task, PROTO-048 already holds it.
 ---
 
 ## Later epics (not in v1, kept for planning)
