@@ -93,6 +93,7 @@ import type {
   LabModelConnection,
   LabModelTest,
   LabSettings,
+  LayerGroups,
   LayerImportResult,
   LayerObject,
   LegalHold,
@@ -6651,6 +6652,54 @@ export const getListAnnotationHistoryResponseMock = (): AnnotationVersion[] =>
       null,
     ]),
   }));
+
+export const getGetLayerGroupsResponseMock = (
+  overrideResponse: Partial<Extract<LayerGroups, object>> = {},
+): LayerGroups => ({
+  groups: Array.from({ length: faker.number.int({ min: 1, max: 500 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.number.int({ min: 1 }),
+      name: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      parent_id: faker.helpers.arrayElement([faker.number.int(), null]),
+      color: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 3, max: 3 }) }, (_, i) => i + 1).map(() =>
+          faker.number.int({ min: 0, max: 255 }),
+        ),
+        null,
+      ]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+    }),
+  ),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSetLayerGroupsResponseMock = (
+  overrideResponse: Partial<Extract<LayerGroups, object>> = {},
+): LayerGroups => ({
+  groups: Array.from({ length: faker.number.int({ min: 1, max: 500 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.number.int({ min: 1 }),
+      name: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      parent_id: faker.helpers.arrayElement([faker.number.int(), null]),
+      color: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 3, max: 3 }) }, (_, i) => i + 1).map(() =>
+          faker.number.int({ min: 0, max: 255 }),
+        ),
+        null,
+      ]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+    }),
+  ),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  ...overrideResponse,
+});
 
 export const getListPaintedMapsResponseMock = (): PaintedMap[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -22402,6 +22451,50 @@ export const getListAnnotationHistoryMockHandler = (
   );
 };
 
+export const getGetLayerGroupsMockHandler = (
+  overrideResponse?:
+    | LayerGroups
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<LayerGroups> | LayerGroups),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/layer-groups",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetLayerGroupsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetLayerGroupsMockHandler = (
+  overrideResponse?:
+    | LayerGroups
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<LayerGroups> | LayerGroups),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/slides/:slideId/layer-groups",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetLayerGroupsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListPaintedMapsMockHandler = (
   overrideResponse?:
     | PaintedMap[]
@@ -29427,6 +29520,8 @@ export const getParfocalAPIMock = () => [
   getDeleteAnnotationMockHandler(),
   getRestoreAnnotationMockHandler(),
   getListAnnotationHistoryMockHandler(),
+  getGetLayerGroupsMockHandler(),
+  getSetLayerGroupsMockHandler(),
   getListPaintedMapsMockHandler(),
   getCreatePaintedMapMockHandler(),
   getSavePaintedMapMockHandler(),

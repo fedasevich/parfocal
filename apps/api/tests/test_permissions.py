@@ -375,6 +375,7 @@ NEEDS_A_TASK = frozenset(
         "createPaintedMap",
         "savePaintedMap",
         "changeAnnotation",
+        "setLayerGroups",
         "deleteAnnotation",
         "restoreAnnotation",
         "saveReviewEdit",
@@ -1068,6 +1069,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "restoreAnnotation": lambda w: Call(
         "POST", f"{w.annotations}/{w.deleted_annotation}/restore", {"version": 2}
+    ),
+    "getLayerGroups": lambda w: Call("GET", f"/api/slides/{w.slide}/layer-groups"),
+    "setLayerGroups": lambda w: Call(
+        "PUT", f"/api/slides/{w.slide}/layer-groups", {"groups": [], "members": []}
     ),
     "listPaintedMaps": lambda w: Call("GET", w.painted_maps),
     "listPaintedMapVersions": lambda w: Call("GET", f"{w.painted_maps}/{w.painted_map}/versions"),

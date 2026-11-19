@@ -3,6 +3,7 @@ import {
   addGroup,
   type Group,
   groupChain,
+  pieceKey,
   removeGroup,
   updateGroup,
 } from "./document.ts";
@@ -37,6 +38,7 @@ export interface LayerRow {
   readonly groupId: GroupId | null;
   readonly name: string;
   readonly colour: string;
+  readonly hex: string;
   readonly count: number;
   readonly depth: number;
   readonly hidden: boolean;
@@ -69,6 +71,10 @@ export function rgbOfHex(hex: string): [number, number, number] | null {
 export function hexOfRgb(color: readonly [number, number, number] | null): string {
   if (color === null) return "#888888";
   return `#${color.map((part) => part.toString(16).padStart(2, "0")).join("")}`;
+}
+
+function classHex(context: LayerContext, classId: string | null): string {
+  return context.classes.find((item) => item.id === classId)?.colour ?? "";
 }
 
 function dominantClass(shapes: readonly Shape[]): string | null {
@@ -118,6 +124,7 @@ export function layerRows(doc: AnnotationDocument, context: LayerContext): Layer
       groupId: group.id,
       name: group.name,
       colour: colourToCss(group.color) ?? classColour ?? fallbackColour,
+      hex: hexOfRgb(group.color ?? rgbOfHex(classHex(context, dominant)) ?? null),
       count: shapes.length,
       depth,
       hidden: group.hidden,
@@ -138,6 +145,7 @@ export function layerRows(doc: AnnotationDocument, context: LayerContext): Layer
       groupId: null,
       name: "Ungrouped",
       colour: fallbackColour,
+      hex: hexOfRgb(null),
       count: loose.length,
       depth: 0,
       hidden: false,
@@ -216,6 +224,78 @@ export function ungroupShapes(
   let document = doc;
   for (const groupId of groups) document = removeGroup(document, groupId);
   return document;
+}
+
+export function renameGroup(
+  doc: AnnotationDocument,
+  id: GroupId,
+  name: string,
+): AnnotationDocument {
+  const group = doc.groups.get(id);
+  const trimmed = name.trim();
+  if (group === undefined || trimmed === "" || trimmed === group.name) return doc;
+  return updateGroup(doc, id, { name: trimmed }).document;
+}
+
+export function moveToGroup(
+  doc: AnnotationDocument,
+  ids: readonly ShapeId[],
+  groupId: GroupId | null,
+): AnnotationDocument {
+  if (groupId !== null && !doc.groups.has(groupId)) return doc;
+  const moving = ids.filter((id) => {
+    const shape = doc.shapes.get(id);
+    return shape !== undefined && shape.groupId !== groupId;
+  });
+  if (moving.length === 0) return doc;
+  const shapes = new Map(doc.shapes);
+  for (const id of moving) {
+    const shape = shapes.get(id);
+    if (shape) shapes.set(id, { ...shape, groupId });
+  }
+  return { ...doc, shapes };
+}
+
+export function deleteGroupWithShapes(doc: AnnotationDocument, id: GroupId): AnnotationDocument {
+  if (!doc.groups.has(id)) return doc;
+  const doomed = new Set<GroupId>([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const group of doc.groups.values()) {
+      if (group.parentId !== null && doomed.has(group.parentId) && !doomed.has(group.id)) {
+        doomed.add(group.id);
+        grew = true;
+      }
+    }
+  }
+  const groups = new Map(doc.groups);
+  for (const groupId of doomed) groups.delete(groupId);
+  const shapes = new Map(doc.shapes);
+  const promoted = new Map(doc.promoted);
+  for (const shape of doc.shapes.values()) {
+    if (shape.groupId === null || !doomed.has(shape.groupId)) continue;
+    shapes.delete(shape.id);
+    if (shape.provenance.kind === "model") {
+      promoted.delete(pieceKey(shape.provenance.runId, shape.provenance.piece));
+    }
+  }
+  return { ...doc, groups, shapes, promoted };
+}
+
+export function skippedTarget(
+  before: AnnotationDocument,
+  after: AnnotationDocument,
+  target: GroupId | null,
+): { name: string; reason: "hidden" | "locked" } | null {
+  if (target === null || after === before || usableTarget(after, target) !== null) return null;
+  const chain = groupChain(after, target);
+  const blocker = chain.find((group) => group.locked) ?? chain.find((group) => group.hidden);
+  if (blocker === undefined || chain[0]?.id !== target) return null;
+  const arrived = [...after.shapes.values()].some(
+    (shape) => shape.id >= before.nextShapeId && shape.groupId === null,
+  );
+  return arrived ? { name: blocker.name, reason: blocker.locked ? "locked" : "hidden" } : null;
 }
 
 export function addLayer(

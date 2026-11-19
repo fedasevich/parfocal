@@ -12,7 +12,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 
 | Class | Columns |
 |---|---|
-| `phi` | 50 |
+| `phi` | 51 |
 | `personal` | 101 |
 | `secret` | 15 |
 | `operational` | 879 |
@@ -1242,6 +1242,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `remote_failures` | operational |
 | `remote_failing_since` | operational |
 | `remote_read_at` | operational |
+| `layer_groups` | phi |
 | `created_at` | operational |
 | `updated_at` | operational |
 | `deleted_at` | operational |

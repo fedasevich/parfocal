@@ -2,6 +2,12 @@ import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { ProjectClass } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -10,16 +16,19 @@ import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { SlideAreaEntry } from "../viewer/slide-areas.ts";
-import { type AnnotationDocument, updateGroup } from "./document.ts";
+import { type AnnotationDocument, removeGroup, updateGroup } from "./document.ts";
 import {
   addLayer,
   bucketsOf,
+  deleteGroupWithShapes,
   groupBy,
   type LayerContext,
   type LayerLens,
   layerLenses,
   layerRows,
+  moveToGroup,
   overlaysHidden,
+  renameGroup,
   rgbOfHex,
   setOverlaysHidden,
   toggleHidden,
@@ -27,7 +36,8 @@ import {
   ungroupedKey,
   usableTarget,
 } from "./layers.ts";
-import type { GroupId } from "./shapes.ts";
+import type { GroupId, ShapeId } from "./shapes.ts";
+import type { SkippedTarget } from "./use-saved-annotations.ts";
 
 type LayersPanelProps = {
   document: AnnotationDocument;
@@ -36,6 +46,8 @@ type LayersPanelProps = {
   areas: readonly SlideAreaEntry[];
   target: GroupId | null;
   onTarget: (id: GroupId | null) => void;
+  selected?: readonly ShapeId[];
+  skipped?: SkippedTarget | null;
   resultSets?: ReactNode;
 };
 
@@ -58,6 +70,8 @@ export function LayersPanel({
   areas,
   target,
   onTarget,
+  selected = [],
+  skipped = null,
   resultSets,
 }: LayersPanelProps) {
   const { t } = useLingui();
@@ -105,6 +119,7 @@ export function LayersPanel({
     key: row.key,
     name: row.name,
     colour: row.colour,
+    hex: row.hex,
     count: row.count,
     depth: row.depth,
     locked: row.locked,
@@ -147,6 +162,38 @@ export function LayersPanel({
           >
             <Icon name="plus" />
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={selected.length === 0}
+                  data-testid="layers-move"
+                  title={t`Move the selected shapes into a layer`}
+                >
+                  <Trans>Move to</Trans>
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-48">
+              {rows.map((row) => (
+                <DropdownMenuItem
+                  key={row.key}
+                  onClick={() => onApply(moveToGroup(doc, selected, row.groupId), "Move to layer")}
+                >
+                  {row.name}
+                </DropdownMenuItem>
+              ))}
+              {rows.some((row) => row.groupId === null) ? null : (
+                <DropdownMenuItem
+                  onClick={() => onApply(moveToGroup(doc, selected, null), "Move to layer")}
+                >
+                  <Trans>Ungrouped</Trans>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             size="icon-sm"
             variant="ghost"
@@ -161,6 +208,13 @@ export function LayersPanel({
           <Keycap keys="⌘G" size="sm" />
         </span>
       </div>
+      {skipped ? (
+        <p role="status" data-testid="layers-skipped" className="m-0 text-body-sm text-warn">
+          {skipped.reason === "locked"
+            ? t`${skipped.name} is locked, so the new shape went to Ungrouped.`
+            : t`${skipped.name} is hidden, so the new shape went to Ungrouped.`}
+        </p>
+      ) : null}
       {rows.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">
           <Trans>Nothing drawn yet. Select shapes and press ⌘G to group them.</Trans>
@@ -176,6 +230,11 @@ export function LayersPanel({
             if (color)
               change(key, (id) => updateGroup(doc, id, { color }).document, "Layer colour");
           }}
+          onRename={(key, name) => change(key, (id) => renameGroup(doc, id, name), "Rename layer")}
+          onUngroup={(key) => change(key, (id) => removeGroup(doc, id), "Ungroup layer")}
+          onDelete={(key) =>
+            change(key, (id) => deleteGroupWithShapes(doc, id), "Delete layer and its shapes")
+          }
           onPick={(key) => {
             const id = groupIdOf(key);
             if (id !== null) onTarget(id === effective ? null : id);

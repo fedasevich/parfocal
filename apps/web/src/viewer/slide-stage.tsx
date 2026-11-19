@@ -1028,6 +1028,8 @@ function OpenedSlide({
                           areas={areas}
                           target={saved.target}
                           onTarget={saved.setTarget}
+                          selected={selectedIds}
+                          skipped={saved.skipped}
                           resultSets={
                             projectId === undefined ? undefined : (
                               <ResultSetLayers

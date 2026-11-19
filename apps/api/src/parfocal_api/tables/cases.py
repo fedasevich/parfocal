@@ -405,6 +405,7 @@ slides = Table(
     Column("remote_failures", SmallInteger, nullable=False, server_default="0", info=OPERATIONAL),
     Column("remote_failing_since", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("remote_read_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("layer_groups", JSONB(none_as_null=True), nullable=True, info=PHI),
     *case_timestamps(),
     UniqueConstraint("project_id", "barcode"),
     UniqueConstraint("id", "project_id"),

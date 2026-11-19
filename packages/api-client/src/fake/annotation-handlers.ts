@@ -1,7 +1,8 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import type { Annotation, AnnotationDraft, AnnotationEdit } from "../generated/api.ts";
+import type { Annotation, AnnotationDraft, AnnotationEdit, LayerGroups } from "../generated/api.ts";
 
 const storageKey = "parfocal.fake.annotations";
+const groupsKey = "parfocal.fake.layer-groups";
 
 const letters: Record<Annotation["kind"], string> = {
   roi: "R",
@@ -15,6 +16,19 @@ const letters: Record<Annotation["kind"], string> = {
 type Store = Record<string, Annotation[]>;
 
 let memory: Store = {};
+let memoryGroups: Record<string, LayerGroups> = {};
+
+function readGroups(): Record<string, LayerGroups> {
+  const stored = session()?.getItem(groupsKey);
+  return stored === null || stored === undefined
+    ? memoryGroups
+    : (JSON.parse(stored) as Record<string, LayerGroups>);
+}
+
+function writeGroups(groups: Record<string, LayerGroups>): void {
+  memoryGroups = groups;
+  session()?.setItem(groupsKey, JSON.stringify(groups));
+}
 
 function session(): Storage | null {
   return typeof sessionStorage === "undefined" ? null : sessionStorage;
@@ -33,7 +47,9 @@ function writeStore(store: Store): void {
 
 export function resetFakeAnnotations(): void {
   memory = {};
+  memoryGroups = {};
   session()?.removeItem(storageKey);
+  session()?.removeItem(groupsKey);
 }
 
 export const toSavedAnnotation = (
@@ -74,6 +90,17 @@ const staleProblem = () =>
   );
 
 export const annotationHandlers = (): RequestHandler[] => [
+  http.get<{ slideId: string }>("*/api/slides/:slideId/layer-groups", ({ params }) =>
+    HttpResponse.json(readGroups()[params.slideId] ?? { groups: [], members: [] }),
+  ),
+  http.put<{ slideId: string }>(
+    "*/api/slides/:slideId/layer-groups",
+    async ({ params, request }) => {
+      const body = (await request.json()) as LayerGroups;
+      writeGroups({ ...readGroups(), [params.slideId]: body });
+      return HttpResponse.json(body);
+    },
+  ),
   http.get<{ slideId: string }>("*/api/slides/:slideId/annotations", ({ params, request }) => {
     const kind = new URL(request.url).searchParams.get("kind");
     const saved = readStore()[params.slideId] ?? [];

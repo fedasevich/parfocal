@@ -1,6 +1,12 @@
 import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { IntoTopStack, useTopStacked } from "@parfocal/ui/components/top-stack";
@@ -360,6 +366,7 @@ type LayerRow = {
   plain?: boolean;
   hasChildren?: boolean;
   inheritedOff?: boolean;
+  hex?: string;
 };
 
 function LayerList({
@@ -369,6 +376,9 @@ function LayerList({
   onLock,
   onColour,
   onPick,
+  onRename,
+  onUngroup,
+  onDelete,
   className,
 }: {
   rows: LayerRow[];
@@ -377,9 +387,25 @@ function LayerList({
   onLock?: (key: string) => void;
   onColour?: (key: string, hex: string) => void;
   onPick?: (key: string) => void;
+  onRename?: (key: string, name: string) => void;
+  onUngroup?: (key: string) => void;
+  onDelete?: (key: string) => void;
   className?: string;
 }) {
   const { t } = useLingui();
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const managed = onRename !== undefined || onUngroup !== undefined || onDelete !== undefined;
+  const startRename = (row: LayerRow) => {
+    if (!onRename || row.plain) return;
+    setDraft(row.name);
+    setRenaming(row.key);
+  };
+  const finishRename = (row: LayerRow, keep: boolean) => {
+    setRenaming(null);
+    const name = draft.trim();
+    if (keep && name !== "" && name !== row.name) onRename?.(row.key, name);
+  };
 
   return (
     <ul
@@ -408,11 +434,19 @@ function LayerList({
             data-target={row.target || undefined}
             data-hidden={off || undefined}
             data-locked={row.locked || undefined}
+            onKeyDown={(event) => {
+              if (event.key === "F2" && !row.plain && renaming === null) {
+                event.preventDefault();
+                startRename(row);
+              }
+            }}
             className={cn(
               "grid items-center gap-1.75 rounded-md px-1 py-1 text-body-sm text-fg-dim data-current:bg-accent-soft data-current:text-fg data-target:bg-accent-soft data-target:text-fg",
-              onLock
-                ? "grid-cols-[16px_10px_1fr_auto_24px_24px]"
-                : "grid-cols-[16px_10px_1fr_auto_24px_18px]",
+              managed
+                ? "grid-cols-[16px_10px_1fr_auto_24px_24px_24px]"
+                : onLock
+                  ? "grid-cols-[16px_10px_1fr_auto_24px_24px]"
+                  : "grid-cols-[16px_10px_1fr_auto_24px_18px]",
               row.child && "pl-5.5",
               row.inheritedOff && "opacity-50",
             )}
@@ -432,7 +466,7 @@ function LayerList({
                 <input
                   type="color"
                   aria-label={t`Colour of ${row.name}`}
-                  value={row.colour.startsWith("#") ? row.colour : "#888888"}
+                  value={row.hex ?? "#888888"}
                   onChange={(event) => onColour(row.key, event.target.value)}
                   className="absolute inset-0 size-full cursor-pointer opacity-0"
                 />
@@ -440,13 +474,30 @@ function LayerList({
             ) : (
               swatch
             )}
-            {onPick && !row.plain ? (
+            {renaming === row.key ? (
+              <input
+                type="text"
+                aria-label={t`Name of ${row.name}`}
+                value={draft}
+                maxLength={80}
+                ref={(node) => node?.select()}
+                onChange={(event) => setDraft(event.target.value)}
+                onBlur={() => finishRename(row, true)}
+                onKeyDown={(event) => {
+                  event.stopPropagation();
+                  if (event.key === "Enter") finishRename(row, true);
+                  if (event.key === "Escape") finishRename(row, false);
+                }}
+                className="min-w-0 rounded-sm border border-line bg-chrome px-1 text-body-sm text-fg"
+              />
+            ) : onPick && !row.plain ? (
               <button
                 type="button"
                 aria-pressed={row.target ?? false}
                 aria-label={t`New shapes go to ${row.name}`}
                 title={t`New shapes go here`}
                 onClick={() => onPick(row.key)}
+                onDoubleClick={() => startRename(row)}
                 className="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-inherit"
               >
                 {row.name}
@@ -485,6 +536,43 @@ function LayerList({
             ) : (
               <span />
             )}
+            {managed ? (
+              row.plain ? (
+                <span />
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label={t`More actions for ${row.name}`}
+                        title={t`More`}
+                        className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
+                      >
+                        <Icon name="more" />
+                      </button>
+                    }
+                  />
+                  <DropdownMenuContent align="end" className="w-44">
+                    {onRename ? (
+                      <DropdownMenuItem onClick={() => startRename(row)}>
+                        <Trans>Rename</Trans>
+                      </DropdownMenuItem>
+                    ) : null}
+                    {onUngroup ? (
+                      <DropdownMenuItem onClick={() => onUngroup(row.key)}>
+                        <Trans>Ungroup</Trans>
+                      </DropdownMenuItem>
+                    ) : null}
+                    {onDelete ? (
+                      <DropdownMenuItem onClick={() => onDelete(row.key)}>
+                        <Trans>Delete group</Trans>
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )
+            ) : null}
           </li>
         );
       })}
