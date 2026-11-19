@@ -49,3 +49,11 @@ export function threadTarget(
   const geometry = anchor.geometry;
   return geometry ? geometryArea(geometry.coordinates) : null;
 }
+
+export function threadAnchorPoint(
+  anchor: Thread["anchor"],
+  areas: readonly SlideAreaEntry[],
+): { x: number; y: number } | null {
+  const target = threadTarget(anchor, areas);
+  return target === null ? null : { x: target.x + target.width, y: target.y };
+}

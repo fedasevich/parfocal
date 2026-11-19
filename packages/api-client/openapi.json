@@ -56318,6 +56318,20 @@
               }
             ],
             "title": "Note"
+          },
+          "outline": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outline"
           }
         },
         "type": "object",

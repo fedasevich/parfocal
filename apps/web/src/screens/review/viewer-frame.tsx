@@ -340,12 +340,13 @@ const decisionDot: Record<Count, string> = {
 
 export type ListFilter = "all" | "open" | Count | "added";
 
-const filters: { key: Exclude<ListFilter, "added">; label: string }[] = [
+const filters: { key: ListFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "open", label: "Open" },
   { key: "agree", label: "Agree" },
   { key: "disagree", label: "Disagree" },
   { key: "unsure", label: "Unsure" },
+  { key: "added", label: "Added" },
 ];
 
 const filterWord: Record<Exclude<ListFilter, "all">, string> = {
@@ -409,23 +410,27 @@ export function ObjectList({
     "grid w-full cursor-pointer grid-cols-[44px_1fr_auto_auto] items-start gap-2 rounded-ctl border-0 bg-transparent px-1 py-2 text-left text-body-sm text-fg hover:bg-chrome-2 aria-[current=true]:bg-surf-hl";
   return (
     <div data-testid="object-list" className="grid gap-3">
-      <fieldset
-        aria-label={t`Show`}
-        className="m-0 flex min-w-0 gap-1.5 overflow-hidden border-0 p-0"
-      >
-        {filters.map((item) => (
-          <FilterChip
-            key={item.key}
-            {...(filter === undefined
-              ? { defaultPressed: item.key === "all" }
-              : {
-                  pressed: item.key === shown,
-                  onPressedChange: () => onFilterChange?.(item.key),
-                })}
-          >
-            {item.label} {item.key === "all" ? counts.total : counts[item.key]}
-          </FilterChip>
-        ))}
+      <fieldset aria-label={t`Show`} className="m-0 flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
+        {filters
+          .filter((item) => item.key !== "added" || added.length > 0)
+          .map((item) => (
+            <FilterChip
+              key={item.key}
+              {...(filter === undefined
+                ? { defaultPressed: item.key === "all" }
+                : {
+                    pressed: item.key === shown,
+                    onPressedChange: () => onFilterChange?.(item.key),
+                  })}
+            >
+              {item.label}{" "}
+              {item.key === "all"
+                ? counts.total
+                : item.key === "added"
+                  ? added.length
+                  : counts[item.key]}
+            </FilterChip>
+          ))}
       </fieldset>
       <ul className="m-0 grid list-none gap-1 p-0">
         {regions.map((item) => {

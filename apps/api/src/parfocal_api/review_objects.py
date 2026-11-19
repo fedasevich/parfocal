@@ -66,6 +66,7 @@ class ReviewObject(BaseModel):
 class AddedObject(BaseModel):
     object: str
     note: str | None
+    outline: list[float] | None = None
 
 
 class ReviewObjects(BaseModel):
@@ -306,7 +307,12 @@ async def added_objects(
     if me is None:
         return []
     rows = await connection.execute(
-        select(annotations.c.kind, annotations.c.number, annotations.c.text)
+        select(
+            annotations.c.kind,
+            annotations.c.number,
+            annotations.c.text,
+            func.ST_AsGeoJSON(annotations.c.geometry).label("shape"),
+        )
         .where(
             annotations.c.task_id == task_id,
             annotations.c.slide_id == slide_id,
@@ -317,7 +323,11 @@ async def added_objects(
         .order_by(annotations.c.kind, annotations.c.number)
     )
     return [
-        AddedObject(object=added_code(AnnotationKind(row.kind), row.number), note=row.text or None)
+        AddedObject(
+            object=added_code(AnnotationKind(row.kind), row.number),
+            note=row.text or None,
+            outline=outline_of(row.shape),
+        )
         for row in rows
     ]
 

@@ -221,7 +221,13 @@ export const lenkaDecisionsInReview = (): Map<string, ScenarioDecision> =>
 export const reviewDecisionTimes = (index: number) =>
   `2026-10-15T${String(9 + Math.floor(index / 12)).padStart(2, "0")}:${String((index * 5) % 60).padStart(2, "0")}:00+02:00`;
 
-export const addedByLenka = [{ object: "T6⁺", note: "Missed by the AI, 0.9 mm" }];
+export const addedByLenka = [
+  {
+    object: "T6⁺",
+    note: "Missed by the AI, 0.9 mm",
+    outline: [660, 600, 720, 595, 730, 650, 670, 660],
+  },
+];
 
 export type ScenarioComment = {
   id: string;

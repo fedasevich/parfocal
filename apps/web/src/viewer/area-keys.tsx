@@ -15,11 +15,13 @@ export function AreaKeys({
   areas,
   host,
   focused,
+  listed = true,
 }: {
   session: { readonly engine: ViewerEngine; readonly module: ViewerModule };
   areas: readonly SlideAreaEntry[];
   host: HTMLElement | null;
   focused: { current: SelectionArea | null };
+  listed?: boolean;
 }) {
   const { t } = useLingui();
   const docked = useDocked();
@@ -53,30 +55,32 @@ export function AreaKeys({
           host={host}
         />
       ) : null}
-      <DockCard section="objects" order={2}>
-        <section
-          aria-label={t`Areas`}
-          data-testid="area-nav"
-          data-current={nav.current ?? ""}
-          data-visited={[...nav.visited].sort().join(" ")}
-          className={
-            docked
-              ? dockedCard
-              : "absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
-          }
-        >
-          <h2 className="m-0 font-semibold text-body-sm">
-            <Trans>Areas, largest first</Trans>
-          </h2>
-          <AreaList
-            areas={areas}
-            current={nav.current}
-            visited={nav.visited}
-            roleOf={(object) => roles.get(object)}
-            onGoTo={nav.goTo}
-          />
-        </section>
-      </DockCard>
+      {listed ? (
+        <DockCard section="objects" order={2}>
+          <section
+            aria-label={t`Areas`}
+            data-testid="area-nav"
+            data-current={nav.current ?? ""}
+            data-visited={[...nav.visited].sort().join(" ")}
+            className={
+              docked
+                ? dockedCard
+                : "absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
+            }
+          >
+            <h2 className="m-0 font-semibold text-body-sm">
+              <Trans>Areas, largest first</Trans>
+            </h2>
+            <AreaList
+              areas={areas}
+              current={nav.current}
+              visited={nav.visited}
+              roleOf={(object) => roles.get(object)}
+              onGoTo={nav.goTo}
+            />
+          </section>
+        </DockCard>
+      ) : null}
     </>
   );
 }
