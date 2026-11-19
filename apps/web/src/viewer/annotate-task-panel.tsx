@@ -113,6 +113,7 @@ type AnnotateTaskPanelProps = {
   selecting?: boolean;
   bridge?: RefObject<AiEditBridge>;
   onOpenSlide?: ((slideId: string) => void) | undefined;
+  onShowPanel?: (() => void) | undefined;
 };
 
 const noSelection: readonly string[] = [];
@@ -142,8 +143,11 @@ export function AnnotateTaskPanel({
   selecting = false,
   bridge,
   onOpenSlide,
+  onShowPanel,
 }: AnnotateTaskPanelProps) {
   const { t } = useLingui();
+  const showPanel = useRef(onShowPanel);
+  showPanel.current = onShowPanel;
   const docked = useDocked();
   const { taskId, slideId } = task;
   const queryClient = useQueryClient();
@@ -289,17 +293,19 @@ export function AnnotateTaskPanel({
   latestConfirm.current = confirmSelected;
   const confirmBindings = useBindings(["annotate"], confirmActions);
   const onConfirmKey = useCallback((fired: Fired) => {
-    if (confirms(fired)) latestConfirm.current();
+    if (!confirms(fired)) return;
+    showPanel.current?.();
+    latestConfirm.current();
   }, []);
   useHotkeys(confirmBindings, onConfirmKey);
 
   const latestCanGuide = useRef(false);
   latestCanGuide.current = guidedAvailable(view.shown, ai.length, locked);
   const guideBindings = useBindings(["annotate"], guideActionList);
-  const toggleGuide = useCallback(
-    () => setGuided((on) => guidedToggle(on, latestCanGuide.current)),
-    [],
-  );
+  const toggleGuide = useCallback(() => {
+    if (latestCanGuide.current) showPanel.current?.();
+    setGuided((on) => guidedToggle(on, latestCanGuide.current));
+  }, []);
   const onGuideKey = useCallback(
     (fired: Fired) => {
       if (guides(fired)) toggleGuide();
@@ -413,7 +419,9 @@ export function AnnotateTaskPanel({
   const retypeSlot = useCallback(
     (slot: number) => {
       const picked = classes[slot - 1];
-      if (picked !== undefined) retype(picked.id);
+      if (picked === undefined) return;
+      showPanel.current?.();
+      retype(picked.id);
     },
     [classes, retype],
   );

@@ -7,9 +7,7 @@ const withResults = "00000000-0000-4000-8005-000000000005";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openTaskSlide(page: Page) {
-  await page.goto(
-    `/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&tab=objects&as=DH`,
-  );
+  await page.goto(`/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
@@ -100,6 +98,7 @@ test("a row click keeps the guided object and a fast second key does not touch a
 
 test("the guide key does nothing while the AI result is hidden", async ({ page }) => {
   await openTaskSlide(page);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   await page.getByRole("switch", { name: "Show the AI result" }).click();
   await page.keyboard.press("Shift+G");
   await page.getByRole("switch", { name: "Show the AI result" }).click();

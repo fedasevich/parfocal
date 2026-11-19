@@ -720,6 +720,13 @@ function OpenedSlide({
       />
     );
   const tab = inspector.tab ?? (workspace === "annotate" ? "display" : "objects");
+  const panelNow = useRef({ tab, hidden: inspectorLayout.hidden, onTab: inspector.onTab });
+  panelNow.current = { tab, hidden: inspectorLayout.hidden, onTab: inspector.onTab };
+  const showObjectsPanel = useCallback(() => {
+    const now = panelNow.current;
+    if (now.tab !== "objects") now.onTab("objects");
+    if (now.hidden) setInspectorLayout({ hidden: false });
+  }, [setInspectorLayout]);
 
   return (
     <EscProvider value={escRegistry}>
@@ -960,6 +967,7 @@ function OpenedSlide({
                       selecting={tool === "select"}
                       bridge={aiBridge}
                       onOpenSlide={onOpenSlide}
+                      onShowPanel={showObjectsPanel}
                     />
                   ) : null}
                   {drawsContextBar({ ...contextModel, proposals: proposalCount, hintsShown }) ? (

@@ -3,8 +3,6 @@ import { expect, type Locator, type Page, test } from "./a11y.ts";
 const minimap = (page: Page) => page.locator('[data-slot="smart-minimap"]');
 const viewportOf = (page: Page) => minimap(page).locator('[data-slot="map-viewport"]');
 
-const mapInset = 40;
-
 async function openScene(page: Page, name: string) {
   await page.goto("/prototype");
   const link = page.getByRole("list", { name: "Screens" }).getByRole("link", { name, exact: true });
@@ -31,8 +29,8 @@ async function drag(page: Page, target: Locator) {
   const box = await settledBox(target);
   const map = await minimap(page).boundingBox();
   if (map === null) throw new Error("the minimap has no box");
-  const x = Math.min(box.x + box.width / 2, map.x + map.width - mapInset);
-  const y = Math.min(box.y + box.height / 2, map.y + map.height - mapInset);
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
   await page.mouse.move(x, y);
   await page.mouse.down();
   const towardsCentre = (at: number, start: number, length: number) =>
