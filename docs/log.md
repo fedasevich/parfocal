@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-072 merged from agent: people not assigned to a slide see a read only banner and no answer controls, their visits are not saved as resume points (the audit 404), and refusals show plain sentences from one list in screens/refusals.ts. Left open: the slide opinion form still shows to them, annotate tasks have no read only view. The viewer-issue-states tile fault test failed once in its run, not yet checked on main.
 - PROTO-074 merged from agent: slide, task and disagreement rows, evaluation object IDs and finished jobs link to the viewer, Team stops inventing due dates, report headers skip failed and importing sets, automatic imports opens its settings block. Slide rows still open the working mode, asked as decision 163.
 
 ## 2026-11-19

@@ -6825,7 +6825,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 14, 15, 16 and 17 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): areas read 0.00 mm with a size category when the slide has no pixel size, small regions read 0.0 mm, an empty range reads -Infinity mm to Infinity mm, and drawn shapes are listed as Measurements with No category.
   Done when sizes show in micrometres below 1 mm, a slide without a pixel size shows pixels and says why, empty ranges read None, drawn shapes list under their class, with unit tests.
   Depends on PROTO-047. Size: S.
-- [ ] PROTO-072 · People not assigned to a task see it read only
+- [x] PROTO-072 · People not assigned to a task see it read only
   Row 11 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): someone not assigned gets live answer buttons, each refused with 403 not-assigned while the card moves on, and row 31: raw codes such as not-assigned and unknown-object reach the screen.
   Done when a spec opens another reviewer's task and finds no answer controls and a read only note, and every refused action shows a plain sentence.
   Depends on PROTO-033. Size: S.
