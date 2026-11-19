@@ -322,7 +322,7 @@ function SlideRowView({
         title={row.disabledReason}
         onClick={() => onPick?.(row.id)}
         className={cn(
-          "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_84px] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
+          "grid w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_34px_auto] items-center gap-3 rounded-[9px] border-0 bg-transparent p-2 text-left text-fg outline-none hover:bg-surf-section focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent disabled:cursor-default disabled:opacity-60",
           offersSideBySide && "pb-7",
           row.current &&
             "bg-surf-hl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_45%,transparent)]",
@@ -407,7 +407,7 @@ function SlidesPopover({
       role="dialog"
       aria-label={ariaLabel}
       data-slot="slides-popover"
-      className={cn("grid w-115 overflow-hidden", className)}
+      className={cn("grid w-115 max-w-[calc(100vw-2rem)] overflow-hidden", className)}
     >
       {caseTitle ? (
         <div className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-3 border-b border-surf-edge bg-surf-section px-4 py-3.5">

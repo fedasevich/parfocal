@@ -64,11 +64,11 @@ test("the viewer minimap reads the head and the foot of a task", async ({ page }
   await expect(minimap(page)).toContainText(/\d+% seen/);
 });
 
-test("guided review shows the small inset with Click to move", async ({ page }) => {
+test("guided review shows the small inset without a caption", async ({ page }) => {
   await page.goto(guided);
   await wheel(page, "in", 30);
   await expect(minimap(page)).toBeVisible({ timeout: 30_000 });
-  await expect(minimap(page)).toContainText("Click to move");
+  await expect(minimap(page)).not.toContainText("Click to move");
   await expect(minimap(page)).toContainText("A1");
   await expect(minimap(page).locator('[data-slot="minimap-grip"]')).toBeVisible();
   const grip = await minimap(page).locator('[data-slot="minimap-grip"]').boundingBox();

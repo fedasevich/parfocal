@@ -251,7 +251,7 @@ const PlacedMinimap = memo(function PlacedMinimap({
         ? t`Whole slide`
         : t`${progress.current} of ${progress.total}`;
   const footEnd = guided
-    ? t`Click to move`
+    ? undefined
     : progress === null
       ? power
       : t`${power} · ${progress.decided} of ${progress.total} decided`;

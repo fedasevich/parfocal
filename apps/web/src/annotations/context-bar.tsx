@@ -11,7 +11,7 @@ const centred = "right-3 left-3 mx-auto w-fit max-w-[calc(100%-1.5rem)] translat
 
 const fitted = `${centred} flex-wrap justify-center gap-y-1.5 whitespace-normal`;
 
-const oneLine = `${centred} [&>*]:shrink-0`;
+const oneLine = fitted;
 
 type ClassStripProps = {
   classes: readonly ProjectClass[];
@@ -126,10 +126,10 @@ export function ContextBarView({
       {model.hints.length > 0 ? (
         <span
           data-testid="context-hints"
-          className="flex min-w-0 shrink! items-center gap-2.5 overflow-hidden"
+          className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2.5 gap-y-1.5"
         >
           {model.hints.map((hint) => (
-            <ContextPill key={hint} className="shrink-0">
+            <ContextPill key={hint} className="whitespace-nowrap">
               {hint}
             </ContextPill>
           ))}

@@ -146,8 +146,8 @@ function ContextBar({
         role="toolbar"
         aria-label={t`${label} options`}
         className={cn(
-          "flex items-center gap-2.5 py-1.5 pr-2 pl-3 text-caption whitespace-nowrap",
-          stacked ? "max-w-full" : "absolute top-3 left-1/2 z-4 -translate-x-1/2",
+          "flex max-w-full flex-wrap items-center gap-x-2.5 gap-y-1.5 py-1.5 pr-2 pl-3 text-caption whitespace-nowrap",
+          stacked ? "" : "absolute top-3 left-1/2 z-4 -translate-x-1/2",
           floatSurface,
           className,
         )}
@@ -164,7 +164,10 @@ function ContextPill({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="context-pill"
-      className={cn("rounded-md border border-line bg-chrome-2 px-2 py-0.75", className)}
+      className={cn(
+        "rounded-md border border-line bg-chrome-2 px-2 py-0.75 whitespace-nowrap",
+        className,
+      )}
       {...props}
     />
   );

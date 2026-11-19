@@ -609,9 +609,6 @@ function Minimap({
       </div>
       <span className="flex justify-between gap-2 px-0.5 text-caption text-fg-dim">
         <span data-phi="">{slideName}</span>
-        <span>
-          <Trans>Click to move</Trans>
-        </span>
       </span>
     </div>
   );
