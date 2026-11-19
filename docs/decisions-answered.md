@@ -13,6 +13,8 @@ Every decision the owner has answered, newest first. Open ones are in [decisions
 - Decision 95 (the Zitadel login service user for the app's own sign-in), option A. It waits for a short session with you, listed in [decisions.md](decisions.md).
 - The R2 step of 2026-11-18 needed no token from you. The production environment secrets `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` now hold the app's own EU key `parfocal-app-eu` from OpenTofu, which reads and writes only `parfocal-dev-eu`.
 
+- Owner steps of 2026-11-19, all done and checked by the lead: the GitHub environment `staging` is deleted, the Cloudflare token `parfocal-ci-staging` and the Modal token `parfocal-ci-staging` are revoked, the old US Neon project `soft-pine-86468744` is deleted through Vercel, and `parfocal-tofu` gained Account Analytics Read, which the lead added in the dashboard at the owner's request.
+
 ### The questions as asked
 
 #### 91. Delete the GitHub environment `staging` and the staging tokens
