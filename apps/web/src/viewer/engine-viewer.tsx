@@ -4,6 +4,7 @@ import {
   useGetProject,
   useGetReviewTask,
   useGetReviewTaskStates,
+  useListReviewObjects,
 } from "@parfocal/api-client";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
@@ -28,7 +29,13 @@ import {
   StageIssueLayer,
   useReviewerNames,
 } from "./stage-issue-cards.tsx";
-import { isWithdrawn, othersReviewOf, resultMissingOf, signedOffOf } from "./stage-issues.ts";
+import {
+  isWithdrawn,
+  nothingFoundOf,
+  othersReviewOf,
+  resultMissingOf,
+  signedOffOf,
+} from "./stage-issues.ts";
 import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import type { NoteRequest } from "./stage-object-notes.tsx";
@@ -121,6 +128,10 @@ export function EngineViewer({
     taskDetail?.kind === "review" ? signedOffOf(okData(statesQuery.data), slideId) : null;
   const resultMissing =
     taskDetail?.kind === "review" && resultMissingOf(taskDetail.slides, slideId);
+  const reviewObjects = useListReviewObjects(reviewTask ?? "", slideId, {
+    query: { enabled: reviewTask !== null },
+  });
+  const nothingFound = reviewTask !== null && nothingFoundOf(okData(reviewObjects.data));
   const me = okData(useGetMe().data)?.user_id;
   const othersReview =
     taskDetail?.kind === "review" ? othersReviewOf(taskDetail.slides, slideId, me) : null;
@@ -215,6 +226,7 @@ export function EngineViewer({
         withdrawn={withdrawn}
         unreadable={load?.slide?.highPowerUnreadable === true}
         resultMissing={resultMissing}
+        nothingFound={nothingFound}
         signedOff={signedOff !== null}
         slideLabel={load?.slide?.label ?? ""}
         reviewers={reviewers}

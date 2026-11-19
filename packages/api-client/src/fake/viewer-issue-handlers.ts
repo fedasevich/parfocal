@@ -54,7 +54,7 @@ export const viewerIssueHandlers = (): RequestHandler[] => [
     ({ params }) =>
       fakeViewerIssue() === "preparing"
         ? orderNotReady()
-        : fakeViewerIssue() === "noresults"
+        : fakeViewerIssue() === "noresults" || fakeViewerIssue() === "empty"
           ? HttpResponse.json({ ...toReviewObjects(params.taskId, params.slideId), objects: [] })
           : undefined,
   ),
