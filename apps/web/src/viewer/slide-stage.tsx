@@ -154,6 +154,7 @@ export type ViewedLink = {
   peek: boolean;
   onPeekClose: () => void;
   onPercent: (percent: number | null) => void;
+  host?: HTMLElement | null;
 };
 
 function ScanKeys({
@@ -1058,6 +1059,11 @@ function OpenedSlide({
               {session && coverage && viewed?.peek ? (
                 <ViewedPeek
                   engine={session.engine}
+                  slideId={slideId}
+                  taskId={taskId}
+                  overview={session.overview}
+                  stage={hostNode}
+                  host={viewed.host ?? null}
                   raster={coverage.raster}
                   tissue={coverage.tissue}
                   percent={coverage.percent}

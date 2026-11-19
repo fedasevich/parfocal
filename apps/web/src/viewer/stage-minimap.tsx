@@ -45,7 +45,7 @@ function overviewUrl(overview: SlideOverview): string | null {
 
 export type MinimapSource = "thumbnail" | "overview" | "none";
 
-function useMinimapImage(slideId: string, overview: StageSession["overview"] | undefined) {
+export function useMinimapImage(slideId: string, overview: StageSession["overview"] | undefined) {
   const [image, setImage] = useState<{ src: string | null; source: MinimapSource } | null>(null);
   useEffect(() => {
     const stop = new AbortController();
