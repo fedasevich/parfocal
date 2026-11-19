@@ -6833,7 +6833,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 24 and 26 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): guided steps zoom to 118x and 321x on slides scanned at 20x or 40x, and Smart select with Best keeps saying Best is not answering yet with no end.
   Done when guided steps stop at the slide's scan power, and Smart select ends its Best wait with the Good outline or a clear message within a set time, with specs.
   Depends on AISEG-024. Size: S.
-- [ ] PROTO-074 · Every place that shows a slide opens it in the full viewer
+- [x] PROTO-074 · Every place that shows a slide opens it in the full viewer
   The full viewer entry points section and rows 20, 21, 23 and 34 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): task rows, Team, disagreements, evaluation crops and finished jobs have no way into the viewer, slide rows are buttons so they cannot open in a new tab, a failed import counts as a model in the report, due dates differ between Team and the project, and Automatic imports opens Upload.
   Done when each listed place links to the viewer at the slide or object, slide rows are links, the report skips failed imports, due dates agree, Automatic imports opens its settings, with specs.
   Depends on PROTO-058. Size: M.

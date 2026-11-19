@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-19
+Last updated: 2026-11-20
 
 This file holds only what is open. Everything you have answered is in [decisions-answered.md](decisions-answered.md), newest first.
 
@@ -19,7 +19,16 @@ None. All five steps of 2026-11-19 are done and checked.
 
 ## Open questions
 
-None right now.
+### 163. Where a slide row on the project page opens
+
+PROTO-074 (every place that shows a slide opens it in the full viewer) made slide rows real links. A row still opens the slide in its working mode, so a researcher lands in Annotate with the drawing tools, and a reviewer lands in the review viewer.
+
+- A. Keep it. The row opens the working mode, and the full viewer stays one click away.
+- B. The row opens the full viewer for everyone, and Annotate becomes a button on the row. About 35 drawing specs that start from a row change with it.
+
+Recommended: A, because most row clicks start work on the slide.
+
+Your choice:
 
 ## The review column, what each task waits for
 

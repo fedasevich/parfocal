@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-20
+
+- PROTO-074 merged from agent: slide, task and disagreement rows, evaluation object IDs and finished jobs link to the viewer, Team stops inventing due dates, report headers skip failed and importing sets, automatic imports opens its settings block. Slide rows still open the working mode, asked as decision 163.
+
 ## 2026-11-19
 
 - PROTO-090 merged from agent: Print failed because the CSP refuses every frame (frame-src none) and the old Print used a hidden frame. Print now adds the compiled pages to the page for print only and calls print, with no CSP change. The preview fits the page width with 50 to 300 percent zoom and opens with view=pdf instead of scene=pdf. Printing the preview pages rather than the PDF file is fine since both come from one Typst compile, so no decision entry. Real API spec added but not run locally (no Typst), so moved to review for a deployed check.
