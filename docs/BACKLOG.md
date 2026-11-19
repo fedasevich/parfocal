@@ -6797,7 +6797,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 3, 4, 39, 40 and 41 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): Cmd+G and Add a layer make groups that are never written and are gone after a reload, a group row has no rename, delete, ungroup or move, an empty layer cannot be removed, drawing into a locked group drops the shape in Ungrouped silently, and Shift click and the colour input may not work. Delete group removes the group and its shapes and Ungroup keeps the shapes, both undoable.
   Done when a spec groups shapes, renames, recolours, moves a shape in, ungroups, deletes a group with its shapes, undoes, and finds the result after a reload on the fake and the real API.
   Depends on PROTO-035. Size: M.
-- [ ] PROTO-067 · AI objects in an annotate task can be confirmed, deleted and undone
+- [x] PROTO-067 · AI objects in an annotate task can be confirmed, deleted and undone
   Row 5 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): after Add the run, every confirm answers 404 unknown-object because the object is not in the result set the call names, and delete and undo answer 404 on ai-changes.
   Done when a real API e2e spec adds a run to an annotate task, confirms, deletes and undoes AI objects, and the counters follow.
   Depends on PROTO-035. Size: S.
