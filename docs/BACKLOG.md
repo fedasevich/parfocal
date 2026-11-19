@@ -6821,7 +6821,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Row 9 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): Compare slides goes to scene=picking, drops the workspace and stays on Loading the slide.
   Done when a spec opens compare from the tool rail on the fake API and the real API e2e, picks a second slide and both draw.
   Depends on VIEW-075. Size: S.
-- [ ] PROTO-071 · Sizes read right when the pixel size is unknown or small
+- [x] PROTO-071 · Sizes read right when the pixel size is unknown or small
   Rows 14, 15, 16 and 17 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): areas read 0.00 mm with a size category when the slide has no pixel size, small regions read 0.0 mm, an empty range reads -Infinity mm to Infinity mm, and drawn shapes are listed as Measurements with No category.
   Done when sizes show in micrometres below 1 mm, a slide without a pixel size shows pixels and says why, empty ranges read None, drawn shapes list under their class, with unit tests.
   Depends on PROTO-047. Size: S.

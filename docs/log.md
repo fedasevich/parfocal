@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-071 merged from agent: sizes under 1 mm read in micrometres, slides without a pixel size show areas in pixels with a note and no size category, empty region ranges read None, drawn shapes list under their class then No class then Rulers. Clinical report sizes stay in millimetres unless the unit setting says always micrometres, which suits the 0.2 mm staging line, so no decision asked. No browser test of the no pixel size note since the fake has no such slide.
 - PROTO-080 merged from agent: the cells strip's first flight lands at 40x or the slide's scan power if lower, per decision 161 option B. Pan and stay steps keep the zoom. Specs cover 20x and a rewritten 0.25 um per pixel slide. Not checked on a real 40x scan.
 - PROTO-072 merged from agent: people not assigned to a slide see a read only banner and no answer controls, their visits are not saved as resume points (the audit 404), and refusals show plain sentences from one list in screens/refusals.ts. Left open: the slide opinion form still shows to them, annotate tasks have no read only view. The viewer-issue-states tile fault test failed once in its run, not yet checked on main.
 - PROTO-074 merged from agent: slide, task and disagreement rows, evaluation object IDs and finished jobs link to the viewer, Team stops inventing due dates, report headers skip failed and importing sets, automatic imports opens its settings block. Slide rows still open the working mode, asked as decision 163.
