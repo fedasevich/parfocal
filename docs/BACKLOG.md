@@ -4697,6 +4697,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Copy what only `parfocal-dev` holds into `parfocal-dev-eu` (`fixtures/` has 2,203 objects there and 33 in the EU bucket, among them `fixtures/ui-visual/` and `fixtures/sam-parity/`), point every reader at the EU endpoint with a read-only key scoped to `parfocal-dev-eu`, and remove the bucket from OpenTofu with a plan that destroys only it. Write the owner's delete command, its cost and what it frees in `docs/decisions.md`.
   Done when a full CI run and `pnpm fixtures` pass with no key that can reach `parfocal-dev`, `git grep` finds no reader of it, and the owner's delete step is in `docs/decisions.md`.
   Size: S.
+- [ ] OPS-038 · A GPU call waiting for an EU GPU shows the wait, not an error
+  Decision 159 (what a GPU job does when Modal has no GPU free in the EU) keeps all six GPU pools pinned to Modal's `eu` region. On 2026-11-19 a view map call waited 244 s for a T4 and the typer and view map answered Cloudflare's 524, which the viewer shows as a failure.
+  Let the API answer a GPU call that is still waiting for a container with a waiting state the viewer can poll instead of holding the request past Cloudflare's 100 s, show "Waiting for a GPU" with Cancel in the typer and view map, make the deployed smoke retry once after three minutes before it fails, and log each wait. After a week, write a result file with how often the EU wait passed 60 s.
+  Done when an API test holds a fake GPU pool for 150 s and the call ends in a result without a 524, a browser test sees "Waiting for a GPU" and Cancel stops the call, the smoke passes on a cold EU pool, and the result file exists.
+  Size: M.
 
 ---
 
