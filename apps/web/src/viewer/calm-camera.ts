@@ -24,6 +24,21 @@ export function calmStep(camera: CalmCamera, view: CalmView, cell: CalmCell): Ca
   return { kind: "pan", camera: { x: cell.x, y: cell.y + lift / scale, zoom: camera.zoom } };
 }
 
+export const cellLandingPower = 40;
+
+export function landingPower(scanPower: number | null): number | null {
+  return scanPower !== null && scanPower > 0 ? Math.min(cellLandingPower, scanPower) : null;
+}
+
+export function landingCamera(
+  view: CalmView | null,
+  cell: { x: number; y: number },
+  zoom: number,
+): CalmCamera {
+  const lift = (view?.bottomInset ?? 0) / 2;
+  return { x: cell.x, y: cell.y + lift / 2 ** zoom, zoom };
+}
+
 export function stageCalmView(): CalmView | null {
   const strip = document.querySelector('[data-testid="stage-cells-grid"]');
   const host = (strip?.closest('[data-testid="slide-stage"]') ?? document).querySelector(

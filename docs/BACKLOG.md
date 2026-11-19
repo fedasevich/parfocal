@@ -6857,7 +6857,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner said on 2026-11-19 that the deployed app is to be treated as production for features and must not show mock views. Eleven screens still hold prototype-scenes files and routes such as /prototype, /flow-map, /kpi, /spikes, /issue-states and /developer ship in the build. List every scene and mock route a signed in person can reach on the deployed app, make each one a real feature on real data or keep it only behind the dev tools flag that the deployed build turns off, and make the build fail if a scene parameter is read outside dev tools.
   Done when a unit test lists every route and scene, a build check fails on a scene read outside dev tools, a spec on the deployed build config finds none of the mock routes, and the disagreements work stays with PROTO-078.
   Depends on PROTO-078. Size: M.
-- [ ] PROTO-080 · The cells strip lands at 40x
+- [x] PROTO-080 · The cells strip lands at 40x
   Decision 161 (how far the sample cells strip zooms on its first flight to a cell), option B: the first flight to a cell lands at 40x, or the slide's highest power if lower, instead of zooming until the cell is twice its size.
   Done when a spec flies to a cell on a 40x and a 20x slide and reads 40x and 20x in the magnification bar, and the calm camera from PROTO-063 still leaves the zoom alone on later steps.
   Depends on PROTO-063. Size: S.

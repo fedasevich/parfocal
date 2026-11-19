@@ -53,8 +53,11 @@ test("a tile from the crop route centres the stage on its cell and selects it", 
         return first === (await cameraOf(page)).join(",");
       })
       .toBe(true);
-    const [x = 0, y = 0, zoom = 0] = await cameraOf(page);
-    expect(zoom).toBeGreaterThan(0);
+    const [x = 0, y = 0] = await cameraOf(page);
+    await expect(page.getByTestId("magnification-bar")).toHaveAttribute(
+      "aria-label",
+      /^Magnification 20×/,
+    );
     centres.push(`${x.toFixed(1)},${y.toFixed(1)}`);
   }
   expect(new Set(centres).size).toBe(3);
