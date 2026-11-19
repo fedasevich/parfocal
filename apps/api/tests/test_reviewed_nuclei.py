@@ -72,6 +72,7 @@ def with_cells(database: str, c: Called) -> tuple[uuid.UUID, MemoryStore]:
     key = chunk_key(result_set_prefix(tenant, c.r.slide, c.r.result_set), 0)
     behind_the_triggers(
         database,
+        f"DELETE FROM result_chunks WHERE result_set_id = '{c.r.result_set}'; "
         "INSERT INTO result_chunks (tenant_id, result_set_id, chunk, x, y, width, height, "
         f"cell_count, vertex_count, object_key) VALUES ('{tenant}', '{c.r.result_set}', 0, 0, 0, "
         f"2048, 2048, {len(CELLS)}, {4 * len(CELLS)}, '{key}');",

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.annotate_layer import TOP_SCORE, stored_cells
+from parfocal_api.annotate_layer import TOP_SCORE
 from parfocal_api.annotations import code_of as added_code
 from parfocal_api.blinding import ai_hidden_on, sees_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -17,6 +17,7 @@ from parfocal_api.display_settings import FIELD_OF, display_of
 from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
+from parfocal_api.result_membership import stored_cells
 from parfocal_api.review_order import Results, order_state, temperature_of
 from parfocal_api.review_tasks import code_of
 from parfocal_api.reviewed_layer import review_slide, task_slide
