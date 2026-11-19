@@ -6781,7 +6781,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   In the Cells in your sample strip the hint says the arrow keys pick a cell, but they only nudge the camera. Decide with the Fable adviser whether arrows always step between cells while the strip has focus, or whether a setting chooses, and build it so the picked cell is outlined and the camera centres on it.
   Done when a spec presses the arrow keys in the strip and the picked cell moves one step each press and the camera centres on it, and the hint matches the keys.
   Depends on PROTO-034. Size: S.
-- [ ] PROTO-064 · An annotate task can be created from its stepper
+- [x] PROTO-064 · An annotate task can be created from its stepper
   Row 1 and row 22 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the last step's Send to experts button does nothing because its handler returns undefined, and the stepper ticks every slide and every person, including the viewer test accounts, with no name or due date.
   Done when a spec walks the stepper on the fake API and on the real API e2e, the task is created and opens, nothing is ticked by default except what the user picks, and the form asks for a name and offers a due date.
   Depends on PROTO-030. Size: S.
@@ -6833,7 +6833,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-19 the owner found three cut parts on app.parfocal.eu: the minimap's click to move caption hangs below the slide and makes the page scroll, the Slides in this project popover cuts its Assigned chips and the Q and E keys at the right edge, and the Select tool hint bar cuts "Double-click an edge to add a point". Remove the minimap caption, fit the popover to its content within the window, and let hint bars wrap or shorten instead of clipping.
   Done when a spec at 1440 by 900, 1280 by 800 and 1024 by 700 finds the document not scrollable in the viewer, every chip and key in the slides popover inside it, and every hint chip's text unclipped (scrollWidth equals clientWidth).
   Depends on PROTO-060. Size: S.
-- [ ] PROTO-077 · See all in notifications opens every notification
+- [x] PROTO-077 · See all in notifications opens every notification
   On 2026-11-19 the owner found that See all in the notifications popover does nothing. Make it open a notifications page or a full height panel with every notification, read and unread, paged, with mark all read.
   Done when a spec clicks See all and finds the full list, paging and mark all read on the fake API and the real API e2e.
   Depends on PROTO-061. Size: S.
