@@ -1,5 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
+  type ReviewTaskDetail,
+  useCreateReviewTask,
   useGetProject,
   useListMySlides,
   useListProjectResultSets,
@@ -16,14 +18,22 @@ import {
   PresetPicker,
 } from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
+import { DatePicker } from "@parfocal/ui/components/date-picker";
 import { FlowBar, FlowPage, type FlowStep, SummaryRows } from "@parfocal/ui/components/flow-page";
+import { FormField } from "@parfocal/ui/components/form-field";
+import { Icon } from "@parfocal/ui/components/icon";
+import { Input } from "@parfocal/ui/components/input";
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { defaultSampleSize } from "@parfocal/ui/lib/sample-size";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { now } from "../../clock.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { plural } from "../format.ts";
+import { checkChangeOf, checkPresetOf } from "../new-task/annotate-draft.ts";
 import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { type AnnotateStep, annotateStepKeys } from "./step-keys.ts";
@@ -44,6 +54,16 @@ const presetOptions = (key: PresetKey): CheckOptionValues =>
     hasResult: false,
     sampleSize: defaultSampleSize,
   };
+
+const lengthOf = (minutes: number) =>
+  minutes < 90 ? `${minutes} min` : `${Math.round(minutes / 60)} h`;
+
+const todayText = () => {
+  const day = now();
+  const month = String(day.getMonth() + 1).padStart(2, "0");
+  const date = String(day.getDate()).padStart(2, "0");
+  return `${day.getFullYear()}-${month}-${date}`;
+};
 
 export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotateTaskProps) {
   const { t } = useLingui();
@@ -66,24 +86,32 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
     (slide) => ({
       id: slide.id,
       name: slide.label,
-      resultName: slide.result_sets[0]?.name.split(" ")[0] ?? null,
-      resultSetIds: slide.result_sets.map((ref) => ref.id),
+      results: slide.result_sets.map((ref) => ({
+        id: ref.id,
+        name: ref.name.split(" ")[0] ?? ref.name,
+      })),
     }),
   );
   const resultSets = okData(useListProjectResultSets(projectId).data) ?? [];
   const members = okData(useListTenantMembers().data) ?? [];
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const create = useCreateReviewTask();
+  const [name, setName] = useState("");
+  const [dueOn, setDueOn] = useState("");
+  const [created, setCreated] = useState<ReviewTaskDetail | null>(null);
+  const [failed, setFailed] = useState(false);
   const [chosen, setChosen] = useState<PresetKey>(preset);
   const [options, setOptions] = useState(() => presetOptions(preset));
   const [blind, setBlind] = useState(false);
-  const [slideChoice, setSlideChoice] = useState<string[] | null>(null);
-  const [expertChoice, setExpertChoice] = useState<string[] | null>(null);
-  const picked = slideChoice ?? slideRows.map((row) => row.id);
-  const experts = expertChoice ?? members.map((member) => member.user_id);
+  const [picked, setSlideChoice] = useState<string[]>([]);
+  const [experts, setExpertChoice] = useState<string[]>([]);
   const index = annotateStepKeys.indexOf(step);
   const reached = annotateStepKeys.length - 1;
   const hasResult = options.hasResult;
-  const withResult = picked.filter((id) => slideRows.find((row) => row.id === id)?.resultName);
+  const withResult = picked.filter(
+    (id) => (slideRows.find((row) => row.id === id)?.results.length ?? 0) > 0,
+  );
   const slidesWithResult = withResult.length;
   const cellsInScope = resultSets
     .filter((set) => withResult.includes(set.slide_id))
@@ -95,6 +123,103 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
         ? Math.min(defaultSampleSize, cellsInScope)
         : cellsInScope;
   const minutes = Math.round(toCheck * 0.5 + picked.length * 6);
+
+  const blockers = [
+    ...(name.trim() === ""
+      ? [
+          {
+            id: "name",
+            text: t`Name the task`,
+            goTo: t`Go to`,
+            onGoTo: () => onStep("send"),
+            target: "#annotate-task-name",
+          },
+        ]
+      : []),
+    ...(picked.length === 0
+      ? [
+          {
+            id: "slides",
+            text: t`Pick at least one slide`,
+            goTo: t`Go to`,
+            onGoTo: () => onStep("slides"),
+          },
+        ]
+      : []),
+    ...(experts.length === 0
+      ? [
+          {
+            id: "experts",
+            text: t`Pick at least one expert`,
+            goTo: t`Go to`,
+            onGoTo: () => onStep("experts"),
+          },
+        ]
+      : []),
+  ];
+
+  const send = () => {
+    if (blockers.length > 0 || create.isPending) return;
+    setFailed(false);
+    const base = presetOptions(chosen);
+    const change = checkChangeOf(options, base);
+    create.mutate(
+      {
+        projectId,
+        data: {
+          name: name.trim(),
+          kind: "annotate",
+          slide_ids: picked,
+          result_sets: options.hasResult
+            ? withResult.flatMap((id) => {
+                const resultSetId = slideRows.find((row) => row.id === id)?.results[0]?.id;
+                return resultSetId ? [{ slide_id: id, result_set_id: resultSetId }] : [];
+              })
+            : [],
+          reviewer_ids: experts,
+          split: "everyone",
+          scope: { kind: "whole-slide" },
+          blinded: false,
+          ai_hidden_first_read: false,
+          start_mode: "viewer",
+          blind_first: blind,
+          due_on: dueOn === "" ? null : dueOn,
+          preset: checkPresetOf[chosen],
+          ...(change ? { check: change } : {}),
+        },
+      },
+      {
+        onSuccess: (response) => {
+          if (response.status !== 201) {
+            setFailed(true);
+            return;
+          }
+          void queryClient.invalidateQueries({
+            predicate: (query) => String(query.queryKey[0]).startsWith("/api/me/"),
+          });
+          setCreated(response.data);
+        },
+        onError: () => setFailed(true),
+      },
+    );
+  };
+
+  const openCreated = (task: ReviewTaskDetail) => {
+    const first = task.slides[0]?.slide_id;
+    if (first === undefined) {
+      void navigate({
+        to: "/projects/$projectId",
+        params: { projectId },
+        search: { tab: "tasks" },
+      });
+      return;
+    }
+    void navigate({
+      to: "/projects/$projectId/slides/$slideId/annotate-task",
+      params: { projectId, slideId: first },
+      search: { task: task.id },
+    });
+  };
 
   const steps: FlowStep[] = annotateStepKeys.map((key) => ({ label: stepNames[key] }));
   const before = annotateStepKeys[index - 1];
@@ -127,18 +252,26 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       }}
       bar={
         <FlowBar
-          hint={t`About ${toCheck} objects to check, roughly ${minutes} min per expert`}
+          hint={t`About ${toCheck} objects to check, roughly ${lengthOf(minutes)} per expert`}
           back={
-            before ? (
+            before && !created ? (
               <Button onClick={() => onStep(before)}>
                 <Trans>Back</Trans>
               </Button>
             ) : undefined
           }
-          primary={{
-            label: after ? t`Next` : t`Send to experts`,
-            onClick: () => (after ? onStep(after) : undefined),
-          }}
+          primary={
+            created
+              ? { label: t`Open the task`, onClick: () => openCreated(created) }
+              : after
+                ? { label: t`Next`, onClick: () => onStep(after) }
+                : {
+                    label: t`Send to experts`,
+                    onClick: send,
+                    disabled: create.isPending,
+                    blockers,
+                  }
+          }
         />
       }
     >
@@ -201,8 +334,14 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
                       }
                     />
                     <span className="min-w-0 flex-1 font-medium text-fg">{row.name}</span>
-                    {row.resultName ? (
-                      <StatusTag tone="accent">{row.resultName}</StatusTag>
+                    {row.results.length > 0 ? (
+                      <span className="flex flex-wrap gap-1.5">
+                        {row.results.map((result) => (
+                          <StatusTag key={result.id} tone="accent">
+                            {result.name}
+                          </StatusTag>
+                        ))}
+                      </span>
                     ) : (
                       <StatusTag>
                         <Trans>No result set</Trans>
@@ -265,8 +404,60 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
           <BlindFirstSwitch checked={blind} onCheckedChange={setBlind} />
         </Zone>
       ) : null}
-      {step === "send" ? (
+      {step === "send" && created ? (
+        <Zone title={t`Sent`}>
+          <p className="m-0 flex items-center gap-2 text-body-sm text-fg" role="status">
+            <Icon name="check" className="text-ok" />
+            <span>
+              <Trans>
+                {created.name} was sent to {plural(created.reviewer_count, "expert")}.
+              </Trans>
+            </span>
+          </p>
+        </Zone>
+      ) : null}
+      {step === "send" && !created ? (
+        <Zone title={t`Name and due date`}>
+          <div className="grid gap-4">
+            <FormField
+              id="annotate-task-name-field"
+              labelId="annotate-task-name-label"
+              label={t`Task name`}
+              required
+            >
+              <Input
+                id="annotate-task-name"
+                aria-labelledby="annotate-task-name-label"
+                value={name}
+                maxLength={80}
+                placeholder={t`For example, Round 3 · CAMELYON v1.0`}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </FormField>
+            <FormField
+              id="annotate-task-due-field"
+              labelId="annotate-task-due-label"
+              label={t`Due date`}
+              optional
+            >
+              <DatePicker
+                aria-labelledby="annotate-task-due-label"
+                value={dueOn}
+                today={todayText()}
+                min={todayText()}
+                onValueChange={setDueOn}
+              />
+            </FormField>
+          </div>
+        </Zone>
+      ) : null}
+      {step === "send" && !created ? (
         <Zone title={t`Send`} sub={t`One last look before the experts get the task.`}>
+          {failed ? (
+            <p className="m-0 text-body-sm text-bad" role="alert">
+              <Trans>The task could not be created. Try again.</Trans>
+            </p>
+          ) : null}
           <SummaryRows
             rows={[
               {
@@ -276,12 +467,12 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
               },
               {
                 label: t`Slides`,
-                value: t`${picked.length} slides, ${slidesWithResult} with a result set`,
+                value: t`${plural(picked.length, "slide")}, ${slidesWithResult} with a result set`,
                 onChange: () => onStep("slides"),
               },
               {
                 label: t`Experts`,
-                value: t`${experts.length} experts`,
+                value: plural(experts.length, t`expert`),
                 onChange: () => onStep("experts"),
               },
               {

@@ -719,11 +719,6 @@ msgstr "{0} edited"
 msgid "{0} evaluation report"
 msgstr "{0} evaluation report"
 
-#. placeholder {0}: experts.length
-#: src/screens/annotate-task/new-annotate-task.tsx
-msgid "{0} experts"
-msgstr "{0} experts"
-
 #. placeholder {0}: hook.rejected_today
 #: src/screens/admin/api-section.tsx
 msgid "{0} failed"
@@ -1416,11 +1411,6 @@ msgstr "{0} slides with AI results, made for trying things out"
 msgid "{0} slides, {1} with {short}"
 msgstr "{0} slides, {1} with {short}"
 
-#. placeholder {0}: picked.length
-#: src/screens/annotate-task/new-annotate-task.tsx
-msgid "{0} slides, {slidesWithResult} with a result set"
-msgstr "{0} slides, {slidesWithResult} with a result set"
-
 #. placeholder {0}: preview.task.slides
 #. placeholder {1}: preview.task.hours
 #: src/screens/onboarding/invite-screen.tsx
@@ -1541,6 +1531,12 @@ msgstr "{0} was declined and is not in the library"
 msgid "{0} was redrawn by {1} on "
 msgstr "{0} was redrawn by {1} on "
 
+#. placeholder {0}: created.name
+#. placeholder {1}: plural(created.reviewer_count, "expert")
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "{0} was sent to {1}."
+msgstr "{0} was sent to {1}."
+
 #. placeholder {0}: andJoin(people.map((person) => person.name))
 #: src/screens/new-task/send-step.tsx
 msgid "{0} was told by email. They see it at the top of My work, with one button to start."
@@ -1660,6 +1656,11 @@ msgstr "{0}, {left} left out"
 #: src/screens/new-task/send-step.tsx
 msgid "{0}, {required} required"
 msgstr "{0}, {required} required"
+
+#. placeholder {0}: plural(picked.length, "slide")
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "{0}, {slidesWithResult} with a result set"
+msgstr "{0}, {slidesWithResult} with a result set"
 
 #. placeholder {0}: row.project.code
 #: src/screens/my-work/all-slides-tab.tsx
@@ -2961,9 +2962,10 @@ msgstr "about {minutes} min left"
 msgid "about {rest} min left"
 msgstr "about {rest} min left"
 
+#. placeholder {0}: lengthOf(minutes)
 #: src/screens/annotate-task/new-annotate-task.tsx
-msgid "About {toCheck} objects to check, roughly {minutes} min per expert"
-msgstr "About {toCheck} objects to check, roughly {minutes} min per expert"
+msgid "About {toCheck} objects to check, roughly {0} per expert"
+msgstr "About {toCheck} objects to check, roughly {0} per expert"
 
 #: src/screens/home/home-screen.tsx
 msgid "above"
@@ -3498,6 +3500,10 @@ msgstr "All edits saved"
 #: src/screens/viewer/save-preset-modal.tsx
 msgid "All my tasks"
 msgstr "All my tasks"
+
+#: src/screens/notifications/notifications-screen.tsx
+msgid "All notifications"
+msgstr "All notifications"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "All objects are in the layer and join the check scope."
@@ -6489,6 +6495,7 @@ msgid "Due {due}"
 msgstr "Due {due}"
 
 #: src/routes/issue-pages.$kind.tsx
+#: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Due date"
 msgstr "Due date"
 
@@ -6871,6 +6878,10 @@ msgstr "Every file reads cleanly. Only the space is short, and nothing uploads u
 msgid "Every hint shows again, once, under its setting."
 msgstr "Every hint shows again, once, under its setting."
 
+#: src/screens/notifications/notifications-screen.tsx
+msgid "Every notification, read and unread, newest first"
+msgstr "Every notification, read and unread, newest first"
+
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Every object is decided, left open or with the adjudicator"
 msgstr "Every object is decided, left open or with the adjudicator"
@@ -6995,6 +7006,10 @@ msgstr "Expand"
 #: src/shell/maintenance-banner.tsx
 msgid "Expected back at {until}."
 msgstr "Expected back at {until}."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "expert"
+msgstr "expert"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -7398,6 +7413,7 @@ msgstr "For example, measure the widest extent across the capsule."
 msgid "For example, measured again on deeper levels of A1"
 msgstr "For example, measured again on deeper levels of A1"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/steps.tsx
 msgid "For example, Round 3 · CAMELYON v1.0"
 msgstr "For example, Round 3 · CAMELYON v1.0"
@@ -7633,6 +7649,7 @@ msgstr "Go home"
 
 #: ../../packages/ui/src/components/command-palette.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -9050,6 +9067,7 @@ msgid "Loading models"
 msgstr "Loading models"
 
 #: ../../packages/ui/src/components/notifications-skeleton.tsx
+#: src/screens/notifications/notifications-screen.tsx
 msgid "Loading notifications"
 msgstr "Loading notifications"
 
@@ -9408,6 +9426,7 @@ msgid "Maps to"
 msgstr "Maps to"
 
 #: ../../packages/ui/src/components/notifications-panel.tsx
+#: src/screens/notifications/notifications-screen.tsx
 msgid "Mark all read"
 msgstr "Mark all read"
 
@@ -9841,6 +9860,10 @@ msgstr "My work · To review"
 msgid "Name"
 msgstr "Name"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Name and due date"
+msgstr "Name and due date"
+
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Name if saved as a template"
 msgstr "Name if saved as a template"
@@ -9861,6 +9884,10 @@ msgstr "Name saved"
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Name the specimen."
 msgstr "Name the specimen."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Name the task"
+msgstr "Name the task"
 
 #: src/screens/admin/people.tsx
 msgid "name@hospital.example"
@@ -10724,6 +10751,7 @@ msgstr "Nothing here counts in a real evaluation"
 
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: src/screens/home/activity-card.tsx
+#: src/screens/notifications/notifications-screen.tsx
 msgid "Nothing here yet"
 msgstr "Nothing here yet"
 
@@ -10869,6 +10897,7 @@ msgstr "Nothing, experts only draw"
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: src/routes/prototype.tsx
+#: src/screens/notifications/notifications-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/bell.tsx
 #: src/shell/palette-labels.tsx
@@ -11376,6 +11405,10 @@ msgstr "Open the Slide done card in the Opinion tab"
 #: src/viewer/live-top-bar.tsx
 msgid "Open the Slide done card in the Review tab"
 msgstr "Open the Slide done card in the Review tab"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Open the task"
+msgstr "Open the task"
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Open the whole slide"
@@ -12027,10 +12060,15 @@ msgstr "Pick an object, or measure the deposit by hand."
 msgid "Pick another sample below"
 msgstr "Pick another sample below"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Pick at least one expert"
+msgstr "Pick at least one expert"
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Pick at least one file"
 msgstr "Pick at least one file"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/modals.tsx
 msgid "Pick at least one slide"
 msgstr "Pick at least one slide"
@@ -14112,6 +14150,10 @@ msgstr "Sends one sample tile from {0} and shows what comes back."
 msgid "Sensitivity"
 msgstr "Sensitivity"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Sent"
+msgstr "Sent"
+
 #: ../../packages/ui/src/components/team.tsx
 msgid "Sent by email and shown at the top of My work."
 msgstr "Sent by email and shown at the top of My work."
@@ -14410,6 +14452,10 @@ msgstr "Show me"
 #: src/screens/upload/viewer-flow.tsx
 msgid "Show next to {0} after adding"
 msgstr "Show next to {0} after adding"
+
+#: src/screens/notifications/notifications-screen.tsx
+msgid "Show older"
+msgstr "Show older"
 
 #. placeholder {0}: sideName[side]
 #: ../../packages/ui/src/components/viewer-tools.tsx
@@ -15698,6 +15744,7 @@ msgstr "Task {taskCode}"
 msgid "Task default"
 msgstr "Task default"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/send-step.tsx
 #: src/screens/new-task/steps.tsx
 msgid "Task name"
@@ -16536,6 +16583,7 @@ msgstr "the task"
 msgid "The task"
 msgstr "The task"
 
+#: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The task could not be created. Try again."
 msgstr "The task could not be created. Try again."

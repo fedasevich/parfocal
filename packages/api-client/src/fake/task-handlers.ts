@@ -244,9 +244,13 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   created_at: `${newTask.sentOn}T14:30:00+02:00`,
   slide_count: draft.slide_ids?.length || (draft.result_sets?.length ?? 0),
   reviewer_count: draft.reviewer_ids.length,
-  slides: (draft.result_sets ?? []).map((set) => ({
-    slide_id: set.slide_id,
-    result_set_id: set.result_set_id,
+  slides: (draft.slide_ids?.length
+    ? draft.slide_ids
+    : (draft.result_sets ?? []).map((set) => set.slide_id)
+  ).map((slideId) => ({
+    slide_id: slideId,
+    result_set_id:
+      draft.result_sets?.find((set) => set.slide_id === slideId)?.result_set_id ?? null,
     reviewer_ids: draft.reviewer_ids,
   })),
 });
