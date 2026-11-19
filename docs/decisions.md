@@ -8,20 +8,7 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Your steps today
 
-The lead opened every page in your browser. Each step ends in one click or one command of yours, because the guard leaves deleting to you. Cost $0 for all of them, and nothing here loses data the app needs.
-
-1. **Delete the GitHub environment `staging`** (decision 91, option A). Run this in your terminal. It removes the environment with its three secrets and one variable.
-
-   ```bash
-   gh api -X DELETE repos/fedasevich/parfocal/environments/staging
-   ```
-
-2. **Revoke the Cloudflare token `parfocal-ci-staging`** (decision 91). On the Account API tokens page, open the ⋯ menu on its row and choose Delete. Leave the other six tokens alone.
-3. **Revoke the Modal token `parfocal-ci-staging`** (decision 91). On Modal's API tokens page, open its row (`ak-BBp3rSa69No49uhyJ9RKnO`, no recent activity) and revoke it. Leave `parfocal-ci-prod` and the unnamed token of 2026-10-06, which is your own CLI login.
-4. **Delete the old US Neon project `parfocal` (`soft-pine-86468744`, Washington)**. Production moved to `parfocal-eu` (`still-field-25034761`, Frankfurt) on 2026-11-17 and nothing points at the old one. Neon only deletes it through Vercel: on the Vercel page of the store `parfocal` (Neon ID `soft-pine-86468744`), Settings, click Delete Database at the bottom and confirm. Leave `parfocal-eu` and your other stores (`neon-red-engine`, `neon-mapa`, `viewer-ux-study-db`) alone.
-5. **Let the agent's Cloudflare token read analytics** (OPS-009, storage lifecycle and cost controls). On the Account API tokens page, edit `parfocal-tofu`, add the permission Account, Account Analytics, Read, and save. The token value does not change.
-
-When you are done, tell the lead "steps done" and it checks each one.
+None. All five steps of 2026-11-19 are done and checked.
 
 ## Later
 
@@ -32,7 +19,15 @@ When you are done, tell the lead "steps done" and it checks each one.
 
 ## Open questions
 
-None right now.
+### 159. What a GPU job does when Modal has no GPU free in the EU
+
+The browser smoke of 2026-11-19 on the reseeded dev app passed sign-in, home, the viewer and every seeded format, Philips-3 included, but the typer and the view map failed with Cloudflare's 524. A view map call waited 244 s and the first EU GPU container started only after the test gave up, because all six GPU pools are pinned to Modal's `eu` region (ADR 0147, cloud provider, regions and pilot cost) and Modal had no T4 free there at that minute.
+
+- **A. Keep the EU pin and make the wait visible (recommended).** Slides never leave the EU. The viewer shows "Waiting for a GPU" with a cancel instead of an error, the smoke retries once after a few minutes, and a result file measures how often the EU wait passes 60 s over a week. No extra cost.
+- **B. Fall back to any region after 60 s while the app holds only public test slides.** Faster on a busy hour, but tiles of a slide leave the EU, which must end before the first real user.
+- Other.
+
+Your choice: 
 
 ### 159. Two extras the mock does not draw: Send feedback and the Open and Resolved switch
 
@@ -51,7 +46,7 @@ Last checked 2026-11-19.
 Waits for you:
 
 - OPS-035 (agents get a signed-in session on the dev app), OPS-029 (a queued job starts a worker in the deployed app), TEST-010 (load test tooling), TEST-020 (showcase seed over every feature), TEST-046 (a ready demo workflow on the dev app), TEST-047 (demo seed with real model results), PROTO-025 (real data on Home, My work and the wizards) and INGEST-032 (every deployed slide has a thumbnail). All of them wait for the reseed of 2026-11-19, after which an agent walks the dev app with its test account. Nothing from you.
-- OPS-009 (storage lifecycle and cost controls). Step 5 below, then an agent makes the first live cost report.
+- OPS-009 (storage lifecycle and cost controls). The agent token reads account analytics since 2026-11-19, so an agent makes the first live cost report. Nothing from you.
 - VIEW-021 (wheel, trackpad and pinch) and DEV-013 (two-finger click and Safari pinch). Record input traces on your trackpad at `/spikes/input-traces` in the local dev app, about two minutes.
 - VIEW-052 (hidden tab check in headed Chrome). Keep the Mac unlocked and awake for about five minutes while an agent runs the check.
 

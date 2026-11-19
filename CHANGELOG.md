@@ -2,15 +2,137 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
-## v0.21.0 (2026-11-18)
+## v0.22.0 (2026-11-19)
 
 ### Features
 
 - TEST-048: Seed the 13 gigapixel Philips-3 TIFF in the format gallery
+- PROTO-031: Settings rows draw and preview what they do, add Motion, fix pan hiding
+- PROTO-030: Close dialogs on outside click and open Settings as an overlay
+- PROTO-032: Tool hints close, show once and come back from Help
+- PROTO-033: Make review panel buttons visible, name the map buttons, fix Guided switch
+- PROTO-036: Serve model files and add the one-click model picker
+- PROTO-038: Match the viewer frame's small parts to the mock
+- PROTO-034: Cell review follows the Minimap setting with a movable minimap
+- PROTO-034: Live cell review minimap follows the setting, moves and Z opens the slide
+- PROTO-035: Edit AI cells on the slide, type, outline and delete, as one atomic batch
+- PROTO-041: Match the top bar's title, slide chip, decision ring and Submit to the mock
+- PROTO-038: Merge the lead's top bar work and keep the frame parts
+- PROTO-042: Show the case, loose slides and three actions in the slides popover
+- PROTO-042: Fit the slides popover to the merged top bar and extract its strings
+- PROTO-040: Give the stage minimap its head, foot and guided inset texts
+- PROTO-043: Give guided review the mock's own panel on the engine stage
+- PROTO-044: Give guided review its own stage controls and fix the minimap grip target
+- PROTO-037: Draw the mock's Objects panel with summary, filters, rows and a docked card
+- PROTO-037: Merge main and list ruler measurements as rows in the Objects tab
+- PROTO-039: Draw region tags, a sampled cells chip and a Whole slide button on the slide
+- PROTO-037: Merge the lead's region tags and check the camera flies to T5
+- PROTO-044: Merge the lead and share one Whole slide button
+- PROTO-045: Give the stage's Display tab the mock's preset and groups bound to the overlays
+- PROTO-046: Add decision notes list, thread popover and one cells row to the stage
+- PROTO-048: Draw the viewer's issue cards, read only banner and AI reading panel
+- PROTO-047: Open annotate on Display and show the scale in the auto region bar
+- PROTO-055: Paint the stage and compare panes with the canvas colour
+- PROTO-051: Withdraw review tasks and flag slides unreadable at high power
+- TEST-051: Seed only AI results made by real model runs on fixture slide crops
+- TEST-051: Give the sample project real tumour model regions on test_065 and gallery slides
+- PROTO-053: Move the magnification bar to the top right with the bottom dock
+- PROTO-054: Compare slides wears the viewer's top bar and the mock's panel
+- PROTO-052: Show the slide, AI areas, checks and the view in the whole slide peek
+- PROTO-056: Tie off the small ends of both drift audits
+
+### Fixes
+
+- PROTO-038: Make the viewer browser specs pass after the mock parity merges
+- PROTO-035: Make main's CI green after the mock parity merges
+- PROTO-034: Keep the next object within budget after a decision
+- VIEW-074: Draw the slide once per camera frame
+- PROTO-049: Test every quiet text token against its surfaces in both themes
+- PROTO-043: Keep the next object within budget with the guided panel
+- PROTO-047: Make main's CI green after the viewer drift merges
+- PROTO-047: Drop an unused import in the core flows spec
+- PROTO-047: Wait for the compare top bar's chip before measuring it
+- PROTO-047: Show the Objects panel on task keys and keep the minimap view box inside the map
+- OPS-036: Let the reset leave tenant objects the bucket lock keeps
+- PROTO-051: Make main's CI green after the second drift merges
 
 ### Docs
 
 - TEST-051: Add the task to seed only real inference results
+- OPS-036: Log the deployed view map check on a seeded slide
+- OPS-036: Log the failed reset of the dev app and its R2 cause
+- OPS-036: Ask the owner to scope the R2 token to the EU dev bucket
+- PROTO-031: Log and tick after merge, ask about extra Display settings
+- PROTO-030: Log and tick after merge
+- TEST-048: Log the Philips-3 publish into the EU bucket
+- PROTO-032: Log and tick after merge
+- PROTO-033: Log and tick after merge
+- PROTO-036: Log and tick after merge
+- PROTO-036: Log the model upload and ask what Best runs
+- PROTO-030: Audit the viewer's drift from the mock
+- PROTO-037: Add the viewer drift tasks from the mock audit
+- PROTO-037: Log the viewer drift audit
+- PROTO-034: Log and tick after merge
+- PROTO-035: Number the ADR from the merge
+- PROTO-035: Log and tick after merge
+- PROTO-041: Log and tick after merge
+- PROTO-038: Log and tick after merge
+- PROTO-042: Log and tick after merge
+- VIEW-074: Number the ADR from the merge
+- PROTO-040: Log and tick after merge
+- PROTO-043: Log and tick after merge
+- PROTO-039: Log and tick after merge
+- PROTO-037: Log and tick after merge
+- PROTO-044: Log and tick after merge
+- PROTO-045: Ask the owner about five display defaults
+- PROTO-049: Log and tick after merge
+- PROTO-045: Log and tick after merge
+- PROTO-046: Log and tick after merge
+- PROTO-047: Log and tick after merge
+- PROTO-043: Ask whether guided check moves on at the key press
+- PROTO-048: Log and tick after merge
+- PROTO-051: Add the withdrawn status and unreadable flag task
+- PROTO-050: Audit the dock, compare, peek, shortcuts and dark theme against the mock
+- PROTO-050: Log and tick after merge
+- PROTO-052: Add the second drift audit's tasks
+- PROTO-055: Log and tick after merge
+- PROTO-051: Log and tick after merge
+- PROTO-048: Tick after the API carries the withdrawn status
+- TEST-051: Log and move to review after merge
+- PROTO-053: Log and tick after merge
+- PROTO-054: Log and tick after merge
+- PROTO-052: Log and tick after merge
+- PROTO-056: Log and tick after merge
+- OPS-036: Apply the owner's answers of 2026-11-19 and keep only open items in decisions
+- PROTO-056: Ask about Send feedback and the Open and Resolved switch
+- PROTO-051: List ADR 0403 in the index
+- OPS-009: Record the owner's cleanup of 2026-11-19 and the analytics permission
+
+### Tests
+
+- PROTO-030: Approve the UI baselines for the dismissal, settings and minimap stories
+- PROTO-048: Open the Objects tab in the withdrawn task spec
+
+### Other
+
+- PROTO-032: Claim PROTO-032 for the parallel run
+- PROTO-033: Claim PROTO-033 for the parallel run
+- PROTO-036: Claim PROTO-036 for the parallel run
+- PROTO-034: Claim PROTO-034 for the parallel run
+- PROTO-035: Claim PROTO-035 for the parallel run
+- PROTO-041: Claim PROTO-041 PROTO-038 for the parallel run
+- PROTO-042: Claim PROTO-042 for the parallel run
+- PROTO-037: Claim PROTO-037 PROTO-043 PROTO-040 for the parallel run
+- PROTO-039: Claim PROTO-039 for the parallel run
+- PROTO-044: Claim PROTO-044 for the parallel run
+- PROTO-045: Claim PROTO-045 for the parallel run
+- PROTO-049: Claim PROTO-049
+- PROTO-048: Claim PROTO-048
+- PROTO-050: Claim PROTO-050
+- PROTO-051: Claim PROTO-051 and TEST-051 over dependencies in review
+- PROTO-055: Claim PROTO-055
+- PROTO-052: Claim PROTO-052 and PROTO-054
+- PROTO-056: Claim PROTO-056
 
 ## v0.20.3 (2026-11-18)
 
