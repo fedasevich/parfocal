@@ -855,10 +855,20 @@ msgstr "{0} is back in the list"
 msgid "{0} is hidden from every model list. Result sets it made stay."
 msgstr "{0} is hidden from every model list. Result sets it made stay."
 
+#. placeholder {0}: skipped.name
+#: src/annotations/layers-panel.tsx
+msgid "{0} is hidden, so the new shape went to Ungrouped."
+msgstr "{0} is hidden, so the new shape went to Ungrouped."
+
 #. placeholder {0}: rowLabel(row)
 #: src/screens/disagreements/queue-screen.tsx
 msgid "{0} is left open. Sign-off counts it on purpose."
 msgstr "{0} is left open. Sign-off counts it on purpose."
+
+#. placeholder {0}: skipped.name
+#: src/annotations/layers-panel.tsx
+msgid "{0} is locked, so the new shape went to Ungrouped."
+msgstr "{0} is locked, so the new shape went to Ungrouped."
 
 #. placeholder {0}: task.code
 #. placeholder {1}: formatDue(day)
@@ -5138,11 +5148,6 @@ msgstr "Click keeps only this type. Shift and click drops it."
 msgid "Click to drop a marker. Shift-click removes one."
 msgstr "Click to drop a marker. Shift-click removes one."
 
-#: src/screens/review/slide-still.tsx
-#: src/viewer/stage-minimap.tsx
-msgid "Click to move"
-msgstr "Click to move"
-
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Click to open the whole slide (or hold Z)"
 msgstr "Click to open the whole slide (or hold Z)"
@@ -6089,6 +6094,10 @@ msgstr "Delete {0}?"
 #: src/screens/project/result-set-delete-dialog.tsx
 msgid "Delete anyway"
 msgstr "Delete anyway"
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Delete group"
+msgstr "Delete group"
 
 #: src/screens/project/project-delete-dialog.tsx
 #: src/screens/project/settings-tab.tsx
@@ -9040,6 +9049,10 @@ msgstr "Loading join settings"
 msgid "Loading models"
 msgstr "Loading models"
 
+#: ../../packages/ui/src/components/notifications-skeleton.tsx
+msgid "Loading notifications"
+msgstr "Loading notifications"
+
 #: src/screens/admin/retention.tsx
 msgid "Loading retention"
 msgstr "Loading retention"
@@ -9661,6 +9674,7 @@ msgstr "MONAI server"
 #: ../../packages/ui/src/components/breadcrumb.tsx
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/admin/common.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
@@ -9668,7 +9682,9 @@ msgstr "MONAI server"
 msgid "More"
 msgstr "More"
 
+#. placeholder {0}: row.name
 #. placeholder {0}: task.code
+#: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/my-work/assigned-tab.tsx
 msgid "More actions for {0}"
 msgstr "More actions for {0}"
@@ -9751,6 +9767,14 @@ msgstr "Move the minimap"
 msgid "Move the minimap. It stays in this corner"
 msgstr "Move the minimap. It stays in this corner"
 
+#: src/annotations/layers-panel.tsx
+msgid "Move the selected shapes into a layer"
+msgstr "Move the selected shapes into a layer"
+
+#: src/annotations/layers-panel.tsx
+msgid "Move to"
+msgstr "Move to"
+
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Move up"
 msgstr "Move up"
@@ -9824,6 +9848,11 @@ msgstr "Name if saved as a template"
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Name it, choose de-identified or clinical, pick a class list and an analysis template"
 msgstr "Name it, choose de-identified or clinical, pick a class list and an analysis template"
+
+#. placeholder {0}: row.name
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Name of {0}"
+msgstr "Name of {0}"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Name saved"
@@ -11673,6 +11702,7 @@ msgstr "Paper"
 #: ../../packages/ui/src/components/app-shell.tsx
 #: ../../packages/ui/src/components/auth.tsx
 #: ../../packages/ui/src/components/icon.tsx
+#: ../../packages/ui/src/components/loader.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/onboarding/setup-screen.tsx
@@ -12799,6 +12829,10 @@ msgstr "Remove the 4 largest slides from this upload"
 #: src/screens/settings/settings-screen.tsx
 msgid "Remove the passkey {0}"
 msgstr "Remove the passkey {0}"
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Rename"
+msgstr "Rename"
 
 #: src/screens/developer/bench-section.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -17324,6 +17358,10 @@ msgstr "Undo"
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "Undo all"
 msgstr "Undo all"
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Ungroup"
+msgstr "Ungroup"
 
 #: src/annotations/layers-panel.tsx
 msgid "Ungrouped"

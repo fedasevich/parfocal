@@ -853,9 +853,19 @@ msgstr ""
 msgid "{0} is hidden from every model list. Result sets it made stay."
 msgstr ""
 
+#. placeholder {0}: skipped.name
+#: src/annotations/layers-panel.tsx
+msgid "{0} is hidden, so the new shape went to Ungrouped."
+msgstr ""
+
 #. placeholder {0}: rowLabel(row)
 #: src/screens/disagreements/queue-screen.tsx
 msgid "{0} is left open. Sign-off counts it on purpose."
+msgstr ""
+
+#. placeholder {0}: skipped.name
+#: src/annotations/layers-panel.tsx
+msgid "{0} is locked, so the new shape went to Ungrouped."
 msgstr ""
 
 #. placeholder {0}: task.code
@@ -5136,11 +5146,6 @@ msgstr ""
 msgid "Click to drop a marker. Shift-click removes one."
 msgstr ""
 
-#: src/screens/review/slide-still.tsx
-#: src/viewer/stage-minimap.tsx
-msgid "Click to move"
-msgstr ""
-
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Click to open the whole slide (or hold Z)"
 msgstr ""
@@ -6083,6 +6088,10 @@ msgstr ""
 
 #: src/screens/project/result-set-delete-dialog.tsx
 msgid "Delete anyway"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Delete group"
 msgstr ""
 
 #: src/screens/project/project-delete-dialog.tsx
@@ -9035,6 +9044,10 @@ msgstr ""
 msgid "Loading models"
 msgstr ""
 
+#: ../../packages/ui/src/components/notifications-skeleton.tsx
+msgid "Loading notifications"
+msgstr ""
+
 #: src/screens/admin/retention.tsx
 msgid "Loading retention"
 msgstr ""
@@ -9656,6 +9669,7 @@ msgstr ""
 #: ../../packages/ui/src/components/breadcrumb.tsx
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/admin/common.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
@@ -9663,7 +9677,9 @@ msgstr ""
 msgid "More"
 msgstr ""
 
+#. placeholder {0}: row.name
 #. placeholder {0}: task.code
+#: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/my-work/assigned-tab.tsx
 msgid "More actions for {0}"
 msgstr ""
@@ -9746,6 +9762,14 @@ msgstr ""
 msgid "Move the minimap. It stays in this corner"
 msgstr ""
 
+#: src/annotations/layers-panel.tsx
+msgid "Move the selected shapes into a layer"
+msgstr ""
+
+#: src/annotations/layers-panel.tsx
+msgid "Move to"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Move up"
 msgstr ""
@@ -9818,6 +9842,11 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Name it, choose de-identified or clinical, pick a class list and an analysis template"
+msgstr ""
+
+#. placeholder {0}: row.name
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Name of {0}"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -11668,6 +11697,7 @@ msgstr ""
 #: ../../packages/ui/src/components/app-shell.tsx
 #: ../../packages/ui/src/components/auth.tsx
 #: ../../packages/ui/src/components/icon.tsx
+#: ../../packages/ui/src/components/loader.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/onboarding/setup-screen.tsx
@@ -12789,6 +12819,10 @@ msgstr ""
 #. placeholder {0}: item.name
 #: src/screens/settings/settings-screen.tsx
 msgid "Remove the passkey {0}"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Rename"
 msgstr ""
 
 #: src/screens/developer/bench-section.tsx
@@ -17314,6 +17348,10 @@ msgstr ""
 #: ../../packages/ui/src/components/findings-panel.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "Undo all"
+msgstr ""
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Ungroup"
 msgstr ""
 
 #: src/annotations/layers-panel.tsx
