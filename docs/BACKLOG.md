@@ -3843,6 +3843,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a result file records precision at 10 and 50 per cell type against PanNuke's labels, compared with a random ranking.
   Depends on AISEG-014, MLEVAL-010.
   Size: M.
+- [ ] AISEG-024 · Best one-click outlines run PathoSAM ViT-L on the server
+  Decision 156 (what the Best model does for one-click outlines) chose option B. Today Best and Good both run PathoSAM ViT-B, so they give the same outline. ADR 0202 (the v1 model line-up per tier) puts the ViT-L embedding on the server for Best, with the decoder in the browser.
+  Export the PathoSAM ViT-L encoder for a Modal GPU function in the `eu` region, return the image embedding for the clicked view, and let the browser's existing decoder use it when Best is picked. Check the file size and peak memory first and keep a local run under about 8 GB. Log the cost of the GPU calls.
+  Done when a test on the deployed app clicks one nucleus with Best and with Good on a seeded slide, gets a ViT-L outline from the server for Best, and a result file compares both outlines against a labelled nucleus set the repository already scores.
+  Depends on PROTO-036.
+  Size: M.
 
 ## 23 AINUC · Whole-slide nuclei, typing and confidence
 
@@ -4685,6 +4691,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   `/api/me/slides` measured about 70 queries for one page on app.parfocal.eu because the page loaded the full review state of every task one task at a time (the task row, its slides, its disagreement queue and its assignments). The page now loads the states of all the tasks it touches together, so the count no longer grows with the number of tasks.
   Done when a db test pins `/api/me/slides` for 50 slides under 12 queries however many tasks the page touches, and the slides, sessions and review state tests still pass.
   Depends on: OPS-033.
+  Size: S.
+- [ ] OPS-037 · Nothing reads the US bucket parfocal-dev, so the owner can delete it
+  The owner asked on 2026-11-19 to stop paying for the US copy. `parfocal-dev` holds 38.1 GB (28.7 GB of `fixtures/`, 8.7 GB of `fixture-slides/`, 0.45 GB of `samples/`, 0.17 GB of `models/`), most of it also in `parfocal-dev-eu`, about $0.57 a month. CI and `pnpm fixtures` read `fixtures/` from it with the read-only key `parfocal-fixtures-read`, `apps/edge/wrangler.jsonc` binds it for local dev, and `packages/upload-spike` names it.
+  Copy what only `parfocal-dev` holds into `parfocal-dev-eu` (`fixtures/` has 2,203 objects there and 33 in the EU bucket, among them `fixtures/ui-visual/` and `fixtures/sam-parity/`), point every reader at the EU endpoint with a read-only key scoped to `parfocal-dev-eu`, and remove the bucket from OpenTofu with a plan that destroys only it. Write the owner's delete command, its cost and what it frees in `docs/decisions.md`.
+  Done when a full CI run and `pnpm fixtures` pass with no key that can reach `parfocal-dev`, `git grep` finds no reader of it, and the owner's delete step is in `docs/decisions.md`.
   Size: S.
 
 ---
@@ -6720,6 +6731,12 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser test on RT-14 sees all six chips inside the panel, reads "boundary is off" on T2, finds no Areas card in guided review, reads the minimap's head and both foot texts without overlap, opens T2's seeded thread and sees its popover, and finds a T6⁺ tag on the slide.
   Size: S.
   Row 62 needs no new task, PROTO-048 already holds it.
+- [ ] PROTO-057 · The Display settings gain the mock's display ideas that make sense
+  Decision 155 (which extra settings the Display tab gets): the owner asked for the display ideas the mock already has where they make sense, such as fill opacity, beyond the Motion row PROTO-031 added. The mock's display rows include fill opacity, heatmap opacity and colormap, confidence display and fade, and the common viewer rows text size and a colour-blind-safe class palette are candidates too.
+  List every display row in `docs/design/ux-mock/index.html`, keep the ones that change how the slide or its overlays look for one person (not developer or renderer rows), and add each as a Settings, Display row that previews what it does, stored per device as PROTO-031 stores Motion. Record the rows left out and why in the log.
+  Done when a browser test changes each new row, sees the viewer redraw with it (fill opacity read from the overlay layer, text size from the computed root font size, the class palette from a drawn cell colour) and finds it kept after a reload, and axe passes on the Display tab in both themes.
+  Depends on PROTO-031.
+  Size: M.
 ---
 
 ## Later epics (not in v1, kept for planning)

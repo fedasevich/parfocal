@@ -8,7 +8,7 @@ Last consolidated: 2026-11-15
 
 State on 2026-11-18. The deployed app runs in Europe, and `app.parfocal.eu` is a development environment that agents may reseed ([ADR 0390](adr/0390-app-parfocal-eu-is-a-development-environment.md), the deployed app is dev). The owner answered decisions 138 to 154 on 2026-11-18, which put database backups on hold. Most tasks in review now wait for one owner step, the password of the agent test account of decision 153, after which an agent walks the deployed app signed in and ticks them. Main CI is being repaired on a branch. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open steps and the Mac checks are in [decisions.md](decisions.md), which starts with what to do next in order.
+The owner's open steps and the Mac checks are in [decisions.md](decisions.md), which starts with what to do next in order. Answered decisions move to [decisions-answered.md](decisions-answered.md).
 
 ## Where we are now
 
@@ -44,7 +44,8 @@ Tasks in the review column wait for an owner look, a cloud step or another task,
 |---|---|
 | [BACKLOG.md](BACKLOG.md) | Every task with checkboxes, the Definition of Done and the decisions baseline |
 | [log.md](log.md) | Dated log of what was done |
-| [decisions.md](decisions.md) | Open questions for the owner, each with options, the recommended one and a blank line for the owner's choice |
+| [decisions.md](decisions.md) | Only what is open for the owner: today's steps, open questions and what the review column waits for |
+| [decisions-answered.md](decisions-answered.md) | Every answered decision and what it changed, newest first |
 | [board/](board/README.md) | The live task board over the backlog, with one claim file per task being worked on (`pnpm board`) |
 | [project/overview.md](project/overview.md) | The product, users, scope, the React app as the design source and the POC's role |
 | [project/roadmap.md](project/roadmap.md) | The milestones, M0 to M6 with MA (the annotation path), and their status |

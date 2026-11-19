@@ -171,11 +171,11 @@ Copy `docs/results/_template.md` to `docs/results/YYYY-MM-DD-topic.md`. Record t
 
 ## The owner's decisions file
 
-`docs/decisions.md` holds every open question for the owner.
+`docs/decisions.md` holds only what is open for the owner, short enough to read without scrolling: today's steps, later steps, open questions and what the review column waits for.
 
-- It starts with a line where the owner can write "all recommended", then a short table of what landed.
-- Each item has a heading like `1a` with a plain title, two sentences of context, options A, B, C and Other with the recommended one in bold and a few words why, then a blank `Your choice:` line.
-- When the owner answers, apply each choice, log it and delete the answered item. Keep only open items.
+- Each question has a numbered heading with a plain title, two sentences of context, options A, B and Other with the recommended one in bold and a few words why, then a blank `Your choice:` line.
+- Each owner step names the page or the exact command, what it costs and what it must leave alone.
+- When the owner answers, apply each choice, log it, and move the question with a line on what changed to the top of `docs/decisions-answered.md` under that day's heading. Nothing answered stays in `decisions.md`.
 - When two branches both add items, keep both and renumber.
 
 ## Consolidation
