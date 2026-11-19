@@ -23,6 +23,7 @@ import { LiveProgress, useSlideStepKeys } from "./live-progress.tsx";
 import { type LiveReview, liveReview } from "./live-review.ts";
 import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
 import { LiveSlidesPopover } from "./live-slides-popover.tsx";
+import { SlideExportMenu } from "./slide-export-menu.tsx";
 import type { SlideWorkspace } from "./workspace.ts";
 
 const slidePage = 200;
@@ -268,6 +269,9 @@ function TopBar({
       {storage}
       <span className="flex-1" />
       <span ref={statusRef} data-slot="live-save-status" className="min-w-0" />
+      {task !== undefined && !reviewTask ? (
+        <SlideExportMenu slideId={slideId} taskId={task.id} />
+      ) : null}
       <SegmentedControl
         aria-label={t`How to review`}
         data-testid="workspace-switch"

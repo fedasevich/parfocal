@@ -6884,6 +6884,10 @@ msgstr "Every class has a match."
 msgid "Every deposit on the case's slides. Sizes come from your measurements and can be changed here."
 msgstr "Every deposit on the case's slides. Sizes come from your measurements and can be changed here."
 
+#: src/annotations/slide-export.ts
+msgid "Every drawn shape with its type and layer, readable by QuPath and most map tools"
+msgstr "Every drawn shape with its type and layer, readable by QuPath and most map tools"
+
 #: src/routes/prototype.tsx
 msgid "Every error and empty state grouped by flow, each opens its own screen"
 msgstr "Every error and empty state grouped by flow, each opens its own screen"
@@ -7101,8 +7105,14 @@ msgstr "Expired"
 #: src/results/painted-map-layer.tsx
 #: src/screens/settings/shortcuts-section.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/viewer/slide-export-menu.tsx
 msgid "Export"
 msgstr "Export"
+
+#. placeholder {0}: choice.label
+#: src/screens/review/slide-export-items.ts
+msgid "Export {0}"
+msgstr "Export {0}"
 
 #: src/screens/admin/audit.tsx
 msgid "Export signed log"
@@ -7333,6 +7343,10 @@ msgstr "Fix AI on selected areas"
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Flag"
 msgstr "Flag"
+
+#: src/annotations/slide-export.ts
+msgid "FlatGeobuf"
+msgstr "FlatGeobuf"
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "Fleiss kappa"
@@ -7651,6 +7665,10 @@ msgstr "Gamepad"
 #: src/study/study-screen.tsx
 msgid "Gave up"
 msgstr "Gave up"
+
+#: src/annotations/slide-export.ts
+msgid "GeoJSON"
+msgstr "GeoJSON"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "GeoJSON and .fgb"
@@ -11806,6 +11824,7 @@ msgstr "Parfocal could not read this link."
 msgid "Parfocal home"
 msgstr "Parfocal home"
 
+#: src/annotations/slide-export.ts
 #: src/screens/upload/formats-drawer.tsx
 msgid "Parfocal JSON"
 msgstr "Parfocal JSON"
@@ -13863,6 +13882,10 @@ msgstr "Saved {0} v{version}. Tasks made from the earlier version keep it."
 #: src/screens/admin/template-editor.tsx
 msgid "Saved {0} v1. Researchers can pick it in a new review task."
 msgstr "Saved {0} v1. Researchers can pick it in a new review task."
+
+#: src/viewer/slide-export-menu.tsx
+msgid "Saved {name}"
+msgstr "Saved {name}"
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Saved as you go"
@@ -16172,6 +16195,10 @@ msgstr "The draft is saved as you go."
 msgid "The due date is in the past."
 msgstr "The due date is in the past."
 
+#: src/viewer/slide-export-menu.tsx
+msgid "The export could not be made"
+msgstr "The export could not be made"
+
 #: src/routes/issue-pages.$kind.tsx
 msgid "The export failed."
 msgstr "The export failed."
@@ -16507,6 +16534,10 @@ msgstr "The run is streaming onto the slide"
 msgid "The run joined the task's check scope"
 msgstr "The run joined the task's check scope"
 
+#: src/annotations/slide-export.ts
+msgid "The same shapes in a compact binary file that opens fast with very many objects"
+msgstr "The same shapes in a compact binary file that opens fast with very many objects"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time."
 msgstr "The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time."
@@ -16575,6 +16606,10 @@ msgstr "The server's details could not be loaded."
 #: src/screens/project/settings-zones.tsx
 msgid "The setting was not saved. Try again."
 msgstr "The setting was not saved. Try again."
+
+#: src/annotations/slide-export.ts
+msgid "The shapes with their groups, notes and cell calls, which Parfocal can import again"
+msgstr "The shapes with their groups, notes and cell calls, which Parfocal can import again"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "The size comes from the object."

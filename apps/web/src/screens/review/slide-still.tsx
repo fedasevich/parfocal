@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { StillLink } from "../../viewer/still-engine.tsx";
 import { type StillFrame, type StillShape, stillShapeOf } from "../../viewer/still-frame.ts";
+import { useStageWheel } from "../../viewer/use-stage-wheel.ts";
 import type { SlideOutlines } from "../../viewer/use-still-objects.ts";
 import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
 import type { Count } from "./decision-style.ts";
@@ -237,6 +238,26 @@ export function SlideStill({
     written.current = shown;
     onCameraChange(shown);
   }, [camera, shown, onCameraChange]);
+  const wheelNow = useRef({ shown, moveTo });
+  wheelNow.current = { shown, moveTo };
+  const [wheelNode, setWheelNode] = useState<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (wheelNode === null) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const { shown: now, moveTo: move } = wheelNow.current;
+      const factor =
+        event.ctrlKey && event.deltaMode === 0
+          ? Math.exp(-event.deltaY * 0.01)
+          : event.deltaY < 0
+            ? 1.15
+            : 1 / 1.15;
+      move({ ...now, scale: now.scale * factor });
+    };
+    wheelNode.addEventListener("wheel", onWheel, { passive: false });
+    return () => wheelNode.removeEventListener("wheel", onWheel);
+  }, [wheelNode]);
+  useStageWheel(wheelNode);
   const drag = useRef<{ x: number; y: number; from: Camera } | null>(null);
   const image = look ?? imageOf(view);
   const picture = useSlidePicture();
@@ -316,7 +337,10 @@ export function SlideStill({
       : [];
   return (
     <div
-      ref={ref}
+      ref={(node) => {
+        ref.current = node;
+        setWheelNode(node);
+      }}
       data-slot="slide-still"
       data-view={view.kind}
       data-scale={shown.scale.toFixed(2)}
@@ -329,10 +353,6 @@ export function SlideStill({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={endDrag}
-      onWheel={(event) => {
-        const factor = event.deltaY < 0 ? 1.15 : 1 / 1.15;
-        moveTo({ ...shown, scale: shown.scale * factor });
-      }}
     >
       {backdrop?.({ camera: shown, size, onReady: setLink, onTiles: setFailedTiles })}
       <svg

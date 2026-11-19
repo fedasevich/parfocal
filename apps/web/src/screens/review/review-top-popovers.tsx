@@ -29,6 +29,7 @@ import { caseDetailsOf } from "./case-details.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { SlideCounts } from "./review-top.tsx";
 import { timeLeft } from "./review-top.tsx";
+import { slideExportItems } from "./slide-export-items.ts";
 import { recallSlideCamera, stepSlideId } from "./slide-switch.ts";
 import { slidePickerSummary, topBarMoreItems } from "./top-bar-model.ts";
 
@@ -286,13 +287,16 @@ export function useReviewTopPopovers({
   const moreItems: MoreItem[] | undefined =
     mode === "adjudicate"
       ? undefined
-      : topBarMoreItems({
-          mode,
-          projectId,
-          slideId: session.slideId,
-          taskId: task?.id,
-          go: (href) => void goTo(href),
-        });
+      : [
+          ...topBarMoreItems({
+            mode,
+            projectId,
+            slideId: session.slideId,
+            taskId: task?.id,
+            go: (href) => void goTo(href),
+          }),
+          ...slideExportItems(session.slideId, task?.id),
+        ];
 
   const slideSummary = slidePickerSummary({
     caseLabel: session.caseLabel,
