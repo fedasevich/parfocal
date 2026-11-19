@@ -1,7 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
-import { NotificationsSkeleton } from "@parfocal/ui/components/notifications-skeleton";
+import { NotificationsSkeleton, popoverRows } from "@parfocal/ui/components/notifications-skeleton";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
 import { CountBadge, ObjectIdTag } from "@parfocal/ui/components/tag";
@@ -98,7 +98,9 @@ function NotificationsPanel({
     which === "all" || item.group === which;
   const unreadIn = (which: NotificationGroup) =>
     items.filter((item) => inTab(item, which) && !item.read).length;
-  const shown = items.filter((item) => inTab(item, tab) && (!unreadOnly || !item.read));
+  const shown = items
+    .filter((item) => inTab(item, tab) && (!unreadOnly || !item.read))
+    .slice(0, popoverRows);
   const anyUnread = items.some((item) => !item.read);
   const tabLabel = (which: NotificationGroup, label: string) => {
     const count = unreadIn(which);

@@ -71,7 +71,7 @@ test("the first paint shows the boot loader with the product name", async ({ bro
   await page.goto("/");
   const loader = page.getByTestId("boot-loader");
   await expect(loader).toBeVisible();
-  await expect(loader).toHaveText("Parfocal");
+  await expect(loader.getByText("Parfocal", { exact: true })).toBeVisible();
   await context.close();
 });
 

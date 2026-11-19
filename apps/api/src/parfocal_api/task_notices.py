@@ -23,7 +23,15 @@ async def told(
     kind: NotificationKind,
     payload: dict[str, Any],
 ) -> None:
-    await notify(connection, row.tenant_id, people, kind, TargetKind.TASK, row.id, payload)
+    await notify(
+        connection,
+        row.tenant_id,
+        people,
+        kind,
+        TargetKind.TASK,
+        row.id,
+        {"task_name": row.name} | payload,
+    )
 
 
 async def tell_due_changed(connection: AsyncConnection, row: Any, due_on: date | None) -> None:

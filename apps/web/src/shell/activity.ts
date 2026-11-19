@@ -35,6 +35,16 @@ export const payloadText = (item: InboxItem, key: string): string | undefined =>
   return typeof value === "string" ? value : undefined;
 };
 
+export const detailOf = (item: Pick<InboxItem, "payload">): string | undefined => {
+  const written = item.payload.detail;
+  if (typeof written === "string" && written !== "") return written;
+  const task = item.payload.task_name;
+  if (typeof task !== "string" || task === "") return undefined;
+  const slides = item.payload.slides;
+  if (typeof slides !== "number") return task;
+  return `${task} · ${slides} ${slides === 1 ? "slide" : "slides"}`;
+};
+
 export const kindTitles: Record<string, string> = {
   mention: "You were mentioned",
   reply: "New reply",

@@ -2,7 +2,7 @@ import { useLingui } from "@lingui/react/macro";
 import { type InboxItem, useListNotifications } from "@parfocal/api-client";
 import { type ActivityEntry, ActivityFeed } from "@parfocal/ui/components/activity-feed";
 import { now } from "../../clock.ts";
-import { inFilter, kindIcons, newestFirst, payloadText, titleOf } from "../../shell/activity.ts";
+import { detailOf, inFilter, kindIcons, newestFirst, titleOf } from "../../shell/activity.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { relativeTime } from "../format.ts";
 import { okData } from "../placeholder.tsx";
@@ -19,7 +19,7 @@ export const toActivityEntry = (item: InboxItem): ActivityEntry => ({
   group: groupOf(item),
   icon: kindIcons[item.kind] ?? "bell",
   title: titleOf(item),
-  detail: payloadText(item, "detail"),
+  detail: detailOf(item),
   time: relativeTime(new Date(item.created_at), now()),
   read: item.read,
 });

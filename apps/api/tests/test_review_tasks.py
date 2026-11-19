@@ -150,6 +150,7 @@ def test_creating_a_task_puts_it_in_every_reviewer_bell_and_in_assigned_by_me(
         listed = api(s.people[label]).get("/api/me/notifications").json()["notifications"]
         assert [item["kind"] for item in listed] == ["task-assigned"]
         assert listed[0]["payload"]["slides"] == 4
+        assert listed[0]["payload"]["task_name"]
     assigned = api(s.people["owner"]).get("/api/me/assigned-tasks").json()
     assert [task["code"] for task in assigned] == ["RT-1"]
 

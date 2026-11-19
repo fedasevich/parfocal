@@ -14,7 +14,7 @@ type LoaderProps = {
 const glyphSize: Record<LoaderSize, string> = {
   inline: "size-4",
   block: "size-12",
-  page: "size-16",
+  page: "size-6",
 };
 
 function Loader({ label, size = "block", still = false, className }: LoaderProps) {
@@ -23,7 +23,8 @@ function Loader({ label, size = "block", still = false, className }: LoaderProps
       role="status"
       className={cn(
         "inline-flex items-center justify-center",
-        size === "inline" ? "align-middle" : "w-full",
+        size === "inline" && "align-middle",
+        size === "block" && "w-full",
         className,
       )}
     >
