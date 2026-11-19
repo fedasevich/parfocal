@@ -2,6 +2,38 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.24.1 (2026-11-19)
+
+### Features
+
+- PROTO-059: Add a favicon drawn from the Parfocal mark
+- PROTO-060: Stack the stage's top centre notices so none can overlap
+
+### Fixes
+
+- PROTO-057: Keep the settings rows and shortcuts out of the first page
+- PROTO-056: Let the study's find the tumor check read area visits in task views
+- OPS-038: Cover cancelGpuCall in the isolation suite and pass no call token in the showcase test
+- PROTO-060: Keep the top stack below the magnification bar in the dock layout
+- TEST-052: Pass the budgets apart flag through turbo and title the favicon
+
+### Docs
+
+- AISEG-024: Log the v0.24.0 deploy and the polled GPU waits
+- OPS-038: Log the main CI fixes after v0.24.0
+- PROTO-060: Log and tick after merge
+- TEST-052: Log the CI follow up
+
+### Tests
+
+- AISEG-024: Pick the Good tier by the start of its name
+- TEST-052: Run the timing budgets alone with one worker in CI
+
+### Other
+
+- PROTO-060: Add and claim PROTO-060
+- PROTO-060: Claim PROTO-060
+
 ## v0.24.0 (2026-11-19)
 
 ### Features
