@@ -1,4 +1,4 @@
-import { useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetCellChunkUrl,
   getGetCellSummaryUrl,
@@ -11,14 +11,17 @@ import {
   useListResultSetRegions,
   useListSlideResultSets,
 } from "@parfocal/api-client";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { clickSlopScreenPixels } from "../annotations/click-press.ts";
+import { slideAt } from "../annotations/stage-pointer.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { shownSetsOf, taskDisplayView } from "../screens/review/display-model.ts";
 import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
 import { useDisplayDefaults } from "../shell/display-defaults.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
-import { DockCard, dockedCard } from "./inspector-slots.tsx";
+import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
+import { cellAt, type PickedCell, pickSlopScreenPixels } from "./result-cell-pick.ts";
 import {
   chunkCells,
   mergeRegions,
@@ -118,6 +121,7 @@ function SetCells({
       .catch((error: unknown) => console.error("result set cells did not page in", error));
   }, [paged, outlines, left, top, width, height]);
   const [drawn, setDrawn] = useState({ cells: 0, as: "none" });
+  const [picked, setPicked] = useState<PickedCell | null>(null);
   useEffect(() => {
     if (paged === null || version < 0) return;
     const loaded = outlines ? chunkCells(set.id, paged, paints) : [];
@@ -127,17 +131,126 @@ function SetCells({
       outlined ? { draw: "outline", colorBy: "class" } : { draw: "dots", colorBy: "score" },
     );
     drawing.setObjects(cells);
+    drawing.setCurrent(picked?.id ?? null);
     setDrawn({ cells: cells.length, as: outlined ? "outlines" : "dots" });
-  }, [drawing, paged, version, outlines, set.id, paints]);
+  }, [drawing, paged, version, outlines, set.id, paints, picked]);
+  useEffect(() => {
+    const stage = frame.current?.closest<HTMLElement>('[data-testid="slide-stage"]');
+    if (paged === null || !outlines || !stage) return;
+    let down: { x: number; y: number } | null = null;
+    const onDown = (event: PointerEvent) => {
+      down = event.button === 0 ? { x: event.clientX, y: event.clientY } : null;
+    };
+    const onUp = (event: PointerEvent) => {
+      const start = down;
+      down = null;
+      if (start === null || event.button !== 0) return;
+      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > clickSlopScreenPixels)
+        return;
+      if (stage.dataset.tool !== "select") return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('button, a, input, [role="toolbar"], [data-testid="context-bar"]')
+      )
+        return;
+      const at = slideAt(engine, stage, event);
+      const reach = pickSlopScreenPixels / 2 ** engine.getCamera().zoom;
+      setPicked(cellAt(set.id, paged, paints, at, reach));
+    };
+    stage.addEventListener("pointerdown", onDown, true);
+    stage.addEventListener("pointerup", onUp, true);
+    return () => {
+      stage.removeEventListener("pointerdown", onDown, true);
+      stage.removeEventListener("pointerup", onUp, true);
+    };
+  }, [engine, paged, outlines, paints, set.id, frame]);
+  return (
+    <>
+      {picked === null ? null : <PickedCellCard set={set} cell={picked} />}
+      <SetCellsMarker
+        frame={frame}
+        set={set}
+        drawn={drawn}
+        resident={paged?.cache.size ?? 0}
+        picked={picked}
+      />
+    </>
+  );
+}
+
+function PickedCellCard({ set, cell }: { set: ResultSet; cell: PickedCell }) {
+  const { t } = useLingui();
+  const card = (
+    <section className={dockedCard} data-testid="picked-cell" data-cell={cell.id}>
+      <h3 className="truncate font-medium text-fg">
+        <Trans>Cell {cell.number}</Trans>
+      </h3>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-fg-dim">
+        <dt>
+          <Trans>ID</Trans>
+        </dt>
+        <dd className="text-fg" data-testid="picked-cell-id">
+          {cell.id}
+        </dd>
+        <dt>
+          <Trans>Type</Trans>
+        </dt>
+        <dd className="text-fg" data-testid="picked-cell-type">
+          {cell.typeName ?? t`No type`}
+        </dd>
+        <dt>
+          <Trans>Score</Trans>
+        </dt>
+        <dd className="text-fg" data-testid="picked-cell-score">
+          {cell.score.toFixed(2)}
+        </dd>
+        <dt>
+          <Trans>Result set</Trans>
+        </dt>
+        <dd className="truncate text-fg">{set.name}</dd>
+      </dl>
+      <p className="text-fg-dim">
+        <Trans>To change it, edit this cell in an annotate task.</Trans>
+      </p>
+    </section>
+  );
+  return (
+    <>
+      <DockCard section="objects" order={0}>
+        {card}
+      </DockCard>
+      {useDocked() ? (
+        <DockCard section="display" order={0}>
+          {card}
+        </DockCard>
+      ) : null}
+    </>
+  );
+}
+
+function SetCellsMarker({
+  frame,
+  set,
+  drawn,
+  resident,
+  picked,
+}: {
+  frame: RefObject<HTMLDivElement | null>;
+  set: ResultSet;
+  drawn: { cells: number; as: string };
+  resident: number;
+  picked: PickedCell | null;
+}) {
   return (
     <div
       ref={frame}
       className="pointer-events-none invisible absolute inset-0"
+      data-picked={picked?.id ?? ""}
       data-testid="result-set-cells"
       data-set={set.id}
       data-cells={drawn.cells}
       data-drawn={drawn.as}
-      data-resident={paged?.cache.size ?? 0}
+      data-resident={resident}
     />
   );
 }

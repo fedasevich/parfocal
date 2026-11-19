@@ -80,7 +80,7 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
     await expect(card).toHaveAttribute("data-object", object);
     if (object.includes("·C")) {
       await expect(typeBar).toHaveAttribute("aria-label", `Type for ${object}`);
-      await typeBar.getByRole("button", { name: /Keep/ }).click();
+      await typeBar.getByRole("button", { name: /Agree/ }).click();
       await expect(typeBar).toHaveAttribute("data-chosen", "keep");
     } else {
       await card.locator('button[data-counts-as="agree"]').click();

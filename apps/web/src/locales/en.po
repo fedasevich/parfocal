@@ -3152,6 +3152,10 @@ msgstr "Add at least one slide to go on. Results go with a slide."
 msgid "Add class"
 msgstr "Add class"
 
+#: src/viewer/no-classes-card.tsx
+msgid "Add classes in the project settings"
+msgstr "Add classes in the project settings"
+
 #: src/screens/admin/connect-model.tsx
 msgid "Add model"
 msgstr "Add model"
@@ -4635,10 +4639,12 @@ msgstr "Cases from folder names"
 msgid "Category"
 msgstr "Category"
 
+#. placeholder {0}: cell.number
 #. placeholder {0}: cell.object
 #. placeholder {0}: selection.id
 #: ../../packages/ui/src/components/findings-panel.tsx
 #: src/viewer/stage-objects-panel.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Cell {0}"
 msgstr "Cell {0}"
 
@@ -4779,6 +4785,10 @@ msgstr "Change the slide on this side"
 #: src/screens/review/object-card.tsx
 msgid "Change the type"
 msgstr "Change the type"
+
+#: src/viewer/use-selection-class.ts
+msgid "Change type"
+msgstr "Change type"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "changed"
@@ -5076,6 +5086,10 @@ msgstr "Class for new shapes"
 #: src/screens/upload/result-problems.tsx
 msgid "Class for objects with none"
 msgstr "Class for objects with none"
+
+#: src/annotations/context-bar.tsx
+msgid "Class for the selection"
+msgstr "Class for the selection"
 
 #: src/screens/upload/check-step.tsx
 msgid "Class in {projectCode}"
@@ -6219,6 +6233,10 @@ msgstr "Dice"
 #: ../../packages/ui/src/components/ingest-failure.tsx
 msgid "did not finish"
 msgstr "did not finish"
+
+#: src/viewer/no-classes-card.tsx
+msgid "Digits cannot set a type and cells read as no type until the project has classes."
+msgstr "Digits cannot set a type and cells read as no type until the project has classes."
 
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Dimmer"
@@ -8154,6 +8172,7 @@ msgstr "IBM Plex Sans, sans-serif"
 
 #: ../../packages/ui/src/components/evaluation-report.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "ID"
 msgstr "ID"
 
@@ -10435,6 +10454,10 @@ msgstr "No tumor flagged"
 #: src/screens/settings/shortcuts-section.tsx
 msgid "No two actions share a key."
 msgstr "No two actions share a key."
+
+#: src/viewer/stage-result-cells.tsx
+msgid "No type"
+msgstr "No type"
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "No values changed. Fix it and send it again."
@@ -13143,6 +13166,7 @@ msgstr "Result files"
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Result set"
 msgstr "Result set"
 
@@ -13896,6 +13920,7 @@ msgstr "Scope"
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/viewer/viewer-canvas-parts.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Score"
 msgstr "Score"
 
@@ -16832,6 +16857,10 @@ msgstr "This page does not exist, or it was moved or deleted."
 msgid "This part of the slide can't be read yet"
 msgstr "This part of the slide can't be read yet"
 
+#: src/viewer/no-classes-card.tsx
+msgid "This project has no classes"
+msgstr "This project has no classes"
+
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "This project has no slides yet. Upload some first."
 msgstr "This project has no slides yet. Upload some first."
@@ -17067,6 +17096,10 @@ msgstr "To {0} · from P07"
 #: src/screens/project/add-class-modal.tsx
 msgid "To {projectCode}. New imports and tasks can use it."
 msgstr "To {projectCode}. New imports and tasks can use it."
+
+#: src/viewer/stage-result-cells.tsx
+msgid "To change it, edit this cell in an annotate task."
+msgstr "To change it, edit this cell in an annotate task."
 
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/my-work/to-review-tab.tsx
@@ -17334,6 +17367,10 @@ msgstr "Two roles apply in the whole workspace. Admin rights are a switch on a r
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Two-finger double tap"
 msgstr "Two-finger double tap"
+
+#: src/viewer/stage-result-cells.tsx
+msgid "Type"
+msgstr "Type"
 
 #. placeholder {0}: project.name
 #: src/screens/project/project-delete-dialog.tsx

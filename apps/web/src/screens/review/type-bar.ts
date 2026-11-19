@@ -16,7 +16,7 @@ export type TypeOption = {
 export const typeOptions: readonly TypeOption[] = [
   {
     id: "keep",
-    label: "Keep",
+    label: "Agree",
     key: "K",
     action: "dagree",
     hint: "Keeps what the AI called this cell",
@@ -51,7 +51,7 @@ export const typeOptions: readonly TypeOption[] = [
   },
   {
     id: "notcell",
-    label: "Not a cell",
+    label: "Disagree",
     key: "X",
     action: "ddisagree",
     hint: "Debris, pigment, red blood cells, folds or blur",

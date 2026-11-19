@@ -34,7 +34,7 @@ async function correctOne(page: Page) {
   const truth = fixtureTruth(object ?? "");
   expect(truth).not.toBeNull();
   await bar
-    .getByRole("button", { name: truth === "Tumor" ? /Keep/ : new RegExp(truth ?? "") })
+    .getByRole("button", { name: truth === "Tumor" ? /Agree/ : new RegExp(truth ?? "") })
     .click();
   await expect.poll(() => currentCell(page)).not.toBe(object);
   return truth !== "Tumor";
@@ -76,7 +76,7 @@ test("the changed zone appears after ten corrections and is reviewed like any zo
   const object = ((await first.getAttribute("aria-label")) ?? "").split(" ")[0];
   await first.click();
   await expect.poll(() => currentCell(page)).toBe(object);
-  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Keep/ }).click();
+  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Agree/ }).click();
   await expect(
     panel(page).getByRole("button", { name: new RegExp(`^${object} .*agree`) }),
   ).toBeVisible();

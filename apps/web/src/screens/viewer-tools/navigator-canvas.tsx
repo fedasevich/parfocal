@@ -107,7 +107,7 @@ export function NavigatorCanvas({
               title={t`Cell 6 of 12 · AI says "tumor or immune"`}
               where="area 2"
               keys={[
-                { key: "K", label: "Keep", main: true },
+                { key: "K", label: "Agree", main: true },
                 { key: "1", label: "tumor" },
                 { key: "3", label: "immune" },
                 { key: "J", label: "skip" },

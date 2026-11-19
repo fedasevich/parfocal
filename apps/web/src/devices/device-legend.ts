@@ -38,9 +38,9 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", "J"],
-      ["Keep", "K"],
+      ["Agree", "K"],
       ["Retype", "1 to 4"],
-      ["Not a cell", "X"],
+      ["Disagree", "X"],
     ],
     annotate: [
       ["Select", "Drag on empty tissue"],
@@ -58,7 +58,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", "J"],
-      ["Keep", "K"],
+      ["Agree", "K"],
       ["Retype", "1 to 4"],
       ["Pan", "Two fingers"],
     ],
@@ -78,7 +78,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", "Left button"],
-      ["Keep", "Right button"],
+      ["Agree", "Right button"],
       ["Retype", "1 to 4 on the keyboard"],
       ["Pan", "Tilt, speed follows tilt"],
     ],
@@ -98,9 +98,9 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", "B"],
-      ["Keep", "A"],
+      ["Agree", "A"],
       ["Retype", "D-pad"],
-      ["Not a cell", "X"],
+      ["Disagree", "X"],
     ],
     annotate: [
       ["Pan", "Left stick"],
@@ -118,9 +118,9 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", "Swipe the sheet"],
-      ["Keep", "Keep button"],
+      ["Agree", "Keep button"],
       ["Retype", "Type buttons"],
-      ["Not a cell", "Button"],
+      ["Disagree", "Button"],
     ],
     annotate: [
       ["Draw", "Pen"],
@@ -138,7 +138,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", "J"],
-      ["Keep", "K"],
+      ["Agree", "K"],
       ["Retype", "1 to 4"],
       ["Back", "Shift+J"],
     ],
@@ -158,7 +158,7 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
     ],
     review: [
       ["Next cell", footswitchDefaultKey],
-      ["Keep", "K"],
+      ["Agree", "K"],
       ["Back", "Shift+J"],
       ["Retype", "Use the keyboard"],
     ],

@@ -14,7 +14,6 @@ import { type AnnotateTask, taskClassesOf } from "../annotations/annotate-task.t
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { AutoLayer } from "../annotations/auto-layer.tsx";
 import { BrushLayer } from "../annotations/brush-layer.tsx";
-import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
 import { contextBarOf, takesActiveClass } from "../annotations/context-bar.ts";
 import { ContextBarView } from "../annotations/context-bar.tsx";
@@ -79,6 +78,7 @@ import { DockCard, type InspectorSection, type InspectorSlots } from "./inspecto
 import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { StageMagnification, type ViewerModule } from "./magnification-control.tsx";
+import { NoClassesCard } from "./no-classes-card.tsx";
 import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OpenFailureAlert } from "./open-failure-alert.tsx";
@@ -104,6 +104,7 @@ import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loadi
 import type { ScanTissue } from "./tissue-scan.ts";
 import { toolHintText } from "./tool-hint-text.ts";
 import { usePanelKey, usePanHide } from "./use-pan-hide.ts";
+import { useSelectionClass } from "./use-selection-class.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
@@ -404,7 +405,7 @@ function OpenedSlide({
     [undoEdit, redoEdit, aiBridge, aiIsNewer],
   );
   useHotkeys(undoBindings, onUndoKey);
-  const [projectClasses, setProjectClasses] = useState<readonly ProjectClass[]>([]);
+  const [fetched, setProjectClasses] = useState<readonly ProjectClass[] | null>(null);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   useEffect(() => {
     if (snapshot !== null || projectId === undefined) return;
@@ -420,31 +421,27 @@ function OpenedSlide({
       cancelled = true;
     };
   }, [projectId, snapshot]);
-  const classes = useMemo(
-    () => taskClassesOf(snapshot, projectClasses),
-    [snapshot, projectClasses],
-  );
+  const classes = useMemo(() => taskClassesOf(snapshot, fetched ?? []), [snapshot, fetched]);
   useEffect(() => {
     setActiveClass((current) => current ?? classes[0]?.id ?? null);
   }, [classes]);
-  const pickSlot = useCallback(
-    (slot: number) => {
-      const picked = classes[slot - 1];
-      if (picked !== undefined) setActiveClass(picked.id);
-    },
-    [classes],
-  );
-  const classTool = takesActiveClass(tool);
-  useClassKeys(pickSlot, classTool);
-  const pickClassKey = useCallback((classKey: string) => setActiveClass(classKey), []);
+  const { stripClass, selectionTakesClass, pickClassKey } = useSelectionClass({
+    saved,
+    tool,
+    selectedIds,
+    classes,
+    activeClass,
+    setActiveClass,
+  });
   const activeIndex = classes.findIndex((item) => item.id === activeClass);
-  const activeInfo = activeIndex < 0 ? null : (classes[activeIndex] ?? null);
+  const activeInfo = classes[activeIndex];
   const markerTotal = markersOf(annotations).length;
-  const contextModel = contextBarOf(tool, {
+  const contextBase = contextBarOf(tool, {
     activeSlot: activeIndex < 0 || activeIndex >= maxClassKeys ? null : activeIndex + 1,
     activeName: activeInfo?.name ?? null,
     counted: markerTotal,
   });
+  const contextModel = selectionTakesClass ? { ...contextBase, classStrip: true } : contextBase;
   const wantsHints = workspace === "annotate" || tool !== restingTool;
   const { shown: hintsShown, dismiss: dismissHints } = useHintsOnce(tool, wantsHints);
   const hintBindings = useBindings(["viewer"], ["hidehint"], hintsShown);
@@ -783,8 +780,9 @@ function OpenedSlide({
                     model={barModel}
                     onCloseHints={dismissHints}
                     classes={classes}
-                    activeClass={activeClass}
+                    activeClass={stripClass}
                     onPick={pickClassKey}
+                    forSelection={selectionTakesClass}
                     proposals={
                       proposalCount > 0
                         ? {
@@ -1043,6 +1041,10 @@ function OpenedSlide({
                         />
                       ) : null}
                     </DockCard>
+                    <NoClassesCard
+                      projectId={fetched !== null && classes.length === 0 ? projectId : undefined}
+                      section={tab === "display" ? "display" : "objects"}
+                    />
                     <DockCard section="objects" order={3}>
                       {showsCountPanel(setup, {
                         counting: tool === "marker",

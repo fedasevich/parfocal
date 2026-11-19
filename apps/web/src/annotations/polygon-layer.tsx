@@ -245,6 +245,7 @@ export function PolygonLayer({
           key={shape.id}
           data-testid="polygon-shape"
           data-points={shape.points.length >> 1}
+          data-class={shape.classKey ?? ""}
           data-vertices={Array.from(shape.points, (value) => Math.round(value)).join(" ")}
           d={pathOf(verticesOf(shape.points).map(project), true)}
           className="fill-accent/15 stroke-accent"

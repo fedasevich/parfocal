@@ -81,7 +81,7 @@ test("a reviewer fades, zones and decides cells on a paged result of 250,000 nuc
   );
   expect(faded.size).toBeGreaterThan(1);
 
-  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Keep/ }).click();
+  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Agree/ }).click();
   await expect(page.getByText(/: agree$/).first()).toBeVisible();
   await expect.poll(async () => (await savedDecisions(page)).length).toBeGreaterThan(0);
   const saved = (await savedDecisions(page)).find((item) => /^C\d+$/.test(item.object));
@@ -115,7 +115,7 @@ test("the zone list covers the slide and a far field keeps its zone and the firs
   await tiles(page).first().click();
   await expect(page).toHaveURL(/object=C\d+/);
   const firstObject = new URL(page.url()).searchParams.get("object") ?? "";
-  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Keep/ }).click();
+  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Agree/ }).click();
   await expect(page.getByText(/: agree$/).first()).toBeVisible();
   await expect.poll(async () => (await savedDecisions(page)).length).toBeGreaterThan(0);
 
