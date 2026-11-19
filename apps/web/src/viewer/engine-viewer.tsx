@@ -104,7 +104,7 @@ export function EngineViewer({
   const taskDetail = okData(taskQuery.data);
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
-  const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
+  const annotateTask = annotateTaskOf(taskDetail, slideId, owner, object);
   const retype = useCellRetype(projectId, annotateTask);
   const withdrawn = taskDetail?.kind === "review" && isWithdrawn(taskDetail);
   const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;

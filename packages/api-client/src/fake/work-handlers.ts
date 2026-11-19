@@ -496,17 +496,63 @@ const scopeKinds: Record<string, SearchHit["kind"][]> = {
   patients: ["patient-case"],
 };
 
-export const searchScenario = (query: string, scope = "all"): SearchHit[] => {
+const objectToken = /^(?:T\d+[·.-])?[TCRZMAN]\d+[a-z]*[+⁺]?$/i;
+
+const canonicalObject = (token: string): string =>
+  token.toUpperCase().replace(/^(T\d+)[.-]/, "$1·");
+
+const knownObjects: Record<number, readonly string[]> = {
+  1: ["T1", "T2", "T3", "T4", "T5", "C145", "C1394", "T1·C145", "T2·C145", "T2·C1394", "R1"],
+};
+
+const exactObjectHits = (query: string, slideId: string | null): SearchHit[] => {
+  const words = query
+    .trim()
+    .split(/[\s/]+/)
+    .filter(Boolean);
+  const token = words.at(-1);
+  if (token === undefined || !objectToken.test(token)) return [];
+  const object = canonicalObject(token);
+  const slideWords = words.slice(0, -1).map(fold);
+  return Object.entries(knownObjects).flatMap(([index, objects]) => {
+    const slide = slideByIndex(Number(index));
+    if (!objects.includes(object) || (slideId !== null && slide.id !== slideId)) return [];
+    const where = fold([slide.project, slide.caseLabel, slide.label].filter(Boolean).join(" "));
+    if (!slideWords.every((word) => where.includes(word))) return [];
+    return [
+      {
+        kind: "object" as const,
+        id: `${slide.project}/${slide.caseLabel}/${slide.label}/${object}`,
+        label: `${object} on ${slide.label}`,
+        project: toProjectRef(projectByCode(slide.project)),
+        case_label: slide.caseLabel,
+        slide_id: slide.id,
+        object_id: object,
+      },
+    ];
+  });
+};
+
+export const searchScenario = (
+  query: string,
+  scope = "all",
+  slideId: string | null = null,
+): SearchHit[] => {
   const kinds = scopeKinds[scope];
   const tokens = fold(query.trim()).split(/\s+/).filter(Boolean);
   if (tokens.join("").length < 2) return [];
-  return searchIndex()
-    .filter((hit) => {
-      if (kinds && !kinds.includes(hit.kind)) return false;
-      const haystack = fold(`${hit.label} ${pathOf(hit)}`);
-      return tokens.every((token) => haystack.includes(token));
-    })
-    .slice(0, kinds ? 20 : 8);
+  const exact = kinds && !kinds.includes("object") ? [] : exactObjectHits(query, slideId);
+  const fuzzy = searchIndex().filter((hit) => {
+    if (kinds && !kinds.includes(hit.kind)) return false;
+    if (slideId !== null && hit.kind === "object" && hit.slide_id !== slideId) return false;
+    const haystack = fold(`${hit.label} ${pathOf(hit)}`);
+    return tokens.every((token) => haystack.includes(token));
+  });
+  const seen = new Set(exact.map((hit) => `${hit.slide_id}/${hit.object_id}`));
+  return [...exact, ...fuzzy.filter((hit) => !seen.has(`${hit.slide_id}/${hit.object_id}`))].slice(
+    0,
+    kinds ? 20 : 8,
+  );
 };
 
 export const reviewOrderOf = reviewOrderFor;
@@ -586,7 +632,10 @@ export function workHandlers(): RequestHandler[] {
     getSearchMockHandler(({ request }) => {
       const params = new URL(request.url).searchParams;
       const query = params.get("q") ?? "";
-      return { query, hits: searchScenario(query, params.get("scope") ?? "all") };
+      return {
+        query,
+        hits: searchScenario(query, params.get("scope") ?? "all", params.get("slide_id")),
+      };
     }),
     getListAnnouncementsMockHandler(() => currentAnnouncements().map(toAnnouncement)),
     getCreateAnnouncementMockHandler(async ({ request }) => {

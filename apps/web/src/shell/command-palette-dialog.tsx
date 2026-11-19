@@ -21,7 +21,31 @@ type Row = PaletteCommand & { group: PaletteGroup; score: number };
 
 const perGroupLimit = 8;
 
+const objectScore = 100;
+
+function objectLabel(hit: SearchHit): string {
+  const object = hit.object_id;
+  if (object === null || object === undefined) return hit.label;
+  const shown = object.replace(/^(T\d+)\./, "$1\u00b7");
+  const at = hit.label.lastIndexOf(` ${object}`);
+  const slide = at > 0 ? hit.label.slice(0, at) : null;
+  if (slide === null) return hit.label;
+  const resolved = hit.resolved_from ? ` (${hit.resolved_from})` : "";
+  return `${shown}${resolved} on ${slide}`;
+}
+
 function hitRow(hit: SearchHit, query: string, run: () => void): Row {
+  if (hit.kind === "object") {
+    return {
+      id: `hit-${hit.kind}-${hit.id}-${hit.object_id ?? ""}`,
+      group: "Go to",
+      icon: hitIcons[hit.kind],
+      label: objectLabel(hit),
+      matched: [],
+      score: objectScore,
+      run,
+    };
+  }
   const label =
     hit.project && hit.kind !== "project" ? `${hit.label} · ${hit.project.code}` : hit.label;
   const keywords = [hit.id, hit.case_label ?? "", hit.project?.code ?? ""];
@@ -37,19 +61,53 @@ function hitRow(hit: SearchHit, query: string, run: () => void): Row {
   };
 }
 
-function usePlaces(query: string, close: () => void): Row[] {
+type OpenSlide = { projectId: string; slideId: string; taskId: string | undefined };
+
+function usePlaces(query: string, close: () => void, open: OpenSlide | null): Row[] {
   const goTo = useGoTo();
+  const router = useRouter();
   const projects = okData(useListProjects().data) ?? [];
   const hits =
-    okData(useSearch({ q: query }, { query: { enabled: query.length >= 2 } }).data)?.hits ?? [];
+    okData(
+      useSearch(
+        {
+          q: query,
+          ...(open === null
+            ? {}
+            : {
+                project_id: open.projectId,
+                slide_id: open.slideId,
+                ...(open.taskId === undefined ? {} : { task_id: open.taskId }),
+              }),
+        },
+        { query: { enabled: query.length >= 2 } },
+      ).data,
+    )?.hits ?? [];
   if (query.length < 2) return [];
-  const open = (href: string) => () => {
+  const opener = (href: string) => () => {
     close();
     void goTo(href);
   };
   const fromServer = hits.flatMap((hit) => {
     const href = hitHref(hit);
-    return href === null ? [] : [hitRow(hit, query, open(href))];
+    if (href === null) return [];
+    if (hit.kind === "object" && open !== null && hit.slide_id === open.slideId) {
+      const stay = () => {
+        close();
+        void router.navigate({
+          to: ".",
+          search: ((previous: Record<string, unknown>) => ({
+            ...previous,
+            object: hit.object_id,
+            x: undefined,
+            y: undefined,
+            z: undefined,
+          })) as never,
+        });
+      };
+      return [hitRow(hit, query, stay)];
+    }
+    return [hitRow(hit, query, opener(href))];
   });
   const known = new Set(fromServer.map((row) => row.id));
   const fromList = projects.flatMap((project) => {
@@ -59,7 +117,7 @@ function usePlaces(query: string, close: () => void): Row[] {
       label: `${project.code} · ${project.name}`,
     };
     if (matchText(hit.label, query) === null) return [];
-    const row = hitRow(hit, query, open(destinations.project(project.id)));
+    const row = hitRow(hit, query, opener(destinations.project(project.id)));
     return known.has(row.id) ? [] : [row];
   });
   return [...fromServer, ...fromList];
@@ -80,7 +138,16 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
   const hints = useHintsSeen();
   const projects = okData(useListProjects().data) ?? [];
   const trimmed = query.trim();
-  const places = usePlaces(trimmed, close);
+  const search = useRouterState({ select: (state) => state.location.search as { task?: unknown } });
+  const openSlide: OpenSlide | null =
+    params.projectId && params.slideId
+      ? {
+          projectId: params.projectId,
+          slideId: params.slideId,
+          taskId: typeof search.task === "string" ? search.task : undefined,
+        }
+      : null;
+  const places = usePlaces(trimmed, close, openSlide);
   const entries = paletteEntries({
     projectId: params.projectId ?? projects[0]?.id ?? "",
     onSlide: /^\/projects\/[^/]+\/slides\/[^/]+$/.test(pathname),

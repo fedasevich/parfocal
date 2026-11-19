@@ -204,6 +204,16 @@ export function StageReviewObjects({
     setCurrent(id);
     flyTo(id);
   };
+  const focusedObject = useRef<string | null>(null);
+  useEffect(() => {
+    if (object === undefined || focusedObject.current === object) return;
+    if (!objects.some((item) => item.object === object)) return;
+    focusedObject.current = object;
+    setDone(false);
+    setCurrent(object);
+    const area = outlineArea(objects.find((item) => item.object === object)?.outline);
+    if (area !== null) void engine.flyToArea(area);
+  }, [object, objects, engine]);
   const stepGoal = useRef<CalmCamera | null>(null);
   const stepTo = (id: string) => {
     const cell = outlineCentre(objects.find((item) => item.object === id)?.outline);
