@@ -208,6 +208,15 @@ PROTO-036 (one-click annotation has its model picker) shows two rows, Best and G
 
 Your choice: 
 
+### 157. Five display defaults that ADR 0132 leaves open
+
+PROTO-045 (the viewer's Display tab has the mock's preset and groups) built these defaults, because ADR 0132 (display settings, presets and task locks, Proposed) does not settle them. Each can change later without data loss.
+
+- **A. Keep all five (recommended).** The Fade, Mark unsure, Bands switch stays, below the groups. The task's own result set is left out of the result set list, since the review draws it already. A task lock on other result sets disables their rows and says why. Turning ID labels off also hides the region tags. Colour by decision recolours the review outlines.
+- **B. Change some.** Name which ones and how.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-18 after a sweep of stale tasks. Tasks an agent can finish went back to the ready list. What is left in review waits on you or on the next release.
