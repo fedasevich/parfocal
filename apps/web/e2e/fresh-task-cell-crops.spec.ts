@@ -20,7 +20,7 @@ test("a fresh task's cells grid has every tile answered by the crop route", asyn
   });
   await page
     .getByTestId("stage-review-objects")
-    .getByRole("button", { name: "Show the cells grid" })
+    .getByRole("button", { name: "Show the cells" })
     .click();
   const grid = page.getByTestId("stage-cells-grid");
   const tiles = grid.locator("[data-crop]");

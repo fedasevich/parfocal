@@ -214,6 +214,7 @@ type ObjectFootProps = {
   onSaveNote: () => void;
   onAnswer: (raw: string) => void;
   onClose: () => void;
+  cellButtons?: boolean;
 };
 
 export function ObjectFoot({
@@ -230,6 +231,7 @@ export function ObjectFoot({
   onSaveNote,
   onAnswer,
   onClose,
+  cellButtons = false,
 }: ObjectFootProps) {
   const { t } = useLingui();
   const format = useFormat();
@@ -276,7 +278,7 @@ export function ObjectFoot({
       ) : null}
       <ConfidenceByColour chip={text.chip} />
       <b className="text-body font-semibold">{text.question}</b>
-      {object.kind === "cell" ? null : (
+      {object.kind === "cell" && !cellButtons ? null : (
         <DecisionButtons
           decisionStyle={style.kind}
           size="large"

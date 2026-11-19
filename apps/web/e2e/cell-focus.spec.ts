@@ -40,9 +40,8 @@ test("focus mode on the real stage types the current cell by key and the focus k
   await page.keyboard.press("Control+Backslash");
   await expect(page.getByTestId("focus-mode")).toHaveCount(0);
   await expect(page.getByRole("complementary", { name: "Side panel" })).toBeVisible();
-  await expect(
-    page.locator('[data-testid="stage-review-object"][data-object="C2"]'),
-  ).toHaveAttribute("data-decision", "agree");
+  await expect(page.getByTestId("object-foot")).toHaveAttribute("data-object", "C2");
+  await expect(page.getByTestId("object-row-cells")).toContainText("1 of 3 decided");
 });
 
 test("cells are answered with the mouse only on the slide", async ({ page }) => {

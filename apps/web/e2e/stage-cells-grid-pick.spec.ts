@@ -24,7 +24,7 @@ test("a tile from the crop route centres the stage on its cell and selects it", 
     timeout: 20_000,
   });
   const card = page.getByTestId("stage-review-objects");
-  await card.getByRole("button", { name: "Show the cells grid" }).click();
+  await card.getByRole("button", { name: "Show the cells" }).click();
   const grid = page.getByTestId("stage-cells-grid");
   const tiles = grid.locator("[data-crop]");
   await expect(tiles).toHaveCount(3);

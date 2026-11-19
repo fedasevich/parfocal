@@ -3338,11 +3338,6 @@ msgstr ""
 msgid "AI objects"
 msgstr ""
 
-#. placeholder {0}: objects.length
-#: src/viewer/stage-review-objects.tsx
-msgid "AI objects · {0}"
-msgstr ""
-
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr ""
@@ -4534,8 +4529,10 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
+#. placeholder {0}: cell.object
 #. placeholder {0}: selection.id
 #: ../../packages/ui/src/components/findings-panel.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Cell {0}"
 msgstr ""
 
@@ -7548,6 +7545,7 @@ msgid "Go to {0}{1}"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Go to {firstOpen}, the first open object"
 msgstr ""
 
@@ -7781,10 +7779,6 @@ msgstr ""
 #: src/screens/new-task/how-step.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Hide the AI for a first read"
-msgstr ""
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Hide the cells grid"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -14276,10 +14270,6 @@ msgstr ""
 #: ../../packages/ui/src/components/cells-panel.tsx
 #: src/screens/review/viewer-frame.tsx
 msgid "Show the cells"
-msgstr ""
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Show the cells grid"
 msgstr ""
 
 #: ../../packages/ui/src/components/cells-panel.tsx

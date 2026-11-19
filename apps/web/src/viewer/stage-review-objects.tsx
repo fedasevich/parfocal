@@ -25,6 +25,7 @@ import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
+import { StageObjectsPanel } from "./stage-objects-panel.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
@@ -211,6 +212,15 @@ export function StageReviewObjects({
     },
     ready && typedCell !== null,
   );
+  const listKeysLive =
+    ready && !guided && focus === null && currentItem !== undefined && typedCell === null;
+  useAnswerKeys(
+    answersOf(session.style, session.classes, currentItem),
+    (raw) => {
+      if (currentItem !== undefined) answer(currentItem, raw);
+    },
+    listKeysLive,
+  );
   const index = current === null ? -1 : order.indexOf(current);
   const shown = guided ? objects.filter((item) => item.object === current) : objects;
   return (
@@ -264,11 +274,11 @@ export function StageReviewObjects({
           data-current={current ?? ""}
           className="flex flex-col gap-2"
         >
-          <h3 className="m-0 text-body-sm font-semibold">
-            {guided
-              ? t`Object ${index + 1} of ${objects.length} · ${decided.size} decided`
-              : t`AI objects · ${objects.length}`}
-          </h3>
+          {guided ? (
+            <h3 className="m-0 text-body-sm font-semibold">
+              {t`Object ${index + 1} of ${objects.length} · ${decided.size} decided`}
+            </h3>
+          ) : null}
           {coachOn ? (
             <StageCoachInPanel
               keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
@@ -300,30 +310,31 @@ export function StageReviewObjects({
               )}
             </div>
           ) : null}
-          {hasCells ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="justify-self-start"
-              aria-pressed={gridOpen}
-              onClick={() => setGridOpen((open) => !open)}
-            >
-              {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
-            </Button>
+          {guided ? (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {shown.map((item) => (
+                <ObjectRow
+                  key={item.object}
+                  session={session}
+                  object={item}
+                  current={current === item.object}
+                  onPick={() => pick(item.object)}
+                  onAnswer={(raw) => answer(item, raw)}
+                  onComments={() => onComments(item.object)}
+                />
+              ))}
+            </ul>
+          ) : ready ? (
+            <StageObjectsPanel
+              session={session}
+              current={current}
+              onPick={(id) => (id === null ? setCurrent(null) : pick(id))}
+              onAnswer={answer}
+              onNote={(id) => (decided.has(id) ? onNote?.(id) : onComments(id))}
+              onOpenCells={() => setGridOpen(true)}
+              cellTyped={typedCell !== null}
+            />
           ) : null}
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
-            {shown.map((item) => (
-              <ObjectRow
-                key={item.object}
-                session={session}
-                object={item}
-                current={current === item.object}
-                onPick={() => pick(item.object)}
-                onAnswer={(raw) => answer(item, raw)}
-                onComments={() => onComments(item.object)}
-              />
-            ))}
-          </ul>
         </section>
       </DockCard>
     </>

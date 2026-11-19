@@ -408,7 +408,7 @@ export function ObjectList({
   const row =
     "grid w-full cursor-pointer grid-cols-[44px_1fr_auto_auto] items-start gap-2 rounded-ctl border-0 bg-transparent px-1 py-2 text-left text-body-sm text-fg hover:bg-chrome-2 aria-[current=true]:bg-surf-hl";
   return (
-    <div className="grid gap-3">
+    <div data-testid="object-list" className="grid gap-3">
       <fieldset
         aria-label={t`Show`}
         className="m-0 flex min-w-0 gap-1.5 overflow-hidden border-0 p-0"
@@ -431,7 +431,12 @@ export function ObjectList({
         {regions.map((item) => {
           const decided = answer(item.object);
           return (
-            <li key={item.object}>
+            <li
+              key={item.object}
+              data-testid="object-row"
+              data-object={item.object}
+              data-decision={decided?.value ?? ""}
+            >
               <button
                 type="button"
                 aria-current={item.object === current ? "true" : undefined}
@@ -471,7 +476,7 @@ export function ObjectList({
           );
         })}
         {onOpenCells && cellsHit ? (
-          <li>
+          <li data-testid="object-row-cells">
             <div
               aria-current={current?.includes("·") ? "true" : undefined}
               className="grid grid-cols-[44px_1fr_auto] items-center gap-2 rounded-ctl px-1 py-2 text-body-sm aria-[current=true]:bg-surf-hl"

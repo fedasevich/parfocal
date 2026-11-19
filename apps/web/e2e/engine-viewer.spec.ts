@@ -80,11 +80,15 @@ test("the full viewer decides an AI object on the real stage", async ({ page }) 
   await page.goto(objectsViewer);
   await ready(page);
   const list = page.getByTestId("stage-review-objects");
-  await expect(list.getByTestId("stage-review-object").first()).toBeVisible();
-  const row = list.getByTestId("stage-review-object").first();
-  const answers = row.getByRole("group").getByRole("button");
+  const row = list.locator('[data-testid="object-row"][data-decision=""]').first();
+  await expect(row).toBeVisible();
+  const object = (await row.getAttribute("data-object")) ?? "";
+  await row.getByRole("button").click();
+  const answers = page.getByTestId("object-foot").getByRole("group").getByRole("button");
   await answers.first().click();
-  await expect(row).not.toHaveAttribute("data-decision", "");
+  await expect(
+    list.locator(`[data-testid="object-row"][data-object="${object}"]`),
+  ).not.toHaveAttribute("data-decision", "");
 });
 
 test("the annotate task decides an AI object on the real stage", async ({ page }) => {
@@ -249,15 +253,14 @@ test("outlined cells draw on the real stage and the type bar decides the current
   await ready(page);
   await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-objects", "3");
   const list = page.getByTestId("stage-review-objects");
-  const row = list.locator('[data-testid="stage-review-object"][data-object="C2"]');
-  await row.getByRole("button", { name: /C2/ }).click();
+  await list.getByRole("button", { name: "Show the cells" }).click();
+  await page.getByTestId("stage-cells-grid").getByRole("button", { name: /^C2 / }).click();
   const bar = page.getByTestId("cell-type-bar");
   await expect(bar).toHaveAttribute("aria-label", "Type for C2");
   await bar.getByRole("button", { name: /Stroma/ }).click();
-  await expect(row).toHaveAttribute("data-decision", "disagree");
   await expect(bar).toHaveAttribute("data-chosen", "Stroma");
+  await expect(list.getByTestId("object-row-cells")).toContainText("1 of 3 decided");
   await page.keyboard.press("k");
-  await expect(row).toHaveAttribute("data-decision", "agree");
   await expect(bar).toHaveAttribute("data-chosen", "keep");
 });
 
@@ -274,15 +277,16 @@ test("guided review on outlined cells moves to the next cell after a type", asyn
 test("a decision note with a reason is written and saved on the stage", async ({ page }) => {
   await page.goto(objectsViewer);
   await ready(page);
-  const row = page.locator('[data-testid="stage-review-object"][data-object="T2"]');
-  await row
+  const row = page.locator('[data-testid="object-row"][data-object="T2"]');
+  await row.getByRole("button").click();
+  const card = page.getByTestId("object-foot");
+  await card
     .getByRole("group", { name: "Your answer on T2" })
     .getByRole("button", { name: /Disagree/ })
     .click();
   await expect(row).toHaveAttribute("data-decision", "disagree");
-  await row.getByRole("button", { name: "Notes and comments" }).click();
+  await card.getByRole("button", { name: /Add a note/ }).click();
   const notes = page.getByTestId("stage-object-notes");
-  await notes.getByRole("button", { name: "Add a note" }).click();
   const field = page.getByRole("textbox", { name: "Note on your decision for T2" });
   await expect(field).toBeFocused();
   await page.getByRole("button", { name: "Boundary is off" }).click();
