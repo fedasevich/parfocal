@@ -63,7 +63,7 @@ class ModelCells:
 
 
 def folder_of(label: str, root: Path = MODEL_RESULTS) -> Path:
-    return root / label.split(".", 1)[0].lower().replace("_", "-")
+    return root / label.lower().replace("_", "-").replace(".", "-")
 
 
 def scaled(value: float | None) -> int:

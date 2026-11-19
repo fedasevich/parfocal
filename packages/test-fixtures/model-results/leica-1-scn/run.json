@@ -1,0 +1,61 @@
+{
+  "slide": "Leica-1.scn",
+  "dimensions": [
+    53130,
+    153470
+  ],
+  "mpp": 0.5,
+  "machine": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+  "torch": "2.15.0",
+  "tumor_map": {
+    "box_cells": [
+      1089,
+      1794,
+      1217,
+      1922
+    ],
+    "box_px": [
+      33872,
+      55801,
+      37854,
+      59782
+    ],
+    "scale": 2.05761316872428,
+    "listed_from_peak": 0.97,
+    "tiles": 16,
+    "map_s": 12.594742167042568,
+    "areas_over_outline": 48,
+    "regions": 4,
+    "providers": [
+      "CPUExecutionProvider"
+    ]
+  },
+  "cells": {
+    "crop_px": [
+      17088,
+      40448,
+      19136,
+      42496
+    ],
+    "weights": "instanseg_models_v0.1.1/brightfield_nuclei",
+    "count": 603,
+    "by_class": {
+      "Stroma": 218,
+      "Immune": 321,
+      "Tumor": 64
+    },
+    "input_side": [
+      2048,
+      2048
+    ],
+    "segment_s": 25.790706292027608,
+    "rings_s": 0.2585760420188308,
+    "typer_windows": 16,
+    "typer_window_px": 512,
+    "typer_s": 26.247988249990158
+  },
+  "bytes": {
+    "cells.geojson": 230086,
+    "regions.parfocal.json": 1882
+  }
+}

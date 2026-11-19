@@ -7,6 +7,29 @@
   "mpp": 0.499,
   "machine": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
   "torch": "2.15.0",
+  "tumor_map": {
+    "box_cells": [
+      0,
+      0,
+      72,
+      96
+    ],
+    "box_px": [
+      0,
+      0,
+      2244,
+      2992
+    ],
+    "scale": 2.0534979423868314,
+    "listed_from_peak": 0.5,
+    "tiles": 7,
+    "map_s": 20.87551529193297,
+    "areas_over_outline": 6,
+    "regions": 6,
+    "providers": [
+      "CPUExecutionProvider"
+    ]
+  },
   "cells": {
     "crop_px": [
       0,
@@ -26,13 +49,14 @@
       2003,
       2044
     ],
-    "segment_s": 63.18551216699416,
-    "rings_s": 4.531921415997203,
+    "segment_s": 101.83366474998184,
+    "rings_s": 1.6490678749978542,
     "typer_windows": 13,
     "typer_window_px": 513,
-    "typer_s": 88.84586620802293
+    "typer_s": 62.94342429190874
   },
   "bytes": {
-    "cells.geojson": 517758
+    "cells.geojson": 517758,
+    "regions.parfocal.json": 2183
   }
 }
