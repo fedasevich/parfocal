@@ -96,6 +96,7 @@ test("the annotate task decides an AI object on the real stage", async ({ page }
   await ready(page);
   await noPrototypePictures(page);
   await expect(page.getByTestId("ai-object")).toHaveCount(6);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   await page.keyboard.press("Shift+G");
   const guide = page.getByTestId("guided-check");
   await expect(guide).toHaveAttribute("data-current", "C1");

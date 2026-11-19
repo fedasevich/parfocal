@@ -6669,7 +6669,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Add the notes list under the threads as ADR 0285 (a decision note stays on the decision) describes, open a thread as a popover at its pin with the list kept, rename the button, and fold the open cells into one checklist row that opens the cells panel.
   Done when a browser test writes a note on a Disagree, finds it under "Your decision notes", opens a thread from the list and sees the popover at the pin with the list still shown, and reads one cells row in "Before you submit".
   Size: S.
-- [ ] PROTO-047 · The annotate workspace opens on Display and its auto region bar offers accept and discard
+- [x] PROTO-047 · The annotate workspace opens on Display and its auto region bar offers accept and discard
   With a task open the annotate workspace opens on the Objects tab's review list where the mock opens on Display with the layer tree, and the auto region bar shows only class swatches where the mock shows the tier pill, the scale, "Discard Esc" and "Accept as tumor ↵" (rows 60 and 61).
   Open annotate on Display, and draw the tier pill, scale and the accept and discard buttons in the bar while proposals wait, as ADR 0255 (smart select gestures and proposals) puts them.
   Done when a browser test switches to Annotate and finds the Display tab selected with the Layers block, runs auto region on the fixture slide and accepts with Enter and discards with Esc from the bar.

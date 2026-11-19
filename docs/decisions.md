@@ -217,6 +217,15 @@ PROTO-045 (the viewer's Display tab has the mock's preset and groups) built thes
 
 Your choice: 
 
+### 158. Whether guided check moves on at the key press or at the server's answer
+
+In guided check, the next object appears when the server confirms the decision. On a busy CI runner that round trip puts the next object test near its 126 ms budget (ADR 0353, main path budgets are a p95 after a warm up). The guard that a fast second key never touches another object depends on waiting.
+
+- **A. Keep waiting for the server's answer (recommended).** Safe by design, a few tens of ms slower, and the budget test can stay near its limit on busy runners.
+- **B. Move on at the key press and roll back if the save fails.** Feels instant, needs a new task to keep the fast second key guard and to undo a failed save on screen.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-18 after a sweep of stale tasks. Tasks an agent can finish went back to the ready list. What is left in review waits on you or on the next release.

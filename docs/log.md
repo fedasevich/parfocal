@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-19
 
+- PROTO-047 (the annotate workspace opens on Display and its auto region bar offers accept and discard): Annotate opens on the Display tab with the Layers block even with a task open, the auto region bar gains the scale pill next to the tier pill, Discard Esc and Accept as tumor, and a browser test accepts with Enter and discards with Esc.
 - PROTO-046 (comments, decision notes and the Opinion checklist read as in the mock): the Comments tab has New comment on an ID and a Your decision notes list under the threads, a thread card flies to its pin and opens the thread there with the lists kept, and Before you submit folds open cells into one row that opens the cells panel on the first open cell.
 - PROTO-045 (the viewer's Display tab has the mock's preset and groups): the stage's Display tab in a review task has the Preset menu with Save as and Shift keys and the groups How objects draw and What the AI shows wired to the live overlays, with the map buttons under What the AI shows and result sets in both workspaces. Defaults that ADR 0132 leaves open are decision 157.
 - PROTO-049 (the command palette passes its contrast check during a route change): a unit test now checks every quiet text token against eight surfaces in both themes at WCAG AA, and all pass. The #8d8d8d text was caught mid-fade of the view transition, which the axe wait from TEST-040 already handles, so no colour changed.

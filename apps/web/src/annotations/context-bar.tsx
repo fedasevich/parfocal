@@ -52,9 +52,12 @@ export function ClassStrip({ classes, activeClass, onPick }: ClassStripProps) {
   );
 }
 
+const scaleText = (micronsPerPixel: number) => String(Number(micronsPerPixel.toFixed(2)));
+
 type ProposalActions = {
   count: number;
   activeName: string | null;
+  micronsPerPixel: number | null;
   onAccept: () => void;
   onDiscard: () => void;
 };
@@ -91,6 +94,11 @@ export function ContextBarView({
       >
         {strip}
         <ContextExtrasSlot />
+        {proposals.micronsPerPixel === null ? null : (
+          <ContextPill data-testid="proposal-scale">
+            <Trans>nuclei · {scaleText(proposals.micronsPerPixel)} µm</Trans>
+          </ContextPill>
+        )}
         <ContextDivider />
         <span className="inline-flex items-center gap-1.5 font-mono">
           <i
