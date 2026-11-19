@@ -1,5 +1,4 @@
 import {
-  ApiError,
   getGetReviewTaskQueryKey,
   getListSlideResultSetsQueryKey,
   getModelRun,
@@ -15,6 +14,7 @@ import {
   sharedLayerKey,
   slideStatusKey,
 } from "../annotations/annotate-task-api.ts";
+import { useRefusals } from "../screens/refusals.ts";
 
 const watchMs = 2000;
 
@@ -31,12 +31,9 @@ export type TaskRunJoin = {
   readonly phase: TaskRunPhase;
   readonly runId: string | null;
   readonly status: JobStatus | null;
-  readonly code: string;
+  readonly refusal: string;
   readonly watch: (runId: string) => void;
 };
-
-const problemCode = (error: unknown) =>
-  error instanceof ApiError ? (error.problem?.code ?? `${error.status}`) : "network";
 
 export function useTaskRunJoin(options: {
   readonly projectId: string;
@@ -48,7 +45,10 @@ export function useTaskRunJoin(options: {
   const [phase, setPhase] = useState<TaskRunPhase>("idle");
   const [runId, setRunId] = useState<string | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
-  const [code, setCode] = useState("");
+  const [refusal, setRefusal] = useState("");
+  const { refusalOf } = useRefusals();
+  const refused = useRef(refusalOf);
+  refused.current = refusalOf;
   const latest = useRef({ task, onJoined: options.onJoined });
   latest.current = { task, onJoined: options.onJoined };
 
@@ -102,7 +102,7 @@ export function useTaskRunJoin(options: {
         setPhase(pinned ? "joined" : "scoped");
       } catch (error) {
         stopped = true;
-        setCode(problemCode(error));
+        setRefusal(refused.current(error));
         setPhase("failed");
       } finally {
         looking = false;
@@ -115,5 +115,5 @@ export function useTaskRunJoin(options: {
     };
   }, [runId, projectId, queryClient]);
 
-  return { phase, runId, status, code, watch };
+  return { phase, runId, status, refusal, watch };
 }

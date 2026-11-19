@@ -76,12 +76,30 @@ export function SignedOffNotice({
   );
 }
 
+export function useReviewerNames(names: readonly string[] | null): string | null {
+  const { i18n } = useLingui();
+  if (names === null) return null;
+  return new Intl.ListFormat(i18n.locale, { type: "conjunction" }).format(names);
+}
+
+export function ReadOnlyNotice({ reviewers }: { reviewers: string }) {
+  return (
+    <Banner tone="info" icon="lock" data-testid="read-only-notice">
+      <Trans>
+        <b>Read only.</b> This slide is assigned to {reviewers}, so you can look but not answer.
+      </Trans>
+    </Banner>
+  );
+}
+
 export function useAnswersOff(
   issue: StageIssue | null,
   signedOff: boolean,
   slideLabel: string,
+  reviewers: string | null = null,
 ): string | undefined {
   const { t } = useLingui();
+  if (reviewers !== null) return t`Read only. This slide is assigned to ${reviewers}.`;
   if (signedOff) return t`Signed off. Ask the researcher to amend.`;
   if (issue === "withdrawn") return t`This task was withdrawn. There is nothing left to decide.`;
   if (issue === "slidefail")
@@ -182,6 +200,7 @@ export function StageIssueLayer({
   resultMissing,
   signedOff,
   slideLabel,
+  reviewers = null,
   onAsk,
   onNext,
   children,
@@ -193,9 +212,10 @@ export function StageIssueLayer({
   resultMissing: boolean;
   signedOff: boolean;
   slideLabel: string;
+  reviewers?: string | null;
   onAsk: () => void;
   onNext: (() => void) | null;
-  children: (answersOff: string | undefined) => ReactNode;
+  children: (answersOff: string | undefined, readOnly: boolean) => ReactNode;
 }) {
   const failedLevels = useFailedLevels(route);
   const [retried, setRetried] = useState<string | null>(null);
@@ -206,7 +226,7 @@ export function StageIssueLayer({
     unreadable: unreadable && retried !== slideId,
     resultMissing,
   });
-  const answersOff = useAnswersOff(issue, signedOff, slideLabel);
+  const answersOff = useAnswersOff(issue, signedOff, slideLabel, reviewers);
   const retry = () => {
     setRetried(slideId);
     for (const tile of route?.failedTiles() ?? []) route?.retryTile(tile.key);
@@ -222,7 +242,7 @@ export function StageIssueLayer({
           onNext={onNext}
         />
       )}
-      {children(answersOff)}
+      {children(answersOff, reviewers !== null)}
     </>
   );
 }

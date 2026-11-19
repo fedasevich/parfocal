@@ -51,3 +51,19 @@ export function signedOffOf(
   const slide = states.slides.find((item) => item.slide_id === slideId);
   return slide?.state === "signed-off" ? { at: null } : null;
 }
+
+export type TaskSlideReviewers = {
+  readonly slide_id: string;
+  readonly reviewer_ids: readonly string[];
+};
+
+export function othersReviewOf(
+  slides: readonly TaskSlideReviewers[] | undefined,
+  slideId: string,
+  me: string | null | undefined,
+): readonly string[] | null {
+  if (me === null || me === undefined) return null;
+  const entry = slides?.find((slide) => slide.slide_id === slideId);
+  if (entry === undefined || entry.reviewer_ids.includes(me)) return null;
+  return entry.reviewer_ids;
+}

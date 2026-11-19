@@ -1,6 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
-  ApiError,
   getGetReviewTaskQueryKey,
   type LayerObject,
   type ProjectClass,
@@ -94,6 +93,7 @@ import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { ReasonModal } from "../screens/clinical-report/modals.tsx";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { useRefusals } from "../screens/refusals.ts";
 import { GuidedCheck } from "./guided-check.tsx";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -119,20 +119,6 @@ type AnnotateTaskPanelProps = {
 const noSelection: readonly string[] = [];
 const noPending: ReadonlyMap<string, AiState> = new Map();
 
-const problemCode = (error: unknown) =>
-  error instanceof ApiError ? (error.problem?.code ?? `${error.status}`) : "network";
-
-const refusals: Record<string, string> = {
-  "layer-not-empty": "The slide has objects, so it is not empty.",
-  "slide-signed-off": "This slide is signed off and its layer is locked.",
-  "reason-needed": "Give a reason to change a signed-off slide.",
-  "no-result-set": "Add only a finished result set of the same slide.",
-  "experts-unchecked": "Every assigned expert has to check the slide first.",
-  "objects-unchecked": "The task needs every AI object checked before sign-off.",
-  "annotation-changed":
-    "A colleague changed some of these cells, so nothing was changed. Look at them and try again.",
-};
-
 export function AnnotateTaskPanel({
   engine,
   stage,
@@ -146,6 +132,7 @@ export function AnnotateTaskPanel({
   onShowPanel,
 }: AnnotateTaskPanelProps) {
   const { t } = useLingui();
+  const { refusalOf, sentenceOf } = useRefusals();
   const showPanel = useRef(onShowPanel);
   showPanel.current = onShowPanel;
   const docked = useDocked();
@@ -227,8 +214,7 @@ export function AnnotateTaskPanel({
       try {
         await action();
       } catch (error) {
-        const code = problemCode(error);
-        setRefusal(refusals[code] ?? `The server refused it (${code}).`);
+        setRefusal(refusalOf(error));
       }
       if (lock === "until-saved") {
         working.current = false;
@@ -242,7 +228,7 @@ export function AnnotateTaskPanel({
         working.current = false;
       }
     },
-    [refresh],
+    [refresh, refusalOf],
   );
 
   const setsQuery = useListSlideResultSets(slideId);
@@ -357,8 +343,7 @@ export function AnnotateTaskPanel({
           settle();
           return true;
         } catch (error) {
-          const code = problemCode(error);
-          setRefusal(refusals[code] ?? `The server refused it (${code}).`);
+          setRefusal(refusalOf(error));
           setNotice(null);
           settle();
           versions.current.clear();
@@ -369,14 +354,14 @@ export function AnnotateTaskPanel({
       sending.current = work;
       return work;
     },
-    [taskId, slideId, keepSaved, refresh],
+    [taskId, slideId, keepSaved, refresh, refusalOf],
   );
 
   const edit = useCallback(
     (after: readonly AiState[], label: string, line?: (count: number) => string) => {
       const now = live.current;
       if (now.locked) {
-        setRefusal(refusals["slide-signed-off"] ?? null);
+        setRefusal(sentenceOf("slide-signed-off"));
         return;
       }
       const byId = new Map(now.cells.map((cell) => [cell.object, cell]));
@@ -395,7 +380,7 @@ export function AnnotateTaskPanel({
       setNotice(line === undefined ? null : line(changed.length));
       void send(changed);
     },
-    [send],
+    [send, sentenceOf],
   );
 
   const selectedCells = useCallback(() => {

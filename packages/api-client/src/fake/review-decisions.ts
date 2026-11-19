@@ -27,14 +27,19 @@ import { fakeView } from "./view.ts";
 
 export const reviewedSlide = slideByIndex(1);
 
-export const reviewsA1 = (taskId: string, slideId: string) => {
+const isA1 = (taskId: string, slideId: string) => {
   const task = [...reviewTasks, rt16].find((candidate) => candidate.id === taskId);
   return (
     (task?.code === "RT-14" || task?.code === "RT-16" || task?.code === "RT-09") &&
-    slideId === reviewedSlide.id &&
-    fakeView().viewer === "LM"
+    slideId === reviewedSlide.id
   );
 };
+
+export const reviewsA1 = (taskId: string, slideId: string) =>
+  isA1(taskId, slideId) && fakeView().viewer === "LM";
+
+const looksAtA1 = (taskId: string, slideId: string) =>
+  isA1(taskId, slideId) && fakeView().viewer === "DH";
 
 const nextSlide = slideByIndex(2);
 
@@ -143,7 +148,7 @@ export const addObject = (taskId: string, slideId: string, draft: AddedDraft): A
 export const objectsOn = (taskId: string, slideId: string) => {
   if (taskId === rt17.id && firstReadOpen(taskId, slideId)) return [];
   if (readsFirst(taskId, slideId)) return reviewObjects;
-  if (reviewsA1(taskId, slideId)) return placedReviewObjects;
+  if (reviewsA1(taskId, slideId) || looksAtA1(taskId, slideId)) return placedReviewObjects;
   if (reviewsOutlined(taskId, slideId)) return outlinedObjects;
   if (reviewsOutlinedCells(taskId, slideId)) return outlinedCells;
   if (reviewsNext(taskId, slideId)) {

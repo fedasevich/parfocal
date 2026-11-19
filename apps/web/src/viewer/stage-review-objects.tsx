@@ -145,6 +145,7 @@ export function StageReviewObjects({
   onCurrent,
   onAddMissed,
   answersOff,
+  readOnly = false,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -161,6 +162,7 @@ export function StageReviewObjects({
   onCurrent?: (object: string | null) => void;
   onAddMissed?: () => void;
   answersOff?: string | undefined;
+  readOnly?: boolean;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -391,6 +393,7 @@ export function StageReviewObjects({
           onAnswer={(raw) => answer(currentItem, raw)}
           onShowUi={focus.onShowUi}
           keysLive={ready}
+          readOnly={readOnly}
         />
       )}
       {gridOpen && hasCells && ready && focus === null ? (
@@ -400,12 +403,13 @@ export function StageReviewObjects({
           saves={saves}
           slideId={slideId}
           current={current}
+          readOnly={readOnly}
           onPick={pick}
           onStep={stepTo}
           onClose={() => setGridOpen(false)}
         />
       ) : null}
-      {typedCell === null ? null : (
+      {typedCell === null || readOnly ? null : (
         <StageCellTypeBar
           engine={engine}
           cell={typedCell}
@@ -455,13 +459,22 @@ export function StageReviewObjects({
               }}
               onAddMissed={() => onAddMissed?.()}
               answersOff={answersOff}
+              readOnly={readOnly}
             />
           ) : null}
           {orderWait ? (
             <ReviewOrderTabNotice order={orderWait} onRetry={session.retryOrder} />
           ) : null}
           <StageAiReading slideId={slideId} objects={objects} />
-          {!ready && answersOff !== undefined ? (
+          {readOnly && answersOff !== undefined ? (
+            <p
+              data-testid="read-only-note"
+              className="m-0 inline-flex items-center gap-2 text-body-sm text-fg-dim"
+            >
+              {answersOff}
+            </p>
+          ) : null}
+          {!ready && !readOnly && answersOff !== undefined ? (
             <p
               data-testid="answers-off"
               className="m-0 inline-flex items-center gap-2 text-body-sm text-warn"
@@ -472,6 +485,7 @@ export function StageReviewObjects({
           {!guided && ready ? (
             <StageObjectsPanel
               answersOff={answersOff}
+              readOnly={readOnly}
               session={session}
               current={current}
               onPick={(id) => (id === null ? setCurrent(null) : pick(id))}

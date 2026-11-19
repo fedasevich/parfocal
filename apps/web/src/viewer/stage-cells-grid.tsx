@@ -25,6 +25,7 @@ export function StageCellsGrid({
   saves,
   slideId,
   current,
+  readOnly = false,
   onPick,
   onStep,
   onClose,
@@ -34,6 +35,7 @@ export function StageCellsGrid({
   saves: Saves;
   slideId: string;
   current: string | null;
+  readOnly?: boolean;
   onPick: (object: string) => void;
   onStep: (object: string) => void;
   onClose: () => void;
@@ -52,6 +54,7 @@ export function StageCellsGrid({
   const answer = (object: string) => answers.get(object);
   const currentCell = cells.find((cell) => cell.object === current) ?? cells[0];
   const agreeRest = () => {
+    if (readOnly) return;
     for (const cell of cells) {
       if (!answer(cell.object))
         saves.save(cell.object, rawFor(session.style, "agree", cell), "agree");
@@ -61,7 +64,7 @@ export function StageCellsGrid({
   const order = cells.map((cell) => cell.object);
   const picked = current !== null && order.includes(current) ? current : undefined;
   const firstOpen = cells.find((cell) => !answer(cell.object))?.object;
-  const canAgreeRest = showsClaim(session.style) && firstOpen !== undefined;
+  const canAgreeRest = !readOnly && showsClaim(session.style) && firstOpen !== undefined;
   const stepping = !folded && !confirming;
   useEffect(() => (stepping ? holdCellArrows(engine) : undefined), [engine, stepping]);
   const bindings = useBindings(["review"], stripActions);
@@ -104,8 +107,13 @@ export function StageCellsGrid({
         cells={cells}
         current={current ?? undefined}
         answer={answer}
-        answerKeys={answersOf(session.style, session.classes, currentCell).map((item) => item.key)}
+        answerKeys={
+          readOnly
+            ? []
+            : answersOf(session.style, session.classes, currentCell).map((item) => item.key)
+        }
         claimHidden={!showsClaim(session.style)}
+        readOnly={readOnly}
         folded={folded}
         confirming={confirming}
         onPick={onPick}

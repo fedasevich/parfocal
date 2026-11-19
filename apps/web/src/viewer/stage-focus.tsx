@@ -57,17 +57,19 @@ export function StageFocusCard({
   onAnswer,
   onShowUi,
   keysLive,
+  readOnly = false,
 }: {
   session: ReviewSession;
   object: ReviewObject;
   onAnswer: (raw: string) => void;
   onShowUi: () => void;
   keysLive: boolean;
+  readOnly?: boolean;
 }) {
   const { t } = useLingui();
   const decision = session.decisions.get(object.object);
-  const keys = answersOf(session.style, session.classes, object);
-  useAnswerKeys(keys, onAnswer, keysLive);
+  const keys = readOnly ? [] : answersOf(session.style, session.classes, object);
+  useAnswerKeys(keys, onAnswer, keysLive && !readOnly);
   const score = Math.round(object.score * 100);
   return (
     <FocusCard

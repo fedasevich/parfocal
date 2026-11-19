@@ -151,13 +151,12 @@ function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId
 
 function TaskRunLine({ join }: { join: TaskRunJoin }) {
   const status = join.status ?? "";
-  const code = join.code;
   if (join.phase === "running") return <Trans>The run is streaming onto the slide</Trans>;
   if (join.phase === "joining") return <Trans>Adding the run to the task</Trans>;
   if (join.phase === "joined") return <Trans>Its objects are AI objects of this task now</Trans>;
   if (join.phase === "scoped") return <Trans>The run joined the task's check scope</Trans>;
   if (join.phase === "ended") return <Trans>The run ended as {status}, nothing was added</Trans>;
-  if (join.phase === "failed") return <Trans>The server refused it ({code})</Trans>;
+  if (join.phase === "failed") return join.refusal;
   return null;
 }
 

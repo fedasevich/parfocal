@@ -1,5 +1,6 @@
 import {
   type Thread,
+  useGetMe,
   useGetProject,
   useGetReviewTask,
   useGetReviewTaskStates,
@@ -21,8 +22,13 @@ import { SlideStage } from "./slide-stage.tsx";
 import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
-import { SignedOffNotice, StageIssueLayer } from "./stage-issue-cards.tsx";
-import { isWithdrawn, resultMissingOf, signedOffOf } from "./stage-issues.ts";
+import {
+  ReadOnlyNotice,
+  SignedOffNotice,
+  StageIssueLayer,
+  useReviewerNames,
+} from "./stage-issue-cards.tsx";
+import { isWithdrawn, othersReviewOf, resultMissingOf, signedOffOf } from "./stage-issues.ts";
 import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import type { NoteRequest } from "./stage-object-notes.tsx";
@@ -115,6 +121,10 @@ export function EngineViewer({
     taskDetail?.kind === "review" ? signedOffOf(okData(statesQuery.data), slideId) : null;
   const resultMissing =
     taskDetail?.kind === "review" && resultMissingOf(taskDetail.slides, slideId);
+  const me = okData(useGetMe().data)?.user_id;
+  const othersReview =
+    taskDetail?.kind === "review" ? othersReviewOf(taskDetail.slides, slideId, me) : null;
+  const reviewers = useReviewerNames(othersReview?.map((id) => person(id)?.name ?? id) ?? null);
   const taskSlideIds = taskDetail?.slides.map((item) => item.slide_id) ?? [];
   const nextSlideId = taskSlideIds[taskSlideIds.indexOf(slideId) + 1];
   const researcher = person(taskDetail?.created_by_user_id)?.name;
@@ -146,7 +156,7 @@ export function EngineViewer({
   const [currentObject, setCurrentObject] = useState<string | null>(object ?? null);
   const [doneRequest, setDoneRequest] = useState(0);
   useRememberResume(
-    reviewTask === null
+    reviewTask === null || reviewers !== null
       ? null
       : {
           task_id: reviewTask,
@@ -163,7 +173,9 @@ export function EngineViewer({
     toolLink.current?.("comment");
   };
   const lock =
-    signedOff === null ? null : (
+    reviewers !== null ? (
+      <ReadOnlyNotice reviewers={reviewers} />
+    ) : signedOff === null ? null : (
       <SignedOffNotice at={signedOff.at} researcher={researcher} onAsk={askResearcher} />
     );
   const notices = useMemo(() => ({ banner, status, lock }), [banner, status, lock]);
@@ -205,6 +217,7 @@ export function EngineViewer({
         resultMissing={resultMissing}
         signedOff={signedOff !== null}
         slideLabel={load?.slide?.label ?? ""}
+        reviewers={reviewers}
         onAsk={askResearcher}
         onNext={
           nextSlideId === undefined || taskSlideIds.indexOf(slideId) < 0
@@ -212,10 +225,11 @@ export function EngineViewer({
             : () => onOpenSlide(nextSlideId)
         }
       >
-        {(answersOff) =>
+        {(answersOff, readOnly) =>
           reviewTask === null ? null : (
             <StageReviewObjects
               answersOff={answersOff}
+              readOnly={readOnly}
               engine={session.engine}
               module={session.module}
               taskId={reviewTask}
