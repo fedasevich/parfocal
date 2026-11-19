@@ -27,11 +27,19 @@ async function settledBox(target: Locator) {
 async function drag(page: Page, target: Locator) {
   await page.bringToFront();
   const box = await settledBox(target);
+  const map = await minimap(page).boundingBox();
+  if (map === null) throw new Error("the minimap has no box");
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + 24, y + 16, { steps: 4 });
+  const towardsCentre = (at: number, start: number, length: number) =>
+    at < start + length / 2 ? 1 : -1;
+  await page.mouse.move(
+    x + 24 * towardsCentre(x, map.x, map.width),
+    y + 16 * towardsCentre(y, map.y, map.height),
+    { steps: 4 },
+  );
   await page.mouse.up();
   return box;
 }

@@ -293,6 +293,8 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   await expect(page.locator('[data-slot="focus-card"]')).toBeVisible();
   await expect(page.locator('[data-slot="magnification-bar"]')).toBeVisible();
   expect(await chromeShare(page)).toBe(0);
+  await expect(minimap(page)).toBeVisible();
+  await page.keyboard.press("0");
   await expect(minimap(page)).toHaveCount(0);
   const stage = await page.getByTestId("slide-stage").boundingBox();
   if (stage === null) throw new Error("the stage has no box");

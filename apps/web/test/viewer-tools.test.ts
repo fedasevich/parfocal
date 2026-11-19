@@ -5,7 +5,7 @@ import { pathPoints, placeMinimap } from "../src/screens/viewer-tools/minimap-pl
 import { pickSlide, swapSlides } from "../src/screens/viewer-tools/pane-slides.ts";
 import { tissueShareOnScreen } from "../src/screens/viewer-tools/tissue-share.ts";
 import { cropCentre } from "../src/screens/viewer-tools/tool-geometry.ts";
-import { toOverview, viewportOf } from "../src/screens/viewer-tools/tool-maths.ts";
+import { insideMap, toOverview, viewportOf } from "../src/screens/viewer-tools/tool-maths.ts";
 
 const canvas = { width: 1048, height: 856 };
 const box = { width: 208, height: 301 };
@@ -80,4 +80,12 @@ test("picking a slide not on screen replaces only that side", () => {
   assert.deepEqual(pickSlide(shown, "right", "a3"), { left: "a1", right: "a3" });
   assert.deepEqual(pickSlide(shown, "left", "a1"), shown);
   assert.deepEqual(swapSlides(shown), { left: "a2", right: "a1" });
+});
+
+test("a view box that leaves the map is kept inside it", () => {
+  const map: [number, number, number, number] = [0, 0, 1400, 1924];
+  assert.deepEqual(insideMap([200, 300, 400, 300], map), [200, 300, 400, 300]);
+  assert.deepEqual(insideMap([1180, 1153, 525, 403], map), [1180, 1153, 220, 403]);
+  assert.deepEqual(insideMap([-100, -50, 400, 300], map), [0, 0, 300, 250]);
+  assert.deepEqual(insideMap([1500, 2500, 500, 400], [0, 0, 1000, 2000]), [960, 1920, 40, 80]);
 });

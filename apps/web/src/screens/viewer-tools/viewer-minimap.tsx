@@ -42,7 +42,7 @@ import { viewerSpots } from "./minimap-scenes.ts";
 import { type AreaMark, MinimapAreas } from "./slide-maps.tsx";
 import { tissueShareOnScreen } from "./tissue-share.ts";
 import { seenTrail } from "./tool-geometry.ts";
-import { boxCentre, fromOverview, viewportOf } from "./tool-maths.ts";
+import { boxCentre, fromOverview, insideMap, viewportOf } from "./tool-maths.ts";
 import { useHeldCorner } from "./use-held-corner.tsx";
 import { type MinimapSurface, useMinimapCorner } from "./use-minimap-corner.ts";
 
@@ -91,8 +91,9 @@ export function ViewerMinimap({
 }) {
   const overviewImage = useOverviewImage();
   const docked = useToolsLayout() === "dock";
-  const viewport = viewportOf(imageOf(view), camera, size);
-  const tissueShare = tissueShareOnScreen(viewport);
+  const onScreen = viewportOf(imageOf(view), camera, size);
+  const viewport = insideMap(onScreen, slideExtent);
+  const tissueShare = tissueShareOnScreen(onScreen);
   const magnification = magnificationOf(view, camera);
   const minimap = useMinimap(setting, { tissueShare, magnification });
   const { send } = minimap;

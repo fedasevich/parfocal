@@ -32,6 +32,20 @@ export function viewportOf(look: StillLook, camera: Camera, size: Size): MapRect
   return [x, y, width * k, height * k];
 }
 
+const smallestShare = 0.04;
+
+export function insideMap(rect: MapRect, map: MapRect): MapRect {
+  const side = (start: number, length: number, from: number, span: number) => {
+    const least = Math.min(length, span * smallestShare);
+    const low = Math.min(Math.max(start, from), from + span - least);
+    const high = Math.max(Math.min(start + length, from + span), low + least);
+    return [low, high - low] as const;
+  };
+  const [x, width] = side(rect[0], rect[2], map[0], map[2]);
+  const [y, height] = side(rect[1], rect[3], map[1], map[3]);
+  return [x, y, width, height];
+}
+
 export const toScreen = (camera: Camera, size: Size, point: [number, number]) => ({
   x: (point[0] - camera.x) * camera.scale + size.width / 2,
   y: (point[1] - camera.y) * camera.scale + size.height / 2,

@@ -98,6 +98,7 @@ test("a row click keeps the guided object and a fast second key does not touch a
 
 test("the guide key does nothing while the AI result is hidden", async ({ page }) => {
   await openTaskSlide(page);
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Objects" }).click();
   await page.getByRole("switch", { name: "Show the AI result" }).click();
   await page.keyboard.press("Shift+G");
   await page.getByRole("switch", { name: "Show the AI result" }).click();

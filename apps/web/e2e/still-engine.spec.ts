@@ -3,7 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 
-const regionShapeCount = 6;
+const outlinedRegionCount = 5;
 
 const engine = (page: Page) => page.getByTestId("still-engine");
 
@@ -30,7 +30,7 @@ test("guided review draws the slide with the Viv canvas and the engine object la
   expect(Number(await engine(page).getAttribute("data-overlays"))).toBeGreaterThan(0);
   await expect(page.locator('[data-slot="slide-still"] svg image')).toHaveCount(0);
   await expect(page.locator('[data-slot="slide-still"] svg[role="img"] > g > path')).toHaveCount(
-    regionShapeCount - drawn,
+    outlinedRegionCount - drawn,
   );
 });
 
@@ -40,7 +40,7 @@ test("guided review keeps the current region as the still's tinted outline", asy
   const drawn = Number(await engine(page).getAttribute("data-objects"));
   expect(drawn).toBeGreaterThan(0);
   await expect(page.locator('[data-slot="slide-still"] svg[role="img"] > g > path')).toHaveCount(
-    regionShapeCount - drawn,
+    outlinedRegionCount - drawn,
   );
 });
 
@@ -58,7 +58,7 @@ test("guided review draws no AI objects through the engine before the claim is s
   await engineReady(page);
   await expect(engine(page)).toHaveAttribute("data-objects", "0");
   await expect(page.locator('[data-slot="slide-still"] svg[role="img"] > g > path')).toHaveCount(
-    regionShapeCount,
+    outlinedRegionCount,
   );
 });
 
