@@ -6751,6 +6751,12 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Widen the Help dialog to a readable measure with a footer that keeps its three actions on one line. Show the running app version (from the build) at the top of What's new. Build the notes from the changelog with only user facing entries: features and fixes with a plain sentence, no chores, claims, docs, backlog or test lines, and no task IDs. Keep every release reachable, the newest open.
   Done when a unit test filters a sample changelog to user facing lines, a browser test opens Help and reads the build's version and at least one user facing note with no task ID or "Claim" line, and the dialog is at least 640 px wide on a 1440 px screen with its footer on one line.
   Size: S.
+- [x] PROTO-059 · The app has a favicon drawn from the Parfocal mark
+  On 2026-11-19 the owner asked for a favicon. The browser tab showed a blank page icon because `apps/web` shipped none.
+  Draw the loader's mark, the four corners and the centre dot, in white on a rounded accent square as `public/favicon.svg`, render 32 px and 180 px PNGs for browsers and iOS home screens that skip SVG, and link all three from `index.html`.
+  Done when a unit test finds each link in `index.html` and each file in `public/`, and the built app serves all three.
+  Depends on nothing.
+  Size: S.
 ---
 
 ## Later epics (not in v1, kept for planning)
