@@ -41,7 +41,13 @@ import {
   useOpenThreads,
 } from "./parts.tsx";
 import { minutesLeft, slidePosition } from "./review-progress.ts";
-import { activeTasks, continuePath, reviewRow } from "./to-review-rows.ts";
+import {
+  activeTasks,
+  continuePath,
+  heroTaskOf,
+  reviewRow,
+  startedResume,
+} from "./to-review-rows.ts";
 
 export { activeTasks };
 
@@ -257,7 +263,7 @@ function TaskPreview({
   const { t } = useLingui();
 
   const goTo = useGoTo();
-  const here = resume?.task_id === task.id ? resume : null;
+  const here = startedResume(task, resume);
   const slideId = here?.slide_id ?? task.next_slide_id ?? undefined;
   const progress = useSlideProgress(task.id, slideId);
   const threads = useOpenThreads(here ? slideId : undefined);
@@ -346,7 +352,7 @@ export function ToReviewTab({
   const colourOf = (id: string) =>
     projectColour(projects.find((project) => project.id === id)?.colour ?? 0);
   const active = activeTasks(tasks);
-  const heroTask = resume ? active.find((task) => task.id === resume.task_id) : undefined;
+  const heroTask = heroTaskOf(active, resume);
   const previewTask = active.find((task) => task.id === selected);
   const previewAdjudication = adjudications.find((item) => adjudicationKey(item) === selected);
   const close = () => onSelect(undefined);

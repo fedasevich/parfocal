@@ -59,14 +59,15 @@ export const firstName = (name: string) => name.split(" ")[0] ?? name;
 export function nudgeMessage(name: string, task: TeamTask, row: TeamReviewer, asOf: string) {
   const left = row.slides_assigned - row.slides_done;
   if (task.due_on === null) {
-    return `Hi ${firstName(name)}, ${task.code} has ${left} slides left. Could you fit some in this week?`;
+    return `Hi ${firstName(name)}, ${task.code} has ${plural(left, "slide")} left. Could you fit some in this week?`;
   }
   const verb = dueText(task, asOf).overdue ? "was" : "is";
-  return `Hi ${firstName(name)}, ${task.code} ${verb} due ${formatDue(task.due_on)} and ${left} slides are left. Could you fit some in this week?`;
+  const are = left === 1 ? "is" : "are";
+  return `Hi ${firstName(name)}, ${task.code} ${verb} due ${formatDue(task.due_on)} and ${plural(left, "slide")} ${are} left. Could you fit some in this week?`;
 }
 
 export const projectLine = (task: TeamTask) =>
-  `${task.project.name} · ${task.slides} slides${task.split === "even" ? ", split evenly" : ""}`;
+  `${task.project.name} · ${plural(task.slides, "slide")}${task.split === "even" ? ", split evenly" : ""}`;
 
 export function headerLine(workload: TeamWorkload): string {
   const rows = workload.open.flatMap((task) => task.reviewers);

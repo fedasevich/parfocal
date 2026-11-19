@@ -48,7 +48,7 @@ import { type ReactNode, useState } from "react";
 import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
-import { formatDayMonth, formatDue, percent } from "../format.ts";
+import { formatDayMonth, formatDue, percent, plural } from "../format.ts";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { TaskViewerLinks } from "../viewer-links.tsx";
@@ -133,7 +133,9 @@ function AssignedRow({
         <b className="font-medium text-fg">{task.name}</b>
         <small className="block text-caption text-fg-dim">
           {task.project.name}
-          {detail ? t` · ${detail.slide_count} slides${detail.blinded ? " · blind" : ""}` : ""}
+          {detail
+            ? t` · ${plural(detail.slide_count, "slide")}${detail.blinded ? " · blind" : ""}`
+            : ""}
         </small>
         <span className="-ml-2 block">
           <TaskViewerLinks taskId={task.id} projectId={task.project.id} />

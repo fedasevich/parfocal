@@ -150,6 +150,7 @@ export const liveSearch = lenientSearch({
 export const annotateTaskSearch = lenientSearch({
   task: z.string().optional(),
   scene: sceneField(annotateTaskSceneKeys),
+  tab: z.enum(viewerTabs).optional(),
 });
 
 export const newTaskSearch = lenientSearch({

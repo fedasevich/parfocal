@@ -135,6 +135,7 @@ type LiveTopBarProps = {
   objectTotal: number;
   onPeek: () => void;
   statusRef: (node: HTMLElement | null) => void;
+  finishRef?: ((node: HTMLElement | null) => void) | undefined;
   storage: ReactNode;
 };
 
@@ -166,6 +167,7 @@ function TopBar({
   objectTotal,
   onPeek,
   statusRef,
+  finishRef,
   storage,
   review,
 }: LiveTopBarProps & { review: LiveReview | undefined }) {
@@ -328,6 +330,9 @@ function TopBar({
         >
           <Trans>Submit</Trans>
         </Button>
+      ) : null}
+      {task !== undefined && !reviewTask && finishRef !== undefined ? (
+        <span ref={finishRef} data-slot="top-finish" className="flex shrink-0 empty:hidden" />
       ) : null}
       <ViewingNow slideId={slideId} taskId={task?.id} />
       <AccountMenu me={me} person={personOf(me)} home />

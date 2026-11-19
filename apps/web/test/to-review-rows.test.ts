@@ -6,6 +6,7 @@ import {
   continuePath,
   continuesHero,
   heroPath,
+  heroTaskOf,
   reviewRow,
 } from "../src/screens/my-work/to-review-rows.ts";
 
@@ -93,4 +94,16 @@ test("Enter with nothing selected continues the task in progress in one action",
   assert.equal(continuesHero({ key: "Enter", metaKey: true }, undefined), false);
   assert.equal(continuesHero({ key: "j" }, undefined), false);
   assert.equal(continuesHero({ key: "Enter" }, undefined, true), false);
+});
+
+test("a task never opened gets no continue card and starts at slide 1, even with a saved place", () => {
+  const unopened = task({ id: "task-2", status: "not-started", next_slide_id: "slide-1" });
+  const saved = { ...resume, position: 2, decisions_on_slide: 0 };
+  assert.equal(heroTaskOf([unopened], saved), undefined);
+  assert.equal(heroPath([unopened], saved), undefined);
+  assert.equal(continuePath(unopened, saved), "/tasks/task-2/guided?slide=slide-1");
+  assert.equal(reviewRow(unopened, "Daniel Hruška", saved)?.action.label, "Start");
+  const decided = { ...saved, decisions_on_slide: 1 };
+  assert.equal(heroTaskOf([unopened], decided)?.id, "task-2");
+  assert.equal(reviewRow(unopened, "Daniel Hruška", decided)?.action.label, "Continue");
 });

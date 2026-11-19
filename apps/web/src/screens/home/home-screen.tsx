@@ -280,9 +280,8 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
           <span className="truncate">{project.name}</span>
         </b>
         <small className="font-mono text-caption text-fg-faint">
-          <Trans>
-            {project.code} · {project.slides} slides · {project.result_sets} result sets
-          </Trans>
+          {project.code} · {plural(project.slides, "slide")} ·{" "}
+          {plural(project.result_sets, "result set")}
         </small>
         <div className="flex items-center justify-between">
           {project.privacy_mode === "clinical" ? (

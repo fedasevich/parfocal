@@ -22,11 +22,12 @@ function AnnotateTaskWorkspace() {
         slideId={slideId}
         task={search.task}
         workspace="annotate"
+        tab={search.tab}
         onOpenSlide={(next) =>
           void navigate({
             to: "/projects/$projectId/slides/$slideId/annotate-task",
             params: { projectId, slideId: next },
-            search: { task: search.task },
+            search: { task: search.task, tab: search.tab },
           })
         }
         onWorkspace={(workspace) =>
@@ -35,6 +36,9 @@ function AnnotateTaskWorkspace() {
             params: { projectId, slideId },
             search: { task: search.task, workspace },
           })
+        }
+        onTab={(next) =>
+          void navigate({ search: (previous) => ({ ...previous, tab: next }), replace: true })
         }
       />
     );

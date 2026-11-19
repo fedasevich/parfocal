@@ -13,11 +13,14 @@ export type NoticeSlots = {
   readonly banner: HTMLElement | null;
   readonly status: HTMLElement | null;
   readonly lock?: ReactNode;
+  readonly finish?: HTMLElement | null;
 };
 
 const NoticeSlotsContext = createContext<NoticeSlots | null>(null);
 
 export const NoticeSlotsProvider = NoticeSlotsContext.Provider;
+
+export const useFinishSlot = () => useContext(NoticeSlotsContext)?.finish ?? null;
 
 function Into({ node, children }: { node: HTMLElement | null | undefined; children: ReactNode }) {
   return node ? createPortal(children, node) : null;

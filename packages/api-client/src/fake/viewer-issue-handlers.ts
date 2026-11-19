@@ -1,6 +1,6 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { problemMediaType } from "../problem.ts";
-import { projectSlideRows } from "./project-handlers.ts";
+import { projectSlideRows, toSlideResultSets } from "./project-handlers.ts";
 import { toReviewObjects } from "./review-handlers.ts";
 import { fakeViewerIssue } from "./viewer-scene.ts";
 import { reviewTaskDetailOf } from "./work-handlers.ts";
@@ -68,6 +68,19 @@ export const viewerIssueHandlers = (): RequestHandler[] => [
       })),
       next_cursor: null,
     });
+  }),
+  http.get<{ slideId: string }>("*/api/slides/:slideId/result-sets", ({ params }) => {
+    const issue = fakeViewerIssue();
+    if (issue !== "importing" && issue !== "importfail") return undefined;
+    return HttpResponse.json(
+      toSlideResultSets(params.slideId).map((set, index) =>
+        index > 0
+          ? set
+          : issue === "importing"
+            ? { ...set, status: "importing" as const }
+            : { ...set, status: "failed" as const, error_code: "geometry-unreadable" },
+      ),
+    );
   }),
   http.post(
     "*/api/slides/:slideId/high-power-failure",

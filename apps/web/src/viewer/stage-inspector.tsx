@@ -125,7 +125,9 @@ export function StageInspector({
         tabs={
           guided
             ? [objectsTab, commentsTab, displayTab]
-            : [objectsTab, displayTab, commentsTab, opinionTab]
+            : opinion === null
+              ? [objectsTab, displayTab, commentsTab]
+              : [objectsTab, displayTab, commentsTab, opinionTab]
         }
       />
     </InspectorDock>

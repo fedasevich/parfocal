@@ -19,15 +19,15 @@ msgstr ""
 msgid " · {0} cells"
 msgstr ""
 
-#. placeholder {0}: detail.slide_count
-#. placeholder {1}: detail.blinded ? " · blind" : ""
-#: src/screens/my-work/assigned-tab.tsx
-msgid " · {0} slides{1}"
-msgstr ""
-
 #. placeholder {0}: plural(toDecide, "object")
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {0} to decide"
+msgstr ""
+
+#. placeholder {0}: plural(detail.slide_count, "slide")
+#. placeholder {1}: detail.blinded ? " · blind" : ""
+#: src/screens/my-work/assigned-tab.tsx
+msgid " · {0}{1}"
 msgstr ""
 
 #: src/viewer/stage-minimap.tsx
@@ -341,13 +341,6 @@ msgstr ""
 #. placeholder {1}: run.slides
 #: src/screens/admin/sections.tsx
 msgid "{0} · {1} slides"
-msgstr ""
-
-#. placeholder {0}: project.code
-#. placeholder {1}: project.slides
-#. placeholder {2}: project.result_sets
-#: src/screens/home/home-screen.tsx
-msgid "{0} · {1} slides · {2} result sets"
 msgstr ""
 
 #. placeholder {0}: batch.storage.trimmed_slides
@@ -4147,6 +4140,7 @@ msgstr ""
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/review/review-order-state.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
 msgid "Back to the project"
 msgstr ""
 
@@ -9218,6 +9212,7 @@ msgstr ""
 msgid "Loading the server details"
 msgstr ""
 
+#: src/routes/tasks.$taskId.comments.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/comments-on-ids.tsx
 #: src/screens/viewer-tools/tool-session.tsx
@@ -11527,6 +11522,7 @@ msgid "Open the slides of this task in the full viewer"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
 msgid "Open the task"
 msgstr ""
 
@@ -16570,6 +16566,26 @@ msgstr ""
 msgid "The researcher"
 msgstr ""
 
+#. placeholder {0}: andJoin(failed)
+#: src/viewer/result-set-notice.tsx
+msgid "The result set {0} did not import, so its objects are not shown."
+msgstr ""
+
+#. placeholder {0}: andJoin(importing)
+#: src/viewer/result-set-notice.tsx
+msgid "The result set {0} is still importing. Its objects show when it is ready."
+msgstr ""
+
+#. placeholder {0}: andJoin(importing)
+#: src/viewer/result-set-notice.tsx
+msgid "The result sets {0} are still importing. Their objects show when they are ready."
+msgstr ""
+
+#. placeholder {0}: andJoin(failed)
+#: src/viewer/result-set-notice.tsx
+msgid "The result sets {0} did not import, so their objects are not shown."
+msgstr ""
+
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
 msgstr ""
@@ -16702,6 +16718,10 @@ msgstr ""
 
 #: src/annotations/slide-export.ts
 msgid "The shapes with their groups, notes and cell calls, which Parfocal can import again"
+msgstr ""
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "The sign-off of this task could not be opened. The evaluation report shows whether it is signed."
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -16956,6 +16976,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/new-forms.tsx
 msgid "This is a clinical project. Names can be hidden for everyone in Settings, and opening them is logged."
+msgstr ""
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "This is an annotate task. Each slide is signed off on its own in the viewer, under Objects, once its experts have checked it."
 msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx

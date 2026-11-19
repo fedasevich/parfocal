@@ -87,6 +87,7 @@ export function AreaKeys({
               visited={nav.visited}
               roleOf={(object) => roles.get(object)}
               onGoTo={nav.goTo}
+              className={docked ? "max-h-none overflow-visible" : undefined}
             />
           </section>
         </DockCard>

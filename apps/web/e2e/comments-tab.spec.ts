@@ -19,6 +19,13 @@ test("the Comments tab lists open threads and swaps to the resolved ones", async
   await expect(cards(page).first()).toContainText("Resolved");
 });
 
+test("the comments route without a slide opens the task's first slide", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/comments`);
+  await expect(page.getByRole("radio", { name: "Open 3" })).toBeChecked({ timeout: 15_000 });
+  await expect(cards(page)).toHaveCount(3);
+  await expect(page.getByText("Loading the slide")).toHaveCount(0);
+});
+
 test("a thread card opens its thread and Go to follows the location", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/comments?slide=${a1}&thread=T2`);
   await cards(page)

@@ -21,6 +21,7 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { Loader } from "@parfocal/ui/components/loader";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   type AiEditBridge,
   type AiEntry,
@@ -96,6 +97,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { useRefusals } from "../screens/refusals.ts";
 import { GuidedCheck } from "./guided-check.tsx";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
+import { useFinishSlot } from "./stage-notices.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { screenToSlide } from "./viewer-engine.ts";
 
@@ -136,6 +138,7 @@ export function AnnotateTaskPanel({
   const showPanel = useRef(onShowPanel);
   showPanel.current = onShowPanel;
   const docked = useDocked();
+  const finishSlot = useFinishSlot();
   const { taskId, slideId, focusObject } = task;
   const queryClient = useQueryClient();
   const me = okData(useGetMe().data)?.user_id ?? null;
@@ -576,9 +579,25 @@ export function AnnotateTaskPanel({
   const summary = nothingToMark
     ? "You marked this slide as having nothing to mark. Colleagues see it as checked."
     : `${counts.confirmed + counts.edited + counts.deleted} of ${counts.total} AI objects checked. The layer has ${drawn.length} drawn by hand.`;
+  const markChecked =
+    step === "open" ? (
+      <Button
+        variant="primary"
+        data-testid="mark-slide-checked"
+        disabled={!loaded}
+        onClick={() =>
+          void run(() =>
+            checkSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),
+          )
+        }
+      >
+        {nothingToMark ? t`Nothing to mark` : t`Mark slide checked`}
+      </Button>
+    ) : null;
 
   return (
     <>
+      {finishSlot !== null && markChecked !== null ? createPortal(markChecked, finishSlot) : null}
       {view.shown ? (
         <AiLayer
           engine={engine}
@@ -829,19 +848,7 @@ export function AnnotateTaskPanel({
               {refusal}
             </p>
           ) : null}
-          {step === "open" ? (
-            <Button
-              variant="primary"
-              disabled={!loaded}
-              onClick={() =>
-                void run(() =>
-                  checkSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),
-                )
-              }
-            >
-              {nothingToMark ? t`Nothing to mark` : t`Mark slide checked`}
-            </Button>
-          ) : null}
+          {finishSlot === null ? markChecked : null}
           {step !== "open" ? (
             <CheckedCard
               nothingToMark={

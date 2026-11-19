@@ -18,6 +18,7 @@ import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { useCellRetype } from "./picked-cell-retype.tsx";
 import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-slide-notice.tsx";
+import { ResultSetNotice } from "./result-set-notice.tsx";
 import { SlideStage } from "./slide-stage.tsx";
 import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
@@ -93,6 +94,7 @@ export function EngineViewer({
   const [storage, setStorage] = useState<{ slideId: string; note: SlideStorageNote } | null>(null);
   const [banner, setBanner] = useState<HTMLElement | null>(null);
   const [status, setStatus] = useState<HTMLElement | null>(null);
+  const [finish, setFinish] = useState<HTMLElement | null>(null);
   const [, setLayout] = useInspectorLayout();
   const person = usePeople();
   const storageNote = storage?.slideId === slideId ? storage.note : null;
@@ -178,7 +180,7 @@ export function EngineViewer({
     ) : signedOff === null ? null : (
       <SignedOffNotice at={signedOff.at} researcher={researcher} onAsk={askResearcher} />
     );
-  const notices = useMemo(() => ({ banner, status, lock }), [banner, status, lock]);
+  const notices = useMemo(() => ({ banner, status, lock, finish }), [banner, status, lock, finish]);
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
@@ -202,6 +204,7 @@ export function EngineViewer({
         reviewTaskId={reviewTask ?? undefined}
       />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
+      {load ? <ResultSetNotice resultSets={load.resultSets} /> : null}
       {focus ? (
         <StageFocusPill
           label={load?.case?.label || load?.slide?.label || ""}
@@ -278,7 +281,7 @@ export function EngineViewer({
   };
   const inspector = {
     guided,
-    tab,
+    tab: tab === "opinion" && taskDetail?.kind !== "review" ? undefined : tab,
     onTab,
     counts: tabCounts,
     focus: threadFocus?.slideId === slideId ? threadFocus.request : null,
@@ -309,18 +312,19 @@ export function EngineViewer({
         )}
       </>
     ),
-    opinion: (
-      <StageOpinion
-        taskId={task}
-        slideId={slideId}
-        reviewTask={taskDetail?.kind === "review"}
-        onObjects={(id) => {
-          onTab("objects");
-          if (id !== undefined)
-            setJumpRequest((before) => ({ id, count: (before?.count ?? 0) + 1 }));
-        }}
-      />
-    ),
+    opinion:
+      taskDetail?.kind === "review" ? (
+        <StageOpinion
+          taskId={task}
+          slideId={slideId}
+          reviewTask
+          onObjects={(id) => {
+            onTab("objects");
+            if (id !== undefined)
+              setJumpRequest((before) => ({ id, count: (before?.count ?? 0) + 1 }));
+          }}
+        />
+      ) : null,
   };
   return (
     <main
@@ -352,6 +356,7 @@ export function EngineViewer({
           objectTotal={areas.length}
           onPeek={() => setPeek(true)}
           statusRef={setStatus}
+          finishRef={setFinish}
           storage={
             <>
               <RemoteSlideTag note={storageNote} />
