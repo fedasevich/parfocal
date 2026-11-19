@@ -1,4 +1,10 @@
-import type { LayerGroups } from "@parfocal/api-client";
+import {
+  getLayerGroups,
+  getSharedLayerGroups,
+  type LayerGroups,
+  setLayerGroups,
+  setSharedLayerGroups,
+} from "@parfocal/api-client";
 import type { AnnotationDocument, Group } from "./document.ts";
 import type { GroupId, ShapeId } from "./shapes.ts";
 
@@ -10,6 +16,12 @@ const triple = (channels: readonly number[] | null | undefined): Group["color"] 
   channels !== null && channels !== undefined && channels.length === 3
     ? [channels[0] ?? 0, channels[1] ?? 0, channels[2] ?? 0]
     : null;
+
+export const readLayerGroups = (slideId: string, taskId: string | null) =>
+  taskId === null ? getLayerGroups(slideId) : getSharedLayerGroups(taskId, slideId);
+
+export const writeLayerGroups = (slideId: string, taskId: string | null, body: LayerGroups) =>
+  taskId === null ? setLayerGroups(slideId, body) : setSharedLayerGroups(taskId, slideId, body);
 
 export function layerGroupsOf(doc: AnnotationDocument, remotes: SavedRemotes): LayerGroups {
   const groups = [...doc.groups.values()]

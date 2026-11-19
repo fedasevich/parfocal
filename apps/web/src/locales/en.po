@@ -4769,6 +4769,10 @@ msgstr "Change is {0} minus {1}. Both tasks cover the same slides."
 msgid "Change it"
 msgstr "Change it"
 
+#: src/viewer/picked-cell-retype.tsx
+msgid "Change its type in this task"
+msgstr "Change its type in this task"
+
 #. placeholder {0}: sideName[side]
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Change the {0} slide"
@@ -16681,6 +16685,10 @@ msgstr "The tumor share result is shown."
 #: src/screens/admin/sections.tsx
 msgid "The two factor setting did not save. Try again."
 msgstr "The two factor setting did not save. Try again."
+
+#: src/viewer/picked-cell-retype.tsx
+msgid "The type was not saved. Try again."
+msgstr "The type was not saved. Try again."
 
 #. placeholder {0}: learnerView.corrections
 #: src/screens/viewer/use-viewer-state.tsx

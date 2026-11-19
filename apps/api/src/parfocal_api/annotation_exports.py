@@ -7,11 +7,13 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.annotate_layer import readable_layer
 from parfocal_api.annotations import LETTERS as ANNOTATION_LETTERS
 from parfocal_api.annotations import PERSON_MADE_AI_KINDS
+from parfocal_api.blind_first import seen_by
 from parfocal_api.blinding import require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import class_names
@@ -199,7 +201,11 @@ async def body(plan: Plan, format: ExportFormat, store: ResultStore) -> AsyncIte
 
 
 async def annotation_rows(
-    connection: AsyncConnection, slide_id: uuid.UUID, names: dict[uuid.UUID, str]
+    connection: AsyncConnection,
+    slide_id: uuid.UUID,
+    names: dict[uuid.UUID, str],
+    task_id: uuid.UUID | None = None,
+    seen: Sequence[ColumnElement[bool]] = (),
 ) -> list[Feature]:
     rows = await connection.execute(
         select(
@@ -207,12 +213,16 @@ async def annotation_rows(
             annotations.c.number,
             annotations.c.class_id,
             annotations.c.text,
+            annotations.c.origin,
             func.ST_AsGeoJSON(annotations.c.geometry).label("geojson"),
         )
         .where(
             annotations.c.slide_id == slide_id,
             annotations.c.deleted_at.is_(None),
-            annotations.c.task_id.is_(None),
+            annotations.c.task_id.is_(None)
+            if task_id is None
+            else annotations.c.task_id == task_id,
+            *seen,
         )
         .order_by(annotations.c.kind, annotations.c.number)
     )
@@ -226,7 +236,7 @@ async def annotation_rows(
             ),
             json.loads(row.geojson),
             names.get(row.class_id) if row.class_id else None,
-            "human",
+            str(row.origin),
             None,
             row.text,
         )
@@ -285,11 +295,16 @@ async def plan_of(
     principal: CurrentPrincipal,
     slide_id: uuid.UUID,
     result_set_id: uuid.UUID | None,
+    task_id: uuid.UUID | None = None,
 ) -> Plan:
     slide = await slide_row(connection, principal, slide_id)
+    seen: list[ColumnElement[bool]] = []
+    if task_id is not None:
+        layer = await readable_layer(connection, principal, task_id, slide_id)
+        seen = seen_by(layer.blind_first, principal)
     where = await path_parts(connection, slide_id)
     rows = await annotation_rows(
-        connection, slide_id, await class_names(connection, slide.project_id)
+        connection, slide_id, await class_names(connection, slide.project_id), task_id, seen
     )
     if result_set_id is None:
         return Plan(where, "Annotations", len(rows), rows, [], {})
@@ -337,8 +352,9 @@ async def export_slide_objects(
     results: Results,
     format: ExportFormat = ExportFormat.GEOJSON,
     result_set_id: uuid.UUID | None = None,
+    task_id: uuid.UUID | None = None,
 ) -> StreamingResponse:
-    plan = await plan_of(connection, principal, slide_id, result_set_id)
+    plan = await plan_of(connection, principal, slide_id, result_set_id, task_id)
     return StreamingResponse(
         body(plan, format, results),
         media_type=MEDIA_TYPES[format],

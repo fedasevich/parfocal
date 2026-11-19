@@ -243,6 +243,120 @@ def feature_count(header_buffer: bytes) -> int:
     return 0 if at is None else struct.unpack_from("<Q", header_buffer, at)[0]
 
 
+def child_at(buffer: bytes, table: int, index: int) -> int | None:
+    at = field_at(buffer, table, index)
+    return None if at is None else at + struct.unpack_from("<I", buffer, at)[0]
+
+
+def vector_of(buffer: bytes, table: int, index: int, kind: str) -> list[Any]:
+    start = child_at(buffer, table, index)
+    if start is None:
+        return []
+    (length,) = struct.unpack_from("<I", buffer, start)
+    return list(struct.unpack_from(f"<{length}{FORMATS[kind][1]}", buffer, start + 4))
+
+
+def string_of(buffer: bytes, table: int, index: int) -> str | None:
+    start = child_at(buffer, table, index)
+    if start is None:
+        return None
+    (length,) = struct.unpack_from("<I", buffer, start)
+    return buffer[start + 4 : start + 4 + length].decode()
+
+
+def tables_of(buffer: bytes, table: int, index: int) -> list[int]:
+    start = child_at(buffer, table, index)
+    if start is None:
+        return []
+    (length,) = struct.unpack_from("<I", buffer, start)
+    slots = [start + 4 + 4 * item for item in range(length)]
+    return [slot + struct.unpack_from("<I", buffer, slot)[0] for slot in slots]
+
+
+def u8_at(buffer: bytes, table: int, index: int) -> int:
+    at = field_at(buffer, table, index)
+    return 0 if at is None else buffer[at]
+
+
+def columns_of(header_buffer: bytes) -> list[tuple[str, ColumnType]]:
+    root = root_of(header_buffer)
+    return [
+        (string_of(header_buffer, column, 0) or "", ColumnType(u8_at(header_buffer, column, 1)))
+        for column in tables_of(header_buffer, root, 7)
+    ]
+
+
+def rings_of(buffer: bytes, table: int) -> list[list[list[float]]]:
+    values = vector_of(buffer, table, 1, "f64")
+    points = [[values[i], values[i + 1]] for i in range(0, len(values), 2)]
+    ends = vector_of(buffer, table, 0, "u32") or [len(points)]
+    starts = [0, *ends[:-1]]
+    return [points[start:end] for start, end in zip(starts, ends, strict=True)]
+
+
+def geometry_of(buffer: bytes, table: int) -> dict[str, Any]:
+    kind = GeometryType(u8_at(buffer, table, 6))
+    match kind:
+        case GeometryType.POINT:
+            return {"type": "Point", "coordinates": rings_of(buffer, table)[0][0]}
+        case GeometryType.MULTI_POINT:
+            return {"type": "MultiPoint", "coordinates": rings_of(buffer, table)[0]}
+        case GeometryType.LINE_STRING:
+            return {"type": "LineString", "coordinates": rings_of(buffer, table)[0]}
+        case GeometryType.POLYGON:
+            return {"type": "Polygon", "coordinates": rings_of(buffer, table)}
+        case GeometryType.MULTI_LINE_STRING:
+            return {"type": "MultiLineString", "coordinates": rings_of(buffer, table)}
+        case GeometryType.MULTI_POLYGON:
+            parts = tables_of(buffer, table, 7)
+            return {"type": "MultiPolygon", "coordinates": [rings_of(buffer, p) for p in parts]}
+        case _:
+            raise FlatGeobufError(f"FlatGeobuf reading does not take {kind.name}")
+
+
+def properties_of(data: bytes, columns: Sequence[tuple[str, ColumnType]]) -> dict[str, Any]:
+    found: dict[str, Any] = {}
+    position = 0
+    while position < len(data):
+        (index,) = struct.unpack_from("<H", data, position)
+        name, kind = columns[index]
+        position += 2
+        match kind:
+            case ColumnType.INT:
+                found[name] = struct.unpack_from("<i", data, position)[0]
+                position += 4
+            case ColumnType.DOUBLE:
+                found[name] = struct.unpack_from("<d", data, position)[0]
+                position += 8
+            case _:
+                (length,) = struct.unpack_from("<I", data, position)
+                found[name] = data[position + 4 : position + 4 + length].decode()
+                position += 4 + length
+    return found
+
+
+def read_features(data: bytes) -> list[dict[str, Any]]:
+    head, *bodies = frames(data)
+    columns = columns_of(head)
+    features: list[dict[str, Any]] = []
+    for body in bodies:
+        root = root_of(body)
+        geometry = child_at(body, root, 0)
+        start = child_at(body, root, 1)
+        raw = b""
+        if start is not None:
+            (length,) = struct.unpack_from("<I", body, start)
+            raw = body[start + 4 : start + 4 + length]
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": None if geometry is None else geometry_of(body, geometry),
+                "properties": properties_of(raw, columns),
+            }
+        )
+    return features
+
+
 def geometry_type_of(feature_buffer: bytes) -> GeometryType:
     at = field_at(feature_buffer, root_of(feature_buffer), 0)
     if at is None:

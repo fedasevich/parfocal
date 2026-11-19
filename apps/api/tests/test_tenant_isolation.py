@@ -2260,6 +2260,13 @@ GET_ROUTES = {
             f"/api/review-tasks/{a.ids['annotate_task']}/slides/{a.ids['slide']}/check-status"
         ),
     ),
+    "getSharedLayerGroups": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['annotate_task']}/slides/{a.ids['slide']}"
+            "/shared-layer/groups"
+        ),
+    ),
     "listSharedAiObjects": Route(
         Exposure.TENANT,
         lambda a: (

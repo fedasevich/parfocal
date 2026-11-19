@@ -31,6 +31,7 @@ from parfocal_api.result_sets import (
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
 from parfocal_api.sample_files import SampleFile, stored_facts
 from parfocal_api.seed_request import seed_request
+from parfocal_api.showcase_annotation import seed_annotation_example
 from parfocal_api.showcase_demo import (
     DemoSets,
     add_demo_sets,
@@ -1091,9 +1092,55 @@ async def seed(
                 )
         await seat_accounts(engine, tenant_ids, viewer_emails, SEEDED_VIEWER)
         await seat_accounts(engine, tenant_ids, agent_emails, SEEDED_AGENT)
+        for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True):
+            owner = owners.get(tenant_id)
+            if owner is not None:
+                await seed_example(
+                    engine,
+                    Seeded(tenant_id, await people_of(engine, tenant_id), owner),
+                    results,
+                    workspace.gallery,
+                    agent_emails,
+                )
         return tenant_ids
     finally:
         await engine.dispose()
+
+
+async def members_named(
+    engine: Any, tenant_id: uuid.UUID, emails: Sequence[str]
+) -> list[uuid.UUID]:
+    if not emails:
+        return []
+    async with scoped_transaction(engine, DatabaseScope(platform=True, auth=True)) as connection:
+        found = await connection.scalars(
+            select(users.c.id)
+            .join(memberships, memberships.c.user_id == users.c.id)
+            .where(
+                memberships.c.tenant_id == tenant_id,
+                func.lower(users.c.email).in_([email.strip().lower() for email in emails]),
+            )
+            .order_by(users.c.email)
+        )
+        return list(found.all())
+
+
+async def seed_example(
+    engine: Any, seeded: Seeded, results: ResultStore, gallery: str, agent_emails: Sequence[str]
+) -> None:
+    assert seeded.owner is not None
+    agents = await members_named(engine, seeded.tenant_id, agent_emails)
+    async with scoped_transaction(
+        engine, DatabaseScope(tenant_id=seeded.tenant_id, user_id=seeded.people["ada"])
+    ) as connection:
+        await seed_annotation_example(
+            connection,
+            principal_of(seeded, "ada", Role.RESEARCHER, True),
+            MemberPrincipal(OWNER_SUBJECT, seeded.tenant_id, seeded.owner, Role.RESEARCHER, True),
+            results,
+            gallery,
+            [seeded.owner, *agents],
+        )
 
 
 async def unpublished_gallery(store: ObjectStore) -> list[str]:

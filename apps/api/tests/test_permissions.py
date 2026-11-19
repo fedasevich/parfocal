@@ -407,6 +407,7 @@ NEEDS_A_TASK = frozenset(
         "moveThreadOnSlide",
         "deleteThreadOnSlide",
         "createSharedObject",
+        "setSharedLayerGroups",
         "importSharedObjects",
         "changeAiObject",
         "changeAiObjects",
@@ -1120,6 +1121,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "GET", f"{w.shared_layer}/objects/{w.layer_object}/history"
     ),
     "listSharedAiObjects": lambda w: Call("GET", f"{w.shared_layer}/ai"),
+    "getSharedLayerGroups": lambda w: Call("GET", f"{w.shared_layer}/groups"),
+    "setSharedLayerGroups": lambda w: Call(
+        "PUT", f"{w.shared_layer}/groups", {"groups": [], "members": []}
+    ),
     "createSharedObject": lambda w: Call(
         "POST", f"{w.shared_layer}/objects", {"kind": "region", "geometry": SQUARE}
     ),

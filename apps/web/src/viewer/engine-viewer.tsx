@@ -15,6 +15,7 @@ import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
+import { useCellRetype } from "./picked-cell-retype.tsx";
 import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-slide-notice.tsx";
 import { SlideStage } from "./slide-stage.tsx";
 import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
@@ -104,6 +105,7 @@ export function EngineViewer({
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
+  const retype = useCellRetype(projectId, annotateTask);
   const withdrawn = taskDetail?.kind === "review" && isWithdrawn(taskDetail);
   const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
   const statesQuery = useGetReviewTaskStates(task ?? "", {
@@ -184,6 +186,7 @@ export function EngineViewer({
         module={session.module}
         slideId={slideId}
         inTask={task !== undefined}
+        retype={retype}
         reviewTaskId={reviewTask ?? undefined}
       />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />

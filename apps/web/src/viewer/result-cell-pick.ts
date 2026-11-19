@@ -16,6 +16,7 @@ export type PickedCell = {
   readonly number: number;
   readonly typeName: string | null;
   readonly score: number;
+  readonly ring: readonly number[];
 };
 
 export const pickSlopScreenPixels = 10;
@@ -70,6 +71,7 @@ export function cellAt(
       number,
       typeName: paints[classIndex]?.name ?? null,
       score: (chunk.score[local] ?? 255) / 255,
+      ring: Array.from(ring),
     };
   });
   return best;

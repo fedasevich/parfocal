@@ -4767,6 +4767,10 @@ msgstr ""
 msgid "Change it"
 msgstr ""
 
+#: src/viewer/picked-cell-retype.tsx
+msgid "Change its type in this task"
+msgstr ""
+
 #. placeholder {0}: sideName[side]
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Change the {0} slide"
@@ -16671,6 +16675,10 @@ msgstr ""
 
 #: src/screens/admin/sections.tsx
 msgid "The two factor setting did not save. Try again."
+msgstr ""
+
+#: src/viewer/picked-cell-retype.tsx
+msgid "The type was not saved. Try again."
 msgstr ""
 
 #. placeholder {0}: learnerView.corrections
