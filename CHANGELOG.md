@@ -2,6 +2,12 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.23.1 (2026-11-19)
+
+### Fixes
+
+- OPS-038: Treat Modal's plain TimeoutError as a GPU call still running
+
 ## v0.23.0 (2026-11-19)
 
 ### Features
