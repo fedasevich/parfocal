@@ -4,6 +4,9 @@ export const MODELS_PATH = "/models/";
 export const MODELS_KEY_PREFIX = "models/";
 export const MODEL_CACHE_CONTROL = "public, max-age=86400";
 
+export const SIGNIN_ART_FILE = "signin-slide-v1.webp";
+export const SIGNIN_ART_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
 const MODEL_FILE = /^[a-z0-9][a-z0-9_-]{0,63}(\.[a-z0-9_-]{1,32}){0,3}\.onnx$/;
 
 export function isModelsPath(pathname: string): boolean {
@@ -12,13 +15,14 @@ export function isModelsPath(pathname: string): boolean {
 
 export function modelKey(pathname: string): string | null {
   const file = pathname.slice(MODELS_PATH.length);
-  return MODEL_FILE.test(file) ? `${MODELS_KEY_PREFIX}${file}` : null;
+  return file === SIGNIN_ART_FILE || MODEL_FILE.test(file) ? `${MODELS_KEY_PREFIX}${file}` : null;
 }
 
 function modelHeaders(object: R2Object): Headers {
+  const art = object.key === `${MODELS_KEY_PREFIX}${SIGNIN_ART_FILE}`;
   return new Headers({
-    "Cache-Control": MODEL_CACHE_CONTROL,
-    "Content-Type": "application/octet-stream",
+    "Cache-Control": art ? SIGNIN_ART_CACHE_CONTROL : MODEL_CACHE_CONTROL,
+    "Content-Type": art ? "image/webp" : "application/octet-stream",
     "Content-Length": String(object.size),
     ETag: object.httpEtag,
     "X-Content-Type-Options": "nosniff",
