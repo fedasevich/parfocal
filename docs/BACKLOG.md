@@ -6761,6 +6761,18 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-19 the owner found the slide failure alert and the GPU wait timer drawn over other viewer UI. Four things claim the stage's top centre with their own absolute positions: the tool context bar and the floating pill in `packages/ui/src/components/viewer-tools.tsx`, `GpuWaitNotice` in `apps/web/src/gpu/gpu-wait-notice.tsx` and the open failure alert in `slide-stage.tsx`, and the guided card sits at the same spot. Give the stage one top centre stack that lays these out one under another in a fixed order, so none covers another or the stage tools, the minimap or the magnification bar.
   Done when a viewer spec shows the context bar, the GPU wait notice and the failure alert at once with no two rectangles intersecting and none covering the stage tools, at 1280 by 800 and 1024 by 700, and the existing viewer specs and stories pass.
   Depends on OPS-038, PROTO-034. Size: S.
+- [ ] PROTO-061 · Notifications load with a skeleton and the mark is the favicon everywhere
+  On 2026-11-19 the owner found three inconsistencies. The notifications popover opens as a thin line while its list loads. The header logo is a set of concentric circles, while PROTO-059 (favicon) drew the mark as four corners and a centre dot. And the whole page loader shows the mark with no name. Give the notifications popover a skeleton at its loaded size, use the favicon mark in the header logo and in the loader, and show the word Parfocal beside the mark in the whole page loader.
+  Done when a spec opens notifications with the list held and finds the skeleton at the popover's loaded height, the header and the loader draw the same mark as `public/favicon.svg`, the whole page loader shows Parfocal, and the touched stories pass.
+  Depends on PROTO-059. Size: S.
+- [ ] PROTO-062 · The sign-in page shows a real annotated slide
+  The sign-in page used to show a slide picture beside the form and now shows none. Render a real public sample slide region with its seeded annotations as a still image, store it in R2 beside the models, and show it on the left of the sign-in page, with the same picture for every visitor and nothing from a tenant.
+  Done when the image comes from a public sample with no PHI, is served from R2 with a long cache, the sign-in page shows it at desktop widths and hides it on narrow screens, and a spec checks it loads.
+  Depends on TEST-051. Size: S.
+- [ ] PROTO-063 · Arrow keys move between cells in the sample cells strip
+  In the Cells in your sample strip the hint says the arrow keys pick a cell, but they only nudge the camera. Decide with the Fable adviser whether arrows always step between cells while the strip has focus, or whether a setting chooses, and build it so the picked cell is outlined and the camera centres on it.
+  Done when a spec presses the arrow keys in the strip and the picked cell moves one step each press and the camera centres on it, and the hint matches the keys.
+  Depends on PROTO-034. Size: S.
 
 ---
 
