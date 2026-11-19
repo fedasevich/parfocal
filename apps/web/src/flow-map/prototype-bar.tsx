@@ -42,6 +42,7 @@ export function stepLink(ref: StepRef, ids: ScenarioIds) {
   if (step === undefined || chapter === undefined) return null;
   return targetFor(step.screen, ids, {
     scene: step.scene,
+    view: step.view,
     clinical: chapter.clinical ?? false,
     as: stepWho(ref),
   });

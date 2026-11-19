@@ -12,7 +12,6 @@ const signOffNotes: Record<(typeof mockScenes.signoff)[number], [string, string]
 const evaluationNotes: Record<(typeof mockScenes.evaluation)[number], [string, string]> = {
   report: ["Evaluation report", "RT-14's report as its pages"],
   arrange: ["Evaluation report · arrange", "Arranging blocks and format for this task"],
-  pdf: ["Evaluation report · PDF", "The PDF preview with page thumbnails"],
   retiredtpl: ["Evaluation report · retired template", "Issue, the report keeps template v2"],
   exportfail: ["Evaluation report · export failed", "Issue, the PDF could not be made"],
 };
@@ -44,5 +43,11 @@ export function disagreementPrototypeLinks(taskId: string) {
       note: evaluationNotes[scene][1],
       link: linkOptions({ to: "/tasks/$taskId/evaluation", params, search: { scene } }),
     })),
+    {
+      key: "evaluation-pdf",
+      label: "Evaluation report · PDF",
+      note: "The PDF preview with page thumbnails",
+      link: linkOptions({ to: "/tasks/$taskId/evaluation", params, search: { view: "pdf" } }),
+    },
   ];
 }

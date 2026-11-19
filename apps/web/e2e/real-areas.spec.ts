@@ -1,4 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
+import {
+  expectReadablePage,
+  pageSvg,
+  pdfViewer,
+  printed,
+  readingPage,
+  stepAndZoom,
+  stubPrint,
+} from "./pdf-preview-steps.ts";
 import { area, ok, realTags, signIn, viewableTask } from "./real.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -82,6 +91,32 @@ test(
     await page.goto(`/tasks/${task}/evaluation`);
     await noNotice(page);
     expect(unanswered).toEqual([]);
+  },
+);
+
+test(
+  "the evaluation PDF preview shows the real PDF pages, steps, zooms and prints",
+  realTags(area.reports),
+  async ({ page }) => {
+    await signIn(page, "/my-work");
+    const { task } = await viewableTask(page, "review");
+    await page.goto(`/tasks/${task}/evaluation`);
+    await page.getByRole("button", { name: "Preview the PDF" }).click();
+    await expect(page).toHaveURL(/view=pdf/);
+    const preview = pdfViewer(page);
+    const first = preview.getByRole("img", { name: "Page 1 of the report" });
+    await expectReadablePage(page, first);
+    expect(await pageSvg(first)).toMatch(/^<svg[^>]+viewBox=/);
+    const count = Number((await readingPage(page).textContent())?.split("/")[1]?.trim());
+    expect(count).toBeGreaterThan(0);
+    await stepAndZoom(page, count);
+    await stubPrint(page);
+    await preview.getByRole("button", { name: "Print" }).click();
+    await expect.poll(async () => (await printed(page)).length).toBe(1);
+    expect((await printed(page))[0]?.pages).toBe(count);
+    const file = await page.request.get(`/api/review-tasks/${task}/evaluation/exports/report.pdf`);
+    expect(file.headers()["content-type"]).toContain("application/pdf");
+    expect((await file.body()).subarray(0, 5).toString()).toBe("%PDF-");
   },
 );
 

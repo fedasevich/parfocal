@@ -9,7 +9,7 @@ export const Route = createFileRoute("/tasks/$taskId/evaluation")({
 
 function EvaluationReport() {
   const { taskId } = Route.useParams();
-  const { scene } = Route.useSearch();
+  const { scene, view } = Route.useSearch();
   const navigate = Route.useNavigate();
   return (
     <EvaluationScreen
@@ -18,6 +18,12 @@ function EvaluationReport() {
       onScene={(next) =>
         void navigate({
           search: (previous) => ({ ...previous, scene: next === "report" ? undefined : next }),
+        })
+      }
+      previewing={view === "pdf"}
+      onPreview={(open) =>
+        void navigate({
+          search: (previous) => ({ ...previous, view: open ? "pdf" : undefined }),
         })
       }
     />

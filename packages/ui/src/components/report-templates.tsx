@@ -154,6 +154,7 @@ function BlockSettings({ block, className, ...props }: BlockSettingsProps) {
 type PdfPreviewProps = React.ComponentProps<"div"> & {
   title: string;
   pages: number;
+  pageWidth?: number;
   current?: number;
   failed?: boolean;
   loading?: boolean;
@@ -167,10 +168,39 @@ type PdfPreviewProps = React.ComponentProps<"div"> & {
 };
 
 const READING_LINE = 120;
+const ZOOM_MIN = 50;
+const ZOOM_MAX = 300;
+const ZOOM_STEP = 25;
+const PAGE_GAP = 48;
+
+const zoomIn = (value: number) =>
+  Math.min(ZOOM_MAX, Math.floor(value / ZOOM_STEP) * ZOOM_STEP + ZOOM_STEP);
+const zoomOut = (value: number) =>
+  Math.max(ZOOM_MIN, Math.ceil(value / ZOOM_STEP) * ZOOM_STEP - ZOOM_STEP);
+
+function useFitZoom(holder: React.RefObject<HTMLDivElement | null>, pageWidth: number) {
+  const [fit, setFit] = React.useState(100);
+  React.useLayoutEffect(() => {
+    const node = holder.current;
+    if (!node) return;
+    const measure = () => {
+      const room = node.clientWidth - PAGE_GAP;
+      if (room <= 0) return;
+      const wanted = Math.floor((room / pageWidth) * 100);
+      setFit(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, wanted)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [holder, pageWidth]);
+  return fit;
+}
 
 function PdfPreview({
   title,
   pages,
+  pageWidth = 794,
   current = 1,
   failed = false,
   loading = false,
@@ -186,9 +216,11 @@ function PdfPreview({
 }: PdfPreviewProps) {
   const { t } = useLingui();
 
-  const [zoom, setZoom] = React.useState(100);
+  const [chosen, setChosen] = React.useState<number | null>(null);
   const [inner, setInner] = React.useState(current);
   const holder = React.useRef<HTMLDivElement>(null);
+  const fit = useFitZoom(holder, pageWidth);
+  const zoom = chosen ?? fit;
   const scroller = () =>
     holder.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]') ?? null;
   const numbers = Array.from({ length: pages }, (_, index) => index + 1);
@@ -242,7 +274,8 @@ function PdfPreview({
           size="sm"
           variant="ghost"
           aria-label={t`Zoom out`}
-          onClick={() => setZoom((value) => Math.max(50, value - 25))}
+          disabled={zoom <= ZOOM_MIN}
+          onClick={() => setChosen(zoomOut(zoom))}
         >
           <Icon name="minus" />
         </Button>
@@ -253,9 +286,19 @@ function PdfPreview({
           size="sm"
           variant="ghost"
           aria-label={t`Zoom in`}
-          onClick={() => setZoom((value) => Math.min(200, value + 25))}
+          disabled={zoom >= ZOOM_MAX}
+          onClick={() => setChosen(zoomIn(zoom))}
         >
           <Icon name="plus" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={t`Fit the page to the width`}
+          aria-pressed={chosen === null}
+          onClick={() => setChosen(null)}
+        >
+          <Icon name="frame" />
         </Button>
         <Button size="sm" disabled={failed || loading} onClick={onPrint}>
           <Trans>Print</Trans>
@@ -284,7 +327,12 @@ function PdfPreview({
               onClick={() => jumpTo(page)}
               className="group grid cursor-pointer justify-items-center gap-1 border-0 bg-transparent p-0 text-caption text-fg-dim"
             >
-              <span className="relative block aspect-[210/297] w-full overflow-hidden border-2 border-transparent bg-white group-aria-[current=page]:border-accent">
+              <span
+                className={cn(
+                  "relative block w-full overflow-hidden border-2 border-transparent bg-white group-aria-[current=page]:border-accent",
+                  pageWidth > 1000 ? "aspect-[297/210]" : "aspect-[210/297]",
+                )}
+              >
                 {thumbnail ? (
                   <span
                     aria-hidden="true"
@@ -314,7 +362,7 @@ function PdfPreview({
             className="h-full"
             viewportProps={{ tabIndex: 0, role: "region", "aria-label": t`Pages of the report` }}
           >
-            <div className="grid justify-items-center gap-6 p-6">
+            <div className="grid w-max min-w-full justify-items-center gap-6 p-6">
               {failed ? (
                 <div className="grid max-w-80 justify-items-center gap-2 self-center text-center text-body-sm">
                   <Icon name="warn" size="xl" className="text-warn" />
@@ -331,7 +379,12 @@ function PdfPreview({
                 </span>
               ) : renderPage ? (
                 numbers.map((page) => (
-                  <div key={page} data-pdf-page={page} style={{ zoom: zoom / 100 }}>
+                  <div
+                    key={page}
+                    data-pdf-page={page}
+                    className="max-w-none"
+                    style={{ width: Math.round((pageWidth * zoom) / 100) }}
+                  >
                     {renderPage(page)}
                   </div>
                 ))

@@ -5,6 +5,7 @@ export type WalkScreen = MapScreen | "home" | "project";
 export type WalkStep = {
   screen: WalkScreen;
   scene?: string;
+  view?: "pdf";
   who?: PersonaKey;
   text: string;
 };
@@ -289,7 +290,7 @@ export const chapters: Chapter[] = [
       },
       {
         screen: "evaluation",
-        scene: "pdf",
+        view: "pdf",
         text: "The exact file co-authors get, with thumbnails and zoom. Download it.",
       },
     ],
