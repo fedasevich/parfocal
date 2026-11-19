@@ -1,9 +1,11 @@
 import { useLingui } from "@lingui/react/macro";
+import { useListDecisions, useListReviewObjects } from "@parfocal/api-client";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
 import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { openPopout, useMainPopoutSync } from "../popout/popout-channel.ts";
+import { okData } from "../screens/placeholder.tsx";
 import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
 import {
   type Corner,
@@ -127,9 +129,43 @@ function useStageBlocks(frame: React.RefObject<HTMLElement | null>): ScreenRect[
   return blocks;
 }
 
+export type MinimapReview = { taskId: string; current: string | null };
+
+type ReviewProgress = {
+  current: string;
+  total: number;
+  decided: number;
+  slideName: string;
+};
+
+function useReviewProgress(
+  review: MinimapReview | undefined,
+  slideId: string,
+): ReviewProgress | null {
+  const enabled = review !== undefined;
+  const taskId = review?.taskId ?? "";
+  const objects = okData(useListReviewObjects(taskId, slideId, { query: { enabled } }).data);
+  const decisions = okData(
+    useListDecisions(taskId, slideId, undefined, { query: { enabled } }).data,
+  );
+  if (review === undefined || objects === undefined || objects.objects.length === 0) return null;
+  const order = objects.objects.map((item) => item.object);
+  const known = new Set(order);
+  const slide = objects.slide;
+  return {
+    current: review.current ?? order[0] ?? "",
+    total: order.length,
+    decided: (decisions ?? []).filter((item) => known.has(item.object)).length,
+    slideName: slide ? `${slide.label} · ${slide.stain}` : "",
+  };
+}
+
 type StageMinimapProps = {
   engine: ViewerEngine;
   slideId: string;
+  review?: MinimapReview;
+  guided?: boolean;
+  seenPercent?: number | null;
   overview?: StageSession["overview"];
   units?: Pick<ViewerModule, "effectiveMagnification">;
   surface?: MinimapSurface;
@@ -140,13 +176,22 @@ export function StageMinimap({
   slideId,
   overview,
   surface = "viewer",
+  review,
   ...view
 }: StageMinimapProps) {
   const image = useMinimapImage(slideId, overview);
   const setting = useResolvedSettings()?.minimap ?? "useful";
   const [choice, setChoice] = useMinimapCorner(surface);
+  const progress = useReviewProgress(review, slideId);
   return (
-    <PlacedMinimap {...view} image={image} setting={setting} choice={choice} onChoice={setChoice} />
+    <PlacedMinimap
+      {...view}
+      image={image}
+      progress={progress}
+      setting={setting}
+      choice={choice}
+      onChoice={setChoice}
+    />
   );
 }
 
@@ -154,11 +199,15 @@ const PlacedMinimap = memo(function PlacedMinimap({
   engine,
   units,
   onOpen,
+  guided = false,
+  seenPercent = null,
+  progress,
   image,
   setting,
   choice,
   onChoice: setChoice,
-}: Pick<StageMinimapProps, "engine" | "units" | "onOpen"> & {
+}: Pick<StageMinimapProps, "engine" | "units" | "onOpen" | "guided" | "seenPercent"> & {
+  progress: ReviewProgress | null;
   image: ReturnType<typeof useMinimapImage>;
   setting: MinimapSetting;
   choice: CornerChoice;
@@ -193,7 +242,19 @@ const PlacedMinimap = memo(function PlacedMinimap({
   useEffect(() => {
     send({ type: "CAMERA", tissueShare, magnification });
   }, [send, tissueShare, magnification]);
-  const boxSize = minimap.size === "pip" ? "compact" : (minimap.size ?? "full");
+  const boxSize = guided || minimap.size === "pip" ? "compact" : (minimap.size ?? "full");
+  const power = `${Math.round(magnification)}×`;
+  const foot =
+    guided && progress !== null
+      ? progress.slideName
+      : progress === null
+        ? t`Whole slide`
+        : t`${progress.current} of ${progress.total}`;
+  const footEnd = guided
+    ? t`Click to move`
+    : progress === null
+      ? power
+      : t`${power} · ${progress.decided} of ${progress.total} decided`;
   const sized = minimapBox(boxSize, slideRect);
   const blocks = useStageBlocks(frame);
   const chosen = cornerOfChoice(choice);
@@ -238,9 +299,14 @@ const PlacedMinimap = memo(function PlacedMinimap({
           className="pointer-events-auto"
           size={boxSize}
           image={{ src: image.src ?? "", width: slide.width, height: slide.height }}
-          title={<b>{t`Whole slide`}</b>}
-          foot={t`Whole slide`}
-          footEnd={`${Math.round(magnification)}×`}
+          title={
+            <>
+              <b>{t`Whole slide`}</b>
+              {seenPercent === null ? null : t` · ${seenPercent}% seen`}
+            </>
+          }
+          foot={foot}
+          footEnd={footEnd}
           viewport={viewport}
           onOpen={onOpen}
           onMoveView={moveView}

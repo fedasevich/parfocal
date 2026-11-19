@@ -17,9 +17,13 @@ export function slideDoneCounts(session: ReviewSession): SlideDoneCounts {
   return { ...counts, added: session.added.length };
 }
 
-type OpinionProps = { taskId: string; slideId: string; onObjects: () => void };
+type OpinionProps = {
+  taskId: string;
+  slideId: string;
+  onObjects: (object?: string) => void;
+};
 
-function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
+export function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
   const { t } = useLingui();
   const navigate = useNavigate();
   const session = useReviewSession(taskId, slideId);
@@ -33,7 +37,7 @@ function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
       id: object.object,
       text: t`${object.object} is still open`,
       goTo: t`Go to ${object.object}`,
-      onGoTo: onObjects,
+      onGoTo: () => onObjects(object.object),
     }));
   const blockers = open.length > 0 ? open : questionBlockers(questions, answers);
   return (
