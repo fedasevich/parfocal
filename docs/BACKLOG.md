@@ -6837,7 +6837,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The full viewer entry points section and rows 20, 21, 23 and 34 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): task rows, Team, disagreements, evaluation crops and finished jobs have no way into the viewer, slide rows are buttons so they cannot open in a new tab, a failed import counts as a model in the report, due dates differ between Team and the project, and Automatic imports opens Upload.
   Done when each listed place links to the viewer at the slide or object, slide rows are links, the report skips failed imports, due dates agree, Automatic imports opens its settings, with specs.
   Depends on PROTO-058. Size: M.
-- [ ] PROTO-075 · Smaller viewer and wording fixes from the audit
+- [x] PROTO-075 · Smaller viewer and wording fixes from the audit
   Rows 18, 25, 27, 28, 29, 30, 32, 33, 35 and 38 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the Opinion tab outside review tasks, no notice for importing or failed result sets, two tissue progress controls, no finish control in the annotate top bar, a never opened task shown as continued, the comments route without a slide, 1 slides, wrapping Objects rows, the sign off route for a signed task, and the ignored tab parameter.
   Done when each row has a spec or unit test and reads right on the fake API.
   Depends on PROTO-060. Size: M.
