@@ -90,7 +90,8 @@ test("a whole page load shows the reticle loader across the full screen", async 
   const loader = page.getByTestId("boot-loader");
   await expect(loader).toBeVisible();
   await expect(loader.getByRole("status")).toContainText("Loading Parfocal");
-  await expect(loader.locator("svg")).toBeVisible();
+  await expect(loader.locator('svg[data-slot="brand-mark"]')).toBeVisible();
+  await expect(loader.getByText("Parfocal", { exact: true })).toBeVisible();
   const box = await loader.boundingBox();
   const viewport = page.viewportSize();
   expect(box?.width).toBe(viewport?.width);

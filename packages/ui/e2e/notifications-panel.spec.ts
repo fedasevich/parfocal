@@ -50,6 +50,12 @@ test("mark all read clears every count and swaps the link for All read", async (
   await expect(page.getByRole("img", { name: "Unread" })).toHaveCount(0);
 });
 
+test("loading shows skeleton rows instead of the list", async ({ page }) => {
+  await page.goto(story("notifications-loading"));
+  await expect(page.getByTestId("notifications-skeleton")).toBeVisible();
+  await expect(rows(page)).toHaveCount(0);
+});
+
 test("see all is a button that asks to leave the panel", async ({ page }) => {
   await page.goto(story("notifications-interactive"));
   await page.getByRole("button", { name: "See all" }).click();

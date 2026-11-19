@@ -1,4 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import { BrandMark } from "@parfocal/ui/components/brand-mark";
 import { Button } from "@parfocal/ui/components/button";
 import {
   DeveloperDrawer,
@@ -1010,7 +1011,7 @@ export function DeveloperScreen({
   return (
     <main className="relative h-screen overflow-hidden bg-canvas">
       <header className="flex h-11 items-center gap-2 border-b border-line bg-chrome px-3 text-body-sm text-fg-dim">
-        <Icon name="parfocal" />
+        <BrandMark className="size-5" />
         <span>
           <Trans>Full viewer</Trans>
         </span>
