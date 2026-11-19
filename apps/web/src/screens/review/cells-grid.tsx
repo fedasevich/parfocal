@@ -9,6 +9,8 @@ import type { Answer } from "./review-state.ts";
 import { cellShapes, hpfSize } from "./slide-geometry.ts";
 
 const tile = 40;
+
+export const stripColumns = 13;
 const zoom = 1.4;
 
 export function cropStyle(object: string, size = tile) {
@@ -109,6 +111,7 @@ export function CellsGrid({
       onCancelRest={onCancelRest}
       onFoldChange={onFoldChange}
       onClose={onClose}
+      columns={stripColumns}
     >
       {cells.map((cell) => {
         const value = answer(cell.object)?.value;

@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { usePersonalKeys } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import {
   applyViewerKey,
+  cellArrowsHeld,
+  pansTakenByCells,
   type SelectionArea,
+  subscribeCellArrows,
   type ViewerKeyTarget,
   viewerKeyBindings,
 } from "./viewer-keys.ts";
+
+const noPans: ReadonlySet<string> = new Set();
 
 type KeyModule = Pick<ViewerModule, "createKeyPan" | "keyZoomOctaves" | "bindViewHistory">;
 
@@ -85,9 +90,17 @@ export function useViewerKeys(
   );
   const resolve = usePersonalKeys();
   const bindings = useMemo(() => viewerKeyBindings(resolve), [resolve]);
+  const cellsHold = useSyncExternalStore(subscribeCellArrows, () => cellArrowsHeld(engine));
+  const taken = useMemo(
+    () => (cellsHold ? pansTakenByCells(resolve) : noPans),
+    [cellsHold, resolve],
+  );
   const onFire = useCallback(
-    (fired: Parameters<typeof applyViewerKey>[0]) => applyViewerKey(fired, target, shift.current),
-    [target],
+    (fired: Parameters<typeof applyViewerKey>[0]) => {
+      if (fired.phase === "press" && !shift.current && taken.has(fired.action)) return;
+      applyViewerKey(fired, target, shift.current);
+    },
+    [target, taken],
   );
   useHotkeys(bindings, onFire);
 }

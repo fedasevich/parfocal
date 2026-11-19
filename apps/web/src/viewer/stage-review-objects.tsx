@@ -242,10 +242,18 @@ export function StageReviewObjects({
     }
     if (guided) advance(cell.object);
   };
+  const stepToOpenCell = (answered: ReviewObject) => {
+    if (guided || !gridOpen || answersOff !== undefined || answered.kind !== "cell") return;
+    const cellOrder = objects.filter((item) => item.kind === "cell").map((item) => item.object);
+    const next = nextOpenObject(cellOrder, new Set([...decided, answered.object]), answered.object);
+    if (next !== null) pick(next);
+  };
   useAnswerKeys(
     typeAnswers,
     (raw) => {
-      if (typedCell !== null) decideType(typedCell, raw);
+      if (typedCell === null) return;
+      decideType(typedCell, raw);
+      stepToOpenCell(typedCell);
     },
     ready && typedCell !== null,
   );
@@ -254,7 +262,9 @@ export function StageReviewObjects({
   useAnswerKeys(
     answersOf(session.style, session.classes, currentItem),
     (raw) => {
-      if (currentItem !== undefined) answer(currentItem, raw);
+      if (currentItem === undefined) return;
+      answer(currentItem, raw);
+      stepToOpenCell(currentItem);
     },
     listKeysLive,
   );
@@ -348,6 +358,7 @@ export function StageReviewObjects({
       )}
       {gridOpen && hasCells && ready && focus === null ? (
         <StageCellsGrid
+          engine={engine}
           session={session}
           saves={saves}
           slideId={slideId}

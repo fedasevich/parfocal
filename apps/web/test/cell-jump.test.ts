@@ -7,6 +7,7 @@ import {
   panned,
   placeBar,
   previousOpen,
+  stripStep,
   touchesCircle,
 } from "../src/screens/review/cell-jump.ts";
 
@@ -107,4 +108,34 @@ test("shift and J steps back through the open cells of a zone and wraps", () => 
     undefined,
   );
   assert.equal(previousOpen(order, undefined, open), "d");
+});
+
+const strip = Array.from({ length: 30 }, (_, index) => `C${index + 1}`);
+
+test("left and right step one cell in the strip and stop at its ends", () => {
+  assert.equal(stripStep(strip, "C5", "right", 13), "C6");
+  assert.equal(stripStep(strip, "C5", "left", 13), "C4");
+  assert.equal(stripStep(strip, "C1", "left", 13), "C1");
+  assert.equal(stripStep(strip, "C30", "right", 13), "C30");
+});
+
+test("up and down step one row of the strip", () => {
+  assert.equal(stripStep(strip, "C5", "down", 13), "C18");
+  assert.equal(stripStep(strip, "C18", "up", 13), "C5");
+  assert.equal(stripStep(strip, "C5", "up", 13), "C5");
+  assert.equal(stripStep(strip, "C18", "down", 13), "C30");
+  assert.equal(stripStep(strip, "C28", "down", 13), "C28");
+});
+
+test("up and down step one cell when the strip is a single row", () => {
+  const row = strip.slice(0, 12);
+  assert.equal(stripStep(row, "C5", "down", 13), "C6");
+  assert.equal(stripStep(row, "C5", "up", 13), "C4");
+  assert.equal(stripStep(row, "C12", "down", 13), "C12");
+});
+
+test("with no cell picked the strip starts at its first cell", () => {
+  assert.equal(stripStep(strip, undefined, "right", 13), "C1");
+  assert.equal(stripStep(strip, "T1", "down", 13), "C1");
+  assert.equal(stripStep([], undefined, "right", 13), undefined);
 });

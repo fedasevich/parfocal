@@ -33,6 +33,38 @@ export const viewerKeyIds = [
 
 const directions = new Set<string>(["up", "down", "left", "right"]);
 
+const cellArrowHolds = new WeakMap<object, number>();
+const cellArrowListeners = new Set<() => void>();
+
+export function holdCellArrows(engine: object): () => void {
+  const change = (by: number) => {
+    cellArrowHolds.set(engine, (cellArrowHolds.get(engine) ?? 0) + by);
+    for (const listener of cellArrowListeners) listener();
+  };
+  change(1);
+  return () => change(-1);
+}
+
+export const cellArrowsHeld = (engine: object) => (cellArrowHolds.get(engine) ?? 0) > 0;
+
+export function subscribeCellArrows(listener: () => void): () => void {
+  cellArrowListeners.add(listener);
+  return () => {
+    cellArrowListeners.delete(listener);
+  };
+}
+
+export function pansTakenByCells(options: Omit<Resolve, "scopes" | "only"> = {}): Set<string> {
+  const together = keyRegistry.bindings({
+    ...options,
+    scopes: ["viewer", "review"],
+    only: ["pan", "dnear"],
+  });
+  const kept = new Set(together.map((binding) => binding.action));
+  const pans = keyRegistry.bindings({ ...options, scopes: ["viewer"], only: ["pan"] });
+  return new Set(pans.map((binding) => binding.action).filter((action) => !kept.has(action)));
+}
+
 export function viewerKeyBindings(options: Omit<Resolve, "scopes" | "only"> = {}): Binding[] {
   return keyRegistry.bindings({ ...options, scopes: ["viewer"], only: viewerKeyIds });
 }
