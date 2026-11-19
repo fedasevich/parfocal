@@ -12,10 +12,13 @@
     <script>
       (function () {
         var choice = "system";
+        var stored;
+        var legacy;
+        var value;
         try {
-          var stored = JSON.parse(window.localStorage.getItem("parfocal.device-settings") || "{}");
-          var legacy = window.localStorage.getItem("parfocal-theme");
-          var value = stored && stored.theme !== undefined ? stored.theme : legacy;
+          stored = JSON.parse(window.localStorage.getItem("parfocal.device-settings") || "{}");
+          legacy = window.localStorage.getItem("parfocal-theme");
+          value = stored && stored.theme !== undefined ? stored.theme : legacy;
           if (value === "dark" || value === "light" || value === "system") choice = value;
         } catch (error) {}
         var light = typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: light)").matches;
