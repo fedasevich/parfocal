@@ -3,6 +3,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { IntoTopStack, useTopStacked } from "@parfocal/ui/components/top-stack";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -130,22 +131,26 @@ function ContextBar({
   ...props
 }: React.ComponentProps<"div"> & { label: string }) {
   const { t } = useLingui();
+  const stacked = useTopStacked();
 
   return (
-    <div
-      data-slot="context-bar"
-      role="toolbar"
-      aria-label={t`${label} options`}
-      className={cn(
-        "absolute top-3 left-1/2 z-4 flex -translate-x-1/2 items-center gap-2.5 py-1.5 pr-2 pl-3 text-caption whitespace-nowrap",
-        floatSurface,
-        className,
-      )}
-      {...props}
-    >
-      <span className="text-fg-faint">{label}</span>
-      {children}
-    </div>
+    <IntoTopStack order="bar">
+      <div
+        data-slot="context-bar"
+        role="toolbar"
+        aria-label={t`${label} options`}
+        className={cn(
+          "flex items-center gap-2.5 py-1.5 pr-2 pl-3 text-caption whitespace-nowrap",
+          stacked ? "max-w-full" : "absolute top-3 left-1/2 z-4 -translate-x-1/2",
+          floatSurface,
+          className,
+        )}
+        {...props}
+      >
+        <span className="text-fg-faint">{label}</span>
+        {children}
+      </div>
+    </IntoTopStack>
   );
 }
 
@@ -779,16 +784,20 @@ function Crosshair({ x, y }: { x: number | string; y: number | string }) {
 }
 
 function FloatingPill({ className, ...props }: React.ComponentProps<"div">) {
+  const stacked = useTopStacked();
   return (
-    <div
-      data-slot="floating-pill"
-      className={cn(
-        "absolute top-3 left-1/2 z-4 flex -translate-x-1/2 items-center gap-3 px-3 py-1.25 text-caption whitespace-nowrap [&>input]:absolute",
-        floatSurface,
-        className,
-      )}
-      {...props}
-    />
+    <IntoTopStack order="bar">
+      <div
+        data-slot="floating-pill"
+        className={cn(
+          "flex items-center gap-3 px-3 py-1.25 text-caption whitespace-nowrap [&>input]:absolute",
+          stacked ? "relative" : "absolute top-3 left-1/2 z-4 -translate-x-1/2",
+          floatSurface,
+          className,
+        )}
+        {...props}
+      />
+    </IntoTopStack>
   );
 }
 

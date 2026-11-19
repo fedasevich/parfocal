@@ -83,3 +83,20 @@ export async function untilGpuAnswers<T>(
     drop(id);
   }
 }
+
+export const holdGpuWaitEvent = "parfocal:hold-gpu-wait";
+
+export function holdGpuWait(seconds: number): void {
+  const noCancel: GpuCancel = () => Promise.resolve();
+  const attempt: GpuAttempt<never> = (call, signal) => {
+    if (call === null) {
+      return Promise.resolve({
+        waiting: { call: "held", waited_seconds: seconds, hold_seconds: 1 },
+      });
+    }
+    return new Promise((_, reject) =>
+      signal.addEventListener("abort", () => reject(new GpuCallCancelledError())),
+    );
+  };
+  void untilGpuAnswers("view-map", attempt, noCancel).catch(() => undefined);
+}

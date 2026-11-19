@@ -5,6 +5,7 @@ import { sampleSlides } from "./scenario.ts";
 export const fakeTileLifetimeSeconds = 600;
 export const fakeRemotePrefix = "remote-";
 export const fakeOfflinePrefix = "remote-offline-";
+export const fakeBrokenPrefix = "broken-";
 
 export const toTileAccess = (slideId: string, now: Date = new Date()): TileAccess => {
   const remote = slideId.startsWith(fakeRemotePrefix);
@@ -22,7 +23,11 @@ export const toTileAccess = (slideId: string, now: Date = new Date()): TileAcces
 
 export const tileAccessHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string }>("*/api/slides/:slideId/tile-access", ({ params }) =>
-    HttpResponse.json(toTileAccess(params.slideId), { headers: { "Cache-Control": "no-store" } }),
+    params.slideId.startsWith(fakeBrokenPrefix)
+      ? new HttpResponse(null, { status: 503 })
+      : HttpResponse.json(toTileAccess(params.slideId), {
+          headers: { "Cache-Control": "no-store" },
+        }),
   ),
   http.get("*/api/remote-tiles/:slideId/:name", () => passthrough()),
 ];
