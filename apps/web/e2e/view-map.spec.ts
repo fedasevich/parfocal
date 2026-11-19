@@ -43,3 +43,22 @@ test("the view map is computed on demand and asking again after a pan rescores n
   await expect(panel).toHaveAttribute("data-phase", "ready");
   expect(await tilesOf(panel)).toBe(first);
 });
+
+test("a view map waiting for a GPU says so and Cancel stops the wait", async ({ page }) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH&gpu=queued`);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+  await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
+  const panel = page.getByTestId("view-map");
+  await page.keyboard.press("Alt+5");
+  await page.getByTestId("view-map-ask").click();
+  const notice = page.getByRole("status", { name: "Waiting for a GPU" });
+  await expect(notice).toBeVisible();
+  await expect(notice).toHaveAttribute("data-kinds", "view-map");
+  await expect(panel).toHaveAttribute("data-phase", "scoring");
+  await notice.getByRole("button", { name: "Cancel" }).click();
+  await expect(notice).toHaveCount(0);
+  await expect(panel).toHaveAttribute("data-phase", "empty");
+  await expect(page.getByTestId("view-map-status")).not.toContainText("could not be mapped");
+});

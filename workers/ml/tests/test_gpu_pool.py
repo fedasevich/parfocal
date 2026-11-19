@@ -52,7 +52,14 @@ def test_best_tiers_run_on_l4_and_the_rest_on_t4() -> None:
     assert pool_for(Family.TYPER_GOOD).gpu is Gpu.T4
     assert pool_for(Family.EMBEDDER).gpu is Gpu.T4
     assert pool_for(Family.LAB_MODEL).gpu is None
-    assert {function_options(pool)["gpu"] for pool in POOLS} == {"T4", "L4", None}
+    assert [function_options(pool)["gpu"] for pool in POOLS] == [
+        "L4",
+        "T4",
+        "L4",
+        "T4",
+        ["T4", "L4"],
+        None,
+    ]
 
 
 def test_model_gpu_memory_fits_its_card() -> None:
@@ -101,7 +108,7 @@ def test_every_call_has_a_timeout() -> None:
 
 
 def test_all_pools_at_their_cap_stay_under_the_hourly_spend_cap() -> None:
-    assert worst_case_hourly_usd(POOLS) == pytest.approx(2 * 0.80 + 2 * 0.59 + 0.80 + 0.59 + 0.59)
+    assert worst_case_hourly_usd(POOLS) == pytest.approx(2 * 0.80 + 2 * 0.59 + 0.80 + 0.59 + 0.80)
     assert worst_case_hourly_usd(POOLS) <= MAX_HOURLY_SPEND_USD
 
 
@@ -160,3 +167,36 @@ def test_a_pinned_pool_passes_its_region_to_modal() -> None:
 def test_a_pool_pinned_outside_the_eu_and_us_is_rejected() -> None:
     with pytest.raises(PoolLimitError, match="Modal EU or US region"):
         validate_pools((replace(pool_for(Family.DETECTOR_GOOD), region="uk"),))
+
+
+def test_the_interactive_pool_falls_back_to_an_l4_inside_the_eu() -> None:
+    embedder = pool_for(Family.EMBEDDER)
+    options = function_options(embedder)
+    assert options["gpu"] == ["T4", "L4"]
+    assert options.get("region") == "eu"
+    assert embedder.hourly_usd_at_max == pytest.approx(0.80)
+
+
+def test_a_cold_interactive_container_gets_longer_to_start_than_a_call_runs() -> None:
+    options = function_options(pool_for(Family.EMBEDDER))
+    assert options["timeout"] == 60
+    assert options.get("startup_timeout", 0) > options["timeout"]
+    assert all(
+        "startup_timeout" not in function_options(pool)
+        for pool in POOLS
+        if pool.family is not Family.EMBEDDER
+    )
+
+
+def test_a_fallback_list_needs_a_region_and_no_repeats() -> None:
+    embedder = pool_for(Family.EMBEDDER)
+    with pytest.raises(PoolLimitError, match="needs a region pin"):
+        validate_pools((replace(embedder, region=None),))
+    with pytest.raises(PoolLimitError, match="repeats the first choice"):
+        validate_pools((replace(embedder, fallback_gpus=(Gpu.T4,)),))
+
+
+def test_a_fallback_card_must_fit_the_model_too() -> None:
+    small = replace(pool_for(Family.DETECTOR_BEST), gpu=Gpu.L4, fallback_gpus=(Gpu.T4,))
+    with pytest.raises(PoolLimitError, match="exceeds the card"):
+        validate_pools((small,))

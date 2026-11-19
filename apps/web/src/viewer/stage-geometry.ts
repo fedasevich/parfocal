@@ -1,3 +1,4 @@
+import type { ClassPalette } from "../shell/display-defaults.ts";
 import { type ClassPaint, paintFor } from "./class-paint.ts";
 import type { ClassName } from "./viewer-engine.ts";
 
@@ -186,6 +187,7 @@ export function summaryCells(setId: string, summary: SummaryRows) {
 export function placedObjects(
   objects: readonly Placeable[],
   projectClasses: readonly { id: string; name: string; colour: string }[] = [],
+  palette: ClassPalette = "standard",
 ) {
   return objects.flatMap((item) =>
     item.outline && item.outline.length >= 6
@@ -194,7 +196,7 @@ export function placedObjects(
             id: item.object,
             kind: item.kind === "cell" ? ("cell" as const) : ("region" as const),
             ring: item.outline,
-            ...painted(paintFor(item.class_name, projectClasses)),
+            ...painted(paintFor(item.class_name, projectClasses, null, palette)),
             score: item.score,
           },
         ]

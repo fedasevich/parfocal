@@ -3,9 +3,11 @@ from collections.abc import Generator
 
 import pytest
 from db_support import ApiAs
+from test_gpu_calls import EU_WAIT, Clock, EuQueue, queue_in
 from test_model_runs import Lab, make_lab, problem
 from workspace_support import owner
 
+from parfocal_api.gpu_calls import gpu_calls_of
 from parfocal_api.principals import ServicePrincipal
 from parfocal_common.embedding_cache import EMBEDDING_BYTES
 from parfocal_common.view_embeddings import (
@@ -200,3 +202,37 @@ def test_no_answering_encoder_is_a_503(api: ApiAs, lab: Lab, pools: FakeEncoder 
     finally:
         if pools is not None:
             del api.app.state.warm_gate
+
+
+def test_a_queued_encoder_answers_waiting_and_the_token_fetches_the_embedding(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    clock = Clock()
+    queue = EuQueue(clock, FakeEncoder())
+    queue_in(api, queue, clock)
+    try:
+        first = ask(api, lab)
+        assert first.status_code == 202, first.text
+        token = first.json()["call"]
+        other = api(lab.people["owner"]).post(
+            f"/api/slides/{lab.slides[1]}/embeddings/view", params={"call": token}, json=VIEW
+        )
+        assert problem(other) == (404, "gpu-call-not-found")
+        path = f"/api/slides/{lab.slides[0]}/embeddings/view"
+        answer = first
+        for _ in range(20):
+            answer = api(lab.people["owner"]).post(path, params={"call": token}, json=VIEW)
+            if answer.status_code != 202:
+                break
+            token = answer.json()["call"]
+        assert answer.status_code == 200, answer.status_code
+        assert answer.content == EMBEDDING
+    finally:
+        api.app.dependency_overrides.pop(gpu_calls_of, None)
+    assert len(queue.submitted) == 1
+    rows = owner(
+        database,
+        "SELECT (details::jsonb->>'waited_seconds')::float FROM audit_events "
+        f"WHERE action = 'view.embedded' AND target_id = '{lab.slides[0]}'",
+    )
+    assert rows == [(EU_WAIT,)]

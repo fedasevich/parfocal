@@ -2,6 +2,7 @@ import { type OutlineTypes, type TypedOutline, typeOutlines } from "@parfocal/ap
 import { mayNotBeNucleus } from "@parfocal/ui/lib/not-a-nucleus";
 import { type AnnotationDocument, typeShape } from "../annotations/document.ts";
 import { boundsOf, type OutlineTyping, type Shape } from "../annotations/shapes.ts";
+import { type GpuCancel, serverGpuCancel, untilGpuAnswers } from "../gpu/gpu-wait.ts";
 import { smartSource } from "./smart-run.ts";
 
 export const typedSources: ReadonlySet<string> = new Set([smartSource]);
@@ -11,11 +12,24 @@ export type OutlineTyper = (
   outlines: readonly { points: number[] }[],
 ) => Promise<OutlineTypes>;
 
-export const serverTyper: OutlineTyper = async (slideId, outlines) => {
-  const response = await typeOutlines(slideId, { outlines: [...outlines] });
-  if (response.status !== 200) throw new Error("The typer did not answer");
-  return response.data;
-};
+export function typerOf(cancelCall: GpuCancel = serverGpuCancel): OutlineTyper {
+  return (slideId, outlines) =>
+    untilGpuAnswers(
+      "typer",
+      async (call, signal) => {
+        const params = call === null ? undefined : { call };
+        const response = await typeOutlines(slideId, { outlines: [...outlines] }, params, {
+          signal,
+        });
+        if (response.status === 202) return { waiting: response.data };
+        if (response.status !== 200) throw new Error("The typer did not answer");
+        return { answered: response.data };
+      },
+      cancelCall,
+    );
+}
+
+export const serverTyper: OutlineTyper = typerOf();
 
 export const typerBatch = 500;
 

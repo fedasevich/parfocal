@@ -1031,6 +1031,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/slides/{w.slide}/embeddings/warm", {"device": "fast"}
     ),
     "scoreViewMapTile": lambda w: Call("POST", f"/api/slides/{w.slide}/view-map/0/0"),
+    "cancelGpuCall": lambda w: Call("DELETE", "/api/gpu-calls/e30.c2lnbmF0dXJl"),
     "embedSlideView": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/embeddings/view",

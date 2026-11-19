@@ -1,5 +1,6 @@
-import { getEmbedSlideViewUrl, type ViewToEmbed } from "@parfocal/api-client";
+import type { GpuWaiting, ViewToEmbed } from "@parfocal/api-client";
 import type { SamClient, SamEncoded } from "@parfocal/viewer-engine";
+import { type GpuCancel, serverGpuCancel, untilGpuAnswers } from "../gpu/gpu-wait.ts";
 import type { PresetPatchReader } from "./patch-reader.ts";
 import {
   decodeFloat16,
@@ -45,20 +46,29 @@ export type ViewSam = Pick<SamClient, "encode" | "adopt">;
 
 export function postViewEmbedding(
   fetcher: typeof fetch = (input, init) => fetch(input, init),
+  cancelCall: GpuCancel = serverGpuCancel,
 ): ViewEmbeddingPost {
-  return async (slideId, view) => {
-    const response = await fetcher(getEmbedSlideViewUrl(slideId), {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(view),
-    });
-    if (!response.ok) throw new Error("The server did not embed the view");
-    if (response.headers.get("Parfocal-Encoder") !== viewEncoder) {
-      throw new Error("The server embedded the view with another encoder");
-    }
-    return response.arrayBuffer();
-  };
+  return (slideId, view) =>
+    untilGpuAnswers(
+      "encoder",
+      async (call, signal) => {
+        const query = call === null ? "" : `?${new URLSearchParams({ call }).toString()}`;
+        const response = await fetcher(`/api/slides/${slideId}/embeddings/view${query}`, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(view),
+          signal,
+        });
+        if (response.status === 202) return { waiting: (await response.json()) as GpuWaiting };
+        if (!response.ok) throw new Error("The server did not embed the view");
+        if (response.headers.get("Parfocal-Encoder") !== viewEncoder) {
+          throw new Error("The server embedded the view with another encoder");
+        }
+        return { answered: await response.arrayBuffer() };
+      },
+      cancelCall,
+    );
 }
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

@@ -9,10 +9,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { useDisplayDefaults } from "../shell/display-defaults.ts";
+import { useStageDisplay } from "../viewer/stage-display.tsx";
 import {
   colorizeHeatmap,
   defaultHeatmapLook,
-  defaultHeatmapOpacity,
   type HeatmapColormap,
   slideToScreen,
   type ViewerEngine,
@@ -25,9 +26,9 @@ export type HeatmapChoices = {
   change: (setId: string, next: Partial<HeatmapChoice>) => void;
 };
 
-const firstChoice: HeatmapChoice = { shown: true, colormap: defaultHeatmapLook.colormap };
-
 export function useHeatmapChoices(): HeatmapChoices {
+  const { colormap } = useDisplayDefaults();
+  const firstChoice: HeatmapChoice = { shown: true, colormap };
   const [choices, setChoices] = useState<Readonly<Record<string, HeatmapChoice>>>({});
   return {
     choiceOf: (setId) => choices[setId] ?? firstChoice,
@@ -80,9 +81,10 @@ type HeatmapImageProps = {
   stage: HTMLElement;
   set: ResultSet;
   choice: HeatmapChoice;
+  opacity: number;
 };
 
-function HeatmapImage({ engine, stage, set, choice }: HeatmapImageProps) {
+function HeatmapImage({ engine, stage, set, choice, opacity }: HeatmapImageProps) {
   const facts = useSetHeatmap(set);
   const grid = useQuery({
     queryKey: ["heatmap-grid", set.id],
@@ -121,7 +123,7 @@ function HeatmapImage({ engine, stage, set, choice }: HeatmapImageProps) {
         top: from.y,
         width: to.x - from.x,
         height: to.y - from.y,
-        opacity: defaultHeatmapOpacity,
+        opacity,
       }}
     />
   );
@@ -132,10 +134,14 @@ type HeatmapLayersProps = {
   stage: HTMLElement;
   slideId: string;
   choices: HeatmapChoices;
+  taskId?: string | undefined;
 };
 
-export function HeatmapLayers({ engine, stage, slideId, choices }: HeatmapLayersProps) {
+export function HeatmapLayers({ engine, stage, slideId, choices, taskId }: HeatmapLayersProps) {
   const sets = okData(useListSlideResultSets(slideId).data) ?? [];
+  const { heatmapOpacity } = useDisplayDefaults();
+  const { heatmap } = useStageDisplay(taskId);
+  const opacity = (heatmap > 0 ? heatmap : heatmapOpacity) / 100;
   return (
     <>
       {sets.filter(mayBeHeatmap).map((set) => (
@@ -145,6 +151,7 @@ export function HeatmapLayers({ engine, stage, slideId, choices }: HeatmapLayers
           stage={stage}
           set={set}
           choice={choices.choiceOf(set.id)}
+          opacity={opacity}
         />
       ))}
     </>

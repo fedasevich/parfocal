@@ -4697,6 +4697,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Copy what only `parfocal-dev` holds into `parfocal-dev-eu` (`fixtures/` has 2,203 objects there and 33 in the EU bucket, among them `fixtures/ui-visual/` and `fixtures/sam-parity/`), point every reader at the EU endpoint with a read-only key scoped to `parfocal-dev-eu`, and remove the bucket from OpenTofu with a plan that destroys only it. Write the owner's delete command, its cost and what it frees in `docs/decisions.md`.
   Done when a full CI run and `pnpm fixtures` pass with no key that can reach `parfocal-dev`, `git grep` finds no reader of it, and the owner's delete step is in `docs/decisions.md`.
   Size: S.
+- [ ] OPS-038 · A GPU call waiting for an EU GPU shows the wait, not an error
+  Decision 159 (what a GPU job does when Modal has no GPU free in the EU) keeps all six GPU pools pinned to Modal's `eu` region. On 2026-11-19 a view map call waited 244 s for a T4 and the typer and view map answered Cloudflare's 524, which the viewer shows as a failure.
+  Let the API answer a GPU call that is still waiting for a container with a waiting state the viewer can poll instead of holding the request past Cloudflare's 100 s, show "Waiting for a GPU" with Cancel in the typer and view map, make the deployed smoke retry once after three minutes before it fails, and log each wait. After a week, write a result file with how often the EU wait passed 60 s.
+  Done when an API test holds a fake GPU pool for 150 s and the call ends in a result without a 524, a browser test sees "Waiting for a GPU" and Cancel stops the call, the smoke passes on a cold EU pool, and the result file exists.
+  Size: M.
 
 ---
 
@@ -6731,12 +6736,17 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser test on RT-14 sees all six chips inside the panel, reads "boundary is off" on T2, finds no Areas card in guided review, reads the minimap's head and both foot texts without overlap, opens T2's seeded thread and sees its popover, and finds a T6⁺ tag on the slide.
   Size: S.
   Row 62 needs no new task, PROTO-048 already holds it.
-- [ ] PROTO-057 · The Display settings gain the mock's display ideas that make sense
+- [x] PROTO-057 · The Display settings gain the mock's display ideas that make sense
   Decision 155 (which extra settings the Display tab gets): the owner asked for the display ideas the mock already has where they make sense, such as fill opacity, beyond the Motion row PROTO-031 added. The mock's display rows include fill opacity, heatmap opacity and colormap, confidence display and fade, and the common viewer rows text size and a colour-blind-safe class palette are candidates too.
   List every display row in `docs/design/ux-mock/index.html`, keep the ones that change how the slide or its overlays look for one person (not developer or renderer rows), and add each as a Settings, Display row that previews what it does, stored per device as PROTO-031 stores Motion. Record the rows left out and why in the log.
   Done when a browser test changes each new row, sees the viewer redraw with it (fill opacity read from the overlay layer, text size from the computed root font size, the class palette from a drawn cell colour) and finds it kept after a reload, and axe passes on the Display tab in both themes.
   Depends on PROTO-031.
   Size: M.
+- [x] PROTO-058 · Help is wider, shows the running version and lists what changed for users
+  On 2026-11-19 the owner found the Help dialog too narrow to read, its footer cramped, and its "What's new" list showing the raw changelog: internal lines such as "Claim PROTO-030 PROTO-031 for the parallel run" and "Add the task to seed only real inference results", and v0.21.0 as the newest while a later release runs.
+  Widen the Help dialog to a readable measure with a footer that keeps its three actions on one line. Show the running app version (from the build) at the top of What's new. Build the notes from the changelog with only user facing entries: features and fixes with a plain sentence, no chores, claims, docs, backlog or test lines, and no task IDs. Keep every release reachable, the newest open.
+  Done when a unit test filters a sample changelog to user facing lines, a browser test opens Help and reads the build's version and at least one user facing note with no task ID or "Claim" line, and the dialog is at least 640 px wide on a 1440 px screen with its footer on one line.
+  Size: S.
 ---
 
 ## Later epics (not in v1, kept for planning)

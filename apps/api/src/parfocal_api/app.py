@@ -42,6 +42,7 @@ from parfocal_api import (
     events_out,
     feedback,
     first_reads,
+    gpu_calls,
     hidden_models,
     home,
     import_checks,
@@ -400,6 +401,7 @@ def create_app(
     app.include_router(cell_crops.router)
     app.include_router(slide_embeddings.router)
     app.include_router(view_maps.router)
+    app.include_router(gpu_calls.router)
     app.include_router(outline_types.router)
     app.include_router(slide_areas.router)
 

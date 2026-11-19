@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { okData } from "../screens/placeholder.tsx";
 import { shownSetsOf, taskDisplayView } from "../screens/review/display-model.ts";
 import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
+import { useDisplayDefaults } from "../shell/display-defaults.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { DockCard, dockedCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
@@ -192,14 +193,15 @@ function SetRegions({
 }
 
 function useSetPaints(setId: string) {
+  const { classPalette: palette } = useDisplayDefaults();
   const detail = okData(useGetResultSet(setId).data);
   const projectId = detail?.project_id ?? "";
   const projectClasses = okData(
     useListProjectClasses(projectId, { query: { enabled: projectId !== "" } }).data,
   );
   return useMemo(
-    () => classPaints(detail?.classes ?? [], projectClasses ?? []),
-    [detail, projectClasses],
+    () => classPaints(detail?.classes ?? [], projectClasses ?? [], palette),
+    [detail, projectClasses, palette],
   );
 }
 

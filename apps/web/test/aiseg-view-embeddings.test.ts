@@ -117,6 +117,28 @@ describe("live ViT-L view embeddings", () => {
     assert.equal((await views.embedding(slideId, view))?.[0], 0.5);
   });
 
+  it("polls a waiting server with the call token until the embedding arrives", async () => {
+    const urls: string[] = [];
+    const post = postViewEmbedding(
+      (input) => {
+        urls.push(typeof input === "string" ? input : "");
+        const waiting = { state: "waiting", call: "token-1", waited_seconds: 20, hold_seconds: 20 };
+        return Promise.resolve(
+          urls.length === 1
+            ? new Response(JSON.stringify(waiting), { status: 202 })
+            : new Response(halves(), { status: 200, headers: { "Parfocal-Encoder": viewEncoder } }),
+        );
+      },
+      () => Promise.resolve(),
+    );
+    const body = await post(slideId, view);
+    assert.equal(body.byteLength, serverEmbeddingValues * 2);
+    assert.deepEqual(urls, [
+      `/api/slides/${slideId}/embeddings/view`,
+      `/api/slides/${slideId}/embeddings/view?call=token-1`,
+    ]);
+  });
+
   it("refuses a short body", async () => {
     const views = createViewEmbeddings({
       post: () => Promise.resolve(new ArrayBuffer(12)),

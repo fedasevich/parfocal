@@ -1,16 +1,23 @@
 import base64
 import logging
-import time
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Path, Query, Response
 from pydantic import BaseModel, Field
-from starlette.concurrency import run_in_threadpool
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
+from parfocal_api.gpu_calls import (
+    GpuAnswer,
+    GpuCalls,
+    GpuCallScope,
+    GpuWaiting,
+    gpu_calls_of,
+    scope_of,
+    waiting_response,
+)
 from parfocal_api.gpu_warm import warm_for, warm_gate_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
@@ -180,26 +187,29 @@ async def warm_slide_embedder(
     return Response(status_code=204)
 
 
-async def embedded_view(gate: WarmGate, view: ViewEmbeddingCall) -> tuple[bytes, float]:
-    started = time.perf_counter()
+async def embedded_view(
+    calls: GpuCalls, scope: GpuCallScope, view: ViewEmbeddingCall, token: str | None
+) -> tuple[bytes, GpuAnswer] | GpuWaiting:
     try:
-        reply = await run_in_threadpool(gate.request, view.call())
+        answer = await calls.answer_or_wait(scope, view.call(), token)
+    except ProblemError:
+        raise
     except Exception as error:
         logger.warning("view embedding call failed: %s", type(error).__name__)
         raise EncoderOfflineError from error
-    waited = time.perf_counter() - started
-    embedding = embedding_in(reply)
+    if isinstance(answer, GpuWaiting):
+        return answer
+    embedding = embedding_in(answer.reply)
     if embedding is None:
         raise EncoderOfflineError
-    reported = seconds_in(reply)
-    return embedding, round(waited if reported is None else reported, 3)
+    return embedding, answer
 
 
 @router.post(
     "/view",
     operation_id="embedSlideView",
     response_class=Response,
-    responses={200: {"content": {EMBEDDING_CONTENT_TYPE: {}}}},
+    responses={200: {"content": {EMBEDDING_CONTENT_TYPE: {}}}, 202: {"model": GpuWaiting}},
     **require(Permission.SEE_SLIDES, write=True),
 )
 async def embed_slide_view(
@@ -207,7 +217,8 @@ async def embed_slide_view(
     body: ViewToEmbed,
     principal: CurrentPrincipal,
     connection: TenantConnection,
-    gate: Annotated[WarmGate, Depends(warm_gate_of)],
+    calls: Annotated[GpuCalls, Depends(gpu_calls_of)],
+    call: str | None = Query(default=None, max_length=2048),
 ) -> Response:
     slide = await readable_slide(connection, principal, slide_id)
     if await ai_hidden_on(connection, principal, slide.project_id, slide_id):
@@ -223,7 +234,13 @@ async def embed_slide_view(
     view = ViewEmbeddingCall(
         slide.tenant_id, slide_id, body.x, body.y, body.width, body.height, folder
     )
-    embedding, gpu_seconds = await embedded_view(gate, view)
+    scope = scope_of("view-embedding", principal, slide.tenant_id, slide_id)
+    outcome = await embedded_view(calls, scope, view, call)
+    if isinstance(outcome, GpuWaiting):
+        return waiting_response(outcome)
+    embedding, answer = outcome
+    reported = seconds_in(answer.reply)
+    gpu_seconds = answer.waited_seconds if reported is None else round(reported, 3)
     await record(
         connection,
         actor_of(principal),
@@ -235,6 +252,7 @@ async def embed_slide_view(
             "project_id": str(slide.project_id),
             "encoder": f"{ENCODER_MODEL}@{ENCODER_VERSION}",
             "gpu_seconds": gpu_seconds,
+            "waited_seconds": answer.waited_seconds,
         },
     )
     return Response(embedding, media_type=EMBEDDING_CONTENT_TYPE, headers=VIEW_EMBEDDING_HEADERS)

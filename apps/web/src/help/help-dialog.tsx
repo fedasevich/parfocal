@@ -5,7 +5,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "../shell/destinations.ts";
 import { useGoTo } from "../shell/router-link.tsx";
 import { helpTopics } from "./help-topics.ts";
-import { latestReleases } from "./release-notes-source.ts";
+import { allReleases, appVersion } from "./release-notes-source.ts";
 import { ToolHintsSection } from "./tool-hints-section.tsx";
 import { closeHelp, startTour, useHelpOpen } from "./tour-state.ts";
 import { progressOf, resumeIndex, tourLength } from "./tour-steps.ts";
@@ -24,12 +24,12 @@ export function HelpDialog() {
         if (!next) closeHelp();
       }}
       title={t`Help`}
+      width={720}
       subtitle={t`Short answers, the shortcut sheet, the tour and what changed.`}
       primaryLabel={resuming ? t`Resume the tour` : t`Take the tour`}
       onPrimary={() => startTour(resumeIndex(progress))}
       cancelLabel={t`Close`}
       onCancel={closeHelp}
-      hint={t`The tour has ${tourLength} steps and you can stop at any time.`}
       secondaryAction={
         <button
           type="button"
@@ -52,20 +52,26 @@ export function HelpDialog() {
             </div>
           ))}
         </dl>
+        <p className="text-body-sm text-fg-dim">
+          <Trans>The tour has {tourLength} steps and you can stop at any time.</Trans>
+        </p>
         <ToolHintsSection />
         <section aria-labelledby="whats-new-heading" className="grid gap-2 text-body-sm">
           <h3 id="whats-new-heading" className="font-medium text-fg">
             <Trans>What's new</Trans>
           </h3>
-          {latestReleases.map((release) => (
-            <details key={release.version} open>
+          <p data-testid="app-version" className="font-medium text-fg">
+            <Trans>You are running {appVersion}</Trans>
+          </p>
+          {allReleases.map((release, index) => (
+            <details key={release.version} open={index === 0}>
               <summary className="cursor-pointer text-fg-dim">
                 <h4 className="inline">
                   {release.version} ({release.date})
                 </h4>
               </summary>
               <ul className="list-disc pl-5 text-fg-dim">
-                {release.notes.slice(0, 5).map((note) => (
+                {release.notes.map((note) => (
                   <li key={note}>{note}</li>
                 ))}
               </ul>

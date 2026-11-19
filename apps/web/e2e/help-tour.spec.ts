@@ -31,6 +31,26 @@ test("Help in the account menu opens the topics and stopping keeps the place", a
   await expect(help).toContainText("Review an AI result");
   await expect(help.getByRole("heading", { name: "What's new" })).toBeVisible();
   await expect(help.getByRole("heading", { name: /^v\d+\.\d+\.\d+ \(/ }).first()).toBeVisible();
+  await expect(help.getByTestId("app-version")).toHaveText(/^You are running v\d+\.\d+\.\d+$/);
+  const notes = await help.locator("details[open] li").allTextContents();
+  expect(notes.length).toBeGreaterThan(0);
+  for (const note of notes) expect(note).not.toMatch(/[A-Z]{2,}-\d+|^Claim/);
+  const box = await help.boundingBox();
+  expect(box?.width ?? 0).toBeGreaterThanOrEqual(640);
+  const footerTops = await help.locator("button:visible").evaluateAll((buttons) =>
+    buttons
+      .filter((button) =>
+        /^(Close|Open the shortcut sheet|Take the tour|Resume the tour)/.test(
+          button.textContent ?? "",
+        ),
+      )
+      .map((button) => {
+        const rect = button.getBoundingClientRect();
+        return Math.round((rect.top + rect.bottom) / 2 / 4);
+      }),
+  );
+  expect(footerTops.length).toBe(3);
+  expect(new Set(footerTops).size).toBe(1);
   await page.mouse.move(0, 0);
   const results = await new AxeBuilder({ page })
     .include('[role="dialog"]')

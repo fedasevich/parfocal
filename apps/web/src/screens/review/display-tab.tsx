@@ -6,6 +6,7 @@ import {
   defaultDisplaySettings,
 } from "@parfocal/ui/components/display-panel";
 import type { ReactNode } from "react";
+import { personalPanelValues, useDisplayDefaults } from "../../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { overridesOf, type TaskDisplayView, taskDisplayView } from "./display-model.ts";
 
@@ -56,12 +57,14 @@ export function displaySettings(
   locks: DisplayLock[] = [],
   confidence?: string,
   labCutoff?: number,
+  personal: Partial<DisplaySettings> = personalPanelValues(),
 ): DisplaySettings {
   const picked = display?.presets.find((item) => item.name === preset)?.settings ?? {};
   const locked = Object.fromEntries(locks.map((lock) => [lock.setting, lock.value]));
   return {
     ...defaultDisplaySettings,
     ...(display?.defaults ?? {}),
+    ...personal,
     ...(labCutoff === undefined ? {} : { cutoff: labCutoff }),
     ...(confidence === undefined ? {} : { confidence }),
     ...picked,
@@ -86,11 +89,12 @@ export function withOverrides(
 export function myDisplaySettings(
   my: MyDisplay | undefined,
   labCutoff: number | undefined,
+  personal: Partial<DisplaySettings> = personalPanelValues(),
 ): DisplaySettings {
   const view = my ? taskDisplayView(my, "") : undefined;
   const preset = my && my.preset_id !== null ? my.preset : null;
   return withOverrides(
-    displaySettings(view, preset, [], undefined, labCutoff),
+    displaySettings(view, preset, [], undefined, labCutoff, personal),
     view ? overridesOf(my, view) : {},
     view,
   );
@@ -148,8 +152,9 @@ export function DisplayTab({
   onSettingChange,
   classVisibility,
 }: DisplayTabProps) {
+  const personal = personalPanelValues(useDisplayDefaults());
   const picked = withOverrides(
-    displaySettings(display, preset, extraLocks, confidence, useLabDecisionCutoff()),
+    displaySettings(display, preset, extraLocks, confidence, useLabDecisionCutoff(), personal),
     overrides,
     display,
     extraLocks,

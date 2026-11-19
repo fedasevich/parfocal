@@ -4,6 +4,8 @@ import { test } from "node:test";
 import {
   type CellCollection,
   firstTypeableCell,
+  gpuAnswer,
+  gpuRetryAfterMs,
   outlinePoints,
   retriesTyping,
   type TypedOutlines,
@@ -81,6 +83,66 @@ test("only a busy or cold gateway is asked again", () => {
   assert.equal(retriesTyping(503), true);
   assert.equal(retriesTyping(502), true);
   assert.equal(retriesTyping(504), true);
+  assert.equal(retriesTyping(524), true);
   assert.equal(retriesTyping(422), false);
   assert.equal(retriesTyping(403), false);
+});
+
+type Reply = { status(): number; json(): Promise<unknown> };
+
+const reply = (status: number, body: unknown = {}): Reply => ({
+  status: () => status,
+  json: () => Promise.resolve(body),
+});
+
+const waitingReply = (call: string) => reply(202, { state: "waiting", call });
+
+function scripted(replies: Reply[]) {
+  const calls: (string | null)[] = [];
+  const slept: number[] = [];
+  let clock = 0;
+  return {
+    calls,
+    slept,
+    now: () => clock,
+    post: (call: string | null) => {
+      calls.push(call);
+      clock += 45_000;
+      const next = replies.shift();
+      assert.ok(next !== undefined, "the smoke asked once too often");
+      return Promise.resolve(next);
+    },
+    sleep: (ms: number) => {
+      slept.push(ms);
+      clock += ms;
+      return Promise.resolve();
+    },
+  };
+}
+
+test("the smoke polls a waiting GPU call with its token until the answer", async () => {
+  const run = scripted([waitingReply("a"), waitingReply("b"), reply(200)]);
+  const { response, retried } = await gpuAnswer(run.post, run.sleep, run.now);
+  assert.equal(response.status(), 200);
+  assert.equal(retried, false);
+  assert.deepEqual(run.calls, [null, "a", "b"]);
+  assert.deepEqual(run.slept, []);
+});
+
+test("a cold EU pool gets one fresh call three minutes later", async () => {
+  const waits = Array.from({ length: 6 }, (_, index) => waitingReply(`w${index}`));
+  const run = scripted([...waits, waitingReply("late"), reply(200)]);
+  const { response, retried } = await gpuAnswer(run.post, run.sleep, run.now);
+  assert.equal(response.status(), 200);
+  assert.equal(retried, true);
+  assert.deepEqual(run.slept, [gpuRetryAfterMs]);
+  assert.equal(run.calls.filter((call) => call === null).length, 2);
+});
+
+test("a refused call fails at once without the three minute retry", async () => {
+  const run = scripted([reply(403)]);
+  const { response, retried } = await gpuAnswer(run.post, run.sleep, run.now);
+  assert.equal(response.status(), 403);
+  assert.equal(retried, false);
+  assert.deepEqual(run.slept, []);
 });

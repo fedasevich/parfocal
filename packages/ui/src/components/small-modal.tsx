@@ -12,7 +12,7 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { cn } from "@parfocal/ui/lib/utils";
 import * as React from "react";
 
-type SmallModalWidth = 480 | 560;
+type SmallModalWidth = 480 | 560 | 720;
 
 const firstFieldSelector =
   'input:not([type="hidden"]):not(:disabled), textarea:not(:disabled), select:not(:disabled), [role="combobox"]:not([aria-disabled="true"]), [role="radio"][tabindex="0"], [contenteditable="true"]';

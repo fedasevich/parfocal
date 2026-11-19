@@ -4,10 +4,10 @@ import { email, galleryProject, password, seededSlide, signIn } from "./session.
 import {
   type CellCollection,
   firstTypeableCell,
-  retriesTyping,
+  gpuAnswer,
+  gpuSmokeTimeoutMs,
   typedCellsFile,
   typedSlideLabel,
-  typerRetryMs,
   typerWaitMs,
 } from "./typing.ts";
 import { report, watch } from "./watch.ts";
@@ -17,7 +17,7 @@ const embeddingBytes = 256 * 64 * 64 * 2;
 const largeEncoder = "pathosam-vit-l-histopathology-fp32";
 const largeDecoders = ["pathosam-vit-l.decoder.onnx", "pathosam-vit-l.decoder_window32.onnx"];
 
-test.describe.configure({ timeout: typerWaitMs + 120_000 });
+test.describe.configure({ timeout: gpuSmokeTimeoutMs });
 
 async function viewAroundSeededNucleus(): Promise<{ x: number; y: number }> {
   const cells = JSON.parse(await readFile(typedCellsFile, "utf8")) as CellCollection;
@@ -39,23 +39,23 @@ async function embedView(
   slideId: string,
   at: { x: number; y: number },
 ) {
-  const deadline = Date.now() + typerWaitMs;
-  for (;;) {
-    const response = await page.request.post(`/api/slides/${slideId}/embeddings/view`, {
-      data: { ...at, width: viewSide, height: viewSide },
-      headers: { origin },
-      timeout: typerWaitMs,
-    });
-    if (response.ok()) return response;
-    const status = response.status();
-    if (!retriesTyping(status) || Date.now() + typerRetryMs > deadline) {
-      expect(
-        status,
-        `the encoder answered ${status}: ${(await response.text()).slice(0, 300)}`,
-      ).toBe(200);
-    }
-    await page.waitForTimeout(typerRetryMs);
-  }
+  const { response, retried } = await gpuAnswer(
+    (call) =>
+      page.request.post(`/api/slides/${slideId}/embeddings/view`, {
+        data: { ...at, width: viewSide, height: viewSide },
+        headers: { origin },
+        params: call === null ? {} : { call },
+        timeout: typerWaitMs,
+      }),
+    (ms) => page.waitForTimeout(ms),
+  );
+  const status = response.status();
+  const again = retried ? " after one retry" : "";
+  expect(
+    status,
+    `the encoder answered ${status}${again}: ${(await response.text()).slice(0, 300)}`,
+  ).toBe(200);
+  return response;
 }
 
 test("Best gets a ViT-L embedding of the clicked view from the server on the deployed app", async ({

@@ -4,11 +4,11 @@ import { email, galleryProject, password, readJson, seededSlide, signIn } from "
 import {
   type CellCollection,
   firstTypeableCell,
-  retriesTyping,
+  gpuAnswer,
+  gpuSmokeTimeoutMs,
   type TypedOutlines,
   typedCellsFile,
   typedSlideLabel,
-  typerRetryMs,
   typerWaitMs,
   typingProblem,
 } from "./typing.ts";
@@ -16,7 +16,7 @@ import { errorScreenShown, report, watch } from "./watch.ts";
 
 type ResultSetRow = { id: string; name: string; cell_count: number };
 
-test.describe.configure({ timeout: typerWaitMs + 120_000 });
+test.describe.configure({ timeout: gpuSmokeTimeoutMs });
 
 async function seededOutline(): Promise<number[]> {
   const cells = JSON.parse(await readFile(typedCellsFile, "utf8")) as CellCollection;
@@ -31,22 +31,23 @@ async function typeOne(
   slideId: string,
   points: number[],
 ): Promise<TypedOutlines> {
-  const deadline = Date.now() + typerWaitMs;
-  for (;;) {
-    const response = await page.request.post(`/api/slides/${slideId}/outline-types`, {
-      data: { outlines: [{ points }] },
-      headers: { origin },
-      timeout: typerWaitMs,
-    });
-    if (response.ok()) return (await response.json()) as TypedOutlines;
-    const status = response.status();
-    if (!retriesTyping(status) || Date.now() + typerRetryMs > deadline) {
-      expect(status, `the typer answered ${status}: ${(await response.text()).slice(0, 300)}`).toBe(
-        200,
-      );
-    }
-    await page.waitForTimeout(typerRetryMs);
-  }
+  const { response, retried } = await gpuAnswer(
+    (call) =>
+      page.request.post(`/api/slides/${slideId}/outline-types`, {
+        data: { outlines: [{ points }] },
+        headers: { origin },
+        params: call === null ? {} : { call },
+        timeout: typerWaitMs,
+      }),
+    (ms) => page.waitForTimeout(ms),
+  );
+  const status = response.status();
+  const again = retried ? " after one retry" : "";
+  expect(
+    status,
+    `the typer answered ${status}${again}: ${(await response.text()).slice(0, 300)}`,
+  ).toBe(200);
+  return (await response.json()) as TypedOutlines;
 }
 
 test("the viewer typing tool types one seeded outline on the deployed app", async ({

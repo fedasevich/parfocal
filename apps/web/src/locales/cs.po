@@ -2117,6 +2117,10 @@ msgstr ""
 msgid "{saved} saved to Downloads"
 msgstr ""
 
+#: src/gpu/gpu-wait-notice.tsx
+msgid "{seconds} s"
+msgstr ""
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "{seenPercent}% of the tissue seen at 10x or more"
 msgstr ""
@@ -4468,6 +4472,7 @@ msgstr ""
 #: ../../packages/ui/src/components/new-forms.tsx
 #: ../../packages/ui/src/components/small-modal.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/gpu/gpu-wait-notice.tsx
 #: src/results/add-result-set.tsx
 #: src/screens/admin/api-section.tsx
 #: src/screens/admin/connect-model.tsx
@@ -5002,6 +5007,10 @@ msgstr ""
 msgid "Class"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Class colors"
+msgstr ""
+
 #. placeholder {0}: item.name
 #. placeholder {0}: row.sent
 #: ../../packages/ui/src/components/connect-model.tsx
@@ -5288,12 +5297,17 @@ msgstr ""
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/project/add-class-modal.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Color"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Color by"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Color-blind safe"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -5444,6 +5458,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Confidence display"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Confidence shown as"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -7785,8 +7803,16 @@ msgstr ""
 msgid "Heatmap"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Heatmap colors"
+msgstr ""
+
 #: src/screens/upload/result-problems.tsx
 msgid "Heatmap not kept"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Heatmap opacity"
 msgstr ""
 
 #: src/screens/upload/result-problems.tsx
@@ -7816,6 +7842,7 @@ msgstr ""
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Hidden"
 msgstr ""
 
@@ -8194,6 +8221,7 @@ msgid "Incoming webhook"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Inferno"
 msgstr ""
 
@@ -8657,6 +8685,7 @@ msgid "Language of labels"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Large"
 msgstr ""
 
@@ -9231,7 +9260,7 @@ msgid "Loose slides, no case"
 msgstr ""
 
 #: ../../packages/ui/src/components/number-stepper.tsx
-#: src/screens/settings/settings-screen.tsx
+#: src/screens/settings/row-controls.tsx
 msgid "Lower {label}"
 msgstr ""
 
@@ -10859,6 +10888,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Number"
 msgstr ""
 
@@ -10884,6 +10914,10 @@ msgstr ""
 
 #: src/screens/review/first-read.tsx
 msgid "Object added to your first read."
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Object opacity"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -12438,7 +12472,7 @@ msgid "Quiet"
 msgstr ""
 
 #: ../../packages/ui/src/components/number-stepper.tsx
-#: src/screens/settings/settings-screen.tsx
+#: src/screens/settings/row-controls.tsx
 msgid "Raise {label}"
 msgstr ""
 
@@ -14969,6 +15003,7 @@ msgid "Slowest tenth"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Small"
 msgstr ""
 
@@ -15158,6 +15193,10 @@ msgstr ""
 #. placeholder {0}: index + 1
 #: src/screens/project/case-slides-editor.tsx
 msgid "Stain of slide {0}"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Standard"
 msgstr ""
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
@@ -15360,6 +15399,10 @@ msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Stopped. What was stored is kept"
+msgstr ""
+
+#: src/gpu/gpu-wait-notice.tsx
+msgid "Stops waiting and asks the GPU for nothing more"
 msgstr ""
 
 #: src/screens/my-work/all-slides-tab.tsx
@@ -15697,6 +15740,7 @@ msgid "Text label"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Text size"
 msgstr ""
 
@@ -17111,6 +17155,7 @@ msgid "Tumor share result"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Turbo"
 msgstr ""
 
@@ -17588,6 +17633,7 @@ msgid "Views"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Viridis"
 msgstr ""
 
@@ -17626,6 +17672,10 @@ msgstr ""
 #: src/screens/clinical-report/steps.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "Waiting"
+msgstr ""
+
+#: src/gpu/gpu-wait-notice.tsx
+msgid "Waiting for a GPU"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -18116,6 +18166,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Word"
 msgstr ""
 
@@ -18234,6 +18285,10 @@ msgstr ""
 
 #: src/screens/home/home-screen.tsx
 msgid "You are not in a workspace yet"
+msgstr ""
+
+#: src/help/help-dialog.tsx
+msgid "You are running {appVersion}"
 msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx

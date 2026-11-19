@@ -6,7 +6,13 @@ import pytest
 from db_support import OWNER_URL, migrated_database, run_sql, with_database
 from test_showcase import RESULTS, EmptyStore
 
-from parfocal_api.outline_types import OutlinesToType, OutlineToType, type_outlines
+from parfocal_api.gpu_calls import GpuCalls
+from parfocal_api.outline_types import (
+    OutlinesToType,
+    OutlineToType,
+    OutlineTypes,
+    type_outlines,
+)
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.result_sets import list_slide_result_sets
 from parfocal_api.showcase import VIEWER_SAMPLE, WORKSPACES, seed
@@ -114,8 +120,9 @@ async def test_the_smoke_account_sees_ai_cells_and_types_an_outline_on_the_sampl
                 OutlinesToType(outlines=[OutlineToType(points=NUCLEUS)]),
                 principal,
                 connection,
-                WarmGate(OneClassTyper()),  # type: ignore[arg-type]
+                GpuCalls(WarmGate(OneClassTyper()), None),  # type: ignore[arg-type]
             )
+        assert isinstance(typed, OutlineTypes)
         assert typed.slide_id == slide
         assert [outline.type for outline in typed.outlines] == ["stroma"]
     finally:
