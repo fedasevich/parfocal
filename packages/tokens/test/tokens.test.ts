@@ -114,8 +114,13 @@ test("sizes match the constants", () => {
 
 test("the Tailwind theme has the nine type sizes", () => {
   for (const [style, { size, line }] of Object.entries(typeScale)) {
-    assert.ok(theme.includes(`--text-${style}: ${size}px;`), `text-${style} is missing`);
-    assert.ok(theme.includes(`--text-${style}--line-height: ${line}px;`));
+    assert.ok(
+      theme.includes(`--text-${style}: calc(${size}px * var(--text-scale, 1));`),
+      `text-${style} is missing`,
+    );
+    assert.ok(
+      theme.includes(`--text-${style}--line-height: calc(${line}px * var(--text-scale, 1));`),
+    );
   }
 });
 

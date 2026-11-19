@@ -8,6 +8,7 @@ import { taskDisplayView } from "../screens/review/display-model.ts";
 import { DisplayTab, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { useDisplayChoice, useShiftPresetKeys } from "../screens/review/use-display-choice.ts";
 import { SavePresetModal } from "../screens/viewer/save-preset-modal.tsx";
+import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
 import { showUndoToast } from "../shell/undo-toasts.tsx";
 import { DockCard, type InspectorSection } from "./inspector-slots.tsx";
@@ -20,7 +21,11 @@ export function useStageDisplay(taskId: string | undefined): DisplaySettings {
     useGetMyDisplay(taskId ?? "", { query: { enabled: taskId !== undefined } }).data,
   );
   const labCutoff = useLabDecisionCutoff();
-  return useMemo(() => myDisplaySettings(my, labCutoff), [my, labCutoff]);
+  const defaults = useDisplayDefaults();
+  return useMemo(
+    () => myDisplaySettings(my, labCutoff, personalPanelValues(defaults)),
+    [my, labCutoff, defaults],
+  );
 }
 
 function useSlots(onSlot: SlotPlacer) {

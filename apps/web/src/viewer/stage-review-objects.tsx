@@ -19,6 +19,7 @@ import {
   typeOptions,
 } from "../screens/review/type-bar.ts";
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
+import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
@@ -65,6 +66,7 @@ function ObjectOutlines({
   decisions: ReviewSession["decisions"];
   settings: DisplaySettings;
 }) {
+  const defaults = useDisplayDefaults();
   const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
   const projectClasses = useMemo(
     () =>
@@ -83,11 +85,12 @@ function ObjectOutlines({
     const shown = placedObjects(
       collapsed ? objects.filter((item) => item.kind !== "cell") : objects,
       projectClasses,
+      defaults.classPalette,
     );
     if (decisionKey === "") return shown;
     const decided = new Map(JSON.parse(decisionKey) as [string, string][]);
     return shown.map((item) => ({ ...item, decision: decisionNameOf(decided.get(item.id)) }));
-  }, [objects, projectClasses, collapsed, decisionKey]);
+  }, [objects, projectClasses, collapsed, decisionKey, defaults.classPalette]);
   const choices = useMemo(() => drawChoicesOf(settings), [settings]);
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: overlayId, host: engine }),
@@ -153,9 +156,10 @@ export function StageReviewObjects({
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
   const labCutoff = useLabDecisionCutoff();
+  const defaults = useDisplayDefaults();
   const settings = useMemo(
-    () => myDisplaySettings(session.myDisplay, labCutoff),
-    [session.myDisplay, labCutoff],
+    () => myDisplaySettings(session.myDisplay, labCutoff, personalPanelValues(defaults)),
+    [session.myDisplay, labCutoff, defaults],
   );
   const saves = useDecisionSaves(session, session.style);
   const objects = session.objects;

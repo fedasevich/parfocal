@@ -36,6 +36,12 @@ export type RowKey =
   | "brightness"
   | "density"
   | "motion"
+  | "textSize"
+  | "classPalette"
+  | "fillOpacity"
+  | "heatmapOpacity"
+  | "colormap"
+  | "confidenceForm"
   | "patientNames"
   | "lengths"
   | "magnificationLabel"
@@ -115,6 +121,42 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Motion",
       "device",
       "Slower stretches every transition to three times as long, for presenting. Reduced cuts them all. Reduced motion in your system always wins.",
+    ),
+    row(
+      "textSize",
+      "Text size",
+      "device",
+      "Scales every word and control in the app on this device.",
+    ),
+    row(
+      "classPalette",
+      "Class colors",
+      "device",
+      "Standard uses each class's own color. Color-blind safe draws cells and regions in colors that stay apart for the common kinds of color blindness.",
+    ),
+    row(
+      "fillOpacity",
+      "Object opacity",
+      "device",
+      "How solid outlines and fills start on the slide. The Display tab in the viewer starts here and can change it for one task.",
+    ),
+    row(
+      "confidenceForm",
+      "Confidence shown as",
+      "device",
+      "How a score reads first. The viewer's Display tab starts here, and a task can lock it.",
+    ),
+    row(
+      "heatmapOpacity",
+      "Heatmap opacity",
+      "device",
+      "How strongly a heatmap covers the slide when you turn it on.",
+    ),
+    row(
+      "colormap",
+      "Heatmap colors",
+      "device",
+      "The color ramp a new heatmap starts with. Each heatmap can still switch in Layers.",
     ),
     row(
       "patientNames",

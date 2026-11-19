@@ -13,6 +13,7 @@ import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { locksAt } from "./session/lock-rules.ts";
 import { signedOutRedirect } from "./session/sign-in-redirect.ts";
+import { installDisplayDefaults } from "./shell/display-defaults.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 import { installNameMask } from "./shell/hide-names.ts";
 import { installMotion } from "./shell/motion.ts";
@@ -28,6 +29,7 @@ setDraftsAnswered(config.fakeApi !== "off");
 
 installTheme();
 installMotion();
+installDisplayDefaults();
 
 installDebugHandle(window, config.appEnv);
 provideDebug(benchmarkDebug(window));

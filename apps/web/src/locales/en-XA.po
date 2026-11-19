@@ -1471,6 +1471,11 @@ msgstr ""
 msgid "{0} to fix first."
 msgstr ""
 
+#. placeholder {0}: regions.length
+#: src/viewer/viewed-peek.tsx
+msgid "{0} tumor regions, {decided} decided"
+msgstr ""
+
 #. placeholder {0}: tb(used)
 #: ../../packages/ui/src/components/admin.tsx
 msgid "{0} used. {split}"
@@ -2060,6 +2065,10 @@ msgstr ""
 
 #: src/viewer/live-progress.tsx
 msgid "{percent}% of the tissue seen"
+msgstr ""
+
+#: src/viewer/viewed-peek.tsx
+msgid "{percent}% of tissue seen"
 msgstr ""
 
 #: ../../packages/ui/src/components/inspector.tsx
@@ -4989,6 +4998,10 @@ msgstr ""
 msgid "Class"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Class colors"
+msgstr ""
+
 #. placeholder {0}: item.name
 #. placeholder {0}: row.sent
 #: ../../packages/ui/src/components/connect-model.tsx
@@ -5055,7 +5068,7 @@ msgstr ""
 msgid "Clear"
 msgstr ""
 
-#: src/viewer/slide-stage.tsx
+#: src/viewer/stage-measurement-card.tsx
 msgid "Clear all"
 msgstr ""
 
@@ -5275,12 +5288,17 @@ msgstr ""
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/project/add-class-modal.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Color"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Color by"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Color-blind safe"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -5431,6 +5449,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Confidence display"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Confidence shown as"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -7772,8 +7794,16 @@ msgstr ""
 msgid "Heatmap"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Heatmap colors"
+msgstr ""
+
 #: src/screens/upload/result-problems.tsx
 msgid "Heatmap not kept"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Heatmap opacity"
 msgstr ""
 
 #: src/screens/upload/result-problems.tsx
@@ -7803,6 +7833,7 @@ msgstr ""
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Hidden"
 msgstr ""
 
@@ -7836,10 +7867,6 @@ msgstr ""
 #: src/screens/new-task/how-step.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Hide the AI for a first read"
-msgstr ""
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Hide the cells grid"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -8185,6 +8212,7 @@ msgid "Incoming webhook"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Inferno"
 msgstr ""
 
@@ -8648,6 +8676,7 @@ msgid "Language of labels"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Large"
 msgstr ""
 
@@ -9222,7 +9251,7 @@ msgid "Loose slides, no case"
 msgstr ""
 
 #: ../../packages/ui/src/components/number-stepper.tsx
-#: src/screens/settings/settings-screen.tsx
+#: src/screens/settings/row-controls.tsx
 msgid "Lower {label}"
 msgstr ""
 
@@ -10804,6 +10833,11 @@ msgstr ""
 msgid "Nuclei"
 msgstr ""
 
+#. placeholder {0}: scaleText(proposals.micronsPerPixel)
+#: src/annotations/context-bar.tsx
+msgid "nuclei · {0} µm"
+msgstr ""
+
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "nuclei · 0.25 µm"
 msgstr ""
@@ -10845,6 +10879,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Number"
 msgstr ""
 
@@ -10870,6 +10905,10 @@ msgstr ""
 
 #: src/screens/review/first-read.tsx
 msgid "Object added to your first read."
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Object opacity"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -12424,7 +12463,7 @@ msgid "Quiet"
 msgstr ""
 
 #: ../../packages/ui/src/components/number-stepper.tsx
-#: src/screens/settings/settings-screen.tsx
+#: src/screens/settings/row-controls.tsx
 msgid "Raise {label}"
 msgstr ""
 
@@ -14342,10 +14381,6 @@ msgstr ""
 msgid "Show the cells"
 msgstr ""
 
-#: src/viewer/stage-review-objects.tsx
-msgid "Show the cells grid"
-msgstr ""
-
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"
 msgstr ""
@@ -14959,6 +14994,7 @@ msgid "Slowest tenth"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Small"
 msgstr ""
 
@@ -15148,6 +15184,10 @@ msgstr ""
 #. placeholder {0}: index + 1
 #: src/screens/project/case-slides-editor.tsx
 msgid "Stain of slide {0}"
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Standard"
 msgstr ""
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
@@ -15687,6 +15727,7 @@ msgid "Text label"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Text size"
 msgstr ""
 
@@ -17101,6 +17142,7 @@ msgid "Tumor share result"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Turbo"
 msgstr ""
 
@@ -17578,6 +17620,7 @@ msgid "Views"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Viridis"
 msgstr ""
 
@@ -18106,6 +18149,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Word"
 msgstr ""
 

@@ -1473,6 +1473,11 @@ msgstr "{0} to finish first."
 msgid "{0} to fix first."
 msgstr "{0} to fix first."
 
+#. placeholder {0}: regions.length
+#: src/viewer/viewed-peek.tsx
+msgid "{0} tumor regions, {decided} decided"
+msgstr "{0} tumor regions, {decided} decided"
+
 #. placeholder {0}: tb(used)
 #: ../../packages/ui/src/components/admin.tsx
 msgid "{0} used. {split}"
@@ -2063,6 +2068,10 @@ msgstr "{percent}% done: {0} agree, {1} disagree, {2} not sure, {3} open"
 #: src/viewer/live-progress.tsx
 msgid "{percent}% of the tissue seen"
 msgstr "{percent}% of the tissue seen"
+
+#: src/viewer/viewed-peek.tsx
+msgid "{percent}% of tissue seen"
+msgstr "{percent}% of tissue seen"
 
 #: ../../packages/ui/src/components/inspector.tsx
 msgid "{point} mm, between {low} and {high} mm"
@@ -4991,6 +5000,10 @@ msgstr "Choose the data folder"
 msgid "Class"
 msgstr "Class"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Class colors"
+msgstr "Class colors"
+
 #. placeholder {0}: item.name
 #. placeholder {0}: row.sent
 #: ../../packages/ui/src/components/connect-model.tsx
@@ -5057,7 +5070,7 @@ msgstr "Classes of new projects"
 msgid "Clear"
 msgstr "Clear"
 
-#: src/viewer/slide-stage.tsx
+#: src/viewer/stage-measurement-card.tsx
 msgid "Clear all"
 msgstr "Clear all"
 
@@ -5277,6 +5290,7 @@ msgstr "Cohen's kappa {0} on regions. Shown only after both submitted."
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/project/add-class-modal.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Color"
 msgstr "Color"
 
@@ -5284,6 +5298,10 @@ msgstr "Color"
 #: src/screens/new-task/how-step.tsx
 msgid "Color by"
 msgstr "Color by"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Color-blind safe"
+msgstr "Color-blind safe"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Colormap"
@@ -5434,6 +5452,10 @@ msgstr "Confidence by colour: {0}"
 #: src/screens/developer/developer-screen.tsx
 msgid "Confidence display"
 msgstr "Confidence display"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Confidence shown as"
+msgstr "Confidence shown as"
 
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
@@ -7777,9 +7799,17 @@ msgstr "Header"
 msgid "Heatmap"
 msgstr "Heatmap"
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Heatmap colors"
+msgstr "Heatmap colors"
+
 #: src/screens/upload/result-problems.tsx
 msgid "Heatmap not kept"
 msgstr "Heatmap not kept"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Heatmap opacity"
+msgstr "Heatmap opacity"
 
 #: src/screens/upload/result-problems.tsx
 msgid "Heatmap scale guess"
@@ -7808,6 +7838,7 @@ msgstr "Hi {0}, {taskCode} is waiting on your last {1} slides before its disagre
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Hidden"
 msgstr "Hidden"
 
@@ -7842,10 +7873,6 @@ msgstr "Hide overlays (A)"
 #: src/screens/project/settings-tab.tsx
 msgid "Hide the AI for a first read"
 msgstr "Hide the AI for a first read"
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Hide the cells grid"
-msgstr "Hide the cells grid"
 
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
@@ -8190,6 +8217,7 @@ msgid "Incoming webhook"
 msgstr "Incoming webhook"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Inferno"
 msgstr "Inferno"
 
@@ -8653,6 +8681,7 @@ msgid "Language of labels"
 msgstr "Language of labels"
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Large"
 msgstr "Large"
 
@@ -9227,7 +9256,7 @@ msgid "Loose slides, no case"
 msgstr "Loose slides, no case"
 
 #: ../../packages/ui/src/components/number-stepper.tsx
-#: src/screens/settings/settings-screen.tsx
+#: src/screens/settings/row-controls.tsx
 msgid "Lower {label}"
 msgstr "Lower {label}"
 
@@ -10809,6 +10838,11 @@ msgstr "Notifications: {unread} unread. Mentions, replies, tasks and jobs"
 msgid "Nuclei"
 msgstr "Nuclei"
 
+#. placeholder {0}: scaleText(proposals.micronsPerPixel)
+#: src/annotations/context-bar.tsx
+msgid "nuclei · {0} µm"
+msgstr "nuclei · {0} µm"
+
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "nuclei · 0.25 µm"
 msgstr "nuclei · 0.25 µm"
@@ -10850,6 +10884,7 @@ msgstr "Nudges {0}"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Number"
 msgstr "Number"
 
@@ -10876,6 +10911,10 @@ msgstr "Object <0>{position}</0> of {total} on this slide"
 #: src/screens/review/first-read.tsx
 msgid "Object added to your first read."
 msgstr "Object added to your first read."
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Object opacity"
+msgstr "Object opacity"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Objective"
@@ -12433,7 +12472,7 @@ msgid "Quiet"
 msgstr "Quiet"
 
 #: ../../packages/ui/src/components/number-stepper.tsx
-#: src/screens/settings/settings-screen.tsx
+#: src/screens/settings/row-controls.tsx
 msgid "Raise {label}"
 msgstr "Raise {label}"
 
@@ -14351,10 +14390,6 @@ msgstr "Show the AI result"
 msgid "Show the cells"
 msgstr "Show the cells"
 
-#: src/viewer/stage-review-objects.tsx
-msgid "Show the cells grid"
-msgstr "Show the cells grid"
-
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"
 msgstr "Show the cells panel"
@@ -14968,6 +15003,7 @@ msgid "Slowest tenth"
 msgstr "Slowest tenth"
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Small"
 msgstr "Small"
 
@@ -15158,6 +15194,10 @@ msgstr "Staging"
 #: src/screens/project/case-slides-editor.tsx
 msgid "Stain of slide {0}"
 msgstr "Stain of slide {0}"
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Standard"
+msgstr "Standard"
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -15696,6 +15736,7 @@ msgid "Text label"
 msgstr "Text label"
 
 #: ../../packages/ui/src/components/report-editor.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Text size"
 msgstr "Text size"
 
@@ -17110,6 +17151,7 @@ msgid "Tumor share result"
 msgstr "Tumor share result"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Turbo"
 msgstr "Turbo"
 
@@ -17587,6 +17629,7 @@ msgid "Views"
 msgstr "Views"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Viridis"
 msgstr "Viridis"
 
@@ -18115,6 +18158,7 @@ msgstr "Within the AI's likely range, {low} to {high}."
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Word"
 msgstr "Word"
 
