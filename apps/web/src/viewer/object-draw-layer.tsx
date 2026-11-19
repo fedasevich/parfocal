@@ -1,11 +1,8 @@
-import { useGetMyDisplay } from "@parfocal/api-client";
 import { useEffect, useMemo, useState } from "react";
-import { okData } from "../screens/placeholder.tsx";
-import { taskDisplayView } from "../screens/review/display-model.ts";
-import { displaySettings } from "../screens/review/display-tab.tsx";
-import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
+import { drawChoicesOf } from "../screens/review/display-tab.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { sampleOutlines } from "./sample-outlines.ts";
+import { useStageDisplay } from "./stage-display.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -23,19 +20,7 @@ export function ObjectDrawLayer({
   tissue: ScanTissue | null;
 }) {
   const slide = engine.getSlide();
-  const display = okData(useGetMyDisplay(taskId).data);
-  const labCutoff = useLabDecisionCutoff();
-  const settings = useMemo(
-    () =>
-      displaySettings(
-        display ? taskDisplayView(display, "") : undefined,
-        null,
-        [],
-        undefined,
-        labCutoff,
-      ),
-    [display, labCutoff],
-  );
+  const settings = useStageDisplay(taskId);
   const objects = useMemo(() => {
     if (slide === null) return [];
     return sampleOutlines(tissue?.grid ?? module.coverageGrid(slide), tissue).map(
@@ -56,14 +41,7 @@ export function ObjectDrawLayer({
   const [drawn, setDrawn] = useState({ overlays: 0, below: 0 });
   useEffect(() => {
     drawing.setObjects(objects);
-    drawing.setChoices({
-      draw: settings.draw,
-      width: settings.width,
-      opacity: settings.opacity,
-      colorBy: settings.colorBy,
-      cutoff: settings.cutoff,
-      confidence: settings.confidence,
-    });
+    drawing.setChoices(drawChoicesOf(settings));
     const result = drawing.result();
     setDrawn({ overlays: result?.overlays.length ?? 0, below: result?.belowCutoff.length ?? 0 });
   }, [drawing, objects, settings]);
@@ -73,7 +51,10 @@ export function ObjectDrawLayer({
       data-testid="object-draw-layer"
       data-draw={settings.draw}
       data-width={settings.width}
+      data-opacity={settings.opacity}
       data-color-by={settings.colorBy}
+      data-cutoff={settings.cutoff}
+      data-ids={settings.ids}
       data-objects={objects.length}
       data-overlays={drawn.overlays}
       data-below-cutoff={drawn.below}

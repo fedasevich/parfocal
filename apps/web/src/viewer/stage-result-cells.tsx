@@ -4,13 +4,17 @@ import {
   getGetCellSummaryUrl,
   type ResultSet,
   type SetRegion,
+  useGetMyDisplay,
   useGetResultSet,
+  useGetReviewTask,
   useListProjectClasses,
   useListResultSetRegions,
   useListSlideResultSets,
 } from "@parfocal/api-client";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { okData } from "../screens/placeholder.tsx";
+import { shownSetsOf, taskDisplayView } from "../screens/review/display-model.ts";
+import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { DockCard, dockedCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
@@ -257,29 +261,70 @@ function ResultSetLayer({
   );
 }
 
-export function StageResultCells({
-  engine,
-  module,
-  slideId,
-  inTask = false,
-  reviewTask = false,
-}: {
+type SetsProps = {
   engine: ViewerEngine;
   module: ViewerModule;
   slideId: string;
   inTask?: boolean;
-  reviewTask?: boolean;
+};
+
+function SetToggles({
+  sets,
+  shown,
+  locked,
+  onToggle,
+}: {
+  sets: readonly ResultSet[];
+  shown: (id: string) => boolean;
+  locked?: string | undefined;
+  onToggle: (id: string) => void;
 }) {
   const { t } = useLingui();
+  if (sets.length === 0) return null;
+  return (
+    <DockCard section="sets" order={1}>
+      <section
+        className="grid gap-1.5"
+        aria-label={t`Result sets`}
+        data-testid="result-set-toggles"
+      >
+        {sets.map((set) => {
+          const on = shown(set.id);
+          return (
+            <button
+              key={set.id}
+              type="button"
+              aria-pressed={on}
+              disabled={locked !== undefined}
+              data-testid="result-set-toggle"
+              className="w-full truncate rounded-md border border-line bg-surf-panel px-2 py-1 text-left text-caption text-fg disabled:text-fg-dim"
+              title={locked ?? set.name}
+              onClick={() => onToggle(set.id)}
+            >
+              {on ? t`Hide ${set.name}` : t`Show ${set.name}`}
+            </button>
+          );
+        })}
+        {locked === undefined ? null : (
+          <small className="text-caption text-fg-dim" data-testid="result-sets-locked">
+            {locked}
+          </small>
+        )}
+      </section>
+    </DockCard>
+  );
+}
+
+function drawableSets(sets: readonly ResultSet[], inTask: boolean) {
+  return sets.filter(
+    (set) =>
+      set.status === "ready" && ((set.cell_count ?? 0) > 0 || (!inTask && set.region_count > 0)),
+  );
+}
+
+function SlideResultSets({ engine, module, slideId, inTask = false }: SetsProps) {
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
-  const sets = okData(useListSlideResultSets(slideId).data) ?? [];
-  const drawable = reviewTask
-    ? []
-    : sets.filter(
-        (set) =>
-          set.status === "ready" &&
-          ((set.cell_count ?? 0) > 0 || (!inTask && set.region_count > 0)),
-      );
+  const drawable = drawableSets(okData(useListSlideResultSets(slideId).data) ?? [], inTask);
   const toggle = (id: string) =>
     setHidden((before) => {
       const next = new Set(before);
@@ -299,32 +344,59 @@ export function StageResultCells({
           shown={!hidden.has(set.id)}
         />
       ))}
-      {drawable.length === 0 ? null : (
-        <DockCard section="display" order={1}>
-          <section
-            className={dockedCard}
-            aria-label={t`Result sets`}
-            data-testid="result-set-toggles"
-          >
-            {drawable.map((set) => {
-              const shown = !hidden.has(set.id);
-              return (
-                <button
-                  key={set.id}
-                  type="button"
-                  aria-pressed={shown}
-                  data-testid="result-set-toggle"
-                  className="w-full truncate rounded-md border border-line bg-surf-panel px-2 py-1 text-left text-caption text-fg"
-                  title={set.name}
-                  onClick={() => toggle(set.id)}
-                >
-                  {shown ? t`Hide ${set.name}` : t`Show ${set.name}`}
-                </button>
-              );
-            })}
-          </section>
-        </DockCard>
-      )}
+      <SetToggles sets={drawable} shown={(id) => !hidden.has(id)} onToggle={toggle} />
     </>
+  );
+}
+
+function ReviewResultSets({ engine, module, slideId, taskId }: SetsProps & { taskId: string }) {
+  const myDisplay = okData(useGetMyDisplay(taskId).data);
+  const task = okData(useGetReviewTask(taskId).data);
+  const display = useMemo(
+    () => (myDisplay ? taskDisplayView(myDisplay, task?.code ?? "") : undefined),
+    [myDisplay, task?.code],
+  );
+  const choice = useDisplayChoice({ taskId, display, myDisplay });
+  const taskSetId = task?.slides.find((item) => item.slide_id === slideId)?.result_set_id;
+  const others = drawableSets(okData(useListSlideResultSets(slideId).data) ?? [], false).filter(
+    (set) => set.id !== taskSetId,
+  );
+  const lock = myDisplay?.task.locks?.["other-sets"];
+  const locked =
+    lock === undefined || lock === null
+      ? undefined
+      : `Locked by ${task?.code ?? "the task"}: ${lock.charAt(0).toLowerCase()}${lock.slice(1)}`;
+  const kept = shownSetsOf(myDisplay?.settings);
+  const shown = (id: string) => locked === undefined && (kept[id] ?? false);
+  return (
+    <>
+      {others.map((set) => (
+        <ResultSetLayer
+          key={set.id}
+          engine={engine}
+          module={module}
+          set={set}
+          inTask={false}
+          shown={shown(set.id)}
+        />
+      ))}
+      <SetToggles
+        sets={others}
+        shown={shown}
+        locked={locked}
+        onToggle={(id) => choice.showSet(id, !shown(id))}
+      />
+    </>
+  );
+}
+
+export function StageResultCells({
+  reviewTaskId,
+  ...props
+}: SetsProps & { reviewTaskId?: string | undefined }) {
+  return reviewTaskId === undefined ? (
+    <SlideResultSets {...props} />
+  ) : (
+    <ReviewResultSets {...props} taskId={reviewTaskId} />
   );
 }

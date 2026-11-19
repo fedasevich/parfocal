@@ -340,6 +340,7 @@ type DisplayPanelProps = React.ComponentProps<"div"> & {
   preset?: PresetMenuProps;
   viewer?: boolean;
   resultSets?: React.ReactNode;
+  aiExtras?: React.ReactNode;
   after?: React.ReactNode;
   onIdsChange?: (on: boolean) => void;
   onSettingChange?: SettingChange;
@@ -353,6 +354,7 @@ function DisplayPanel({
   preset = { current: t`Task default`, presets: [{ name: "Tumor first", key: "⇧2" }] },
   viewer = false,
   resultSets,
+  aiExtras,
   after,
   onIdsChange,
   onSettingChange: onChange,
@@ -451,6 +453,7 @@ function DisplayPanel({
             {resultSets}
           </div>
         ) : null}
+        {aiExtras}
       </FoldingZone>
       <FoldingZone
         title={t`How the review moves`}

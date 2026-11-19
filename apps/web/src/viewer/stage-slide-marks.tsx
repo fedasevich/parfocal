@@ -80,6 +80,7 @@ export function StageSlideMarks({
   showScore,
   sample,
   collapsed,
+  ids = true,
   onWholeSlide,
 }: {
   engine: ViewerEngine;
@@ -88,6 +89,7 @@ export function StageSlideMarks({
   showScore: boolean;
   sample: SampleCells | null;
   collapsed: boolean;
+  ids?: boolean;
   onWholeSlide: (() => void) | null;
 }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -164,8 +166,9 @@ export function StageSlideMarks({
       className="pointer-events-none absolute inset-0 z-[3] overflow-hidden"
       data-testid="slide-marks"
       data-collapsed={collapsed}
+      data-ids={ids}
     >
-      {regions.map((region) => {
+      {(ids ? regions : []).map((region) => {
         const label = showScore ? `${region.id} ${Math.round(region.score * 100)}%` : region.id;
         return (
           <span

@@ -146,7 +146,7 @@ export function EngineViewer({
         module={session.module}
         slideId={slideId}
         inTask={task !== undefined}
-        reviewTask={reviewTask !== null}
+        reviewTaskId={reviewTask ?? undefined}
       />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       {focus ? (

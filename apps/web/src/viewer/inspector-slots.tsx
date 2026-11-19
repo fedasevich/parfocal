@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useContext } from "react";
 import { createPortal } from "react-dom";
 
-export const inspectorSections = ["objects", "foot", "display"] as const;
+export const inspectorSections = ["objects", "foot", "display", "sets", "ai"] as const;
 
 export type InspectorSection = (typeof inspectorSections)[number];
 

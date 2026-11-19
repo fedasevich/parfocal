@@ -1,4 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import type { MyDisplay } from "@parfocal/api-client";
 import {
   DisplayPanel,
   type DisplaySettings,
@@ -6,7 +7,7 @@ import {
 } from "@parfocal/ui/components/display-panel";
 import type { ReactNode } from "react";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
-import type { TaskDisplayView } from "./display-model.ts";
+import { overridesOf, type TaskDisplayView, taskDisplayView } from "./display-model.ts";
 
 const lockedWords: Record<string, Record<string, string>> = {
   order: { ai: "AI order", size: "Largest first", leastsure: "Least sure first", random: "Random" },
@@ -82,6 +83,30 @@ export function withOverrides(
   return { ...base, ...Object.fromEntries(allowed) };
 }
 
+export function myDisplaySettings(
+  my: MyDisplay | undefined,
+  labCutoff: number | undefined,
+): DisplaySettings {
+  const view = my ? taskDisplayView(my, "") : undefined;
+  const preset = my && my.preset_id !== null ? my.preset : null;
+  return withOverrides(
+    displaySettings(view, preset, [], undefined, labCutoff),
+    view ? overridesOf(my, view) : {},
+    view,
+  );
+}
+
+export function drawChoicesOf(settings: DisplaySettings) {
+  return {
+    draw: settings.draw,
+    width: settings.width,
+    opacity: settings.opacity,
+    colorBy: settings.colorBy,
+    cutoff: settings.cutoff,
+    confidence: settings.confidence,
+  };
+}
+
 type DisplayTabProps = {
   display: TaskDisplayView | undefined;
   preset: string | null;
@@ -89,6 +114,7 @@ type DisplayTabProps = {
   confidence?: string;
   viewer?: boolean;
   resultSets?: ReactNode;
+  aiExtras?: ReactNode;
   after?: ReactNode;
   presetOpen?: boolean;
   changed?: boolean;
@@ -109,6 +135,7 @@ export function DisplayTab({
   confidence,
   viewer = false,
   resultSets,
+  aiExtras,
   after,
   presetOpen,
   changed = false,
@@ -141,6 +168,7 @@ export function DisplayTab({
         locks={displayLocks(display, extraLocks)}
         viewer={viewer}
         resultSets={resultSets}
+        aiExtras={aiExtras}
         after={after}
         classVisibility={classVisibility}
         {...(onSettingChange ? { onSettingChange } : {})}

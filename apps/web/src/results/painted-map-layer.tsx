@@ -208,7 +208,7 @@ function PaintedMapPanel({ engine, stage, session }: PanelProps) {
           />
         </svg>
       )}
-      <DockCard section="display" order={3}>
+      <DockCard section="ai" order={2}>
         <section
           aria-label={t`Painted map`}
           data-testid="painted-map"

@@ -11409,7 +11409,7 @@ msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/stage-display.tsx
 msgid "Outline display"
 msgstr ""
 
@@ -16617,6 +16617,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "This sets your home page and which walkthrough you see first."
+msgstr ""
+
+#: src/viewer/slide-stage.tsx
+msgid "this slide"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
