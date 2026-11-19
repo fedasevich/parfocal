@@ -1,6 +1,6 @@
 import type { ClinicalReport, ClinicalValues } from "@parfocal/api-client";
 import type { ReportDocumentModel } from "@parfocal/ui/lib/report-document";
-import { formatMillimetres } from "../../measure/length-units.ts";
+import { formatMillimetres, lengthUnitsNow } from "../../measure/length-units.ts";
 import type { mockScenes } from "../scenes.ts";
 
 export type ReportScene = (typeof mockScenes.creport)[number];
@@ -88,7 +88,8 @@ export const fieldNames = { diag: "Final diagnosis", micro: "Microscopic", comme
 
 export const fmtMm = (value: number) => value.toFixed(value < 1 ? 2 : 1);
 
-export const mmText = (value: number) => formatMillimetres(value, value < 1 ? 2 : 1);
+export const mmText = (value: number) =>
+  lengthUnitsNow() === "um" ? formatMillimetres(value) : `${value.toFixed(value < 1 ? 2 : 1)} mm`;
 
 export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 

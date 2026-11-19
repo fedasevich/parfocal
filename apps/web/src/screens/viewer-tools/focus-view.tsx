@@ -5,6 +5,7 @@ import { MapTrail, MapViewport, SmartMinimap } from "@parfocal/ui/components/sma
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
+import { formatMillimetres } from "../../measure/length-units.ts";
 import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { useAnswerKeys } from "../review/answer-keys.ts";
@@ -144,9 +145,13 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
                     </StatusTag>
                   }
                   text={
-                    decided
-                      ? t`${current.size_mm?.toFixed(2) ?? ""} mm across. Decided. Press a key again to change it.`
-                      : t`${current.size_mm?.toFixed(2) ?? ""} mm across. Still open.`
+                    current.size_mm == null
+                      ? decided
+                        ? t`Size unknown. Decided. Press a key again to change it.`
+                        : t`Size unknown. Still open.`
+                      : decided
+                        ? t`${formatMillimetres(current.size_mm)} across. Decided. Press a key again to change it.`
+                        : t`${formatMillimetres(current.size_mm)} across. Still open.`
                   }
                   keys={[
                     ...keys.map((item) => ({

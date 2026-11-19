@@ -4,7 +4,7 @@ import type { Fired } from "../keys/registry.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { areaKey, markVisited } from "../screens/viewer/area-nav.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
-import type { SlideAreaEntry } from "./slide-areas.ts";
+import { rankSize, type SlideAreaEntry } from "./slide-areas.ts";
 import { createTravel } from "./travel.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -23,7 +23,7 @@ export function useEngineAreaNav(
   const order = useMemo(
     () =>
       [...areas]
-        .sort((a, b) => b.size - a.size || a.object.localeCompare(b.object, "en"))
+        .sort((a, b) => rankSize(b) - rankSize(a) || a.object.localeCompare(b.object, "en"))
         .map((area) => area.object),
     [areas],
   );

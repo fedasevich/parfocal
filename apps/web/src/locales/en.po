@@ -541,6 +541,16 @@ msgstr "{0} {1} px · by {2}{3} · IDs {4}"
 msgid "{0} {1} steps, about {2} minutes."
 msgstr "{0} {1} steps, about {2} minutes."
 
+#. placeholder {0}: formatMillimetres(current.size_mm)
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "{0} across. Decided. Press a key again to change it."
+msgstr "{0} across. Decided. Press a key again to change it."
+
+#. placeholder {0}: formatMillimetres(current.size_mm)
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "{0} across. Still open."
+msgstr "{0} across. Still open."
+
 #. placeholder {0}: plural(ids.length, "slide")
 #: src/screens/new-task/new-task-screen.tsx
 msgid "{0} added to the task"
@@ -1000,16 +1010,6 @@ msgstr "{0} min"
 #: src/screens/viewer-tools/measure-canvas.tsx
 msgid "{0} mm"
 msgstr "{0} mm"
-
-#. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "{0} mm across. Decided. Press a key again to change it."
-msgstr "{0} mm across. Decided. Press a key again to change it."
-
-#. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "{0} mm across. Still open."
-msgstr "{0} mm across. Still open."
 
 #. placeholder {0}: plural(toFix, "file")
 #. placeholder {1}: toFix === 1 ? "s" : ""
@@ -1625,6 +1625,13 @@ msgstr "{0}, {1} objects, plus {2} added by a reviewer"
 msgid "{0}, {1} of {2} slides"
 msgstr "{0}, {1} of {2} slides"
 
+#. placeholder {0}: range.count
+#. placeholder {1}: range.low
+#. placeholder {2}: range.high
+#: src/screens/review/viewer-frame.tsx
+msgid "{0}, {1} to {2}"
+msgstr "{0}, {1} to {2}"
+
 #. placeholder {0}: offered.code
 #. placeholder {1}: offered.name
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -1724,6 +1731,11 @@ msgstr "{0}, largest first. Confirm and measure area {1} to settle the category.
 #: src/screens/upload/live-wizard.tsx
 msgid "{0}, no case number"
 msgstr "{0}, no case number"
+
+#. placeholder {0}: range.count
+#: src/screens/review/viewer-frame.tsx
+msgid "{0}, size unknown"
+msgstr "{0}, size unknown"
 
 #. placeholder {0}: chapter.title
 #. placeholder {0}: session.profile.title
@@ -10265,6 +10277,10 @@ msgstr "No case attached"
 msgid "No changes yet. Co-signing keeps {senderFirst}'s values."
 msgstr "No changes yet. Co-signing keeps {senderFirst}'s values."
 
+#: src/measure/measurement-list.tsx
+msgid "No class"
+msgstr "No class"
+
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "No clear match between these two. Line them up by hand."
 msgstr "No clear match between these two. Line them up by hand."
@@ -10564,6 +10580,7 @@ msgstr "none"
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/my-work/parts.tsx
 #: src/screens/new-task/send-step.tsx
+#: src/screens/review/viewer-frame.tsx
 msgid "None"
 msgstr "None"
 
@@ -13678,6 +13695,10 @@ msgstr "Ruler"
 msgid "ruler, across {0}"
 msgstr "ruler, across {0}"
 
+#: src/measure/measurement-list.tsx
+msgid "Rulers"
+msgstr "Rulers"
+
 #: src/screens/admin/storage.tsx
 msgid "Rules for sources"
 msgstr "Rules for sources"
@@ -14985,6 +15006,14 @@ msgstr "Size of {0} in mm"
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Size of {id} in mm"
 msgstr "Size of {id} in mm"
+
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "Size unknown. Decided. Press a key again to change it."
+msgstr "Size unknown. Decided. Press a key again to change it."
+
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "Size unknown. Still open."
+msgstr "Size unknown. Still open."
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Sizes in µm are kept in mm."
@@ -17015,6 +17044,10 @@ msgstr "This slide cannot be read"
 #: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
 msgstr "This slide could not be prepared"
+
+#: src/viewer/area-keys.tsx
+msgid "This slide has no pixel size, so areas show in pixels and get no size category."
+msgstr "This slide has no pixel size, so areas show in pixels and get no size category."
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "This slide has no tumor map"

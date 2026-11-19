@@ -27,7 +27,8 @@ const region = { kind: "region", class_name: "Tumor", size_mm: 1.5 } as unknown 
 test("the objects panel and review lists show millimetres in auto and micrometres in always um", () => {
   assert.equal(formatMillimetres(1.5, 1, "auto"), "1.5 mm");
   assert.equal(formatMillimetres(1.5, 1, "um"), "1500 µm");
-  assert.equal(formatMillimetres(0.45, 2, "auto"), "0.45 mm");
+  assert.equal(formatMillimetres(0.45, 2, "auto"), "450 µm");
+  assert.equal(formatMillimetres(0.012, 1, "auto"), "12.0 µm");
   assert.equal(formatMillimetres(0.45, 2, "um"), "450 µm");
   assert.equal(formatMillimetres(5, 1, "um"), "5000 µm");
 });
