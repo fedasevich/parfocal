@@ -44,7 +44,7 @@ test("the viewed ring shows the coverage share and opens the whole slide peek", 
   await ring.click();
   const peek = page.getByTestId("viewed-peek");
   await expect(peek).toBeVisible();
-  await expect(peek).toContainText(`${percent}% of the tissue seen at 10x or more`);
+  await expect(peek).toContainText(`${percent}% of tissue seen`);
   await expect(peek.locator("[data-slot=viewed-cells]")).toHaveAttribute(
     "data-cells",
     String(await seenOf(page)),

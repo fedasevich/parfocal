@@ -92,7 +92,8 @@ export function EngineViewer({
   const closePeek = useCallback(() => setPeek(false), []);
   const openPeek = useCallback(() => setPeek(true), []);
   usePeekKey(peek, openPeek, closePeek);
-  const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent };
+  const [peekHost, setPeekHost] = useState<HTMLElement | null>(null);
+  const viewed = { peek, onPeekClose: closePeek, onPercent: setPercent, host: peekHost };
   const load = loaded.state === "ready" ? loaded.load : null;
   const flagged = load !== null && load.resultSets.length > 0;
   const slideAreas = useSlideAreas(slideId, flagged);
@@ -392,6 +393,11 @@ export function EngineViewer({
             bare={focus}
           />
         </NoticeSlotsProvider>
+        <div
+          ref={setPeekHost}
+          data-slot="peek-host"
+          className="absolute inset-0 z-30 empty:hidden"
+        />
       </div>
     </main>
   );
