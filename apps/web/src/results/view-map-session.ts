@@ -10,6 +10,7 @@ import {
   viewMapLayout,
   viewMapMaxTilesPerAsk,
 } from "@parfocal/viewer-engine";
+import { GpuCallCancelledError } from "../gpu/gpu-wait.ts";
 
 export type ViewMapPhase = "empty" | "scoring" | "ready" | "too-wide" | "failed";
 
@@ -69,8 +70,11 @@ export function createViewMapSession(options: ViewMapSessionOptions): ViewMapSes
           onTile: (partial) => settle("scoring", partial),
         });
         settle("ready", map);
-      } catch {
-        settle("failed", state.map);
+      } catch (error) {
+        settle(
+          error instanceof GpuCallCancelledError ? restingPhase(state.map) : "failed",
+          state.map,
+        );
       }
     },
   };

@@ -3619,6 +3619,13 @@ export interface FrameSummary {
   long_frames: number;
 }
 
+export interface GpuWaiting {
+  state?: "waiting";
+  call: string;
+  waited_seconds: number;
+  hold_seconds: number;
+}
+
 /**
  * @minLength 1
  * @maxLength 80
@@ -8566,6 +8573,14 @@ export type ExportAuditEventsParams = {
   action_prefix?: string | null;
   since?: string | null;
   until?: string | null;
+};
+
+export type ScoreViewMapTileParams = {
+  call?: string | null;
+};
+
+export type TypeOutlinesParams = {
+  call?: string | null;
 };
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -84357,6 +84372,11 @@ export type scoreViewMapTileResponse200 = {
   status: 200;
 };
 
+export type scoreViewMapTileResponse202 = {
+  data: GpuWaiting;
+  status: 202;
+};
+
 export type scoreViewMapTileResponse400 = {
   data: Problem;
   status: 400;
@@ -84397,7 +84417,10 @@ export type scoreViewMapTileResponse500 = {
   status: 500;
 };
 
-export type scoreViewMapTileResponseSuccess = scoreViewMapTileResponse200 & {
+export type scoreViewMapTileResponseSuccess = (
+  | scoreViewMapTileResponse200
+  | scoreViewMapTileResponse202
+) & {
   headers: Headers;
 };
 export type scoreViewMapTileResponseError = (
@@ -84417,8 +84440,25 @@ export type scoreViewMapTileResponse =
   | scoreViewMapTileResponseSuccess
   | scoreViewMapTileResponseError;
 
-export const getScoreViewMapTileUrl = (slideId: string, column: number, row: number) => {
-  return `/api/slides/${slideId}/view-map/${column}/${row}`;
+export const getScoreViewMapTileUrl = (
+  slideId: string,
+  column: number,
+  row: number,
+  params?: ScoreViewMapTileParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/view-map/${column}/${row}?${stringifiedParams}`
+    : `/api/slides/${slideId}/view-map/${column}/${row}`;
 };
 
 /**
@@ -84428,9 +84468,10 @@ export const scoreViewMapTile = async (
   slideId: string,
   column: number,
   row: number,
+  params?: ScoreViewMapTileParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<scoreViewMapTileResponse> => {
-  return apiFetch<scoreViewMapTileResponse>(getScoreViewMapTileUrl(slideId, column, row), {
+  return apiFetch<scoreViewMapTileResponse>(getScoreViewMapTileUrl(slideId, column, row, params), {
     ...options,
     method: "POST",
   });
@@ -84463,9 +84504,9 @@ export const getScoreViewMapTileMutationOptions = <TError = Problem, TContext = 
     Awaited<ReturnType<typeof scoreViewMapTile>>,
     ScoreViewMapTileMutationVariables
   > = (props) => {
-    const { slideId, column, row } = props ?? {};
+    const { slideId, column, row, params } = props ?? {};
 
-    return scoreViewMapTile(slideId, column, row, requestOptions);
+    return scoreViewMapTile(slideId, column, row, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -84476,7 +84517,12 @@ export type ScoreViewMapTileMutationResult = NonNullable<
 >;
 
 export type ScoreViewMapTileMutationError = Problem;
-export type ScoreViewMapTileMutationVariables = { slideId: string; column: number; row: number };
+export type ScoreViewMapTileMutationVariables = {
+  slideId: string;
+  column: number;
+  row: number;
+  params?: ScoreViewMapTileParams;
+};
 
 /**
  * @summary Score View Map Tile
@@ -84501,9 +84547,157 @@ export const useScoreViewMapTile = <TError = Problem, TContext = unknown>(
   return useMutation(getScoreViewMapTileMutationOptions(options), queryClient);
 };
 
+export type cancelGpuCallResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type cancelGpuCallResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type cancelGpuCallResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type cancelGpuCallResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type cancelGpuCallResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type cancelGpuCallResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type cancelGpuCallResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type cancelGpuCallResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type cancelGpuCallResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type cancelGpuCallResponseSuccess = cancelGpuCallResponse204 & {
+  headers: Headers;
+};
+export type cancelGpuCallResponseError = (
+  | cancelGpuCallResponse400
+  | cancelGpuCallResponse401
+  | cancelGpuCallResponse403
+  | cancelGpuCallResponse404
+  | cancelGpuCallResponse409
+  | cancelGpuCallResponse422
+  | cancelGpuCallResponse429
+  | cancelGpuCallResponse500
+) & {
+  headers: Headers;
+};
+
+export type cancelGpuCallResponse = cancelGpuCallResponseSuccess | cancelGpuCallResponseError;
+
+export const getCancelGpuCallUrl = (call: string) => {
+  return `/api/gpu-calls/${call}`;
+};
+
+/**
+ * @summary Cancel Gpu Call
+ */
+export const cancelGpuCall = async (
+  call: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<cancelGpuCallResponse> => {
+  return apiFetch<cancelGpuCallResponse>(getCancelGpuCallUrl(call), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getCancelGpuCallMutationKey = () => ["cancelGpuCall"] as const;
+
+export const getCancelGpuCallMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelGpuCall>>,
+    TError,
+    CancelGpuCallMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelGpuCall>>,
+  TError,
+  CancelGpuCallMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCancelGpuCallMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelGpuCall>>,
+    CancelGpuCallMutationVariables
+  > = (props) => {
+    const { call } = props ?? {};
+
+    return cancelGpuCall(call, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelGpuCallMutationResult = NonNullable<Awaited<ReturnType<typeof cancelGpuCall>>>;
+
+export type CancelGpuCallMutationError = Problem;
+export type CancelGpuCallMutationVariables = { call: string };
+
+/**
+ * @summary Cancel Gpu Call
+ */
+export const useCancelGpuCall = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelGpuCall>>,
+      TError,
+      CancelGpuCallMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelGpuCall>>,
+  TError,
+  CancelGpuCallMutationVariables,
+  TContext
+> => {
+  return useMutation(getCancelGpuCallMutationOptions(options), queryClient);
+};
+
 export type typeOutlinesResponse200 = {
   data: OutlineTypes;
   status: 200;
+};
+
+export type typeOutlinesResponse202 = {
+  data: GpuWaiting;
+  status: 202;
 };
 
 export type typeOutlinesResponse400 = {
@@ -84546,7 +84740,7 @@ export type typeOutlinesResponse500 = {
   status: 500;
 };
 
-export type typeOutlinesResponseSuccess = typeOutlinesResponse200 & {
+export type typeOutlinesResponseSuccess = (typeOutlinesResponse200 | typeOutlinesResponse202) & {
   headers: Headers;
 };
 export type typeOutlinesResponseError = (
@@ -84564,8 +84758,20 @@ export type typeOutlinesResponseError = (
 
 export type typeOutlinesResponse = typeOutlinesResponseSuccess | typeOutlinesResponseError;
 
-export const getTypeOutlinesUrl = (slideId: string) => {
-  return `/api/slides/${slideId}/outline-types`;
+export const getTypeOutlinesUrl = (slideId: string, params?: TypeOutlinesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/outline-types?${stringifiedParams}`
+    : `/api/slides/${slideId}/outline-types`;
 };
 
 /**
@@ -84574,6 +84780,7 @@ export const getTypeOutlinesUrl = (slideId: string) => {
 export const typeOutlines = async (
   slideId: string,
   outlinesToType: OutlinesToType,
+  params?: TypeOutlinesParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<typeOutlinesResponse> => {
   const getHeaders = (
@@ -84595,7 +84802,7 @@ export const typeOutlines = async (
     }
     return headers;
   };
-  return apiFetch<typeOutlinesResponse>(getTypeOutlinesUrl(slideId), {
+  return apiFetch<typeOutlinesResponse>(getTypeOutlinesUrl(slideId, params), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
@@ -84630,9 +84837,9 @@ export const getTypeOutlinesMutationOptions = <TError = Problem, TContext = unkn
     Awaited<ReturnType<typeof typeOutlines>>,
     TypeOutlinesMutationVariables
   > = (props) => {
-    const { slideId, data } = props ?? {};
+    const { slideId, data, params } = props ?? {};
 
-    return typeOutlines(slideId, data, requestOptions);
+    return typeOutlines(slideId, data, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -84641,7 +84848,11 @@ export const getTypeOutlinesMutationOptions = <TError = Problem, TContext = unkn
 export type TypeOutlinesMutationResult = NonNullable<Awaited<ReturnType<typeof typeOutlines>>>;
 export type TypeOutlinesMutationBody = OutlinesToType;
 export type TypeOutlinesMutationError = Problem;
-export type TypeOutlinesMutationVariables = { slideId: string; data: OutlinesToType };
+export type TypeOutlinesMutationVariables = {
+  slideId: string;
+  data: OutlinesToType;
+  params?: TypeOutlinesParams;
+};
 
 /**
  * @summary Type Outlines

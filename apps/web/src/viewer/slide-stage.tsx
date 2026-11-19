@@ -49,6 +49,7 @@ import { DeviceLegend } from "../devices/device-legend.tsx";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
 import { createPenDoubleTap, createToolHistory } from "../devices/pen-touch.ts";
 import { applyMainCalibration } from "../devices/stage-calibration.ts";
+import { GpuWaitNotice } from "../gpu/gpu-wait-notice.tsx";
 import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -925,6 +926,7 @@ function OpenedSlide({
                   {workspace === "annotate" ? null : (
                     <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
                   )}
+                  <GpuWaitNotice />
                   {workspace === "annotate" ? null : (
                     <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
                   )}

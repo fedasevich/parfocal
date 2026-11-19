@@ -11,6 +11,7 @@ MAX_SCALEDOWN_SECONDS = 300
 MAX_CONTAINERS_PER_POOL = 4
 MAX_HOURLY_SPEND_USD = 5.0
 MAX_TIMEOUT_SECONDS = 3600
+INTERACTIVE_STARTUP_SECONDS = 300
 EU_POOL_REGION = "eu"
 
 
@@ -56,16 +57,22 @@ class PoolLimits:
     min_containers: int = 0
     buffer_containers: int = 0
     region: str | None = None
+    fallback_gpus: tuple[Gpu, ...] = ()
+    startup_timeout_seconds: int | None = None
 
     @property
     def function_name(self) -> str:
         return self.family.value.replace("-", "_")
 
     @property
+    def gpus(self) -> tuple[Gpu, ...]:
+        return () if self.gpu is None else (self.gpu, *self.fallback_gpus)
+
+    @property
     def hourly_usd_at_max(self) -> float:
-        if self.gpu is None:
+        if not self.gpus:
             return 0.0
-        return GPU_HOURLY_USD[self.gpu] * self.max_containers
+        return max(GPU_HOURLY_USD[gpu] for gpu in self.gpus) * self.max_containers
 
 
 POOLS: tuple[PoolLimits, ...] = (
@@ -128,6 +135,8 @@ POOLS: tuple[PoolLimits, ...] = (
         timeout_seconds=60,
         scaledown_window_seconds=INTERACTIVE_SCALEDOWN_SECONDS,
         region=EU_POOL_REGION,
+        fallback_gpus=(Gpu.L4,),
+        startup_timeout_seconds=INTERACTIVE_STARTUP_SECONDS,
     ),
     PoolLimits(
         family=Family.LAB_MODEL,
@@ -145,7 +154,7 @@ POOLS: tuple[PoolLimits, ...] = (
 
 
 class FunctionOptions(TypedDict):
-    gpu: str | None
+    gpu: str | list[str] | None
     memory: tuple[int, int]
     max_containers: int
     min_containers: int
@@ -155,6 +164,7 @@ class FunctionOptions(TypedDict):
     serialized: bool
     name: str
     region: NotRequired[str]
+    startup_timeout: NotRequired[int]
 
 
 class ConcurrencyOptions(TypedDict):
@@ -167,8 +177,12 @@ class PoolLimitError(ValueError):
 
 def pool_problems(pool: PoolLimits) -> list[str]:
     problems: list[str] = []
-    if pool.gpu is not None and pool.gpu_memory_budget_mib > GPU_MEMORY_MIB[pool.gpu]:
+    if any(pool.gpu_memory_budget_mib > GPU_MEMORY_MIB[gpu] for gpu in pool.gpus):
         problems.append("model GPU memory budget exceeds the card")
+    if pool.fallback_gpus and pool.region is None:
+        problems.append("a GPU fallback list needs a region pin")
+    if pool.gpu is not None and pool.gpu in pool.fallback_gpus:
+        problems.append("a fallback GPU repeats the first choice")
     if not 0 < pool.memory_request_mib <= pool.memory_limit_mib:
         problems.append("memory request must be positive and at most the limit")
     if pool.max_inputs < 1:
@@ -181,6 +195,9 @@ def pool_problems(pool: PoolLimits) -> list[str]:
         problems.append("scaledown window outside the idle cap")
     if not 0 < pool.timeout_seconds <= MAX_TIMEOUT_SECONDS:
         problems.append("timeout outside the job cap")
+    startup = pool.startup_timeout_seconds
+    if startup is not None and not 0 < startup <= MAX_TIMEOUT_SECONDS:
+        problems.append("startup timeout outside the job cap")
     if pool.region is not None and home_of(pool.region) is None:
         problems.append("region is not a Modal EU or US region")
     return problems
@@ -204,7 +221,7 @@ def worst_case_hourly_usd(pools: tuple[PoolLimits, ...]) -> float:
 
 def function_options(pool: PoolLimits) -> FunctionOptions:
     options: FunctionOptions = {
-        "gpu": None if pool.gpu is None else pool.gpu.value,
+        "gpu": gpu_option(pool),
         "memory": (pool.memory_request_mib, pool.memory_limit_mib),
         "max_containers": pool.max_containers,
         "min_containers": pool.min_containers,
@@ -216,7 +233,17 @@ def function_options(pool: PoolLimits) -> FunctionOptions:
     }
     if pool.region is not None:
         options["region"] = pool.region
+    if pool.startup_timeout_seconds is not None:
+        options["startup_timeout"] = pool.startup_timeout_seconds
     return options
+
+
+def gpu_option(pool: PoolLimits) -> str | list[str] | None:
+    if not pool.gpus:
+        return None
+    if len(pool.gpus) == 1:
+        return pool.gpus[0].value
+    return [gpu.value for gpu in pool.gpus]
 
 
 def concurrency_options(pool: PoolLimits) -> ConcurrencyOptions:

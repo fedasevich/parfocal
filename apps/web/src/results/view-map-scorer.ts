@@ -1,6 +1,7 @@
-import { getScoreViewMapTileUrl } from "@parfocal/api-client";
+import { type GpuWaiting, getScoreViewMapTileUrl } from "@parfocal/api-client";
 import type { ViewMapScorer, ViewMapTileRequest } from "@parfocal/viewer-engine";
 import { type FakeApiMode, readBuildConfig } from "../config.ts";
+import { type GpuCancel, serverGpuCancel, untilGpuAnswers } from "../gpu/gpu-wait.ts";
 
 export const fakeTumorSpots = [
   { x: 0.32, y: 0.4, radius: 0.08, peak: 0.99 },
@@ -43,16 +44,60 @@ export function createFakeViewMapScorer(slide: {
   return Object.assign(scorer, { asked });
 }
 
+export function queuedScorer(holdMs = 300): ViewMapScorer {
+  return () => {
+    let waited = 0;
+    return untilGpuAnswers<Uint8Array>(
+      "view-map",
+      (call, signal) =>
+        new Promise((resolve, reject) => {
+          const timer = setTimeout(() => {
+            waited += holdMs / 1000;
+            resolve({
+              waiting: {
+                state: "waiting",
+                call: call ?? "queued",
+                waited_seconds: waited,
+                hold_seconds: holdMs / 1000,
+              },
+            });
+          }, holdMs);
+          signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            reject(new Error("The queued view tile was cancelled"));
+          });
+        }),
+      () => Promise.resolve(),
+    );
+  };
+}
+
+export function fakeGpuQueued(search: string = globalThis.location?.search ?? ""): boolean {
+  return new URLSearchParams(search).get("gpu") === "queued";
+}
+
 export type ViewTilePost = (slideId: string, column: number, row: number) => Promise<Uint8Array>;
 
-export const postViewTile: ViewTilePost = async (slideId, column, row) => {
-  const response = await fetch(getScoreViewMapTileUrl(slideId, column, row), {
-    method: "POST",
-    credentials: "same-origin",
-  });
-  if (!response.ok) throw new Error("The view tile could not be mapped");
-  return new Uint8Array(await response.arrayBuffer());
-};
+export function viewTilePoster(cancelCall: GpuCancel = serverGpuCancel): ViewTilePost {
+  return (slideId, column, row) =>
+    untilGpuAnswers(
+      "view-map",
+      async (call, signal) => {
+        const params = call === null ? undefined : { call };
+        const response = await fetch(getScoreViewMapTileUrl(slideId, column, row, params), {
+          method: "POST",
+          credentials: "same-origin",
+          signal,
+        });
+        if (response.status === 202) return { waiting: (await response.json()) as GpuWaiting };
+        if (!response.ok) throw new Error("The view tile could not be mapped");
+        return { answered: new Uint8Array(await response.arrayBuffer()) };
+      },
+      cancelCall,
+    );
+}
+
+export const postViewTile: ViewTilePost = viewTilePoster();
 
 export function createServerViewMapScorer(
   slideId: string,
@@ -90,7 +135,7 @@ export function viewMapScorerFor(
   slideId: string,
   post?: ViewTilePost,
 ): ViewMapScorer | null {
-  if (source === "fake") return createFakeViewMapScorer(slide);
+  if (source === "fake") return fakeGpuQueued() ? queuedScorer() : createFakeViewMapScorer(slide);
   if (source === "server") return createServerViewMapScorer(slideId, post);
   return null;
 }

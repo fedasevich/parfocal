@@ -1,18 +1,24 @@
 import logging
-import time
 import uuid
 from collections.abc import Mapping
 from enum import StrEnum
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel, Field, field_validator
-from starlette.concurrency import run_in_threadpool
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.gpu_warm import warm_gate_of
+from parfocal_api.gpu_calls import (
+    GpuAnswer,
+    GpuCalls,
+    GpuCallScope,
+    GpuWaiting,
+    gpu_calls_of,
+    scope_of,
+    waiting_response,
+)
 from parfocal_api.hidden_models import refuse_hidden
 from parfocal_api.model_registry import temperatures_of
 from parfocal_api.permissions import Permission, require
@@ -31,7 +37,6 @@ from parfocal_common.outline_types import (
     typed_outlines_in,
 )
 from parfocal_common.view_maps import seconds_in
-from parfocal_common.warm_gate import WarmGate
 
 logger = logging.getLogger("parfocal.api.outline_types")
 
@@ -93,30 +98,38 @@ class OutlineTypes(BaseModel):
 
 
 async def typed_outlines(
-    gate: WarmGate, request: OutlineTypesCall
-) -> tuple[list[Mapping[str, object]], float]:
-    started = time.perf_counter()
+    calls: GpuCalls, scope: GpuCallScope, request: OutlineTypesCall, token: str | None
+) -> tuple[list[Mapping[str, object]], GpuAnswer] | GpuWaiting:
     try:
-        reply = await run_in_threadpool(gate.request, request.call())
+        answer = await calls.answer_or_wait(scope, request.call(), token)
+    except ProblemError:
+        raise
     except Exception as error:
         logger.warning("outline types call failed: %s", type(error).__name__)
         raise TyperOfflineError from error
-    waited = time.perf_counter() - started
-    typed = typed_outlines_in(reply, len(request.outlines))
+    if isinstance(answer, GpuWaiting):
+        return answer
+    typed = typed_outlines_in(answer.reply, len(request.outlines))
     if typed is None:
         raise TyperOfflineError
-    reported = seconds_in(reply)
-    return typed, round(waited if reported is None else reported, 3)
+    return typed, answer
 
 
-@router.post("", operation_id="typeOutlines", **require(Permission.SEE_SLIDES, write=True))
+@router.post(
+    "",
+    operation_id="typeOutlines",
+    response_model=OutlineTypes,
+    responses={202: {"model": GpuWaiting}},
+    **require(Permission.SEE_SLIDES, write=True),
+)
 async def type_outlines(
     slide_id: uuid.UUID,
     body: OutlinesToType,
     principal: CurrentPrincipal,
     connection: TenantConnection,
-    gate: Annotated[WarmGate, Depends(warm_gate_of)],
-) -> OutlineTypes:
+    calls: Annotated[GpuCalls, Depends(gpu_calls_of)],
+    call: str | None = Query(default=None, max_length=2048),
+) -> OutlineTypes | Response:
     slide = await readable_slide(connection, principal, slide_id)
     if await ai_hidden_on(connection, principal, slide.project_id, slide_id):
         raise NotFoundError("Slide not found")
@@ -129,7 +142,13 @@ async def type_outlines(
         1.0 if temperature is None else temperature,
         None if slide.original_key is None else folder_of(slide.original_key),
     )
-    typed, gpu_seconds = await typed_outlines(gate, request)
+    scope = scope_of("outline-types", principal, slide.tenant_id, slide_id)
+    outcome = await typed_outlines(calls, scope, request, call)
+    if isinstance(outcome, GpuWaiting):
+        return waiting_response(outcome)
+    typed, answer = outcome
+    reported = seconds_in(answer.reply)
+    gpu_seconds = answer.waited_seconds if reported is None else round(reported, 3)
     await record(
         connection,
         actor_of(principal),
@@ -143,6 +162,7 @@ async def type_outlines(
             "typer": f"{TYPER}@{TYPER_VERSION}",
             "calibrated": temperature is not None,
             "gpu_seconds": gpu_seconds,
+            "waited_seconds": answer.waited_seconds,
         },
     )
     return OutlineTypes(
