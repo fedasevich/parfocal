@@ -465,11 +465,11 @@ function SlideRow({
   const navigate = useNavigate();
   const people = usePeople();
   const own = slide.result_sets.flatMap((ref) => sets.filter((set) => set.id === ref.id));
-  const open = () =>
-    void navigate({
-      to: "/projects/$projectId/slides/$slideId/live",
-      params: { projectId: project.id, slideId: slide.id },
-    });
+  const target = {
+    to: "/projects/$projectId/slides/$slideId/live",
+    params: { projectId: project.id, slideId: slide.id },
+  } as const;
+  const open = () => void navigate(target);
   const toggle = () =>
     void navigate({
       to: "/projects/$projectId",
@@ -497,22 +497,30 @@ function SlideRow({
       >
         <TableCell>
           <span className="flex min-w-0 items-center gap-3">
-            <SlideThumb
-              slideId={slide.id}
-              file={slide.file}
-              className="h-7.5 w-11 flex-none overflow-hidden rounded-md border border-line"
-            />
-            <span className="grid min-w-0 gap-0.5">
-              <b
-                data-testid="slide-title"
-                className="font-semibold [overflow-wrap:anywhere] text-fg"
-              >
-                {slideTitle(slide)}
-              </b>
-              <small className="max-w-70 truncate font-mono text-caption text-fg-faint">
-                {slide.file}
-              </small>
-            </span>
+            <Link
+              {...target}
+              data-testid="slide-link"
+              draggable={false}
+              onClick={(event) => event.stopPropagation()}
+              className="flex min-w-0 items-center gap-3 text-inherit no-underline"
+            >
+              <SlideThumb
+                slideId={slide.id}
+                file={slide.file}
+                className="h-7.5 w-11 flex-none overflow-hidden rounded-md border border-line"
+              />
+              <span className="grid min-w-0 gap-0.5">
+                <b
+                  data-testid="slide-title"
+                  className="font-semibold [overflow-wrap:anywhere] text-fg"
+                >
+                  {slideTitle(slide)}
+                </b>
+                <small className="max-w-70 truncate font-mono text-caption text-fg-faint">
+                  {slide.file}
+                </small>
+              </span>
+            </Link>
             <SlideViewers viewers={viewers} />
             {slide.remote ? (
               <span
@@ -611,7 +619,12 @@ function SlideRow({
                 {moveTitle(slide.case_label !== null)}
               </Button>
             ) : null}
-            <Button size="sm" className="shrink-0" onClick={open}>
+            <Button
+              size="sm"
+              className="shrink-0"
+              nativeButton={false}
+              render={<Link {...target} onClick={(event) => event.stopPropagation()} />}
+            >
               <Trans>Open</Trans>
             </Button>
           </span>

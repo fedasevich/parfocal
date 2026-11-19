@@ -27,6 +27,7 @@ from parfocal_api.projects import ProjectArchivedError, owned
 from parfocal_api.review_tasks import readable_task, task_row
 from parfocal_api.tables import (
     NotificationKind,
+    ResultStatus,
     evaluation_changes,
     evaluation_versions,
     opinions,
@@ -409,6 +410,7 @@ async def result_set_of(connection: AsyncConnection, task: Any) -> ResultSetFact
             )
             .join(review_task_slides, review_task_slides.c.result_set_id == result_sets.c.id)
             .where(review_task_slides.c.task_id == task.id)
+            .where(result_sets.c.status == ResultStatus.READY)
             .order_by(result_sets.c.name)
         )
     ).all()

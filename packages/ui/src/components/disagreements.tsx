@@ -28,6 +28,7 @@ type QueueRowProps = Omit<React.ComponentProps<"tr">, "onSelect"> & {
   checkReason?: string | undefined;
   onSelect?: (() => void) | undefined;
   onCheckedChange?: ((checked: boolean) => void) | undefined;
+  viewerLink?: React.ReactNode;
 };
 
 function QueueTable({ className, children, ...props }: React.ComponentProps<"table">) {
@@ -51,6 +52,7 @@ function QueueRow({
   checkReason = t`Already decided or with the adjudicator`,
   onSelect,
   onCheckedChange,
+  viewerLink,
   className,
   ...props
 }: QueueRowProps) {
@@ -111,7 +113,10 @@ function QueueRow({
         )}
       </TableCell>
       <TableCell className="text-right">
-        <StatusTag {...(tone ? { tone } : {})}>{tag}</StatusTag>
+        <span className="inline-flex items-center justify-end gap-1.5">
+          <StatusTag {...(tone ? { tone } : {})}>{tag}</StatusTag>
+          {viewerLink}
+        </span>
       </TableCell>
     </TableRow>
   );

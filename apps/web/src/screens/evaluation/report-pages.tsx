@@ -25,10 +25,12 @@ import {
   ReportSheet,
 } from "@parfocal/ui/components/evaluation-report";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { answerOf, answerWord } from "../disagreements/text.ts";
 import { okData } from "../placeholder.tsx";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
+import { viewerSearch } from "../viewer-links.tsx";
 import {
   comparisonRows,
   fixed,
@@ -40,6 +42,42 @@ import {
 } from "./numbers.ts";
 
 export type PageBlock = EvaluationReportBlock & { id: string };
+
+function ObjectLink({
+  report,
+  slideId,
+  object,
+  figure = false,
+  children,
+}: {
+  report: EvaluationReport;
+  slideId: string | undefined;
+  object: string | undefined;
+  figure?: boolean;
+  children: ReactNode;
+}) {
+  const { t } = useLingui();
+  if (!slideId) return children;
+  return (
+    <Link
+      to="/projects/$projectId/slides/$slideId"
+      params={{ projectId: report.project.id, slideId }}
+      search={viewerSearch({ taskId: report.task_id, object })}
+      title={object ? t`Open ${object} in the full viewer` : t`Open the slide in the full viewer`}
+      data-testid="report-viewer-link"
+      className={
+        figure
+          ? "block"
+          : "-my-1 inline-flex min-h-6 min-w-6 items-center text-inherit underline decoration-dotted underline-offset-2 hover:decoration-solid"
+      }
+    >
+      {children}
+    </Link>
+  );
+}
+
+const slideOf = (queue: QueueRow[], object: string) =>
+  queue.find((row) => row.object === object)?.slide_id;
 
 export const planOf = (blocks: PageBlock[], format: EvaluationReportFormat) =>
   reportPages(blocks, format);
@@ -240,6 +278,11 @@ function BlockBody({
               what: row.what,
               answers: row.answers.map((answer) => answer.raw),
             }))}
+            renderObject={(object) => (
+              <ObjectLink report={report} slideId={slideOf(queue, object)} object={object}>
+                {object}
+              </ObjectLink>
+            )}
           />
           <span className="text-[7.5px] text-[#666]">
             <Trans>
@@ -285,11 +328,18 @@ function BlockBody({
         );
       return (
         <figure className="m-0 grid gap-1">
-          <img
-            src={slideThumbUrl(block.slide_id)}
-            alt={block.caption || block.title}
-            className="w-full"
-          />
+          <ObjectLink
+            report={report}
+            slideId={block.slide_id}
+            object={block.object_id ?? undefined}
+            figure
+          >
+            <img
+              src={slideThumbUrl(block.slide_id)}
+              alt={block.caption || block.title}
+              className="w-full"
+            />
+          </ObjectLink>
           <figcaption className="text-[7.5px] text-[#666]">
             {block.object_id ? `${block.object_id} · ` : ""}
             {block.caption}
@@ -505,7 +555,11 @@ function Appendix({
         <tbody>
           {queue.map((row) => (
             <tr key={row.key} className="border-b border-[#ddd] [&>td]:py-1">
-              <td className="font-mono font-semibold">{row.object}</td>
+              <td className="font-mono font-semibold">
+                <ObjectLink report={report} slideId={row.slide_id} object={row.object}>
+                  {row.object}
+                </ObjectLink>
+              </td>
               <td>{row.slide_label}</td>
               {report.reviewer_ids.map((id) => {
                 const answer = row.answers.find((item) => item.user_id === id);

@@ -41,6 +41,7 @@ import { useScreenToast } from "../project/screen-toast.tsx";
 import { type ReviewStyle, toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf } from "../review/decision-style.ts";
 import { fromMentionTokens } from "../review/mention-picking.ts";
+import { ViewerLink } from "../viewer-links.tsx";
 import { DisagreementStage } from "./disagreement-stage.tsx";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
 import {
@@ -268,6 +269,19 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   checkable={canSend(item)}
                   checked={checked.includes(item.key)}
                   onSelect={() => select(item.key)}
+                  viewerLink={
+                    task ? (
+                      <ViewerLink
+                        target={{
+                          projectId: task.project_id,
+                          slideId: item.slide_id,
+                          taskId,
+                          object: item.object,
+                        }}
+                        label={t`Open ${item.object} in the full viewer`}
+                      />
+                    ) : null
+                  }
                   onCheckedChange={(on) =>
                     setChecked((now) =>
                       on ? [...now, item.key] : now.filter((key) => key !== item.key),

@@ -15,6 +15,7 @@ const dayOf = (at: string) => parseDay(at.slice(0, 10));
 export const dayWord = (count: number) => plural(count, "day");
 
 export function dueText(task: Pick<TeamTask, "due_on">, asOf: string) {
+  if (task.due_on === null) return { due: undefined, dueIn: undefined, overdue: false };
   const days = daysBetween(dayOf(asOf), parseDay(task.due_on));
   return {
     due: formatDue(task.due_on),
@@ -57,6 +58,9 @@ export const firstName = (name: string) => name.split(" ")[0] ?? name;
 
 export function nudgeMessage(name: string, task: TeamTask, row: TeamReviewer, asOf: string) {
   const left = row.slides_assigned - row.slides_done;
+  if (task.due_on === null) {
+    return `Hi ${firstName(name)}, ${task.code} has ${left} slides left. Could you fit some in this week?`;
+  }
   const verb = dueText(task, asOf).overdue ? "was" : "is";
   return `Hi ${firstName(name)}, ${task.code} ${verb} due ${formatDue(task.due_on)} and ${left} slides are left. Could you fit some in this week?`;
 }

@@ -54,6 +54,24 @@ def test_the_evaluation_report_reads_the_task(api: ApiAs, database: str) -> None
     assert (hidden.status_code, hidden.json()["code"]) == (403, "evaluation-hidden")
 
 
+def test_the_evaluation_report_leaves_failed_and_importing_sets_out(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    url = f"/api/review-tasks/{r.task}/evaluation-report"
+    owner(database, "ALTER TABLE result_sets DISABLE TRIGGER USER")
+    for status in ("failed", "importing"):
+        owner(
+            database,
+            f"UPDATE result_sets SET status = '{status}' WHERE id IN "
+            f"(SELECT result_set_id FROM review_task_slides WHERE task_id = '{r.task}')",
+        )
+        response = api(r.people["owner"]).get(url)
+        assert response.status_code == 200, response.text
+        assert (response.json()["model"], response.json()["objects"]) == ("", 0), status
+    owner(database, "ALTER TABLE result_sets ENABLE TRIGGER USER")
+
+
 def test_the_clinical_report_reads_the_case_of_the_slide(
     api: ApiAs, database: str, clinic: Clinic
 ) -> None:

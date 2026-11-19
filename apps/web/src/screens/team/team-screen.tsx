@@ -41,6 +41,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { andJoin, formatDayMonth, formatDue, parseDay } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { TaskViewerLinks } from "../viewer-links.tsx";
 import { type TeamSearch, type TeamState, teamState } from "./scenes.ts";
 import {
   behindRows,
@@ -473,6 +474,7 @@ function OpenTask({
       dueIn={due.dueIn}
       overdue={due.overdue}
       highlight={state.task === task.id}
+      links={<TaskViewerLinks taskId={task.id} projectId={task.project.id} />}
       aria-label={`${task.code} · ${task.name}`}
     >
       {rows.map((row) => {

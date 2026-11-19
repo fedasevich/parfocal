@@ -23,19 +23,14 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { formatDue } from "../format.ts";
 import { okData } from "../placeholder.tsx";
+import { TaskViewerLinks } from "../viewer-links.tsx";
 import { reviewerProgress, taskStatus } from "./model.ts";
 import { usePeople } from "./people.ts";
 import { TaskSettingsDrawer } from "./task-settings-drawer.tsx";
 
-const dueText = (iso: string | null) =>
-  iso
-    ? new Date(`${iso}T12:00:00`).toLocaleDateString("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      })
-    : t`No due date`;
+const dueText = (iso: string | null) => (iso ? formatDue(iso) : t`No due date`);
 
 const headCell = "px-4 py-(--density-head-y)";
 
@@ -141,6 +136,9 @@ function TaskRow({
           <small className="max-w-85 truncate text-caption text-fg-faint">
             {facts.join(" · ")}
           </small>
+          <span className="-ml-2">
+            <TaskViewerLinks taskId={task.id} projectId={project.id} />
+          </span>
         </span>
       </TableCell>
       <TableCell>

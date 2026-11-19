@@ -57,6 +57,18 @@ test("the due line counts days from the server's clock", () => {
   assert.equal(dueText(task({ due_on: "2026-10-15" }), asOf).dueIn, "today");
 });
 
+test("a task without a due date says so instead of inventing one", () => {
+  assert.deepEqual(dueText(task({ due_on: null }), asOf), {
+    due: undefined,
+    dueIn: undefined,
+    overdue: false,
+  });
+  assert.equal(
+    nudgeMessage("Simona Marková", task({ due_on: null }), reviewer({}), asOf),
+    "Hi Simona, RT-14 has 8 slides left. Could you fit some in this week?",
+  );
+});
+
 test("each reviewer row says what the mock says", () => {
   assert.equal(reviewerDetail(reviewer({}), asOf), "8 slides left · about 2 h 8 min");
   assert.equal(

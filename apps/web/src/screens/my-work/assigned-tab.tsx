@@ -51,6 +51,7 @@ import { useGoTo } from "../../shell/router-link.tsx";
 import { formatDayMonth, formatDue, percent } from "../format.ts";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { TaskViewerLinks } from "../viewer-links.tsx";
 import { assignedLook, assignedNudgeMessage, behindmost, changeable } from "./assigned-rows.ts";
 import { SetChip, useSetLook } from "./parts.tsx";
 
@@ -134,6 +135,9 @@ function AssignedRow({
           {task.project.name}
           {detail ? t` · ${detail.slide_count} slides${detail.blinded ? " · blind" : ""}` : ""}
         </small>
+        <span className="-ml-2 block">
+          <TaskViewerLinks taskId={task.id} projectId={task.project.id} />
+        </span>
       </TableCell>
       <TableCell className="whitespace-normal">
         {set?.label ? <SetChip label={set.label} source={set.source} /> : null}

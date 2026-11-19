@@ -7758,7 +7758,7 @@ export interface TeamTask {
   slides: number;
   split: TeamTaskSplit;
   sent_on: string;
-  due_on: string;
+  due_on: string | null;
   signed_on: string | null;
   reviewers: TeamReviewer[];
 }

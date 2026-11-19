@@ -84424,8 +84424,15 @@
             "title": "Sent On"
           },
           "due_on": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Due On"
           },
           "signed_on": {
