@@ -13,7 +13,7 @@ import {
 import { PdfPreview } from "@parfocal/ui/components/report-templates";
 import { useEffect, useRef, useState } from "react";
 import { okData } from "../placeholder.tsx";
-import { fetchPdf, paperLabel, printFile, saveFile, svgSource } from "./pdf-file.ts";
+import { fetchPdf, paperLabel, printPages, saveFile, svgSource } from "./pdf-file.ts";
 
 type ViewerProps = {
   preview: ReportPreview | undefined;
@@ -52,7 +52,20 @@ function useLaterPages(
       },
     );
   }, [loadPages, asking, stuck, have, wanted]);
-  return pages;
+  const allPages = async () => {
+    const whole = [...pages];
+    const count = preview?.page_count ?? whole.length;
+    while (loadPages && whole.length < count) {
+      const more = await loadPages(whole.length);
+      if (!more.length) break;
+      whole.push(...more);
+    }
+    if (whole.length < count) throw new Error("The pages could not be loaded");
+    const fetched = whole.slice(preview?.pages.length ?? 0);
+    setLater((known) => (fetched.length > known.length ? fetched : known));
+    return whole;
+  };
+  return { pages, allPages };
 }
 
 function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: ViewerProps) {
@@ -61,7 +74,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
   const [page, setPage] = useState(1);
   const [fileFailed, setFileFailed] = useState(false);
   const file = useRef<Promise<Blob> | null>(null);
-  const pages = useLaterPages(preview, page, loadPages);
+  const { pages, allPages } = useLaterPages(preview, page, loadPages);
   const name = preview?.file_name ?? "report.pdf";
   const landscape = preview?.orientation === "landscape";
   const act = (use: (blob: Blob) => void) => () => {
@@ -70,6 +83,13 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
       file.current = null;
       setFileFailed(true);
     });
+  };
+  const print = () => {
+    if (!preview) return;
+    allPages().then(
+      (whole) => printPages(whole, preview),
+      () => setFileFailed(true),
+    );
   };
   return (
     <div
@@ -86,6 +106,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
             : undefined
         }
         pages={Math.max(1, preview?.page_count ?? 1)}
+        pageWidth={landscape ? 1123 : 794}
         current={page}
         onCurrentChange={setPage}
         loading={loading}
@@ -95,7 +116,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
           return svg === undefined ? (
             <div
               aria-busy="true"
-              className={`block max-w-full bg-white shadow-pop ${landscape ? "aspect-[297/210] w-[1123px]" : "aspect-[210/297] w-[794px]"}`}
+              className={`block w-full bg-white shadow-pop ${landscape ? "aspect-[297/210]" : "aspect-[210/297]"}`}
             >
               <span className="sr-only">
                 <Trans>Page {number} is loading</Trans>
@@ -105,7 +126,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
             <img
               src={svgSource(svg)}
               alt={t`Page ${number} of the report`}
-              className="block bg-white shadow-pop"
+              className="block h-auto w-full bg-white shadow-pop"
             />
           );
         }}
@@ -115,7 +136,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
             <img src={svgSource(svg)} alt="" className="h-full w-full object-contain" />
           );
         }}
-        onPrint={act(printFile)}
+        onPrint={print}
         onDownload={act((blob) => saveFile(blob, name))}
         onClose={onClose}
       />

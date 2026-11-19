@@ -133,7 +133,7 @@ export const mockScenes = {
   annotate: ["auto", "models"],
   compare: ["picked", "picking"],
   gallery: ["grid", "rest", "folded", "blind"],
-  evaluation: ["report", "arrange", "pdf", "retiredtpl", "exportfail"],
+  evaluation: ["report", "arrange", "retiredtpl", "exportfail"],
   settings: [
     "display",
     "review",

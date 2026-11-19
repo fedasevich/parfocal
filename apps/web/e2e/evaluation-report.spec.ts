@@ -202,15 +202,16 @@ test("a researcher without admin rights offers the arrangement to an admin", asy
   await expect(page.getByText("Offered Lab layout to the admins")).toBeVisible();
 });
 
-for (const scene of ["report", "arrange", "pdf", "retiredtpl", "exportfail"]) {
+for (const scene of ["report", "arrange", "view=pdf", "retiredtpl", "exportfail"]) {
   test(`the ${scene} scene passes axe`, async ({ page }) => {
-    await page.goto(url(scene));
+    const previewing = scene === "view=pdf";
+    await page.goto(previewing ? `/tasks/${rt14}/evaluation?view=pdf` : url(scene));
     if (scene === "arrange") {
       await expect(page.getByRole("complementary", { name: "Block catalogue" })).toBeVisible();
     } else {
       await expect(page.getByRole("article").first()).toBeVisible();
     }
-    if (scene === "pdf") {
+    if (previewing) {
       await expect(page.getByRole("img", { name: "Page 1 of the report" })).toBeVisible();
     }
     await page.evaluate(() =>

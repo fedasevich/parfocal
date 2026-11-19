@@ -41,7 +41,7 @@ import { LazyTaskPdf } from "./pdf-overlay-lazy.tsx";
 import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
 import { ShareLinks } from "./share-links.tsx";
 
-export type EvaluationScene = "report" | "arrange" | "pdf" | "retiredtpl" | "exportfail";
+export type EvaluationScene = "report" | "arrange" | "retiredtpl" | "exportfail";
 
 const fromLayout = (blocks: readonly object[]): PageBlock[] =>
   blocks.map((block, index) => ({
@@ -56,10 +56,14 @@ export function EvaluationScreen({
   taskId,
   scene,
   onScene,
+  previewing = false,
+  onPreview = () => undefined,
 }: {
   taskId: string;
   scene: EvaluationScene;
   onScene: (scene: EvaluationScene) => void;
+  previewing?: boolean;
+  onPreview?: (open: boolean) => void;
 }) {
   const report = okData(useGetEvaluationReport(taskId).data);
   const layout = okData(useGetTaskReportLayout(taskId).data);
@@ -71,6 +75,8 @@ export function EvaluationScreen({
       layout={layout}
       scene={scene}
       onScene={onScene}
+      previewing={previewing}
+      onPreview={onPreview}
     />
   );
 }
@@ -81,12 +87,16 @@ function EvaluationBody({
   layout,
   scene,
   onScene,
+  previewing,
+  onPreview,
 }: {
   taskId: string;
   report: EvaluationReport;
   layout: TaskReportLayout;
   scene: EvaluationScene;
   onScene: (scene: EvaluationScene) => void;
+  previewing: boolean;
+  onPreview: (open: boolean) => void;
 }) {
   const { t } = useLingui();
 
@@ -371,7 +381,7 @@ function EvaluationBody({
                   {blocks.length} blocks on {pageCount} pages.
                 </Trans>
               </span>
-              <Button variant="primary" onClick={() => onScene("pdf")}>
+              <Button variant="primary" onClick={() => onPreview(true)}>
                 <Icon name="eye" />
                 <Trans>Preview the PDF</Trans>
               </Button>
@@ -465,7 +475,7 @@ function EvaluationBody({
           </aside>
         </div>
       )}
-      {scene === "pdf" ? <LazyTaskPdf taskId={taskId} onClose={() => onScene("report")} /> : null}
+      {previewing ? <LazyTaskPdf taskId={taskId} onClose={() => onPreview(false)} /> : null}
       {toast.node}
     </main>
   );

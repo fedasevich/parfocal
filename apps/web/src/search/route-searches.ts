@@ -243,7 +243,8 @@ export const worklistSearch = lenientSearch({
 });
 
 export const evaluationSearch = lenientSearch({
-  scene: sceneField(mockScenes.evaluation, ["report", "arrange", "pdf"]),
+  scene: sceneField(mockScenes.evaluation, ["report", "arrange"]),
+  view: z.enum(["pdf"]).optional(),
 });
 
 export const submittedSearch = lenientSearch({

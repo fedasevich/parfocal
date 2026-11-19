@@ -7335,6 +7335,10 @@ msgstr "First slide"
 msgid "Fit"
 msgstr "Fit"
 
+#: ../../packages/ui/src/components/report-templates.tsx
+msgid "Fit the page to the width"
+msgstr "Fit the page to the width"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Fit to screen"
 msgstr "Fit to screen"

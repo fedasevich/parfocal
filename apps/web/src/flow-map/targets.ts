@@ -14,6 +14,7 @@ export type ScenarioIds = {
 
 export type TargetOptions = {
   scene?: string | undefined;
+  view?: "pdf" | undefined;
   clinical?: boolean;
   submitted?: boolean;
   as?: PersonaKey | undefined;
@@ -31,7 +32,7 @@ const myWorkTab = (scene: string | undefined) =>
   scene === "assigned" ? "assigned" : scene === "all" || scene === "allpreview" ? "all" : "review";
 
 export function targetFor(screen: WalkScreen, ids: ScenarioIds, options: TargetOptions = {}) {
-  const { scene, as } = options;
+  const { scene, view, as } = options;
   const project = { projectId: ids.researchProject };
   const task = { taskId: ids.task };
   const clinicalSlide = { projectId: ids.clinicalProject, slideId: ids.clinicalSlide };
@@ -78,7 +79,7 @@ export function targetFor(screen: WalkScreen, ids: ScenarioIds, options: TargetO
       return linkOptions({
         to: "/tasks/$taskId/evaluation",
         params: task,
-        search: { scene: sceneIn("evaluation", scene), as },
+        search: { scene: sceneIn("evaluation", scene), view, as },
       });
     case "worklist":
       return linkOptions({ to: "/my-work", search: { tab: myWorkTab(scene), as } });

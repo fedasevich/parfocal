@@ -7330,6 +7330,10 @@ msgstr ""
 msgid "Fit"
 msgstr ""
 
+#: ../../packages/ui/src/components/report-templates.tsx
+msgid "Fit the page to the width"
+msgstr ""
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Fit to screen"
 msgstr ""

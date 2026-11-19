@@ -61,7 +61,7 @@ const productRoutes: Record<string, readonly string[]> = {
   "tasks.$taskId.cells.tsx": [],
   "tasks.$taskId.comments.tsx": [],
   "tasks.$taskId.disagreements.tsx": [],
-  "tasks.$taskId.evaluation.tsx": ["report", "arrange", "pdf"],
+  "tasks.$taskId.evaluation.tsx": ["report", "arrange"],
   "tasks.$taskId.guided.tsx": ["region"],
   "tasks.$taskId.sign-off.tsx": [],
   "tasks.$taskId.submitted.tsx": [],
@@ -175,6 +175,12 @@ test("scenes run only with dev tools and the fake API both on", () => {
     sceneHarnessOn({ PARFOCAL_PUBLIC_DEV_TOOLS: "on", PARFOCAL_PUBLIC_FAKE_API: "drafts" }),
     true,
   );
+});
+
+test("the evaluation PDF preview is a plain view parameter, not a scene", () => {
+  assert.deepEqual(routeSearches.evaluationSearch.read({ view: "pdf" }), { view: "pdf" });
+  assert.deepEqual(routeSearches.evaluationSearch.read({ view: "slides" }), {});
+  assert.equal(routeSearches.evaluationSearch.read({ scene: "pdf" }).scene, undefined);
 });
 
 test("a gated scene field drops prototype scenes and keeps live ones", () => {

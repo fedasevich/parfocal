@@ -141,3 +141,16 @@ test("the co-signer sees both values and either returns or co-signs", async ({ p
     page.getByText("Reported by Tomáš Beneš, verified and signed by Lenka Malá").first(),
   ).toBeVisible();
 });
+
+test("the draft preview shows the report page with readable text and closes", async ({ page }) => {
+  await page.goto(`${report}?scene=text`);
+  await page.getByRole("button", { name: "Preview the page" }).click();
+  const preview = page.getByRole("dialog", { name: "Preview of the report" });
+  await expect(preview.getByText(/_draft\.pdf$/)).toBeVisible();
+  const line = preview.getByText(/metasta/i).first();
+  await expect(line).toBeVisible();
+  const size = await line.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+  expect(size).toBeGreaterThanOrEqual(11);
+  await preview.getByRole("button", { name: "Close the preview" }).click();
+  await expect(preview).toHaveCount(0);
+});
