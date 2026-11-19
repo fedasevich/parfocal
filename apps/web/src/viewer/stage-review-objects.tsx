@@ -23,10 +23,11 @@ import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
 import { StageCellsGrid } from "./stage-cells-grid.tsx";
-import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
+import { StageCoachAnswerTip, StageCoachOnSlide, StageCoachStepTip } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
 import { StageGuidedCard } from "./stage-guided-card.tsx";
+import { StageGuidedView } from "./stage-guided-view.tsx";
 import { ReviewOpinion } from "./stage-opinion.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
@@ -211,6 +212,8 @@ export function StageReviewObjects({
     else setCurrent(item.object);
   };
   const currentItem = objects.find((item) => item.object === current);
+  const currentOutline = currentItem?.outline;
+  const currentArea = useMemo(() => outlineArea(currentOutline), [currentOutline]);
   const typedCell =
     currentItem?.kind === "cell" && outlineArea(currentItem.outline) !== null ? currentItem : null;
   const decideType = (cell: ReviewObject, id: string) => {
@@ -253,9 +256,8 @@ export function StageReviewObjects({
         : id,
     );
   const coachPart = coachOn ? (
-    <StageCoachInPanel
+    <StageCoachAnswerTip
       keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
-      onStart={coach.dismiss}
     />
   ) : (
     <Button variant="ghost" size="sm" className="w-fit px-0" onClick={coach.reopen}>
@@ -271,7 +273,17 @@ export function StageReviewObjects({
         classes={session.classes}
         current={current}
       />
-      {coachOn && focus === null ? <StageCoachOnSlide /> : null}
+      {guided && ready && focus === null && currentItem !== undefined ? (
+        <StageGuidedView
+          key={currentItem.object}
+          engine={engine}
+          module={module}
+          object={currentItem.object}
+          area={currentArea}
+          finished={done}
+        />
+      ) : null}
+      {coachOn && focus === null ? <StageCoachOnSlide object={current ?? ""} /> : null}
       {focus === null || currentItem === undefined || typedCell !== null ? null : (
         <StageFocusCard
           session={session}
@@ -324,6 +336,7 @@ export function StageReviewObjects({
               object={currentItem}
               position={index + 1}
               coach={coachPart}
+              stepTip={coachOn ? <StageCoachStepTip onStart={coach.dismiss} /> : null}
               onAnswer={(raw) => answer(currentItem, raw)}
               onJump={(id) => {
                 if (id === "cells") setGridOpen(true);

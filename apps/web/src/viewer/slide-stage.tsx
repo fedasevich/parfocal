@@ -1128,7 +1128,7 @@ function OpenedSlide({
               {session && hostNode && systematicScan ? (
                 <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
               ) : null}
-              {session ? (
+              {session && !inspector.guided ? (
                 <StageMagnification
                   engine={session.engine}
                   units={session.module}
