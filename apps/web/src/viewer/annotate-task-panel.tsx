@@ -149,7 +149,7 @@ export function AnnotateTaskPanel({
   const showPanel = useRef(onShowPanel);
   showPanel.current = onShowPanel;
   const docked = useDocked();
-  const { taskId, slideId } = task;
+  const { taskId, slideId, focusObject } = task;
   const queryClient = useQueryClient();
   const me = okData(useGetMe().data)?.user_id ?? null;
   const personOf = usePeople();
@@ -489,6 +489,28 @@ export function AnnotateTaskPanel({
     },
     [order, engine, stage],
   );
+
+  const focused = useRef<string | null>(null);
+  useEffect(() => {
+    if (focusObject === undefined || focused.current === focusObject) return;
+    const cell = cells.find((item) => item.object === focusObject);
+    if (cell === undefined) return;
+    focused.current = focusObject;
+    setSelection([focusObject]);
+    showPanel.current?.();
+    const bounds = stage.getBoundingClientRect();
+    const camera = engine.getCamera();
+    const corner = screenToSlide(camera, bounds, bounds.left, bounds.top);
+    const far = screenToSlide(camera, bounds, bounds.right, bounds.bottom);
+    const width = far.x - corner.x;
+    const height = far.y - corner.y;
+    void engine.flyToArea({
+      x: cell.centre.x - width / 2,
+      y: cell.centre.y - height / 2,
+      width,
+      height,
+    });
+  }, [focusObject, cells, engine, stage]);
 
   const replay = useCallback(
     (states: readonly AiState[], label: string) => {

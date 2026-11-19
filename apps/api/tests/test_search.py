@@ -7,13 +7,17 @@ from typing import Any
 
 import pytest
 from case_support import seed_case
+from chunk_support import CellRow, chunk_bytes, put_chunk
 from db_support import APP_URL, ApiAs, with_database
+from storage_support import ensure_bucket
 from test_my_work import task
 from test_review_tasks import Study, study
 from test_reviewed_layer import LEFT, RIGHT, Review, merge, review, split
 from workspace_support import join_project, make_project, owner
 
+from parfocal_common.chunk_store import chunk_key
 from parfocal_common.db import DatabaseScope, async_database_url, create_engine, scoped_transaction
+from parfocal_common.result_imports import result_set_prefix
 
 pytestmark = pytest.mark.db
 
@@ -24,6 +28,57 @@ def found(api: ApiAs, s: Study, who: str, q: str, **params: str) -> list[tuple[s
     response = api(s.people[who]).get("/api/search", params={"q": q, **params})
     assert response.status_code == 200, response.text
     return [(hit["kind"], hit["label"]) for hit in response.json()["hits"]]
+
+
+def seed_regions(database: str, s: Study, slide: int, numbers: list[int]) -> None:
+    set_id = s.sets[s.slides[slide]]
+    values = ", ".join(
+        f"('{s.tenant_id}', '{set_id}', 'region', {number}, "
+        "ST_GeomFromText('POLYGON((0 0,9 0,9 9,0 9,0 0))', 0), 200)"
+        for number in numbers
+    )
+    owner(
+        database,
+        "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+        "INSERT INTO result_objects (tenant_id, result_set_id, kind, number, geometry, score) "
+        f"VALUES {values}; END $$",
+    )
+
+
+def seed_cells(database: str, s: Study, slide: int, numbers: list[int]) -> None:
+    ensure_bucket()
+    set_id = s.sets[s.slides[slide]]
+    key = chunk_key(result_set_prefix(s.tenant_id, s.slides[slide], set_id), 0)
+    cells: list[CellRow] = [(number, 255, 100, number * 100.0, 100.0) for number in numbers]
+    owner(
+        database,
+        "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+        "INSERT INTO result_chunks (tenant_id, result_set_id, chunk, x, y, width, height, "
+        f"cell_count, vertex_count, object_key) VALUES ('{s.tenant_id}', '{set_id}', 0, 0, 0, "
+        f"2048, 2048, {len(cells)}, {4 * len(cells)}, '{key}'); END $$",
+    )
+    put_chunk(key, chunk_bytes(cells, None))
+
+
+def draw(database: str, s: Study, slide: int, kind: str, number: int) -> None:
+    owner(
+        database,
+        "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry) "
+        f"VALUES ('{s.tenant_id}', '{s.project}', '{s.slides[slide]}', '{kind}', {number}, "
+        "ST_GeomFromText('POINT(40 40)', 0))",
+    )
+
+
+def seeded(database: str) -> Study:
+    s = study(database)
+    seed_regions(database, s, 2, [3])
+    seed_regions(database, s, 3, [3])
+    seed_cells(database, s, 3, [12])
+    draw(database, s, 3, "cell", 12)
+    draw(database, s, 1, "region", 1)
+    draw(database, s, 0, "roi", 1)
+    draw(database, s, 1, "region", 7)
+    return s
 
 
 def case_label(database: str, s: Study) -> str:
@@ -54,14 +109,14 @@ def test_parts_of_names_find_projects_cases_slides_and_people(api: ApiAs, databa
 def test_any_part_of_an_object_path_opens_the_slide_at_the_object(
     api: ApiAs, database: str
 ) -> None:
-    s = study(database)
+    s = seeded(database)
     label = case_label(database, s)
     full = found(api, s, "owner", f"P01/{label}/A1/T3")
     assert full == [("object", "A1 T3")]
     assert found(api, s, "owner", f"{label}/A2/C12+") == [("object", "A2 C12+")]
-    assert found(api, s, "owner", "~/loose-1/T1") == [("object", "loose-1 T1")]
-    assert found(api, s, "owner", "loose-0/T1", scope="objects") == [("object", "loose-0 T1")]
-    assert found(api, s, "owner", "P02/~/loose-1/T1", scope="objects") == []
+    assert found(api, s, "owner", "~/loose-1/T1+") == [("object", "loose-1 T1+")]
+    assert found(api, s, "owner", "loose-0/R1", scope="objects") == [("object", "loose-0 R1")]
+    assert found(api, s, "owner", "P02/~/loose-1/T1+", scope="objects") == []
     assert found(api, s, "owner", "loose-1/not-an-id", scope="objects") == []
     response = api(s.people["owner"]).get(
         "/api/search", params={"q": f"{label}/A1/T3", "scope": "objects"}
@@ -77,16 +132,19 @@ def objects(api: ApiAs, who: Any, q: str, **params: str) -> list[tuple[str, str 
 
 
 def test_every_form_of_an_object_id_resolves_in_its_context(api: ApiAs, database: str) -> None:
-    s = study(database)
+    s = seeded(database)
     label = case_label(database, s)
     who = s.people["owner"]
     assert objects(api, who, f"p01/{label}/A1/t3") == [("A1 T3", None)]
-    assert objects(api, who, f"{label}/A1/T2·C12") == [("A1 T2.C12", None)]
-    assert objects(api, who, f"{label}/A1/T2.C12⁺") == [("A1 T2.C12+", None)]
-    assert objects(api, who, "A1/C12") == [("A1 C12", None)]
+    assert objects(api, who, f"{label}/A2/T3·C12") == [("A2 T3.C12", None)]
+    assert objects(api, who, f"{label}/A2/T3.C12⁺") == [("A2 T3.C12+", None)]
+    assert objects(api, who, "A2/C12") == [("A2 C12", None)]
     assert objects(api, who, "A1/T3", project_id=str(s.project)) == [("A1 T3", None)]
+    assert objects(api, who, "A1/T9") == []
+    assert objects(api, who, "A1/C13") == []
     assert objects(api, who, "A1/T3", project_id=str(uuid.uuid4())) == []
-    assert objects(api, who, "T3") == []
+    assert objects(api, who, "T3") == [("A1 T3", None), ("A2 T3", None)]
+    assert objects(api, who, "T3", project_id=str(uuid.uuid4())) == []
     assert objects(api, who, "T3", slide_id=str(s.slides[2])) == [("A1 T3", None)]
     assert objects(api, who, "R1", slide_id=str(s.slides[0])) == [("loose-0 R1", None)]
     assert objects(api, who, "A1//T3") == []
@@ -100,9 +158,47 @@ def test_every_form_of_an_object_id_resolves_in_its_context(api: ApiAs, database
         "INSERT INTO slides (tenant_id, project_id, case_id, label) "
         f"VALUES ('{s.tenant_id}', '{s.project}', '{slashed}', 'B/1')",
     )
+    odd = owner(
+        database, f"SELECT id FROM slides WHERE label = 'B/1' AND project_id = '{s.project}'"
+    )[0][0]
+    owner(
+        database,
+        "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry) "
+        f"VALUES ('{s.tenant_id}', '{s.project}', '{odd}', 'region', 1, "
+        "ST_GeomFromText('POINT(40 40)', 0))",
+    )
     assert objects(api, who, "P01/S26%2F0481%202/B%2F1/T1%2B") == [("B/1 T1+", None)]
     assert objects(api, who, "S26/0481 2/B/1/T1") == []
     assert objects(api, s.people["outsider"], "T3", slide_id=str(s.slides[2])) == []
+
+
+def test_a_bare_id_or_a_slide_and_an_id_finds_cells_shapes_and_regions_that_exist(
+    api: ApiAs, database: str
+) -> None:
+    s = seeded(database)
+    who = s.people["owner"]
+    assert objects(api, who, "C12") == [("A2 C12", None)]
+    assert objects(api, who, "c12") == [("A2 C12", None)]
+    assert objects(api, who, "C12+") == [("A2 C12+", None)]
+    assert objects(api, who, "T3") == [("A1 T3", None), ("A2 T3", None)]
+    assert objects(api, who, "T7+") == [("loose-1 T7+", None)]
+    assert objects(api, who, "R1") == [("loose-0 R1", None)]
+    assert objects(api, who, "A2 C12") == [("A2 C12", None)]
+    assert objects(api, who, "a2 c12") == [("A2 C12", None)]
+    assert objects(api, who, "A2/C12") == [("A2 C12", None)]
+    assert objects(api, who, "loose-0 R1") == [("loose-0 R1", None)]
+    assert objects(api, who, "A2 T3-C12") == [("A2 T3.C12", None)]
+    assert objects(api, who, "T3-C12") == [("A2 T3.C12", None)]
+    assert objects(api, who, "T3.C12") == [("A2 T3.C12", None)]
+    assert objects(api, who, "T4-C12") == []
+    assert objects(api, who, "C13") == []
+    assert objects(api, who, "A1 C12") == []
+    assert objects(api, who, "A2 C99") == []
+    assert objects(api, who, "R2") == []
+    assert objects(api, who, "T9+") == []
+    assert objects(api, s.people["outsider"], "C12") == []
+    assert objects(api, who, "C12", slide_id=str(s.slides[0])) == []
+    assert objects(api, who, "C12", slide_id=str(s.slides[3])) == [("A2 C12", None)]
 
 
 def slide_label(database: str, r: Review) -> str:
@@ -142,6 +238,13 @@ def test_ai_ids_stay_hidden_until_the_first_read(api: ApiAs, database: str) -> N
     owner(database, f"UPDATE review_tasks SET ai_hidden_first_read = true WHERE id = '{r.task}'")
     assert objects(api, r.people["first"], f"{slide}/T1") == []
     assert objects(api, r.people["first"], f"{slide}/C3") == []
+    for kind, number in (("region", 7), ("roi", 1)):
+        owner(
+            database,
+            "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry) "
+            f"SELECT tenant_id, project_id, id, '{kind}', {number}, "
+            f"ST_GeomFromText('POINT(40 40)', 0) FROM slides WHERE id = '{r.slide}'",
+        )
     assert objects(api, r.people["first"], f"{slide}/T7+") == [(f"{slide} T7+", None)]
     assert objects(api, r.people["first"], f"{slide}/R1") == [(f"{slide} R1", None)]
     assert objects(api, r.people["owner"], f"{slide}/T1") == [(f"{slide} T1", None)]

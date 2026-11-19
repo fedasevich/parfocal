@@ -1,7 +1,8 @@
+import re
 import uuid
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Query, Request
@@ -19,12 +20,18 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, database_scope
 from parfocal_api.project_access import readable, readable_slide
 from parfocal_api.projects import code_of
+from parfocal_api.result_membership import missing_cells, missing_regions
+from parfocal_api.review_order import ResultFilesMissingError, ResultFilesUnreadableError
 from parfocal_api.tables import (
     AnnotationKind,
     PrivacyMode,
+    ResultStatus,
+    annotations,
     cases,
     memberships,
     projects,
+    result_objects,
+    result_sets,
     review_edits,
     slides,
     users,
@@ -32,6 +39,7 @@ from parfocal_api.tables import (
 from parfocal_common.envelope import DataKeyUnavailableError
 from parfocal_common.object_ids import LOOSE_CASE, Letter, ObjectId, ObjectIdError, parse
 from parfocal_common.object_lineage import Fate, Retired, resolve
+from parfocal_common.result_store import ResultStore
 
 PER_KIND = 20
 
@@ -192,10 +200,12 @@ def object_query(
 ) -> Any | None:
     statement = visible_slides(principal)
     if len(segments) == 1:
-        if context.slide_id is None:
-            return None
-        return statement.where(slides.c.id == context.slide_id)
-    statement = statement.where(slides.c.label == segments[-2])
+        if context.slide_id is not None:
+            return statement.where(slides.c.id == context.slide_id)
+        if context.project_id is not None:
+            statement = statement.where(slides.c.project_id == context.project_id)
+        return statement
+    statement = statement.where(slides.c.label_lower == segments[-2].lower())
     if len(segments) >= 3:
         case = segments[-3]
         statement = statement.where(
@@ -267,28 +277,120 @@ async def current_ids(
     return task_id, resolved
 
 
+DRAWN_KINDS = {
+    Letter.REGION: AnnotationKind.REGION,
+    Letter.CELL: AnnotationKind.CELL,
+    Letter.ROI: AnnotationKind.ROI,
+    Letter.MEASUREMENT: AnnotationKind.MEASUREMENT,
+    Letter.ARROW: AnnotationKind.ARROW,
+    Letter.TEXT: AnnotationKind.TEXT,
+}
+REGION_PREFIX = re.compile(r"^(T\d+)[-\u2010-\u2013]", re.IGNORECASE)
+SCANNED_SLIDES = 200
+
+
+def parse_token(text: str) -> ObjectId:
+    try:
+        return parse(text)
+    except ObjectIdError:
+        return parse(REGION_PREFIX.sub(r"\1.", text.strip()))
+
+
+def split_term(term: str) -> tuple[list[str], ObjectId] | None:
+    segments = [unquote(segment) for segment in term.split("/")]
+    if not all(segments):
+        return None
+    try:
+        return segments, parse_token(segments[-1])
+    except ObjectIdError:
+        pass
+    head, _, tail = segments[-1].strip().rpartition(" ")
+    if not head.strip():
+        return None
+    try:
+        return [*segments[:-1], head.strip(), tail], parse_token(tail)
+    except ObjectIdError:
+        return None
+
+
+async def ai_object_exists(
+    connection: AsyncConnection, store: ResultStore, slide_id: uuid.UUID, found: ObjectId
+) -> bool:
+    set_ids = list(
+        await connection.scalars(
+            select(result_sets.c.id).where(
+                result_sets.c.slide_id == slide_id,
+                result_sets.c.status == ResultStatus.READY.value,
+                result_sets.c.deleted_at.is_(None),
+            )
+        )
+    )
+    for set_id in set_ids:
+        if found.region is not None and await missing_regions(connection, set_id, {found.region}):
+            continue
+        if found.letter is Letter.CELL:
+            try:
+                if not await missing_cells(connection, store, set_id, {found.number}):
+                    return True
+            except ResultFilesMissingError, ResultFilesUnreadableError:
+                continue
+            continue
+        kind = "region" if found.letter is Letter.REGION else "zone"
+        present = select(result_objects).where(
+            result_objects.c.result_set_id == set_id,
+            result_objects.c.kind == kind,
+            result_objects.c.number == found.number,
+        )
+        if await connection.scalar(select(present.exists())):
+            return True
+    return False
+
+
+async def drawn_object_exists(
+    connection: AsyncConnection, slide_id: uuid.UUID, found: ObjectId
+) -> bool:
+    kind = DRAWN_KINDS.get(found.letter)
+    if kind is None:
+        return False
+    present = select(annotations).where(
+        annotations.c.slide_id == slide_id,
+        annotations.c.kind == kind.value,
+        annotations.c.number == found.number,
+        annotations.c.deleted_at.is_(None),
+    )
+    return bool(await connection.scalar(select(present.exists())))
+
+
+async def object_exists(
+    connection: AsyncConnection, store: ResultStore, slide_id: uuid.UUID, found: ObjectId
+) -> bool:
+    if found.letter in AI_LETTERS and not found.person:
+        return await ai_object_exists(connection, store, slide_id, found)
+    return await drawn_object_exists(connection, slide_id, found)
+
+
 async def object_hits(
     connection: AsyncConnection,
     principal: CurrentPrincipal,
     term: str,
     context: SearchContext,
+    store: ResultStore,
 ) -> list[SearchHit]:
-    segments = [unquote(segment) for segment in term.split("/")]
-    if len(segments) > 4 or not all(segments):
+    split = split_term(term)
+    if split is None or len(split[0]) > 4:
         return []
-    try:
-        found = parse(segments[-1])
-    except ObjectIdError:
-        return []
+    segments, found = split
     statement = object_query(principal, segments, context)
     if statement is None:
         return []
     if found.letter in AI_LETTERS and not found.person:
         statement = statement.where(~ai_hidden(principal, slides.c.project_id, slides.c.id))
-    rows = await connection.execute(statement.order_by(slides.c.label).limit(PER_KIND))
+    rows = await connection.execute(statement.order_by(slides.c.label).limit(SCANNED_SLIDES))
     typed = found.text(ascii=True)
     hits: list[SearchHit] = []
     for row in rows:
+        if not await object_exists(connection, store, row.id, found):
+            continue
         task_id, resolved = await current_ids(connection, principal, row.id, found, context)
         for item in resolved:
             text = item.text(ascii=True)
@@ -307,6 +409,8 @@ async def object_hits(
                     task_id=task_id,
                 )
             )
+        if len(hits) >= PER_KIND:
+            break
     return hits[:PER_KIND]
 
 
@@ -380,7 +484,9 @@ async def search(
     wanted = set(SearchScope) if scope is SearchScope.ALL else {scope}
     hits: list[SearchHit] = []
     if SearchScope.OBJECTS in wanted:
-        hits += await object_hits(connection, principal, q, context)
+        hits += await object_hits(
+            connection, principal, q, context, cast("ResultStore", request.app.results)
+        )
     if SearchScope.PROJECTS in wanted:
         hits += await project_hits(connection, principal, q)
     if SearchScope.CASES in wanted:

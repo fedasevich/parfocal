@@ -18,12 +18,14 @@ export type AnnotateTask = {
   readonly classes: readonly ProjectClass[] | null;
   readonly slideIds: readonly string[];
   readonly owner: boolean;
+  readonly focusObject?: string | undefined;
 };
 
 export function annotateTaskOf(
   task: ReviewTaskDetail | undefined,
   slideId: string,
   owner: boolean,
+  focusObject?: string,
 ): AnnotateTask | null {
   if (task === undefined || task.kind !== "annotate") return null;
   const slide = task.slides.find((item) => item.slide_id === slideId);
@@ -36,6 +38,7 @@ export function annotateTaskOf(
     classes: task.classes,
     slideIds: task.slides.map((slide) => slide.slide_id),
     owner,
+    focusObject,
   };
 }
 
