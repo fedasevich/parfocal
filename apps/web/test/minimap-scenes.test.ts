@@ -152,3 +152,29 @@ test("a cells panel under the bottom right moves the viewer map to the bottom le
   const place = placeMinimap(size, { width: 208, height: 301 }, spots.hot, spots.blocked);
   assert.equal(place.corner, "bottom-left");
 });
+
+test("with the bottom dock the viewer blocks the bar at the top right and the dock at the bottom centre", () => {
+  const spots = viewerSpots({ ...viewerInput, docked: true });
+  const bar = spots.blocked.find((rect) => rect[1] === 12);
+  assert.ok(bar);
+  assert.equal(bar[0] + bar[2], size.width - 12);
+  const dock = spots.blocked.find((rect) => rect[3] === 48);
+  assert.ok(dock);
+  assert.equal(dock[1] + dock[3], size.height - 14);
+  assert.ok(!spots.blocked.some((rect) => rect[1] > size.height - 60 && rect[3] === 50));
+});
+
+test("with the bottom dock the viewer map never lands on the bar at the top right", () => {
+  const spots = viewerSpots({ ...viewerInput, docked: true });
+  const place = placeMinimap(size, { width: 208, height: 301 }, spots.hot, spots.blocked);
+  assert.notEqual(place.corner, "top-right");
+});
+
+test("with the bottom dock the annotate and focus maps block the moved bar", () => {
+  const camera = { x: 800, y: 500, scale: 1 };
+  for (const spots of [annotateSpots(camera, size, {}, true), focusSpots(camera, size, true)]) {
+    assert.ok(
+      spots.blocked.some((rect) => rect[1] === 12 && rect[0] + rect[2] === size.width - 12),
+    );
+  }
+});

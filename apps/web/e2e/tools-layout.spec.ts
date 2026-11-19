@@ -55,6 +55,9 @@ for (const layout of ["Left rail", "Bottom dock"] as const) {
       return;
     }
     const dock = await expectDocked(page, '[data-vt-target=""]');
+    const area = await boxOf(page, '[data-vt-target=""]');
+    expect(Math.round(bar.y - area.y)).toBe(12);
+    expect(Math.round(area.x + area.width - (bar.x + bar.width))).toBe(12);
     expect(bar.y + bar.height).toBeLessThanOrEqual(dock.y);
     await page.getByRole("toolbar", { name: "Tools" }).getByRole("button", { name: /Pan/ }).click();
     await expect(page).toHaveURL(/tool=hand/);
@@ -77,11 +80,15 @@ for (const layout of ["Left rail", "Bottom dock"] as const) {
     const dock = await expectDocked(page, '[data-vt-target=""]');
     const area = await boxOf(page, '[data-vt-target=""]');
     expect(Math.round(context.y - area.y)).toBe(72);
+    expect(Math.round(bar.y - area.y)).toBe(12);
+    expect(Math.round(area.x + area.width - (bar.x + bar.width))).toBe(12);
     expect(bar.y + bar.height).toBeLessThanOrEqual(dock.y);
   });
 }
 
-test("the real slide stage docks its tools and lifts the magnification bar", async ({ page }) => {
+test("the real slide stage docks its tools and moves the magnification bar to the top right", async ({
+  page,
+}) => {
   await chooseTools(page, "Bottom dock");
   await page.goto(`/projects/${p07}?tab=slides`);
   await page
@@ -99,6 +106,7 @@ test("the real slide stage docks its tools and lifts the magnification bar", asy
   expect(Math.round(tools.y + tools.height)).toBe(
     Math.round((area?.y ?? 0) + (area?.height ?? 0) - 14),
   );
+  expect(Math.round(magnification.y - (area?.y ?? 0))).toBe(12);
   expect(magnification.y + magnification.height).toBeLessThanOrEqual(tools.y);
   await page.locator('button[data-tool="rect"]').click();
   await expect(stage).toHaveAttribute("data-tool", "rectangle");

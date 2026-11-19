@@ -33,6 +33,7 @@ import { LiveCursor } from "../../presence/live-cursor.tsx";
 import { cursorSender } from "../../presence/shared-cursor.ts";
 import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
+import { useToolsLayout } from "../../shell/tools-layout.ts";
 import {
   type StillDrawChoices,
   StillEngine,
@@ -129,6 +130,7 @@ type CompareViewProps = {
 
 export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareViewProps) {
   const { t } = useLingui();
+  const docked = useToolsLayout() === "dock";
   const { session, projectId, counts } = tools;
   const all = okData(useListProjectSlides(projectId).data) ?? [];
   const caseSlides = all
@@ -590,7 +592,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         {visible.map((side) => (
           <Fragment key={side}>{pane(side)}</Fragment>
         ))}
-        <FloatingPill className="top-auto bottom-4">
+        <FloatingPill className={docked ? "top-auto bottom-[4.75rem]" : "top-auto bottom-4"}>
           <Icon name="slides" />
           <span>
             <Trans>Linked: pan, zoom and rotation move both</Trans>

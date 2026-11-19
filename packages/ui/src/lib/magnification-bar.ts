@@ -79,7 +79,11 @@ export function msUntilFold(signals: BarSignals, now: number): number | null {
   return signals.zoomedAt + zoomHoldMs - now;
 }
 
-export type BarState = { open: boolean; brightnessChanged: boolean };
+export type BarState = {
+  open: boolean;
+  brightnessChanged: boolean;
+  docked?: boolean;
+};
 
 export type BarRect = [x: number, y: number, width: number, height: number];
 
@@ -90,18 +94,17 @@ const foldedWidth = 230;
 const foldedWidthWithBrightness = 300;
 const foldedHeight = 50;
 const foldedFromBottom = 60;
+const dockedInset = 12;
 
 export function magnificationBarRect(
   canvas: { width: number; height: number },
-  { open, brightnessChanged }: BarState,
+  { open, brightnessChanged, docked = false }: BarState,
 ): BarRect {
-  if (open)
-    return [
-      canvas.width / 2 - openWidth / 2,
-      canvas.height - openFromBottom,
-      openWidth,
-      openHeight,
-    ];
-  const width = brightnessChanged ? foldedWidthWithBrightness : foldedWidth;
-  return [canvas.width / 2 - width / 2, canvas.height - foldedFromBottom, width, foldedHeight];
+  const width = open ? openWidth : brightnessChanged ? foldedWidthWithBrightness : foldedWidth;
+  const height = open ? openHeight : foldedHeight;
+  if (docked) return [canvas.width - dockedInset - width, dockedInset, width, height];
+  if (open) {
+    return [canvas.width / 2 - width / 2, canvas.height - openFromBottom, width, height];
+  }
+  return [canvas.width / 2 - width / 2, canvas.height - foldedFromBottom, width, height];
 }

@@ -41,6 +41,13 @@ from parfocal_api.showcase import (
     seed,
     viewer_emails_of,
 )
+from parfocal_api.showcase_results import (
+    CELLS_MODEL,
+    MODEL_RESULTS,
+    REGIONS_MODEL,
+    model_cells,
+    model_regions,
+)
 from parfocal_api.slide_result_stats import get_slide_result_stats
 from parfocal_api.slide_threads import list_slide_threads, list_thread_comments
 from parfocal_api.slide_viewer import (
@@ -96,6 +103,18 @@ SUFFIX_FORMATS = {
 
 
 OPENABLE = ("CMU-1-Small-Region.svs", "Philips-4.tiff")
+DEMO_LABELS = (VIEWER_SAMPLE, *(slide.file for slide in FORMAT_GALLERY))
+WITH_REGIONS = {label for label in DEMO_LABELS if model_regions(label) is not None}
+WITH_CELLS = {label for label in DEMO_LABELS if model_cells(label) is not None}
+
+
+def regions_on(label: str) -> int:
+    found = model_regions(label)
+    return 0 if found is None else len(found.rows)
+
+
+async def label_of(url: str, slide_id: uuid.UUID) -> str:
+    return str((await run_sql(url, f"SELECT label FROM slides WHERE id = '{slide_id}'"))[0][0])
 
 
 def stored_fixture(name: str) -> bytes:
@@ -345,7 +364,7 @@ async def test_the_owner_reviews_a_gallery_tour_that_opens_on_the_camelyon_sampl
         for workspace in WORKSPACES
     }
     assert {str(kind) for _, kind, _, _, _ in rows} == {"review"}
-    assert len(rows) == len(WORKSPACES) * (len(FORMAT_GALLERY) + 1)
+    assert len(rows) == len(WORKSPACES) * len(WITH_REGIONS)
     assigned = await run_sql(
         seeded,
         "SELECT DISTINCT u.email FROM review_assignments a JOIN review_tasks t ON t.id = a.task_id "
@@ -620,17 +639,19 @@ async def test_the_demo_tasks_use_templates_that_match_their_results(seeded: str
     assert unset == {"0"}
 
 
-async def test_every_demo_slide_has_a_regions_and_a_cells_result(seeded: str) -> None:
+async def test_every_demo_slide_has_the_results_its_model_runs_made(seeded: str) -> None:
     await run_seed(seeded)
     rows = await run_sql(
         seeded,
-        "SELECT s.id, max(r.region_count), max(r.cell_count) FROM slides s "
+        "SELECT s.label, max(r.region_count), max(r.cell_count) FROM slides s "
         "JOIN projects p ON p.id = s.project_id "
         "JOIN result_sets r ON r.slide_id = s.id AND r.status = 'ready' "
-        f"WHERE p.name = '{WORKSPACES[0].gallery}' GROUP BY s.id",
+        f"WHERE p.name = '{WORKSPACES[0].gallery}' GROUP BY s.label",
     )
-    assert len(rows) == len(FORMAT_GALLERY) + 1
-    assert all(int(str(regions)) > 0 and int(str(cells)) > 0 for _, regions, cells in rows)
+    assert {str(label) for label, _, _ in rows} == WITH_REGIONS | WITH_CELLS
+    assert {str(label) for label, regions, _ in rows if int(str(regions)) > 0} == WITH_REGIONS
+    assert {str(label) for label, _, cells in rows if int(str(cells)) > 0} == WITH_CELLS
+    assert len(WITH_CELLS) >= len(FORMAT_GALLERY) - 1
 
 
 async def test_the_tour_opens_the_slides_that_open_first(seeded: str) -> None:
@@ -651,8 +672,10 @@ async def test_the_owner_has_objects_to_decide_in_each_open_demo_task(seeded: st
     await run_seed(seeded)
     engine = create_engine(seeded)
     try:
-        for name, kind, count in ((GALLERY_TOUR, "region", 3), (CELL_TOUR, "cell", CELLS_CHECKED)):
+        for name, kind in ((GALLERY_TOUR, "region"), (CELL_TOUR, "cell")):
             task, principal, slide_ids = await owner_task(seeded, name)
+            label = await label_of(seeded, slide_ids[-1])
+            count = regions_on(label) if kind == "region" else CELLS_CHECKED
             async with scoped_transaction(
                 engine, DatabaseScope(tenant_id=principal.tenant_id)
             ) as connection:
@@ -689,7 +712,7 @@ async def test_one_demo_task_is_half_done_and_one_is_submitted_with_a_report(
             ]
             assert submitted == half_slides[:1]
             decided = await list_decisions(half, half_slides[1], principal, connection)
-            assert len(decided) == 3
+            assert len(decided) == regions_on(await label_of(seeded, half_slides[1]))
             assert not await list_decisions(half, half_slides[2], principal, connection)
             done_states = await states_of(connection, await task_of(connection, done))
             assert len(done_slides) == 2
@@ -747,3 +770,38 @@ async def test_a_listed_viewer_can_see_every_project_without_admin_rights(seeded
         "WHERE u.email = 'watcher@example.test'",
     )
     assert covered == {str(3 * len(WORKSPACES))}
+
+
+def points_of(wkt: str) -> tuple[tuple[float, float], ...]:
+    inner = wkt.removeprefix("POLYGON((").removesuffix("))")
+    return tuple((float(x), float(y)) for x, y in (point.split() for point in inner.split(",")))
+
+
+def model_outputs() -> tuple[set[tuple[tuple[float, float], ...]], set[int]]:
+    rings: set[tuple[tuple[float, float], ...]] = set()
+    counts: set[int] = set()
+    for folder in MODEL_RESULTS.iterdir():
+        regions = model_regions(folder.name)
+        cells = model_cells(folder.name)
+        rings |= {points_of(row.wkt) for row in regions.rows} if regions else set()
+        counts |= {len(cells.cells)} if cells else set()
+    return rings, counts
+
+
+async def test_every_seeded_ai_result_comes_from_a_model_run(seeded: str) -> None:
+    await run_seed(seeded)
+    rings, counts = model_outputs()
+    made = await run_sql(
+        seeded,
+        "SELECT model_version, cell_count, region_count, status FROM result_sets "
+        "WHERE status <> 'failed'",
+    )
+    assert made
+    assert {str(row[0]) for row in made} == {REGIONS_MODEL, CELLS_MODEL}
+    assert {int(str(row[1])) for row in made if row[0] == CELLS_MODEL} <= counts
+    assert all(
+        int(str(row[2])) > 0 for row in made if row[0] == REGIONS_MODEL and row[3] == "ready"
+    )
+    shapes = await run_sql(seeded, "SELECT ST_AsText(geometry) FROM result_objects")
+    assert shapes
+    assert {points_of(str(row[0])) for row in shapes} <= rings

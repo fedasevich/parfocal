@@ -16,9 +16,20 @@ from parfocal_common.chunk_store import build_cells
 
 REAL = {
     VIEWER_SAMPLE: True,
-    "CMU-1-Small-Region.svs": False,
+    "CMU-1-Small-Region.svs": True,
+    "JP2K-33003-1.svs": True,
+    "CMU-1-JP2K-33005.svs": True,
+    "CMU-1.ndpi": True,
+    "Leica-1.scn": True,
+    "OS-1.bif": True,
     "Philips-4.tiff": True,
+    "Philips-3.tiff": False,
+    "Huron-1-40x.tif": True,
+    "Argos-1.avs": True,
+    "CMU-1.tiff": True,
+    "CMU-1-JP2K-33005-v2.zip": True,
 }
+UNREADABLE_BY_THE_MODELS = {"CMU-1-Saved-1_16.zip", "synthetic-zlib.ome.tiff"}
 
 
 def run_of(label: str) -> dict[str, Any]:
@@ -29,7 +40,7 @@ def test_every_result_folder_belongs_to_a_seeded_slide() -> None:
     labels = {VIEWER_SAMPLE, *(slide.file for slide in FORMAT_GALLERY)}
     folders = {path.name for path in MODEL_RESULTS.iterdir() if path.is_dir()}
     assert folders == {folder_of(label).name for label in REAL}
-    assert set(REAL) <= labels
+    assert set(REAL) | UNREADABLE_BY_THE_MODELS == labels
 
 
 @pytest.mark.parametrize("label", sorted(REAL))

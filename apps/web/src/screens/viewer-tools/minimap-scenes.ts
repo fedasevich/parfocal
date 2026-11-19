@@ -16,6 +16,26 @@ export type MapSpots = {
   extent: MapRect;
 };
 
+export const dockSize = { width: 272, height: 48, fromBottom: 14 };
+
+export function dockBlock(size: Size): ScreenRect {
+  return [
+    size.width / 2 - dockSize.width / 2,
+    size.height - dockSize.fromBottom - dockSize.height,
+    dockSize.width,
+    dockSize.height,
+  ];
+}
+
+export function barBlocks(size: Size, state: { open: boolean; docked: boolean }): ScreenRect[] {
+  const bar = magnificationBarRect(size, {
+    open: state.open,
+    brightnessChanged: false,
+    docked: state.docked,
+  });
+  return state.docked ? [bar, dockBlock(size)] : [bar];
+}
+
 export type NavigatorMapScene = "reading" | "travel" | "avoid" | "pointer" | "cells" | "focus";
 
 export const overviewExtent: MapRect = [0, 0, 1400, 1924];
@@ -60,14 +80,14 @@ export function navigatorSpots(
   scene: NavigatorMapScene,
   shown: Camera,
   size: Size,
-  context: { areaObjects: string[]; current: string; barOpen: boolean },
+  context: { areaObjects: string[]; current: string; barOpen: boolean; docked?: boolean },
   chrome: { openThread?: ScreenRect | null; cellsPanel?: ScreenRect | null } = {},
 ): NavigatorSpots {
   const setup = navigatorLookOf(scene);
   const reading = setup.look === "mid";
   const viewport = viewportOf(setup.look, shown, size);
   const blocked: ScreenRect[] = [
-    magnificationBarRect(size, { open: context.barOpen, brightnessChanged: false }),
+    ...barBlocks(size, { open: context.barOpen, docked: context.docked ?? false }),
     ...chromeBlocks(chrome),
   ];
   const hot: HotSpot[] = [];
@@ -125,6 +145,7 @@ export function annotateSpots(
   shown: Camera,
   size: Size,
   chrome: { openThread?: ScreenRect | null; cellsPanel?: ScreenRect | null } = {},
+  docked = false,
 ): MapSpots {
   const corner = toScreen(shown, size, [annotatePromptBox.x, annotatePromptBox.y]);
   const hot: HotSpot[] = autoRegionProposals.map((cell) => {
@@ -132,7 +153,9 @@ export function annotateSpots(
     return [at.x, at.y, hotWeight.proposal];
   });
   const blocked: ScreenRect[] = [
-    [size.width / 2 - 250, size.height - 58, 500, 50],
+    ...(docked
+      ? barBlocks(size, { open: false, docked })
+      : [[size.width / 2 - 250, size.height - 58, 500, 50] as ScreenRect]),
     [size.width / 2 - 370, 6, 740, 50],
     [
       corner.x,
@@ -147,13 +170,15 @@ export function annotateSpots(
 
 export const focusHome = coverHome(midSize, [700, 520]);
 
-export function focusSpots(shown: Camera, size: Size): MapSpots {
+export function focusSpots(shown: Camera, size: Size, docked = false): MapSpots {
   const hot: HotSpot[] = edgePoints.map((point) => {
     const at = toScreen(shown, size, point);
     return [at.x, at.y, hotWeight.tumorEdge];
   });
   const blocked: ScreenRect[] = [
-    [size.width / 2 - 250, size.height - 58, 500, 50],
+    ...(docked
+      ? barBlocks(size, { open: false, docked })
+      : [[size.width / 2 - 250, size.height - 58, 500, 50] as ScreenRect]),
     [size.width - 330, size.height - 170, 316, 156],
     [size.width / 2 - 170, 0, 340, 50],
   ];
@@ -173,6 +198,7 @@ export type ViewerSpotsInput = {
   proposals: { x: number; y: number }[];
   openThread: ScreenRect | null;
   cellsPanel: ScreenRect | null;
+  docked?: boolean;
 };
 
 export const wholeSlideButtonWidth = 140;
@@ -182,7 +208,7 @@ export const toastWidth = 340;
 export function viewerSpots(input: ViewerSpotsInput): Pick<MapSpots, "hot" | "blocked"> {
   const { camera, size } = input;
   const blocked: ScreenRect[] = [
-    magnificationBarRect(size, { open: false, brightnessChanged: false }),
+    ...barBlocks(size, { open: false, docked: input.docked ?? false }),
     ...chromeBlocks({ openThread: input.openThread, cellsPanel: input.cellsPanel }),
   ];
   if (input.blockLeft) blocked.push([16, size.height - 60, wholeSlideButtonWidth, 44]);

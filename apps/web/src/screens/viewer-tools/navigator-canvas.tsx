@@ -10,6 +10,7 @@ import {
 } from "@parfocal/ui/components/smart-minimap";
 import { CellHud, DistanceCue, RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useState } from "react";
+import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { regionShapes } from "../review/slide-geometry.ts";
 import { useOverviewImage } from "../review/slide-picture.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
@@ -54,6 +55,7 @@ export function NavigatorCanvas({
 }: NavigatorCanvasProps) {
   const { t } = useLingui();
   const overviewImage = useOverviewImage();
+  const docked = useToolsLayout() === "dock";
   const [camera, setCamera] = useState<Camera | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const setup = lookOf(scene);
@@ -92,6 +94,7 @@ export function NavigatorCanvas({
           areaObjects: areas.map((area) => area.object),
           current,
           barOpen,
+          docked,
         });
         const { cues, size: mapSize, extent } = spots;
         const nextMm = (cues.find((cue) => cue.direction === "next")?.mm ?? 0).toFixed(1);

@@ -103,8 +103,28 @@
 }
 
 [data-tools="dock"]
-  :is(:has(> [data-slot="magnification-bar"]), [data-slot="stage-magnification"]) {
-  bottom: 5.25rem;
+  :is(
+    :has(> [data-slot="magnification-bar"]),
+    [data-slot="stage-magnification"],
+    [data-slot="magnification-bar"].absolute
+  ) {
+  top: 0.75rem;
+  right: 0.75rem;
+  bottom: auto;
+  left: auto;
+  --tw-translate-x: 0px;
+  --tw-translate-y: 0px;
+  transform: none;
+  justify-items: end;
+}
+
+[data-tools="dock"] :has(> [data-slot="magnification-bar"]) > [data-slot="magnification-bar"] {
+  order: -1;
+}
+
+:is([data-layout="dock"], [data-slot="stage-tools"]) [data-slot="tool-rail-button"] {
+  width: 2.25rem;
+  height: 2.25rem;
 }
 
 [data-slot="tool-rail"][data-layout="dock"] [data-slot="tool-rail-group"] {

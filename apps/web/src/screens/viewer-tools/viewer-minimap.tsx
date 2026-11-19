@@ -13,6 +13,7 @@ import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useArm } from "../../flags/use-arm.ts";
 import { openPopout, useMainPopoutSync } from "../../popout/popout-channel.ts";
+import { useToolsLayout } from "../../shell/tools-layout.ts";
 import type { Pin } from "../review/comment-pin.ts";
 import { cellShapes, overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import { useOverviewImage } from "../review/slide-picture.tsx";
@@ -89,6 +90,7 @@ export function ViewerMinimap({
   onMoveView: (camera: Camera) => void;
 }) {
   const overviewImage = useOverviewImage();
+  const docked = useToolsLayout() === "dock";
   const viewport = viewportOf(imageOf(view), camera, size);
   const tissueShare = tissueShareOnScreen(viewport);
   const magnification = magnificationOf(view, camera);
@@ -124,6 +126,7 @@ export function ViewerMinimap({
     proposals,
     openThread,
     cellsPanel,
+    docked,
   });
   const motion = useArm("minimap_motion");
   const [choice, setChoice] = useMinimapCorner(surface);

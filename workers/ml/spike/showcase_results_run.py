@@ -40,6 +40,8 @@ THUMB_DOWNSAMPLE = 64
 SIMPLIFY_PX = 1.0
 LEAST_RING_POINTS = 3
 MAP_TILES = 2
+TUMOR_MPP = 0.243
+RESCALE_FROM = 1.2
 
 
 class OpenSlideReader:
@@ -53,21 +55,48 @@ class OpenSlideReader:
         return rgb
 
 
-def tissue_of(slide):
+class ScaledReader:
+    def __init__(self, slide, scale):
+        self.reader = OpenSlideReader(slide)
+        self.scale = scale
+
+    def read(self, x, y, width, height):
+        if self.scale == 1:
+            return self.reader.read(x, y, width, height)
+        left, top = int(np.floor(x / self.scale)), int(np.floor(y / self.scale))
+        side_x = int(np.ceil(width / self.scale)) + 1
+        side_y = int(np.ceil(height / self.scale)) + 1
+        rgb = self.reader.read(left, top, side_x, side_y)
+        image = Image.fromarray(rgb).resize(
+            (round(side_x * self.scale), round(side_y * self.scale)), Image.Resampling.BILINEAR
+        )
+        dx, dy = round(x - left * self.scale), round(y - top * self.scale)
+        return np.ascontiguousarray(np.asarray(image)[dy : dy + height, dx : dx + width])
+
+
+def map_scale(mpp):
+    return mpp / TUMOR_MPP if mpp > TUMOR_MPP * RESCALE_FROM else 1.0
+
+
+def tissue_of(slide, scale=1.0):
     level = slide.get_best_level_for_downsample(THUMB_DOWNSAMPLE + 0.5)
     rgba = np.asarray(slide.read_region((0, 0), level, slide.level_dimensions[level]))
     rgb = rgba[..., :3].copy()
     rgb[rgba[..., 3] == 0] = 255
     width, height = slide.dimensions
-    return tissue_cells(rgb, slide.level_downsamples[level], width, height)
+    return tissue_cells(
+        rgb, slide.level_downsamples[level] * scale, round(width * scale), round(height * scale)
+    )
 
 
 def densest_box(tissue, side):
     counts = ndimage.uniform_filter(tissue.astype(np.float32), size=side, mode="constant")
     row, col = np.unravel_index(int(np.argmax(counts)), counts.shape)
-    top = int(np.clip(row - side // 2, 0, tissue.shape[0] - side))
-    left = int(np.clip(col - side // 2, 0, tissue.shape[1] - side))
-    return CellBox(left, top, left + side, top + side)
+    top = max(0, min(row - side // 2, tissue.shape[0] - side))
+    left = max(0, min(col - side // 2, tissue.shape[1] - side))
+    return CellBox(
+        int(left), int(top), min(left + side, tissue.shape[1]), min(top + side, tissue.shape[0])
+    )
 
 
 def read_rgb(slide, left, top, width, height):
@@ -173,29 +202,33 @@ def cell_features(rings, typed, left, top):
     return features
 
 
-def tumor_regions(slide, box):
-    tissue = tissue_of(slide)
+def tumor_regions(slide, box, scale=1.0, map_tiles=MAP_TILES, any_area=False):
+    tissue = tissue_of(slide, scale)
     if box is None:
-        box = densest_box(tissue, MAP_TILES * TILE_CELLS)
+        box = densest_box(tissue, map_tiles * TILE_CELLS)
     scorer = OnnxTumorScorer(local_weights())
     started = time.perf_counter()
-    found = map_slide(OpenSlideReader(slide), scorer, tissue, box)
+    found = map_slide(ScaledReader(slide, scale), scorer, tissue, box)
     seconds = time.perf_counter() - started
     grid = decoded(stored_values(found.probability, found.tissue))
     window = grid[box.top : box.bottom, box.left : box.right]
     labels, count = ndimage.label(window >= OUTLINE_AT, structure=np.ones((3, 3), bool))
+    peaks = [float(window[labels == label].max()) for label in range(1, count + 1)]
+    listed_from = LISTED_FROM_PEAK
+    if any_area and not any(peak >= LISTED_FROM_PEAK for peak in peaks):
+        listed_from = OUTLINE_AT
     objects = []
     for label in range(1, count + 1):
         mask = labels == label
-        peak = float(window[mask].max())
-        if peak < LISTED_FROM_PEAK:
+        peak = peaks[label - 1]
+        if peak < listed_from:
             continue
         contours = measure.find_contours(np.pad(mask, 1).astype(np.float64), 0.5)
         contour = max(contours, key=len) - 1
         points = [
             [
-                round((box.left + float(col) + 0.5) * CELL),
-                round((box.top + float(row) + 0.5) * CELL),
+                round((box.left + float(col) + 0.5) * CELL / scale),
+                round((box.top + float(row) + 0.5) * CELL / scale),
             ]
             for row, col in contour
         ]
@@ -215,7 +248,11 @@ def tumor_regions(slide, box):
     gc.collect()
     report = {
         "box_cells": [box.left, box.top, box.right, box.bottom],
-        "box_px": [box.left * CELL, box.top * CELL, box.right * CELL, box.bottom * CELL],
+        "box_px": [
+            round(value * CELL / scale) for value in (box.left, box.top, box.right, box.bottom)
+        ],
+        "scale": scale,
+        "listed_from_peak": listed_from,
         "tiles": found.scored,
         "map_s": seconds,
         "areas_over_outline": count,
@@ -244,12 +281,18 @@ def main():
     parser.add_argument("--crop", type=int, nargs=2)
     parser.add_argument("--regions", action="store_true")
     parser.add_argument("--map-box", type=int, nargs=4)
+    parser.add_argument("--map-tiles", type=int, default=MAP_TILES)
+    parser.add_argument("--any-area", action="store_true")
+    parser.add_argument("--dense-crop", action="store_true")
+    parser.add_argument("--mpp", type=float)
+    parser.add_argument("--name")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     slide = openslide.OpenSlide(args.slide)
-    mpp = float(slide.properties["openslide.mpp-x"])
+    mpp = args.mpp or float(slide.properties["openslide.mpp-x"])
+    scale = map_scale(mpp)
     report = {
-        "slide": args.slide.name,
+        "slide": args.name or args.slide.name,
         "dimensions": list(slide.dimensions),
         "mpp": mpp,
         "machine": platform.platform(),
@@ -258,15 +301,17 @@ def main():
     regions = []
     map_box = CellBox(*args.map_box) if args.map_box else None
     if args.regions:
-        regions, report["tumor_map"] = tumor_regions(slide, map_box)
+        regions, report["tumor_map"] = tumor_regions(
+            slide, map_box, scale, args.map_tiles, args.any_area
+        )
         map_box = CellBox(*report["tumor_map"]["box_cells"])
         document = {"format": "parfocal-results", "version": 1, "objects": regions}
         (args.out / "regions.parfocal.json").write_text(json.dumps(document) + "\n")
     if args.crop:
         left, top = args.crop
-    elif map_box is not None:
-        left = (map_box.left + map_box.right) * CELL // 2 - CROP // 2
-        top = (map_box.top + map_box.bottom) * CELL // 2 - CROP // 2
+    elif map_box is not None and not args.dense_crop:
+        left = max(0, round((map_box.left + map_box.right) * CELL / scale / 2) - CROP // 2)
+        top = max(0, round((map_box.top + map_box.bottom) * CELL / scale / 2) - CROP // 2)
     else:
         box = densest_box(tissue_of(slide), CROP // CELL)
         left, top = box.left * CELL, box.top * CELL

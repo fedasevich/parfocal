@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
+import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { okData } from "../placeholder.tsx";
 import { ReviewTop } from "../review/review-top.tsx";
 import { regionShapes } from "../review/slide-geometry.ts";
@@ -67,6 +68,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
   const { t } = useLingui();
   const { session, counts } = tools;
   const goTo = useGoTo();
+  const docked = useToolsLayout() === "dock";
   const layers = okData(useListAnnotationLayers(session.slideId).data);
   const tierList = tiersFor(okData(useListModelTiers().data) ?? [], "outline");
   const [tool, setTool] = useState<string>(initialTool ?? "auto");
@@ -282,7 +284,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
           ) : null
         }
         overlay={({ camera: shown, size }) => {
-          const spots = annotateSpots(shown, size);
+          const spots = annotateSpots(shown, size, {}, docked);
           const { extent } = spots;
           const fresh = placeMinimap(size, mapBoxOf(spots), spots.hot, spots.blocked);
           return (
