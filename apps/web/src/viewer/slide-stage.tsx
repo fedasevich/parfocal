@@ -1102,6 +1102,7 @@ function OpenedSlide({
                   engine={session.engine}
                   areas={areas}
                   request={inspector.focus ?? null}
+                  pinRegistry={pinRegistry}
                 />
               ) : null}
               {session && hostNode && systematicScan ? (

@@ -1,6 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useSubmitSlideReview } from "@parfocal/api-client";
 import { InlineState } from "@parfocal/ui/components/banner";
+import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { SlideDoneCard, type SlideDoneCounts } from "@parfocal/ui/components/slide-done-card";
 import { useNavigate } from "@tanstack/react-router";
 import { opinionQuestions, questionBlockers } from "../screens/review/guided-blockers.ts";
@@ -31,14 +32,30 @@ export function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
   const submitReview = useSubmitSlideReview();
   const questions = opinionQuestions(session, answers, []);
   const counts = slideDoneCounts(session);
-  const open = session.objects
-    .filter((object) => !session.decisions.has(object.object))
-    .map((object) => ({
+  const undecided = session.objects.filter((object) => !session.decisions.has(object.object));
+  const openRegions = undecided.filter((object) => object.kind !== "cell");
+  const openCells = undecided.filter((object) => object.kind === "cell");
+  const open: Blocker[] = [
+    ...openRegions.map((object) => ({
       id: object.object,
       text: t`${object.object} is still open`,
       goTo: t`Go to ${object.object}`,
       onGoTo: () => onObjects(object.object),
-    }));
+    })),
+    ...(openCells.length > 0
+      ? [
+          {
+            id: "cells",
+            text:
+              openCells.length === 1
+                ? t`1 cell in the sample is still open`
+                : t`${openCells.length} cells in the sample are still open`,
+            goTo: t`Go to the cells`,
+            onGoTo: () => onObjects("cells"),
+          },
+        ]
+      : []),
+  ];
   const blockers = open.length > 0 ? open : questionBlockers(questions, answers);
   return (
     <SlideDoneCard
@@ -71,7 +88,7 @@ export function StageOpinion({
   taskId: string | undefined;
   slideId: string;
   reviewTask: boolean;
-  onObjects: () => void;
+  onObjects: (object?: string) => void;
 }) {
   if (taskId !== undefined && reviewTask)
     return <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={onObjects} />;

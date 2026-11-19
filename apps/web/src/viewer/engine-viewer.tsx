@@ -11,7 +11,7 @@ import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-slide-notice.tsx";
 import { SlideStage } from "./slide-stage.tsx";
-import { StageComments } from "./stage-comments.tsx";
+import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
 import { StageMinimap } from "./stage-minimap.tsx";
@@ -108,11 +108,18 @@ export function EngineViewer({
     slideId: string;
     request: ThreadFocusRequest;
   } | null>(null);
-  const goToThread = (thread: Thread) =>
+  const focusThread = (thread: Thread, open: boolean) =>
     setThreadFocus((before) => ({
       slideId,
-      request: { count: (before?.request.count ?? 0) + 1, anchor: thread.anchor },
+      request: {
+        count: (before?.request.count ?? 0) + 1,
+        anchor: thread.anchor,
+        openThreadId: open ? thread.id : undefined,
+      },
     }));
+  const goToThread = (thread: Thread) => focusThread(thread, false);
+  const openThread = (thread: Thread) => focusThread(thread, true);
+  const [jumpRequest, setJumpRequest] = useState<{ id: string; count: number } | null>(null);
   const toolLink = useRef<ArmTool | null>(null);
   const [currentObject, setCurrentObject] = useState<string | null>(object ?? null);
   const [doneRequest, setDoneRequest] = useState(0);
@@ -165,6 +172,7 @@ export function EngineViewer({
           object={object}
           guided={guided}
           cellsGrid={cells}
+          jumpRequest={jumpRequest}
           focus={focus ? { onShowUi: showUi } : null}
           doneRequest={doneRequest}
           onAddMissed={() => session.armTool("smart")}
@@ -191,6 +199,16 @@ export function EngineViewer({
       )}
     </>
   );
+  const commentsProps = {
+    onGoTo: goToThread,
+    onOpen: openThread,
+    onNewComment: () => toolLink.current?.("comment"),
+    projectId,
+    taskId: task,
+    taskName: taskDetail?.name,
+    slideId,
+    slideLabel: load?.slide?.label ?? "",
+  };
   const inspector = {
     guided,
     tab,
@@ -198,33 +216,42 @@ export function EngineViewer({
     counts: tabCounts,
     focus: threadFocus?.slideId === slideId ? threadFocus.request : null,
     extras,
-    comments:
-      reviewTask !== null && noteObject !== null ? (
-        <StageObjectNotes
-          key={noteObject}
-          editRequest={noteRequest?.object === noteObject ? noteRequest.count : 0}
-          taskId={reviewTask}
-          slideId={slideId}
-          object={noteObject}
-          onAllComments={() => setNoteObject(null)}
-        />
-      ) : (
-        <StageComments
-          onGoTo={goToThread}
-          onNewComment={() => toolLink.current?.("comment")}
-          projectId={projectId}
-          taskId={task}
-          taskName={taskDetail?.name}
-          slideId={slideId}
-          slideLabel={load?.slide?.label ?? ""}
-        />
-      ),
+    comments: (
+      <>
+        {reviewTask !== null && noteObject !== null ? (
+          <StageObjectNotes
+            key={noteObject}
+            editRequest={noteRequest?.object === noteObject ? noteRequest.count : 0}
+            taskId={reviewTask}
+            slideId={slideId}
+            object={noteObject}
+            onAllComments={() => setNoteObject(null)}
+          />
+        ) : null}
+        {reviewTask === null ? (
+          <StageComments {...commentsProps} />
+        ) : (
+          <ReviewStageComments
+            {...commentsProps}
+            reviewTaskId={reviewTask}
+            onSelectNote={(id) => {
+              setNoteRequest(null);
+              setNoteObject(id);
+            }}
+          />
+        )}
+      </>
+    ),
     opinion: (
       <StageOpinion
         taskId={task}
         slideId={slideId}
         reviewTask={taskDetail?.kind === "review"}
-        onObjects={() => onTab("objects")}
+        onObjects={(id) => {
+          onTab("objects");
+          if (id !== undefined)
+            setJumpRequest((before) => ({ id, count: (before?.count ?? 0) + 1 }));
+        }}
       />
     ),
   };
