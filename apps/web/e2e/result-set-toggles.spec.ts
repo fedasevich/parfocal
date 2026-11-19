@@ -74,5 +74,9 @@ for (const viewport of [
     await toggles.first().scrollIntoViewIfNeeded();
     expect(await toggles.count()).toBeGreaterThan(1);
     expect(await unclipped(page)).toEqual([]);
+    const first = toggles.first().getByRole("switch");
+    const before = await first.isChecked();
+    await first.click();
+    await expect(first).toBeChecked({ checked: !before });
   });
 }

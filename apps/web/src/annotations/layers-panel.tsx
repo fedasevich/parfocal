@@ -289,11 +289,9 @@ export function LayersPanel({
             />
             {goesTo?.name ?? t`Ungrouped`}
           </span>
-          <span className="text-fg-dim">
-            {target !== null && effective === null
-              ? t`that layer is hidden or locked`
-              : t`click a layer name to change`}
-          </span>
+          {target !== null && effective === null ? (
+            <span className="text-fg-dim">{t`that layer is hidden or locked`}</span>
+          ) : null}
         </div>
       </div>
     </section>

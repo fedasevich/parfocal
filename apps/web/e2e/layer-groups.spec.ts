@@ -65,13 +65,14 @@ test("groups are saved, renamed, recoloured, filled, ungrouped, deleted and rest
   await expect(rowOf(page, "Ungrouped")).toContainText("1");
 
   await page.getByRole("button", { name: "New shapes go to Group 1" }).dblclick();
-  await page.getByLabel("Name of Group 1").fill("Margins");
+  await expect(page.getByText("click a layer name to change")).toHaveCount(0);
+  await page.getByLabel("Name of Group 1").pressSequentially("Margins");
   await page.keyboard.press("Enter");
   await expect(rowOf(page, "Margins")).toHaveCount(1);
 
   await page.getByRole("button", { name: "New shapes go to Margins" }).focus();
   await page.keyboard.press("F2");
-  await page.getByLabel("Name of Margins").fill("Margin cells");
+  await page.getByLabel("Name of Margins").pressSequentially("Margin cells");
   await page.keyboard.press("Enter");
   await expect(rowOf(page, "Margin cells")).toHaveCount(1);
 

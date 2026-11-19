@@ -13,7 +13,7 @@ import { IntoTopStack, useTopStacked } from "@parfocal/ui/components/top-stack";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 const floatSurface = "rounded-[10px] border border-line bg-chrome shadow-pop";
 
@@ -398,6 +398,10 @@ function LayerList({
   const { t } = useLingui();
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const selectOnce = useCallback((node: HTMLInputElement | null) => {
+    node?.focus();
+    node?.select();
+  }, []);
   const managed = onRename !== undefined || onUngroup !== undefined || onDelete !== undefined;
   const startRename = (row: LayerRow) => {
     if (!onRename || row.plain) return;
@@ -483,7 +487,7 @@ function LayerList({
                 aria-label={t`Name of ${row.name}`}
                 value={draft}
                 maxLength={80}
-                ref={(node) => node?.select()}
+                ref={selectOnce}
                 onChange={(event) => setDraft(event.target.value)}
                 onBlur={() => finishRename(row, true)}
                 onKeyDown={(event) => {

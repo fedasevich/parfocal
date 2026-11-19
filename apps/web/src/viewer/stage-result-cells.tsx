@@ -11,6 +11,7 @@ import {
   useListResultSetRegions,
   useListSlideResultSets,
 } from "@parfocal/api-client";
+import { Switch } from "@parfocal/ui/components/switch";
 import { type RefObject, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { clickSlopScreenPixels } from "../annotations/click-press.ts";
 import { slideAt } from "../annotations/stage-pointer.ts";
@@ -406,18 +407,22 @@ function SetToggles({
         {sets.map((set) => {
           const on = shown(set.id);
           return (
-            <button
+            <label
               key={set.id}
-              type="button"
-              aria-pressed={on}
-              disabled={locked !== undefined}
               data-testid="result-set-toggle"
-              className="w-full truncate rounded-md border border-line bg-surf-panel px-2 py-1 text-left text-caption text-fg disabled:text-fg-dim"
+              data-shown={on || undefined}
               title={locked ?? set.name}
-              onClick={() => onToggle(set.id)}
+              className="flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-md bg-surf-panel py-1.5 pr-3.5 pl-2 text-caption text-fg has-disabled:cursor-not-allowed has-disabled:text-fg-dim"
             >
-              {on ? t`Hide ${set.name}` : t`Show ${set.name}`}
-            </button>
+              <span className="min-w-0 truncate">{set.name}</span>
+              <Switch
+                size="sm"
+                checked={on}
+                disabled={locked !== undefined}
+                aria-label={t`Show ${set.name}`}
+                onCheckedChange={() => onToggle(set.id)}
+              />
+            </label>
           );
         })}
         {locked === undefined ? null : (

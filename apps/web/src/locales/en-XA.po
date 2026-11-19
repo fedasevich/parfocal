@@ -5158,10 +5158,6 @@ msgstr ""
 msgid "Click a block on the page to set its title, width and fields."
 msgstr ""
 
-#: src/annotations/layers-panel.tsx
-msgid "click a layer name to change"
-msgstr ""
-
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Click a place to go there ·"
 msgstr ""
@@ -7935,11 +7931,6 @@ msgstr ""
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/upload/files-step.tsx
 msgid "Hide"
-msgstr ""
-
-#. placeholder {0}: set.name
-#: src/viewer/stage-result-cells.tsx
-msgid "Hide {0}"
 msgstr ""
 
 #: src/annotations/layers-panel.tsx
