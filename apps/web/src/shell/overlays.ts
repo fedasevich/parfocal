@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
-import { settingsSectionKeys } from "../screens/settings/sections.ts";
+import { settingsSectionKeys } from "../screens/settings/section-keys.ts";
 import { lenientSearch } from "../search/lenient-search.ts";
 
 export const personaKeys = ["LM", "AK", "SM", "JR", "TB", "PK", "HL", "MV", "DH"] as const;

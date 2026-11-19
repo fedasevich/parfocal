@@ -1,21 +1,10 @@
 import type { IconName } from "@parfocal/ui/components/icon";
 import type { SettingScopeKind } from "@parfocal/ui/components/settings-dialog";
 import type { SceneOf } from "../scenes.ts";
+import { type SettingsSection, settingsSectionKeys } from "./section-keys.ts";
 import { anyKeyMatches, type ShortcutScene } from "./shortcuts.ts";
 
-export const settingsSectionKeys = [
-  "display",
-  "review",
-  "layout",
-  "ai",
-  "navigation",
-  "shortcuts",
-  "notifications",
-  "privacy",
-  "account",
-] as const;
-
-export type SettingsSection = (typeof settingsSectionKeys)[number];
+export { type SettingsSection, settingsSectionKeys };
 
 export type SettingsScene = SceneOf<"settings">;
 

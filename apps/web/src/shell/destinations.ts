@@ -1,4 +1,4 @@
-import type { SettingsSection } from "../screens/settings/sections.ts";
+import type { SettingsSection } from "../screens/settings/section-keys.ts";
 
 const query = (params: Record<string, string | undefined>) => {
   const search = new URLSearchParams();

@@ -3,7 +3,8 @@ import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 import { HomeScreen } from "../screens/home/home-screen.tsx";
 import { okData } from "../screens/placeholder.tsx";
-import { queryOfScene, settingsSectionKeys } from "../screens/settings/sections.ts";
+import { settingsSectionKeys } from "../screens/settings/section-keys.ts";
+import { queryOfScene } from "../screens/settings/sections.ts";
 import { SettingsScreen } from "../screens/settings/settings-screen.tsx";
 import { settingsSearch } from "../search/route-searches.ts";
 
