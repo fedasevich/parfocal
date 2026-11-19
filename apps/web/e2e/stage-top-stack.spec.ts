@@ -25,6 +25,7 @@ async function failedOpenWithWait(page: Page) {
 }
 
 for (const viewport of [
+  { width: 1440, height: 900 },
   { width: 1280, height: 800 },
   { width: 1024, height: 700 },
 ]) {
@@ -69,6 +70,7 @@ for (const viewport of [
 }
 
 for (const viewport of [
+  { width: 1440, height: 900 },
   { width: 1280, height: 800 },
   { width: 1024, height: 700 },
 ]) {

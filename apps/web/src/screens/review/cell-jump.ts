@@ -70,18 +70,38 @@ export function placeBar(
   size: { width: number; height: number },
   gap = 14,
   margin = 12,
+  blocked: readonly BlockRect[] = [],
 ): BarBox {
   const below = cell.y + radius + gap;
   const above = cell.y - radius - gap - bar.height;
   const fitsBelow = below + bar.height <= size.height - margin;
-  const top = fitsBelow || above < margin ? below : above;
   const wanted = cell.x - bar.width / 2;
   const left = Math.min(
     Math.max(wanted, margin),
     Math.max(margin, size.width - bar.width - margin),
   );
-  return { left, top, width: bar.width, height: bar.height };
+  const hits = (top: number) =>
+    blocked.filter(
+      ([x, y, width, height]) =>
+        left < x + width && x < left + bar.width && top < y + height && y < top + bar.height,
+    );
+  const first = fitsBelow || above < margin ? below : above;
+  const second = first === below ? above : below;
+  const clear = [first, second].find(
+    (top) => top >= margin && top + bar.height <= size.height - margin && hits(top).length === 0,
+  );
+  if (clear !== undefined || hits(first).length === 0)
+    return { left, top: clear ?? first, width: bar.width, height: bar.height };
+  const roof = Math.min(...hits(first).map(([, y]) => y));
+  return {
+    left,
+    top: Math.max(margin, roof - gap - bar.height),
+    width: bar.width,
+    height: bar.height,
+  };
 }
+
+export type BlockRect = readonly [number, number, number, number];
 
 export const panStep = 96;
 
