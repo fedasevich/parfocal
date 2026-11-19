@@ -2,7 +2,6 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
-import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRail, ToolRailButton, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
@@ -95,13 +94,13 @@ import { StageMagnification, type ViewerModule } from "./magnification-control.t
 import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
-import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
 import { type EngineRouteId, pickRoutes, type RoutePicker } from "./route-picker.ts";
 import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { StageCompareButton } from "./stage-compare.tsx";
+import { OutlineModeCard, StageDisplay } from "./stage-display.tsx";
 import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
@@ -1091,17 +1090,7 @@ function OpenedSlide({
                       tissue={coverage?.tissue ?? null}
                     />
                   )}
-                  <DockCard section="display" order={0}>
-                    <SegmentedControl
-                      aria-label={t`Outline display`}
-                      value={outlineMode}
-                      onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
-                      options={outlineModeChoices.map((choice) => ({
-                        value: choice,
-                        label: outlineModeLabels[choice],
-                      }))}
-                    />
-                  </DockCard>
+                  <OutlineModeCard mode={outlineMode} onMode={setOutlineMode} />
                 </>
               ) : null}
               {session ? (
@@ -1138,6 +1127,13 @@ function OpenedSlide({
                 />
               ) : null}
               {phase.state === "loading" ? <StageOpening /> : null}
+              <DockCard section="display" order={0}>
+                <StageDisplay
+                  taskId={workspace === "annotate" ? null : (taskId ?? null)}
+                  slideLabel={t`this slide`}
+                  onSlot={placeSlot}
+                />
+              </DockCard>
               {chosenDevice === undefined ? null : (
                 <DockCard section="display" order={9}>
                   <DeviceLegend

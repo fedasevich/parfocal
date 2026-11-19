@@ -84,7 +84,7 @@ function ViewMapPanel({ engine, stage, session }: ViewMapPanelProps) {
           }}
         />
       )}
-      <DockCard section="display" order={2}>
+      <DockCard section="ai" order={1}>
         <section
           aria-label={t`Tumor map for this view`}
           data-testid="view-map"

@@ -2,11 +2,13 @@ import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
+import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
+import { drawChoicesOf, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { useNoteKey } from "../screens/review/note-key.ts";
 import { useObjectKeys } from "../screens/review/object-keys.ts";
@@ -19,6 +21,7 @@ import {
   typeOptions,
 } from "../screens/review/type-bar.ts";
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
+import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
@@ -33,6 +36,14 @@ import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
 
+const decisionNames = new Set(["agree", "disagree", "unsure"]);
+
+function decisionNameOf(value: string | undefined) {
+  return value !== undefined && decisionNames.has(value)
+    ? (value as "agree" | "disagree" | "unsure")
+    : null;
+}
+
 function ObjectOutlines({
   engine,
   module,
@@ -40,6 +51,8 @@ function ObjectOutlines({
   classes,
   current,
   collapsed,
+  decisions,
+  settings,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -47,6 +60,8 @@ function ObjectOutlines({
   classes: ReviewSession["classes"];
   current: string | null;
   collapsed: boolean;
+  decisions: ReviewSession["decisions"];
+  settings: DisplaySettings;
 }) {
   const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
   const projectClasses = useMemo(
@@ -58,14 +73,20 @@ function ObjectOutlines({
       })),
     [classKey],
   );
-  const placed = useMemo(
-    () =>
-      placedObjects(
-        collapsed ? objects.filter((item) => item.kind !== "cell") : objects,
-        projectClasses,
-      ),
-    [objects, projectClasses, collapsed],
-  );
+  const decisionKey =
+    settings.colorBy === "decision"
+      ? JSON.stringify([...decisions].map(([id, decision]) => [id, decision.value]))
+      : "";
+  const placed = useMemo(() => {
+    const shown = placedObjects(
+      collapsed ? objects.filter((item) => item.kind !== "cell") : objects,
+      projectClasses,
+    );
+    if (decisionKey === "") return shown;
+    const decided = new Map(JSON.parse(decisionKey) as [string, string][]);
+    return shown.map((item) => ({ ...item, decision: decisionNameOf(decided.get(item.id)) }));
+  }, [objects, projectClasses, collapsed, decisionKey]);
+  const choices = useMemo(() => drawChoicesOf(settings), [settings]);
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: overlayId, host: engine }),
     [module, engine],
@@ -75,9 +96,23 @@ function ObjectOutlines({
     drawing.setObjects(placed);
   }, [drawing, placed]);
   useEffect(() => {
+    drawing.setChoices(choices);
+  }, [drawing, choices]);
+  useEffect(() => {
     drawing.setCurrent(current);
   }, [drawing, current]);
-  return <div hidden data-testid="review-object-outlines" data-objects={placed.length} />;
+  return (
+    <div
+      hidden
+      data-testid="review-object-outlines"
+      data-objects={placed.length}
+      data-draw={choices.draw}
+      data-width={choices.width}
+      data-opacity={choices.opacity}
+      data-color-by={choices.colorBy}
+      data-cutoff={choices.cutoff}
+    />
+  );
 }
 
 function ObjectRow({
@@ -161,6 +196,11 @@ export function StageReviewObjects({
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
+  const labCutoff = useLabDecisionCutoff();
+  const settings = useMemo(
+    () => myDisplaySettings(session.myDisplay, labCutoff),
+    [session.myDisplay, labCutoff],
+  );
   const saves = useDecisionSaves(session, session.style);
   const objects = session.objects;
   const order = objects.map((item) => item.object);
@@ -287,6 +327,8 @@ export function StageReviewObjects({
         classes={session.classes}
         current={current}
         collapsed={collapsed}
+        decisions={session.decisions}
+        settings={settings}
       />
       {focus === null ? (
         <StageSlideMarks
@@ -296,6 +338,7 @@ export function StageReviewObjects({
           showScore={session.style.kind !== "yesno" && session.style.kind !== "blind"}
           sample={sample}
           collapsed={collapsed}
+          ids={settings.ids}
           onWholeSlide={guided ? null : wholeSlide}
         />
       ) : null}

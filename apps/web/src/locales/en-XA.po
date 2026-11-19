@@ -30,6 +30,10 @@ msgstr ""
 msgid " · {0} to decide"
 msgstr ""
 
+#: src/viewer/stage-minimap.tsx
+msgid " · {seenPercent}% seen"
+msgstr ""
+
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {waiting} waiting for you to resolve"
 msgstr ""
@@ -1067,6 +1071,7 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
 #: src/shell/jobs-tray.tsx
+#: src/viewer/stage-minimap.tsx
 msgid "{0} of {1}"
 msgstr ""
 
@@ -2060,6 +2065,12 @@ msgstr ""
 msgid "{positive, plural, one {node has a deposit} other {nodes have a deposit}}"
 msgstr ""
 
+#. placeholder {0}: progress.decided
+#. placeholder {1}: progress.total
+#: src/viewer/stage-minimap.tsx
+msgid "{power} · {0} of {1} decided"
+msgstr ""
+
 #: src/screens/admin/tile-sharing-modal.tsx
 msgid "{projectName} is a clinical project"
 msgstr ""
@@ -2993,6 +3004,7 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-guided-card.tsx
 #: src/viewer/stage-object-notes.tsx
 msgid "Add a note"
 msgstr ""
@@ -5056,6 +5068,7 @@ msgid "Click to drop a marker. Shift-click removes one."
 msgstr ""
 
 #: src/screens/review/slide-still.tsx
+#: src/viewer/stage-minimap.tsx
 msgid "Click to move"
 msgstr ""
 
@@ -5885,6 +5898,7 @@ msgid "Decision cutoff"
 msgstr ""
 
 #: src/screens/review/object-comments.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Decision notes"
 msgstr ""
 
@@ -9906,7 +9920,7 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
-#: src/viewer/stage-review-objects.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Next"
 msgstr ""
 
@@ -10801,13 +10815,6 @@ msgstr ""
 msgid "object {0}"
 msgstr ""
 
-#. placeholder {0}: index + 1
-#. placeholder {1}: objects.length
-#. placeholder {2}: decided.size
-#: src/viewer/stage-review-objects.tsx
-msgid "Object {0} of {1} · {2} decided"
-msgstr ""
-
 #. placeholder {0}: deposit.objectId
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "object <0>{0}</0>"
@@ -11227,6 +11234,10 @@ msgstr ""
 msgid "Open the Slide done card in the Opinion tab"
 msgstr ""
 
+#: src/viewer/live-top-bar.tsx
+msgid "Open the Slide done card in the Review tab"
+msgstr ""
+
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Open the whole slide"
 msgstr ""
@@ -11390,7 +11401,7 @@ msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/stage-display.tsx
 msgid "Outline display"
 msgstr ""
 
@@ -12176,7 +12187,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
-#: src/viewer/stage-review-objects.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Previous"
 msgstr ""
 
@@ -13065,6 +13076,7 @@ msgstr ""
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/stage-inspector.tsx
 msgid "Review"
 msgstr ""
 
@@ -14673,6 +14685,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Skip for now"
 msgstr ""
 
@@ -14738,6 +14751,10 @@ msgstr ""
 #. placeholder {0}: list.total
 #: src/viewer/live-progress.tsx
 msgid "Slide {position} of {0}"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Slide {position} of {total}. Submit opens the next one"
 msgstr ""
 
 #: src/screens/review/slide-submitted.tsx
@@ -15341,6 +15358,7 @@ msgid "Submit"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Submit opens the next slide"
 msgstr ""
 
@@ -16528,6 +16546,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "This is the first object"
 msgstr ""
 
@@ -16585,6 +16604,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "This sets your home page and which walkthrough you see first."
+msgstr ""
+
+#: src/viewer/slide-stage.tsx
+msgid "this slide"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx

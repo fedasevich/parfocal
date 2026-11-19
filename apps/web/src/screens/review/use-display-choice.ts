@@ -45,7 +45,7 @@ export type DisplayChoice = {
 };
 
 export function useDisplayChoice(
-  session: ReviewSession,
+  session: Pick<ReviewSession, "taskId" | "display" | "myDisplay">,
   seedPreset: string | null = null,
 ): DisplayChoice {
   const { taskId, display, myDisplay } = session;
