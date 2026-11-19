@@ -26,8 +26,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar } from "@parfocal/ui/components/person";
-import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/segmented-control";
-import { PreviewOption, type SettingPreviewKind } from "@parfocal/ui/components/setting-preview";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import {
   SettingsDialog,
   SettingsEmpty,
@@ -38,7 +37,6 @@ import {
   SettingsRows,
   SettingsScopeLegend,
 } from "@parfocal/ui/components/settings-dialog";
-import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
 import { Toast } from "@parfocal/ui/components/undo-toast";
 import type { WordingSetting } from "@parfocal/ui/lib/confidence-words";
@@ -68,6 +66,16 @@ import { setLengthUnits } from "../../measure/length-units.ts";
 import { addPasskey, PasskeyCancelledError, rememberPasskeyEmail } from "../../session/passkeys.ts";
 import { applyDensity } from "../../shell/density.ts";
 import { readDeviceSettings, writeDeviceSetting } from "../../shell/device-settings.ts";
+import {
+  type ClassPalette,
+  type ColormapChoice,
+  type ConfidenceForm,
+  chooseDisplayDefault,
+  fillOpacityRange,
+  heatmapOpacityRange,
+  type TextSize,
+  useDisplayDefaults,
+} from "../../shell/display-defaults.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { chooseMotion, type MotionChoice, readMotion } from "../../shell/motion.ts";
 import { readStatNotice, writeStatChannel, writeStatSound } from "../../shell/notification-gate.ts";
@@ -89,8 +97,17 @@ import {
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
+import {
+  ColormapStrip,
+  ConfidencePreview,
+  HeatmapPreview,
+  OpacityPreview,
+  PalettePreview,
+  TextSizePreview,
+} from "./display-preview.tsx";
 import { FeelPreview } from "./feel-preview.tsx";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
+import { Segments, Stepper } from "./row-controls.tsx";
 import {
   hintId,
   matchCount,
@@ -144,85 +161,11 @@ const noticeKinds: Partial<Record<RowKey, string>> = {
   noticeDue: "task-due-soon",
 };
 
-const options = (pairs: [string, string][], preview?: SettingPreviewKind): SegmentOption[] =>
-  pairs.map(([value, label]) => ({
-    value,
-    label:
-      preview === undefined ? label : <PreviewOption kind={preview} option={value} label={label} />,
-  }));
-
-function Segments({
-  label,
-  value,
-  pairs,
-  preview,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  pairs: [string, string][];
-  preview?: SettingPreviewKind;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <SegmentedControl
-      fill
-      aria-label={label}
-      value={value}
-      onValueChange={(next) => onChange(String(next))}
-      options={options(pairs, preview)}
-    />
-  );
-}
-
 const brightnessRange: Range = {
   min: minBrightness,
   max: maxBrightness,
   step: brightnessStep,
 };
-
-function Stepper({
-  label,
-  value,
-  unit,
-  range,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  unit: string;
-  range: Range;
-  onChange: (value: number) => void;
-}) {
-  const { t } = useLingui();
-
-  const step = (delta: number) => onChange(Math.max(range.min, Math.min(range.max, value + delta)));
-  return (
-    <div className="flex items-center gap-2.5">
-      <Button size="icon-sm" aria-label={t`Lower ${label}`} onClick={() => step(-range.step)}>
-        <Icon name="minus" size="xs" />
-      </Button>
-      <Slider
-        className="data-[orientation=horizontal]:w-[180px]"
-        min={range.min}
-        max={range.max}
-        step={range.step}
-        value={[value]}
-        getAriaLabel={() => label}
-        onValueChange={(next: number | readonly number[]) =>
-          onChange(typeof next === "number" ? next : (next[0] ?? value))
-        }
-      />
-      <Button size="icon-sm" aria-label={t`Raise ${label}`} onClick={() => step(range.step)}>
-        <Icon name="plus" size="xs" />
-      </Button>
-      <span className="min-w-10 font-mono text-body-sm text-fg">
-        {value}
-        {unit}
-      </span>
-    </div>
-  );
-}
 
 const toggle = (label: string, checked: boolean, onChange: (value: boolean) => void) => (
   <Switch aria-label={label} checked={checked} onCheckedChange={onChange} />
@@ -302,6 +245,7 @@ function LoadedSettings({
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
+  const displayDefaults = useDisplayDefaults();
   const [motionChoice, setMotionChoice] = useState<MotionChoice>(() => readMotion());
   const [slideBrightness] = useSlideBrightness();
   const [stat, setStat] = useState(readStatNotice);
@@ -459,6 +403,93 @@ function LoadedSettings({
           chooseMotion(value as MotionChoice);
         }}
       />
+    ),
+    textSize: () => (
+      <div className="flex items-center gap-3">
+        <Segments
+          label={t`Text size`}
+          value={displayDefaults.textSize}
+          pairs={[
+            ["small", t`Small`],
+            ["normal", t`Normal`],
+            ["large", t`Large`],
+          ]}
+          onChange={(value) => chooseDisplayDefault("textSize", value as TextSize)}
+        />
+        <TextSizePreview size={displayDefaults.textSize} />
+      </div>
+    ),
+    classPalette: () => (
+      <div className="flex items-center gap-3">
+        <Segments
+          label={t`Class colors`}
+          value={displayDefaults.classPalette}
+          pairs={[
+            ["standard", t`Standard`],
+            ["safe", t`Color-blind safe`],
+          ]}
+          onChange={(value) => chooseDisplayDefault("classPalette", value as ClassPalette)}
+        />
+        <PalettePreview palette={displayDefaults.classPalette} />
+      </div>
+    ),
+    fillOpacity: () => (
+      <div className="flex items-center gap-3">
+        <Stepper
+          label={t`Object opacity`}
+          value={displayDefaults.fillOpacity}
+          unit="%"
+          range={fillOpacityRange}
+          onChange={(value) => chooseDisplayDefault("fillOpacity", value)}
+        />
+        <OpacityPreview value={displayDefaults.fillOpacity} />
+      </div>
+    ),
+    confidenceForm: () => (
+      <div className="flex items-center gap-3">
+        <Segments
+          label={t`Confidence shown as`}
+          value={displayDefaults.confidence}
+          pairs={[
+            ["number", t`Number`],
+            ["word", t`Word`],
+            ["color", t`Color`],
+            ["hidden", t`Hidden`],
+          ]}
+          onChange={(value) => chooseDisplayDefault("confidence", value as ConfidenceForm)}
+        />
+        <ConfidencePreview form={displayDefaults.confidence} />
+      </div>
+    ),
+    heatmapOpacity: () => (
+      <div className="flex items-center gap-3">
+        <Stepper
+          label={t`Heatmap opacity`}
+          value={displayDefaults.heatmapOpacity}
+          unit="%"
+          range={heatmapOpacityRange}
+          onChange={(value) => chooseDisplayDefault("heatmapOpacity", value)}
+        />
+        <HeatmapPreview
+          value={displayDefaults.heatmapOpacity}
+          colormap={displayDefaults.colormap}
+        />
+      </div>
+    ),
+    colormap: () => (
+      <div className="flex items-center gap-3">
+        <Segments
+          label={t`Heatmap colors`}
+          value={displayDefaults.colormap}
+          pairs={[
+            ["viridis", t`Viridis`],
+            ["inferno", t`Inferno`],
+            ["turbo", t`Turbo`],
+          ]}
+          onChange={(value) => chooseDisplayDefault("colormap", value as ColormapChoice)}
+        />
+        <ColormapStrip colormap={displayDefaults.colormap} />
+      </div>
     ),
     brightness: () => (
       <Stepper

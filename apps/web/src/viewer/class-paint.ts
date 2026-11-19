@@ -1,4 +1,5 @@
 import { type ClassName, classColors } from "@parfocal/viewer-engine";
+import type { ClassPalette } from "../shell/display-defaults.ts";
 
 type Rgba = readonly [number, number, number, number];
 
@@ -23,6 +24,23 @@ export const fallbackPalette = [
   "#dcbeff",
   "#9a6324",
 ] as const;
+
+export const safePalette = [
+  "#e69f00",
+  "#56b4e9",
+  "#009e73",
+  "#f0e442",
+  "#0072b2",
+  "#d55e00",
+  "#cc79a7",
+] as const;
+
+const safeEngineSlots: Readonly<Record<ClassName, number>> = {
+  tumor: 5,
+  stroma: 1,
+  immune: 6,
+  other: 0,
+};
 
 const engineClasses = Object.keys(classColors) as ClassName[];
 
@@ -71,11 +89,24 @@ type SetClassRow = {
   readonly class_id?: string | null;
 };
 
+export function safeColour(name: string, slot?: number): Rgba {
+  const lower = name.toLowerCase();
+  const engine = engineClasses.find((item) => item === lower);
+  const index = engine === undefined ? (slot ?? nameHash(lower)) : safeEngineSlots[engine];
+  return hexToRgba(safePalette[index % safePalette.length] ?? safePalette[0]) ?? classColors.other;
+}
+
 export function paintFor(
   name: string,
   projectClasses: readonly ProjectClassRow[],
   id?: string | null,
+  palette: ClassPalette = "standard",
+  slot?: number,
 ) {
+  if (palette === "safe") {
+    const colour = safeColour(name, slot);
+    return { name, className: engineClassOf(name), colour, hex: toHex(colour) };
+  }
   const lower = name.toLowerCase();
   const project =
     (id ? projectClasses.find((item) => item.id === id) : undefined) ??
@@ -87,10 +118,17 @@ export function paintFor(
 export function classPaints(
   setClasses: readonly SetClassRow[],
   projectClasses: readonly ProjectClassRow[],
+  palette: ClassPalette = "standard",
 ): ClassPaint[] {
   const paints: ClassPaint[] = [];
   for (const item of setClasses) {
-    paints[item.position] = paintFor(item.name, projectClasses, item.class_id);
+    paints[item.position] = paintFor(
+      item.name,
+      projectClasses,
+      item.class_id,
+      palette,
+      item.position,
+    );
   }
   return paints;
 }
