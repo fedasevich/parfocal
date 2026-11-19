@@ -2,6 +2,53 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.26.0 (2026-11-19)
+
+### Features
+
+- PROTO-079: Gate scenes on dev tools, hide /kpi, list every route and scene
+- TEST-054: Seed an annotation example on Philips-3, type AI cells and save groups in tasks
+- PROTO-088: Offer GeoJSON, FlatGeobuf and Parfocal JSON exports on an annotate task
+- PROTO-089: Drag slides between cases and Loose slides with undo, and wrap long names
+- TEST-055: Seed a showcase case with reports, co-sign, thread, upload and shared link
+
+### Fixes
+
+- PROTO-066: Keep layer names while typing and show result sets as switches
+- PROTO-086: One loader, centred, and a popover-sized notifications skeleton
+- PROTO-086: Hoist the boot script's variables for lint
+- PROTO-065: Start the deployed ingest worker after a reset so seeded cell crops are cut
+- PROTO-065: Give the shared layer fixture a cell chunk so AI cell edits pass the set check
+- PROTO-087: Send wheel and pinch over floating parts to the slide and use app tooltips
+- PROTO-057: Let display opacity go to zero
+- PROTO-075: Open the week's own evaluation and disagreements from home
+- PROTO-091: Find cells, shapes and regions by ID in search and the palette
+- PROTO-089: Make New case a primary button and fit every case form inside the window
+- PROTO-090: Fit PDF preview pages to the window, print them, and open it with view=pdf
+
+### Docs
+
+- PROTO-079: Log, tick and add the four real states from the inventory
+- PROTO-086: Add the owner's loader and skeleton task
+- TEST-054: Log and tick, add PROTO-087 and PROTO-088
+- PROTO-089: Add the owner's case form and case showcase tasks
+- PROTO-090: Add the owner's PDF preview and print task
+- PROTO-086: Log and tick after merge
+- PROTO-065: Log the crop jobs follow up
+- PROTO-089: Add the owner's wrapping and drag between cases
+- PROTO-091: Add the owner's object search task
+- PROTO-087: Log and tick PROTO-087 and PROTO-088 after merge
+- PROTO-091: Log and tick object search, opacity and home links
+- PROTO-065: Log the cell crops drain on the deployed app
+- PROTO-089: Log and tick case forms and slide drag
+- TEST-056: Give the walkthrough artifact its own task ID
+- TEST-055: Log the seeded case showcase
+- PROTO-090: Log the PDF preview and Print fix
+
+### Other
+
+- TEST-054: Claim TEST-054
+
 ## v0.25.0 (2026-11-19)
 
 ### Features
