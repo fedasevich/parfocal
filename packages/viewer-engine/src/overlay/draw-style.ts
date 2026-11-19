@@ -27,7 +27,7 @@ export type DecisionName = "agree" | "disagree" | "unsure";
 
 export { belowCutoffAlpha, belowCutoffDash, filledAlpha };
 
-export const minDrawOpacity = 20;
+export const minDrawOpacity = 0;
 
 export const maxDrawOpacity = 100;
 

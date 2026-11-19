@@ -37,13 +37,13 @@ test("display choices become draw settings and ignore unknown words", () => {
   const settings = drawSettingsFromChoices({
     draw: "fill",
     width: "3",
-    opacity: 5,
+    opacity: -5,
     colorBy: "score",
     cutoff: 2,
   });
   assert.equal(settings.draw, "fill");
   assert.equal(settings.widthPx, 3);
-  assert.equal(settings.opacity, 20);
+  assert.equal(settings.opacity, 0);
   assert.equal(settings.colourBy, "score");
   assert.equal(settings.cutoff, 1);
   assert.equal(drawSettingsFromChoices({ draw: "weird", width: "9" }).draw, "outline");

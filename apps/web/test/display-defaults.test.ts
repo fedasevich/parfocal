@@ -28,7 +28,7 @@ test("stored values are snapped, clamped and checked", () => {
       "display.classPalette": "safe",
     }),
   );
-  assert.equal(read.fillOpacity, 20);
+  assert.equal(read.fillOpacity, 0);
   assert.equal(read.heatmapOpacity, 60);
   assert.equal(read.confidence, "number");
   assert.equal(read.colormap, "turbo");

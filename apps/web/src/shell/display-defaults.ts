@@ -20,8 +20,8 @@ export type DisplayDefaults = {
   classPalette: ClassPalette;
 };
 
-export const fillOpacityRange = { min: 20, max: 100, step: 10 } as const;
-export const heatmapOpacityRange = { min: 20, max: 100, step: 10 } as const;
+export const fillOpacityRange = { min: 0, max: 100, step: 10 } as const;
+export const heatmapOpacityRange = { min: 0, max: 100, step: 10 } as const;
 
 export const textScales: Readonly<Record<TextSize, number>> = {
   small: 0.9,

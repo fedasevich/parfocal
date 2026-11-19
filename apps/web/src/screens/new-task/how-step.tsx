@@ -224,7 +224,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
             </GroupTitle>
             {seg("draw")}
             {seg("width")}
-            {range("opacity", t`Opacity`, 20, 100, 10)}
+            {range("opacity", t`Opacity`, 0, 100, 10)}
             {seg("colorBy")}
             {row(
               "ids",

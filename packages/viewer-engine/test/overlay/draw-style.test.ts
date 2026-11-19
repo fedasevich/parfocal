@@ -82,11 +82,11 @@ test("dots draw cells as points at their centre and keep regions as outlines", (
   assert.equal(overlay(draw(), "main").shapes.points, undefined);
 });
 
-test("opacity is clamped between 20 and 100 and sets the overlay opacity", () => {
-  assert.equal(clampOpacity(5), 20);
+test("opacity is clamped between 0 and 100 and sets the overlay opacity", () => {
+  assert.equal(clampOpacity(-5), 0);
   assert.equal(clampOpacity(250), 100);
   assert.equal(overlay(draw({ opacity: 40 }), "main").opacity, 0.4);
-  assert.equal(overlay(draw({ opacity: 0 }), "main").opacity, 0.2);
+  assert.equal(overlay(draw({ opacity: 0 }), "main").opacity, 0);
   assert.equal(overlay(draw(), "main").opacity, 1);
 });
 

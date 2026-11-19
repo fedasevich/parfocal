@@ -401,7 +401,7 @@ function DisplayPanel({
         <RangeRow
           label={t`Opacity`}
           value={settings.opacity}
-          min={20}
+          min={0}
           max={100}
           step={10}
           format={(value) => `${value}%`}
