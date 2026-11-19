@@ -6,6 +6,8 @@ import { SlideDoneCard, type SlideDoneCounts } from "@parfocal/ui/components/sli
 import { useNavigate } from "@tanstack/react-router";
 import { opinionQuestions, questionBlockers } from "../screens/review/guided-blockers.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
+import { pendingOrder } from "../screens/review/review-order-state.ts";
+import { ReviewOrderOpinionNotice } from "../screens/review/review-order-state.tsx";
 import { useOpinionDraft } from "../screens/review/use-opinion-draft.ts";
 
 export function slideDoneCounts(session: ReviewSession): SlideDoneCounts {
@@ -57,6 +59,7 @@ export function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
       : []),
   ];
   const blockers = open.length > 0 ? open : questionBlockers(questions, answers);
+  if (pendingOrder(session.order, session.ready) !== null) return <ReviewOrderOpinionNotice />;
   return (
     <SlideDoneCard
       panel

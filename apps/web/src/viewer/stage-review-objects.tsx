@@ -11,6 +11,8 @@ import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { useNoteKey } from "../screens/review/note-key.ts";
 import { useObjectKeys } from "../screens/review/object-keys.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
+import { pendingOrder } from "../screens/review/review-order-state.ts";
+import { ReviewOrderTabNotice } from "../screens/review/review-order-state.tsx";
 import {
   storedType,
   type TypeOption,
@@ -220,6 +222,7 @@ export function StageReviewObjects({
     else flyTo(id);
   };
   const ready = session.ready && objects.length > 0;
+  const orderWait = pendingOrder(session.order, session.ready);
   const coach = useGuidedCoach(guided && object === undefined);
   const coachOn = guided && coachShown(coach.open, ready ? objects.length : 0);
   const opening = useRef(true);
@@ -443,6 +446,9 @@ export function StageReviewObjects({
               onAddMissed={() => onAddMissed?.()}
               answersOff={answersOff}
             />
+          ) : null}
+          {orderWait ? (
+            <ReviewOrderTabNotice order={orderWait} onRetry={session.retryOrder} />
           ) : null}
           <StageAiReading slideId={slideId} objects={objects} />
           {!ready && answersOff !== undefined ? (

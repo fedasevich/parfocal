@@ -17,6 +17,7 @@ from parfocal_api.review_order_job import REVIEW_ORDER
 from parfocal_api.tables import Role
 from parfocal_common.cell_chunks import encode
 from parfocal_common.chunk_store import chunk_key
+from parfocal_common.jobs import Step, StepRun, Workflow
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.scope import sample
 from parfocal_ingest.__main__ import DEFAULT_WORKFLOWS
@@ -414,6 +415,30 @@ def test_a_cell_scope_order_is_not_ready_until_its_job_runs(api: ApiAs, database
     assert sorted(order[4:]) == ["T4", "T6"]
     assert shared(api, o, task, slide=1) == []
     assert [status for _, status, _ in order_jobs_of(database, task)] == ["done"]
+
+
+async def crashing_crop(_run: StepRun) -> None:
+    raise AttributeError("unhydrated image")
+
+
+CRASHING_CROPS = Workflow(CELL_CROPS.kind, [Step(CELL_CROPS.steps[0].name, crashing_crop)])
+
+
+def test_a_crashing_older_job_does_not_keep_a_new_order_from_being_built(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    assert crop_jobs_of(database, o.slides[0]) == [("queued",)]
+    task = made(api, o, {"kind": "inside-rois"})
+    assert run_orders(database, o.tenant, CRASHING_CROPS) >= 2
+    assert shared(api, o, task)[:4] == ["C1", "C2", "T3", "T5"]
+    assert [status for _, status, _ in order_jobs_of(database, task)] == ["done"]
+    crashed = owner(
+        database,
+        "SELECT DISTINCT status, claimed_by, lease_until > clock_timestamp() FROM jobs "
+        f"WHERE kind = 'cell-crops' AND tenant_id = '{o.tenant}'",
+    )
+    assert crashed == [("running", None, True)]
 
 
 def test_a_failed_order_job_retried_leaves_one_order_per_slide(api: ApiAs, database: str) -> None:

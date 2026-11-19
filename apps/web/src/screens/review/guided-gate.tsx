@@ -24,7 +24,14 @@ export function GuidedGate({
     query: { enabled: hidesAi, retry: false },
   });
   if (!session.ready && (session.order === "preparing" || session.order === "failed"))
-    return <ReviewOrderState order={session.order} onRetry={session.retryOrder} />;
+    return (
+      <ReviewOrderState
+        order={session.order}
+        onRetry={session.retryOrder}
+        projectId={session.task?.project_id}
+        madeAt={session.task?.created_at}
+      />
+    );
   if (!session.ready || (hidesAi && firstRead.isPending)) {
     return <Loader label={t`Loading the review`} size="page" />;
   }

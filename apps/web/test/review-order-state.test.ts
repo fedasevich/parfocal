@@ -3,9 +3,11 @@ import { test } from "node:test";
 import { ApiError } from "@parfocal/api-client";
 import {
   nextReviewOrderState,
+  pendingOrder,
   preparingInterval,
   preparingPollMs,
   reviewOrderState,
+  waitedMinutes,
 } from "../src/screens/review/review-order-state.ts";
 
 const conflict = (code: string) =>
@@ -37,4 +39,19 @@ test("no error or another error leaves the order ready", () => {
   assert.equal(reviewOrderState(new ApiError("not-found", 404)), "ready");
   assert.equal(reviewOrderState(conflict("something-else")), "ready");
   assert.equal(preparingInterval(undefined), false);
+});
+
+test("the wait is counted in whole minutes from when the task was made", () => {
+  const made = "2026-11-19T18:00:00Z";
+  assert.equal(waitedMinutes(made, Date.parse("2026-11-19T18:00:40Z")), 0);
+  assert.equal(waitedMinutes(made, Date.parse("2026-11-19T18:50:10Z")), 50);
+  assert.equal(waitedMinutes(undefined, Date.now()), 0);
+  assert.equal(waitedMinutes("not a date", Date.now()), 0);
+});
+
+test("the tabs show the order state only until the slide's objects arrive", () => {
+  assert.equal(pendingOrder("preparing", false), "preparing");
+  assert.equal(pendingOrder("failed", false), "failed");
+  assert.equal(pendingOrder("preparing", true), null);
+  assert.equal(pendingOrder("ready", false), null);
 });

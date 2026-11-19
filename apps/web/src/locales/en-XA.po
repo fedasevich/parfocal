@@ -4023,6 +4023,10 @@ msgstr ""
 msgid "Back to disagreements"
 msgstr ""
 
+#: src/screens/review/review-order-state.tsx
+msgid "Back to my work"
+msgstr ""
+
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
@@ -4079,6 +4083,7 @@ msgstr ""
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
+#: src/screens/review/review-order-state.tsx
 msgid "Back to the project"
 msgstr ""
 
@@ -4857,6 +4862,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Check nothing"
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "Check now"
 msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -16154,11 +16163,19 @@ msgid "The object in focus"
 msgstr ""
 
 #: src/screens/review/review-order-state.tsx
-msgid "The objects are being put in review order. This usually takes under a minute."
+msgid "The objects are being put in review order. This usually takes under a minute, and this page checks again every few seconds."
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The objects of finished tiles are in the layer and join the check scope."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "The objects of this slide are still being put in review order. They appear here on their own once it is ready."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "The opinion opens once the objects of this slide are prepared and answered."
 msgstr ""
 
 #: src/viewer/stage-opinion.tsx
@@ -16305,6 +16322,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "The review order of this slide could not be worked out."
 msgstr ""
 
 #: src/screens/review/review-order-state.tsx
@@ -16474,6 +16495,14 @@ msgstr ""
 
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The task could not be created. Try again."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "The task was made {minutes} minutes ago."
+msgstr ""
+
+#: src/screens/review/review-order-state.tsx
+msgid "The task was made {minutes} minutes ago. This is taking longer than usual, so you can go back and open it later."
 msgstr ""
 
 #: src/screens/new-task/send-step.tsx

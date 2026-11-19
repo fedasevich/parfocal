@@ -332,8 +332,12 @@ class ModalSandbox:
         await self.sandbox.terminate.aio()
 
 
-def hydrated_image(image: modal.Image) -> modal.Image:
-    return modal.Image.from_id(image.object_id)
+RUNNING_IMAGE_VARIABLE = "MODAL_IMAGE_ID"
+
+
+def hydrated_image(image: modal.Image, environ: Mapping[str, str] = os.environ) -> modal.Image:
+    running = environ.get(RUNNING_IMAGE_VARIABLE)
+    return modal.Image.from_id(running if running else image.object_id)
 
 
 def modal_launcher(

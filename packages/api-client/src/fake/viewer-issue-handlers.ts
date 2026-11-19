@@ -1,4 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { problemMediaType } from "../problem.ts";
 import { projectSlideRows } from "./project-handlers.ts";
 import { toReviewObjects } from "./review-handlers.ts";
 import { fakeViewerIssue } from "./viewer-scene.ts";
@@ -15,6 +16,17 @@ const taskWithdrawn = () =>
       code: "task-withdrawn",
     },
     { status: 409 },
+  );
+
+const orderNotReady = () =>
+  HttpResponse.json(
+    {
+      type: "about:blank",
+      title: "The review order of this slide is still being prepared",
+      status: 409,
+      code: "review-order-not-ready",
+    },
+    { status: 409, headers: { "content-type": problemMediaType } },
   );
 
 export const viewerIssueHandlers = (): RequestHandler[] => [
@@ -40,9 +52,11 @@ export const viewerIssueHandlers = (): RequestHandler[] => [
   http.get<{ taskId: string; slideId: string }>(
     "*/api/review-tasks/:taskId/slides/:slideId/objects",
     ({ params }) =>
-      fakeViewerIssue() === "noresults"
-        ? HttpResponse.json({ ...toReviewObjects(params.taskId, params.slideId), objects: [] })
-        : undefined,
+      fakeViewerIssue() === "preparing"
+        ? orderNotReady()
+        : fakeViewerIssue() === "noresults"
+          ? HttpResponse.json({ ...toReviewObjects(params.taskId, params.slideId), objects: [] })
+          : undefined,
   ),
   http.get("*/api/me/slides", ({ request }) => {
     const projectId = new URL(request.url).searchParams.get("project_id");

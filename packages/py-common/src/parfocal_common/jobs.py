@@ -77,6 +77,7 @@ class JobControl(StrEnum):
 LIVE = frozenset({JobStatus.RUNNING, JobStatus.CANCELLING})
 MAX_TRIES = 3
 TOO_MANY_CLAIMS = "too-many-claims"
+CRASH_BACKOFF_SECONDS = 30.0
 ALLOWED_FROM: Mapping[JobControl, frozenset[JobStatus]] = {
     JobControl.CANCEL: frozenset({JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.PAUSED}),
     JobControl.RESUME: frozenset({JobStatus.PAUSED, JobStatus.CANCELLED}),
@@ -759,9 +760,28 @@ async def work(
             continue
         idle = 0.0
         job, workflow = claimed
-        await run_job(engine, job, workflow, worker, on_finished=on_finished, on_settled=on_settled)
+        try:
+            await run_job(
+                engine, job, workflow, worker, on_finished=on_finished, on_settled=on_settled
+            )
+        except Exception:
+            logger.exception("job crashed", extra={"job_id": str(job.job_id), "event": job.kind})
+            await release_crashed(engine, job, worker)
         finished += 1
     return finished
+
+
+async def release_crashed(engine: AsyncEngine, job: Claimed, worker: str) -> None:
+    async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
+        await connection.execute(
+            update(jobs)
+            .where(
+                jobs.c.id == job.job_id,
+                jobs.c.claimed_by == worker,
+                jobs.c.status.in_(list(LIVE)),
+            )
+            .values(claimed_by=None, lease_until=lease(CRASH_BACKOFF_SECONDS))
+        )
 
 
 def load_workflow(path: str) -> Workflow:

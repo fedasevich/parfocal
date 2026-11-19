@@ -6,20 +6,20 @@ from storage_support import TEST_STORAGE
 
 from parfocal_api.review_order_job import review_order_workflow
 from parfocal_common.db import DatabaseScope, async_database_url, create_engine, scoped_transaction
-from parfocal_common.jobs import JobControl, move, work
+from parfocal_common.jobs import JobControl, Workflow, move, work
 
 ORDERS = review_order_workflow(lambda: TEST_STORAGE)
 
 
-def run_orders(database: str, tenant_id: uuid.UUID) -> None:
-    async def go() -> None:
+def run_orders(database: str, tenant_id: uuid.UUID, *beside: Workflow) -> int:
+    async def go() -> int:
         engine = create_engine(async_database_url(with_database(APP_URL, database)))
         try:
-            await work(engine, [ORDERS], "test", 0.2, 0.1, tenant_id)
+            return await work(engine, [*beside, ORDERS], "test", 0.2, 0.1, tenant_id)
         finally:
             await engine.dispose()
 
-    asyncio.run(go())
+    return asyncio.run(go())
 
 
 def retry_order(database: str, tenant_id: uuid.UUID, job_id: uuid.UUID) -> None:
