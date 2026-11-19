@@ -35,6 +35,25 @@ export function jumpTarget(
   return pool[0]?.cell.object;
 }
 
+export function stripStep(
+  order: readonly string[],
+  from: string | undefined,
+  direction: Direction,
+  columns: number,
+): string | undefined {
+  const index = from === undefined ? -1 : order.indexOf(from);
+  if (index < 0) return order[0];
+  const last = order.length - 1;
+  const oneRow = order.length <= columns;
+  const forward = direction === "right" || direction === "down";
+  const stride = direction === "left" || direction === "right" || oneRow ? 1 : columns;
+  const wanted = index + (forward ? stride : -stride);
+  if (wanted < 0) return order[index];
+  if (wanted <= last) return order[wanted];
+  const lastRowStart = last - (last % columns);
+  return order[stride > 1 && index < lastRowStart ? last : index];
+}
+
 export function nearestOpen(cells: CellSpot[], from: string): string | undefined {
   const origin = cells.find((cell) => cell.object === from);
   if (origin === undefined) return undefined;

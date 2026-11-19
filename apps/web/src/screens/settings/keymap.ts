@@ -103,10 +103,13 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["dprev", "Previous object", ["⇧J"], "new"],
       [
         "dnear",
-        "Nearest cell on the slide",
+        "Step between cells",
         ["Arrows"],
         "new",
-        { direction: true, note: "in the cells panel" },
+        {
+          direction: true,
+          note: "in the cells panel, one cell sideways and one row up or down. Shift pans",
+        },
       ],
       [
         "dpan",

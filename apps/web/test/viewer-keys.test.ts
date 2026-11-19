@@ -3,6 +3,9 @@ import { test } from "node:test";
 import { comboOf, idleKeys, type KeyInput, step } from "../src/keys/registry.ts";
 import {
   applyViewerKey,
+  cellArrowsHeld,
+  holdCellArrows,
+  pansTakenByCells,
   selectionArea,
   type ViewerKeyTarget,
   viewerKeyBindings,
@@ -234,4 +237,16 @@ test("the zoom target is the selected shapes, then the focused area, then nothin
   assert.deepEqual(zoomTargetArea(shapes, ["gone"], focused), focused);
   assert.deepEqual(zoomTargetArea(shapes, [], focused), focused);
   assert.equal(zoomTargetArea(shapes, [], null), null);
+});
+
+test("the cells strip takes the plain arrows from the pan while it holds them", () => {
+  assert.deepEqual([...pansTakenByCells()].sort(), ["pan:down", "pan:left", "pan:right", "pan:up"]);
+  assert.deepEqual([...pansTakenByCells({ personal: { dnear: ["IJKL"] } })], []);
+  const engine = {};
+  assert.equal(cellArrowsHeld(engine), false);
+  const release = holdCellArrows(engine);
+  assert.equal(cellArrowsHeld(engine), true);
+  assert.equal(cellArrowsHeld({}), false);
+  release();
+  assert.equal(cellArrowsHeld(engine), false);
 });

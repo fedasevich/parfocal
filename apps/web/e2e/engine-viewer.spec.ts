@@ -261,6 +261,10 @@ test("outlined cells draw on the real stage and the type bar decides the current
   await bar.getByRole("button", { name: /Stroma/ }).click();
   await expect(bar).toHaveAttribute("data-chosen", "Stroma");
   await expect(list.getByTestId("object-row-cells")).toContainText("1 of 3 decided");
+  await page
+    .getByTestId("stage-cells-grid")
+    .getByRole("button", { name: "Close the cells" })
+    .click();
   await page.keyboard.press("k");
   await expect(bar).toHaveAttribute("data-chosen", "keep");
 });

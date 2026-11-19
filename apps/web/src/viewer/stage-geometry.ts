@@ -1,3 +1,4 @@
+import { tissueOrder } from "../screens/review/strip-order.ts";
 import type { ClassPalette } from "../shell/display-defaults.ts";
 import { type ClassPaint, paintFor } from "./class-paint.ts";
 import type { ClassName } from "./viewer-engine.ts";
@@ -229,4 +230,18 @@ export function mergeRegions<Row extends { readonly number: number }>(
   const merged = new Map(before.size + rows.length > keep ? [] : before);
   for (const row of rows) merged.set(row.number, row);
   return merged;
+}
+
+export function cellsInTissueOrder<
+  Cell extends { object: string; kind: string; outline?: readonly number[] | null },
+>(objects: readonly Cell[]): Cell[] {
+  const cells = objects.filter((item) => item.kind === "cell");
+  const spots = cells.flatMap((cell) => {
+    const centre = outlineCentre(cell.outline);
+    return centre === null ? [] : [{ object: cell.object, x: centre.x, y: centre.y }];
+  });
+  const place = new Map(tissueOrder(spots).map((object, index) => [object, index]));
+  const placed = cells.filter((cell) => place.has(cell.object));
+  placed.sort((a, b) => (place.get(a.object) ?? 0) - (place.get(b.object) ?? 0));
+  return [...placed, ...cells.filter((cell) => !place.has(cell.object))];
 }

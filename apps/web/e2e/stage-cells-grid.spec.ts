@@ -46,3 +46,142 @@ test("the engine viewer opens the cells grid and agrees with the rest", async ({
   await grid.getByRole("button", { name: "Close the cells" }).click();
   await expect(grid).toHaveCount(0);
 });
+
+const cameraOf = (page: Page) => page.getByTestId("slide-host").getAttribute("data-camera");
+
+async function settledCamera(page: Page) {
+  let last = await cameraOf(page);
+  await expect
+    .poll(async () => {
+      await page.waitForTimeout(250);
+      const now = await cameraOf(page);
+      const still = now === last;
+      last = now;
+      return still;
+    })
+    .toBe(true);
+  return (last ?? "").split(",").map(Number);
+}
+
+const barOffCentre = (page: Page) =>
+  page.getByTestId("cell-type-bar").evaluate((bar) => {
+    const frame = (bar as HTMLElement).offsetParent ?? document.body;
+    const box = bar.getBoundingClientRect();
+    const around = frame.getBoundingClientRect();
+    return Math.abs(box.left + box.width / 2 - (around.left + around.width / 2));
+  });
+
+async function picked(page: Page, cell: string) {
+  await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", cell);
+  const tile = page.getByTestId("stage-cells-grid").getByRole("button", {
+    name: new RegExp(`^${cell} `),
+  });
+  await expect(tile).toHaveAttribute("data-state", "current");
+  await expect(page.getByTestId("cell-type-bar")).toHaveAttribute("aria-label", `Type for ${cell}`);
+  return settledCamera(page);
+}
+
+async function openCells(page: Page) {
+  await page.goto(`/tasks/${rt14}/cells?slide=${cellsSlide}`);
+  await ready(page);
+  await expect(page.getByTestId("stage-cells-grid").locator("[data-crop]")).toHaveCount(3);
+  return settledCamera(page);
+}
+
+const tileOrder = (page: Page) =>
+  page
+    .getByTestId("stage-cells-grid")
+    .locator("[data-crop]")
+    .evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute("aria-label")?.split(" ")[0]));
+
+test("the arrow keys step one cell each and the camera stays put while the cell is in view", async ({
+  page,
+}) => {
+  const opened = await openCells(page);
+  await page.keyboard.press("ArrowRight");
+  expect(await picked(page, "C1")).toEqual(opened);
+  await page.keyboard.press("ArrowRight");
+  expect(await picked(page, "C2")).toEqual(opened);
+  await page.keyboard.press("ArrowDown");
+  const [x = 0, , zoom = 0] = await picked(page, "C3");
+  expect(Math.abs(x - 420)).toBeLessThan(1);
+  expect(zoom).toBe(opened[2]);
+  await expect.poll(() => barOffCentre(page)).toBeLessThan(3);
+  const strip = await page.getByTestId("stage-cells-grid").boundingBox();
+  const bar = await page.getByTestId("cell-type-bar").boundingBox();
+  expect((bar?.y ?? 0) + (bar?.height ?? 0)).toBeLessThan(strip?.y ?? 0);
+  await page.keyboard.press("ArrowRight");
+  await picked(page, "C3");
+  await page.keyboard.press("ArrowUp");
+  const second = await picked(page, "C2");
+  expect(Math.abs((second[0] ?? 0) - 520)).toBeLessThan(1);
+  expect(second[2]).toBe(opened[2]);
+  await page.keyboard.press("ArrowLeft");
+  expect(await picked(page, "C1")).toEqual(second);
+});
+
+test("a cell too small to judge is flown to and fitted as before", async ({ page }) => {
+  const opened = await openCells(page);
+  for (let press = 0; press < 3; press += 1) await page.keyboard.press("-");
+  const out = await settledCamera(page);
+  expect(out[2] ?? 0).toBeLessThan((opened[2] ?? 0) - 0.5);
+  await page.keyboard.press("ArrowRight");
+  const [x = 0, , zoom = 0] = await picked(page, "C1");
+  expect(Math.abs(x - 300)).toBeLessThan(1);
+  expect(zoom).toBeGreaterThan(opened[2] ?? 0);
+});
+
+test("the strip follows the tissue and keeps its order after a reload", async ({ page }) => {
+  await openCells(page);
+  const order = await tileOrder(page);
+  expect(order).toEqual(["C1", "C2", "C3"]);
+  await page.reload();
+  await ready(page);
+  await expect(page.getByTestId("stage-cells-grid").locator("[data-crop]")).toHaveCount(3);
+  expect(await tileOrder(page)).toEqual(order);
+});
+
+test("a key decision in the strip moves to the next undecided cell", async ({ page }) => {
+  const opened = await openCells(page);
+  const card = page.getByTestId("stage-review-objects");
+  const grid = page.getByTestId("stage-cells-grid");
+  await page.keyboard.press("ArrowRight");
+  await picked(page, "C1");
+  await page.keyboard.press("k");
+  expect(await picked(page, "C2")).toEqual(opened);
+  await expect(grid.getByRole("button", { name: /^C1 / })).toHaveAttribute("data-state", "done");
+  await page.keyboard.press("ArrowRight");
+  await picked(page, "C3");
+  await page.keyboard.press("x");
+  await picked(page, "C2");
+  await page.keyboard.press("u");
+  await expect(card).toHaveAttribute("data-current", "C2");
+  await expect(grid.locator('[data-crop][data-state="to-check"]')).toHaveCount(0);
+});
+
+test("the arrows pan with Shift, and again on their own once the strip is closed", async ({
+  page,
+}) => {
+  await openCells(page);
+  const card = page.getByTestId("stage-review-objects");
+  const grid = page.getByTestId("stage-cells-grid");
+  await page.keyboard.press("ArrowRight");
+  const start = (await picked(page, "C1")).join(",");
+  await page.keyboard.down("Shift");
+  await page.keyboard.down("ArrowRight");
+  await expect.poll(() => cameraOf(page)).not.toBe(start);
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.up("Shift");
+  await expect(card).toHaveAttribute("data-current", "C1");
+  await page.keyboard.press("Shift+K");
+  await expect(grid.getByRole("button", { name: /Agree with 3/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(grid.getByRole("button", { name: /Agree with the rest/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(grid).toHaveCount(0);
+  const before = (await settledCamera(page)).join(",");
+  await page.keyboard.down("ArrowRight");
+  await expect.poll(async () => (await settledCamera(page)).join(",")).not.toBe(before);
+  await page.keyboard.up("ArrowRight");
+  await expect(card).toHaveAttribute("data-current", "C1");
+});
