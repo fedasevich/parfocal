@@ -10,7 +10,7 @@ test("a reviewer decides on an AI region, submits, and the slide shows as submit
   const projectId = idOf(sample);
   const [taskId = "", slideId = ""] = sql(
     `SELECT t.id || '|' || s.id FROM review_tasks t JOIN slides s ON s.project_id = t.project_id ` +
-      `WHERE t.project_id = '${projectId}' AND s.label = 'tumor_001'`,
+      `WHERE t.project_id = '${projectId}' AND s.label = 'test_065'`,
   ).split("|");
   const slide = `/api/review-tasks/${taskId}/slides/${slideId}`;
 
@@ -70,6 +70,6 @@ test("a reviewer decides on an AI region, submits, and the slide shows as submit
   ).toBe(`${researcher.subject}|${slideId}`);
 
   await page.goto(`/projects/${projectId}?tab=slides`);
-  await expect(page.getByRole("row", { name: /tumor_001/ })).toContainText("submitted");
-  await expect(page.getByRole("row", { name: /tumor_002/ })).toContainText("assigned");
+  await expect(page.getByRole("row", { name: /test_065/ })).toContainText("submitted");
+  await expect(page.getByRole("row", { name: /CMU-1\.tiff/ })).toContainText("assigned");
 });
