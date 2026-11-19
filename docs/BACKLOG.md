@@ -6829,7 +6829,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 18, 25, 27, 28, 29, 30, 32, 33, 35 and 38 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the Opinion tab outside review tasks, no notice for importing or failed result sets, two tissue progress controls, no finish control in the annotate top bar, a never opened task shown as continued, the comments route without a slide, 1 slides, wrapping Objects rows, the sign off route for a signed task, and the ignored tab parameter.
   Done when each row has a spec or unit test and reads right on the fake API.
   Depends on PROTO-060. Size: M.
-- [ ] PROTO-076 · Nothing in the viewer is cut off or scrolls the page
+- [x] PROTO-076 · Nothing in the viewer is cut off or scrolls the page
   On 2026-11-19 the owner found three cut parts on app.parfocal.eu: the minimap's click to move caption hangs below the slide and makes the page scroll, the Slides in this project popover cuts its Assigned chips and the Q and E keys at the right edge, and the Select tool hint bar cuts "Double-click an edge to add a point". Remove the minimap caption, fit the popover to its content within the window, and let hint bars wrap or shorten instead of clipping.
   Done when a spec at 1440 by 900, 1280 by 800 and 1024 by 700 finds the document not scrollable in the viewer, every chip and key in the slides popover inside it, and every hint chip's text unclipped (scrollWidth equals clientWidth).
   Depends on PROTO-060. Size: S.
