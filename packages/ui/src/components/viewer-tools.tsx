@@ -3,7 +3,6 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { Zone } from "@parfocal/ui/components/zone";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -667,6 +666,28 @@ function SlideSlot({
   );
 }
 
+function PanelSection({
+  title,
+  end,
+  className,
+  children,
+}: {
+  title: React.ReactNode;
+  end?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section data-slot="panel-section" className={cn("grid min-w-0 gap-2.5", className)}>
+      <div className="flex items-center justify-between gap-2 text-caption font-semibold text-fg-dim">
+        <span>{title}</span>
+        {end}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function SlidesOnScreenPanel({
   slots,
   onChange,
@@ -679,7 +700,7 @@ function SlidesOnScreenPanel({
   const { t } = useLingui();
 
   return (
-    <Zone title={t`Slides on screen`}>
+    <PanelSection title={t`Slides on screen`}>
       <div className="grid gap-2">
         {slots.map((slot) => (
           <SlideSlot
@@ -697,7 +718,7 @@ function SlidesOnScreenPanel({
           </Button>
         ) : null}
       </div>
-    </Zone>
+    </PanelSection>
   );
 }
 
@@ -870,6 +891,7 @@ export {
   type LayerRow,
   type LayerSide,
   PaneHeader,
+  PanelSection,
   PanePicker,
   type PaneSide,
   type PaneSlide,
