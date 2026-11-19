@@ -33,7 +33,7 @@ import { markTried } from "../home/getting-started.ts";
 import { okData } from "../placeholder.tsx";
 import { usePeople } from "./people.ts";
 import { useScreenToast } from "./screen-toast.tsx";
-import { SettingsTab } from "./settings-tab.tsx";
+import { automaticImportsId, SettingsTab } from "./settings-tab.tsx";
 import { SlidesTab } from "./slides-tab.tsx";
 import { TasksTab } from "./tasks-tab.tsx";
 
@@ -247,9 +247,10 @@ export function ProjectPage({
                 <DropdownMenuItem
                   onClick={() =>
                     void navigate({
-                      to: "/projects/$projectId/upload",
+                      to: "/projects/$projectId",
                       params: { projectId },
-                      search: { scene: "api" },
+                      search: { tab: "settings" },
+                      hash: automaticImportsId,
                     })
                   }
                 >

@@ -18558,7 +18558,7 @@ export const getListTeamWorkloadResponseMock = (
     slides: faker.number.int({ min: 0 }),
     split: faker.helpers.arrayElement(["all", "even"] as const),
     sent_on: faker.date.past().toISOString().slice(0, 10),
-    due_on: faker.date.past().toISOString().slice(0, 10),
+    due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
     signed_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
     reviewers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({
@@ -18595,7 +18595,7 @@ export const getListTeamWorkloadResponseMock = (
     slides: faker.number.int({ min: 0 }),
     split: faker.helpers.arrayElement(["all", "even"] as const),
     sent_on: faker.date.past().toISOString().slice(0, 10),
-    due_on: faker.date.past().toISOString().slice(0, 10),
+    due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
     signed_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
     reviewers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({

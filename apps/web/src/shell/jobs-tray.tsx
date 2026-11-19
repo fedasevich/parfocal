@@ -17,6 +17,7 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from "
 import { now } from "../clock.ts";
 import {
   finishedJobs,
+  finishedTarget,
   type JobTarget,
   jobIcon,
   jobTarget,
@@ -27,6 +28,7 @@ import {
   trayValueText,
 } from "../screens/jobs/model.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { viewerSearch } from "../screens/viewer-links.tsx";
 import { formatBytes, type UploadEntry } from "../upload/entries.ts";
 import { useUploads } from "../upload/use-uploads.ts";
 import { showUndoToast } from "./undo-toasts.tsx";
@@ -89,6 +91,13 @@ function useGoToTarget() {
         params: { projectId: target.projectId, jobId: target.jobId },
       });
     }
+    if (target.kind === "slide") {
+      return navigate({
+        to: "/projects/$projectId/slides/$slideId",
+        params: { projectId: target.projectId, slideId: target.slideId },
+        search: viewerSearch({}),
+      });
+    }
     if (target.kind === "upload") {
       return navigate({
         to: "/projects/$projectId/upload",
@@ -147,9 +156,9 @@ export function ShellJobs() {
     tray.setOpen(false);
     void goTo(jobTarget(job, newestUpload));
   };
-  const openProject = (job: MyJob) => {
+  const openFinished = (job: MyJob) => {
     tray.setOpen(false);
-    void goTo({ kind: "project", projectId: job.project.id });
+    void goTo(finishedTarget(job));
   };
   const uploads = browserUploads(useUploads().entries);
   const uploadRow = (upload: BrowserUpload) => (
@@ -188,7 +197,7 @@ export function ShellJobs() {
       onOpen={() => open(job)}
       action={
         job.status === "done" ? (
-          <JobRowLink onClick={() => openProject(job)}>
+          <JobRowLink onClick={() => openFinished(job)}>
             <Trans>Open</Trans>
           </JobRowLink>
         ) : job.status === "paused" ? (

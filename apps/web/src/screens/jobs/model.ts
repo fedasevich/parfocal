@@ -81,7 +81,8 @@ export const jobIcon = (job: MyJob): JobIcon =>
 export type JobTarget =
   | { kind: "job"; projectId: string; jobId: string }
   | { kind: "upload"; projectId: string; scene: "progress" | "done" }
-  | { kind: "project"; projectId: string };
+  | { kind: "project"; projectId: string }
+  | { kind: "slide"; projectId: string; slideId: string };
 
 export function jobTarget(job: MyJob, newestUploadId: string | undefined): JobTarget {
   if (job.kind === "model-run") return { kind: "job", projectId: job.project.id, jobId: job.id };
@@ -91,6 +92,15 @@ export function jobTarget(job: MyJob, newestUploadId: string | undefined): JobTa
     projectId: job.project.id,
     scene: isRunning(job) ? "progress" : "done",
   };
+}
+
+export function finishedTarget(job: MyJob): JobTarget {
+  const [only, ...more] = job.slides;
+  if (only && more.length === 0) {
+    return { kind: "slide", projectId: job.project.id, slideId: only.id };
+  }
+  if (job.kind === "model-run") return { kind: "job", projectId: job.project.id, jobId: job.id };
+  return { kind: "project", projectId: job.project.id };
 }
 
 export const runningJobs = (jobs: MyJob[]) => jobs.filter((job) => !isFinished(job));

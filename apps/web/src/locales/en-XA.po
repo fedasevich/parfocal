@@ -6256,6 +6256,7 @@ msgstr ""
 #: src/routes/issue-states.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/screens/viewer-links.tsx
 msgid "Disagreements"
 msgstr ""
 
@@ -6790,6 +6791,7 @@ msgid "Estimate"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
+#: src/screens/viewer-links.tsx
 msgid "Evaluation"
 msgstr ""
 
@@ -10259,6 +10261,7 @@ msgstr ""
 msgid "No deposit yet. Add one from an object on a slide, or measure one by hand."
 msgstr ""
 
+#: ../../packages/ui/src/components/team.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
@@ -11336,6 +11339,15 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+#. placeholder {0}: item.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Open {0} in the full viewer"
+msgstr ""
+
+#: src/screens/evaluation/report-pages.tsx
+msgid "Open {object} in the full viewer"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Open a review task first"
 msgstr ""
@@ -11455,6 +11467,14 @@ msgstr ""
 
 #: src/viewer/live-top-bar.tsx
 msgid "Open the Slide done card in the Review tab"
+msgstr ""
+
+#: src/screens/evaluation/report-pages.tsx
+msgid "Open the slide in the full viewer"
+msgstr ""
+
+#: src/screens/viewer-links.tsx
+msgid "Open the slides of this task in the full viewer"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -15073,6 +15093,7 @@ msgstr ""
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/formats-drawer.tsx
 #: src/screens/upload/live-wizard.tsx
+#: src/screens/viewer-links.tsx
 msgid "Slides"
 msgstr ""
 

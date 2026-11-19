@@ -129,13 +129,30 @@ type TaskBlockProps = Omit<React.ComponentProps<"section">, "title"> & {
   title: string;
   code?: string;
   project: string;
-  due: string;
-  dueIn: string;
+  due?: string | undefined;
+  dueIn?: string | undefined;
   overdue?: boolean;
   highlight?: boolean;
+  links?: React.ReactNode;
 };
 
-function DueText({ due, dueIn, overdue }: { due: string; dueIn: string; overdue: boolean }) {
+function DueText({
+  due,
+  dueIn,
+  overdue,
+}: {
+  due: string | undefined;
+  dueIn: string | undefined;
+  overdue: boolean;
+}) {
+  if (due === undefined) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-body-sm whitespace-nowrap text-fg-dim">
+        <Icon name="calendar" />
+        <Trans>No due date</Trans>
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
@@ -144,7 +161,8 @@ function DueText({ due, dueIn, overdue }: { due: string; dueIn: string; overdue:
       )}
     >
       <Icon name={overdue ? "warn" : "calendar"} />
-      <Trans>Due {due}</Trans> · {dueIn}
+      <Trans>Due {due}</Trans>
+      {dueIn ? ` · ${dueIn}` : null}
     </span>
   );
 }
@@ -157,6 +175,7 @@ function TaskBlock({
   dueIn,
   overdue = false,
   highlight = false,
+  links,
   className,
   children,
   ...props
@@ -183,7 +202,10 @@ function TaskBlock({
         </h3>
         <DueText due={due} dueIn={dueIn} overdue={overdue} />
       </div>
-      <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">{project}</p>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">{project}</p>
+        {links ? <span className="flex flex-wrap items-center gap-1">{links}</span> : null}
+      </div>
       {children}
     </section>
   );

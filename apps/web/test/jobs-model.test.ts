@@ -7,6 +7,7 @@ import { fakeViewFor } from "../src/fake-api/view-rules.ts";
 import {
   cancellableRuns,
   canOpenSlide,
+  finishedTarget,
   jobIcon,
   jobTarget,
   pausedRuns,
@@ -180,6 +181,28 @@ test("a row opens the job window, the newest upload's page or the project", () =
     kind: "project",
     projectId: "p07",
   });
+});
+
+test("a finished job opens its one slide, its job window or its project", () => {
+  const slide = { id: "s1", label: "tumor_052", file: "tumor_052.svs" };
+  const other = { id: "s2", label: "tumor_060", file: "tumor_060.svs" };
+  assert.deepEqual(finishedTarget(job({ status: "done", slides: [slide] })), {
+    kind: "slide",
+    projectId: "p07",
+    slideId: "s1",
+  });
+  assert.deepEqual(finishedTarget(job({ status: "done", slides: [slide, other] })), {
+    kind: "job",
+    projectId: "p07",
+    jobId: "job",
+  });
+  assert.deepEqual(
+    finishedTarget(job({ kind: "upload", status: "done", slides: [slide, other] })),
+    {
+      kind: "project",
+      projectId: "p07",
+    },
+  );
 });
 
 test("the estimate adds the queue on the Parfocal GPU and none on the lab server", () => {

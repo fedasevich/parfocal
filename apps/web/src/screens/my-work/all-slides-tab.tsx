@@ -157,6 +157,9 @@ function SlidePreview({
 
 type Look = ReturnType<typeof useSetLook>;
 
+const opensElsewhere = (event: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }) =>
+  event.metaKey || event.ctrlKey || event.shiftKey;
+
 const rowEstimate = 45;
 
 function scrollParentOf(element: HTMLElement | null): HTMLElement | null {
@@ -176,6 +179,7 @@ function SlideLine({
   measure,
   onSelect,
   onOpen,
+  href,
 }: {
   row: SlideRow;
   index: number;
@@ -185,6 +189,7 @@ function SlideLine({
   measure: (element: HTMLTableRowElement | null) => void;
   onSelect: (key: string) => void;
   onOpen: (row: SlideRow) => void;
+  href: string;
 }) {
   const { t } = useLingui();
 
@@ -201,10 +206,22 @@ function SlideLine({
       className="cursor-pointer"
     >
       <TableCell className="whitespace-normal">
-        <span className="inline-flex items-center gap-2.25">
+        <a
+          href={href}
+          data-testid="slide-link"
+          draggable={false}
+          onClick={(event) => {
+            if (opensElsewhere(event)) {
+              event.stopPropagation();
+              return;
+            }
+            event.preventDefault();
+          }}
+          className="inline-flex items-center gap-2.25 text-inherit no-underline"
+        >
           <RowThumb slideId={row.id} file={row.label} className="h-5.5 w-8.5" />
           <b className="font-medium text-fg">{row.label}</b>
-        </span>
+        </a>
       </TableCell>
       {showProject ? (
         <TableCell className="whitespace-normal">
@@ -254,6 +271,7 @@ function SlideTable({
   look,
   onSelect,
   onOpen,
+  hrefOf,
 }: {
   rows: SlideRow[];
   selected: string | undefined;
@@ -261,6 +279,7 @@ function SlideTable({
   look: Look;
   onSelect: (key: string) => void;
   onOpen: (row: SlideRow) => void;
+  hrefOf: (row: SlideRow) => string;
 }) {
   const { t } = useLingui();
 
@@ -331,6 +350,7 @@ function SlideTable({
               measure={virtualizer.measureElement}
               onSelect={onSelect}
               onOpen={onOpen}
+              href={hrefOf(row)}
             />
           );
         })}
@@ -450,6 +470,7 @@ export function AllSlidesTab({
           look={look}
           onSelect={onSelect}
           onOpen={(row) => void goTo(slideOpenPath(row, me?.user_id))}
+          hrefOf={(row) => slideOpenPath(row, me?.user_id)}
         />
         {rows.length === 0 ? (
           <p className="m-0 py-6 text-center text-body-sm text-fg-dim">

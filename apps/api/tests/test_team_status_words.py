@@ -41,6 +41,13 @@ def test_a_task_due_the_day_it_was_sent_wants_every_slide_at_once() -> None:
     assert reviewer_status(pace(12), SENT, SENT, SENT, False) is TeamReviewerStatus.DONE
 
 
+def test_a_task_without_a_due_day_is_never_behind() -> None:
+    late = date(2027, 1, 1)
+    assert reviewer_status(pace(0), late, SENT, None, False) is TeamReviewerStatus.NOT_STARTED
+    assert reviewer_status(pace(1), late, SENT, None, False) is TeamReviewerStatus.ON_TRACK
+    assert reviewer_status(pace(1), late, SENT, None, True) is TeamReviewerStatus.AWAY
+
+
 def test_the_time_left_comes_from_the_pace_so_far() -> None:
     assert minutes_left(pace(12)) == 0
     assert minutes_left(pace(0)) is None

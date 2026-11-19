@@ -29,7 +29,7 @@ def test_the_owner_sees_each_reviewers_progress_from_stored_work(api: ApiAs, dat
     assert (task["id"], task["slides"], task["split"]) == (str(r.task), 1, "all")
     assert task["code"].startswith("RT")
     assert task["project"]["id"] == str(r.project)
-    assert task["due_on"] == task["sent_on"]
+    assert task["due_on"] is None
     assert task["signed_on"] is None
     before = reviewers_of(task, r)
     assert set(before) == {"first", "second"}

@@ -66,7 +66,7 @@ class TeamTask(BaseModel):
     slides: int = Field(ge=0)
     split: Literal["all", "even"]
     sent_on: date
-    due_on: date
+    due_on: date | None
     signed_on: date | None
     reviewers: list[TeamReviewer]
 
@@ -95,14 +95,16 @@ tenant_router = APIRouter(prefix="/api/tenant", tags=["tenant"])
 
 
 def reviewer_status(
-    pace: Pace, today: date, sent_on: date, due_on: date, away: bool
+    pace: Pace, today: date, sent_on: date, due_on: date | None, away: bool
 ) -> TeamReviewerStatus:
-    span = (due_on - sent_on).days
-    share = min(1.0, max(0.0, (today - sent_on).days / span)) if span > 0 else 1.0
     if pace.assigned - pace.done <= 0:
         return TeamReviewerStatus.DONE
     if away:
         return TeamReviewerStatus.AWAY
+    if due_on is None:
+        return TeamReviewerStatus.NOT_STARTED if pace.done == 0 else TeamReviewerStatus.ON_TRACK
+    span = (due_on - sent_on).days
+    share = min(1.0, max(0.0, (today - sent_on).days / span)) if span > 0 else 1.0
     if pace.done == 0 and today <= due_on:
         return TeamReviewerStatus.NOT_STARTED
     if today > due_on or pace.done / pace.assigned < share:
@@ -235,7 +237,7 @@ async def list_team_workload(
 
     def shown(task: Any) -> TeamTask:
         sent_on = task.created_at.date()
-        due_on = task.due_on or sent_on
+        due_on = task.due_on
         reviewers: list[TeamReviewer] = []
         for user_id, pace in paces.get(task.id, {}).items():
             away, until = away_until(availability.get(user_id))

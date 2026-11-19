@@ -353,9 +353,16 @@ type ReportObjectsTableProps = React.ComponentProps<"table"> & {
     answers: ("agree" | "disagree" | "unsure")[];
     thumb?: string;
   }[];
+  renderObject?: ((object: string) => React.ReactNode) | undefined;
 };
 
-function ReportObjectsTable({ people, rows, className, ...props }: ReportObjectsTableProps) {
+function ReportObjectsTable({
+  people,
+  rows,
+  renderObject,
+  className,
+  ...props
+}: ReportObjectsTableProps) {
   const { t } = useLingui();
 
   return (
@@ -396,7 +403,9 @@ function ReportObjectsTable({ people, rows, className, ...props }: ReportObjects
                 />
               ) : null}
             </td>
-            <td className="font-mono font-semibold">{row.object}</td>
+            <td className="font-mono font-semibold">
+              {renderObject ? renderObject(row.object) : row.object}
+            </td>
             <td>{row.what}</td>
             {row.answers.map((answer, index) => (
               <td

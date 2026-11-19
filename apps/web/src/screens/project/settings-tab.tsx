@@ -19,8 +19,8 @@ import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group"
 import { Switch } from "@parfocal/ui/components/switch";
 import { Hint, Zone, Zones } from "@parfocal/ui/components/zone";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { type ReactNode, useEffect, useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { AddClassModal } from "./add-class-modal.tsx";
 import { AddPersonDialog } from "./add-person-dialog.tsx";
@@ -87,6 +87,8 @@ function ClassRow({
   );
 }
 
+export const automaticImportsId = "automatic-imports";
+
 export function SettingsTab({
   project,
   addClass,
@@ -111,6 +113,12 @@ export function SettingsTab({
   const form = okData(useGetOpinionForm(project.id).data);
   const imports = okData(useGetProjectImports(project.id).data);
   const { value, change } = useProjectChange(project, toast);
+  const hash = useLocation({ select: (location) => location.hash });
+  useEffect(() => {
+    if (hash === automaticImportsId) {
+      document.getElementById(automaticImportsId)?.scrollIntoView({ block: "start" });
+    }
+  }, [hash]);
   const [extra, setExtra] = useState<NewClass[]>([]);
   const [deleting, setDeleting] = useState(false);
   const askedToAdd =
@@ -206,6 +214,7 @@ export function SettingsTab({
         </Zone>
         {clinical ? <ReportTemplateZone value={value.clinical_template} onChange={change} /> : null}
         <Zone
+          id={automaticImportsId}
           title={t`Automatic imports`}
           sub={t`Slides and results can arrive from a webhook, the API or a watched folder, with the same checks as an upload.`}
         >
