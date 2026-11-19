@@ -6789,7 +6789,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Row 2 and row 19 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): a review task made in the form stays on Preparing this slide, its objects call answering 409 review-order-not-ready 50 minutes later, the screen has no way back, and its tabs read blank or Slide 5 is done.
   Done when the review order is built for a new task on the deployed app within a minute, the guided screen polls with a visible state, a back link and a retry, the tabs say the order is being prepared, and a real API e2e spec makes a task and reviews one object.
   Depends on OPS-038. Size: M.
-- [ ] PROTO-066 · Layer groups are saved and can be renamed, deleted and filled
+- [x] PROTO-066 · Layer groups are saved and can be renamed, deleted and filled
   Rows 3, 4, 39, 40 and 41 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): Cmd+G and Add a layer make groups that are never written and are gone after a reload, a group row has no rename, delete, ungroup or move, an empty layer cannot be removed, drawing into a locked group drops the shape in Ungrouped silently, and Shift click and the colour input may not work. Delete group removes the group and its shapes and Ungroup keeps the shapes, both undoable.
   Done when a spec groups shapes, renames, recolours, moves a shape in, ungroups, deletes a group with its shapes, undoes, and finds the result after a reload on the fake and the real API.
   Depends on PROTO-035. Size: M.
