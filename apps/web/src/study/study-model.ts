@@ -97,7 +97,7 @@ const cellGuard: TaskGuard = {
   stayOn: ["^/projects/{taskProject}/slides/{taskSlide}(/|$)"],
   where: "This task happens on the slide's cell findings screen. Stay on it until you are done.",
 };
-const areaNav = '[data-testid="area-nav"]';
+const areaVisits = '[data-testid="area-visits"]';
 
 export const defaultTasks: StudyTask[] = [
   {
@@ -119,7 +119,7 @@ export const defaultTasks: StudyTask[] = [
     slide: studySlide,
     startPath: liveSlide,
     targetSeconds: 60,
-    check: { selector: `${areaNav}:not([data-visited=""])` },
+    check: { selector: `${areaVisits}:not([data-visited=""])` },
   },
   {
     id: "t3",

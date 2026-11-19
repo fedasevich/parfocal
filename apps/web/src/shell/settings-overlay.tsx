@@ -2,7 +2,7 @@ import { useGetMyHome } from "@parfocal/api-client";
 import { useRouter, useSearch } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
-import { type SettingsSection, settingsSectionKeys } from "../screens/settings/sections.ts";
+import { type SettingsSection, settingsSectionKeys } from "../screens/settings/section-keys.ts";
 
 const SettingsScreen = lazy(async () => ({
   default: (await import("../screens/settings/settings-screen.tsx")).SettingsScreen,
