@@ -39,7 +39,9 @@ test("the Objects tab shows the summary, filters to open rows and decides T5 fro
   await expect(objects.getByTestId("object-row")).toHaveCount(1);
   await expect(objects.getByTestId("object-row-cells")).toContainText("6 open");
 
+  const before = await centre(page);
   await objects.locator('[data-testid="object-row"][data-object="T5"] button').click();
+  await expect.poll(() => centre(page), { timeout: 10_000 }).not.toBe(before);
   const card = page.getByTestId("object-foot");
   await expect(card).toHaveAttribute("data-object", "T5");
   await expect(card).toContainText("The AI says T5 is tumor, 52% sure.");

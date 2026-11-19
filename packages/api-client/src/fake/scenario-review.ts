@@ -399,3 +399,26 @@ export const outlinedCells: ScenarioReviewObject[] = [
   outlinedCell("C2", "Immune", 0.74, 520, 300),
   outlinedCell("C3", "Stroma", 0.58, 420, 520),
 ];
+
+const regionOutlines: Record<string, number[]> = {
+  T1: [140, 150, 330, 130, 380, 250, 300, 340, 160, 320],
+  T2: [560, 170, 760, 190, 790, 330, 610, 370],
+  T3: [430, 470, 600, 460, 630, 600, 450, 620],
+  T4: [180, 480, 290, 470, 300, 560, 190, 570],
+  T5: [760, 500, 840, 495, 850, 570, 770, 580],
+};
+
+const sampleColumns = 10;
+const sampleSpacing = 8;
+
+const sampledCellOutline = (index: number) => {
+  const x = 220 + (index % sampleColumns) * sampleSpacing;
+  const y = 200 + Math.floor(index / sampleColumns) * sampleSpacing;
+  return [x - 2.5, y - 2, x + 2, y - 2.5, x + 3, y + 1.5, x - 0.5, y + 3, x - 3, y + 1];
+};
+
+export const placedReviewObjects: ScenarioReviewObject[] = reviewObjects.map((item) => {
+  const cell = sampledCells.indexOf(item.object);
+  const outline = cell >= 0 ? sampledCellOutline(cell) : regionOutlines[item.object];
+  return outline === undefined ? item : { ...item, outline };
+});

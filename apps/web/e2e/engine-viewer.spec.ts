@@ -368,14 +368,17 @@ test("a result set's cells page in as outlines and its regions draw outside a ta
   await expect(cells).toHaveAttribute("data-drawn", "outlines");
 });
 
-test("inside a task a result set's cells stay dots and its regions are left to the task", async ({
+test("inside an annotate task a result set's cells stay dots and a review task draws only its sample", async ({
   page,
 }) => {
-  await page.goto(`${objectsViewer}&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?task=${annotateTask}&as=DH`);
   await ready(page);
-  const cells = page.locator(
-    '[data-testid="result-set-cells"][data-set="00000000-0000-4000-8006-000000000002"]',
-  );
-  await expect(cells).toHaveAttribute("data-drawn", "dots", { timeout: 15_000 });
+  const cells = page.getByTestId("result-set-cells");
+  await expect(cells.first()).toHaveAttribute("data-drawn", "dots", { timeout: 15_000 });
+  await expect(page.getByTestId("result-set-regions")).toHaveCount(0);
+  await page.goto(`${objectsViewer}&as=LM`);
+  await ready(page);
+  await expect(page.getByTestId("review-object-outlines")).not.toHaveAttribute("data-objects", "0");
+  await expect(cells).toHaveCount(0);
   await expect(page.getByTestId("result-set-regions")).toHaveCount(0);
 });

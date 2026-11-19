@@ -12955,6 +12955,7 @@ msgstr ""
 #: src/screens/admin/sections.tsx
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Result sets"
 msgstr ""
 
@@ -17953,6 +17954,7 @@ msgstr ""
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
 #: src/viewer/stage-minimap.tsx
+#: src/viewer/stage-slide-marks.tsx
 #: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr ""
