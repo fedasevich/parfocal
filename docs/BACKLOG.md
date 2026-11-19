@@ -6837,7 +6837,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-19 the owner found that See all in the notifications popover does nothing. Make it open a notifications page or a full height panel with every notification, read and unread, paged, with mark all read.
   Done when a spec clicks See all and finds the full list, paging and mark all read on the fake API and the real API e2e.
   Depends on PROTO-061. Size: S.
-- [ ] PROTO-078 · Disagreements draw the slide and adjudication works for real
+- [x] PROTO-078 · Disagreements draw the slide and adjudication works for real
   On 2026-11-19 the owner found the disagreements screen draws only outlines on an empty canvas with no slide image, Preview the adjudicator view is a dashed prototype button, and the adjudicator view at scene=adjudicate says Nothing is queued for you with an empty stage. Production must not carry mock views. Draw the slide region under each object, make Send to an adjudicator create a real queue, give the adjudicator a real route that lists and decides the queued objects on the slide, remove the preview button and the scene switch, and store each adjudication beside the reviewers' decisions.
   Done when a real API e2e spec makes a disagreement, sends it to an adjudicator, signs in as the adjudicator, decides it on a drawn slide, and the task's evaluation and sign off show the adjudication, and no disagreements route reads a scene parameter.
   Depends on PROTO-065. Size: M.
