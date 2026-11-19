@@ -295,7 +295,8 @@ async def test_the_owner_can_open_the_format_gallery(seeded: str) -> None:
         "JOIN users u ON u.id = pm.user_id WHERE u.email = 'owner@example.test'",
     )
     assert {(str(name), str(role)) for name, role in rows} == {
-        (workspace.gallery, "owner") for workspace in WORKSPACES
+        *((workspace.gallery, "owner") for workspace in WORKSPACES),
+        (WORKSPACES[0].clinical_study, "owner"),
     }
 
 

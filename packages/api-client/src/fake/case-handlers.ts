@@ -54,7 +54,8 @@ const slidesOfCase = (caseId: string): ScenarioSlide[] => {
   const found = cases.find((item) => item.id === caseId);
   if (found === undefined) return [];
   const clinical = clinicalCaseOf(caseId);
-  const borrowed = clinical !== undefined && found.project === clinicalProject;
+  const borrowed =
+    clinical !== undefined && found.project === clinicalProject && clinical.label !== found.label;
   const inCase = slides.filter((slide) =>
     borrowed
       ? slide.caseLabel === clinical.label && slide.project === "P07"

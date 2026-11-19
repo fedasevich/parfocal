@@ -2,6 +2,7 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import type { CreatedReportLink, ReportLink, SharedReport } from "../generated/api.ts";
 import { toTaskEvaluation } from "./adjudication-handlers.ts";
 import { people, projectByCode, reviewTasks } from "./scenario.ts";
+import { showcaseReportToken } from "./scenario-clinical.ts";
 
 type StoredLink = ReportLink & { token: string };
 
@@ -114,6 +115,10 @@ export function reportLinkHandlers(): RequestHandler[] {
       return new HttpResponse(null, { status: 204 });
     }),
     http.get("*/api/shared-reports/:token", ({ params }) => {
+      if (params.token === showcaseReportToken) {
+        const report = sharedReportOf(reviewTasks[0]?.id ?? "");
+        return report === null ? notFound() : HttpResponse.json(report);
+      }
       const links = readLinks();
       const link = [...links.values()].find((candidate) => candidate.token === params.token);
       if (link === undefined) return notFound();

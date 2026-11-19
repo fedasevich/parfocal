@@ -252,6 +252,7 @@ export const cases: ScenarioCase[] = [
   scenarioCase(6, "S26-04820", "P03", "Breast core biopsy, right", "Breast"),
   scenarioCase(7, "S26-04728", "P03", "Skin excision, back", "Skin"),
   scenarioCase(8, "S26-04733", "P11", "Colon biopsies, 4 sites", "GI"),
+  scenarioCase(9, "Showcase case", "P03", "Sentinel lymph nodes, left axilla", "Lymph nodes"),
 ];
 
 const slide = (
@@ -296,6 +297,11 @@ export const slides: ScenarioSlide[] = [
   slide(11, "P03", "S26-04728", "A1", "H&E"),
   slide(12, "P11", "S26-04733", "A1", "H&E"),
   slide(13, "P09", null, "LN-0141", "H&E"),
+  slide(21, "P03", "Showcase case", "CMU-1-Small-Region.svs", "H&E", {
+    file: "CMU-1-Small-Region.svs",
+  }),
+  slide(22, "P03", "Showcase case", "CMU-1.ndpi", "H&E", { file: "CMU-1.ndpi" }),
+  slide(23, "P03", "Showcase case", "Philips-4.tiff", "H&E", { file: "Philips-4.tiff" }),
 ];
 
 export const resultSets: ScenarioResultSet[] = [

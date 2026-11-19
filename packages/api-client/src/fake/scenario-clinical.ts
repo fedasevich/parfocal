@@ -43,6 +43,10 @@ export type SignRight = "own" | "any" | "never";
 
 export const clinicalProject = "P03" as const;
 
+export const showcaseCase = "Showcase case";
+
+export const showcaseReportToken = "showcase-shared-report";
+
 export const clinicalRoles: Record<string, "owner" | "reviewer" | "viewer"> = {
   LM: "owner",
   SM: "reviewer",
@@ -92,6 +96,13 @@ export type ClinicalCase = {
   deposits: Partial<Record<PersonKey, ClinicalDepositSeed[]>>;
   receivedAt: string;
   requestedBy: string;
+  signed?: ClinicalSigned;
+};
+
+export type ClinicalSigned = {
+  by: PersonKey;
+  at: string;
+  diagnosis: string;
 };
 
 const aiRegions = reviewObjects.filter((object) => object.kind === "region");
@@ -190,6 +201,34 @@ export const clinicalCases: ClinicalCase[] = [
     deposits: {},
     receivedAt: "14 Oct 2026 09:05",
     requestedBy: "MUDr. Pavel Kraus, ENT",
+  },
+  {
+    label: showcaseCase,
+    template: "sentinel-node",
+    slide: "CMU-1-Small-Region.svs",
+    specimen: "Sentinel lymph nodes, left axilla, excision",
+    site: "Lymph nodes, sentinel, left axilla, excision",
+    clinical: "Showcase case with gallery slides.",
+    assigned: ["LM"],
+    decisions: [],
+    cells: null,
+    examined: 2,
+    slides: ["CMU-1-Small-Region.svs", "CMU-1.ndpi", "Philips-4.tiff"].map((label, index) => ({
+      key: label,
+      id: slideOf(clinicalProject, showcaseCase, label).id,
+      label,
+      node: index + 1,
+      short: label.split(".")[0] ?? label,
+    })),
+    objects: [],
+    deposits: {},
+    receivedAt: "15 Oct 2026 08:30",
+    requestedBy: "Showcase seed",
+    signed: {
+      by: "LM",
+      at: "2026-10-16T10:00:00+02:00",
+      diagnosis: "Two sentinel lymph nodes, no metastatic carcinoma (0/2).",
+    },
   },
 ];
 

@@ -17,6 +17,7 @@ import type {
 import { cases, people, slides } from "./scenario.ts";
 import {
   type ClinicalCase,
+  type ClinicalSigned,
   canSignCase,
   clinicalCases,
   clinicalProject,
@@ -112,7 +113,37 @@ const caseItem = clinicalCaseOf;
 export const clinicalCaseId = (label: string) =>
   cases.find((item) => item.label === label && item.project === clinicalProject)?.id;
 
+const signedSeed = (stored: Stored, signed: ClinicalSigned): Stored => {
+  const done: Stored = {
+    ...stored,
+    category: "none",
+    extranodal: "na",
+    diagnosis: signed.diagnosis,
+  };
+  return {
+    ...done,
+    state: "signed",
+    versions: [
+      {
+        signature: {
+          number: 1,
+          signed_by_user_id: people[signed.by].id,
+          reported_by_user_id: null,
+          signed_at: signed.at,
+          reason: null,
+        },
+        values: valuesOf(done),
+      },
+    ],
+  };
+};
+
 const seedOf = (item: ClinicalCase): Stored => {
+  const draft = draftOf(item);
+  return item.signed === undefined ? draft : signedSeed(draft, item.signed);
+};
+
+const draftOf = (item: ClinicalCase): Stored => {
   const viewer = fakeView().viewer;
   const seeds = item.deposits[viewer] ?? item.deposits.LM ?? [];
   return {

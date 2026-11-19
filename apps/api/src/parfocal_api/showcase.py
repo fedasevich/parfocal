@@ -32,6 +32,7 @@ from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_
 from parfocal_api.sample_files import SampleFile, stored_facts
 from parfocal_api.seed_request import seed_request
 from parfocal_api.showcase_annotation import seed_annotation_example
+from parfocal_api.showcase_case import CASE_FILES, members_named, seed_showcase_case
 from parfocal_api.showcase_demo import (
     DemoSets,
     add_demo_sets,
@@ -1092,6 +1093,13 @@ async def seed(
                 )
         await seat_accounts(engine, tenant_ids, viewer_emails, SEEDED_VIEWER)
         await seat_accounts(engine, tenant_ids, agent_emails, SEEDED_AGENT)
+        case_facts = {
+            slide.file: gallery_facts(
+                slide, facts, await stored_facts(store, fixture_folder(slide.file))
+            )
+            for slide in FORMAT_GALLERY
+            if slide.file in CASE_FILES
+        }
         for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True):
             owner = owners.get(tenant_id)
             if owner is not None:
@@ -1099,48 +1107,42 @@ async def seed(
                     engine,
                     Seeded(tenant_id, await people_of(engine, tenant_id), owner),
                     results,
-                    workspace.gallery,
+                    workspace,
                     agent_emails,
+                    case_facts if workspace is WORKSPACES[0] else None,
                 )
         return tenant_ids
     finally:
         await engine.dispose()
 
 
-async def members_named(
-    engine: Any, tenant_id: uuid.UUID, emails: Sequence[str]
-) -> list[uuid.UUID]:
-    if not emails:
-        return []
-    async with scoped_transaction(engine, DatabaseScope(platform=True, auth=True)) as connection:
-        found = await connection.scalars(
-            select(users.c.id)
-            .join(memberships, memberships.c.user_id == users.c.id)
-            .where(
-                memberships.c.tenant_id == tenant_id,
-                func.lower(users.c.email).in_([email.strip().lower() for email in emails]),
-            )
-            .order_by(users.c.email)
-        )
-        return list(found.all())
-
-
 async def seed_example(
-    engine: Any, seeded: Seeded, results: ResultStore, gallery: str, agent_emails: Sequence[str]
+    engine: Any,
+    seeded: Seeded,
+    results: ResultStore,
+    workspace: Workspace,
+    agent_emails: Sequence[str],
+    case_facts: Mapping[str, Mapping[str, Any]] | None,
 ) -> None:
     assert seeded.owner is not None
     agents = await members_named(engine, seeded.tenant_id, agent_emails)
+    creator = principal_of(seeded, "ada", Role.RESEARCHER, True)
+    owner = MemberPrincipal(OWNER_SUBJECT, seeded.tenant_id, seeded.owner, Role.RESEARCHER, True)
     async with scoped_transaction(
         engine, DatabaseScope(tenant_id=seeded.tenant_id, user_id=seeded.people["ada"])
     ) as connection:
         await seed_annotation_example(
-            connection,
-            principal_of(seeded, "ada", Role.RESEARCHER, True),
-            MemberPrincipal(OWNER_SUBJECT, seeded.tenant_id, seeded.owner, Role.RESEARCHER, True),
-            results,
-            gallery,
-            [seeded.owner, *agents],
+            connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents]
         )
+        made = (
+            None
+            if case_facts is None
+            else await seed_showcase_case(
+                connection, creator, owner, results, workspace.clinical_study, case_facts, agents
+            )
+        )
+    if made is not None:
+        print(f"shared report link for {workspace.clinical_study}: {made.shared_url}")
 
 
 async def unpublished_gallery(store: ObjectStore) -> list[str]:
