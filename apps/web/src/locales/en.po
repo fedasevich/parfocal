@@ -288,6 +288,11 @@ msgstr "{0, plural, one {# object is still open.} other {# objects are still ope
 msgid "{0, plural, one {# object selected} other {# objects selected}}"
 msgstr "{0, plural, one {# object selected} other {# objects selected}}"
 
+#. placeholder {0}: adjudicated.length
+#: src/screens/evaluation/evaluation-screen.tsx
+msgid "{0, plural, one {# object} other {# objects}}"
+msgstr "{0, plural, one {# object} other {# objects}}"
+
 #. placeholder {0}: missing.length
 #: src/screens/review/first-read.tsx
 msgid "{0, plural, one {# required question is not answered.} other {# required questions are not answered.}}"
@@ -297,6 +302,11 @@ msgstr "{0, plural, one {# required question is not answered.} other {# required
 #: src/screens/new-task/new-task-screen.tsx
 msgid "{0, plural, one {# reviewer} other {# reviewers}}"
 msgstr "{0, plural, one {# reviewer} other {# reviewers}}"
+
+#. placeholder {0}: row.reviewer_decisions
+#: src/screens/disagreements/adjudication-rows.tsx
+msgid "{0, plural, one {Kept beside # reviewer decision} other {Kept beside # reviewer decisions}}"
+msgstr "{0, plural, one {Kept beside # reviewer decision} other {Kept beside # reviewer decisions}}"
 
 #. placeholder {0}: tier.model
 #: ../../packages/ui/src/components/viewer-tools.tsx
@@ -3266,6 +3276,12 @@ msgstr "Adjudication"
 msgid "Adjudication · {0}"
 msgstr "Adjudication · {0}"
 
+#: src/screens/disagreements/adjudication-rows.tsx
+#: src/screens/evaluation/evaluation-screen.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "Adjudications"
+msgstr "Adjudications"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Adjustments"
 msgstr "Adjustments"
@@ -6037,6 +6053,10 @@ msgstr "Decline"
 #: src/screens/admin/template-offers.tsx
 msgid "Decline {0}"
 msgstr "Decline {0}"
+
+#: src/screens/disagreements/adjudication-rows.tsx
+msgid "Declined"
+msgstr "Declined"
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Declined:"
@@ -9635,10 +9655,6 @@ msgstr "mm"
 msgid "Mock only"
 msgstr "Mock only"
 
-#: src/screens/disagreements/queue-screen.tsx
-msgid "Mock persona switch"
-msgstr "Mock persona switch"
-
 #: src/screens/developer/developer-screen.tsx
 msgid "Mode"
 msgstr "Mode"
@@ -12345,10 +12361,6 @@ msgstr "Preview of {title}"
 msgid "Preview of the report"
 msgstr "Preview of the report"
 
-#: src/screens/disagreements/queue-screen.tsx
-msgid "Preview the adjudicator view"
-msgstr "Preview the adjudicator view"
-
 #: src/screens/clinical-report/steps.tsx
 msgid "Preview the page"
 msgstr "Preview the page"
@@ -14012,6 +14024,10 @@ msgstr "See the Methods block"
 #: src/viewer/stage-guided-view.tsx
 msgid "See the whole slide"
 msgstr "See the whole slide"
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "See them in the disagreements"
+msgstr "See them in the disagreements"
 
 #. placeholder {0}: person.name
 #: src/presence/viewing-now.tsx
@@ -17798,6 +17814,7 @@ msgid "Wait for an invite from a researcher"
 msgstr "Wait for an invite from a researcher"
 
 #: src/screens/clinical-report/steps.tsx
+#: src/screens/disagreements/adjudication-rows.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "Waiting"
 msgstr "Waiting"
