@@ -135,6 +135,9 @@ export function EngineViewer({
         overview={session.overview}
         units={session.module}
         surface={cells ? "cells" : "viewer"}
+        guided={guided}
+        seenPercent={percent}
+        {...(reviewTask === null ? {} : { review: { taskId: reviewTask, current: currentObject } })}
         onOpen={openPeek}
       />
       <StageResultCells
