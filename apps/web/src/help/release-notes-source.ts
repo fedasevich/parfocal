@@ -1,4 +1,6 @@
 import changelog from "../../../../CHANGELOG.md?raw";
-import { parseReleases } from "./release-notes.ts";
+import { newestVersion, parseReleases } from "./release-notes.ts";
 
-export const latestReleases = parseReleases(changelog, 2);
+export const allReleases = parseReleases(changelog);
+
+export const appVersion = newestVersion(changelog);

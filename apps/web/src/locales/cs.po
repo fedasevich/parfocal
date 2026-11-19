@@ -18270,6 +18270,10 @@ msgstr ""
 msgid "You are not in a workspace yet"
 msgstr ""
 
+#: src/help/help-dialog.tsx
+msgid "You are running {appVersion}"
+msgstr ""
+
 #: src/screens/clinical-report/report-screen.tsx
 msgid "You are told when it is signed or returned."
 msgstr ""

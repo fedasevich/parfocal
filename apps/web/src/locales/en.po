@@ -18279,6 +18279,10 @@ msgstr "You are not a member of {projectName}. Its owner is {ownerName}."
 msgid "You are not in a workspace yet"
 msgstr "You are not in a workspace yet"
 
+#: src/help/help-dialog.tsx
+msgid "You are running {appVersion}"
+msgstr "You are running {appVersion}"
+
 #: src/screens/clinical-report/report-screen.tsx
 msgid "You are told when it is signed or returned."
 msgstr "You are told when it is signed or returned."
