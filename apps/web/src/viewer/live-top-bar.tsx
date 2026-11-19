@@ -39,6 +39,41 @@ function facts(load: CaseLoad, task: ReviewTaskDetail | undefined): string[] {
   ];
 }
 
+function GuidedSlideChip({
+  slideId,
+  label,
+  position,
+  total,
+}: {
+  slideId: string;
+  label: string;
+  position: number | undefined;
+  total: number | undefined;
+}) {
+  const { t } = useLingui();
+  return (
+    <span
+      data-testid="guided-slide-chip"
+      title={
+        position === undefined || total === undefined
+          ? t`Submit opens the next slide`
+          : t`Slide ${position} of ${total}. Submit opens the next one`
+      }
+      className="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-ctl border border-line bg-chrome-2 pr-3 pl-1.5 text-fg"
+    >
+      <span
+        aria-hidden="true"
+        data-slot="slide-thumb"
+        className="h-6.5 w-9 shrink-0 rounded-[4px] bg-[#f1eef2] bg-cover bg-center"
+        style={{ backgroundImage: `url(${slideThumbUrl(slideId)})` }}
+      />
+      <b className="max-w-56 truncate text-body-sm font-semibold" data-phi="">
+        {label}
+      </b>
+    </span>
+  );
+}
+
 function SlidePicker({
   list,
   slideId,
@@ -163,12 +198,13 @@ function TopBar({
   return (
     <header
       data-testid="live-top-bar"
-      className="flex h-11 shrink-0 items-center gap-3 border-line border-b bg-chrome px-3 text-body-sm"
+      data-guided={guided || undefined}
+      className={`flex shrink-0 items-center gap-3 border-line border-b bg-chrome px-3 text-body-sm ${guided ? "h-16" : "h-11"}`}
     >
       <Link
         to="/my-work"
         title={t`Back to My work. Every answer is saved`}
-        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-ctl px-2 font-medium text-fg-dim no-underline hover:text-fg"
+        className={`inline-flex shrink-0 items-center gap-1.5 rounded-ctl px-2 font-medium ${guided ? "h-10" : "h-8"} text-fg-dim no-underline hover:text-fg`}
       >
         <Icon name="back" />
         <span>
@@ -188,19 +224,28 @@ function TopBar({
             {load ? facts(load, task).join(" · ") : ""}
           </small>
         </div>
-        <SlidePicker list={list} slideId={slideId} label={slideLabel}>
-          <LiveSlidesPopover
-            projectId={projectId}
+        {guided ? (
+          <GuidedSlideChip
             slideId={slideId}
-            slideLabel={load?.slide?.label ?? slideLabel}
-            list={list}
-            slides={projectSlides}
-            load={load}
-            task={task}
-            onPick={onOpenSlide}
-            onResultSets={onResultSets}
+            label={slideLabel}
+            position={neighbours?.position}
+            total={neighbours?.total}
           />
-        </SlidePicker>
+        ) : (
+          <SlidePicker list={list} slideId={slideId} label={slideLabel}>
+            <LiveSlidesPopover
+              projectId={projectId}
+              slideId={slideId}
+              slideLabel={load?.slide?.label ?? slideLabel}
+              list={list}
+              slides={projectSlides}
+              load={load}
+              task={task}
+              onPick={onOpenSlide}
+              onResultSets={onResultSets}
+            />
+          </SlidePicker>
+        )}
       </div>
       <span
         data-testid="slide-progress"
@@ -227,6 +272,7 @@ function TopBar({
         aria-label={t`How to review`}
         data-testid="workspace-switch"
         className="shrink-0"
+        {...(guided ? { size: "lg" as const } : {})}
         value={guided ? "guided" : workspace}
         onValueChange={(next: string) => {
           if (next === "guided" && task !== undefined) {
@@ -264,11 +310,15 @@ function TopBar({
         <Button
           variant="primary"
           data-testid="top-submit"
+          {...(guided ? { size: "lg" as const } : {})}
           disabled={review === undefined || review.submitReason !== undefined}
           title={
             review === undefined
               ? t`Opening the objects of this slide`
-              : (review.submitReason ?? t`Open the Slide done card in the Opinion tab`)
+              : (review.submitReason ??
+                (guided
+                  ? t`Open the Slide done card in the Review tab`
+                  : t`Open the Slide done card in the Opinion tab`))
           }
           onClick={onSubmit}
         >
