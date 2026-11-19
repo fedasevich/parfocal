@@ -2,6 +2,18 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.24.0 (2026-11-19)
+
+### Features
+
+- AISEG-024: Best one-click outlines use a live ViT-L embedding from the server
+- AISEG-024: Merge main and move the view embedding route onto polled GPU calls
+
+### Docs
+
+- OPS-038: Log the v0.23.0 and v0.23.1 deploys
+- AISEG-024: Number ADR 0405, log and move to review after merge
+
 ## v0.23.1 (2026-11-19)
 
 ### Fixes
