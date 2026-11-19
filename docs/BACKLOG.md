@@ -4968,6 +4968,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The browser timing budgets from ADR 0353 (main path budgets are a p95 after a warm up) ran inside the sharded web browser job beside a second Playwright worker, so on 2026-11-19 decision-next-object measured 130 and 163 ms against its 126 ms limit on a shard that ran 32% slower, while local and container benches showed no regression (42 to 48 ms). Tag the budget tests `@budget`, leave them out of the sharded run in CI, and run them alone with one worker after shard 1 of the web job.
   Done when the decision-next-object and auto-region budget tests carry the `@budget` tag, the sharded CI run skips them, a single worker step runs only them in CI, and `playwright test --grep @budget --workers=1` passes locally.
   Depends on TEST-050. Size: S.
+- [ ] TEST-053 · The seed gives audits a task, a case, a finished job and a broken slide
+  Row 37 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed gives the agent account no task, has no case so the case page, clinical report and co-sign cannot be reached, no finished job so Jobs is empty, and no broken slide to raise the open failure alert.
+  Done when a seed test finds for the agent account one review task, one annotate task, one case with a report, one finished job and one slide that fails to open, and the next reset shows them.
+  Depends on TEST-051. Size: S.
 
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
@@ -6773,6 +6777,54 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   In the Cells in your sample strip the hint says the arrow keys pick a cell, but they only nudge the camera. Decide with the Fable adviser whether arrows always step between cells while the strip has focus, or whether a setting chooses, and build it so the picked cell is outlined and the camera centres on it.
   Done when a spec presses the arrow keys in the strip and the picked cell moves one step each press and the camera centres on it, and the hint matches the keys.
   Depends on PROTO-034. Size: S.
+- [ ] PROTO-064 · An annotate task can be created from its stepper
+  Row 1 and row 22 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the last step's Send to experts button does nothing because its handler returns undefined, and the stepper ticks every slide and every person, including the viewer test accounts, with no name or due date.
+  Done when a spec walks the stepper on the fake API and on the real API e2e, the task is created and opens, nothing is ticked by default except what the user picks, and the form asks for a name and offers a due date.
+  Depends on PROTO-030. Size: S.
+- [ ] PROTO-065 · A new review task becomes ready on the deployed app
+  Row 2 and row 19 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): a review task made in the form stays on Preparing this slide, its objects call answering 409 review-order-not-ready 50 minutes later, the screen has no way back, and its tabs read blank or Slide 5 is done.
+  Done when the review order is built for a new task on the deployed app within a minute, the guided screen polls with a visible state, a back link and a retry, the tabs say the order is being prepared, and a real API e2e spec makes a task and reviews one object.
+  Depends on OPS-038. Size: M.
+- [ ] PROTO-066 · Layer groups are saved and can be renamed, deleted and filled
+  Rows 3, 4, 39, 40 and 41 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): Cmd+G and Add a layer make groups that are never written and are gone after a reload, a group row has no rename, delete, ungroup or move, an empty layer cannot be removed, drawing into a locked group drops the shape in Ungrouped silently, and Shift click and the colour input may not work. Delete group removes the group and its shapes and Ungroup keeps the shapes, both undoable.
+  Done when a spec groups shapes, renames, recolours, moves a shape in, ungroups, deletes a group with its shapes, undoes, and finds the result after a reload on the fake and the real API.
+  Depends on PROTO-035. Size: M.
+- [ ] PROTO-067 · AI objects in an annotate task can be confirmed, deleted and undone
+  Row 5 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): after Add the run, every confirm answers 404 unknown-object because the object is not in the result set the call names, and delete and undo answer 404 on ai-changes.
+  Done when a real API e2e spec adds a run to an annotate task, confirms, deletes and undoes AI objects, and the counters follow.
+  Depends on PROTO-035. Size: S.
+- [ ] PROTO-068 · Draw layers stay inside the stage and the stage parts never overlap
+  Rows 6, 12, 13 and 43 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): AI outlines paint over the top bar and tool rail because nothing clips the stage, the guided minimap hangs 11 px below the window and covers the type bar, the Whole slide button overlaps the magnification bar, and the cells grid, type bar and magnification bar overlap, while the minimap vanishes at small windows.
+  Done when stage-top-stack and a new overlap spec measure every stage part with no two intersecting and none outside the stage at 1440 by 900, 1280 by 800 and 1024 by 700, in the full viewer, guided review and the cells grid.
+  Depends on PROTO-060. Size: S.
+- [ ] PROTO-069 · Cells and outlines can be typed and an AI cell can be picked
+  Rows 7, 8, 10 and 42 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed project with the cell results has no classes so digits do nothing and cells read No type with no reason given, a digit does not re-class a selected outline, an AI cell cannot be picked or show its ID, type and score, and K and X carry two names in cell review.
+  Done when the seed gives every project with cells its classes, an empty class list shows how to add classes, digits re-class the selection and persist, a click picks an AI cell and shows its ID, type and score, K and X have one name, with specs for each.
+  Depends on TEST-051. Size: M.
+- [ ] PROTO-070 · Compare slides opens on the deployed app
+  Row 9 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): Compare slides goes to scene=picking, drops the workspace and stays on Loading the slide.
+  Done when a spec opens compare from the tool rail on the fake API and the real API e2e, picks a second slide and both draw.
+  Depends on VIEW-075. Size: S.
+- [ ] PROTO-071 · Sizes read right when the pixel size is unknown or small
+  Rows 14, 15, 16 and 17 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): areas read 0.00 mm with a size category when the slide has no pixel size, small regions read 0.0 mm, an empty range reads -Infinity mm to Infinity mm, and drawn shapes are listed as Measurements with No category.
+  Done when sizes show in micrometres below 1 mm, a slide without a pixel size shows pixels and says why, empty ranges read None, drawn shapes list under their class, with unit tests.
+  Depends on PROTO-047. Size: S.
+- [ ] PROTO-072 · People not assigned to a task see it read only
+  Row 11 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): someone not assigned gets live answer buttons, each refused with 403 not-assigned while the card moves on, and row 31: raw codes such as not-assigned and unknown-object reach the screen.
+  Done when a spec opens another reviewer's task and finds no answer controls and a read only note, and every refused action shows a plain sentence.
+  Depends on PROTO-033. Size: S.
+- [ ] PROTO-073 · Guided steps and Smart select stay in sensible bounds
+  Rows 24 and 26 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): guided steps zoom to 118x and 321x on slides scanned at 20x or 40x, and Smart select with Best keeps saying Best is not answering yet with no end.
+  Done when guided steps stop at the slide's scan power, and Smart select ends its Best wait with the Good outline or a clear message within a set time, with specs.
+  Depends on AISEG-024. Size: S.
+- [ ] PROTO-074 · Every place that shows a slide opens it in the full viewer
+  The full viewer entry points section and rows 20, 21, 23 and 34 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): task rows, Team, disagreements, evaluation crops and finished jobs have no way into the viewer, slide rows are buttons so they cannot open in a new tab, a failed import counts as a model in the report, due dates differ between Team and the project, and Automatic imports opens Upload.
+  Done when each listed place links to the viewer at the slide or object, slide rows are links, the report skips failed imports, due dates agree, Automatic imports opens its settings, with specs.
+  Depends on PROTO-058. Size: M.
+- [ ] PROTO-075 · Smaller viewer and wording fixes from the audit
+  Rows 18, 25, 27, 28, 29, 30, 32, 33, 35 and 38 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the Opinion tab outside review tasks, no notice for importing or failed result sets, two tissue progress controls, no finish control in the annotate top bar, a never opened task shown as continued, the comments route without a slide, 1 slides, wrapping Objects rows, the sign off route for a signed task, and the ignored tab parameter.
+  Done when each row has a spec or unit test and reads right on the fake API.
+  Depends on PROTO-060. Size: M.
 
 ---
 

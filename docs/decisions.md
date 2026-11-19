@@ -28,6 +28,15 @@ PROTO-063 (arrow keys move between cells in the sample cells strip) now steps th
 
 Your choice:
 
+### 162. Whether annotator and read-only viewer are roles of their own
+
+The audit of the deployed app on 2026-11-19 found two roles, Researcher and Reviewer, plus admin rights. The seeded viewer accounts are Reviewers, so they get answer buttons on tasks they are not assigned to, which PROTO-072 (people not assigned see a task read only) hides either way. The thesis assignment asks for defined user roles.
+
+- A. Keep two roles and admin rights, and show a table of what each may do in Admin.
+- B. Add Annotator (draws and types, no review decisions) and Viewer (reads only) beside Researcher and Reviewer, with the same table. Recommended, because the thesis names annotation experts and the seeded viewer accounts need a role that matches them.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.
