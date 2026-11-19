@@ -27,6 +27,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { closeOn, ReasonModal, useSignature } from "../clinical-report/modals.tsx";
+import { AdjudicationRows, useTaskAdjudications } from "../disagreements/adjudication-rows.tsx";
 import { headlineTiles } from "../evaluation/numbers.ts";
 import { andJoin } from "../format.ts";
 import { ProjectBackground } from "../jobs/project-background.tsx";
@@ -89,6 +90,20 @@ function SignOffModal({
 
   const summary = okData(useGetSignOffSummary(taskId).data);
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
+  const adjudicated = useTaskAdjudications(taskId);
+  const adjudicationZone = adjudicated.length ? (
+    <SmallModalZone title={t`Adjudications`}>
+      <AdjudicationRows rows={adjudicated} />
+      <Button
+        size="sm"
+        variant="ghost"
+        className="justify-self-start"
+        onClick={() => void navigate({ to: "/tasks/$taskId/disagreements", params: { taskId } })}
+      >
+        <Trans>See them in the disagreements</Trans>
+      </Button>
+    </SmallModalZone>
+  ) : null;
   const me = okData(useGetMe().data);
   const person = usePeople();
   const navigate = useNavigate();
@@ -190,6 +205,7 @@ function SignOffModal({
               ]}
             />
           </SmallModalZone>
+          {adjudicationZone}
           {summary.next_version ? (
             <SmallModalZone title={t`Next version`}>
               <ChangeLine
@@ -405,6 +421,7 @@ function SignOffModal({
         <SmallModalZone title={t`Results`}>
           <MetricTiles variant="panel" tiles={evaluation ? headlineTiles(evaluation) : []} />
         </SmallModalZone>
+        {adjudicationZone}
         <SmallModalZone title={t`What signing does`}>
           <p className="m-0 text-body-sm leading-[1.5] text-fg">
             <Trans>

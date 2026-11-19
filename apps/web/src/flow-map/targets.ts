@@ -65,11 +65,9 @@ export function targetFor(screen: WalkScreen, ids: ScenarioIds, options: TargetO
     case "team":
       return linkOptions({ to: "/team", search: { scene: sceneIn("team", scene), as } });
     case "disagree":
-      return linkOptions({
-        to: "/tasks/$taskId/disagreements",
-        params: task,
-        search: { scene: sceneIn("disagree", scene), as },
-      });
+      return scene === "adjudicate" || scene === "adjdone"
+        ? linkOptions({ to: "/tasks/$taskId/adjudicate", params: task, search: { as } })
+        : linkOptions({ to: "/tasks/$taskId/disagreements", params: task, search: { as } });
     case "signoff":
       return linkOptions({
         to: "/tasks/$taskId/sign-off",

@@ -207,10 +207,6 @@ export const signUpSearch = lenientSearch({
   scene: sceneField(onboardingScenes.signup, ["form", "verify"]),
 });
 
-export const disagreementsSearch = lenientSearch({
-  scene: sceneField(mockScenes.disagree, ["adjudicate"]),
-});
-
 export const signInSearch = lenientSearch({
   scene: sceneField(onboardingScenes.signin, [
     "email",

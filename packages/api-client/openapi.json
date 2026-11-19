@@ -42062,6 +42062,130 @@
         },
         "x-permission": "create-cases",
         "x-permission-write": true
+      },
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "List Task Adjudications",
+        "operationId": "listTaskAdjudications",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskAdjudication"
+                  },
+                  "title": "Response Listtaskadjudications"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases"
       }
     },
     "/api/adjudications/objects": {
@@ -82980,6 +83104,68 @@
           "source"
         ],
         "title": "TargetKind"
+      },
+      "TaskAdjudication": {
+        "properties": {
+          "adjudication_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Adjudication Id"
+          },
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "slide_label": {
+            "type": "string",
+            "title": "Slide Label"
+          },
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "adjudicator_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Adjudicator User Id"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "declined": {
+            "type": "boolean",
+            "title": "Declined"
+          },
+          "reviewer_decisions": {
+            "type": "integer",
+            "title": "Reviewer Decisions"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdjudicatorDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "adjudication_id",
+          "slide_id",
+          "slide_label",
+          "object",
+          "adjudicator_user_id",
+          "sent_at",
+          "declined",
+          "reviewer_decisions"
+        ],
+        "title": "TaskAdjudication"
       },
       "TaskChange": {
         "properties": {

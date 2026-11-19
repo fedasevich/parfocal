@@ -1,18 +1,6 @@
 import { linkOptions } from "@tanstack/react-router";
 import { mockScenes } from "../scenes.ts";
 
-const queueNotes: Record<(typeof mockScenes.disagree)[number], [string, string]> = {
-  queue: ["Disagreements", "Daniel's queue of 7 objects in RT-14"],
-  selected: ["Disagreements · three selected", "T4, T5 and T1·C145 checked"],
-  sendadj: ["Disagreements · send to an adjudicator", "The Send to an adjudicator modal"],
-  sent: ["Disagreements · with the adjudicator", "Three objects with Anna Kopecká"],
-  adjudicate: ["Adjudication · first object", "Anna decides T4 with Reviewer A and B"],
-  adjdone: ["Adjudication · all decided", "Anna has decided all three"],
-  lockedqueue: ["Disagreements · locked", "Issue, the queue waits for Simona's last slides"],
-  declined: ["Disagreements · declined", "Issue, Anna declined the three objects"],
-  edited: ["Disagreements · edited", "Issue, T2 was redrawn after both reviewers decided"],
-};
-
 const signOffNotes: Record<(typeof mockScenes.signoff)[number], [string, string]> = {
   blocked: ["Sign-off · blockers", "Issue, reviews and disagreements still open"],
   ready: ["Sign-off · ready", "Ready to sign RT-14 with single sign-on"],
@@ -32,12 +20,18 @@ const evaluationNotes: Record<(typeof mockScenes.evaluation)[number], [string, s
 export function disagreementPrototypeLinks(taskId: string) {
   const params = { taskId };
   return [
-    ...mockScenes.disagree.map((scene) => ({
-      key: `disagree-${scene}`,
-      label: queueNotes[scene][0],
-      note: queueNotes[scene][1],
-      link: linkOptions({ to: "/tasks/$taskId/disagreements", params, search: { scene } }),
-    })),
+    {
+      key: "disagree-queue",
+      label: "Disagreements",
+      note: "The queue of objects the reviewers disagree on",
+      link: linkOptions({ to: "/tasks/$taskId/disagreements", params }),
+    },
+    {
+      key: "adjudicate",
+      label: "Adjudication",
+      note: "The objects a researcher sent to the signed-in person",
+      link: linkOptions({ to: "/tasks/$taskId/adjudicate", params }),
+    },
     ...mockScenes.signoff.map((scene) => ({
       key: `signoff-${scene}`,
       label: signOffNotes[scene][0],

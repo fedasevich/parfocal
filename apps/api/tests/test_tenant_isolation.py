@@ -2309,6 +2309,10 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements/adjudicators",
     ),
+    "listTaskAdjudications": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements/adjudications",
+    ),
     "listAdjudicationObjects": Route(Exposure.TENANT, lambda _: "/api/adjudications/objects"),
     "listMyAdjudications": Route(Exposure.TENANT, lambda _: "/api/adjudications"),
     "listMembers": Route(

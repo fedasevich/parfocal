@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type EvaluationReport,
@@ -30,6 +31,7 @@ import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { AdjudicationRows, useTaskAdjudications } from "../disagreements/adjudication-rows.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useScreenToast } from "../project/screen-toast.tsx";
@@ -91,6 +93,7 @@ function EvaluationBody({
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
   const countsAsChanges = okData(useGetReviewTask(taskId).data)?.counts_as_changes;
   const queue = okData(useGetDisagreementQueue(taskId).data)?.rows ?? [];
+  const adjudicated = useTaskAdjudications(taskId);
   const logged = okData(useListEvaluationChanges(taskId).data);
   const changes = (logged?.changes ?? []).filter(
     (change) => change.version === logged?.signed_version,
@@ -450,6 +453,15 @@ function EvaluationBody({
               </Button>
               <ShareLinks taskId={taskId} taskCode={report.task_code} />
             </FoldingZone>
+            {adjudicated.length ? (
+              <FoldingZone
+                title={t`Adjudications`}
+                summary={plural(adjudicated.length, { one: "# object", other: "# objects" })}
+                defaultOpen
+              >
+                <AdjudicationRows rows={adjudicated} />
+              </FoldingZone>
+            ) : null}
           </aside>
         </div>
       )}

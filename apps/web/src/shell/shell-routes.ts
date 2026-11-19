@@ -26,12 +26,6 @@ export const foldedShellRouteIds: ReadonlySet<string> = new Set<string>([
   "/tasks/$taskId/evaluation",
 ]);
 
-const outsideShellScenes: Readonly<Record<string, ReadonlySet<string>>> = {
-  "/tasks/$taskId/disagreements": new Set(["adjudicate", "adjdone"]),
-};
-
-export function inGlobalShell(match: { routeId: string; search: unknown }): boolean {
-  if (!shellRouteIds.has(match.routeId)) return false;
-  const scene = (match.search as { scene?: unknown } | undefined)?.scene;
-  return !(typeof scene === "string" && outsideShellScenes[match.routeId]?.has(scene));
+export function inGlobalShell(match: { routeId: string }): boolean {
+  return shellRouteIds.has(match.routeId);
 }

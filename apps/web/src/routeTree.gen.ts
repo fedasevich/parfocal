@@ -39,6 +39,7 @@ import { Route as FlowMapWalkthroughChapterRouteImport } from "./routes/flow-map
 import { Route as ProjectsProjectIdIndexRouteImport } from "./routes/projects.$projectId.index.tsx";
 import { Route as ProjectsProjectIdRunModelRouteImport } from "./routes/projects.$projectId.run-model.tsx";
 import { Route as ProjectsProjectIdUploadRouteImport } from "./routes/projects.$projectId.upload.tsx";
+import { Route as TasksTaskIdAdjudicateRouteImport } from "./routes/tasks.$taskId.adjudicate.tsx";
 import { Route as TasksTaskIdCellsRouteImport } from "./routes/tasks.$taskId.cells.tsx";
 import { Route as TasksTaskIdCommentsRouteImport } from "./routes/tasks.$taskId.comments.tsx";
 import { Route as TasksTaskIdDisagreementsRouteImport } from "./routes/tasks.$taskId.disagreements.tsx";
@@ -210,6 +211,11 @@ const ProjectsProjectIdUploadRoute = ProjectsProjectIdUploadRouteImport.update({
   path: "/projects/$projectId/upload",
   getParentRoute: () => rootRouteImport,
 } as any);
+const TasksTaskIdAdjudicateRoute = TasksTaskIdAdjudicateRouteImport.update({
+  id: "/tasks/$taskId/adjudicate",
+  path: "/tasks/$taskId/adjudicate",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const TasksTaskIdCellsRoute = TasksTaskIdCellsRouteImport.update({
   id: "/tasks/$taskId/cells",
   path: "/tasks/$taskId/cells",
@@ -342,6 +348,7 @@ export interface FileRoutesByFullPath {
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
   "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
   "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
+  "/tasks/$taskId/adjudicate": typeof TasksTaskIdAdjudicateRoute;
   "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
   "/tasks/$taskId/comments": typeof TasksTaskIdCommentsRoute;
   "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
@@ -392,6 +399,7 @@ export interface FileRoutesByTo {
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
   "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
   "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
+  "/tasks/$taskId/adjudicate": typeof TasksTaskIdAdjudicateRoute;
   "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
   "/tasks/$taskId/comments": typeof TasksTaskIdCommentsRoute;
   "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
@@ -443,6 +451,7 @@ export interface FileRoutesById {
   "/flow-map/walkthrough/$chapter": typeof FlowMapWalkthroughChapterRoute;
   "/projects/$projectId/run-model": typeof ProjectsProjectIdRunModelRoute;
   "/projects/$projectId/upload": typeof ProjectsProjectIdUploadRoute;
+  "/tasks/$taskId/adjudicate": typeof TasksTaskIdAdjudicateRoute;
   "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
   "/tasks/$taskId/comments": typeof TasksTaskIdCommentsRoute;
   "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
@@ -495,6 +504,7 @@ export interface FileRouteTypes {
     | "/flow-map/walkthrough/$chapter"
     | "/projects/$projectId/run-model"
     | "/projects/$projectId/upload"
+    | "/tasks/$taskId/adjudicate"
     | "/tasks/$taskId/cells"
     | "/tasks/$taskId/comments"
     | "/tasks/$taskId/disagreements"
@@ -545,6 +555,7 @@ export interface FileRouteTypes {
     | "/flow-map/walkthrough/$chapter"
     | "/projects/$projectId/run-model"
     | "/projects/$projectId/upload"
+    | "/tasks/$taskId/adjudicate"
     | "/tasks/$taskId/cells"
     | "/tasks/$taskId/comments"
     | "/tasks/$taskId/disagreements"
@@ -595,6 +606,7 @@ export interface FileRouteTypes {
     | "/flow-map/walkthrough/$chapter"
     | "/projects/$projectId/run-model"
     | "/projects/$projectId/upload"
+    | "/tasks/$taskId/adjudicate"
     | "/tasks/$taskId/cells"
     | "/tasks/$taskId/comments"
     | "/tasks/$taskId/disagreements"
@@ -646,6 +658,7 @@ export interface RootRouteChildren {
   FlowMapWalkthroughChapterRoute: typeof FlowMapWalkthroughChapterRoute;
   ProjectsProjectIdRunModelRoute: typeof ProjectsProjectIdRunModelRoute;
   ProjectsProjectIdUploadRoute: typeof ProjectsProjectIdUploadRoute;
+  TasksTaskIdAdjudicateRoute: typeof TasksTaskIdAdjudicateRoute;
   TasksTaskIdCellsRoute: typeof TasksTaskIdCellsRoute;
   TasksTaskIdCommentsRoute: typeof TasksTaskIdCommentsRoute;
   TasksTaskIdDisagreementsRoute: typeof TasksTaskIdDisagreementsRoute;
@@ -880,6 +893,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof ProjectsProjectIdUploadRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/tasks/$taskId/adjudicate": {
+      id: "/tasks/$taskId/adjudicate";
+      path: "/tasks/$taskId/adjudicate";
+      fullPath: "/tasks/$taskId/adjudicate";
+      preLoaderRoute: typeof TasksTaskIdAdjudicateRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/tasks/$taskId/cells": {
       id: "/tasks/$taskId/cells";
       path: "/tasks/$taskId/cells";
@@ -1038,6 +1058,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlowMapWalkthroughChapterRoute: FlowMapWalkthroughChapterRoute,
   ProjectsProjectIdRunModelRoute: ProjectsProjectIdRunModelRoute,
   ProjectsProjectIdUploadRoute: ProjectsProjectIdUploadRoute,
+  TasksTaskIdAdjudicateRoute: TasksTaskIdAdjudicateRoute,
   TasksTaskIdCellsRoute: TasksTaskIdCellsRoute,
   TasksTaskIdCommentsRoute: TasksTaskIdCommentsRoute,
   TasksTaskIdDisagreementsRoute: TasksTaskIdDisagreementsRoute,

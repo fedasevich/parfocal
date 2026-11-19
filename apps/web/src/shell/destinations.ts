@@ -58,8 +58,8 @@ export const destinations = {
       y: view?.y.toString(),
       z: view?.z.toString(),
     })}`,
-  disagreements: (taskId: string, scene?: string) =>
-    `/tasks/${taskId}/disagreements${query({ scene })}`,
+  disagreements: (taskId: string) => `/tasks/${taskId}/disagreements`,
+  adjudicate: (taskId: string) => `/tasks/${taskId}/adjudicate`,
   signOff: (taskId: string) => `/tasks/${taskId}/sign-off`,
   evaluation: (taskId: string) => `/tasks/${taskId}/evaluation`,
   team: (link: { scene?: string; task?: string; focus?: string | undefined } = {}) =>

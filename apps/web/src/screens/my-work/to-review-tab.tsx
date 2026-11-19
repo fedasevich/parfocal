@@ -319,7 +319,7 @@ function AdjudicationPreview({ item, onClose }: { item: MyAdjudication; onClose:
       ]}
       main={{
         label: item.decided > 0 ? t`Continue deciding` : t`Start deciding`,
-        run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
+        run: () => void goTo(destinations.adjudicate(item.task_id)),
       }}
       onClose={onClose}
     />
@@ -391,7 +391,7 @@ export function ToReviewTab({
                   action={{
                     label: allDone ? t`Open` : item.decided > 0 ? t`Continue` : t`Start`,
                     primary: !allDone,
-                    run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
+                    run: () => void goTo(destinations.adjudicate(item.task_id)),
                   }}
                   onSelect={() => onSelect(adjudicationKey(item))}
                 />
