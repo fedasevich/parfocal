@@ -67,7 +67,7 @@ Cost. The publish ran one CPU container for under two minutes. No GPU second was
 - On these 22 images ViT-L with its own decoder is better than the browser's ViT-B for every prompt, by 0.023 to 0.044 mean IoU, 13 to 29 standard errors. It improves about six nuclei in ten and worsens one in twenty. The gain is largest for a loose box, which is the prompt a person draws by hand.
 - The share of clicks that are already good moves little (93.5% against 92.4%), so most of the gain is tighter outlines on nuclei both models find.
 - The ViT-B means here (0.866 for a click) are above the 0.852 the same harness gave on all 50 images on 2026-11-06, so these 22 images are easier than the rest. The difference between the models is paired and does not depend on that, but its size on the other 28 images is not known.
-- The decoders are not interchangeable. Best must use the ViT-L decoder with the ViT-L embedding, which [ADR 0404](../adr/0404-best-one-click-outlines-use-a-live-vit-l-embedding-and-the-vit-l-decoder.md) (Best uses a live ViT-L embedding and the ViT-L decoder) records.
+- The decoders are not interchangeable. Best must use the ViT-L decoder with the ViT-L embedding, which [ADR 0405](../adr/0405-best-one-click-outlines-use-a-live-vit-l-embedding-and-the-vit-l-decoder.md) (Best uses a live ViT-L embedding and the ViT-L decoder) records.
 - Good on WebGPU runs the 4-bit ViT-B encoder, which was not scored here. The 2026-11-06 export result puts it 0.005 mean IoU under the uint8 encoder against PyTorch.
 
 ## Follow-ups

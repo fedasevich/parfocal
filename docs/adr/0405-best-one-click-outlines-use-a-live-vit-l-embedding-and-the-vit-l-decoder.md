@@ -1,4 +1,4 @@
-# 0404. Best one-click outlines use a live ViT-L embedding from the server and the ViT-L decoder in the browser
+# 0405. Best one-click outlines use a live ViT-L embedding from the server and the ViT-L decoder in the browser
 
 - Date: 2026-11-19
 - Status: Accepted
