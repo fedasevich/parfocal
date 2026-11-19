@@ -22,10 +22,10 @@ ROLE_DUTIES = {
         "without a project role only through emergency access"
     ),
     Role.REVIEWER: (
-        "Reviews the slides of their tasks. Gives decisions with reasons and notes, fixes "
-        "outlines and types, adds missed objects, fills the opinion form and submits each "
-        "slide. Decides queued objects when a researcher makes them adjudicator. Never "
-        "uploads, runs models, creates projects or tasks, signs off or holds admin rights"
+        "Reviews and annotates the slides of their tasks. Gives decisions with reasons and "
+        "notes, fixes outlines and types, adds missed objects, fills the opinion form and "
+        "submits each slide. Decides queued objects when a researcher makes them adjudicator. "
+        "Never uploads, runs models, creates projects or tasks, signs off or holds admin rights"
     ),
 }
 
@@ -93,7 +93,7 @@ PERMISSION_NAMES = {
     Permission.UPLOAD_SLIDES: "Upload slides and AI results, fix unmatched files",
     Permission.MOVE_SLIDES: "Move a slide between cases",
     Permission.RUN_MODELS: "Run AI models on slides, cancel, resume and retry the runs",
-    Permission.REVIEW: "Give decisions, fix results, comment",
+    Permission.REVIEW: "Give decisions, annotate, fix results, comment",
     Permission.SET_OWN_STATUS: "Set their own status",
     Permission.SEE_PEOPLE: "See the workspace's people and their status",
     Permission.MANAGE_PEOPLE: "Invite people, change roles and admin rights",

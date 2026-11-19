@@ -25,6 +25,15 @@ from parfocal_api.permissions import (
 from parfocal_common.repository import repository_root
 
 DOC_PATH = repository_root(__file__) / "docs" / "reference" / "permissions.md"
+WEB_MATRIX_PATH = (
+    repository_root(__file__)
+    / "apps"
+    / "web"
+    / "src"
+    / "screens"
+    / "admin"
+    / "permission-matrix.generated.ts"
+)
 
 
 def cell(grant: Grant) -> str:
@@ -128,10 +137,29 @@ def render() -> str:
     )
 
 
+def render_web_matrix() -> str:
+    rows = [
+        f'  {{ key: "{permission.value}", '
+        + ", ".join(f'{role.value}: "{grants[role].value}"' for role in COLUMNS)
+        + f", adminRights: {'true' if permission in ADMIN_RIGHTS else 'false'} }},"
+        for permission, grants in MATRIX.items()
+    ]
+    return "\n".join(
+        [
+            "export const permissionMatrix = [",
+            *rows,
+            "] as const;",
+            "",
+        ]
+    )
+
+
 def main() -> None:
     target = Path(sys.argv[1]) if len(sys.argv) > 1 else DOC_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(render())
+    if len(sys.argv) <= 1:
+        WEB_MATRIX_PATH.write_text(render_web_matrix())
 
 
 if __name__ == "__main__":
