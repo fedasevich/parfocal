@@ -35,7 +35,7 @@ from parfocal_api.permissions import (
     Permission,
     grant_for,
 )
-from parfocal_api.permissions_doc import DOC_PATH, render
+from parfocal_api.permissions_doc import DOC_PATH, WEB_MATRIX_PATH, render, render_web_matrix
 from parfocal_api.principals import MemberPrincipal, Principal, SignedInUser
 from parfocal_api.slide_thumbnail import THUMBNAIL_FILE
 from parfocal_api.slide_tissue import TISSUE_FILE
@@ -1763,6 +1763,10 @@ def test_admin_rights_add_no_access_to_project_data() -> None:
 
 def test_the_permission_page_is_current() -> None:
     assert Path(DOC_PATH).read_text() == render()
+
+
+def test_the_web_permission_matrix_is_current() -> None:
+    assert Path(WEB_MATRIX_PATH).read_text() == render_web_matrix()
 
 
 def test_every_operation_declares_a_permission_or_why_it_is_open() -> None:

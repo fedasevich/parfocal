@@ -3028,6 +3028,7 @@ msgid "Account menu"
 msgstr "Account menu"
 
 #: src/screens/admin/audit.tsx
+#: src/screens/admin/role-permissions.tsx
 #: src/screens/project/tasks-tab.tsx
 msgid "Action"
 msgstr "Action"
@@ -3248,6 +3249,10 @@ msgstr "Add them to the viewer address, for example <0>?lab&renderer=viv&nuclei=
 #: src/screens/viewer/object-table.tsx
 msgid "Added"
 msgstr "Added"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Added by admin rights"
+msgstr "Added by admin rights"
 
 #: src/screens/review/viewer-frame.tsx
 msgid "added by you"
@@ -3982,6 +3987,7 @@ msgstr "Attach the blurred screenshot"
 
 #: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
+#: src/screens/admin/role-permissions.tsx
 msgid "Audit log"
 msgstr "Audit log"
 
@@ -4796,6 +4802,10 @@ msgstr "Change the {0} slide"
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "Change the address"
 msgstr "Change the address"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Change the privacy mode of a project they own, with a reason"
+msgstr "Change the privacy mode of a project they own, with a reason"
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Change the slide on this side"
@@ -5872,6 +5882,10 @@ msgstr "Create it and continue"
 msgid "Create my first project"
 msgstr "Create my first project"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Create projects and cases, edit their details"
+msgstr "Create projects and cases, edit their details"
+
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Create the account first."
 msgstr "Create the account first."
@@ -6206,6 +6220,10 @@ msgstr "Detector"
 #: ../../packages/ui/src/components/developer-drawer.tsx
 msgid "Developer"
 msgstr "Developer"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Developer mode and API tokens"
+msgstr "Developer mode and API tokens"
 
 #: src/routes/developer.tsx
 msgid "Developer mode is not available"
@@ -6708,6 +6726,10 @@ msgstr "Emergency access lasts"
 #: src/screens/admin/workspace-settings.tsx
 msgid "Emergency access lasts {0} now."
 msgstr "Emergency access lasts {0} now."
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Emergency, with reason"
+msgstr "Emergency, with reason"
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Empty file"
@@ -7723,6 +7745,10 @@ msgstr "Give a reason of at least 10 characters."
 msgid "Give a reason to change a signed-off slide."
 msgstr "Give a reason to change a signed-off slide."
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Give decisions, annotate, fix results, comment"
+msgstr "Give decisions, annotate, fix results, comment"
+
 #: src/screens/admin/connect-model.tsx
 msgid "Give the model a name and a version."
 msgstr "Give the model a name and a version."
@@ -8329,6 +8355,10 @@ msgstr "In the file"
 msgid "In the test"
 msgstr "In the test"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "In their tasks"
+msgstr "In their tasks"
+
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "In this upload"
@@ -8458,6 +8488,10 @@ msgstr "Invite expired"
 #: src/screens/project/settings-zones.tsx
 msgid "Invite people"
 msgstr "Invite people"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Invite people, change roles and admin rights"
+msgstr "Invite people, change roles and admin rights"
 
 #: src/screens/admin/people.tsx
 msgid "Invite sent"
@@ -9835,6 +9869,10 @@ msgstr "Move {0} down"
 msgid "Move {0} up"
 msgstr "Move {0} up"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Move a slide between cases"
+msgstr "Move a slide between cases"
+
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Move both together"
 msgstr "Move both together"
@@ -10197,6 +10235,7 @@ msgid "Next: classes and access"
 msgstr "Next: classes and access"
 
 #: src/screens/admin/people.tsx
+#: src/screens/admin/role-permissions.tsx
 msgid "No"
 msgstr "No"
 
@@ -11384,6 +11423,10 @@ msgstr "Open {0} in the full viewer"
 #: src/screens/evaluation/report-pages.tsx
 msgid "Open {object} in the full viewer"
 msgstr "Open {object} in the full viewer"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Open a clinical project they are not in"
+msgstr "Open a clinical project they are not in"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Open a review task first"
@@ -12688,6 +12731,10 @@ msgstr "Read an evaluation report"
 msgid "Read error"
 msgstr "Read error"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Read from the permission matrix the server enforces. Reviewers are the doctors who review and annotate, so annotating sits under Reviewer. A researcher with admin rights gets the researcher's column and yes wherever the admin rights column says yes."
+msgstr "Read from the permission matrix the server enforces. Reviewers are the doctors who review and annotate, so annotating sits under Reviewer. A researcher with admin rights gets the researcher's column and yes wherever the admin rights column says yes."
+
 #: src/screens/admin/connect-model.tsx
 msgid "Read from the server. Result sets it makes carry this name and version."
 msgstr "Read from the server. Result sets it makes carry this name and version."
@@ -13099,6 +13146,7 @@ msgstr "Research projects never show it."
 #: ../../packages/ui/src/components/comment-thread.tsx
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/admin/people.tsx
+#: src/screens/admin/role-permissions.tsx
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Researcher"
 msgstr "Researcher"
@@ -13455,6 +13503,10 @@ msgstr "Reviewer {0}"
 msgid "Reviewer only, added {0}"
 msgstr "Reviewer only, added {0}"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Reviewer, reviews and annotates"
+msgstr "Reviewer, reviews and annotates"
+
 #: src/screens/admin/overview.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/evaluation/report-pages.tsx
@@ -13544,12 +13596,12 @@ msgid "Reviews"
 msgstr "Reviews"
 
 #: src/screens/admin/people.tsx
-msgid "Reviews the slides of the tasks they are given."
-msgstr "Reviews the slides of the tasks they are given."
+msgid "Reviews and annotates the slides of their tasks, as the doctor who reviews is also the annotator. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate"
+msgstr "Reviews and annotates the slides of their tasks, as the doctor who reviews is also the annotator. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate"
 
 #: src/screens/admin/people.tsx
-msgid "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate"
-msgstr "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate"
+msgid "Reviews the slides of the tasks they are given."
+msgstr "Reviews the slides of the tasks they are given."
 
 #: src/screens/team/team-screen.tsx
 msgid "Reviews this task"
@@ -13712,6 +13764,10 @@ msgstr "Run a session"
 #: src/screens/viewer/viewer-result-sets.tsx
 msgid "Run again"
 msgstr "Run again"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Run AI models on slides, cancel, resume and retry the runs"
+msgstr "Run AI models on slides, cancel, resume and retry the runs"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Run cancelled, finished tiles kept"
@@ -14115,6 +14171,14 @@ msgstr "security@hospital.example"
 msgid "See all"
 msgstr "See all"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "See projects, cases and slides"
+msgstr "See projects, cases and slides"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "See slide label and macro images, only in clinical projects"
+msgstr "See slide label and macro images, only in clinical projects"
+
 #: src/screens/project/project-page.tsx
 msgid "See the fix"
 msgstr "See the fix"
@@ -14127,6 +14191,10 @@ msgstr "See the Methods block"
 #: src/viewer/stage-guided-view.tsx
 msgid "See the whole slide"
 msgstr "See the whole slide"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "See the workspace's people and their status"
+msgstr "See the workspace's people and their status"
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "See them in the disagreements"
@@ -14364,6 +14432,10 @@ msgstr "Set for this block only."
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "Set password and sign in"
 msgstr "Set password and sign in"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Set their own status"
+msgstr "Set their own status"
 
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Set up"
@@ -15640,6 +15712,10 @@ msgstr "Storage"
 #: src/screens/upload/check-step.tsx
 msgid "Storage and sources"
 msgstr "Storage and sources"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "Storage, sources, API and webhooks"
+msgstr "Storage, sources, API and webhooks"
 
 #: src/screens/admin/overview.tsx
 msgid "Stored"
@@ -17732,6 +17808,10 @@ msgstr "Upload slides and AI results, assign reviews"
 msgid "Upload slides and AI results, assign reviews, sign off evaluations"
 msgstr "Upload slides and AI results, assign reviews, sign off evaluations"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Upload slides and AI results, fix unmatched files"
+msgstr "Upload slides and AI results, fix unmatched files"
+
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/shell/palette-labels.tsx
@@ -17830,6 +17910,10 @@ msgstr "Use for new projects"
 msgid "Use my password instead"
 msgstr "Use my password instead"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Use report templates, edit the library"
+msgstr "Use report templates, edit the library"
+
 #: src/screens/upload/result-problems.tsx
 msgid "Use this choice"
 msgstr "Use this choice"
@@ -17922,6 +18006,10 @@ msgstr "View as, dev build only"
 #: src/screens/settings/settings-screen.tsx
 msgid "View centre"
 msgstr "View centre"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "View only"
+msgstr "View only"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Viewer"
@@ -18142,6 +18230,10 @@ msgstr "What do you want people to know?"
 #: src/screens/admin/people.tsx
 msgid "What each role is responsible for"
 msgstr "What each role is responsible for"
+
+#: src/screens/admin/role-permissions.tsx
+msgid "What each role may do"
+msgstr "What each role may do"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "What experts check"
@@ -18517,6 +18609,10 @@ msgstr "Workspace logo"
 msgid "Workspace settings"
 msgstr "Workspace settings"
 
+#: src/screens/admin/role-permissions.tsx
+msgid "Workspace settings and session security"
+msgstr "Workspace settings and session security"
+
 #: ../../packages/ui/src/components/comment-thread.tsx
 msgid "Write a comment first"
 msgstr "Write a comment first"
@@ -18563,6 +18659,7 @@ msgid "Wrong outline"
 msgstr "Wrong outline"
 
 #: src/screens/admin/people.tsx
+#: src/screens/admin/role-permissions.tsx
 msgid "Yes"
 msgstr "Yes"
 

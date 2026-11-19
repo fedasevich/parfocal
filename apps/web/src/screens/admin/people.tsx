@@ -1,4 +1,3 @@
-import type { MessageDescriptor } from "@lingui/core";
 import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
@@ -48,6 +47,7 @@ import { okData } from "../placeholder.tsx";
 import { lastActive, MoreButton, type Notify, tableClass } from "./common.tsx";
 import { JoinRequestsZone } from "./join-requests.tsx";
 import { adminSwitchOf, type PeopleFilter, shownInvitations, takenEmails } from "./people-rules.ts";
+import { RolePermissionsZone } from "./role-permissions.tsx";
 
 type Filter = PeopleFilter;
 
@@ -64,7 +64,7 @@ const roleDefinitions = lazyText(
       },
       {
         name: msg`Reviewer`,
-        does: t`Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate`,
+        does: t`Reviews and annotates the slides of their tasks, as the doctor who reviews is also the annotator. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate`,
         never: t`Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin`,
         who: "reviewer",
       },
@@ -415,6 +415,7 @@ export function PeopleSection({
           </TableBody>
         </Table>
       </Zone>
+      <RolePermissionsZone />
       <InvitePeopleModal
         open={inviting}
         taken={takenEmails(activity, invitations)}
