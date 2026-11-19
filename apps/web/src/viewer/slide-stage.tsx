@@ -772,7 +772,10 @@ function OpenedSlide({
                   <SlideChecker engine={opened.engine} stage={hostNode} />
                 ) : null}
                 <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
-                <TopStack ref={setTopStackNode} />
+                <TopStack
+                  ref={setTopStackNode}
+                  className={toolsLayout === "dock" ? "top-15" : ""}
+                />
                 <GpuWaitNotice />
                 {phase.state !== "loading" &&
                 drawsContextBar({ ...contextModel, proposals: proposalCount, hintsShown }) ? (
