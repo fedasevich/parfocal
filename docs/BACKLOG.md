@@ -6881,7 +6881,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These pages exist only as scenes. Check whether the real auth answers reach them and build what is missing.
   Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
   Depends on PROTO-079. Size: S.
-- [ ] PROTO-086 · One loader, centred, and a notifications skeleton at popover size
+- [x] PROTO-086 · One loader, centred, and a notifications skeleton at popover size
   On 2026-11-19 the owner found two whole page loaders in a row on app.parfocal.eu, a light one with the mark alone and then a dark one with the mark and Parfocal, the dark one's mark and name not centred as a group and the mark too large for the name, and the notifications skeleton filling the full height of the window instead of the popover's size with its limit of about five rows. Notification rows also read only New review task with an Open button, naming no task.
   Done when the static loader in index.html and the app's loader are one look in the user's theme with no visible switch between them, the mark and name are centred together with the mark sized to the name, the skeleton matches the loaded popover's box and row count, each notification row names its task or object, with specs measuring each.
   Depends on PROTO-061, PROTO-077. Size: S.
