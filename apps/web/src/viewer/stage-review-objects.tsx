@@ -25,6 +25,7 @@ import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
+import { StageSlideMarks, sampleOf, useSampleCollapsed } from "./stage-slide-marks.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
@@ -35,12 +36,14 @@ function ObjectOutlines({
   objects,
   classes,
   current,
+  collapsed,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   objects: readonly ReviewObject[];
   classes: ReviewSession["classes"];
   current: string | null;
+  collapsed: boolean;
 }) {
   const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
   const projectClasses = useMemo(
@@ -52,7 +55,14 @@ function ObjectOutlines({
       })),
     [classKey],
   );
-  const placed = useMemo(() => placedObjects(objects, projectClasses), [objects, projectClasses]);
+  const placed = useMemo(
+    () =>
+      placedObjects(
+        collapsed ? objects.filter((item) => item.kind !== "cell") : objects,
+        projectClasses,
+      ),
+    [objects, projectClasses, collapsed],
+  );
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: overlayId, host: engine }),
     [module, engine],
@@ -211,6 +221,12 @@ export function StageReviewObjects({
     },
     ready && typedCell !== null,
   );
+  const sample = useMemo(() => sampleOf(objects), [objects]);
+  const collapsed = useSampleCollapsed(engine, sample);
+  const wholeSlide = () => {
+    setCurrent(null);
+    void engine.flyToFit();
+  };
   const index = current === null ? -1 : order.indexOf(current);
   const shown = guided ? objects.filter((item) => item.object === current) : objects;
   return (
@@ -221,7 +237,19 @@ export function StageReviewObjects({
         objects={objects}
         classes={session.classes}
         current={current}
+        collapsed={collapsed}
       />
+      {focus === null ? (
+        <StageSlideMarks
+          engine={engine}
+          objects={objects}
+          decisionOf={(id) => session.decisions.get(id)?.value}
+          showScore={session.style.kind !== "yesno" && session.style.kind !== "blind"}
+          sample={sample}
+          collapsed={collapsed}
+          onWholeSlide={guided ? null : wholeSlide}
+        />
+      ) : null}
       {coachOn && focus === null ? <StageCoachOnSlide /> : null}
       {focus === null || currentItem === undefined || typedCell !== null ? null : (
         <StageFocusCard
