@@ -6869,7 +6869,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): `/kpi` falls back to a seeded sample and is dev tools only since PROTO-079. Read the recorded timing events from the API so the page works on the deployed app.
   Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
   Depends on PROTO-079. Size: S.
-- [ ] PROTO-083 · Guided review shows withdrawn, signed off, failed and empty states from the real task
+- [x] PROTO-083 · Guided review shows withdrawn, signed off, failed and empty states from the real task
   From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These states exist only as scenes. Check whether the real screen reaches each from the task state and build what is missing.
   Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
   Depends on PROTO-079. Size: S.
