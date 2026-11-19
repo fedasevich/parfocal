@@ -29,7 +29,10 @@ from parfocal_ml.sam_contract import (
     MASK_INPUT_SIZE,
     OPSET,
     SAM,
+    SAM_VIT_L,
+    VIT_L_GRAPHS,
     WINDOW_SIZE,
+    Checkpoint,
     checkpoint_path,
     onnx_dir,
     window_decoder_graph,
@@ -50,11 +53,11 @@ class Exported:
     seconds: float
 
 
-def load_sam() -> Sam:
-    state = torch.load(checkpoint_path(SAM), map_location="cpu", weights_only=False)
+def load_sam(kind: str = "vit_b", checkpoint: Checkpoint = SAM) -> Sam:
+    state = torch.load(checkpoint_path(checkpoint), map_location="cpu", weights_only=False)
     if isinstance(state, dict) and "model_state" in state:
         state = state["model_state"]
-    sam = sam_model_registry["vit_b"]()
+    sam = sam_model_registry[kind]()
     sam.load_state_dict(state, strict=True)
     return sam.eval()
 
@@ -137,17 +140,17 @@ def trace(model: torch.nn.Module, args: tuple[Any, ...], target: Path, **options
     return Exported(target.name, target.stat().st_size / 1e6, time.perf_counter() - started)
 
 
-def export_encoder(sam: Sam, folder: Path) -> Exported:
+def export_encoder(sam: Sam, folder: Path, name: str = GRAPHS.encoder) -> Exported:
     return trace(
         Encoder(sam),
         (torch.randn(1, 3, IMAGE_SIZE, IMAGE_SIZE),),
-        folder / GRAPHS.encoder,
+        folder / name,
         input_names=["pixel_values"],
         output_names=["image_embeddings"],
     )
 
 
-def export_decoder(sam: Sam, folder: Path) -> Exported:
+def export_decoder(sam: Sam, folder: Path, name: str = GRAPHS.decoder) -> Exported:
     feeds = {
         "image_embeddings": embeddings_dummy(),
         "point_coords": torch.randint(0, IMAGE_SIZE, (1, 5, 2), dtype=torch.float),
@@ -159,18 +162,20 @@ def export_decoder(sam: Sam, folder: Path) -> Exported:
     return trace(
         SamOnnxModel(sam, return_single_mask=False),
         tuple(feeds.values()),
-        folder / GRAPHS.decoder,
+        folder / name,
         input_names=list(feeds),
         output_names=["masks", "iou_predictions", "low_res_masks"],
         dynamic_axes={"point_coords": {1: "num_points"}, "point_labels": {1: "num_points"}},
     )
 
 
-def export_window_decoder(sam: Sam, folder: Path, size: int = WINDOW_SIZE) -> Exported:
+def export_window_decoder(
+    sam: Sam, folder: Path, size: int = WINDOW_SIZE, name: str | None = None
+) -> Exported:
     return trace(
         WindowDecoder(sam, size),
         window_dummies(),
-        folder / window_decoder_graph(size),
+        folder / (name or window_decoder_graph(size)),
         input_names=list(WINDOW_INPUTS),
         output_names=list(WINDOW_OUTPUTS),
         dynamic_axes={"point_coords": {1: "num_points"}, "point_labels": {1: "num_points"}},
@@ -325,6 +330,17 @@ def export_all(folder: Path) -> list[Exported]:
     ]
 
 
+def export_vit_l(folder: Path) -> list[Exported]:
+    folder.mkdir(parents=True, exist_ok=True)
+    sam = load_sam("vit_l", SAM_VIT_L)
+    with torch.no_grad():
+        return [
+            export_encoder(sam, folder, VIT_L_GRAPHS.encoder),
+            export_decoder(sam, folder, VIT_L_GRAPHS.decoder),
+            export_window_decoder(sam, folder, name=VIT_L_GRAPHS.window_decoder),
+        ]
+
+
 def quantise_ais(folder: Path) -> list[Exported]:
     return [quantise_ais_uint8(folder), quantise_ais_int8_weights(folder)]
 
@@ -334,8 +350,11 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=onnx_dir())
     parser.add_argument("--ais-only", action="store_true")
     parser.add_argument("--window-sizes", type=int, nargs="+")
+    parser.add_argument("--vit-l", action="store_true")
     args = parser.parse_args()
-    if args.window_sizes:
+    if args.vit_l:
+        graphs = export_vit_l(args.out)
+    elif args.window_sizes:
         sam = load_sam()
         graphs = [export_window_decoder(sam, args.out, size) for size in args.window_sizes]
     elif args.ais_only:

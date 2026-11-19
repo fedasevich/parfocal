@@ -19367,6 +19367,20 @@ export const getGetSlideEmbeddingsResponseMock = (
 export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getEmbedSlideViewResponseMock = (
+  overrideResponse: Partial<Extract<Blob | GpuWaiting, object>> = {},
+): Blob | GpuWaiting =>
+  faker.helpers.arrayElement([
+    new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
+    {
+      state: "waiting",
+      call: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      waited_seconds: faker.number.float({ fractionDigits: 2 }),
+      hold_seconds: faker.number.float({ fractionDigits: 2 }),
+      ...overrideResponse,
+    },
+  ]);
+
 export const getScoreViewMapTileResponseMock = (
   overrideResponse: Partial<Extract<Blob | GpuWaiting, object>> = {},
 ): Blob | GpuWaiting =>
@@ -29163,6 +29177,33 @@ export const getWarmSlideEmbedderMockHandler = (
   );
 };
 
+export const getEmbedSlideViewMockHandler = (
+  overrideResponse?:
+    | Blob
+    | GpuWaiting
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<Blob | GpuWaiting> | Blob | GpuWaiting),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/embeddings/view",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmbedSlideViewResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getScoreViewMapTileMockHandler = (
   overrideResponse?:
     | Blob
@@ -29682,6 +29723,7 @@ export const getParfocalAPIMock = () => [
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),
+  getEmbedSlideViewMockHandler(),
   getScoreViewMapTileMockHandler(),
   getCancelGpuCallMockHandler(),
   getTypeOutlinesMockHandler(),

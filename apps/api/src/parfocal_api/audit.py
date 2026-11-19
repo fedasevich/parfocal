@@ -89,6 +89,7 @@ class AuditAction(StrEnum):
     TUMOR_MAP_STARTED = "tumor-map.started"
     VIEW_MAP_SCORED = "view-map.scored"
     OUTLINES_TYPED = "outlines.typed"
+    VIEW_EMBEDDED = "view.embedded"
     UPLOAD_REFUSED = "upload.refused"
     UPLOAD_PAIRED = "upload.paired"
     SLIDE_PUBLISHED = "slide.published"

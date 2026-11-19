@@ -32,7 +32,10 @@ describe("one-click model tiers", () => {
       tiers.map((tier) => tier.name),
       ["Best", "Good"],
     );
-    assert.match(tiers[0]?.model ?? "", /PathoSAM ViT-B · on the Parfocal server/);
+    assert.match(
+      tiers[0]?.model ?? "",
+      /PathoSAM ViT-L · on the Parfocal server, else ViT-B on this computer · 33 MB/,
+    );
     assert.doesNotMatch(tiers.map((tier) => tier.description).join(" "), /hospital/);
     assert.match(
       tiers[1]?.model ?? "",

@@ -69,6 +69,11 @@ class Graphs:
 
 
 GRAPHS = Graphs()
+VIT_L_GRAPHS = Graphs(
+    encoder="pathosam-vit-l.encoder.onnx",
+    decoder="pathosam-vit-l.decoder.onnx",
+    window_decoder=f"pathosam-vit-l.decoder_window{WINDOW_SIZE}.onnx",
+)
 
 
 def window_decoder_graph(size: int) -> str:

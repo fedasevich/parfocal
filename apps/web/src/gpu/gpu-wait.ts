@@ -1,6 +1,6 @@
 import { cancelGpuCall, type GpuWaiting } from "@parfocal/api-client";
 
-export type GpuWaitKind = "typer" | "view-map";
+export type GpuWaitKind = "typer" | "view-map" | "encoder";
 
 export interface GpuWait {
   readonly id: number;

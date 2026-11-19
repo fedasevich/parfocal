@@ -5,7 +5,7 @@ import type {
   SamPromptOutcome,
   SamReady,
 } from "./inference-engine.ts";
-import type { SamGraph } from "./variants.ts";
+import type { SamEncoderModel, SamGraph } from "./variants.ts";
 
 export type SamRequest =
   | { readonly type: "init"; readonly modelsUrl: string }
@@ -20,6 +20,7 @@ export type SamRequest =
       readonly requestId: number;
       readonly id: string;
       readonly embedding: Float32Array<ArrayBuffer>;
+      readonly model?: SamEncoderModel;
     }
   | {
       readonly type: "prompt";

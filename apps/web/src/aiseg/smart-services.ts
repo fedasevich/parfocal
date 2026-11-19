@@ -14,11 +14,19 @@ import {
   withServerTiles,
 } from "./server-embeddings.ts";
 import type { SmartReader, SmartSam } from "./smart-session.ts";
+import {
+  createEncoderSource,
+  createViewEmbeddings,
+  type EncoderSourceSignal,
+  withSeenLevels,
+  withViewEmbeddings,
+} from "./view-embeddings.ts";
 
 export interface SmartServices {
   readonly reader: SmartReader;
   readonly sam: SmartSam & RegionSam & Partial<Pick<SamClient, "pool">>;
   readonly plan: (preset: ScalePresetId) => Promise<PresetPatchPlan>;
+  readonly encoderSource?: Pick<EncoderSourceSignal, "get" | "subscribe">;
   readonly close: () => void;
 }
 
@@ -67,21 +75,26 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
   });
   const local = engine.createSamClient({ modelsUrl: modelsUrl() });
   const presets = createPresetPatchReader(inner);
-  const server = serverFirst(context) ? createServerEmbeddings(httpEmbeddingTransport()) : null;
-  const sam = server === null ? local : withServerEmbeddings(local, server);
-  const reader =
-    context.slideId === undefined || server === null
-      ? presets
-      : withServerTiles(presets, server, context.slideId);
-  return {
-    reader,
-    sam,
-    plan: (preset) => reader.plan(preset),
-    close: () => {
-      local.close();
-      inner.close();
-    },
+  const close = () => {
+    local.close();
+    inner.close();
   };
+  const { slideId } = context;
+  if (!serverFirst(context) || slideId === undefined) {
+    return { reader: presets, sam: local, plan: (preset) => presets.plan(preset), close };
+  }
+  const server = createServerEmbeddings(httpEmbeddingTransport());
+  const levels = new Map<number, number>();
+  const encoderSource = createEncoderSource();
+  const sam = withViewEmbeddings(withServerEmbeddings(local, server), {
+    views: createViewEmbeddings(),
+    slideId,
+    slide: context.slide,
+    downsampleOf: (level) => levels.get(level),
+    onSource: (source) => encoderSource.set(source),
+  });
+  const reader = withSeenLevels(withServerTiles(presets, server, slideId), levels);
+  return { reader, sam, plan: (preset) => reader.plan(preset), encoderSource, close };
 }
 
 export function withEmbedderWarm(

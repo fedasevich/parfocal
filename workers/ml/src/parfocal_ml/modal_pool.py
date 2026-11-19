@@ -82,6 +82,12 @@ def outline_types_runner(call: Mapping[str, object]) -> Mapping[str, object]:
     return answer_outline_types_call(call)
 
 
+def view_embedding_runner(call: Mapping[str, object]) -> Mapping[str, object]:
+    from parfocal_ml.view_embedding_worker import answer_view_embedding_call
+
+    return answer_view_embedding_call(call)
+
+
 def lab_model_runner(call: Mapping[str, object]) -> Mapping[str, object]:
     from parfocal_ml.lab_model_worker import run_lab_models
 
@@ -102,7 +108,11 @@ def default_runners(pool: PoolLimits) -> dict[str, Runner]:
     if pool.family is TUMOR_MAP_FAMILY:
         return {Kind.TUMOR_MAP: tumor_map_runner(pool)}
     if pool.family is VIEW_MAP_FAMILY:
-        return {Kind.VIEW_MAP: view_map_runner, Kind.OUTLINE_TYPES: outline_types_runner}
+        return {
+            Kind.VIEW_MAP: view_map_runner,
+            Kind.OUTLINE_TYPES: outline_types_runner,
+            Kind.VIEW_EMBEDDING: view_embedding_runner,
+        }
     if pool.family is LAB_MODEL_FAMILY:
         return {Kind.LAB_MODEL: lab_model_runner}
     return {}

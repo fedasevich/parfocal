@@ -4181,6 +4181,10 @@ msgstr "below"
 msgid "Best"
 msgstr "Best"
 
+#: src/annotations/smart-layer.tsx
+msgid "Best is not answering yet, Good outlined this view"
+msgstr "Best is not answering yet, Good outlined this view"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Big slides"
 msgstr "Big slides"

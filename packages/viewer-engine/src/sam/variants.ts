@@ -8,6 +8,15 @@ export const samGraphs = {
   aisDecoder: "pathosam.ais_decoder.onnx",
   aisDecoderUint8: "pathosam.ais_decoder_uint8.onnx",
   aisDecoderInt8Weights: "pathosam.ais_decoder_int8_weights.onnx",
+  largeDecoder: "pathosam-vit-l.decoder.onnx",
+  largeWindowDecoder: "pathosam-vit-l.decoder_window32.onnx",
+} as const;
+
+export type SamEncoderModel = "vit-b" | "vit-l";
+
+export const largeDecoderGraphs = {
+  decoder: samGraphs.largeDecoder,
+  windowDecoder: samGraphs.largeWindowDecoder,
 } as const;
 
 export type SamGraph = (typeof samGraphs)[keyof typeof samGraphs];

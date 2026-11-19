@@ -18,6 +18,7 @@ import {
   type SmartSession,
   type SmartSnapshot,
 } from "../aiseg/smart-session.ts";
+import type { EncoderSource } from "../aiseg/view-embeddings.ts";
 import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
@@ -105,6 +106,7 @@ export function SmartLayer({
   const [snapshot, setSnapshot] = useState<SmartSnapshot>(idle);
   const [press, setPress] = useState<Press | null>(null);
   const [hoverRing, setHoverRing] = useState<Float32Array | null>(null);
+  const [encoderSource, setEncoderSource] = useState<EncoderSource | null>(null);
   const [hoverOn, setHoverOn] = useHoverPreview();
   const hoverNow = useRef(hoverOn);
   hoverNow.current = hoverOn;
@@ -147,7 +149,16 @@ export function SmartLayer({
         tier,
         open: latest.current.openRequest,
       };
-      services.current = latest.current.loader(context);
+      const loading = latest.current.loader(context);
+      services.current = loading;
+      setEncoderSource(null);
+      void loading.then(
+        (loaded) =>
+          loaded.encoderSource?.subscribe((source) => {
+            if (services.current === loading) setEncoderSource(source);
+          }),
+        () => undefined,
+      );
       session.current = services.current.then((loaded) =>
         createSmartSession({
           slideId,
@@ -428,6 +439,7 @@ export function SmartLayer({
         data-kept={snapshot.kept.length}
         data-live={live?.ring ? 1 : 0}
         data-hover={hoverRing === null ? 0 : 1}
+        data-encoder={encoderSource ?? undefined}
         data-confidence={live?.ring ? live.confidence.toFixed(2) : undefined}
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 size-full overflow-visible"
@@ -475,6 +487,11 @@ export function SmartLayer({
           >
             {hoverOn ? t`Hover preview on` : t`Hover preview off`}
           </button>
+          {tier === "best" && encoderSource === "browser" ? (
+            <span data-testid="smart-encoder-fallback" role="status" className={contextChip}>
+              {t`Best is not answering yet, Good outlined this view`}
+            </span>
+          ) : null}
           {snapshot.phase === "thinking" || snapshot.message !== null ? (
             <span data-testid="smart-status" role="status" className={contextChip}>
               {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}

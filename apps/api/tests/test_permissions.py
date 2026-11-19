@@ -122,6 +122,8 @@ from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.outline_types import KIND as OUTLINE_TYPES_KIND
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_common.view_embeddings import KIND as VIEW_EMBEDDING_KIND
+from parfocal_common.view_embeddings import reply_of as view_embedding_reply
 from parfocal_common.view_maps import reply_of as view_tile_reply
 from parfocal_common.view_maps import tile_size as view_tile_size
 from parfocal_common.warm_gate import WarmGate
@@ -462,7 +464,7 @@ def link_site_serving() -> threading.Thread:
     return thread
 
 
-INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines"})
+INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile", "typeOutlines", "embedSlideView"})
 
 
 OUTLINE_TYPED: dict[str, object] = {
@@ -484,6 +486,8 @@ class BlankViewMap:
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
         if call.get("kind") == OUTLINE_TYPES_KIND:
             return OUTLINE_TYPED
+        if call.get("kind") == VIEW_EMBEDDING_KIND:
+            return view_embedding_reply(bytes(EMBEDDING_BYTES))
         width, height = view_tile_size(4096, 2048, 0, 0)
         return view_tile_reply(bytes(width * height), width, height)
 
@@ -1028,6 +1032,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "scoreViewMapTile": lambda w: Call("POST", f"/api/slides/{w.slide}/view-map/0/0"),
     "cancelGpuCall": lambda w: Call("DELETE", "/api/gpu-calls/e30.c2lnbmF0dXJl"),
+    "embedSlideView": lambda w: Call(
+        "POST",
+        f"/api/slides/{w.slide}/embeddings/view",
+        {"x": 0, "y": 0, "width": 512, "height": 512},
+    ),
     "typeOutlines": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/outline-types",

@@ -811,6 +811,7 @@ export {
   EngineNotReadyError,
   type InferenceEngine,
   type InferenceEngineOptions,
+  OtherEncoderEmbeddingError,
   type SamBox,
   type SamDecodePath,
   type SamEncoded,
@@ -861,6 +862,8 @@ export {
 } from "./sam/smart-prompt.ts";
 export {
   graphRunsOn,
+  largeDecoderGraphs,
+  type SamEncoderModel,
   type SamGraph,
   type SamProvider,
   type SamVariant,

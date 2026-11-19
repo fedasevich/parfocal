@@ -4,6 +4,7 @@ import {
   createInferenceEngine,
   EngineNotReadyError,
   type InferenceEngine,
+  OtherEncoderEmbeddingError,
   samGraphs,
   UnknownEmbeddingError,
   UnsupportedGraphInputError,
@@ -446,5 +447,68 @@ describe("inference engine adopted embeddings", () => {
     const { engine } = build();
     await engine.init();
     await assert.rejects(engine.adopt("tile-a", new Float32Array(12)), RangeError);
+  });
+});
+
+describe("inference engine ViT-L embeddings from the server", () => {
+  const embeddingCount = 256 * 64 * 64;
+  const large = () => new Float32Array(embeddingCount).fill(0.5);
+
+  it("decodes a ViT-L embedding with the ViT-L decoder and a browser one with ViT-B", async () => {
+    const { runtime, cache, engine } = build({ warm: false });
+    await started(engine, "view-b");
+    assert.equal(cache.urls.includes(`/models/${samGraphs.largeDecoder}`), false);
+    await engine.adopt("view-l", large(), "vit-l");
+    assert.equal(cache.urls.includes(`/models/${samGraphs.largeDecoder}`), true);
+    await engine.prompt("view-l", click);
+    assert.equal(runtime.session(samGraphs.largeDecoder).feedsSeen.length, 1);
+    assert.equal(runtime.session(decoderGraph).feedsSeen.length, 0);
+    assert.equal(
+      runtime.session(samGraphs.largeDecoder).feedsSeen[0]?.["image_embeddings"]?.data[0],
+      0.5,
+    );
+    await engine.prompt("view-b", click);
+    assert.equal(runtime.session(decoderGraph).feedsSeen.length, 1);
+    assert.equal(runtime.session(samGraphs.largeDecoder).feedsSeen.length, 1);
+  });
+
+  it("uses the ViT-L window decoder near the click when windows are on", async () => {
+    const { runtime, engine } = build({ warm: false, windowDecoder: true });
+    await engine.init();
+    await engine.adopt("view-l", large(), "vit-l");
+    const outcome = await engine.prompt("view-l", click);
+    assert.equal(outcome.status, "answer");
+    assert.equal(runtime.session(samGraphs.largeWindowDecoder).feedsSeen.length, 1);
+    assert.equal(runtime.session(samGraphs.windowDecoder).feedsSeen.length, 0);
+  });
+
+  it("refuses to adopt when the ViT-L decoder cannot load and keeps nothing", async () => {
+    const { engine } = build({ missingGraphs: [samGraphs.largeDecoder] });
+    await engine.init();
+    await assert.rejects(engine.adopt("view-l", large(), "vit-l"));
+    assert.equal(engine.hasEmbedding("view-l"), false);
+    await engine.encode("view-l", new Float32Array(pixelCount));
+    assert.equal((await engine.prompt("view-l", click)).status, "answer");
+  });
+
+  it("goes back to the ViT-B decoder when the browser encodes the same view again", async () => {
+    const { runtime, engine } = build({ warm: false });
+    await engine.init();
+    await engine.adopt("view-a", large(), "vit-l");
+    await engine.encode("view-a", new Float32Array(pixelCount));
+    await engine.prompt("view-a", click);
+    assert.equal(runtime.session(decoderGraph).feedsSeen.length, 1);
+    assert.equal(runtime.session(samGraphs.largeDecoder).feedsSeen.length, 0);
+  });
+
+  it("never feeds a ViT-L embedding to the ViT-B nucleus decoder or the learner", async () => {
+    const { engine } = build();
+    await engine.init();
+    await engine.adopt("view-l", large(), "vit-l");
+    await assert.rejects(engine.segmentAll("view-l"), OtherEncoderEmbeddingError);
+    assert.throws(() => engine.pool("view-l", []), OtherEncoderEmbeddingError);
+    engine.drop("view-l");
+    await engine.adopt("view-l", large());
+    assert.deepEqual(engine.pool("view-l", []), []);
   });
 });
