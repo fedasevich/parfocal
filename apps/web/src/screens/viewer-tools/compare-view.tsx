@@ -1,5 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type ProjectSlide, useGetMe, useListProjectSlides } from "@parfocal/api-client";
+import {
+  type ProjectSlide,
+  useGetMe,
+  useGetReviewTask,
+  useListProjectSlides,
+} from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -8,13 +13,13 @@ import {
   Crosshair,
   FloatingPill,
   PaneHeader,
+  PanelSection,
   PanePicker,
   type PaneSide,
   type PaneSlide,
   SideToggles,
   SlidesOnScreenPanel,
 } from "@parfocal/ui/components/viewer-tools";
-import { Zone } from "@parfocal/ui/components/zone";
 import {
   alignViews,
   alignWithOffset,
@@ -26,6 +31,7 @@ import {
   toggleLinked,
   unlinkViews,
 } from "@parfocal/viewer-engine";
+import { useNavigate } from "@tanstack/react-router";
 import { Fragment, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
@@ -34,6 +40,8 @@ import { cursorSender } from "../../presence/shared-cursor.ts";
 import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
 import { useToolsLayout } from "../../shell/tools-layout.ts";
+import { LiveTopBar } from "../../viewer/live-top-bar.tsx";
+import { useStageTabCounts } from "../../viewer/stage-tab-counts.ts";
 import {
   type StillDrawChoices,
   StillEngine,
@@ -41,10 +49,11 @@ import {
   type StillObject,
 } from "../../viewer/still-engine.tsx";
 import type { StillFrame } from "../../viewer/still-frame.ts";
+import { useCaseLoad } from "../../viewer/use-case-load.ts";
 import { useWebglAvailable } from "../../viewer/webgl.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
-import { ViewerFrame } from "../review/viewer-frame.tsx";
+import { ObjectsSummary, ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
@@ -132,7 +141,31 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const { t } = useLingui();
   const docked = useToolsLayout() === "dock";
   const { session, projectId, counts } = tools;
+  const navigate = useNavigate();
   const all = okData(useListProjectSlides(projectId).data) ?? [];
+  const loaded = useCaseLoad(projectId, session.slideId, session.taskId);
+  const load = loaded.state === "ready" ? loaded.load : null;
+  const taskDetail = okData(useGetReviewTask(session.taskId).data);
+  const tabCounts = useStageTabCounts({
+    projectId,
+    taskId: session.taskId,
+    reviewTaskId: taskDetail?.kind === "review" ? session.taskId : null,
+    slideId: session.slideId,
+  });
+  const backToViewer = (change: {
+    slideId?: string;
+    workspace?: "review" | "annotate";
+    tab?: "opinion" | "display";
+  }) =>
+    void navigate({
+      to: "/projects/$projectId/slides/$slideId",
+      params: { projectId, slideId: change.slideId ?? session.slideId },
+      search: {
+        task: session.taskId,
+        ...(change.workspace ? { workspace: change.workspace } : {}),
+        ...(change.tab ? { tab: change.tab } : {}),
+      },
+    });
   const caseSlides = all
     .filter((slide) => slide.case?.label === session.caseLabel)
     .map((slide) => toCompareSlide(slide, session.slideId));
@@ -301,7 +334,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const there = visible.find((other) => other !== side && ids[other] === id);
     return there === undefined
       ? "Click to show here"
-      : `On the ${paneName[there]} now, picking it swaps the panes`;
+      : `On the ${paneName[there]} now, picking it swaps the sides`;
   };
 
   const viewOn = (side: PaneSide, camera: Camera): LinkedView => ({
@@ -470,14 +503,20 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const slide = slideOn(side);
     return slide ? [{ side, slide, note: slide.note }] : [];
   });
+  const slideLabel = load?.slide?.label ?? session.slideName.split(" · ")[0] ?? "";
   const body = (
     <>
+      <ObjectsSummary
+        slideLabel={slideLabel}
+        counts={counts}
+        added={session.added.map((item) => item.object)}
+      />
       <SlidesOnScreenPanel
         slots={slots}
         onChange={setPicking}
         onSwap={visible.length > 1 ? swap : undefined}
       />
-      <Zone
+      <PanelSection
         title={t`Layers`}
         end={
           <span className="font-mono text-caption text-fg-dim">
@@ -491,8 +530,8 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             setLayers(layers.map((row) => (row.key === key ? { ...row, [side]: !row[side] } : row)))
           }
         />
-      </Zone>
-      <Zone title={t`Views`}>
+      </PanelSection>
+      <PanelSection title={t`Views`}>
         <div className="grid gap-2.5 rounded-zone bg-chrome-2 p-3">
           <label className="flex items-center justify-between gap-2 text-body-sm">
             <Trans>Move both together</Trans>
@@ -560,7 +599,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             shared cursor shows the same point on both.
           </Trans>
         </p>
-      </Zone>
+      </PanelSection>
     </>
   );
 
@@ -569,6 +608,24 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       session={session}
       counts={counts}
       tool="select"
+      topBar={
+        <LiveTopBar
+          projectId={projectId}
+          slideId={session.slideId}
+          load={load}
+          task={taskDetail}
+          workspace="review"
+          onWorkspace={(workspace) => backToViewer({ workspace })}
+          onOpenSlide={(slideId) => backToViewer({ slideId })}
+          onSubmit={() => backToViewer({ tab: "opinion" })}
+          onResultSets={() => backToViewer({ tab: "display" })}
+          percent={null}
+          objectTotal={0}
+          onPeek={() => backToViewer({})}
+          statusRef={() => undefined}
+          storage={null}
+        />
+      }
       railGroups={reviewRail}
       onToolChange={(tool) => {
         if (tool === "select") onLeave({ scene: "objects" });
@@ -580,7 +637,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       tabs={[
         { value: "objects", label: "Objects", count: counts.total, body },
         { value: "display", label: "Display", body: null },
-        { value: "comments", label: "Comments", count: session.threads.length, body: null },
+        { value: "comments", label: "Comments", count: tabCounts.comments ?? 0, body: null },
         { value: "opinion", label: "Opinion", body: null },
       ]}
     >
@@ -592,7 +649,9 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         {visible.map((side) => (
           <Fragment key={side}>{pane(side)}</Fragment>
         ))}
-        <FloatingPill className={docked ? "top-auto bottom-[4.75rem]" : "top-auto bottom-4"}>
+        <FloatingPill
+          className={`min-h-8 ${docked ? "top-auto bottom-[4.75rem]" : "top-auto bottom-4"}`}
+        >
           <Icon name="slides" />
           <span>
             <Trans>Linked: pan, zoom and rotation move both</Trans>
