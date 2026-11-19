@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+import modal
 import pytest
 
 from parfocal_common.ingest import Failure, Refusal
@@ -14,6 +15,7 @@ from parfocal_deploy.parse_sandbox import (
     SandboxChild,
     SandboxLauncher,
     checked,
+    hydrated_image,
 )
 from parfocal_ingest.isolation import (
     MAX_MESSAGE_BYTES,
@@ -415,3 +417,13 @@ async def test_a_single_parse_never_keeps_its_sandbox(tmp_path: Path) -> None:
     )
     assert factory.made[0].terminated
     assert launcher.kept == {}
+
+
+def test_a_deployed_worker_starts_its_parse_sandbox_from_its_own_image() -> None:
+    image = hydrated_image(modal_app.IMAGE, {"MODAL_IMAGE_ID": "im-running"})
+    assert image.object_id == "im-running"
+
+
+def test_a_local_probe_starts_its_parse_sandbox_from_the_hydrated_image() -> None:
+    image = hydrated_image(modal.Image.from_id("im-local"), {})
+    assert image.object_id == "im-local"

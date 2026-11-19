@@ -4021,6 +4021,10 @@ msgstr "Back to {object}"
 msgid "Back to disagreements"
 msgstr "Back to disagreements"
 
+#: src/screens/review/review-order-state.tsx
+msgid "Back to my work"
+msgstr "Back to my work"
+
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
@@ -4077,6 +4081,7 @@ msgstr "Back to the map"
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
+#: src/screens/review/review-order-state.tsx
 msgid "Back to the project"
 msgstr "Back to the project"
 
@@ -4856,6 +4861,10 @@ msgstr "Check inside areas I draw"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Check nothing"
 msgstr "Check nothing"
+
+#: src/screens/review/review-order-state.tsx
+msgid "Check now"
+msgstr "Check now"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Check that the whole link was copied, or ask the person who shared it for a new one."
@@ -16159,12 +16168,20 @@ msgid "The object in focus"
 msgstr "The object in focus"
 
 #: src/screens/review/review-order-state.tsx
-msgid "The objects are being put in review order. This usually takes under a minute."
-msgstr "The objects are being put in review order. This usually takes under a minute."
+msgid "The objects are being put in review order. This usually takes under a minute, and this page checks again every few seconds."
+msgstr "The objects are being put in review order. This usually takes under a minute, and this page checks again every few seconds."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The objects of finished tiles are in the layer and join the check scope."
 msgstr "The objects of finished tiles are in the layer and join the check scope."
+
+#: src/screens/review/review-order-state.tsx
+msgid "The objects of this slide are still being put in review order. They appear here on their own once it is ready."
+msgstr "The objects of this slide are still being put in review order. They appear here on their own once it is ready."
+
+#: src/screens/review/review-order-state.tsx
+msgid "The opinion opens once the objects of this slide are prepared and answered."
+msgstr "The opinion opens once the objects of this slide are prepared and answered."
 
 #: src/viewer/stage-opinion.tsx
 msgid "The opinion questions belong to a review task. Open this slide from one to answer them."
@@ -16311,6 +16328,10 @@ msgstr "The researcher"
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
 msgstr "The review could not be submitted. Nothing was lost, every decision is saved."
+
+#: src/screens/review/review-order-state.tsx
+msgid "The review order of this slide could not be worked out."
+msgstr "The review order of this slide could not be worked out."
 
 #: src/screens/review/review-order-state.tsx
 msgid "The review order of this slide could not be worked out. Try again in a moment."
@@ -16480,6 +16501,14 @@ msgstr "The task"
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The task could not be created. Try again."
 msgstr "The task could not be created. Try again."
+
+#: src/screens/review/review-order-state.tsx
+msgid "The task was made {minutes} minutes ago."
+msgstr "The task was made {minutes} minutes ago."
+
+#: src/screens/review/review-order-state.tsx
+msgid "The task was made {minutes} minutes ago. This is taking longer than usual, so you can go back and open it later."
+msgstr "The task was made {minutes} minutes ago. This is taking longer than usual, so you can go back and open it later."
 
 #: src/screens/new-task/send-step.tsx
 msgid "the task when they join."
@@ -17071,7 +17100,7 @@ msgstr "True positives"
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
-#: src/viewer/slide-stage.tsx
+#: src/viewer/open-failure-alert.tsx
 msgid "Try again"
 msgstr "Try again"
 
