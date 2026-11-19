@@ -8,7 +8,7 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openByHandSlide(page: Page) {
   await page.goto(
-    `/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&as=DH&scene=streaming`,
+    `/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&tab=objects&as=DH&scene=streaming`,
   );
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
@@ -103,7 +103,7 @@ test("a model run on the current view sends the view scope with the task", async
 
 test("an expert without the right to run models sees no run panel", async ({ page }) => {
   await page.goto(
-    `/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&as=AK&scene=streaming`,
+    `/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&tab=objects&as=AK&scene=streaming`,
   );
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });

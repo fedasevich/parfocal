@@ -12,7 +12,9 @@ test.use({ viewport: { width: 1440, height: 900 } });
 type Box = { x: number; y: number; width: number; height: number };
 
 async function openTaskSlide(page: Page) {
-  await page.goto(`/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&as=DH`);
+  await page.goto(
+    `/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&tab=objects&as=DH`,
+  );
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 40_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");

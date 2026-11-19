@@ -23,6 +23,7 @@ import { Switch } from "@parfocal/ui/components/switch";
 import { FoldingZone, Zone, Zones } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
+import { useState } from "react";
 
 type Lock = { value: string; reason: string };
 
@@ -175,6 +176,12 @@ function RangeRow({
   lock?: Lock | undefined;
   onChange?: ((value: number) => void) | undefined;
 }) {
+  const [stored, setStored] = useState(value);
+  const [held, setHeld] = useState(value);
+  if (stored !== value) {
+    setStored(value);
+    setHeld(value);
+  }
   return (
     <ControlRow label={label} help={help} locked={lock}>
       {() => (
@@ -183,9 +190,12 @@ function RangeRow({
             className="w-60"
             {...(onChange
               ? {
-                  value,
-                  onValueChange: (next: number | readonly number[]) =>
-                    onChange(typeof next === "number" ? next : (next[0] ?? value)),
+                  value: held,
+                  onValueChange: (next: number | readonly number[]) => {
+                    const picked = typeof next === "number" ? next : (next[0] ?? held);
+                    setHeld(picked);
+                    onChange(picked);
+                  },
                 }
               : { defaultValue: value })}
             min={min}
@@ -193,7 +203,7 @@ function RangeRow({
             step={step}
             getAriaLabel={() => label}
           />
-          <span className="min-w-10 font-mono text-body-sm">{format(value)}</span>
+          <span className="min-w-10 font-mono text-body-sm">{format(onChange ? held : value)}</span>
         </span>
       )}
     </ControlRow>

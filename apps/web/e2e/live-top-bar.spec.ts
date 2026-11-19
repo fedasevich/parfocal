@@ -72,9 +72,19 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
 
   await inspector(page).getByRole("tab", { name: "Objects" }).click();
   const card = page.getByTestId("object-foot");
+  const typeBar = page.getByTestId("cell-type-bar");
   for (let left = 7; left > 0; left -= 1) {
-    await page.getByRole("button", { name: /, the first open object$/ }).click();
-    await card.locator('button[data-counts-as="agree"]').click();
+    const goTo = page.getByRole("button", { name: /, the first open object$/ });
+    const object = /^Go to (\S+),/.exec((await goTo.textContent()) ?? "")?.[1] ?? "";
+    await goTo.click();
+    await expect(card).toHaveAttribute("data-object", object);
+    if (object.includes("·C")) {
+      await expect(typeBar).toHaveAttribute("aria-label", `Type for ${object}`);
+      await typeBar.getByRole("button", { name: /Keep/ }).click();
+      await expect(typeBar).toHaveAttribute("data-chosen", "keep");
+    } else {
+      await card.locator('button[data-counts-as="agree"]').click();
+    }
     await expect(page.getByTestId("inspector-objects")).toContainText(`${55 - left + 1} of 55`);
     await card.getByRole("button", { name: "Close" }).click();
   }
