@@ -4972,7 +4972,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Row 37 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed gives the agent account no task, has no case so the case page, clinical report and co-sign cannot be reached, no finished job so Jobs is empty, and no broken slide to raise the open failure alert.
   Done when a seed test finds for the agent account one review task, one annotate task, one case with a report, one finished job and one slide that fails to open, and the next reset shows them.
   Depends on TEST-051. Size: S.
-- [ ] TEST-054 · Philips-3.tiff carries a worked annotation example
+- [x] TEST-054 · Philips-3.tiff carries a worked annotation example
   On 2026-11-19 the owner asked to see a seeded example of annotation creation, editing and export on the biggest seeded slide, Philips-3.tiff. Seed an annotate task on it with shapes drawn in each class, two named groups, AI objects confirmed, edited and deleted with their history, typed cells picked and re-typed inside the annotate task (PROTO-069 left AI cells as dots inside tasks), groups saved inside the shared annotate task (PROTO-066 saves groups only on the personal layer), and one finished export in each documented format, all made through the app's own API calls so the example proves the flow.
   Done when a seed test finds the task, the shapes in classes and groups, the history, the typed cells and the exports on Philips-3.tiff, the export files download and re-import cleanly, and after the next reset the owner and agent accounts can open it from My work.
   Depends on TEST-051, PROTO-066, PROTO-069. Size: M.
@@ -6881,6 +6881,14 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-19 the owner found two whole page loaders in a row on app.parfocal.eu, a light one with the mark alone and then a dark one with the mark and Parfocal, the dark one's mark and name not centred as a group and the mark too large for the name, and the notifications skeleton filling the full height of the window instead of the popover's size with its limit of about five rows. Notification rows also read only New review task with an Open button, naming no task.
   Done when the static loader in index.html and the app's loader are one look in the user's theme with no visible switch between them, the mark and name are centred together with the mark sized to the name, the skeleton matches the loaded popover's box and row count, each notification row names its task or object, with specs measuring each.
   Depends on PROTO-061, PROTO-077. Size: S.
+- [ ] PROTO-087 · Pinch and wheel over the viewer's floating parts move the slide, not the page
+  On 2026-11-19 the owner found that a trackpad pinch over a floating part of the viewer, such as the 12 sampled cells chip, zooms the whole page instead of the slide, and that chip's tooltip is the browser's native one. A pinch arrives as a ctrl wheel event that nothing stops. Every floating part over the stage hands wheel and pinch to the viewer, the viewer route never lets the browser zoom, and stage tooltips use the app's tooltip.
+  Done when a spec sends ctrl wheel and plain wheel events over each floating part (chips, strips, cards, minimap, top stack, magnification bar) and the camera zooms or pans while the page zoom stays 1, and no stage control uses a native title for its tooltip.
+  Depends on PROTO-068. Size: S.
+- [ ] PROTO-088 · An annotate task offers its exports in the app
+  TEST-054 (Philips-3.tiff carries a worked annotation example) made the slide export take a task and write GeoJSON, FlatGeobuf and Parfocal JSON, but the deployed app has no button for it, so the thesis case of exporting annotations is not visible. Add an Export menu on the annotate task's top bar and the slide's More menu with the three formats and a line on what each holds.
+  Done when a spec downloads each format from the annotate task on the fake API and a real API e2e spec downloads and re-imports one.
+  Depends on TEST-054. Size: S.
 
 ---
 
