@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import os
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Protocol
 
 import httpx2
@@ -13,6 +13,7 @@ from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.deploy import MIGRATE
 from parfocal_deploy.environments import Environment, environment
+from parfocal_deploy.modal_app import APP_NAME, INGEST_FUNCTION
 from parfocal_deploy.tools import Tools, fetch, read, required, run, sql
 
 RESET_SETTINGS = (
@@ -93,7 +94,20 @@ def storage_location(target: Environment, settings: Mapping[str, str]) -> Storag
     )
 
 
-def reset(target: Environment, tools: Tools, local: Mapping[str, str]) -> int:
+def start_ingest(target: Environment) -> None:
+    import modal
+
+    modal.Function.from_name(
+        APP_NAME, INGEST_FUNCTION, environment_name=target.modal_environment
+    ).spawn()
+
+
+def reset(
+    target: Environment,
+    tools: Tools,
+    local: Mapping[str, str],
+    drain_jobs: Callable[[Environment], None] = start_ingest,
+) -> int:
     settings = required(local, RESET_SETTINGS)
     project = settings["NEON_PROJECT_ID"]
     branch = neon.ensure_branch(tools.neon, project, target.neon_branch)
@@ -123,6 +137,7 @@ def reset(target: Environment, tools: Tools, local: Mapping[str, str]) -> int:
             "SEED_AGENT_EMAILS": local.get("SEED_AGENT_EMAILS", ""),
         },
     )
+    drain_jobs(target)
     return removed
 
 

@@ -10,7 +10,7 @@ from parfocal_api.showcase import FORMAT_GALLERY
 from parfocal_common.object_store import ObjectStore, StorageError, StorageLocation
 from parfocal_deploy import reset as reset_module
 from parfocal_deploy.deploy import MIGRATE
-from parfocal_deploy.environments import environment
+from parfocal_deploy.environments import Environment, environment
 from parfocal_deploy.reset import (
     BUCKET_LOCKED,
     KEPT_TABLES,
@@ -86,7 +86,7 @@ def test_the_reset_stops_on_any_other_refusal() -> None:
         asyncio.run(remove_unlocked(store, ["t/one/a"]))
 
 
-def test_the_reset_publishes_the_fixture_folders_before_it_empties_anything(
+def test_the_reset_publishes_fixtures_first_and_starts_the_ingest_worker_after_the_seed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     steps: list[str] = []
@@ -112,13 +112,18 @@ def test_the_reset_publishes_the_fixture_folders_before_it_empties_anything(
     monkeypatch.setattr(reset_module, "empty_tenant_objects", emptied)
     tools = Tools(run=ran, read=lambda _: "", sql=statement, neon=None, fetch=lambda _: (200, {}))  # type: ignore[arg-type]
     settings: dict[str, str] = dict.fromkeys(RESET_SETTINGS, "x")
-    reset_module.reset(environment("production"), tools, settings)
+
+    def drained(target: Environment) -> None:
+        steps.append(f"start ingest in {target.modal_environment}")
+
+    reset_module.reset(environment("production"), tools, settings, drained)
     assert steps == [
         MIGRATE[-1],
         "parfocal_ingest.fixture_slides",
         "truncate",
         "empty objects",
         "parfocal_api.showcase",
+        "start ingest in main",
     ]
 
 
