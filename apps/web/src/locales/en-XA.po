@@ -2117,6 +2117,10 @@ msgstr ""
 msgid "{saved} saved to Downloads"
 msgstr ""
 
+#: src/gpu/gpu-wait-notice.tsx
+msgid "{seconds} s"
+msgstr ""
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "{seenPercent}% of the tissue seen at 10x or more"
 msgstr ""
@@ -4464,6 +4468,7 @@ msgstr ""
 #: ../../packages/ui/src/components/new-forms.tsx
 #: ../../packages/ui/src/components/small-modal.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/gpu/gpu-wait-notice.tsx
 #: src/results/add-result-set.tsx
 #: src/screens/admin/api-section.tsx
 #: src/screens/admin/connect-model.tsx
@@ -15392,6 +15397,10 @@ msgstr ""
 msgid "Stopped. What was stored is kept"
 msgstr ""
 
+#: src/gpu/gpu-wait-notice.tsx
+msgid "Stops waiting and asks the GPU for nothing more"
+msgstr ""
+
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "Storage"
 msgstr ""
@@ -17659,6 +17668,10 @@ msgstr ""
 #: src/screens/clinical-report/steps.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "Waiting"
+msgstr ""
+
+#: src/gpu/gpu-wait-notice.tsx
+msgid "Waiting for a GPU"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx

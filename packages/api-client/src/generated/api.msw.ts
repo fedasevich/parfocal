@@ -72,6 +72,7 @@ import type {
   FormVersion,
   GetResultsSchema200,
   GetResultsTemplate200,
+  GpuWaiting,
   HeadlineNumbers,
   Health,
   HeatmapFacts,
@@ -9253,6 +9254,12 @@ export const getListReviewObjectsResponseMock = (
   added: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
     note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    outline: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.number.float({ fractionDigits: 2 }),
+      ),
+      null,
+    ]),
   })),
   ...overrideResponse,
 });
@@ -19360,31 +19367,52 @@ export const getGetSlideEmbeddingsResponseMock = (
 export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
-export const getScoreViewMapTileResponseMock = (): Blob =>
-  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+export const getScoreViewMapTileResponseMock = (
+  overrideResponse: Partial<Extract<Blob | GpuWaiting, object>> = {},
+): Blob | GpuWaiting =>
+  faker.helpers.arrayElement([
+    new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]),
+    {
+      state: "waiting",
+      call: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      waited_seconds: faker.number.float({ fractionDigits: 2 }),
+      hold_seconds: faker.number.float({ fractionDigits: 2 }),
+      ...overrideResponse,
+    },
+  ]);
 
 export const getTypeOutlinesResponseMock = (
-  overrideResponse: Partial<Extract<OutlineTypes, object>> = {},
-): OutlineTypes => ({
-  slide_id: faker.string.uuid(),
-  typer: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  calibrated: faker.datatype.boolean(),
-  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      probabilities: {
-        tumor: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
-        stroma: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
-        immune: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
-        other: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
-      },
-      type: faker.helpers.arrayElement(Object.values(TyperClass)),
-      alternatives: faker.helpers.arrayElements(Object.values(TyperClass)),
-      foreground: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
-    }),
-  ),
-  ...overrideResponse,
-});
+  overrideResponse: Partial<Extract<OutlineTypes | GpuWaiting, object>> = {},
+): OutlineTypes | GpuWaiting =>
+  faker.helpers.arrayElement([
+    {
+      slide_id: faker.string.uuid(),
+      typer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      calibrated: faker.datatype.boolean(),
+      outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          probabilities: {
+            tumor: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            stroma: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            immune: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            other: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+          },
+          type: faker.helpers.arrayElement(Object.values(TyperClass)),
+          alternatives: faker.helpers.arrayElements(Object.values(TyperClass)),
+          foreground: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        }),
+      ),
+      ...overrideResponse,
+    },
+    {
+      state: "waiting",
+      call: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      waited_seconds: faker.number.float({ fractionDigits: 2 }),
+      hold_seconds: faker.number.float({ fractionDigits: 2 }),
+      ...overrideResponse,
+    },
+  ]);
 
 export const getListSlideAreasResponseMock = (): SlideArea[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -29138,7 +29166,10 @@ export const getWarmSlideEmbedderMockHandler = (
 export const getScoreViewMapTileMockHandler = (
   overrideResponse?:
     | Blob
-    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Blob> | Blob),
+    | GpuWaiting
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<Blob | GpuWaiting> | Blob | GpuWaiting),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
@@ -29159,12 +29190,32 @@ export const getScoreViewMapTileMockHandler = (
   );
 };
 
+export const getCancelGpuCallMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/gpu-calls/:call",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getTypeOutlinesMockHandler = (
   overrideResponse?:
     | OutlineTypes
+    | GpuWaiting
     | ((
         info: Parameters<Parameters<typeof http.post>[1]>[0],
-      ) => Promise<OutlineTypes> | OutlineTypes),
+      ) => Promise<OutlineTypes | GpuWaiting> | OutlineTypes | GpuWaiting),
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
@@ -29632,6 +29683,7 @@ export const getParfocalAPIMock = () => [
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),
   getScoreViewMapTileMockHandler(),
+  getCancelGpuCallMockHandler(),
   getTypeOutlinesMockHandler(),
   getListSlideAreasMockHandler(),
 ];

@@ -77,6 +77,58 @@ export const typerWaitMs = 240_000;
 
 export const typerRetryMs = 15_000;
 
+export const gpuRetryAfterMs = 180_000;
+
+export const gpuSmokeTimeoutMs = 2 * typerWaitMs + gpuRetryAfterMs + 120_000;
+
 export function retriesTyping(status: number): boolean {
-  return status === 502 || status === 503 || status === 504;
+  return status === 502 || status === 503 || status === 504 || status === 524;
+}
+
+export interface GpuReply {
+  status(): number;
+  json(): Promise<unknown>;
+}
+
+export type GpuPost<R extends GpuReply> = (call: string | null) => Promise<R>;
+
+export type Sleep = (ms: number) => Promise<void>;
+
+function waitingCallOf(body: unknown): string | null {
+  if (typeof body !== "object" || body === null) return null;
+  const { state, call } = body as { state?: unknown; call?: unknown };
+  return state === "waiting" && typeof call === "string" ? call : null;
+}
+
+async function oneGpuCall<R extends GpuReply>(
+  post: GpuPost<R>,
+  sleep: Sleep,
+  now: () => number,
+): Promise<R> {
+  const deadline = now() + typerWaitMs;
+  let call: string | null = null;
+  for (;;) {
+    const response = await post(call);
+    const status = response.status();
+    if (status === 202) {
+      call = waitingCallOf(await response.json());
+      if (call === null || now() > deadline) return response;
+      continue;
+    }
+    if (!retriesTyping(status) || now() + typerRetryMs > deadline) return response;
+    call = null;
+    await sleep(typerRetryMs);
+  }
+}
+
+export async function gpuAnswer<R extends GpuReply>(
+  post: GpuPost<R>,
+  sleep: Sleep,
+  now: () => number = Date.now,
+): Promise<{ readonly response: R; readonly retried: boolean }> {
+  const first = await oneGpuCall(post, sleep, now);
+  const status = first.status();
+  if (status !== 202 && !retriesTyping(status)) return { response: first, retried: false };
+  await sleep(gpuRetryAfterMs);
+  return { response: await oneGpuCall(post, sleep, now), retried: true };
 }

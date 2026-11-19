@@ -55773,6 +55773,23 @@
               "minimum": 0,
               "title": "Row"
             }
+          },
+          {
+            "name": "call",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Call"
+            }
           }
         ],
         "responses": {
@@ -55781,6 +55798,131 @@
             "content": {
               "application/octet-stream": {}
             }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GpuWaiting"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-write": true
+      }
+    },
+    "/api/gpu-calls/{call}": {
+      "delete": {
+        "tags": [
+          "slides"
+        ],
+        "summary": "Cancel Gpu Call",
+        "operationId": "cancelGpuCall",
+        "parameters": [
+          {
+            "name": "call",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Call"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "400": {
             "content": {
@@ -55892,6 +56034,23 @@
               "format": "uuid",
               "title": "Slide Id"
             }
+          },
+          {
+            "name": "call",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Call"
+            }
           }
         ],
         "requestBody": {
@@ -56002,6 +56161,16 @@
               }
             },
             "description": "Something went wrong"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GpuWaiting"
+                }
+              }
+            },
+            "description": "Accepted"
           }
         },
         "x-permission": "see-slides",
@@ -64765,6 +64934,35 @@
             "Polygon": "#/components/schemas/PolygonGeometry"
           }
         }
+      },
+      "GpuWaiting": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "const": "waiting",
+            "title": "State",
+            "default": "waiting"
+          },
+          "call": {
+            "type": "string",
+            "title": "Call"
+          },
+          "waited_seconds": {
+            "type": "number",
+            "title": "Waited Seconds"
+          },
+          "hold_seconds": {
+            "type": "number",
+            "title": "Hold Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "call",
+          "waited_seconds",
+          "hold_seconds"
+        ],
+        "title": "GpuWaiting"
       },
       "Handover": {
         "properties": {

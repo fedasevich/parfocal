@@ -2119,6 +2119,10 @@ msgstr "{running} running, {percent}%"
 msgid "{saved} saved to Downloads"
 msgstr "{saved} saved to Downloads"
 
+#: src/gpu/gpu-wait-notice.tsx
+msgid "{seconds} s"
+msgstr "{seconds} s"
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "{seenPercent}% of the tissue seen at 10x or more"
 msgstr "{seenPercent}% of the tissue seen at 10x or more"
@@ -4466,6 +4470,7 @@ msgstr "cancel"
 #: ../../packages/ui/src/components/new-forms.tsx
 #: ../../packages/ui/src/components/small-modal.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/gpu/gpu-wait-notice.tsx
 #: src/results/add-result-set.tsx
 #: src/screens/admin/api-section.tsx
 #: src/screens/admin/connect-model.tsx
@@ -15401,6 +15406,10 @@ msgstr "Stopped at {0} of {total}. What was stored is kept"
 msgid "Stopped. What was stored is kept"
 msgstr "Stopped. What was stored is kept"
 
+#: src/gpu/gpu-wait-notice.tsx
+msgid "Stops waiting and asks the GPU for nothing more"
+msgstr "Stops waiting and asks the GPU for nothing more"
+
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "Storage"
 msgstr "Storage"
@@ -17669,6 +17678,10 @@ msgstr "Wait for an invite from a researcher"
 #: src/screens/upload/progress-step.tsx
 msgid "Waiting"
 msgstr "Waiting"
+
+#: src/gpu/gpu-wait-notice.tsx
+msgid "Waiting for a GPU"
+msgstr "Waiting for a GPU"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "waiting for its admin"

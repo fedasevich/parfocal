@@ -1,28 +1,28 @@
 import { expect, type Page, test } from "@playwright/test";
 import { email, galleryProject, password, seededSlide, signIn } from "./session.ts";
-import { retriesTyping, typedSlideLabel, typerRetryMs, typerWaitMs } from "./typing.ts";
+import { gpuAnswer, gpuSmokeTimeoutMs, typedSlideLabel, typerWaitMs } from "./typing.ts";
 
 const tileCells = 16;
 
-test.describe.configure({ timeout: typerWaitMs + 120_000 });
+test.describe.configure({ timeout: gpuSmokeTimeoutMs });
 
 async function firstTile(page: Page, origin: string, slideId: string): Promise<Buffer> {
-  const deadline = Date.now() + typerWaitMs;
-  for (;;) {
-    const response = await page.request.post(`/api/slides/${slideId}/view-map/0/0`, {
-      headers: { origin },
-      timeout: typerWaitMs,
-    });
-    if (response.ok()) return response.body();
-    const status = response.status();
-    if (!retriesTyping(status) || Date.now() + typerRetryMs > deadline) {
-      expect(
-        status,
-        `the view map answered ${status}: ${(await response.text()).slice(0, 300)}`,
-      ).toBe(200);
-    }
-    await page.waitForTimeout(typerRetryMs);
-  }
+  const { response, retried } = await gpuAnswer(
+    (call) =>
+      page.request.post(`/api/slides/${slideId}/view-map/0/0`, {
+        headers: { origin },
+        params: call === null ? {} : { call },
+        timeout: typerWaitMs,
+      }),
+    (ms) => page.waitForTimeout(ms),
+  );
+  const status = response.status();
+  const again = retried ? " after one retry" : "";
+  expect(
+    status,
+    `the view map answered ${status}${again}: ${(await response.text()).slice(0, 300)}`,
+  ).toBe(200);
+  return response.body();
 }
 
 test("a view map tile is scored on a seeded sample slide on the deployed app", async ({
