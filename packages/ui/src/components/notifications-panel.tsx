@@ -1,6 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { NotificationsSkeleton } from "@parfocal/ui/components/notifications-skeleton";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Switch } from "@parfocal/ui/components/switch";
 import { CountBadge, ObjectIdTag } from "@parfocal/ui/components/tag";
@@ -26,6 +27,7 @@ type NotificationsPanelProps = {
   onMarkAllRead: () => void;
   onSeeAll: () => void;
   onClose: () => void;
+  loading?: boolean;
 };
 
 const detailClass = "mt-0.5 block text-body-sm text-fg-dim leading-[1.45]";
@@ -86,6 +88,7 @@ function NotificationsPanel({
   onMarkAllRead,
   onSeeAll,
   onClose,
+  loading = false,
 }: NotificationsPanelProps) {
   const { t } = useLingui();
 
@@ -106,6 +109,7 @@ function NotificationsPanel({
       </span>
     );
   };
+  if (loading) return <NotificationsSkeleton />;
   return (
     <div className="flex max-h-[780px] min-h-0 flex-col">
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">

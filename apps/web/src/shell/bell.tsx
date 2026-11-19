@@ -10,6 +10,7 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import type { NotificationItem } from "@parfocal/ui/components/notifications-panel";
+import { NotificationsSkeleton } from "@parfocal/ui/components/notifications-skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
@@ -94,7 +95,7 @@ function useStatSound() {
 }
 
 function InboxPanel({ onClose }: { onClose: () => void }) {
-  const inbox = useGatedInbox().shown;
+  const { shown: inbox, loaded } = useGatedInbox();
   const markRead = useMarkNotificationsRead();
   const refresh = useInboxRefresh();
   const goTo = useGoTo();
@@ -120,6 +121,7 @@ function InboxPanel({ onClose }: { onClose: () => void }) {
         void goTo(destinations.myWork());
       }}
       onClose={onClose}
+      loading={!loaded}
     />
   );
 }
@@ -163,7 +165,7 @@ export function Bell() {
         aria-label={t`Notifications`}
         className="w-110 gap-0 overflow-hidden p-0"
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<NotificationsSkeleton />}>
           <InboxPanel onClose={() => void overlay.set(undefined)} />
         </Suspense>
       </PopoverContent>

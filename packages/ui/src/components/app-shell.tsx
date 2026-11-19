@@ -1,4 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import { BrandMark } from "@parfocal/ui/components/brand-mark";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -42,7 +43,7 @@ function Brand({
 
   const mark = (
     <>
-      <Icon name="parfocal" size="md" className="text-accent" />
+      <BrandMark />
       <b className="text-body font-semibold text-fg">
         <Trans>Parfocal</Trans>
       </b>

@@ -157,6 +157,21 @@ export const NotificationsEmpty: Story = {
   ),
 };
 
+export const NotificationsLoading: Story = {
+  render: () => (
+    <PopoverStage>
+      <NotificationsPanel
+        items={[]}
+        loading
+        onOpen={none}
+        onMarkAllRead={none}
+        onSeeAll={none}
+        onClose={none}
+      />
+    </PopoverStage>
+  ),
+};
+
 export const NotificationsMany: Story = {
   render: () => (
     <PopoverStage>

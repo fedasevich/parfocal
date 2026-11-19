@@ -1,3 +1,5 @@
+import { Trans } from "@lingui/react/macro";
+import { BrandMark } from "@parfocal/ui/components/brand-mark";
 import { cn } from "@parfocal/ui/lib/utils";
 
 type LoaderSize = "inline" | "block" | "page";
@@ -15,37 +17,6 @@ const glyphSize: Record<LoaderSize, string> = {
   page: "size-16",
 };
 
-function Reticle({ size, still }: { size: LoaderSize; still: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={cn("shrink-0 text-accent-fill", glyphSize[size])}
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="origin-center [transform-box:fill-box] motion-reduce:[animation:none]"
-        style={
-          still
-            ? undefined
-            : {
-                animationName: "pf-breathe",
-                animationDuration: "calc(var(--motion-slower) * 4)",
-                animationTimingFunction: "ease-in-out",
-                animationIterationCount: "infinite",
-              }
-        }
-      />
-      <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-    </svg>
-  );
-}
-
 function Loader({ label, size = "block", still = false, className }: LoaderProps) {
   const body = (
     <span
@@ -56,7 +27,12 @@ function Loader({ label, size = "block", still = false, className }: LoaderProps
         className,
       )}
     >
-      <Reticle size={size} still={still} />
+      <BrandMark className={glyphSize[size]} breathing={!still} />
+      {size === "page" ? (
+        <span aria-hidden="true" className="ml-3 text-title font-semibold text-fg">
+          <Trans>Parfocal</Trans>
+        </span>
+      ) : null}
       <span className="sr-only">{label}</span>
     </span>
   );
