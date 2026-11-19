@@ -302,6 +302,7 @@ WRITE_ROUTES: dict[str, Write] = {
     "changeAnnotation": Write(body=constant({"version": 1, "geometry": SQUARE})),
     "deleteAnnotation": Write(query=lambda _: {"version": "1"}),
     "restoreAnnotation": Write(body=constant({"version": 1}), owner=CONFLICT),
+    "setLayerGroups": Write(body=constant({"groups": [], "members": []})),
     "createPaintedMap": Write(body=constant({"name": "Painted", "content": EMPTY_PAINTED_MAP})),
     "savePaintedMap": Write(body=constant({"version": 1, "content": EMPTY_PAINTED_MAP})),
     "recordSlideCoverage": Write(

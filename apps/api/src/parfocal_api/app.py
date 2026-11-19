@@ -51,6 +51,7 @@ from parfocal_api import (
     invitations,
     invite_preview,
     lab_models,
+    layer_groups,
     link_imports,
     maintenance,
     model_area,
@@ -283,6 +284,7 @@ def create_app(
     app.include_router(slide_moves.router)
     app.include_router(slide_copies.router)
     app.include_router(annotations.router)
+    app.include_router(layer_groups.router)
     app.include_router(painted_maps.router)
     app.include_router(result_sets.slide_router)
     app.include_router(result_sets.project_router)

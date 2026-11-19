@@ -587,8 +587,17 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         update(slides)
         .where(slides.c.id == case.loose_slide_id)
-        .values(restricted_images=[RestrictedImage.LABEL.value], width=4096, height=2048)
+        .values(
+            restricted_images=[RestrictedImage.LABEL.value],
+            width=4096,
+            height=2048,
+            layer_groups={
+                "groups": [{"id": 1, "name": f"Layer {seeded.tenant_id}"}],
+                "members": [],
+            },
+        )
     )
+    seeded.markers.add(f"Layer {seeded.tenant_id}")
     async with httpx2.AsyncClient(timeout=30) as http:
         await put_restricted_images(
             ObjectStore(TEST_STORAGE, http),
@@ -2224,6 +2233,9 @@ GET_ROUTES = {
     ),
     "getHeatmapGrid": Route(
         Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/heatmap/grid"
+    ),
+    "getLayerGroups": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/layer-groups"
     ),
     "listAnnotations": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotations"

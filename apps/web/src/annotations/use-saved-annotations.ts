@@ -1,4 +1,10 @@
-import { type AnnotationDraft, listAnnotations, useGetMe } from "@parfocal/api-client";
+import {
+  type AnnotationDraft,
+  getLayerGroups,
+  listAnnotations,
+  setLayerGroups,
+  useGetMe,
+} from "@parfocal/api-client";
 import {
   type RefObject,
   useCallback,
@@ -25,7 +31,7 @@ import {
   redo,
   undo,
 } from "./history.ts";
-import { intoGroup } from "./layers.ts";
+import { intoGroup, skippedTarget } from "./layers.ts";
 import { applyLiveChanges } from "./live-apply.ts";
 import { type ChangeSummary, createLiveBatch, type LayerRecord, summarise } from "./live-batch.ts";
 import type { Point } from "./polygon-draft.ts";
@@ -37,6 +43,7 @@ import {
   type Remote,
 } from "./save-queue.ts";
 import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
+import { layerGroupsOf, withSavedGroups } from "./saved-groups.ts";
 import { draftOf, sameBody, shapeOf } from "./saved-shapes.ts";
 import type { GroupId, Shape, ShapeId } from "./shapes.ts";
 
@@ -53,6 +60,10 @@ export const layerChangedEvent = "layer.object-changed";
 
 export type SaveConflict = Conflict<AnnotationDraft>;
 
+export type SkippedTarget = { readonly name: string; readonly reason: "hidden" | "locked" };
+
+const groupRetryMs = 4000;
+
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
   readonly setDocument: (next: AnnotationDocument) => void;
@@ -67,6 +78,7 @@ export type SavedAnnotations = {
   readonly fold: (id: EntryId, change: (doc: AnnotationDocument) => AnnotationDocument) => void;
   readonly target: GroupId | null;
   readonly setTarget: (id: GroupId | null) => void;
+  readonly skipped: SkippedTarget | null;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly loaded: boolean;
@@ -107,10 +119,13 @@ export function useSavedAnnotations(
   const [loaded, setLoaded] = useState(false);
   const [target, setTargetState] = useState<GroupId | null>(null);
   const targetRef = useRef<GroupId | null>(null);
+  const [skipped, setSkipped] = useState<SkippedTarget | null>(null);
   const setTarget = useCallback((id: GroupId | null) => {
     targetRef.current = id;
     setTargetState(id);
+    setSkipped(null);
   }, []);
+  const savedGroups = useRef<string | null>(null);
   const [history, setHistoryState] = useState(createHistory);
   const current = useRef(document);
   const log = useRef(history);
@@ -263,6 +278,7 @@ export function useSavedAnnotations(
     let cancelled = false;
     remotes.current.clear();
     deletedHere.current.clear();
+    savedGroups.current = null;
     setDocument(createDocument());
     setHistory(createHistory());
     setLoaded(false);
@@ -277,8 +293,24 @@ export function useSavedAnnotations(
           next = added.document;
           remotes.current.set(added.shape.id, { id: annotation.id, version: annotation.version });
         }
-        setDocument(next);
-        setLoaded(true);
+        const finish = (grouped: AnnotationDocument, remembered: string | null) => {
+          if (cancelled) return;
+          savedGroups.current = remembered;
+          setDocument(grouped);
+          setLoaded(true);
+        };
+        if (sharedTaskId !== null) {
+          finish(next, null);
+          return;
+        }
+        void getLayerGroups(slideId).then(
+          (response) => {
+            if (response.status !== 200) return finish(next, null);
+            const grouped = withSavedGroups(next, response.data, remotes.current);
+            finish(grouped, JSON.stringify(layerGroupsOf(grouped, remotes.current)));
+          },
+          () => finish(next, null),
+        );
       },
       () => undefined,
     );
@@ -286,6 +318,33 @@ export function useSavedAnnotations(
       cancelled = true;
     };
   }, [slideId, sharedTaskId, enabled, setDocument, setHistory]);
+
+  useEffect(() => {
+    if (!enabled || !loaded || sharedTaskId !== null || status.waiting > 0) return;
+    const body = layerGroupsOf(document, remotes.current);
+    const text = JSON.stringify(body);
+    if (savedGroups.current === null && body.groups?.length === 0) return;
+    if (text === savedGroups.current) return;
+    let stale = false;
+    let timer: number | undefined;
+    const push = () => {
+      void setLayerGroups(slideId, body).then(
+        (response) => {
+          if (stale) return;
+          if (response.status === 200) savedGroups.current = text;
+          else timer = window.setTimeout(push, groupRetryMs);
+        },
+        () => {
+          if (!stale) timer = window.setTimeout(push, groupRetryMs);
+        },
+      );
+    };
+    push();
+    return () => {
+      stale = true;
+      window.clearTimeout(timer);
+    };
+  }, [document, enabled, loaded, sharedTaskId, slideId, status.waiting]);
 
   const recordEdit = useCallback(
     (before: AnnotationDocument, after: AnnotationDocument, label: string) => {
@@ -307,6 +366,7 @@ export function useSavedAnnotations(
       const before = current.current;
       const added = addShape(before, { kind: "polygon", points, classKey });
       const placed = intoGroup(before, added.document, targetRef.current);
+      setSkipped(skippedTarget(before, added.document, targetRef.current));
       setDocument(placed);
       recordEdit(before, placed, "Add outline");
       createFor(added.shape);
@@ -319,6 +379,7 @@ export function useSavedAnnotations(
       const before = current.current;
       const added = dropMarker(before, point, classKey);
       const placed = intoGroup(before, added.document, targetRef.current);
+      setSkipped(skippedTarget(before, added.document, targetRef.current));
       setDocument(placed);
       recordEdit(before, placed, "Add marker");
       createFor(added.shape);
@@ -343,6 +404,8 @@ export function useSavedAnnotations(
       const before = current.current;
       if (next === before) return;
       const placed = intoGroup(before, next, targetRef.current);
+      const missed = skippedTarget(before, next, targetRef.current);
+      if (missed !== null) setSkipped(missed);
       setDocument(placed);
       commit(before, placed, label);
     },
@@ -408,6 +471,7 @@ export function useSavedAnnotations(
     fold: foldInto,
     target,
     setTarget,
+    skipped,
     canUndo: canUndo(history),
     canRedo: canRedo(history),
     loaded,

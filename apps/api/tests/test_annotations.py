@@ -390,3 +390,41 @@ def test_an_annotation_snapshot_from_before_text_still_reads() -> None:
     field = Annotation.model_fields["text"]
     assert not field.is_required()
     assert field.default is None
+
+
+def test_layer_groups_are_saved_with_the_slide_and_checked(api: ApiAs, database: str) -> None:
+    s = studio(database)
+    client = api(s.people["owner"])
+    path = f"/api/slides/{s.slide}/layer-groups"
+    assert client.get(path).json() == {"groups": [], "members": []}
+    shape = client.post(s.path, json={"kind": "roi", "geometry": square(0, 0)}).json()["id"]
+    saved = {
+        "groups": [
+            {
+                "id": 1,
+                "name": "Margin",
+                "parent_id": None,
+                "color": [10, 20, 30],
+                "hidden": False,
+                "locked": True,
+            },
+            {
+                "id": 2,
+                "name": "Inner",
+                "parent_id": 1,
+                "color": None,
+                "hidden": True,
+                "locked": False,
+            },
+        ],
+        "members": [{"annotation_id": shape, "group_id": 2}],
+    }
+    assert client.put(path, json=saved).json() == saved
+    assert client.get(path).json() == saved
+    orphan = {"groups": [], "members": [{"annotation_id": shape, "group_id": 9}]}
+    assert client.put(path, json=orphan).status_code == 422
+    loop = {"groups": [{"id": 1, "name": "A", "parent_id": 7}], "members": []}
+    assert client.put(path, json=loop).status_code == 422
+    assert client.get(path).json() == saved
+    assert api(s.people["viewer"]).get(path).json() == saved
+    assert api(s.people["viewer"]).put(path, json=saved).status_code == 403

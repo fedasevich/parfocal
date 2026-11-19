@@ -1544,6 +1544,12 @@ export interface ChangedAiObjects {
   objects: LayerObject[];
 }
 
+/**
+ * @minimum 0
+ * @maximum 255
+ */
+export type Channel = number;
+
 export type ChartStyle = (typeof ChartStyle)[keyof typeof ChartStyle];
 
 export const ChartStyle = {
@@ -3629,6 +3635,12 @@ export interface GpuWaiting {
 /**
  * @minLength 1
  * @maxLength 80
+ */
+export type GroupName = string;
+
+/**
+ * @minLength 1
+ * @maxLength 80
  * @pattern ^[A-Za-z0-9][A-Za-z0-9-]*$
  */
 export type HeaderName = string;
@@ -4432,6 +4444,29 @@ export interface LabSettings {
 export interface LastArrival {
   at: string;
   what: string;
+}
+
+export interface LayerGroup {
+  /** @minimum 1 */
+  id: number;
+  name: GroupName;
+  parent_id?: number | null;
+  color?: Channel[] | null;
+  hidden?: boolean;
+  locked?: boolean;
+}
+
+export interface LayerMember {
+  annotation_id: string;
+  /** @minimum 1 */
+  group_id: number;
+}
+
+export interface LayerGroups {
+  /** @maxItems 500 */
+  groups?: LayerGroup[];
+  /** @maxItems 20000 */
+  members?: LayerMember[];
 }
 
 export type LayerImportContent = { [key: string]: unknown } | unknown[];
@@ -31131,6 +31166,358 @@ export function useListAnnotationHistory<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getLayerGroupsResponse200 = {
+  data: LayerGroups;
+  status: 200;
+};
+
+export type getLayerGroupsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getLayerGroupsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getLayerGroupsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getLayerGroupsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getLayerGroupsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getLayerGroupsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getLayerGroupsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getLayerGroupsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getLayerGroupsResponseSuccess = getLayerGroupsResponse200 & {
+  headers: Headers;
+};
+export type getLayerGroupsResponseError = (
+  | getLayerGroupsResponse400
+  | getLayerGroupsResponse401
+  | getLayerGroupsResponse403
+  | getLayerGroupsResponse404
+  | getLayerGroupsResponse409
+  | getLayerGroupsResponse422
+  | getLayerGroupsResponse429
+  | getLayerGroupsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getLayerGroupsResponse = getLayerGroupsResponseSuccess | getLayerGroupsResponseError;
+
+export const getGetLayerGroupsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/layer-groups`;
+};
+
+/**
+ * @summary Get Layer Groups
+ */
+export const getLayerGroups = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getLayerGroupsResponse> => {
+  return apiFetch<getLayerGroupsResponse>(getGetLayerGroupsUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetLayerGroupsQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/layer-groups`] as const;
+};
+
+export const getGetLayerGroupsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLayerGroups>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLayerGroups>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetLayerGroupsQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLayerGroups>>> = ({ signal }) =>
+    getLayerGroups(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getLayerGroups>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetLayerGroupsQueryResult = NonNullable<Awaited<ReturnType<typeof getLayerGroups>>>;
+export type GetLayerGroupsQueryError = Problem;
+
+export function useGetLayerGroups<
+  TData = Awaited<ReturnType<typeof getLayerGroups>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLayerGroups>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLayerGroups>>,
+          TError,
+          Awaited<ReturnType<typeof getLayerGroups>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetLayerGroups<
+  TData = Awaited<ReturnType<typeof getLayerGroups>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLayerGroups>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLayerGroups>>,
+          TError,
+          Awaited<ReturnType<typeof getLayerGroups>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetLayerGroups<
+  TData = Awaited<ReturnType<typeof getLayerGroups>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLayerGroups>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Layer Groups
+ */
+
+export function useGetLayerGroups<
+  TData = Awaited<ReturnType<typeof getLayerGroups>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLayerGroups>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetLayerGroupsQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setLayerGroupsResponse200 = {
+  data: LayerGroups;
+  status: 200;
+};
+
+export type setLayerGroupsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setLayerGroupsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setLayerGroupsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setLayerGroupsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setLayerGroupsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setLayerGroupsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setLayerGroupsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setLayerGroupsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setLayerGroupsResponseSuccess = setLayerGroupsResponse200 & {
+  headers: Headers;
+};
+export type setLayerGroupsResponseError = (
+  | setLayerGroupsResponse400
+  | setLayerGroupsResponse401
+  | setLayerGroupsResponse403
+  | setLayerGroupsResponse404
+  | setLayerGroupsResponse409
+  | setLayerGroupsResponse422
+  | setLayerGroupsResponse429
+  | setLayerGroupsResponse500
+) & {
+  headers: Headers;
+};
+
+export type setLayerGroupsResponse = setLayerGroupsResponseSuccess | setLayerGroupsResponseError;
+
+export const getSetLayerGroupsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/layer-groups`;
+};
+
+/**
+ * @summary Set Layer Groups
+ */
+export const setLayerGroups = async (
+  slideId: string,
+  layerGroups: LayerGroups,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setLayerGroupsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setLayerGroupsResponse>(getSetLayerGroupsUrl(slideId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(layerGroups),
+  });
+};
+
+export const getSetLayerGroupsMutationKey = () => ["setLayerGroups"] as const;
+
+export const getSetLayerGroupsMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setLayerGroups>>,
+    TError,
+    SetLayerGroupsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setLayerGroups>>,
+  TError,
+  SetLayerGroupsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetLayerGroupsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setLayerGroups>>,
+    SetLayerGroupsMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return setLayerGroups(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetLayerGroupsMutationResult = NonNullable<Awaited<ReturnType<typeof setLayerGroups>>>;
+export type SetLayerGroupsMutationBody = LayerGroups;
+export type SetLayerGroupsMutationError = Problem;
+export type SetLayerGroupsMutationVariables = { slideId: string; data: LayerGroups };
+
+/**
+ * @summary Set Layer Groups
+ */
+export const useSetLayerGroups = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setLayerGroups>>,
+      TError,
+      SetLayerGroupsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setLayerGroups>>,
+  TError,
+  SetLayerGroupsMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetLayerGroupsMutationOptions(options), queryClient);
+};
 
 export type listPaintedMapsResponse200 = {
   data: PaintedMap[];
