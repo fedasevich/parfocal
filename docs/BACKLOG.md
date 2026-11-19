@@ -4972,6 +4972,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Row 37 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed gives the agent account no task, has no case so the case page, clinical report and co-sign cannot be reached, no finished job so Jobs is empty, and no broken slide to raise the open failure alert.
   Done when a seed test finds for the agent account one review task, one annotate task, one case with a report, one finished job and one slide that fails to open, and the next reset shows them.
   Depends on TEST-051. Size: S.
+- [ ] TEST-054 · Philips-3.tiff carries a worked annotation example
+  On 2026-11-19 the owner asked to see a seeded example of annotation creation, editing and export on the biggest seeded slide, Philips-3.tiff. Seed an annotate task on it with shapes drawn in each class, two named groups, AI objects confirmed, edited and deleted with their history, typed cells, and one finished export in each documented format, all made through the app's own API calls so the example proves the flow.
+  Done when a seed test finds the task, the shapes in classes and groups, the history, the typed cells and the exports on Philips-3.tiff, the export files download and re-import cleanly, and after the next reset the owner and agent accounts can open it from My work.
+  Depends on TEST-051, PROTO-066, PROTO-069. Size: M.
 
 - [x] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
@@ -6825,6 +6829,22 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 18, 25, 27, 28, 29, 30, 32, 33, 35 and 38 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the Opinion tab outside review tasks, no notice for importing or failed result sets, two tissue progress controls, no finish control in the annotate top bar, a never opened task shown as continued, the comments route without a slide, 1 slides, wrapping Objects rows, the sign off route for a signed task, and the ignored tab parameter.
   Done when each row has a spec or unit test and reads right on the fake API.
   Depends on PROTO-060. Size: M.
+- [ ] PROTO-076 · Nothing in the viewer is cut off or scrolls the page
+  On 2026-11-19 the owner found three cut parts on app.parfocal.eu: the minimap's click to move caption hangs below the slide and makes the page scroll, the Slides in this project popover cuts its Assigned chips and the Q and E keys at the right edge, and the Select tool hint bar cuts "Double-click an edge to add a point". Remove the minimap caption, fit the popover to its content within the window, and let hint bars wrap or shorten instead of clipping.
+  Done when a spec at 1440 by 900, 1280 by 800 and 1024 by 700 finds the document not scrollable in the viewer, every chip and key in the slides popover inside it, and every hint chip's text unclipped (scrollWidth equals clientWidth).
+  Depends on PROTO-060. Size: S.
+- [ ] PROTO-077 · See all in notifications opens every notification
+  On 2026-11-19 the owner found that See all in the notifications popover does nothing. Make it open a notifications page or a full height panel with every notification, read and unread, paged, with mark all read.
+  Done when a spec clicks See all and finds the full list, paging and mark all read on the fake API and the real API e2e.
+  Depends on PROTO-061. Size: S.
+- [ ] PROTO-078 · Disagreements draw the slide and adjudication works for real
+  On 2026-11-19 the owner found the disagreements screen draws only outlines on an empty canvas with no slide image, Preview the adjudicator view is a dashed prototype button, and the adjudicator view at scene=adjudicate says Nothing is queued for you with an empty stage. Production must not carry mock views. Draw the slide region under each object, make Send to an adjudicator create a real queue, give the adjudicator a real route that lists and decides the queued objects on the slide, remove the preview button and the scene switch, and store each adjudication beside the reviewers' decisions.
+  Done when a real API e2e spec makes a disagreement, sends it to an adjudicator, signs in as the adjudicator, decides it on a drawn slide, and the task's evaluation and sign off show the adjudication, and no disagreements route reads a scene parameter.
+  Depends on PROTO-065. Size: M.
+- [ ] PROTO-079 · The deployed app carries no prototype scenes or mock views
+  The owner said on 2026-11-19 that the deployed app is to be treated as production for features and must not show mock views. Eleven screens still hold prototype-scenes files and routes such as /prototype, /flow-map, /kpi, /spikes, /issue-states and /developer ship in the build. List every scene and mock route a signed in person can reach on the deployed app, make each one a real feature on real data or keep it only behind the dev tools flag that the deployed build turns off, and make the build fail if a scene parameter is read outside dev tools.
+  Done when a unit test lists every route and scene, a build check fails on a scene read outside dev tools, a spec on the deployed build config finds none of the mock routes, and the disagreements work stays with PROTO-078.
+  Depends on PROTO-078. Size: M.
 
 ---
 
