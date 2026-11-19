@@ -96,6 +96,7 @@ import { StageDockProvider, useStageMeasurementsValue } from "./stage-measuremen
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import type { StageTabCounts } from "./stage-tab-counts.ts";
+import { StageTips } from "./stage-tips.tsx";
 import { stageToolOf } from "./stage-tools.ts";
 import { ThreadFocus } from "./thread-focus.tsx";
 import { threadAnchorPoint } from "./thread-target.ts";
@@ -106,6 +107,7 @@ import { toolHintText } from "./tool-hint-text.ts";
 import { usePanelKey, usePanHide } from "./use-pan-hide.ts";
 import { useSelectionClass } from "./use-selection-class.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
+import { useStageWheel } from "./use-stage-wheel.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
@@ -683,6 +685,7 @@ function OpenedSlide({
   }, [hostNode]);
 
   useStageDevices(session, hostNode, chosenDevice, workspace);
+  useStageWheel(hostNode);
 
   useEffect(() => {
     session?.engine.setSlideBrightness(brightness);
@@ -769,6 +772,7 @@ function OpenedSlide({
                   <SlideChecker engine={opened.engine} stage={hostNode} />
                 ) : null}
                 <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
+                <StageTips stage={hostNode?.parentElement ?? null} />
                 <TopStack
                   ref={setTopStackNode}
                   className={toolsLayout === "dock" ? "top-15" : ""}
