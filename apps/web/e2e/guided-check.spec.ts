@@ -80,8 +80,17 @@ test("a row click keeps the guided object and a fast second key does not touch a
   await expect(row(page, "C1")).toHaveAttribute("aria-pressed", "true");
   await expect(row(page, "C4")).toHaveAttribute("aria-pressed", "false");
 
-  await page.keyboard.press("d");
-  await page.keyboard.press("Shift+X");
+  await page.evaluate(() => {
+    const press = (key: string, code: string, shiftKey: boolean) => {
+      for (const type of ["keydown", "keyup"]) {
+        document.body.dispatchEvent(
+          new KeyboardEvent(type, { key, code, shiftKey, bubbles: true, cancelable: true }),
+        );
+      }
+    };
+    press("d", "KeyD", false);
+    press("X", "KeyX", true);
+  });
   await expect(guide).toHaveAttribute("data-current", "C2");
   await expect(row(page, "C1")).toHaveAttribute("data-origin", "ai-confirmed");
   await expect(row(page, "C2")).toHaveAttribute("data-origin", "ai");

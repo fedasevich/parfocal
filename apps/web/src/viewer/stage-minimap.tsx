@@ -1,12 +1,13 @@
 import { useLingui } from "@lingui/react/macro";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
-import { type MapRect, minimapBox } from "@parfocal/ui/lib/minimap-box";
+import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { openPopout, useMainPopoutSync } from "../popout/popout-channel.ts";
 import { slideThumbUrl } from "../screens/slide-thumb-url.ts";
 import {
   type Corner,
+  type CornerChoice,
   choiceOfCorner,
   chosenPlacement,
   cornerOfChoice,
@@ -20,6 +21,7 @@ import {
 import { tissueShareOnScreen } from "../screens/viewer-tools/tissue-share.ts";
 import { useHeldCorner } from "../screens/viewer-tools/use-held-corner.tsx";
 import {
+  type CornerChoiceUpdate,
   type MinimapSurface,
   useMinimapCorner,
 } from "../screens/viewer-tools/use-minimap-corner.ts";
@@ -125,27 +127,47 @@ function useStageBlocks(frame: React.RefObject<HTMLElement | null>): ScreenRect[
   return blocks;
 }
 
-export function StageMinimap({
-  engine,
-  slideId,
-  overview,
-  units,
-  surface = "viewer",
-  onOpen,
-}: {
+type StageMinimapProps = {
   engine: ViewerEngine;
   slideId: string;
   overview?: StageSession["overview"];
   units?: Pick<ViewerModule, "effectiveMagnification">;
   surface?: MinimapSurface;
   onOpen?: (() => void) | undefined;
+};
+
+export function StageMinimap({
+  slideId,
+  overview,
+  surface = "viewer",
+  ...view
+}: StageMinimapProps) {
+  const image = useMinimapImage(slideId, overview);
+  const setting = useResolvedSettings()?.minimap ?? "useful";
+  const [choice, setChoice] = useMinimapCorner(surface);
+  return (
+    <PlacedMinimap {...view} image={image} setting={setting} choice={choice} onChoice={setChoice} />
+  );
+}
+
+const PlacedMinimap = memo(function PlacedMinimap({
+  engine,
+  units,
+  onOpen,
+  image,
+  setting,
+  choice,
+  onChoice: setChoice,
+}: Pick<StageMinimapProps, "engine" | "units" | "onOpen"> & {
+  image: ReturnType<typeof useMinimapImage>;
+  setting: MinimapSetting;
+  choice: CornerChoice;
+  onChoice: (choice: CornerChoiceUpdate) => void;
 }) {
   const { t } = useLingui();
   const frame = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
-  const image = useMinimapImage(slideId, overview);
-  const setting = useResolvedSettings()?.minimap ?? "useful";
   useEffect(() => {
     const node = frame.current;
     if (node === null) return;
@@ -174,7 +196,6 @@ export function StageMinimap({
   const boxSize = minimap.size === "pip" ? "compact" : (minimap.size ?? "full");
   const sized = minimapBox(boxSize, slideRect);
   const blocks = useStageBlocks(frame);
-  const [choice, setChoice] = useMinimapCorner(surface);
   const chosen = cornerOfChoice(choice);
   const scored = placeMinimap(size, sized, [], blocks);
   const place = useHeldCorner(chosenPlacement(scored, chosen), camera);
@@ -249,4 +270,4 @@ export function StageMinimap({
       )}
     </div>
   );
-}
+});

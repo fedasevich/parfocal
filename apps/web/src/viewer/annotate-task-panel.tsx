@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   getGetReviewTaskQueryKey,
+  type LayerObject,
   type ProjectClass,
   type SharedLayer,
   useGetMe,
@@ -84,6 +85,7 @@ import {
   nextClassOf,
   selectionAfterRowClick,
 } from "../annotations/guided-check.ts";
+import { interruptMotion } from "../annotations/stage-pointer.ts";
 
 import type { SaveState } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -98,6 +100,8 @@ import type { ViewerEngine } from "./viewer-engine.ts";
 import { screenToSlide } from "./viewer-engine.ts";
 
 const guideActionList = [guideAction];
+
+const quietBeforeRefreshMs = 400;
 
 type AnnotateTaskPanelProps = {
   engine: ViewerEngine;
@@ -193,9 +197,26 @@ export function AnnotateTaskPanel({
     ]);
   }, [queryClient, taskId, slideId, task.slideIds]);
 
+  const keepSaved = useCallback(
+    (saved: readonly LayerObject[]) =>
+      queryClient.setQueryData<{ data: SharedLayer }>(sharedLayerKey(taskId, slideId), (old) => {
+        if (old === undefined) return old;
+        const fresh = new Map(saved.map((item) => [item.id, item]));
+        const kept = old.data.objects.map((item) => fresh.get(item.id) ?? item);
+        const known = new Set(kept.map((item) => item.id));
+        const added = saved.filter((item) => !known.has(item.id));
+        return { ...old, data: { ...old.data, objects: [...kept, ...added] } };
+      }),
+    [queryClient, taskId, slideId],
+  );
+
   const working = useRef(false);
+  const refreshTimer = useRef<number | undefined>(undefined);
   const run = useCallback(
-    async (action: () => Promise<unknown>) => {
+    async (
+      action: () => Promise<unknown>,
+      lock: "until-refreshed" | "until-saved" = "until-refreshed",
+    ) => {
       if (working.current) return;
       working.current = true;
       setRefusal(null);
@@ -204,6 +225,12 @@ export function AnnotateTaskPanel({
       } catch (error) {
         const code = problemCode(error);
         setRefusal(refusals[code] ?? `The server refused it (${code}).`);
+      }
+      if (lock === "until-saved") {
+        working.current = false;
+        window.clearTimeout(refreshTimer.current);
+        refreshTimer.current = window.setTimeout(() => void refresh(), quietBeforeRefreshMs);
+        return;
       }
       try {
         await refresh();
@@ -249,10 +276,15 @@ export function AnnotateTaskPanel({
 
   const confirmSelected = useCallback(() => {
     if (selectedAi === undefined || selectedAi.check !== "unchecked" || locked) return;
-    void run(() =>
-      confirmAi(taskId, slideId, selectedAi.object, { geometry: selectedAi.geometry }),
-    );
-  }, [selectedAi, locked, run, taskId, slideId]);
+    if (guided) interruptMotion(engine);
+    void run(async () => {
+      const answer = await confirmAi(taskId, slideId, selectedAi.object, {
+        geometry: selectedAi.geometry,
+      });
+      void queryClient.cancelQueries({ queryKey: sharedLayerKey(taskId, slideId) });
+      keepSaved([answer.data]);
+    }, "until-saved");
+  }, [selectedAi, locked, guided, engine, run, taskId, slideId, keepSaved, queryClient]);
   const latestConfirm = useRef(confirmSelected);
   latestConfirm.current = confirmSelected;
   const confirmBindings = useBindings(["annotate"], confirmActions);
@@ -315,17 +347,7 @@ export function AnnotateTaskPanel({
           for (const item of saved) {
             if (item.source !== null) versions.current.set(item.source, item.version);
           }
-          queryClient.setQueryData<{ data: SharedLayer }>(
-            sharedLayerKey(taskId, slideId),
-            (old) => {
-              if (old === undefined) return old;
-              const fresh = new Map(saved.map((item) => [item.id, item]));
-              const kept = old.data.objects.map((item) => fresh.get(item.id) ?? item);
-              const known = new Set(kept.map((item) => item.id));
-              const added = saved.filter((item) => !known.has(item.id));
-              return { ...old, data: { ...old.data, objects: [...kept, ...added] } };
-            },
-          );
+          keepSaved(saved);
           settle();
           return true;
         } catch (error) {
@@ -341,7 +363,7 @@ export function AnnotateTaskPanel({
       sending.current = work;
       return work;
     },
-    [taskId, slideId, queryClient, refresh],
+    [taskId, slideId, keepSaved, refresh],
   );
 
   const edit = useCallback(
@@ -530,6 +552,7 @@ export function AnnotateTaskPanel({
   };
 
   const deleteSelected = deleteSelection;
+  const guidedObjectWaits = () => !working.current && selectedAi?.check === "unchecked";
 
   const addRunNow = (resultSetId: string, reason?: string) =>
     void run(() => addRun(taskId, slideId, resultSetId, reason));
@@ -660,8 +683,12 @@ export function AnnotateTaskPanel({
                   canReclass={classes.length > 1}
                   onCurrent={setSelected}
                   onConfirm={confirmSelected}
-                  onDelete={deleteSelected}
-                  onReclass={reclassSelected}
+                  onDelete={() => {
+                    if (guidedObjectWaits()) deleteSelected();
+                  }}
+                  onReclass={() => {
+                    if (guidedObjectWaits()) reclassSelected();
+                  }}
                   onLeave={toggleGuide}
                 />
               )
