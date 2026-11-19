@@ -9,25 +9,66 @@
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Parfocal</title>
+    <script>
+      (function () {
+        var choice = "system";
+        try {
+          var stored = JSON.parse(window.localStorage.getItem("parfocal.device-settings") || "{}");
+          var legacy = window.localStorage.getItem("parfocal-theme");
+          var value = stored && stored.theme !== undefined ? stored.theme : legacy;
+          if (value === "dark" || value === "light" || value === "system") choice = value;
+        } catch (error) {}
+        var light = typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: light)").matches;
+        document.documentElement.dataset.theme = choice === "system" ? (light ? "light" : "dark") : choice;
+      })();
+    </script>
     <style>
+      :root,
+      :root[data-theme="dark"] {
+        --boot-page: #121212;
+        --boot-fg: #ececec;
+        --boot-accent: #2563eb;
+      }
+      :root[data-theme="light"] {
+        --boot-page: #ececec;
+        --boot-fg: #171717;
+        --boot-accent: #1d5fd1;
+      }
+      body {
+        margin: 0;
+        background: var(--boot-page);
+      }
       .boot-loader {
         position: fixed;
         inset: 0;
+      }
+      .boot-loader-page {
         display: grid;
         place-items: center;
-        background: var(--page, #121212);
-        color: var(--accent-fill, #2563eb);
+        height: 100dvh;
+        background: var(--boot-page);
+      }
+      .boot-loader-group {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .boot-loader svg {
-        width: 64px;
-        height: 64px;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
       }
       .boot-loader-corners {
         transform-box: fill-box;
         transform-origin: center;
         animation: boot-loader-breathe 1.6s ease-in-out infinite;
       }
-      .boot-loader-name {
+      .boot-loader-title {
+        margin-left: 12px;
+        font: 600 20px/28px "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: var(--boot-fg);
+      }
+      .boot-loader-label {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -42,13 +83,10 @@
       @media (prefers-reduced-motion: reduce) {
         .boot-loader-corners { animation: none; }
       }
-      @media (prefers-color-scheme: light) {
-        :root:not([data-theme]) .boot-loader { background: #ececec; color: #1d5fd1; }
-      }
     </style>
   </head>
   <body>
-    <div id="root"><div class="boot-loader" data-testid="boot-loader" role="status" aria-label="Loading Parfocal"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path class="boot-loader-corners" d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg><span class="boot-loader-name">Parfocal</span></div></div>
+    <div id="root"><div class="boot-loader" data-testid="boot-loader"><main class="boot-loader-page"><span class="boot-loader-group" role="status"><svg data-slot="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--boot-accent)"/><g transform="translate(4 4)" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="boot-loader-corners" d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></g><circle cx="16" cy="16" r="2.4" fill="#ffffff"/></svg><span class="boot-loader-title" aria-hidden="true">Parfocal</span><span class="boot-loader-label">Loading Parfocal</span></span></main></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
