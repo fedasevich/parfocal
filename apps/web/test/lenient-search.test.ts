@@ -15,7 +15,7 @@ const searches: [string, Lenient][] = [
 ];
 
 test("every route search schema is covered", () => {
-  assert.ok(searches.length >= 32, `only ${searches.length} schemas found`);
+  assert.ok(searches.length >= 31, `only ${searches.length} schemas found`);
 });
 
 test("an unknown or malformed value for any key falls back to what the key is without it", () => {

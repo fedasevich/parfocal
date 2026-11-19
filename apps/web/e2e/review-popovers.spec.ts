@@ -58,7 +58,7 @@ test("the More menu in the annotate top bar opens settings from an item", async 
 });
 
 test("the adjudicator's slide chip lists the slides queued for them", async ({ page }) => {
-  await page.goto(`/tasks/${rt14}/disagreements?scene=adjudicate`);
+  await page.goto(`/tasks/${rt14}/adjudicate`);
   await page.getByRole("button", { name: /^A1/ }).first().click();
   const queued = page.getByRole("dialog", { name: "Slides with objects queued for you" });
   await expect(queued).toContainText("Slides with objects for you");

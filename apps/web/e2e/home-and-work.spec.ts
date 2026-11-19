@@ -91,7 +91,7 @@ test("Anna sees her adjudication entry and nothing to read", async ({ page }) =>
     .filter({ hasText: /Decide 3 objects/ })
     .getByRole("button", { name: "Start" })
     .click();
-  await expect(page).toHaveURL(/\/disagreements\?scene=adjudicate$/);
+  await expect(page).toHaveURL(/\/adjudicate$/);
 });
 
 test("the bell filters, opens an item and marks everything read", async ({ page }) => {

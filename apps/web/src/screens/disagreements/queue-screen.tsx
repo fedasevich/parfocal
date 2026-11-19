@@ -41,8 +41,7 @@ import { useScreenToast } from "../project/screen-toast.tsx";
 import { type ReviewStyle, toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf } from "../review/decision-style.ts";
 import { fromMentionTokens } from "../review/mention-picking.ts";
-import type { Camera } from "../review/slide-still.tsx";
-import { SlideStill } from "../review/slide-still.tsx";
+import { DisagreementStage } from "./disagreement-stage.tsx";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
 import {
   allClosed,
@@ -57,34 +56,17 @@ import {
   type QueueFilter,
   rowLabel,
   rowTag,
-  stillOf,
   styledText,
   styledWord,
 } from "./text.ts";
 
-export type QueueScene =
-  | "queue"
-  | "selected"
-  | "sendadj"
-  | "sent"
-  | "lockedqueue"
-  | "declined"
-  | "edited";
-
-const sentKeys = ["A1:T4", "A1:T5", "A1:T1·C145"];
-
 type SendDraft = { keys: string[]; excluded: string[] };
-
-const firstSelected = (scene: QueueScene) =>
-  scene === "selected" || scene === "sendadj" || scene === "declined"
-    ? (sentKeys[0] ?? "A1:T2")
-    : "A1:T2";
 
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
-export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueScene }) {
+export function QueueScreen({ taskId }: { taskId: string }) {
   const { t } = useLingui();
 
   const queue = okData(useGetDisagreementQueue(taskId).data);
@@ -110,31 +92,26 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   const queryClient = useQueryClient();
   const toast = useScreenToast();
   const [filter, setFilter] = useState<QueueFilter>("all");
-  const [selectedKey, setSelectedKey] = useState(firstSelected(scene));
-  const [checked, setChecked] = useState<string[]>(
-    scene === "selected" || scene === "sendadj" ? sentKeys : [],
-  );
-  const [send, setSend] = useState<SendDraft | null>(
-    scene === "sendadj" ? { keys: sentKeys, excluded: [] } : null,
-  );
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [checked, setChecked] = useState<string[]>([]);
+  const [send, setSend] = useState<SendDraft | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [nudging, setNudging] = useState<{ userId: string; message: string } | null>(null);
-  const [camera, setCamera] = useState<Camera | null>(null);
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: getGetDisagreementQueueQueryKey(taskId) });
   const update = useUpdateQueuedObject({ mutation: { onSuccess: () => void refresh() } });
   const sendTo = useSendToAdjudicator({ mutation: { onSuccess: () => void refresh() } });
   const nudge = useNudgeReviewer();
   const rows = queue?.rows ?? [];
-  const row = rows.find((candidate) => candidate.key === selectedKey) ?? rows[0];
+  const row =
+    rows.find((candidate) => candidate.key === selectedKey) ??
+    rows.find((candidate) => !isClosed(candidate)) ??
+    rows[0];
   const locked = queue?.locked ?? null;
   const reviewerIds = [...new Set(rows.flatMap((item) => item.answers.map((a) => a.user_id)))];
   const taskCode = task?.code ?? "RT-14";
 
-  const select = (key: string) => {
-    setSelectedKey(key);
-    setCamera(null);
-  };
+  const select = (key: string) => setSelectedKey(key);
 
   const decide = (target: QueueRow, raw: string) => {
     const note = notes[target.key]?.trim() || null;
@@ -247,33 +224,17 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               <Trans>Nudge {lockedName.split(" ")[0]}</Trans>
             </Button>
           ) : (
-            <>
-              <Button
-                className="outline-1 outline-dashed outline-[#d946ef]"
-                title={t`Mock persona switch`}
-                onClick={() =>
-                  void navigate({
-                    to: "/tasks/$taskId/disagreements",
-                    params: { taskId },
-                    search: { scene: "adjudicate" },
-                  })
-                }
-              >
-                <Icon name="users" />
-                <Trans>Preview the adjudicator view</Trans>
-              </Button>
-              <Button
-                variant={everyClosed ? "primary" : "default"}
-                title={
-                  everyClosed
-                    ? t`Every object is decided, left open or with the adjudicator`
-                    : t`Sign-off lists what is still open`
-                }
-                onClick={() => void navigate({ to: "/tasks/$taskId/sign-off", params: { taskId } })}
-              >
-                <Trans>Go to sign-off</Trans>
-              </Button>
-            </>
+            <Button
+              variant={everyClosed ? "primary" : "default"}
+              title={
+                everyClosed
+                  ? t`Every object is decided, left open or with the adjudicator`
+                  : t`Sign-off lists what is still open`
+              }
+              onClick={() => void navigate({ to: "/tasks/$taskId/sign-off", params: { taskId } })}
+            >
+              <Trans>Go to sign-off</Trans>
+            </Button>
           )}
         </div>
       </header>
@@ -332,16 +293,13 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
         ) : row ? (
           <>
             <section aria-label={t`Evidence for ${rowLabel(row)}`} className="grid gap-3">
-              <div className="relative h-[360px] overflow-hidden rounded-zone bg-canvas">
-                <SlideStill
-                  view={stillOf(row)}
-                  camera={camera}
-                  onCameraChange={setCamera}
-                  regionDecisions={{}}
+              <div className="relative flex h-[360px] overflow-hidden rounded-zone bg-canvas">
+                <DisagreementStage
+                  taskId={taskId}
+                  slideId={row.slide_id}
+                  object={row.object}
+                  slideLabel={row.slide_label}
                   className="h-full"
-                  minimap={false}
-                  hint={false}
-                  slideName={row.slide_label}
                 />
               </div>
               <EvidenceList>

@@ -40,7 +40,6 @@ import { answersOf, showsClaim } from "../review/decision-style.ts";
 import { taskDisplayView } from "../review/display-model.ts";
 import { DisplayTab } from "../review/display-tab.tsx";
 import { fromMentionTokens } from "../review/mention-picking.ts";
-import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   adjudicatorCard,
@@ -48,7 +47,8 @@ import {
   decidedRows,
   sentNoteLine,
 } from "./adjudicator-card.ts";
-import { countOf, stillOf } from "./text.ts";
+import { DisagreementStage } from "./disagreement-stage.tsx";
+import { countOf } from "./text.ts";
 
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
@@ -94,7 +94,6 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const queryClient = useQueryClient();
   const [index, setIndex] = useState(0);
   const [tab, setTab] = useState("review");
-  const [camera, setCamera] = useState<Camera | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const decideMutation = useDecideAdjudication({
     mutation: {
@@ -116,7 +115,6 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? t`The researcher`;
   const goTo = (next: number) => {
     setIndex(((next % objects.length) + objects.length) % objects.length);
-    setCamera(null);
   };
   const decide = (raw: string) => {
     if (!current) return;
@@ -176,10 +174,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
             ),
         }))}
       />
-      <Button
-        className="justify-self-start"
-        onClick={() => void navigate({ to: "/my-work", search: { scene: "anna" } })}
-      >
+      <Button className="justify-self-start" onClick={() => void navigate({ to: "/my-work" })}>
         <Trans>Back to My work</Trans>
       </Button>
     </div>
@@ -315,7 +310,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         progressTitle={t`${decided.length} of ${objects.length} decided`}
         progressSub={t`Objects queued for you`}
         primaryTitle={`${percent}% decided`}
-        onPrimary={() => void navigate({ to: "/my-work", search: { scene: "anna" } })}
+        onPrimary={() => void navigate({ to: "/my-work" })}
         backHref={destinations.myWork()}
         renderLink={renderLink}
         accountSlot={<AccountMenu me={me} person={personOf(me)} />}
@@ -323,14 +318,12 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_470px]">
         <div className="relative flex min-h-0 overflow-hidden bg-canvas">
           {shown ? (
-            <SlideStill
-              view={allDone ? { kind: "cell", object: "T1·C145" } : stillOf(shown)}
-              camera={camera}
-              onCameraChange={setCamera}
-              regionDecisions={{}}
+            <DisagreementStage
+              taskId={taskId}
+              slideId={shown.slide_id}
+              object={shown.object}
+              slideLabel={shown.slide_label}
               claimHidden={!showsClaim(look.style)}
-              showIds
-              slideName={shown.slide_label}
             />
           ) : null}
         </div>

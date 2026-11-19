@@ -8,6 +8,7 @@ import {
   getGetTaskEvaluationMockHandler,
   getListEvaluationChangesMockHandler,
   getListMyAdjudicationsMockHandler,
+  getListTaskAdjudicationsMockHandler,
   getSendToAdjudicatorMockHandler,
   getSignOffReviewTaskMockHandler,
   getStartEvaluationVersionMockHandler,
@@ -16,6 +17,7 @@ import type {
   AdjudicationAnswer,
   AdjudicationDraft,
   AdjudicationObject,
+  DecisionValue,
   DisagreementQueue,
   Evaluation,
   EvaluationChange,
@@ -27,6 +29,7 @@ import type {
   QueuedObjectUpdate,
   QueueRow,
   SignOffSummary,
+  TaskAdjudication,
 } from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
@@ -536,8 +539,41 @@ const decideAdjudicationInScene = () =>
     },
   );
 
+const plainValues: readonly string[] = ["agree", "disagree", "unsure"];
+
+const valueOfRaw = (raw: string, className: string): DecisionValue =>
+  plainValues.includes(raw) ? (raw as DecisionValue) : raw === className ? "agree" : "disagree";
+
+export const toTaskAdjudications = (): TaskAdjudication[] =>
+  queueRows.flatMap((seed) => {
+    const live = liveRow(queueKey(seed));
+    if (live.adjudicator === null) return [];
+    const decided = live.adjudicated;
+    return [
+      {
+        adjudication_id: `00000000-0000-4000-8040-${String(queueRows.indexOf(seed) + 1).padStart(12, "0")}`,
+        slide_id: slideByIndex(seed.slide).id,
+        slide_label: seed.slideLabel,
+        object: seed.object,
+        adjudicator_user_id: idOf(live.adjudicator.by),
+        sent_at: scenarioNow,
+        declined: live.state === "declined",
+        reviewer_decisions: seed.answers.length,
+        decision: decided
+          ? {
+              answer: decided.raw,
+              answer_class_id: null,
+              value: valueOfRaw(decided.raw, seed.className),
+              note: decided.note ?? null,
+            }
+          : null,
+      },
+    ];
+  });
+
 export function adjudicationHandlers(): RequestHandler[] {
   return [
+    getListTaskAdjudicationsMockHandler(() => toTaskAdjudications()),
     getGetDisagreementQueueMockHandler(({ params }) => toDisagreementQueue(String(params.taskId))),
     updateQueuedObjectInScene(),
     getGetMyAdjudicationMockHandler(({ params }) => toMyAdjudication(String(params.taskId))),

@@ -1,8 +1,6 @@
 import type { QueueAnswerRecord, QueueRow } from "@parfocal/api-client";
 import { answersFor, type ProjectClass } from "@parfocal/ui/lib/decision-answers";
 import { countsAs, type ReviewStyle } from "../review/decision-mapping.ts";
-import { cellShapes, regionShapes } from "../review/slide-geometry.ts";
-import type { StillView } from "../review/slide-still.tsx";
 
 export type Answer = "agree" | "disagree" | "unsure";
 
@@ -68,15 +66,6 @@ export const isClosed = (row: QueueRow) =>
   ["decided", "left-open", "with-adjudicator", "adjudicated"].includes(row.state);
 
 export const canSend = (row: QueueRow) => row.state === "open" || row.state === "declined";
-
-const firstCell = Object.keys(cellShapes)[0] ?? "T1·C101";
-
-export function stillOf(row: Pick<QueueRow, "object" | "kind">): StillView {
-  if (row.kind === "cell") {
-    return { kind: "cell", object: row.object in cellShapes ? row.object : firstCell };
-  }
-  return { kind: "region", object: row.object in regionShapes ? row.object : "T1" };
-}
 
 const verb: Record<Answer, string> = {
   agree: "agrees with the AI",

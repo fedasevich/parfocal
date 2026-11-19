@@ -229,6 +229,7 @@ import type {
   StudyTemplateSummary,
   StudyTemplateVersion,
   Target,
+  TaskAdjudication,
   TaskDisplay,
   TaskReportLayout,
   TaskSlide,
@@ -12982,6 +12983,33 @@ export const getSendToAdjudicatorResponseMock = (): QueuedObject[] =>
           null,
         ]),
         declined_note: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+      },
+      null,
+    ]),
+  }));
+
+export const getListTaskAdjudicationsResponseMock = (): TaskAdjudication[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    adjudication_id: faker.string.uuid(),
+    slide_id: faker.string.uuid(),
+    slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    adjudicator_user_id: faker.string.uuid(),
+    sent_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    declined: faker.datatype.boolean(),
+    reviewer_decisions: faker.number.int(),
+    decision: faker.helpers.arrayElement([
+      {
+        answer: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
+        answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        value: faker.helpers.arrayElement(Object.values(DecisionValue)),
+        note: faker.helpers.arrayElement([
           faker.string.alpha({ length: { min: 10, max: 20 } }),
           null,
         ]),
@@ -26747,6 +26775,30 @@ export const getSendToAdjudicatorMockHandler = (
   );
 };
 
+export const getListTaskAdjudicationsMockHandler = (
+  overrideResponse?:
+    | TaskAdjudication[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TaskAdjudication[]> | TaskAdjudication[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/disagreements/adjudications",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListTaskAdjudicationsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListAdjudicationObjectsMockHandler = (
   overrideResponse?:
     | AdjudicatedObject[]
@@ -29708,6 +29760,7 @@ export const getParfocalAPIMock = () => [
   getKeepReviewerDecisionsMockHandler(),
   getListAdjudicatorCandidatesMockHandler(),
   getSendToAdjudicatorMockHandler(),
+  getListTaskAdjudicationsMockHandler(),
   getListAdjudicationObjectsMockHandler(),
   getDecideAsAdjudicatorMockHandler(),
   getDeclineAdjudicationMockHandler(),

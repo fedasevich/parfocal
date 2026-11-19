@@ -92,7 +92,7 @@ test("a note written in guided review shows in the Comments tab and the adjudica
   await expect(field(page, "T5")).toHaveValue("Folded edge, ask @Daniel Hruška");
   await page.keyboard.press("Escape");
 
-  await goInApp(page, `/tasks/${rt14}/disagreements?scene=adjudicate`);
+  await goInApp(page, `/tasks/${rt14}/adjudicate`);
   await page.getByRole("button", { name: /^T5, / }).click();
   const quote = page.locator("[data-slot=quoted-note]", { hasText: "Folded edge, ask" });
   await expect(quote).toContainText("@Daniel Hruška");

@@ -17,6 +17,8 @@ from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
     Role,
+    adjudication_objects,
+    adjudications,
     emergency_grants,
     memberships,
     project_members,
@@ -190,6 +192,19 @@ def assigned_slides(principal: Principal) -> Select[tuple[uuid.UUID]]:
     )
 
 
+def adjudicated_slides(principal: MemberPrincipal) -> Select[tuple[uuid.UUID]]:
+    return (
+        select(adjudication_objects.c.slide_id)
+        .join(adjudications, adjudications.c.id == adjudication_objects.c.adjudication_id)
+        .join(review_tasks, review_tasks.c.id == adjudications.c.task_id)
+        .where(
+            adjudications.c.adjudicator_user_id == principal.user_id,
+            adjudications.c.declined_at.is_(None),
+            review_tasks.c.archived_at.is_(None),
+        )
+    )
+
+
 async def reads_slide(
     connection: AsyncConnection,
     principal: Principal,
@@ -202,7 +217,8 @@ async def reads_slide(
     if grant is not Grant.ASSIGNED or not isinstance(principal, MemberPrincipal):
         return False
     mine = assigned_slides(principal).where(review_assignments.c.slide_id == slide_id)
-    return bool(await connection.scalar(select(mine.exists())))
+    judged = adjudicated_slides(principal).where(adjudication_objects.c.slide_id == slide_id)
+    return bool(await connection.scalar(select(or_(mine.exists(), judged.exists()))))
 
 
 async def require_slide_reading(

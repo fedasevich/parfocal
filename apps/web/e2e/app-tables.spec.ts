@@ -66,7 +66,7 @@ const screens: { name: string; path: string; ready: (page: Page) => Promise<void
   },
   {
     name: "disagreement queue",
-    path: `/tasks/${rt14}/disagreements?scene=queue`,
+    path: `/tasks/${rt14}/disagreements?stage=open`,
     ready: (page) => expect(page.locator('[data-slot="queue-row"]').first()).toBeVisible(),
   },
   {

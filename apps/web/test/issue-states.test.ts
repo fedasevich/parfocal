@@ -36,7 +36,8 @@ test("every built state opens its route with its own scene", () => {
     const target = issueTarget(screen, scene, ids);
     assert.ok(target, `${screen}:${scene} has a target`);
     const search = target.search as Record<string, unknown>;
-    assert.equal(search["scene"], scene, `${screen}:${scene} keeps its scene`);
+    const kept = screen === "disagree" ? undefined : scene;
+    assert.equal(search["scene"], kept, `${screen}:${scene} keeps its scene`);
   }
 });
 

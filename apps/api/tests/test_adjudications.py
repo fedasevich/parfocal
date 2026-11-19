@@ -187,6 +187,43 @@ def test_a_declined_send_goes_to_someone_else_whose_decision_sits_beside_the_rev
     ]
 
 
+def test_the_adjudicator_reads_the_slide_and_the_owner_sees_the_adjudication(
+    api: ApiAs, database: str
+) -> None:
+    r, task = queued(api, database)
+    objects = f"{r.base}/objects"
+    assert api(r.people["third"]).get(objects).status_code == 404
+    assert send(api, r, task, "third", ["T1", "T2"], note="Edges").status_code == 201
+    seen = api(r.people["third"]).get(objects)
+    assert seen.status_code == 200, seen.text
+    assert {item["object"] for item in seen.json()["objects"]} >= {"T1", "T2"}
+    decided = api(r.people["third"]).put(
+        f"/api/adjudications/{r.task}/{r.slide}/T1",
+        json={"answer": "disagree", "note": "Not tumour"},
+    )
+    assert decided.status_code == 200, decided.text
+    listed = api(r.people["owner"]).get(f"{task}/disagreements/adjudications")
+    assert listed.status_code == 200, listed.text
+    rows = by_object(listed.json())
+    assert rows["T1"]["adjudicator_user_id"] == str(r.people["third"].user_id)
+    assert rows["T1"]["decision"]["value"] == "disagree"
+    assert rows["T1"]["decision"]["note"] == "Not tumour"
+    assert rows["T1"]["reviewer_decisions"] == 2
+    assert rows["T2"]["decision"] is None
+    reviewers = by_object(api(r.people["owner"]).get(f"{task}/disagreements").json())
+    assert sorted(given["value"] for given in reviewers["T1"]["decisions"]) == [
+        "agree",
+        "disagree",
+    ]
+    refused = api(r.people["first"]).get(f"{task}/disagreements/adjudications")
+    assert refused.status_code == 403
+    declined = api(r.people["third"]).post(
+        f"/api/adjudications/{rows['T1']['adjudication_id']}/decline", json={}
+    )
+    assert declined.status_code == 204
+    assert api(r.people["third"]).get(objects).status_code == 404
+
+
 def test_another_workspace_and_other_members_cannot_touch_adjudications(
     api: ApiAs, database: str
 ) -> None:

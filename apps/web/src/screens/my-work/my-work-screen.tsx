@@ -69,7 +69,7 @@ export function MyWorkScreen({
   const reviewRows = [
     ...adjudications.map((item) => ({
       key: adjudicationKey(item),
-      path: destinations.disagreements(item.task_id, "adjudicate"),
+      path: destinations.adjudicate(item.task_id),
     })),
     ...active.map((task) => ({
       key: task.id,

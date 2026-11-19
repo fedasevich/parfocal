@@ -1304,6 +1304,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
             "objects": [{"slide_id": str(w.slide), "object": "T4"}],
         },
     ),
+    "listTaskAdjudications": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.queued_task}/disagreements/adjudications"
+    ),
     "listMyAdjudications": lambda _: Call("GET", "/api/adjudications"),
     "listAdjudicationObjects": lambda _: Call("GET", "/api/adjudications/objects"),
     "decideAsAdjudicator": lambda w: Call(

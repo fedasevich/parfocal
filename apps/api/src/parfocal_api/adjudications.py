@@ -107,6 +107,18 @@ class AdjudicatedObject(BaseModel):
     decision: AdjudicatorDecision | None = None
 
 
+class TaskAdjudication(BaseModel):
+    adjudication_id: uuid.UUID
+    slide_id: uuid.UUID
+    slide_label: str
+    object: str
+    adjudicator_user_id: uuid.UUID
+    sent_at: datetime
+    declined: bool
+    reviewer_decisions: int
+    decision: AdjudicatorDecision | None = None
+
+
 class ProjectRef(BaseModel):
     id: uuid.UUID
     code: str
@@ -313,6 +325,51 @@ async def send_to_adjudicator(
     return [
         item for item in await queue_of(connection, task_id) if (item.slide_id, item.object) in sent
     ]
+
+
+@task_router.get(
+    "/adjudications",
+    operation_id="listTaskAdjudications",
+    **require(Permission.CREATE_CASES),
+)
+async def list_task_adjudications(
+    task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> list[TaskAdjudication]:
+    task = await owned_task(connection, principal, task_id)
+    queue = await queue_of(connection, task.id)
+    found = await connection.execute(
+        select(slides.c.id, slides.c.label).where(
+            slides.c.id.in_({item.slide_id for item in queue})
+        )
+    )
+    labels: dict[uuid.UUID, str] = {row.id: row.label for row in found}
+    return [
+        adjudication_of(item, sent, labels.get(item.slide_id) or "")
+        for item in queue
+        if (sent := item.adjudication) is not None
+    ]
+
+
+def adjudication_of(item: QueuedObject, sent: Adjudication, label: str) -> TaskAdjudication:
+    decision = item.decision
+    return TaskAdjudication(
+        adjudication_id=sent.id,
+        slide_id=item.slide_id,
+        slide_label=label,
+        object=item.object,
+        adjudicator_user_id=sent.adjudicator_user_id,
+        sent_at=sent.sent_at,
+        declined=not sent.active,
+        reviewer_decisions=len(item.reviewers()),
+        decision=AdjudicatorDecision(
+            answer=decision.answer,
+            answer_class_id=decision.answer_class_id,
+            value=decision.value,
+            note=item.note,
+        )
+        if decision is not None and decision.decided_by_user_id == sent.adjudicator_user_id
+        else None,
+    )
 
 
 def me(principal: Principal) -> uuid.UUID:
