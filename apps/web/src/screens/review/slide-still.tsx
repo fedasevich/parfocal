@@ -322,7 +322,7 @@ export function SlideStill({
       data-scale={shown.scale.toFixed(2)}
       data-camera={`${shown.x.toFixed(2)},${shown.y.toFixed(2)},${shown.scale.toFixed(5)}`}
       className={cn(
-        "relative min-h-0 flex-1 cursor-grab touch-none overflow-hidden bg-[#262626] select-none active:cursor-grabbing",
+        "relative min-h-0 flex-1 cursor-grab touch-none overflow-hidden bg-canvas select-none active:cursor-grabbing",
         className,
       )}
       onPointerDown={onPointerDown}

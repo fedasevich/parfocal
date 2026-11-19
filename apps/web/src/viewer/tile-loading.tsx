@@ -176,7 +176,7 @@ export function SlideChecker({ engine, stage }: { engine: ViewerEngine; stage: H
       className="pointer-events-none absolute"
       style={{
         ...box,
-        backgroundColor: "var(--color-chrome)",
+        backgroundColor: "var(--color-canvas)",
         backgroundImage:
           "conic-gradient(var(--color-line) 25%, transparent 25% 50%, var(--color-line) 50% 75%, transparent 75%)",
         backgroundSize: `${checkerCell * 2}px ${checkerCell * 2}px`,

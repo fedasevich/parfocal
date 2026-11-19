@@ -59,7 +59,7 @@ function GuidedSlideChip({
           ? t`Submit opens the next slide`
           : t`Slide ${position} of ${total}. Submit opens the next one`
       }
-      className="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-ctl border border-line bg-chrome-2 pr-3 pl-1.5 text-fg"
+      className="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-ctl border border-line bg-transparent pr-3 pl-1.5 text-fg"
     >
       <span
         aria-hidden="true"
