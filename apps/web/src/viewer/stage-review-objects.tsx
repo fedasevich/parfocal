@@ -21,6 +21,7 @@ import {
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
+import { type CalmCamera, type CalmStep, calmStep, stageCalmView } from "./calm-camera.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { StageAiReading } from "./stage-ai-reading.tsx";
@@ -28,7 +29,13 @@ import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
 import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachAnswerTip, StageCoachOnSlide, StageCoachStepTip } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
-import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
+import {
+  cellsInTissueOrder,
+  nextOpenObject,
+  outlineArea,
+  outlineCentre,
+  placedObjects,
+} from "./stage-geometry.ts";
 import { StageGuidedCard } from "./stage-guided-card.tsx";
 import { StageGuidedView } from "./stage-guided-view.tsx";
 import { useStageRulers } from "./stage-measurements.tsx";
@@ -195,6 +202,23 @@ export function StageReviewObjects({
     setCurrent(id);
     flyTo(id);
   };
+  const stepGoal = useRef<CalmCamera | null>(null);
+  const stepTo = (id: string) => {
+    const cell = outlineCentre(objects.find((item) => item.object === id)?.outline);
+    const view = stageCalmView();
+    const flying = engine.getMotion() === "flying";
+    const from = flying ? stepGoal.current : engine.getCamera();
+    const move: CalmStep =
+      cell === null || view === null || from === null
+        ? { kind: "fly" }
+        : calmStep(from, view, { x: cell.x, y: cell.y, size: cell.radius * 2 });
+    setDone(false);
+    setCurrent(id);
+    if (move.kind === "stay") return;
+    stepGoal.current = move.kind === "pan" ? move.camera : null;
+    if (move.kind === "pan") void engine.flyTo(move.camera);
+    else flyTo(id);
+  };
   const ready = session.ready && objects.length > 0;
   const coach = useGuidedCoach(guided && object === undefined);
   const coachOn = guided && coachShown(coach.open, ready ? objects.length : 0);
@@ -244,9 +268,9 @@ export function StageReviewObjects({
   };
   const stepToOpenCell = (answered: ReviewObject) => {
     if (guided || !gridOpen || answersOff !== undefined || answered.kind !== "cell") return;
-    const cellOrder = objects.filter((item) => item.kind === "cell").map((item) => item.object);
+    const cellOrder = cellsInTissueOrder(objects).map((item) => item.object);
     const next = nextOpenObject(cellOrder, new Set([...decided, answered.object]), answered.object);
-    if (next !== null) pick(next);
+    if (next !== null) stepTo(next);
   };
   useAnswerKeys(
     typeAnswers,
@@ -364,6 +388,7 @@ export function StageReviewObjects({
           slideId={slideId}
           current={current}
           onPick={pick}
+          onStep={stepTo}
           onClose={() => setGridOpen(false)}
         />
       ) : null}

@@ -53,13 +53,14 @@ async function settledCamera(page: Page) {
   let last = await cameraOf(page);
   await expect
     .poll(async () => {
+      await page.waitForTimeout(250);
       const now = await cameraOf(page);
       const still = now === last;
       last = now;
       return still;
     })
     .toBe(true);
-  return last;
+  return (last ?? "").split(",").map(Number);
 }
 
 const barOffCentre = (page: Page) =>
@@ -70,53 +71,89 @@ const barOffCentre = (page: Page) =>
     return Math.abs(box.left + box.width / 2 - (around.left + around.width / 2));
   });
 
-async function pickedAndCentred(page: Page, cell: string) {
+async function picked(page: Page, cell: string) {
   await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", cell);
   const tile = page.getByTestId("stage-cells-grid").getByRole("button", {
     name: new RegExp(`^${cell} `),
   });
   await expect(tile).toHaveAttribute("data-state", "current");
   await expect(page.getByTestId("cell-type-bar")).toHaveAttribute("aria-label", `Type for ${cell}`);
-  await expect.poll(() => barOffCentre(page)).toBeLessThan(3);
   return settledCamera(page);
 }
 
-test("the arrow keys step between cells in the strip and the camera centres on each", async ({
-  page,
-}) => {
+async function openCells(page: Page) {
   await page.goto(`/tasks/${rt14}/cells?slide=${cellsSlide}`);
   await ready(page);
   await expect(page.getByTestId("stage-cells-grid").locator("[data-crop]")).toHaveCount(3);
+  return settledCamera(page);
+}
+
+const tileOrder = (page: Page) =>
+  page
+    .getByTestId("stage-cells-grid")
+    .locator("[data-crop]")
+    .evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute("aria-label")?.split(" ")[0]));
+
+test("the arrow keys step one cell each and the camera stays put while the cell is in view", async ({
+  page,
+}) => {
+  const opened = await openCells(page);
   await page.keyboard.press("ArrowRight");
-  const first = await pickedAndCentred(page, "C1");
+  expect(await picked(page, "C1")).toEqual(opened);
   await page.keyboard.press("ArrowRight");
-  const second = await pickedAndCentred(page, "C2");
-  expect(second).not.toBe(first);
+  expect(await picked(page, "C2")).toEqual(opened);
   await page.keyboard.press("ArrowDown");
-  const third = await pickedAndCentred(page, "C3");
-  expect(third).not.toBe(second);
+  const [x = 0, , zoom = 0] = await picked(page, "C3");
+  expect(Math.abs(x - 420)).toBeLessThan(1);
+  expect(zoom).toBe(opened[2]);
+  await expect.poll(() => barOffCentre(page)).toBeLessThan(3);
+  const strip = await page.getByTestId("stage-cells-grid").boundingBox();
+  const bar = await page.getByTestId("cell-type-bar").boundingBox();
+  expect((bar?.y ?? 0) + (bar?.height ?? 0)).toBeLessThan(strip?.y ?? 0);
   await page.keyboard.press("ArrowRight");
-  await pickedAndCentred(page, "C3");
+  await picked(page, "C3");
   await page.keyboard.press("ArrowUp");
-  expect(await pickedAndCentred(page, "C2")).toBe(second);
+  const second = await picked(page, "C2");
+  expect(Math.abs((second[0] ?? 0) - 520)).toBeLessThan(1);
+  expect(second[2]).toBe(opened[2]);
   await page.keyboard.press("ArrowLeft");
-  expect(await pickedAndCentred(page, "C1")).toBe(first);
+  expect(await picked(page, "C1")).toEqual(second);
+});
+
+test("a cell too small to judge is flown to and fitted as before", async ({ page }) => {
+  const opened = await openCells(page);
+  for (let press = 0; press < 3; press += 1) await page.keyboard.press("-");
+  const out = await settledCamera(page);
+  expect(out[2] ?? 0).toBeLessThan((opened[2] ?? 0) - 0.5);
+  await page.keyboard.press("ArrowRight");
+  const [x = 0, , zoom = 0] = await picked(page, "C1");
+  expect(Math.abs(x - 300)).toBeLessThan(1);
+  expect(zoom).toBeGreaterThan(opened[2] ?? 0);
+});
+
+test("the strip follows the tissue and keeps its order after a reload", async ({ page }) => {
+  await openCells(page);
+  const order = await tileOrder(page);
+  expect(order).toEqual(["C1", "C2", "C3"]);
+  await page.reload();
+  await ready(page);
+  await expect(page.getByTestId("stage-cells-grid").locator("[data-crop]")).toHaveCount(3);
+  expect(await tileOrder(page)).toEqual(order);
 });
 
 test("a key decision in the strip moves to the next undecided cell", async ({ page }) => {
-  await page.goto(`/tasks/${rt14}/cells?slide=${cellsSlide}`);
-  await ready(page);
+  const opened = await openCells(page);
   const card = page.getByTestId("stage-review-objects");
   const grid = page.getByTestId("stage-cells-grid");
   await page.keyboard.press("ArrowRight");
-  await pickedAndCentred(page, "C1");
+  await picked(page, "C1");
   await page.keyboard.press("k");
-  await pickedAndCentred(page, "C2");
+  expect(await picked(page, "C2")).toEqual(opened);
   await expect(grid.getByRole("button", { name: /^C1 / })).toHaveAttribute("data-state", "done");
   await page.keyboard.press("ArrowRight");
-  await pickedAndCentred(page, "C3");
+  await picked(page, "C3");
   await page.keyboard.press("x");
-  await pickedAndCentred(page, "C2");
+  await picked(page, "C2");
   await page.keyboard.press("u");
   await expect(card).toHaveAttribute("data-current", "C2");
   await expect(grid.locator('[data-crop][data-state="to-check"]')).toHaveCount(0);
@@ -125,15 +162,14 @@ test("a key decision in the strip moves to the next undecided cell", async ({ pa
 test("the arrows pan with Shift, and again on their own once the strip is closed", async ({
   page,
 }) => {
-  await page.goto(`/tasks/${rt14}/cells?slide=${cellsSlide}`);
-  await ready(page);
+  await openCells(page);
   const card = page.getByTestId("stage-review-objects");
   const grid = page.getByTestId("stage-cells-grid");
   await page.keyboard.press("ArrowRight");
-  const centred = await pickedAndCentred(page, "C1");
+  const start = (await picked(page, "C1")).join(",");
   await page.keyboard.down("Shift");
   await page.keyboard.down("ArrowRight");
-  await expect.poll(() => cameraOf(page)).not.toBe(centred);
+  await expect.poll(() => cameraOf(page)).not.toBe(start);
   await page.keyboard.up("ArrowRight");
   await page.keyboard.up("Shift");
   await expect(card).toHaveAttribute("data-current", "C1");
@@ -143,9 +179,9 @@ test("the arrows pan with Shift, and again on their own once the strip is closed
   await expect(grid.getByRole("button", { name: /Agree with the rest/ })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(grid).toHaveCount(0);
-  const before = await settledCamera(page);
+  const before = (await settledCamera(page)).join(",");
   await page.keyboard.down("ArrowRight");
-  await expect.poll(() => cameraOf(page)).not.toBe(before);
+  await expect.poll(async () => (await settledCamera(page)).join(",")).not.toBe(before);
   await page.keyboard.up("ArrowRight");
   await expect(card).toHaveAttribute("data-current", "C1");
 });

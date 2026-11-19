@@ -11,6 +11,7 @@ import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf, showsClaim } from "../screens/review/decision-style.ts";
 import type { ReviewSession } from "../screens/review/review-data.ts";
 import { baseAnswers } from "../screens/review/review-state.ts";
+import { cellsInTissueOrder } from "./stage-geometry.ts";
 import { holdCellArrows } from "./viewer-keys.ts";
 
 type Saves = { save: (object: string, raw: string, value: "agree") => void };
@@ -25,6 +26,7 @@ export function StageCellsGrid({
   slideId,
   current,
   onPick,
+  onStep,
   onClose,
 }: {
   engine: object;
@@ -33,14 +35,12 @@ export function StageCellsGrid({
   slideId: string;
   current: string | null;
   onPick: (object: string) => void;
+  onStep: (object: string) => void;
   onClose: () => void;
 }) {
   const [folded, setFolded] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const cells = useMemo(
-    () => session.objects.filter((item: ReviewObject) => item.kind === "cell"),
-    [session.objects],
-  );
+  const cells = useMemo(() => cellsInTissueOrder<ReviewObject>(session.objects), [session.objects]);
   const answers = baseAnswers(
     session.objects,
     session.decisions,
@@ -77,7 +77,7 @@ export function StageCellsGrid({
       picked === undefined
         ? (firstOpen ?? order[0])
         : stripStep(order, picked, suffix as Direction, stripColumns);
-    if (next !== undefined && next !== picked) onPick(next);
+    if (next !== undefined && next !== picked) onStep(next);
   });
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
