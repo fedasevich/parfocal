@@ -7,15 +7,17 @@ import httpx2
 import pytest
 
 from parfocal_api.showcase import FORMAT_GALLERY
-from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.object_store import ObjectStore, StorageError, StorageLocation
 from parfocal_deploy import reset as reset_module
 from parfocal_deploy.deploy import MIGRATE
 from parfocal_deploy.environments import environment
 from parfocal_deploy.reset import (
+    BUCKET_LOCKED,
     KEPT_TABLES,
     RESET_SETTINGS,
     empty_tenant_objects,
     metadata,
+    remove_unlocked,
     truncate_statement,
 )
 from parfocal_deploy.tools import Tools
@@ -57,6 +59,31 @@ def test_the_reset_removes_tenant_objects_and_leaves_fixtures_untouched() -> Non
     removed, left = asyncio.run(stored_keys_after_reset())
     assert removed == len(TENANT_KEYS)
     assert left == sorted(KEPT_KEYS)
+
+
+class LockedStore:
+    def __init__(self, locked: set[str], refused: dict[str, str]) -> None:
+        self.locked, self.refused, self.removed = locked, refused, list[str]()
+
+    async def delete_object(self, key: str) -> None:
+        if key in self.locked:
+            raise StorageError(409, BUCKET_LOCKED)
+        if key in self.refused:
+            raise StorageError(403, self.refused[key])
+        self.removed.append(key)
+
+
+def test_the_reset_leaves_objects_the_bucket_lock_keeps_and_removes_the_rest() -> None:
+    store = LockedStore({"t/one/new.svs"}, {})
+    removed = asyncio.run(remove_unlocked(store, ["t/one/new.svs", "t/one/old.svs", "t/two/x"]))
+    assert removed == 2
+    assert store.removed == ["t/one/old.svs", "t/two/x"]
+
+
+def test_the_reset_stops_on_any_other_refusal() -> None:
+    store = LockedStore(set(), {"t/one/a": "AccessDenied"})
+    with pytest.raises(StorageError, match="AccessDenied"):
+        asyncio.run(remove_unlocked(store, ["t/one/a"]))
 
 
 def test_the_reset_publishes_the_fixture_folders_before_it_empties_anything(

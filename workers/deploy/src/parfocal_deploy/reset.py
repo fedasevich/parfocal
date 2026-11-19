@@ -2,12 +2,13 @@ import argparse
 import asyncio
 import os
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from typing import Protocol
 
 import httpx2
 
 from parfocal_api.tables import slides
-from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.object_store import ObjectStore, StorageError, StorageLocation
 from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.deploy import MIGRATE
@@ -23,6 +24,7 @@ RESET_SETTINGS = (
     "SEED_OWNER_EMAIL",
 )
 TENANT_PREFIX = "t/"
+BUCKET_LOCKED = "ObjectLockedByBucketPolicy"
 KEPT_TABLES = frozenset({"alembic_version", "platform_operators"})
 AUDIT_TABLE = "audit_events"
 AUDIT_TRUNCATE_GUARD = "audit_events_no_truncate"
@@ -61,9 +63,24 @@ async def empty_tenant_objects(location: StorageLocation) -> int:
         keys = [
             key for key in await store.list_keys(TENANT_PREFIX) if key.startswith(TENANT_PREFIX)
         ]
-        for key in keys:
+        return await remove_unlocked(store, keys)
+
+
+class Deleter(Protocol):
+    async def delete_object(self, key: str) -> None: ...
+
+
+async def remove_unlocked(store: Deleter, keys: Sequence[str]) -> int:
+    removed = 0
+    for key in keys:
+        try:
             await store.delete_object(key)
-        return len(keys)
+        except StorageError as error:
+            if error.code != BUCKET_LOCKED:
+                raise
+            continue
+        removed += 1
+    return removed
 
 
 def storage_location(target: Environment, settings: Mapping[str, str]) -> StorageLocation:
