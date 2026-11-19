@@ -10,6 +10,7 @@ import {
   setFakeSuspendedWorkspace,
   setFakeTeamScene,
   setFakeView,
+  setFakeViewerIssue,
   setFakeViewerScene,
 } from "@parfocal/api-client/fake";
 import { startFakeWorker } from "@parfocal/api-client/fake/browser";
@@ -51,6 +52,7 @@ export async function startFakeApi(
   const search = Object.fromEntries(new URLSearchParams(window.location.search));
   applyFakeState(window.location.pathname, search);
   setFakeAiStreaming(search["stream"] === "1");
+  setFakeViewerIssue(search["issue"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
   const sessionLock = scope === "all" ? sessionLockHandlers() : [];
   await startFakeWorker([...sessionLock, ...fakeApiHandlers(scope)]);

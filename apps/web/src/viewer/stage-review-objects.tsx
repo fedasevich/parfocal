@@ -22,6 +22,7 @@ import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
 import { DockCard } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
+import { StageAiReading } from "./stage-ai-reading.tsx";
 import { StageCellTypeBar } from "./stage-cell-type-bar.tsx";
 import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachAnswerTip, StageCoachOnSlide, StageCoachStepTip } from "./stage-coach.tsx";
@@ -131,6 +132,7 @@ export function StageReviewObjects({
   onNote,
   onCurrent,
   onAddMissed,
+  answersOff,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -146,6 +148,7 @@ export function StageReviewObjects({
   onNote?: (object: string) => void;
   onCurrent?: (object: string | null) => void;
   onAddMissed?: () => void;
+  answersOff?: string | undefined;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -209,6 +212,7 @@ export function StageReviewObjects({
     else pick(next);
   };
   const answer = (item: ReviewObject, raw: string) => {
+    if (answersOff !== undefined) return;
     const option = answersOf(session.style, session.classes, item).find(
       (entry) => entry.raw === raw,
     );
@@ -224,6 +228,7 @@ export function StageReviewObjects({
   const typedCell =
     currentItem?.kind === "cell" && outlineArea(currentItem.outline) !== null ? currentItem : null;
   const decideType = (cell: ReviewObject, id: string) => {
+    if (answersOff !== undefined) return;
     const option = typeOptions.find((item) => item.id === id);
     if (option === undefined) {
       if (id === "unsure") saves.save(cell.object, rawFor(session.style, "unsure", cell), "unsure");
@@ -395,6 +400,7 @@ export function StageReviewObjects({
                 if (current !== null) onNote?.(current);
               }}
               onAddMissed={() => onAddMissed?.()}
+              answersOff={answersOff}
             />
           ) : null}
           {guided && hasCells && !done ? (
@@ -408,8 +414,18 @@ export function StageReviewObjects({
               {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
             </Button>
           ) : null}
+          <StageAiReading slideId={slideId} objects={objects} />
+          {!ready && answersOff !== undefined ? (
+            <p
+              data-testid="answers-off"
+              className="m-0 inline-flex items-center gap-2 text-body-sm text-warn"
+            >
+              {answersOff}
+            </p>
+          ) : null}
           {!guided && ready ? (
             <StageObjectsPanel
+              answersOff={answersOff}
               session={session}
               current={current}
               onPick={(id) => (id === null ? setCurrent(null) : pick(id))}

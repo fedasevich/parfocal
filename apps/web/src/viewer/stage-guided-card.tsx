@@ -25,6 +25,7 @@ export function StageGuidedCard({
   onSkip,
   onNote,
   onAddMissed,
+  answersOff,
 }: {
   session: ReviewSession;
   object: ReviewObject;
@@ -37,6 +38,7 @@ export function StageGuidedCard({
   onSkip: () => void;
   onNote: () => void;
   onAddMissed: () => void;
+  answersOff?: string | undefined;
 }) {
   const { t } = useLingui();
   const wording = useResolvedSettings()?.confidence_wording ?? "numbers";
@@ -92,8 +94,10 @@ export function StageGuidedCard({
         classes={session.classes}
         answer={kept}
         pending={null}
-        lockLine={null}
-        disabled={false}
+        lockLine={
+          answersOff === undefined ? null : { icon: "lock", text: answersOff, tone: "lock" }
+        }
+        disabled={answersOff !== undefined}
         disagreeOpen={false}
         note={note}
         coach={coach}

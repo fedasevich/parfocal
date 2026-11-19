@@ -16,7 +16,7 @@ import {
   reviewerAgainstReviewer,
   scoreBins,
 } from "./scenario-viewer.ts";
-import { fakeViewerScene, nextFakeProgressRead } from "./viewer-scene.ts";
+import { fakeViewerIssue, fakeViewerScene, nextFakeProgressRead } from "./viewer-scene.ts";
 
 const setId = (key: string) => resultSets.find((set) => set.key === key)?.id ?? key;
 
@@ -62,7 +62,7 @@ const stepsAfter = (reads: number) =>
   );
 
 export const toSlideAiProgress = (slideId: string): SlideAiProgress => {
-  if (fakeViewerScene() !== "running") {
+  if (fakeViewerScene() !== "running" && fakeViewerIssue() !== "running") {
     return { slide_id: slideId, state: "ready", steps: [], found: [] };
   }
   const reads = nextFakeProgressRead();

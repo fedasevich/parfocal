@@ -33,6 +33,7 @@ import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
 import { uploadHandlers } from "./upload-handlers.ts";
 import { viewerHandlers } from "./viewer-handlers.ts";
+import { viewerIssueHandlers } from "./viewer-issue-handlers.ts";
 import { viewerToolsHandlers } from "./viewer-tools-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
 import { workspaceJoinHandlers } from "./workspace-join-handlers.ts";
@@ -47,6 +48,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
   return [
     ...statusHandlers(),
     ...runStreamHandlers(),
+    ...viewerIssueHandlers(),
     ...draftHandlers(),
     ...signUpHandlers(),
     ...passwordSignInHandlers(),
@@ -223,6 +225,7 @@ export {
   type FakeViewerScene,
   fakeViewerScene,
   setFakeAiStreaming,
+  setFakeViewerIssue,
   setFakeViewerScene,
 } from "./viewer-scene.ts";
 export {

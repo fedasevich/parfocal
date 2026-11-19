@@ -58,6 +58,7 @@ export function StageObjectsPanel({
   cellTyped,
   rulers = [],
   onRemoveRuler,
+  answersOff,
 }: {
   session: ReviewSession;
   current: string | null;
@@ -68,6 +69,7 @@ export function StageObjectsPanel({
   cellTyped: boolean;
   rulers?: readonly StageRuler[];
   onRemoveRuler?: (ruler: StageRuler) => void;
+  answersOff?: string | undefined;
 }) {
   const person = usePeople();
   const setName = useSetName(session);
@@ -106,7 +108,7 @@ export function StageObjectsPanel({
         style={session.style}
         classes={session.classes}
         answer={answer(currentItem.object)}
-        disabledReason={undefined}
+        disabledReason={answersOff}
         author={person(session.meId)}
         note={closedNote}
         saveOffReason={undefined}

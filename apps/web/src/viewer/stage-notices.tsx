@@ -12,6 +12,7 @@ import { usePeople } from "../screens/people.ts";
 export type NoticeSlots = {
   readonly banner: HTMLElement | null;
   readonly status: HTMLElement | null;
+  readonly lock?: ReactNode;
 };
 
 const NoticeSlotsContext = createContext<NoticeSlots | null>(null);
@@ -100,6 +101,7 @@ export function StageNotices({
           onRetry={onRetry}
           onDismissNotSaved={() => setDismissed(refused)}
         />
+        {plan.shown === null ? slots?.lock : null}
       </Into>
     </>
   );

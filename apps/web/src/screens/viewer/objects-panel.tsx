@@ -292,6 +292,15 @@ export function ObjectFoot({
           label={t`Your answer on ${object.object}`}
         />
       )}
+      {disabledReason === undefined ? null : (
+        <span
+          data-testid="answers-off"
+          className="inline-flex items-center gap-2 text-body-sm text-warn"
+        >
+          <Icon name="lock" />
+          {disabledReason}
+        </span>
+      )}
       {noteBlock}
     </div>
   );

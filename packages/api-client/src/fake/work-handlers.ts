@@ -288,6 +288,11 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
 const taskSlideId = (task: ScenarioReviewTask, index: number, own: string[]) =>
   own[index] ?? `${task.id.slice(0, 24)}${String(900000000000 + index).slice(-12)}`;
 
+export const reviewTaskDetailOf = (taskId: string): ReviewTaskDetail => {
+  const task = [...reviewTasks, rt18].find((candidate) => candidate.id === taskId);
+  return toReviewTaskDetail(task ?? taskByCode("RT-14"));
+};
+
 export const toTaskStates = (seeded: ScenarioReviewTask): TaskStates => {
   const task = queueTaskView(seeded);
   const own = slides.filter((slide) => slide.project === task.project).map((slide) => slide.id);
@@ -553,10 +558,7 @@ export function workHandlers(): RequestHandler[] {
         next_cursor: null,
       };
     }),
-    getGetReviewTaskMockHandler(({ params }) => {
-      const task = [...reviewTasks, rt18].find((candidate) => candidate.id === params.taskId);
-      return toReviewTaskDetail(task ?? taskByCode("RT-14"));
-    }),
+    getGetReviewTaskMockHandler(({ params }) => reviewTaskDetailOf(String(params.taskId))),
     getGetReviewTaskStatesMockHandler(({ params }) => {
       const task = [...reviewTasks, rt18].find((candidate) => candidate.id === params.taskId);
       return task

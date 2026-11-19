@@ -12,7 +12,7 @@ import type { InspectorSection } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { StageTabCounts } from "./stage-tab-counts.ts";
 import type { ThreadFocusRequest } from "./thread-focus.tsx";
-import type { SlideOverview, ViewerEngine } from "./viewer-engine.ts";
+import type { SlideOverview, ViewerEngine, VivRoute } from "./viewer-engine.ts";
 
 type StageInspectorProps = {
   guided?: boolean;
@@ -43,6 +43,7 @@ export type StageSession = {
   readonly module: ViewerModule;
   readonly overview: (signal?: AbortSignal) => Promise<SlideOverview | null>;
   readonly armTool: (tool: string) => void;
+  readonly route: VivRoute | null;
 };
 
 const slotClass = "flex flex-col gap-3";

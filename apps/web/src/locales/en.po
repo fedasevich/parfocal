@@ -619,6 +619,11 @@ msgid "{0} cells in {1} marked agree"
 msgstr "{0} cells in {1} marked agree"
 
 #. placeholder {0}: openCells.length
+#: src/viewer/stage-opinion.tsx
+msgid "{0} cells in the sample are still open"
+msgstr "{0} cells in the sample are still open"
+
+#. placeholder {0}: openCells.length
 #: src/screens/viewer/full-viewer.tsx
 msgid "{0} cells marked agree"
 msgstr "{0} cells marked agree"
@@ -2122,9 +2127,17 @@ msgstr "{senderFirst} sees your changes and the note. He sends it again when it 
 msgid "{shortcutFileName} saved to Downloads, with {0}"
 msgstr "{shortcutFileName} saved to Downloads, with {0}"
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "{slideLabel} can't be read at the highest magnifications yet. Retry, or ask the researcher."
+msgstr "{slideLabel} can't be read at the highest magnifications yet. Retry, or ask the researcher."
+
 #: src/screens/viewer/viewer-notices.tsx
 msgid "{slideLabel} could not be read at 20x and 40x."
 msgstr "{slideLabel} could not be read at 20x and 40x."
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "{slideLabel} could not be read at the highest magnifications."
+msgstr "{slideLabel} could not be read at the highest magnifications."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "{slideName} is locked. Later changes go to the change log."
@@ -2423,9 +2436,14 @@ msgstr "<0>Run a model</0> on the picked slides, or pick another result set."
 msgid "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 msgstr "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "<0>Signed off {day}.</0> Changes need an amendment."
+msgstr "<0>Signed off {day}.</0> Changes need an amendment."
+
 #: src/routes/issue-pages.$kind.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "<0>Signed off.</0> Changes need an amendment."
 msgstr "<0>Signed off.</0> Changes need an amendment."
 
@@ -2467,6 +2485,10 @@ msgstr "0 0 0 1.5px #ffffff"
 #: src/screens/upload/check-step.tsx
 msgid "1 case, {loose} loose"
 msgstr "1 case, {loose} loose"
+
+#: src/viewer/stage-opinion.tsx
+msgid "1 cell in the sample is still open"
+msgstr "1 cell in the sample is still open"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "1 change"
@@ -3805,6 +3827,10 @@ msgstr "As {0}"
 msgid "Ask"
 msgstr "Ask"
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "Ask {researcher} to amend"
+msgstr "Ask {researcher} to amend"
+
 #: src/screens/review/guided-review.tsx
 msgid "Ask {researcherFirstName} to amend"
 msgstr "Ask {researcherFirstName} to amend"
@@ -3827,11 +3853,13 @@ msgstr "Ask the person who shared it for a new link."
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Ask the researcher"
 msgstr "Ask the researcher"
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Ask the researcher to amend"
 msgstr "Ask the researcher to amend"
 
@@ -3985,6 +4013,7 @@ msgstr "Back to disagreements"
 #: src/screens/review/guided-review.tsx
 #: src/screens/review/slide-submitted.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Back to My work"
 msgstr "Back to My work"
 
@@ -7616,6 +7645,7 @@ msgid "Go to sign-off"
 msgstr "Go to sign-off"
 
 #: src/screens/viewer/use-viewer-scene.tsx
+#: src/viewer/stage-opinion.tsx
 msgid "Go to the cells"
 msgstr "Go to the cells"
 
@@ -9819,8 +9849,8 @@ msgid "New classes"
 msgstr "New classes"
 
 #: ../../packages/ui/src/components/comments-tab.tsx
-msgid "New comment <0/>"
-msgstr "New comment <0/>"
+msgid "New comment on an ID <0/>"
+msgstr "New comment on an ID <0/>"
 
 #: src/screens/upload/watched-folder.tsx
 msgid "New files in this folder arrive in {projectCode} on their own, checked like an upload."
@@ -9956,6 +9986,7 @@ msgstr "Next field"
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Next slide"
 msgstr "Next slide"
 
@@ -10007,6 +10038,10 @@ msgstr "No access to {projectName}"
 #: src/screens/kpi/corrections-card.tsx
 msgid "No AI nuclei have been reviewed yet."
 msgstr "No AI nuclei have been reviewed yet."
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "No AI result on {slideLabel} yet."
+msgstr "No AI result on {slideLabel} yet."
 
 #: src/screens/upload/files-step.tsx
 msgid "No AI results found next to it. Fine, you can run a model later."
@@ -10702,6 +10737,7 @@ msgid "Nothing to check, so the order and the finishing rule do not apply."
 msgstr "Nothing to check, so the order and the finishing rule do not apply."
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Nothing to decide here yet."
 msgstr "Nothing to decide here yet."
 
@@ -13040,6 +13076,7 @@ msgstr "Retired"
 #: src/screens/review/guided-review.tsx
 #: src/screens/upload/case-upload-drawer.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/stage-issue-cards.tsx
 #: src/viewer/tile-loading.tsx
 msgid "Retry"
 msgstr "Retry"
@@ -13126,6 +13163,7 @@ msgid "Review the first slide <0/>"
 msgstr "Review the first slide <0/>"
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Review the slide without AI, or ask the researcher to run the model."
 msgstr "Review the slide without AI, or ask the researcher to run the model."
 
@@ -14612,6 +14650,7 @@ msgid "Signed off by: ____________  Date: ________"
 msgstr "Signed off by: ____________  Date: ________"
 
 #: src/screens/viewer/use-viewer-state.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Signed off. Ask the researcher to amend."
 msgstr "Signed off. Ask the researcher to amend."
 
@@ -15724,6 +15763,10 @@ msgstr "the AI cells inside the areas you draw"
 msgid "The AI counts {0} to {1} tumor cells. The line is {cellLine}"
 msgstr "The AI counts {0} to {1} tumor cells. The line is {cellLine}"
 
+#: src/viewer/stage-ai-reading.tsx
+msgid "The AI finished reading this slide."
+msgstr "The AI finished reading this slide."
+
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "The AI found no tumor area on this slide."
 msgstr "The AI found no tumor area on this slide."
@@ -16690,6 +16733,14 @@ msgstr "This task has no regions to measure."
 msgid "This task is signed off, so the mapping is locked."
 msgstr "This task is signed off, so the mapping is locked."
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "This task was withdrawn."
+msgstr "This task was withdrawn."
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "This task was withdrawn. There is nothing left to decide."
+msgstr "This task was withdrawn. There is nothing left to decide."
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "This text block is empty."
 msgstr "This text block is empty."
@@ -16764,6 +16815,7 @@ msgstr "Tiles"
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/stage-issue-cards.tsx
 msgid "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
 msgstr "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
 
@@ -17977,10 +18029,9 @@ msgstr "Who reviews"
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
-#: src/viewer/stage-guided-view.tsx
 #: src/viewer/stage-minimap.tsx
-#: src/viewer/stage-slide-marks.tsx
 #: src/viewer/start-run-panel.tsx
+#: src/viewer/whole-slide-button.tsx
 msgid "Whole slide"
 msgstr "Whole slide"
 
@@ -18310,10 +18361,15 @@ msgstr "Your browser puts it with: {0}. The server puts it with: {1}. The upload
 msgid "Your call on {area}"
 msgstr "Your call on {area}"
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "Your decided slides are kept and show in the report."
+msgstr "Your decided slides are kept and show in the report."
+
 #: src/screens/viewer/viewer-canvas-parts.tsx
 msgid "Your decision"
 msgstr "Your decision"
 
+#: ../../packages/ui/src/components/comments-tab.tsx
 #: src/screens/review/comments-on-ids.tsx
 msgid "Your decision notes"
 msgstr "Your decision notes"

@@ -30,7 +30,7 @@ export const reviewedSlide = slideByIndex(1);
 export const reviewsA1 = (taskId: string, slideId: string) => {
   const task = [...reviewTasks, rt16].find((candidate) => candidate.id === taskId);
   return (
-    (task?.code === "RT-14" || task?.code === "RT-16") &&
+    (task?.code === "RT-14" || task?.code === "RT-16" || task?.code === "RT-09") &&
     slideId === reviewedSlide.id &&
     fakeView().viewer === "LM"
   );

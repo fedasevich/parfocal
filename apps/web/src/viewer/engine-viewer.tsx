@@ -1,8 +1,14 @@
-import { type Thread, useGetProject, useGetReviewTask } from "@parfocal/api-client";
+import {
+  type Thread,
+  useGetProject,
+  useGetReviewTask,
+  useGetReviewTaskStates,
+} from "@parfocal/api-client";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
 import { useRememberResume } from "../screens/home/remember-resume.ts";
+import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
@@ -14,6 +20,8 @@ import { SlideStage } from "./slide-stage.tsx";
 import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
+import { SignedOffNotice, StageIssueLayer } from "./stage-issue-cards.tsx";
+import { isTaskGone, resultMissingOf, signedOffOf } from "./stage-issues.ts";
 import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import type { NoteRequest } from "./stage-object-notes.tsx";
@@ -78,8 +86,8 @@ export function EngineViewer({
   const [storage, setStorage] = useState<{ slideId: string; note: SlideStorageNote } | null>(null);
   const [banner, setBanner] = useState<HTMLElement | null>(null);
   const [status, setStatus] = useState<HTMLElement | null>(null);
-  const notices = useMemo(() => ({ banner, status }), [banner, status]);
   const [, setLayout] = useInspectorLayout();
+  const person = usePeople();
   const storageNote = storage?.slideId === slideId ? storage.note : null;
   const closePeek = useCallback(() => setPeek(false), []);
   const openPeek = useCallback(() => setPeek(true), []);
@@ -95,7 +103,21 @@ export function EngineViewer({
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
-  const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
+  const [goneTask, setGoneTask] = useState<string | null>(null);
+  if (task !== undefined && goneTask !== task && isTaskGone(taskQuery.error)) setGoneTask(task);
+  const taskGone = task !== undefined && goneTask === task;
+  const reviewTask =
+    task !== undefined && (taskDetail?.kind === "review" || taskGone) ? task : null;
+  const statesQuery = useGetReviewTaskStates(task ?? "", {
+    query: { enabled: task !== undefined && taskDetail?.kind === "review" },
+  });
+  const signedOff =
+    taskDetail?.kind === "review" ? signedOffOf(okData(statesQuery.data), slideId) : null;
+  const resultMissing =
+    taskDetail?.kind === "review" && resultMissingOf(taskDetail.slides, slideId);
+  const taskSlideIds = taskDetail?.slides.map((item) => item.slide_id) ?? [];
+  const nextSlideId = taskSlideIds[taskSlideIds.indexOf(slideId) + 1];
+  const researcher = person(taskDetail?.created_by_user_id)?.name;
   const tabCounts = useStageTabCounts({
     projectId,
     taskId: task,
@@ -134,6 +156,17 @@ export function EngineViewer({
           camera: start === undefined ? null : { x: start.x, y: start.y, z: start.scale },
         },
   );
+  const askResearcher = () => {
+    showUi();
+    setLayout({ hidden: false });
+    onTab("comments");
+    toolLink.current?.("comment");
+  };
+  const lock =
+    signedOff === null ? null : (
+      <SignedOffNotice at={signedOff.at} researcher={researcher} onAsk={askResearcher} />
+    );
+  const notices = useMemo(() => ({ banner, status, lock }), [banner, status, lock]);
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
@@ -163,40 +196,57 @@ export function EngineViewer({
           onShowUi={showUi}
         />
       ) : null}
-      {reviewTask === null ? null : (
-        <StageReviewObjects
-          engine={session.engine}
-          module={session.module}
-          taskId={reviewTask}
-          slideId={slideId}
-          object={object}
-          guided={guided}
-          cellsGrid={cells}
-          jumpRequest={jumpRequest}
-          focus={focus ? { onShowUi: showUi } : null}
-          doneRequest={doneRequest}
-          onAddMissed={() => session.armTool("smart")}
-          onCurrent={(id) => {
-            setCurrentObject(id);
-            if (guided && id !== null) {
-              setNoteRequest(null);
-              setNoteObject(id);
-            }
-          }}
-          onComments={(id) => {
-            setNoteRequest(null);
-            setNoteObject(id);
-            onTab("comments");
-          }}
-          onNote={(id) => {
-            showUi();
-            setLayout({ hidden: false });
-            setNoteRequest((before) => ({ object: id, count: (before?.count ?? 0) + 1 }));
-            setNoteObject(id);
-            onTab("comments");
-          }}
-        />
-      )}
+      <StageIssueLayer
+        route={session.route}
+        taskGone={taskGone}
+        resultMissing={resultMissing}
+        signedOff={signedOff !== null}
+        slideLabel={load?.slide?.label ?? ""}
+        onAsk={askResearcher}
+        onNext={
+          nextSlideId === undefined || taskSlideIds.indexOf(slideId) < 0
+            ? null
+            : () => onOpenSlide(nextSlideId)
+        }
+      >
+        {(answersOff) =>
+          reviewTask === null ? null : (
+            <StageReviewObjects
+              answersOff={answersOff}
+              engine={session.engine}
+              module={session.module}
+              taskId={reviewTask}
+              slideId={slideId}
+              object={object}
+              guided={guided}
+              cellsGrid={cells}
+              jumpRequest={jumpRequest}
+              focus={focus ? { onShowUi: showUi } : null}
+              doneRequest={doneRequest}
+              onAddMissed={() => session.armTool("smart")}
+              onCurrent={(id) => {
+                setCurrentObject(id);
+                if (guided && id !== null) {
+                  setNoteRequest(null);
+                  setNoteObject(id);
+                }
+              }}
+              onComments={(id) => {
+                setNoteRequest(null);
+                setNoteObject(id);
+                onTab("comments");
+              }}
+              onNote={(id) => {
+                showUi();
+                setLayout({ hidden: false });
+                setNoteRequest((before) => ({ object: id, count: (before?.count ?? 0) + 1 }));
+                setNoteObject(id);
+                onTab("comments");
+              }}
+            />
+          )
+        }
+      </StageIssueLayer>
     </>
   );
   const commentsProps = {
