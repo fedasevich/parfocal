@@ -1,7 +1,9 @@
 import uuid
-from dataclasses import dataclass
+from functools import cache
+from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Response
+from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -30,7 +32,7 @@ from parfocal_api.result_sets import (
 )
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
-from parfocal_api.sample_files import stored_sample_file
+from parfocal_api.sample_files import SampleFile, stored_facts
 from parfocal_api.seed_request import seed_request
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -42,48 +44,52 @@ from parfocal_api.tables import (
     projects,
     slides,
 )
+from parfocal_common.ingest import fixture_folder
 from parfocal_common.object_store import ObjectStore
 
 SAMPLE_NAME = "Sample · sentinel nodes"
 SAMPLE_TASK = "Try a review"
 SAMPLE_SLIDES = ("tumor_001", "tumor_002", "tumor_003", "normal_001")
-TUMOR = "Tumor"
+SAMPLE_MODEL = "CAMELYON tumor model"
+SAMPLE_RESULTS = Path(__file__).with_name("sample_results.json")
 
 
-@dataclass(frozen=True)
-class SampleModel:
-    name: str
-    version: str
-    reviewed: bool
-    offset: int
+class SampleRegion(BaseModel):
+    wkt: str
+    class_position: int
+    score: int
 
 
-SAMPLE_MODELS = (
-    SampleModel("CAMELYON tumor model", "v1.0", True, 0),
-    SampleModel("PathoSAM + HoVer-NeXt", "v1.2", False, 400),
-)
-REGIONS_PER_SLIDE = 3
+class SampleSlide(BaseModel):
+    label: str
+    facts: SampleFile | None = None
+    classes: list[str]
+    regions: list[SampleRegion]
+
+
+class SampleResults(BaseModel):
+    model: str
+    slides: list[SampleSlide]
 
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
 
-def square(index: int, offset: int) -> str:
-    left, top = 8000 + index * 6000 + offset, 12000 + offset
-    right, bottom = left + 2500, top + 1800
-    return f"POLYGON(({left} {top},{right} {top},{right} {bottom},{left} {bottom},{left} {top}))"
+@cache
+def sample_results() -> SampleResults:
+    return SampleResults.model_validate_json(SAMPLE_RESULTS.read_bytes())
 
 
-def regions(model: SampleModel) -> list[RegionRow]:
+def regions(slide: SampleSlide) -> list[RegionRow]:
     return [
         RegionRow(
             kind=ResultObjectKind.REGION,
-            number=index + 1,
-            wkt=square(index, model.offset),
-            class_position=0,
-            score=230 - index * 60,
+            number=number,
+            wkt=region.wkt,
+            class_position=region.class_position,
+            score=region.score,
         )
-        for index in range(REGIONS_PER_SLIDE)
+        for number, region in enumerate(slide.regions, start=1)
     ]
 
 
@@ -95,18 +101,20 @@ async def live_sample(connection: AsyncConnection) -> uuid.UUID | None:
 
 async def seed_slides(
     connection: AsyncConnection, store: ObjectStore, tenant_id: uuid.UUID, project_id: uuid.UUID
-) -> list[uuid.UUID]:
-    created: list[uuid.UUID] = []
-    for label in SAMPLE_SLIDES:
-        stored = await stored_sample_file(store, label)
+) -> dict[uuid.UUID, SampleSlide]:
+    created: dict[uuid.UUID, SampleSlide] = {}
+    for slide in sample_results().slides:
+        stored = slide.facts or await stored_facts(store, fixture_folder(slide.label))
         file = {} if stored is None else {**stored.model_dump(), "published_at": func.now()}
         slide_id = await connection.scalar(
             slides.insert()
-            .values(tenant_id=tenant_id, project_id=project_id, label=label, stain="H&E", **file)
+            .values(
+                tenant_id=tenant_id, project_id=project_id, label=slide.label, stain="H&E", **file
+            )
             .returning(slides.c.id)
         )
         assert isinstance(slide_id, uuid.UUID)
-        created.append(slide_id)
+        created[slide_id] = slide
     return created
 
 
@@ -114,30 +122,29 @@ async def seed_results(
     connection: AsyncConnection,
     principal: MemberPrincipal,
     project_id: uuid.UUID,
-    slide_ids: list[uuid.UUID],
+    seeded: dict[uuid.UUID, SampleSlide],
 ) -> dict[uuid.UUID, uuid.UUID]:
     reviewed: dict[uuid.UUID, uuid.UUID] = {}
-    rows = (
-        await connection.execute(
-            select(slides.c.id, slides.c.project_id).where(slides.c.id.in_(slide_ids))
-        )
-    ).all()
-    for slide in rows:
-        for model in SAMPLE_MODELS:
-            draft = ResultSetDraft(name=model.name, model_version=model.version, classes=[TUMOR])
-            set_id = await insert_result_set(
-                connection,
-                principal.tenant_id,
-                slide,
-                draft,
-                ResultSource.IMPORT,
-                actor_of(principal),
-                principal.user_id,
+    model = sample_results().model
+    for slide_id, slide in seeded.items():
+        row = (
+            await connection.execute(
+                select(slides.c.id, slides.c.project_id).where(slides.c.id == slide_id)
             )
-            await add_regions(connection, set_id, regions(model))
-            await finish(connection, set_id)
-            if model.reviewed:
-                reviewed[slide.id] = set_id
+        ).one()
+        draft = ResultSetDraft(name=SAMPLE_MODEL, model_version=model, classes=slide.classes)
+        set_id = await insert_result_set(
+            connection,
+            principal.tenant_id,
+            row,
+            draft,
+            ResultSource.IMPORT,
+            actor_of(principal),
+            principal.user_id,
+        )
+        await add_regions(connection, set_id, regions(slide))
+        await finish(connection, set_id)
+        reviewed[slide_id] = set_id
     return reviewed
 
 
@@ -157,8 +164,9 @@ async def seed(
     await connection.execute(
         update(projects).where(projects.c.id == project.id).values(sample=True)
     )
-    slide_ids = await seed_slides(connection, store, principal.tenant_id, project.id)
-    reviewed = await seed_results(connection, principal, project.id, slide_ids)
+    seeded = await seed_slides(connection, store, principal.tenant_id, project.id)
+    reviewed = await seed_results(connection, principal, project.id, seeded)
+    slide_ids = list(seeded)
     await create_review_task(
         project.id,
         TaskDraft(
@@ -185,7 +193,7 @@ async def seed(
         principal,
         AuditAction.SAMPLE_PROJECT_CREATED,
         project.id,
-        {"slides": len(slide_ids), "result_sets": len(slide_ids) * len(SAMPLE_MODELS)},
+        {"slides": len(slide_ids), "result_sets": len(reviewed)},
     )
     return project.id
 

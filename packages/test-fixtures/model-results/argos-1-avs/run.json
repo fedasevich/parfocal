@@ -1,0 +1,62 @@
+{
+  "slide": "Argos-1.avs",
+  "dimensions": [
+    130546,
+    57440
+  ],
+  "mpp": 0.38300410109301325,
+  "machine": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+  "torch": "2.15.0",
+  "tumor_map": {
+    "box_cells": [
+      1127,
+      284,
+      1255,
+      412
+    ],
+    "box_px": [
+      45762,
+      11532,
+      50960,
+      16729
+    ],
+    "scale": 1.576148564168779,
+    "listed_from_peak": 0.97,
+    "tiles": 12,
+    "map_s": 9.317229209002107,
+    "areas_over_outline": 52,
+    "regions": 6,
+    "providers": [
+      "CPUExecutionProvider"
+    ]
+  },
+  "cells": {
+    "crop_px": [
+      118464,
+      8576,
+      120512,
+      10624
+    ],
+    "weights": "instanseg_models_v0.1.1/brightfield_nuclei",
+    "count": 2017,
+    "by_class": {
+      "Immune": 538,
+      "Stroma": 1265,
+      "Tumor": 203,
+      "Other": 11
+    },
+    "input_side": [
+      1569,
+      1569
+    ],
+    "segment_s": 13.756043708999641,
+    "rings_s": 0.8751212919596583,
+    "typer_windows": 15,
+    "typer_window_px": 668,
+    "typer_s": 15.60297604103107
+  },
+  "bytes": {
+    "cells.geojson": 866767,
+    "regions.parfocal.json": 5634
+  }
+}
