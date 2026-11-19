@@ -735,7 +735,7 @@ function OpenedSlide({
       <InspectorSlotsProvider value={slots}>
         <ContextExtrasHost>
           <div data-slot="viewer-body" className="relative flex size-full min-h-0 bg-chrome">
-            {bare || toolsLayout === "dock" ? null : (
+            {bare || inspector.guided || toolsLayout === "dock" ? null : (
               <ToolRail className="justify-between">
                 <div className="grid gap-1">
                   {setup.rail.map((group) => (
@@ -990,7 +990,7 @@ function OpenedSlide({
                       }
                     />
                   ) : null}
-                  {!bare && toolsLayout === "dock" ? (
+                  {!bare && !inspector.guided && toolsLayout === "dock" ? (
                     <div
                       data-slot="stage-tools"
                       className="absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
@@ -1179,6 +1179,7 @@ function OpenedSlide({
             {bare ? null : (
               <StageInspector
                 key={workspace}
+                guided={inspector.guided ?? false}
                 layout={inspectorLayout}
                 onLayout={setInspectorLayout}
                 tab={tab}

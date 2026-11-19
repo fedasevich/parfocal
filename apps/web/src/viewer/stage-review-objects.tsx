@@ -9,6 +9,7 @@ import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { useNoteKey } from "../screens/review/note-key.ts";
+import { useObjectKeys } from "../screens/review/object-keys.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import {
   storedType,
@@ -25,6 +26,8 @@ import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
+import { StageGuidedCard } from "./stage-guided-card.tsx";
+import { ReviewOpinion } from "./stage-opinion.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
@@ -126,9 +129,11 @@ export function StageReviewObjects({
   guided = false,
   cellsGrid = false,
   focus = null,
+  doneRequest = 0,
   onComments,
   onNote,
   onCurrent,
+  onAddMissed,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -138,9 +143,11 @@ export function StageReviewObjects({
   guided?: boolean;
   cellsGrid?: boolean;
   focus?: { onShowUi: () => void } | null;
+  doneRequest?: number;
   onComments: (object: string) => void;
   onNote?: (object: string) => void;
   onCurrent?: (object: string | null) => void;
+  onAddMissed?: () => void;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -150,6 +157,12 @@ export function StageReviewObjects({
   const decided = new Set(session.decisions.keys());
   const [chosen, setCurrent] = useState<string | null>(object ?? null);
   const [gridOpen, setGridOpen] = useState(cellsGrid);
+  const [done, setDone] = useState(false);
+  const [seenRequest, setSeenRequest] = useState(doneRequest);
+  if (doneRequest !== seenRequest) {
+    setSeenRequest(doneRequest);
+    if (guided) setDone(true);
+  }
   const hasCells = objects.some((item) => item.kind === "cell");
   const current =
     chosen ??
@@ -163,6 +176,7 @@ export function StageReviewObjects({
   };
   const pick = (id: string | null) => {
     if (id === null) return;
+    setDone(false);
     setCurrent(id);
     flyTo(id);
   };
@@ -181,6 +195,11 @@ export function StageReviewObjects({
   useEffect(() => {
     if (ready) reported.current?.(current);
   }, [ready, current]);
+  const advance = (answered: string) => {
+    const next = nextOpenObject(order, new Set([...decided, answered]), answered);
+    if (next === null) setDone(true);
+    else pick(next);
+  };
   const answer = (item: ReviewObject, raw: string) => {
     const option = answersOf(session.style, session.classes, item).find(
       (entry) => entry.raw === raw,
@@ -188,7 +207,7 @@ export function StageReviewObjects({
     const value = option?.countsAs;
     if (value === undefined) return;
     saves.save(item.object, raw, value);
-    if (guided) pick(nextOpenObject(order, new Set([...decided, item.object]), item.object));
+    if (guided) advance(item.object);
     else setCurrent(item.object);
   };
   const currentItem = objects.find((item) => item.object === current);
@@ -202,7 +221,7 @@ export function StageReviewObjects({
       const choice = typeChoice(session.style, option, cell, session.classes);
       saves.save(cell.object, choice.raw, choice.value, choice.draft);
     }
-    if (guided) pick(nextOpenObject(order, new Set([...decided, cell.object]), cell.object));
+    if (guided) advance(cell.object);
   };
   useAnswerKeys(
     typeAnswers,
@@ -212,7 +231,37 @@ export function StageReviewObjects({
     ready && typedCell !== null,
   );
   const index = current === null ? -1 : order.indexOf(current);
-  const shown = guided ? objects.filter((item) => item.object === current) : objects;
+  const stepping = guided && ready && !done && focus === null;
+  useAnswerKeys(
+    answersOf(session.style, session.classes, currentItem),
+    (raw) => {
+      if (currentItem !== undefined) answer(currentItem, raw);
+    },
+    stepping && typedCell === null && currentItem !== undefined,
+  );
+  useObjectKeys(
+    () => pick(order[index + 1] ?? null),
+    () => pick(order[index - 1] ?? null),
+    stepping,
+  );
+  const jump = (id: string) =>
+    pick(
+      id === "cells"
+        ? (objects.find((item) => item.kind === "cell" && !decided.has(item.object))?.object ??
+            objects.find((item) => item.kind === "cell")?.object ??
+            null)
+        : id,
+    );
+  const coachPart = coachOn ? (
+    <StageCoachInPanel
+      keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
+      onStart={coach.dismiss}
+    />
+  ) : (
+    <Button variant="ghost" size="sm" className="w-fit px-0" onClick={coach.reopen}>
+      {t`How guided review works`}
+    </Button>
+  );
   return (
     <>
       <ObjectOutlines
@@ -262,45 +311,33 @@ export function StageReviewObjects({
           data-ready={ready}
           data-guided={guided}
           data-current={current ?? ""}
-          className="flex flex-col gap-2"
+          className={guided ? "flex flex-col gap-4" : "flex flex-col gap-2"}
         >
-          <h3 className="m-0 text-body-sm font-semibold">
-            {guided
-              ? t`Object ${index + 1} of ${objects.length} · ${decided.size} decided`
-              : t`AI objects · ${objects.length}`}
-          </h3>
-          {coachOn ? (
-            <StageCoachInPanel
-              keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
-              onStart={coach.dismiss}
+          {guided ? null : (
+            <h3 className="m-0 text-body-sm font-semibold">{t`AI objects · ${objects.length}`}</h3>
+          )}
+          {guided && done ? (
+            <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={(id) => pick(id ?? null)} />
+          ) : guided && currentItem !== undefined ? (
+            <StageGuidedCard
+              session={session}
+              object={currentItem}
+              position={index + 1}
+              coach={coachPart}
+              onAnswer={(raw) => answer(currentItem, raw)}
+              onJump={(id) => {
+                if (id === "cells") setGridOpen(true);
+                jump(id);
+              }}
+              onPrevious={() => pick(order[index - 1] ?? null)}
+              onSkip={() => pick(order[index + 1] ?? nextOpenObject(order, decided, current))}
+              onNote={() => {
+                if (current !== null) onNote?.(current);
+              }}
+              onAddMissed={() => onAddMissed?.()}
             />
           ) : null}
-          {guided ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={index <= 0}
-                onClick={() => pick(order[index - 1] ?? null)}
-              >
-                {t`Previous`}
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={index < 0 || index >= order.length - 1}
-                onClick={() => pick(order[index + 1] ?? null)}
-              >
-                {t`Next`}
-              </Button>
-              {coachOn ? null : (
-                <Button size="sm" variant="secondary" onClick={coach.reopen}>
-                  {t`How guided review works`}
-                </Button>
-              )}
-            </div>
-          ) : null}
-          {hasCells ? (
+          {hasCells && !done ? (
             <Button
               size="sm"
               variant="secondary"
@@ -311,19 +348,21 @@ export function StageReviewObjects({
               {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
             </Button>
           ) : null}
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
-            {shown.map((item) => (
-              <ObjectRow
-                key={item.object}
-                session={session}
-                object={item}
-                current={current === item.object}
-                onPick={() => pick(item.object)}
-                onAnswer={(raw) => answer(item, raw)}
-                onComments={() => onComments(item.object)}
-              />
-            ))}
-          </ul>
+          {guided ? null : (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {objects.map((item) => (
+                <ObjectRow
+                  key={item.object}
+                  session={session}
+                  object={item}
+                  current={current === item.object}
+                  onPick={() => pick(item.object)}
+                  onAnswer={(raw) => answer(item, raw)}
+                  onComments={() => onComments(item.object)}
+                />
+              ))}
+            </ul>
+          )}
         </section>
       </DockCard>
     </>

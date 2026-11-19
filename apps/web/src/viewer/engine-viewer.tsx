@@ -115,6 +115,7 @@ export function EngineViewer({
     }));
   const toolLink = useRef<ArmTool | null>(null);
   const [currentObject, setCurrentObject] = useState<string | null>(object ?? null);
+  const [doneRequest, setDoneRequest] = useState(0);
   useRememberResume(
     reviewTask === null
       ? null
@@ -161,7 +162,15 @@ export function EngineViewer({
           guided={guided}
           cellsGrid={cells}
           focus={focus ? { onShowUi: showUi } : null}
-          onCurrent={setCurrentObject}
+          doneRequest={doneRequest}
+          onAddMissed={() => session.armTool("smart")}
+          onCurrent={(id) => {
+            setCurrentObject(id);
+            if (guided && id !== null) {
+              setNoteRequest(null);
+              setNoteObject(id);
+            }
+          }}
           onComments={(id) => {
             setNoteRequest(null);
             setNoteObject(id);
@@ -179,6 +188,7 @@ export function EngineViewer({
     </>
   );
   const inspector = {
+    guided,
     tab,
     onTab,
     counts: tabCounts,
@@ -231,7 +241,10 @@ export function EngineViewer({
           onOpenSlide={onOpenSlide}
           onSubmit={() => {
             setLayout({ hidden: false });
-            onTab("opinion");
+            if (guided) {
+              setDoneRequest((count) => count + 1);
+              onTab("objects");
+            } else onTab("opinion");
           }}
           onResultSets={() => {
             setLayout({ hidden: false });
