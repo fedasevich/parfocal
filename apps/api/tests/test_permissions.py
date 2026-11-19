@@ -1406,6 +1406,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getUploadBatch": lambda w: Call("GET", f"/api/projects/{w.project}/upload-batch"),
     "listThreadComments": lambda w: Call("GET", f"/api/threads/{w.thread}/comments"),
     "getSlideAiProgress": lambda w: Call("GET", f"/api/slides/{w.slide}/ai-progress"),
+    "reportHighPowerFailure": lambda w: Call("POST", f"/api/slides/{w.slide}/high-power-failure"),
     "listAnnotationLayers": lambda w: Call("GET", f"/api/slides/{w.slide}/annotation-layers"),
     "getResultSetTyper": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/typer"),
     "getSlideResultStats": lambda w: Call(
@@ -1447,6 +1448,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"reason": "Measured again on A1"},
     ),
     "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
+    "withdrawReviewTask": lambda w: Call("POST", f"/api/review-tasks/{w.signed_task}/withdraw"),
     "setTaskReportLayout": lambda w: Call(
         "PUT", f"/api/review-tasks/{w.task}/report-layout", {"blocks": []}
     ),

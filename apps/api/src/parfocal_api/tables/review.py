@@ -111,6 +111,14 @@ review_tasks = Table(
         info=PERSONAL,
     ),
     Column("archived_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("withdrawn_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "withdrawn_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
     Column("signed_off_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column(
         "signed_off_by_user_id",

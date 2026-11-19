@@ -40,6 +40,7 @@ from parfocal_api.tables import (
     review_tasks,
     slides,
 )
+from parfocal_common.ingest import Notice
 
 PAGE = 50
 MAX_PAGE = 200
@@ -129,6 +130,7 @@ class SlideRow(BaseModel):
     status: State
     storage: SlideStorage
     created_at: datetime
+    high_power_unreadable: bool = False
 
 
 class SlidePage(BaseModel):
@@ -455,6 +457,7 @@ async def describe(
                 status=status,
                 storage=SlideStorage(row.storage),
                 created_at=row.created_at,
+                high_power_unreadable=Notice.HIGH_POWER_UNREADABLE in row.notices,
             )
         )
     return described
@@ -475,6 +478,7 @@ def slides_statement(
             slides.c.case_id,
             slides.c.created_at,
             slides.c.storage,
+            slides.c.notices,
             slides.c.project_id,
             projects.c.number.label("project_number"),
             projects.c.name.label("project_name"),

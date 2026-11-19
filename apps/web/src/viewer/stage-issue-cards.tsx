@@ -1,11 +1,12 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import { useReportHighPowerFailure as useReportHighPowerFailureMutation } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useFormat } from "../format.ts";
 import { CanvasNotice } from "../screens/review/guided-parts.tsx";
-import { highPowerLevels, type StageIssue, stageIssueOf } from "./stage-issues.ts";
+import { highPowerFailed, highPowerLevels, type StageIssue, stageIssueOf } from "./stage-issues.ts";
 import type { VivRoute } from "./viewer-engine.ts";
 
 const failedPollMs = 1000;
@@ -163,9 +164,21 @@ export function StageIssueCard({
   );
 }
 
+function useReportHighPowerFailure(slideId: string, failed: boolean, flagged: boolean) {
+  const { mutate } = useReportHighPowerFailureMutation();
+  const reported = useRef<string | null>(null);
+  useEffect(() => {
+    if (!failed || flagged || reported.current === slideId) return;
+    reported.current = slideId;
+    mutate({ slideId });
+  }, [failed, flagged, slideId, mutate]);
+}
+
 export function StageIssueLayer({
   route,
-  taskGone,
+  slideId,
+  withdrawn,
+  unreadable,
   resultMissing,
   signedOff,
   slideLabel,
@@ -174,7 +187,9 @@ export function StageIssueLayer({
   children,
 }: {
   route: VivRoute | null;
-  taskGone: boolean;
+  slideId: string;
+  withdrawn: boolean;
+  unreadable: boolean;
   resultMissing: boolean;
   signedOff: boolean;
   slideLabel: string;
@@ -183,9 +198,17 @@ export function StageIssueLayer({
   children: (answersOff: string | undefined) => ReactNode;
 }) {
   const failedLevels = useFailedLevels(route);
-  const issue = stageIssueOf({ taskGone, failedLevels, resultMissing });
+  const [retried, setRetried] = useState<string | null>(null);
+  useReportHighPowerFailure(slideId, highPowerFailed(failedLevels), unreadable);
+  const issue = stageIssueOf({
+    withdrawn,
+    failedLevels,
+    unreadable: unreadable && retried !== slideId,
+    resultMissing,
+  });
   const answersOff = useAnswersOff(issue, signedOff, slideLabel);
   const retry = () => {
+    setRetried(slideId);
     for (const tile of route?.failedTiles() ?? []) route?.retryTile(tile.key);
   };
   return (

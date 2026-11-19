@@ -53,13 +53,22 @@ test("a withdrawn task says so on the slide, locks the answers and goes back to 
   await expect(card).toHaveAttribute("data-issue", "withdrawn");
   await expect(card).toContainText("This task was withdrawn.");
   await page.getByRole("tab", { name: "Objects" }).click();
-  const panel = page.getByTestId("stage-review-objects");
-  await expect(panel.getByTestId("answers-off")).toHaveText(
-    "This task was withdrawn. There is nothing left to decide.",
-  );
-  await expect(panel.getByRole("button", { name: /^(Agree|Disagree|Unsure)/ })).toHaveCount(0);
+  await answersOff(page, "This task was withdrawn. There is nothing left to decide.");
   await card.getByRole("button", { name: "Back to My work" }).click();
   await expect(page).toHaveURL(/\/my-work/);
+});
+
+test("a slide the API flags as unreadable at high power says so before any tile fails", async ({
+  page,
+}) => {
+  await page.goto(viewerOf(rt14, "slidefail"));
+  await ready(page);
+  const card = page.getByTestId("stage-issue");
+  await expect(card).toHaveAttribute("data-issue", "slidefail", { timeout: 15_000 });
+  await expect(card).toContainText(/could not be read at the highest magnifications\./);
+  await expect(card.getByRole("button", { name: "Ask the researcher" })).toBeVisible();
+  await card.getByRole("button", { name: "Retry" }).click();
+  await expect(card).toHaveCount(0, { timeout: 15_000 });
 });
 
 test("a signed off task shows the read only banner, locks the answers and asks for an amendment", async ({

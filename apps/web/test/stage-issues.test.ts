@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   highPowerFailed,
-  isTaskGone,
+  isWithdrawn,
   resultMissingOf,
   signedOffOf,
   stageIssueOf,
 } from "../src/viewer/stage-issues.ts";
 
-const calm = { taskGone: false, failedLevels: [], resultMissing: false };
+const calm = { withdrawn: false, failedLevels: [], unreadable: false, resultMissing: false };
 
 describe("stage issues", () => {
   it("shows nothing when the task, slide and result are fine", () => {
@@ -17,7 +17,7 @@ describe("stage issues", () => {
 
   it("puts a withdrawn task before a failing slide and a missing result", () => {
     assert.equal(
-      stageIssueOf({ taskGone: true, failedLevels: [0], resultMissing: true }),
+      stageIssueOf({ withdrawn: true, failedLevels: [0], unreadable: true, resultMissing: true }),
       "withdrawn",
     );
     assert.equal(stageIssueOf({ ...calm, failedLevels: [1], resultMissing: true }), "slidefail");
@@ -28,6 +28,10 @@ describe("stage issues", () => {
     assert.equal(highPowerFailed([3, 4]), false);
     assert.equal(highPowerFailed([4, 1]), true);
     assert.equal(stageIssueOf({ ...calm, failedLevels: [2, 5] }), null);
+  });
+
+  it("shows a slide flagged as unreadable at high power before any tile fails", () => {
+    assert.equal(stageIssueOf({ ...calm, unreadable: true, resultMissing: true }), "slidefail");
   });
 
   it("finds a missing result only for a slide the task lists without one", () => {
@@ -41,10 +45,11 @@ describe("stage issues", () => {
     assert.equal(resultMissingOf(undefined, "a"), false);
   });
 
-  it("treats only a task that is not found as withdrawn", () => {
-    assert.equal(isTaskGone({ status: 404 }), true);
-    assert.equal(isTaskGone({ status: 403 }), false);
-    assert.equal(isTaskGone(null), false);
+  it("reads a task as withdrawn only from its withdrawn time", () => {
+    assert.equal(isWithdrawn({ withdrawn_at: "2026-10-16T09:30:00Z" }), true);
+    assert.equal(isWithdrawn({ withdrawn_at: null }), false);
+    assert.equal(isWithdrawn({}), false);
+    assert.equal(isWithdrawn(undefined), false);
   });
 
   it("reads a sign off from the task or from the slide", () => {
