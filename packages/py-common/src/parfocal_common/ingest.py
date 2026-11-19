@@ -90,6 +90,7 @@ class Notice(StrEnum):
     OBJECTIVE_MISSING = "objective-missing"
     LEVEL_SKIPPED = "level-skipped"
     FIRST_PLANE_ONLY = "first-plane-only"
+    HIGH_POWER_UNREADABLE = "high-power-unreadable"
 
 
 NOTICES = {
@@ -108,6 +109,9 @@ NOTICES = {
         "A stored resolution level does not halve the one above it and is not used."
     ),
     Notice.FIRST_PLANE_ONLY: "The slide has several focal planes. Only the one in focus is shown.",
+    Notice.HIGH_POWER_UNREADABLE: (
+        "The slide cannot be read at the highest magnifications. Lower magnifications still show."
+    ),
 }
 
 

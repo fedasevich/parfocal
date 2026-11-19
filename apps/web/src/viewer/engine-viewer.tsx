@@ -21,7 +21,7 @@ import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
 import { SignedOffNotice, StageIssueLayer } from "./stage-issue-cards.tsx";
-import { isTaskGone, resultMissingOf, signedOffOf } from "./stage-issues.ts";
+import { isWithdrawn, resultMissingOf, signedOffOf } from "./stage-issues.ts";
 import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import type { NoteRequest } from "./stage-object-notes.tsx";
@@ -103,11 +103,8 @@ export function EngineViewer({
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
-  const [goneTask, setGoneTask] = useState<string | null>(null);
-  if (task !== undefined && goneTask !== task && isTaskGone(taskQuery.error)) setGoneTask(task);
-  const taskGone = task !== undefined && goneTask === task;
-  const reviewTask =
-    task !== undefined && (taskDetail?.kind === "review" || taskGone) ? task : null;
+  const withdrawn = taskDetail?.kind === "review" && isWithdrawn(taskDetail);
+  const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
   const statesQuery = useGetReviewTaskStates(task ?? "", {
     query: { enabled: task !== undefined && taskDetail?.kind === "review" },
   });
@@ -198,7 +195,9 @@ export function EngineViewer({
       ) : null}
       <StageIssueLayer
         route={session.route}
-        taskGone={taskGone}
+        slideId={slideId}
+        withdrawn={withdrawn}
+        unreadable={load?.slide?.highPowerUnreadable === true}
         resultMissing={resultMissing}
         signedOff={signedOff !== null}
         slideLabel={load?.slide?.label ?? ""}

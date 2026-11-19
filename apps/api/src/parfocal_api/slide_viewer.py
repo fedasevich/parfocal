@@ -1,9 +1,9 @@
 import uuid
 from typing import Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_whole, user_of
@@ -23,7 +23,9 @@ from parfocal_api.tables import (
     model_runs,
     project_classes,
     result_sets,
+    slides,
 )
+from parfocal_common.ingest import Notice
 from parfocal_common.jobs import JobStatus, StepStatus
 
 type StepKey = Literal["tissue", "regions", "cells"]
@@ -181,6 +183,25 @@ async def get_slide_ai_progress(
             )
         )
     return SlideAiProgress(slide_id=slide_id, state="running", steps=steps, found=[])
+
+
+@slide_router.post(
+    "/high-power-failure",
+    operation_id="reportHighPowerFailure",
+    status_code=204,
+    response_class=Response,
+    **require(Permission.SEE_SLIDES, write=True),
+)
+async def report_high_power_failure(
+    slide_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> None:
+    await readable_slide(connection, principal, slide_id)
+    flag = Notice.HIGH_POWER_UNREADABLE.value
+    await connection.execute(
+        update(slides)
+        .where(slides.c.id == slide_id, ~slides.c.notices.contains([flag]))
+        .values(notices=func.array_append(slides.c.notices, flag))
+    )
 
 
 async def counted_annotations(

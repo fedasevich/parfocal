@@ -25,7 +25,7 @@ from parfocal_api.check_options import (
     stored_score,
 )
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.decision_styles import DecisionSettings
+from parfocal_api.decision_styles import CountsAsChange, DecisionSettings
 from parfocal_api.display_settings import (
     DisplaySettings,
     TaskDisplaySettings,
@@ -213,15 +213,6 @@ class TaskSlide(BaseModel):
     reviewer_ids: list[uuid.UUID]
 
 
-class CountsAsChange(BaseModel):
-    changed_at: datetime
-    changed_by_user_id: uuid.UUID | None
-    before: list[str]
-    after: list[str]
-    recounted: int
-    reasons_dropped: int
-
-
 class ReviewTask(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
@@ -249,6 +240,8 @@ class ReviewTask(BaseModel):
     counts_as_changes: list[CountsAsChange]
     created_by_user_id: uuid.UUID | None
     created_at: datetime
+    withdrawn_at: datetime | None = None
+    withdrawn_by_user_id: uuid.UUID | None = None
     slide_count: int
     reviewer_count: int
 
@@ -493,6 +486,8 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         counts_as_changes=[CountsAsChange.model_validate(item) for item in row.counts_as_changes],
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
+        withdrawn_at=row.withdrawn_at,
+        withdrawn_by_user_id=row.withdrawn_by_user_id,
         slide_count=slide_count,
         reviewer_count=reviewer_count,
     )

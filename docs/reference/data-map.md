@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 50 |
-| `personal` | 100 |
+| `personal` | 101 |
 | `secret` | 15 |
-| `operational` | 878 |
+| `operational` | 879 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1104,6 +1104,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `reminder_days` | operational |
 | `created_by_user_id` | personal |
 | `archived_at` | operational |
+| `withdrawn_at` | operational |
+| `withdrawn_by_user_id` | personal |
 | `signed_off_at` | operational |
 | `signed_off_by_user_id` | personal |
 | `study_template_id` | operational |

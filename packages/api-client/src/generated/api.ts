@@ -6500,6 +6500,8 @@ export interface ReviewTask {
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
+  withdrawn_at?: string | null;
+  withdrawn_by_user_id?: string | null;
   slide_count: number;
   reviewer_count: number;
 }
@@ -6556,6 +6558,8 @@ export interface ReviewTaskDetail {
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
+  withdrawn_at?: string | null;
+  withdrawn_by_user_id?: string | null;
   slide_count: number;
   reviewer_count: number;
   slides: TaskSlide[];
@@ -7175,6 +7179,7 @@ export interface SlideRow {
   status: State;
   storage: SlideStorage;
   created_at: string;
+  high_power_unreadable?: boolean;
 }
 
 export interface SlidePage {
@@ -42442,6 +42447,156 @@ export const useAddTaskReviewer = <TError = Problem, TContext = unknown>(
   return useMutation(getAddTaskReviewerMutationOptions(options), queryClient);
 };
 
+export type withdrawReviewTaskResponse200 = {
+  data: ReviewTaskDetail;
+  status: 200;
+};
+
+export type withdrawReviewTaskResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type withdrawReviewTaskResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type withdrawReviewTaskResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type withdrawReviewTaskResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type withdrawReviewTaskResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type withdrawReviewTaskResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type withdrawReviewTaskResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type withdrawReviewTaskResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type withdrawReviewTaskResponseSuccess = withdrawReviewTaskResponse200 & {
+  headers: Headers;
+};
+export type withdrawReviewTaskResponseError = (
+  | withdrawReviewTaskResponse400
+  | withdrawReviewTaskResponse401
+  | withdrawReviewTaskResponse403
+  | withdrawReviewTaskResponse404
+  | withdrawReviewTaskResponse409
+  | withdrawReviewTaskResponse422
+  | withdrawReviewTaskResponse429
+  | withdrawReviewTaskResponse500
+) & {
+  headers: Headers;
+};
+
+export type withdrawReviewTaskResponse =
+  | withdrawReviewTaskResponseSuccess
+  | withdrawReviewTaskResponseError;
+
+export const getWithdrawReviewTaskUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/withdraw`;
+};
+
+/**
+ * @summary Withdraw Review Task
+ */
+export const withdrawReviewTask = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<withdrawReviewTaskResponse> => {
+  return apiFetch<withdrawReviewTaskResponse>(getWithdrawReviewTaskUrl(taskId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getWithdrawReviewTaskMutationKey = () => ["withdrawReviewTask"] as const;
+
+export const getWithdrawReviewTaskMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawReviewTask>>,
+    TError,
+    WithdrawReviewTaskMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof withdrawReviewTask>>,
+  TError,
+  WithdrawReviewTaskMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWithdrawReviewTaskMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof withdrawReviewTask>>,
+    WithdrawReviewTaskMutationVariables
+  > = (props) => {
+    const { taskId } = props ?? {};
+
+    return withdrawReviewTask(taskId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WithdrawReviewTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof withdrawReviewTask>>
+>;
+
+export type WithdrawReviewTaskMutationError = Problem;
+export type WithdrawReviewTaskMutationVariables = { taskId: string };
+
+/**
+ * @summary Withdraw Review Task
+ */
+export const useWithdrawReviewTask = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof withdrawReviewTask>>,
+      TError,
+      WithdrawReviewTaskMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof withdrawReviewTask>>,
+  TError,
+  WithdrawReviewTaskMutationVariables,
+  TContext
+> => {
+  return useMutation(getWithdrawReviewTaskMutationOptions(options), queryClient);
+};
+
 export type saveReviewEditResponse200 = {
   data: ReviewEdit;
   status: 200;
@@ -48043,6 +48198,156 @@ export function useGetSlideAiProgress<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type reportHighPowerFailureResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type reportHighPowerFailureResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reportHighPowerFailureResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reportHighPowerFailureResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reportHighPowerFailureResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reportHighPowerFailureResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reportHighPowerFailureResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reportHighPowerFailureResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reportHighPowerFailureResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reportHighPowerFailureResponseSuccess = reportHighPowerFailureResponse204 & {
+  headers: Headers;
+};
+export type reportHighPowerFailureResponseError = (
+  | reportHighPowerFailureResponse400
+  | reportHighPowerFailureResponse401
+  | reportHighPowerFailureResponse403
+  | reportHighPowerFailureResponse404
+  | reportHighPowerFailureResponse409
+  | reportHighPowerFailureResponse422
+  | reportHighPowerFailureResponse429
+  | reportHighPowerFailureResponse500
+) & {
+  headers: Headers;
+};
+
+export type reportHighPowerFailureResponse =
+  | reportHighPowerFailureResponseSuccess
+  | reportHighPowerFailureResponseError;
+
+export const getReportHighPowerFailureUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/high-power-failure`;
+};
+
+/**
+ * @summary Report High Power Failure
+ */
+export const reportHighPowerFailure = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reportHighPowerFailureResponse> => {
+  return apiFetch<reportHighPowerFailureResponse>(getReportHighPowerFailureUrl(slideId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReportHighPowerFailureMutationKey = () => ["reportHighPowerFailure"] as const;
+
+export const getReportHighPowerFailureMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reportHighPowerFailure>>,
+    TError,
+    ReportHighPowerFailureMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reportHighPowerFailure>>,
+  TError,
+  ReportHighPowerFailureMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReportHighPowerFailureMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reportHighPowerFailure>>,
+    ReportHighPowerFailureMutationVariables
+  > = (props) => {
+    const { slideId } = props ?? {};
+
+    return reportHighPowerFailure(slideId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReportHighPowerFailureMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reportHighPowerFailure>>
+>;
+
+export type ReportHighPowerFailureMutationError = Problem;
+export type ReportHighPowerFailureMutationVariables = { slideId: string };
+
+/**
+ * @summary Report High Power Failure
+ */
+export const useReportHighPowerFailure = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reportHighPowerFailure>>,
+      TError,
+      ReportHighPowerFailureMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reportHighPowerFailure>>,
+  TError,
+  ReportHighPowerFailureMutationVariables,
+  TContext
+> => {
+  return useMutation(getReportHighPowerFailureMutationOptions(options), queryClient);
+};
 
 export type listAnnotationLayersResponse200 = {
   data: AnnotationLayers;

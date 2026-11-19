@@ -1,30 +1,62 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { projectSlideRows } from "./project-handlers.ts";
 import { toReviewObjects } from "./review-handlers.ts";
 import { fakeViewerIssue } from "./viewer-scene.ts";
 import { reviewTaskDetailOf } from "./work-handlers.ts";
 
-const taskGone = () =>
+export const fakeWithdrawnAt = "2026-10-16T09:30:00Z";
+
+const taskWithdrawn = () =>
   HttpResponse.json(
-    { type: "about:blank", title: "Review task not found", status: 404, code: "not-found" },
-    { status: 404 },
+    {
+      type: "about:blank",
+      title: "The task was withdrawn. There is nothing left to decide",
+      status: 409,
+      code: "task-withdrawn",
+    },
+    { status: 409 },
   );
 
 export const viewerIssueHandlers = (): RequestHandler[] => [
   http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
     const issue = fakeViewerIssue();
-    if (issue === "withdrawn") return taskGone();
-    if (issue !== "noresults") return undefined;
+    if (issue !== "noresults" && issue !== "withdrawn") return undefined;
     const detail = reviewTaskDetailOf(params.taskId);
+    if (issue === "withdrawn") {
+      return HttpResponse.json({
+        ...detail,
+        withdrawn_at: fakeWithdrawnAt,
+        withdrawn_by_user_id: detail.created_by_user_id,
+      });
+    }
     return HttpResponse.json({
       ...detail,
       slides: detail.slides.map((slide) => ({ ...slide, result_set_id: null })),
     });
   }),
+  http.put("*/api/review-tasks/:taskId/slides/:slideId/decisions/:objectId", () =>
+    fakeViewerIssue() === "withdrawn" ? taskWithdrawn() : undefined,
+  ),
   http.get<{ taskId: string; slideId: string }>(
     "*/api/review-tasks/:taskId/slides/:slideId/objects",
     ({ params }) =>
       fakeViewerIssue() === "noresults"
         ? HttpResponse.json({ ...toReviewObjects(params.taskId, params.slideId), objects: [] })
         : undefined,
+  ),
+  http.get("*/api/me/slides", ({ request }) => {
+    const projectId = new URL(request.url).searchParams.get("project_id");
+    if (fakeViewerIssue() !== "slidefail" || !projectId) return undefined;
+    return HttpResponse.json({
+      slides: projectSlideRows(projectId).map((slide) => ({
+        ...slide,
+        high_power_unreadable: true,
+      })),
+      next_cursor: null,
+    });
+  }),
+  http.post(
+    "*/api/slides/:slideId/high-power-failure",
+    () => new HttpResponse(null, { status: 204 }),
   ),
 ];

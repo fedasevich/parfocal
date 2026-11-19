@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Sequence
+from datetime import datetime
 from itertools import pairwise
 from typing import Annotated
 
@@ -31,6 +32,15 @@ type CountsAs = Annotated[
 type DecisionQuestion = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)
 ]
+
+
+class CountsAsChange(BaseModel):
+    changed_at: datetime
+    changed_by_user_id: uuid.UUID | None
+    before: list[str]
+    after: list[str]
+    recounted: int
+    reasons_dropped: int
 
 
 class DecisionSettings(BaseModel):

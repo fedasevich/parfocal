@@ -1,8 +1,9 @@
 export type StageIssue = "withdrawn" | "slidefail" | "noresults";
 
 export type StageIssueFacts = {
-  readonly taskGone: boolean;
+  readonly withdrawn: boolean;
   readonly failedLevels: readonly number[];
+  readonly unreadable: boolean;
   readonly resultMissing: boolean;
 };
 
@@ -13,16 +14,14 @@ export function highPowerFailed(levels: readonly number[]): boolean {
 }
 
 export function stageIssueOf(facts: StageIssueFacts): StageIssue | null {
-  if (facts.taskGone) return "withdrawn";
-  if (highPowerFailed(facts.failedLevels)) return "slidefail";
+  if (facts.withdrawn) return "withdrawn";
+  if (facts.unreadable || highPowerFailed(facts.failedLevels)) return "slidefail";
   if (facts.resultMissing) return "noresults";
   return null;
 }
 
-export function isTaskGone(error: unknown): boolean {
-  return (
-    typeof error === "object" && error !== null && (error as { status?: unknown }).status === 404
-  );
+export function isWithdrawn(task: { readonly withdrawn_at?: string | null } | undefined): boolean {
+  return task?.withdrawn_at !== undefined && task.withdrawn_at !== null;
 }
 
 export type TaskSlideResult = {

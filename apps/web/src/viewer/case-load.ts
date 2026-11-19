@@ -22,7 +22,11 @@ export type CaseLoadInput = {
 export type CaseLoad = {
   readonly project: { readonly id: string; readonly code: string; readonly name: string };
   readonly clinical: boolean;
-  readonly slide: { readonly id: string; readonly label: string } | null;
+  readonly slide: {
+    readonly id: string;
+    readonly label: string;
+    readonly highPowerUnreadable: boolean;
+  } | null;
   readonly case: {
     readonly id: string;
     readonly label: string;
@@ -48,7 +52,13 @@ export function shapeCaseLoad(input: CaseLoadInput): CaseLoad {
   return {
     project: { id: input.project.id, code: input.project.code, name: input.project.name },
     clinical,
-    slide: slide ? { id: slide.id, label: slide.label } : null,
+    slide: slide
+      ? {
+          id: slide.id,
+          label: slide.label,
+          highPowerUnreadable: slide.high_power_unreadable === true,
+        }
+      : null,
     case: caseRef
       ? {
           id: caseRef.id,

@@ -7815,6 +7815,11 @@ export const getCreateReviewTaskResponseMock = (
   })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  withdrawn_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  withdrawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_count: faker.number.int(),
   reviewer_count: faker.number.int(),
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -7956,6 +7961,11 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
     })),
     created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    withdrawn_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    withdrawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     slide_count: faker.number.int(),
     reviewer_count: faker.number.int(),
   }));
@@ -8082,6 +8092,11 @@ export const getGetReviewTaskResponseMock = (
   })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  withdrawn_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  withdrawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_count: faker.number.int(),
   reviewer_count: faker.number.int(),
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -8223,6 +8238,11 @@ export const getChangeReviewTaskResponseMock = (
   })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  withdrawn_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  withdrawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_count: faker.number.int(),
   reviewer_count: faker.number.int(),
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -8394,6 +8414,157 @@ export const getAddTaskReviewerResponseMock = (
   })),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  withdrawn_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  withdrawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  slide_count: faker.number.int(),
+  reviewer_count: faker.number.int(),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide_id: faker.string.uuid(),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      run_set_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+      reviewer_ids: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+      ).map(() => faker.string.uuid()),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getWithdrawReviewTaskResponseMock = (
+  overrideResponse: Partial<Extract<ReviewTaskDetail, object>> = {},
+): ReviewTaskDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  number: faker.number.int(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TaskKind)),
+  classes: faker.helpers.arrayElement([
+    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      id: faker.string.uuid(),
+      key: faker.number.int(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    null,
+  ]),
+  split: faker.helpers.arrayElement(Object.values(TaskSplit)),
+  scope: {
+    kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+    count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+    score: faker.helpers.arrayElement([
+      faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      null,
+    ]),
+  },
+  scopes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      kind: faker.helpers.arrayElement(Object.values(TaskScope)),
+      count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+      score: faker.helpers.arrayElement([
+        faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+        null,
+      ]),
+    }),
+  ),
+  opinion_form_version: faker.number.int(),
+  blinded: faker.datatype.boolean(),
+  ai_hidden_first_read: faker.datatype.boolean(),
+  start_mode: faker.helpers.arrayElement(Object.values(StartMode)),
+  due_on: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+  reminder_days: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.number.int(),
+  ),
+  study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  analysis_template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  decision: {
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    counts_as: faker.helpers.arrayElements(Object.values(DecisionValue)),
+    question: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 2, max: 200 } }),
+      null,
+    ]),
+  },
+  display: {
+    defaults: {
+      draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
+      width: faker.number.int({ min: 1, max: 3 }),
+      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
+      id_labels: faker.datatype.boolean(),
+      confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
+      heatmap: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
+      score_cutoff: faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+      other_sets: {
+        reviewed_layer: faker.datatype.boolean(),
+        result_set_ids: Array.from(
+          { length: faker.number.int({ min: 1, max: 20 }) },
+          (_, i) => i + 1,
+        ).map(() => faker.string.uuid()),
+      },
+      order: faker.helpers.arrayElement(Object.values(ObjectOrder)),
+      zoom: faker.helpers.arrayElement(Object.values(ZoomAround)),
+      move_on: faker.datatype.boolean(),
+      buttons: faker.helpers.arrayElement(Object.values(ButtonPlace)),
+    },
+    locks: {
+      [faker.string.alphanumeric(5)]: faker.string.alpha({ length: { min: 5, max: 120 } }),
+    },
+  },
+  check: faker.helpers.arrayElement([
+    {
+      preset: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(CheckPreset)),
+        null,
+      ]),
+      scope: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          kind: faker.helpers.arrayElement(Object.values(CheckKind)),
+          count: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 10000 }), null]),
+          score: faker.helpers.arrayElement([
+            faker.number.float({ min: 0, max: 1, fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
+      order: faker.helpers.arrayElement(Object.values(CheckOrder)),
+      sign_off: faker.helpers.arrayElement(Object.values(SignOffRule)),
+      unchecked_export: faker.helpers.arrayElement(Object.values(UncheckedExport)),
+    },
+    null,
+  ]),
+  blind_first: faker.datatype.boolean(),
+  counts_as_changes: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => ({
+    changed_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    before: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    after: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    recounted: faker.number.int(),
+    reasons_dropped: faker.number.int(),
+  })),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  withdrawn_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  withdrawn_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_count: faker.number.int(),
   reviewer_count: faker.number.int(),
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -18131,6 +18302,7 @@ export const getListMySlidesResponseMock = (
       status: faker.helpers.arrayElement(Object.values(State)),
       storage: faker.helpers.arrayElement(Object.values(SlideStorage)),
       created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      high_power_unreadable: faker.datatype.boolean(),
     }),
   ),
   next_cursor: faker.helpers.arrayElement([
@@ -23652,6 +23824,30 @@ export const getAddTaskReviewerMockHandler = (
   );
 };
 
+export const getWithdrawReviewTaskMockHandler = (
+  overrideResponse?:
+    | ReviewTaskDetail
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReviewTaskDetail> | ReviewTaskDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/withdraw",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getWithdrawReviewTaskResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSaveReviewEditMockHandler = (
   overrideResponse?:
     | ReviewEdit
@@ -24312,6 +24508,25 @@ export const getGetSlideAiProgressMockHandler = (
           : getGetSlideAiProgressResponseMock(),
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getReportHighPowerFailureMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/high-power-failure",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -29184,6 +29399,7 @@ export const getParfocalAPIMock = () => [
   getReassignSlidesMockHandler(),
   getUndoReassignmentMockHandler(),
   getAddTaskReviewerMockHandler(),
+  getWithdrawReviewTaskMockHandler(),
   getSaveReviewEditMockHandler(),
   getClearReviewEditMockHandler(),
   getSplitReviewObjectMockHandler(),
@@ -29213,6 +29429,7 @@ export const getParfocalAPIMock = () => [
   getGetTaskDisplayMockHandler(),
   getGetSlideResultStatsMockHandler(),
   getGetSlideAiProgressMockHandler(),
+  getReportHighPowerFailureMockHandler(),
   getListAnnotationLayersMockHandler(),
   getGetResultSetTyperMockHandler(),
   getGetDisagreementQueueMockHandler(),

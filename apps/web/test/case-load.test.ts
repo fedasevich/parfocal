@@ -71,10 +71,16 @@ test("a de-identified project never carries patient fields", () => {
 test("the case lists the slides it holds and the slide, result sets and task come along", () => {
   const load = shapeCaseLoad({ ...base, project: project("clinical") });
   assert.deepEqual(load.case, { id: "c-1", label: "S26-04812", slideIds: ["s-1", "s-2"] });
-  assert.deepEqual(load.slide, { id: "s-1", label: "A-s-1" });
+  assert.deepEqual(load.slide, { id: "s-1", label: "A-s-1", highPowerUnreadable: false });
   assert.equal(load.resultSets.length, 1);
   assert.equal(load.task?.code, "RT-14");
   assert.equal(load.decisions.length, 1);
+});
+
+test("the slide carries the flag that it cannot be read at high power", () => {
+  const flagged = { ...slideOf("s-1", "c-1"), high_power_unreadable: true } as SlideRow;
+  const load = shapeCaseLoad({ ...base, slides: [flagged], project: project("clinical") });
+  assert.equal(load.slide?.highPowerUnreadable, true);
 });
 
 test("a loose slide has no case and no patient even in a clinical project", () => {

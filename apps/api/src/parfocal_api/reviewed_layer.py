@@ -175,6 +175,11 @@ class TaskSignedOffError(ConflictError):
     title = "The task is signed off. An owner can reopen it"
 
 
+class TaskWithdrawnError(ConflictError):
+    code = "task-withdrawn"
+    title = "The task was withdrawn. There is nothing left to decide"
+
+
 router = APIRouter(prefix="/api/review-tasks/{task_id}/slides/{slide_id}", tags=["review-tasks"])
 
 
@@ -191,6 +196,7 @@ async def task_slide(
                 review_tasks.c.tenant_id,
                 review_tasks.c.kind,
                 review_tasks.c.signed_off_at,
+                review_tasks.c.withdrawn_at,
                 review_task_slides.c.signed_off_at.label("slide_signed_off_at"),
                 review_tasks.c.decision_style,
                 review_tasks.c.counts_as,
@@ -247,6 +253,8 @@ async def assigned_slide(
         raise NotAssignedError
     if row.signed_off_at is not None:
         raise TaskSignedOffError
+    if row.withdrawn_at is not None:
+        raise TaskWithdrawnError
     if row.archived_at is not None:
         raise ProjectArchivedError
     return row

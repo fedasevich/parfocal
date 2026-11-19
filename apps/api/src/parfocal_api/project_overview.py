@@ -198,6 +198,7 @@ async def slide_states(connection: AsyncConnection, project_id: uuid.UUID) -> li
                 slides.c.case_id,
                 slides.c.created_at,
                 slides.c.storage,
+                slides.c.notices,
                 slides.c.project_id,
                 projects.c.number.label("project_number"),
                 projects.c.name.label("project_name"),

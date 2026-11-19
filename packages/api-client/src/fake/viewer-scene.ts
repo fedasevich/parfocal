@@ -1,8 +1,8 @@
 export type FakeViewerScene = "ready" | "running" | "streaming";
 
-export type FakeViewerIssue = "withdrawn" | "noresults" | "running";
+export type FakeViewerIssue = "withdrawn" | "noresults" | "running" | "slidefail";
 
-const viewerIssues: readonly FakeViewerIssue[] = ["withdrawn", "noresults", "running"];
+const viewerIssues: readonly FakeViewerIssue[] = ["withdrawn", "noresults", "running", "slidefail"];
 
 let scene: FakeViewerScene = "ready";
 let issue: FakeViewerIssue | null = null;
