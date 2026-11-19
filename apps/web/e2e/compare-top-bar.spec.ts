@@ -26,9 +26,9 @@ test("compare opened from the rail wears the viewer's top bar and the mock's pan
   await expect(bar.getByRole("link", { name: "My work" })).toBeVisible();
   const chip = bar.getByTestId("slide-picker");
   await expect(chip).toHaveText("A1 · H&E");
-  const chipBox = await chip.boundingBox();
-  expect(chipBox?.width ?? 0).toBeGreaterThan(120);
-  expect(chipBox?.width ?? 0).toBeLessThan(165);
+  const chipWidth = async () => (await chip.boundingBox())?.width ?? 0;
+  await expect.poll(chipWidth).toBeGreaterThan(120);
+  expect(await chipWidth()).toBeLessThan(165);
   await expect(bar.getByTestId("workspace-switch").getByRole("radio")).toHaveText([
     "Guided",
     "Full viewer",
