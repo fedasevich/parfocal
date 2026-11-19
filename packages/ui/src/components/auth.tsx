@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
+import { BrandMark } from "@parfocal/ui/components/brand-mark";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Person, PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
@@ -31,9 +32,7 @@ function WorkspaceLogo({ workspace, size = 30 }: { workspace: AuthWorkspace; siz
 function AuthBrand() {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="grid size-8 place-items-center rounded-lg border border-white/30 text-accent">
-        <Icon name="parfocal" size="md" />
-      </span>
+      <BrandMark className="size-8" />
       <b className="text-title font-bold tracking-[-0.01em]">
         <Trans>Parfocal</Trans>
       </b>
