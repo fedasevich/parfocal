@@ -4973,7 +4973,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a seed test finds for the agent account one review task, one annotate task, one case with a report, one finished job and one slide that fails to open, and the next reset shows them.
   Depends on TEST-051. Size: S.
 - [ ] TEST-054 · Philips-3.tiff carries a worked annotation example
-  On 2026-11-19 the owner asked to see a seeded example of annotation creation, editing and export on the biggest seeded slide, Philips-3.tiff. Seed an annotate task on it with shapes drawn in each class, two named groups, AI objects confirmed, edited and deleted with their history, typed cells, and one finished export in each documented format, all made through the app's own API calls so the example proves the flow.
+  On 2026-11-19 the owner asked to see a seeded example of annotation creation, editing and export on the biggest seeded slide, Philips-3.tiff. Seed an annotate task on it with shapes drawn in each class, two named groups, AI objects confirmed, edited and deleted with their history, typed cells picked and re-typed inside the annotate task (PROTO-069 left AI cells as dots inside tasks), groups saved inside the shared annotate task (PROTO-066 saves groups only on the personal layer), and one finished export in each documented format, all made through the app's own API calls so the example proves the flow.
   Done when a seed test finds the task, the shapes in classes and groups, the history, the typed cells and the exports on Philips-3.tiff, the export files download and re-import cleanly, and after the next reset the owner and agent accounts can open it from My work.
   Depends on TEST-051, PROTO-066, PROTO-069. Size: M.
 
@@ -6801,7 +6801,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 6, 12, 13 and 43 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): AI outlines paint over the top bar and tool rail because nothing clips the stage, the guided minimap hangs 11 px below the window and covers the type bar, the Whole slide button overlaps the magnification bar, and the cells grid, type bar and magnification bar overlap, while the minimap vanishes at small windows.
   Done when stage-top-stack and a new overlap spec measure every stage part with no two intersecting and none outside the stage at 1440 by 900, 1280 by 800 and 1024 by 700, in the full viewer, guided review and the cells grid.
   Depends on PROTO-060. Size: S.
-- [ ] PROTO-069 · Cells and outlines can be typed and an AI cell can be picked
+- [x] PROTO-069 · Cells and outlines can be typed and an AI cell can be picked
   Rows 7, 8, 10 and 42 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed project with the cell results has no classes so digits do nothing and cells read No type with no reason given, a digit does not re-class a selected outline, an AI cell cannot be picked or show its ID, type and score, and K and X carry two names in cell review.
   Done when the seed gives every project with cells its classes, an empty class list shows how to add classes, digits re-class the selection and persist, a click picks an AI cell and shows its ID, type and score, K and X have one name, with specs for each.
   Depends on TEST-051. Size: M.
