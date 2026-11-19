@@ -160,6 +160,35 @@ const localSnapshot = (): string[] => {
   return localList;
 };
 
+export type HintWrites = {
+  pending: () => string[] | null;
+  push: (ids: string[], settled: () => void) => void;
+};
+
+export function hintWrites(send: (ids: string[]) => Promise<unknown>): HintWrites {
+  let latest: string[] | null = null;
+  let waiting = 0;
+  let chain: Promise<unknown> = Promise.resolve();
+  return {
+    pending: () => latest,
+    push: (ids, settled) => {
+      latest = ids;
+      waiting += 1;
+      chain = chain
+        .then(() => send(ids))
+        .catch(() => undefined)
+        .then(() => {
+          waiting -= 1;
+          if (waiting > 0) return;
+          latest = null;
+          settled();
+        });
+    },
+  };
+}
+
+const serverWrites = hintWrites((ids) => setMySettingLayers({ values: { hints_seen: ids } }));
+
 export type HintsSeen = {
   ready: boolean;
   seen: ReadonlySet<string>;
@@ -182,8 +211,8 @@ export function useHintsSeen(): HintsSeen {
     (next: (current: string[]) => string[]) => {
       const key = getGetMySettingLayersQueryKey();
       const cached = queryClient.getQueryData<getMySettingLayersResponse>(key);
-      const current = serverSeen(cached);
-      if (current === undefined || cached?.status !== 200) {
+      const fetched = serverSeen(cached);
+      if (fetched === undefined || cached?.status !== 200) {
         const before = readGuestHints();
         const updated = next(before);
         if (sameList(before, updated)) return;
@@ -191,15 +220,15 @@ export function useHintsSeen(): HintsSeen {
         notifyLocal();
         return;
       }
+      const current = serverWrites.pending() ?? fetched;
       const updated = next(current);
       if (sameList(current, updated)) return;
+      void queryClient.cancelQueries({ queryKey: key });
       queryClient.setQueryData<getMySettingLayersResponse>(key, {
         ...cached,
         data: { ...cached.data, personal: { ...cached.data.personal, hints_seen: updated } },
       });
-      void setMySettingLayers({ values: { hints_seen: updated } })
-        .catch(() => undefined)
-        .finally(() => void queryClient.invalidateQueries({ queryKey: key }));
+      serverWrites.push(updated, () => void queryClient.invalidateQueries({ queryKey: key }));
     },
     [queryClient],
   );

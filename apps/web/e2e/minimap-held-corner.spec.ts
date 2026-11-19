@@ -4,13 +4,27 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 const minimap = (page: Page) => page.locator('[data-slot="smart-minimap"]');
 
-async function openScene(page: Page, name: string) {
+async function openLink(page: Page, name: string) {
   await page.goto("/prototype");
   const link = page.getByRole("list", { name: "Screens" }).getByRole("link", { name, exact: true });
   await expect(link).toBeVisible({ timeout: 20_000 });
   await page.goto((await link.getAttribute("href")) ?? "");
+}
+
+async function openScene(page: Page, name: string) {
+  await openLink(page, name);
   await expect(minimap(page)).toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(600);
+}
+
+async function zoomIntoStage(page: Page) {
+  const stage = await page.getByTestId("slide-stage").boundingBox();
+  if (stage === null) throw new Error("the stage has no box");
+  await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2);
+  for (let step = 0; step < 5; step += 1) {
+    await page.mouse.wheel(0, -600);
+    await page.waitForTimeout(60);
+  }
 }
 
 async function panAndKeepCorner(page: Page, from: [number, number], by: [number, number]) {
@@ -46,7 +60,12 @@ for (const [name, from, by] of scenes) {
 test("the focus mode minimap stays pinned while its view rectangle follows a pan", async ({
   page,
 }) => {
-  await openScene(page, "Focus mode");
+  await openLink(page, "Focus mode");
+  await expect(page.getByTestId("focus-mode")).toBeVisible({ timeout: 20_000 });
+  await expect(minimap(page)).toHaveCount(0);
+  await zoomIntoStage(page);
+  await expect(minimap(page)).toBeVisible();
+  await page.waitForTimeout(600);
   const pinned = await minimap(page).boundingBox();
   const viewport = minimap(page).locator('[data-slot="map-viewport"]');
   const startBox = await viewport.boundingBox();

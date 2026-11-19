@@ -378,7 +378,7 @@ def notices(database: str) -> list[tuple[Any, ...]]:
     return query(
         with_database(OWNER_URL, database),
         "SELECT user_id, target_type, target_id::text, payload->>'title' FROM notifications"
-        " WHERE kind = 'integration-down' ORDER BY created_at",
+        " WHERE kind = 'integration-down' AND target_type = 'source' ORDER BY created_at",
     )
 
 

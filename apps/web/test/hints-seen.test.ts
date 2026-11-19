@@ -5,6 +5,7 @@ import {
   foldLegacyHints,
   guestHintsKey,
   guidedCoachHintId,
+  hintWrites,
   legacyHintIds,
   mostHints,
   noteHintsSeen,
@@ -122,5 +123,58 @@ describe("hints seen", () => {
     writeGuestHints(withoutSeen(readGuestHints(storage), [toolHintId("rect")]), storage);
     assert.deepEqual(readGuestHints(storage), ["viewer.tool.smart"]);
     assert.deepEqual(withoutSeen(["a"], ["b"]), ["a"]);
+  });
+
+  it("sends quick hint saves one at a time and builds each on the one before", async () => {
+    const sent: string[][] = [];
+    const releases: (() => void)[] = [];
+    let settled = 0;
+    const writes = hintWrites((ids) => {
+      sent.push(ids);
+      return new Promise<void>((resolve) => releases.push(resolve));
+    });
+    const mark = (id: string) =>
+      writes.push(withSeen(writes.pending() ?? [], [id]), () => {
+        settled += 1;
+      });
+    const turn = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    mark("viewer.tool.ruler");
+    mark("viewer.tool.arrow");
+    await turn();
+    assert.deepEqual(sent, [["viewer.tool.ruler"]]);
+    assert.deepEqual(writes.pending(), ["viewer.tool.ruler", "viewer.tool.arrow"]);
+
+    releases[0]?.();
+    await turn();
+    assert.deepEqual(sent[1], ["viewer.tool.ruler", "viewer.tool.arrow"]);
+    assert.equal(settled, 0);
+    mark("viewer.tool.text");
+
+    releases[1]?.();
+    await turn();
+    releases[2]?.();
+    await turn();
+    assert.deepEqual(sent[2], ["viewer.tool.ruler", "viewer.tool.arrow", "viewer.tool.text"]);
+    assert.equal(settled, 1);
+    assert.equal(writes.pending(), null);
+  });
+
+  it("a failed hint save still lets the next one through", async () => {
+    const sent: string[][] = [];
+    let settled = 0;
+    const writes = hintWrites((ids) => {
+      sent.push(ids);
+      return sent.length === 1 ? Promise.reject(new Error("offline")) : Promise.resolve();
+    });
+    writes.push(["a"], () => {
+      settled += 1;
+    });
+    writes.push(["a", "b"], () => {
+      settled += 1;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual(sent, [["a"], ["a", "b"]]);
+    assert.equal(settled, 1);
   });
 });

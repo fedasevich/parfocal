@@ -492,7 +492,7 @@ function SmartMinimap({
                   }
                 }}
                 className={cn(
-                  "-ml-0.5 grid size-3.5 shrink-0 cursor-grab place-items-center rounded-[3px] border-0 bg-transparent p-0 outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
+                  "-my-1.25 -mr-1.25 -ml-1.75 grid size-6 shrink-0 cursor-grab place-items-center rounded-[3px] border-0 bg-transparent p-0 outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
                   move.pinned ? "text-accent" : "text-fg-faint",
                 )}
               >
