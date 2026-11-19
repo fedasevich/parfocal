@@ -4,6 +4,8 @@ Every decision the owner has answered, newest first. Open ones are in [decisions
 
 ## Answers of 2026-11-19
 
+- Decision 161 (how far the sample cells strip zooms on its first flight to a cell), option B. The first flight lands at 40x, or the slide's highest power if lower. PROTO-080 (the cells strip lands at 40x) builds it.
+- Decision 162 (whether annotator and read-only viewer are roles of their own), option A. Researcher and Reviewer stay the two roles with admin rights. In your words, "annotator is a reviwer doctor that can do many things", so the Reviewer role covers annotating. PROTO-081 (Admin shows what each role may do) adds the table and names annotating under Reviewer.
 - Decision 159 (what a GPU job does when Modal has no GPU free in the EU), option A. The EU pin stays. OPS-038 (a GPU call waiting for an EU GPU shows the wait, not an error) builds the wait, the smoke retry and a week of measurement.
 - Decision 160 (two extras the mock does not draw), option A. "Send feedback" stays in the account menu and the Open and Resolved switch stays on the Comments tab. No work. It was numbered 159 by mistake when asked.
 - Decision 155 (which extra settings the Display tab gets). You asked for the mock's display ideas that make sense, such as fill opacity. PROTO-057 (the Display settings gain the mock's display ideas that make sense) is on the board.

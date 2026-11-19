@@ -19,23 +19,7 @@ None. All five steps of 2026-11-19 are done and checked.
 
 ## Open questions
 
-### 161. How far the sample cells strip zooms on its first flight to a cell
-
-PROTO-063 (arrow keys move between cells in the sample cells strip) now steps through the sampled cells in a short spatial tour and leaves the camera still while the next cell is in view. When the camera does fly to a cell, it zooms until the cell is twice its own size, up to the slide's limit, which on a small cell can be far past 40x.
-
-- A. Keep it. The cell always fills the same part of the screen, whatever the slide's scan power.
-- B. Land at a fixed 40x, or the slide's highest power if lower, so every cell is judged at the magnification a pathologist reads at. Recommended, because it matches how the rest of the viewer names powers and keeps neighbouring cells in view.
-
-Your choice:
-
-### 162. Whether annotator and read-only viewer are roles of their own
-
-The audit of the deployed app on 2026-11-19 found two roles, Researcher and Reviewer, plus admin rights. The seeded viewer accounts are Reviewers, so they get answer buttons on tasks they are not assigned to, which PROTO-072 (people not assigned see a task read only) hides either way. The thesis assignment asks for defined user roles.
-
-- A. Keep two roles and admin rights, and show a table of what each may do in Admin.
-- B. Add Annotator (draws and types, no review decisions) and Viewer (reads only) beside Researcher and Reviewer, with the same table. Recommended, because the thesis names annotation experts and the seeded viewer accounts need a role that matches them.
-
-Your choice:
+None right now.
 
 ## The review column, what each task waits for
 
