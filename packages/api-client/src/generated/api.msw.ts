@@ -9960,6 +9960,8 @@ export const getGetMyHomeResponseMock = (
     agreed: faker.number.int(),
     agree_share: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
     open_disagreements: faker.helpers.arrayElement([faker.number.int(), null]),
+    checked_task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    disagreements_task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   },
   announcements: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({

@@ -86754,6 +86754,30 @@
               }
             ],
             "title": "Open Disagreements"
+          },
+          "checked_task_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked Task Id"
+          },
+          "disagreements_task_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disagreements Task Id"
           }
         },
         "type": "object",
@@ -86762,7 +86786,9 @@
           "objects_checked",
           "agreed",
           "agree_share",
-          "open_disagreements"
+          "open_disagreements",
+          "checked_task_id",
+          "disagreements_task_id"
         ],
         "title": "Week"
       },

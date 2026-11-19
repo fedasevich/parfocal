@@ -135,6 +135,8 @@ class Week(BaseModel):
     agreed: int
     agree_share: float | None
     open_disagreements: int | None
+    checked_task_id: uuid.UUID | None
+    disagreements_task_id: uuid.UUID | None
 
 
 class Home(BaseModel):
@@ -463,12 +465,16 @@ async def projects_of(
 
 async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[uuid.UUID]) -> Week:
     since_column = (func.now() - WEEK).label("since")
-    since, checked, agreed = (
+    rows = (
         await connection.execute(
             select(
                 since_column,
-                func.count(),
-                func.count().filter(review_decisions.c.value == DecisionValue.AGREE),
+                review_decisions.c.task_id,
+                func.count().label("checked"),
+                func.count()
+                .filter(review_decisions.c.value == DecisionValue.AGREE)
+                .label("agreed"),
+                func.max(review_decisions.c.updated_at).label("latest"),
             )
             .join(projects, projects.c.id == review_decisions.c.project_id)
             .where(
@@ -476,11 +482,17 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
                 review_decisions.c.updated_at >= func.now() - WEEK,
                 NOT_SAMPLE,
             )
+            .group_by(review_decisions.c.task_id)
         )
-    ).one()
+    ).all()
+    since = rows[0].since if rows else (await connection.execute(select(since_column))).scalar_one()
+    checked = sum(row.checked for row in rows)
+    agreed = sum(row.agreed for row in rows)
+    busiest = max(rows, key=lambda row: (row.checked, row.latest), default=None)
     open_disagreements: int | None = None
+    disagreements_task_id: uuid.UUID | None = None
     if adjudicated:
-        open_disagreements = await count_open_disagreements(
+        by_task = await count_open_disagreements(
             connection,
             select(review_tasks.c.id).where(
                 review_tasks.c.project_id.in_(adjudicated),
@@ -488,12 +500,16 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
                 review_tasks.c.signed_off_at.is_(None),
             ),
         )
+        open_disagreements = sum(by_task.values())
+        disagreements_task_id = max(by_task, key=lambda task_id: by_task[task_id], default=None)
     return Week(
         since=since,
         objects_checked=checked,
         agreed=agreed,
         agree_share=agreed / checked if checked else None,
         open_disagreements=open_disagreements,
+        checked_task_id=busiest.task_id if busiest else None,
+        disagreements_task_id=disagreements_task_id,
     )
 
 

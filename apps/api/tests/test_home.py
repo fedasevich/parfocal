@@ -106,14 +106,18 @@ def test_home_lists_open_tasks_by_due_date_and_the_week_in_numbers(
     week = mine["week"]
     assert (week["objects_checked"], week["agreed"], week["open_disagreements"]) == (3, 2, None)
     assert week["agree_share"] == pytest.approx(2 / 3)
+    assert week["checked_task_id"] == later["id"]
     queued = sum(
         entry["decision"] is None
         for task_id in (later["id"], done["id"])
         for entry in api(s.people["owner"]).get(f"/api/review-tasks/{task_id}/disagreements").json()
     )
     assert queued > 0
-    assert home(api, s, "owner")["week"]["open_disagreements"] == queued
-    assert home(api, s, "owner")["week"]["objects_checked"] == 0
+    owner_week = home(api, s, "owner")["week"]
+    assert owner_week["open_disagreements"] == queued
+    assert owner_week["disagreements_task_id"] in {later["id"], done["id"]}
+    assert owner_week["objects_checked"] == 0
+    assert owner_week["checked_task_id"] is None
 
 
 def test_project_cards_show_what_each_member_may_read(api: ApiAs, database: str) -> None:

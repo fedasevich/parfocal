@@ -3764,6 +3764,8 @@ export interface Week {
   agreed: number;
   agree_share: number | null;
   open_disagreements: number | null;
+  checked_task_id: string | null;
+  disagreements_task_id: string | null;
 }
 
 export interface Home {

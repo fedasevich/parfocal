@@ -354,6 +354,8 @@ export const toHome = (): Home => {
       agreed: week.agreed,
       agree_share: week.agreed / week.objectsChecked,
       open_disagreements: week.openDisagreements,
+      checked_task_id: week.objectsChecked > 0 ? task.id : null,
+      disagreements_task_id: (week.openDisagreements ?? 0) > 0 ? task.id : null,
     },
     announcements: announcementsFor(firstWeek).map(toAnnouncement),
   };
@@ -379,7 +381,15 @@ const emptyWorkspaceHome = (home: Home): Home => ({
   tasks: [],
   projects: [],
   slides_without_results: 0,
-  week: { ...home.week, objects_checked: 0, agreed: 0, agree_share: 0, open_disagreements: 0 },
+  week: {
+    ...home.week,
+    objects_checked: 0,
+    agreed: 0,
+    agree_share: 0,
+    open_disagreements: 0,
+    checked_task_id: null,
+    disagreements_task_id: null,
+  },
 });
 
 const switchRefused = (code: "not-a-member" | "tenant-suspended") =>

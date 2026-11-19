@@ -3,6 +3,7 @@ import {
   ApiError,
   type Checklist,
   getGetMySettingLayersQueryKey,
+  type Home,
   type HomeProject,
   type MyTask,
   type Project,
@@ -357,13 +358,7 @@ function ChecklistCard({ steps, onHide }: { steps: Checklist["steps"]; onHide: (
   );
 }
 
-function ThisWeek({
-  week,
-  taskId,
-}: {
-  week: { objects_checked: number; agree_share: number | null; open_disagreements: number | null };
-  taskId: string | undefined;
-}) {
+function ThisWeek({ week }: { week: Home["week"] }) {
   const { t } = useLingui();
 
   const goTo = useGoTo();
@@ -371,8 +366,13 @@ function ThisWeek({
     <SideCard
       title={t`This week in your projects`}
       end={
-        taskId ? (
-          <Button variant="link" onClick={() => void goTo(destinations.evaluation(taskId))}>
+        week.checked_task_id ? (
+          <Button
+            variant="link"
+            onClick={() =>
+              week.checked_task_id && void goTo(destinations.evaluation(week.checked_task_id))
+            }
+          >
             <Trans>Evaluation</Trans>
           </Button>
         ) : null
@@ -396,13 +396,22 @@ function ThisWeek({
           </small>
         </div>
         <div>
-          <button
-            type="button"
-            onClick={() => (taskId ? void goTo(destinations.disagreements(taskId)) : undefined)}
-            className="block cursor-pointer border-0 bg-transparent p-0 font-mono text-page-title leading-[1.1] font-semibold text-decision-disagree"
-          >
-            {week.open_disagreements ?? 0}
-          </button>
+          {week.disagreements_task_id ? (
+            <button
+              type="button"
+              onClick={() =>
+                week.disagreements_task_id &&
+                void goTo(destinations.disagreements(week.disagreements_task_id))
+              }
+              className="block cursor-pointer border-0 bg-transparent p-0 font-mono text-page-title leading-[1.1] font-semibold text-decision-disagree"
+            >
+              {week.open_disagreements}
+            </button>
+          ) : (
+            <b className="block font-mono text-page-title leading-[1.1] font-semibold text-fg">
+              {week.open_disagreements ?? 0}
+            </b>
+          )}
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
             <Trans>disagreements open</Trans>
           </small>
@@ -661,7 +670,7 @@ export function HomeScreen() {
     ),
   };
   const side: Record<SideBlock, ReactNode> = {
-    week: <ThisWeek week={home.week} taskId={home.resume?.task_id} />,
+    week: <ThisWeek week={home.week} />,
     tasks: <ComingUp tasks={home.tasks} projects={home.projects} />,
   };
   return (

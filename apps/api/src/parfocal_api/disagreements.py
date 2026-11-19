@@ -265,7 +265,7 @@ def queued_why(rows: list[Any]) -> Why | None:
     return why_queued({row.user_id: row.value for row in rows}, second_look)
 
 
-async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> int:
+async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> dict[uuid.UUID, int]:
     pending = review_assignments.alias("pending")
     reviewer = review_assignments.alias("reviewer")
     rows = await connection.execute(
@@ -307,15 +307,15 @@ async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> int:
     grouped: dict[TaskKey, list[Any]] = {}
     for row in rows:
         grouped.setdefault((row.task_id, row.slide_id, row.kind, row.number), []).append(row)
-    return sum(
-        counts_as_open(
+    by_task: dict[uuid.UUID, int] = {}
+    for (task_id, *_), found in grouped.items():
+        if queued_why(found) is not None and counts_as_open(
             looking_again=any(row.reopened_at is not None for row in found),
             decided=found[0].chosen_value is not None,
             left_open=bool(found[0].left_open),
-        )
-        for found in grouped.values()
-        if queued_why(found) is not None
-    )
+        ):
+            by_task[task_id] = by_task.get(task_id, 0) + 1
+    return by_task
 
 
 async def queues_of(
