@@ -19,7 +19,14 @@ None. All five steps of 2026-11-19 are done and checked.
 
 ## Open questions
 
-None right now.
+### 161. How far the sample cells strip zooms on its first flight to a cell
+
+PROTO-063 (arrow keys move between cells in the sample cells strip) now steps through the sampled cells in a short spatial tour and leaves the camera still while the next cell is in view. When the camera does fly to a cell, it zooms until the cell is twice its own size, up to the slide's limit, which on a small cell can be far past 40x.
+
+- A. Keep it. The cell always fills the same part of the screen, whatever the slide's scan power.
+- B. Land at a fixed 40x, or the slide's highest power if lower, so every cell is judged at the magnification a pathologist reads at. Recommended, because it matches how the rest of the viewer names powers and keeps neighbouring cells in view.
+
+Your choice:
 
 ## The review column, what each task waits for
 
