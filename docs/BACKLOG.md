@@ -6684,7 +6684,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Give that text a colour that passes WCAG AA on its background, and check the other quiet text tokens of the light theme the same way.
   Done when `command-palette.spec.ts` passes with axe on, and a unit test checks the contrast of every quiet text token against its surfaces in both themes.
   Size: S.
-- [ ] PROTO-050 · A second drift audit covers the bottom dock, compare, peek, the shortcuts sheet and dark theme
+- [x] PROTO-050 · A second drift audit covers the bottom dock, compare, peek, the shortcuts sheet and dark theme
   The audit in `docs/results/2026-11-18-viewer-mock-drift.md` (the viewer's drift from the mock) did not compare the bottom dock, compare, the peek overlay, the shortcuts sheet and dark theme, and could not check region outlines on the fake slide.
   Compare those against the mock's scenes the same way, and add a backlog task for each group of differences.
   Done when a result file lists every difference in those parts with kept or fixed and its reason, and each open one has a task.
