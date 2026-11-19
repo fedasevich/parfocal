@@ -6861,7 +6861,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Decision 161 (how far the sample cells strip zooms on its first flight to a cell), option B: the first flight to a cell lands at 40x, or the slide's highest power if lower, instead of zooming until the cell is twice its size.
   Done when a spec flies to a cell on a 40x and a 20x slide and reads 40x and 20x in the magnification bar, and the calm camera from PROTO-063 still leaves the zoom alone on later steps.
   Depends on PROTO-063. Size: S.
-- [ ] PROTO-081 · Admin shows what each role may do
+- [x] PROTO-081 · Admin shows what each role may do
   Decision 162 (whether annotator and read-only viewer are roles of their own), option A: Researcher and Reviewer stay, with admin rights, and the owner says the reviewer doctor is also the annotator. Show a table in Admin, People and roles, of what each role and admin rights may do, read from the permission matrix, naming annotating under Reviewer.
   Done when a spec opens People and roles and finds the table, and a unit test checks every permission in the matrix appears in it.
   Depends on PROTO-072. Size: S.
