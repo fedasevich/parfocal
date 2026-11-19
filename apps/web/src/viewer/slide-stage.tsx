@@ -17,12 +17,7 @@ import { AutoLayer } from "../annotations/auto-layer.tsx";
 import { BrushLayer } from "../annotations/brush-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
-import {
-  clearAll,
-  clearPrompt,
-  deleteShapes,
-  needsClearConfirmation,
-} from "../annotations/clear.ts";
+import { clearAll, clearPrompt, needsClearConfirmation } from "../annotations/clear.ts";
 import { contextBarOf, takesActiveClass } from "../annotations/context-bar.ts";
 import { ContextBarView } from "../annotations/context-bar.tsx";
 import { ContextExtrasHost } from "../annotations/context-extras.tsx";
@@ -82,12 +77,7 @@ import { appFrameReporter } from "../telemetry/frame-monitor.ts";
 import { useFrameMonitor } from "../telemetry/use-frame-monitor.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { AreaKeys } from "./area-keys.tsx";
-import {
-  DockCard,
-  type InspectorSection,
-  type InspectorSlots,
-  InspectorSlotsProvider,
-} from "./inspector-slots.tsx";
+import { DockCard, type InspectorSection, type InspectorSlots } from "./inspector-slots.tsx";
 import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { StageMagnification, type ViewerModule } from "./magnification-control.tsx";
@@ -102,6 +92,7 @@ import { useSlideCoverage } from "./slide-coverage.ts";
 import { StageCompareButton } from "./stage-compare.tsx";
 import { OutlineModeCard, StageDisplay } from "./stage-display.tsx";
 import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
+import { StageDockProvider, useStageMeasurementsValue } from "./stage-measurements.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import type { StageTabCounts } from "./stage-tab-counts.ts";
@@ -376,6 +367,8 @@ function OpenedSlide({
     selected: selectedIds,
   });
   const annotations = saved.document;
+  const mpp = session?.engine.getSlide()?.micronsPerPixel ?? null;
+  const measurements = useStageMeasurementsValue(saved, mpp, t`Delete shape`);
   const selectedBox = useMemo(
     () =>
       selectionArea(
@@ -665,8 +658,7 @@ function OpenedSlide({
     if (session === null || hostNode === null) return;
     const mark = () => {
       const camera = session.engine.getCamera();
-      hostNode.dataset["camera"] =
-        `${camera.x.toFixed(3)},${camera.y.toFixed(3)},${camera.zoom.toFixed(4)}`;
+      hostNode.dataset.camera = `${camera.x.toFixed(3)},${camera.y.toFixed(3)},${camera.zoom.toFixed(4)}`;
     };
     mark();
     return session.engine.subscribeCamera(mark);
@@ -731,7 +723,7 @@ function OpenedSlide({
 
   return (
     <EscProvider value={escRegistry}>
-      <InspectorSlotsProvider value={slots}>
+      <StageDockProvider slots={slots} measurements={measurements}>
         <ContextExtrasHost>
           <div data-slot="viewer-body" className="relative flex size-full min-h-0 bg-chrome">
             {bare || inspector.guided || toolsLayout === "dock" ? null : (
@@ -1044,9 +1036,7 @@ function OpenedSlide({
                     <MeasurementList
                       document={annotations}
                       micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
-                      onRemove={(id) =>
-                        saved.apply(deleteShapes(annotations, [id]).document, t`Delete shape`)
-                      }
+                      onRemove={measurements.remove}
                     />
                     {annotations.shapes.size > 0 ? (
                       <Button
@@ -1117,7 +1107,7 @@ function OpenedSlide({
               {session && hostNode && systematicScan ? (
                 <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
               ) : null}
-              {session ? (
+              {session && !inspector.guided ? (
                 <StageMagnification
                   engine={session.engine}
                   units={session.module}
@@ -1189,7 +1179,7 @@ function OpenedSlide({
             )}
           </div>
         </ContextExtrasHost>
-      </InspectorSlotsProvider>
+      </StageDockProvider>
     </EscProvider>
   );
 }

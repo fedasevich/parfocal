@@ -6619,7 +6619,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Add the mock's model picker to the smart select and one-click tools, listing the models the workspace can run with their size and where they run, load the chosen model in the browser or call the worker, and make a click on a nucleus draw an accepted outline on the real slide.
   Done when a browser test picks a model, clicks a nucleus on a fixture slide and accepts an outline that is saved, and the deployed app does the same on a seeded slide.
   Depends on PROTO-029. Size: M.
-- [ ] PROTO-037 · The Objects tab shows the mock's summary, filters, compact rows and one object card
+- [x] PROTO-037 · The Objects tab shows the mock's summary, filters, compact rows and one object card
   The engine viewer's Objects tab lists every review object as a 148 px card with its own three buttons, 8,634 px for 55 objects, and has no summary, no filter and no way to the first open object (rows 1 to 9 of the 2026-11-18 drift result). The mock's panel exists as `screens/viewer/objects-panel.tsx` and `screens/review/object-card.tsx` but is drawn only in prototype scenes.
   Draw the mock's Objects panel on the engine stage from the task's review objects: the "Objects on A1" card with the decision ring and counts, the "AI says" card, the filter chips, 58 px rows with ID, kind, score, size and the decision line, one "Cells, 50 sampled" row, measurements as rows, and "Go to T5, the first open object". Selecting a row flies to the object and docks one object card at the foot with the sentence "The AI says T5 is tumor, 52% sure." and three stacked answer buttons. Picking a cell in the cells panel does the same for the cell and shows its crop.
   Done when a browser test on the fake task RT-14 finds the summary counts, filters to Open and sees 7 rows, clicks T5, sees the camera move and the card, decides it with K and sees the row and the ring change, and the list for 55 objects is under 900 px tall before scrolling.
@@ -6629,7 +6629,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Add the counts, use the mock's panel colours, leave "Hide while panning" to the Layout setting and drop the panel's foot, put Compare slides at the rail's foot, open review on Select, match the magnification bar's size and labels, and keep a hint bar to one line.
   Done when a browser test reads "Objects 55" and "Comments 3" on the tabs, finds Compare slides in the rail and Select pressed on open, and a `shot --against` of the inspector and the magnification bar compares by number against new baselines.
   Size: S.
-- [ ] PROTO-039 · The slide shows region tags, one chip for the sampled cells and a Whole slide button, and nothing else floats
+- [x] PROTO-039 · The slide shows region tags, one chip for the sampled cells and a Whole slide button, and nothing else floats
   On the slide the mock draws each region's outline with a tag such as "T1 97%", one chip "50 sampled cells · 44 decided, 6 open" at low power, and a "Whole slide" button once the view is on an object. The app draws every cell of the result set over the whole slide, shows no chip, no tags on the fake slide and no button, and floats a "Hide PathoSAM + HoVer-NeXt" chip at the bottom left (rows 17 to 21).
   In a review task draw the regions with their tags and only the sampled cells, collapse the sample into the mock's chip while the cells are under about 7 px, add the "Whole slide" button, and move the result set switch into the Display tab. Outside a task a whole result set keeps drawing as VIEW-076 (every cell of a result set draws on the engine stage) built it.
   Done when a browser test on RT-14 sees five tags and one chip at whole slide zoom, clicks the chip and lands on the cells, clicks "Whole slide" and is back, finds no result set chip over the slide, and the viewer golden images pass.
@@ -6654,7 +6654,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw that layout on the engine stage for `/tasks/$taskId/guided`, fed by the stage's review objects and decisions, with decision notes and the cells panel as ADR 0398 (one engine stage) lists them.
   Done when a browser test opens guided review on RT-14, finds no tool rail, reads the heading for T5, answers with K, sees the next open object and its dot change, skips one, goes back with Previous, finishes the slide and sees "Slide 8 is done" in the Review tab.
   Depends on PROTO-033. Size: M.
-- [ ] PROTO-044 · Guided review has its own stage controls
+- [x] PROTO-044 · Guided review has its own stage controls
   On the slide the mock's guided review shows "Back to T5", a zoom group with minus, the magnification and plus, a "Whole slide" toggle, a pan hint chip and the first run tips beside what they explain, and no magnification bar (rows 49 to 51). The app shows the full viewer's magnification bar and puts tips 3 and 4 in the panel.
   Add the three controls at the bottom left of the guided stage, hide the magnification bar there, show the pan hint, and place each tip beside its target.
   Done when a browser test pans away, clicks "Back to T5" and is centred on T5 again, zooms with plus and minus and reads the new magnification, toggles "Whole slide", and a first run shows four tips each next to its control.

@@ -358,7 +358,7 @@ const filterWord: Record<Exclude<ListFilter, "all">, string> = {
 
 export type AddedRow = { object: string; size: string; note: string | null };
 
-export type MeasurementRow = { object: string; mm: number; across: string };
+export type MeasurementRow = { object: string; mm: number; across: string; length?: string };
 
 type ObjectListProps = {
   objects: ReviewObject[];
@@ -408,7 +408,7 @@ export function ObjectList({
   const row =
     "grid w-full cursor-pointer grid-cols-[44px_1fr_auto_auto] items-start gap-2 rounded-ctl border-0 bg-transparent px-1 py-2 text-left text-body-sm text-fg hover:bg-chrome-2 aria-[current=true]:bg-surf-hl";
   return (
-    <div className="grid gap-3">
+    <div data-testid="object-list" className="grid gap-3">
       <fieldset
         aria-label={t`Show`}
         className="m-0 flex min-w-0 gap-1.5 overflow-hidden border-0 p-0"
@@ -431,7 +431,12 @@ export function ObjectList({
         {regions.map((item) => {
           const decided = answer(item.object);
           return (
-            <li key={item.object}>
+            <li
+              key={item.object}
+              data-testid="object-row"
+              data-object={item.object}
+              data-decision={decided?.value ?? ""}
+            >
               <button
                 type="button"
                 aria-current={item.object === current ? "true" : undefined}
@@ -471,7 +476,7 @@ export function ObjectList({
           );
         })}
         {onOpenCells && cellsHit ? (
-          <li>
+          <li data-testid="object-row-cells">
             <div
               aria-current={current?.includes("·") ? "true" : undefined}
               className="grid grid-cols-[44px_1fr_auto] items-center gap-2 rounded-ctl px-1 py-2 text-body-sm aria-[current=true]:bg-surf-hl"
@@ -517,7 +522,7 @@ export function ObjectList({
           </li>
         ))}
         {(shown === "all" ? measurements : []).map((item) => (
-          <li key={item.object}>
+          <li key={item.object} data-testid="object-row" data-object={item.object}>
             <button
               type="button"
               aria-current={item.object === current ? "true" : undefined}
@@ -531,11 +536,13 @@ export function ObjectList({
                 </span>
                 <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
                   <i aria-hidden="true" className="size-2 rounded-full bg-fg-faint" />
-                  <Trans>ruler, across {item.across}</Trans>
+                  {item.across ? <Trans>ruler, across {item.across}</Trans> : <Trans>ruler</Trans>}
                 </small>
               </span>
               <span />
-              <span className="font-mono text-fg-dim">{formatMillimetres(item.mm, 2)}</span>
+              <span className="font-mono text-fg-dim">
+                {item.length ?? formatMillimetres(item.mm, 2)}
+              </span>
             </button>
           </li>
         ))}

@@ -3350,11 +3350,6 @@ msgstr ""
 msgid "AI objects"
 msgstr ""
 
-#. placeholder {0}: objects.length
-#: src/viewer/stage-review-objects.tsx
-msgid "AI objects · {0}"
-msgstr ""
-
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr ""
@@ -3975,6 +3970,10 @@ msgstr ""
 msgid "Back to {currentId}"
 msgstr ""
 
+#: src/viewer/stage-guided-view.tsx
+msgid "Back to {object}"
+msgstr ""
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Back to disagreements"
 msgstr ""
@@ -4546,8 +4545,10 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
+#. placeholder {0}: cell.object
 #. placeholder {0}: selection.id
 #: ../../packages/ui/src/components/findings-panel.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Cell {0}"
 msgstr ""
 
@@ -4626,6 +4627,10 @@ msgstr ""
 
 #: src/screens/review/guided-parts.tsx
 msgid "Center {currentId} again"
+msgstr ""
+
+#: src/viewer/stage-guided-view.tsx
+msgid "Center {object} again"
 msgstr ""
 
 #: ../../packages/ui/src/components/flow-page.tsx
@@ -6302,12 +6307,12 @@ msgstr ""
 msgid "Drag to another corner. Double-click to place it automatically"
 msgstr ""
 
-#: src/viewer/stage-coach.tsx
-msgid "Drag to move around. Scroll or use + and − to zoom."
-msgstr ""
-
 #: src/screens/review/guided-review.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
+msgstr ""
+
+#: src/viewer/stage-coach.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom. Back to {object} brings you back."
 msgstr ""
 
 #: ../../packages/ui/src/components/cells-panel.tsx
@@ -6315,6 +6320,7 @@ msgid "Drag to move the panel"
 msgstr ""
 
 #: src/screens/review/slide-still.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Drag to move, scroll to zoom"
 msgstr ""
 
@@ -6350,6 +6356,10 @@ msgstr ""
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
+msgstr ""
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Drawn with the ruler. It is yours only and is not a decision."
 msgstr ""
 
 #: src/screens/upload/formats-drawer.tsx
@@ -7562,6 +7572,7 @@ msgid "Go to {0}{1}"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Go to {firstOpen}, the first open object"
 msgstr ""
 
@@ -9259,6 +9270,7 @@ msgid "Magnification label"
 msgstr ""
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Magnification on screen"
 msgstr ""
 
@@ -10554,10 +10566,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Note, optional"
-msgstr ""
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Notes and comments"
 msgstr ""
 
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
@@ -13367,6 +13375,10 @@ msgstr ""
 msgid "RT-14 opened in the preview on the right"
 msgstr ""
 
+#: src/screens/review/viewer-frame.tsx
+msgid "ruler"
+msgstr ""
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Ruler"
 msgstr ""
@@ -13817,6 +13829,7 @@ msgid "See the Methods block"
 msgstr ""
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "See the whole slide"
 msgstr ""
 
@@ -17955,6 +17968,7 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/stage-guided-view.tsx
 #: src/viewer/stage-minimap.tsx
 #: src/viewer/stage-slide-marks.tsx
 #: src/viewer/start-run-panel.tsx
@@ -18270,7 +18284,6 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
-#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr ""
 
@@ -18450,6 +18463,7 @@ msgstr ""
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom"
 msgstr ""
 
@@ -18465,10 +18479,12 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom in"
 msgstr ""
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom in (+)"
 msgstr ""
 
@@ -18482,10 +18498,12 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom out"
 msgstr ""
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom out (−)"
 msgstr ""
 

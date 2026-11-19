@@ -3352,11 +3352,6 @@ msgstr "AI models"
 msgid "AI objects"
 msgstr "AI objects"
 
-#. placeholder {0}: objects.length
-#: src/viewer/stage-review-objects.tsx
-msgid "AI objects · {0}"
-msgstr "AI objects · {0}"
-
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr "AI only, reviewer disagreed"
@@ -3977,6 +3972,10 @@ msgstr "Back to {backLabel}"
 msgid "Back to {currentId}"
 msgstr "Back to {currentId}"
 
+#: src/viewer/stage-guided-view.tsx
+msgid "Back to {object}"
+msgstr "Back to {object}"
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Back to disagreements"
 msgstr "Back to disagreements"
@@ -4548,8 +4547,10 @@ msgstr "Cases from folder names"
 msgid "Category"
 msgstr "Category"
 
+#. placeholder {0}: cell.object
 #. placeholder {0}: selection.id
 #: ../../packages/ui/src/components/findings-panel.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Cell {0}"
 msgstr "Cell {0}"
 
@@ -4629,6 +4630,10 @@ msgstr "Cells, {cellWord}"
 #: src/screens/review/guided-parts.tsx
 msgid "Center {currentId} again"
 msgstr "Center {currentId} again"
+
+#: src/viewer/stage-guided-view.tsx
+msgid "Center {object} again"
+msgstr "Center {object} again"
 
 #: ../../packages/ui/src/components/flow-page.tsx
 #: ../../packages/ui/src/components/viewer-tools.tsx
@@ -6307,19 +6312,20 @@ msgstr "Drag to another corner, or use the arrow keys"
 msgid "Drag to another corner. Double-click to place it automatically"
 msgstr "Drag to another corner. Double-click to place it automatically"
 
-#: src/viewer/stage-coach.tsx
-msgid "Drag to move around. Scroll or use + and − to zoom."
-msgstr "Drag to move around. Scroll or use + and − to zoom."
-
 #: src/screens/review/guided-review.tsx
 msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
 msgstr "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
+
+#: src/viewer/stage-coach.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom. Back to {object} brings you back."
+msgstr "Drag to move around. Scroll or use + and − to zoom. Back to {object} brings you back."
 
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Drag to move the panel"
 msgstr "Drag to move the panel"
 
 #: src/screens/review/slide-still.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Drag to move, scroll to zoom"
 msgstr "Drag to move, scroll to zoom"
 
@@ -6356,6 +6362,10 @@ msgstr "Drawn or imported by an expert"
 #: src/screens/viewer/objects-panel.tsx
 msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
 msgstr "Drawn with the ruler across {across}. It is yours only and is not a decision."
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Drawn with the ruler. It is yours only and is not a decision."
+msgstr "Drawn with the ruler. It is yours only and is not a decision."
 
 #: src/screens/upload/formats-drawer.tsx
 msgid "Drop a result file"
@@ -7567,6 +7577,7 @@ msgid "Go to {0}{1}"
 msgstr "Go to {0}{1}"
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Go to {firstOpen}, the first open object"
 msgstr "Go to {firstOpen}, the first open object"
 
@@ -9264,6 +9275,7 @@ msgid "Magnification label"
 msgstr "Magnification label"
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Magnification on screen"
 msgstr "Magnification on screen"
 
@@ -10560,10 +10572,6 @@ msgstr "Note to them <0>optional</0>"
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Note, optional"
 msgstr "Note, optional"
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Notes and comments"
-msgstr "Notes and comments"
 
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"
@@ -13376,6 +13384,10 @@ msgstr "RT-14 · Round 2"
 msgid "RT-14 opened in the preview on the right"
 msgstr "RT-14 opened in the preview on the right"
 
+#: src/screens/review/viewer-frame.tsx
+msgid "ruler"
+msgstr "ruler"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Ruler"
 msgstr "Ruler"
@@ -13826,6 +13838,7 @@ msgid "See the Methods block"
 msgstr "See the Methods block"
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "See the whole slide"
 msgstr "See the whole slide"
 
@@ -17964,6 +17977,7 @@ msgstr "Who reviews"
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/stage-guided-view.tsx
 #: src/viewer/stage-minimap.tsx
 #: src/viewer/stage-slide-marks.tsx
 #: src/viewer/start-run-panel.tsx
@@ -18279,7 +18293,6 @@ msgstr "Your alignment is kept for this pair of slides. Clear puts the panes bac
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
-#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr "Your answer on {0}"
 
@@ -18459,6 +18472,7 @@ msgstr "Zones where the AI is unsure"
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/review/guided-parts.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -18474,10 +18488,12 @@ msgstr "Zoom around the object"
 
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom in"
 msgstr "Zoom in"
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom in (+)"
 msgstr "Zoom in (+)"
 
@@ -18491,10 +18507,12 @@ msgstr "Zoom in to map this view"
 
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom out"
 msgstr "Zoom out"
 
 #: src/screens/review/guided-parts.tsx
+#: src/viewer/stage-guided-view.tsx
 msgid "Zoom out (−)"
 msgstr "Zoom out (−)"
 

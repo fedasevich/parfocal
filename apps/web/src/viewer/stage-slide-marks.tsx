@@ -1,11 +1,9 @@
-import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
-import { Button } from "@parfocal/ui/components/button";
 import { CellCluster } from "@parfocal/ui/components/cells-panel";
-import { Icon } from "@parfocal/ui/components/icon";
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { outlineArea } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
+import { WholeSlideButton } from "./whole-slide-button.tsx";
 
 export const sampleChipBelowPx = 7;
 const tagGapPx = 8;
@@ -94,7 +92,6 @@ export function StageSlideMarks({
   ids?: boolean;
   onWholeSlide: (() => void) | null;
 }) {
-  const { t } = useLingui();
   const frame = useRef<HTMLDivElement>(null);
   const size = useRef<Size>({ width: 0, height: 0 });
   const tags = useRef(new Map<string, HTMLElement>());
@@ -202,16 +199,7 @@ export function StageSlideMarks({
       ) : null}
       {wholeShown && onWholeSlide !== null ? (
         <div className="pointer-events-auto absolute bottom-16 left-4 flex gap-2">
-          <Button
-            size="lg"
-            variant="secondary"
-            className="bg-chrome shadow-pop"
-            data-testid="whole-slide-button"
-            onClick={onWholeSlide}
-          >
-            <Icon name="expand" />
-            {t`Whole slide`}
-          </Button>
+          <WholeSlideButton testId="whole-slide-button" onClick={onWholeSlide} />
         </div>
       ) : null}
     </div>

@@ -18,6 +18,7 @@ export function StageGuidedCard({
   object,
   position,
   coach,
+  stepTip,
   onAnswer,
   onJump,
   onPrevious,
@@ -29,6 +30,7 @@ export function StageGuidedCard({
   object: ReviewObject;
   position: number;
   coach: ReactNode;
+  stepTip: ReactNode;
   onAnswer: (raw: string) => void;
   onJump: (object: string) => void;
   onPrevious: () => void;
@@ -104,6 +106,7 @@ export function StageGuidedCard({
         onCancelRedraw={() => undefined}
         onAddMissed={onAddMissed}
       />
+      {stepTip}
       <div className="flex items-center justify-between pt-2">
         <Button
           variant="secondary"

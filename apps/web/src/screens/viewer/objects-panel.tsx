@@ -214,6 +214,7 @@ type ObjectFootProps = {
   onSaveNote: () => void;
   onAnswer: (raw: string) => void;
   onClose: () => void;
+  cellButtons?: boolean;
 };
 
 export function ObjectFoot({
@@ -230,6 +231,7 @@ export function ObjectFoot({
   onSaveNote,
   onAnswer,
   onClose,
+  cellButtons = false,
 }: ObjectFootProps) {
   const { t } = useLingui();
   const format = useFormat();
@@ -276,7 +278,7 @@ export function ObjectFoot({
       ) : null}
       <ConfidenceByColour chip={text.chip} />
       <b className="text-body font-semibold">{text.question}</b>
-      {object.kind === "cell" ? null : (
+      {object.kind === "cell" && !cellButtons ? null : (
         <DecisionButtons
           decisionStyle={style.kind}
           size="large"
@@ -330,18 +332,20 @@ export function MeasurementFoot({
   object,
   mm,
   across,
+  length: shownLength,
   onClose,
   onRemove,
 }: {
   object: string;
   mm: number;
   across: string;
+  length?: string;
   onClose: () => void;
   onRemove: () => void;
 }) {
   const { t } = useLingui();
   useLengthUnits();
-  const length = formatMillimetres(mm, 2);
+  const length = shownLength ?? formatMillimetres(mm, 2);
   return (
     <div className="grid gap-2.5" data-slot="object-foot">
       <div className="flex items-center gap-2">
@@ -354,7 +358,13 @@ export function MeasurementFoot({
         </Button>
       </div>
       <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
-        <Trans>Drawn with the ruler across {across}. It is yours only and is not a decision.</Trans>
+        {across ? (
+          <Trans>
+            Drawn with the ruler across {across}. It is yours only and is not a decision.
+          </Trans>
+        ) : (
+          <Trans>Drawn with the ruler. It is yours only and is not a decision.</Trans>
+        )}
       </p>
       <Button className="w-full" onClick={onRemove}>
         <Trans>Remove {object}</Trans>

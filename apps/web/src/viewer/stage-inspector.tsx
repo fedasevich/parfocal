@@ -69,6 +69,7 @@ export function StageInspector({
     (node: HTMLDivElement | null) => onSlot("objects", node),
     [onSlot],
   );
+  const footRef = useCallback((node: HTMLDivElement | null) => onSlot("foot", node), [onSlot]);
   const displayRef = useCallback(
     (node: HTMLDivElement | null) => onSlot("display", node),
     [onSlot],
@@ -88,6 +89,7 @@ export function StageInspector({
     label: labels.objects,
     ...(counts.objects && !guided ? { count: counts.objects } : {}),
     body: <div ref={objectsRef} data-testid="inspector-objects" className={slotClass} />,
+    foot: <div ref={footRef} data-foot-slot="" data-testid="inspector-objects-foot" />,
   };
   const displayTab = {
     value: "display",

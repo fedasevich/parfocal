@@ -37,13 +37,12 @@ test("the engine viewer opens the cells grid and agrees with the rest", async ({
   await ready(page);
   const card = page.getByTestId("stage-review-objects");
   await expect(page.getByTestId("stage-cells-grid")).toHaveCount(0);
-  await card.getByRole("button", { name: "Show the cells grid" }).click();
+  await card.getByRole("button", { name: "Show the cells" }).click();
   const grid = page.getByTestId("stage-cells-grid");
   await expect(grid.locator("[data-crop]")).toHaveCount(3);
   await grid.getByRole("button", { name: /Agree with the rest/ }).click();
   await grid.getByRole("button", { name: /Agree with 3/ }).click();
-  const rows = card.locator('[data-testid="stage-review-object"]');
-  await expect(rows.and(page.locator('[data-decision="agree"]'))).toHaveCount(3);
-  await card.getByRole("button", { name: "Hide the cells grid" }).click();
+  await expect(card.getByTestId("object-row-cells")).toContainText("3 of 3 decided");
+  await grid.getByRole("button", { name: "Close the cells" }).click();
   await expect(grid).toHaveCount(0);
 });

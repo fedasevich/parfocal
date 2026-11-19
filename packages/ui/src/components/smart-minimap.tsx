@@ -465,7 +465,7 @@ function SmartMinimap({
       {footShown ? (
         <div
           {...handle}
-          className="mx-0.5 mt-1.25 flex items-center justify-between gap-2 text-caption whitespace-nowrap text-fg-faint data-handle:cursor-grab data-handle:select-none"
+          className="mx-0.5 mt-0.5 flex min-h-6 items-center justify-between gap-2 text-caption whitespace-nowrap text-fg-faint data-handle:cursor-grab data-handle:select-none"
         >
           <span className="inline-flex min-w-0 items-center gap-1">
             {move ? (
@@ -492,7 +492,7 @@ function SmartMinimap({
                   }
                 }}
                 className={cn(
-                  "-my-1.25 -mr-1.25 -ml-1.75 grid size-6 shrink-0 cursor-grab place-items-center rounded-[3px] border-0 bg-transparent p-0 outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
+                  "-ml-1.75 grid size-6 shrink-0 cursor-grab place-items-center rounded-[3px] border-0 bg-transparent p-0 outline-none hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
                   move.pinned ? "text-accent" : "text-fg-faint",
                 )}
               >
