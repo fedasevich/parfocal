@@ -292,3 +292,22 @@ def test_a_review_task_has_no_shared_layer(api: ApiAs, database: str) -> None:
     assert [(r.status_code, r.json()["code"]) for r in refusals] == [
         (409, "not-an-annotate-task")
     ] * 3
+
+
+def test_groups_are_saved_on_the_shared_layer_for_every_expert(api: ApiAs, database: str) -> None:
+    layer = shared_layer(api, database)
+    made = draw(api, layer, "first", {"kind": "region", "geometry": SQUARE}).json()
+    body = {
+        "groups": [{"id": 1, "name": "Border"}, {"id": 2, "name": "Inside", "parent_id": 1}],
+        "members": [{"annotation_id": made["id"], "group_id": 2}],
+    }
+    saved = api(layer.people["first"]).put(f"{layer.base}/groups", json=body)
+    assert saved.status_code == 200, saved.text
+    for who in ("second", "owner"):
+        seen = api(layer.people[who]).get(f"{layer.base}/groups")
+        assert seen.status_code == 200, seen.text
+        assert [group["name"] for group in seen.json()["groups"]] == ["Border", "Inside"]
+        assert seen.json()["members"] == body["members"]
+    refused = api(layer.people["owner"]).put(f"{layer.base}/groups", json=body)
+    assert refused.json()["code"] == "not-assigned"
+    assert api(layer.people["third"]).get(f"{layer.base}/groups").status_code == 404

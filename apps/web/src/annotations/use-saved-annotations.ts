@@ -1,10 +1,4 @@
-import {
-  type AnnotationDraft,
-  getLayerGroups,
-  listAnnotations,
-  setLayerGroups,
-  useGetMe,
-} from "@parfocal/api-client";
+import { type AnnotationDraft, listAnnotations, useGetMe } from "@parfocal/api-client";
 import {
   type RefObject,
   useCallback,
@@ -43,7 +37,12 @@ import {
   type Remote,
 } from "./save-queue.ts";
 import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
-import { layerGroupsOf, withSavedGroups } from "./saved-groups.ts";
+import {
+  layerGroupsOf,
+  readLayerGroups,
+  withSavedGroups,
+  writeLayerGroups,
+} from "./saved-groups.ts";
 import { draftOf, sameBody, shapeOf } from "./saved-shapes.ts";
 import type { GroupId, Shape, ShapeId } from "./shapes.ts";
 
@@ -299,11 +298,7 @@ export function useSavedAnnotations(
           setDocument(grouped);
           setLoaded(true);
         };
-        if (sharedTaskId !== null) {
-          finish(next, null);
-          return;
-        }
-        void getLayerGroups(slideId).then(
+        void readLayerGroups(slideId, sharedTaskId).then(
           (response) => {
             if (response.status !== 200) return finish(next, null);
             const grouped = withSavedGroups(next, response.data, remotes.current);
@@ -320,7 +315,7 @@ export function useSavedAnnotations(
   }, [slideId, sharedTaskId, enabled, setDocument, setHistory]);
 
   useEffect(() => {
-    if (!enabled || !loaded || sharedTaskId !== null || status.waiting > 0) return;
+    if (!enabled || !loaded || status.waiting > 0) return;
     const body = layerGroupsOf(document, remotes.current);
     const text = JSON.stringify(body);
     if (savedGroups.current === null && body.groups?.length === 0) return;
@@ -328,10 +323,10 @@ export function useSavedAnnotations(
     let stale = false;
     let timer: number | undefined;
     const push = () => {
-      void setLayerGroups(slideId, body).then(
+      void writeLayerGroups(slideId, sharedTaskId, body).then(
         (response) => {
           if (stale) return;
-          if (response.status === 200) savedGroups.current = text;
+          if (response.status < 500) savedGroups.current = text;
           else timer = window.setTimeout(push, groupRetryMs);
         },
         () => {

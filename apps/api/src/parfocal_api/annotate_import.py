@@ -117,11 +117,11 @@ def from_feature(index: int, value: Any) -> Candidate:
     own = mapping(properties.get("parfocal")) or {}
     return Candidate(
         index,
-        text_of(own.get("kind")),
+        text_of(own.get("kind")) or text_of(properties.get("kind")),
         text_of(properties.get("objectType")),
         feature.get("geometry"),
         classification_of(properties),
-        words_of(own.get("text")),
+        words_of(own.get("text", properties.get("text"))),
     )
 
 

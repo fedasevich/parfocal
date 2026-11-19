@@ -8290,6 +8290,10 @@ export type DeleteAnnotationParams = {
   version: number;
 };
 
+export type SetSharedLayerGroupsParams = {
+  reason?: string | null;
+};
+
 export type DeleteResultSetParams = {
   confirm?: boolean;
 };
@@ -8478,6 +8482,7 @@ export type ExportReviewedLayer200 = { [key: string]: unknown };
 export type ExportSlideObjectsParams = {
   format?: ParfocalApiAnnotationExportsExportFormat;
   result_set_id?: string | null;
+  task_id?: string | null;
 };
 
 export type GetSlideNeighboursParams = {
@@ -31529,6 +31534,411 @@ export const useSetLayerGroups = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetLayerGroupsMutationOptions(options), queryClient);
+};
+
+export type getSharedLayerGroupsResponse200 = {
+  data: LayerGroups;
+  status: 200;
+};
+
+export type getSharedLayerGroupsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSharedLayerGroupsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSharedLayerGroupsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSharedLayerGroupsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSharedLayerGroupsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSharedLayerGroupsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSharedLayerGroupsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSharedLayerGroupsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSharedLayerGroupsResponseSuccess = getSharedLayerGroupsResponse200 & {
+  headers: Headers;
+};
+export type getSharedLayerGroupsResponseError = (
+  | getSharedLayerGroupsResponse400
+  | getSharedLayerGroupsResponse401
+  | getSharedLayerGroupsResponse403
+  | getSharedLayerGroupsResponse404
+  | getSharedLayerGroupsResponse409
+  | getSharedLayerGroupsResponse422
+  | getSharedLayerGroupsResponse429
+  | getSharedLayerGroupsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSharedLayerGroupsResponse =
+  | getSharedLayerGroupsResponseSuccess
+  | getSharedLayerGroupsResponseError;
+
+export const getGetSharedLayerGroupsUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/groups`;
+};
+
+/**
+ * @summary Get Shared Layer Groups
+ */
+export const getSharedLayerGroups = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSharedLayerGroupsResponse> => {
+  return apiFetch<getSharedLayerGroupsResponse>(getGetSharedLayerGroupsUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSharedLayerGroupsQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/groups`] as const;
+};
+
+export const getGetSharedLayerGroupsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSharedLayerGroups>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSharedLayerGroups>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSharedLayerGroupsQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSharedLayerGroups>>> = ({ signal }) =>
+    getSharedLayerGroups(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSharedLayerGroups>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSharedLayerGroupsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSharedLayerGroups>>
+>;
+export type GetSharedLayerGroupsQueryError = Problem;
+
+export function useGetSharedLayerGroups<
+  TData = Awaited<ReturnType<typeof getSharedLayerGroups>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSharedLayerGroups>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSharedLayerGroups>>,
+          TError,
+          Awaited<ReturnType<typeof getSharedLayerGroups>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSharedLayerGroups<
+  TData = Awaited<ReturnType<typeof getSharedLayerGroups>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSharedLayerGroups>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSharedLayerGroups>>,
+          TError,
+          Awaited<ReturnType<typeof getSharedLayerGroups>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSharedLayerGroups<
+  TData = Awaited<ReturnType<typeof getSharedLayerGroups>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSharedLayerGroups>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Shared Layer Groups
+ */
+
+export function useGetSharedLayerGroups<
+  TData = Awaited<ReturnType<typeof getSharedLayerGroups>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSharedLayerGroups>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSharedLayerGroupsQueryOptions(taskId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setSharedLayerGroupsResponse200 = {
+  data: LayerGroups;
+  status: 200;
+};
+
+export type setSharedLayerGroupsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setSharedLayerGroupsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setSharedLayerGroupsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setSharedLayerGroupsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setSharedLayerGroupsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setSharedLayerGroupsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setSharedLayerGroupsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setSharedLayerGroupsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setSharedLayerGroupsResponseSuccess = setSharedLayerGroupsResponse200 & {
+  headers: Headers;
+};
+export type setSharedLayerGroupsResponseError = (
+  | setSharedLayerGroupsResponse400
+  | setSharedLayerGroupsResponse401
+  | setSharedLayerGroupsResponse403
+  | setSharedLayerGroupsResponse404
+  | setSharedLayerGroupsResponse409
+  | setSharedLayerGroupsResponse422
+  | setSharedLayerGroupsResponse429
+  | setSharedLayerGroupsResponse500
+) & {
+  headers: Headers;
+};
+
+export type setSharedLayerGroupsResponse =
+  | setSharedLayerGroupsResponseSuccess
+  | setSharedLayerGroupsResponseError;
+
+export const getSetSharedLayerGroupsUrl = (
+  taskId: string,
+  slideId: string,
+  params?: SetSharedLayerGroupsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/groups?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/groups`;
+};
+
+/**
+ * @summary Set Shared Layer Groups
+ */
+export const setSharedLayerGroups = async (
+  taskId: string,
+  slideId: string,
+  layerGroups: LayerGroups,
+  params?: SetSharedLayerGroupsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setSharedLayerGroupsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setSharedLayerGroupsResponse>(
+    getSetSharedLayerGroupsUrl(taskId, slideId, params),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(layerGroups),
+    },
+  );
+};
+
+export const getSetSharedLayerGroupsMutationKey = () => ["setSharedLayerGroups"] as const;
+
+export const getSetSharedLayerGroupsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setSharedLayerGroups>>,
+    TError,
+    SetSharedLayerGroupsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setSharedLayerGroups>>,
+  TError,
+  SetSharedLayerGroupsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetSharedLayerGroupsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setSharedLayerGroups>>,
+    SetSharedLayerGroupsMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data, params } = props ?? {};
+
+    return setSharedLayerGroups(taskId, slideId, data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetSharedLayerGroupsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setSharedLayerGroups>>
+>;
+export type SetSharedLayerGroupsMutationBody = LayerGroups;
+export type SetSharedLayerGroupsMutationError = Problem;
+export type SetSharedLayerGroupsMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: LayerGroups;
+  params?: SetSharedLayerGroupsParams;
+};
+
+/**
+ * @summary Set Shared Layer Groups
+ */
+export const useSetSharedLayerGroups = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setSharedLayerGroups>>,
+      TError,
+      SetSharedLayerGroupsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setSharedLayerGroups>>,
+  TError,
+  SetSharedLayerGroupsMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetSharedLayerGroupsMutationOptions(options), queryClient);
 };
 
 export type listPaintedMapsResponse200 = {

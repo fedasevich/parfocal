@@ -6702,6 +6702,54 @@ export const getSetLayerGroupsResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSharedLayerGroupsResponseMock = (
+  overrideResponse: Partial<Extract<LayerGroups, object>> = {},
+): LayerGroups => ({
+  groups: Array.from({ length: faker.number.int({ min: 1, max: 500 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.number.int({ min: 1 }),
+      name: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      parent_id: faker.helpers.arrayElement([faker.number.int(), null]),
+      color: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 3, max: 3 }) }, (_, i) => i + 1).map(() =>
+          faker.number.int({ min: 0, max: 255 }),
+        ),
+        null,
+      ]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+    }),
+  ),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSetSharedLayerGroupsResponseMock = (
+  overrideResponse: Partial<Extract<LayerGroups, object>> = {},
+): LayerGroups => ({
+  groups: Array.from({ length: faker.number.int({ min: 1, max: 500 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.number.int({ min: 1 }),
+      name: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      parent_id: faker.helpers.arrayElement([faker.number.int(), null]),
+      color: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 3, max: 3 }) }, (_, i) => i + 1).map(() =>
+          faker.number.int({ min: 0, max: 255 }),
+        ),
+        null,
+      ]),
+      hidden: faker.datatype.boolean(),
+      locked: faker.datatype.boolean(),
+    }),
+  ),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 20000 }) }, (_, i) => i + 1).map(
+    () => ({ annotation_id: faker.string.uuid(), group_id: faker.number.int({ min: 1 }) }),
+  ),
+  ...overrideResponse,
+});
+
 export const getListPaintedMapsResponseMock = (): PaintedMap[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     id: faker.string.uuid(),
@@ -22523,6 +22571,50 @@ export const getSetLayerGroupsMockHandler = (
   );
 };
 
+export const getGetSharedLayerGroupsMockHandler = (
+  overrideResponse?:
+    | LayerGroups
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<LayerGroups> | LayerGroups),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/groups",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSharedLayerGroupsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetSharedLayerGroupsMockHandler = (
+  overrideResponse?:
+    | LayerGroups
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<LayerGroups> | LayerGroups),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/groups",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetSharedLayerGroupsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListPaintedMapsMockHandler = (
   overrideResponse?:
     | PaintedMap[]
@@ -29574,6 +29666,8 @@ export const getParfocalAPIMock = () => [
   getListAnnotationHistoryMockHandler(),
   getGetLayerGroupsMockHandler(),
   getSetLayerGroupsMockHandler(),
+  getGetSharedLayerGroupsMockHandler(),
+  getSetSharedLayerGroupsMockHandler(),
   getListPaintedMapsMockHandler(),
   getCreatePaintedMapMockHandler(),
   getSavePaintedMapMockHandler(),

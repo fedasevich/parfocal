@@ -22,6 +22,7 @@ import { useDisplayDefaults } from "../shell/display-defaults.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
+import { type CellRetype, RetypeAiCell } from "./picked-cell-retype.tsx";
 import { cellAt, type PickedCell, pickSlopScreenPixels } from "./result-cell-pick.ts";
 import {
   chunkCells,
@@ -99,12 +100,14 @@ function SetCells({
   set,
   outlines,
   paints,
+  retype,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   set: ResultSet;
   outlines: boolean;
   paints: readonly ClassPaint[];
+  retype: CellRetype | null;
 }) {
   const { paged, version } = usePagedCells(set.id);
   const { frame, size } = useStageSize();
@@ -167,7 +170,14 @@ function SetCells({
   }, [engine, paged, outlines, paints, set.id, frame]);
   return (
     <>
-      {picked === null ? null : <PickedCellCard set={set} cell={picked} />}
+      {picked === null ? null : (
+        <PickedCellCard
+          key={picked.id}
+          set={set}
+          cell={picked}
+          retype={retype?.resultSetId === set.id ? retype : null}
+        />
+      )}
       <SetCellsMarker
         frame={frame}
         set={set}
@@ -179,8 +189,18 @@ function SetCells({
   );
 }
 
-function PickedCellCard({ set, cell }: { set: ResultSet; cell: PickedCell }) {
+function PickedCellCard({
+  set,
+  cell,
+  retype,
+}: {
+  set: ResultSet;
+  cell: PickedCell;
+  retype: CellRetype | null;
+}) {
   const { t } = useLingui();
+  const [typed, setTyped] = useState<string | null>(null);
+  const shown = typed === null ? cell : { ...cell, typeName: typed };
   const card = (
     <section className={dockedCard} data-testid="picked-cell" data-cell={cell.id}>
       <h3 className="truncate font-medium text-fg">
@@ -197,7 +217,7 @@ function PickedCellCard({ set, cell }: { set: ResultSet; cell: PickedCell }) {
           <Trans>Type</Trans>
         </dt>
         <dd className="text-fg" data-testid="picked-cell-type">
-          {cell.typeName ?? t`No type`}
+          {shown.typeName ?? t`No type`}
         </dd>
         <dt>
           <Trans>Score</Trans>
@@ -210,9 +230,13 @@ function PickedCellCard({ set, cell }: { set: ResultSet; cell: PickedCell }) {
         </dt>
         <dd className="truncate text-fg">{set.name}</dd>
       </dl>
-      <p className="text-fg-dim">
-        <Trans>To change it, edit this cell in an annotate task.</Trans>
-      </p>
+      {retype === null ? (
+        <p className="text-fg-dim">
+          <Trans>To change it, edit this cell in an annotate task.</Trans>
+        </p>
+      ) : (
+        <RetypeAiCell retype={retype} cell={shown} onTyped={setTyped} />
+      )}
     </section>
   );
   return (
@@ -355,19 +379,29 @@ function ResultSetLayer({
   set,
   inTask,
   shown,
+  retype = null,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   set: ResultSet;
   inTask: boolean;
   shown: boolean;
+  retype?: CellRetype | null;
 }) {
   const paints = useSetPaints(set.id);
   if (!shown) return null;
+  const taskSet = retype?.resultSetId === set.id;
   return (
     <>
       {(set.cell_count ?? 0) > 0 ? (
-        <SetCells engine={engine} module={module} set={set} outlines={!inTask} paints={paints} />
+        <SetCells
+          engine={engine}
+          module={module}
+          set={set}
+          outlines={!inTask || taskSet}
+          paints={paints}
+          retype={retype}
+        />
       ) : null}
       {!inTask && (set.region_count ?? 0) > 0 ? (
         <SetRegions engine={engine} module={module} set={set} paints={paints} />
@@ -382,6 +416,7 @@ type SetsProps = {
   module: ViewerModule;
   slideId: string;
   inTask?: boolean;
+  retype?: CellRetype | null;
 };
 
 function SetToggles({
@@ -442,7 +477,7 @@ function drawableSets(sets: readonly ResultSet[], inTask: boolean) {
   );
 }
 
-function SlideResultSets({ engine, module, slideId, inTask = false }: SetsProps) {
+function SlideResultSets({ engine, module, slideId, inTask = false, retype = null }: SetsProps) {
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const drawable = drawableSets(okData(useListSlideResultSets(slideId).data) ?? [], inTask);
   const toggle = (id: string) =>
@@ -462,6 +497,7 @@ function SlideResultSets({ engine, module, slideId, inTask = false }: SetsProps)
           set={set}
           inTask={inTask}
           shown={!hidden.has(set.id)}
+          retype={retype}
         />
       ))}
       <SetToggles sets={drawable} shown={(id) => !hidden.has(id)} onToggle={toggle} />

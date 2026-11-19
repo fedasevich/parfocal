@@ -8,6 +8,7 @@ import type {
   CheckDraft,
   CheckProgress,
   CheckState,
+  LayerGroups,
   LayerObject,
   OrderedObject,
   ProjectClass,
@@ -132,9 +133,10 @@ type Store = {
   checks: Record<string, Check>;
   signOffs: Record<string, SignOff>;
   runs: Record<string, string[]>;
+  groups: Record<string, LayerGroups>;
 };
 
-const empty = (): Store => ({ layers: {}, checks: {}, signOffs: {}, runs: {} });
+const empty = (): Store => ({ layers: {}, checks: {}, signOffs: {}, runs: {}, groups: {} });
 
 let memory: Store = empty();
 
@@ -341,6 +343,26 @@ function aiCopy(
   return made;
 }
 
+function pickedCellOf(
+  params: Params,
+  objectId: string,
+  edit: AiObjectEdit,
+): SharedAiObject | undefined {
+  const number = /^C(\d+)$/.exec(objectId)?.[1];
+  if (number === undefined || edit.geometry?.type !== "Polygon") return undefined;
+  if (resultSetOf(params.taskId, params.slideId) === null) return undefined;
+  return {
+    object: objectId,
+    kind: "cell",
+    number: Number(number),
+    class_id: null,
+    score: null,
+    probabilities: null,
+    geometry: edit.geometry,
+    check: "unchecked",
+  };
+}
+
 export const sharedLayerHandlers = (): RequestHandler[] => {
   listenForColleagues();
   return layerHandlers();
@@ -367,6 +389,21 @@ const layerHandlers = (): RequestHandler[] => [
         .slice(offset, offset + limit)
         .map((item) => ({ ...item, check: checkOf(item.object) })),
     });
+  }),
+  http.get<Params>(`${base}/shared-layer/groups`, ({ params }) =>
+    HttpResponse.json(
+      readStore().groups[keyOf(params.taskId, params.slideId)] ?? { groups: [], members: [] },
+    ),
+  ),
+  http.put<Params>(`${base}/shared-layer/groups`, async ({ params, request }) => {
+    if (isSignedOff(params)) return signedOff();
+    const body = (await request.json()) as LayerGroups;
+    const store = readStore();
+    writeStore({
+      ...store,
+      groups: { ...store.groups, [keyOf(params.taskId, params.slideId)]: body },
+    });
+    return HttpResponse.json(body);
   }),
   http.get<Params>(`${base}/shared-layer`, ({ params }) => {
     if (params.taskId !== annotateStubTaskId) return undefined;
@@ -433,9 +470,10 @@ const layerHandlers = (): RequestHandler[] => [
     async ({ params, request }) => {
       if (isSignedOff(params)) return signedOff();
       const edit = (await request.json()) as AiObjectEdit;
-      const source = aiObjectsOf(params.taskId, params.slideId).find(
-        (cell) => cell.object === params.objectId,
-      );
+      const source =
+        aiObjectsOf(params.taskId, params.slideId).find(
+          (cell) => cell.object === params.objectId,
+        ) ?? pickedCellOf(params, params.objectId, edit);
       if (source === undefined) return new HttpResponse(null, { status: 404 });
       const store = readStore();
       const made = aiCopy(params, params.objectId, (found) => ({

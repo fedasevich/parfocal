@@ -504,6 +504,11 @@ WRITE_ROUTES: dict[str, Write] = {
         query=constant_query(reason=REASON),
         owner=BAD_REQUEST,
     ),
+    "setSharedLayerGroups": Write(
+        path=ON_ANNOTATE_TASK,
+        body=constant({"groups": [], "members": []}),
+        query=constant_query(reason=REASON),
+    ),
     "createSharedObject": Write(
         path=ON_ANNOTATE_TASK,
         body=constant({"kind": "measurement", "geometry": LINE}),

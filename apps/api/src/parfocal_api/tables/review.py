@@ -236,6 +236,7 @@ review_task_slides = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column("layer_groups", JSONB(none_as_null=True), nullable=True, info=PHI),
     UniqueConstraint("task_id", "position"),
     ForeignKeyConstraint(
         ["task_id", "project_id", "tenant_id"],
