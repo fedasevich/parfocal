@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-19
 
+- PROTO-043 (guided review has the mock's own panel): guided review on the engine stage has no tool rail, a 64 px top bar with a read-only slide chip, and a 469 px Review, Comments and Display panel with the object dots, Cells x of y chip, the question as a heading, the answer buttons, Add something the AI missed, Previous and Skip for now, and the Slide done card. Add something the AI missed turns on Smart select, where the mock shows a toast.
 - PROTO-040 (the minimap hides, sits and labels itself as the mock and ADR 0185 say): the stage minimap shows Whole slide · N% seen in its head, T2 of 5 and 10× · 1 of 5 decided in its foot, and guided review gets the compact inset with the slide name and Click to move. Hiding at fit zoom and the bottom right preference came from PROTO-034, now covered by stage-minimap-texts.spec.ts.
 - PROTO-042 (the slides popover shows the case, loose slides and its three actions): the engine viewer's slides popover now shows the case head with Open the case, Slides in this case and Loose slides in task RT-14, rows with thumbnail, stain, result sets, build progress and status, the Q and E key caps, and the actions Result sets of A1, Compare and Add slides. The fake RT-14 gained two loose slides. Compare opens the older slide route where compare lives.
 

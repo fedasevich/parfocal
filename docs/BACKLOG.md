@@ -6649,7 +6649,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw that popover on the engine viewer from the task's and the case's slides, and wire its three actions to the Display tab, compare and the upload flow.
   Done when a browser test opens the popover on RT-14, reads the case head, both groups and the three actions, opens a loose slide from it, and steps with Q and E.
   Size: S.
-- [ ] PROTO-043 · Guided review has the mock's own panel
+- [x] PROTO-043 · Guided review has the mock's own panel
   Guided review in the app is the full viewer with one card in the Objects tab, the tool rail and four tabs (rows 39 to 48). The mock's guided screen has no rail, a taller top bar, a 469 px panel with the tabs Review, Comments and Display, a strip of dots for the objects with a "Cells 44 of 50" chip, the question as a heading, three 58 px answer buttons, "Add something the AI missed", "Previous" and "Skip for now", and the slide done card in the Review tab. It exists as `screens/review/guided-review.tsx` on prototype data.
   Draw that layout on the engine stage for `/tasks/$taskId/guided`, fed by the stage's review objects and decisions, with decision notes and the cells panel as ADR 0398 (one engine stage) lists them.
   Done when a browser test opens guided review on RT-14, finds no tool rail, reads the heading for T5, answers with K, sees the next open object and its dot change, skips one, goes back with Previous, finishes the slide and sees "Slide 8 is done" in the Review tab.
