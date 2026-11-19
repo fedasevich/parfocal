@@ -8,7 +8,7 @@ const cellsPerTile = 36;
 
 async function openStreamingSlide(page: Page): Promise<string> {
   await page.goto(
-    `/projects/${p07}/slides/${tumor044}/live?task=${rt14}&workspace=annotate&scene=streaming&as=DH`,
+    `/projects/${p07}/slides/${tumor044}/live?task=${rt14}&workspace=annotate&scene=streaming&tab=objects&as=DH`,
   );
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });

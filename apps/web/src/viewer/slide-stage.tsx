@@ -718,8 +718,7 @@ function OpenedSlide({
         tipSide={toolsLayout === "dock" ? "top" : "right"}
       />
     );
-  const tab =
-    inspector.tab ?? (taskId === undefined && workspace === "annotate" ? "display" : "objects");
+  const tab = inspector.tab ?? (workspace === "annotate" ? "display" : "objects");
 
   return (
     <EscProvider value={escRegistry}>
@@ -974,6 +973,7 @@ function OpenedSlide({
                           ? {
                               count: proposalCount,
                               activeName: activeInfo?.name ?? null,
+                              micronsPerPixel: mpp,
                               onAccept: acceptProposals,
                               onDiscard: discardProposals,
                             }
