@@ -6757,6 +6757,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a unit test finds each link in `index.html` and each file in `public/`, and the built app serves all three.
   Depends on nothing.
   Size: S.
+- [ ] PROTO-060 · Stage notices share one top centre stack and never overlap
+  On 2026-11-19 the owner found the slide failure alert and the GPU wait timer drawn over other viewer UI. Four things claim the stage's top centre with their own absolute positions: the tool context bar and the floating pill in `packages/ui/src/components/viewer-tools.tsx`, `GpuWaitNotice` in `apps/web/src/gpu/gpu-wait-notice.tsx` and the open failure alert in `slide-stage.tsx`, and the guided card sits at the same spot. Give the stage one top centre stack that lays these out one under another in a fixed order, so none covers another or the stage tools, the minimap or the magnification bar.
+  Done when a viewer spec shows the context bar, the GPU wait notice and the failure alert at once with no two rectangles intersecting and none covering the stage tools, at 1280 by 800 and 1024 by 700, and the existing viewer specs and stories pass.
+  Depends on OPS-038, PROTO-034. Size: S.
 ---
 
 ## Later epics (not in v1, kept for planning)
