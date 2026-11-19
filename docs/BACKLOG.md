@@ -5052,6 +5052,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when an E2E test walks every step of the script on production, the showcase seed resets production to the script's start under the reseed yes of [ADR 0293](adr/0293-production-only-until-the-first-real-user.md) (production only until the first real user), and the owner has done one pass whose notes are logged and turned into tasks.
   Depends on TEST-020, ANN-031, TASK-014, AINUC-013, COLLAB-016, JOBS-007, EVAL-014, CMP-007, ONB-006, ADMIN-007, PROTO-010.
   Size: L.
+- [ ] PILOT-010 · The owner's changes to the study after going over it
+  On 2026-11-19 the owner asked for a task to go over the study mode at `/study` on app.parfocal.eu (study templates, the pilot tasks, the task guard and session replay) and said there will be changes. Before building anything, the agent who picks this up asks the owner in chat, or through `docs/decisions.md`, to walk the study with them and list the changes, then turns each change into a step of this task or a task of its own.
+  Done when the owner's list of changes is written in this task's log, each change is built with a spec or moved to its own task, and the owner has gone over the study again on the deployed app.
+  Depends on EXP-010. Size: M.
 
 ---
 
