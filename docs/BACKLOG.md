@@ -6797,7 +6797,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Row 5 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): after Add the run, every confirm answers 404 unknown-object because the object is not in the result set the call names, and delete and undo answer 404 on ai-changes.
   Done when a real API e2e spec adds a run to an annotate task, confirms, deletes and undoes AI objects, and the counters follow.
   Depends on PROTO-035. Size: S.
-- [ ] PROTO-068 · Draw layers stay inside the stage and the stage parts never overlap
+- [x] PROTO-068 · Draw layers stay inside the stage and the stage parts never overlap
   Rows 6, 12, 13 and 43 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): AI outlines paint over the top bar and tool rail because nothing clips the stage, the guided minimap hangs 11 px below the window and covers the type bar, the Whole slide button overlaps the magnification bar, and the cells grid, type bar and magnification bar overlap, while the minimap vanishes at small windows.
   Done when stage-top-stack and a new overlap spec measure every stage part with no two intersecting and none outside the stage at 1440 by 900, 1280 by 800 and 1024 by 700, in the full viewer, guided review and the cells grid.
   Depends on PROTO-060. Size: S.
