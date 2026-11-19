@@ -6,9 +6,9 @@ const live = `/projects/${p07}/slides/${a1}/live?as=DH`;
 
 async function unclipped(page: Page): Promise<string[]> {
   return page.getByTestId("result-set-toggle").evaluateAll((buttons) => {
-    const stage = document.querySelector('[data-testid="slide-stage"]');
-    if (stage === null) return ["no stage"];
-    const frame = stage.getBoundingClientRect();
+    const panel = document.querySelector('[data-testid="stage-inspector"]');
+    if (panel === null) return ["no inspector"];
+    const frame = panel.getBoundingClientRect();
     const problems: string[] = [];
     for (const button of buttons) {
       const box = button.getBoundingClientRect();
@@ -31,7 +31,7 @@ async function unclipped(page: Page): Promise<string[]> {
         box.right > frame.right ||
         box.bottom > frame.bottom
       ) {
-        problems.push(`${name} leaves the stage`);
+        problems.push(`${name} leaves the inspector`);
       }
       const middleX = (box.left + box.right) / 2;
       const middleY = (box.top + box.bottom) / 2;
@@ -60,7 +60,7 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 1280, height: 720 },
 ]) {
-  test(`the per-set hide buttons sit whole inside the stage at ${viewport.width} by ${viewport.height}`, async ({
+  test(`the per-set hide buttons sit whole in the Display tab at ${viewport.width} by ${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
@@ -69,7 +69,9 @@ for (const viewport of [
       timeout: 20_000,
     });
     const toggles = page.getByTestId("result-set-toggle");
+    await page.getByTestId("stage-inspector").getByRole("tab", { name: "Display" }).click();
     await expect(toggles.first()).toBeVisible();
+    await toggles.first().scrollIntoViewIfNeeded();
     expect(await toggles.count()).toBeGreaterThan(1);
     expect(await unclipped(page)).toEqual([]);
   });

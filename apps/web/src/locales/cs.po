@@ -3350,11 +3350,6 @@ msgstr ""
 msgid "AI objects"
 msgstr ""
 
-#. placeholder {0}: objects.length
-#: src/viewer/stage-review-objects.tsx
-msgid "AI objects · {0}"
-msgstr ""
-
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr ""
@@ -4550,8 +4545,10 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
+#. placeholder {0}: cell.object
 #. placeholder {0}: selection.id
 #: ../../packages/ui/src/components/findings-panel.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Cell {0}"
 msgstr ""
 
@@ -6361,6 +6358,10 @@ msgstr ""
 msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
 msgstr ""
 
+#: src/screens/viewer/objects-panel.tsx
+msgid "Drawn with the ruler. It is yours only and is not a decision."
+msgstr ""
+
 #: src/screens/upload/formats-drawer.tsx
 msgid "Drop a result file"
 msgstr ""
@@ -7571,6 +7572,7 @@ msgid "Go to {0}{1}"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
+#: src/viewer/stage-objects-panel.tsx
 msgid "Go to {firstOpen}, the first open object"
 msgstr ""
 
@@ -10566,10 +10568,6 @@ msgstr ""
 msgid "Note, optional"
 msgstr ""
 
-#: src/viewer/stage-review-objects.tsx
-msgid "Notes and comments"
-msgstr ""
-
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"
 msgstr ""
@@ -12967,6 +12965,7 @@ msgstr ""
 #: src/screens/admin/sections.tsx
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/viewer/stage-result-cells.tsx
 msgid "Result sets"
 msgstr ""
 
@@ -13374,6 +13373,10 @@ msgstr ""
 
 #: src/routes/prototype.tsx
 msgid "RT-14 opened in the preview on the right"
+msgstr ""
+
+#: src/screens/review/viewer-frame.tsx
+msgid "ruler"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -17963,6 +17966,7 @@ msgstr ""
 #: src/screens/viewer/full-viewer.tsx
 #: src/viewer/stage-guided-view.tsx
 #: src/viewer/stage-minimap.tsx
+#: src/viewer/stage-slide-marks.tsx
 #: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr ""
@@ -18276,7 +18280,6 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
-#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr ""
 

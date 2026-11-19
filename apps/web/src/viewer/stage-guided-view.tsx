@@ -6,6 +6,7 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { StageArea } from "./stage-geometry.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
+import { WholeSlideButton } from "./whole-slide-button.tsx";
 
 const movedScreenPx = 24;
 const zoomStepOctaves = 0.5;
@@ -122,16 +123,11 @@ export function StageGuidedView({
             <Icon name="plus" />
           </Button>
         </fieldset>
-        <Button
-          size="lg"
-          variant={whole ? "selected" : "secondary"}
-          aria-pressed={whole}
+        <WholeSlideButton
+          pressed={whole}
           title={whole ? t`Back to ${object}` : t`See the whole slide`}
           onClick={toggleWhole}
-        >
-          <Icon name="expand" />
-          {t`Whole slide`}
-        </Button>
+        />
       </div>
     </>
   );

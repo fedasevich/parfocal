@@ -262,19 +262,24 @@ export function StageResultCells({
   module,
   slideId,
   inTask = false,
+  reviewTask = false,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   slideId: string;
   inTask?: boolean;
+  reviewTask?: boolean;
 }) {
   const { t } = useLingui();
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const sets = okData(useListSlideResultSets(slideId).data) ?? [];
-  const drawable = sets.filter(
-    (set) =>
-      set.status === "ready" && ((set.cell_count ?? 0) > 0 || (!inTask && set.region_count > 0)),
-  );
+  const drawable = reviewTask
+    ? []
+    : sets.filter(
+        (set) =>
+          set.status === "ready" &&
+          ((set.cell_count ?? 0) > 0 || (!inTask && set.region_count > 0)),
+      );
   const toggle = (id: string) =>
     setHidden((before) => {
       const next = new Set(before);
@@ -295,24 +300,30 @@ export function StageResultCells({
         />
       ))}
       {drawable.length === 0 ? null : (
-        <div className="pointer-events-auto absolute bottom-16 left-3 z-10 flex flex-col gap-1">
-          {drawable.map((set) => {
-            const shown = !hidden.has(set.id);
-            return (
-              <button
-                key={set.id}
-                type="button"
-                aria-pressed={shown}
-                data-testid="result-set-toggle"
-                className="w-fit max-w-64 truncate rounded-md border border-line bg-surf-panel px-2 py-1 text-left text-caption text-fg shadow-pop"
-                title={set.name}
-                onClick={() => toggle(set.id)}
-              >
-                {shown ? t`Hide ${set.name}` : t`Show ${set.name}`}
-              </button>
-            );
-          })}
-        </div>
+        <DockCard section="display" order={1}>
+          <section
+            className={dockedCard}
+            aria-label={t`Result sets`}
+            data-testid="result-set-toggles"
+          >
+            {drawable.map((set) => {
+              const shown = !hidden.has(set.id);
+              return (
+                <button
+                  key={set.id}
+                  type="button"
+                  aria-pressed={shown}
+                  data-testid="result-set-toggle"
+                  className="w-full truncate rounded-md border border-line bg-surf-panel px-2 py-1 text-left text-caption text-fg"
+                  title={set.name}
+                  onClick={() => toggle(set.id)}
+                >
+                  {shown ? t`Hide ${set.name}` : t`Show ${set.name}`}
+                </button>
+              );
+            })}
+          </section>
+        </DockCard>
       )}
     </>
   );

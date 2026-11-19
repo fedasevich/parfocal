@@ -71,11 +71,12 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
   await expect(opinion).toContainText("1 added");
 
   await inspector(page).getByRole("tab", { name: "Objects" }).click();
-  const open = page.locator('[data-testid="stage-review-object"][data-decision=""]');
-  await expect(open).toHaveCount(7);
+  const card = page.getByTestId("object-foot");
   for (let left = 7; left > 0; left -= 1) {
-    await open.first().locator('button[data-counts-as="agree"]').click();
-    await expect(open).toHaveCount(left - 1);
+    await page.getByRole("button", { name: /, the first open object$/ }).click();
+    await card.locator('button[data-counts-as="agree"]').click();
+    await expect(page.getByTestId("inspector-objects")).toContainText(`${55 - left + 1} of 55`);
+    await card.getByRole("button", { name: "Close" }).click();
   }
   await expect(progress.getByTestId("decision-ring")).toHaveAttribute("aria-label", /^100% done/);
   await expect(submit).toBeEnabled();

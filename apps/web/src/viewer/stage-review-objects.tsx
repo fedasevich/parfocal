@@ -1,8 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
-import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
@@ -28,7 +26,10 @@ import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
 import { StageGuidedCard } from "./stage-guided-card.tsx";
 import { StageGuidedView } from "./stage-guided-view.tsx";
+import { useStageRulers } from "./stage-measurements.tsx";
+import { StageObjectsPanel } from "./stage-objects-panel.tsx";
 import { ReviewOpinion } from "./stage-opinion.tsx";
+import { StageSlideMarks, sampleOf, useSampleCollapsed } from "./stage-slide-marks.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
@@ -39,12 +40,14 @@ function ObjectOutlines({
   objects,
   classes,
   current,
+  collapsed,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   objects: readonly ReviewObject[];
   classes: ReviewSession["classes"];
   current: string | null;
+  collapsed: boolean;
 }) {
   const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
   const projectClasses = useMemo(
@@ -56,7 +59,14 @@ function ObjectOutlines({
       })),
     [classKey],
   );
-  const placed = useMemo(() => placedObjects(objects, projectClasses), [objects, projectClasses]);
+  const placed = useMemo(
+    () =>
+      placedObjects(
+        collapsed ? objects.filter((item) => item.kind !== "cell") : objects,
+        projectClasses,
+      ),
+    [objects, projectClasses, collapsed],
+  );
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: overlayId, host: engine }),
     [module, engine],
@@ -69,56 +79,6 @@ function ObjectOutlines({
     drawing.setCurrent(current);
   }, [drawing, current]);
   return <div hidden data-testid="review-object-outlines" data-objects={placed.length} />;
-}
-
-function ObjectRow({
-  session,
-  object,
-  current,
-  onPick,
-  onAnswer,
-  onComments,
-}: {
-  session: ReviewSession;
-  object: ReviewObject;
-  current: boolean;
-  onPick: () => void;
-  onAnswer: (raw: string) => void;
-  onComments: () => void;
-}) {
-  const { t } = useLingui();
-  const decision = session.decisions.get(object.object);
-  return (
-    <li
-      data-testid="stage-review-object"
-      data-object={object.object}
-      data-decision={decision?.value ?? ""}
-      data-current={current}
-      className={`flex flex-col gap-1.5 rounded-ctl border p-2 ${current ? "border-accent" : "border-line"}`}
-    >
-      <button
-        type="button"
-        onClick={onPick}
-        className="flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-body-sm text-fg"
-      >
-        <ObjectIdTag>{object.object}</ObjectIdTag>
-        <span className="min-w-0 flex-1 truncate">{object.class_name}</span>
-        <span className="text-caption text-fg-dim">{Math.round(object.score * 100)}%</span>
-      </button>
-      <DecisionButtons
-        decisionStyle={session.style.kind}
-        size="compact"
-        value={decision?.answer}
-        onValueChange={onAnswer}
-        classes={session.classes}
-        aiClass={object.class_name}
-        label={t`Your answer on ${object.object}`}
-      />
-      <Button size="sm" variant="secondary" className="justify-self-start" onClick={onComments}>
-        {t`Notes and comments`}
-      </Button>
-    </li>
-  );
 }
 
 export function StageReviewObjects({
@@ -171,8 +131,13 @@ export function StageReviewObjects({
   useNoteKey(() => {
     if (current !== null && decided.has(current)) onNote?.(current);
   });
+  const measurements = useStageRulers(!guided);
+  const rulers = measurements?.rulers ?? [];
   const flyTo = (id: string | null) => {
-    const area = outlineArea(objects.find((item) => item.object === id)?.outline);
+    const area = outlineArea(
+      objects.find((item) => item.object === id)?.outline ??
+        rulers.find((item) => item.label === id)?.points,
+    );
     if (area !== null) void engine.flyToArea(area);
   };
   const pick = (id: string | null) => {
@@ -233,6 +198,21 @@ export function StageReviewObjects({
     },
     ready && typedCell !== null,
   );
+  const listKeysLive =
+    ready && !guided && focus === null && currentItem !== undefined && typedCell === null;
+  useAnswerKeys(
+    answersOf(session.style, session.classes, currentItem),
+    (raw) => {
+      if (currentItem !== undefined) answer(currentItem, raw);
+    },
+    listKeysLive,
+  );
+  const sample = useMemo(() => sampleOf(objects), [objects]);
+  const collapsed = useSampleCollapsed(engine, sample);
+  const wholeSlide = () => {
+    setCurrent(null);
+    void engine.flyToFit();
+  };
   const index = current === null ? -1 : order.indexOf(current);
   const stepping = guided && ready && !done && focus === null;
   useAnswerKeys(
@@ -272,6 +252,7 @@ export function StageReviewObjects({
         objects={objects}
         classes={session.classes}
         current={current}
+        collapsed={collapsed}
       />
       {guided && ready && focus === null && currentItem !== undefined ? (
         <StageGuidedView
@@ -281,6 +262,17 @@ export function StageReviewObjects({
           object={currentItem.object}
           area={currentArea}
           finished={done}
+        />
+      ) : null}
+      {focus === null ? (
+        <StageSlideMarks
+          engine={engine}
+          objects={objects}
+          decisionOf={(id) => session.decisions.get(id)?.value}
+          showScore={session.style.kind !== "yesno" && session.style.kind !== "blind"}
+          sample={sample}
+          collapsed={collapsed}
+          onWholeSlide={guided ? null : wholeSlide}
         />
       ) : null}
       {coachOn && focus === null ? <StageCoachOnSlide object={current ?? ""} /> : null}
@@ -325,9 +317,6 @@ export function StageReviewObjects({
           data-current={current ?? ""}
           className={guided ? "flex flex-col gap-4" : "flex flex-col gap-2"}
         >
-          {guided ? null : (
-            <h3 className="m-0 text-body-sm font-semibold">{t`AI objects · ${objects.length}`}</h3>
-          )}
           {guided && done ? (
             <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={(id) => pick(id ?? null)} />
           ) : guided && currentItem !== undefined ? (
@@ -350,7 +339,7 @@ export function StageReviewObjects({
               onAddMissed={() => onAddMissed?.()}
             />
           ) : null}
-          {hasCells && !done ? (
+          {guided && hasCells && !done ? (
             <Button
               size="sm"
               variant="secondary"
@@ -361,21 +350,19 @@ export function StageReviewObjects({
               {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
             </Button>
           ) : null}
-          {guided ? null : (
-            <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {objects.map((item) => (
-                <ObjectRow
-                  key={item.object}
-                  session={session}
-                  object={item}
-                  current={current === item.object}
-                  onPick={() => pick(item.object)}
-                  onAnswer={(raw) => answer(item, raw)}
-                  onComments={() => onComments(item.object)}
-                />
-              ))}
-            </ul>
-          )}
+          {!guided && ready ? (
+            <StageObjectsPanel
+              session={session}
+              current={current}
+              onPick={(id) => (id === null ? setCurrent(null) : pick(id))}
+              onAnswer={answer}
+              onNote={(id) => (decided.has(id) ? onNote?.(id) : onComments(id))}
+              onOpenCells={() => setGridOpen(true)}
+              cellTyped={typedCell !== null}
+              rulers={rulers}
+              onRemoveRuler={(ruler) => measurements?.remove(ruler.shapeId)}
+            />
+          ) : null}
         </section>
       </DockCard>
     </>

@@ -2,9 +2,7 @@ import { expect, type Page, test } from "./a11y.ts";
 
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
-const outlined = "00000000-0000-4000-8005-000000000004";
 const onStage = `/tasks/${rt14}/guided?slide=${a1}`;
-const onOutlined = `/tasks/${rt14}/guided?slide=${outlined}`;
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -35,7 +33,7 @@ async function settled(page: Page) {
 
 test("guided review has its own stage controls and no magnification bar", async ({ page }) => {
   test.setTimeout(90_000);
-  await page.goto(onOutlined);
+  await page.goto(onStage);
   await objectsReady(page);
   await page.getByRole("button", { name: "Got it, start" }).click();
   await settled(page);

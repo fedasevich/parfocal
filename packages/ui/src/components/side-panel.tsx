@@ -84,7 +84,7 @@ function SidePanel({
             {tab.foot ? (
               <div
                 data-slot="side-panel-foot"
-                className="grid gap-2.5 border-t border-line bg-chrome px-(--density-foot-x) pt-(--density-foot-top) pb-(--density-foot-bottom)"
+                className="grid gap-2.5 border-t border-line bg-chrome px-(--density-foot-x) has-[[data-foot-slot]:empty]:hidden pt-(--density-foot-top) pb-(--density-foot-bottom)"
               >
                 {tab.foot}
               </div>
