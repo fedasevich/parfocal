@@ -81,7 +81,7 @@ for (const viewport of [
     for (const [setting, choice] of [
       ["Tools", "Bottom dock"],
       ["Minimap", "Always"],
-    ]) {
+    ] as const) {
       const radio = dialog
         .getByRole("radiogroup", { name: setting })
         .getByRole("radio", { name: choice });
