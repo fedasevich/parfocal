@@ -124,6 +124,7 @@ export function StageReviewObjects({
   object,
   guided = false,
   cellsGrid = false,
+  jumpRequest = null,
   focus = null,
   doneRequest = 0,
   onComments,
@@ -138,6 +139,7 @@ export function StageReviewObjects({
   object: string | undefined;
   guided?: boolean;
   cellsGrid?: boolean;
+  jumpRequest?: { readonly id: string; readonly count: number } | null;
   focus?: { onShowUi: () => void } | null;
   doneRequest?: number;
   onComments: (object: string) => void;
@@ -275,6 +277,12 @@ export function StageReviewObjects({
             null)
         : id,
     );
+  const [seenJump, setSeenJump] = useState(jumpRequest?.count ?? 0);
+  if (jumpRequest !== null && jumpRequest.count !== seenJump) {
+    setSeenJump(jumpRequest.count);
+    if (jumpRequest.id === "cells") setGridOpen(true);
+    jump(jumpRequest.id);
+  }
   const coachPart = coachOn ? (
     <StageCoachAnswerTip
       keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
@@ -361,7 +369,14 @@ export function StageReviewObjects({
           className={guided ? "flex flex-col gap-4" : "flex flex-col gap-2"}
         >
           {guided && done ? (
-            <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={(id) => pick(id ?? null)} />
+            <ReviewOpinion
+              taskId={taskId}
+              slideId={slideId}
+              onObjects={(id) => {
+                if (id === "cells") setGridOpen(true);
+                if (id !== undefined) jump(id);
+              }}
+            />
           ) : guided && currentItem !== undefined ? (
             <StageGuidedCard
               session={session}

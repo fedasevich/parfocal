@@ -307,7 +307,7 @@ test("a decision note with a reason is written and saved on the stage", async ({
 
   await notes.getByRole("button", { name: "Edit" }).click();
   await expect(field).toBeFocused();
-  await expect(page.getByRole("button", { name: "Boundary is off" })).toHaveAttribute(
+  await expect(notes.getByRole("button", { name: "Boundary is off", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
