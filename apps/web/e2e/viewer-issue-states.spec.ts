@@ -52,6 +52,7 @@ test("a withdrawn task says so on the slide, locks the answers and goes back to 
   const card = page.getByTestId("stage-issue");
   await expect(card).toHaveAttribute("data-issue", "withdrawn");
   await expect(card).toContainText("This task was withdrawn.");
+  await page.getByRole("tab", { name: "Objects" }).click();
   const panel = page.getByTestId("stage-review-objects");
   await expect(panel.getByTestId("answers-off")).toHaveText(
     "This task was withdrawn. There is nothing left to decide.",
