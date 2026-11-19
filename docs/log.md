@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-19
 
+- PROTO-048 (the viewer's issue states show the mock's cards) ticked after PROTO-051 gave the API a withdrawn status and an unreadable slide flag.
 - PROTO-051 (the API says when a task is withdrawn and when a slide cannot be read at high power): owners withdraw review tasks through POST review-tasks/{id}/withdraw, which keeps the task and objects readable and refuses decisions with 409 task-withdrawn, and the first failed high power tile sets a high-power-unreadable slide notice, so both viewer cards come from the API. Additive migration 0139. Ingest does not test-read high power yet and withdrawn tasks still show in My work, written up in the ADR.
 - PROTO-055 (the area around the slide uses the canvas colour in both themes): the stage, compare panes and slide loading checker use the canvas token in light and dark, the guided slide chip has no fill, and stage-canvas-colour.spec.ts reads each background against --canvas. The goldens do not reach the app CSS, so no baselines change.
 - PROTO-050 (second drift audit, docs/results/2026-11-19-viewer-mock-drift-2.md): the bottom dock, compare, peek, shortcuts sheet and dark theme add 28 rows, 24 open and 4 kept by ADRs. Of the first audit's 62 rows, 53 are fixed, 8 partly fixed and row 62 waits on PROTO-048. Its five proposed tasks became PROTO-052 to PROTO-056.

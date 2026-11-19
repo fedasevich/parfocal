@@ -6674,7 +6674,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Open annotate on Display, and draw the tier pill, scale and the accept and discard buttons in the bar while proposals wait, as ADR 0255 (smart select gestures and proposals) puts them.
   Done when a browser test switches to Annotate and finds the Display tab selected with the Layers block, runs auto region on the fixture slide and accepts with Enter and discards with Esc from the bar.
   Depends on PROTO-036. Size: S.
-- [ ] PROTO-048 · The viewer's issue states show the mock's cards
+- [x] PROTO-048 · The viewer's issue states show the mock's cards
   No results on a slide, a slide that cannot be read at high power, a withdrawn task, a signed off task and an AI run still reading each have a card or panel in the mock with one sentence and one or two actions (row 62). Their components exist in `screens/viewer/viewer-notices.tsx` and `screens/viewer/objects-panel.tsx`, and the engine viewer draws none of them.
   Draw each state on the engine viewer from the real task, slide and run status: the card on the slide with its actions, the read only banner through the one banner of PROTO-028 (the live viewer's one banner), disabled answer buttons with the reason, and the "Still reading this slide" panel with "Tell me when it is ready".
   Done when a browser test sets each of the five states through the fake API, reads its sentence, uses its first action, and finds the answer buttons disabled with the reason in the withdrawn and signed off states.
