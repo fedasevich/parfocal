@@ -6679,7 +6679,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw each state on the engine viewer from the real task, slide and run status: the card on the slide with its actions, the read only banner through the one banner of PROTO-028 (the live viewer's one banner), disabled answer buttons with the reason, and the "Still reading this slide" panel with "Tell me when it is ready".
   Done when a browser test sets each of the five states through the fake API, reads its sentence, uses its first action, and finds the answer buttons disabled with the reason in the withdrawn and signed off states.
   Size: M.
-- [ ] PROTO-049 · The command palette passes its contrast check during a route change
+- [x] PROTO-049 · The command palette passes its contrast check during a route change
   PROTO-033 (the review panel's buttons are visible) found that `apps/web/e2e/command-palette.spec.ts` fails an axe colour contrast check because the My work page text, 13 px #8d8d8d on #ececec, is still on screen while the palette changes route.
   Give that text a colour that passes WCAG AA on its background, and check the other quiet text tokens of the light theme the same way.
   Done when `command-palette.spec.ts` passes with axe on, and a unit test checks the contrast of every quiet text token against its surfaces in both themes.
