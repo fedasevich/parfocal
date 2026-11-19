@@ -1,9 +1,12 @@
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from parfocal_api.result_sets import RegionRow
+from parfocal_api.sample_files import SampleFile
 from parfocal_api.tables import ResultObjectKind
 from parfocal_common.chunk_store import Cell
 from parfocal_common.repository import repository_root
@@ -129,3 +132,23 @@ def model_cells(label: str, root: Path = MODEL_RESULTS) -> ModelCells | None:
         for number, feature in enumerate(features, start=1)
     ]
     return ModelCells(classes, cells)
+
+
+def sample_bundle(labels: Sequence[str], facts: Mapping[str, SampleFile]) -> dict[str, Any]:
+    slides: list[dict[str, Any]] = []
+    for label in labels:
+        found = model_regions(label)
+        if found is None:
+            continue
+        slides.append(
+            {
+                "label": label,
+                "facts": facts[label].model_dump() if label in facts else None,
+                "classes": found.classes,
+                "regions": [
+                    {"wkt": row.wkt, "class_position": row.class_position, "score": row.score}
+                    for row in found.rows
+                ],
+            }
+        )
+    return {"model": REGIONS_MODEL, "slides": slides}
