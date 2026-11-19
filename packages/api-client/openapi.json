@@ -81240,8 +81240,15 @@
       "SlideMove": {
         "properties": {
           "case_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Case Id"
           },
           "reason": {
@@ -81279,8 +81286,15 @@
             "title": "From Case Id"
           },
           "to_case_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "To Case Id"
           },
           "result_set_ids": {

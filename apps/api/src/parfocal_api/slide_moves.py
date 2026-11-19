@@ -30,14 +30,14 @@ MoveReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=
 class SlideMove(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    case_id: uuid.UUID
+    case_id: uuid.UUID | None
     reason: MoveReason
 
 
 class SlideMoved(BaseModel):
     slide_id: uuid.UUID
     from_case_id: uuid.UUID | None
-    to_case_id: uuid.UUID
+    to_case_id: uuid.UUID | None
     result_set_ids: list[uuid.UUID]
     task_ids: list[uuid.UUID]
     block_cleared: bool
@@ -130,7 +130,8 @@ async def move_slide(
     await require_owner(connection, principal, slide.project_id)
     if slide.case_id == move.case_id:
         raise SameCaseError
-    await target_case(connection, move.case_id, slide.project_id)
+    if move.case_id is not None:
+        await target_case(connection, move.case_id, slide.project_id)
     await require_free_label(connection, slide_id, slide.project_id, move.case_id, slide.label)
     task_ids = await holding_tasks(connection, slide_id)
     await connection.execute(
@@ -151,13 +152,13 @@ async def move_slide(
     shared = {
         "slide_id": str(slide_id),
         "from_case_id": str(slide.case_id) if slide.case_id else None,
-        "to_case_id": str(move.case_id),
+        "to_case_id": str(move.case_id) if move.case_id else None,
         "reason": move.reason,
         "result_sets": len(sets),
         "tasks": len(task_ids),
         "block_cleared": slide.block_id is not None,
     }
-    sides = [("in", move.case_id)]
+    sides = [("in", move.case_id)] if move.case_id is not None else []
     if slide.case_id is not None:
         sides.insert(0, ("out", slide.case_id))
     for direction, case_id in sides:
@@ -179,7 +180,7 @@ async def move_slide(
             NotificationKind.SLIDE_MOVED,
             TargetKind.SLIDE,
             slide_id,
-            {"to_case_id": str(move.case_id)},
+            {"to_case_id": str(move.case_id) if move.case_id else None},
         )
         background.add_task(deliver_after_commit, http.app, tenant_id)
     return SlideMoved(

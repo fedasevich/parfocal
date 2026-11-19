@@ -6489,7 +6489,7 @@ export const getMoveSlideResponseMock = (
 ): SlideMoved => ({
   slide_id: faker.string.uuid(),
   from_case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  to_case_id: faker.string.uuid(),
+  to_case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   result_set_ids: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,

@@ -176,8 +176,8 @@ export function ProjectPage({
         </Banner>
       ) : null}
       <div className="flex min-h-0 flex-1 flex-col pt-5.5 pr-8 pb-4.5 pl-7">
-        <header className="flex flex-none items-start justify-between gap-6 pt-0.5 pb-5.5">
-          <div className="grid min-w-0 gap-2">
+        <header className="flex flex-none flex-wrap items-start justify-between gap-x-6 gap-y-3 pt-0.5 pb-5.5">
+          <div className="grid min-w-64 flex-1 basis-80 gap-2">
             <div className="flex min-w-0 items-center gap-3.5">
               <h2 className="m-0 truncate text-page-title font-semibold tracking-[-0.015em]">
                 {project.name}
@@ -204,7 +204,7 @@ export function ProjectPage({
               ) : null}
             </p>
           </div>
-          <div className="flex flex-none items-center gap-2">
+          <div className="flex flex-none flex-wrap items-center gap-2">
             <Button
               nativeButton={false}
               render={<Link to="/projects/$projectId/upload" params={{ projectId }} />}
@@ -214,6 +214,13 @@ export function ProjectPage({
             </Button>
             <Button
               variant="primary"
+              nativeButton={false}
+              render={<Link to="/projects/$projectId/cases/new" params={{ projectId }} />}
+            >
+              <Icon name="folder" />
+              <Trans>New case</Trans>
+            </Button>
+            <Button
               nativeButton={false}
               render={<Link to="/projects/$projectId/tasks/new" params={{ projectId }} />}
             >
@@ -229,14 +236,6 @@ export function ProjectPage({
                 }
               />
               <DropdownMenuContent align="end" className="w-65">
-                <DropdownMenuItem
-                  onClick={() =>
-                    void navigate({ to: "/projects/$projectId/cases/new", params: { projectId } })
-                  }
-                >
-                  <Icon name="folder" />
-                  <Trans>New case</Trans>
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
                     void navigate({ to: "/projects/$projectId/run-model", params: { projectId } })

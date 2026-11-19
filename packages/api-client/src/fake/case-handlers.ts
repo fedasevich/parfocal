@@ -166,7 +166,10 @@ export const caseHandlers = (): RequestHandler[] => [
     const slide = slides.find((item) => item.id === params.slideId);
     if (slide === undefined) return problem(404, "Slide not found", "not-found");
     const move = (await request.json()) as SlideMove;
-    const target = cases.find((item) => item.id === move.case_id);
+    const target =
+      move.case_id === null
+        ? { id: null, label: null, project: slide.project }
+        : cases.find((item) => item.id === move.case_id);
     if (target === undefined) return problem(404, "Case not found", "not-found");
     if (target.project !== slide.project)
       return problem(

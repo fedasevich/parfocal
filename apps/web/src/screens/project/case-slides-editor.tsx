@@ -120,7 +120,7 @@ function EditorBody({
           <li
             key={draft.id}
             data-testid="slide-edit-row"
-            className="grid grid-cols-[auto_1.3fr_1fr_0.9fr_0.6fr] items-center gap-2"
+            className="grid grid-cols-[auto_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.6fr)] items-center gap-2"
           >
             <span className="flex gap-0.5">
               <Button
