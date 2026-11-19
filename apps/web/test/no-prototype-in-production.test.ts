@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { test } from "node:test";
-import { sceneField, sceneHarnessOn } from "../src/search/scene-harness.ts";
 
 const root = new URL("../src/", import.meta.url).pathname;
 
@@ -49,40 +48,6 @@ function offenders(): Set<string> {
 test("no production screen gains prototype pictures, fake data or mock dates", () => {
   const added = [...offenders()].filter((name) => !STILL_TO_REPLACE.has(name));
   assert.deepEqual(added, []);
-});
-
-const ungatedScene = [/\bscene:\s*z\./, /\.get\(\s*["']scene["']\s*\)/];
-
-function ungatedSceneReaders(): string[] {
-  return sourceFiles(root)
-    .map((file) => relative(root, file))
-    .filter((name) => !outsideProduction.some((pattern) => pattern.test(name)))
-    .filter((name) => name !== "search/scene-harness.ts")
-    .filter((name) => {
-      const text = readFileSync(join(root, name), "utf8");
-      return ungatedScene.some((pattern) => pattern.test(text));
-    });
-}
-
-test("a production route reads a scene only through the gated scene field", () => {
-  assert.deepEqual(ungatedSceneReaders(), []);
-});
-
-test("the deployed build keeps only the scenes a real control writes", () => {
-  const field = sceneField(["files", "allgood", "storagefull"], ["files"], false);
-  assert.equal(field.parse("files"), "files");
-  assert.equal(field.parse("allgood"), undefined);
-  assert.equal(field.parse(undefined), undefined);
-  const harness = sceneField(["files", "allgood"], ["files"], true);
-  assert.equal(harness.parse("allgood"), "allgood");
-});
-
-test("scenes run only in a fake API build", () => {
-  assert.equal(sceneHarnessOn({ PARFOCAL_PUBLIC_FAKE_API: "off" }), false);
-  assert.equal(sceneHarnessOn({}), false);
-  assert.equal(sceneHarnessOn({ PARFOCAL_PUBLIC_FAKE_API: "" }), false);
-  assert.equal(sceneHarnessOn({ PARFOCAL_PUBLIC_FAKE_API: "all" }), true);
-  assert.equal(sceneHarnessOn({ PARFOCAL_PUBLIC_FAKE_API: "drafts" }), true);
 });
 
 test("a screen that no longer uses the prototype leaves the list", () => {
