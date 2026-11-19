@@ -6659,7 +6659,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Add the three controls at the bottom left of the guided stage, hide the magnification bar there, show the pan hint, and place each tip beside its target.
   Done when a browser test pans away, clicks "Back to T5" and is centred on T5 again, zooms with plus and minus and reads the new magnification, toggles "Whole slide", and a first run shows four tips each next to its control.
   Depends on PROTO-043. Size: S.
-- [ ] PROTO-045 · The viewer's Display tab has the mock's preset and groups
+- [x] PROTO-045 · The viewer's Display tab has the mock's preset and groups
   The Display tab in a review task holds one switch (Fade, Mark unsure, Bands) and the buttons "Map this view" and "Paint a map". The mock's tab has a Preset select, "How objects draw" (Draw as, Width, Opacity, Color by, ID labels) and "What the AI shows" (Confidence, Heatmap, Score cutoff, Result sets) (rows 52 to 55). ADR 0268 (how display state reaches the overlay system) is the accepted path for these values. It was not read for this audit.
   Draw the mock's groups in the stage's Display tab, bind each control to the display state the overlays read, keep the two map buttons under "What the AI shows", and show the result sets in both workspaces. Record in `docs/decisions.md` any control whose behaviour ADR 0132 (display settings, presets and task locks, Proposed) leaves open.
   Done when a browser test switches Draw as to Dots and Fill, changes width and opacity, colours by decision, hides ID labels, moves the score cutoff and sees each change in the overlay's reported state, and the viewer golden images pass.
