@@ -23,7 +23,7 @@ async function insideStage(page: Page, testId: string) {
   });
 }
 
-test("RT-14 shows five region tags and one sampled cells chip, and the chip and Whole slide move the view", async ({
+test("RT-14 shows five region tags, a T6⁺ tag for the added region and one sampled cells chip, and the chip and Whole slide move the view", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -32,9 +32,10 @@ test("RT-14 shows five region tags and one sampled cells chip, and the chip and 
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 60_000 });
 
   const tags = page.getByTestId("region-tag");
-  await expect(tags).toHaveCount(5);
+  await expect(tags).toHaveCount(6);
+  await expect(tags.last()).toHaveText("T6⁺");
   await expect(tags.first()).toHaveText("T1 97%");
-  await expect.poll(() => insideStage(page, "region-tag")).toBe(5);
+  await expect.poll(() => insideStage(page, "region-tag")).toBe(6);
   const chip = page.getByTestId("sample-chip");
   await expect(chip).toHaveCount(1);
   await expect(chip).toContainText("50 sampled cells");

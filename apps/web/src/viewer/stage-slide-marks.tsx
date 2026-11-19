@@ -81,6 +81,7 @@ export function StageSlideMarks({
   sample,
   collapsed,
   ids = true,
+  added = [],
   onWholeSlide,
 }: {
   engine: ViewerEngine;
@@ -90,6 +91,7 @@ export function StageSlideMarks({
   sample: SampleCells | null;
   collapsed: boolean;
   ids?: boolean;
+  added?: readonly { object: string; outline?: number[] | null }[];
   onWholeSlide: (() => void) | null;
 }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -97,13 +99,19 @@ export function StageSlideMarks({
   const tags = useRef(new Map<string, HTMLElement>());
   const chip = useRef<HTMLButtonElement>(null);
   const regions = useMemo(
-    () =>
-      objects.flatMap((item) =>
+    (): { id: string; score: number | null; box: Box }[] => [
+      ...objects.flatMap((item) =>
         item.kind === "region" && item.outline && item.outline.length >= 6
           ? [{ id: item.object, score: item.score, box: boxOf(item.outline) }]
           : [],
       ),
-    [objects],
+      ...added.flatMap((item) =>
+        item.outline && item.outline.length >= 6 && !item.object.startsWith("C")
+          ? [{ id: item.object, score: null, box: boxOf(item.outline) }]
+          : [],
+      ),
+    ],
+    [objects, added],
   );
   const place = useCallback(() => {
     const camera = engine.getCamera();
@@ -169,7 +177,10 @@ export function StageSlideMarks({
       data-ids={ids}
     >
       {(ids ? regions : []).map((region) => {
-        const label = showScore ? `${region.id} ${Math.round(region.score * 100)}%` : region.id;
+        const label =
+          showScore && region.score !== null
+            ? `${region.id} ${Math.round(region.score * 100)}%`
+            : region.id;
         return (
           <span
             key={region.id}

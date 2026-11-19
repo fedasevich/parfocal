@@ -465,9 +465,9 @@ function SmartMinimap({
       {footShown ? (
         <div
           {...handle}
-          className="mx-0.5 mt-0.5 flex min-h-6 items-center justify-between gap-2 text-caption whitespace-nowrap text-fg-faint data-handle:cursor-grab data-handle:select-none"
+          className="mx-0.5 mt-0.5 flex min-h-6 flex-wrap items-center justify-between gap-x-2 text-caption whitespace-nowrap text-fg-faint data-handle:cursor-grab data-handle:select-none"
         >
-          <span className="inline-flex min-w-0 items-center gap-1">
+          <span className="inline-flex shrink-0 items-center gap-1">
             {move ? (
               <button
                 type="button"
@@ -501,7 +501,7 @@ function SmartMinimap({
             ) : null}
             <span>{foot}</span>
           </span>
-          <span className="min-w-0 truncate">{footEnd}</span>
+          <span className="ml-auto max-w-full truncate">{footEnd}</span>
         </div>
       ) : null}
     </div>

@@ -106,7 +106,7 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         "Nearest cell on the slide",
         ["Arrows"],
         "new",
-        { direction: true, note: "from the selected cell, to the nearest unsure one that way" },
+        { direction: true, note: "in the cells panel" },
       ],
       [
         "dpan",

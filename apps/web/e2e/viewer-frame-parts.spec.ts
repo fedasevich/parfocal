@@ -72,7 +72,7 @@ test("the panel has no foot and its cards are grey sections on a white panel", a
   const panelBox = (await panel.boundingBox()) ?? { height: 1 };
   expect(Math.round(dockBox.height)).toBe(Math.round(panelBox.height));
   await expect(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
-  const card = panel.getByTestId("area-nav");
+  const card = panel.locator(".bg-surf-section").first();
   await expect(card).toHaveCSS("background-color", "rgb(244, 244, 244)");
   await expect(card).toHaveCSS("border-top-color", "rgb(228, 228, 228)");
   await expect(card).toHaveCSS("border-top-left-radius", "12px");

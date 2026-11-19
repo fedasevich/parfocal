@@ -194,6 +194,7 @@ export interface AddedDraft {
 export interface AddedObject {
   object: string;
   note: string | null;
+  outline?: number[] | null;
 }
 
 /**

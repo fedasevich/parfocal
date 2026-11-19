@@ -783,7 +783,7 @@ function FloatingPill({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="floating-pill"
       className={cn(
-        "absolute top-3 left-1/2 z-4 flex -translate-x-1/2 items-center gap-3 px-3 py-1.25 text-caption whitespace-nowrap",
+        "absolute top-3 left-1/2 z-4 flex -translate-x-1/2 items-center gap-3 px-3 py-1.25 text-caption whitespace-nowrap [&>input]:absolute",
         floatSurface,
         className,
       )}

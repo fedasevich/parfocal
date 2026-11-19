@@ -17,7 +17,6 @@ import { AutoLayer } from "../annotations/auto-layer.tsx";
 import { BrushLayer } from "../annotations/brush-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
-import { clearAll, clearPrompt, needsClearConfirmation } from "../annotations/clear.ts";
 import { contextBarOf, takesActiveClass } from "../annotations/context-bar.ts";
 import { ContextBarView } from "../annotations/context-bar.tsx";
 import { ContextExtrasHost } from "../annotations/context-extras.tsx";
@@ -54,7 +53,6 @@ import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
-import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
@@ -92,12 +90,14 @@ import { useSlideCoverage } from "./slide-coverage.ts";
 import { StageCompareButton } from "./stage-compare.tsx";
 import { OutlineModeCard, StageDisplay } from "./stage-display.tsx";
 import { StageInspector, type StageInspectorLink, type StageSession } from "./stage-inspector.tsx";
+import { StageMeasurementCard } from "./stage-measurement-card.tsx";
 import { StageDockProvider, useStageMeasurementsValue } from "./stage-measurements.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
 import type { StageTabCounts } from "./stage-tab-counts.ts";
 import { stageToolOf } from "./stage-tools.ts";
 import { ThreadFocus } from "./thread-focus.tsx";
+import { threadAnchorPoint } from "./thread-target.ts";
 import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
@@ -876,6 +876,7 @@ function OpenedSlide({
                     active={tool === "comment"}
                     selecting={tool === "select"}
                     registry={pinRegistry}
+                    anchorOf={(anchor) => threadAnchorPoint(anchor, areas)}
                     document={annotations}
                     projectId={projectId}
                     taskId={taskId}
@@ -1041,27 +1042,14 @@ function OpenedSlide({
                       />
                     ) : null}
                   </DockCard>
-                  <DockCard section="objects" order={4}>
-                    <MeasurementList
+                  {inspector.guided ? null : (
+                    <StageMeasurementCard
                       document={annotations}
                       micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
                       onRemove={measurements.remove}
+                      onApply={saved.apply}
                     />
-                    {annotations.shapes.size > 0 ? (
-                      <Button
-                        size="sm"
-                        data-testid="clear-annotations"
-                        onClick={() => {
-                          const count = annotations.shapes.size;
-                          if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count)))
-                            return;
-                          saved.apply(clearAll(annotations).document, t`Clear all`);
-                        }}
-                      >
-                        <Trans>Clear all</Trans>
-                      </Button>
-                    ) : null}
-                  </DockCard>
+                  )}
                 </>
               ) : null}
               {session && coverage && viewed?.peek ? (
@@ -1106,7 +1094,13 @@ function OpenedSlide({
                 />
               ) : null}
               {session ? (
-                <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
+                <AreaKeys
+                  session={session}
+                  areas={areas}
+                  host={hostNode}
+                  focused={focusedArea}
+                  listed={taskId === undefined}
+                />
               ) : null}
               {session && inspector.extras
                 ? inspector.extras({ ...session, armTool: (next) => setTool(stageToolOf(next)) })

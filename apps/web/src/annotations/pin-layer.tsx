@@ -37,6 +37,7 @@ type PinLayerProps = {
   active: boolean;
   selecting?: boolean;
   registry?: PinRegistry;
+  anchorOf?: ((anchor: Thread["anchor"]) => Point | null) | undefined;
   document: AnnotationDocument;
   projectId?: string | undefined;
   taskId: string | undefined;
@@ -116,6 +117,7 @@ export function PinLayer({
   active,
   selecting = false,
   registry,
+  anchorOf,
   document: doc,
   projectId,
   taskId,
@@ -326,7 +328,12 @@ export function PinLayer({
     return () => window.clearTimeout(timer);
   }, [settledKey, drag]);
 
-  const opened = pins.find(({ thread }) => thread.id === openId);
+  const pinned = pins.find(({ thread }) => thread.id === openId);
+  const unpinned =
+    pinned || openId === null ? undefined : threads.find((item) => item.id === openId);
+  const unpinnedAt = unpinned && anchorOf ? anchorOf(unpinned.anchor) : null;
+  const opened =
+    pinned ?? (unpinned && unpinnedAt ? { thread: unpinned, point: unpinnedAt } : undefined);
   const openedAt = opened ? slideToScreen(camera, rect, opened.point) : null;
 
   return (

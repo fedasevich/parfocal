@@ -296,7 +296,7 @@ function Row({
         }
         onClick={() => apply({ state: startRecording(state, action.id, slot) })}
       >
-        {recording ? t`Press a key` : key}
+        {recording ? t`Press a key` : action.id === "zoomin" && key === "+" ? "=" : key}
       </KeyBinding>
     );
   };

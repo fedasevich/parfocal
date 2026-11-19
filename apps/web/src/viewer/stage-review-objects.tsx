@@ -328,6 +328,7 @@ export function StageReviewObjects({
           sample={sample}
           collapsed={collapsed}
           ids={settings.ids}
+          added={session.added}
           onWholeSlide={guided ? null : wholeSlide}
         />
       ) : null}
@@ -402,17 +403,6 @@ export function StageReviewObjects({
               onAddMissed={() => onAddMissed?.()}
               answersOff={answersOff}
             />
-          ) : null}
-          {guided && hasCells && !done ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="justify-self-start"
-              aria-pressed={gridOpen}
-              onClick={() => setGridOpen((open) => !open)}
-            >
-              {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
-            </Button>
           ) : null}
           <StageAiReading slideId={slideId} objects={objects} />
           {!ready && answersOff !== undefined ? (
