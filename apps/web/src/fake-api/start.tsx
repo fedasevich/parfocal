@@ -7,6 +7,7 @@ import {
   setFakeConnectModelScene,
   setFakeJobsScene,
   setFakeQueueScene,
+  setFakeRefusal,
   setFakeSuspendedWorkspace,
   setFakeTeamScene,
   setFakeView,
@@ -53,6 +54,7 @@ export async function startFakeApi(
   applyFakeState(window.location.pathname, search);
   setFakeAiStreaming(search["stream"] === "1");
   setFakeViewerIssue(search["issue"]);
+  setFakeRefusal(search["refuse"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
   const sessionLock = scope === "all" ? sessionLockHandlers() : [];
   await startFakeWorker([...sessionLock, ...fakeApiHandlers(scope)]);

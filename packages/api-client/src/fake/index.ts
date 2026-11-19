@@ -157,6 +157,7 @@ export {
   resetQueueState,
   setFakeQueueScene,
 } from "./queue-scene.ts";
+export { setFakeRefusal } from "./refusal-scene.ts";
 export {
   reportLinkHandlers,
   resetFakeReportLinks,

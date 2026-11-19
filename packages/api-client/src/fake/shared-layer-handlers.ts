@@ -16,6 +16,7 @@ import type {
   SharedAiObjects,
   SharedLayer,
 } from "../generated/api.ts";
+import { fakeRefusal } from "./refusal-scene.ts";
 import { type FakeRunCell, fakeRunCells } from "./run-stream-handlers.ts";
 import { people, resultSets } from "./scenario.ts";
 import { annotateStubTaskId } from "./scenario-review.ts";
@@ -180,6 +181,11 @@ const problem = (status: number, code: string, title: string) =>
   );
 
 const signedOff = () => problem(409, "slide-signed-off", "This slide is signed off");
+
+const refusedWrite = () => {
+  const refused = fakeRefusal();
+  return refused === null ? null : problem(refused.status, refused.code, refused.title);
+};
 
 const layerOf = (store: Store, key: string) => store.layers[key] ?? [];
 
@@ -497,6 +503,8 @@ const layerHandlers = (): RequestHandler[] => [
   ),
   http.post<Params>(`${base}/shared-layer/ai-changes`, async ({ params, request }) => {
     if (isSignedOff(params)) return signedOff();
+    const refusedChange = refusedWrite();
+    if (refusedChange !== null) return refusedChange;
     const { changes } = (await request.json()) as AiObjectChanges;
     const sources = aiObjectsOf(params.taskId, params.slideId);
     let objects = layerOf(readStore(), keyOf(params.taskId, params.slideId));
@@ -541,6 +549,8 @@ const layerHandlers = (): RequestHandler[] => [
     `${base}/shared-layer/ai/:objectId/confirm`,
     ({ params }) => {
       if (isSignedOff(params)) return signedOff();
+      const refusedConfirm = refusedWrite();
+      if (refusedConfirm !== null) return refusedConfirm;
       const source = aiObjectsOf(params.taskId, params.slideId).find(
         (cell) => cell.object === params.objectId,
       );

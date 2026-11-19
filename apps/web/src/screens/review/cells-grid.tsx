@@ -65,6 +65,7 @@ type CellsGridProps = {
   answer: (object: string) => Answer | undefined;
   answerKeys: string[];
   claimHidden: boolean;
+  readOnly?: boolean;
   folded: boolean;
   confirming: boolean;
   onPick: (object: string) => void;
@@ -84,6 +85,7 @@ export function CellsGrid({
   answer,
   answerKeys,
   claimHidden,
+  readOnly = false,
   folded,
   confirming,
   onPick,
@@ -105,7 +107,7 @@ export function CellsGrid({
       answerKeys={answerKeys}
       folded={folded}
       confirmRest={confirming ? open.length : undefined}
-      canAgreeRest={!claimHidden}
+      canAgreeRest={!claimHidden && !readOnly}
       onAgreeRest={onAgreeRest}
       onApplyRest={onApplyRest}
       onCancelRest={onCancelRest}

@@ -26,6 +26,7 @@ export function StageGuidedCard({
   onNote,
   onAddMissed,
   answersOff,
+  readOnly = false,
 }: {
   session: ReviewSession;
   object: ReviewObject;
@@ -39,6 +40,7 @@ export function StageGuidedCard({
   onNote: () => void;
   onAddMissed: () => void;
   answersOff?: string | undefined;
+  readOnly?: boolean;
 }) {
   const { t } = useLingui();
   const wording = useResolvedSettings()?.confidence_wording ?? "numbers";
@@ -98,6 +100,8 @@ export function StageGuidedCard({
           answersOff === undefined ? null : { icon: "lock", text: answersOff, tone: "lock" }
         }
         disabled={answersOff !== undefined}
+        answersElsewhere={readOnly}
+        readOnly={readOnly}
         disagreeOpen={false}
         note={note}
         coach={coach}

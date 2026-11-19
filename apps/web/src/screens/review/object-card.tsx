@@ -292,6 +292,7 @@ type ObjectCardProps = {
   lockLine: LockLine;
   disabled: boolean;
   answersElsewhere?: boolean;
+  readOnly?: boolean;
   disagreeOpen: boolean;
   note: ReactNode;
   coach?: ReactNode;
@@ -319,6 +320,7 @@ export function ObjectCard({
   lockLine,
   disabled,
   answersElsewhere = false,
+  readOnly = false,
   disagreeOpen,
   note,
   coach,
@@ -480,10 +482,12 @@ export function ObjectCard({
       ) : null}
       {shown ? note : null}
       {coach}
-      <Button className="w-fit" disabled={disabled} onClick={onAddMissed}>
-        <Icon name="poly" />
-        <Trans>Add something the AI missed</Trans>
-      </Button>
+      {readOnly ? null : (
+        <Button className="w-fit" disabled={disabled} onClick={onAddMissed}>
+          <Icon name="poly" />
+          <Trans>Add something the AI missed</Trans>
+        </Button>
+      )}
     </div>
   );
 }

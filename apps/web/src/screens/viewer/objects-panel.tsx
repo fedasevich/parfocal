@@ -215,6 +215,7 @@ type ObjectFootProps = {
   onAnswer: (raw: string) => void;
   onClose: () => void;
   cellButtons?: boolean;
+  readOnly?: boolean;
 };
 
 export function ObjectFoot({
@@ -232,6 +233,7 @@ export function ObjectFoot({
   onAnswer,
   onClose,
   cellButtons = false,
+  readOnly = false,
 }: ObjectFootProps) {
   const { t } = useLingui();
   const format = useFormat();
@@ -278,7 +280,7 @@ export function ObjectFoot({
       ) : null}
       <ConfidenceByColour chip={text.chip} />
       <b className="text-body font-semibold">{text.question}</b>
-      {object.kind === "cell" && !cellButtons ? null : (
+      {readOnly || (object.kind === "cell" && !cellButtons) ? null : (
         <DecisionButtons
           decisionStyle={style.kind}
           size="large"

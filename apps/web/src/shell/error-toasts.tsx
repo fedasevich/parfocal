@@ -2,6 +2,8 @@ import { type ApiError, isDraftNotAvailable } from "@parfocal/api-client";
 import { ErrorToast } from "@parfocal/ui/components/error-toast";
 import { describeApiError, type ErrorNotice } from "@parfocal/ui/lib/api-error";
 import { useSyncExternalStore } from "react";
+import { i18n } from "../i18n/i18n.ts";
+import { knownRefusal } from "../screens/refusals.ts";
 
 type Shown = { id: number; notice: ErrorNotice };
 
@@ -27,8 +29,12 @@ export const notAvailableNotice: ErrorNotice = {
   action: undefined,
 };
 
-export const noticeFor = (error: ApiError): ErrorNotice =>
-  isDraftNotAvailable(error) ? notAvailableNotice : describeApiError(error);
+export const noticeFor = (error: ApiError): ErrorNotice => {
+  if (isDraftNotAvailable(error)) return notAvailableNotice;
+  const notice = describeApiError(error);
+  const known = knownRefusal(error.problem?.code ?? "");
+  return known === undefined ? notice : { ...notice, message: i18n._(known) };
+};
 
 export function showErrorToast(error: ApiError): void {
   const notice = noticeFor(error);

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   highPowerFailed,
   isWithdrawn,
+  othersReviewOf,
   resultMissingOf,
   signedOffOf,
   stageIssueOf,
@@ -65,5 +66,17 @@ describe("stage issues", () => {
       null,
     );
     assert.equal(signedOffOf(undefined, "a"), null);
+  });
+
+  it("names the reviewers of a slide only to someone not assigned to it", () => {
+    const slides = [
+      { slide_id: "a", reviewer_ids: ["lm", "sm"] },
+      { slide_id: "b", reviewer_ids: ["dh"] },
+    ];
+    assert.deepEqual(othersReviewOf(slides, "a", "dh"), ["lm", "sm"]);
+    assert.equal(othersReviewOf(slides, "b", "dh"), null);
+    assert.equal(othersReviewOf(slides, "a", null), null);
+    assert.equal(othersReviewOf(slides, "c", "dh"), null);
+    assert.equal(othersReviewOf(undefined, "a", "dh"), null);
   });
 });

@@ -2463,6 +2463,10 @@ msgstr ""
 msgid "<0>Not enough space.</0> This upload needs {0} GB and {projectCode} has {1} GB left of its {2} GB allowance."
 msgstr ""
 
+#: src/viewer/stage-issue-cards.tsx
+msgid "<0>Read only.</0> This slide is assigned to {reviewers}, so you can look but not answer."
+msgstr ""
+
 #: src/screens/new-task/steps.tsx
 msgid "<0>Run a model</0> on the picked slides, or pick another result set."
 msgstr ""
@@ -2668,6 +2672,10 @@ msgstr ""
 
 #: src/annotations/conflict-preview.tsx
 msgid "A colleague already deleted this shape"
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "A colleague changed some of these cells, so nothing was changed. Look at them and try again."
 msgstr ""
 
 #: src/annotations/conflict-preview.tsx
@@ -3159,6 +3167,10 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "Add model"
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "Add only a finished result set of the same slide."
 msgstr ""
 
 #: src/screens/admin/people.tsx
@@ -6870,6 +6882,10 @@ msgstr ""
 msgid "Every arrival goes through the same checks as an upload."
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "Every assigned expert has to check the slide first."
+msgstr ""
+
 #: src/screens/project/case-slides-editor.tsx
 msgid "Every change is kept in the audit log."
 msgstr ""
@@ -7694,6 +7710,10 @@ msgstr ""
 #: src/screens/sign-off/sign-off-screen.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Give a reason of at least 10 characters."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "Give a reason to change a signed-off slide."
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -11252,6 +11272,10 @@ msgstr ""
 msgid "Only an annotate task counts how the experts changed the AI."
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "Only an owner of this project can do that."
+msgstr ""
+
 #: src/screens/project/settings-zones.tsx
 msgid "Only an owner of this project changes its settings."
 msgstr ""
@@ -11290,6 +11314,10 @@ msgstr ""
 
 #: src/screens/admin/templates.tsx
 msgid "Only the header and footer. You add the blocks."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "Only the people assigned to this task can do that. You can look at it read only."
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -12661,6 +12689,10 @@ msgstr ""
 #. placeholder {0}: sizeText(usage.in_place_bytes)
 #: src/screens/admin/storage.tsx
 msgid "Read in place, not counted: <0>{0}</0> stays on your sources"
+msgstr ""
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "Read only. This slide is assigned to {reviewers}."
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -15237,6 +15269,10 @@ msgstr ""
 msgid "someone"
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "Someone changed this first. Reload to see the latest version, then try again."
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Someone mentions me"
@@ -15924,6 +15960,10 @@ msgstr ""
 msgid "That did not save. Try again."
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "That did not work, and nothing was changed. Reload the page and try again."
+msgstr ""
+
 #: src/results/painted-map-layer.tsx
 msgid "That did not work, try again"
 msgstr ""
@@ -15941,6 +15981,10 @@ msgstr ""
 
 #: src/annotations/layers-panel.tsx
 msgid "that layer is hidden or locked"
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "That object is no longer in this result, so nothing was changed. Reload the slide and try again."
 msgstr ""
 
 #: src/screens/upload/formats-drawer.tsx
@@ -16586,10 +16630,6 @@ msgstr ""
 msgid "The server is fetching {0}. They are checked and published like any upload."
 msgstr ""
 
-#: src/viewer/run-stream-layer.tsx
-msgid "The server refused it ({code})"
-msgstr ""
-
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "The server refused them, so a reload shows the last saved version."
 msgstr ""
@@ -16627,6 +16667,10 @@ msgstr ""
 msgid "The Slide done card with the opinion questions. It opens from Submit once every object is decided."
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "The slide has objects, so it is not empty."
+msgstr ""
+
 #: src/viewer/remote-slide-notice.tsx
 msgid "The slide is still being inspected at its source."
 msgstr ""
@@ -16660,6 +16704,14 @@ msgstr ""
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The task could not be created. Try again."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "The task is signed off. An owner can reopen it."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "The task needs every AI object checked before sign-off."
 msgstr ""
 
 #: src/screens/review/review-order-state.tsx
@@ -16946,10 +16998,15 @@ msgstr ""
 msgid "This slide is already stored in Parfocal."
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "This slide is already submitted."
+msgstr ""
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off"
 msgstr ""
 
+#: src/screens/refusals.ts
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off and its layer is locked."
 msgstr ""
@@ -16998,6 +17055,10 @@ msgstr ""
 
 #: src/results/view-map-layer.tsx
 msgid "This view could not be mapped"
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "This was not found. It may have been moved or deleted."
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -18506,6 +18567,10 @@ msgstr ""
 msgid "You are not in a workspace yet"
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "You are offline, so nothing was saved. Try again when the connection is back."
+msgstr ""
+
 #: src/help/help-dialog.tsx
 msgid "You are running {appVersion}"
 msgstr ""
@@ -18555,6 +18620,10 @@ msgstr ""
 #. placeholder {0}: object.object
 #: src/screens/review/object-card.tsx
 msgid "You disagree with the AI on {0}"
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "You do not have access to do that here."
 msgstr ""
 
 #: src/screens/jobs/run-model-window.tsx
@@ -18759,6 +18828,10 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "Your session ended after {hours} hours."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "Your session has ended. Sign in again to carry on."
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx

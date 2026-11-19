@@ -61,6 +61,7 @@ export function StageObjectsPanel({
   rulers = [],
   onRemoveRuler,
   answersOff,
+  readOnly = false,
 }: {
   session: ReviewSession;
   current: string | null;
@@ -72,6 +73,7 @@ export function StageObjectsPanel({
   rulers?: readonly StageRuler[];
   onRemoveRuler?: (ruler: StageRuler) => void;
   answersOff?: string | undefined;
+  readOnly?: boolean;
 }) {
   const person = usePeople();
   const setName = useSetName(session);
@@ -119,6 +121,7 @@ export function StageObjectsPanel({
         onAnswer={(raw) => onAnswer(currentItem, raw)}
         onClose={() => onPick(null)}
         cellButtons={!cellTyped}
+        readOnly={readOnly}
       />
     </div>
   ) : firstOpen ? (
