@@ -28,6 +28,7 @@
       "dependsOn": ["topo"],
       "cache": false,
       "passThroughEnv": [
+        "PARFOCAL_BUDGETS_APART",
         "PARFOCAL_REQUIRE_FIXTURES",
         "PARFOCAL_REQUIRE_VISUAL",
         "PARFOCAL_FIXTURES_R2_ENDPOINT",
