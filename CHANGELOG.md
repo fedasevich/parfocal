@@ -2,6 +2,66 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.25.0 (2026-11-19)
+
+### Features
+
+- PROTO-061: Skeleton for the bell list and one shared brand mark in header and loader
+- PROTO-061: Use the shared brand mark on sign-in and the developer screen
+- PROTO-062: Show a real annotated slide on the sign-in page from R2
+- PROTO-063: Step between cells with the arrow keys while the cells strip is open
+- PROTO-063: Order the cells strip along the tissue and keep the camera still inside a cluster
+- PROTO-066: Save layer groups and add rename, ungroup, delete, move to
+- PROTO-077: Open a paged notifications page from See all with mark all read
+- PROTO-078: Draw the slide under disagreements and give adjudicators a real route
+
+### Fixes
+
+- PROTO-060: Type the settings pairs in the top stack spec
+- PROTO-065: Keep a crashing job from starving review orders and show the wait
+- PROTO-076: Drop the minimap caption, wrap hint bars and fit the slides popover
+- PROTO-064: Send an annotate task from its stepper with a name, due date and no default ticks
+- PROTO-067: Check AI cells of an annotate task against the result set, not the slide counter
+- PROTO-068: Clip the stage and keep minimap, type bar, grid and magnification bar apart
+- PROTO-069: Seed classes, re-class a selection by digit, pick AI cells, one name for K and X
+- PROTO-067: Check AI cells of review decisions, skips and threads against the result set
+
+### Docs
+
+- PROTO-063: Ask how far the cells strip zooms on its first flight
+- TEST-051: Log the reseed, backfill and held polish branches
+- PROTO-064: Record the deployed viewer audit, its tasks and decision 162
+- PROTO-061: Log and tick the polish merges
+- PROTO-076: Add the owner's cut UI, See all, adjudication, mock view and Philips-3 tasks
+- PROTO-065: Log and move to review after merge
+- PROTO-066: Log and tick after merge
+- PROTO-076: Log and tick after merge
+- PROTO-077: Log and tick PROTO-077 and PROTO-064 after merge
+- PROTO-078: Log the first part after merge
+- PROTO-078: Log and tick after merge
+- PROTO-067: Log PROTO-067 and PROTO-068 after merge
+- PROTO-069: Log and tick after merge, widen TEST-054
+- PILOT-005: Remind the owner to go over the study
+- TEST-055: Add the walkthrough artifact task
+- PROTO-067: Log and tick after merge
+- PILOT-010: Add a task for the owner's study changes
+- PROTO-080: Record the owner's answers to decisions 161 and 162
+
+### Tests
+
+- PROTO-078: Add the adjudication e2e spec and an adjudicator test user
+- PROTO-067: Wait for the focus mode minimap to settle before pinning its box
+
+### Other
+
+- PROTO-061: Add and claim the owner's polish tasks
+- PROTO-078: Claim PROTO-078
+- PROTO-076: Claim PROTO-076
+- PROTO-076: Refresh the catalogs after the caption removal
+- PROTO-077: Claim PROTO-077
+- PROTO-078: Refresh the catalogs
+- PROTO-079: Claim PROTO-079
+
 ## v0.24.1 (2026-11-19)
 
 ### Features
