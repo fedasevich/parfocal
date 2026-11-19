@@ -6709,7 +6709,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw compare under the engine viewer's top bar, keep the summary card above "Slides on screen", use the mock's plain section labels, say "sides" everywhere, match the pill, and feed the Comments count from the same threads as the viewer.
   Done when a browser test opens compare from the rail on RT-14, reads "My work", the 138 px chip "A1 · H&E" and only Guided and Full viewer, finds "Objects on A1" above "Slides on screen", reads the same Comments count as in the viewer, and the compare specs still pass.
   Size: S.
-- [ ] PROTO-055 · The area around the slide uses the canvas colour in both themes
+- [x] PROTO-055 · The area around the slide uses the canvas colour in both themes
   Around the slide the app paints the chrome colour, white in light and 29, 29, 29 in dark, where the mock paints its canvas colour, 207, 207, 207 and 42, 42, 42. Compare panes are 23, 23, 23 in both themes, and the slide chip in the top bar is drawn as a button where the mock's is quieter (rows 85 to 87).
   Give the stage and the compare panes the canvas token of the theme, and the slide chip the mock's quiet tone and border.
   Done when a browser test reads the stage background in light and dark on the viewer, guided review and compare and finds the canvas token each time, and the viewer golden images pass.
