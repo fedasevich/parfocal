@@ -6737,6 +6737,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser test changes each new row, sees the viewer redraw with it (fill opacity read from the overlay layer, text size from the computed root font size, the class palette from a drawn cell colour) and finds it kept after a reload, and axe passes on the Display tab in both themes.
   Depends on PROTO-031.
   Size: M.
+- [ ] PROTO-058 · Help is wider, shows the running version and lists what changed for users
+  On 2026-11-19 the owner found the Help dialog too narrow to read, its footer cramped, and its "What's new" list showing the raw changelog: internal lines such as "Claim PROTO-030 PROTO-031 for the parallel run" and "Add the task to seed only real inference results", and v0.21.0 as the newest while a later release runs.
+  Widen the Help dialog to a readable measure with a footer that keeps its three actions on one line. Show the running app version (from the build) at the top of What's new. Build the notes from the changelog with only user facing entries: features and fixes with a plain sentence, no chores, claims, docs, backlog or test lines, and no task IDs. Keep every release reachable, the newest open.
+  Done when a unit test filters a sample changelog to user facing lines, a browser test opens Help and reads the build's version and at least one user facing note with no task ID or "Claim" line, and the dialog is at least 640 px wide on a 1440 px screen with its footer on one line.
+  Size: S.
 ---
 
 ## Later epics (not in v1, kept for planning)
