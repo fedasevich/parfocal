@@ -19,7 +19,15 @@ None. All five steps of 2026-11-19 are done and checked.
 
 ## Open questions
 
-None right now.
+### 159. What a GPU job does when Modal has no GPU free in the EU
+
+The browser smoke of 2026-11-19 on the reseeded dev app passed sign-in, home, the viewer and every seeded format, Philips-3 included, but the typer and the view map failed with Cloudflare's 524. A view map call waited 244 s and the first EU GPU container started only after the test gave up, because all six GPU pools are pinned to Modal's `eu` region (ADR 0147, cloud provider, regions and pilot cost) and Modal had no T4 free there at that minute.
+
+- **A. Keep the EU pin and make the wait visible (recommended).** Slides never leave the EU. The viewer shows "Waiting for a GPU" with a cancel instead of an error, the smoke retries once after a few minutes, and a result file measures how often the EU wait passes 60 s over a week. No extra cost.
+- **B. Fall back to any region after 60 s while the app holds only public test slides.** Faster on a busy hour, but tiles of a slide leave the EU, which must end before the first real user.
+- Other.
+
+Your choice: 
 
 ### 159. Two extras the mock does not draw: Send feedback and the Open and Resolved switch
 
