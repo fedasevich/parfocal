@@ -6654,7 +6654,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw that layout on the engine stage for `/tasks/$taskId/guided`, fed by the stage's review objects and decisions, with decision notes and the cells panel as ADR 0398 (one engine stage) lists them.
   Done when a browser test opens guided review on RT-14, finds no tool rail, reads the heading for T5, answers with K, sees the next open object and its dot change, skips one, goes back with Previous, finishes the slide and sees "Slide 8 is done" in the Review tab.
   Depends on PROTO-033. Size: M.
-- [ ] PROTO-044 · Guided review has its own stage controls
+- [x] PROTO-044 · Guided review has its own stage controls
   On the slide the mock's guided review shows "Back to T5", a zoom group with minus, the magnification and plus, a "Whole slide" toggle, a pan hint chip and the first run tips beside what they explain, and no magnification bar (rows 49 to 51). The app shows the full viewer's magnification bar and puts tips 3 and 4 in the panel.
   Add the three controls at the bottom left of the guided stage, hide the magnification bar there, show the pan hint, and place each tip beside its target.
   Done when a browser test pans away, clicks "Back to T5" and is centred on T5 again, zooms with plus and minus and reads the new magnification, toggles "Whole slide", and a first run shows four tips each next to its control.
