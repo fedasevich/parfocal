@@ -121,7 +121,9 @@ async function watchedPass(page: Page, centre: { x: number; y: number }): Promis
   return watch;
 }
 
-test("no main thread task passes its budget during a multi tile pass", async ({ page }) => {
+test("no main thread task passes its budget during a multi tile pass", { tag: "@budget" }, async ({
+  page,
+}) => {
   test.setTimeout(60_000);
   const { centre } = await openAuto(page);
   const passes: PassWatch[] = [];
@@ -131,9 +133,9 @@ test("no main thread task passes its budget during a multi tile pass", async ({ 
   await checkBudget("aiseg.region-main-thread-task-ms", fastest);
 });
 
-test("no main thread task passes its throttled budget with the CPU slowed four times", async ({
-  page,
-}) => {
+test("no main thread task passes its throttled budget with the CPU slowed four times", {
+  tag: "@budget",
+}, async ({ page }) => {
   test.setTimeout(180_000);
   const { centre } = await openAuto(page);
   const session = await page.context().newCDPSession(page);

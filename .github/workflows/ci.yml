@@ -320,11 +320,17 @@ jobs:
       - if: ${{ github.event_name != 'workflow_dispatch' }}
         run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }} ${{ matrix.shard && format('-- --shard={0}/{1}', matrix.shard, matrix.shards) || '' }}
         env:
+          PARFOCAL_BUDGETS_APART: "1"
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
           PARFOCAL_REQUIRE_VISUAL: ${{ github.actor != 'dependabot[bot]' && '1' || '' }}
           PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.r2.cloudflarestorage.com
           PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID }}
           PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY }}
+      - if: ${{ github.event_name != 'workflow_dispatch' && matrix.package == 'web' && matrix.shard == 1 }}
+        working-directory: apps/web
+        run: pnpm exec playwright test --grep @budget --workers=1 --reporter=list
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
       - if: ${{ always() && github.event_name != 'workflow_dispatch' }}
         env:
           PACKAGE: ${{ matrix.package }}

@@ -70,9 +70,9 @@ const median = (values: readonly number[]) => {
   return ordered.length % 2 === 1 ? upper : ((ordered[middle - 1] ?? Number.NaN) + upper) / 2;
 };
 
-test("a decision in the guided check puts the next object on screen within budget", async ({
-  browser,
-}) => {
+test("a decision in the guided check puts the next object on screen within budget", {
+  tag: "@budget",
+}, async ({ browser }) => {
   test.setTimeout(60_000 + rounds * 30_000);
   const samples: number[] = [];
   for (let round = 0; round <= rounds; round++) {
