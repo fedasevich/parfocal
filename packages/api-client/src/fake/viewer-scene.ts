@@ -6,7 +6,9 @@ export type FakeViewerIssue =
   | "empty"
   | "running"
   | "slidefail"
-  | "preparing";
+  | "preparing"
+  | "importing"
+  | "importfail";
 
 const viewerIssues: readonly FakeViewerIssue[] = [
   "withdrawn",
@@ -15,6 +17,8 @@ const viewerIssues: readonly FakeViewerIssue[] = [
   "running",
   "slidefail",
   "preparing",
+  "importing",
+  "importfail",
 ];
 
 let scene: FakeViewerScene = "ready";

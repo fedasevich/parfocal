@@ -59,6 +59,19 @@ const plural = (count: number, one: string) => `${count} ${one}${count === 1 ? "
 export function SignOffScreen({ taskId, scene }: { taskId: string; scene: SignOffScene }) {
   const task = okData(useGetReviewTask(taskId).data);
   if (!task) return null;
+  if (task.kind === "annotate") {
+    return (
+      <ProjectBackground projectId={task.project_id} tab="tasks">
+        <AnnotateSignOff
+          taskId={taskId}
+          projectId={task.project_id}
+          taskCode={task.code}
+          taskName={task.name}
+          firstSlideId={task.slides[0]?.slide_id}
+        />
+      </ProjectBackground>
+    );
+  }
   return (
     <ProjectBackground projectId={task.project_id} tab="tasks">
       <SignOffModal
@@ -70,6 +83,59 @@ export function SignOffScreen({ taskId, scene }: { taskId: string; scene: SignOf
         scene={scene}
       />
     </ProjectBackground>
+  );
+}
+
+function AnnotateSignOff({
+  taskId,
+  projectId,
+  taskCode,
+  taskName,
+  firstSlideId,
+}: {
+  taskId: string;
+  projectId: string;
+  taskCode: string;
+  taskName: string;
+  firstSlideId: string | undefined;
+}) {
+  const { t } = useLingui();
+  const navigate = useNavigate();
+  const toProject = () =>
+    void navigate({ to: "/projects/$projectId", params: { projectId }, search: { tab: "tasks" } });
+  return (
+    <SmallModal
+      open
+      onOpenChange={closeOn(toProject)}
+      width={480}
+      title={t`Sign off ${taskCode}`}
+      subtitle={taskName}
+      showCancel={false}
+      secondaryAction={
+        <Button onClick={toProject}>
+          <Trans>Back to the project</Trans>
+        </Button>
+      }
+      primaryLabel={<Trans>Open the task</Trans>}
+      onPrimary={() =>
+        firstSlideId === undefined
+          ? toProject()
+          : void navigate({
+              to: "/projects/$projectId/slides/$slideId/annotate-task",
+              params: { projectId, slideId: firstSlideId },
+              search: { task: taskId, tab: "objects" },
+            })
+      }
+    >
+      <SmallModalZone>
+        <p data-testid="sign-off-annotate" className="m-0 text-body-sm">
+          <Trans>
+            This is an annotate task. Each slide is signed off on its own in the viewer, under
+            Objects, once its experts have checked it.
+          </Trans>
+        </p>
+      </SmallModalZone>
+    </SmallModal>
   );
 }
 
@@ -88,7 +154,8 @@ function SignOffModal({
 }) {
   const { t } = useLingui();
 
-  const summary = okData(useGetSignOffSummary(taskId).data);
+  const summaryQuery = useGetSignOffSummary(taskId);
+  const summary = okData(summaryQuery.data);
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
   const adjudicated = useTaskAdjudications(taskId);
   const adjudicationZone = adjudicated.length ? (
@@ -145,7 +212,41 @@ function SignOffModal({
     ? t`${taskName} · ${summary.result_set.name}`
     : taskName;
   const signingVersion = summary?.next_version?.version ?? summary?.version ?? 1;
-  if (!summary) return null;
+  const openReport = () => void navigate({ to: "/tasks/$taskId/evaluation", params: { taskId } });
+  if (!summary) {
+    if (summaryQuery.isPending || summaryQuery.isFetching) return null;
+    return (
+      <SmallModal
+        open
+        onOpenChange={closeOn(toProject)}
+        width={480}
+        title={t`Sign off ${taskCode}`}
+        subtitle={taskName}
+        showCancel={false}
+        secondaryAction={
+          <Button onClick={toProject}>
+            <Trans>Back to the project</Trans>
+          </Button>
+        }
+        primaryLabel={
+          <>
+            <Icon name="file" />
+            <Trans>Open the evaluation report</Trans>
+          </>
+        }
+        onPrimary={openReport}
+      >
+        <SmallModalZone>
+          <p role="alert" data-testid="sign-off-unavailable" className="m-0 text-body-sm">
+            <Trans>
+              The sign-off of this task could not be opened. The evaluation report shows whether it
+              is signed.
+            </Trans>
+          </p>
+        </SmallModalZone>
+      </SmallModal>
+    );
+  }
   const nameOf = (userId: string) => person(userId)?.name ?? "";
 
   if (summary.signature && !signingNext) {
@@ -177,7 +278,7 @@ function SignOffModal({
               <Trans>Open the evaluation report</Trans>
             </>
           }
-          onPrimary={() => void navigate({ to: "/tasks/$taskId/evaluation", params: { taskId } })}
+          onPrimary={openReport}
         >
           <SmallModalZone
             title={

@@ -130,4 +130,12 @@ test("a slide opened without a task keeps Annotate, the tissue ring and its case
   await expect(bar(page).getByTestId("decision-ring")).toHaveCount(0);
   await expect(bar(page).getByTestId("case-header")).toContainText("result set");
   await expect(bar(page).getByRole("button", { name: "Submit" })).toHaveCount(0);
+  await expect(inspector(page).getByRole("tab", { name: /^Opinion/ })).toHaveCount(0);
+});
+
+test("a plain slide opened on the Opinion tab falls back to Objects", async ({ page }) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&tab=opinion&as=DH`);
+  await ready(page);
+  await expect(inspector(page)).toHaveAttribute("data-tab", "objects");
+  await expect(page.getByText("No opinion asked")).toHaveCount(0);
 });

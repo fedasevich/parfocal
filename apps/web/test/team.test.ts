@@ -11,6 +11,7 @@ import {
   headerLine,
   nudgeAllQuestion,
   nudgeMessage,
+  projectLine,
   reviewerDetail,
 } from "../src/screens/team/team-text.ts";
 
@@ -126,4 +127,21 @@ test("the scenes pick the tab, the highlight and the fake server state", () => {
   assert.equal(fakeTeamSceneFor("/team", { scene: "sent" }).sent, true);
   assert.equal(fakeTeamSceneFor("/my-work", { scene: "sent" }).sent, false);
   assert.equal(fakeViewFor("/team", {}).viewer, "DH");
+});
+
+test("one slide reads as one slide in the task line and the nudge", () => {
+  assert.equal(projectLine(task({ slides: 1 })), "Sentinel node AI evaluation · 1 slide");
+  assert.equal(
+    projectLine(task({ slides: 12, split: "even" })),
+    "Sentinel node AI evaluation · 12 slides, split evenly",
+  );
+  const last = reviewer({ slides_done: 11 });
+  assert.equal(
+    nudgeMessage("Simona Marková", task({}), last, asOf),
+    "Hi Simona, RT-14 is due Fri 23 Oct and 1 slide is left. Could you fit some in this week?",
+  );
+  assert.equal(
+    nudgeMessage("Simona Marková", task({ due_on: null }), last, asOf),
+    "Hi Simona, RT-14 has 1 slide left. Could you fit some in this week?",
+  );
 });

@@ -23,7 +23,7 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
-import { formatDue } from "../format.ts";
+import { formatDue, plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { TaskViewerLinks } from "../viewer-links.tsx";
 import { reviewerProgress, taskStatus } from "./model.ts";
@@ -119,7 +119,7 @@ function TaskRow({
   const set = sets.find((candidate) => candidate.id === detail?.slides[0]?.result_set_id);
   const facts = [
     set ? `${set.name.split(" ")[0]} ${set.model_version}` : null,
-    `${task.slide_count} slides${task.split === "even" ? t`, split evenly` : ""}`,
+    `${plural(task.slide_count, "slide")}${task.split === "even" ? t`, split evenly` : ""}`,
     task.blinded ? "blind" : null,
   ].filter(Boolean);
   const behind = [...progress].sort((a, b) => b.total - b.done - (a.total - a.done))[0];

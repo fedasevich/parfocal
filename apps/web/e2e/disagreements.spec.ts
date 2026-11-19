@@ -111,6 +111,28 @@ test("sign-off warns about open threads and still lets the researcher sign", asy
   await expect(modal.getByRole("button", { name: /^Sign/ }).last()).toBeEnabled();
 });
 
+test("the sign-off page of a task signed before shows the signed state and opens the report", async ({
+  page,
+}) => {
+  const rt09 = "00000000-0000-4000-8007-000000000009";
+  await page.goto(`/tasks/${rt09}/sign-off`);
+  const modal = page.getByRole("dialog", { name: "Sign off RT-09" });
+  await expect(modal).toContainText("signed");
+  await expect(modal).toContainText("Checksum");
+  await modal.getByRole("button", { name: "Open the evaluation report" }).click();
+  await expect(page).toHaveURL(new RegExp(`/tasks/${rt09}/evaluation`));
+});
+
+test("the sign-off page of an annotate task says slides are signed off in the viewer", async ({
+  page,
+}) => {
+  const annotateTask = "00000000-0000-4000-8007-000000000021";
+  await page.goto(`/tasks/${annotateTask}/sign-off`);
+  await expect(page.getByTestId("sign-off-annotate")).toBeVisible();
+  await page.getByRole("button", { name: "Open the task" }).click();
+  await expect(page).toHaveURL(/\/annotate-task\?.*tab=objects/);
+});
+
 test("the report's Methods block says how the decisions were counted", async ({ page }) => {
   await page.goto(`${base}/evaluation?scene=report`);
   const methods = page.locator("[data-methods]").first();

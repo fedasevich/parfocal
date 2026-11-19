@@ -89,8 +89,11 @@ test("an annotate task slide draws on the shared layer, fixes AI, checks two sli
     "ai-confirmed",
   );
 
-  await page.getByRole("button", { name: "Mark slide checked" }).click();
+  const topBar = page.getByTestId("live-top-bar");
+  await expect(panel.getByRole("button", { name: "Mark slide checked" })).toHaveCount(0);
+  await topBar.getByRole("button", { name: "Mark slide checked" }).click();
   await expect(panel).toHaveAttribute("data-step", "checked");
+  await expect(topBar.getByTestId("mark-slide-checked")).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Slide checked" })).toBeVisible();
   await expect(page.getByTestId("task-progress")).toHaveText("1 of 2 slides checked");
 
@@ -118,4 +121,27 @@ test("an annotate task slide draws on the shared layer, fixes AI, checks two sli
   await page.getByRole("button", { name: "Nothing to mark" }).click();
   await expect(panel).toHaveAttribute("data-step", "checked");
   await expect(page.getByTestId("task-progress")).toHaveText("2 of 2 slides checked, 1 signed off");
+});
+
+test("the annotate task route honours its tab, shows one tissue progress control and no Opinion tab", async ({
+  page,
+}) => {
+  await page.goto(
+    `/projects/${p07}/slides/${withResults}/annotate-task?task=${annotateTask}&tab=objects&as=DH`,
+  );
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  const inspector = page.getByTestId("stage-inspector");
+  await expect(inspector).toHaveAttribute("data-tab", "objects");
+  await expect(page.getByTestId("annotate-task-panel")).toBeVisible();
+  await expect(inspector.getByRole("tab")).toHaveText([/^Objects/, /^Display/, /^Comments/]);
+  const progress = page.getByTestId("live-top-bar").getByTestId("slide-progress");
+  await expect(progress.getByTestId("viewed-ring")).toBeVisible();
+  await expect(progress).toContainText(/Slide \d+ of \d+about .+ left/);
+  await expect(progress).not.toContainText("of the tissue seen");
+  await inspector.getByRole("tab", { name: "Display" }).click();
+  await expect(page).toHaveURL(/tab=display/);
+  await expect(
+    page.getByTestId("live-top-bar").getByRole("button", { name: "Mark slide checked" }),
+  ).toBeVisible();
 });

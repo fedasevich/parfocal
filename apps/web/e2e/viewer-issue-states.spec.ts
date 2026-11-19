@@ -6,6 +6,7 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 const rt09 = "00000000-0000-4000-8007-000000000009";
 const sampleProject = "00000000-0000-4000-8003-000000000001";
 const tumor001 = "00000000-0000-4000-8005-000000000101";
+const tumor044 = "00000000-0000-4000-8005-000000000005";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -128,4 +129,24 @@ test("a slide whose highest magnification fails says so on the slide and retries
   });
   await card.getByRole("button", { name: "Retry" }).click();
   await expect(card).toHaveCount(0, { timeout: 15_000 });
+});
+
+for (const [issue, state, text] of [
+  ["importing", "importing", /is still importing\. Its objects show when it is ready\./],
+  ["importfail", "failed", /did not import, so its objects are not shown\./],
+] as const) {
+  test(`a result set that is ${state} says so once in the top stack`, async ({ page }) => {
+    await page.goto(`/projects/${p07}/slides/${tumor044}/live?issue=${issue}`);
+    await ready(page);
+    const notice = page.locator('[data-slot="top-stack"]').getByTestId("result-set-notice");
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveAttribute("data-state", state);
+    await expect(notice).toContainText(text);
+  });
+}
+
+test("a slide whose result sets are ready shows no result set notice", async ({ page }) => {
+  await page.goto(`/projects/${p07}/slides/${tumor044}/live`);
+  await ready(page);
+  await expect(page.getByTestId("result-set-notice")).toHaveCount(0);
 });

@@ -19,16 +19,16 @@ msgstr "{0} GB needed, {1} GB left in {projectCode}"
 msgid " · {0} cells"
 msgstr " · {0} cells"
 
-#. placeholder {0}: detail.slide_count
-#. placeholder {1}: detail.blinded ? " · blind" : ""
-#: src/screens/my-work/assigned-tab.tsx
-msgid " · {0} slides{1}"
-msgstr " · {0} slides{1}"
-
 #. placeholder {0}: plural(toDecide, "object")
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {0} to decide"
 msgstr " · {0} to decide"
+
+#. placeholder {0}: plural(detail.slide_count, "slide")
+#. placeholder {1}: detail.blinded ? " · blind" : ""
+#: src/screens/my-work/assigned-tab.tsx
+msgid " · {0}{1}"
+msgstr " · {0}{1}"
 
 #: src/viewer/stage-minimap.tsx
 msgid " · {seenPercent}% seen"
@@ -344,13 +344,6 @@ msgstr "{0} · {1} objects need a decision out of {2} · {resolved} resolved{3}"
 #: src/screens/admin/sections.tsx
 msgid "{0} · {1} slides"
 msgstr "{0} · {1} slides"
-
-#. placeholder {0}: project.code
-#. placeholder {1}: project.slides
-#. placeholder {2}: project.result_sets
-#: src/screens/home/home-screen.tsx
-msgid "{0} · {1} slides · {2} result sets"
-msgstr "{0} · {1} slides · {2} result sets"
 
 #. placeholder {0}: batch.storage.trimmed_slides
 #. placeholder {1}: gb(batch.storage.trimmed_gb)
@@ -4155,6 +4148,7 @@ msgstr "Back to the map"
 #: src/screens/clinical-report/report-screen.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/review/review-order-state.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
 msgid "Back to the project"
 msgstr "Back to the project"
 
@@ -9257,6 +9251,7 @@ msgstr "Loading the security contact"
 msgid "Loading the server details"
 msgstr "Loading the server details"
 
+#: src/routes/tasks.$taskId.comments.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/comments-on-ids.tsx
 #: src/screens/viewer-tools/tool-session.tsx
@@ -11579,6 +11574,7 @@ msgid "Open the slides of this task in the full viewer"
 msgstr "Open the slides of this task in the full viewer"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
 msgid "Open the task"
 msgstr "Open the task"
 
@@ -16663,6 +16659,26 @@ msgstr "The request is withdrawn. The report is a draft again."
 msgid "The researcher"
 msgstr "The researcher"
 
+#. placeholder {0}: andJoin(failed)
+#: src/viewer/result-set-notice.tsx
+msgid "The result set {0} did not import, so its objects are not shown."
+msgstr "The result set {0} did not import, so its objects are not shown."
+
+#. placeholder {0}: andJoin(importing)
+#: src/viewer/result-set-notice.tsx
+msgid "The result set {0} is still importing. Its objects show when it is ready."
+msgstr "The result set {0} is still importing. Its objects show when it is ready."
+
+#. placeholder {0}: andJoin(importing)
+#: src/viewer/result-set-notice.tsx
+msgid "The result sets {0} are still importing. Their objects show when they are ready."
+msgstr "The result sets {0} are still importing. Their objects show when they are ready."
+
+#. placeholder {0}: andJoin(failed)
+#: src/viewer/result-set-notice.tsx
+msgid "The result sets {0} did not import, so their objects are not shown."
+msgstr "The result sets {0} did not import, so their objects are not shown."
+
 #: ../../packages/ui/src/components/slide-done-card.tsx
 msgid "The review could not be submitted. Nothing was lost, every decision is saved."
 msgstr "The review could not be submitted. Nothing was lost, every decision is saved."
@@ -16796,6 +16812,10 @@ msgstr "The setting was not saved. Try again."
 #: src/annotations/slide-export.ts
 msgid "The shapes with their groups, notes and cell calls, which Parfocal can import again"
 msgstr "The shapes with their groups, notes and cell calls, which Parfocal can import again"
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "The sign-off of this task could not be opened. The evaluation report shows whether it is signed."
+msgstr "The sign-off of this task could not be opened. The evaluation report shows whether it is signed."
 
 #: src/screens/clinical-report/modals.tsx
 msgid "The size comes from the object."
@@ -17050,6 +17070,10 @@ msgstr "This invite link does not work"
 #: ../../packages/ui/src/components/new-forms.tsx
 msgid "This is a clinical project. Names can be hidden for everyone in Settings, and opening them is logged."
 msgstr "This is a clinical project. Names can be hidden for everyone in Settings, and opening them is logged."
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "This is an annotate task. Each slide is signed off on its own in the viewer, under Objects, once its experts have checked it."
+msgstr "This is an annotate task. Each slide is signed off on its own in the viewer, under Objects, once its experts have checked it."
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx

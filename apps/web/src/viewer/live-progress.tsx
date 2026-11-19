@@ -59,13 +59,14 @@ export function LiveProgress({
   const { t } = useLingui();
   const position = list.position;
   const timeLeft = timeLeftText(position, list.total);
+  const inTask = task !== undefined && load?.task != null && position > 0;
   const heading = (
     <span className="grid leading-tight text-left">
       <b className="font-semibold">
         {position > 0 ? t`Slide ${position} of ${list.total}` : t`Slide`}
       </b>
       <small className="text-caption text-fg-dim">
-        {review !== undefined
+        {review !== undefined || inTask
           ? t`${timeLeft} left`
           : percent === null
             ? t`Opening`
@@ -77,7 +78,7 @@ export function LiveProgress({
     task?.kind === "review" || percent === null ? null : (
       <ViewedRing data-testid="viewed-ring" percent={percent} size={34} onClick={onPeek} />
     );
-  if (task === undefined || load?.task == null || position === 0) {
+  if (!inTask || task === undefined || load?.task == null) {
     return (
       <>
         {ring}

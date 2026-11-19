@@ -89,7 +89,7 @@ export function MeasurementList({
                       className="flex items-center gap-2 text-body-sm"
                     >
                       <ObjectIdTag>{row.label}</ObjectIdTag>
-                      <span className="grid">
+                      <span className="grid shrink-0 whitespace-nowrap">
                         {row.area === null ? (
                           <span data-slot="value" className="font-mono">
                             {row.value}
@@ -105,7 +105,10 @@ export function MeasurementList({
                           </>
                         )}
                       </span>
-                      <time data-slot="time" className="ml-auto font-mono text-caption text-fg-dim">
+                      <time
+                        data-slot="time"
+                        className="ml-auto font-mono text-caption whitespace-nowrap text-fg-dim"
+                      >
                         {formatDrawnTime(row.drawnAt)}
                       </time>
                       {onRemove === undefined ? null : (
