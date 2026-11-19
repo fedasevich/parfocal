@@ -112,6 +112,7 @@ def test_scope_options_list_rois_and_unsure_zones(api: ApiAs, database: str) -> 
         "INSERT INTO result_objects (tenant_id, result_set_id, kind, number, geometry) "
         f"VALUES ('{tenant}', '{r.result_set}', 'zone', 1, "
         "ST_GeomFromText('POLYGON((0 0,100 0,100 100,0 100,0 0))', 0)); "
+        f"DELETE FROM result_chunks WHERE result_set_id = '{r.result_set}'; "
         "INSERT INTO result_chunks (tenant_id, result_set_id, chunk, x, y, width, height, "
         f"cell_count, vertex_count, object_key) VALUES ('{tenant}', '{r.result_set}', "
         "0, 0, 0, 2048, 2048, 12, 48, 'scope/0'), "

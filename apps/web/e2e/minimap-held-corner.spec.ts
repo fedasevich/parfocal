@@ -27,6 +27,17 @@ async function zoomIntoStage(page: Page) {
   }
 }
 
+async function settledBox(page: Page) {
+  let last = await minimap(page).boundingBox();
+  for (let tries = 0; tries < 20; tries += 1) {
+    await page.waitForTimeout(300);
+    const next = await minimap(page).boundingBox();
+    if (JSON.stringify(next) === JSON.stringify(last)) return next;
+    last = next;
+  }
+  throw new Error("the minimap never settled");
+}
+
 async function panAndKeepCorner(page: Page, from: [number, number], by: [number, number]) {
   const before = await minimap(page).getAttribute("data-corner");
   const viewport = minimap(page).locator('[data-slot="map-viewport"]');
@@ -65,8 +76,7 @@ test("the focus mode minimap stays pinned while its view rectangle follows a pan
   await expect(minimap(page)).toHaveCount(0);
   await zoomIntoStage(page);
   await expect(minimap(page)).toBeVisible();
-  await page.waitForTimeout(600);
-  const pinned = await minimap(page).boundingBox();
+  const pinned = await settledBox(page);
   const viewport = minimap(page).locator('[data-slot="map-viewport"]');
   const startBox = await viewport.boundingBox();
   await page.mouse.move(500, 400);

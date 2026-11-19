@@ -42,11 +42,12 @@ from parfocal_api.project_access import (
     role_in,
 )
 from parfocal_api.projects import ProjectArchivedError
+from parfocal_api.result_membership import require_ai_object
+from parfocal_api.review_order import result_store
 from parfocal_api.reviewed_layer import (
     NotAssignedError,
     TaskSignedOffError,
     UnknownObjectError,
-    check_exists,
     task_slide,
 )
 from parfocal_api.tables import (
@@ -67,6 +68,7 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_common.object_ids import Letter, ObjectId, ObjectIdError, parse
+from parfocal_common.result_store import ResultStore
 
 type Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 type Body = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4000)]
@@ -340,7 +342,11 @@ def is_ai(found: ObjectId) -> bool:
 
 
 async def check_anchor(
-    connection: AsyncConnection, principal: Principal, place: Any, anchor: Anchor
+    connection: AsyncConnection,
+    store: ResultStore,
+    principal: Principal,
+    place: Any,
+    anchor: Anchor,
 ) -> Anchored:
     if anchor.object_id is None:
         return Anchored()
@@ -352,7 +358,7 @@ async def check_anchor(
         raise BadAnchorError("An ROI anchor names an ROI, and an object anchor names no ROI")
     if is_ai(found):
         await require_ai_shown(connection, principal, place.project_id, place.slide_id)
-        chosen = await check_ai_object(connection, place, found, anchor.result_set_id)
+        chosen = await check_ai_object(connection, store, place, found, anchor.result_set_id)
         return Anchored(found.text(ascii=True), chosen)
     if anchor.result_set_id is not None:
         raise BadAnchorError("Only an AI object anchor names a result set")
@@ -377,9 +383,11 @@ async def check_anchor(
     return Anchored(found.text(ascii=True))
 
 
-async def present_in(connection: AsyncConnection, place: Any, found: ObjectId) -> None:
+async def present_in(
+    connection: AsyncConnection, store: ResultStore, place: Any, found: ObjectId
+) -> None:
     try:
-        await check_exists(connection, place, found)
+        await require_ai_object(connection, store, place, found)
     except UnknownObjectError as error:
         raise BadAnchorError(str(error)) from error
 
@@ -415,19 +423,23 @@ async def sets_holding(
 
 
 async def check_ai_object(
-    connection: AsyncConnection, place: Any, found: ObjectId, asked: uuid.UUID | None
+    connection: AsyncConnection,
+    store: ResultStore,
+    place: Any,
+    found: ObjectId,
+    asked: uuid.UUID | None,
 ) -> uuid.UUID | None:
     if place.task_id is not None:
         if asked is not None and asked != place.result_set_id:
             raise BadAnchorError("This task reviews another result set")
-        await present_in(connection, place, found)
+        await present_in(connection, store, place, found)
         return place.result_set_id
     if asked is not None:
         await require_set_on_slide(connection, place, asked)
-        await present_in(connection, replace(place, result_set_id=asked), found)
+        await present_in(connection, store, replace(place, result_set_id=asked), found)
         return asked
     if found.letter is not Letter.REGION:
-        await present_in(connection, place, found)
+        await present_in(connection, store, place, found)
         return None
     holding = await sets_holding(connection, place, found)
     if not holding:
@@ -737,7 +749,7 @@ async def start_in(
 ) -> ThreadDetail:
     if place.signed_off_at is not None:
         raise TaskSignedOffError
-    anchored = await check_anchor(connection, principal, place, draft.anchor)
+    anchored = await check_anchor(connection, result_store(http), principal, place, draft.anchor)
     object_id = anchored.object_id
     me = member_of(principal).user_id
     offset = draft.anchor.offset

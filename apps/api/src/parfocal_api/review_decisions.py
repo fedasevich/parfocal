@@ -19,13 +19,13 @@ from parfocal_api.decision_styles import answer_in_style, counted
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError
+from parfocal_api.result_membership import require_ai_object
 from parfocal_api.review_order import Results
 from parfocal_api.review_order import read_chunk as read_cell_chunk
 from parfocal_api.reviewed_layer import (
     KINDS,
     ai_object,
     assigned_slide,
-    check_exists,
     review_slide,
 )
 from parfocal_api.tables import (
@@ -480,7 +480,7 @@ async def save_decision(
     style = DecisionStyle(row.decision_style)
     answer = draft.pressed
     answer_in_style(style, answer, draft.answer_class_id)
-    await check_exists(connection, row, found)
+    await require_ai_object(connection, results, row, found)
     ai_class = None
     if draft.answer_class_id is not None:
         await check_classes(connection, row.project_id, {draft.answer_class_id})

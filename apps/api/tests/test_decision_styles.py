@@ -18,7 +18,11 @@ pytestmark = pytest.mark.db
 DEFAULT = ["disagree", "disagree", "unsure", "agree", "agree"]
 CHUNKS: list[list[CellRow]] = [
     [(1, 0, 200, 10.0, 10.0), (2, 1, 180, 20.0, 10.0)],
-    [(3, UNCLASSIFIED, 90, 2100.0, 10.0), (4, 0, 220, 2200.0, 10.0)],
+    [
+        (3, UNCLASSIFIED, 90, 2100.0, 10.0),
+        (4, 0, 220, 2200.0, 10.0),
+        (5, UNCLASSIFIED, 50, 2300.0, 10.0),
+    ],
 ]
 
 
@@ -191,6 +195,11 @@ def cells_in_chunks(database: str, r: Review) -> uuid.UUID:
         f"'stroma', '{stroma}'); END $$",
     )
     prefix = result_set_prefix(uuid.UUID(str(tenant)), r.slide, r.result_set)
+    owner(
+        database,
+        "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+        f"DELETE FROM result_chunks WHERE result_set_id = '{r.result_set}'; END $$",
+    )
     for chunk, rows in enumerate(CHUNKS):
         key = chunk_key(prefix, chunk)
         owner(

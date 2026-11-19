@@ -12,6 +12,7 @@ from parfocal_api.blinding import require_judging_allowed, require_seeing_review
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError
+from parfocal_api.result_membership import require_ai_object
 from parfocal_api.review_decisions import (
     REPORTED_CALL,
     Score,
@@ -21,7 +22,8 @@ from parfocal_api.review_decisions import (
     lock_object,
     same_object,
 )
-from parfocal_api.reviewed_layer import KINDS, ai_object, assigned_slide, check_exists, review_slide
+from parfocal_api.review_order import Results
+from parfocal_api.reviewed_layer import KINDS, ai_object, assigned_slide, review_slide
 from parfocal_api.tables import AnnotationKind, review_decisions, review_skips
 from parfocal_common.object_ids import Letter, ObjectId
 
@@ -71,12 +73,13 @@ async def skip_object(
     draft: SkipDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
 ) -> Skip:
     row = await assigned_slide(connection, principal, task_id, slide_id)
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     kind = KINDS[found.letter]
-    await check_exists(connection, row, found)
+    await require_ai_object(connection, results, row, found)
     me = user_of(principal)
     await lock_object(connection, task_id, slide_id, me, kind, found.number)
     decided = select(review_decisions).where(

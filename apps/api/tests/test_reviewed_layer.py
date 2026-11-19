@@ -3,12 +3,17 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+from chunk_support import CellRow, chunk_bytes, put_chunk
 from db_support import ApiAs
+from storage_support import ensure_bucket
 from test_annotations import make_class, make_slide
+from test_review_order import add_chunk
 from workspace_support import join_project, make_project, make_workspace, owner
 
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
+from parfocal_common.chunk_store import chunk_key
+from parfocal_common.result_imports import result_set_prefix
 
 pytestmark = pytest.mark.db
 
@@ -65,6 +70,11 @@ def review(api: ApiAs, database: str) -> Review:
             f"VALUES ('{tenant}', '{result_set}', 'region', {number}, "
             f"ST_GeomFromText('POLYGON((0 0,{number}00 0,{number}00 50,0 50,0 0))', 0), 200)",
         )
+    ensure_bucket()
+    key = chunk_key(result_set_prefix(tenant, slide, result_set), 0)
+    cells: list[CellRow] = [(number, 255, 100, number * 100.0, 100.0) for number in range(1, 6)]
+    add_chunk(database, tenant, key, result_set, 0, cells)
+    put_chunk(key, chunk_bytes(cells, None))
     owner(
         database,
         "UPDATE result_sets SET status = 'ready', region_count = 2, cell_count = 5 "

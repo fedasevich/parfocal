@@ -37,10 +37,9 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.realtime import Realtime, RealtimeClient, RoomEvent
+from parfocal_api.result_membership import require_in_set, stored_cells
 from parfocal_api.review_order import (
     CheckState,
-    ResultFilesMissingError,
-    ResultFilesUnreadableError,
     Results,
     check_states,
     temperature_of,
@@ -48,7 +47,6 @@ from parfocal_api.review_order import (
 from parfocal_api.reviewed_layer import (
     KINDS,
     NotAnAiObjectError,
-    UnknownObjectError,
     ai_object,
     assigned_slide,
     outline,
@@ -68,10 +66,9 @@ from parfocal_api.tables import (
     result_sets,
 )
 from parfocal_api.task_kinds import annotate_only
-from parfocal_common.cell_chunks import ChunkError
-from parfocal_common.chunk_store import Cell, read_chunk
+from parfocal_common.chunk_store import Cell
 from parfocal_common.object_ids import Letter, ObjectId
-from parfocal_common.result_store import MissingObjectError, ResultStore
+from parfocal_common.result_store import ResultStore
 from parfocal_common.review_order import UNCALIBRATED, calibrated_shares
 
 CHANGED_EVENT = "layer.object-changed"
@@ -468,63 +465,11 @@ def parsed_source(row: Any, object_id: str) -> tuple[ObjectId, AnnotationKind]:
     return found, KINDS[found.letter]
 
 
-async def missing_regions(
-    connection: AsyncConnection, set_id: uuid.UUID, numbers: set[int]
-) -> set[int]:
-    if not numbers:
-        return set()
-    present = await connection.scalars(
-        select(result_objects.c.number).where(
-            result_objects.c.result_set_id == set_id,
-            result_objects.c.kind == "region",
-            result_objects.c.number.in_(numbers),
-        )
-    )
-    return numbers - set(present)
-
-
-async def missing_cells(
-    connection: AsyncConnection, store: ResultStore, set_id: uuid.UUID, numbers: set[int]
-) -> set[int]:
-    left = set(numbers)
-    if not left:
-        return left
-    keys = await connection.scalars(
-        select(result_chunks.c.object_key)
-        .where(result_chunks.c.result_set_id == set_id)
-        .order_by(result_chunks.c.chunk)
-    )
-    for object_key in keys:
-        left.difference_update(cell.number for cell in await stored_cells(store, object_key))
-        if not left:
-            break
-    return left
-
-
-async def require_in_set(
-    connection: AsyncConnection, store: ResultStore, row: Any, sources: Sequence[ObjectId]
-) -> None:
-    regions = {found.number for found in sources if found.letter is Letter.REGION}
-    cells = {found.number for found in sources if found.letter is Letter.CELL}
-    missing = [
-        *(
-            ObjectId(Letter.REGION, number)
-            for number in sorted(await missing_regions(connection, row.result_set_id, regions))
-        ),
-        *(
-            ObjectId(Letter.CELL, number)
-            for number in sorted(await missing_cells(connection, store, row.result_set_id, cells))
-        ),
-    ]
-    if missing:
-        raise UnknownObjectError(f"{missing[0].text(ascii=True)} is not in this result set")
-
-
 async def source_of(
     connection: AsyncConnection, store: ResultStore, row: Any, object_id: str
 ) -> tuple[ObjectId, AnnotationKind]:
     found, kind = parsed_source(row, object_id)
-    await require_in_set(connection, store, row, [found])
+    await require_in_set(connection, store, row.result_set_id, [found])
     return found, kind
 
 
@@ -708,7 +653,7 @@ async def change_ai_objects(
 ) -> ChangedAiObjects:
     row = await editable_layer(connection, principal, task_id, slide_id, reason)
     sources = [parsed_source(row, change.object)[0] for change in batch.changes]
-    await require_in_set(connection, results, row, sources)
+    await require_in_set(connection, results, row.result_set_id, sources)
     class_ids = {change.class_id for change in batch.changes if change.class_id is not None}
     if class_ids:
         await check_classes(connection, row.project_id, class_ids)
@@ -975,15 +920,6 @@ async def ai_regions(
         .limit(limit)
     )
     return list(rows)
-
-
-async def stored_cells(store: ResultStore, object_key: str) -> list[Cell]:
-    try:
-        return await read_chunk(store, object_key)
-    except MissingObjectError as error:
-        raise ResultFilesMissingError from error
-    except ChunkError as error:
-        raise ResultFilesUnreadableError from error
 
 
 async def ai_cells(
