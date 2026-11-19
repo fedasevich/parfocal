@@ -6,6 +6,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
 import { useResolvedSettings } from "../../shell/resolved-settings.ts";
+import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
 import { overviewImageOf } from "../review/slide-picture.tsx";
@@ -45,6 +46,7 @@ export function FocusView(props: FocusViewProps) {
 function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusViewProps) {
   const { t } = useLingui();
   const minimapOff = useResolvedSettings()?.minimap === "never";
+  const docked = useToolsLayout() === "dock";
   const [held, setHeld] = useState(false);
   usePeekKey(
     peekOpen,
@@ -114,7 +116,7 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
           />
         )}
         overlay={({ camera: shown, size }) => {
-          const spots = focusSpots(shown, size);
+          const spots = focusSpots(shown, size, docked);
           const fresh = placeMinimap(size, mapBoxOf(spots), spots.hot, spots.blocked);
           return (
             <>
