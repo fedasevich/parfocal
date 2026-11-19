@@ -6689,7 +6689,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Compare those against the mock's scenes the same way, and add a backlog task for each group of differences.
   Done when a result file lists every difference in those parts with kept or fixed and its reason, and each open one has a task.
   Depends on PROTO-037, PROTO-043. Size: S.
-- [ ] PROTO-051 · The API says when a task is withdrawn and when a slide cannot be read at high power
+- [x] PROTO-051 · The API says when a task is withdrawn and when a slide cannot be read at high power
   PROTO-048 (the viewer's issue states show the mock's cards) reads a withdrawn task from a 404, so the review objects never load and the answer buttons cannot show their reason, and reads an unreadable slide only from failed tiles at the two highest magnifications.
   Add a withdrawn status to review tasks that keeps the task and its objects readable, and a slide flag set at ingest or on the first failed high power read, and drive the two viewer cards from them in the real and fake API.
   Done when an API test withdraws a task and reads it back with its objects, a browser test sees the withdrawn card with disabled answer buttons and their reason, and the unreadable card shows from the flag through the fake API.
