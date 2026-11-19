@@ -77,7 +77,7 @@ test("the AI's line follows the confidence setting", () => {
   assert.equal(adjudicatorCard(object(), agree, "hidden").headline, "The AI says T4 is tumor.");
   assert.equal(
     adjudicatorCard(object(), agree, "color").sub,
-    "Confidence as a color · 0.8 mm across",
+    "Confidence as a color · 750 µm across",
   );
 });
 

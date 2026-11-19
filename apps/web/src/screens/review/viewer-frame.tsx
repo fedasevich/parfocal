@@ -19,6 +19,7 @@ import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { type Count, countWord } from "./decision-style.ts";
 import { InspectorDock } from "./inspector-dock.tsx";
 import { useInspectorLayout } from "./inspector-layout.ts";
+import { regionRange } from "./region-range.ts";
 import type { ReviewSession } from "./review-data.ts";
 import { useRailKeys } from "./review-rail.ts";
 import type { Answer } from "./review-state.ts";
@@ -295,7 +296,9 @@ export function ObjectsSummary({
             <li key={row.key} className="flex items-center gap-2 text-body-sm">
               <i aria-hidden="true" className={cn("size-2.5 rounded-full", row.dot)} />
               <span className="flex-1 text-fg-dim">
-                {row.key === "added" ? `${row.label}, ${added.join(", ")}` : row.label}
+                {row.key === "added" && added.length > 0
+                  ? `${row.label}, ${added.join(", ")}`
+                  : row.label}
               </span>
               <b className="font-mono font-semibold">
                 {row.key === "added" ? added.length : counts[row.key]}
@@ -310,9 +313,12 @@ export function ObjectsSummary({
 
 export function AiSays({ setName, objects }: { setName: string; objects: ReviewObject[] }) {
   const { t } = useLingui();
-  useLengthUnits();
+  const units = useLengthUnits();
   const regions = objects.filter((item) => item.kind === "region");
-  const sizes = regions.map((item) => item.size_mm ?? 0);
+  const range = regionRange(
+    regions.map((item) => item.size_mm),
+    units,
+  );
   const cells = objects.length - regions.length;
   return (
     <Zone title={t`AI says`}>
@@ -323,7 +329,14 @@ export function AiSays({ setName, objects }: { setName: string; objects: ReviewO
           {
             icon: "flag",
             label: "Tumor regions",
-            value: `${regions.length}, ${formatMillimetres(Math.max(...sizes))} to ${formatMillimetres(Math.min(...sizes), 2)}`,
+            value:
+              range.kind === "none"
+                ? t`None`
+                : range.kind === "unknown"
+                  ? t`${range.count}, size unknown`
+                  : range.kind === "one"
+                    ? `${range.count}, ${range.size}`
+                    : t`${range.count}, ${range.low} to ${range.high}`,
           },
           { icon: "target", label: "Cells", value: `18,240, ${cells} in your sample` },
         ]}
@@ -474,7 +487,7 @@ export function ObjectList({
                   {showScore ? item.score.toFixed(2) : ""}
                 </span>
                 <span className="font-mono text-fg-dim">
-                  {formatMillimetres(item.size_mm ?? 0)}
+                  {item.size_mm == null ? "" : formatMillimetres(item.size_mm)}
                 </span>
               </button>
             </li>

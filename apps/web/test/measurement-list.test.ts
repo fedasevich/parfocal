@@ -4,6 +4,7 @@ import { addGroup, addShape, createDocument, updateGroup } from "../src/annotati
 import {
   buildMeasurementRows,
   formatDrawnTime,
+  groupMeasurementRows,
   noteDrawnTimes,
 } from "../src/measure/measurement-list.ts";
 
@@ -35,7 +36,7 @@ describe("the measurement list", () => {
     const [row] = buildMeasurementRows(doc, null, new Map());
     assert.equal(row?.area, "200 px²");
     assert.equal(row?.value, "60 px");
-    assert.equal(row?.category, "No category");
+    assert.equal(row?.category, "No class");
   });
 
   test("a class key without a name shows the key and a hidden group hides its rows", () => {
@@ -73,5 +74,52 @@ describe("the measurement list", () => {
   test("the time shows hours and minutes", () => {
     assert.equal(formatDrawnTime(null), "");
     assert.match(formatDrawnTime(Date.now()), /^\d\d:\d\d$/);
+  });
+
+  test("drawn shapes list under their class, unclassed shapes after them and rulers last", () => {
+    let doc = createDocument();
+    doc = addShape(doc, { kind: "ruler", points: Float32Array.of(0, 0, 10, 0) }).document;
+    doc = addShape(doc, { kind: "rectangle", points: Float32Array.of(0, 0, 10, 10) }).document;
+    doc = addShape(doc, {
+      kind: "polygon",
+      points: Float32Array.of(0, 0, 10, 0, 10, 10),
+      classKey: "t",
+    }).document;
+    doc = addShape(doc, {
+      kind: "ellipse",
+      points: Float32Array.of(0, 0, 10, 10),
+      classKey: "t",
+    }).document;
+    const rows = buildMeasurementRows(doc, null, new Map(), new Map([["t", "Tumor"]]));
+    assert.deepEqual(
+      groupMeasurementRows(rows).map((group) => [
+        group.name,
+        group.kind,
+        group.rows.map((row) => row.label),
+      ]),
+      [
+        ["Tumor", "area", ["M3", "M4"]],
+        ["No class", "area", ["M2"]],
+        ["Rulers", "ruler", ["M1"]],
+      ],
+    );
+  });
+
+  test("a class that happens to be named Ruler stays apart from the rulers", () => {
+    let doc = createDocument();
+    doc = addShape(doc, { kind: "ruler", points: Float32Array.of(0, 0, 10, 0) }).document;
+    doc = addShape(doc, {
+      kind: "rectangle",
+      points: Float32Array.of(0, 0, 10, 10),
+      classKey: "r",
+    }).document;
+    const rows = buildMeasurementRows(doc, null, new Map(), new Map([["r", "Rulers"]]));
+    assert.deepEqual(
+      groupMeasurementRows(rows).map((group) => [group.name, group.kind]),
+      [
+        ["Rulers", "area"],
+        ["Rulers", "ruler"],
+      ],
+    );
   });
 });

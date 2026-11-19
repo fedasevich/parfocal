@@ -17,6 +17,34 @@ export type MeasurementRow = {
 
 export type MeasurementNames = ReadonlyMap<string, string>;
 
+export const noClass = "No class";
+
+export const rulersGroup = "Rulers";
+
+export type MeasurementGroup = {
+  readonly name: string;
+  readonly kind: MeasurementRow["kind"];
+  readonly rows: readonly MeasurementRow[];
+};
+
+const groupRank = (group: MeasurementGroup) =>
+  group.kind === "ruler" ? 2 : group.name === noClass ? 1 : 0;
+
+export function groupMeasurementRows(rows: readonly MeasurementRow[]): MeasurementGroup[] {
+  const groups = new Map<
+    string,
+    { name: string; kind: MeasurementRow["kind"]; rows: MeasurementRow[] }
+  >();
+  for (const row of rows) {
+    const name = row.kind === "ruler" ? rulersGroup : row.category;
+    const key = `${row.kind}:${name}`;
+    const found = groups.get(key);
+    if (found) found.rows.push(row);
+    else groups.set(key, { name, kind: row.kind, rows: [row] });
+  }
+  return [...groups.values()].sort((a, b) => groupRank(a) - groupRank(b));
+}
+
 export function buildMeasurementRows(
   doc: AnnotationDocument,
   micronsPerPixel: number | null,
@@ -55,9 +83,7 @@ export function buildMeasurementRows(
       value: formatPerimeter(measure, units),
       area: formatArea(measure, units),
       category:
-        shape.classKey === null
-          ? "No category"
-          : (classNames.get(shape.classKey) ?? shape.classKey),
+        shape.classKey === null ? noClass : (classNames.get(shape.classKey) ?? shape.classKey),
       drawnAt: time,
     });
   }

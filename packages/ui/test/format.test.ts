@@ -82,9 +82,10 @@ test("lengths stay in microns when the setting says always microns", () => {
   assert.equal(enMicrons.length(2500), "2500 µm");
 });
 
-test("object sizes in millimetres keep two decimals under 1 mm and one above", () => {
-  assert.equal(en.size(0.45), "0.45 mm");
-  assert.equal(en.size(0.4), "0.40 mm");
+test("object sizes read in micrometres under 1 mm and in millimetres from 1 mm", () => {
+  assert.equal(en.size(0.45), "450 µm");
+  assert.equal(en.size(0.4), "400 µm");
+  assert.equal(en.size(0.012), "12 µm");
   assert.equal(en.size(1), "1.0 mm");
   assert.equal(en.size(3.26), "3.3 mm");
   assert.equal(en.size(12.04), "12.0 mm");

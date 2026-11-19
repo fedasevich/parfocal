@@ -58,7 +58,7 @@ export function formatMillimetres(
   digits = 1,
   units: LengthUnits = lengthUnitsNow(),
 ): string {
-  if (units === "um") return formatMicrons(millimetres * 1000, "um");
+  if (units === "um" || Math.abs(millimetres) < 1) return formatMicrons(millimetres * 1000, units);
   return `${millimetres.toFixed(digits)} mm`;
 }
 

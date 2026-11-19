@@ -8,8 +8,8 @@ test("a language and lengths setting always gives the same formatter", () => {
   assert.notEqual(formatFor("en", "um"), defaultFormat);
 });
 
-test("the default formatter reads sizes the way the screens already did", () => {
-  assert.equal(defaultFormat.size(0.45), "0.45 mm");
+test("the default formatter reads small sizes in micrometres and large ones in millimetres", () => {
+  assert.equal(defaultFormat.size(0.45), "450 µm");
   assert.equal(defaultFormat.size(3.26), "3.3 mm");
   assert.equal(formatFor("en", "um").size(0.45), "450 µm");
 });

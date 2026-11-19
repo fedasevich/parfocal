@@ -99,9 +99,9 @@ export function createFormat(settings: FormatSettings = defaultFormatSettings): 
         ? `${significant(microns)} µm`
         : `${significant(microns / 1000)} mm`,
     size: (millimetres) =>
-      settings.lengths === "um"
+      settings.lengths === "um" || Math.abs(millimetres) < 1
         ? `${number(Math.round(millimetres * 1000), { decimals: 0, grouping: false })} µm`
-        : `${number(millimetres, { decimals: Math.abs(millimetres) < 1 ? 2 : 1, grouping: false })} mm`,
+        : `${number(millimetres, { decimals: 1, grouping: false })} mm`,
   };
 }
 

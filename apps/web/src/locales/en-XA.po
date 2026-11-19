@@ -539,6 +539,16 @@ msgstr ""
 msgid "{0} {1} steps, about {2} minutes."
 msgstr ""
 
+#. placeholder {0}: formatMillimetres(current.size_mm)
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "{0} across. Decided. Press a key again to change it."
+msgstr ""
+
+#. placeholder {0}: formatMillimetres(current.size_mm)
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "{0} across. Still open."
+msgstr ""
+
 #. placeholder {0}: plural(ids.length, "slide")
 #: src/screens/new-task/new-task-screen.tsx
 msgid "{0} added to the task"
@@ -997,16 +1007,6 @@ msgstr ""
 #: ../../packages/ui/src/components/inspector.tsx
 #: src/screens/viewer-tools/measure-canvas.tsx
 msgid "{0} mm"
-msgstr ""
-
-#. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "{0} mm across. Decided. Press a key again to change it."
-msgstr ""
-
-#. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "{0} mm across. Still open."
 msgstr ""
 
 #. placeholder {0}: plural(toFix, "file")
@@ -1623,6 +1623,13 @@ msgstr ""
 msgid "{0}, {1} of {2} slides"
 msgstr ""
 
+#. placeholder {0}: range.count
+#. placeholder {1}: range.low
+#. placeholder {2}: range.high
+#: src/screens/review/viewer-frame.tsx
+msgid "{0}, {1} to {2}"
+msgstr ""
+
 #. placeholder {0}: offered.code
 #. placeholder {1}: offered.name
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -1721,6 +1728,11 @@ msgstr ""
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "{0}, no case number"
+msgstr ""
+
+#. placeholder {0}: range.count
+#: src/screens/review/viewer-frame.tsx
+msgid "{0}, size unknown"
 msgstr ""
 
 #. placeholder {0}: chapter.title
@@ -10260,6 +10272,10 @@ msgstr ""
 msgid "No changes yet. Co-signing keeps {senderFirst}'s values."
 msgstr ""
 
+#: src/measure/measurement-list.tsx
+msgid "No class"
+msgstr ""
+
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "No clear match between these two. Line them up by hand."
 msgstr ""
@@ -10559,6 +10575,7 @@ msgstr ""
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/my-work/parts.tsx
 #: src/screens/new-task/send-step.tsx
+#: src/screens/review/viewer-frame.tsx
 msgid "None"
 msgstr ""
 
@@ -13669,6 +13686,10 @@ msgstr ""
 msgid "ruler, across {0}"
 msgstr ""
 
+#: src/measure/measurement-list.tsx
+msgid "Rulers"
+msgstr ""
+
 #: src/screens/admin/storage.tsx
 msgid "Rules for sources"
 msgstr ""
@@ -14975,6 +14996,14 @@ msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Size of {id} in mm"
+msgstr ""
+
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "Size unknown. Decided. Press a key again to change it."
+msgstr ""
+
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "Size unknown. Still open."
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -17005,6 +17034,10 @@ msgstr ""
 
 #: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
+msgstr ""
+
+#: src/viewer/area-keys.tsx
+msgid "This slide has no pixel size, so areas show in pixels and get no size category."
 msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx

@@ -49,7 +49,7 @@ const categoryShort: Record<StagingCategory, string> = lazyText(() => ({
   ITC: "ITC",
 }));
 
-const formatMm = (mm: number) => `${mm.toFixed(mm < 1 ? 2 : 1)} mm`;
+const formatMm = (mm: number) => (mm < 1 ? `${Math.round(mm * 1000)} µm` : `${mm.toFixed(1)} mm`);
 
 const areaWord = (count: number) => `${count} ${count === 1 ? "area" : "areas"}`;
 
@@ -60,6 +60,7 @@ type AreaListProps = {
   visited?: ReadonlySet<string> | undefined;
   roleOf?: ((object: string) => string | undefined) | undefined;
   onGoTo?: ((object: string) => void) | undefined;
+  sizesInPixels?: boolean | undefined;
 };
 
 type StagingCardsProps = React.ComponentProps<"section"> &
@@ -229,6 +230,7 @@ function AreaRows({
   visited,
   roleOf,
   onGoTo,
+  sizesInPixels = false,
   className,
 }: AreaRowsProps) {
   const { t } = useLingui();
@@ -248,8 +250,8 @@ function AreaRows({
           data-area={area.object}
           objectId={area.object}
           kind={rowKind(area, settled)}
-          size={formatMm(area.shownSize)}
-          category={area.category}
+          size={sizesInPixels ? `${Math.round(area.shownSize)} px` : formatMm(area.shownSize)}
+          {...(sizesInPixels ? {} : { category: area.category })}
           selected={onGoTo ? current === area.object : area.lead}
           note={roleOf?.(area.object)}
           visited={visited?.has(area.object) ?? false}

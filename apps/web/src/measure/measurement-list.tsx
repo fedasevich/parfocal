@@ -1,5 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
+import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useMemo, useRef } from "react";
 import type { AnnotationDocument } from "../annotations/document.ts";
 import type { ShapeId } from "../annotations/shapes.ts";
@@ -9,7 +9,10 @@ import { useLengthUnits } from "./length-units.ts";
 import {
   buildMeasurementRows,
   formatDrawnTime,
+  groupMeasurementRows,
+  type MeasurementGroup,
   type MeasurementNames,
+  noClass,
   noteDrawnTimes,
 } from "./measurement-list.ts";
 
@@ -26,6 +29,8 @@ export function MeasurementList({
 }) {
   const skipRulers = useRulersClaimed();
   const { t } = useLingui();
+  const groupName = (group: MeasurementGroup) =>
+    group.kind === "ruler" ? t`Rulers` : group.name === noClass ? t`No class` : group.name;
   const docked = useDocked();
 
   const times = useRef<ReadonlyMap<ShapeId, number>>(new Map());
@@ -61,48 +66,65 @@ export function MeasurementList({
           <Trans>Nothing measured yet. Press L and drag to measure a length.</Trans>
         </p>
       ) : (
-        <ul className="m-0 grid list-none gap-1 p-0">
-          {rows.map((row) => (
-            <li
-              key={row.shapeId}
-              data-testid="measurement-row"
-              data-kind={row.kind}
-              className="flex items-center gap-2 text-body-sm"
-            >
-              <ObjectIdTag>{row.label}</ObjectIdTag>
-              <span className="grid">
-                {row.area === null ? (
-                  <span data-slot="value" className="font-mono">
-                    {row.value}
-                  </span>
-                ) : (
-                  <>
-                    <span data-slot="area" className="font-mono">
-                      {row.area}
-                    </span>
-                    <small data-slot="value" className="font-mono text-caption text-fg-dim">
-                      <Trans>perimeter {row.value}</Trans>
-                    </small>
-                  </>
-                )}
-              </span>
-              <CategoryTag>{row.category}</CategoryTag>
-              <time data-slot="time" className="ml-auto font-mono text-caption text-fg-dim">
-                {formatDrawnTime(row.drawnAt)}
-              </time>
-              {onRemove === undefined ? null : (
-                <button
-                  type="button"
-                  aria-label={t`Remove ${row.label}`}
-                  className="text-fg-dim hover:text-fg"
-                  onClick={() => onRemove(row.shapeId)}
-                >
-                  <Trans>Remove</Trans>
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-2">
+          {groupMeasurementRows(rows).map((group) => {
+            const name = groupName(group);
+            return (
+              <section
+                key={`${group.kind}:${group.name}`}
+                aria-label={name}
+                data-testid="measurement-group"
+                data-group={group.name}
+                className="grid gap-1"
+              >
+                <h3 className="m-0 text-caption font-semibold text-fg-dim">
+                  {name} <span className="font-mono">{group.rows.length}</span>
+                </h3>
+                <ul className="m-0 grid list-none gap-1 p-0">
+                  {group.rows.map((row) => (
+                    <li
+                      key={row.shapeId}
+                      data-testid="measurement-row"
+                      data-kind={row.kind}
+                      className="flex items-center gap-2 text-body-sm"
+                    >
+                      <ObjectIdTag>{row.label}</ObjectIdTag>
+                      <span className="grid">
+                        {row.area === null ? (
+                          <span data-slot="value" className="font-mono">
+                            {row.value}
+                          </span>
+                        ) : (
+                          <>
+                            <span data-slot="area" className="font-mono">
+                              {row.area}
+                            </span>
+                            <small data-slot="value" className="font-mono text-caption text-fg-dim">
+                              <Trans>perimeter {row.value}</Trans>
+                            </small>
+                          </>
+                        )}
+                      </span>
+                      <time data-slot="time" className="ml-auto font-mono text-caption text-fg-dim">
+                        {formatDrawnTime(row.drawnAt)}
+                      </time>
+                      {onRemove === undefined ? null : (
+                        <button
+                          type="button"
+                          aria-label={t`Remove ${row.label}`}
+                          className="text-fg-dim hover:text-fg"
+                          onClick={() => onRemove(row.shapeId)}
+                        >
+                          <Trans>Remove</Trans>
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
       )}
     </section>
   );

@@ -32,7 +32,8 @@ test("each ruler line joins the measurement list with its value and a time, and 
   await expect(rows.first()).toContainText("M1");
   await expect(rows.nth(1)).toContainText("M2");
   await expect(rows.first().locator("[data-slot=value]")).toHaveText(/^\d+(\.\d+)? (µm|mm)$/);
-  await expect(rows.first().locator("[data-slot=category-tag]")).toHaveText("Ruler");
+  await expect(list.getByTestId("measurement-group")).toHaveAttribute("data-group", "Rulers");
+  await expect(list.getByRole("heading", { name: "Rulers 2" })).toBeVisible();
   await expect(rows.first().locator("[data-slot=time]")).toHaveText(/^\d\d:\d\d$/);
   await page.getByRole("button", { name: "Remove M1" }).click();
   await expect(rows).toHaveCount(1);

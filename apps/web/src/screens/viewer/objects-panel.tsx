@@ -88,7 +88,9 @@ export function RunningObjects({
               </small>
             </span>
             <span className="font-mono text-fg-dim">{item.score.toFixed(2)}</span>
-            <span className="font-mono text-fg-dim">{formatMillimetres(item.size_mm ?? 0)}</span>
+            <span className="font-mono text-fg-dim">
+              {item.size_mm == null ? "" : formatMillimetres(item.size_mm)}
+            </span>
           </li>
         ))}
         <NextFoundRow key={`next-${found.length}`} />
