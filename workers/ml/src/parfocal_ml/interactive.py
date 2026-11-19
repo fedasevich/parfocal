@@ -369,7 +369,13 @@ def compare(
 
 
 class OnnxSam:
-    def __init__(self, encoder: str, folder: Path | None = None, threads: int = 0) -> None:
+    def __init__(
+        self,
+        encoder: str,
+        folder: Path | None = None,
+        threads: int = 0,
+        decoder: str = GRAPHS.decoder,
+    ) -> None:
         import onnxruntime as ort
 
         root = folder or onnx_dir()
@@ -380,7 +386,7 @@ class OnnxSam:
             str(root / encoder), options, providers=providers
         )
         self.decoder: ort.InferenceSession = ort.InferenceSession(
-            str(root / GRAPHS.decoder), options, providers=providers
+            str(root / decoder), options, providers=providers
         )
         self.encode_ms: list[float] = []
         self.decode_ms: list[float] = []
@@ -486,13 +492,14 @@ def main() -> int:
     )
     parser.add_argument("--images", type=int, default=None)
     parser.add_argument("--encoder", default=GRAPHS.encoder_uint8)
+    parser.add_argument("--decoder", default=GRAPHS.decoder)
     parser.add_argument("--threads", type=int, default=0)
     parser.add_argument("--out", type=Path, default=cache_dir() / "interactive")
     arguments = parser.parse_args()
     import onnxruntime as ort
 
     arguments.out.mkdir(parents=True, exist_ok=True)
-    model = OnnxSam(arguments.encoder, threads=arguments.threads)
+    model = OnnxSam(arguments.encoder, threads=arguments.threads, decoder=arguments.decoder)
     started = time.perf_counter()
     images = itertools.islice(samples("tnbc"), arguments.images)
     outcomes = list(run(model, images, arguments.out / "nuclei.jsonl"))
@@ -501,7 +508,7 @@ def main() -> int:
         "dataset": "tnbc",
         "images": len({o.image for o in outcomes}),
         "encoder": arguments.encoder,
-        "decoder": GRAPHS.decoder,
+        "decoder": arguments.decoder,
         "summary": summary,
         "doc26": compare(summary, DOC26_TNBC) if arguments.images is None else None,
         "tolerance": TOLERANCE,

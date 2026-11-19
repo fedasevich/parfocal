@@ -147,7 +147,7 @@ export class FakeRuntime implements SamRuntime {
         throw new Error(`no graph ${graph}`);
       }
       const isWindow = graph.includes("decoder_window");
-      const isDecoder = graph === "pathosam.decoder.onnx" || isWindow;
+      const isDecoder = graph.endsWith(".decoder.onnx") || isWindow;
       const isAis = graph.includes("ais_decoder");
       const session = new FakeSession({
         graph,

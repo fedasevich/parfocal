@@ -56,9 +56,9 @@ export function startSamWorker(scope: SamWorkerScope, dependencies: SamWorkerDep
       return;
     }
     if (message.type === "adopt") {
-      const { requestId, id, embedding } = message;
+      const { requestId, id, embedding, model } = message;
       withEngine(requestId, async (active) => {
-        const encoded = await active.adopt(id, embedding);
+        const encoded = await active.adopt(id, embedding, model);
         scope.postMessage({ type: "encoded", requestId, encoded }, []);
       });
       return;

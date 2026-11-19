@@ -9253,6 +9253,12 @@ export const getListReviewObjectsResponseMock = (
   added: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
     note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    outline: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.number.float({ fractionDigits: 2 }),
+      ),
+      null,
+    ]),
   })),
   ...overrideResponse,
 });
@@ -19360,6 +19366,9 @@ export const getGetSlideEmbeddingsResponseMock = (
 export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getEmbedSlideViewResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getScoreViewMapTileResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
@@ -29135,6 +29144,30 @@ export const getWarmSlideEmbedderMockHandler = (
   );
 };
 
+export const getEmbedSlideViewMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/embeddings/view",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEmbedSlideViewResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getScoreViewMapTileMockHandler = (
   overrideResponse?:
     | Blob
@@ -29631,6 +29664,7 @@ export const getParfocalAPIMock = () => [
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),
+  getEmbedSlideViewMockHandler(),
   getScoreViewMapTileMockHandler(),
   getTypeOutlinesMockHandler(),
   getListSlideAreasMockHandler(),

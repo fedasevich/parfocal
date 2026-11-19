@@ -1473,6 +1473,11 @@ msgstr "{0} to finish first."
 msgid "{0} to fix first."
 msgstr "{0} to fix first."
 
+#. placeholder {0}: regions.length
+#: src/viewer/viewed-peek.tsx
+msgid "{0} tumor regions, {decided} decided"
+msgstr "{0} tumor regions, {decided} decided"
+
 #. placeholder {0}: tb(used)
 #: ../../packages/ui/src/components/admin.tsx
 msgid "{0} used. {split}"
@@ -2063,6 +2068,10 @@ msgstr "{percent}% done: {0} agree, {1} disagree, {2} not sure, {3} open"
 #: src/viewer/live-progress.tsx
 msgid "{percent}% of the tissue seen"
 msgstr "{percent}% of the tissue seen"
+
+#: src/viewer/viewed-peek.tsx
+msgid "{percent}% of tissue seen"
+msgstr "{percent}% of tissue seen"
 
 #: ../../packages/ui/src/components/inspector.tsx
 msgid "{point} mm, between {low} and {high} mm"
@@ -4168,6 +4177,10 @@ msgstr "below"
 msgid "Best"
 msgstr "Best"
 
+#: src/annotations/smart-layer.tsx
+msgid "Best is not answering yet, Good outlined this view"
+msgstr "Best is not answering yet, Good outlined this view"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Big slides"
 msgstr "Big slides"
@@ -5057,7 +5070,7 @@ msgstr "Classes of new projects"
 msgid "Clear"
 msgstr "Clear"
 
-#: src/viewer/slide-stage.tsx
+#: src/viewer/stage-measurement-card.tsx
 msgid "Clear all"
 msgstr "Clear all"
 
@@ -7842,10 +7855,6 @@ msgstr "Hide overlays (A)"
 #: src/screens/project/settings-tab.tsx
 msgid "Hide the AI for a first read"
 msgstr "Hide the AI for a first read"
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Hide the cells grid"
-msgstr "Hide the cells grid"
 
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
@@ -10808,6 +10817,11 @@ msgstr "Notifications: {unread} unread. Mentions, replies, tasks and jobs"
 #: src/screens/developer/developer-screen.tsx
 msgid "Nuclei"
 msgstr "Nuclei"
+
+#. placeholder {0}: scaleText(proposals.micronsPerPixel)
+#: src/annotations/context-bar.tsx
+msgid "nuclei · {0} µm"
+msgstr "nuclei · {0} µm"
 
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "nuclei · 0.25 µm"
@@ -14350,10 +14364,6 @@ msgstr "Show the AI result"
 #: src/screens/review/viewer-frame.tsx
 msgid "Show the cells"
 msgstr "Show the cells"
-
-#: src/viewer/stage-review-objects.tsx
-msgid "Show the cells grid"
-msgstr "Show the cells grid"
 
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"

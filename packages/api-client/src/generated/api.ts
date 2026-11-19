@@ -8067,6 +8067,29 @@ export interface VersionDraft {
   reason: VersionReason;
 }
 
+export interface ViewToEmbed {
+  /**
+   * @minimum 0
+   * @maximum 10000000
+   */
+  x: number;
+  /**
+   * @minimum 0
+   * @maximum 10000000
+   */
+  y: number;
+  /**
+   * @minimum 16
+   * @maximum 4096
+   */
+  width: number;
+  /**
+   * @minimum 16
+   * @maximum 4096
+   */
+  height: number;
+}
+
 export type WebhookDirection = (typeof WebhookDirection)[keyof typeof WebhookDirection];
 
 export const WebhookDirection = {
@@ -84350,6 +84373,171 @@ export const useWarmSlideEmbedder = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getWarmSlideEmbedderMutationOptions(options), queryClient);
+};
+
+export type embedSlideViewResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type embedSlideViewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type embedSlideViewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type embedSlideViewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type embedSlideViewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type embedSlideViewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type embedSlideViewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type embedSlideViewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type embedSlideViewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type embedSlideViewResponseSuccess = embedSlideViewResponse200 & {
+  headers: Headers;
+};
+export type embedSlideViewResponseError = (
+  | embedSlideViewResponse400
+  | embedSlideViewResponse401
+  | embedSlideViewResponse403
+  | embedSlideViewResponse404
+  | embedSlideViewResponse409
+  | embedSlideViewResponse422
+  | embedSlideViewResponse429
+  | embedSlideViewResponse500
+) & {
+  headers: Headers;
+};
+
+export type embedSlideViewResponse = embedSlideViewResponseSuccess | embedSlideViewResponseError;
+
+export const getEmbedSlideViewUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/embeddings/view`;
+};
+
+/**
+ * @summary Embed Slide View
+ */
+export const embedSlideView = async (
+  slideId: string,
+  viewToEmbed: ViewToEmbed,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<embedSlideViewResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<embedSlideViewResponse>(getEmbedSlideViewUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(viewToEmbed),
+  });
+};
+
+export const getEmbedSlideViewMutationKey = () => ["embedSlideView"] as const;
+
+export const getEmbedSlideViewMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof embedSlideView>>,
+    TError,
+    EmbedSlideViewMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof embedSlideView>>,
+  TError,
+  EmbedSlideViewMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEmbedSlideViewMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof embedSlideView>>,
+    EmbedSlideViewMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return embedSlideView(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EmbedSlideViewMutationResult = NonNullable<Awaited<ReturnType<typeof embedSlideView>>>;
+export type EmbedSlideViewMutationBody = ViewToEmbed;
+export type EmbedSlideViewMutationError = Problem;
+export type EmbedSlideViewMutationVariables = { slideId: string; data: ViewToEmbed };
+
+/**
+ * @summary Embed Slide View
+ */
+export const useEmbedSlideView = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof embedSlideView>>,
+      TError,
+      EmbedSlideViewMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof embedSlideView>>,
+  TError,
+  EmbedSlideViewMutationVariables,
+  TContext
+> => {
+  return useMutation(getEmbedSlideViewMutationOptions(options), queryClient);
 };
 
 export type scoreViewMapTileResponse200 = {

@@ -7,7 +7,14 @@ import {
 } from "./embedding-window.ts";
 import type { ModelCache } from "./model-cache.ts";
 import type { SamRuntime, SamSession, SamTensor } from "./runtime.ts";
-import { type SamGraph, type SamProvider, samProvider, samVariant } from "./variants.ts";
+import {
+  largeDecoderGraphs,
+  type SamEncoderModel,
+  type SamGraph,
+  type SamProvider,
+  samProvider,
+  samVariant,
+} from "./variants.ts";
 
 export const samImageSize = 1024;
 export const samMaskInputSize = 256;
@@ -84,7 +91,7 @@ export interface InferenceEngineOptions {
 export interface InferenceEngine {
   init(): Promise<SamReady>;
   encode(id: string, pixels: Float32Array): Promise<SamEncoded>;
-  adopt(id: string, embedding: Float32Array): Promise<SamEncoded>;
+  adopt(id: string, embedding: Float32Array, model?: SamEncoderModel): Promise<SamEncoded>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
   pool(id: string, outlines: readonly Float32Array[]): Float32Array[];
@@ -107,6 +114,13 @@ export class UnknownEmbeddingError extends Error {
   constructor(id: string) {
     super(`No embedding is held for ${id}`);
     this.name = "UnknownEmbeddingError";
+  }
+}
+
+export class OtherEncoderEmbeddingError extends Error {
+  constructor(id: string) {
+    super(`The embedding held for ${id} came from another encoder`);
+    this.name = "OtherEncoderEmbeddingError";
   }
 }
 
@@ -190,11 +204,18 @@ function promptFeed(
   throw new UnsupportedGraphInputError(name);
 }
 
+interface DecoderPair {
+  readonly decoder: SamSession;
+  readonly window: SamSession | null;
+}
+
 export function createInferenceEngine(options: InferenceEngineOptions): InferenceEngine {
   const { runtime, cache } = options;
   const capacity = options.embeddingCapacity ?? defaultEmbeddingCapacity;
   const modelsBase = options.modelsUrl.endsWith("/") ? options.modelsUrl : `${options.modelsUrl}/`;
   const embeddings = new Map<string, SamTensor>();
+  const largeIds = new Set<string>();
+  let largeDecoders: Promise<DecoderPair> | null = null;
 
   let sessionLock: Promise<unknown> = Promise.resolve();
   let runLock: Promise<unknown> = Promise.resolve();
@@ -288,26 +309,55 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
   }
 
   async function decode(
-    session: SamSession,
+    pair: DecoderPair,
     embedding: SamTensor,
     prompt: SamPrompt,
   ): Promise<{ outputs: SamOutputs; path: SamDecodePath }> {
-    const window = windowSession === null ? null : embeddingWindow(prompt);
-    if (windowSession === null || window === null) {
+    const session = pair.decoder;
+    const window = pair.window === null ? null : embeddingWindow(prompt);
+    if (pair.window === null || window === null) {
       return { outputs: await runDecoder(session, embedding, prompt), path: "full" };
     }
-    const windowed = await runDecoder(windowSession, embedding, prompt, window);
+    const windowed = await runDecoder(pair.window, embedding, prompt, window);
     if (touchesInnerEdge(windowed, window)) {
       return { outputs: await runDecoder(session, embedding, prompt), path: "window-edge" };
     }
     return { outputs: pasteWindowOutputs(windowed, window), path: "window" };
   }
 
-  async function loadWindowDecoder(onProvider: SamProvider): Promise<SamSession | null> {
+  async function loadWindowDecoder(
+    onProvider: SamProvider,
+    graph: SamGraph = samVariant(onProvider).windowDecoder,
+  ): Promise<SamSession | null> {
     try {
-      return await createSession(samVariant(onProvider).windowDecoder, onProvider, []);
+      return await createSession(graph, onProvider, []);
     } catch {
       return null;
+    }
+  }
+
+  function loadLargeDecoders(): Promise<DecoderPair> {
+    largeDecoders ??= (async () => {
+      const session = await createSession(largeDecoderGraphs.decoder, provider, []);
+      const window =
+        options.windowDecoder === true
+          ? await loadWindowDecoder(provider, largeDecoderGraphs.windowDecoder)
+          : null;
+      return { decoder: session, window };
+    })().catch((error: unknown) => {
+      largeDecoders = null;
+      throw error;
+    });
+    return largeDecoders;
+  }
+
+  function forgetModel(ids: readonly string[]): void {
+    for (const id of ids) largeIds.delete(id);
+  }
+
+  function refuseLarge(id: string): void {
+    if (largeIds.has(id)) {
+      throw new OtherEncoderEmbeddingError(id);
     }
   }
 
@@ -427,11 +477,12 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
           throw new Error("The encoder gave no image embedding");
         }
         const evicted = keepEmbedding(id, embedding);
+        forgetModel([id, ...evicted]);
         return { id, ms: performance.now() - started, evicted };
       });
     },
 
-    adopt(id, embedding) {
+    adopt(id, embedding, model = "vit-b") {
       return inRun(async () => {
         await ready();
         if (embedding.length !== embeddingValues) {
@@ -439,8 +490,15 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
             `An adopted embedding must hold ${samEmbeddingDims.join(" x ")} values`,
           );
         }
+        if (model === "vit-l") {
+          await loadLargeDecoders();
+        }
         const started = performance.now();
         const evicted = keepEmbedding(id, runtime.tensor(embedding, samEmbeddingDims));
+        forgetModel([id, ...evicted]);
+        if (model === "vit-l") {
+          largeIds.add(id);
+        }
         return { id, ms: performance.now() - started, evicted };
       });
     },
@@ -453,8 +511,11 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
           return { status: "stale" };
         }
         const { decoder: session } = await ready();
+        const pair = largeIds.has(id)
+          ? await loadLargeDecoders()
+          : { decoder: session, window: windowSession };
         const started = performance.now();
-        const { outputs, path } = await decode(session, embeddingFor(id), prompt);
+        const { outputs, path } = await decode(pair, embeddingFor(id), prompt);
         if (sequence !== promptSequence) {
           return { status: "stale" };
         }
@@ -465,6 +526,7 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     segmentAll(id) {
       return inRun(async () => {
         await ready();
+        refuseLarge(id);
         const embedding = embeddingFor(id);
         aisDecoder ??= createSession(samVariant(provider).aisDecoder, provider, []);
         let session: SamSession;
@@ -479,6 +541,7 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     },
 
     pool(id, outlines) {
+      refuseLarge(id);
       const embedding = embeddingFor(id);
       const [, channels = 0, grid = 0] = embedding.dims;
       const planes = { data: embedding.data, channels, grid };
@@ -488,6 +551,7 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     drop(id) {
       embeddings.get(id)?.dispose();
       embeddings.delete(id);
+      largeIds.delete(id);
     },
 
     hasEmbedding(id) {
@@ -502,17 +566,22 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
         tensor.dispose();
       }
       embeddings.clear();
+      largeIds.clear();
       const ais = aisDecoder === null ? null : await aisDecoder.catch(() => null);
+      const large = largeDecoders === null ? null : await largeDecoders.catch(() => null);
       await Promise.all([
         encoder?.release(),
         decoder?.release(),
         windowSession?.release(),
         ais?.release(),
+        large?.decoder.release(),
+        large?.window?.release(),
       ]);
       encoder = null;
       decoder = null;
       windowSession = null;
       aisDecoder = null;
+      largeDecoders = null;
     },
   };
 }

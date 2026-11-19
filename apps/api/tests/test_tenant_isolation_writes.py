@@ -90,6 +90,7 @@ PROBED_ELSEWHERE: dict[str, tuple[str, str]] = {
     ),
     "scoreViewMapTile": ("test_view_maps", "test_anyone_who_can_read_the_slide_may_ask"),
     "typeOutlines": ("test_outline_types", "test_anyone_who_can_read_the_slide_may_ask"),
+    "embedSlideView": ("test_view_embeddings", "test_anyone_who_can_read_the_slide_may_ask"),
     "callProjectWebhook": (
         "test_project_webhooks",
         "test_a_case_outside_the_project_and_a_bad_body_are_refused_and_logged",

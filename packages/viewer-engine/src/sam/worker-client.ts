@@ -7,7 +7,7 @@ import type {
   SamReady,
 } from "./inference-engine.ts";
 import type { SamReply, SamRequest } from "./protocol.ts";
-import type { SamGraph } from "./variants.ts";
+import type { SamEncoderModel, SamGraph } from "./variants.ts";
 
 export type SamWorker = WorkerHandle<SamRequest, SamReply>;
 
@@ -20,7 +20,11 @@ export interface SamClientOptions {
 export interface SamClient {
   readonly ready: Promise<SamReady>;
   encode(id: string, pixels: Float32Array<ArrayBuffer>): Promise<SamEncoded>;
-  adopt(id: string, embedding: Float32Array<ArrayBuffer>): Promise<SamEncoded>;
+  adopt(
+    id: string,
+    embedding: Float32Array<ArrayBuffer>,
+    model?: SamEncoderModel,
+  ): Promise<SamEncoded>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
   pool(id: string, outlines: readonly Float32Array[]): Promise<Float32Array[]>;
@@ -148,9 +152,15 @@ export function createSamClient(options: SamClientOptions): SamClient {
       );
       return reply.type === "encoded" ? reply.encoded : unexpected(reply);
     },
-    async adopt(id, embedding) {
+    async adopt(id, embedding, model) {
       const reply = await request(
-        (requestId) => ({ type: "adopt", requestId, id, embedding }),
+        (requestId) => ({
+          type: "adopt",
+          requestId,
+          id,
+          embedding,
+          ...(model === undefined ? {} : { model }),
+        }),
         [embedding.buffer],
       );
       return reply.type === "encoded" ? reply.encoded : unexpected(reply);
