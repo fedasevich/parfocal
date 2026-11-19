@@ -15,6 +15,7 @@ import {
   nextSlideFacts,
   outlinedCells,
   outlinedObjects,
+  placedReviewObjects,
   reviewDecisionTimes,
   reviewObjects,
   rt16,
@@ -142,7 +143,7 @@ export const addObject = (taskId: string, slideId: string, draft: AddedDraft): A
 export const objectsOn = (taskId: string, slideId: string) => {
   if (taskId === rt17.id && firstReadOpen(taskId, slideId)) return [];
   if (readsFirst(taskId, slideId)) return reviewObjects;
-  if (reviewsA1(taskId, slideId)) return reviewObjects;
+  if (reviewsA1(taskId, slideId)) return placedReviewObjects;
   if (reviewsOutlined(taskId, slideId)) return outlinedObjects;
   if (reviewsOutlinedCells(taskId, slideId)) return outlinedCells;
   if (reviewsNext(taskId, slideId)) {
