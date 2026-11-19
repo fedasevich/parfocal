@@ -6664,7 +6664,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw the mock's groups in the stage's Display tab, bind each control to the display state the overlays read, keep the two map buttons under "What the AI shows", and show the result sets in both workspaces. Record in `docs/decisions.md` any control whose behaviour ADR 0132 (display settings, presets and task locks, Proposed) leaves open.
   Done when a browser test switches Draw as to Dots and Fill, changes width and opacity, colours by decision, hides ID labels, moves the score cutoff and sees each change in the overlay's reported state, and the viewer golden images pass.
   Size: M.
-- [ ] PROTO-046 · Comments, decision notes and the Opinion checklist read as in the mock
+- [x] PROTO-046 · Comments, decision notes and the Opinion checklist read as in the mock
   The Comments tab has no "Your decision notes" list, its button says "New comment" where the mock says "New comment on an ID", "Notes and comments" replaces the whole tab where the mock opens a thread beside its pin, and the Opinion tab's "Before you submit" list has one row per open cell where the mock has one row for all cells (rows 56 to 59).
   Add the notes list under the threads as ADR 0285 (a decision note stays on the decision) describes, open a thread as a popover at its pin with the list kept, rename the button, and fold the open cells into one checklist row that opens the cells panel.
   Done when a browser test writes a note on a Disagree, finds it under "Your decision notes", opens a thread from the list and sees the popover at the pin with the list still shown, and reads one cells row in "Before you submit".
