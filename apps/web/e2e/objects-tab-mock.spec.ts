@@ -83,3 +83,30 @@ test("a cell picked in the cells panel flies there and shows its crop in the car
     new RegExp(`/api/slides/${cellsSlide}/cell-crops/\\d+$`),
   );
 });
+
+test("a ruler line joins the object list as M1 and its card removes it", async ({ page }) => {
+  const objects = await openLive(page);
+  const inspector = page.getByTestId("stage-inspector");
+  await expect(inspector.getByTestId("measurement-list")).toHaveCount(0);
+  const box = (await page.getByTestId("slide-stage").boundingBox()) ?? {
+    x: 0,
+    y: 0,
+    width: 800,
+    height: 600,
+  };
+  await page.keyboard.press("l");
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + 200, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 400, y, { steps: 4 });
+  await page.mouse.up();
+  const row = objects.locator('[data-testid="object-row"][data-object="M1"]');
+  await expect(row).toContainText("Measurement");
+  await row.getByRole("button").click();
+  const card = page.getByTestId("object-foot");
+  await expect(card).toHaveAttribute("data-object", "M1");
+  await expect(card).toContainText("Measurement · ");
+  await card.getByRole("button", { name: "Remove M1" }).click();
+  await expect(row).toHaveCount(0);
+  await expect(inspector.getByTestId("measurement-list")).toHaveCount(0);
+});

@@ -70,7 +70,7 @@ test("the AI is absent before the first read, appears after it, and the first re
   const current = (await objects.getAttribute("data-current")) ?? "";
   await objects
     .getByTestId("stage-review-object")
-    .getByRole("group")
+    .getByRole("group", { name: /^Your answer on/ })
     .getByRole("button")
     .first()
     .click();

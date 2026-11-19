@@ -116,7 +116,7 @@ test("guided review decides the current object and steps to the next open one", 
   expect(first).not.toBe("");
   await card
     .getByTestId("stage-review-object")
-    .getByRole("group")
+    .getByRole("group", { name: /^Your answer on/ })
     .getByRole("button")
     .first()
     .click();

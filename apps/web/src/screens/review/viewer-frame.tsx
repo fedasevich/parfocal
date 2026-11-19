@@ -358,7 +358,7 @@ const filterWord: Record<Exclude<ListFilter, "all">, string> = {
 
 export type AddedRow = { object: string; size: string; note: string | null };
 
-export type MeasurementRow = { object: string; mm: number; across: string };
+export type MeasurementRow = { object: string; mm: number; across: string; length?: string };
 
 type ObjectListProps = {
   objects: ReviewObject[];
@@ -522,7 +522,7 @@ export function ObjectList({
           </li>
         ))}
         {(shown === "all" ? measurements : []).map((item) => (
-          <li key={item.object}>
+          <li key={item.object} data-testid="object-row" data-object={item.object}>
             <button
               type="button"
               aria-current={item.object === current ? "true" : undefined}
@@ -536,11 +536,13 @@ export function ObjectList({
                 </span>
                 <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
                   <i aria-hidden="true" className="size-2 rounded-full bg-fg-faint" />
-                  <Trans>ruler, across {item.across}</Trans>
+                  {item.across ? <Trans>ruler, across {item.across}</Trans> : <Trans>ruler</Trans>}
                 </small>
               </span>
               <span />
-              <span className="font-mono text-fg-dim">{formatMillimetres(item.mm, 2)}</span>
+              <span className="font-mono text-fg-dim">
+                {item.length ?? formatMillimetres(item.mm, 2)}
+              </span>
             </button>
           </li>
         ))}

@@ -30,6 +30,10 @@ msgstr " · {0} slides{1}"
 msgid " · {0} to decide"
 msgstr " · {0} to decide"
 
+#: src/viewer/stage-minimap.tsx
+msgid " · {seenPercent}% seen"
+msgstr " · {seenPercent}% seen"
+
 #: src/screens/my-work/my-work-screen.tsx
 msgid " · {waiting} waiting for you to resolve"
 msgstr " · {waiting} waiting for you to resolve"
@@ -1069,6 +1073,7 @@ msgstr "{0} objects, shown in cyan and not saved yet"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
 #: src/shell/jobs-tray.tsx
+#: src/viewer/stage-minimap.tsx
 msgid "{0} of {1}"
 msgstr "{0} of {1}"
 
@@ -2062,6 +2067,12 @@ msgstr "{point} mm, between {low} and {high} mm"
 msgid "{positive, plural, one {node has a deposit} other {nodes have a deposit}}"
 msgstr "{positive, plural, one {node has a deposit} other {nodes have a deposit}}"
 
+#. placeholder {0}: progress.decided
+#. placeholder {1}: progress.total
+#: src/viewer/stage-minimap.tsx
+msgid "{power} · {0} of {1} decided"
+msgstr "{power} · {0} of {1} decided"
+
 #: src/screens/admin/tile-sharing-modal.tsx
 msgid "{projectName} is a clinical project"
 msgstr "{projectName} is a clinical project"
@@ -2995,6 +3006,7 @@ msgstr "Add a layer"
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/objects-panel.tsx
+#: src/viewer/stage-guided-card.tsx
 #: src/viewer/stage-object-notes.tsx
 msgid "Add a note"
 msgstr "Add a note"
@@ -5055,6 +5067,7 @@ msgid "Click to drop a marker. Shift-click removes one."
 msgstr "Click to drop a marker. Shift-click removes one."
 
 #: src/screens/review/slide-still.tsx
+#: src/viewer/stage-minimap.tsx
 msgid "Click to move"
 msgstr "Click to move"
 
@@ -5887,6 +5900,7 @@ msgid "Decision cutoff"
 msgstr "Decision cutoff"
 
 #: src/screens/review/object-comments.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Decision notes"
 msgstr "Decision notes"
 
@@ -6339,6 +6353,10 @@ msgstr "Drawn or imported by an expert"
 #: src/screens/viewer/objects-panel.tsx
 msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
 msgstr "Drawn with the ruler across {across}. It is yours only and is not a decision."
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Drawn with the ruler. It is yours only and is not a decision."
+msgstr "Drawn with the ruler. It is yours only and is not a decision."
 
 #: src/screens/upload/formats-drawer.tsx
 msgid "Drop a result file"
@@ -7785,6 +7803,10 @@ msgstr "Hide overlays (A)"
 #: src/screens/project/settings-tab.tsx
 msgid "Hide the AI for a first read"
 msgstr "Hide the AI for a first read"
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Hide the cells grid"
+msgstr "Hide the cells grid"
 
 #: src/screens/home/home-screen.tsx
 msgid "Hide the checklist"
@@ -9905,7 +9927,7 @@ msgstr "New workspace"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
-#: src/viewer/stage-review-objects.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Next"
 msgstr "Next"
 
@@ -10541,10 +10563,6 @@ msgstr "Note to them <0>optional</0>"
 msgid "Note, optional"
 msgstr "Note, optional"
 
-#: src/viewer/stage-review-objects.tsx
-msgid "Notes and comments"
-msgstr "Notes and comments"
-
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "nothing"
 msgstr "nothing"
@@ -10799,13 +10817,6 @@ msgstr "Object"
 #: src/screens/upload/check-step.tsx
 msgid "object {0}"
 msgstr "object {0}"
-
-#. placeholder {0}: index + 1
-#. placeholder {1}: objects.length
-#. placeholder {2}: decided.size
-#: src/viewer/stage-review-objects.tsx
-msgid "Object {0} of {1} · {2} decided"
-msgstr "Object {0} of {1} · {2} decided"
 
 #. placeholder {0}: deposit.objectId
 #: ../../packages/ui/src/components/clinical-report.tsx
@@ -11225,6 +11236,10 @@ msgstr "Open the slide"
 #: src/viewer/live-top-bar.tsx
 msgid "Open the Slide done card in the Opinion tab"
 msgstr "Open the Slide done card in the Opinion tab"
+
+#: src/viewer/live-top-bar.tsx
+msgid "Open the Slide done card in the Review tab"
+msgstr "Open the Slide done card in the Review tab"
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Open the whole slide"
@@ -12179,7 +12194,7 @@ msgstr "Preview the report"
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
-#: src/viewer/stage-review-objects.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Previous"
 msgstr "Previous"
 
@@ -13067,6 +13082,7 @@ msgstr "Returns"
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/stage-inspector.tsx
 msgid "Review"
 msgstr "Review"
 
@@ -13356,6 +13372,10 @@ msgstr "RT-14 · Round 2"
 #: src/routes/prototype.tsx
 msgid "RT-14 opened in the preview on the right"
 msgstr "RT-14 opened in the preview on the right"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "ruler"
+msgstr "ruler"
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Ruler"
@@ -14281,6 +14301,10 @@ msgstr "Show the AI result"
 msgid "Show the cells"
 msgstr "Show the cells"
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Show the cells grid"
+msgstr "Show the cells grid"
+
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Show the cells panel"
 msgstr "Show the cells panel"
@@ -14671,6 +14695,7 @@ msgstr "Skip"
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Skip for now"
 msgstr "Skip for now"
 
@@ -14737,6 +14762,10 @@ msgstr "Slide {0} of {1}, case {2}"
 #: src/viewer/live-progress.tsx
 msgid "Slide {position} of {0}"
 msgstr "Slide {position} of {0}"
+
+#: src/viewer/live-top-bar.tsx
+msgid "Slide {position} of {total}. Submit opens the next one"
+msgstr "Slide {position} of {total}. Submit opens the next one"
 
 #: src/screens/review/slide-submitted.tsx
 msgid "Slide {position} submitted"
@@ -15339,6 +15368,7 @@ msgid "Submit"
 msgstr "Submit"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Submit opens the next slide"
 msgstr "Submit opens the next slide"
 
@@ -16526,6 +16556,7 @@ msgstr "This is a clinical project. Names can be hidden for everyone in Settings
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "This is the first object"
 msgstr "This is the first object"
 
@@ -18244,7 +18275,6 @@ msgstr "Your alignment is kept for this pair of slides. Clear puts the panes bac
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/objects-panel.tsx
-#: src/viewer/stage-review-objects.tsx
 msgid "Your answer on {0}"
 msgstr "Your answer on {0}"
 

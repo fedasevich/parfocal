@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import type { AnnotationDocument } from "../annotations/document.ts";
 import type { ShapeId } from "../annotations/shapes.ts";
 import { useDocked } from "../viewer/inspector-slots.tsx";
+import { useRulersClaimed } from "../viewer/stage-measurements.tsx";
 import { useLengthUnits } from "./length-units.ts";
 import {
   buildMeasurementRows,
@@ -23,6 +24,7 @@ export function MeasurementList({
   classNames?: MeasurementNames;
   onRemove?: (id: ShapeId) => void;
 }) {
+  const skipRulers = useRulersClaimed();
   const { t } = useLingui();
   const docked = useDocked();
 
@@ -31,9 +33,13 @@ export function MeasurementList({
   const drawn = times.current;
   const units = useLengthUnits();
   const rows = useMemo(
-    () => buildMeasurementRows(doc, micronsPerPixel, drawn, classNames, units),
-    [doc, micronsPerPixel, drawn, classNames, units],
+    () =>
+      buildMeasurementRows(doc, micronsPerPixel, drawn, classNames, units).filter(
+        (row) => !skipRulers || row.kind !== "ruler",
+      ),
+    [doc, micronsPerPixel, drawn, classNames, units, skipRulers],
   );
+  if (skipRulers && rows.length === 0) return null;
 
   return (
     <section

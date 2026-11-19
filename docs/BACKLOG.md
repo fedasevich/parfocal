@@ -6634,7 +6634,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   In a review task draw the regions with their tags and only the sampled cells, collapse the sample into the mock's chip while the cells are under about 7 px, add the "Whole slide" button, and move the result set switch into the Display tab. Outside a task a whole result set keeps drawing as VIEW-076 (every cell of a result set draws on the engine stage) built it.
   Done when a browser test on RT-14 sees five tags and one chip at whole slide zoom, clicks the chip and lands on the cells, clicks "Whole slide" and is back, finds no result set chip over the slide, and the viewer golden images pass.
   Size: M.
-- [ ] PROTO-040 · The minimap hides, sits and labels itself as the mock and ADR 0185 say
+- [x] PROTO-040 · The minimap hides, sits and labels itself as the mock and ADR 0185 say
   The minimap shows at the top right of every viewer screen, also while the whole slide is on screen, with the head "Whole slide" and no foot (rows 22 to 25). The mock and ADR 0185 (smart minimap state machine and placement) hide it while most of the tissue is on screen, prefer the bottom right corner, and give it a head such as "Whole slide · 21% seen" and a foot such as "T2 of 5" and "10× · 1 of 5 decided". Guided review has a small inset "Click to move".
   Wire the stage's minimap to the NAV-006 (smart minimap state machine) states and the NAV-007 (minimap placement scoring) corners, and add the head and foot texts and the guided inset.
   Done when a browser test sees no minimap at whole slide zoom under When useful, sees it at the bottom right after zooming in, reads the head and foot texts in a task, and sees the inset in guided review.
@@ -6649,7 +6649,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Draw that popover on the engine viewer from the task's and the case's slides, and wire its three actions to the Display tab, compare and the upload flow.
   Done when a browser test opens the popover on RT-14, reads the case head, both groups and the three actions, opens a loose slide from it, and steps with Q and E.
   Size: S.
-- [ ] PROTO-043 · Guided review has the mock's own panel
+- [x] PROTO-043 · Guided review has the mock's own panel
   Guided review in the app is the full viewer with one card in the Objects tab, the tool rail and four tabs (rows 39 to 48). The mock's guided screen has no rail, a taller top bar, a 469 px panel with the tabs Review, Comments and Display, a strip of dots for the objects with a "Cells 44 of 50" chip, the question as a heading, three 58 px answer buttons, "Add something the AI missed", "Previous" and "Skip for now", and the slide done card in the Review tab. It exists as `screens/review/guided-review.tsx` on prototype data.
   Draw that layout on the engine stage for `/tasks/$taskId/guided`, fed by the stage's review objects and decisions, with decision notes and the cells panel as ADR 0398 (one engine stage) lists them.
   Done when a browser test opens guided review on RT-14, finds no tool rail, reads the heading for T5, answers with K, sees the next open object and its dot change, skips one, goes back with Previous, finishes the slide and sees "Slide 8 is done" in the Review tab.

@@ -64,7 +64,7 @@ test("the guided panel's quiet buttons have a visible border", async ({ page }) 
   await page.goto(`/tasks/${rt14}/guided?slide=${slide}`);
   const objects = page.getByTestId("stage-review-objects");
   await expect(objects).toHaveAttribute("data-ready", "true", { timeout: 25_000 });
-  for (const name of ["Next", "Previous"]) {
+  for (const name of [/Skip for now/, /Previous/]) {
     const button = objects.getByRole("button", { name });
     await expect(button).toHaveCSS("border-top-width", "1px");
     await expect(button).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");

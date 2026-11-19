@@ -15,8 +15,9 @@ import {
   ObjectList,
   ObjectsSummary,
 } from "../screens/review/viewer-frame.tsx";
-import { ObjectFoot } from "../screens/viewer/objects-panel.tsx";
+import { MeasurementFoot, ObjectFoot } from "../screens/viewer/objects-panel.tsx";
 import { DockCard } from "./inspector-slots.tsx";
+import type { StageRuler } from "./stage-measurements.tsx";
 import { answerOfDecision } from "./stage-object-notes.tsx";
 
 const closedNote = { open: false, reasons: [], text: "" };
@@ -55,6 +56,8 @@ export function StageObjectsPanel({
   onNote,
   onOpenCells,
   cellTyped,
+  rulers = [],
+  onRemoveRuler,
 }: {
   session: ReviewSession;
   current: string | null;
@@ -63,6 +66,8 @@ export function StageObjectsPanel({
   onNote: (object: string) => void;
   onOpenCells: () => void;
   cellTyped: boolean;
+  rulers?: readonly StageRuler[];
+  onRemoveRuler?: (ruler: StageRuler) => void;
 }) {
   const person = usePeople();
   const setName = useSetName(session);
@@ -75,7 +80,22 @@ export function StageObjectsPanel({
   const currentItem = objects.find((item) => item.object === current);
   const firstOpen = objects.find((item) => answer(item.object) === undefined)?.object;
   const hasCells = objects.some((item) => item.kind === "cell");
-  const foot = currentItem ? (
+  const ruler = rulers.find((item) => item.label === current);
+  const foot = ruler ? (
+    <div data-testid="object-foot" data-object={ruler.label}>
+      <MeasurementFoot
+        object={ruler.label}
+        mm={0}
+        across=""
+        length={ruler.length}
+        onClose={() => onPick(null)}
+        onRemove={() => {
+          onPick(null);
+          onRemoveRuler?.(ruler);
+        }}
+      />
+    </div>
+  ) : currentItem ? (
     <div data-testid="object-foot" data-object={currentItem.object} className="grid gap-2.5">
       {currentItem.kind === "cell" ? (
         <CellCrop slideId={session.slideId} cell={currentItem} />
@@ -125,6 +145,12 @@ export function StageObjectsPanel({
           note: item.note,
         }))}
         {...(hasCells ? { onOpenCells } : {})}
+        measurements={rulers.map((item) => ({
+          object: item.label,
+          mm: 0,
+          across: "",
+          length: item.length,
+        }))}
       />
       {foot === null ? null : (
         <DockCard section="foot">

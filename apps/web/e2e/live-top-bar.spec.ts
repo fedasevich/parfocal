@@ -101,7 +101,8 @@ test("guided review checks Guided, and the account menu leads back to Parfocal h
   await ready(page);
   await expect(modes(page)).toHaveText(["Guided", "Full viewer"]);
   await expect(modes(page).filter({ hasText: "Guided" })).toBeChecked();
-  await expect(bar(page).getByTestId("slide-picker")).toHaveText("A1 · H&E");
+  await expect(bar(page).getByTestId("slide-picker")).toHaveCount(0);
+  await expect(bar(page).getByTestId("guided-slide-chip")).toHaveText("A1 · H&E");
 
   await bar(page).getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: "Parfocal home" }).click();

@@ -2,7 +2,11 @@ import { useLingui } from "@lingui/react/macro";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { type ReactNode, useCallback } from "react";
 import { InspectorDock } from "../screens/review/inspector-dock.tsx";
-import type { InspectorLayout, InspectorLayoutChange } from "../screens/review/inspector-layout.ts";
+import {
+  type InspectorLayout,
+  type InspectorLayoutChange,
+  inspectorDefaultWidth,
+} from "../screens/review/inspector-layout.ts";
 import { type ViewerTab, viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import type { InspectorSection } from "./inspector-slots.tsx";
 import type { ViewerModule } from "./magnification-control.tsx";
@@ -11,6 +15,7 @@ import type { ThreadFocusRequest } from "./thread-focus.tsx";
 import type { SlideOverview, ViewerEngine } from "./viewer-engine.ts";
 
 type StageInspectorProps = {
+  guided?: boolean;
   layout: InspectorLayout;
   onLayout: (change: InspectorLayoutChange) => void;
   tab: ViewerTab;
@@ -23,6 +28,7 @@ type StageInspectorProps = {
 };
 
 export type StageInspectorLink = {
+  readonly guided?: boolean;
   readonly tab: ViewerTab | undefined;
   readonly onTab: (tab: ViewerTab) => void;
   readonly counts?: StageTabCounts;
@@ -44,8 +50,11 @@ const slotClass = "flex flex-col gap-3";
 const isTab = (value: string): value is ViewerTab =>
   (viewerTabs as readonly string[]).includes(value);
 
+export const guidedPanelWidth = 469;
+
 export function StageInspector({
-  layout,
+  guided = false,
+  layout: chosenLayout,
   onLayout,
   tab,
   onTab,
@@ -65,12 +74,35 @@ export function StageInspector({
     (node: HTMLDivElement | null) => onSlot("display", node),
     [onSlot],
   );
+  const layout =
+    guided && chosenLayout.width === inspectorDefaultWidth
+      ? { ...chosenLayout, width: guidedPanelWidth }
+      : chosenLayout;
   const labels: Record<ViewerTab, string> = {
-    objects: t`Objects`,
+    objects: guided ? t`Review` : t`Objects`,
     display: t`Display`,
     comments: t`Comments`,
     opinion: t`Opinion`,
   };
+  const objectsTab = {
+    value: "objects",
+    label: labels.objects,
+    ...(counts.objects && !guided ? { count: counts.objects } : {}),
+    body: <div ref={objectsRef} data-testid="inspector-objects" className={slotClass} />,
+    foot: <div ref={footRef} data-foot-slot="" data-testid="inspector-objects-foot" />,
+  };
+  const displayTab = {
+    value: "display",
+    label: labels.display,
+    body: <div ref={displayRef} data-testid="inspector-display" className={slotClass} />,
+  };
+  const commentsTab = {
+    value: "comments",
+    label: labels.comments,
+    ...(counts.comments ? { count: counts.comments } : {}),
+    body: comments,
+  };
+  const opinionTab = { value: "opinion", label: labels.opinion, body: opinion };
   return (
     <InspectorDock
       layout={layout}
@@ -82,32 +114,18 @@ export function StageInspector({
       <SidePanel
         data-testid="stage-inspector"
         data-tab={tab}
+        data-guided={guided || undefined}
         width={layout.width}
+        variant={guided ? "quiet" : "panel"}
         value={tab}
         onValueChange={(next) => {
           if (isTab(next)) onTab(next);
         }}
-        tabs={[
-          {
-            value: "objects",
-            label: labels.objects,
-            ...(counts.objects ? { count: counts.objects } : {}),
-            body: <div ref={objectsRef} data-testid="inspector-objects" className={slotClass} />,
-            foot: <div ref={footRef} data-foot-slot="" data-testid="inspector-objects-foot" />,
-          },
-          {
-            value: "display",
-            label: labels.display,
-            body: <div ref={displayRef} data-testid="inspector-display" className={slotClass} />,
-          },
-          {
-            value: "comments",
-            label: labels.comments,
-            ...(counts.comments ? { count: counts.comments } : {}),
-            body: comments,
-          },
-          { value: "opinion", label: labels.opinion, body: opinion },
-        ]}
+        tabs={
+          guided
+            ? [objectsTab, commentsTab, displayTab]
+            : [objectsTab, displayTab, commentsTab, opinionTab]
+        }
       />
     </InspectorDock>
   );

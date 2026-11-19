@@ -1,14 +1,13 @@
 import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
-import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { useNoteKey } from "../screens/review/note-key.ts";
+import { useObjectKeys } from "../screens/review/object-keys.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import {
   storedType,
@@ -25,7 +24,10 @@ import { StageCellsGrid } from "./stage-cells-grid.tsx";
 import { StageCoachInPanel, StageCoachOnSlide } from "./stage-coach.tsx";
 import { StageFocusCard } from "./stage-focus.tsx";
 import { nextOpenObject, outlineArea, placedObjects } from "./stage-geometry.ts";
+import { StageGuidedCard } from "./stage-guided-card.tsx";
+import { useStageRulers } from "./stage-measurements.tsx";
 import { StageObjectsPanel } from "./stage-objects-panel.tsx";
+import { ReviewOpinion } from "./stage-opinion.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
@@ -68,56 +70,6 @@ function ObjectOutlines({
   return <div hidden data-testid="review-object-outlines" data-objects={placed.length} />;
 }
 
-function ObjectRow({
-  session,
-  object,
-  current,
-  onPick,
-  onAnswer,
-  onComments,
-}: {
-  session: ReviewSession;
-  object: ReviewObject;
-  current: boolean;
-  onPick: () => void;
-  onAnswer: (raw: string) => void;
-  onComments: () => void;
-}) {
-  const { t } = useLingui();
-  const decision = session.decisions.get(object.object);
-  return (
-    <li
-      data-testid="stage-review-object"
-      data-object={object.object}
-      data-decision={decision?.value ?? ""}
-      data-current={current}
-      className={`flex flex-col gap-1.5 rounded-ctl border p-2 ${current ? "border-accent" : "border-line"}`}
-    >
-      <button
-        type="button"
-        onClick={onPick}
-        className="flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-body-sm text-fg"
-      >
-        <ObjectIdTag>{object.object}</ObjectIdTag>
-        <span className="min-w-0 flex-1 truncate">{object.class_name}</span>
-        <span className="text-caption text-fg-dim">{Math.round(object.score * 100)}%</span>
-      </button>
-      <DecisionButtons
-        decisionStyle={session.style.kind}
-        size="compact"
-        value={decision?.answer}
-        onValueChange={onAnswer}
-        classes={session.classes}
-        aiClass={object.class_name}
-        label={t`Your answer on ${object.object}`}
-      />
-      <Button size="sm" variant="secondary" className="justify-self-start" onClick={onComments}>
-        {t`Notes and comments`}
-      </Button>
-    </li>
-  );
-}
-
 export function StageReviewObjects({
   engine,
   module,
@@ -127,9 +79,11 @@ export function StageReviewObjects({
   guided = false,
   cellsGrid = false,
   focus = null,
+  doneRequest = 0,
   onComments,
   onNote,
   onCurrent,
+  onAddMissed,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -139,9 +93,11 @@ export function StageReviewObjects({
   guided?: boolean;
   cellsGrid?: boolean;
   focus?: { onShowUi: () => void } | null;
+  doneRequest?: number;
   onComments: (object: string) => void;
   onNote?: (object: string) => void;
   onCurrent?: (object: string | null) => void;
+  onAddMissed?: () => void;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -151,6 +107,12 @@ export function StageReviewObjects({
   const decided = new Set(session.decisions.keys());
   const [chosen, setCurrent] = useState<string | null>(object ?? null);
   const [gridOpen, setGridOpen] = useState(cellsGrid);
+  const [done, setDone] = useState(false);
+  const [seenRequest, setSeenRequest] = useState(doneRequest);
+  if (doneRequest !== seenRequest) {
+    setSeenRequest(doneRequest);
+    if (guided) setDone(true);
+  }
   const hasCells = objects.some((item) => item.kind === "cell");
   const current =
     chosen ??
@@ -158,12 +120,18 @@ export function StageReviewObjects({
   useNoteKey(() => {
     if (current !== null && decided.has(current)) onNote?.(current);
   });
+  const measurements = useStageRulers(!guided);
+  const rulers = measurements?.rulers ?? [];
   const flyTo = (id: string | null) => {
-    const area = outlineArea(objects.find((item) => item.object === id)?.outline);
+    const area = outlineArea(
+      objects.find((item) => item.object === id)?.outline ??
+        rulers.find((item) => item.label === id)?.points,
+    );
     if (area !== null) void engine.flyToArea(area);
   };
   const pick = (id: string | null) => {
     if (id === null) return;
+    setDone(false);
     setCurrent(id);
     flyTo(id);
   };
@@ -182,6 +150,11 @@ export function StageReviewObjects({
   useEffect(() => {
     if (ready) reported.current?.(current);
   }, [ready, current]);
+  const advance = (answered: string) => {
+    const next = nextOpenObject(order, new Set([...decided, answered]), answered);
+    if (next === null) setDone(true);
+    else pick(next);
+  };
   const answer = (item: ReviewObject, raw: string) => {
     const option = answersOf(session.style, session.classes, item).find(
       (entry) => entry.raw === raw,
@@ -189,7 +162,7 @@ export function StageReviewObjects({
     const value = option?.countsAs;
     if (value === undefined) return;
     saves.save(item.object, raw, value);
-    if (guided) pick(nextOpenObject(order, new Set([...decided, item.object]), item.object));
+    if (guided) advance(item.object);
     else setCurrent(item.object);
   };
   const currentItem = objects.find((item) => item.object === current);
@@ -203,7 +176,7 @@ export function StageReviewObjects({
       const choice = typeChoice(session.style, option, cell, session.classes);
       saves.save(cell.object, choice.raw, choice.value, choice.draft);
     }
-    if (guided) pick(nextOpenObject(order, new Set([...decided, cell.object]), cell.object));
+    if (guided) advance(cell.object);
   };
   useAnswerKeys(
     typeAnswers,
@@ -222,7 +195,37 @@ export function StageReviewObjects({
     listKeysLive,
   );
   const index = current === null ? -1 : order.indexOf(current);
-  const shown = guided ? objects.filter((item) => item.object === current) : objects;
+  const stepping = guided && ready && !done && focus === null;
+  useAnswerKeys(
+    answersOf(session.style, session.classes, currentItem),
+    (raw) => {
+      if (currentItem !== undefined) answer(currentItem, raw);
+    },
+    stepping && typedCell === null && currentItem !== undefined,
+  );
+  useObjectKeys(
+    () => pick(order[index + 1] ?? null),
+    () => pick(order[index - 1] ?? null),
+    stepping,
+  );
+  const jump = (id: string) =>
+    pick(
+      id === "cells"
+        ? (objects.find((item) => item.kind === "cell" && !decided.has(item.object))?.object ??
+            objects.find((item) => item.kind === "cell")?.object ??
+            null)
+        : id,
+    );
+  const coachPart = coachOn ? (
+    <StageCoachInPanel
+      keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
+      onStart={coach.dismiss}
+    />
+  ) : (
+    <Button variant="ghost" size="sm" className="w-fit px-0" onClick={coach.reopen}>
+      {t`How guided review works`}
+    </Button>
+  );
   return (
     <>
       <ObjectOutlines
@@ -272,59 +275,41 @@ export function StageReviewObjects({
           data-ready={ready}
           data-guided={guided}
           data-current={current ?? ""}
-          className="flex flex-col gap-2"
+          className={guided ? "flex flex-col gap-4" : "flex flex-col gap-2"}
         >
-          {guided ? (
-            <h3 className="m-0 text-body-sm font-semibold">
-              {t`Object ${index + 1} of ${objects.length} · ${decided.size} decided`}
-            </h3>
-          ) : null}
-          {coachOn ? (
-            <StageCoachInPanel
-              keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
-              onStart={coach.dismiss}
+          {guided && done ? (
+            <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={(id) => pick(id ?? null)} />
+          ) : guided && currentItem !== undefined ? (
+            <StageGuidedCard
+              session={session}
+              object={currentItem}
+              position={index + 1}
+              coach={coachPart}
+              onAnswer={(raw) => answer(currentItem, raw)}
+              onJump={(id) => {
+                if (id === "cells") setGridOpen(true);
+                jump(id);
+              }}
+              onPrevious={() => pick(order[index - 1] ?? null)}
+              onSkip={() => pick(order[index + 1] ?? nextOpenObject(order, decided, current))}
+              onNote={() => {
+                if (current !== null) onNote?.(current);
+              }}
+              onAddMissed={() => onAddMissed?.()}
             />
           ) : null}
-          {guided ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={index <= 0}
-                onClick={() => pick(order[index - 1] ?? null)}
-              >
-                {t`Previous`}
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={index < 0 || index >= order.length - 1}
-                onClick={() => pick(order[index + 1] ?? null)}
-              >
-                {t`Next`}
-              </Button>
-              {coachOn ? null : (
-                <Button size="sm" variant="secondary" onClick={coach.reopen}>
-                  {t`How guided review works`}
-                </Button>
-              )}
-            </div>
+          {guided && hasCells && !done ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="justify-self-start"
+              aria-pressed={gridOpen}
+              onClick={() => setGridOpen((open) => !open)}
+            >
+              {gridOpen ? t`Hide the cells grid` : t`Show the cells grid`}
+            </Button>
           ) : null}
-          {guided ? (
-            <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {shown.map((item) => (
-                <ObjectRow
-                  key={item.object}
-                  session={session}
-                  object={item}
-                  current={current === item.object}
-                  onPick={() => pick(item.object)}
-                  onAnswer={(raw) => answer(item, raw)}
-                  onComments={() => onComments(item.object)}
-                />
-              ))}
-            </ul>
-          ) : ready ? (
+          {!guided && ready ? (
             <StageObjectsPanel
               session={session}
               current={current}
@@ -333,6 +318,8 @@ export function StageReviewObjects({
               onNote={(id) => (decided.has(id) ? onNote?.(id) : onComments(id))}
               onOpenCells={() => setGridOpen(true)}
               cellTyped={typedCell !== null}
+              rulers={rulers}
+              onRemoveRuler={(ruler) => measurements?.remove(ruler.shapeId)}
             />
           ) : null}
         </section>
