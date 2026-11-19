@@ -141,6 +141,15 @@ test("a slide reopened after a reload starts at its remembered view", async ({ p
     .toEqual(zoomed);
 });
 
+async function togglePinnedStrip(page: Page) {
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" && response.url().includes("/api/me/setting-layers"),
+  );
+  await page.getByRole("switch", { name: "Pinned slide strip" }).click();
+  expect((await saved).status()).toBe(200);
+}
+
 test("the pinned slide strip is off until the setting turns it on", async ({ page }) => {
   test.setTimeout(90_000);
   const url = await fullViewerUrl(page);
@@ -148,14 +157,14 @@ test("the pinned slide strip is off until the setting turns it on", async ({ pag
   await expect(page.getByTestId("full-viewer")).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Slides of this case" })).toHaveCount(0);
   await page.goto("/settings/layout");
-  await page.getByRole("switch", { name: "Pinned slide strip" }).click();
+  await togglePinnedStrip(page);
   await page.goto(url);
   const strip = page.getByRole("navigation", { name: "Slides of this case" });
   await expect(strip).toBeVisible();
   await strip.getByRole("button").nth(1).click();
   await expect.poll(() => slideOf(page.url())).not.toBe(a1);
   await page.goto("/settings/layout");
-  await page.getByRole("switch", { name: "Pinned slide strip" }).click();
+  await togglePinnedStrip(page);
   await page.goto(url);
   await expect(page.getByRole("navigation", { name: "Slides of this case" })).toHaveCount(0);
 });

@@ -8,6 +8,8 @@ export * from "@playwright/test";
 
 const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
+const settlesWithMotion = new Set(["color-contrast", "target-size"]);
+
 const scannedStates = new Set<string>();
 
 export function stateOfPage(): string[] {
@@ -95,7 +97,7 @@ export const test = base.extend<{ accessible: undefined }>({
       let found = await scan();
       for (let attempt = 0; attempt < 3; attempt += 1) {
         const open = found.filter((violation) => !isAllowed(violation.rule, route));
-        if (open.length === 0 || open.some((violation) => violation.rule !== "color-contrast")) {
+        if (open.length === 0 || open.some((violation) => !settlesWithMotion.has(violation.rule))) {
           break;
         }
         await page.waitForTimeout(500);

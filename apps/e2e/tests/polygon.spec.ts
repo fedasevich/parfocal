@@ -21,7 +21,7 @@ test("a researcher draws a polygon on a live slide, reloads, and PostGIS holds t
   const slideId = sql(
     `UPDATE slides SET original_key = 'e2e/' || id || '/slide.tiff', ` +
       `file_bytes = ${statSync(fixture).size} ` +
-      `WHERE project_id = '${projectId}' AND label = 'tumor_001' RETURNING id`,
+      `WHERE project_id = '${projectId}' AND label = 'test_065' RETURNING id`,
   ).split("\n")[0];
 
   await page.goto(`/projects/${projectId}/slides/${slideId}/live`);

@@ -453,6 +453,8 @@ WRITE_ROUTES: dict[str, Write] = {
     "setTaskReportLayout": Write(body=constant({"blocks": BLOCKS})),
     "addTaskReviewer": Write(body=lambda a: {"user_id": str(a.ids["user"])}, owner=CONFLICT),
     "signOffReviewTask": Write(body=constant({})),
+    "withdrawReviewTask": Write(),
+    "reportHighPowerFailure": Write(),
     "addReviewObject": Write(body=constant({"kind": "cell", "geometry": POINT})),
     "checkAnnotateSlide": Write(path=ON_ANNOTATE_TASK, body=constant({}), owner=FORBIDDEN),
     "saveReviewEdit": Write(path=OBJECT, body=constant({"deleted": True})),

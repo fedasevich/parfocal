@@ -363,3 +363,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0400](0400-a-transaction-begins-and-sets-its-scope-in-one-round-trip.md) | A transaction begins and sets its scope in one round trip | Accepted | 2026-11-18 |
 | [0401](0401-ai-cell-edits-as-one-atomic-batch.md) | Edits of AI cells go to the shared layer as one atomic batch | Accepted | 2026-11-18 |
 | [0402](0402-the-viv-route-draws-the-slide-once-per-change.md) | The Viv route draws the slide once per change, after updating its layers | Accepted | 2026-11-19 |
+| [0403](0403-withdrawn-tasks-and-slides-unreadable-at-high-power.md) | A withdrawn task keeps its rows and a slide unreadable at high power is a notice | Accepted | 2026-11-19 |

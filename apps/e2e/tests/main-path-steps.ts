@@ -4,7 +4,7 @@ import { call, field, idOf, root, sql } from "./support.ts";
 import { researcherWorkspace } from "./workspaces.ts";
 
 const fixture = `${root}packages/test-fixtures/synthetic/synthetic-jpeg.tiff`;
-const slideLabels = ["tumor_001", "tumor_002", "tumor_003"];
+const slideLabels = ["CMU-1-Small-Region.svs", "CMU-1.ndpi", "Leica-1.scn"];
 const jumpTarget = { x: 512, y: 384, magnification: 10 };
 
 type PageNode = { getAttribute(name: string): string | null };
