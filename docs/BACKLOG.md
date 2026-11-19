@@ -6731,7 +6731,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when a browser test on RT-14 sees all six chips inside the panel, reads "boundary is off" on T2, finds no Areas card in guided review, reads the minimap's head and both foot texts without overlap, opens T2's seeded thread and sees its popover, and finds a T6⁺ tag on the slide.
   Size: S.
   Row 62 needs no new task, PROTO-048 already holds it.
-- [ ] PROTO-057 · The Display settings gain the mock's display ideas that make sense
+- [x] PROTO-057 · The Display settings gain the mock's display ideas that make sense
   Decision 155 (which extra settings the Display tab gets): the owner asked for the display ideas the mock already has where they make sense, such as fill opacity, beyond the Motion row PROTO-031 added. The mock's display rows include fill opacity, heatmap opacity and colormap, confidence display and fade, and the common viewer rows text size and a colour-blind-safe class palette are candidates too.
   List every display row in `docs/design/ux-mock/index.html`, keep the ones that change how the slide or its overlays look for one person (not developer or renderer rows), and add each as a Settings, Display row that previews what it does, stored per device as PROTO-031 stores Motion. Record the rows left out and why in the log.
   Done when a browser test changes each new row, sees the viewer redraw with it (fill opacity read from the overlay layer, text size from the computed root font size, the class palette from a drawn cell colour) and finds it kept after a reload, and axe passes on the Display tab in both themes.
