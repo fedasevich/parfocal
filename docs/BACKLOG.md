@@ -6897,6 +6897,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-19 the owner found case creation is not a clear button on the project page, the new case form stretches to the full page height instead of the window, and every case modal and form looks broken. Cover the project page's case entry, `/projects/$id/cases/new`, the case slides editor, the slide move dialog, the case upload drawer, the clinical report and co-sign screens.
   Done when the project page has a primary New case button, every case form and modal fits a 1280 by 800 and a 1024 by 700 window with its own scroll and its actions in view, and a spec walks create case, add slides, move a slide, upload into the case, write the report and co-sign on the fake API with no element outside the window.
   Depends on PROTO-076. Size: M.
+- [ ] PROTO-090 · The PDF preview and Print work
+  On 2026-11-19 the owner found the evaluation report's PDF preview at `/tasks/$id/evaluation?scene=pdf` broken (`apps/web/src/screens/evaluation/pdf-overlay.tsx`) and its Print button doing nothing. Make the preview render the real PDF pages readably with working page, zoom and thumbnail controls, make Print print the PDF, move the preview from the scene parameter to a plain `view=pdf` search parameter, and check every other PDF preview in the app (clinical report, shared report) the same way.
+  Done when a spec opens each PDF preview, steps pages, zooms, sees readable text in the page canvas, and Print opens the browser's print for the PDF (checked through a stubbed print call), on the fake API and with a real PDF in the real API e2e.
+  Depends on PROTO-079. Size: S.
 
 ---
 
