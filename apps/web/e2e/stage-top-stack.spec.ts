@@ -17,7 +17,7 @@ async function failedOpenWithWait(page: Page) {
   await page.goto(annotate);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "failed", { timeout: 30_000 });
-  await page.getByRole("button", { name: "Polygon (P)" }).click();
+  await expect(page.getByRole("button", { name: "Polygon (P)" })).toHaveCount(0);
   await page.evaluate(() =>
     window.dispatchEvent(new CustomEvent("parfocal:hold-gpu-wait", { detail: 14 })),
   );
@@ -29,7 +29,7 @@ for (const viewport of [
   { width: 1280, height: 800 },
   { width: 1024, height: 700 },
 ]) {
-  test(`the context bar, the GPU wait and the failure alert stack without overlap at ${viewport.width} by ${viewport.height}`, async ({
+  test(`on a slide that cannot open, the context bar, the GPU wait and the failure alert stack without overlap at ${viewport.width} by ${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);

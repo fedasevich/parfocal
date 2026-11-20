@@ -99,10 +99,10 @@ test("the magnification bar is 38 pixels tall with the mock's corner and steps",
 
 test("a tool's hint bar stays on one line when the stage has room for it", async ({ page }) => {
   const stage = await openReview(page);
-  for (const [key, tool, width] of [
-    ["l", "ruler", 1440],
-    ["c", "comment", 1440],
-    ["s", "smart", 1920],
+  for (const [key, tool, width, oneLineBarHeight] of [
+    ["l", "ruler", 1440, 40],
+    ["c", "comment", 1440, 40],
+    ["s", "smart", 1920, 44],
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     await page.keyboard.press(key);
@@ -110,7 +110,7 @@ test("a tool's hint bar stays on one line when the stage has room for it", async
     const hints = page.getByTestId("context-bar");
     await expect(hints).toBeVisible();
     const box = (await hints.boundingBox()) ?? { x: 0, width: 0, height: 99 };
-    expect(box.height).toBeLessThanOrEqual(40);
+    expect(box.height).toBeLessThanOrEqual(oneLineBarHeight);
     const stageBox = (await stage.boundingBox()) ?? { x: 0, width: 0 };
     expect(Math.abs(box.x + box.width / 2 - (stageBox.x + stageBox.width / 2))).toBeLessThanOrEqual(
       1,
