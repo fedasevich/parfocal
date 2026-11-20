@@ -713,6 +713,7 @@ UNAIMED_WRITES: dict[str, str] = {
     ),
     "raiseSyntheticError": "raises a drill error for platform operators only and stores nothing",
     "reportViewerFrames": "exports the caller's own frame timings and stores nothing",
+    "recordTimingEvents": "stores the caller's own timing events and names no row",
     "endOtherSessions": "ends the caller's own other sessions",
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",

@@ -965,6 +965,17 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.add(colleague_name)
+    hidden_project = await seed_project(connection, seeded.tenant_id)
+    await connection.execute(
+        insert(project_members).values(
+            tenant_id=seeded.tenant_id,
+            project_id=hidden_project,
+            user_id=colleague,
+            role="owner",
+        )
+    )
+    seeded.ids["hidden_project"] = hidden_project
+    seeded.markers.add(str(colleague))
     taker = await connection.scalar(
         insert(users)
         .values(subject=f"taker-{task_id}", display_name="Taker", initials="TT", avatar_colour=0)
@@ -1026,8 +1037,13 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             kind="annotate",
             result_set_id=None,
             signed_off_at=func.now(),
+            layer_groups={
+                "groups": [{"id": 1, "name": f"Shared {seeded.tenant_id}"}],
+                "members": [],
+            },
         )
     )
+    seeded.markers.add(f"Shared {seeded.tenant_id}")
     seeded.ids["annotate_task"] = annotate_id
     patch_job = await connection.scalar(
         insert(jobs)
@@ -1912,6 +1928,10 @@ GET_ROUTES = {
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
     "listDeletedProjects": Route(Exposure.TENANT, lambda _: "/api/projects/deleted"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
+    "getProjectAccess": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['hidden_project']}/access-requests/mine",
+    ),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
     "listRegisteredModels": Route(Exposure.PUBLIC, lambda _: "/api/model-registry"),
     "getRegisteredModel": Route(
