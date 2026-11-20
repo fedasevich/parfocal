@@ -381,13 +381,6 @@ export function EngineViewer({
         <>
           {load ? <CasePatientBanner load={load} /> : null}
           <RemoteSlideOffline note={storageNote} />
-          <div className="relative z-20 h-0">
-            <div
-              ref={setBanner}
-              data-testid="viewer-banner"
-              className="absolute inset-x-0 top-0 empty:hidden"
-            />
-          </div>
         </>
       )}
       <div className="relative min-h-0 flex-1">
@@ -425,6 +418,7 @@ export function EngineViewer({
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
             inspector={inspector}
             bare={focus}
+            bannerRef={focus ? undefined : setBanner}
           />
         </NoticeSlotsProvider>
         <div

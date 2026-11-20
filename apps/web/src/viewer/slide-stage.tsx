@@ -198,9 +198,11 @@ export function SlideStage({
   onStorage,
   inspector,
   bare = false,
+  bannerRef,
 }: {
   inspector: StageInspectorLink;
   bare?: boolean;
+  bannerRef?: ((node: HTMLElement | null) => void) | undefined;
   slideId: string;
   projectId?: string;
   taskId?: string;
@@ -232,6 +234,7 @@ export function SlideStage({
       onStorage={onStorage}
       inspector={inspector}
       bare={bare}
+      bannerRef={bannerRef}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -255,9 +258,11 @@ function OpenedSlide({
   onRetry,
   inspector,
   bare,
+  bannerRef,
 }: {
   inspector: StageInspectorLink;
   bare: boolean;
+  bannerRef: ((node: HTMLElement | null) => void) | undefined;
   slideId: string;
   projectId: string | undefined;
   taskId: string | undefined;
@@ -772,6 +777,13 @@ function OpenedSlide({
                 ) : null}
                 <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
                 <StageTips stage={hostNode?.parentElement ?? null} />
+                {bannerRef === undefined ? null : (
+                  <div
+                    ref={bannerRef}
+                    data-testid="viewer-banner"
+                    className="absolute inset-x-0 top-0 z-20 empty:hidden"
+                  />
+                )}
                 <TopStack
                   ref={setTopStackNode}
                   className={toolsLayout === "dock" ? "top-15" : ""}
