@@ -17,6 +17,7 @@ import {
 import type { CheckState } from "./check-state.ts";
 import type { Point } from "./polygon-draft.ts";
 import { fastNudgeStepPx, hitTolerancePx, nudgeStepPx } from "./select-tool.ts";
+import type { Extent } from "./shapes.ts";
 import { capturePointer, releasePointer, slideAt } from "./stage-pointer.ts";
 import { type StageRect, useStageRect } from "./stage-size.ts";
 
@@ -46,6 +47,29 @@ type Gesture =
 type Draft = { readonly object: string; readonly ring: Ring };
 
 const dragStartPx = 4;
+const areaViews = 3;
+const shrinkViews = 6;
+const deepShare = 4;
+
+const viewArea = (camera: Camera, rect: StageRect): Extent => {
+  const scale = screenScale(camera);
+  const width = Math.max(rect.width, 1) / scale;
+  const height = Math.max(rect.height, 1) / scale;
+  return [camera.x - width / 2, camera.y - height / 2, camera.x + width / 2, camera.y + height / 2];
+};
+
+const around = (view: Extent): Extent => {
+  const width = ((view[2] - view[0]) * (areaViews - 1)) / 2;
+  const height = ((view[3] - view[1]) * (areaViews - 1)) / 2;
+  return [view[0] - width, view[1] - height, view[2] + width, view[3] + height];
+};
+
+const covers = (area: Extent, view: Extent) =>
+  area[0] <= view[0] &&
+  area[1] <= view[1] &&
+  area[2] >= view[2] &&
+  area[3] >= view[3] &&
+  area[2] - area[0] <= (view[2] - view[0]) * shrinkViews;
 const handleHitPx = 10;
 
 const nudges: Record<string, [number, number]> = {
@@ -382,6 +406,24 @@ export function AiLayer({
       })
       .join(" ");
   const shown = useMemo(() => cells.filter((cell) => !cell.deleted), [cells]);
+  const view = viewArea(camera, rect);
+  const [kept, keep] = useState<Extent | null>(null);
+  const area = kept !== null && covers(kept, view) ? kept : around(view);
+  if (area !== kept) keep(area);
+  const draftObject = draft?.object ?? null;
+  const near = useMemo(() => {
+    const inside = shown.filter(
+      (cell) =>
+        chosen.has(cell.object) ||
+        cell.object === draftObject ||
+        (cell.bounds[2] >= area[0] &&
+          cell.bounds[0] <= area[2] &&
+          cell.bounds[3] >= area[1] &&
+          cell.bounds[1] <= area[3]),
+    );
+    return inside.length === shown.length ? shown : inside;
+  }, [shown, chosen, draftObject, area]);
+  const deep = near.length * deepShare <= shown.length;
   const handles = edited === null ? null : draft?.object === edited.object ? draft.ring : editRing;
   const tagAt =
     sole && !sole.deleted && tag !== null
@@ -398,14 +440,29 @@ export function AiLayer({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 size-full overflow-visible"
       >
-        <g data-testid="ai-cells" transform={slideTransform(camera, rect)}>
-          <CellOutlines
-            shown={shown}
-            chosen={chosen}
-            checkOf={checkOf}
-            colourOf={colourOf}
-            draft={draft}
-          />
+        <g
+          data-testid="ai-cells"
+          data-drawn={deep ? near.length : shown.length}
+          transform={slideTransform(camera, rect)}
+        >
+          <g display={deep ? "none" : undefined}>
+            <CellOutlines
+              shown={shown}
+              chosen={chosen}
+              checkOf={checkOf}
+              colourOf={colourOf}
+              draft={draft}
+            />
+          </g>
+          {deep ? (
+            <CellOutlines
+              shown={near}
+              chosen={chosen}
+              checkOf={checkOf}
+              colourOf={colourOf}
+              draft={draft}
+            />
+          ) : null}
         </g>
         {sole?.edited && !sole.deleted ? (
           <polygon
