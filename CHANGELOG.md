@@ -2,6 +2,26 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.27.2 (2026-11-20)
+
+### Features
+
+- OPS-038: Let GPU pools run in any region unless PARFOCAL_GPU_REGION pins them
+
+### Fixes
+
+- OPS-038: Let the GPU wait fields through the log scrubber
+
+### Docs
+
+- PROTO-092: Log the v0.27.1 deploy
+- PROTO-093: Log the viewer access rule and annotate read only
+- PROTO-036: Record the deployed Good one-click check
+- AISEG-024: Record the deployed Best click, GPU seconds and cost
+- OPS-038: Record a cold EU GPU wait on the deployed app
+- TEST-051: Record that the reseeded app shows only real results
+- TEST-051: Log the AI review checks and tick PROTO-036 and TEST-051
+
 ## v0.27.1 (2026-11-20)
 
 ### Fixes
