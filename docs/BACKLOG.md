@@ -4693,7 +4693,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a db test pins `/api/me/slides` for 50 slides under 12 queries however many tasks the page touches, and the slides, sessions and review state tests still pass.
   Depends on: OPS-033.
   Size: S.
-- [ ] OPS-037 · Nothing reads the US bucket parfocal-dev, so the owner can delete it
+- [x] OPS-037 · Nothing reads the US bucket parfocal-dev, so the owner can delete it
   The owner asked on 2026-11-19 to stop paying for the US copy. `parfocal-dev` holds 38.1 GB (28.7 GB of `fixtures/`, 8.7 GB of `fixture-slides/`, 0.45 GB of `samples/`, 0.17 GB of `models/`), most of it also in `parfocal-dev-eu`, about $0.57 a month. CI and `pnpm fixtures` read `fixtures/` from it with the read-only key `parfocal-fixtures-read`, `apps/edge/wrangler.jsonc` binds it for local dev, and `packages/upload-spike` names it.
   Copy what only `parfocal-dev` holds into `parfocal-dev-eu` (`fixtures/` has 2,203 objects there and 33 in the EU bucket, among them `fixtures/ui-visual/` and `fixtures/sam-parity/`), point every reader at the EU endpoint with a read-only key scoped to `parfocal-dev-eu`, and remove the bucket from OpenTofu with a plan that destroys only it. Write the owner's delete command, its cost and what it frees in `docs/decisions.md`.
   Done when a full CI run and `pnpm fixtures` pass with no key that can reach `parfocal-dev`, `git grep` finds no reader of it, and the owner's delete step is in `docs/decisions.md`.
