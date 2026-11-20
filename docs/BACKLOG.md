@@ -6993,7 +6993,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 3. `stage-guided-card.tsx` never opens the reasons and its fix buttons do nothing, so the redraw and retype of RSET-007 (the reviewed layer) are unreachable in the viewer people use.
   Done when Disagree opens the reasons in the live viewer, "Redraw the outline" and "Change the type" save through `saveReviewEdit`, the redrawn outline is drawn over the dimmed AI one, Undo clears the edit, a read only reviewer sees no fix buttons, and specs cover a region and a cell on the fake API and one on the real API.
   Depends on PROTO-099 (one progress control, one Submit and engine drawn adjudication). Size: M.
-- [ ] PROTO-112 · A reviewer edits the current AI outline with handles and the brush
+- [x] PROTO-112 · A reviewer edits the current AI outline with handles and the brush
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 4. The owner asked for moving vertices and erasing part, and a full redraw is too coarse for a small fix.
   Done when Enter or a double click on the current AI object in a review task shows the same handles as Annotate, the brush adds to or erases from it, each gesture saves one review edit, "Restore the AI original" clears it, and specs cover move, add, erase and restore.
   Depends on PROTO-111. Size: M.
