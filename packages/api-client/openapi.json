@@ -74387,6 +74387,39 @@
         ],
         "title": "ProjectRole"
       },
+      "ProjectRoom": {
+        "properties": {
+          "used_bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Used Bytes"
+          },
+          "needed_bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Needed Bytes"
+          },
+          "allowance_bytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowance Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "used_bytes",
+          "needed_bytes",
+          "allowance_bytes"
+        ],
+        "title": "ProjectRoom"
+      },
       "ProjectScopeOptions": {
         "properties": {
           "rois": {
@@ -82338,6 +82371,9 @@
             },
             "type": "array",
             "title": "New Cases"
+          },
+          "room": {
+            "$ref": "#/components/schemas/ProjectRoom"
           }
         },
         "type": "object",
@@ -82345,7 +82381,8 @@
           "slides",
           "results",
           "others",
-          "new_cases"
+          "new_cases",
+          "room"
         ],
         "title": "Sorting"
       },

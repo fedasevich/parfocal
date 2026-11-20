@@ -24,6 +24,7 @@ from parfocal_api.review_decisions import ReviewDecisionDraft, list_decisions, s
 from parfocal_api.review_objects import list_review_objects
 from parfocal_api.review_states import State, states_of, task_of
 from parfocal_api.sample_files import SampleFile
+from parfocal_api.settings import ApiSettings
 from parfocal_api.showcase import (
     ANNOTATE_DEMO,
     CELL_TOUR,
@@ -564,7 +565,9 @@ async def test_the_owner_opens_a_seeded_project_on_the_real_project_calls(seeded
     engine = create_engine(seeded)
     try:
         async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant)) as connection:
-            overview = await get_project_overview(project, principal, connection)
+            overview = await get_project_overview(
+                project, principal, connection, ApiSettings.model_construct()
+            )
             assert overview.slides > 0
             assert overview.result_sets > 0
             slides = await list_project_slides(project, principal, connection)

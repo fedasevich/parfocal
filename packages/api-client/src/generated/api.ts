@@ -5967,6 +5967,14 @@ export interface ProjectOverview {
   import_failure: ImportFailure | null;
 }
 
+export interface ProjectRoom {
+  /** @minimum 0 */
+  used_bytes: number;
+  /** @minimum 0 */
+  needed_bytes: number;
+  allowance_bytes: number | null;
+}
+
 export interface ScopeRoi {
   key: string;
   name: string;
@@ -7370,6 +7378,7 @@ export interface Sorting {
   results: ResultPairing[];
   others: string[];
   new_cases: string[];
+  room: ProjectRoom;
 }
 
 export interface SortingRequest {

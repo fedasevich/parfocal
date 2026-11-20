@@ -7435,6 +7435,11 @@ export const getSortDroppedFilesResponseMock = (
   new_cases: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
+  room: {
+    used_bytes: faker.number.int({ min: 0 }),
+    needed_bytes: faker.number.int({ min: 0 }),
+    allowance_bytes: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+  },
   ...overrideResponse,
 });
 
@@ -7493,6 +7498,11 @@ export const getApplyDroppedFilesResponseMock = (
   new_cases: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
+  room: {
+    used_bytes: faker.number.int({ min: 0 }),
+    needed_bytes: faker.number.int({ min: 0 }),
+    allowance_bytes: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+  },
   ...overrideResponse,
 });
 

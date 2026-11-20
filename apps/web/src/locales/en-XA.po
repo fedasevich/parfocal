@@ -2468,6 +2468,10 @@ msgstr ""
 msgid "<0>Not enough space.</0> This upload needs {0} GB and {projectCode} has {1} GB left of its {2} GB allowance."
 msgstr ""
 
+#: src/screens/upload/server-check.tsx
+msgid "<0>Not enough space.</0> This upload needs {needed} and the project has {left} left of its {allowance} allowance. Remove some slides from this upload, or ask an admin to raise the allowance."
+msgstr ""
+
 #: src/viewer/stage-issue-cards.tsx
 msgid "<0>Read only.</0> This slide is assigned to {reviewers}, so you can look but not answer."
 msgstr ""
@@ -16932,6 +16936,10 @@ msgstr ""
 #. placeholder {0}: learnerView.corrections
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
+msgstr ""
+
+#: src/screens/upload/live-wizard.tsx
+msgid "The upload does not fit in the project's storage. Remove some slides to go on."
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx

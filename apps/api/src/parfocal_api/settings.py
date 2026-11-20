@@ -52,6 +52,7 @@ class ApiSettings(StorageSettings):
     upload_max_bytes: Annotated[int, Field(ge=1, le=MAX_PARTS * MAX_PART_BYTES)] = (
         DEFAULT_UPLOAD_MAX_BYTES
     )
+    project_storage_allowance_bytes: PositiveInt | None = None
     upload_part_bytes: Annotated[
         int, Field(ge=MIN_PART_BYTES, le=MAX_PART_BYTES), AfterValidator(whole_mib)
     ] = DEFAULT_PART_BYTES

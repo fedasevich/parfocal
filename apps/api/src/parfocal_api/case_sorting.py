@@ -20,6 +20,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError
+from parfocal_api.project_storage import ProjectRoom, room_of
 from parfocal_api.projects import visible
 from parfocal_api.result_pairing import (
     MAX_FILES,
@@ -32,7 +33,7 @@ from parfocal_api.result_pairing import (
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.slide_ingest import label_of
 from parfocal_api.tables import CaseSource, cases, slides
-from parfocal_api.uploads import paired_slide
+from parfocal_api.uploads import Settings, paired_slide
 from parfocal_common.pairing import (
     Certainty,
     FileKind,
@@ -116,6 +117,7 @@ class Sorting(BaseModel):
     results: list[ResultPairing]
     others: list[str]
     new_cases: list[str]
+    room: ProjectRoom
 
 
 class NotADroppedSlideError(BadRequestError):
@@ -135,6 +137,7 @@ class Draft:
     slides: list[SortedSlide]
     results: list[ResultPairing]
     others: list[str]
+    sizes: dict[str, int | None]
 
 
 router = APIRouter(prefix="/api/uploads", tags=["uploads"])
@@ -267,6 +270,7 @@ async def draft_of(
         slides=sorted_slides,
         results=pairings,
         others=[path for path, kind in kinds.items() if kind is FileKind.OTHER],
+        sizes=sizes,
     )
 
 
@@ -320,12 +324,22 @@ def missing_cases(draft: Draft) -> list[str]:
     )
 
 
-async def sorting_of(connection: AsyncConnection, draft: Draft, request: SortingRequest) -> Sorting:
+def needed_bytes(draft: Draft, results: list[ResultPairing]) -> int:
+    kept = [entry.path for entry in draft.slides if entry.outcome is not SlideOutcome.LEFT_OUT]
+    paired = [pairing.path for pairing in results if pairing.slide is not None]
+    return sum(draft.sizes.get(path) or 0 for path in [*kept, *paired])
+
+
+async def sorting_of(
+    connection: AsyncConnection, draft: Draft, request: SortingRequest, allowance: int | None
+) -> Sorting:
+    results = await decide_results(connection, draft, request.result_decisions)
     return Sorting(
         slides=draft.slides,
-        results=await decide_results(connection, draft, request.result_decisions),
+        results=results,
         others=draft.others,
         new_cases=missing_cases(draft),
+        room=await room_of(connection, draft.project_id, needed_bytes(draft, results), allowance),
     )
 
 
@@ -384,10 +398,13 @@ def placed(draft: Draft, created: dict[str, uuid.UUID]) -> None:
     **require(Permission.UPLOAD_SLIDES, write=True),
 )
 async def sort_dropped_files(
-    request: SortingRequest, principal: CurrentPrincipal, connection: TenantConnection
+    request: SortingRequest,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    settings: Settings,
 ) -> Sorting:
     draft = await draft_of(connection, principal, request)
-    return await sorting_of(connection, draft, request)
+    return await sorting_of(connection, draft, request, settings.project_storage_allowance_bytes)
 
 
 @router.post(
@@ -396,7 +413,10 @@ async def sort_dropped_files(
     **require(Permission.UPLOAD_SLIDES, write=True),
 )
 async def apply_dropped_files(
-    request: SortingRequest, principal: CurrentPrincipal, connection: TenantConnection
+    request: SortingRequest,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    settings: Settings,
 ) -> Sorting:
     draft = await draft_of(connection, principal, request)
     labels = missing_cases(draft)
@@ -404,5 +424,5 @@ async def apply_dropped_files(
         await create_cases(connection, principal, draft, labels) if labels else {}
     )
     placed(draft, created)
-    sorting = await sorting_of(connection, draft, request)
+    sorting = await sorting_of(connection, draft, request, settings.project_storage_allowance_bytes)
     return sorting.model_copy(update={"new_cases": labels})

@@ -5,6 +5,7 @@ import {
   compareSorting,
   duplicatesOf,
   type PlaceInput,
+  shortfallOf,
   sortingRequestOf,
 } from "../src/upload/place.ts";
 
@@ -56,7 +57,21 @@ const agreeing: Sorting = {
   ],
   others: [],
   new_cases: [],
+  room: { used_bytes: 0, needed_bytes: 20, allowance_bytes: null },
 };
+
+test("an upload is short of storage only when it needs more than the allowance has left", () => {
+  const room = (used: number, needed: number, allowance: number | null) => ({
+    used_bytes: used,
+    needed_bytes: needed,
+    allowance_bytes: allowance,
+  });
+  assert.equal(shortfallOf(null), null);
+  assert.equal(shortfallOf(room(900, 500, null)), null);
+  assert.equal(shortfallOf(room(400, 600, 1000)), null);
+  assert.deepEqual(shortfallOf(room(400, 601, 1000)), { needed: 601, left: 600, allowance: 1000 });
+  assert.deepEqual(shortfallOf(room(1200, 1, 1000)), { needed: 1, left: 0, allowance: 1000 });
+});
 
 test("the sorting request lists slides and kept results, a pick as a decision, and skips empty sizes", () => {
   const request = sortingRequestOf(input);
