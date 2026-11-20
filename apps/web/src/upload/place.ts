@@ -3,6 +3,7 @@ import {
   apiFetch,
   type FileKind,
   type PairBy,
+  type ProjectRoom,
   type ResultDecision,
   type SortedFile,
   type Sorting,
@@ -155,7 +156,21 @@ const caseText = (label: string | null) => (label === null ? "Loose, no case" : 
 
 const slideText = (path: string | null) => (path === null ? "No slide" : `Slide ${path}`);
 
-export type SortCheck = { differences: SortDifference[]; duplicates: Duplicate[] };
+export type SortCheck = {
+  differences: SortDifference[];
+  duplicates: Duplicate[];
+  room: ProjectRoom;
+};
+
+export type Shortfall = { needed: number; left: number; allowance: number };
+
+export function shortfallOf(room: ProjectRoom | null): Shortfall | null {
+  if (room === null || room.allowance_bytes === null) return null;
+  const left = Math.max(0, room.allowance_bytes - room.used_bytes);
+  return room.needed_bytes > left
+    ? { needed: room.needed_bytes, left, allowance: room.allowance_bytes }
+    : null;
+}
 
 export type Duplicate = { path: string; of: string };
 
@@ -170,6 +185,7 @@ export async function checkSorting(input: PlaceInput): Promise<SortCheck> {
   return {
     differences: compareSorting(input, response.data),
     duplicates: duplicatesOf(response.data),
+    room: response.data.room,
   };
 }
 

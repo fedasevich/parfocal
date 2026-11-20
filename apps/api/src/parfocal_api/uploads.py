@@ -16,6 +16,7 @@ from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal, ServicePrincipal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
+from parfocal_api.project_storage import require_room
 from parfocal_api.projects import visible
 from parfocal_api.result_imports import (
     lock_slide_upload,
@@ -489,6 +490,7 @@ async def create_upload(
         if found is None:
             raise CaseNotFoundError
     paired = await result_values(connection, principal, project.id, meta, draft.filename)
+    await require_room(connection, project.id, meta.size, settings.project_storage_allowance_bytes)
     plan = plan_parts(meta.size, part_size_for(meta.size, settings.upload_part_bytes))
     upload_id = uuid.uuid4()
     key = object_key(project.tenant_id, upload_id, draft.filename)

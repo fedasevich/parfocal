@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
-from upload_support import Lab
+from upload_support import Lab, start_upload
 from workspace_support import join_project, make_case, make_slide, owner, person
 
 from parfocal_api.principals import ServicePrincipal
@@ -252,3 +252,42 @@ def test_a_service_account_creates_cases_by_sorting_with_no_author(
         "SELECT count(*) FROM cases "
         f"WHERE project_id = '{lab.project}' AND created_by_user_id IS NULL",
     ) == [(2,)]
+
+
+def allow(api: ApiAs, allowance: int | None) -> None:
+    api.app.settings = api.app.settings.model_copy(
+        update={"project_storage_allowance_bytes": allowance}
+    )
+
+
+def test_sorting_answers_the_room_the_kept_files_need(api: ApiAs, database: str, lab: Lab) -> None:
+    case = make_case(database, lab.tenant_id, lab.project, "S26-04812")
+    held = make_slide(database, lab.tenant_id, lab.project, "old", case)
+    owner(database, f"UPDATE slides SET file_bytes = 250 WHERE id = '{held}'")
+    assert sorted_ok(api, lab)["room"] == {
+        "used_bytes": 250,
+        "needed_bytes": 300,
+        "allowance_bytes": None,
+    }
+    allow(api, 500)
+    room = sorted_ok(api, lab)["room"]
+    assert (room["used_bytes"] + room["needed_bytes"], room["allowance_bytes"]) == (550, 500)
+    start_upload(api, lab.lead, lab.project, "arriving.svs", 50)
+    assert sorted_ok(api, lab)["room"]["used_bytes"] == 300
+
+
+def test_an_upload_past_the_allowance_is_refused_as_storage_full(api: ApiAs, lab: Lab) -> None:
+    allow(api, 150)
+    start_upload(api, lab.lead, lab.project, "first.svs", 100)
+    refused = api(lab.lead).post(
+        "/api/uploads/s3/multipart",
+        json={
+            "filename": "second.svs",
+            "type": "application/octet-stream",
+            "metadata": {"project_id": str(lab.project), "size": 100},
+        },
+    )
+    assert (refused.status_code, refused.json()["code"]) == (409, "storage-full")
+    start_upload(api, lab.lead, lab.project, "small.svs", 50)
+    overview = api(lab.lead).get(f"/api/projects/{lab.project}/overview").json()
+    assert overview["storage"]["allowance_gb"] == 150 / 1_000_000_000

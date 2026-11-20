@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
-import type { Project } from "@parfocal/api-client";
+import type { Project, ProjectRoom } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -33,7 +33,7 @@ import {
 } from "../../upload/drop.ts";
 import { dropStore, useDropStore } from "../../upload/drop-store.ts";
 import { formatBytes, sameFile } from "../../upload/entries.ts";
-import type { Duplicate } from "../../upload/place.ts";
+import { type Duplicate, shortfallOf } from "../../upload/place.ts";
 import { minutesLeft, slideSteps, timeLeftText } from "../../upload/slide-steps.ts";
 import { useSlideStates } from "../../upload/use-slide-states.ts";
 import { useUploads } from "../../upload/use-uploads.ts";
@@ -94,6 +94,8 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
   const [dragging, setDragging] = useState(false);
   const [phase, setPhase] = useState<"busy" | "error" | null>(null);
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
+  const [room, setRoom] = useState<ProjectRoom | null>(null);
+  const full = shortfallOf(room) !== null;
   const model = createLiveModel(items, state);
   const openDuplicates = duplicates.filter(
     (duplicate) => state.duplicate[duplicate.path] === undefined,
@@ -215,15 +217,17 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
       <FlowBar
         back={back}
         hint={
-          toFix > 0
-            ? t`${plural(toFix, "file")} wait${toFix === 1 ? "s" : ""} for a fix. The rest upload now.`
-            : t`Nothing needs you.`
+          full
+            ? t`The upload does not fit in the project's storage. Remove some slides to go on.`
+            : toFix > 0
+              ? t`${plural(toFix, "file")} wait${toFix === 1 ? "s" : ""} for a fix. The rest upload now.`
+              : t`Nothing needs you.`
         }
         next={
           <Button
             variant="primary"
             data-testid="start-upload"
-            disabled={!model.canStart || phase === "busy"}
+            disabled={!model.canStart || full || phase === "busy"}
             onClick={startUpload}
           >
             <Icon name="upload" />
@@ -306,6 +310,8 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             take={take}
             duplicates={duplicates}
             onDuplicates={setDuplicates}
+            room={room}
+            onRoom={setRoom}
           />
         ) : (
           <UploadStep model={model} entries={mine} projectId={project.id} />
@@ -791,6 +797,8 @@ function CheckStep({
   take,
   duplicates,
   onDuplicates,
+  room,
+  onRoom,
 }: {
   model: LiveModel<DroppedItem>;
   state: LiveState;
@@ -801,6 +809,8 @@ function CheckStep({
   take: (taken: DroppedItem[]) => void;
   duplicates: readonly Duplicate[];
   onDuplicates: (found: Duplicate[]) => void;
+  room: ProjectRoom | null;
+  onRoom: (room: ProjectRoom | null) => void;
 }) {
   const { t } = useLingui();
 
@@ -857,6 +867,8 @@ function CheckStep({
           startError={startError}
           duplicates={duplicates}
           onDuplicates={onDuplicates}
+          room={room}
+          onRoom={onRoom}
           decide={(path, choice) => {
             const next = { ...state.duplicate };
             if (choice === null) delete next[path];

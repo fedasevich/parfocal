@@ -167,7 +167,18 @@ const sortFiles = (request: SortingRequest): Sorting => {
       };
     });
   const others = paths.filter((path) => kinds.get(path) === FileKind.other);
-  return { slides, results, others, new_cases: [] };
+  const sizeOf = (path: string) => request.files.find((file) => file.path === path)?.size ?? 0;
+  const needed = [
+    ...slides
+      .filter((slide) => slide.outcome !== SlideOutcome["left-out"])
+      .map((slide) => slide.path),
+    ...results.filter((result) => result.slide !== null).map((result) => result.path),
+  ].reduce((sum, path) => sum + sizeOf(path), 0);
+  const full = slidePaths.some((path) => stemOf(path).startsWith("full-"));
+  const room = full
+    ? { used_bytes: 3_800_000_000, needed_bytes: needed, allowance_bytes: 3_800_000_000 }
+    : { used_bytes: 0, needed_bytes: needed, allowance_bytes: null };
+  return { slides, results, others, new_cases: [], room };
 };
 
 const apply = (request: SortingRequest): Sorting => {

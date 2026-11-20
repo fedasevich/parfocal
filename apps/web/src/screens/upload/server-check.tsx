@@ -1,12 +1,16 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import type { ProjectRoom } from "@parfocal/api-client";
+import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useRef, useState } from "react";
 import type { DroppedItem } from "../../upload/drop.ts";
+import { formatBytes } from "../../upload/entries.ts";
 import {
   checkSorting,
   type Duplicate,
   placeInputOf,
   type SortDifference,
+  shortfallOf,
 } from "../../upload/place.ts";
 import { DoneRow, ProblemZone } from "./check-step.tsx";
 import type { LiveModel, LiveState } from "./live-model.ts";
@@ -20,6 +24,8 @@ export default function ServerCheck({
   startError,
   duplicates,
   onDuplicates,
+  room,
+  onRoom,
   decide,
 }: {
   projectId: string;
@@ -28,6 +34,8 @@ export default function ServerCheck({
   startError: boolean;
   duplicates: readonly Duplicate[];
   onDuplicates: (found: Duplicate[]) => void;
+  room: ProjectRoom | null;
+  onRoom: (room: ProjectRoom | null) => void;
   decide: (path: string, choice: "skip" | "keep" | null) => void;
 }) {
   const { t } = useLingui();
@@ -37,6 +45,8 @@ export default function ServerCheck({
   latest.current = () => placeInputOf(projectId, model, state);
   const report = useRef(onDuplicates);
   report.current = onDuplicates;
+  const reportRoom = useRef(onRoom);
+  reportRoom.current = onRoom;
   const key = JSON.stringify([
     model.slides.map((slide) => `${slide.path}:${slide.size}`),
     model.results.map((result) => `${result.item.path}:${result.slide}:${result.left}`),
@@ -52,16 +62,32 @@ export default function ServerCheck({
         if (!live) return;
         setDifferences(found.differences);
         report.current(found.duplicates);
+        reportRoom.current(found.room);
       })
       .catch(() => {
-        if (live) setDifferences([]);
+        if (!live) return;
+        setDifferences([]);
+        reportRoom.current(null);
       });
     return () => {
       live = false;
     };
   }, [key]);
+  const short = shortfallOf(room);
+  const needed = short ? formatBytes(short.needed) : "";
+  const left = short && short.left > 0 ? formatBytes(short.left) : "0 KB";
+  const allowance = short ? formatBytes(short.allowance) : "";
   return (
     <>
+      {short ? (
+        <Banner tone="warn" inline data-testid="storage-full">
+          <Trans>
+            <b>Not enough space.</b> This upload needs {needed} and the project has {left} left of
+            its {allowance} allowance. Remove some slides from this upload, or ask an admin to raise
+            the allowance.
+          </Trans>
+        </Banner>
+      ) : null}
       {startError ? (
         <ProblemZone
           icon="x-circle"

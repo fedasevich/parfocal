@@ -494,6 +494,37 @@ test("a skipped duplicate stays out of the upload", async ({ page }) => {
   await rm(root, { recursive: true, force: true });
 });
 
+test("an upload that does not fit the storage allowance waits until slides are removed", async ({
+  page,
+}) => {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-full-e2e-"));
+  await writeTree(root, {
+    name: "full",
+    children: [
+      { name: "full-big.svs", text: "slide-big" },
+      { name: "fine.svs", text: "slide-fine" },
+    ],
+  });
+  const gate = await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "full"));
+  await page.getByTestId("upload-next").click();
+  await expect(page.getByTestId("storage-full")).toContainText("Not enough space");
+  await expect(page.getByTestId("storage-full")).toContainText("0 KB left");
+  await expect(page.getByTestId("start-upload")).toBeDisabled();
+  await page.getByRole("button", { name: "Back" }).click();
+  await page
+    .getByTestId("upload-page")
+    .getByRole("button", { name: /Remove .*full-big\.svs/ })
+    .click();
+  await page.getByTestId("upload-next").click();
+  await expect(page.getByTestId("storage-full")).toHaveCount(0);
+  await expect(page.getByTestId("start-upload")).toBeEnabled();
+  await page.getByTestId("start-upload").click();
+  await expect.poll(() => gate.created.map((item) => item.filename)).toEqual(["fine.svs"]);
+  await rm(root, { recursive: true, force: true });
+});
+
 const tumorId = "00000000-0000-4000-8003-000000000007-class-1";
 const stromaId = "00000000-0000-4000-8003-000000000007-class-2";
 

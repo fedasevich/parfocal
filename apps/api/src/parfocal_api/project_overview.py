@@ -41,6 +41,7 @@ from parfocal_api.tables import (
     specimens,
     uploads,
 )
+from parfocal_api.uploads import Settings
 from parfocal_common.result_imports import CHECK_PROBLEMS, UploadKind
 
 BYTES_PER_GB = 1_000_000_000
@@ -168,6 +169,10 @@ async def whole_project(
     return row
 
 
+def allowance_gb_of(allowance: int | None) -> float | None:
+    return None if allowance is None else allowance / BYTES_PER_GB
+
+
 def live_slides(project_id: uuid.UUID) -> Any:
     return and_(slides.c.project_id == project_id, slides.c.deleted_at.is_(None))
 
@@ -248,7 +253,10 @@ async def import_failure(
     **require(Permission.SEE_SLIDES, emergency=True),
 )
 async def get_project_overview(
-    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    project_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    settings: Settings,
 ) -> ProjectOverview:
     project = await whole_project(connection, principal, project_id)
     case_count = await connection.scalar(
@@ -310,7 +318,8 @@ async def get_project_overview(
         ],
         study_template_id=project.study_template_id,
         storage=ProjectStorage(
-            used_gb=round(int(used_bytes or 0) / BYTES_PER_GB, 2), allowance_gb=None
+            used_gb=round(int(used_bytes or 0) / BYTES_PER_GB, 2),
+            allowance_gb=allowance_gb_of(settings.project_storage_allowance_bytes),
         ),
         import_failure=await import_failure(connection, project_id),
     )
