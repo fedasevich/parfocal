@@ -6940,6 +6940,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Migration steps 14, 15, 16 and the last line. Keep one progress control and one Submit in the top bar and make the Opinion tab card the form only, draw the disagreement queue and adjudication cards with the engine stage in an object layout and give the adjudicator a link to open the slide in review, turn tool keys off wherever the rail is hidden, make the back link return to the page the person came from, and move the slide kind notices (no pixel size, remote source offline, result importing or failed, no result) into one ordered list shown in every mode and layout.
   Done when specs cover each item on the fake API and the viewer golden images pass.
   Depends on PROTO-098. Size: M.
+- [ ] PROTO-100 · A slide that came in a zip reads as its own format
+  On 2026-11-20 the owner asked whether slides named like `CMU-1-Saved-1_16.zip` are expected. They are: MIRAX (a .mrxs file with its data folder) and DICOM (a folder of instances) are several files, so they arrive as one zip, and the format gallery seed labels each slide by its fixture file name. The row then reads as a zip, not as a slide. Show such slides by their stem with the format inside (for example MIRAX or DICOM) in the slide row, the viewer title and search, keep the zip only as the file line, and seed the gallery labels the same way, updating the seed tests, the seeded-formats smoke and the model result keys that use the label.
+  Done when the project Slides tab, the viewer title and search show the two gallery zips by stem and format on the fake API and after the next reset, and the seed tests pass.
+  Depends on TEST-055. Size: S.
 
 ---
 
