@@ -1117,6 +1117,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "getReviewedLayer": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/layer"),
+    "listReviewEditHistory": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/edits/T1/history"
+    ),
     "getSharedLayer": lambda w: Call("GET", w.shared_layer),
     "listSharedObjectHistory": lambda w: Call(
         "GET", f"{w.shared_layer}/objects/{w.layer_object}/history"

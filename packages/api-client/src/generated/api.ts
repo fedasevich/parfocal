@@ -6531,6 +6531,32 @@ export interface ReviewEdit {
   updated_at: string;
 }
 
+export type ReviewEditChange = (typeof ReviewEditChange)[keyof typeof ReviewEditChange];
+
+export const ReviewEditChange = {
+  edited: "edited",
+  cleared: "cleared",
+  restored: "restored",
+  split: "split",
+  part: "part",
+  merged: "merged",
+  "merged-into": "merged-into",
+} as const;
+
+export type ReviewEditVersionGeometry = { [key: string]: unknown } | null;
+
+export interface ReviewEditVersion {
+  object: string;
+  change: "ai-original" | ReviewEditChange;
+  class_id: string | null;
+  class_name: string | null;
+  geometry: ReviewEditVersionGeometry;
+  deleted: boolean;
+  related: string[];
+  reviewer_id: string | null;
+  changed_at: string | null;
+}
+
 export type ReviewObjectKind = (typeof ReviewObjectKind)[keyof typeof ReviewObjectKind];
 
 export const ReviewObjectKind = {
@@ -8565,6 +8591,10 @@ export type GetReviewOrderParams = {
    * @maximum 1000
    */
   limit?: number;
+};
+
+export type ListReviewEditHistoryParams = {
+  reviewer_id?: string | null;
 };
 
 export type ExportReviewedLayerParams = {
@@ -48928,6 +48958,266 @@ export function useGetTaskDisplay<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetTaskDisplayQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listReviewEditHistoryResponse200 = {
+  data: ReviewEditVersion[];
+  status: 200;
+};
+
+export type listReviewEditHistoryResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listReviewEditHistoryResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listReviewEditHistoryResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listReviewEditHistoryResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listReviewEditHistoryResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listReviewEditHistoryResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listReviewEditHistoryResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listReviewEditHistoryResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listReviewEditHistoryResponseSuccess = listReviewEditHistoryResponse200 & {
+  headers: Headers;
+};
+export type listReviewEditHistoryResponseError = (
+  | listReviewEditHistoryResponse400
+  | listReviewEditHistoryResponse401
+  | listReviewEditHistoryResponse403
+  | listReviewEditHistoryResponse404
+  | listReviewEditHistoryResponse409
+  | listReviewEditHistoryResponse422
+  | listReviewEditHistoryResponse429
+  | listReviewEditHistoryResponse500
+) & {
+  headers: Headers;
+};
+
+export type listReviewEditHistoryResponse =
+  | listReviewEditHistoryResponseSuccess
+  | listReviewEditHistoryResponseError;
+
+export const getListReviewEditHistoryUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/edits/${objectId}/history?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/edits/${objectId}/history`;
+};
+
+/**
+ * @summary List Review Edit History
+ */
+export const listReviewEditHistory = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listReviewEditHistoryResponse> => {
+  return apiFetch<listReviewEditHistoryResponse>(
+    getListReviewEditHistoryUrl(taskId, slideId, objectId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListReviewEditHistoryQueryKey = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/edits/${objectId}/history`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListReviewEditHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof listReviewEditHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewEditHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListReviewEditHistoryQueryKey(taskId, slideId, objectId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewEditHistory>>> = ({ signal }) =>
+    listReviewEditHistory(taskId, slideId, objectId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      taskId !== null &&
+      taskId !== undefined &&
+      slideId !== null &&
+      slideId !== undefined &&
+      objectId !== null &&
+      objectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listReviewEditHistory>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListReviewEditHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listReviewEditHistory>>
+>;
+export type ListReviewEditHistoryQueryError = Problem;
+
+export function useListReviewEditHistory<
+  TData = Awaited<ReturnType<typeof listReviewEditHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params: undefined | ListReviewEditHistoryParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewEditHistory>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewEditHistory>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewEditHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewEditHistory<
+  TData = Awaited<ReturnType<typeof listReviewEditHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewEditHistory>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listReviewEditHistory>>,
+          TError,
+          Awaited<ReturnType<typeof listReviewEditHistory>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListReviewEditHistory<
+  TData = Awaited<ReturnType<typeof listReviewEditHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewEditHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Review Edit History
+ */
+
+export function useListReviewEditHistory<
+  TData = Awaited<ReturnType<typeof listReviewEditHistory>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ListReviewEditHistoryParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listReviewEditHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListReviewEditHistoryQueryOptions(
+    taskId,
+    slideId,
+    objectId,
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

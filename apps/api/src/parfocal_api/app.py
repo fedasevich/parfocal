@@ -88,6 +88,7 @@ from parfocal_api import (
     result_sets,
     retention,
     review_decisions,
+    review_edit_history,
     review_objects,
     review_order,
     review_skips,
@@ -316,6 +317,7 @@ def create_app(
     app.include_router(task_runs.router)
     app.include_router(review_order.router)
     app.include_router(review_objects.router)
+    app.include_router(review_edit_history.router)
     app.include_router(slide_result_stats.router)
     app.include_router(slide_viewer.slide_router)
     app.include_router(slide_viewer.result_set_router)

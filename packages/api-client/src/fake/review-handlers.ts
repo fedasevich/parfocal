@@ -17,6 +17,7 @@ import {
   getListMentionableMembersMockHandler,
   getListMentionableMembersOnSlideMockHandler,
   getListProjectClassesMockHandler,
+  getListReviewEditHistoryMockHandler,
   getListReviewObjectsMockHandler,
   getListSlideThreadsMockHandler,
   getListThreadCommentsMockHandler,
@@ -67,6 +68,7 @@ import { toResultSetDetail } from "./project-handlers.ts";
 import {
   addedOn,
   addObject,
+  editHistoryFor,
   firstReadOf,
   firstReadOpen,
   hidesResultSetFrom,
@@ -847,6 +849,13 @@ export function reviewHandlers(): RequestHandler[] {
     }),
     getGetReviewedLayerMockHandler(({ params }) =>
       reviewedLayerFor(String(params["taskId"]), String(params["slideId"])),
+    ),
+    getListReviewEditHistoryMockHandler(({ params }) =>
+      editHistoryFor(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        String(params["objectId"]),
+      ),
     ),
     http.post<{ taskId: string; slideId: string }>(
       "*/api/review-tasks/:taskId/slides/:slideId/submit",

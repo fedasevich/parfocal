@@ -3473,6 +3473,10 @@ msgstr "AI only, reviewer disagreed"
 msgid "AI order"
 msgstr "AI order"
 
+#: src/screens/review/object-edit-history.tsx
+msgid "AI original"
+msgstr "AI original"
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "AI result"
 msgstr "AI result"
@@ -4132,6 +4136,10 @@ msgstr "Back to Parfocal"
 msgid "Back to sign in"
 msgstr "Back to sign in"
 
+#: src/screens/review/object-edit-history.tsx
+msgid "Back to the AI original"
+msgstr "Back to the AI original"
+
 #: src/screens/review/object-card.tsx
 msgid "Back to the answers"
 msgstr "Back to the answers"
@@ -4451,6 +4459,10 @@ msgstr "Brighter"
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Brightness"
 msgstr "Brightness"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Brought back"
+msgstr "Brought back"
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Brush"
@@ -4839,6 +4851,10 @@ msgstr "Change type"
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "changed"
 msgstr "changed"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Changed"
+msgstr "Changed"
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Changed after sign-off"
@@ -6231,6 +6247,7 @@ msgstr "Delete shape"
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/admin/deleted-projects.tsx
+#: src/screens/review/object-edit-history.tsx
 msgid "Deleted"
 msgstr "Deleted"
 
@@ -6723,6 +6740,10 @@ msgstr "Edit"
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Edit {0} myself in the viewer"
 msgstr "Edit {0} myself in the viewer"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Edit history"
+msgstr "Edit history"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Edit in the Display panel"
@@ -9554,6 +9575,10 @@ msgstr "Made by <0>{0}</0>"
 msgid "Made by <0>{0}</0>, nobody has changed it."
 msgstr "Made by <0>{0}</0>, nobody has changed it."
 
+#: src/screens/review/object-edit-history.tsx
+msgid "Made by splitting {related}"
+msgstr "Made by splitting {related}"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Made by the model and kept as it is by an expert"
 msgstr "Made by the model and kept as it is by an expert"
@@ -9782,6 +9807,14 @@ msgstr "Mentions"
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Mentions and replies"
 msgstr "Mentions and replies"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Merged into {related}"
+msgstr "Merged into {related}"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Merged with {related}"
+msgstr "Merged with {related}"
 
 #: ../../packages/ui/src/components/team.tsx
 msgid "Message"
@@ -10182,6 +10215,10 @@ msgstr "New link"
 #: src/results/painted-map-layer.tsx
 msgid "New map"
 msgstr "New map"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "new outline"
+msgstr "new outline"
 
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "New password"
@@ -15651,6 +15688,10 @@ msgstr "Split"
 #: src/screens/new-task/reviewers-step.tsx
 msgid "Split evenly"
 msgstr "Split evenly"
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Split into {related}"
+msgstr "Split into {related}"
 
 #: src/screens/clinical-report/steps.tsx
 msgid "Stage"
