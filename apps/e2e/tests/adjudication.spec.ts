@@ -96,9 +96,12 @@ test("a disagreement goes to an adjudicator who decides it on the drawn slide", 
     expect(sent.status, JSON.stringify(sent.json)).toBe(201);
 
     await adjudicator.goto(`/tasks/${taskId}/adjudicate`);
-    await expect(adjudicator.getByTestId("still-engine").locator("canvas").first()).toBeVisible({
+    const stage = adjudicator.getByTestId("object-stage");
+    await expect(stage.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
       timeout: 30_000,
     });
+    await expect(stage.locator("canvas").first()).toBeVisible();
+    await expect(stage.getByTestId("object-frame")).toHaveAttribute("data-object", "T1");
     await adjudicator.getByLabel("Note for the record").fill("Boundary is clearly off");
     await adjudicator
       .getByRole("group", { name: "Your decision on T1" })
