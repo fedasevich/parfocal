@@ -42,6 +42,7 @@ from parfocal_api.showcase import (
     seed,
     viewer_emails_of,
 )
+from parfocal_api.showcase_case import BROKEN_SLIDE
 from parfocal_api.showcase_results import (
     CELLS_MODEL,
     MODEL_RESULTS,
@@ -330,15 +331,15 @@ def test_every_seeded_original_key_yields_a_folder_the_edge_accepts() -> None:
     assert refused == []
 
 
-def test_every_seeded_slide_row_has_an_original_a_size_and_dimensions() -> None:
+def test_every_seeded_slide_but_the_broken_one_has_an_original_a_size_and_dimensions() -> None:
     with migrated_database() as name:
         url = with_database(OWNER_URL, name)
         asyncio.run(deployed_seed(url, PublishedStore()))
         bare = asyncio.run(
             run_sql(
                 url,
-                "SELECT label FROM slides WHERE original_key IS NULL OR file_bytes IS NULL "
-                "OR width IS NULL OR height IS NULL",
+                "SELECT label FROM slides WHERE (original_key IS NULL OR file_bytes IS NULL "
+                f"OR width IS NULL OR height IS NULL) AND label <> '{BROKEN_SLIDE}'",
             )
         )
         cases = asyncio.run(run_sql(url, "SELECT count(*) FROM slides WHERE label LIKE 'Case %'"))

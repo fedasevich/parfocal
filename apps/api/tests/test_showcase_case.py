@@ -6,16 +6,21 @@ from typing import Any, cast
 
 import pytest
 from db_support import OWNER_URL, migrated_database, run_sql, with_database
+from fastapi import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from test_showcase import RESULTS, EmptyStore
 
 from parfocal_api.cases import case_detail
 from parfocal_api.clinical_reports import get_clinical_report, list_my_cosign_requests
+from parfocal_api.my_jobs import MyJobKind, list_my_jobs
+from parfocal_api.my_work import list_my_review_tasks
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.report_links import EXPIRED, shared_report
 from parfocal_api.showcase import WORKSPACES, seed
 from parfocal_api.showcase_case import (
+    AGENT_UPLOAD_CASE,
+    BROKEN_SLIDE,
     CASE_FILES,
     COSIGN_CASE,
     DRAFT_CASE,
@@ -25,10 +30,13 @@ from parfocal_api.showcase_case import (
     THREAD_REPLY,
     THREAD_TITLE,
     UPLOADED_FILE,
+    seed_http,
 )
-from parfocal_api.tables import CaseReportState, Role, report_links
+from parfocal_api.tables import CaseReportState, Role, TaskKind, report_links, review_tasks
 from parfocal_api.threads import get_thread
+from parfocal_api.tile_access import SlideFileNotFoundError, get_tile_access
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.jobs import JobStatus
 
 pytestmark = pytest.mark.db
 
@@ -169,3 +177,62 @@ async def test_a_shared_report_link_opens_the_case_review(showcase: str) -> None
         ).all()
         shared = [await shared_report(connection, row) for row in links]
     assert [report.task_name for report in shared] == [SHOWCASE_TASK]
+
+
+async def test_the_agent_has_a_review_and_an_annotate_task(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    async with as_member(showcase, agent) as connection:
+        mine = await list_my_review_tasks(agent, connection)
+        kinds = await connection.scalars(
+            select(review_tasks.c.kind).where(review_tasks.c.id.in_([task.id for task in mine]))
+        )
+        found = sorted(TaskKind(kind) for kind in kinds.all())
+    assert TaskKind.REVIEW in found
+    assert TaskKind.ANNOTATE in found
+
+
+async def test_the_agent_reads_the_signed_case_report(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    case_id, project_id = (await case_ids(showcase, agent.tenant_id))[SHOWCASE_CASE]
+    async with as_member(showcase, agent) as connection:
+        report = await get_clinical_report(project_id, case_id, agent, connection)
+    assert report.state is CaseReportState.SIGNED
+
+
+async def test_the_agent_finds_a_finished_upload_job_with_its_slide(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    async with as_member(showcase, agent) as connection:
+        jobs = await list_my_jobs(agent, connection)
+    assert [(job.kind, job.status, job.percent) for job in jobs] == [
+        (MyJobKind.UPLOAD, JobStatus.DONE, 100)
+    ]
+    assert [slide.label for slide in jobs[0].slides] == [UPLOADED_FILE]
+    case_id, _ = (await case_ids(showcase, agent.tenant_id))[AGENT_UPLOAD_CASE]
+    rows = await run_sql(
+        showcase,
+        f"SELECT count(*) FROM slides WHERE id = '{jobs[0].slides[0].id}' "
+        f"AND case_id = '{case_id}'",
+    )
+    assert rows[0][0] == 1
+
+
+async def test_a_seeded_slide_fails_to_open_for_the_agent(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    slide_id = (
+        await run_sql(
+            showcase,
+            f"SELECT id FROM slides WHERE tenant_id = '{agent.tenant_id}' "
+            f"AND label = '{BROKEN_SLIDE}'",
+        )
+    )[0][0]
+    async with as_member(showcase, agent) as connection:
+        with pytest.raises(SlideFileNotFoundError):
+            await get_tile_access(
+                uuid.UUID(str(slide_id)),
+                seed_http(),
+                Response(),
+                agent,
+                connection,
+                cast("Any", None),
+                cast("Any", None),
+            )
