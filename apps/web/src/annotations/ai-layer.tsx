@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { isTyping } from "../keys/registry.ts";
-import type { ViewerEngine } from "../viewer/viewer-engine.ts";
+import type { Camera, ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
 import {
   type AiCell,
@@ -18,7 +18,7 @@ import type { CheckState } from "./check-state.ts";
 import type { Point } from "./polygon-draft.ts";
 import { fastNudgeStepPx, hitTolerancePx, nudgeStepPx } from "./select-tool.ts";
 import { capturePointer, releasePointer, slideAt } from "./stage-pointer.ts";
-import { useStageRect } from "./stage-size.ts";
+import { type StageRect, useStageRect } from "./stage-size.ts";
 
 type AiLayerProps = {
   engine: ViewerEngine;
@@ -58,6 +58,73 @@ const nudges: Record<string, [number, number]> = {
 const onChrome = (target: EventTarget | null) =>
   target instanceof Element &&
   target.closest("button, a, input, textarea, select, section, aside, [role='dialog']") !== null;
+
+type CellOutlinesProps = {
+  shown: readonly AiCell[];
+  chosen: ReadonlySet<string>;
+  checkOf: (object: string) => CheckState;
+  colourOf: (classKey: string | null) => string;
+  draft: Draft | null;
+};
+
+const slideTransform = (camera: Camera, rect: StageRect) => {
+  const scale = screenScale(camera);
+  const origin = slideToScreen(camera, rect, { x: 0, y: 0 });
+  return `matrix(${scale} 0 0 ${scale} ${origin.x} ${origin.y})`;
+};
+
+const ringPoints = (ring: Ring) => ring.map(([x, y]) => `${x},${y}`).join(" ");
+
+const CellOutline = memo(function CellOutline({
+  cell,
+  ring,
+  picked,
+  check,
+  colour,
+}: {
+  cell: AiCell;
+  ring: Ring;
+  picked: boolean;
+  check: CheckState;
+  colour: string;
+}) {
+  const points = useMemo(() => ringPoints(ring), [ring]);
+  return (
+    <polygon
+      data-testid="ai-object"
+      data-object={cell.object}
+      data-check={check}
+      data-class={cell.classId ?? ""}
+      data-selected={picked ? "true" : "false"}
+      points={points}
+      fill={picked ? colour : "none"}
+      fillOpacity={picked ? 0.18 : undefined}
+      stroke={colour}
+      strokeWidth={picked ? 3 : 1.5}
+      strokeDasharray={check === "unchecked" && !cell.edited ? "4 3" : undefined}
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+});
+
+const CellOutlines = memo(function CellOutlines({
+  shown,
+  chosen,
+  checkOf,
+  colourOf,
+  draft,
+}: CellOutlinesProps) {
+  return shown.map((cell) => (
+    <CellOutline
+      key={cell.object}
+      cell={cell}
+      ring={draft?.object === cell.object ? draft.ring : cell.ring}
+      picked={chosen.has(cell.object)}
+      check={checkOf(cell.object)}
+      colour={colourOf(cell.classId)}
+    />
+  ));
+});
 
 const handlesFor = (ring: Ring): Ring => (ring.length > maxHandles ? simplifyRing(ring) : ring);
 
@@ -314,8 +381,7 @@ export function AiLayer({
         return `${at.x},${at.y}`;
       })
       .join(" ");
-  const ringNow = (cell: AiCell) => (draft?.object === cell.object ? draft.ring : cell.ring);
-  const shown = cells.filter((cell) => !cell.deleted);
+  const shown = useMemo(() => cells.filter((cell) => !cell.deleted), [cells]);
   const handles = edited === null ? null : draft?.object === edited.object ? draft.ring : editRing;
   const tagAt =
     sole && !sole.deleted && tag !== null
@@ -332,26 +398,15 @@ export function AiLayer({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 size-full overflow-visible"
       >
-        {shown.map((cell) => {
-          const picked = chosen.has(cell.object);
-          const check = checkOf(cell.object);
-          return (
-            <polygon
-              key={cell.object}
-              data-testid="ai-object"
-              data-object={cell.object}
-              data-check={check}
-              data-class={cell.classId ?? ""}
-              data-selected={picked ? "true" : "false"}
-              points={pointsOf(ringNow(cell))}
-              fill={picked ? colourOf(cell.classId) : "none"}
-              fillOpacity={picked ? 0.18 : undefined}
-              stroke={colourOf(cell.classId)}
-              strokeWidth={picked ? 3 : 1.5}
-              strokeDasharray={check === "unchecked" && !cell.edited ? "4 3" : undefined}
-            />
-          );
-        })}
+        <g data-testid="ai-cells" transform={slideTransform(camera, rect)}>
+          <CellOutlines
+            shown={shown}
+            chosen={chosen}
+            checkOf={checkOf}
+            colourOf={colourOf}
+            draft={draft}
+          />
+        </g>
         {sole?.edited && !sole.deleted ? (
           <polygon
             data-testid="ai-ghost"

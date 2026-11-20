@@ -165,3 +165,40 @@ test("an expert retypes one seeded cell by key and several by lasso, reshapes on
     .toBeLessThan(ghost.width + 10);
   await expect(cell(page, "C2")).toHaveAttribute("data-class", lymphocyte);
 });
+
+type OutlineWrites = { points: number; transform: number };
+
+test("zooming moves the cell outlines without rewriting a single polygon", async ({ page }) => {
+  const stage = await openTaskSlide(page);
+  await cellsAreInView(page, stage);
+  await page.evaluate(() => {
+    const layer = document.querySelector('[data-testid="ai-layer"]');
+    const counts: OutlineWrites = { points: 0, transform: 0 };
+    Object.assign(window, { outlineWrites: counts });
+    new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.attributeName === "points") counts.points += 1;
+        if (record.attributeName === "transform") counts.transform += 1;
+      }
+    }).observe(layer ?? document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["points", "transform"],
+    });
+  });
+  const before = await boxOf(cell(page, "C1"));
+  const frame = await boxOf(stage);
+  await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+  for (let turn = 0; turn < 6; turn += 1) {
+    await page.mouse.wheel(0, -120);
+    await page.waitForTimeout(60);
+  }
+  await expect
+    .poll(async () => (await boxOf(cell(page, "C1"))).width)
+    .toBeGreaterThan(before.width * 1.3);
+  const writes = await page.evaluate(
+    () => (window as unknown as { outlineWrites: OutlineWrites }).outlineWrites,
+  );
+  expect(writes.points).toBe(0);
+  expect(writes.transform).toBeGreaterThan(0);
+});
