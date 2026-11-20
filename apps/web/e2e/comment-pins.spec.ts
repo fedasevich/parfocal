@@ -58,7 +58,7 @@ test("C places a pin, Shift+Enter adds a line and Enter posts", async ({ page })
   await page.keyboard.press("Enter");
   await expect(pins(page)).toHaveCount(1);
   await expect(page.getByTestId("pin-composer")).toHaveCount(0);
-  await expect(pins(page).first()).toHaveAttribute("title", "First line");
+  await expect(pins(page).first()).toHaveAttribute("data-tip", "First line");
   await expect(pins(page).first()).toHaveAttribute("data-linked", "");
 });
 
