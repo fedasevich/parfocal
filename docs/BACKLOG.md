@@ -6973,6 +6973,62 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner found on 2026-11-20 on app.parfocal.eu that developer mode on a slide shows only the small performance overlay (fps, frame, tiles, decode, annotations), never the developer drawer of LAB-001 (developer drawer with the controls of ADR 0189, developer drawer control list), and that `/developer` shows empty sections whose buttons do nothing. Add a "Developer mode" command to the Cmd+K palette for people with the developer permission. It opens the drawer over the right panel tabs of the viewer and stays open until closed, with Ctrl+Shift+D and `?lab` doing the same. Every control drives the open viewer, and `/developer` shows real data from the deployed app instead of the fake scene, or links to the drawer where it has none.
   Done when a spec opens the drawer from the palette on a task slide, changes the renderer and a culling control and sees the viewer change, closes it, a spec checks `/developer` shows content and its buttons act, and the lead checks both on app.parfocal.eu after deploy.
   Depends on nothing. Size: M.
+- [ ] PROTO-109 · An annotate task offers its training dataset and its patches in the app
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 1. The routes of EVAL-014 (training dataset export) and EVAL-015 (patch and mask export) have no caller, so the end product of the path cannot be reached from the screen.
+  Done when the Export menu of an annotate task lists "Training dataset (QuPath GeoJSON zip)" and "Patches with masks", each with one line on what it holds, the patch export asks for the level and tile size and shows its job, `nothing-signed-off` is explained in words, and a spec downloads both on the fake API and one on the real API.
+  Depends on PROTO-088 (an annotate task offers its exports in the app). Size: S.
+- [ ] PROTO-110 · The upload done step offers to annotate the uploaded slides
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 2. After a batch upload the next step of the path is not shown.
+  Done when the done step has "Annotate these slides" beside "Run a model", it opens the annotate task stepper with the batch chosen, and a spec covers it.
+  Depends on PROTO-064 (an annotate task can be created from its stepper). Size: S.
+- [ ] PROTO-111 · A reviewer fixes an AI object from the live review card
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 3. `stage-guided-card.tsx` never opens the reasons and its fix buttons do nothing, so the redraw and retype of RSET-007 (the reviewed layer) are unreachable in the viewer people use.
+  Done when Disagree opens the reasons in the live viewer, "Redraw the outline" and "Change the type" save through `saveReviewEdit`, the redrawn outline is drawn over the dimmed AI one, Undo clears the edit, a read only reviewer sees no fix buttons, and specs cover a region and a cell on the fake API and one on the real API.
+  Depends on PROTO-099 (one progress control, one Submit and engine drawn adjudication). Size: M.
+- [ ] PROTO-112 · A reviewer edits the current AI outline with handles and the brush
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 4. The owner asked for moving vertices and erasing part, and a full redraw is too coarse for a small fix.
+  Done when Enter or a double click on the current AI object in a review task shows the same handles as Annotate, the brush adds to or erases from it, each gesture saves one review edit, "Restore the AI original" clears it, and specs cover move, add, erase and restore.
+  Depends on PROTO-111. Size: M.
+- [ ] PROTO-113 · Every review edit keeps its history
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 5. A save replaces the `review_edits` row and the audit entry has no geometry, so who changed what and from which shape cannot be shown or exported.
+  Done when a migration that only adds creates an append only version table with the task, slide, reviewer, object, change kind, class and geometry after the change and the time, every save, clear, split and merge writes one row, `GET .../edits/{object_id}/history` returns them with the AI original first, the object card shows the list, and DB tests prove the rows cannot be updated or deleted by the app role. An ADR records the choice.
+  Depends on nothing. Size: M.
+- [ ] PROTO-114 · The training dataset names the model and counts the edits
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 6. Provenance in the manifest stops at a result set ID.
+  Done when each slide in the manifest carries the result set name, model name, model version and source, each feature carries the number of versions and whether its shape, its class or both differ from the AI object, the format version is raised, and the strict model and its tests are updated.
+  Depends on nothing. Size: S.
+- [ ] PROTO-115 · A dataset page with filters and stored versions
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 7. A researcher needs "only agreed", "only edited", one class or some slides, and needs to say later exactly which data trained a model.
+  Done when a task has a Dataset page that shows counts by origin and class for the signed off slides, filters by origin, class, slide and "include unchecked" change the counts, "Freeze a version" stores the manifest and the GeoJSON files as write once objects with a number, a note, the filters, who and when and a checksum, the list of versions downloads any of them again byte for byte, patches are made on demand from a frozen version, and API and browser tests cover it. An ADR records the storage and the cost per version.
+  Depends on PROTO-109 and PROTO-114 and on decision 169 (what a dataset version is). Size: L.
+- [ ] PROTO-116 · Reviewers' outlines that differ reach the disagreement queue
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 8. Two different redraws of one object are not noticed today.
+  Done when the disagreement rule adds an object whose reviewers' outlines overlap less than the task's threshold, the queue card says "outline differs" and draws each outline in its own colour over the AI one, and DB tests cover equal, close and far outlines for regions and cells.
+  Depends on PROTO-113 and on decision 167 (who settles different outlines). Size: M.
+- [ ] PROTO-117 · The adjudicator settles the shape
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 9. The queue decision stores an answer and a class and no geometry.
+  Done when the adjudicator and the owner in the queue can pick one reviewer's outline or draw a new one, it is stored on the decision with who and when, the consensus export uses it and covers cells, and specs cover pick, draw and undo.
+  Depends on PROTO-116. Size: M.
+- [ ] PROTO-118 · A signed off review task becomes a final layer the dataset builder reads
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 10. `annotate_only` shuts review tasks out of the training export, so a doctor's corrections never reach a dataset.
+  Done when signing off a review task, or a button on its Dataset page, builds the final layer by the rule of the chosen option (agreed objects as `ai-confirmed`, edited ones as `ai-edited` with their author, adjudicated ones with the adjudicator's outcome, rejected ones as deletions, added ones as `human`), the training dataset and the patch export accept the task, an object left open or unsure is left out and counted, and tests compare the export with the decisions and edits it came from. An ADR records where the final layer lives.
+  Depends on PROTO-113 and PROTO-117 and on decision 166 (which task carries training data). Size: L.
+- [ ] PROTO-119 · Shapes drawn in a review task's Annotate mode belong to the task
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 11. They are saved to the slide wide layer today, so they are in no reviewer's layer and no dataset.
+  Done when a shape drawn by an assigned reviewer in a review task is saved with the task, shows as an added object with its person mark in the reviewer's layer and the consensus, stays hidden from other reviewers while blinding holds, and specs cover it.
+  Depends on decision 166 (which task carries training data). Size: M.
+- [ ] PROTO-120 · Split and merge on screen
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 12. OBJ-003 (split, merge and added objects) built the routes and nothing calls them, and Annotate has neither.
+  Done when the Select tool splits a selected shape along a drawn line and merges two or more selected shapes, in a review task through the split and merge routes and in an annotate task as one atomic batch that keeps the source numbers, undo restores the original, and specs cover both kinds of task.
+  Depends on PROTO-112 and PROTO-113. Size: L.
+- [ ] PROTO-121 · COCO as a format of the patch export
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 13. The owner named COCO and most detection and instance segmentation trainers read it.
+  Done when the patch export can write `annotations.json` in COCO form beside the tiles, with categories from the class snapshot, one polygon per object clipped to its tile and the Parfocal object ID and origin in each annotation, and a test loads it with `pycocotools` and compares areas with the masks.
+  Depends on PROTO-115 and on decision 168 (which training format comes next). Size: M.
+- [ ] PROTO-122 · One spec walks the whole path on the real API
+  From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 14. The owner's sentence is one flow and nothing proves it end to end.
+  Done when an end to end spec uploads a small slide, runs cell detection on a selection, has two reviewers decide and one redraw an outline, adjudicates one disagreement, signs off, freezes a dataset version and checks that the zip holds the redrawn outline with its author letter and the AI original's ID.
+  Depends on PROTO-111 and PROTO-115 and PROTO-117 and PROTO-118. Size: M.
 
 ---
 

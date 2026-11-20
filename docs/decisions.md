@@ -28,6 +28,58 @@ ADR 0408 (MIRAX and DICOM zips become one tiled TIFF at ingest) stores the conve
 
 Your choice:
 
+### 166. Which task carries training data from reviewed AI objects?
+
+From the map of the path from an uploaded slide to training annotations (`docs/results/2026-11-20-annotate-review-export-path.md`).
+
+Review tasks have independent reviewers, decisions and adjudication, and no training export. Annotate tasks have one shared layer with full history and the training export, and no adjudication.
+
+- A. Both, joined at the end. A signed off review task is turned into a final layer that the existing dataset builder reads. One export for everything, and a doctor's corrections become training data. One large task and an ADR. (Recommended.)
+- B. Only annotate tasks make training data. Review tasks only measure the model. Nothing to build but buttons, and review corrections are not used for training.
+- C. Merge the two kinds into one task with a switch for independent work. The simplest model to explain, and the largest rewrite, touching decisions, the queue, sign off and every export.
+
+Your choice:
+
+### 167. When two reviewers draw different outlines for one object, who settles it?
+
+From the map of the path from an uploaded slide to training annotations (`docs/results/2026-11-20-annotate-review-export-path.md`).
+
+- A. The adjudicator picks one of the outlines or draws a new one. Outlines count as different below a set overlap, changeable per task. The starting value is TODO and is picked in the task from fixture outlines. (Recommended.)
+- B. A rule merges them with no person, for example the area most reviewers marked. No extra work, but a shape nobody drew enters the data.
+- C. Shapes are not compared and the latest edit wins.
+
+Your choice:
+
+### 168. Which training formats come next after QuPath GeoJSON and patches with masks?
+
+From the map of the path from an uploaded slide to training annotations (`docs/results/2026-11-20-annotate-review-export-path.md`).
+
+- A. COCO JSON beside the patch tiles. (Recommended, it is the format you named and the most widely read.)
+- B. COCO and also instance maps per tile for nucleus models in the HoVer-Net style.
+- C. Nothing more for now.
+
+Your choice:
+
+### 169. What is a dataset version?
+
+From the map of the path from an uploaded slide to training annotations (`docs/results/2026-11-20-annotate-review-export-path.md`).
+
+- A. A frozen copy of the manifest and the GeoJSON, stored write once with a number and a checksum. Patches are cut again from it when asked. Small files, exact repeat. Storage cost per version: TODO, to be measured in the task. (Recommended.)
+- B. A frozen copy of everything, tiles included. Exact and fast to download again, and the largest storage use.
+- C. Only a saved recipe (task, filters, time) that is built again on demand. No storage, but a later change after sign off can make the same recipe give different data.
+
+Your choice:
+
+### 170. Which objects go into a dataset by default?
+
+From the map of the path from an uploaded slide to training annotations (`docs/results/2026-11-20-annotate-review-export-path.md`).
+
+- A. Only objects a person checked: agreed or confirmed, edited and added. Objects answered unsure or left open are left out and counted. (Recommended.)
+- B. The same, plus unchecked AI objects marked `ai-unchecked`, as the annotate export can already do by a task option.
+- C. Everything, with the origin left to the researcher to filter.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.
