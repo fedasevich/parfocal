@@ -2,6 +2,48 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.33.0 (2026-11-20)
+
+### Features
+
+- PROTO-110: Offer to annotate the uploaded slides on the upload done step
+- PROTO-111: Fix an AI object from the live review card
+- PROTO-111: Keep live card fixes per slide and off in Focus
+- PROTO-111: Open the live card fixes on every style but blind
+- PROTO-114: Name the model per slide and count edits per object in the dataset
+- PROTO-112: Edit the current AI outline with handles and the brush in review
+
+### Fixes
+
+- PROTO-136: Make slide, cell and slides-left counts true
+- PROTO-134: Refuse a signature without a sign-in from the last 5 minutes
+- PROTO-134: Walk the sign-in step before a sign-off, sign out or co-sign
+- PROTO-134: Keep the sign-in time on refresh and walk the sign-in in fake API tests
+- PROTO-135: Best waits for its GPU with the wait shown and says why it falls back to Good
+- PROTO-135: Ask Best again after a retryable fallback and stop open calls on close
+- PROTO-137: Addresses and notices land on the right screen
+- PROTO-138: Seed every clinical project, hide empty report fields, fix plurals, name the release
+
+### Docs
+
+- PROTO-136: Log and tick true counts
+- PROTO-134: Log the fresh sign-in for signatures
+- PROTO-135: Log Best waiting for its GPU
+- PROTO-137: Log and tick addresses and notices
+- PROTO-138: Log and tick seed, report and wording
+- PROTO-110: Log and tick the upload next step
+- PROTO-111: Log the live review card fixes
+- PROTO-114: Log and tick dataset provenance
+- PROTO-112: Log and tick handles and brush in review
+
+### Other
+
+- PROTO-137: Claim addresses and notices land right
+- PROTO-111: Claim the live review fix and seed wording
+- PROTO-114: Claim dataset provenance and the upload next step
+- PROTO-112: Claim handles and brush on AI outlines
+- PROTO-115: Claim dataset versions and outline disagreements
+
 ## v0.32.2 (2026-11-20)
 
 ### Fixes
