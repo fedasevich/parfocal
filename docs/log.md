@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-105 Text annotations are dark text on a white plate at 85 percent with a thin dark border, independent of the theme. text-annotation-contrast spec measures at least 4.5 to 1 over white, pink and dark purple in both themes. arrow-text passes. select, saved-marks and marker-tools specs not rerun.
 - PROTO-123 Settings keep pictures only in the Tools row: preview props removed from home, theme, density, panel width, panel while moving and minimap, display-preview.tsx deleted, setting-preview keeps only the tools kind. 14 touched Playwright tests pass. The Feel preview was not checked for an empty box.
 - PROTO-124 Default lock after moved from 15 to 240 minutes in the API and web app. 1571 API tests pass.
 - VIEW-076 Deployed check passed: v0.29.1 deployed, production reset and reseeded at v0.29.1, thumbnail backfill stored 1, copied 93, failed 0, and the deployed seeded-formats smoke opened both converted zip slides. Production touches: deploys of v0.29.0 and v0.29.1, one reset, one backfill, cost TODO (Modal compute only).
