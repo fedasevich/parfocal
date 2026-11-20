@@ -28,7 +28,7 @@ test("an object is found by a piece of its path and Enter opens it on the slide"
   await palette.getByRole("combobox").fill("s26-04812 c145");
   await expect(palette.getByRole("option", { name: /C145 on A1/ }).first()).toBeVisible();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?.*object=T\d/);
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?.*object=C145/);
   await expect(page).not.toHaveURL(/open=palette/);
 });
 
