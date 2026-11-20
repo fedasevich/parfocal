@@ -4,6 +4,8 @@ import { setupServer } from "msw/node";
 import {
   defaultFakeQueueScene,
   fakeApiHandlers,
+  forgetFakeSignIn,
+  markFakeSignIn,
   resetQueueState,
   scenario,
   setFakeQueueScene,
@@ -125,6 +127,9 @@ test("deciding and leaving open count as resolved, and signing freezes the task"
     summary.queue.left_open.map((row) => `${row.object} on ${row.slide_label}`),
     ["T1·C212 on A1", "T1 on tumor_031"],
   );
+  forgetFakeSignIn();
+  await assert.rejects(signOffReviewTask(rt14), /Sign in again to sign/);
+  markFakeSignIn();
   const states = await signOffReviewTask(rt14);
   assert.ok(states.status === 200 && states.data.signed_off_at);
   const after = await getReviewTaskStates(rt14);

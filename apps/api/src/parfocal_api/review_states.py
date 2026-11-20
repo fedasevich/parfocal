@@ -11,6 +11,7 @@ from sqlalchemy import ColumnElement, func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.auth import SignedInAt, require_fresh_sign_in
 from parfocal_api.blinding import first_read_open
 from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -634,8 +635,10 @@ async def sign_off_review_task(
     http: Request,
     background: BackgroundTasks,
     live: RealtimeClient,
+    signed_in: SignedInAt,
     confirmation: SignOffConfirmation | None = None,
 ) -> TaskStates:
+    require_fresh_sign_in(signed_in)
     task = await task_move(connection, principal, task_id, Move.SIGN_OFF)
     confirmed_with = (confirmation or SignOffConfirmation()).confirmed_with
     await connection.execute(

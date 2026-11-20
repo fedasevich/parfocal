@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.auth import SignedInAt
 from parfocal_api.cases import CASE_SLIDE_ORDER, case_detail, keyring_of
 from parfocal_api.clinical_reports import (
     TEMPLATES,
@@ -503,6 +504,7 @@ async def cosign_clinical_report(
     body: CosignSignRequest,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    signed_in: SignedInAt,
 ) -> ClinicalSignature:
     case_id = await sent_to_me(connection, principal, project_id, slide_id)
     signed = await sign_clinical_report(
@@ -510,6 +512,7 @@ async def cosign_clinical_report(
         case_id=case_id,
         principal=principal,
         connection=connection,
+        signed_in=signed_in,
         confirmation=CaseReportSignOut(confirmed_with=body.method),
     )
     last = signed.versions[-1]

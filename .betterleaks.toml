@@ -27,6 +27,7 @@ paths = [
   '''^packages/api-client/test/sign-up\.test\.ts$''',
   '''^apps/web/e2e/sign-up\.spec\.ts$''',
   '''^apps/web/test/sign-up-rules\.test\.ts$''',
+  '''^apps/web/e2e/signature-sign-in\.spec\.ts$''',
 ]
 regexTarget = "line"
 regexes = ['''(correct-horse|Another-Horse|OnlyLettersAndDigits|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|password: "short"|twelve-chars|signInSecrets|secrets\.)''']

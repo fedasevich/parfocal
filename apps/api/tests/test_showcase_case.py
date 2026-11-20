@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from collections.abc import AsyncGenerator, Iterator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from typing import Any, cast
 
 import pytest
@@ -176,7 +177,12 @@ async def test_the_agent_project_owner_co_signs_the_sent_report(showcase: str) -
         sent = await get_clinical_report(project_id, case_id, agent, connection)
         assert sent.cosigner_user_id == agent.user_id
         signed = await sign_clinical_report(
-            project_id, case_id, agent, connection, CaseReportSignOut(confirmed_with="password")
+            project_id,
+            case_id,
+            agent,
+            connection,
+            signed_in=datetime.now(UTC),
+            confirmation=CaseReportSignOut(confirmed_with="password"),
         )
         assert signed.state is CaseReportState.SIGNED
 

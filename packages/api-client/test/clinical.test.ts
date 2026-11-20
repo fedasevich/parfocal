@@ -4,6 +4,7 @@ import { setupServer } from "msw/node";
 import {
   defaultFakeView,
   fakeApiHandlers,
+  markFakeSignIn,
   resetFakeCaseReports,
   scenario,
   scenarioClinical,
@@ -120,6 +121,7 @@ test("a deposit by hand joins the list and the largest one sets the suggestion",
 });
 
 test("a category against the size needs its confirmation, then the report signs and amends", async () => {
+  markFakeSignIn();
   const caseId = sentinelCase ?? "";
   const filled = {
     category: "micro" as const,

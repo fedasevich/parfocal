@@ -6,7 +6,7 @@ import secrets
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Any, cast
+from typing import Annotated, Any, TypedDict, cast
 from urllib.parse import urlencode
 
 from cryptography.exceptions import InvalidTag
@@ -83,12 +83,19 @@ SEEN_INTERVAL = timedelta(minutes=1)
 AUTH_SCOPE = DatabaseScope(auth=True)
 API_TOKEN_PREFIX = "pf_"
 SECOND_FACTOR_SETUP_PATH = "/ui/console/users/me"
+SIGNATURE_WINDOW = timedelta(minutes=5)
+CLOCK_SKEW = timedelta(seconds=30)
 
 
 class LoginFailedError(ProblemError):
     status = 400
     code = "login-failed"
     title = "Signing in did not work, try again"
+
+
+class FreshSignInNeededError(ForbiddenError):
+    code = "fresh-sign-in-needed"
+    title = "Sign in again to sign. A signature needs a sign-in from the last 5 minutes"
 
 
 class SessionKeyError(ValueError):
@@ -172,15 +179,24 @@ def now() -> datetime:
     return datetime.now(UTC)
 
 
+def auth_time_of(claims: dict[str, Any]) -> int | None:
+    value = claims.get("auth_time")
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value
+
+
 def sealed_tokens(
-    tokens: TokenSet, claims: dict[str, Any], earlier_factors: list[str] | None = None
+    tokens: TokenSet, claims: dict[str, Any], earlier: dict[str, Any] | None = None
 ) -> dict[str, Any]:
+    before = earlier or {}
     return {
         "id_token": tokens.id_token,
         "refresh_token": tokens.refresh_token,
         "name": claims.get("name"),
         "email": claims.get("email"),
-        "amr": factors_of(claims) or earlier_factors or [],
+        "amr": factors_of(claims) or factors_of(before),
+        "auth_time": auth_time_of(claims) if earlier is None else auth_time_of(before),
     }
 
 
@@ -215,7 +231,7 @@ async def refresh_session(
         update(sessions)
         .where(sessions.c.id_hash == digest(session_id))
         .values(
-            tokens=state.cipher.seal(sealed_tokens(renewed, claims, factors_of(tokens))),
+            tokens=state.cipher.seal(sealed_tokens(renewed, claims, tokens)),
             access_expires_at=now() + timedelta(seconds=renewed.expires_in),
         )
     )
@@ -718,6 +734,7 @@ async def redirect_to_identity(
     prompt: str | None = None,
     extra_scopes: tuple[str, ...] = (),
     login_hint: str | None = None,
+    max_age: int | None = None,
 ) -> RedirectResponse:
     state = auth_state(request)
     login_state = secrets.token_urlsafe(32)
@@ -743,17 +760,27 @@ async def redirect_to_identity(
         prompt=prompt,
         extra_scopes=extra_scopes,
         login_hint=login_hint,
+        max_age=max_age,
     )
     response = RedirectResponse(url, status_code=302)
     set_cookie(response, LOGIN_COOKIE, binding, int(LOGIN_LIFETIME.total_seconds()), "lax")
     return response
 
 
+class Reauthentication(TypedDict, total=False):
+    prompt: str
+    max_age: int
+
+
+def reauthentication(reauth: bool) -> Reauthentication:
+    return {"prompt": "login", "max_age": 0} if reauth else {}
+
+
 @router.get("/login", include_in_schema=False)
 async def start_login(
     request: Request, return_to: str = "/", reauth: bool = False
 ) -> RedirectResponse:
-    return await redirect_to_identity(request, return_to, prompt="login" if reauth else None)
+    return await redirect_to_identity(request, return_to, **reauthentication(reauth))
 
 
 class NamedLogin(BaseModel):
@@ -771,8 +798,8 @@ async def start_named_login(attempt: NamedLogin, request: Request) -> JSONRespon
     started = await redirect_to_identity(
         request,
         attempt.return_to,
-        prompt="login" if attempt.reauth else None,
         login_hint=attempt.login_hint.strip() or None,
+        **reauthentication(attempt.reauth),
     )
     response = JSONResponse(
         LoginLocation(location=started.headers["location"]).model_dump(),
@@ -891,3 +918,25 @@ async def get_session(
         email=profile.get("email"),
         operator=isinstance(principal, PlatformOperator),
     )
+
+
+async def signed_in_at(request: Request) -> datetime | None:
+    session_id = request.cookies.get(SESSION_COOKIE)
+    if not session_id:
+        return None
+    state = auth_state(request)
+    async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
+        loaded = await load_session(connection, state, session_id)
+    if loaded is None:
+        return None
+    stamp = auth_time_of(loaded["tokens"])
+    return None if stamp is None else datetime.fromtimestamp(stamp, UTC)
+
+
+type SignedInAt = Annotated[datetime | None, Depends(signed_in_at)]
+
+
+def require_fresh_sign_in(at: datetime | None) -> None:
+    current = now()
+    if at is None or not current - SIGNATURE_WINDOW <= at <= current + CLOCK_SKEW:
+        raise FreshSignInNeededError

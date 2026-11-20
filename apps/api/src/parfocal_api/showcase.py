@@ -5,6 +5,7 @@ import os
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -644,7 +645,8 @@ async def seed_states(
         seed_request(),
         BackgroundTasks(),
         NoRealtime(),
-        SignOffConfirmation(confirmed_with="password"),
+        signed_in=datetime.now(UTC),
+        confirmation=SignOffConfirmation(confirmed_with="password"),
     )
     await seed_queue(connection, seeded, principal, results, project_id, pool)
     running = await ready_set(

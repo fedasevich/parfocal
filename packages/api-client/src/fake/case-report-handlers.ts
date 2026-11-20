@@ -14,6 +14,7 @@ import type {
   NewCaseReportDeposit,
   NodeCategory,
 } from "../generated/api.ts";
+import { freshSignInRefusal } from "./fresh-sign-in.ts";
 import { cases, people, slides } from "./scenario.ts";
 import {
   type ClinicalCase,
@@ -505,6 +506,8 @@ export const caseReportHandlers = (): RequestHandler[] => [
     const body = (await request.json().catch(() => null)) as CaseReportSignOut | null;
     return withReport(params.caseId, (stored, _item, staged) => {
       if (signedState(stored)) return wrongState();
+      const refused = freshSignInRefusal();
+      if (refused) return refused;
       if (blockersOf(stored, stagingOf(stored, staged)).length)
         return problem(409, "report-blocked", "The report has things to finish");
       if (body?.confirmed_with === "sso" && body.identity_answered === false)

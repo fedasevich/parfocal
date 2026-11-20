@@ -207,7 +207,7 @@ function SignOffModal({
             void refresh();
             toast.show(t`Evaluation v${signingVersion} is signed. Reviewers are told.`);
           },
-          onError: () => done(false),
+          onError: (error) => done(false, error),
         },
       ),
   });

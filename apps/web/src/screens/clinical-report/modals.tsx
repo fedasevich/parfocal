@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
+import { signInWithPassword, useGetMe } from "@parfocal/api-client";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Input } from "@parfocal/ui/components/input";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -15,7 +16,15 @@ import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField } from "@parfocal/ui/components/token-field";
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useEffect, useRef, useState } from "react";
+import { startNamedLogin } from "../../session/sign-in-redirect.ts";
+import {
+  currentPath,
+  needsFreshSignIn,
+  rememberSigning,
+  takePendingSigning,
+} from "../../session/signature-sign-in.ts";
 import { FieldNote } from "../new-task/parts.tsx";
+import { okData } from "../placeholder.tsx";
 import { type Dep, mmText, parseNumber, type ReportData } from "./model.ts";
 import { fieldId, KvList, linkButton } from "./parts.tsx";
 
@@ -271,6 +280,8 @@ const signLabel = lazyText(() => ({
   typed: t`Sign with password`,
 }));
 
+export type SignDone = (ok: boolean, error?: unknown) => void;
+
 export function useSignature({
   failed,
   email,
@@ -278,26 +289,66 @@ export function useSignature({
 }: {
   failed: boolean;
   email: string;
-  onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
+  onSign: (method: "sso" | "password", done: SignDone) => void;
 }) {
   const { t } = useLingui();
 
-  const [state, setState] = useState<"idle" | "busy" | "fail">(failed ? "fail" : "idle");
+  const me = okData(useGetMe().data);
+  const [state, setState] = useState<"idle" | "busy" | "fail" | "refused">(
+    failed ? "fail" : "idle",
+  );
   const [password, setPassword] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const resumed = useRef(false);
+  const signerEmail = me?.email || email;
   const withPassword = password !== null;
-  const passwordError = tried && withPassword && !password ? t`Enter your password.` : undefined;
+  const passwordError =
+    tried && withPassword && !password
+      ? t`Enter your password.`
+      : state === "refused"
+        ? t`That password did not work. Nothing was signed.`
+        : undefined;
+  const sign = (method: "sso" | "password") =>
+    onSign(method, (ok, error) => {
+      if (ok) {
+        resumed.current = false;
+        setState("idle");
+        return;
+      }
+      if (method === "sso" && !resumed.current && needsFreshSignIn(error)) {
+        const path = currentPath();
+        rememberSigning(path);
+        void startNamedLogin({ returnTo: path, loginHint: signerEmail, reauth: true });
+        return;
+      }
+      setState("fail");
+    });
+  const resume = useRef(sign);
+  resume.current = sign;
+  useEffect(() => {
+    if (!takePendingSigning(currentPath())) return;
+    resumed.current = true;
+    setState("busy");
+    resume.current("sso");
+  }, []);
   const run = () => {
     if (withPassword && !password) {
       setTried(true);
       return;
     }
     setState("busy");
-    timer.current = window.setTimeout(() => {
-      onSign(withPassword ? "password" : "sso", (ok) => setState(ok ? "idle" : "fail"));
-    }, 800);
+    if (!withPassword) {
+      sign("sso");
+      return;
+    }
+    signInWithPassword({
+      email: signerEmail,
+      password: password ?? "",
+      return_to: currentPath(),
+    }).then(
+      () => sign("password"),
+      () => setState("refused"),
+    );
   };
   const busy = state === "busy";
   const zone = busy ? null : withPassword ? (
@@ -312,7 +363,10 @@ export function useSignature({
           autoFocus
           aria-invalid={passwordError ? true : undefined}
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            if (state === "refused") setState("idle");
+          }}
         />
         <FieldNote error={passwordError} help={t`Your password`} />
       </div>
@@ -366,7 +420,7 @@ export function SignModal({
   failed: boolean;
   pending: boolean;
   onClose: () => void;
-  onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
+  onSign: (method: "sso" | "password", done: SignDone) => void;
 }) {
   const { t } = useLingui();
 
