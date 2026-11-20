@@ -1,4 +1,25 @@
+moved {
+  from = cloudflare_r2_bucket.slides
+  to   = cloudflare_r2_bucket.slides[0]
+}
+
+moved {
+  from = cloudflare_r2_bucket_cors.uploads
+  to   = cloudflare_r2_bucket_cors.uploads[0]
+}
+
+moved {
+  from = cloudflare_r2_bucket_lifecycle.uploads
+  to   = cloudflare_r2_bucket_lifecycle.uploads[0]
+}
+
+moved {
+  from = cloudflare_r2_bucket_lock.recovery
+  to   = cloudflare_r2_bucket_lock.recovery[0]
+}
+
 resource "cloudflare_r2_bucket" "slides" {
+  count      = var.us_bucket ? 1 : 0
   account_id = var.cloudflare_account_id
   name       = "parfocal-${var.name}"
   location   = "eeur"
@@ -10,8 +31,9 @@ resource "cloudflare_r2_bucket" "slides" {
 }
 
 resource "cloudflare_r2_bucket_cors" "uploads" {
+  count       = var.us_bucket ? 1 : 0
   account_id  = var.cloudflare_account_id
-  bucket_name = cloudflare_r2_bucket.slides.name
+  bucket_name = cloudflare_r2_bucket.slides[0].name
 
   rules = [{
     id = "browser-part-uploads"
@@ -26,8 +48,9 @@ resource "cloudflare_r2_bucket_cors" "uploads" {
 }
 
 resource "cloudflare_r2_bucket_lifecycle" "uploads" {
+  count       = var.us_bucket ? 1 : 0
   account_id  = var.cloudflare_account_id
-  bucket_name = cloudflare_r2_bucket.slides.name
+  bucket_name = cloudflare_r2_bucket.slides[0].name
 
   rules = [{
     id      = "abort-incomplete-uploads"
@@ -58,8 +81,9 @@ resource "cloudflare_r2_bucket_lifecycle" "uploads" {
 }
 
 resource "cloudflare_r2_bucket_lock" "recovery" {
+  count       = var.us_bucket ? 1 : 0
   account_id  = var.cloudflare_account_id
-  bucket_name = cloudflare_r2_bucket.slides.name
+  bucket_name = cloudflare_r2_bucket.slides[0].name
 
   rules = [{
     id      = "keep-tenant-objects"

@@ -238,7 +238,7 @@ def test_a_new_preview_gets_a_branch_environment_secrets_deploy_and_seed() -> No
     assert set(cloud.secrets["pr-7"]) == {KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET}
     config = cloud.secrets["pr-7"][CONFIG_SECRET]
     assert config["APP_ENV"] == "preview"
-    assert config["STORAGE_BUCKET"] == "parfocal-dev"
+    assert config["STORAGE_BUCKET"] == "parfocal-dev-eu"
     assert config["STORAGE_KEY_PREFIX"] == "previews/pr-7/"
     assert config["PUBLIC_ORIGIN"] == "https://parfocal-edge-pr-7.parfocal.workers.dev"
     assert config["ZITADEL_CLIENT_ID"] == "preview-client"

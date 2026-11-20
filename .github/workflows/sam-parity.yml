@@ -55,9 +55,9 @@ jobs:
       - name: Fetch the WebAssembly graphs and the PyTorch fixture from R2
         run: pnpm --filter @parfocal/viewer-engine parity:fetch wasm
         env:
-          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.r2.cloudflarestorage.com
-          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID }}
-          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY }}
+          PARFOCAL_FIXTURES_R2_ENDPOINT: https://ecd7fda10e3d9ff42ecc86cb43073fcd.eu.r2.cloudflarestorage.com
+          PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_ACCESS_KEY_ID }}
+          PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY: ${{ secrets.PARFOCAL_FIXTURES_R2_EU_SECRET_ACCESS_KEY }}
       - run: google-chrome --version
       - run: nproc
       - name: ONNX on WebAssembly against PyTorch on the fixed TNBC patches

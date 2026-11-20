@@ -3,7 +3,7 @@ output "app_origin" {
 }
 
 output "slide_bucket" {
-  value = cloudflare_r2_bucket.slides.name
+  value = one(cloudflare_r2_bucket.slides[*].name)
 }
 
 output "slide_bucket_eu" {

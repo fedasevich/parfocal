@@ -87,7 +87,7 @@ DATABASE_URL="$MIGRATION_DATABASE_URL" SEED_OWNER_EMAIL="${SEED_OWNER_EMAIL:-${Z
 
 export PARFOCAL_EDGE_DEV="${PARFOCAL_EDGE_DEV:-on}"
 if [ "$PARFOCAL_EDGE_DEV" = on ]; then
-  step "Checking the Cloudflare login for the parfocal-dev bucket"
+  step "Checking the Cloudflare login for the parfocal-dev-eu bucket"
   if ! pnpm --filter @parfocal/edge exec wrangler whoami 2>/dev/null | grep -q "logged in"; then
     echo "Wrangler is not logged in, so slides use the fixture tiles. Run pnpm --filter @parfocal/edge exec wrangler login for the real bucket."
     PARFOCAL_EDGE_DEV=off

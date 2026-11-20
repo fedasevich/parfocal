@@ -32,7 +32,7 @@ import { type ApiEvent, startUploadApi, type UploadApi } from "../src/upload-api
 
 const CONTAINER = "parfocal-stack039-minio";
 const SETTLE_MS = 1000;
-const R2_BUCKET = "parfocal-dev";
+const R2_BUCKET = "parfocal-dev-eu";
 const R2_APP_ORIGIN = "http://localhost:5173";
 
 const { values: args } = parseArgs({
@@ -627,7 +627,7 @@ async function cloudflareBucketSetting(setting: "cors" | "lifecycle") {
   }
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${account}/r2/buckets/${BUCKET}/${setting}`,
-    { headers: { authorization: `Bearer ${token}` } },
+    { headers: { authorization: `Bearer ${token}`, "cf-r2-jurisdiction": "eu" } },
   );
   const body = (await response.json()) as { result?: unknown };
   return { status: response.status, result: body.result ?? null };

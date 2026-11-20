@@ -31,7 +31,8 @@ from parfocal_deploy.tools import (
 
 MAX_PREVIEWS = 5
 EXPIRY_DAYS = 7
-SLIDE_BUCKET = "parfocal-dev"
+SLIDE_BUCKET = "parfocal-dev-eu"
+SLIDE_JURISDICTION = "eu"
 PREVIEW_MODULES = ("parfocal_deploy.modal_app",)
 NUMBER = re.compile(r"[1-9][0-9]{0,6}")
 SLUG = re.compile(r"pr-[1-9][0-9]{0,6}")
@@ -181,6 +182,7 @@ def preview_environment(number: int, subdomain: str) -> Environment:
         neon_branch=chosen.neon_branch,
         tofu_root="",
         slide_bucket=SLIDE_BUCKET,
+        storage_jurisdiction=SLIDE_JURISDICTION,
         storage_prefix=chosen.storage_prefix,
     )
 
@@ -277,7 +279,9 @@ def seed(target: Environment, tools: Tools, settings: Mapping[str, str]) -> None
         {
             "DATABASE_URL": neon.engine_uri(direct),
             "APP_ENV": target.app_env,
-            "STORAGE_ENDPOINT": storage_endpoint(settings["CLOUDFLARE_ACCOUNT_ID"]),
+            "STORAGE_ENDPOINT": storage_endpoint(
+                settings["CLOUDFLARE_ACCOUNT_ID"], target.storage_jurisdiction
+            ),
             "STORAGE_REGION": "auto",
             "STORAGE_BUCKET": target.slide_bucket,
             "STORAGE_KEY_PREFIX": target.storage_prefix,
@@ -441,7 +445,7 @@ class R2Bucket:
         from parfocal_common.object_store import StorageLocation
 
         self.location = StorageLocation(
-            endpoint=storage_endpoint(local["CLOUDFLARE_ACCOUNT_ID"]),
+            endpoint=storage_endpoint(local["CLOUDFLARE_ACCOUNT_ID"], SLIDE_JURISDICTION),
             region="auto",
             bucket=SLIDE_BUCKET,
             access_key_id=local["R2_ACCESS_KEY_ID"],

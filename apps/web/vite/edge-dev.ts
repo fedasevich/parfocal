@@ -22,7 +22,7 @@ export function edgeDevFor({ command, isPreview, env }: EdgeDevInput): boolean {
   return flag === "on" && command === "serve" && !isPreview;
 }
 
-type Bucket = { binding: string; bucket_name?: string; remote?: boolean };
+type Bucket = { binding: string; bucket_name?: string; jurisdiction?: string; remote?: boolean };
 
 export type EdgeDevOverrides = {
   r2_buckets: Bucket[];

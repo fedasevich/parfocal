@@ -11,7 +11,7 @@ How to provision and deprovision a tenant with one command each. The logic is OP
 
 ## Local run
 
-`make dev` or `bash infra/local/zitadel-up.sh` writes `.zitadel/e2e.env` with the local issuer and its admin token. `.env` may hold cloud values, so the block below sets the local database and MinIO the way `scripts/dev.sh` does, which keeps the run away from the `parfocal-dev` bucket.
+`make dev` or `bash infra/local/zitadel-up.sh` writes `.zitadel/e2e.env` with the local issuer and its admin token. `.env` may hold cloud values, so the block below sets the local database and MinIO the way `scripts/dev.sh` does, which keeps the run away from the `parfocal-dev-eu` bucket.
 
 ```
 set -a; . ./.env; . .zitadel/e2e.env; set +a

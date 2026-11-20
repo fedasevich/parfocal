@@ -26,9 +26,12 @@ test("an unknown flag value is refused", () => {
 });
 
 test("the dev Worker reads the real bucket remotely and gets the API's token keys", () => {
-  const overrides = edgeDevOverrides([{ binding: "SLIDES", bucket_name: "parfocal-dev" }], keys);
+  const overrides = edgeDevOverrides(
+    [{ binding: "SLIDES", bucket_name: "parfocal-dev-eu", jurisdiction: "eu" }],
+    keys,
+  );
   assert.deepEqual(overrides.r2_buckets, [
-    { binding: "SLIDES", bucket_name: "parfocal-dev", remote: true },
+    { binding: "SLIDES", bucket_name: "parfocal-dev-eu", jurisdiction: "eu", remote: true },
   ]);
   assert.deepEqual(overrides.vars, keys);
   assert.deepEqual(overrides.assets.run_worker_first, edgeWorkerPaths);
@@ -39,10 +42,12 @@ test("the dev Worker needs both token keys", () => {
 });
 
 test("the bucket binding is replaced in place, because the plugin concatenates returned arrays", () => {
-  const worker = { r2_buckets: [{ binding: "SLIDES", bucket_name: "parfocal-dev" }] };
+  const worker = {
+    r2_buckets: [{ binding: "SLIDES", bucket_name: "parfocal-dev-eu", jurisdiction: "eu" }],
+  };
   const returned = customizeEdgeWorker(worker, keys);
   assert.deepEqual(worker.r2_buckets, [
-    { binding: "SLIDES", bucket_name: "parfocal-dev", remote: true },
+    { binding: "SLIDES", bucket_name: "parfocal-dev-eu", jurisdiction: "eu", remote: true },
   ]);
   assert.equal("r2_buckets" in returned, false);
   assert.deepEqual(returned.vars, keys);

@@ -35,6 +35,11 @@ variable "dev_mode" {
   }
 }
 
+variable "us_bucket" {
+  type    = bool
+  default = true
+}
+
 variable "eu_bucket" {
   type    = bool
   default = false
