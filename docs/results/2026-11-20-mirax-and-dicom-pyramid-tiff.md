@@ -1,7 +1,7 @@
 # Result: MIRAX and DICOM gallery zips converted to a lossless pyramid TIFF
 
 - Date: 2026-11-20
-- Backlog: VIEW-076 (slides that arrive as a MIRAX or DICOM zip open in the viewer). Decision in [ADR 0408](../adr/0408-mirax-and-dicom-slides-are-served-as-a-lossless-pyramid-tiff-made-at-ingest.md) (MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest)
+- Backlog: VIEW-081 (slides that arrive as a MIRAX or DICOM zip open in the viewer). Decision in [ADR 0408](../adr/0408-mirax-and-dicom-slides-are-served-as-a-lossless-pyramid-tiff-made-at-ingest.md) (MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest)
 - Kind: measurement
 - Environment: the owner's MacBook (Apple M4), macOS 15, Python 3.14 through `uv`, other agents running. Times are one run each
 - Data: the public OpenSlide test fixtures `CMU-1-Saved-1_16.zip` and `CMU-1-JP2K-33005-v2.zip` from the fixture cache. No PHI

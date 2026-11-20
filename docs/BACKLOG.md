@@ -6956,7 +6956,8 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken items 5, 6, 7 and 11. A clinical report with no tumor cannot pass Staging, a project owner cannot answer a co-sign request because sign out is refused, RT-2 reads signed off on Team but draft in its report, and no seeded task has a workable disagreement queue or adjudication, nor an adjudicator account.
   Done when DB tests and specs cover a negative node report, the owner co-signing, a signed off task with a signed report, and a seeded queue that an agent account can adjudicate after the next reset.
   Depends on TEST-053. Size: M.
-- [ ] VIEW-076 · Slides that arrive as a MIRAX or DICOM zip open in the viewer
+- [x] VIEW-081 · Slides that arrive as a MIRAX or DICOM zip open in the viewer
+  Added on 2026-11-20 as a second VIEW-076 by mistake. Its commits and log notes of that day carry the scope VIEW-076.
   From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken item 2 and its zip section. CMU-1-Saved-1_16.zip (MIRAX) and CMU-1-JP2K-33005-v2.zip (DICOM) never open: the engine registry has no MIRAX or DICOM opener, the range read of original.zip is refused because the slide has no ranges file, and tile-index.json is missing. Decide between a native browser reader and a converted pyramid made at ingest by the conversion rule the formats ADRs set, record it in an ADR, build it so both gallery slides open and draw on the deployed app, and fold in PROTO-100 so they read by stem and format.
   Done when both slides open and draw in the browser tests and on the deployed app after the next reset, the seeded-formats smoke stops skipping them, and their cell crops are cut.
   Depends on PROTO-100. Size: L.
@@ -6964,6 +6965,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner found on 2026-11-20 that picking an object from search does not move the viewer camera to the searched object, and the page of the hit does not open either. PROTO-091 (search finds cells and other objects by their ID) promised that a hit opens the viewer centred on the object with it picked, so the hit link, the route it lands on, or the viewer's reading of the object in the address is broken. Check both the search page and the ⌘K palette, for an AI cell, a drawn shape and a region, from home and from inside another slide, on the deployed app as well as the fake API.
   Done when a spec on the fake API and a check on the deployed app pick each kind of hit from the search page and the palette and land on its slide with the camera centred on the object and the object picked.
   Depends on PROTO-091. Size: S.
+- [ ] PROTO-105 · Text annotations stay readable on any tissue and in any theme
+  The owner found on 2026-11-20 that a text annotation such as "Check this border with a second expert" is unreadable: pale letters with a pale glow over pink tissue and white fat. `apps/web/src/annotations/text-layer.tsx` draws the label in the theme text colour `text-fg` with a white `text-shadow`, so in a dark theme it is near white on white, and in any theme a thin glow is too weak over busy tissue. Draw the label with a contrast that holds on any slide colour, such as dark text on a solid or semi opaque light plate with a border, or the label colour from its class with a dark outline, independent of the app theme, and keep it the same in exports and screenshots. Check the engine and Viv stages and the compare pane.
+  Done when a spec draws a text annotation over a white, a pink and a dark purple area in the light and the dark theme and measures a text to background contrast of at least 4.5 to 1 in each, and a golden image is updated.
+  Depends on nothing. Size: S.
 
 ---
 

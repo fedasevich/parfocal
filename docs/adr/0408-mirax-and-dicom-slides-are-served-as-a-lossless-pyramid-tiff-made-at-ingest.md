@@ -2,7 +2,7 @@
 
 - Date: 2026-11-20
 - Status: Accepted
-- Deciders: Yurii Fedas, proposed by the agent doing VIEW-076 (slides that arrive as a MIRAX or DICOM zip open in the viewer) with PROTO-100 (a slide that came in a zip reads as its own format)
+- Deciders: Yurii Fedas, proposed by the agent doing VIEW-081 (slides that arrive as a MIRAX or DICOM zip open in the viewer) with PROTO-100 (a slide that came in a zip reads as its own format)
 - Amends [ADR 0306](0306-conversion-triggers-and-the-ome-zarr-target.md) (conversion triggers and the OME-Zarr target), [ADR 0316](0316-jpeg-2000-slides-stay-native.md) (JPEG 2000 slides stay native, whose `FIRED` was empty) and [ADR 0099](0099-tiff-and-zarr-readers-in-the-browser.md) (TIFF and Zarr readers in the browser, which refused MIRAX and DICOM for v1)
 
 ## Context
