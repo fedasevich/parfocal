@@ -1,16 +1,24 @@
-import { createFileRoute, useLocation } from "@tanstack/react-router";
+import { createFileRoute, redirect, useLocation } from "@tanstack/react-router";
 import { readBuildConfig } from "../config.ts";
 import { safeReturnPath } from "../screens/onboarding/sign-in-rules.ts";
 import { SignInScreen } from "../screens/onboarding/sign-in-screen.tsx";
 import { signInSearch } from "../search/route-searches.ts";
 import { BootLoader } from "../session/boot-loader.tsx";
-import { leaveFor, loginUrl, passwordSignInAvailable } from "../session/sign-in-redirect.ts";
+import {
+  hasSession,
+  leaveFor,
+  loginUrl,
+  passwordSignInAvailable,
+} from "../session/sign-in-redirect.ts";
 
 const hostedReturnOf = (returnTo: string | undefined) => safeReturnPath(returnTo) ?? "/";
 
 export const Route = createFileRoute("/sign-in")({
   validateSearch: signInSearch,
   beforeLoad: async ({ search }) => {
+    if (search.ended === undefined && (await hasSession(readBuildConfig().fakeApi))) {
+      throw redirect({ href: hostedReturnOf(search.return_to), replace: true });
+    }
     if (await passwordSignInAvailable(readBuildConfig().fakeApi)) return { hostedSignIn: false };
     if (search.ended !== undefined) return { hostedSignIn: true };
     return leaveFor(loginUrl(hostedReturnOf(search.return_to)));

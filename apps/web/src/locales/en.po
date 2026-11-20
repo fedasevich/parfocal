@@ -837,6 +837,11 @@ msgstr "{0} is already {otherName} in {1}"
 msgid "{0} is already in this project, uploaded "
 msgstr "{0} is already in this project, uploaded "
 
+#. placeholder {0}: task.name
+#: src/shell/review-task-only.tsx
+msgid "{0} is an annotate task, so nothing is compared or scored."
+msgstr "{0} is an annotate task, so nothing is compared or scored."
+
 #. placeholder {0}: person(modal.to).name
 #. placeholder {1}: formatDayMonth(parseDay(pickedAbsence.until))
 #: src/screens/team/team-screen.tsx
@@ -3737,6 +3742,14 @@ msgstr "Annotate by hand"
 msgid "Annotate task"
 msgstr "Annotate task"
 
+#: src/shell/review-task-only.tsx
+msgid "Annotate tasks have no disagreements"
+msgstr "Annotate tasks have no disagreements"
+
+#: src/shell/review-task-only.tsx
+msgid "Annotate tasks have no evaluation"
+msgstr "Annotate tasks have no evaluation"
+
 #: src/routes/issue-states.tsx
 msgid "Annotate workspace"
 msgstr "Annotate workspace"
@@ -4746,6 +4759,7 @@ msgstr "Cell typing"
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 #: src/screens/upload/check-step.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/slide-notice-list.tsx
 msgid "Cells"
 msgstr "Cells"
@@ -5299,6 +5313,7 @@ msgstr "Clinical note"
 #: src/routes/issue-states.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Clinical report"
 msgstr "Clinical report"
 
@@ -5404,6 +5419,10 @@ msgstr "closed"
 #: src/screens/upload/live-wizard.tsx
 msgid "Closing this window keeps the upload going in the jobs tray. Closing the browser tab pauses it, and you pick the files again to continue."
 msgstr "Closing this window keeps the upload going in the jobs tray. Closing the browser tab pauses it, and you pick the files again to continue."
+
+#: src/shell/page-title-names.ts
+msgid "Co-sign"
+msgstr "Co-sign"
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Co-sign and sign out"
@@ -5525,6 +5544,7 @@ msgstr "Comment at the pin"
 msgid "Comment on {object}"
 msgstr "Comment on {object}"
 
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 #: src/viewer/stage-inspector.tsx
 msgid "Comments"
@@ -5933,6 +5953,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/screens/onboarding/sign-in-forms.tsx
+#: src/shell/page-title-names.ts
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -8033,6 +8054,7 @@ msgstr "Guided check"
 #: src/screens/admin/template-editor.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/new-task/send-step.tsx
+#: src/shell/page-title-names.ts
 msgid "Guided review"
 msgstr "Guided review"
 
@@ -8587,6 +8609,10 @@ msgstr "Into {0}"
 msgid "Invert zoom direction"
 msgstr "Invert zoom direction"
 
+#: src/shell/page-title-names.ts
+msgid "Invitation"
+msgstr "Invitation"
+
 #: src/screens/onboarding/invite-screen.tsx
 msgid "Invite"
 msgstr "Invite"
@@ -8728,6 +8754,10 @@ msgstr "Its screen is not built yet"
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "J"
 msgstr "J"
+
+#: src/shell/page-title-names.ts
+msgid "Job"
+msgstr "Job"
 
 #. placeholder {0}: jobId.slice(0, 8)
 #: src/viewer/patch-export-dialog.tsx
@@ -10206,11 +10236,13 @@ msgstr "Never"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/new-task-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "New annotate task"
 msgstr "New annotate task"
 
 #: ../../packages/ui/src/components/new-forms.tsx
 #: src/screens/project/project-page.tsx
+#: src/shell/page-title-names.ts
 msgid "New case"
 msgstr "New case"
 
@@ -10261,6 +10293,7 @@ msgstr "New pinned thread"
 #: src/screens/admin/admin-screen.tsx
 #: src/screens/home/home-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 msgid "New project"
 msgstr "New project"
@@ -10284,6 +10317,7 @@ msgstr "New projects start as"
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/project/project-page.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 msgid "New review task"
 msgstr "New review task"
@@ -11768,6 +11802,7 @@ msgstr "Open the slides of this task in the full viewer"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/shell/review-task-only.tsx
 #: src/viewer/task-slide-check.tsx
 msgid "Open the task"
 msgstr "Open the task"
@@ -11809,6 +11844,10 @@ msgstr "Opened from {mapTitle}, as"
 msgid "Opening"
 msgstr "Opening"
 
+#: src/screens/clinical-report/report-screen.tsx
+msgid "Opening the co-sign page"
+msgstr "Opening the co-sign page"
+
 #: src/routes/go.$notificationId.tsx
 msgid "Opening the notification"
 msgstr "Opening the notification"
@@ -11816,6 +11855,14 @@ msgstr "Opening the notification"
 #: src/viewer/live-top-bar.tsx
 msgid "Opening the objects of this slide"
 msgstr "Opening the objects of this slide"
+
+#: src/viewer/slide-address-check.tsx
+msgid "Opening the slide"
+msgstr "Opening the slide"
+
+#: src/shell/review-task-only.tsx
+msgid "Opening the task"
+msgstr "Opening the task"
 
 #. placeholder {0}: screenTitles[screen]
 #: src/routes/issue-states.tsx
@@ -12312,6 +12359,7 @@ msgstr "Pen"
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/overview.tsx
 #: src/screens/admin/people.tsx
+#: src/screens/project/project-page.tsx
 msgid "People"
 msgstr "People"
 
@@ -13293,6 +13341,7 @@ msgid "Replying to {replyingTo}"
 msgstr "Replying to {replyingTo}"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
+#: src/screens/project/project-page.tsx
 msgid "Report"
 msgstr "Report"
 
@@ -13522,6 +13571,7 @@ msgstr "Result sets"
 msgid "Result sets of {slideLabel}"
 msgstr "Result sets of {slideLabel}"
 
+#: src/screens/project/project-page.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
 #: src/study/study-screen.tsx
 msgid "Results"
@@ -14684,6 +14734,10 @@ msgstr "Set up a workspace"
 msgid "Set up an authenticator app or a security key in your account, then sign in again with it."
 msgstr "Set up an authenticator app or a security key in your account, then sign in again with it."
 
+#: src/shell/page-title-names.ts
+msgid "Set up the workspace"
+msgstr "Set up the workspace"
+
 #: src/screens/project/settings-tab.tsx
 msgid "Set when the project was created."
 msgstr "Set when the project was created."
@@ -14774,6 +14828,10 @@ msgstr "Shared from Parfocal. This page shows numbers only: no slides, images, n
 #: src/routes/issue-states.tsx
 msgid "Shared pages"
 msgstr "Shared pages"
+
+#: src/shell/page-title-names.ts
+msgid "Shared report"
+msgstr "Shared report"
 
 #: src/presence/viewing-now.tsx
 msgid "Sharing my view"
@@ -15763,6 +15821,10 @@ msgstr "Start"
 msgid "Start {0}"
 msgstr "Start {0}"
 
+#: src/screens/clinical-report/report-screen.tsx
+msgid "Start a draft to fill in the findings. Nothing is created until you do."
+msgstr "Start a draft to fill in the findings. Nothing is created until you do."
+
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Start deciding"
 msgstr "Start deciding"
@@ -15815,6 +15877,10 @@ msgstr "Start task"
 #: src/annotations/smart-layer.tsx
 msgid "Start the model"
 msgstr "Start the model"
+
+#: src/screens/clinical-report/report-screen.tsx
+msgid "Start the report"
+msgstr "Start the report"
 
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Start v2"
@@ -16025,6 +16091,7 @@ msgid "Submit your opinion form"
 msgstr "Submit your opinion form"
 
 #: src/routes/issue-states.tsx
+#: src/shell/page-title-names.ts
 msgid "Submitted"
 msgstr "Submitted"
 
@@ -16353,6 +16420,11 @@ msgstr "The \"format\" field must be \"parfocal-results\"."
 #: src/screens/upload/formats-drawer.tsx
 msgid "The \"version\" field must be 1."
 msgstr "The \"version\" field must be 1."
+
+#. placeholder {0}: names[movedFrom] ?? movedFrom
+#: src/screens/project/project-page.tsx
+msgid "The {0} tab moved to {where}."
+msgstr "The {0} tab moved to {where}."
 
 #: ../../packages/ui/src/components/team.tsx
 msgid "The {left} slides not started"
@@ -16866,6 +16938,10 @@ msgstr "The report could not be returned. Try again."
 msgid "The report could not be sent. Try again."
 msgstr "The report could not be sent. Try again."
 
+#: src/screens/clinical-report/report-screen.tsx
+msgid "The report could not be started. Try again."
+msgstr "The report could not be started. Try again."
+
 #. placeholder {0}: picked.name
 #. placeholder {1}: picked.version
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -17308,6 +17384,10 @@ msgstr "This ask is already answered. No one else is waiting."
 #: src/feedback/feedback-dialog.tsx
 msgid "This browser could not take a screenshot, so only your text is sent."
 msgstr "This browser could not take a screenshot, so only your text is sent."
+
+#: src/screens/clinical-report/report-screen.tsx
+msgid "This case has no report yet"
+msgstr "This case has no report yet"
 
 #: ../../packages/ui/src/components/settings-dialog.tsx
 msgid "This computer"
@@ -18189,6 +18269,10 @@ msgstr "Upload slides and results"
 msgid "Upload slides and their AI results"
 msgstr "Upload slides and their AI results"
 
+#: src/shell/page-title-names.ts
+msgid "Upload to a case"
+msgstr "Upload to a case"
+
 #: src/screens/admin/overview.tsx
 msgid "Upload, run models, create tasks, sign off"
 msgstr "Upload, run models, create tasks, sign off"
@@ -18207,8 +18291,8 @@ msgid "Uploading · 8%"
 msgstr "Uploading · 8%"
 
 #: ../../packages/ui/src/components/jobs.tsx
-msgid "Uploads and model runs · click one for its steps"
-msgstr "Uploads and model runs · click one for its steps"
+msgid "Uploads and model runs · click a model run for its steps"
+msgstr "Uploads and model runs · click a model run for its steps"
 
 #: src/screens/admin/people.tsx
 msgid "Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin"
@@ -19108,6 +19192,10 @@ msgstr "You can look at this layer but not change it."
 #: src/screens/refusals.ts
 msgid "You can look at this slide but not change it."
 msgstr "You can look at this slide but not change it."
+
+#: src/shell/review-task-only.tsx
+msgid "You can open the task to annotate its slides. Nothing was changed."
+msgstr "You can open the task to annotate its slides. Nothing was changed."
 
 #: src/viewer/task-slide-check.tsx
 msgid "You can open the task, or look at the slide on its own. Nothing was changed."

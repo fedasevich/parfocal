@@ -23,7 +23,10 @@ export function targetHref(target: Target): string | null {
     case "thread":
       return slideTargetHref(target, true);
     case "task":
-      return target.task_id ? `/tasks/${target.task_id}/guided` : null;
+      if (!target.task_id) return null;
+      return target.slide_id
+        ? destinations.adjudicate(target.task_id)
+        : `/tasks/${target.task_id}/guided`;
     case "evaluation":
       return target.task_id ? destinations.evaluation(target.task_id) : null;
     case "job":

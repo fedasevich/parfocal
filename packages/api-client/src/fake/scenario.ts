@@ -600,6 +600,7 @@ export type ScenarioNotification = {
     | "upload-refused"
     | "task-signed-off"
     | "task-assigned"
+    | "adjudication-requested"
     | "workspace-access-asked";
   actor: PersonKey | null;
   requestId?: string;
@@ -736,6 +737,17 @@ export const notifications: ScenarioNotification[] = [
     action: "Open the note",
     createdAt: "2026-10-15T11:05:00+02:00",
     read: true,
+  },
+  {
+    to: "SM",
+    id: uuid(12, 11),
+    kind: "adjudication-requested",
+    actor: "LM",
+    title: "Objects to adjudicate",
+    detail: "Lenka Malá asked you to decide 2 queued objects on RT-14",
+    action: "Open the queue",
+    createdAt: "2026-10-15T12:00:00+02:00",
+    read: false,
   },
 ];
 

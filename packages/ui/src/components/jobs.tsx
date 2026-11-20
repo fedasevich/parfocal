@@ -196,7 +196,7 @@ function JobsTray({ running, finished, className, ...props }: JobsTrayProps) {
           <Trans>Jobs</Trans>
         </b>
         <span className="text-body-sm text-fg-dim">
-          <Trans>Uploads and model runs · click one for its steps</Trans>
+          <Trans>Uploads and model runs · click a model run for its steps</Trans>
         </span>
       </div>
       <section className="grid gap-0.5 px-4 pt-2 pb-2.5">

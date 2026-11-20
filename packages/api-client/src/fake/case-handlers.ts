@@ -136,7 +136,10 @@ export const caseHandlers = (): RequestHandler[] => [
   }),
   http.get<{ caseId: string }>("*/api/cases/:caseId", ({ params }) => {
     const detail = toCaseDetail(params.caseId);
-    return detail === null ? undefined : HttpResponse.json(detail);
+    if (detail !== null) return HttpResponse.json(detail);
+    return params.caseId.startsWith("00000000-0000-4000-8004-")
+      ? problem(404, "Case not found", "not-found")
+      : undefined;
   }),
   http.patch<{ slideId: string }>("*/api/slides/:slideId", async ({ params, request }) => {
     const slide = slides.find((item) => item.id === params.slideId);

@@ -178,6 +178,7 @@ export const settingsSearch = lenientSearch({
 
 export const searchPageSearch = lenientSearch({
   scope: z.enum(searchScopeValues).optional(),
+  q: z.string().optional(),
 });
 
 export const cellsSearch = lenientSearch({
