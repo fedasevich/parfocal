@@ -34,7 +34,7 @@ Option 3.
 ## Consequences
 
 - Measured on the owner's Mac ([result](../results/2026-11-20-mirax-and-dicom-pyramid-tiff.md)): the MIRAX fixture of 3.8 MB became 18.7 MB in about 4 s, and the DICOM fixture of 127 MB became 1.08 GB in 108 s with 3.6 GB peak resident memory. R2 storage for both is about $0.02 a month.
-- At 8.5 times the archive, lossless storage is the cost of exact pixels. 100 DICOM slides of 1 GB would cost about $13 a month in R2. TODO for the owner: whether converted MIRAX and DICOM may use JPEG q90 tiles, which would bring them near their source size.
+- At 8.5 times the archive, lossless storage is the cost of exact pixels. 100 DICOM slides of 1 GB would cost about $13 a month in R2. Decision 165 in decisions.md asks the owner whether converted MIRAX and DICOM may use JPEG q90 tiles, which would bring them near their source size.
 - Uploaded MIRAX and DICOM zips are not converted yet. The ingest workflow still publishes the archive, so an uploaded zip still does not open. Wiring the converter into the upload workflow is the follow-up.
 - `python -m parfocal_ingest.fixture_slides` must run against the bucket before the next deployed reset, because the deployed seed requires every gallery folder and now looks in the new pyramid folders.
 - Cell crops are cut from the pyramid TIFF like any other TIFF, since the slide's original key now points at it.

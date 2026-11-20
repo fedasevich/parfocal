@@ -19,7 +19,14 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Open questions
 
-None right now.
+### 165. May converted MIRAX and DICOM slides use JPEG tiles instead of lossless?
+
+ADR 0408 (MIRAX and DICOM zips become one tiled TIFF at ingest) stores the converted slide losslessly, so every pixel matches the source. The DICOM fixture came out at 1.08 GB, 8.4 times its zip. At that rate 100 DICOM slides of 1 GB would cost about $13 a month in R2.
+
+- A. JPEG at quality 90. Near the source size, with tiny pixel differences an AI comparison might notice.
+- B. Keep lossless. Exact pixels, about 8 times the storage. (Recommended while only test slides exist, since the cost today is about $0.02 a month.)
+
+Your choice:
 
 ## The review column, what each task waits for
 
