@@ -2,6 +2,7 @@ import os
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -348,7 +349,12 @@ async def reports(
     await create_clinical_report(project_id, seeded.case_id, owner, connection)
     await update_clinical_report(project_id, seeded.case_id, finished_report(), owner, connection)
     await sign_clinical_report(
-        project_id, seeded.case_id, owner, connection, CaseReportSignOut(confirmed_with="password")
+        project_id,
+        seeded.case_id,
+        owner,
+        connection,
+        signed_in=datetime.now(UTC),
+        confirmation=CaseReportSignOut(confirmed_with="password"),
     )
     await create_clinical_report(project_id, seeded.draft_case_id, owner, connection)
     await update_clinical_report(

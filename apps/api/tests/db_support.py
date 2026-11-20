@@ -3,6 +3,7 @@ import os
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from alembic import command
@@ -13,7 +14,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from storage_support import TEST_MAX_BYTES, TEST_PAGE_SIZE, TEST_PART_BYTES, TEST_STORAGE
 
 from parfocal_api.app import ParfocalApi, create_app
-from parfocal_api.auth import authenticate
+from parfocal_api.auth import authenticate, signed_in_at
 from parfocal_api.principals import Principal
 from parfocal_api.problems import UnauthenticatedError
 from parfocal_api.settings import ApiSettings
@@ -91,6 +92,12 @@ def api_settings(database: str) -> ApiSettings:
 class Acting:
     def __init__(self) -> None:
         self.principal: Principal | None = None
+        self.signed_in_ago: timedelta | None = timedelta(0)
+
+    async def signed_in_at(self) -> datetime | None:
+        if self.signed_in_ago is None:
+            return None
+        return datetime.now(UTC) - self.signed_in_ago
 
     async def current(self) -> Principal:
         if self.principal is None:
@@ -104,6 +111,7 @@ class ApiAs:
         self.client = client
         self.acting = Acting()
         app.dependency_overrides[authenticate] = self.acting.current
+        app.dependency_overrides[signed_in_at] = self.acting.signed_in_at
 
     @property
     def principal(self) -> Principal | None:

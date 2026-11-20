@@ -29,6 +29,7 @@ class Grant:
     nonce: str
     challenge: str
     subject: str
+    auth_time: int = field(default_factory=lambda: int(time.time()))
 
 
 @dataclass
@@ -41,6 +42,9 @@ class FakeIdp:
     subject: str = "user-1"
     codes: dict[str, Grant] = field(default_factory=dict[str, Grant])
     refresh_tokens: dict[str, str] = field(default_factory=dict[str, str])
+    auth_times: dict[str, int] = field(default_factory=dict[str, int])
+    signed_in_at: int = field(default_factory=lambda: int(time.time()))
+    prompts: list[str | None] = field(default_factory=list[str | None])
     refreshes: int = 0
     revoked: list[str] = field(default_factory=list[str])
     claim_overrides: dict[str, Any] = field(default_factory=dict[str, Any])
@@ -51,13 +55,14 @@ class FakeIdp:
         public = RSAAlgorithm.to_jwk(self.key.public_key(), as_dict=True)
         return {"keys": [public | {"kid": self.kid, "use": "sig", "alg": "RS256"}]}
 
-    def id_token(self, subject: str, nonce: str | None) -> str:
+    def id_token(self, subject: str, nonce: str | None, auth_time: int) -> str:
         now = int(time.time())
         claims: dict[str, Any] = {
             "iss": ISSUER,
             "aud": CLIENT_ID,
             "sub": subject,
             "iat": now,
+            "auth_time": auth_time,
             "exp": now + 3600,
             "name": "Test Pathologist",
             "email": "pathologist@example.test",
@@ -73,12 +78,13 @@ class FakeIdp:
             headers={"kid": self.signing_kid or self.kid},
         )
 
-    def tokens(self, subject: str, nonce: str | None) -> dict[str, Any]:
+    def tokens(self, subject: str, nonce: str | None, auth_time: int) -> dict[str, Any]:
         refresh_token = secrets.token_urlsafe(16)
         self.refresh_tokens[refresh_token] = subject
+        self.auth_times[refresh_token] = auth_time
         return {
             "access_token": "opaque",
-            "id_token": self.id_token(subject, nonce),
+            "id_token": self.id_token(subject, nonce, auth_time),
             "refresh_token": refresh_token,
             "expires_in": self.expires_in,
             "token_type": "Bearer",
@@ -89,7 +95,13 @@ class FakeIdp:
         assert query["client_id"] == [CLIENT_ID]
         assert query["code_challenge_method"] == ["S256"]
         code = secrets.token_urlsafe(16)
-        self.codes[code] = Grant(query["nonce"][0], query["code_challenge"][0], self.subject)
+        prompt = query.get("prompt", [None])[0]
+        self.prompts.append(prompt)
+        if prompt == "login":
+            self.signed_in_at = int(time.time())
+        self.codes[code] = Grant(
+            query["nonce"][0], query["code_challenge"][0], self.subject, self.signed_in_at
+        )
         return code
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
@@ -122,12 +134,15 @@ class FakeIdp:
             challenge = base64.urlsafe_b64encode(hashed).rstrip(b"=").decode()
             if grant is None or challenge != grant.challenge:
                 return httpx2.Response(400, json={"error": "invalid_grant"})
-            return httpx2.Response(200, json=self.tokens(grant.subject, grant.nonce))
+            return httpx2.Response(
+                200, json=self.tokens(grant.subject, grant.nonce, grant.auth_time)
+            )
         subject = self.refresh_tokens.pop(form["refresh_token"], None)
         if subject is None:
             return httpx2.Response(400, json={"error": "invalid_request"})
         self.refreshes += 1
-        return httpx2.Response(200, json=self.tokens(subject, None))
+        auth_time = self.auth_times.pop(form["refresh_token"])
+        return httpx2.Response(200, json=self.tokens(subject, None, auth_time))
 
 
 @dataclass
@@ -136,8 +151,11 @@ class Browser:
     idp: FakeIdp
     owner_url: str
 
-    def login(self, return_to: str = "/cases/S26-0001") -> httpx2.Response:
-        started = self.client.get("/api/auth/login", params={"return_to": return_to})
+    def login(self, return_to: str = "/cases/S26-0001", reauth: bool = False) -> httpx2.Response:
+        params: dict[str, str] = {"return_to": return_to}
+        if reauth:
+            params["reauth"] = "true"
+        started = self.client.get("/api/auth/login", params=params)
         assert started.status_code == 302
         location = started.headers["location"]
         code = self.idp.authorize(location)

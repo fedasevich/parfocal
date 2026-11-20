@@ -12,6 +12,7 @@ from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.auth import SignedInAt, require_fresh_sign_in
 from parfocal_api.clinical_report_pdf import facts_of, pdf_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation_versions import ConfirmedWith
@@ -1031,9 +1032,11 @@ async def sign_clinical_report(
     case_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    signed_in: SignedInAt,
     confirmation: CaseReportSignOut | None = None,
 ) -> CaseReport:
     confirmation = confirmation or CaseReportSignOut()
+    require_fresh_sign_in(signed_in)
     row = await writable(connection, principal, project_id, case_id)
     state = CaseReportState(row.state)
     if state in SIGNED:
