@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from db_support import ApiAs
@@ -353,7 +353,8 @@ def test_a_mention_notifies_the_colleague_and_breaks_a_mute(api: ApiAs, database
         database,
         f"SELECT payload FROM notifications WHERE kind = 'reply' AND target_id = '{thread['id']}'",
     )
-    assert [payload[0]["actor_user_id"] for payload in payloads] == [s.user("owner")]
+    actors = [cast("dict[str, Any]", payload[0])["actor_user_id"] for payload in payloads]
+    assert actors == [s.user("owner")]
     rows = audit_rows(database, thread["id"])
     assert rows[0][1]["mentions"] == 2
     assert "@[" not in json.dumps([details for _, details in rows])
