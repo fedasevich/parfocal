@@ -3,8 +3,11 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { inRing } from "../annotations/ai-edit.ts";
 import { polygonToGeoJson } from "../annotations/geojson.ts";
 import { closeDraft, type PolygonDraft } from "../annotations/polygon-draft.ts";
+import { slideAt } from "../annotations/stage-pointer.ts";
+import { isTyping } from "../keys/registry.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
@@ -57,6 +60,12 @@ import { StageObjectsPanel } from "./stage-objects-panel.tsx";
 import { ReviewOpinion } from "./stage-opinion.tsx";
 import { StageRedrawLayer } from "./stage-redraw-layer.tsx";
 import { type ReviewFix, ringOfFix, useReviewFixes } from "./stage-review-fixes.ts";
+import {
+  ringOfOutline,
+  type ShapeTool,
+  StageShapeEdit,
+  StageShapeEditBar,
+} from "./stage-shape-edit.tsx";
 import { StageSlideMarks, sampleOf, useSampleCollapsed } from "./stage-slide-marks.tsx";
 import { StageTypePicker } from "./stage-type-picker.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
@@ -66,6 +75,10 @@ const overlayId = "review-objects";
 const dimmedShare = 0.35;
 
 const decisionNames = new Set(["agree", "disagree", "unsure"]);
+
+const onControl = (target: EventTarget | null) =>
+  target instanceof Element &&
+  target.closest("button, a, input, textarea, select, [role=dialog]") !== null;
 
 function decisionNameOf(value: string | undefined) {
   return value !== undefined && decisionNames.has(value)
@@ -274,6 +287,10 @@ export function StageReviewObjects({
     readonly step: "reasons" | "redraw" | "type";
   } | null>(null);
   const [draft, setDraft] = useState<PolygonDraft>([]);
+  const [shaping, setShaping] = useState<{
+    readonly object: string;
+    readonly tool: ShapeTool;
+  } | null>(null);
   const objects = session.objects;
   const order = objects.map((item) => item.object);
   const decided = new Set(session.decisions.keys());
@@ -389,6 +406,7 @@ export function StageReviewObjects({
     saves.save(item.object, raw, value);
     if (canFix && session.style.kind !== "blind" && value === "disagree") {
       setCurrent(item.object);
+      setShaping(null);
       setFixing({ object: item.object, step: "reasons" });
       return;
     }
@@ -398,6 +416,48 @@ export function StageReviewObjects({
   const currentItem = objects.find((item) => item.object === current);
   const currentOutline = currentItem?.outline;
   const currentArea = useMemo(() => outlineArea(currentOutline), [currentOutline]);
+  const currentFix = current === null ? undefined : fixes.fixed.get(current);
+  const originalRing = useMemo(() => ringOfOutline(currentOutline), [currentOutline]);
+  const currentRing = useMemo(() => {
+    const fixedRing = ringOfFix(currentFix);
+    return fixedRing === null ? originalRing : ringOfOutline(fixedRing);
+  }, [currentFix, originalRing]);
+  const canShape =
+    canFix &&
+    session.style.kind !== "blind" &&
+    !done &&
+    stage !== null &&
+    current !== null &&
+    currentRing.length >= 3;
+  const shapeTool =
+    canShape && fixStep === null && shaping?.object === current ? shaping.tool : null;
+  const busy = fixStep !== null || shapeTool !== null;
+  const shapeEntry = canShape && fixStep === null && shapeTool === null;
+  useEffect(() => {
+    if (!shapeEntry || stage === null || current === null) return;
+    const open = () => setShaping({ object: current, tool: "handles" });
+    const key = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" || event.defaultPrevented) return;
+      if (event.altKey || event.metaKey || event.ctrlKey || event.shiftKey) return;
+      if (isTyping(event.target) || onControl(event.target)) return;
+      event.preventDefault();
+      open();
+    };
+    const doubleClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Node) || !stage.contains(event.target)) return;
+      if (!inRing(currentRing, slideAt(engine, stage, event))) return;
+      event.stopPropagation();
+      event.preventDefault();
+      open();
+    };
+    const page = stage.ownerDocument;
+    window.addEventListener("keydown", key);
+    page.addEventListener("dblclick", doubleClick, true);
+    return () => {
+      window.removeEventListener("keydown", key);
+      page.removeEventListener("dblclick", doubleClick, true);
+    };
+  }, [shapeEntry, stage, current, currentRing, engine]);
   const typedCell =
     currentItem?.kind === "cell" && outlineArea(currentItem.outline) !== null ? currentItem : null;
   const decideType = (cell: ReviewObject, id: string) => {
@@ -424,7 +484,7 @@ export function StageReviewObjects({
       decideType(typedCell, raw);
       stepToOpenCell(typedCell);
     },
-    ready && typedCell !== null && fixStep === null,
+    ready && typedCell !== null && !busy,
   );
   const listKeysLive =
     ready && !guided && focus === null && currentItem !== undefined && typedCell === null;
@@ -444,7 +504,7 @@ export function StageReviewObjects({
     void engine.flyToFit();
   };
   const index = current === null ? -1 : order.indexOf(current);
-  const stepping = guided && ready && !done && focus === null && fixStep === null;
+  const stepping = guided && ready && !done && focus === null && !busy;
   useAnswerKeys(
     answersOf(session.style, session.classes, currentItem),
     (raw) => {
@@ -569,6 +629,25 @@ export function StageReviewObjects({
           onCancel={() => cancelRedraw(currentItem)}
         />
       ) : null}
+      {shapeTool !== null && stage !== null && current !== null ? (
+        <StageShapeEdit
+          key={`${current}:${shapeTool}`}
+          engine={engine}
+          stage={stage}
+          object={current}
+          classId={currentFix?.classId ?? null}
+          ring={currentRing}
+          original={originalRing}
+          edited={currentFix !== undefined}
+          tool={shapeTool}
+          onSave={(geometry) => fixes.change(current, { geometry })}
+          onClose={() => setShaping(null)}
+          onStep={(delta) => {
+            setShaping(null);
+            pick(order[index + delta] ?? null);
+          }}
+        />
+      ) : null}
       {guided && ready && focus === null && currentItem !== undefined ? (
         <StageGuidedView
           key={currentItem.object}
@@ -616,7 +695,7 @@ export function StageReviewObjects({
           onClose={() => setGridOpen(false)}
         />
       ) : null}
-      {typedCell === null || readOnly || fixStep !== null ? null : (
+      {typedCell === null || readOnly || busy ? null : (
         <StageCellTypeBar
           engine={engine}
           cell={typedCell}
@@ -669,6 +748,16 @@ export function StageReviewObjects({
               answersOff={answersOff}
               readOnly={readOnly}
               fix={fixFor(currentItem)}
+            />
+          ) : null}
+          {shapeTool !== null && current !== null ? (
+            <StageShapeEditBar
+              object={current}
+              tool={shapeTool}
+              edited={currentFix !== undefined}
+              onTool={(tool) => setShaping({ object: current, tool })}
+              onRestore={() => fixes.restore(current, undefined)}
+              onDone={() => setShaping(null)}
             />
           ) : null}
           {orderWait ? (
