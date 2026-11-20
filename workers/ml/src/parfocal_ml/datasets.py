@@ -113,6 +113,8 @@ def fetch(dataset: Dataset, folder: Path | None = None) -> Path:
     if dataset.archive is None:
         raise unpinned(dataset, folder or cache_dir())
     target = (folder or cache_dir()) / dataset.name / dataset.archive.file
+    if dataset.manual is not None and not target.exists():
+        raise unpinned(dataset, folder or cache_dir())
     if not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
         partial = target.with_suffix(target.suffix + ".part")
