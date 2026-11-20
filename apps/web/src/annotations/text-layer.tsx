@@ -184,7 +184,7 @@ export function TextLayer({
             <span
               key={shape.id}
               data-testid="text-shape"
-              className="absolute whitespace-pre font-semibold text-body-sm text-fg [text-shadow:0_0_3px_#fff,0_0_3px_#fff,0_0_6px_#fff]"
+              className="absolute whitespace-pre rounded-sm border border-black/40 bg-white/85 px-1.5 py-0.5 font-semibold text-body-sm text-[#111]"
               style={{ left: at.x, top: at.y, transform: "translateY(-50%)" }}
             >
               {shape.text}
