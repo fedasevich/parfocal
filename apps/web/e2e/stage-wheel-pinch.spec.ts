@@ -190,11 +190,11 @@ for (const { name, path } of stills) {
     if (box === null) throw new Error("no slide");
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     const before = await camera();
-    await page.mouse.wheel(0, -240);
+    await page.mouse.wheel(0, 240);
     await expect.poll(camera).not.toBe(before);
     const mid = await camera();
     await page.keyboard.down("Control");
-    await page.mouse.wheel(0, 240);
+    await page.mouse.wheel(0, -240);
     await page.keyboard.up("Control");
     await expect.poll(camera).not.toBe(mid);
     expect(await pageScale(page)).toBe(1);
