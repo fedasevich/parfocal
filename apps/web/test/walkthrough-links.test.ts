@@ -67,6 +67,25 @@ test("cells on a task with no cell sample falls back to review", () => {
   assert.equal(viewerModeOf({ ...facts, cellSample: true }).mode, "cells");
   assert.equal(viewerModeOf(facts).mode, "cells");
   assert.equal(viewerModeOf({ ...facts, access: notAssigned, cellSample: false }).mode, "review");
+  assert.equal(viewerModeOf({ ...facts, cellSample: false }).noCellSample, true);
+  assert.equal(viewerModeOf({ ...facts, cellSample: true }).noCellSample, false);
+});
+
+test("cells opens read only for a person not assigned when the slide has a cell sample", () => {
+  const facts = {
+    hasTask: true,
+    taskKind: "review",
+    access: notAssigned,
+    chosen: "cells",
+  } as const;
+  const rule = viewerModeOf({ ...facts, cellSample: true });
+  assert.equal(rule.mode, "cells");
+  assert.deepEqual(rule.choices, []);
+  assert.equal(viewerModeOf({ ...facts, chosen: "annotate", cellSample: true }).mode, "review");
+  assert.equal(
+    viewerModeOf({ ...facts, taskKind: "annotate", cellSample: true }).noCellSample,
+    false,
+  );
   assert.equal(cellSampleOf(undefined), undefined);
   assert.equal(cellSampleOf({ objects: [{ kind: "region" }] }), false);
   assert.equal(cellSampleOf({ objects: [{ kind: "region" }, { kind: "cell" }] }), true);

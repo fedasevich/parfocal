@@ -7,6 +7,7 @@ import {
   continuesHero,
   heroPath,
   heroTaskOf,
+  openAdjudications,
   reviewRow,
 } from "../src/screens/my-work/to-review-rows.ts";
 
@@ -106,4 +107,13 @@ test("a task never opened gets no continue card and starts at slide 1, even with
   const decided = { ...saved, decisions_on_slide: 1 };
   assert.equal(heroTaskOf([unopened], decided)?.id, "task-2");
   assert.equal(reviewRow(unopened, "Daniel Hruška", decided)?.action.label, "Continue");
+});
+
+test("a finished adjudication leaves To review and an open one stays", () => {
+  const open = { id: "open", decided: 1, objects: ["T1", "T2"] };
+  const finished = { id: "finished", decided: 2, objects: ["T1", "T2"] };
+  assert.deepEqual(
+    openAdjudications([open, finished]).map((item) => item.id),
+    ["open"],
+  );
 });
