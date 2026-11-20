@@ -113,13 +113,18 @@ for (const viewport of [
     if (minimapFits) await expect(minimap).toBeVisible();
     const present = minimapFits || (await minimap.isVisible());
     const shown = present ? named : always;
-    const entries: [string, Box][] = [];
-    for (const [name, locator] of Object.entries(shown)) entries.push([name, await boxOf(locator)]);
-    for (const [i, [nameA, a]] of entries.entries()) {
-      for (const [nameB, b] of entries.slice(i + 1)) {
-        expect(meets(a, b), `${nameA} meets ${nameB}`).toBe(false);
-      }
-    }
+    const meetings = async () => {
+      const entries: [string, Box][] = [];
+      for (const [name, locator] of Object.entries(shown))
+        entries.push([name, await boxOf(locator)]);
+      return entries.flatMap(([nameA, a], i) =>
+        entries
+          .slice(i + 1)
+          .filter(([, b]) => meets(a, b))
+          .map(([nameB]) => `${nameA} meets ${nameB}`),
+      );
+    };
+    await expect.poll(meetings).toEqual([]);
     const stackBox = await boxOf(stack);
     const stageBox = await boxOf(stage);
     expect(stackBox.x).toBeGreaterThanOrEqual(stageBox.x);
