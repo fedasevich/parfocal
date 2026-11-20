@@ -59,7 +59,7 @@ def second_device(browser: Browser, database: str) -> Iterator[Browser]:
 
 def test_an_idle_session_locks(browser: Browser) -> None:
     browser.login()
-    shift(browser, "active_at", 16)
+    shift(browser, "active_at", 241)
     assert session_code(browser) == (401, "session-locked")
     assert browser.client.post("/api/auth/activity").status_code == 401
 
@@ -238,7 +238,7 @@ def test_an_admin_sets_the_session_policy(api: ApiAs, browser: Browser) -> None:
     )
     assert api(admin).get("/api/tenant/session-policy").json() == {
         "tenant_id": tenant_id,
-        "idle_lock_minutes": 15,
+        "idle_lock_minutes": 240,
         "session_hours": 12,
         "emergency_hours": 4,
     }

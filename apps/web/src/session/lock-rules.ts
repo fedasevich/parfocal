@@ -1,7 +1,7 @@
 import { ApiError } from "@parfocal/api-client";
 
 export const activityIntervalMs = 60_000;
-export const defaultIdleLockMinutes = 15;
+export const defaultIdleLockMinutes = 240;
 
 export function isSessionLocked(error: unknown): boolean {
   return (

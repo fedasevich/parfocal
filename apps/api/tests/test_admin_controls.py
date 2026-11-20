@@ -54,7 +54,7 @@ def test_the_session_lock_saves_and_reads_back_for_admins_only(api: ApiAs, datab
     body = {"idle_lock_minutes": 5, "session_hours": 12}
     for name in OTHERS:
         assert api(people[name]).put(SESSION_POLICY, json=body).status_code == 403
-    assert api(people["admin"]).get(SESSION_POLICY).json()["idle_lock_minutes"] == 15
+    assert api(people["admin"]).get(SESSION_POLICY).json()["idle_lock_minutes"] == 240
     assert api(people["admin"]).put(SESSION_POLICY, json=body).status_code == 200
     assert api(people["admin"]).get(SESSION_POLICY).json()["idle_lock_minutes"] == 5
     assert api(people["reviewer"]).get(SESSION_POLICY).json()["idle_lock_minutes"] == 5

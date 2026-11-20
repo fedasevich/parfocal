@@ -7,7 +7,7 @@ from parfocal_common.data_classes import OPERATIONAL
 from parfocal_common.residency import Region as Region
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
-DEFAULT_IDLE_LOCK_MINUTES = 15
+DEFAULT_IDLE_LOCK_MINUTES = 240
 DEFAULT_SESSION_HOURS = 12
 DEFAULT_EMERGENCY_HOURS = 4
 
