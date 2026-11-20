@@ -359,17 +359,15 @@ test("a result set's cells page in as outlines and its regions draw outside a ta
   );
   expect(new Set(colours).size).toBe(2);
   expect(colours).not.toContain("#fbbf24");
-  const toggle = page.getByRole("button", { name: "Hide PathoSAM + HoVer-NeXt" });
+  const toggle = page.getByRole("switch", { name: "Show PathoSAM + HoVer-NeXt" });
+  await expect(toggle).toBeChecked();
   await toggle.click();
-  await expect(page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
+  await expect(toggle).not.toBeChecked();
   await expect(cells).toHaveCount(0);
   await expect(regions).toHaveCount(0);
   await expect(legend).toHaveCount(0);
   await expect(page.getByTestId("result-set-regions")).toHaveCount(1);
-  await page.getByRole("button", { name: "Show PathoSAM + HoVer-NeXt" }).click();
+  await toggle.click();
   await expect(cells).toHaveAttribute("data-drawn", "outlines");
 });
 
