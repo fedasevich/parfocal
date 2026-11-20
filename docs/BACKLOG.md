@@ -6928,7 +6928,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner added on 2026-11-20 that the viewer tabs must always make total sense for the task. The side panel tabs, rail tools, actions and keys are looked up from the mode and the access value in one table, each tab shows only when it serves that task (for example Opinion only where a slide opinion is asked, Cells only where the task types cells, Comments wherever people discuss the slide), opens on the tab the task needs first, and never shows a tab whose content would be empty or refused.
   Done when a unit test covers the mode rule and the tab table for every task kind and role, a spec checks the visible tabs and the first open tab for each task kind, and a spec opens one slide from the project row, search, My work, the jobs tray, upload and a report and lands in the same mode each time.
   Depends on PROTO-093. Size: M.
-- [ ] PROTO-097 · One slide route carries the mode in the address
+- [x] PROTO-097 · One slide route carries the mode in the address
   Migration steps 9 and 10. Redirect /live, /annotate and /annotate-task to the main slide route, move the guided and cells routes to a mode value on it keeping object, camera and tab in the address, and rename the workspace values so the address, the button and the code say the same word.
   Done when old addresses redirect with their parameters kept, specs and the real API e2e use the new route, and the same task kind always shows the same mode options.
   Depends on PROTO-096, PROTO-095. Size: M.
