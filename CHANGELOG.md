@@ -2,6 +2,26 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.31.1 (2026-11-20)
+
+### Fixes
+
+- PROTO-128: Move AI cell outlines with one camera transform instead of redrawing them
+- PROTO-128: Draw only the AI outlines near the view at deep zoom and record the A/B runs
+
+### Docs
+
+- PROTO-128: Log the cells slide lag fix
+
+### Tests
+
+- PROTO-129: Check the overview map marker sits on the camera centre, add map and zone tasks
+
+### Other
+
+- PROTO-113: Claim the review edit history
+- PROTO-131: Claim floating zones, map marker and tile request speed
+
 ## v0.31.0 (2026-11-20)
 
 ### Features
