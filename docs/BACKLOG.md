@@ -7009,7 +7009,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 7. A researcher needs "only agreed", "only edited", one class or some slides, and needs to say later exactly which data trained a model.
   Done when a task has a Dataset page that shows counts by origin and class for the signed off slides, filters by origin, class, slide and "include unchecked" change the counts, "Freeze a version" stores the manifest and the GeoJSON files as write once objects with a number, a note, the filters, who and when and a checksum, the list of versions downloads any of them again byte for byte, patches are made on demand from a frozen version, and API and browser tests cover it. An ADR records the storage and the cost per version.
   Depends on PROTO-109 and PROTO-114 and on decision 169 (what a dataset version is). Size: L.
-- [ ] PROTO-116 · Reviewers' outlines that differ reach the disagreement queue
+- [x] PROTO-116 · Reviewers' outlines that differ reach the disagreement queue
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 8. Two different redraws of one object are not noticed today.
   Done when the disagreement rule adds an object whose reviewers' outlines overlap less than the task's threshold, the queue card says "outline differs" and draws each outline in its own colour over the AI one, and DB tests cover equal, close and far outlines for regions and cells.
   Depends on PROTO-113 and on decision 167 (who settles different outlines). Size: M.
@@ -7085,6 +7085,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-20 the reset-production workflow spent over an hour in `parfocal_deploy.reset` on v0.32.2 (seed output from 22:17 to 23:17 UTC and still running when the lead cancelled it at 23:36), and earlier reseeds took 30 to 55 minutes. Each walkthrough uses up seeded examples, so a slow reseed holds up every deployed check. Measure where the seed spends its time against the Neon main branch (likely one round trip per row from the GitHub runner), and batch the writes or run the seed next to the database.
   Done when a result file gives the seed time by phase before and after, and a reseed on the deployed app finishes in under 15 minutes.
   Depends on nothing. Size: M.
+- [ ] PROTO-140 · A redraw against a kept AI outline reaches the queue, and the task sets its overlap
+  PROTO-116 (reviewers' outlines that differ reach the disagreement queue) compares only two redraws. When one reviewer redraws and the other keeps the AI outline, nothing is flagged, because AI cell outlines live in chunk files the queue cannot read cheaply. Store the AI outline beside the first redraw of an object (or read it once per sign-off) so a redraw is compared with the kept AI outline too, and add a control for `outline_overlap` (1 to 99 percent, default 60, ADR 0412) to the review task settings.
+  Done when DB tests cover a redraw against a kept AI region and cell below and above the threshold, and a spec changes the overlap in the task settings and sees the queue change.
+  Depends on PROTO-116. Size: M.
 
 ---
 
