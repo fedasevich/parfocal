@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.32.2 (2026-11-20)
+
+### Fixes
+
+- PROTO-133: Submit beside Open report, read only cells, honest lock and task notices
+
+### Docs
+
+- PROTO-113: Log the v0.32.1 deploy and migration
+- PROTO-133: Log submit, cells mode and task state fixes
+
+### Tests
+
+- PROTO-133: Cover read only cells and finished adjudications in unit tests
+
 ## v0.32.1 (2026-11-20)
 
 ### Fixes
