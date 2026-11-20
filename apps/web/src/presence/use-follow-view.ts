@@ -146,7 +146,7 @@ export function useFollowView(
   }, [blinded, publish]);
 
   const sendToRoom = useRoomEvents(
-    `slide:${slideId}`,
+    slideId ? `slide:${slideId}` : null,
     me,
     (event) => {
       setPresent((known) => nextPresence(known, event, me ?? ""));

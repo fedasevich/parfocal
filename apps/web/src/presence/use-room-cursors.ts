@@ -27,7 +27,7 @@ export function useRoomCursors(
   }, [blinded]);
   const drop = (user: string) => setCursors((known) => withCursor(known, { user, gone: true }));
   const send = useRoomEvents(
-    `slide:${slideId}`,
+    slideId ? `slide:${slideId}` : null,
     me,
     (event) => {
       const user = event.ids["user"];
