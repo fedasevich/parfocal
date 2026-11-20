@@ -32,7 +32,7 @@ import { NudgeModal } from "@parfocal/ui/components/team";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { personProp, usePeople } from "../people.ts";
@@ -43,6 +43,7 @@ import { answersOf } from "../review/decision-style.ts";
 import { fromMentionTokens } from "../review/mention-picking.ts";
 import { ViewerLink } from "../viewer-links.tsx";
 import { DisagreementStage } from "./disagreement-stage.tsx";
+import { reviewerOutlines } from "./reviewer-outlines.ts";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
 import {
   allClosed,
@@ -108,6 +109,11 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     rows.find((candidate) => candidate.key === selectedKey) ??
     rows.find((candidate) => !isClosed(candidate)) ??
     rows[0];
+  const outlines = useMemo(() => (row ? reviewerOutlines(row) : []), [row]);
+  const overlapShare =
+    row?.outline_overlap === null || row?.outline_overlap === undefined
+      ? null
+      : Math.round(row.outline_overlap * 100);
   const locked = queue?.locked ?? null;
   const reviewerIds = [...new Set(rows.flatMap((item) => item.answers.map((a) => a.user_id)))];
   const taskCode = task?.code ?? "RT-14";
@@ -314,9 +320,41 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   taskId={taskId}
                   slideId={row.slide_id}
                   object={row.object}
+                  outlines={outlines}
                   className="h-full"
                 />
               </div>
+              {row.outline_differs ? (
+                <section
+                  aria-label={t`Outlines of ${rowLabel(row)}`}
+                  data-testid="outline-legend"
+                  className="grid gap-1.5 rounded-zone bg-surf-panel px-3 py-2 text-body-sm"
+                >
+                  <b className="flex items-center gap-2 font-semibold">
+                    <StatusTag tone="warn">
+                      <Trans>outline differs</Trans>
+                    </StatusTag>
+                    {overlapShare === null ? null : (
+                      <small className="text-caption text-fg-dim">
+                        <Trans>{overlapShare}% overlap</Trans>
+                      </small>
+                    )}
+                  </b>
+                  {outlines.map((entry) => (
+                    <span key={entry.id} className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="inline-block h-0.5 w-5 rounded-full"
+                        style={{ backgroundColor: entry.hex }}
+                      />
+                      <Person {...personProp(person(entry.userId))} size={20} />
+                    </span>
+                  ))}
+                  <small className="text-caption text-fg-dim">
+                    <Trans>Each reviewer's outline is drawn over the AI one.</Trans>
+                  </small>
+                </section>
+              ) : null}
               <EvidenceList>
                 <EvidenceRow
                   icon="smart"

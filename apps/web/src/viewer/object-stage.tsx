@@ -11,38 +11,67 @@ const chrome = layoutChromeOf("object");
 
 const overlayId = "object-layout";
 
+export type StageOutline = {
+  readonly id: string;
+  readonly ring: readonly number[];
+  readonly colour: readonly [number, number, number, number];
+};
+
+const noOutlines: readonly StageOutline[] = [];
+
 function ObjectFrame({
   engine,
   module,
   object,
   claimHidden,
+  outlines,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   object: ReviewObject | undefined;
   claimHidden: boolean;
+  outlines: readonly StageOutline[];
 }) {
   const outline = object?.outline;
   const id = object?.object;
+  const framed = useMemo(
+    () => [...(outline ?? []), ...outlines.flatMap((entry) => entry.ring)],
+    [outline, outlines],
+  );
   useEffect(() => {
-    const area = outlineArea(outline);
+    const area = outlineArea(framed);
     void (area === null ? engine.flyToFit() : engine.flyToArea(area));
-  }, [engine, outline]);
+  }, [engine, framed]);
   const drawing = useMemo(
     () => module.createObjectDrawing({ id: overlayId, host: engine }),
     [module, engine],
   );
   useEffect(() => () => drawing.clear(), [drawing]);
-  const placed = useMemo(
-    () => (object === undefined || claimHidden ? [] : placedObjects([object])),
-    [object, claimHidden],
-  );
+  const placed = useMemo(() => {
+    const claim = object === undefined || claimHidden ? [] : placedObjects([object]);
+    const kind = object?.kind === "cell" ? ("cell" as const) : ("region" as const);
+    const drawn = outlines.map((entry) => ({
+      id: entry.id,
+      kind,
+      ring: entry.ring,
+      className: "other" as const,
+      classColour: entry.colour,
+      score: 1,
+    }));
+    return [...claim, ...drawn];
+  }, [object, claimHidden, outlines]);
   useEffect(() => {
     drawing.setObjects(placed);
     drawing.setCurrent(id ?? null);
   }, [drawing, placed, id]);
   return (
-    <div hidden data-testid="object-frame" data-object={id ?? ""} data-drawn={placed.length} />
+    <div
+      hidden
+      data-testid="object-frame"
+      data-object={id ?? ""}
+      data-drawn={placed.length}
+      data-outlines={outlines.length}
+    />
   );
 }
 
@@ -51,12 +80,14 @@ export function ObjectStage({
   object,
   objectId,
   claimHidden = false,
+  outlines = noOutlines,
   className = "",
 }: {
   slideId: string;
   object: ReviewObject | undefined;
   objectId: string;
   claimHidden?: boolean;
+  outlines?: readonly StageOutline[];
   className?: string;
 }) {
   const inspector: StageInspectorLink = {
@@ -71,6 +102,7 @@ export function ObjectStage({
         module={session.module}
         object={object}
         claimHidden={claimHidden}
+        outlines={outlines}
       />
     ),
   };

@@ -3,12 +3,14 @@ from enum import StrEnum
 
 AGREE = "agree"
 DISAGREE = "disagree"
+OUTLINE_OVERLAP = 60
 
 
 class Why(StrEnum):
     REVIEWERS_DIFFER = "reviewers-differ"
     AGAINST_THE_AI = "against-the-ai"
     SECOND_LOOK = "second-look"
+    OUTLINES_DIFFER = "outlines-differ"
 
 
 def why_queued[K](values: Mapping[K, str], second_look: Collection[K] = ()) -> Why | None:

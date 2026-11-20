@@ -73256,6 +73256,11 @@
         ],
         "title": "OutlineCell"
       },
+      "OutlineOverlap": {
+        "type": "integer",
+        "maximum": 99.0,
+        "minimum": 1.0
+      },
       "OutlineToType": {
         "properties": {
           "points": {
@@ -76088,6 +76093,30 @@
                 "type": "null"
               }
             ]
+          },
+          "outline_differs": {
+            "type": "boolean",
+            "title": "Outline Differs",
+            "default": false
+          },
+          "outline_overlap": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outline Overlap"
+          },
+          "outlines": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewerOutline"
+            },
+            "type": "array",
+            "title": "Outlines",
+            "default": []
           }
         },
         "type": "object",
@@ -76210,7 +76239,8 @@
         "enum": [
           "differ",
           "bothai",
-          "second"
+          "second",
+          "outline"
         ],
         "title": "QueueTag"
       },
@@ -76241,6 +76271,25 @@
             },
             "type": "array",
             "title": "Decisions"
+          },
+          "outline_overlap": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outline Overlap"
+          },
+          "outlines": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewerOutline"
+            },
+            "type": "array",
+            "title": "Outlines",
+            "default": []
           },
           "decision": {
             "anyOf": [
@@ -79004,6 +79053,11 @@
             "title": "Blind First",
             "default": false
           },
+          "outline_overlap": {
+            "type": "integer",
+            "title": "Outline Overlap",
+            "default": 60
+          },
           "counts_as_changes": {
             "items": {
               "$ref": "#/components/schemas/CountsAsChange"
@@ -79301,6 +79355,11 @@
             "type": "boolean",
             "title": "Blind First",
             "default": false
+          },
+          "outline_overlap": {
+            "type": "integer",
+            "title": "Outline Overlap",
+            "default": 60
           },
           "counts_as_changes": {
             "items": {
@@ -79628,6 +79687,28 @@
           "agreement"
         ],
         "title": "ReviewerObjectAgreement"
+      },
+      "ReviewerOutline": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "outline": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Outline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "outline"
+        ],
+        "title": "ReviewerOutline"
       },
       "ReviewerProgress": {
         "properties": {
@@ -85309,6 +85390,16 @@
               }
             ],
             "title": "Blind First"
+          },
+          "outline_overlap": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutlineOverlap"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -88654,7 +88745,8 @@
         "enum": [
           "reviewers-differ",
           "against-the-ai",
-          "second-look"
+          "second-look",
+          "outlines-differ"
         ],
         "title": "Why"
       },

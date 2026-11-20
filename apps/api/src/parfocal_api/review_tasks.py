@@ -66,6 +66,7 @@ from parfocal_api.tables import (
 from parfocal_api.task_notices import tell_assigned, tell_due_changed
 from parfocal_api.taxonomy import ProjectClass, classes_of
 from parfocal_api.worklist_events import announce_worklist, task_people
+from parfocal_common.disagreements import OUTLINE_OVERLAP
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
 
@@ -77,6 +78,7 @@ type TaskName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)
 ]
 type Reminders = Annotated[list[Annotated[int, Field(ge=0, le=60)]], Field(max_length=3)]
+type OutlineOverlap = Annotated[int, Field(ge=1, le=99)]
 
 
 class Scope(BaseModel):
@@ -198,6 +200,7 @@ class TaskChange(BaseModel):
     display: TaskDisplaySettings | None = None
     check: CheckChange | None = None
     blind_first: bool | None = None
+    outline_overlap: OutlineOverlap | None = None
 
     @model_validator(mode="after")
     def has_change(self) -> TaskChange:
@@ -237,6 +240,7 @@ class ReviewTask(BaseModel):
     display: TaskDisplaySettings
     check: CheckOptions | None = None
     blind_first: bool = False
+    outline_overlap: int = OUTLINE_OVERLAP
     counts_as_changes: list[CountsAsChange]
     created_by_user_id: uuid.UUID | None
     created_at: datetime
@@ -303,6 +307,11 @@ class StyleLockedError(ConflictError):
 class CountsAsSignedOffError(ConflictError):
     code = "counts-as-signed-off"
     title = "Counts as cannot change after sign-off"
+
+
+class OutlineOverlapSignedOffError(ConflictError):
+    code = "outline-overlap-signed-off"
+    title = "The outline overlap cannot change after sign-off"
 
 
 class CheckNotForKindError(BadRequestError):
@@ -483,6 +492,7 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         display=display_of(row.display),
         check=check_of(row.check_options) if row.kind == TaskKind.ANNOTATE else None,
         blind_first=row.blind_first,
+        outline_overlap=row.outline_overlap,
         counts_as_changes=[CountsAsChange.model_validate(item) for item in row.counts_as_changes],
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
@@ -1145,6 +1155,10 @@ async def change_review_task(
             values["blind_first"] = switched
             if switched:
                 values["blind_first_since"] = func.now()
+    if change.outline_overlap is not None and change.outline_overlap != row.outline_overlap:
+        if row.signed_off_at is not None:
+            raise OutlineOverlapSignedOffError
+        values["outline_overlap"] = change.outline_overlap
     if change.extra_scopes is not None:
         values["extra_scopes"] = stored_parts(change.extra_scopes, row.extra_scopes)
     if change.scope is not None:
