@@ -46,6 +46,7 @@ export type StageSession = {
   readonly overview: (signal?: AbortSignal) => Promise<SlideOverview | null>;
   readonly armTool: (tool: string) => void;
   readonly route: VivRoute | null;
+  readonly stage: HTMLElement | null;
 };
 
 const slotClass = "flex flex-col gap-3";

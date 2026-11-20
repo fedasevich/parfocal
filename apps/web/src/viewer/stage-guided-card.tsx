@@ -14,6 +14,28 @@ import type { ReviewSession } from "../screens/review/review-data.ts";
 import { answerFromDecision } from "../screens/review/review-state.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 
+export type GuidedFix = {
+  readonly open: boolean;
+  readonly redrawPoints: number | null;
+  readonly typePicker: ReactNode;
+  readonly onReason: (reason: string) => void;
+  readonly onBack: () => void;
+  readonly onFix: (what: string) => void;
+  readonly onFinishRedraw: () => void;
+  readonly onCancelRedraw: () => void;
+};
+
+const noFix: GuidedFix = {
+  open: false,
+  redrawPoints: null,
+  typePicker: null,
+  onReason: () => undefined,
+  onBack: () => undefined,
+  onFix: () => undefined,
+  onFinishRedraw: () => undefined,
+  onCancelRedraw: () => undefined,
+};
+
 export function StageGuidedCard({
   session,
   object,
@@ -28,6 +50,7 @@ export function StageGuidedCard({
   onAddMissed,
   answersOff,
   readOnly = false,
+  fix = noFix,
 }: {
   session: ReviewSession;
   object: ReviewObject;
@@ -42,6 +65,7 @@ export function StageGuidedCard({
   onAddMissed: () => void;
   answersOff?: string | undefined;
   readOnly?: boolean;
+  fix?: GuidedFix;
 }) {
   const { t } = useLingui();
   const wording = useResolvedSettings()?.confidence_wording ?? "numbers";
@@ -104,17 +128,18 @@ export function StageGuidedCard({
         disabled={answersOff !== undefined}
         answersElsewhere={readOnly}
         readOnly={readOnly}
-        disagreeOpen={false}
+        disagreeOpen={fix.open && !readOnly}
         note={note}
         coach={coach}
         history={<ObjectEditHistory versions={history} classes={session.classes} />}
         onAnswer={onAnswer}
-        onReason={() => undefined}
-        onBackToAnswers={() => undefined}
-        onFix={() => undefined}
-        redrawPoints={null}
-        onFinishRedraw={() => undefined}
-        onCancelRedraw={() => undefined}
+        onReason={fix.onReason}
+        onBackToAnswers={fix.onBack}
+        onFix={fix.onFix}
+        typePicker={fix.typePicker}
+        redrawPoints={readOnly ? null : fix.redrawPoints}
+        onFinishRedraw={fix.onFinishRedraw}
+        onCancelRedraw={fix.onCancelRedraw}
         onAddMissed={onAddMissed}
       />
       {stepTip}

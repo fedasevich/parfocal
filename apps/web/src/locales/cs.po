@@ -1367,6 +1367,11 @@ msgstr ""
 msgid "{0} runs going now"
 msgstr ""
 
+#. placeholder {0}: item.object
+#: src/viewer/stage-review-objects.tsx
+msgid "{0} saved as {name}. The AI result is not changed."
+msgstr ""
+
 #. placeholder {0}: model.name
 #: src/screens/admin/sections.tsx
 msgid "{0} shows in every model list again."
@@ -4600,6 +4605,7 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/viewer/stage-type-picker.tsx
 msgid "Cancel"
 msgstr ""
 
@@ -10242,6 +10248,11 @@ msgstr ""
 msgid "new outline"
 msgstr ""
 
+#. placeholder {0}: item.object
+#: src/viewer/stage-review-objects.tsx
+msgid "New outline saved for {0}. The AI result is not changed."
+msgstr ""
+
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "New password"
 msgstr ""
@@ -12455,6 +12466,11 @@ msgstr ""
 #. placeholder {0}: action.name.toLowerCase()
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Pick the keys for {0}"
+msgstr ""
+
+#. placeholder {0}: object.object
+#: src/viewer/stage-type-picker.tsx
+msgid "Pick the right type of {0}"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx

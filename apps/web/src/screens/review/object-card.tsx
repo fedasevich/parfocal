@@ -302,6 +302,7 @@ type ObjectCardProps = {
   onReason: (reason: string) => void;
   onBackToAnswers: () => void;
   onFix: (what: string) => void;
+  typePicker?: ReactNode;
   redrawPoints: number | null;
   onFinishRedraw: () => void;
   onCancelRedraw: () => void;
@@ -331,6 +332,7 @@ export function ObjectCard({
   onReason,
   onBackToAnswers,
   onFix,
+  typePicker,
   redrawPoints,
   onFinishRedraw,
   onCancelRedraw,
@@ -404,19 +406,23 @@ export function ObjectCard({
           </div>
           {note}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-full text-body-sm text-fg-dim">
-            <Trans>Want to fix it yourself? Optional.</Trans>
-          </span>
-          <Button onClick={() => onFix("outline")}>
-            <Icon name="pen" />
-            <Trans>Redraw the outline</Trans>
-          </Button>
-          <Button onClick={() => onFix("type")}>
-            <Icon name="pen" />
-            <Trans>Change the type</Trans>
-          </Button>
-        </div>
+        {readOnly
+          ? null
+          : (typePicker ?? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="w-full text-body-sm text-fg-dim">
+                  <Trans>Want to fix it yourself? Optional.</Trans>
+                </span>
+                <Button onClick={() => onFix("outline")}>
+                  <Icon name="pen" />
+                  <Trans>Redraw the outline</Trans>
+                </Button>
+                <Button onClick={() => onFix("type")}>
+                  <Icon name="pen" />
+                  <Trans>Change the type</Trans>
+                </Button>
+              </div>
+            ))}
         <Button variant="ghost" className="w-fit px-0" onClick={onBackToAnswers}>
           <Icon name="back" />
           <Trans>Back to the answers</Trans>
