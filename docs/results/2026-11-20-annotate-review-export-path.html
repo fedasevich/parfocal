@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parfocal, from an uploaded slide to reviewed training annotations</title><style>
+:root{color-scheme:light dark;--bg:#fbfaf8;--fg:#1d1b20;--dim:#5d5964;--line:#d6d2da;--card:#fff;--box:#f1eef4;--ok:#e3f1e8;--okl:#3b8457;--warn:#fbe9e4;--warnl:#b4472f;--mid:#fbf3d9;--midl:#a07a12;--acc:#5a4a8a;--code:#efecf3}
+@media (prefers-color-scheme:dark){:root{--bg:#17151a;--fg:#ece9f0;--dim:#a9a4b2;--line:#3a3642;--card:#1f1c24;--box:#2a2631;--ok:#1d3327;--okl:#6fc08e;--warn:#3d221c;--warnl:#f08a70;--mid:#3a3218;--midl:#e0bd55;--acc:#b9a8f0;--code:#2a2631}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1280px;margin:0 auto;padding:32px 24px 80px}h1{font-size:28px;margin:0 0 6px}h2{font-size:21px;margin:48px 0 10px;padding-top:14px;border-top:1px solid var(--line)}h3{font-size:16px;margin:22px 0 4px}
+p{margin:6px 0;max-width:100ch}.lead{color:var(--dim);max-width:92ch}nav a{color:var(--acc);margin-right:16px}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;margin:12px 0}
+svg{min-width:1040px;width:100%;height:auto;display:block;font-family:inherit}
+.b{fill:var(--box);stroke:var(--line)}.bw{fill:var(--warn);stroke:var(--warnl)}.bg{fill:var(--ok);stroke:var(--okl)}.bm{fill:var(--mid);stroke:var(--midl)}
+.t{font-size:13px;font-weight:600;fill:var(--fg)}.s{font-size:11px;fill:var(--dim)}.h{font-size:13px;font-weight:700;fill:var(--acc)}.r{font-size:12px;font-weight:700;fill:var(--dim)}
+.a{fill:none;stroke:var(--dim);stroke-width:1.2}.ah{fill:var(--dim)}.an{fill:none;stroke:var(--okl);stroke-width:1.8}.ahn{fill:var(--okl)}
+.key{display:flex;gap:18px;flex-wrap:wrap;color:var(--dim);font-size:13px}.key i{display:inline-block;width:22px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid var(--line)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);margin:10px 0}table{border-collapse:collapse;width:100%;min-width:980px;font-size:13px}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{color:var(--dim);font-weight:600}tr:last-child td{border-bottom:0}
+code{background:var(--code);border-radius:4px;padding:1px 5px;font:12px/1.5 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+ol li,ul li{margin:5px 0;max-width:100ch}.note{color:var(--dim);font-size:13px}
+.q{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 0}.q h3{margin-top:0}.rec{color:var(--okl);font-weight:600}
+.gap{border-left:3px solid var(--warnl);padding-left:10px}
+</style></head><body><main>
+<h1>From an uploaded slide to human reviewed training annotations</h1>
+<p class="lead">The owner asked on 2026-11-20 for one path: upload a slide, annotate it by hand, with one click tools or with whole slide models, have people review and edit the result with every edit recorded, and end with annotations for AI training. This page maps that path. It was read from the code, the ADRs and the board on 2026-11-20. Nothing was changed, nothing was measured and the deployed app was not opened. The same content as text, with the full task list, is in <code>docs/results/2026-11-20-annotate-review-export-path.md</code>.</p>
+<nav><a href="#picture">The path</a><a href="#gaps">Five gaps</a><a href="#steps">Step by step</a><a href="#order">Order</a><a href="#tasks">Tasks</a><a href="#questions">Your questions</a></nav>
+
+<h2 id="picture">The path, today and proposed</h2>
+<p>Almost every piece exists in the API. The path breaks because it is built twice, on two kinds of task that never meet. A review task has decisions and adjudication and no training export. An annotate task has recorded edits and the training export and no adjudication. The task you opened is a review task.</p>
+<div class="key"><span><i style="background:var(--ok);border-color:var(--okl)"></i>works, on screen</span><span><i style="background:var(--mid);border-color:var(--midl)"></i>built in the API, no button or partly wired</span><span><i style="background:var(--warn);border-color:var(--warnl)"></i>missing</span></div>
+<div class="fig"><svg viewBox="0 0 1240 690" role="img" aria-label="The path in five steps, today on two separate tracks and proposed as one joined path"><defs>
+<marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+<marker id="hn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahn"/></marker></defs>
+<text class="h" x="10" y="22">1. Upload</text><text class="h" x="256" y="22">2. Annotate</text><text class="h" x="502" y="22">3. Review and edit shapes</text><text class="h" x="748" y="22">4. Adjudicate</text><text class="h" x="994" y="22">5. Training export</text>
+
+<text class="r" x="10" y="50">TODAY</text>
+<rect class="bg" x="10" y="60" width="226" height="250" rx="7"/>
+<text class="t" x="20" y="80">Upload wizard, single or batch</text>
+<text class="s" x="20" y="98">resumable multipart, pairs result files</text>
+<text class="s" x="20" y="114">done step offers "Run a model"</text>
+<text class="s" x="20" y="138">uploads.py, project_uploads.py</text>
+<text class="s" x="20" y="154">screens/upload/</text>
+<text class="s" x="20" y="186">Not offered: "annotate these slides"</text>
+
+<rect class="bg" x="256" y="60" width="226" height="250" rx="7"/>
+<text class="t" x="266" y="80">By hand</text>
+<text class="s" x="266" y="96">polygon, freehand, brush with erase,</text>
+<text class="s" x="266" y="110">handles, undo, autosave</text>
+<text class="t" x="266" y="134">One click</text>
+<text class="s" x="266" y="150">Smart select Good and Best,</text>
+<text class="s" x="266" y="164">auto region, proposals</text>
+<text class="t" x="266" y="188">Whole slide</text>
+<text class="s" x="266" y="204">cell detection and tumor map jobs,</text>
+<text class="s" x="266" y="218">streamed onto the open slide</text>
+<text class="s" x="266" y="246">No split, no merge on screen.</text>
+<text class="s" x="266" y="262">In a review task, drawn shapes go to</text>
+<text class="s" x="266" y="276">the slide layer, not to the task.</text>
+
+<text class="r" x="502" y="54">Review task (the one you opened)</text>
+<rect class="bw" x="502" y="60" width="226" height="116" rx="7"/>
+<text class="t" x="512" y="80">Decide: agree, disagree, unsure</text>
+<text class="s" x="512" y="98">Edit routes exist: retype, reshape,</text>
+<text class="s" x="512" y="112">delete, split, merge, add.</text>
+<text class="s" x="512" y="130">Live viewer: fix buttons are dead.</text>
+<text class="s" x="512" y="146">One row per edit, no history,</text>
+<text class="s" x="512" y="160">no before and after outline.</text>
+<rect class="bm" x="748" y="60" width="226" height="116" rx="7"/>
+<text class="t" x="758" y="80">Queue and adjudicator</text>
+<text class="s" x="758" y="98">Settles the answer and the class.</text>
+<text class="s" x="758" y="116">Does not settle a shape. Two different</text>
+<text class="s" x="758" y="130">redraws are not a disagreement.</text>
+<text class="s" x="758" y="152">disagreements.py, adjudications.py</text>
+<rect class="bw" x="994" y="60" width="236" height="116" rx="7"/>
+<text class="t" x="1004" y="80">No training dataset</text>
+<text class="s" x="1004" y="98">Only one reviewer's layer or the</text>
+<text class="s" x="1004" y="112">consensus as GeoJSON or CSV,</text>
+<text class="s" x="1004" y="126">with no button. Consensus skips cells.</text>
+<text class="s" x="1004" y="152">reviewed_export.py</text>
+
+<text class="r" x="502" y="190">Annotate task</text>
+<rect class="bg" x="502" y="196" width="226" height="114" rx="7"/>
+<text class="t" x="512" y="216">Confirm, edit, delete AI objects</text>
+<text class="s" x="512" y="234">handles, class keys, lasso, undo</text>
+<text class="s" x="512" y="252">Every version kept with who, when,</text>
+<text class="s" x="512" y="266">outline, class and the AI source.</text>
+<text class="s" x="512" y="290">annotate_layer.py, annotation_versions</text>
+<rect class="bw" x="748" y="196" width="226" height="114" rx="7"/>
+<text class="t" x="758" y="216">No adjudication, by design</text>
+<text class="s" x="758" y="234">One shared layer. Each expert marks</text>
+<text class="s" x="758" y="248">the slide checked, the owner signs</text>
+<text class="s" x="758" y="262">it off.</text>
+<text class="s" x="758" y="290">annotate_sign_off.py</text>
+<rect class="bm" x="994" y="196" width="236" height="114" rx="7"/>
+<text class="t" x="1004" y="216">Dataset built, no button</text>
+<text class="s" x="1004" y="234">QuPath GeoJSON zip with manifest</text>
+<text class="s" x="1004" y="248">and checksums. Patches with masks.</text>
+<text class="s" x="1004" y="262">No filters, no version, no model</text>
+<text class="s" x="1004" y="276">version, no COCO.</text>
+<text class="s" x="1004" y="298">training_exports.py, patch_exports.py</text>
+
+<path class="a" d="M236 185H254" marker-end="url(#h)"/>
+<path class="a" d="M482 118H500" marker-end="url(#h)"/><path class="a" d="M482 253H500" marker-end="url(#h)"/>
+<path class="a" d="M728 118H746" marker-end="url(#h)"/><path class="a" d="M728 253H746" marker-end="url(#h)"/>
+<path class="a" d="M974 118H992" marker-end="url(#h)"/><path class="a" d="M974 253H992" marker-end="url(#h)"/>
+
+<line x1="10" y1="336" x2="1230" y2="336" stroke="var(--line)"/>
+<text class="r" x="10" y="366">PROPOSED</text>
+<rect class="b" x="10" y="376" width="226" height="290" rx="7"/>
+<text class="t" x="20" y="396">Upload wizard, as today</text>
+<text class="s" x="20" y="416">plus "Annotate these slides"</text>
+<text class="s" x="20" y="430">on the done step</text>
+
+<rect class="b" x="256" y="376" width="226" height="290" rx="7"/>
+<text class="t" x="266" y="396">Same tools</text>
+<text class="s" x="266" y="416">plus split along a line and merge</text>
+<text class="s" x="266" y="430">of selected shapes</text>
+<text class="s" x="266" y="454">Shapes drawn in a review task</text>
+<text class="s" x="266" y="468">belong to that task.</text>
+
+<text class="r" x="502" y="370">Review task</text>
+<rect class="b" x="502" y="376" width="226" height="132" rx="7"/>
+<text class="t" x="512" y="396">Decide and edit in the live viewer</text>
+<text class="s" x="512" y="414">redraw, retype, handles, brush erase,</text>
+<text class="s" x="512" y="428">split, merge, restore the AI original</text>
+<text class="s" x="512" y="450">Each reviewer still works alone.</text>
+<text class="s" x="512" y="468">Every edit is an added history row:</text>
+<text class="s" x="512" y="482">who, when, outline and class after.</text>
+<rect class="b" x="748" y="376" width="226" height="132" rx="7"/>
+<text class="t" x="758" y="396">Adjudicator settles the shape too</text>
+<text class="s" x="758" y="414">Outlines that overlap too little join</text>
+<text class="s" x="758" y="428">the queue. The card draws each one</text>
+<text class="s" x="758" y="442">over the AI outline.</text>
+<text class="s" x="758" y="464">Pick one or draw a new one.</text>
+<rect class="bg" x="994" y="376" width="236" height="132" rx="7"/>
+<text class="t" x="1004" y="396">Final layer</text>
+<text class="s" x="1004" y="414">On sign off: agreed objects become</text>
+<text class="s" x="1004" y="428">confirmed copies, edited ones keep</text>
+<text class="s" x="1004" y="442">their author, adjudicated ones take</text>
+<text class="s" x="1004" y="456">the adjudicator's outcome, rejected</text>
+<text class="s" x="1004" y="470">ones are deletions.</text>
+
+<text class="r" x="502" y="528">Annotate task</text>
+<rect class="b" x="502" y="534" width="226" height="132" rx="7"/>
+<text class="t" x="512" y="554">Shared layer, as today</text>
+<text class="s" x="512" y="572">confirm, edit, delete with full history</text>
+<rect class="b" x="748" y="534" width="226" height="132" rx="7"/>
+<text class="t" x="758" y="554">Check and sign off, as today</text>
+<text class="s" x="758" y="572">the signed off shared layer is</text>
+<text class="s" x="758" y="586">already a final layer</text>
+<rect class="bg" x="994" y="534" width="236" height="132" rx="7"/>
+<text class="t" x="1004" y="554">One dataset page for both tasks</text>
+<text class="s" x="1004" y="572">filters: agreed, edited, added, class,</text>
+<text class="s" x="1004" y="586">slide. Frozen versions with checksum.</text>
+<text class="s" x="1004" y="604">QuPath GeoJSON zip, patches with</text>
+<text class="s" x="1004" y="618">masks, COCO. Model name and version,</text>
+<text class="s" x="1004" y="632">author letters, edit counts.</text>
+
+<path class="a" d="M236 520H254" marker-end="url(#h)"/>
+<path class="a" d="M482 442H500" marker-end="url(#h)"/><path class="a" d="M482 600H500" marker-end="url(#h)"/>
+<path class="a" d="M728 442H746" marker-end="url(#h)"/><path class="a" d="M728 600H746" marker-end="url(#h)"/>
+<path class="a" d="M974 442H992" marker-end="url(#h)"/>
+<path class="an" d="M1112 508V532" marker-end="url(#hn)"/>
+<path class="an" d="M974 600H992" marker-end="url(#hn)"/>
+</svg></div>
+<p class="note">The green arrows are the join: both kinds of task end in one final layer and one dataset builder.</p>
+
+<h2 id="gaps">The five biggest gaps</h2>
+<ol>
+<li class="gap">A review task cannot produce a training dataset. <code>training_exports.py</code> and <code>patch_exports.py</code> refuse any task that is not an annotate task. A doctor's corrections in a review never reach training data.</li>
+<li class="gap">A reviewer cannot edit a shape in the live viewer. <code>apps/web/src/viewer/stage-guided-card.tsx</code> never opens the disagree reasons and passes an empty handler to "Redraw the outline" and "Change the type". Split and merge have API routes and no caller.</li>
+<li class="gap">A review edit is not fully recorded. <code>review_edits</code> keeps one row per reviewer and object, a save replaces it, and the audit entry stores only the words retyped, reshaped or deleted. The AI original is safe. The steps in between are lost.</li>
+<li class="gap">Adjudication settles an answer, not a shape. <code>disagreement_decisions</code> has no geometry. When two reviewers redraw one region differently, the consensus export takes the earliest redraw.</li>
+<li class="gap">The dataset has no home on screen and no version. The QuPath GeoJSON zip and the patches with masks are routes with no button. There are no filters, no stored version, no model version in the manifest and no COCO.</li>
+</ol>
+
+<h2 id="steps">Step by step</h2>
+<div class="scroll"><table>
+<tr><th style="width:11%">Step</th><th style="width:30%">Exists today</th><th style="width:27%">Missing or broken</th><th style="width:32%">Ways to cover it, and the pick</th></tr>
+<tr><td>1. Upload</td><td>Resumable upload of one slide or a batch with paired result files, in <code>uploads.py</code>, <code>project_uploads.py</code> and <code>screens/upload/</code>. Built by INGEST-001 (upload API), INGEST-021 (upload wizard with slides and results) and PROTO-084 (upload warnings from the real API). Import of existing annotations by ANN-023 (import GeoJSON and own JSON).</td><td>The done step offers "Run a model" and no way into an annotate task.</td><td>A. One link "Annotate these slides" on the done step. B. A new wizard that uploads, runs a model and makes the task in one flow, which repeats three wizards that work. <span class="rec">Pick A.</span></td></tr>
+<tr><td>2. Annotate</td><td>Hand tools, brush with erase and handles in <code>apps/web/src/annotations/</code>. Smart select with Good and Best (AISEG-005, smart select tool) and auto region. Whole slide runs through <code>model_runs.py</code> and <code>tumor_maps.py</code>, streamed onto the slide (AINUC-013, stream a whole slide run). In an annotate task every change is a row of <code>annotation_versions</code>.</td><td>No split and no merge on screen. Shapes drawn in the Annotate mode of a review task are saved to the slide wide layer and reach no dataset. PROTO-073 (Smart select stays in sensible bounds) is waiting and AISEG-024 (Best outlines on the server) is in review.</td><td>A. Fix only where shapes land. B. Add split along a line and merge to the Select tool for both kinds of task. <span class="rec">Pick both, B after review editing works.</span></td></tr>
+<tr><td>3. Review and edit</td><td>Decisions with reasons (ADR 0072, decisions, reasons and opinion forms). Review edit routes in <code>reviewed_layer.py</code>: retype, reshape, delete, undo, split, merge, add (RSET-007, the reviewed layer, and OBJ-003, split, merge and added objects). In an annotate task: confirm, edit and delete with handles, keys and lasso (ADR 0401, AI cell edits as one atomic batch, PROTO-035, experts edit any cell).</td><td>In the live viewer a reviewer can only decide. No history of review edits. No caller for split and merge. A doctor uses the same review task, so the same gap applies.</td><td>A. Wire the routes that exist into the live viewer and add an append only history table. B. Send the reviewer to an annotate task to edit, which loses independent review. C. Move review edits into the annotations table as a private layer per reviewer, the cleanest and the largest rewrite. <span class="rec">Pick A.</span></td></tr>
+<tr><td>4. Adjudicate</td><td>The disagreement rule, the queue, sending to an adjudicator and deciding (ADR 0080, the disagreement rule and sign off, ADJ-003, adjudicator view, ADJ-008, send to an adjudicator, PROTO-103, adjudication works on the seed). A redraw after the decisions is flagged for a second look.</td><td>Different outlines are not a disagreement. The adjudicator cannot choose or draw the final shape. An annotate task has no adjudication.</td><td>A. The adjudicator picks one outline or draws one, and outlines that overlap too little join the queue. B. Merge outlines by rule with no person, which trains on a shape nobody drew. C. The latest edit wins. <span class="rec">Pick A.</span></td></tr>
+<tr><td>5. Export</td><td>One slide as GeoJSON, FlatGeobuf or Parfocal JSON with a menu (PROTO-088, an annotate task offers its exports). The dataset zip of QuPath GeoJSON with manifest and checksums (EVAL-014, training dataset export, ADR 0262). Patches with class masks (EVAL-015, patch and mask export, ADR 0299). A reviewer's layer or the consensus for a review task (RSET-008, export reviewed annotations).</td><td>No button for the zip or the patches. No dataset for a review task. No filters, no dataset version, no model name or version, no COCO.</td><td>A. One final layer that both kinds of task end in, and one dataset builder. B. A second reader for review tasks inside the export, which must be kept in step forever. C. Only annotate tasks make training data. <span class="rec">Pick A, after the buttons.</span></td></tr>
+</table></div>
+
+<h2 id="order">Recommended order</h2>
+<ol>
+<li>Buttons for what exists: the dataset zip and the patch export on an annotate task. The path is then complete for annotate tasks.</li>
+<li>Editing in the live review: the reasons card, redraw, retype, handles and brush.</li>
+<li>History for review edits.</li>
+<li>Model name and version, edit counts and filters in the export, with a stored dataset version.</li>
+<li>Shape disagreements and the adjudicator's outline.</li>
+<li>The final layer that lets a review task feed the same dataset builder.</li>
+<li>Split and merge on screen, COCO, and one end to end spec over the whole path.</li>
+</ol>
+<p>Steps 1, 2 and 3 need no answer from you. The stored version in step 4 waits for question D, step 5 for question B and step 6 for question A.</p>
+
+<h2 id="tasks">Proposed backlog tasks</h2>
+<p class="note">Titles, sizes and what each waits for. The "why" and "done when" of each are in the Markdown file. The lead assigns the IDs.</p>
+<div class="scroll"><table>
+<tr><th style="width:4%">#</th><th style="width:44%">Task</th><th style="width:6%">Size</th><th>Depends on</th></tr>
+<tr><td>1</td><td>An annotate task offers its training dataset and its patches in the app</td><td>S</td><td>PROTO-088 (an annotate task offers its exports in the app)</td></tr>
+<tr><td>2</td><td>The upload done step offers to annotate the uploaded slides</td><td>S</td><td>PROTO-064 (an annotate task can be created from its stepper)</td></tr>
+<tr><td>3</td><td>A reviewer fixes an AI object from the live review card</td><td>M</td><td>PROTO-099 (one progress control, one Submit and engine drawn adjudication)</td></tr>
+<tr><td>4</td><td>A reviewer edits the current AI outline with handles and the brush</td><td>M</td><td>Task 3</td></tr>
+<tr><td>5</td><td>Every review edit keeps its history</td><td>M</td><td>Nothing</td></tr>
+<tr><td>6</td><td>The training dataset names the model and counts the edits</td><td>S</td><td>Nothing</td></tr>
+<tr><td>7</td><td>A dataset page with filters and stored versions</td><td>L</td><td>Tasks 1 and 6, question D</td></tr>
+<tr><td>8</td><td>Reviewers' outlines that differ reach the disagreement queue</td><td>M</td><td>Task 5, question B</td></tr>
+<tr><td>9</td><td>The adjudicator settles the shape</td><td>M</td><td>Task 8</td></tr>
+<tr><td>10</td><td>A signed off review task becomes a final layer the dataset builder reads</td><td>L</td><td>Tasks 5 and 9, question A</td></tr>
+<tr><td>11</td><td>Shapes drawn in a review task's Annotate mode belong to the task</td><td>M</td><td>Question A</td></tr>
+<tr><td>12</td><td>Split and merge on screen</td><td>L</td><td>Tasks 4 and 5</td></tr>
+<tr><td>13</td><td>COCO as a format of the patch export</td><td>M</td><td>Task 7, question C</td></tr>
+<tr><td>14</td><td>One spec walks the whole path on the real API</td><td>M</td><td>Tasks 3, 7, 9 and 10</td></tr>
+</table></div>
+
+<h2 id="questions">Questions only you can answer</h2>
+<div class="q"><h3>A. Which task carries training data from reviewed AI objects?</h3>
+<ul><li>A. Both, joined at the end. A signed off review task becomes a final layer that the existing dataset builder reads. One export for everything, and a doctor's corrections become training data. One large task and an ADR. <span class="rec">Recommended.</span></li>
+<li>B. Only annotate tasks make training data. Review tasks only measure the model. Nothing to build but buttons.</li>
+<li>C. Merge the two kinds into one task with a switch for independent work. Simplest to explain and the largest rewrite.</li></ul></div>
+<div class="q"><h3>B. When two reviewers draw different outlines for one object, who settles it?</h3>
+<ul><li>A. The adjudicator picks one of the outlines or draws a new one. Outlines count as different below a set overlap, changeable per task. The starting value is TODO and is picked in the task from fixture outlines. <span class="rec">Recommended.</span></li>
+<li>B. A rule merges them with no person, for example the area most reviewers marked. A shape nobody drew enters the data.</li>
+<li>C. Shapes are not compared and the latest edit wins.</li></ul></div>
+<div class="q"><h3>C. Which training formats come next after QuPath GeoJSON and patches with masks?</h3>
+<ul><li>A. COCO JSON beside the patch tiles. <span class="rec">Recommended.</span></li>
+<li>B. COCO and also instance maps per tile for nucleus models in the HoVer-Net style.</li>
+<li>C. Nothing more for now.</li></ul></div>
+<div class="q"><h3>D. What is a dataset version?</h3>
+<ul><li>A. A frozen copy of the manifest and the GeoJSON, stored write once with a number and a checksum. Patches are cut again from it when asked. Storage cost per version: TODO, to be measured in the task. <span class="rec">Recommended.</span></li>
+<li>B. A frozen copy of everything, tiles included. The largest storage use.</li>
+<li>C. Only a saved recipe that is built again on demand. No storage, but a change after sign off can make the same recipe give different data.</li></ul></div>
+<div class="q"><h3>E. Which objects go into a dataset by default?</h3>
+<ul><li>A. Only objects a person checked: agreed or confirmed, edited and added. Objects answered unsure or left open are left out and counted. <span class="rec">Recommended.</span></li>
+<li>B. The same, plus unchecked AI objects marked <code>ai-unchecked</code>.</li>
+<li>C. Everything, with the origin left to the researcher to filter.</li></ul></div>
+
+<p class="note">Not checked: the deployed app, and whether each ticked task behaves there as its tests say. No timing, size or cost was measured, so this page holds no measured number.</p>
+</main></body></html>
