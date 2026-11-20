@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parfocal viewer state machine, current and proposed</title><style>
+:root{color-scheme:light dark;--bg:#fbfaf8;--fg:#1d1b20;--dim:#5d5964;--line:#d6d2da;--card:#fff;--box:#f1eef4;--ok:#e3f1e8;--okl:#3b8457;--warn:#fbe9e4;--warnl:#b4472f;--acc:#5a4a8a;--code:#efecf3}
+@media (prefers-color-scheme:dark){:root{--bg:#17151a;--fg:#ece9f0;--dim:#a9a4b2;--line:#3a3642;--card:#1f1c24;--box:#2a2631;--ok:#1d3327;--okl:#6fc08e;--warn:#3d221c;--warnl:#f08a70;--acc:#b9a8f0;--code:#2a2631}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1280px;margin:0 auto;padding:32px 24px 80px}h1{font-size:28px;margin:0 0 6px}h2{font-size:21px;margin:48px 0 10px;padding-top:14px;border-top:1px solid var(--line)}h3{font-size:16px;margin:0 0 4px}
+p{margin:6px 0}.lead{color:var(--dim);max-width:86ch}nav a{color:var(--acc);margin-right:16px}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;margin:12px 0}
+svg{min-width:1000px;width:100%;height:auto;display:block;font-family:inherit}
+.b{fill:var(--box);stroke:var(--line)}.bw{fill:var(--warn);stroke:var(--warnl)}.bg{fill:var(--ok);stroke:var(--okl)}.shell{fill:none;stroke:var(--acc);stroke-width:1.5;stroke-dasharray:6 4}
+.t{font-size:13px;font-weight:600;fill:var(--fg)}.s{font-size:11px;fill:var(--dim)}.h{font-size:13px;font-weight:700;fill:var(--acc)}.l{font-size:10.5px;fill:var(--dim)}
+.a{fill:none;stroke:var(--dim);stroke-width:1.2}.aw{fill:none;stroke:var(--warnl);stroke-width:1.5;stroke-dasharray:5 3}.ah{fill:var(--dim)}.ahw{fill:var(--warnl)}
+.key{display:flex;gap:18px;flex-wrap:wrap;color:var(--dim);font-size:13px}.key i{display:inline-block;width:22px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid var(--line);background:var(--box)}.key .w{background:var(--warn);border-color:var(--warnl)}.key .g{background:var(--ok);border-color:var(--okl)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}table{border-collapse:collapse;width:100%;min-width:1100px;font-size:13px}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{background:var(--box);position:sticky;top:0}tr:last-child td{border-bottom:0}td:first-child{font-weight:600;min-width:170px}
+code{background:var(--code);border-radius:4px;padding:1px 5px;font:12px/1.5 ui-monospace,Menlo,monospace;overflow-wrap:anywhere}
+.issues{padding-left:22px}.issues li{margin:0 0 18px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px}.hurt{border-left:3px solid var(--warnl);padding-left:10px}.refs{display:flex;flex-wrap:wrap;gap:6px}
+ol li{margin:5px 0;max-width:100ch}.note{color:var(--dim);font-size:13px}
+</style></head><body><main>
+<h1>Which review and which slide open which viewer</h1>
+<p class="lead">Read from the code of the lead worktree on 2026-11-20. Nothing was changed and nothing was measured. The first half shows what happens today, the second half proposes one simpler shape. File references are relative to the repository root.</p>
+<nav><a href="#current">Current state machine</a><a href="#matrix">Current matrix</a><a href="#issues">What does not make sense</a><a href="#proposed">Proposed architecture</a><a href="#migration">Migration list</a></nav>
+
+<h2 id="current">Current state machine</h2>
+<p>Eight kinds of link lead to six slide routes. All six render the same component, <code>apps/web/src/viewer/engine-viewer.tsx</code>, which draws through <code>apps/web/src/viewer/slide-stage.tsx</code>, yet each route passes a different set of abilities. The workspace is picked by <code>resolveWorkspace</code> in <code>apps/web/src/viewer/workspace.ts:36</code>. A workspace named in the address wins, a review task gives the Full viewer, and everything else gives Annotate.</p>
+<div class="fig"><svg viewBox="0 0 1240 672" role="img" aria-label="Current state machine: entry points, routes and viewer screens"><defs>
+<marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+<marker id="hw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker>
+</defs>
+<text class="h" x="10" y="24">Entry points</text><text class="h" x="400" y="24">Routes and search parameters</text><text class="h" x="810" y="24">Viewer screens and the component that draws</text>
+<rect class="b" x="10" y="44" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="62">Project page, slide row</text>
+<text class="s" x="20" y="78">slides-tab.tsx:469, no task, no workspace</text>
+<rect class="b" x="10" y="122" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="140">Project page, result set row, View</text>
+<text class="s" x="20" y="156">slides-tab.tsx:648, no search at all</text>
+<rect class="b" x="10" y="200" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="218">Jobs tray, upload done, report, queue eye</text>
+<text class="s" x="20" y="234">viewerSearch sets workspace=review</text>
+<rect class="b" x="10" y="278" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="296">Search hit, Home continue, invitation</text>
+<text class="s" x="20" y="312">destinations.slide, no workspace</text>
+<rect class="b" x="10" y="356" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="374">My work, All slides, Open</text>
+<text class="s" x="20" y="390">list-keys.ts:57, task only if mine</text>
+<rect class="b" x="10" y="434" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="452">My work, To review, Start or Continue</text>
+<text class="s" x="20" y="468">destinations.guided</text>
+<rect class="b" x="10" y="512" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="530">New annotate task, annotate sign-off</text>
+<text class="s" x="20" y="546">tab=objects or nothing</text>
+<rect class="b" x="10" y="590" width="262" height="50" rx="7"/>
+<text class="t" x="20" y="608">My work Assigned, Home, task links</text>
+<text class="s" x="20" y="624">disagreements, adjudicate, sign-off</text>
+<rect class="b" x="400" y="44" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="62">/slides/$slideId/live</text>
+<text class="s" x="410" y="78">task, workspace, tab</text>
+<text class="s" x="410" y="92">no first read guard, no focus</text>
+<rect class="b" x="400" y="122" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="140">/slides/$slideId</text>
+<text class="s" x="410" y="156">task, workspace, tab, object, x y z,</text>
+<text class="s" x="410" y="170">focus, scene, with, tool</text>
+<rect class="b" x="400" y="200" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="218">/slides/$slideId/annotate</text>
+<text class="s" x="410" y="234">task, tool, scene. Workspace forced</text>
+<rect class="b" x="400" y="278" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="296">/slides/$slideId/annotate-task</text>
+<text class="s" x="410" y="312">task, tab, scene. Workspace forced</text>
+<rect class="b" x="400" y="356" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="374">/tasks/$taskId/guided</text>
+<text class="s" x="410" y="390">slide, object, x y z, scene</text>
+<rect class="b" x="400" y="434" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="452">/tasks/$taskId/cells</text>
+<text class="s" x="410" y="468">slide, scene</text>
+<rect class="b" x="400" y="512" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="530">/tasks/$taskId/disagreements, /adjudicate</text>
+<text class="s" x="410" y="546">no slide parameters</text>
+<rect class="b" x="400" y="590" width="270" height="62" rx="7"/>
+<text class="t" x="410" y="608">/tasks/$taskId/sign-off, /evaluation</text>
+<text class="s" x="410" y="624">forms and report, no slide stage</text>
+<rect class="b" x="810" y="44" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="62">Annotate workspace</text>
+<text class="s" x="820" y="78">EngineViewer, SlideStage, annotate rail</text>
+<text class="s" x="820" y="92">default when there is no review task</text>
+<rect class="b" x="810" y="122" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="140">Full viewer workspace</text>
+<text class="s" x="820" y="156">EngineViewer, SlideStage, review rail</text>
+<text class="s" x="820" y="170">value in the address is review</text>
+<rect class="b" x="810" y="200" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="218">Guided review</text>
+<text class="s" x="820" y="234">EngineViewer guided, SlideStage, no rail</text>
+<rect class="b" x="810" y="278" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="296">Cells grid</text>
+<text class="s" x="820" y="312">EngineViewer cells, SlideStage and grid</text>
+<rect class="b" x="810" y="356" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="374">Focus</text>
+<text class="s" x="820" y="390">EngineViewer bare, main route only</text>
+<rect class="bw" x="810" y="434" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="452">Compare</text>
+<text class="s" x="820" y="468">CompareView, ViewerFrame, StillEngine</text>
+<text class="s" x="820" y="482">switched by scene=picking or picked</text>
+<rect class="bw" x="810" y="512" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="530">Prototype screens</text>
+<text class="s" x="820" y="546">FullViewer, GuidedReview, AnnotateView</text>
+<text class="s" x="820" y="560">live scenes: objects, travel, region, auto</text>
+<rect class="bw" x="810" y="590" width="300" height="62" rx="7"/>
+<text class="t" x="820" y="608">Still picture card</text>
+<text class="s" x="820" y="624">SlideStill in the queue and adjudication</text>
+<path class="a" d="M272 69.0 C336.0 69.0, 336.0 75.0, 394 75.0" marker-end="url(#h)"/>
+<path class="a" d="M272 147.0 C336.0 147.0, 336.0 153.0, 394 153.0" marker-end="url(#h)"/>
+<path class="a" d="M272 225.0 C336.0 225.0, 336.0 153.0, 394 153.0" marker-end="url(#h)"/>
+<path class="a" d="M272 303.0 C336.0 303.0, 336.0 153.0, 394 153.0" marker-end="url(#h)"/>
+<path class="a" d="M272 381.0 C336.0 381.0, 336.0 75.0, 394 75.0" marker-end="url(#h)"/>
+<path class="a" d="M272 381.0 C336.0 381.0, 336.0 153.0, 394 153.0" marker-end="url(#h)"/>
+<path class="a" d="M272 459.0 C336.0 459.0, 336.0 387.0, 394 387.0" marker-end="url(#h)"/>
+<path class="a" d="M272 537.0 C336.0 537.0, 336.0 309.0, 394 309.0" marker-end="url(#h)"/>
+<path class="a" d="M272 615.0 C336.0 615.0, 336.0 543.0, 394 543.0" marker-end="url(#h)"/>
+<path class="a" d="M272 615.0 C336.0 615.0, 336.0 621.0, 394 621.0" marker-end="url(#h)"/>
+<path class="a" d="M670 75.0 C740.0 75.0, 740.0 75.0, 804 75.0" marker-end="url(#h)"/>
+<path class="aw" d="M670 75.0 C740.0 75.0, 740.0 153.0, 804 153.0" marker-end="url(#hw)"/>
+<path class="aw" d="M670 153.0 C740.0 153.0, 740.0 75.0, 804 75.0" marker-end="url(#hw)"/>
+<path class="a" d="M670 153.0 C740.0 153.0, 740.0 153.0, 804 153.0" marker-end="url(#h)"/>
+<path class="a" d="M670 153.0 C740.0 153.0, 740.0 387.0, 804 387.0" marker-end="url(#h)"/>
+<path class="aw" d="M670 153.0 C740.0 153.0, 740.0 465.0, 804 465.0" marker-end="url(#hw)"/>
+<path class="aw" d="M670 153.0 C740.0 153.0, 740.0 543.0, 804 543.0" marker-end="url(#hw)"/>
+<path class="a" d="M670 231.0 C740.0 231.0, 740.0 75.0, 804 75.0" marker-end="url(#h)"/>
+<path class="aw" d="M670 231.0 C740.0 231.0, 740.0 543.0, 804 543.0" marker-end="url(#hw)"/>
+<path class="a" d="M670 309.0 C740.0 309.0, 740.0 75.0, 804 75.0" marker-end="url(#h)"/>
+<path class="a" d="M670 387.0 C740.0 387.0, 740.0 231.0, 804 231.0" marker-end="url(#h)"/>
+<path class="aw" d="M670 387.0 C740.0 387.0, 740.0 543.0, 804 543.0" marker-end="url(#hw)"/>
+<path class="a" d="M670 465.0 C740.0 465.0, 740.0 309.0, 804 309.0" marker-end="url(#h)"/>
+<path class="aw" d="M670 543.0 C740.0 543.0, 740.0 621.0, 804 621.0" marker-end="url(#hw)"/>
+<path class="a" d="M1110 75.0 C1148 75.0, 1148 153.0, 1116 153.0" marker-end="url(#h)"/><text class="l" x="1144" y="118.0" transform="rotate(90 1144 118.0)" text-anchor="middle">workspace switch</text>
+<path class="a" d="M1110 153.0 C1148 153.0, 1148 231.0, 1116 231.0" marker-end="url(#h)"/><text class="l" x="1144" y="196.0" transform="rotate(90 1144 196.0)" text-anchor="middle">Guided</text>
+<path class="a" d="M1110 153.0 C1186 153.0, 1186 387.0, 1116 387.0" marker-end="url(#h)"/><text class="l" x="1182" y="274.0" transform="rotate(90 1182 274.0)" text-anchor="middle">focus key</text>
+<path class="a" d="M1110 153.0 C1224 153.0, 1224 465.0, 1116 465.0" marker-end="url(#h)"/><text class="l" x="1220" y="313.0" transform="rotate(90 1220 313.0)" text-anchor="middle">rail Compare</text>
+<path class="a" d="M1110 231.0 C1148 231.0, 1148 309.0, 1116 309.0" marker-end="url(#h)"/><text class="l" x="1144" y="274.0" transform="rotate(90 1144 274.0)" text-anchor="middle">cells</text></svg></div>
+<p class="key"><span><i></i>works through the one engine stage</span><span><i class="w"></i>a second drawing path, or a dashed arrow that changes the result by entry or by the scene parameter</span></p>
+<p class="note">Roles in play. A Researcher who owns the project can do everything. A Reviewer reviews and annotates the slides of their tasks, by decision 162 (annotator and read only viewer are not roles of their own). Admin rights add workspace setup and no access to slides, so they change nothing in the viewer. The project roles owner, reviewer and viewer narrow this per project. The viewer screen reads only whether the person is the owner.</p>
+
+<h2 id="matrix">Current matrix</h2>
+<p>One row per task kind and slide kind that behaves differently. Tabs come from <code>apps/web/src/viewer/stage-inspector.tsx:125</code>, rails from <code>apps/web/src/screens/viewer-tools/rails.ts</code>, notices from <code>apps/web/src/viewer/stage-issue-cards.tsx</code> and <code>apps/web/src/viewer/stage-notices.tsx</code>.</p>
+<div class="scroll"><table><thead><tr><th>Task and slide</th><th>Viewer that opens and what draws it</th><th>Side panel tabs</th><th>Rail tools</th><th>Actions and keys</th><th>Notices</th></tr></thead><tbody>
+<tr><td>No task, owner, slide with ready result sets</td><td>Annotate workspace from the project row, search and My work. Full viewer workspace from the jobs tray, upload and report links. SlideStage in both.</td><td>Objects, Display, Comments. Display opens first in Annotate, Objects in Full viewer.</td><td>Annotate: Select, Pan, Smart select, Auto region, Polygon, Freehand, Rectangle, Ellipse, Count marker, Ruler, Arrow, Text, Comment, Brush, Compare. Full viewer: Select, Pan, Measure, Comment, Smart select, Compare.</td><td>Draw, measure, comment, add a result set, start a run, switch slide, compare. Tool keys, camera keys, area keys.</td><td>Save state, conflicts, changes by others.</td></tr>
+<tr><td>No task, slide without result sets</td><td>Same as above.</td><td>Objects, Display, Comments.</td><td>Same rails.</td><td>Same, plus the tissue scan keys because there are no areas to step through.</td><td>None about the missing result. The slide just has an empty list.</td></tr>
+<tr><td>No task, result set importing or failed</td><td>Same as above.</td><td>Objects, Display, Comments.</td><td>Same rails.</td><td>Same.</td><td>Top stack notice that the set is still importing or did not import (result-set-notice.tsx).</td></tr>
+<tr><td>No task, project viewer, or a reviewer outside their tasks</td><td>Annotate workspace by default, exactly like an owner.</td><td>Objects, Display, Comments.</td><td>The whole annotate rail, although the person cannot save.</td><td>Every draw action is offered. The server refuses the save.</td><td>Only the not saved notice after the refused save.</td></tr>
+<tr><td>Review task, assigned, open</td><td>Full viewer workspace (workspace=review), SlideStage. My work starts in Guided instead.</td><td>Objects, Display, Comments, Opinion.</td><td>Select, Pan, Measure, Comment, Smart select, Compare.</td><td>Agree, disagree, unsure with keys, notes, add a missed object, fill the opinion, Submit in the top bar and in the Opinion tab, switch to Guided.</td><td>Save state. No AI result yet. The AI found nothing. Slide could not be read.</td></tr>
+<tr><td>Review task, guided</td><td>Guided, EngineViewer with guided on, SlideStage.</td><td>Review, Comments, Display. No Opinion tab, the questions sit in the done card.</td><td>No rail at all. The tool keys still arm tools.</td><td>Decision keys move to the next open object, done card, Submit.</td><td>Same issue cards as the full viewer, plus the coach.</td></tr>
+<tr><td>Review task, cell typing</td><td>/tasks/$taskId/cells, EngineViewer with cells on, SlideStage and the cells grid.</td><td>Objects, Display, Comments, Opinion. The tab is not kept in the address.</td><td>Select, Pan, Measure, Comment, Smart select, Compare.</td><td>Type a cell, grid keys, decisions.</td><td>Same as the review task.</td></tr>
+<tr><td>Review task with the AI hidden for a first read</td><td>First read step, then the viewer. Only the main route and the guided route check it. The /live route does not.</td><td>After the step: Objects, Display, Comments, Opinion.</td><td>Select, Pan, Measure, Comment, Smart select, Compare.</td><td>Record the first read, then as above.</td><td>From /live the server refuses the objects with the ai-hidden error and no first read step is shown.</td></tr>
+<tr><td>Review task, person not assigned to the slide</td><td>Full viewer workspace, SlideStage.</td><td>Objects, Display, Comments, Opinion. The Opinion form is still open.</td><td>Select, Pan, Measure, Comment, Smart select, Compare. Nothing is removed.</td><td>Decisions are off. The opinion form and both Submit buttons still act and the server refuses them.</td><td>Read only banner naming the assigned reviewers.</td></tr>
+<tr><td>Review task, signed off</td><td>Full viewer workspace, SlideStage.</td><td>Objects, Display, Comments, Opinion. Opinion form still open.</td><td>Select, Pan, Measure, Comment, Smart select, Compare.</td><td>Decisions are off. Ask the researcher to amend opens a comment.</td><td>Signed off banner.</td></tr>
+<tr><td>Review task, withdrawn</td><td>Full viewer workspace, SlideStage.</td><td>Objects, Display, Comments, Opinion.</td><td>Select, Pan, Measure, Comment, Smart select, Compare.</td><td>Decisions are off. Back to My work.</td><td>Withdrawn card over the canvas.</td></tr>
+<tr><td>Annotate task, assigned expert</td><td>/annotate-task, Annotate workspace, SlideStage with the annotate task panel.</td><td>Objects, Display, Comments. An opinion tab in the address is dropped.</td><td>Select, Pan, Smart select, Auto region, Polygon, Freehand, Rectangle, Ellipse, Count marker, Ruler, Arrow, Text, Comment, Brush, Compare.</td><td>Confirm, retype, reshape or delete AI objects, draw new ones, guided check, mark the slide checked, export.</td><td>Save state, conflicts, AI result hidden or missing line in the panel.</td></tr>
+<tr><td>Annotate task, person not assigned</td><td>The same screen as the assigned expert. There is no read only view.</td><td>Objects, Display, Comments.</td><td>The whole annotate rail.</td><td>Every layer edit is offered and the layer endpoints ask only for the review right. Only Checked is refused, as not an assigned expert.</td><td>None.</td></tr>
+<tr><td>Annotate task, signed off</td><td>Same screen. The panel locks itself.</td><td>Objects, Display, Comments.</td><td>The whole annotate rail is still shown.</td><td>Panel actions are off. The owner can still add a new run.</td><td>A line in the panel that the layer is locked. No banner.</td></tr>
+<tr><td>Disagreements queue, researcher</td><td>/tasks/$taskId/disagreements. A still picture card (SlideStill), not the stage.</td><td>None. A queue list and a detail card.</td><td>None.</td><td>Resolve, send to an adjudicator, look again, open the object in the full viewer through the eye link.</td><td>Locked queue message while reviewers still have slides.</td></tr>
+<tr><td>Adjudication, adjudicator</td><td>/tasks/$taskId/adjudicate. The same still picture card.</td><td>None.</td><td>None.</td><td>Decide the object. The only way out is My work, with no link to the full viewer.</td><td>None.</td></tr>
+<tr><td>Sign-off</td><td>/tasks/$taskId/sign-off. A form page. For an annotate task it links to /annotate-task.</td><td>None.</td><td>None.</td><td>Sign off, amend.</td><td>Blocked reasons.</td></tr>
+<tr><td>Any task, slide without pixel size</td><td>Same viewer as its task kind.</td><td>Same.</td><td>Same rail. No tool is removed.</td><td>Areas show in pixels, objective steps are skipped, the AI scale choice is hidden.</td><td>One line in the areas card. No general notice.</td></tr>
+<tr><td>Any task, DICOM slide</td><td>Same viewer. The viewer code has no DICOM branch.</td><td>Same.</td><td>Same.</td><td>Same.</td><td>None of its own.</td></tr>
+<tr><td>Any task, remote slide read in place</td><td>Same viewer.</td><td>Same.</td><td>Same.</td><td>Copy into Parfocal for the owner.</td><td>Remote tag in the top bar. A banner when the source is not answering. Both vanish in Focus and Compare.</td></tr>
+<tr><td>Compare, any task</td><td>CompareView in ViewerFrame, drawn by StillEngine. Switched by scene.</td><td>Always four tabs, Opinion included. Clicking a tab leaves compare.</td><td>Always the review rail. Only Select does something, and it leaves compare.</td><td>Pick slides, swap, link cameras, share the cursor.</td><td>None from the stage. Save state and banners are not wired.</td></tr>
+<tr><td>Focus, any task</td><td>EngineViewer bare, SlideStage. Reachable only on the main route.</td><td>Side panel hidden.</td><td>Rail hidden. Tool keys still work.</td><td>Focus card with decisions for a review task, show the interface.</td><td>Save state and banner float over the canvas. Patient and remote banners are hidden.</td></tr>
+</tbody></table></div>
+
+<h2 id="issues">What does not make sense</h2>
+<p>Ranked by how much each one confuses a pathologist at the microscope. The line with the coloured edge says why it hurts.</p>
+<ol class='issues'>
+<li><h3>The same slide opens in a different viewer depending on where you clicked.</h3><p>A slide with no task opens in Annotate from the project row, from search and from My work, and in the Full viewer from the jobs tray, the upload page and the report. The default is Annotate whenever there is no review task, and one helper forces Full viewer.</p><p class='hurt'>A pathologist cannot learn where a slide will land. Drawing tools appear when they only wanted to look, and drag selects in one place and pans in the other. Decision 163 (where a project slide row opens) is one case of this, and its answer should be applied through one rule.</p><p class='refs'><code>apps/web/src/viewer/workspace.ts:36</code> <code>apps/web/src/screens/viewer-links.tsx:15</code> <code>apps/web/src/screens/project/slides-tab.tsx:469 and :648</code> <code>apps/web/src/shell/jobs-tray.tsx:96</code> <code>apps/web/src/shell/search-hits.ts:18</code> <code>apps/web/src/screens/my-work/list-keys.ts:54</code></p></li>
+<li><h3>Read only stops at the objects card.</h3><p>For a review task the code works out that the slide is assigned to others, signed off or withdrawn, and passes that only to the objects card. The Opinion form stays editable, Submit stays in the top bar and in the Opinion tab, and the rail keeps Smart select and Comment. The server refuses the save because the person has no assignment.</p><p class='hurt'>The banner says you can look but not answer, while a full form with a Submit button sits beside it. The person fills it in and loses the work.</p><p class='refs'><code>apps/web/src/viewer/engine-viewer.tsx:138 and :246</code> <code>apps/web/src/viewer/stage-opinion.tsx:29</code> <code>apps/web/src/viewer/live-top-bar.tsx:318</code> <code>apps/web/src/viewer/slide-stage.tsx:695</code> <code>apps/api/src/parfocal_api/opinions.py:168</code></p></li>
+<li><h3>Annotate tasks have no read only view at all.</h3><p>The read only, withdrawn and signed off checks run only when the task kind is review. An annotate task opens with the full rail and the full panel for anyone who can see the slide. I found no assignment check in the layer write endpoints, which ask only for the review right, so a person who is not an assigned expert can change the shared layer. Only marking the slide checked is refused.</p><p class='hurt'>Training data can be changed by someone the researcher did not pick, and that person gets no sign that the slide is not theirs.</p><p class='refs'><code>apps/web/src/viewer/engine-viewer.tsx:124 and :138</code> <code>apps/web/src/annotations/annotate-task.ts:24</code> <code>apps/api/src/parfocal_api/annotate_layer.py:397</code> <code>apps/api/src/parfocal_api/annotate_sign_off.py:243</code></p></li>
+<li><h3>The role never reaches the viewer.</h3><p>The viewer reads only whether the person owns the project. A project viewer, who may only read, and a reviewer outside their tasks get the Annotate workspace with every drawing tool.</p><p class='hurt'>They draw, the save is refused, and the only feedback is a not saved notice.</p><p class='refs'><code>apps/web/src/viewer/engine-viewer.tsx:121</code> <code>apps/web/src/viewer/workspace.ts:36</code> <code>docs/reference/permissions.md</code></p></li>
+<li><h3>Five addresses lead to the same stage, each with different gaps.</h3><p>The main route, /live, /annotate, /annotate-task and the two task routes all render EngineViewer. Only the main route and the guided route check the first read. Only the main route passes the focus handler, the object and the camera. The tab is kept in the address on three of them and lost on reload on the others. My work opens a not started slide through /live with its task, so a task that hides the AI for a first read skips the first read step and the server answers with the ai-hidden error.</p><p class='hurt'>The focus key works on one page and is dead on the next. A shared link opens without the object or the place. A blinded read can open as a broken list.</p><p class='refs'><code>apps/web/src/routes/projects.$projectId.slides.$slideId.tsx:68</code> <code>apps/web/src/routes/projects.$projectId.slides.$slideId_.live.tsx:16</code> <code>apps/web/src/routes/projects.$projectId.slides.$slideId_.annotate.tsx:18</code> <code>apps/web/src/routes/tasks.$taskId.guided.tsx:53</code> <code>apps/web/src/screens/my-work/list-keys.ts:57</code> <code>apps/api/src/parfocal_api/blinding.py:25</code></p></li>
+<li><h3>The scene parameter still decides which screen you get.</h3><p>The scene key was meant for the prototype gallery. Seven values are still live in production. Two of them switch Compare on. The others open the old prototype screens (FullViewer, GuidedReview on a still picture, AnnotateView) in place of the engine stage.</p><p class='hurt'>An old link or a mode switch inside a prototype screen lands on a second viewer that looks alike and behaves differently. This is the two viewers problem that ADR 0398 (every viewer screen draws through one engine stage) set out to end.</p><p class='refs'><code>apps/web/src/search/route-searches.ts:33, :140 and :199</code> <code>apps/web/src/routes/projects.$projectId.slides.$slideId.tsx:25, :42 and :62</code> <code>apps/web/src/routes/tasks.$taskId.guided.tsx:25</code> <code>apps/web/src/screens/review/review-top.tsx:113</code></p></li>
+<li><h3>Compare is a separate screen that offers tools and tabs that do nothing.</h3><p>Compare draws with StillEngine inside the old frame. It always shows the review rail, even when you came from Annotate, and only Select reacts, by leaving. It always shows four tabs, Opinion included, and clicking any tab leaves compare. Save state and banners are not connected.</p><p class='hurt'>Measure and Comment look available on two slides side by side, which is where a pathologist most wants them, and pressing them does nothing. A tab click throws away the comparison.</p><p class='refs'><code>apps/web/src/screens/viewer-tools/compare-view.tsx:640, :655, :661 and :737</code> <code>apps/web/src/viewer/stage-compare.tsx:29</code></p></li>
+<li><h3>The workspace switch mixes names and changes its options.</h3><p>The button reads Full viewer, the address says workspace=review and the setup label says Review. The group is labelled How to review even with no task. For a review task the Annotate option is hidden unless you are already there. For an annotate task Full viewer shows the same annotate panel with fewer tools. Switching from the guided, cells or annotate routes jumps to another route and drops the object and the tab.</p><p class='hurt'>The same control means a different thing per task, so it cannot be learned.</p><p class='refs'><code>apps/web/src/viewer/live-top-bar.tsx:280</code> <code>apps/web/src/viewer/workspace.ts:19</code> <code>apps/web/src/viewer/slide-stage.tsx:993</code> <code>apps/web/src/routes/tasks.$taskId.guided.tsx:76</code></p></li>
+<li><h3>Progress and finishing are shown several times.</h3><p>A review slide has the progress ring in the top bar, the seen percent on the minimap, the counts in the Opinion tab, a Submit in the top bar and a second Submit in the Opinion tab, and a done card in guided. An annotate task has a progress line in its panel, a mark checked button and a finish slot in the top bar.</p><p class='hurt'>Two Submit buttons with different enabled states make a person doubt whether the slide was sent.</p><p class='refs'><code>apps/web/src/viewer/live-top-bar.tsx:260, :318 and :337</code> <code>apps/web/src/viewer/stage-opinion.tsx:64</code> <code>apps/web/src/viewer/engine-viewer.tsx:208</code> <code>apps/web/src/viewer/annotate-task-panel.tsx:586 and :630</code></p></li>
+<li><h3>Focus works on one route only, and has a prototype twin.</h3><p>The focus key is bound in every EngineViewer, and only the main route gives it something to toggle. With focus and a scene in the address the old FocusView opens.</p><p class='hurt'>A key that works in the full viewer and not in guided review reads as a bug.</p><p class='refs'><code>apps/web/src/viewer/engine-viewer.tsx:94</code> <code>apps/web/src/routes/projects.$projectId.slides.$slideId.tsx:25 and :78</code></p></li>
+<li><h3>Disagreements and adjudication show a still picture, and the adjudicator cannot open the slide.</h3><p>Both pages draw SlideStill with tiles marked unloaded and no minimap. The queue has an eye link to the full viewer. The adjudicator page links only back to My work.</p><p class='hurt'>The person who must settle the hardest objects has the weakest view of them.</p><p class='refs'><code>apps/web/src/screens/disagreements/disagreement-stage.tsx:59</code> <code>apps/web/src/screens/disagreements/queue-screen.tsx:274</code> <code>apps/web/src/screens/disagreements/adjudicator-view.tsx:177 and :313</code></p></li>
+<li><h3>Tool keys act where the rail is hidden.</h3><p>Guided review and Focus hide the rail, and the tool key bindings stay on.</p><p class='hurt'>A stray key press arms Measure or Comment with nothing on screen to show it.</p><p class='refs'><code>apps/web/src/viewer/slide-stage.tsx:306 and :738</code></p></li>
+<li><h3>The back link always says My work.</h3><p>The top bar links to My work even when the slide was opened from a project page or the queue.</p><p class='hurt'>A researcher browsing a project is sent to a different page than the one they came from.</p><p class='refs'><code>apps/web/src/viewer/live-top-bar.tsx:209</code></p></li>
+<li><h3>Slide kind is handled in scattered places.</h3><p>Missing result and nothing found cards exist only for review tasks. A slide without pixel size is mentioned only in the areas card, and no tool changes. Remote banners vanish in Focus and Compare. I could not confirm in this pass what the ruler shows without pixel size.</p><p class='hurt'>The same slide problem is explained in one mode and silent in another.</p><p class='refs'><code>apps/web/src/viewer/engine-viewer.tsx:131 and :383</code> <code>apps/web/src/viewer/area-keys.tsx:76</code> <code>apps/web/src/screens/viewer-tools/compare-view.tsx:652</code></p></li>
+</ol>
+
+<h2 id="proposed">Proposed architecture</h2>
+<p>The core rule is short. One viewer shell on one route, where the mode comes from the task, the access comes from one function of role, assignment and task state, and everything on screen is looked up from those two values. Compare and Focus are layouts of that shell and never separate screens.</p>
+<div class="fig"><svg viewBox="0 0 1240 560" role="img" aria-label="Proposed state machine: one route, one resolver, one shell with mode, layout and access"><defs>
+<marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+<marker id="hw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker>
+</defs>
+<rect class="b" x="10" y="60" width="200" height="74" rx="7"/>
+<text class="t" x="20" y="78">Any link to a slide</text>
+<text class="s" x="20" y="94">one helper builds the address</text>
+<text class="s" x="20" y="108">slide, task, object, camera</text>
+<rect class="b" x="270" y="40" width="250" height="114" rx="7"/>
+<text class="t" x="280" y="58">One route</text>
+<text class="s" x="280" y="74">/projects/$p/slides/$s</text>
+<text class="s" x="280" y="88">task, mode, layout, with,</text>
+<text class="s" x="280" y="102">object, x y z, tab</text>
+<text class="s" x="280" y="116">old addresses redirect here</text>
+<rect class="bg" x="580" y="20" width="300" height="154" rx="7"/>
+<text class="t" x="590" y="38">Capability resolver, one function</text>
+<text class="s" x="590" y="54">inputs: task kind and state,</text>
+<text class="s" x="590" y="68">slide state, role and project role,</text>
+<text class="s" x="590" y="82">assignment, first read</text>
+<text class="s" x="590" y="96">outputs: default mode, allowed modes,</text>
+<text class="s" x="590" y="110">access (edit or read only with a reason),</text>
+<text class="s" x="590" y="124">tabs, tools, actions, keys, notices</text>
+<path class="a" d="M210 97 C240.0 97, 240.0 97, 264 97" marker-end="url(#h)"/>
+<path class="a" d="M520 97 C550.0 97, 550.0 97, 574 97" marker-end="url(#h)"/>
+<rect class="shell" x="10" y="216" width="1220" height="330" rx="10"/><text class="h" x="24" y="240">One viewer shell, one SlideStage engine</text>
+<path class="a" d="M730 174 C730.0 174, 730.0 216, 724 216" marker-end="url(#h)"/>
+<rect class="bg" x="30" y="262" width="270" height="66" rx="7"/>
+<text class="t" x="40" y="280">Look</text>
+<text class="s" x="40" y="296">no task</text>
+<text class="s" x="40" y="310">pan, measure, comment, layers</text>
+<rect class="bg" x="330" y="262" width="270" height="66" rx="7"/>
+<text class="t" x="340" y="280">Review</text>
+<text class="s" x="340" y="296">review task, free order</text>
+<text class="s" x="340" y="310">decisions, opinion, submit</text>
+<rect class="bg" x="630" y="262" width="270" height="66" rx="7"/>
+<text class="t" x="640" y="280">Guided</text>
+<text class="s" x="640" y="296">review task, one object at a time</text>
+<text class="s" x="640" y="310">same data, same submit</text>
+<rect class="bg" x="930" y="262" width="270" height="66" rx="7"/>
+<text class="t" x="940" y="280">Annotate</text>
+<text class="s" x="940" y="296">annotate task, or no task</text>
+<text class="s" x="940" y="310">with the review right</text>
+<text class="s" x="30" y="256">Mode, from the task. The switch offers only the allowed ones.</text>
+<path class="a" d="M300 285 L324 285" marker-end="url(#h)"/><path class="a" d="M330 305 L306 305" marker-end="url(#h)"/>
+<path class="a" d="M600 285 L624 285" marker-end="url(#h)"/><path class="a" d="M630 305 L606 305" marker-end="url(#h)"/>
+<path class="a" d="M900 285 L924 285" marker-end="url(#h)"/><path class="a" d="M930 305 L906 305" marker-end="url(#h)"/>
+<text class="s" x="30" y="362">Layout, independent of the mode. It never changes the route or the engine.</text>
+<rect class="b" x="30" y="370" width="270" height="62" rx="7"/>
+<text class="t" x="40" y="388">Single</text>
+<text class="s" x="40" y="404">one slide, rail and side panel</text>
+<rect class="b" x="330" y="370" width="270" height="62" rx="7"/>
+<text class="t" x="340" y="388">Compare</text>
+<text class="s" x="340" y="404">two to four panes, linked cameras</text>
+<text class="s" x="340" y="418">tools act on the active pane</text>
+<rect class="b" x="630" y="370" width="270" height="62" rx="7"/>
+<text class="t" x="640" y="388">Focus</text>
+<text class="s" x="640" y="404">interface hidden, same keys</text>
+<text class="s" x="640" y="418">works in every mode</text>
+<rect class="b" x="930" y="370" width="270" height="62" rx="7"/>
+<text class="t" x="940" y="388">Object</text>
+<text class="s" x="940" y="404">one object framed, for the queue</text>
+<text class="s" x="940" y="418">and adjudication cards</text>
+<text class="s" x="30" y="466">Access, derived once and read by the rail, the cards, the forms, the keys and the top bar.</text>
+<rect class="bg" x="30" y="474" width="420" height="60" rx="7"/>
+<text class="t" x="40" y="492">Edit</text>
+<text class="s" x="40" y="508">assigned, task open, slide readable</text>
+<rect class="bw" x="480" y="474" width="720" height="60" rx="7"/>
+<text class="t" x="490" y="492">Read only, with one reason</text>
+<text class="s" x="490" y="508">not assigned, signed off, withdrawn,</text>
+<text class="s" x="490" y="522">no review right, first read pending</text></svg></div>
+<p class="key"><span><i class="g"></i>decided in one place</span><span><i class="w"></i>read only, always with a reason and a banner</span><span><i></i>layout, free to combine with any mode</span></p>
+<h3>The rules that keep it simple</h3>
+<ol><li>One route and one shell. Every link to a slide is built by one helper and lands on /projects/$projectId/slides/$slideId. The other addresses redirect to it.</li><li>The mode comes from the task and nothing else. No task gives Look or Annotate, a review task gives Review or Guided, an annotate task gives Annotate. The entry point never changes the mode.</li><li>Access is derived once. One function takes the role, the project role, the assignment, the task state and the slide state and returns edit, or read only with one reason. The rail, the cards, the opinion form, Submit, the keys and the annotate panel all read that one value.</li><li>Capabilities are data. One table maps mode and access to tabs, tools, actions and keys. A tool that cannot work in the current state is not shown, and its key does nothing.</li><li>Layout is separate from mode. Single, Compare, Focus and Object are layouts of the same engine stage, so every tool and notice of the mode keeps working in them.</li><li>The scene parameter belongs to the prototype gallery only and never selects a screen in production.</li><li>Each mode has one progress control and one finish action, in the top bar.</li><li>Notices come from one ordered list, so a slide problem reads the same in every mode and layout.</li><li>The server mirrors the access rule, so the layer endpoints check the assignment the same way the opinion endpoint already does.</li></ol>
+<h3>Proposed matrix</h3>
+<p>The whole table is the output of the resolver, so a test can assert it row by row.</p>
+<div class="scroll"><table><thead><tr><th>Task</th><th>Access or state</th><th>Mode that opens</th><th>Tabs</th><th>Tools</th><th>Actions</th><th>Notice</th></tr></thead><tbody>
+<tr><td>No task</td><td>Edit (owner, or holder of the review right)</td><td>Look by default or Annotate, by the answer to decision 163 (where a project slide row opens). The same from every entry.</td><td>Objects, Display, Comments</td><td>Look: Select, Pan, Measure, Comment. Annotate adds the drawing and AI tools.</td><td>Measure, comment, layers, run a model for the owner.</td><td>Result importing or failed. Remote source offline.</td></tr>
+<tr><td>No task</td><td>Read only (project viewer)</td><td>Look. Annotate is not offered.</td><td>Objects, Display, Comments</td><td>Select, Pan, Measure.</td><td>Look and measure. Measures stay on the device.</td><td>Read only, you can look but not change this slide.</td></tr>
+<tr><td>Review task</td><td>Edit (assigned, open)</td><td>Guided from My work, Review from every other link. One switch between them.</td><td>Objects, Display, Comments, Opinion in Review. Review, Comments, Display in Guided.</td><td>Select, Pan, Measure, Comment, Add missed object.</td><td>Decisions, notes, opinion, one Submit.</td><td>No AI result. Nothing found. Slide unreadable.</td></tr>
+<tr><td>Review task</td><td>Read only (not assigned, signed off, withdrawn)</td><td>Review. Guided is not offered.</td><td>Objects, Display, Comments, Opinion. Opinion shows the answers without inputs.</td><td>Select, Pan, Measure.</td><td>Look, read comments. Submit is not shown.</td><td>One banner with the reason and the one useful action.</td></tr>
+<tr><td>Review task</td><td>First read pending</td><td>First read step on every route, then Review or Guided.</td><td>After the step, as above.</td><td>As above.</td><td>Record the first read.</td><td>The AI stays hidden until your first read.</td></tr>
+<tr><td>Annotate task</td><td>Edit (assigned expert, or owner)</td><td>Annotate.</td><td>Objects, Display, Comments</td><td>The annotate rail.</td><td>Check AI objects, draw, mark checked, sign off for the owner.</td><td>Save state, conflicts.</td></tr>
+<tr><td>Annotate task</td><td>Read only (not assigned, signed off, withdrawn)</td><td>Annotate, read only.</td><td>Objects, Display, Comments</td><td>Select, Pan, Measure.</td><td>Look at the shared layer. The owner can amend.</td><td>One banner with the reason.</td></tr>
+<tr><td>Disagreements and adjudication</td><td>Decide (researcher or adjudicator)</td><td>The queue page embeds the shell in Object layout.</td><td>Its own decision card.</td><td>Pan and zoom on the real slide.</td><td>Resolve, decide, open in Review.</td><td>Queue locked.</td></tr>
+<tr><td>Any</td><td>Compare layout</td><td>The current mode, with two to four panes on the same stage.</td><td>The tabs of the mode.</td><td>The tools of the mode, on the active pane.</td><td>Pick, swap, link.</td><td>The notices of the mode.</td></tr>
+<tr><td>Any</td><td>Slide without pixel size</td><td>The current mode.</td><td>Same.</td><td>Measure shows pixels and says so once.</td><td>No size categories.</td><td>One notice that sizes are in pixels.</td></tr>
+</tbody></table></div>
+<p class="note">Decision 163 (where a project slide row opens) stays the owner's choice. The proposal works with either answer, because the answer becomes one line in the mode rule and every entry point then agrees.</p>
+
+<h2 id="migration">Migration list</h2>
+<p>In order. The first five close gaps where work is lost or a rule is skipped. The rest remove the duplicate paths. Each line can become a backlog task.</p>
+<ol><li>Add one access function for the viewer that returns edit or read only with a reason, and unit test it against the permissions matrix.</li><li>Make the Opinion form, both Submit buttons and the rail obey that access value for review tasks.</li><li>Apply the same access value to annotate tasks, with a read only banner for people who are not assigned experts, and for withdrawn tasks.</li><li>Add the assignment check to the annotate layer write endpoints, with a test for a member who holds the review right and no assignment.</li><li>Run the first read guard inside EngineViewer so that every route gets it, and add a test that opens a blinded task through /live.</li><li>Build every slide link through one helper and delete the forced workspace in viewer-links, so that one rule picks the mode. Apply the owner&#x27;s answer to decision 163 (where a project slide row opens) inside that rule.</li><li>Pass the role into the mode rule, so a project viewer opens in Look and is never offered Annotate.</li><li>Redirect /live, /annotate and /annotate-task to the main route, and move the guided and cells routes to a mode value on it, keeping object, camera and tab in the address.</li><li>Rename the workspace values so the address, the button and the code say the same word, and show the same options for the same task kind every time.</li><li>Rebuild Compare as a layout of the engine stage, with the rail and tabs of the current mode, and remove the picking and picked scenes.</li><li>Make Focus a layout that works in every mode, and delete the prototype FocusView branch.</li><li>Take objects, travel, region, auto and models out of the live scene lists, so the prototype screens open only from the gallery.</li><li>Keep one progress control and one Submit in the top bar, and turn the Opinion tab card into the form only.</li><li>Draw the disagreement queue and adjudication cards with the engine stage in Object layout, and give the adjudicator a link to open the slide in Review.</li><li>Turn tool keys off wherever the rail is hidden, and make the back link return to the page the person came from.</li><li>Move the slide kind notices (no pixel size, remote source offline, result importing or failed, no result) into one ordered list shown in every mode and layout.</li></ol>
+<p class="note">Not checked in this pass: the behaviour of the ruler on a slide without pixel size, what the guided route shows for an annotate task, and the running app itself. Every claim above comes from reading the files named.</p>
+</main></body></html>
