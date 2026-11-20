@@ -7057,6 +7057,30 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   PROTO-130 (tile range requests answer fast enough for a smooth pan) found on 2026-11-20 that one tile can still need up to 4 byte requests through the range cache, and did not measure whether they run in sequence, which would cost a round trip each. See `docs/results/2026-11-20-tile-request-time.md`. Measure it on the deployed app and, if they are sequential, prefetch or batch them so a tile waits for at most one round trip.
   Done when a result file shows the requests per tile and their overlap before and after, and a unit test in the viewer engine covers the batching.
   Depends on PROTO-130. Size: S.
+- [ ] PROTO-133 · A reviewed slide submits, cells mode opens and a task's state reads true in the viewer
+  From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 1, 2, 9, 10 and 15 and recheck 16. RT-1 (Showcase case review) shows Open report where Submit should be and stays at 0 of 3 submitted. RT-2 (Cell typing tour) says "no cell sample" beside 12 sampled cells and falls back to Review, and no agent account owns a cell typing task. RT-8 (Tumour annotation), never started, shows a "Signed off, this slide is locked" card. A task address with a slide outside the task stays on "Loading the review". A finished adjudication still reads as open.
+  Done when specs cover submitting a reviewed slide, cells mode opening on a task with a cell sample, a never started task showing no lock, a slide outside the task showing a clear notice with a way back, and a finished adjudication reading as done, and the seed gives the first agent account a cell typing task after the next reset.
+  Depends on nothing. Size: M.
+- [ ] PROTO-134 · Signing with single sign-on asks for the sign-in step every time
+  From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issue 3. "Sign with single sign-on" signs at once with no sign-in step on task sign-off, report sign out and co-sign. A signature must re-prove the signer through the identity provider (a fresh authentication or step-up), as the signing ADRs describe, or say plainly when the app runs without one.
+  Done when DB tests prove a sign-off, a sign out and a co-sign are refused without a fresh authentication inside the allowed window, and a spec on the fake API walks the sign-in step for each.
+  Depends on nothing. Size: M.
+- [ ] PROTO-135 · Best in Smart select answers or says why it cannot
+  From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issue 4. Two embedding calls after a click on Best got no reply in 10 seconds and the tool fell back to Good with no word on why. Find where the call waits (cold GPU, the region change of ADR 0407, gpu pools in any region, the embedding route or the client timeout), make Best show the GPU wait like other GPU calls and answer once warm, and log the wait in the OPS-038 (GPU wait log) format.
+  Done when a result file has measured cold and warm Best times on the deployed app, Best shows the wait and then a proposal, and a spec on the fake API covers the slow answer and the refusal.
+  Depends on nothing. Size: M.
+- [ ] PROTO-136 · Counts in the viewer and the reports are true
+  From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 5, 7, 8, 11 and 12. "Cells 18,240" shows on every slide in Review. RT-1 (Every state review) shows 6 slides in one place and 7 in another and 4 or 5 left for the same reviewer. The evaluation comparison says a 1 slide task and a 7 slide task cover the same slides. A read only notice shows an empty name. The case ai-running says its objects are not there and then shows them.
+  Done when each count comes from one source and a spec checks it on two different slides or tasks, and the empty name and the ai-running notice have specs.
+  Depends on nothing. Size: M.
+- [ ] PROTO-137 · Every address and notice lands on the right screen
+  From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 6, 13, 14, 16, 17, 18 and 19 and rechecks 4 and 26. The "Objects to adjudicate" notice opens a read only guided slide of the wrong slide. Unknown or misplaced slide addresses, unknown mode and tab values and natural addresses give misleading, blank or not found screens. The person asked to co-sign sees the sender's page. Search loses its words on reload. Opening a report address sends a write. Old project tab names change with no notice. A finished job says "click one for its steps" and shows none. `/sign-in` shows the form to a signed in person, and the project page, reports, co-sign, task wizards, New case and setup pages have no own browser tab name.
+  Done when walkthrough-links specs cover each address and notice, and opening a report sends no write.
+  Depends on nothing. Size: M.
+- [ ] PROTO-138 · The seed, the signed report and the wording read right
+  From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 20, 21 and 22 and rechecks 1 and 9. The other two workspaces have an empty clinical project. The signed clinical report prints empty headings. Wording slips remain ("1 slides", "10 reviews not submitted", "1 disagreements not resolved", "Decide 1 objects", "What he gets back"). `/api/status` names no release. A hint setting is still written on every tool change instead of once. Home, the clinical project and My work ask for the thumbnail of Missing file.svs and get 404.
+  Done when unit tests cover the plural and pronoun forms, a DB test checks the status names the release, the report hides empty headings, a spec counts one hint write per hint, and the seed fills or removes the empty clinical projects after the next reset.
+  Depends on nothing. Size: M.
 
 ---
 
