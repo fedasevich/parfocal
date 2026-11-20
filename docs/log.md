@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-21
+
+- PROTO-110 The upload done step offers Annotate these slides, beside Run a model or in a Next step zone, and opens the annotate task stepper with the uploaded slides ticked through a slides search parameter. upload-wizard spec passes on the fake API. The beside Run a model case is not covered.
+
 ## 2026-11-20
 
 - PROTO-138 The clinical case is seeded in all three workspaces, the report hides empty headings and empty PDF rows, plurals use i18n plural forms and he became they, /api/status returns release from PARFOCAL_RELEASE set by the deploy, each hint is written once per session, an unopenable slide shows no hint bar. Missing file.svs still gets one thumbnail 404 per session because slide lists carry no missing marker. Czech catalog untranslated. Needs a reseed.

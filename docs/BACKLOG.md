@@ -6985,7 +6985,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 1. The routes of EVAL-014 (training dataset export) and EVAL-015 (patch and mask export) have no caller, so the end product of the path cannot be reached from the screen.
   Done when the Export menu of an annotate task lists "Training dataset (QuPath GeoJSON zip)" and "Patches with masks", each with one line on what it holds, the patch export asks for the level and tile size and shows its job, `nothing-signed-off` is explained in words, and a spec downloads both on the fake API and one on the real API.
   Depends on PROTO-088 (an annotate task offers its exports in the app). Size: S.
-- [ ] PROTO-110 · The upload done step offers to annotate the uploaded slides
+- [x] PROTO-110 · The upload done step offers to annotate the uploaded slides
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 2. After a batch upload the next step of the path is not shown.
   Done when the done step has "Annotate these slides" beside "Run a model", it opens the annotate task stepper with the batch chosen, and a spec covers it.
   Depends on PROTO-064 (an annotate task can be created from its stepper). Size: S.
