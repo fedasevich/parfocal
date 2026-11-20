@@ -171,6 +171,21 @@ def test_a_signed_off_slide_exports_its_layer_with_origins_and_letters(
         )
         for feature in features
     }
+    edits = {
+        feature["properties"]["parfocal"]["source"] or "human": (
+            feature["properties"]["parfocal"]["versions"],
+            feature["properties"]["parfocal"]["differs_from_ai"],
+        )
+        for feature in features
+    }
+    assert edits["T1"] == (1, "same")
+    assert edits["T2"][1] == "shape"
+    assert edits["T2"][0] >= 1
+    assert edits["human"][1] is None
+    assert manifest["version"] == 2
+    assert entry["result_set_name"]
+    assert entry["source"] in {"import", "run"}
+    assert {"model_name", "model_version"} <= entry.keys()
     tumour = {"name": "Tumour", "color": [200, 0, 0]}
     assert shown == {
         "T1": ("ai-confirmed", tumour, "A", 1),
