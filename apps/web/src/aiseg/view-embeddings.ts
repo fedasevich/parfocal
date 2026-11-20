@@ -98,13 +98,23 @@ export function postViewEmbedding(
     );
 }
 
-export function createViewEmbeddings(options: ViewEmbeddingsOptions = {}): ViewEmbeddings {
+export interface ClosableViewEmbeddings extends ViewEmbeddings {
+  close(): void;
+}
+
+export function createViewEmbeddings(options: ViewEmbeddingsOptions = {}): ClosableViewEmbeddings {
   const post = options.post ?? postViewEmbedding();
   const giveUpMs = options.giveUpMs ?? viewGiveUpMs;
+  const open = new Set<AbortController>();
 
   return {
+    close() {
+      for (const controller of open) controller.abort();
+      open.clear();
+    },
     async embedding(slideId, view) {
       const controller = new AbortController();
+      open.add(controller);
       let gaveUp = false;
       const timer = setTimeout(() => {
         gaveUp = true;
@@ -121,6 +131,7 @@ export function createViewEmbeddings(options: ViewEmbeddingsOptions = {}): ViewE
         return { fallback: "offline" };
       } finally {
         clearTimeout(timer);
+        open.delete(controller);
       }
     },
   };
@@ -164,36 +175,42 @@ export interface ViewEmbeddingContext {
   readonly onSource?: (source: EncoderSource) => void;
 }
 
+const askAgainAfter: ReadonlySet<BestFallback> = new Set(["offline", "gave-up", "cancelled"]);
+
 export function withViewEmbeddings<S extends ViewSam>(sam: S, context: ViewEmbeddingContext): S {
-  async function fromServer(id: string): Promise<SamEncoded | null> {
+  async function fromServer(id: string): Promise<SamEncoded | BestFallback | null> {
     const parsed = parseEmbeddingId(id);
     if (parsed === null || parsed.slideId !== context.slideId) return null;
     const downsample = context.downsampleOf(parsed.window.level);
     const view = downsample === undefined ? null : viewOf(parsed.window, downsample, context.slide);
     if (view === null) {
       context.onSource?.("unsendable");
-      return null;
+      return "unsendable";
     }
     try {
       context.onSource?.("asking");
       const answer = await context.views.embedding(parsed.slideId, view);
       if ("fallback" in answer) {
         context.onSource?.(answer.fallback);
-        return null;
+        return answer.fallback;
       }
       const adopted = await sam.adopt(id, answer.embedding, "vit-l");
       context.onSource?.("server");
       return adopted;
     } catch {
       context.onSource?.("unsendable");
-      return null;
+      return "unsendable";
     }
   }
 
   return {
     ...sam,
     async encode(id: string, pixels: Float32Array<ArrayBuffer>): Promise<SamEncoded> {
-      return (await fromServer(id)) ?? sam.encode(id, pixels);
+      const server = await fromServer(id);
+      if (server !== null && typeof server === "object") return server;
+      const local = await sam.encode(id, pixels);
+      if (server === null || !askAgainAfter.has(server)) return local;
+      return { ...local, evicted: [...local.evicted, id] };
     },
   };
 }

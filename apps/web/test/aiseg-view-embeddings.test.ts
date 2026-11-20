@@ -109,6 +109,19 @@ describe("live ViT-L view embeddings", () => {
     assert.equal(await answer(hanging, 10), "gave-up");
   });
 
+  it("stops every open call when Smart select closes", async () => {
+    const views = createViewEmbeddings({
+      post: (_, __, signal) =>
+        new Promise((_resolve, reject) =>
+          signal.addEventListener("abort", () => reject(new GpuCallCancelledError())),
+        ),
+      giveUpMs: 60_000,
+    });
+    const pending = views.embedding(slideId, view);
+    views.close();
+    assert.equal(reason(await pending), "cancelled");
+  });
+
   it("polls a waiting server with the call token until the embedding arrives", async () => {
     const urls: string[] = [];
     const post = postViewEmbedding(
@@ -240,6 +253,16 @@ describe("Best outlines with the server embedding and falls back to the browser"
       assert.equal(calls.at(-1), `encode ${id}`);
       assert.deepEqual(sources, said);
     }
+  });
+
+  it("lets the session forget a Good stand in only when asking Best again can help", async () => {
+    const evicted = async (answer: ViewAnswer) =>
+      (await wrapped(answer).best.encode(id, pixels())).evicted;
+    for (const fallback of ["offline", "gave-up", "cancelled"] as const) {
+      assert.deepEqual(await evicted({ fallback }), [id]);
+    }
+    assert.deepEqual(await evicted({ fallback: "refused" }), []);
+    assert.deepEqual(await evicted({ embedding: new Float32Array(8) }), []);
   });
 
   it("leaves ids of other slides and of region passes to the browser without a server call", async () => {

@@ -13,7 +13,7 @@ Issue 4 of the v0.29.1 walkthrough (Best never answered in Smart select) saw two
 
 ## Method
 
-Each run posts one 512 by 512 view at level 0 to `POST /api/slides/{id}/embeddings/view`, as the web client does after a click on Best. A 202 reply is followed by the same POST with `?call=` and the token from the reply, until a 200 arrives. The script records the status and wall time of each round and the total. The cold run was the first call of this session, at 21:59 UTC. Its 202 shows the pool was not answering within the 45 s hold. The warm runs followed it within 2 minutes, each on a new view so no cache could answer.
+Each run posts one 512 by 512 view at level 0 to `POST /api/slides/{id}/embeddings/view`, as the web client does after a click on Best. A 202 reply is followed by the same POST with `?call=` and the token from the reply, until a 200 arrives. The script records the status and wall time of each round and the total. The cold run was the first call of this session, at 21:59 UTC. Its 202 shows the pool was not answering within the 45 s hold. The warm runs followed it straight after, each on a new view so no cache could answer.
 
 ## Results
 
@@ -31,9 +31,9 @@ Code facts read alongside. The server holds each request up to 45 s (`HOLD_SECON
 
 ## Interpretation
 
-Cold, the 6 s race always lost, because the first reply comes after 46 s. Warm, Best takes 4.6 to 6.5 s, so even a warm Best lost the race now and then (warm run 2). The two posts per click in the walkthrough fit the prewarm at the view centre plus the click itself.
+Cold, the 6 s race always lost, because the first reply comes after 46 s. Warm, Best takes 4.6 to 6.5 s, so even a warm Best lost the race now and then (warm run 2). An assumption, not observed: the two posts per click in the walkthrough were the prewarm at the view centre plus the click itself, since Smart select prewarms the centre once the view is still.
 
-The fix drops the race. Best waits for the GPU and answers once warm. After 8 s with no answer, just past the slowest warm run, the client shows the same GPU wait as the other GPU calls, counting seconds and with Cancel. It gives up after 3 minutes, a choice of about three cold starts, not a measured limit. Every fallback to Good now names its reason (refused, GPU not answering, waited 3 minutes, wait stopped, view cannot be sent), and the next click asks Best again. The server already logs each call in the OPS-038 (GPU wait log) format with `gpu_kind` view-embedding, `waited_seconds` and `slow_wait`, so no server change was needed.
+The fix drops the race. Best waits for the GPU and answers once warm. After 8 s with no answer, just past the slowest warm run, the client shows the same GPU wait as the other GPU calls, counting seconds and with Cancel. It gives up after 3 minutes, a choice of about three cold starts, not a measured limit. Every fallback to Good now names its reason (refused, GPU not answering, waited 3 minutes, wait stopped, view cannot be sent). After the last three the session forgets the Good stand in, so the next click on the same view asks Best again. Closing Smart select, switching to Good or leaving the slide stops any open Best call. A Cancel before the first 202 stops the browser's request, but the server is not told, because no call token exists yet. The server already logs each call in the OPS-038 (GPU wait log) format with `gpu_kind` view-embedding, `waited_seconds` and `slow_wait`, so no server change was needed.
 
 GPU calls made for this result: four view embeddings (one cold, three warm). The refused view started none. Cost: TODO, not read from Modal usage.
 

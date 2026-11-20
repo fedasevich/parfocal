@@ -51,21 +51,25 @@ export function modelsUrl(): string {
   return import.meta.env.PARFOCAL_PUBLIC_MODELS_URL || defaultModelsUrl;
 }
 
-async function loadFakeServices(context: SmartServicesContext): Promise<SmartServices> {
+async function loadFakeServices(
+  context: SmartServicesContext,
+  fakeBest: boolean,
+): Promise<SmartServices> {
   const { createFakeReader, createFakeSam } = await import("./fake-sam.ts");
   const reader = createFakeReader(context.slide);
   const sam = createFakeSam();
   const plan = (preset: ScalePresetId) =>
     Promise.resolve(planPresetPatch([{ downsample: 1 }], null, preset));
   const { slideId } = context;
-  if (!serverFirst(context) || slideId === undefined) {
+  if (!fakeBest || !serverFirst(context) || slideId === undefined) {
     return { reader, sam, plan, close: () => undefined };
   }
   const encoderSource = createEncoderSource();
+  const views = createViewEmbeddings();
   const best = withViewEmbeddings(
     { ...sam, adopt: (id: string) => Promise.resolve({ id, ms: 1, evicted: [] }) },
     {
-      views: createViewEmbeddings(),
+      views,
       slideId,
       slide: context.slide,
       downsampleOf: () => 1,
@@ -80,7 +84,7 @@ async function loadFakeServices(context: SmartServicesContext): Promise<SmartSer
       return { ...read, patch: { ...patch, key } };
     },
   };
-  return { reader: windowed, sam: best, plan, encoderSource, close: () => undefined };
+  return { reader: windowed, sam: best, plan, encoderSource, close: () => views.close() };
 }
 
 async function loadRealServices(context: SmartServicesContext): Promise<SmartServices> {
@@ -108,15 +112,20 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
   const server = createServerEmbeddings(httpEmbeddingTransport());
   const levels = new Map<number, number>();
   const encoderSource = createEncoderSource();
+  const views = createViewEmbeddings();
   const sam = withViewEmbeddings(withServerEmbeddings(local, server), {
-    views: createViewEmbeddings(),
+    views,
     slideId,
     slide: context.slide,
     downsampleOf: (level) => levels.get(level),
     onSource: (source) => encoderSource.set(source),
   });
   const reader = withSeenLevels(withServerTiles(presets, server, slideId), levels);
-  return { reader, sam, plan: (preset) => reader.plan(preset), encoderSource, close };
+  const closeAll = () => {
+    views.close();
+    close();
+  };
+  return { reader, sam, plan: (preset) => reader.plan(preset), encoderSource, close: closeAll };
 }
 
 export function withEmbedderWarm(
@@ -135,7 +144,7 @@ const loadWarmedRealServices = withEmbedderWarm(loadRealServices);
 export const loadSmartServices: SmartServicesLoader = (context) => {
   const config = readBuildConfig();
   if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && config.fakeApi !== "off")
-    return loadFakeServices(context);
+    return loadFakeServices(context, config.fakeApi === "all");
   return loadWarmedRealServices(context);
 };
 

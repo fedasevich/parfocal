@@ -18,7 +18,9 @@ async function clickBest(page: Page, scene: string) {
   await choice.getByRole("button", { name: "Best" }).click();
   await expect(choice).toHaveAttribute("data-tier", "best");
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.click(centre.x, centre.y);
+  return centre;
 }
 
 const layer = (page: Page) => page.getByTestId("smart-layer");
@@ -49,11 +51,21 @@ test("a refused Best says so and Good outlines the click", async ({ page }) => {
   await expect(wait(page)).toHaveCount(0);
 });
 
-test("an offline Best GPU says so and offers to ask again", async ({ page }) => {
-  await clickBest(page, "offline");
+test("an offline Best GPU says so and the next click asks Best again", async ({ page }) => {
+  const asked: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes("/embeddings/view")) {
+      asked.push(request.url());
+    }
+  });
+  const centre = await clickBest(page, "offline");
   await expect(layer(page)).toHaveAttribute("data-phase", "ready");
   await expect(fallback(page)).toHaveAttribute("data-reason", "offline");
   await expect(fallback(page)).toContainText("Click again to ask Best again");
+  const before = asked.length;
+  await page.keyboard.press("Escape");
+  await page.mouse.click(centre.x, centre.y);
+  await expect.poll(() => asked.length).toBeGreaterThan(before);
 });
 
 test("cancelling the GPU wait lets Good outline and says the wait was stopped", async ({
