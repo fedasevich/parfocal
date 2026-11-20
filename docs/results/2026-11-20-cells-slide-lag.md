@@ -40,3 +40,38 @@ The owner's performance overlay showed 60 frames a second and a decode p95 of 87
 
 - The Objects panel still renders all 4408 rows. It does not rerender on camera moves, but it adds most of the 44559 elements and part of the 1135 ms of long tasks while the slide opens.
 - Tile range latency to the tile store is a second, open cause of the slow feel.
+
+## Floating parts of the stage
+
+Written for backlog tasks PROTO-131 (every floating part of the viewer stage has a home zone) and PROTO-129 (the overview map marker follows the camera), after the owner saw the overview map floating over tissue on this slide.
+
+### What was measured on the deployed app
+
+Signed in as the agent test account on app.parfocal.eu, Chrome, on the same slide and task.
+
+- At 1512 by 982 the stage is 1120 by 938 px. After the 40× preset and then the 20× preset (⌥6 then ⌥4) the full size overview map sat at 904, 692 instead of its bottom right home at 952, 755, which is 48 px left and 63 px up. Nothing brings it back, so each switch between sizes can push the map further toward the middle.
+- Cause: `useDrawnExtra` in `apps/web/src/viewer/stage-minimap.tsx` measured the drawn map against the size planned one render earlier, so the switch from compact to full counted the whole difference, 46 by 60 px rounded up to 48 by 64, as padding the map needs, and that padding only ever grew. The map now measures itself against the size it is drawn at, read from its own `data-size`, and keeps the padding per size.
+- The marker did not go wrong. At 1512 by 982, 1470 by 956, 1280 by 800 and 1024 by 700, after wheel zoom, after the preset keys, after `object=C2` and with the map pinned top left, the marker centre matched the camera centre to three decimals. `object=T1+` names no object this account sees, so it opens the whole slide. Not tried: the developer drawer open, a narrow or wide side panel, and Safari. The marker check compares with the engine camera, so a camera that disagrees with the picture would not show. TODO.
+
+### Home zones
+
+| Part | Home zone | How it stays clear |
+| --- | --- | --- |
+| Tool rail | Left column outside the stage. In the dock layout, bottom centre inside the stage | The dock layout lifts the magnification bar above it |
+| Top stack: context bar, GPU wait, open failure alert | Top centre, one column in that order | One stack, so they never meet. The map treats it as a block |
+| Viewer banner for save and change notices | Full width band at the top edge | The map treats it as a block |
+| Magnification bar with zoom presets and scale bar | Bottom centre | The map treats it as a block |
+| Hint bar for slow tiles | Bottom centre, above the magnification bar | The map treats it as a block |
+| Overview map | A corner, bottom right first, then bottom left, top right and top left, 12 px from both edges | Skips any corner holding a block and prefers corners clear of the selected or focused object. A pinned map keeps its corner unless it is blocked. Too small a stage draws it as the small picture or hides it |
+| Object focus card in focus mode | Bottom right | The map treats it as a block |
+| Coach bubbles | The first beside the object, the second bottom left | The map treats them as blocks |
+| Tooltips | Next to their control, in a portal above the page | Close on wheel, on pointer down and when the pointer leaves the stage |
+| Error toasts | Bottom right of the window, over the side panel | Outside the stage while the side panel is open. With the panel hidden they can sit over the map. TODO |
+| Undo toasts | Bottom centre of the window | Short lived. They can sit over the magnification bar for a few seconds. TODO |
+| Compare pane | Its own column beside the stage, with its pill top centre of that pane | A separate pane, never over the main stage |
+| Developer drawer and performance overlay | Over the right side panel | Outside the stage |
+| Guided parts: pan hint, guided controls, cell type bar, cells grid, whole slide button, travel map | Top left, bottom left and the edges the earlier overlap spec fixed | The map treats them as blocks |
+
+### Tests
+
+`apps/web/e2e/stage-parts-overlap.spec.ts` opens the annotate task slide with `object=C3` and the default Minimap setting at 1024 by 700, 1280 by 800 and 1440 by 900. Right after the focus and after four wheel steps in, it fails if any floating part covers C3. After six more steps in and three out it fails if any two floating parts meet, if any part leaves the stage or meets the side panel, or if the map is more than 8 px off its corner. The fake slide never reaches the full map size, so the spec passed before the drift fix as well. The drift is shown only by the deployed run above.

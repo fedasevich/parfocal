@@ -20,13 +20,15 @@ import {
   cornerOfChoice,
   cornerOfPoint,
   fitsCanvas,
+  type HotSpot,
   pinnedMinimap,
   placeMinimap,
   type ScreenRect,
   stepCorner,
 } from "../screens/viewer-tools/minimap-placement.ts";
+import { hotWeight } from "../screens/viewer-tools/minimap-weights.ts";
 import { tissueShareOnScreen } from "../screens/viewer-tools/tissue-share.ts";
-import { useHeldCorner } from "../screens/viewer-tools/use-held-corner.tsx";
+import { cornerRestMs, useHeldCorner } from "../screens/viewer-tools/use-held-corner.tsx";
 import {
   type CornerChoiceUpdate,
   type MinimapSurface,
@@ -82,8 +84,59 @@ const blockSelector = [
   '[data-testid="cell-type-bar"]',
   '[data-slot="stage-tools"]',
   '[data-slot="magnification-bar"]',
+  '[data-slot="focus-card"]',
+  '[data-testid="tile-hint"]',
+  '[data-testid="stage-pan-hint"]',
+  '[data-testid="stage-coach"] > *',
+  '[data-testid="viewer-banner"] > *',
   "[data-minimap-block]",
 ].join(",");
+
+const avoidSelector = '[data-testid="ai-object"][data-selected="true"], [data-minimap-avoid]';
+
+const avoidedAtMost = 12;
+
+function avoidSpotsIn(node: HTMLElement, host: HTMLElement): HotSpot[] {
+  const origin = node.getBoundingClientRect();
+  return [...host.querySelectorAll(avoidSelector)]
+    .slice(0, avoidedAtMost)
+    .flatMap((element): HotSpot[] => {
+      const box = element.getBoundingClientRect();
+      const left = box.left - origin.left;
+      const top = box.top - origin.top;
+      return [
+        [left + box.width / 2, top + box.height / 2],
+        [left, top],
+        [left + box.width, top],
+        [left, top + box.height],
+        [left + box.width, top + box.height],
+      ].map(([x = 0, y = 0]): HotSpot => [Math.round(x), Math.round(y), hotWeight.currentCell]);
+    });
+}
+
+function useAvoidSpots(
+  frame: React.RefObject<HTMLElement | null>,
+  camera: object | null,
+): HotSpot[] {
+  const [spots, setSpots] = useState<HotSpot[]>([]);
+  useEffect(() => {
+    if (camera === null) return;
+    const node = frame.current;
+    const host = node?.closest<HTMLElement>('[data-testid="slide-stage"]');
+    if (!node || !host) return;
+    const timer = window.setTimeout(() => {
+      const next = avoidSpotsIn(node, host);
+      setSpots((before) =>
+        before.length === next.length &&
+        before.every((spot, index) => spot.join() === next[index]?.join())
+          ? before
+          : next,
+      );
+    }, cornerRestMs);
+    return () => window.clearTimeout(timer);
+  }, [frame, camera]);
+  return spots;
+}
 
 const sameRects = (a: ScreenRect[], b: ScreenRect[]) =>
   a.length === b.length && a.every((rect, index) => rect.join() === b[index]?.join());
@@ -148,25 +201,43 @@ type Extra = { width: number; height: number };
 
 const noExtra: Extra = { width: 0, height: 0 };
 
+type Extras = Partial<Record<MinimapSize, Extra>>;
+
 const extraStep = 8;
 
-function useDrawnExtra(drawnAs: MinimapSize, slideRect: MapRect) {
+const drawnSizes: readonly MinimapSize[] = ["full", "compact", "pip", "travel"];
+
+function drawnSizeOf(element: HTMLElement): MinimapSize | null {
+  const size = element.dataset["size"];
+  return drawnSizes.find((known) => known === size) ?? null;
+}
+
+function useDrawnExtra(slideRect: MapRect) {
   const [element, setElement] = useState<HTMLElement | null>(null);
-  const [extra, setExtra] = useState<Extra>(noExtra);
-  const expected = useRef({ drawnAs, slideRect });
-  expected.current = { drawnAs, slideRect };
+  const [extra, setExtra] = useState<Extras>({});
+  const slide = useRef(slideRect);
+  slide.current = slideRect;
   useEffect(() => {
     if (element === null) return;
     const measure = () => {
-      const planned = minimapBox(expected.current.drawnAs, expected.current.slideRect);
+      const drawnAs = drawnSizeOf(element);
+      if (drawnAs === null) return;
+      const planned = minimapBox(drawnAs, slide.current);
       const step = (overflow: number) => Math.max(0, Math.ceil(overflow / extraStep) * extraStep);
       const width = step(element.offsetWidth - planned.width);
       const height = step(element.offsetHeight - planned.height);
-      setExtra((before) =>
-        width <= before.width && height <= before.height
+      setExtra((before) => {
+        const known = before[drawnAs] ?? noExtra;
+        return width <= known.width && height <= known.height
           ? before
-          : { width: Math.max(width, before.width), height: Math.max(height, before.height) },
-      );
+          : {
+              ...before,
+              [drawnAs]: {
+                width: Math.max(width, known.width),
+                height: Math.max(height, known.height),
+              },
+            };
+      });
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -176,8 +247,9 @@ function useDrawnExtra(drawnAs: MinimapSize, slideRect: MapRect) {
   return [extra, setElement] as const;
 }
 
-function outerBox(wanted: MinimapSize, slideRect: MapRect, extra: Extra) {
+function outerBox(wanted: MinimapSize, slideRect: MapRect, extras: Extras) {
   const box = minimapBox(wanted, slideRect);
+  const extra = extras[wanted] ?? noExtra;
   return { ...box, width: box.width + extra.width, height: box.height + extra.height };
 }
 
@@ -309,14 +381,13 @@ const PlacedMinimap = memo(function PlacedMinimap({
       ? power
       : t`${power} · ${progress.decided} of ${progress.total} decided`;
   const blocks = useStageBlocks(frame);
-  const drawnAs = useRef<MinimapSize>(preferred);
-  const [extra, drawn] = useDrawnExtra(drawnAs.current, slideRect);
-  const wanted = placeMinimap(size, outerBox(preferred, slideRect, extra), [], blocks);
+  const avoid = useAvoidSpots(frame, camera);
+  const [extra, drawn] = useDrawnExtra(slideRect);
+  const wanted = placeMinimap(size, outerBox(preferred, slideRect, extra), avoid, blocks);
   const boxSize: MinimapSize = fitsCanvas(size, wanted) ? preferred : "pip";
-  drawnAs.current = boxSize;
   const sized = outerBox(boxSize, slideRect, extra);
   const chosen = cornerOfChoice(choice);
-  const scored = boxSize === preferred ? wanted : placeMinimap(size, sized, [], blocks);
+  const scored = boxSize === preferred ? wanted : placeMinimap(size, sized, avoid, blocks);
   const place = useHeldCorner(chosenPlacement(scored, chosen), camera);
   const [dragging, setDragging] = useState(false);
   const shown = measured && minimap.size !== null && fitsCanvas(size, scored);
