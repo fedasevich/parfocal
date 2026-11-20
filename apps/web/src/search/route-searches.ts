@@ -133,6 +133,7 @@ export const projectSearch = lenientSearch({
 export const newAnnotateSearch = lenientSearch({
   step: z.enum(annotateStepKeys).optional(),
   preset: z.enum(presetKeys).optional(),
+  slides: z.array(z.string()).optional(),
 });
 
 export const annotateSearch = lenientSearch({

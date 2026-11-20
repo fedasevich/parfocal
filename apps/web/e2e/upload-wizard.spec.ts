@@ -352,6 +352,30 @@ test("a slide opens from the upload while its results are still being placed", a
   await expect(page).toHaveURL(/\/slides\//);
 });
 
+test("the done step offers Annotate these slides and opens the task stepper with them chosen", async ({
+  page,
+}) => {
+  await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}`);
+  await expect(page.getByTestId("project-page")).toBeVisible();
+  await dropTree(page, '[data-testid="project-page"]', batch);
+  await expect(page.getByTestId("not-matched")).toBeVisible();
+  await page.getByTestId("not-matched").getByRole("combobox", { name: "Choose a slide" }).click();
+  await page.getByRole("option", { name: "P07-upload/tumor_031.tif" }).click();
+  await page.getByTestId("upload-next").click();
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+
+  const annotate = page.getByTestId("annotate-these-slides");
+  await expect(annotate).toBeVisible({ timeout: 20_000 });
+  await expect(annotate).toContainText("Annotate these slides");
+  await annotate.click();
+
+  await expect(page).toHaveURL(/tasks\/new-annotate/);
+  await expect(page).toHaveURL(/step=slides/);
+  await expect(page.getByRole("checkbox", { checked: true }).first()).toBeVisible();
+});
+
 test("a mixed set uploads the fixed MRXS slide while the slide left out and the empty one wait", async ({
   page,
 }) => {

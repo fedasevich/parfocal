@@ -3764,6 +3764,10 @@ msgstr "Annotate tasks have no disagreements"
 msgid "Annotate tasks have no evaluation"
 msgstr "Annotate tasks have no evaluation"
 
+#: src/screens/upload/live-wizard.tsx
+msgid "Annotate these slides"
+msgstr "Annotate these slides"
+
 #: src/routes/issue-states.tsx
 msgid "Annotate workspace"
 msgstr "Annotate workspace"
@@ -8092,6 +8096,10 @@ msgstr "Has a note"
 msgid "Has these slides now"
 msgstr "Has these slides now"
 
+#: src/screens/upload/live-wizard.tsx
+msgid "Have experts draw on these slides, or check what a model found."
+msgstr "Have experts draw on these slides, or check what a model found."
+
 #: src/screens/admin/connect-model.tsx
 msgid "Header"
 msgstr "Header"
@@ -10410,6 +10418,7 @@ msgstr "Next slide"
 
 #: src/flow-map/prototype-bar.tsx
 #: src/screens/input-traces/input-traces.tsx
+#: src/screens/upload/live-wizard.tsx
 msgid "Next step"
 msgstr "Next step"
 

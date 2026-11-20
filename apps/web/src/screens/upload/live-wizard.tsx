@@ -1081,6 +1081,28 @@ function UploadStep({
     const id = entry.uploadId === undefined ? undefined : states[entry.uploadId]?.slide_id;
     return id ? [id] : [];
   });
+  const uploadedSlideIds = slideEntries.flatMap((entry) => {
+    const state = entry.uploadId === undefined ? undefined : states[entry.uploadId];
+    return state?.status === "ready" && state.slide_id ? [state.slide_id] : [];
+  });
+  const annotateLink =
+    uploadedSlideIds.length === 0 ? null : (
+      <Button
+        variant="secondary"
+        nativeButton={false}
+        render={
+          <Link
+            to="/projects/$projectId/tasks/new-annotate"
+            params={{ projectId }}
+            search={{ step: "slides", slides: uploadedSlideIds }}
+          />
+        }
+        data-testid="annotate-these-slides"
+      >
+        <Icon name="pen" />
+        <Trans>Annotate these slides</Trans>
+      </Button>
+    );
   return (
     <>
       <Zone title={t`Everything`} data-testid="upload-overall">
@@ -1188,6 +1210,17 @@ function UploadStep({
         </FileList>
       </Zone>
       <ResultProblems uploads={resultUploads} projectId={projectId} />
+      {bare.length === 0 || leaveBare ? (
+        annotateLink === null ? null : (
+          <Zone
+            title={t`Next step`}
+            sub={t`Have experts draw on these slides, or check what a model found.`}
+            data-testid="annotate-zone"
+          >
+            <div className="mt-1 flex flex-wrap items-center gap-2">{annotateLink}</div>
+          </Zone>
+        )
+      ) : null}
       {bare.length === 0 ? null : leaveBare ? (
         <Zone
           title={t`${plural(bare.length, "slide stays", "slides stay")} without results`}
@@ -1219,6 +1252,7 @@ function UploadStep({
               <Icon name="smart" />
               <Trans>Run a model</Trans>
             </Button>
+            {annotateLink}
             <Button variant="ghost" onClick={() => setLeaveBare(true)}>
               <Trans>Leave them</Trans>
             </Button>

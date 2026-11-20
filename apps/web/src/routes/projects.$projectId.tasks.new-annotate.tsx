@@ -17,6 +17,7 @@ function NewAnnotateTaskRoute() {
       projectId={projectId}
       step={search.step ?? "kind"}
       preset={search.preset ?? "run"}
+      slides={search.slides}
       onStep={(step) =>
         void navigate({ search: (previous) => ({ ...previous, step }), replace: true })
       }

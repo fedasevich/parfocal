@@ -43,6 +43,7 @@ type NewAnnotateTaskProps = {
   projectId: string;
   step: AnnotateStep;
   preset: PresetKey;
+  slides?: string[] | undefined;
   onStep: (step: AnnotateStep) => void;
 };
 
@@ -66,7 +67,7 @@ const todayText = () => {
   return `${day.getFullYear()}-${month}-${date}`;
 };
 
-export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotateTaskProps) {
+export function NewAnnotateTask({ projectId, step, preset, slides, onStep }: NewAnnotateTaskProps) {
   const { t } = useLingui();
   const stepNames: Record<AnnotateStep, string> = {
     kind: t`Kind`,
@@ -105,7 +106,7 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
   const [chosen, setChosen] = useState<PresetKey>(preset);
   const [options, setOptions] = useState(() => presetOptions(preset));
   const [blind, setBlind] = useState(false);
-  const [picked, setSlideChoice] = useState<string[]>([]);
+  const [picked, setSlideChoice] = useState<string[]>(slides ?? []);
   const [experts, setExpertChoice] = useState<string[]>([]);
   const index = annotateStepKeys.indexOf(step);
   const reached = annotateStepKeys.length - 1;
