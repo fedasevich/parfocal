@@ -1,11 +1,12 @@
 import uuid
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import delete, exists, func, insert, select, tuple_, update
+from sqlalchemy import delete, exists, func, insert, select, text, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -13,6 +14,7 @@ from parfocal_api.annotations import check_classes
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import answer_in_style, counted
+from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
@@ -81,6 +83,11 @@ class Adjudication(BaseModel):
         return self.declined_at is None
 
 
+class ReviewerOutline(BaseModel):
+    user_id: uuid.UUID
+    outline: list[float]
+
+
 class QueuedObject(BaseModel):
     slide_id: uuid.UUID
     object: str
@@ -88,6 +95,8 @@ class QueuedObject(BaseModel):
     number: int
     why: Why
     decisions: list[ReviewerAnswer]
+    outline_overlap: float | None = None
+    outlines: list[ReviewerOutline] = []
     decision: QueueDecision | None = None
     left_open: bool = False
     note: str | None = None
@@ -252,6 +261,61 @@ async def sent_objects(
     }
 
 
+FINAL_OUTLINE = (
+    "e.split = '' AND e.geometry IS NOT NULL AND NOT e.deleted AND e.retired IS NULL "
+    "AND EXISTS (SELECT 1 FROM review_assignments r WHERE r.task_id = e.task_id "
+    "AND r.slide_id = e.slide_id AND r.user_id = e.user_id AND r.released_at IS NULL) "
+    "AND NOT EXISTS (SELECT 1 FROM review_assignments p WHERE p.task_id = e.task_id "
+    "AND p.slide_id = e.slide_id AND p.released_at IS NULL AND p.submitted_at IS NULL)"
+)
+
+OUTLINE_GAPS = text(
+    "WITH final AS (SELECT e.task_id, e.slide_id, e.kind, e.number, e.user_id, e.geometry "
+    f"FROM review_edits e WHERE e.task_id = ANY(:task_ids) AND {FINAL_OUTLINE}), "
+    "pairs AS (SELECT a.task_id, a.slide_id, a.kind, a.number, "
+    "CASE WHEN ST_Area(ST_Union(a.geometry, b.geometry)) > 0 "
+    "THEN ST_Area(ST_Intersection(a.geometry, b.geometry)) "
+    "/ ST_Area(ST_Union(a.geometry, b.geometry)) "
+    "WHEN ST_Equals(a.geometry, b.geometry) THEN 1 ELSE 0 END AS overlap "
+    "FROM final a JOIN final b ON a.task_id = b.task_id AND a.slide_id = b.slide_id "
+    "AND a.kind = b.kind AND a.number = b.number AND a.user_id < b.user_id) "
+    "SELECT pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, "
+    "min(pairs.overlap) AS overlap FROM pairs JOIN review_tasks t ON t.id = pairs.task_id "
+    "GROUP BY pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, t.outline_overlap "
+    "HAVING min(pairs.overlap) * 100 < t.outline_overlap"
+)
+
+FINAL_OUTLINES = text(
+    "SELECT e.task_id, e.slide_id, e.kind, e.number, e.user_id, "
+    "ST_AsGeoJSON(e.geometry) AS shape FROM review_edits e "
+    "WHERE e.task_id = ANY(:task_ids) AND e.slide_id = ANY(:slide_ids) "
+    f"AND {FINAL_OUTLINE} "
+    "ORDER BY e.task_id, e.slide_id, e.kind, e.number, e.user_id"
+)
+
+
+async def outline_gaps(
+    connection: AsyncConnection, task_ids: list[uuid.UUID]
+) -> dict[TaskKey, float]:
+    rows = await connection.execute(OUTLINE_GAPS, {"task_ids": task_ids})
+    return {(row.task_id, row.slide_id, row.kind, row.number): float(row.overlap) for row in rows}
+
+
+async def outlines_of(
+    connection: AsyncConnection, task_ids: list[uuid.UUID], keys: Collection[TaskKey]
+) -> dict[TaskKey, list[ReviewerOutline]]:
+    found: dict[TaskKey, list[ReviewerOutline]] = {}
+    if not keys:
+        return found
+    wanted = {"task_ids": task_ids, "slide_ids": list({key[1] for key in keys})}
+    for row in await connection.execute(FINAL_OUTLINES, wanted):
+        key = (row.task_id, row.slide_id, row.kind, row.number)
+        ring = outline_of(row.shape)
+        if key in keys and ring is not None:
+            found.setdefault(key, []).append(ReviewerOutline(user_id=row.user_id, outline=ring))
+    return found
+
+
 async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[QueuedObject]:
     return (await queues_of(connection, [task_id]))[task_id]
 
@@ -307,15 +371,47 @@ async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> dict
     grouped: dict[TaskKey, list[Any]] = {}
     for row in rows:
         grouped.setdefault((row.task_id, row.slide_id, row.kind, row.number), []).append(row)
+    listed: list[uuid.UUID] = (
+        cast(list[uuid.UUID], task_ids)
+        if isinstance(task_ids, list)
+        else list(await connection.scalars(task_ids))
+    )
+    gaps = await outline_gaps(connection, listed) if listed else {}
+    choices = await outline_choices(connection, gaps.keys() - grouped.keys())
     by_task: dict[uuid.UUID, int] = {}
-    for (task_id, *_), found in grouped.items():
-        if queued_why(found) is not None and counts_as_open(
+    for key, found in grouped.items():
+        if (queued_why(found) is not None or key in gaps) and counts_as_open(
             looking_again=any(row.reopened_at is not None for row in found),
             decided=found[0].chosen_value is not None,
             left_open=bool(found[0].left_open),
         ):
-            by_task[task_id] = by_task.get(task_id, 0) + 1
+            by_task[key[0]] = by_task.get(key[0], 0) + 1
+    for key in gaps.keys() - grouped.keys():
+        decided, left_open = choices.get(key, (False, False))
+        if counts_as_open(looking_again=False, decided=decided, left_open=left_open):
+            by_task[key[0]] = by_task.get(key[0], 0) + 1
     return by_task
+
+
+async def outline_choices(
+    connection: AsyncConnection, keys: Collection[TaskKey]
+) -> dict[TaskKey, tuple[bool, bool]]:
+    if not keys:
+        return {}
+    rows = await connection.execute(
+        select(
+            disagreement_decisions.c.task_id,
+            disagreement_decisions.c.slide_id,
+            disagreement_decisions.c.kind,
+            disagreement_decisions.c.number,
+            disagreement_decisions.c.value,
+            disagreement_decisions.c.left_open,
+        ).where(disagreement_decisions.c.task_id.in_({key[0] for key in keys}))
+    )
+    return {
+        (row.task_id, row.slide_id, row.kind, row.number): (row.value is not None, row.left_open)
+        for row in rows
+    }
 
 
 async def queues_of(
@@ -347,9 +443,12 @@ async def queues_of(
     }
     redrawn = await last_redrawn(connection, task_ids)
     sent = await sent_objects(connection, task_ids)
-    for key, rows in grouped.items():
+    gaps = await outline_gaps(connection, task_ids)
+    drawn = await outlines_of(connection, task_ids, gaps.keys())
+    for key in sorted(grouped.keys() | gaps.keys()):
         task_id, slide_id, kind, number = key
-        why = queued_why(rows)
+        rows = grouped.get(key, [])
+        why = queued_why(rows) or (Why.OUTLINES_DIFFER if key in gaps else None)
         if why is None:
             continue
         object_kind = AnnotationKind(kind)
@@ -374,6 +473,8 @@ async def queues_of(
                     )
                     for row in rows
                 ],
+                outline_overlap=gaps.get(key),
+                outlines=drawn.get(key, []),
                 decision=decision_of(choice),
                 left_open=bool(choice and choice.left_open),
                 note=choice.note if choice else None,

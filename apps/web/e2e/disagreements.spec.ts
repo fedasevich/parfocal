@@ -171,6 +171,21 @@ test("the disagreements stage draws the slide under the object", async ({ page }
   );
 });
 
+test("an object whose reviewers drew different outlines draws each one over the AI outline", async ({
+  page,
+}) => {
+  await page.goto(`${base}/disagreements?stage=open`);
+  await page.getByRole("button", { name: /^T1 tumor_031/ }).click();
+  await slideDrawn(page);
+  const frame = objectStage(page).getByTestId("object-frame");
+  await expect(frame).toHaveAttribute("data-outlines", "2");
+  const legend = page.getByTestId("outline-legend");
+  await expect(legend).toContainText("outline differs");
+  await expect(legend).toContainText("42% overlap");
+  await expect(legend).toContainText("Lenka Malá");
+  await expect(legend).toContainText("Simona Marková");
+});
+
 test("a declined object shows the note and can go to someone else", async ({ page }) => {
   await page.goto(`${base}/disagreements?stage=declined`);
   await page.getByRole("button", { name: /^T4 / }).click();

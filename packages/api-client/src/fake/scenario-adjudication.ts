@@ -19,6 +19,7 @@ export type QueueSeedRow = {
   score: number;
   sizeMm: number | null;
   answers: [QueueSeedAnswer, QueueSeedAnswer];
+  outlineOverlap?: number;
 };
 
 const answer = (
@@ -116,6 +117,7 @@ export const queueRows: QueueSeedRow[] = [
       answer("LM", "agree"),
       answer("SM", "disagree", "Not tumor", "Germinal centre with tingible body macrophages."),
     ],
+    outlineOverlap: 0.42,
   },
   {
     slide: 5,

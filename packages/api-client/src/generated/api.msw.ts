@@ -7927,6 +7927,7 @@ export const getCreateReviewTaskResponseMock = (
     null,
   ]),
   blind_first: faker.datatype.boolean(),
+  outline_overlap: faker.number.int(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -8073,6 +8074,7 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
       null,
     ]),
     blind_first: faker.datatype.boolean(),
+    outline_overlap: faker.number.int(),
     counts_as_changes: Array.from(
       { length: faker.number.int({ min: 1, max: 10 }) },
       (_, i) => i + 1,
@@ -8204,6 +8206,7 @@ export const getGetReviewTaskResponseMock = (
     null,
   ]),
   blind_first: faker.datatype.boolean(),
+  outline_overlap: faker.number.int(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -8350,6 +8353,7 @@ export const getChangeReviewTaskResponseMock = (
     null,
   ]),
   blind_first: faker.datatype.boolean(),
+  outline_overlap: faker.number.int(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -8526,6 +8530,7 @@ export const getAddTaskReviewerResponseMock = (
     null,
   ]),
   blind_first: faker.datatype.boolean(),
+  outline_overlap: faker.number.int(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -8672,6 +8677,7 @@ export const getWithdrawReviewTaskResponseMock = (
     null,
   ]),
   blind_first: faker.datatype.boolean(),
+  outline_overlap: faker.number.int(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -9656,6 +9662,16 @@ export const getGetDisagreementQueueResponseMock = (
       { by_user_id: faker.string.uuid(), on: faker.date.past().toISOString().slice(0, 10) },
       null,
     ]),
+    outline_differs: faker.datatype.boolean(),
+    outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.number.float({ fractionDigits: 2 }),
+        ),
+      }),
+    ),
   })),
   ...overrideResponse,
 });
@@ -9715,6 +9731,16 @@ export const getUpdateQueuedObjectResponseMock = (
     { by_user_id: faker.string.uuid(), on: faker.date.past().toISOString().slice(0, 10) },
     null,
   ]),
+  outline_differs: faker.datatype.boolean(),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -12703,6 +12729,15 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
         reopened: faker.datatype.boolean(),
       }),
     ),
+    outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.number.float({ fractionDigits: 2 }),
+        ),
+      }),
+    ),
     decision: faker.helpers.arrayElement([
       {
         style: faker.helpers.arrayElement([
@@ -12768,6 +12803,15 @@ export const getDecideDisagreementResponseMock = (
         null,
       ]),
       reopened: faker.datatype.boolean(),
+    }),
+  ),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
     }),
   ),
   decision: faker.helpers.arrayElement([
@@ -12838,6 +12882,15 @@ export const getLeaveDisagreementOpenResponseMock = (
       reopened: faker.datatype.boolean(),
     }),
   ),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
   decision: faker.helpers.arrayElement([
     {
       style: faker.helpers.arrayElement([
@@ -12906,6 +12959,15 @@ export const getAskReviewersToLookAgainResponseMock = (
       reopened: faker.datatype.boolean(),
     }),
   ),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
   decision: faker.helpers.arrayElement([
     {
       style: faker.helpers.arrayElement([
@@ -12972,6 +13034,15 @@ export const getKeepReviewerDecisionsResponseMock = (
         null,
       ]),
       reopened: faker.datatype.boolean(),
+    }),
+  ),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
     }),
   ),
   decision: faker.helpers.arrayElement([
@@ -13047,6 +13118,15 @@ export const getSendToAdjudicatorResponseMock = (): QueuedObject[] =>
           null,
         ]),
         reopened: faker.datatype.boolean(),
+      }),
+    ),
+    outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        user_id: faker.string.uuid(),
+        outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.number.float({ fractionDigits: 2 }),
+        ),
       }),
     ),
     decision: faker.helpers.arrayElement([
