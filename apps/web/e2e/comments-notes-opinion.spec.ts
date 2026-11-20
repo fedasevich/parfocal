@@ -62,15 +62,15 @@ test("a decision note is listed under Your decision notes and a thread opens at 
   await expect(notes).toBeVisible();
 });
 
-test("the Opinion checklist folds the open cells into one row that opens the cells panel", async ({
+test("the Opinion tab is the form only and the one Submit names what is still open", async ({
   page,
 }) => {
   await page.goto(`${objectsViewer}&tab=opinion`);
   await ready(page);
-  const list = page.getByRole("list", { name: "Before you submit" });
-  const cellRows = list.getByRole("listitem").filter({ hasText: /cells? in the sample/ });
-  await expect(cellRows).toHaveCount(1);
-  await expect(cellRows).toContainText("still open");
-  await cellRows.getByRole("button", { name: "Go to the cells" }).click();
-  await expect(page.getByTestId("stage-cells-grid")).toBeVisible();
+  const opinion = page.getByTestId("stage-opinion");
+  await expect(opinion).toHaveAttribute("data-form-only", "true");
+  await expect(page.getByRole("list", { name: "Before you submit" })).toHaveCount(0);
+  const submit = page.getByTestId("top-submit");
+  await expect(submit).toBeDisabled();
+  await expect(submit).toHaveAttribute("title", /open/);
 });

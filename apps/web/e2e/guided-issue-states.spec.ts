@@ -58,10 +58,11 @@ test("guided review of a slide unreadable at high power says so and retries", as
 test("guided review of a slide with no AI result says so and moves on", async ({ page }) => {
   await page.goto(guidedOf(rt14, "noresults"));
   await ready(page);
-  const card = page.getByTestId("stage-issue");
-  await expect(card).toHaveAttribute("data-issue", "noresults");
-  await expect(card).toContainText(/No AI result on .+ yet\./);
-  await card.getByRole("button", { name: "Next slide" }).click();
+  await expect(page.getByTestId("stage-issue")).toHaveCount(0);
+  const notices = page.locator('[data-slot="top-stack"]').getByTestId("slide-notices");
+  await expect(notices).toHaveAttribute("data-notices", /(^| )no-result( |$)/);
+  await expect(notices.getByTestId("no-result-notice")).toContainText(/No AI result on .+ yet\./);
+  await notices.getByRole("button", { name: "Next slide" }).click();
   await expect(page).not.toHaveURL(new RegExp(`slide=${a1}`));
 });
 
