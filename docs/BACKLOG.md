@@ -6877,7 +6877,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These warnings exist only as scenes. Check whether the real upload answers carry them and build what is missing.
   Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
   Depends on PROTO-079. Size: S.
-- [ ] PROTO-085 · Sign-in shows expired links and no access from the real auth answers
+- [x] PROTO-085 · Sign-in shows expired links and no access from the real auth answers
   From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): These pages exist only as scenes. Check whether the real auth answers reach them and build what is missing.
   Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
   Depends on PROTO-079. Size: S.
