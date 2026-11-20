@@ -100,7 +100,10 @@ test("a scripted session is recorded with masked text and replays with task jump
   expect(atT2).not.toEqual(atT1);
 
   await page.getByLabel("Replay position").fill(String(await replayEnd(page)));
-  await expect(page.getByTestId("replay-stage")).toHaveAttribute("data-path", /\/live/);
+  await expect(page.getByTestId("replay-stage")).toHaveAttribute(
+    "data-path",
+    /\/slides\/[^/?]+(\?|$)/,
+  );
 });
 
 async function replayEnd(page: Page): Promise<number> {

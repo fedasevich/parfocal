@@ -6,7 +6,7 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-const live = `/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`;
+const live = `/projects/${p07}/slides/${tumor044}?mode=look&as=DH`;
 const full = `/projects/${p07}/slides/${tumor044}?task=${rt14}&as=DH`;
 
 async function choosePanelWhileMoving(page: Page, name: "Hides while panning" | "Stays put") {

@@ -9,7 +9,7 @@ import { stayTools } from "../screens/review/review-rail.ts";
 import { mockScenes } from "../screens/scenes.ts";
 import { viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import { searchScopes } from "../shell/search-hits.ts";
-import { workspaces } from "../viewer/workspace.ts";
+import { viewerModes } from "../viewer/viewer-mode.ts";
 import { lenientSearch } from "./lenient-search.ts";
 import { sceneField } from "./scene-harness.ts";
 
@@ -31,6 +31,10 @@ const viewerScenes = [
 ] as const;
 
 const liveViewerScenes = ["objects", "picking", "picked", "travel"] as const;
+
+const oldWorkspaces = ["review", "annotate"] as const;
+
+const armTools = [...stayTools, "smart"] as const;
 
 export const inviteSearch = lenientSearch({
   token: z.string().min(1).optional(),
@@ -108,14 +112,15 @@ export const slideSearch = lenientSearch({
   object: z.string().optional(),
   with: z.string().optional(),
   scene: sceneField(viewerScenes, liveViewerScenes),
-  tool: z.enum(stayTools).optional(),
+  tool: z.enum(armTools).optional(),
   across: z.string().optional(),
   focus: z.boolean().optional(),
   peek: z.boolean().optional(),
   tab: z.enum(viewerTabs).optional(),
   modal: z.enum(["preset"]).optional(),
   pagedCells: z.number().int().optional(),
-  workspace: z.enum(workspaces).optional(),
+  mode: z.enum(viewerModes).optional(),
+  workspace: z.enum(oldWorkspaces).optional(),
 });
 
 export type SlideSearch = ReturnType<typeof slideSearch.read>;
@@ -143,7 +148,7 @@ export const annotateSearch = lenientSearch({
 
 export const liveSearch = lenientSearch({
   task: z.string().optional(),
-  workspace: z.enum(workspaces).optional(),
+  workspace: z.enum(oldWorkspaces).optional(),
   tab: z.enum(viewerTabs).optional(),
 });
 

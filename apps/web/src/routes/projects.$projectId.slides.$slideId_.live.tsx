@@ -1,38 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { liveSearch } from "../search/route-searches.ts";
-import { EngineViewer } from "../viewer/engine-viewer.tsx";
-import { openSlideEarly } from "../viewer/load-engine.ts";
+import { slideRedirect } from "../viewer/old-slide-address.ts";
+import { modeOfWorkspace } from "../viewer/viewer-mode.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/live")({
   validateSearch: liveSearch,
-  loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
-  component: LiveSlide,
+  beforeLoad: ({ params, search, location }) => {
+    const streaming = (location.search as Record<string, unknown>)["scene"] === "streaming";
+    throw slideRedirect(params, location.search, {
+      workspace: undefined,
+      ...(streaming ? { scene: undefined, run: "streaming" } : {}),
+      mode:
+        search.workspace === undefined
+          ? undefined
+          : modeOfWorkspace(search.workspace, search.task !== undefined),
+    });
+  },
 });
-
-function LiveSlide() {
-  const { projectId, slideId } = Route.useParams();
-  const { task, workspace, tab } = Route.useSearch();
-  const navigate = Route.useNavigate();
-  return (
-    <EngineViewer
-      projectId={projectId}
-      slideId={slideId}
-      task={task}
-      workspace={workspace}
-      tab={tab}
-      onOpenSlide={(next) =>
-        void navigate({
-          to: "/projects/$projectId/slides/$slideId/live",
-          params: { projectId, slideId: next },
-          search: { task, workspace, tab },
-        })
-      }
-      onWorkspace={(next) =>
-        void navigate({ search: (previous) => ({ ...previous, workspace: next }), replace: true })
-      }
-      onTab={(next) =>
-        void navigate({ search: (previous) => ({ ...previous, tab: next }), replace: true })
-      }
-    />
-  );
-}

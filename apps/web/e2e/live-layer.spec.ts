@@ -7,7 +7,7 @@ const byHand = "00000000-0000-4000-8005-000000000014";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openAs(page: Page, persona: string) {
-  await page.goto(`/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&as=${persona}`);
+  await page.goto(`/projects/${p07}/slides/${byHand}?task=${annotateTask}&as=${persona}`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");

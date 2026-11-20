@@ -25,7 +25,7 @@ test("a slide row on the project page opens the slide fitted with its case loade
 }) => {
   await page.goto(`/projects/${p07}?tab=slides`);
   await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\/live$/);
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+$/);
   await expectFitted(page);
   const header = page.getByTestId("case-header");
   await expect(header).toContainText("tumor_044");
@@ -40,7 +40,7 @@ test("the Open button of a slide in My work opens the slide fitted", async ({ pa
     .getByRole("complementary", { name: "Preview of tumor_044" })
     .getByRole("button", { name: /^Open(?! in the full)/ })
     .click();
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\/live/);
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+(\?|$)/);
   await expectFitted(page);
   await expect(page.getByTestId("case-header")).toContainText("tumor_044");
 });

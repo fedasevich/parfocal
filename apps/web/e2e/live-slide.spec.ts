@@ -1,6 +1,6 @@
 import { expect, test } from "./a11y.ts";
 
-const livePath = "/projects/p-1/slides/missing-1/live";
+const livePath = "/projects/p-1/slides/missing-1";
 
 test("a slide whose file cannot be read says so and offers another try", async ({ page }) => {
   const tileRequests: string[] = [];

@@ -42,7 +42,7 @@ async function expectCanvas(page: Page, selector: string) {
 }
 
 test("the viewer stage paints the canvas colour in both themes", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });
@@ -50,7 +50,7 @@ test("the viewer stage paints the canvas colour in both themes", async ({ page }
 });
 
 test("the guided review stage paints the canvas colour in both themes", async ({ page }) => {
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`);
   await expect(page.getByTestId("slide-stage")).toBeVisible({ timeout: 20_000 });
   await expectCanvas(page, '[data-testid="slide-stage"]');
 });
@@ -72,7 +72,7 @@ test("the compare panes paint the canvas colour in both themes", async ({ page }
 });
 
 test("the slide chip in the guided top bar has no fill of its own", async ({ page }) => {
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`);
   const chip = page.getByTestId("guided-slide-chip");
   await expect(chip).toBeVisible({ timeout: 20_000 });
   expect(await backgroundOf(page, '[data-testid="guided-slide-chip"]')).toBe("rgba(0, 0, 0, 0)");

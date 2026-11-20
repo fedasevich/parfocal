@@ -15,13 +15,13 @@ async function ready(page: Page) {
 
 const bar = (page: Page) => page.getByTestId("live-top-bar");
 const inspector = (page: Page) => page.getByTestId("stage-inspector");
-const modes = (page: Page) => bar(page).getByTestId("workspace-switch").getByRole("radio");
+const modes = (page: Page) => bar(page).getByTestId("mode-switch").getByRole("radio");
 
 test("the top bar of RT-14 shows the task, the slide chip, the decision ring and a Submit that waits", async ({
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=review`);
   await ready(page);
 
   const header = bar(page).getByTestId("case-header");
@@ -48,8 +48,8 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
   await expect(progress).toContainText("about 1 h 20 min left");
   await expect(progress.getByTestId("viewed-ring")).toHaveCount(0);
 
-  await expect(modes(page)).toHaveText(["Guided", "Full viewer"]);
-  await expect(modes(page).filter({ hasText: "Full viewer" })).toBeChecked();
+  await expect(modes(page)).toHaveText(["Guided", "Review", "Annotate"]);
+  await expect(modes(page).filter({ hasText: "Review" })).toBeChecked();
 
   const submit = bar(page).getByTestId("top-submit");
   await expect(submit).toBeDisabled();
@@ -107,9 +107,9 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
 test("guided review checks Guided, and the account menu leads back to Parfocal home", async ({
   page,
 }) => {
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`);
   await ready(page);
-  await expect(modes(page)).toHaveText(["Guided", "Full viewer"]);
+  await expect(modes(page)).toHaveText(["Guided", "Review", "Annotate"]);
   await expect(modes(page).filter({ hasText: "Guided" })).toBeChecked();
   await expect(bar(page).getByTestId("slide-picker")).toHaveCount(0);
   await expect(bar(page).getByTestId("guided-slide-chip")).toHaveText("A1 · H&E");
@@ -123,9 +123,9 @@ test("guided review checks Guided, and the account menu leads back to Parfocal h
 test("a slide opened without a task keeps Annotate, the tissue ring and its case facts", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   await ready(page);
-  await expect(modes(page)).toHaveText(["Full viewer", "Annotate"]);
+  await expect(modes(page)).toHaveText(["Look", "Annotate"]);
   await expect(bar(page).getByTestId("viewed-ring")).toBeVisible();
   await expect(bar(page).getByTestId("decision-ring")).toHaveCount(0);
   await expect(bar(page).getByTestId("case-header")).toContainText("result set");
@@ -134,7 +134,7 @@ test("a slide opened without a task keeps Annotate, the tissue ring and its case
 });
 
 test("a plain slide opened on the Opinion tab falls back to Objects", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&tab=opinion&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&tab=opinion&as=DH`);
   await ready(page);
   await expect(inspector(page)).toHaveAttribute("data-tab", "objects");
   await expect(page.getByText("No opinion asked")).toHaveCount(0);

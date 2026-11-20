@@ -118,7 +118,7 @@ test("a slide whose highest magnification fails says so on the slide and retries
       return post.call(this, message, ...rest);
     };
   });
-  await page.goto(`/projects/${sampleProject}/slides/${tumor001}/live`);
+  await page.goto(`/projects/${sampleProject}/slides/${tumor001}`);
   await ready(page);
   const card = page.getByTestId("stage-issue");
   await expect(card).toHaveAttribute("data-issue", "slidefail", { timeout: 15_000 });
@@ -136,7 +136,7 @@ for (const [issue, state, text] of [
   ["importfail", "failed", /did not import, so its objects are not shown\./],
 ] as const) {
   test(`a result set that is ${state} says so once in the top stack`, async ({ page }) => {
-    await page.goto(`/projects/${p07}/slides/${tumor044}/live?issue=${issue}`);
+    await page.goto(`/projects/${p07}/slides/${tumor044}?issue=${issue}`);
     await ready(page);
     const notice = page.locator('[data-slot="top-stack"]').getByTestId("result-set-notice");
     await expect(notice).toHaveCount(1);
@@ -146,7 +146,7 @@ for (const [issue, state, text] of [
 }
 
 test("a slide whose result sets are ready shows no result set notice", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}`);
   await ready(page);
   await expect(page.getByTestId("result-set-notice")).toHaveCount(0);
 });

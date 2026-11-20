@@ -71,7 +71,7 @@ test("a blinded reviewer sees no other reviewer's slide pin or thread before sub
   await expect(cards.filter({ hasText: "Lenka checks the capsule" })).toBeVisible();
   await expect(cards.filter({ hasText: "Simona sees a micrometastasis" })).toHaveCount(0);
 
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=annotate`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=annotate`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");

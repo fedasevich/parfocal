@@ -25,6 +25,7 @@ import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { slideLink } from "../../shell/slide-link.ts";
 import { useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { closeOn, ReasonModal, useSignature } from "../clinical-report/modals.tsx";
 import { AdjudicationRows, useTaskAdjudications } from "../disagreements/adjudication-rows.tsx";
@@ -120,11 +121,15 @@ function AnnotateSignOff({
       onPrimary={() =>
         firstSlideId === undefined
           ? toProject()
-          : void navigate({
-              to: "/projects/$projectId/slides/$slideId/annotate-task",
-              params: { projectId, slideId: firstSlideId },
-              search: { task: taskId, tab: "objects" },
-            })
+          : void navigate(
+              slideLink({
+                projectId,
+                slideId: firstSlideId,
+                taskId,
+                mode: "annotate",
+                tab: "objects",
+              }),
+            )
       }
     >
       <SmallModalZone>

@@ -16,7 +16,7 @@ declare global {
 test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openGuidedCheck(page: Page) {
-  await page.goto(`/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${withResults}?task=${annotateTask}&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");

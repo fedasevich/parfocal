@@ -13,7 +13,7 @@ test("a sample slide opens in the viewer from the shared original under its tile
       reads.push({ path: pathname, bearer: request.headers()["authorization"] });
     }
   });
-  await page.goto(`/projects/${sampleProject}/slides/${tumor001}/live`);
+  await page.goto(`/projects/${sampleProject}/slides/${tumor001}`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 15_000,
   });

@@ -2,44 +2,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AnnotateView } from "../screens/viewer-tools/annotate-view.tsx";
 import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { annotateSearch } from "../search/route-searches.ts";
-import { EngineViewer } from "../viewer/engine-viewer.tsx";
+import { slidePath } from "../shell/slide-link.ts";
 import { openSlideEarly } from "../viewer/load-engine.ts";
+import { slideRedirect } from "../viewer/old-slide-address.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId_/annotate")({
   validateSearch: annotateSearch,
+  beforeLoad: ({ params, search, location }) => {
+    if (search.scene !== undefined) return;
+    throw slideRedirect(params, location.search, { mode: "annotate" });
+  },
   loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
-  component: AnnotateWorkspace,
+  component: AnnotatePrototype,
 });
 
-function AnnotateWorkspace() {
+function AnnotatePrototype() {
   const { projectId, slideId } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  if (search.scene === undefined) {
-    return (
-      <EngineViewer
-        projectId={projectId}
-        slideId={slideId}
-        task={search.task}
-        workspace="annotate"
-        tool={search.tool}
-        onOpenSlide={(next) =>
-          void navigate({
-            to: "/projects/$projectId/slides/$slideId/annotate",
-            params: { projectId, slideId: next },
-            search: { task: search.task },
-          })
-        }
-        onWorkspace={(workspace) =>
-          void navigate({
-            to: "/projects/$projectId/slides/$slideId",
-            params: { projectId, slideId },
-            search: { task: search.task, workspace },
-          })
-        }
-      />
-    );
-  }
   return (
     <WithToolSession projectId={projectId} slideId={slideId} task={search.task}>
       {(tools) => (
@@ -52,7 +32,7 @@ function AnnotateWorkspace() {
           }
           onLeave={(tab) =>
             void navigate({
-              to: "/projects/$projectId/slides/$slideId",
+              to: slidePath,
               params: { projectId, slideId },
               search: { task: tools.session.taskId, tab },
             })

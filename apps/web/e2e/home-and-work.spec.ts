@@ -51,7 +51,7 @@ test("home shows the week, what is coming up and the projects, and links onward"
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Home" }).click();
   await expect(page.getByRole("heading", { name: "Good afternoon, Lenka" })).toBeVisible();
   await page.getByRole("button", { name: "Continue ↵" }).click();
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=/);
+  await expect(page).toHaveURL(/\/slides\/[0-9a-f-]+\?.*mode=guided/);
 });
 
 test("My work switches tabs and personas like the mock, and the preview follows the keys", async ({
@@ -227,7 +227,7 @@ test("To review continues into guided review at the next open object in one acti
   await expect(tasks).toContainText("Sentinel node AI evaluation · Tumor regions: all · due");
   await expect(tasks.getByText("Blind").first()).toBeVisible();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=[0-9a-f-]+&object=T5$/);
+  await expect(page).toHaveURL(/\/slides\/[0-9a-f-]+\?object=T5&task=[0-9a-f-]+&mode=guided$/);
   await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T5", {
     timeout: 60_000,
   });

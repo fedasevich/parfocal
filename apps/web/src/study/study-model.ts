@@ -90,7 +90,7 @@ export type StudyState = { rounds: Round[]; sessions: StudySession[] };
 
 export const studySlide = "tumor_044";
 
-const liveSlide = "/projects/{project}/slides/{slide}/live?task={task}&as=DH";
+const reviewSlide = "/projects/{project}/slides/{slide}?task={task}&as=DH";
 const cellFindings =
   "/projects/{taskProject}/slides/{taskSlide}?task={task}&object=T1·C145&scene=objects";
 const cellGuard: TaskGuard = {
@@ -108,7 +108,7 @@ export const defaultTasks: StudyTask[] = [
     startPath: "/projects/{project}?tab=slides",
     targetSeconds: 30,
     check: {
-      path: "/slides/{slide}/live",
+      path: "/slides/{slide}(\\?|$)",
       selector: '[data-testid="slide-stage"][data-state="ready"]',
     },
   },
@@ -117,7 +117,7 @@ export const defaultTasks: StudyTask[] = [
     title: "Find the tumor",
     instruction: "Move the slide to the area you think holds tumor and zoom in on it.",
     slide: studySlide,
-    startPath: liveSlide,
+    startPath: reviewSlide,
     targetSeconds: 60,
     check: { selector: `${areaVisits}:not([data-visited=""])` },
   },
@@ -126,7 +126,7 @@ export const defaultTasks: StudyTask[] = [
     title: "Read the AI result",
     instruction: "Say in your own words what the coloured overlay shows.",
     slide: studySlide,
-    startPath: liveSlide,
+    startPath: reviewSlide,
     targetSeconds: 45,
   },
   {
@@ -166,7 +166,7 @@ export const defaultTasks: StudyTask[] = [
     title: "Leave a comment",
     instruction: "Leave a comment on a region and mention a colleague.",
     slide: studySlide,
-    startPath: liveSlide,
+    startPath: reviewSlide,
     targetSeconds: 60,
   },
   {

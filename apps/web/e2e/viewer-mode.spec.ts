@@ -37,47 +37,71 @@ const rows = [
     workspace: "annotate",
     tabs: ["Objects", "Display", "Comments"],
     first: "display",
-    switch: ["Full viewer", "Annotate"],
+    switch: ["Look", "Annotate"],
+    checked: "Annotate",
+  },
+  {
+    name: "no task, Look",
+    url: `/projects/${p07}/slides/${a1}?mode=look`,
+    workspace: "look",
+    tabs: ["Objects", "Display", "Comments"],
+    first: "objects",
+    switch: ["Look", "Annotate"],
+    checked: "Look",
   },
   {
     name: "review task, assigned reviewer",
     url: `/projects/${p07}/slides/${a1}?task=${rt14}`,
-    workspace: "review",
+    workspace: "look",
     tabs: ["Objects", "Display", "Comments", "Opinion"],
     first: "objects",
-    switch: ["Guided", "Full viewer"],
+    switch: ["Guided", "Review", "Annotate"],
+    checked: "Review",
   },
   {
     name: "review task, guided",
-    url: `/tasks/${rt14}/guided?slide=${a1}`,
-    workspace: "review",
+    url: `/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`,
+    workspace: "look",
     tabs: ["Review", "Comments", "Display"],
     first: "objects",
-    switch: ["Guided", "Full viewer"],
+    switch: ["Guided", "Review", "Annotate"],
+    checked: "Guided",
   },
   {
     name: "review task, cell typing",
-    url: `/tasks/${rt14}/cells?slide=${a1}`,
-    workspace: "review",
+    url: `/projects/${p07}/slides/${a1}?task=${rt14}&mode=cells`,
+    workspace: "look",
     tabs: ["Objects", "Display", "Comments", "Opinion"],
     first: "objects",
-    switch: ["Guided", "Full viewer"],
+    switch: ["Guided", "Review", "Annotate"],
+    checked: "Review",
+  },
+  {
+    name: "review task, annotate",
+    url: `/projects/${p07}/slides/${a1}?task=${rt14}&mode=annotate`,
+    workspace: "annotate",
+    tabs: ["Objects", "Display", "Comments"],
+    first: "display",
+    switch: ["Guided", "Review", "Annotate"],
+    checked: "Annotate",
   },
   {
     name: "review task, not assigned",
     url: `/projects/${p07}/slides/${a1}?task=${rt14}&tab=opinion&as=DH`,
-    workspace: "review",
+    workspace: "look",
     tabs: ["Objects", "Display", "Comments"],
     first: "objects",
     switch: [],
+    checked: "",
   },
   {
     name: "annotate task, assigned expert",
-    url: `/projects/${p07}/slides/${tumor044}?task=${annotateTask}&workspace=review`,
+    url: `/projects/${p07}/slides/${tumor044}?task=${annotateTask}&mode=review`,
     workspace: "annotate",
     tabs: ["Objects", "Display", "Comments"],
     first: "objects",
     switch: [],
+    checked: "",
   },
 ] as const;
 
@@ -90,20 +114,85 @@ for (const row of rows) {
       .poll(async () => (await panelOf(page)).tabs, { timeout: 15_000 })
       .toEqual([...row.tabs]);
     expect((await panelOf(page)).first).toBe(row.first);
-    const choices = page.getByTestId("workspace-switch").getByRole("radio");
-    if (row.switch.length === 0) await expect(page.getByTestId("workspace-switch")).toHaveCount(0);
-    else await expect(choices).toHaveText([...row.switch]);
+    const choices = page.getByTestId("mode-switch").getByRole("radio");
+    if (row.switch.length === 0) {
+      await expect(page.getByTestId("mode-switch")).toHaveCount(0);
+      return;
+    }
+    await expect(choices).toHaveText([...row.switch]);
+    await expect(choices.filter({ hasText: row.checked })).toBeChecked();
   });
 }
 
+function sortedAddress(address: string) {
+  const url = new URL(address, "http://localhost");
+  const pairs = [...url.searchParams].map(([key, value]) => `${key}=${value}`).sort();
+  return `${url.pathname}?${pairs.join("&")}`;
+}
+
+const oldAddresses = [
+  {
+    name: "the live route with the old Full viewer value",
+    old: `/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review&tab=comments`,
+    now: `/projects/${p07}/slides/${a1}?task=${rt14}&tab=comments&mode=review`,
+    workspace: "look",
+  },
+  {
+    name: "the live route with no task",
+    old: `/projects/${p07}/slides/${a1}/live?workspace=review`,
+    now: `/projects/${p07}/slides/${a1}?mode=look`,
+    workspace: "look",
+  },
+  {
+    name: "the annotate route",
+    old: `/projects/${p07}/slides/${a1}/annotate?task=${rt14}&tool=smart`,
+    now: `/projects/${p07}/slides/${a1}?task=${rt14}&tool=smart&mode=annotate`,
+    workspace: "annotate",
+  },
+  {
+    name: "the annotate task route",
+    old: `/projects/${p07}/slides/${tumor044}/annotate-task?task=${annotateTask}&tab=objects`,
+    now: `/projects/${p07}/slides/${tumor044}?task=${annotateTask}&tab=objects&mode=annotate`,
+    workspace: "annotate",
+  },
+  {
+    name: "the main route with the old workspace value",
+    old: `/projects/${p07}/slides/${a1}?task=${rt14}&workspace=annotate`,
+    now: `/projects/${p07}/slides/${a1}?task=${rt14}&mode=annotate`,
+    workspace: "annotate",
+  },
+  {
+    name: "the guided route",
+    old: `/tasks/${rt14}/guided?slide=${a1}&object=T2&x=0.5&y=0.5&z=2&tab=review`,
+    now: `/projects/${p07}/slides/${a1}?object=T2&x=0.5&y=0.5&z=2&tab=objects&task=${rt14}&mode=guided`,
+    workspace: "look",
+  },
+  {
+    name: "the cells route",
+    old: `/tasks/${rt14}/cells?slide=${a1}`,
+    now: `/projects/${p07}/slides/${a1}?task=${rt14}&mode=cells`,
+    workspace: "look",
+  },
+] as const;
+
+for (const row of oldAddresses) {
+  test(`an old address lands on the one slide route with its parameters: ${row.name}`, async ({
+    page,
+  }) => {
+    await page.goto(row.old);
+    await expect.poll(() => sortedAddress(page.url())).toBe(sortedAddress(row.now));
+    const stage = await ready(page);
+    await expect(stage).toHaveAttribute("data-workspace", row.workspace);
+  });
+}
 test("a project viewer opens a slide look only and is never offered Annotate", async ({ page }) => {
   const slide = await firstSlideOf(page, p03, "JR");
   expect(slide).not.toBe("");
-  await page.goto(`/projects/${p03}/slides/${slide}?workspace=annotate&as=JR`);
+  await page.goto(`/projects/${p03}/slides/${slide}?mode=annotate&as=JR`);
   const stage = await ready(page);
-  await expect(stage).toHaveAttribute("data-workspace", "review");
+  await expect(stage).toHaveAttribute("data-workspace", "look");
   await expect(stage).toHaveAttribute("data-access", "read-only", { timeout: 15_000 });
-  await expect(page.getByTestId("workspace-switch")).toHaveCount(0);
+  await expect(page.getByTestId("mode-switch")).toHaveCount(0);
   await expect(page.getByRole("radio", { name: "Annotate" })).toHaveCount(0);
   const tools = page.locator("button[data-tool]");
   expect(await tools.evaluateAll((all) => all.map((tool) => tool.dataset["tool"]))).toEqual([
@@ -158,7 +247,7 @@ test("the report and the task Slides link open the task slide in the same Review
   await report.click();
   await expect(page).toHaveURL(new RegExp(`task=${rt14}`));
   const fromReport = await ready(page);
-  await expect(fromReport).toHaveAttribute("data-workspace", "review");
+  await expect(fromReport).toHaveAttribute("data-workspace", "look");
   expect((await panelOf(page)).first).toBe("objects");
 
   await page.goto(`/projects/${p07}?tab=tasks`);

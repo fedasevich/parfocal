@@ -27,7 +27,7 @@ test("opening a slide from My work animates, the pointer reaches the page and a 
   await expect(page.getByRole("heading", { name: "My work" })).toBeVisible();
   await watchTransitions(page);
   await page.getByRole("button", { name: /Continue reviewing/ }).click();
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=/);
+  await expect(page).toHaveURL(/\/slides\/[0-9a-f-]+\?.*mode=guided/);
   const waiting = await page.waitForFunction(
     () => {
       const target = document.querySelector<HTMLElement>("[data-vt-target]");
@@ -61,7 +61,7 @@ test("reduced motion turns the move into a cut", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "My work" })).toBeVisible();
   await watchTransitions(page);
   await page.getByRole("button", { name: /Continue reviewing/ }).click();
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/guided\?slide=/);
+  await expect(page).toHaveURL(/\/slides\/[0-9a-f-]+\?.*mode=guided/);
   await expect(page.locator("[data-vt-target]")).toBeVisible();
   expect(await seenKinds(page)).toEqual([]);
 });

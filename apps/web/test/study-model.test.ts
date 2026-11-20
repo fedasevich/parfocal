@@ -111,7 +111,7 @@ test("every default task opens a start screen and slide tasks open the CAMELYON1
   }
   const live = defaultTasks.find((task) => task.id === "t2");
   assert.ok(live);
-  assert.equal(resolveStartPath(live, context), "/projects/p-7/slides/s-44/live?task=rt-14&as=DH");
+  assert.equal(resolveStartPath(live, context), "/projects/p-7/slides/s-44?task=rt-14&as=DH");
 });
 
 test("a start screen whose slide is not listed is not offered", () => {

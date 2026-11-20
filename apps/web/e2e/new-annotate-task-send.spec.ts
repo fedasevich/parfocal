@@ -48,5 +48,5 @@ test("the annotate stepper ticks nothing, asks for a name and sends the task", a
   await expect(flow.getByRole("status")).toContainText("Round 3 annotate was sent to 1 expert");
 
   await flow.getByRole("button", { name: "Open the task" }).click();
-  await expect(page).toHaveURL(/\/annotate-task\?task=/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+\?task=.*mode=annotate/);
 });

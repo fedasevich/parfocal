@@ -1,16 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { GuidedGate } from "../screens/review/guided-gate.tsx";
 import { FullViewer } from "../screens/viewer/full-viewer.tsx";
 import { isCompareScene } from "../screens/viewer/viewer-scenes.ts";
 import { CompareView } from "../screens/viewer-tools/compare-view.tsx";
 import { FocusView } from "../screens/viewer-tools/focus-view.tsx";
 import { WithOptionalToolSession, WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { type SlideSearch, slideSearch } from "../search/route-searches.ts";
+import { slidePath } from "../shell/slide-link.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { openSlideEarly } from "../viewer/load-engine.ts";
+import { slideRedirect } from "../viewer/old-slide-address.ts";
 import type { StageStart } from "../viewer/stage-start.tsx";
+import { modeOfWorkspace } from "../viewer/viewer-mode.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId")({
   validateSearch: slideSearch,
+  beforeLoad: ({ params, search, location }) => {
+    if (search.workspace === undefined) return;
+    throw slideRedirect(params, location.search, {
+      workspace: undefined,
+      mode: search.mode ?? modeOfWorkspace(search.workspace, search.task !== undefined),
+    });
+  },
   loader: ({ params, cause }) => openSlideEarly(params.slideId, cause),
   component: SlideView,
 });
@@ -47,7 +58,7 @@ function SlideView() {
             projectId={projectId}
             slideId={slideId}
             taskId={search.task}
-            workspace={search.workspace}
+            mode={search.mode}
             tools={tools}
             scene={scene === "picking" ? "picking" : "picked"}
             rightSlideId={search.with}
@@ -60,30 +71,42 @@ function SlideView() {
   }
   if (search.scene !== undefined) {
     return (
-      <FullViewer projectId={projectId} slideId={slideId} search={search} onSearch={onSearch} />
+      <FullViewer
+        projectId={projectId}
+        slideId={slideId}
+        search={{ ...search, tool: search.tool === "smart" ? undefined : search.tool }}
+        onSearch={onSearch}
+      />
     );
   }
-  return (
+  const viewer = (
     <EngineViewer
       projectId={projectId}
       slideId={slideId}
       task={search.task}
-      workspace={search.workspace}
+      mode={search.mode}
       tab={search.tab}
       object={search.object}
       start={startOf(search)}
+      tool={search.tool}
       focus={search.focus === true}
       onFocus={(on) => onSearch({ focus: on || undefined, peek: undefined })}
       onOpenSlide={(next) =>
         void navigate({
-          to: "/projects/$projectId/slides/$slideId",
+          to: slidePath,
           params: { projectId, slideId: next },
-          search: { task: search.task, workspace: search.workspace, tab: search.tab },
+          search: { task: search.task, mode: search.mode, tab: search.tab },
         })
       }
-      onWorkspace={(workspace) => onSearch({ workspace })}
+      onMode={(mode) => onSearch({ mode })}
       onTab={(tab) => onSearch({ tab })}
     />
+  );
+  if (search.task === undefined || search.mode !== "guided") return viewer;
+  return (
+    <GuidedGate taskId={search.task} slideId={slideId}>
+      {() => viewer}
+    </GuidedGate>
   );
 }
 

@@ -17,7 +17,7 @@ async function boxOf(page: Page, selector: string) {
 test("the live viewer docks its rail and inspector beside the slide like the mock", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   const inspector = page.getByTestId("stage-inspector");
@@ -55,7 +55,7 @@ test("the live viewer docks its rail and inspector beside the slide like the moc
 });
 
 test("the Annotate workspace opens its inspector on Display with the layers", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=annotate&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=annotate&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   const inspector = page.getByTestId("stage-inspector");
@@ -72,7 +72,7 @@ test("the Annotate workspace opens its inspector on Display with the layers", as
 test("the live top bar has the slide picker and progress, and the inspector keeps its three tabs and the open tab across a reload", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   const bar = page.getByTestId("live-top-bar");
@@ -99,7 +99,7 @@ test("the live top bar has the slide picker and progress, and the inspector keep
     "true",
   );
 
-  await bar.getByTestId("workspace-switch").getByRole("radio", { name: "Annotate" }).click();
+  await bar.getByTestId("mode-switch").getByRole("radio", { name: "Annotate" }).click();
   await expect(stage).toHaveAttribute("data-workspace", "annotate");
   await expect(inspector.getByRole("tab", { name: "Comments" })).toHaveAttribute(
     "aria-selected",
@@ -121,7 +121,7 @@ test("hide while panning hides the live inspector during a pan and not on a clic
   page,
 }) => {
   await hidePanelWhilePanning(page, "DH");
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   const dock = page.getByTestId("inspector-dock");
@@ -138,7 +138,7 @@ test("hide while panning hides the live inspector during a pan and not on a clic
 test("the save status sits in the top bar and the tool chips sit in the context bar", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=annotate&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=annotate&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await page.keyboard.press("s");

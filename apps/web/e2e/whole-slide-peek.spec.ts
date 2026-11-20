@@ -16,7 +16,7 @@ test("Z shows the whole slide with its picture, AI areas, checks and the view", 
   page,
 }) => {
   test.setTimeout(60_000);
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&as=LM`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&as=LM`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await expect(stage).toHaveAttribute("data-coverage", "loaded");

@@ -172,7 +172,10 @@ test("a wheel and a ctrl wheel over the cell parts move the slide and the cells 
 const stills = [
   { name: "the disagreements viewer", path: `/tasks/${rt14}/disagreements?stage=open` },
   { name: "the adjudicator stage", path: `/tasks/${rt14}/adjudicate?stage=sent` },
-  { name: "the guided review", path: `/tasks/${rt14}/guided?slide=${cellsSlide}` },
+  {
+    name: "the guided review",
+    path: `/projects/${p07}/slides/${cellsSlide}?task=${rt14}&mode=guided`,
+  },
   { name: "the cells grid screen", path: `/tasks/${rt14}/cells` },
 ];
 
