@@ -9,24 +9,27 @@ export interface Researcher {
 }
 
 export const test = base.extend<{ researcher: Researcher }>({
-  researcher: async ({ page }, use) => {
-    await signIn(page, "/");
-    const profile = await call(page, "GET", "/api/me");
-    const me = field(profile, "user_id");
-    const home: unknown = Reflect.get(profile.json ?? {}, "active_tenant_id");
-    const { subject } = await readSession(page);
-    const tenantId = researcherWorkspace(me);
-    try {
-      const switched = await call(page, "PUT", "/api/me/workspace", { tenant_id: tenantId });
-      expect(switched.status, JSON.stringify(switched.json)).toBe(200);
-      await use({ me, subject, tenantId });
-    } finally {
-      if (typeof home === "string" && !page.isClosed()) {
-        await call(page, "PUT", "/api/me/workspace", { tenant_id: home }).catch(() => undefined);
+  researcher: [
+    async ({ page }, use) => {
+      await signIn(page, "/");
+      const profile = await call(page, "GET", "/api/me");
+      const me = field(profile, "user_id");
+      const home: unknown = Reflect.get(profile.json ?? {}, "active_tenant_id");
+      const { subject } = await readSession(page);
+      const tenantId = researcherWorkspace(me);
+      try {
+        const switched = await call(page, "PUT", "/api/me/workspace", { tenant_id: tenantId });
+        expect(switched.status, JSON.stringify(switched.json)).toBe(200);
+        await use({ me, subject, tenantId });
+      } finally {
+        if (typeof home === "string" && !page.isClosed()) {
+          await call(page, "PUT", "/api/me/workspace", { tenant_id: home }).catch(() => undefined);
+        }
+        purgeWorkspace(tenantId);
       }
-      purgeWorkspace(tenantId);
-    }
-  },
+    },
+    { timeout: 120_000 },
+  ],
 });
 
 export { expect };

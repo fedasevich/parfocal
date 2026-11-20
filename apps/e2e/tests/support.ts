@@ -74,12 +74,21 @@ export async function signIn(
   await page.goto(`/sign-in?return_to=${encodeURIComponent(deepLink)}`);
   await page.getByLabel("Work email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const submit = page.getByRole("button", { name: "Sign in", exact: true });
+  await submit.click();
   const later = page.getByRole("button", { name: "Not now", exact: true });
+  const throttled = page.getByText("Too many requests, try again shortly");
   await expect
-    .poll(async () => (await later.isVisible()) || new URL(page.url()).pathname !== "/sign-in", {
-      timeout: 30_000,
-    })
+    .poll(
+      async () => {
+        if (await throttled.isVisible()) {
+          await page.waitForTimeout(5_000);
+          await submit.click();
+        }
+        return (await later.isVisible()) || new URL(page.url()).pathname !== "/sign-in";
+      },
+      { timeout: 90_000 },
+    )
     .toBe(true);
   if (await later.isVisible()) await later.click();
   await expect
