@@ -98,15 +98,15 @@ test("the bell filters, opens an item and marks everything read", async ({ page 
   await page.goto("/my-work");
   await page.getByRole("button", { name: "Notifications, 5 unread" }).click();
   const panel = page.getByRole("dialog", { name: "Notifications" });
-  await expect(panel.getByTestId("notification")).toHaveCount(7);
+  await expect(panel.getByTestId("notification")).toHaveCount(5);
   await panel.getByRole("radio", { name: /Mentions/ }).click();
   await expect(panel.getByTestId("notification")).toHaveCount(2);
   await panel.getByRole("radio", { name: /For me/ }).click();
   await panel.getByRole("button", { name: "Mark all read" }).click();
   await expect(panel.getByText("All read")).toBeVisible();
   await expect(page.getByRole("button", { name: "Notifications, 0 unread" })).toBeVisible();
-  await panel.getByRole("button", { name: "Open the report" }).click();
-  await expect(page).toHaveURL(/\/tasks\/[0-9a-f-]+\/evaluation$/);
+  await panel.getByRole("button", { name: "See the run" }).click();
+  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\?tab=slides$/);
 });
 
 test("a mention opened from the bell on Home lands on its thread and is marked read", async ({
@@ -129,14 +129,14 @@ test("a mention opened from the bell on Home lands on its thread and is marked r
   await expect(page.getByRole("button", { name: "Notifications, 4 unread" })).toBeVisible();
 });
 
-test("See all in the bell goes to My work", async ({ page }) => {
+test("See all in the bell goes to the notifications page", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /^Notifications/ }).click();
   await page
     .getByRole("dialog", { name: "Notifications" })
     .getByRole("button", { name: "See all" })
     .click();
-  await expect(page).toHaveURL(/\/my-work/);
+  await expect(page).toHaveURL(/\/notifications$/);
 });
 
 test("the palette opens from the search box and ⌘K, finds places and runs on Enter", async ({
