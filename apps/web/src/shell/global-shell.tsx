@@ -19,7 +19,7 @@ import { AccountMenu } from "./account-menu.tsx";
 import { Bell } from "./bell.tsx";
 import { ConnectionBanner } from "./connection-banner.tsx";
 import { destinations } from "./destinations.ts";
-import { JobsTrayProvider, ShellJobs } from "./jobs-tray.tsx";
+import { JobsTrayProvider } from "./jobs-tray.tsx";
 import { MaintenanceBanner } from "./maintenance-banner.tsx";
 import { useOverlay } from "./overlays.ts";
 import { useRoutePending } from "./route-progress.tsx";
@@ -31,6 +31,10 @@ import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx
 
 const NewProjectDrawer = lazy(async () => ({
   default: (await import("../screens/project/drawers.tsx")).NewProjectDrawer,
+}));
+
+const ShellJobs = lazy(async () => ({
+  default: (await import("./shell-jobs.tsx")).ShellJobs,
 }));
 
 export function personOf(me: Me | undefined): PersonInfo {
@@ -136,7 +140,11 @@ export function GlobalShell({ children }: { children: ReactNode }) {
               workspaceSlot={<ShellWorkspaceSwitcher me={me} />}
               homeHref={destinations.home()}
               renderLink={renderLink}
-              jobsSlot={<ShellJobs />}
+              jobsSlot={
+                <Suspense fallback={<span aria-hidden="true" className="size-8" />}>
+                  <ShellJobs />
+                </Suspense>
+              }
               onSearch={() => void overlay.set("palette")}
               onNewProject={() => void goTo(destinations.newProject())}
               onUpload={() => void goTo(destinations.upload(firstProject))}

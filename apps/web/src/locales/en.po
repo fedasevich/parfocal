@@ -1081,7 +1081,7 @@ msgstr "{0} objects, shown in cyan and not saved yet"
 #: src/screens/upload/link-import.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
-#: src/shell/jobs-tray.tsx
+#: src/shell/shell-jobs.tsx
 #: src/viewer/stage-minimap.tsx
 msgid "{0} of {1}"
 msgstr "{0} of {1}"
@@ -8706,7 +8706,7 @@ msgstr "Job typer"
 #: ../../packages/ui/src/components/jobs.tsx
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: src/screens/home/activity-card.tsx
-#: src/shell/jobs-tray.tsx
+#: src/shell/shell-jobs.tsx
 msgid "Jobs"
 msgstr "Jobs"
 
@@ -11538,7 +11538,7 @@ msgstr "open"
 #: src/screens/new-task/send-step.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/viewer-canvas-parts.tsx
-#: src/shell/jobs-tray.tsx
+#: src/shell/shell-jobs.tsx
 msgid "Open"
 msgstr "Open"
 
@@ -13465,7 +13465,7 @@ msgid "results next to their slide"
 msgstr "results next to their slide"
 
 #: src/screens/upload/case-upload-drawer.tsx
-#: src/shell/jobs-tray.tsx
+#: src/shell/shell-jobs.tsx
 msgid "Resume"
 msgstr "Resume"
 
@@ -18086,11 +18086,11 @@ msgid "Upload, run models, create tasks, sign off"
 msgstr "Upload, run models, create tasks, sign off"
 
 #: src/screens/upload/live-wizard.tsx
-#: src/shell/jobs-tray.tsx
+#: src/shell/shell-jobs.tsx
 msgid "Uploaded"
 msgstr "Uploaded"
 
-#: src/shell/jobs-tray.tsx
+#: src/shell/shell-jobs.tsx
 msgid "Uploading"
 msgstr "Uploading"
 

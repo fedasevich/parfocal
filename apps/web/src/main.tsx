@@ -8,7 +8,6 @@ import { selectWebClients } from "./clients.ts";
 import { readBuildConfig } from "./config.ts";
 import { installDebugHandle, provideDebug } from "./debug-handle.ts";
 import { AppI18n } from "./i18n/app-i18n.tsx";
-import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
 import { locksAt } from "./session/lock-rules.ts";
@@ -33,8 +32,11 @@ installTheme();
 installMotion();
 installDisplayDefaults();
 
-installDebugHandle(window, config.appEnv);
-provideDebug(benchmarkDebug(window));
+if (installDebugHandle(window, config.appEnv)) {
+  void import("./lab/pan-sweep.ts").then(({ benchmarkDebug }) =>
+    provideDebug(benchmarkDebug(window)),
+  );
+}
 
 export const clients = selectWebClients(config, {});
 connectAppAnalytics(clients.analytics);
