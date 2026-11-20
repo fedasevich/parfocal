@@ -50,8 +50,9 @@ import {
 } from "../../viewer/still-engine.tsx";
 import type { StillFrame } from "../../viewer/still-frame.ts";
 import { useCaseLoad } from "../../viewer/use-case-load.ts";
+import { editAccess } from "../../viewer/viewer-access.ts";
+import { type ViewerMode, viewerModeOf } from "../../viewer/viewer-mode.ts";
 import { useWebglAvailable } from "../../viewer/webgl.ts";
-import type { SlideWorkspace } from "../../viewer/workspace.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { ObjectsSummary, ViewerFrame } from "../review/viewer-frame.tsx";
@@ -126,7 +127,7 @@ type CompareViewProps = {
   projectId: string;
   slideId: string;
   taskId: string | undefined;
-  workspace: SlideWorkspace | undefined;
+  mode: ViewerMode | undefined;
   tools: ToolSession | null;
   scene: SceneOf<"compare">;
   rightSlideId?: string | undefined;
@@ -141,7 +142,7 @@ export function CompareView({
   projectId,
   slideId,
   taskId,
-  workspace,
+  mode,
   tools,
   scene,
   rightSlideId,
@@ -165,9 +166,15 @@ export function CompareView({
     reviewTaskId: reviewTaskId ?? null,
     slideId,
   });
+  const modeRule = viewerModeOf({
+    hasTask: taskId !== undefined,
+    taskKind: taskId === undefined ? undefined : taskDetail?.kind,
+    access: editAccess,
+    chosen: mode,
+  });
   const backToViewer = (change: {
     slideId?: string;
-    workspace?: SlideWorkspace;
+    mode?: ViewerMode;
     tab?: "opinion" | "display";
   }) =>
     void navigate({
@@ -175,7 +182,7 @@ export function CompareView({
       params: { projectId, slideId: change.slideId ?? slideId },
       search: {
         task: taskId,
-        workspace: change.workspace ?? workspace,
+        mode: change.mode ?? mode,
         ...(change.tab ? { tab: change.tab } : {}),
       },
     });
@@ -644,9 +651,9 @@ export function CompareView({
           slideId={slideId}
           load={load}
           task={taskDetail}
-          workspace={workspace ?? "review"}
-          choices={taskDetail?.kind === "review" ? ["guided", "review"] : ["review", "annotate"]}
-          onWorkspace={(next) => backToViewer({ workspace: next })}
+          choice={modeRule.choice}
+          choices={modeRule.choices}
+          onMode={(next) => backToViewer({ mode: next })}
           onOpenSlide={(next) => backToViewer({ slideId: next })}
           onSubmit={() => backToViewer({ tab: "opinion" })}
           onResultSets={() => backToViewer({ tab: "display" })}

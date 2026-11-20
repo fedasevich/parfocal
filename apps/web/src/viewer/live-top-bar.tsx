@@ -25,7 +25,6 @@ import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides
 import { LiveSlidesPopover } from "./live-slides-popover.tsx";
 import { SlideExportMenu } from "./slide-export-menu.tsx";
 import type { ModeChoice } from "./viewer-mode.ts";
-import type { SlideWorkspace } from "./workspace.ts";
 
 const slidePage = 200;
 
@@ -126,10 +125,10 @@ type LiveTopBarProps = {
   slideId: string;
   load: CaseLoad | null;
   task: ReviewTaskDetail | undefined;
-  workspace: SlideWorkspace;
+  choice: ModeChoice;
   choices: readonly ModeChoice[];
   guided?: boolean;
-  onWorkspace: (next: SlideWorkspace) => void;
+  onMode: (next: ModeChoice) => void;
   onOpenSlide: (slideId: string) => void;
   onSubmit: (() => void) | undefined;
   onResultSets?: (() => void) | undefined;
@@ -160,10 +159,10 @@ function TopBar({
   slideId,
   load,
   task,
-  workspace,
+  choice,
   choices,
   guided = false,
-  onWorkspace,
+  onMode,
   onOpenSlide,
   onSubmit,
   onResultSets,
@@ -179,8 +178,9 @@ function TopBar({
   const { t } = useLingui();
   const navigate = useNavigate();
   const choiceLabels: Record<ModeChoice, string> = {
+    look: t`Look`,
+    review: t`Review`,
     guided: t`Guided`,
-    review: t`Full viewer`,
     annotate: t`Annotate`,
   };
   const me = okData(useGetMe().data);
@@ -287,21 +287,14 @@ function TopBar({
       ) : null}
       {choices.length < 2 ? null : (
         <SegmentedControl
-          aria-label={t`How to review`}
-          data-testid="workspace-switch"
+          aria-label={t`Mode`}
+          data-testid="mode-switch"
           className="shrink-0"
           {...(guided ? { size: "lg" as const } : {})}
-          value={guided ? "guided" : workspace}
+          value={choice}
           onValueChange={(next: string) => {
-            if (next === "guided" && task !== undefined) {
-              void navigate({
-                to: "/tasks/$taskId/guided",
-                params: { taskId: task.id },
-                search: { slide: slideId },
-              });
-              return;
-            }
-            if (next === "review" || next === "annotate") onWorkspace(next);
+            const picked = choices.find((value) => value === next);
+            if (picked !== undefined) onMode(picked);
           }}
           options={choices.map((value) => ({ value, label: choiceLabels[value] }))}
         />

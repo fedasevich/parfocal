@@ -27,7 +27,7 @@ test("RT-14 shows five region tags, a T6⁺ tag for the added region and one sam
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review&as=LM`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=review&as=LM`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 60_000 });
 

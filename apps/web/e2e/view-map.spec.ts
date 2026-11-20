@@ -4,7 +4,7 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
 
 async function openReviewSlide(page: Page): Promise<Locator> {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   return stage;
@@ -45,7 +45,7 @@ test("the view map is computed on demand and asking again after a pan rescores n
 });
 
 test("a view map waiting for a GPU says so and Cancel stops the wait", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH&gpu=queued`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH&gpu=queued`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 30_000,
   });

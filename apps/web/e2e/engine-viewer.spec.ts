@@ -8,12 +8,12 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 const fullViewer = `/projects/${p07}/slides/${tumor044}?task=${rt14}&as=DH`;
-const guided = `/tasks/${rt14}/guided?slide=${tumor044}&as=DH`;
+const guided = `/projects/${p07}/slides/${tumor044}?task=${rt14}&mode=guided&as=DH`;
 const a1 = "00000000-0000-4000-8005-000000000001";
 const objectsViewer = `/projects/${p07}/slides/${a1}?task=${rt14}`;
-const objectsGuided = `/tasks/${rt14}/guided?slide=${a1}`;
+const objectsGuided = `/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`;
 const annotateTask = "00000000-0000-4000-8007-000000000021";
-const annotateTaskViewer = `/projects/${p07}/slides/${tumor044}/annotate-task?task=${annotateTask}&as=DH`;
+const annotateTaskViewer = `/projects/${p07}/slides/${tumor044}?task=${annotateTask}&as=DH`;
 
 async function ready(page: Page) {
   const stage = page.getByTestId("slide-stage");
@@ -213,7 +213,7 @@ test("the minimap falls back to the slide's smallest level while the thumbnail i
 test("New comment and the C key arm the comment tool from the Comments tab in annotate", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&workspace=annotate`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&mode=annotate`);
   const stage = await ready(page);
   await page.getByRole("tab", { name: "Comments" }).click();
   await page.getByRole("button", { name: /New comment/ }).click();
@@ -247,7 +247,7 @@ test("hide while panning takes the whole side panel away during a drag and bring
 });
 
 test("a tool's tooltip carries its hint once the hint was seen", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&workspace=annotate`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${rt14}&mode=annotate`);
   const stage = await ready(page);
   const comment = page.locator('[data-slot="tool-rail-button"][data-tool="comment"]');
   await comment.click();
@@ -287,7 +287,7 @@ test("outlined cells draw on the real stage and the type bar decides the current
 });
 
 test("guided review on outlined cells moves to the next cell after a type", async ({ page }) => {
-  await page.goto(`/tasks/${rt14}/guided?slide=${cellsSlide}`);
+  await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}&mode=guided`);
   await ready(page);
   const card = page.getByTestId("stage-review-objects");
   await expect(card).toHaveAttribute("data-current", "C1");
@@ -391,7 +391,7 @@ test("a result set's cells page in as outlines and its regions draw outside a ta
 test("inside an annotate task a result set's cells stay dots and a review task draws only its sample", async ({
   page,
 }) => {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?task=${annotateTask}&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?task=${annotateTask}&as=DH`);
   await ready(page);
   const cells = page.getByTestId("result-set-cells");
   await expect(cells.first()).toHaveAttribute("data-drawn", "dots", { timeout: 15_000 });

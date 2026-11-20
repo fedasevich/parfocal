@@ -7,7 +7,7 @@ const annotateTask = "00000000-0000-4000-8007-000000000021";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 const annotateOf = (issue?: string) =>
-  `/projects/${p07}/slides/${tumor044}/annotate-task?task=${annotateTask}${issue === undefined ? "" : `&issue=${issue}`}`;
+  `/projects/${p07}/slides/${tumor044}?task=${annotateTask}${issue === undefined ? "" : `&issue=${issue}`}`;
 
 async function ready(page: Page) {
   const stage = page.getByTestId("slide-stage");

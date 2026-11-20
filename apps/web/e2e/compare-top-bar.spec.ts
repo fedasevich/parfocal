@@ -10,7 +10,7 @@ test("compare opened from the rail wears the viewer's top bar and the mock's pan
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=review`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });
@@ -29,9 +29,10 @@ test("compare opened from the rail wears the viewer's top bar and the mock's pan
   const chipWidth = async () => (await chip.boundingBox())?.width ?? 0;
   await expect.poll(chipWidth).toBeGreaterThan(120);
   expect(await chipWidth()).toBeLessThan(165);
-  await expect(bar.getByTestId("workspace-switch").getByRole("radio")).toHaveText([
+  await expect(bar.getByTestId("mode-switch").getByRole("radio")).toHaveText([
     "Guided",
-    "Full viewer",
+    "Review",
+    "Annotate",
   ]);
 
   const panel = page.getByTestId("full-viewer");

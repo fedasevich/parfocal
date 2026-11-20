@@ -9,6 +9,7 @@ export function fakeViewerSceneFor(
 ): FakeViewerScene | null {
   if (livePath.test(pathname)) return search["scene"] === "streaming" ? "streaming" : null;
   if (!slidePath.test(pathname)) return null;
+  if (search["run"] === "streaming") return "streaming";
   if (search["scene"] === "running") return "running";
   return search["scene"] === "streaming" ? "streaming" : "ready";
 }

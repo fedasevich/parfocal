@@ -4,7 +4,7 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
 
 async function openReviewSlide(page: Page): Promise<Locator> {
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=look&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   return stage;

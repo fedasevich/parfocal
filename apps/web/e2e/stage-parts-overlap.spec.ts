@@ -92,7 +92,7 @@ const screens = {
     return 1;
   },
   "guided review on a cell": async (page: Page) => {
-    await page.goto(`/tasks/${rt14}/guided?slide=${cellsSlide}`);
+    await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}&mode=guided`);
     await ready(page);
     await expect(page.getByTestId("cell-type-bar")).toBeVisible();
     return 2;

@@ -22,7 +22,7 @@ test("closing the browser mid-review resumes guided review at the same object", 
 }) => {
   const before = await freshBrowser(browser, baseURL);
   const page = await before.newPage();
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&object=T2`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided&object=T2`);
   const card = page.getByTestId("stage-review-objects");
   await expect(card).toHaveAttribute("data-current", "T2", { timeout: 20_000 });
   await card.getByRole("button", { name: "Next" }).click();
@@ -35,7 +35,9 @@ test("closing the browser mid-review resumes guided review at the same object", 
   const again = await after.newPage();
   await again.goto("/");
   await again.getByRole("button", { name: "Continue ↵" }).click();
-  await expect(again).toHaveURL(new RegExp(`/tasks/${rt14}/guided\\?.*object=T3`));
+  await expect(again).toHaveURL(
+    new RegExp(`/slides/[^/?]+\\?.*object=T3.*task=${rt14}&mode=guided`),
+  );
   await expect(again.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T3", {
     timeout: 20_000,
   });

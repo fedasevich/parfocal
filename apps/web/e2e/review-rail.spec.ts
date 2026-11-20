@@ -50,7 +50,7 @@ test("the comment tool opens the comments tab", async ({ page }) => {
 test("smart select routes to Annotate with smart select picked", async ({ page }) => {
   const rail = await openViewer(page);
   await rail.getByRole("button", { name: "Smart select (S)" }).click();
-  await expect(page).toHaveURL(/\/annotate\?.*tool=smart/);
+  await expect(page).toHaveURL(/mode=annotate&tool=smart/);
   await expect(
     page.getByRole("toolbar", { name: "Tools" }).getByRole("button", { name: "Smart select (S)" }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -59,7 +59,7 @@ test("smart select routes to Annotate with smart select picked", async ({ page }
 test("the S key routes to Annotate too", async ({ page }) => {
   await openViewer(page);
   await page.keyboard.press("s");
-  await expect(page).toHaveURL(/\/annotate\?.*tool=smart/);
+  await expect(page).toHaveURL(/mode=annotate&tool=smart/);
 });
 
 test("a click on the slide in comment mode opens a thread pinned there", async ({ page }) => {

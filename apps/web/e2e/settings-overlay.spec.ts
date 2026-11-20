@@ -5,7 +5,7 @@ const tumor044 = "00000000-0000-4000-8005-000000000005";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-const live = `/projects/${p07}/slides/${tumor044}/live`;
+const live = `/projects/${p07}/slides/${tumor044}`;
 
 const settings = (page: Page) => page.getByRole("dialog", { name: "Settings" });
 
@@ -39,7 +39,7 @@ test("Settings opens over the live viewer and closes back to the same camera", a
 
   await page.keyboard.press("ControlOrMeta+,");
   await expect(settings(page)).toBeVisible();
-  await expect(page).toHaveURL(/\/slides\/[^/]+\/live\?.*settings=display/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+\?.*settings=display/);
   await expect(page.getByTestId("slide-host")).toBeAttached();
 
   await settings(page).getByRole("button", { name: "Shortcuts" }).click();
@@ -47,7 +47,7 @@ test("Settings opens over the live viewer and closes back to the same camera", a
 
   await page.mouse.click(3, 3);
   await expect(settings(page)).toHaveCount(0);
-  await expect(page).toHaveURL(/\/slides\/[^/]+\/live/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+(\?|$)/);
   await expect(page).not.toHaveURL(/settings=/);
   expect(await settledCamera(page)).toBe(before);
 });

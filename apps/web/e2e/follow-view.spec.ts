@@ -60,7 +60,7 @@ const firstAt = (samples: Sample[], camera: string) =>
 
 async function openAs(page: Page, persona: string, slide = byHand, task?: string) {
   const inTask = task === undefined ? "" : `task=${task}&`;
-  await page.goto(`/projects/${p07}/slides/${slide}/live?${inTask}as=${persona}`);
+  await page.goto(`/projects/${p07}/slides/${slide}?${inTask}as=${persona}`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await page.getByTestId("slide-host").evaluate((host) => {

@@ -10,7 +10,7 @@ test.use({ viewport: { width: 1440, height: 900 } });
 test.describe.configure({ timeout: 90_000 });
 
 async function openTaskSlide(page: Page, slideId: string, tab = "objects") {
-  await page.goto(`/projects/${p07}/slides/${slideId}/live?task=${annotateTask}&tab=${tab}&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${slideId}?task=${annotateTask}&tab=${tab}&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");

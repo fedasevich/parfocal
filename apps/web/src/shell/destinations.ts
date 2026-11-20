@@ -35,9 +35,9 @@ export const destinations = {
     taskId: string | undefined,
     scene: "picking" | "picked",
     withSlideId?: string,
-    workspace?: string,
+    mode?: string,
   ) =>
-    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, workspace, scene, with: withSlideId })}`,
+    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, mode, scene, with: withSlideId })}`,
   coSign: (projectId: string, caseId: string) => `/projects/${projectId}/cases/${caseId}/co-sign`,
   guided: (
     taskId: string,

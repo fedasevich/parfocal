@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "./a11y.ts";
 
+const p07 = "00000000-0000-4000-8003-000000000007";
+
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 
@@ -13,7 +15,7 @@ test("guided review has the mock's own panel and walks a slide to the done card"
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`);
   await expect(panel(page)).toHaveAttribute("data-ready", "true", { timeout: 25_000 });
   await page.getByRole("button", { name: "Got it, start" }).click();
   await expect(page.getByRole("toolbar", { name: "Tools" })).toHaveCount(0);

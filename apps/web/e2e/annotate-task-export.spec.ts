@@ -16,9 +16,7 @@ test("the annotate task top bar exports the slide as GeoJSON, FlatGeobuf and Par
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto(
-    `/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&tab=objects&as=DH`,
-  );
+  await page.goto(`/projects/${p07}/slides/${withResults}?task=${annotateTask}&tab=objects&as=DH`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });
@@ -35,9 +33,7 @@ test("the annotate task top bar exports the slide as GeoJSON, FlatGeobuf and Par
 
 test("the exported Parfocal JSON names its format and lists the objects", async ({ page }) => {
   test.setTimeout(90_000);
-  await page.goto(
-    `/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&tab=objects&as=DH`,
-  );
+  await page.goto(`/projects/${p07}/slides/${withResults}?task=${annotateTask}&tab=objects&as=DH`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });

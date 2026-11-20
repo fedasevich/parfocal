@@ -135,7 +135,7 @@ test("the first-week variant leads with the sample project and the checklist", a
 test("Continue lands on the exact slide and object the derived resume names", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Continue ↵" }).click();
-  await expect(page).toHaveURL(new RegExp(`/tasks/${rt14}/guided\\?slide=${a1}&object=T5$`));
+  await expect(page).toHaveURL(new RegExp(`/slides/${a1}\\?object=T5&task=${rt14}&mode=guided$`));
   await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-current", "T5", {
     timeout: 60_000,
   });

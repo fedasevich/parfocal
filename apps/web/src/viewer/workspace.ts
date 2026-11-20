@@ -1,7 +1,7 @@
 import type { RailTool } from "../screens/review/viewer-frame.tsx";
 import { annotateRail, reviewRail } from "../screens/viewer-tools/rails.ts";
 
-export const workspaces = ["review", "annotate"] as const;
+export const workspaces = ["look", "annotate"] as const;
 
 export type SlideWorkspace = (typeof workspaces)[number];
 
@@ -16,8 +16,8 @@ export type WorkspaceSetup = {
 };
 
 export const workspaceSetups: Record<SlideWorkspace, WorkspaceSetup> = {
-  review: {
-    label: "Review",
+  look: {
+    label: "Look",
     rail: reviewRail,
     restingTool: "select",
     dragBehaviour: "pan",
@@ -40,7 +40,7 @@ const lookOnly = (rail: RailTool[][]): RailTool[][] =>
     .filter((group) => group.length > 0);
 
 export const readOnlySetups: Record<SlideWorkspace, WorkspaceSetup> = {
-  review: { ...workspaceSetups.review, rail: lookOnly(reviewRail) },
+  look: { ...workspaceSetups.look, rail: lookOnly(reviewRail) },
   annotate: { ...workspaceSetups.annotate, rail: lookOnly(annotateRail), dragBehaviour: "pan" },
 };
 

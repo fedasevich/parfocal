@@ -8,7 +8,7 @@ const comparedSlide = "00000000-0000-4000-8005-000000000001";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openAs(page: Page, persona: string, slide = byHand) {
-  await page.goto(`/projects/${p07}/slides/${slide}/live?as=${persona}`);
+  await page.goto(`/projects/${p07}/slides/${slide}?as=${persona}`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });

@@ -90,7 +90,7 @@ for (const [code, sentence] of [
 ] as const) {
   test(`a refused check says ${code} as a plain sentence`, async ({ page }) => {
     await page.goto(
-      `/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&as=DH&refuse=${code}`,
+      `/projects/${p07}/slides/${withResults}?task=${annotateTask}&as=DH&refuse=${code}`,
     );
     await ready(page);
     await expect(page.getByTestId("ai-object")).toHaveCount(6);

@@ -1,14 +1,13 @@
 import { expect, type Locator, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
-const rt14 = "00000000-0000-4000-8007-000000000014";
 const tumor044 = "00000000-0000-4000-8005-000000000005";
 const tiles = 12;
 const cellsPerTile = 36;
 
 async function openStreamingSlide(page: Page): Promise<string> {
   await page.goto(
-    `/projects/${p07}/slides/${tumor044}/live?task=${rt14}&workspace=annotate&scene=streaming&tab=objects&as=DH`,
+    `/projects/${p07}/slides/${tumor044}?mode=annotate&run=streaming&tab=objects&as=DH`,
   );
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });

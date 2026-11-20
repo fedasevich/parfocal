@@ -64,8 +64,13 @@ import {
   viewerAccessOf,
   workspaceRoleOf,
 } from "./viewer-access.ts";
-import { panelTabOf, viewerModeOf, viewerPanelOf } from "./viewer-mode.ts";
-import type { SlideWorkspace } from "./workspace.ts";
+import {
+  type ModeChoice,
+  panelTabOf,
+  type ViewerMode,
+  viewerModeOf,
+  viewerPanelOf,
+} from "./viewer-mode.ts";
 
 const fakeOutlines = readBuildConfig().fakeApi !== "off";
 
@@ -73,17 +78,15 @@ export type EngineViewerProps = {
   projectId: string;
   slideId: string;
   task: string | undefined;
-  workspace: SlideWorkspace | undefined;
+  mode: ViewerMode | undefined;
   tab?: ViewerTab | undefined;
   start?: StageStart | undefined;
   object?: string | undefined;
-  guided?: boolean;
-  cells?: boolean;
   tool?: string | undefined;
   focus?: boolean;
   onFocus?: ((on: boolean) => void) | undefined;
   onOpenSlide: (slideId: string) => void;
-  onWorkspace: (workspace: SlideWorkspace) => void;
+  onMode: (mode: ModeChoice) => void;
   onTab?: ((tab: ViewerTab) => void) | undefined;
 };
 
@@ -99,17 +102,15 @@ function GuardedViewer({
   projectId,
   slideId,
   task,
-  workspace: chosen,
+  mode: chosen,
   tab: routeTab,
   start,
   object,
-  guided = false,
-  cells = false,
   tool,
   focus = false,
   onFocus,
   onOpenSlide,
-  onWorkspace,
+  onMode,
   onTab: onRouteTab,
 }: EngineViewerProps) {
   const showUi = () => onFocus?.(false);
@@ -188,10 +189,10 @@ function GuardedViewer({
     taskKind: task === undefined ? undefined : (taskDetail?.kind ?? load?.task?.kind),
     access,
     chosen,
-    guided,
-    cells,
   });
   const workspace = modeRule.workspace;
+  const guided = modeRule.mode === "guided";
+  const cells = modeRule.mode === "cells";
   const taskSlideIds = taskDetail?.slides.map((item) => item.slide_id) ?? [];
   const nextSlideId = taskSlideIds[taskSlideIds.indexOf(slideId) + 1];
   const researcher = person(taskDetail?.created_by_user_id)?.name;
@@ -426,10 +427,10 @@ function GuardedViewer({
           slideId={slideId}
           load={load}
           task={taskDetail}
-          workspace={workspace}
+          choice={modeRule.choice}
           choices={modeRule.choices}
           guided={guided}
-          onWorkspace={onWorkspace}
+          onMode={onMode}
           onOpenSlide={onOpenSlide}
           onSubmit={
             !panel.submit

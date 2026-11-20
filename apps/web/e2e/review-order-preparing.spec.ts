@@ -1,5 +1,7 @@
 import { expect, test } from "./a11y.ts";
 
+const p07 = "00000000-0000-4000-8003-000000000007";
+
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 const objectsOf = `/api/review-tasks/${rt14}/slides/${a1}/objects`;
@@ -11,7 +13,7 @@ test("a slide whose review order is still being prepared waits with a way back a
   page.on("request", (request) => {
     if (new URL(request.url()).pathname === objectsOf) polls.push(request.url());
   });
-  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&issue=preparing`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided&issue=preparing`);
   const waiting = page.getByTestId("review-order-preparing");
   await expect(waiting).toBeVisible();
   await expect(waiting.getByText(/being put in review order/)).toBeVisible();
@@ -31,7 +33,7 @@ test("a slide whose review order is still being prepared waits with a way back a
 test("the review tabs say the order is being prepared and keep the opinion closed", async ({
   page,
 }) => {
-  await page.goto(`/tasks/${rt14}/cells?slide=${a1}&issue=preparing`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=cells&issue=preparing`);
   await expect(page.getByTestId("review-order-tab-preparing")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("tab", { name: /^Opinion/ }).click();
   await expect(page.getByTestId("review-order-opinion-closed")).toBeVisible();

@@ -187,7 +187,7 @@ test("the search, result set and chips narrow the slide rows", async ({ page }) 
 test("a row opens its slide", async ({ page }) => {
   await page.goto(`/projects/${p07}`);
   await page.getByTestId("slide-row").first().getByRole("button", { name: "Open" }).click();
-  await expect(page).toHaveURL(/\/slides\/.+\/live/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+(\?|$)/);
 });
 
 test("dropping files on the project page opens the upload", async ({ page }) => {

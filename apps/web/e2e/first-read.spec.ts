@@ -20,7 +20,7 @@ test("the AI is absent before the first read, appears after it, and the first re
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.goto(`/tasks/${rt17}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt17}&mode=guided`);
   const hidden = page.locator('main[data-ai="hidden"]');
   await expect(hidden).toBeVisible();
   await expect(page.getByTestId("first-read-panel")).toContainText("Read the slide without the AI");
@@ -96,7 +96,7 @@ test("a server error from the first read neither shows the first-read step nor t
       return real(input, init);
     };
   });
-  await page.goto(`/tasks/${rt17}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt17}&mode=guided`);
   await expect(page.getByTestId("first-read-unavailable")).toBeVisible();
   await expect(page.getByTestId("first-read-panel")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
@@ -113,7 +113,7 @@ const setsOf = (page: Page, path: string) =>
 for (const [name, route, extra] of [
   ["full viewer", "", ""],
   ["paged screen", "", "&pagedCells=2000"],
-  ["live route", "/live", ""],
+  ["old live address", "/live", ""],
 ] as const) {
   test(`the ${name} of a hide-the-AI task asks for the first read before the AI shows`, async ({
     page,
@@ -138,7 +138,7 @@ test("the scene search parameter never skips the first read gate on a hide-the-A
 test("the slide and project result set lists hide the AI result of an open first read only on the task page", async ({
   page,
 }) => {
-  await page.goto(`/tasks/${rt17}/guided?slide=${a1}`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt17}&mode=guided`);
   await expect(page.getByTestId("first-read-panel")).toBeVisible();
   const slideList = `/api/slides/${a1}/result-sets`;
   const projectList = `/api/projects/${p07}/result-sets`;

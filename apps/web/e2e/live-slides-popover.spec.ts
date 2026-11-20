@@ -9,7 +9,7 @@ test.use({ viewport: { width: 1440, height: 900 } });
 const slideOf = (url: string) => /slides\/([^/?]+)/.exec(url)?.[1] ?? "";
 
 async function openA1(page: Page) {
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&as=DH`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });

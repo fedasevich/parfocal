@@ -36,7 +36,7 @@ test("To review moves with the arrows and J and K, Esc clears and Enter opens th
   await press(page, "ArrowUp");
   await expect(rows.nth(count - 1)).toHaveAttribute("aria-pressed", "true");
   await press(page, "Enter");
-  await expect(page).toHaveURL(/\/tasks\/[^/]+\/guided/);
+  await expect(page).toHaveURL(/\/slides\/[^/]+\?.*mode=guided/);
 });
 
 test("Assigned by me selects with the keys and Enter opens what the task waits for", async ({

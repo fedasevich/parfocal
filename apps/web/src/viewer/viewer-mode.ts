@@ -3,53 +3,61 @@ import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { lookOnlyLayer, type ViewerAccess } from "./viewer-access.ts";
 import { type SlideWorkspace, setupOf } from "./workspace.ts";
 
-export type ViewerMode = "look" | "annotate" | "review" | "guided" | "cells";
+export const viewerModes = ["look", "review", "guided", "cells", "annotate"] as const;
 
-export type ModeChoice = "guided" | "review" | "annotate";
+export type ViewerMode = (typeof viewerModes)[number];
+
+export type ModeChoice = Exclude<ViewerMode, "cells">;
 
 export type ModeFacts = {
   readonly hasTask: boolean;
   readonly taskKind: TaskKind | undefined;
   readonly access: ViewerAccess;
-  readonly chosen: SlideWorkspace | undefined;
-  readonly guided: boolean;
-  readonly cells: boolean;
+  readonly chosen: ViewerMode | undefined;
 };
 
 export type ModeRule = {
   readonly mode: ViewerMode;
   readonly workspace: SlideWorkspace;
+  readonly choice: ModeChoice;
   readonly choices: readonly ModeChoice[];
 };
 
-const workspaceOf: Record<ViewerMode, SlideWorkspace> = {
-  look: "review",
-  annotate: "annotate",
-  review: "review",
-  guided: "review",
-  cells: "review",
-};
+export function workspaceOf(mode: ViewerMode): SlideWorkspace {
+  return mode === "annotate" ? "annotate" : "look";
+}
 
 const rule = (mode: ViewerMode, choices: readonly ModeChoice[]): ModeRule => ({
   mode,
-  workspace: workspaceOf[mode],
+  workspace: workspaceOf(mode),
+  choice: mode === "cells" ? "review" : mode,
   choices,
 });
+
+export const noTaskChoices: readonly ModeChoice[] = ["look", "annotate"];
+
+export const reviewTaskChoices: readonly ModeChoice[] = ["guided", "review", "annotate"];
+
+const reviewTaskModes: ReadonlySet<ViewerMode> = new Set(["review", "guided", "cells", "annotate"]);
 
 export function viewerModeOf(facts: ModeFacts): ModeRule {
   const edit = facts.access.kind === "edit";
   if (!facts.hasTask) {
     if (!edit) return rule("look", []);
-    return rule(facts.chosen === "review" ? "look" : "annotate", ["review", "annotate"]);
+    return rule(facts.chosen === "look" ? "look" : "annotate", noTaskChoices);
   }
   if (facts.taskKind === "annotate") return rule("annotate", []);
-  if (facts.taskKind === undefined) return rule("review", []);
-  const reviewChoices: readonly ModeChoice[] = edit ? ["guided", "review"] : [];
-  if (facts.guided) return rule("guided", reviewChoices);
-  if (facts.cells) return rule("cells", reviewChoices);
-  if (edit && facts.chosen === "annotate")
-    return rule("annotate", ["guided", "review", "annotate"]);
-  return rule("review", reviewChoices);
+  const chosen =
+    facts.chosen !== undefined && reviewTaskModes.has(facts.chosen) ? facts.chosen : "review";
+  if (facts.taskKind === undefined)
+    return rule(chosen === "guided" || chosen === "cells" ? chosen : "review", []);
+  if (!edit) return rule(chosen === "guided" ? "guided" : "review", []);
+  return rule(chosen, reviewTaskChoices);
+}
+
+export function modeOfWorkspace(workspace: "review" | "annotate", hasTask: boolean): ViewerMode {
+  if (workspace === "annotate") return "annotate";
+  return hasTask ? "review" : "look";
 }
 
 export type PanelFacts = {
@@ -71,7 +79,7 @@ export type ViewerPanel = {
   readonly comment: boolean;
 };
 
-const reviewModes: ReadonlySet<ViewerMode> = new Set(["review", "guided", "cells"]);
+const reviewingModes: ReadonlySet<ViewerMode> = new Set(["review", "guided", "cells"]);
 
 function stageReadOnly(access: ViewerAccess, taskKind: TaskKind | undefined): boolean {
   if (taskKind === "annotate") return lookOnlyLayer(access);
@@ -111,10 +119,10 @@ export function viewerPanelOf(
   const tools =
     mode === "guided"
       ? []
-      : setupOf(workspaceOf[mode], readOnly).rail.flatMap((group) =>
+      : setupOf(workspaceOf(mode), readOnly).rail.flatMap((group) =>
           group.map((item) => item.tool),
         );
-  const reviewing = reviewModes.has(mode) && facts.taskKind === "review";
+  const reviewing = reviewingModes.has(mode) && facts.taskKind === "review";
   return {
     tabs,
     first: firstTab(mode, facts),

@@ -16,7 +16,7 @@ test("a slide read in place opens through the remote route and wears the remote 
   page,
 }) => {
   const reads = remoteReads(page);
-  await page.goto(`/projects/${project}/slides/remote-1/live`);
+  await page.goto(`/projects/${project}/slides/remote-1`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 15_000,
   });
@@ -27,7 +27,7 @@ test("a slide read in place opens through the remote route and wears the remote 
 });
 
 test("a remote slide whose source is down opens from the cache and says so", async ({ page }) => {
-  await page.goto(`/projects/${project}/slides/remote-offline-1/live`);
+  await page.goto(`/projects/${project}/slides/remote-offline-1`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 15_000,
   });
@@ -38,7 +38,7 @@ test("a remote slide whose source is down opens from the cache and says so", asy
 });
 
 test("an uploaded slide shows neither the remote tag nor the offline notice", async ({ page }) => {
-  await page.goto(`/projects/${project}/slides/s-1/live`);
+  await page.goto(`/projects/${project}/slides/s-1`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 15_000,
   });
@@ -52,7 +52,7 @@ test("the owner copies a remote slide into Parfocal from the viewer", async ({ p
     const { pathname } = new URL(request.url());
     if (request.method() === "POST" && pathname.endsWith("/copy-in")) asked.push(pathname);
   });
-  await page.goto(`/projects/${ownedProject}/slides/remote-1/live`);
+  await page.goto(`/projects/${ownedProject}/slides/remote-1`);
   const copy = page.getByTestId("copy-into-parfocal");
   await expect(copy).toBeEnabled({ timeout: 15_000 });
   await copy.click();
@@ -61,6 +61,6 @@ test("the owner copies a remote slide into Parfocal from the viewer", async ({ p
 });
 
 test("a remote slide whose source is down cannot be copied now", async ({ page }) => {
-  await page.goto(`/projects/${ownedProject}/slides/remote-offline-1/live`);
+  await page.goto(`/projects/${ownedProject}/slides/remote-offline-1`);
   await expect(page.getByTestId("copy-into-parfocal")).toBeDisabled({ timeout: 15_000 });
 });
