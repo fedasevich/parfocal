@@ -8,11 +8,13 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Your steps today
 
-None. All five steps of 2026-11-19 are done and checked.
+- **Delete the US bucket `parfocal-dev`**, once the lead has merged OPS-037 (nothing reads the US bucket) into main. Every reader now uses `parfocal-dev-eu`, which holds every object the US bucket had. The delete cannot be undone. It frees 38.1 GB in 3,489 objects, about $0.57 a month, and costs nothing, since R2 deletes are free. Three steps, about ten minutes plus the dashboard's background emptying:
+  1. Remove the bucket lock, because a locked bucket cannot be emptied: `bash infra/tofu/tofu.sh dev apply -target=cloudflare_r2_bucket_lock.retired_us`. The plan shows 1 to destroy.
+  2. In the Cloudflare dashboard open R2, `parfocal-dev`, Settings, and select Empty under Empty Bucket. Wait until it shows the bucket empty.
+  3. `bash infra/tofu/tofu.sh dev apply`. The plan shows 0 to add, 0 to change, 4 to destroy: the bucket `parfocal-dev`, its CORS rule, its lifecycle rules and the US read-only token `parfocal-fixtures-read`. Then delete the two GitHub secrets that held that token: `gh secret delete PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID` and `gh secret delete PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY`. If you like, also delete the account token "parfocal-dev local" in Cloudflare, Manage account, Account API tokens, since it reaches only that bucket.
 
 ## Later
 
-- **The US bucket `parfocal-dev`.** It still serves CI's test fixtures and local dev, so deleting it now would break CI. OPS-037 (nothing reads the US bucket) moves the readers to the EU bucket first, then asks you for one delete. It saves about $0.57 a month.
 - **Production for the first real user.** Say when, and the lead books the deploy session.
 
 ## Open questions

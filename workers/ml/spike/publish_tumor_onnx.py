@@ -25,7 +25,7 @@ LOCAL_ENDPOINT = "http://127.0.0.1:9000"
 
 def r2_location(bucket: str) -> StorageLocation:
     return StorageLocation(
-        endpoint=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
+        endpoint=f"https://{os.environ['R2_ACCOUNT_ID']}.eu.r2.cloudflarestorage.com",
         region="auto",
         bucket=bucket,
         access_key_id=os.environ["R2_ACCESS_KEY_ID"],

@@ -21,11 +21,11 @@ test("matches the published AWS presigned URL example", () => {
   );
 });
 
-test("signs the fixture key under the fixtures prefix of parfocal-dev", () => {
-  const mirror = { endpoint: "https://account.r2.cloudflarestorage.com", ...awsExample };
+test("signs the fixture key under the fixtures prefix of parfocal-dev-eu", () => {
+  const mirror = { endpoint: "https://account.eu.r2.cloudflarestorage.com", ...awsExample };
   const url = new URL(mirrorUrl(mirror, "CMU-1 (copy).svs", { now: new Date(0) }));
-  assert.equal(url.host, "account.r2.cloudflarestorage.com");
-  assert.equal(url.pathname, "/parfocal-dev/fixtures/CMU-1%20%28copy%29.svs");
+  assert.equal(url.host, "account.eu.r2.cloudflarestorage.com");
+  assert.equal(url.pathname, "/parfocal-dev-eu/fixtures/CMU-1%20%28copy%29.svs");
   assert.equal(
     url.searchParams.get("X-Amz-Credential"),
     "AKIAIOSFODNN7EXAMPLE/19700101/auto/s3/aws4_request",

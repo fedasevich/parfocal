@@ -45,7 +45,7 @@ It needs three things on the machine:
 | `dev`, `staging`, `prod` | `app_origin`, `slide_bucket`, `zitadel_issuer`, `zitadel_client_id` (sensitive), `zitadel_client_secret` (sensitive) |
 | `global` | `zone_id`, `zitadel_issuer`, `zitadel_project_id` |
 
-Until OPS-014 the deployed app keeps its slides in `parfocal-dev`, not in the `slide_bucket` of `prod` (ADR 0293). Read them with `tofu.sh <root> output -json` and pipe the values straight into `.env`, a Modal secret or a Wrangler secret without printing.
+Until OPS-014 the deployed app keeps its slides in `parfocal-dev-eu`, not in the `slide_bucket` of `prod` (ADR 0293). Read them with `tofu.sh <root> output -json` and pipe the values straight into `.env`, a Modal secret or a Wrangler secret without printing.
 
 ## Policy check
 

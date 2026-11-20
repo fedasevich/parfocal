@@ -1,6 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
 
-export const fixtureBucket = "parfocal-dev";
+export const fixtureBucket = "parfocal-dev-eu";
 export const fixturePrefix = "fixtures/";
 
 export type Credentials = {

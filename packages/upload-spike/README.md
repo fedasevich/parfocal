@@ -45,7 +45,7 @@ The container is started with `--rm` and removed with its volume when the run en
 
 ## Running it against R2
 
-`--target r2` repeats the run on the `parfocal-dev` bucket for INGEST-028 (upload protocol check on the R2 dev bucket). It reads `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` from `--env-file` (the repository's `.env` by default), refuses any bucket but `parfocal-dev`, and reads the bucket's CORS and lifecycle settings through the Cloudflare API with `CLOUDFLARE_API_TOKEN` and `R2_ACCOUNT_ID`, because the object token cannot. It never writes bucket settings, which belong to `infra/tofu`.
+`--target r2` repeats the run on the `parfocal-dev-eu` bucket for INGEST-028 (upload protocol check on the R2 dev bucket). It reads `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` from `--env-file` (the repository's `.env` by default), refuses any bucket but `parfocal-dev-eu`, needs the EU endpoint in `R2_ENDPOINT` and a key for that bucket, and reads the bucket's CORS and lifecycle settings through the Cloudflare API with `CLOUDFLARE_API_TOKEN` and `R2_ACCOUNT_ID`, because the object token cannot. It never writes bucket settings, which belong to `infra/tofu`.
 
 ```
 pnpm --filter @parfocal/upload-spike spike -- --target r2

@@ -47,7 +47,7 @@ async function drawThroughWorker(page: Page): Promise<string> {
     );
   }
   const fitted = await stage.getAttribute("data-fitted-ms");
-  return `The viewer drew ${sampleSlide} from the parfocal-dev bucket in ${fitted} ms after ${ranged} ranged reads through the edge Worker at ${page.url()}`;
+  return `The viewer drew ${sampleSlide} from the parfocal-dev-eu bucket in ${fitted} ms after ${ranged} ranged reads through the edge Worker at ${page.url()}`;
 }
 
 const root = fileURLToPath(new URL("../..", import.meta.url));

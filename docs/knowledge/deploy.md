@@ -107,7 +107,7 @@ After the deploy, start one map on a small SVS from the app and read `modal app 
 
 ## The shared bucket
 
-The deployed app reads and writes the existing bucket `parfocal-dev`, the only slide store until OPS-014 (prepare production for the first real user) moves production to `parfocal-prod`. `slide_bucket` in `environments.py` is the single setting to change. Local runs use MinIO and the bucket `parfocal-local` by default, so they stay off the deployed objects. Two things do reach `parfocal-dev` from a Mac: checks that use the `R2_*` settings, and `wrangler dev --remote` with the top-level binding. Give such checks their own key prefix and delete what they wrote.
+The deployed app reads and writes the existing bucket `parfocal-dev`, the only slide store until OPS-014 (prepare production for the first real user) moves production to `parfocal-prod`. `slide_bucket` in `environments.py` is the single setting to change. Local runs use MinIO and the bucket `parfocal-local` by default, so they stay off the deployed objects. Since OPS-037 nothing reads `parfocal-dev`. Two things reach `parfocal-dev-eu` from a Mac: checks that use the `R2_*` settings with the EU endpoint, and the remote binding of the top-level Wrangler config under `make dev`. Give such checks their own key prefix and delete what they wrote.
 
 ## Postgres version
 
