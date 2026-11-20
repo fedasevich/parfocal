@@ -52,15 +52,32 @@ export const gpuWaits = {
 
 export const serverGpuCancel: GpuCancel = (call) => cancelGpuCall(call);
 
+export interface GpuWaitOptions {
+  readonly showAfterMs?: number;
+  readonly signal?: AbortSignal;
+  readonly now?: () => number;
+}
+
+export const gpuWaitTickMs = 1000;
+
 export async function untilGpuAnswers<T>(
   kind: GpuWaitKind,
   attempt: GpuAttempt<T>,
   cancelCall: GpuCancel = serverGpuCancel,
+  options: GpuWaitOptions = {},
 ): Promise<T> {
   const id = nextId++;
   const controller = new AbortController();
+  const now = options.now ?? (() => Date.now());
+  const started = now();
+  let serverWaited = 0;
   let call: string | null = null;
   let cancelled = false;
+  let ticker: ReturnType<typeof setInterval> | null = null;
+  const show = () => {
+    const waitedSeconds = Math.max(serverWaited, (now() - started) / 1000);
+    put({ id, kind, waitedSeconds, cancel });
+  };
   const cancel = () => {
     if (cancelled) return;
     cancelled = true;
@@ -68,6 +85,16 @@ export async function untilGpuAnswers<T>(
     drop(id);
     if (call !== null) void cancelCall(call).catch(() => undefined);
   };
+  const reveal =
+    options.showAfterMs === undefined
+      ? null
+      : setTimeout(() => {
+          show();
+          ticker = setInterval(show, gpuWaitTickMs);
+        }, options.showAfterMs);
+  const outside = options.signal;
+  if (outside?.aborted) cancel();
+  outside?.addEventListener("abort", cancel);
   try {
     for (;;) {
       if (cancelled) throw new GpuCallCancelledError();
@@ -75,11 +102,15 @@ export async function untilGpuAnswers<T>(
       if (cancelled) throw new GpuCallCancelledError();
       if ("answered" in outcome) return outcome.answered;
       call = outcome.waiting.call;
-      put({ id, kind, waitedSeconds: outcome.waiting.waited_seconds, cancel });
+      serverWaited = outcome.waiting.waited_seconds;
+      show();
     }
   } catch (error) {
     throw cancelled ? new GpuCallCancelledError() : error;
   } finally {
+    if (reveal !== null) clearTimeout(reveal);
+    if (ticker !== null) clearInterval(ticker);
+    outside?.removeEventListener("abort", cancel);
     drop(id);
   }
 }

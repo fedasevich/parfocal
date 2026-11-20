@@ -49,7 +49,7 @@ export function oneClickTiers(gpu: boolean): Tier[] {
     {
       name: tierNames.best,
       description:
-        "The most accurate outlines. The Parfocal server reads the slide, your clicks are answered here. While the server starts or does not answer, Good outlines the click.",
+        "The most accurate outlines. The Parfocal server reads the slide, your clicks are answered here. While its GPU starts you see the wait. If it cannot answer, Good outlines the click and says why.",
       model: `PathoSAM ViT-L · on the Parfocal server, else ViT-B on this computer · ${megabytes(serverDecoderBytes())} and up to ${browser}`,
       speed: 1,
       colour: "var(--ok)",

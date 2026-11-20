@@ -75,6 +75,25 @@ test("cancel aborts the poll, drops the wait and tells the server", async () => 
   assert.deepEqual(gpuWaits.current(), []);
 });
 
+test("a held first call shows its wait early and an outside abort cancels it", async () => {
+  const outside = new AbortController();
+  const pending = untilGpuAnswers(
+    "encoder",
+    (_call, signal) =>
+      new Promise<GpuOutcome<string>>((_resolve, reject) => {
+        signal.addEventListener("abort", () => reject(new Error("aborted")));
+      }),
+    () => Promise.resolve(),
+    { showAfterMs: 5, signal: outside.signal },
+  );
+  assert.deepEqual(gpuWaits.current(), []);
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(gpuWaits.current()[0]?.kind, "encoder");
+  outside.abort();
+  await assert.rejects(pending, GpuCallCancelledError);
+  assert.deepEqual(gpuWaits.current(), []);
+});
+
 test("the view tile poster sends the token back and reads cells after a 202", async () => {
   const urls: string[] = [];
   const replies = [

@@ -5,10 +5,12 @@ import type { SamEncoded } from "@parfocal/viewer-engine";
 import type { PresetPatchReader } from "../src/aiseg/patch-reader.ts";
 import { serverEmbeddingValues } from "../src/aiseg/server-embeddings.ts";
 import {
+  BestRefusedError,
   createEncoderSource,
   createViewEmbeddings,
   type EncoderSource,
   postViewEmbedding,
+  type ViewAnswer,
   type ViewEmbeddingPost,
   type ViewSam,
   viewEncoder,
@@ -16,6 +18,7 @@ import {
   withSeenLevels,
   withViewEmbeddings,
 } from "../src/aiseg/view-embeddings.ts";
+import { GpuCallCancelledError, gpuWaits } from "../src/gpu/gpu-wait.ts";
 
 const slideId = "6f1c0c1e-0000-4000-8000-000000000001";
 const slide = { width: 8192, height: 6144 };
@@ -29,12 +32,9 @@ function halves(): ArrayBuffer {
   return data.buffer;
 }
 
-function clock(start = 1000) {
-  let at = start;
-  return { now: () => at, pass: (ms: number) => (at += ms) };
-}
-
-const never = () => new Promise<void>(() => undefined);
+const first = (answer: ViewAnswer) => ("embedding" in answer ? answer.embedding[0] : null);
+const reason = (answer: ViewAnswer) => ("fallback" in answer ? answer.fallback : null);
+const tick = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function recordingSam(failAdopt = false) {
   const calls: string[] = [];
@@ -60,61 +60,66 @@ describe("live ViT-L view embeddings", () => {
         asked.push(sent);
         return Promise.resolve(halves());
       },
-      wait: never,
     });
-    const embedding = await views.embedding(slideId, view);
-    assert.equal(embedding?.length, serverEmbeddingValues);
-    assert.equal(embedding?.[0], 0.5);
+    assert.equal(first(await views.embedding(slideId, view)), 0.5);
     assert.deepEqual(asked, [view]);
   });
 
-  it("gives up on a slow server, skips it for a while and comes back when it answers", async () => {
-    const time = clock();
+  it("waits for a slow server past the old six seconds and answers once it is warm", async () => {
     let release: (body: ArrayBuffer) => void = () => undefined;
-    let posts = 0;
-    const post: ViewEmbeddingPost = () => {
-      posts += 1;
-      return posts === 1
-        ? new Promise((resolve) => {
-            release = resolve;
-          })
-        : Promise.resolve(halves());
-    };
     const views = createViewEmbeddings({
-      post,
-      now: time.now,
-      wait: () => Promise.resolve(),
-      retryAfterMs: 20_000,
+      post: () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+      giveUpMs: 1000,
     });
-    assert.equal(await views.embedding(slideId, view), null);
-    assert.equal(await views.embedding(slideId, view), null);
-    assert.equal(posts, 1);
+    const pending = views.embedding(slideId, view);
+    await tick(20);
     release(halves());
-    await Promise.resolve();
-    await Promise.resolve();
-    const warm = createViewEmbeddings({ post, now: time.now, wait: never });
-    assert.equal((await warm.embedding(slideId, view))?.[0], 0.5);
-    assert.equal((await views.embedding(slideId, view)) === null, false);
+    assert.equal(first(await pending), 0.5);
   });
 
-  it("skips a failing server until the retry time passes", async () => {
-    const time = clock();
+  it("asks again on the next click after a failure, with no silent pause", async () => {
     let posts = 0;
     const views = createViewEmbeddings({
       post: () => {
         posts += 1;
-        return posts === 1 ? Promise.reject(new Error("503")) : Promise.resolve(halves());
+        return posts === 1
+          ? Promise.reject(new BestRefusedError("offline"))
+          : Promise.resolve(halves());
       },
-      now: time.now,
-      wait: never,
-      retryAfterMs: 20_000,
     });
-    assert.equal(await views.embedding(slideId, view), null);
-    time.pass(19_000);
-    assert.equal(await views.embedding(slideId, view), null);
-    assert.equal(posts, 1);
-    time.pass(2000);
-    assert.equal((await views.embedding(slideId, view))?.[0], 0.5);
+    assert.equal(reason(await views.embedding(slideId, view)), "offline");
+    assert.equal(first(await views.embedding(slideId, view)), 0.5);
+    assert.equal(posts, 2);
+  });
+
+  it("names why Best fell back", async () => {
+    const answer = async (post: ViewEmbeddingPost, giveUpMs = 1000) =>
+      reason(await createViewEmbeddings({ post, giveUpMs }).embedding(slideId, view));
+    assert.equal(await answer(() => Promise.reject(new BestRefusedError("refused"))), "refused");
+    assert.equal(await answer(() => Promise.reject(new GpuCallCancelledError())), "cancelled");
+    assert.equal(await answer(() => Promise.reject(new TypeError("network"))), "offline");
+    assert.equal(await answer(() => Promise.resolve(new ArrayBuffer(12))), "refused");
+    const hanging: ViewEmbeddingPost = (_, __, signal) =>
+      new Promise((_resolve, reject) =>
+        signal.addEventListener("abort", () => reject(new GpuCallCancelledError())),
+      );
+    assert.equal(await answer(hanging, 10), "gave-up");
+  });
+
+  it("stops every open call when Smart select closes", async () => {
+    const views = createViewEmbeddings({
+      post: (_, __, signal) =>
+        new Promise((_resolve, reject) =>
+          signal.addEventListener("abort", () => reject(new GpuCallCancelledError())),
+        ),
+      giveUpMs: 60_000,
+    });
+    const pending = views.embedding(slideId, view);
+    views.close();
+    assert.equal(reason(await pending), "cancelled");
   });
 
   it("polls a waiting server with the call token until the embedding arrives", async () => {
@@ -131,7 +136,7 @@ describe("live ViT-L view embeddings", () => {
       },
       () => Promise.resolve(),
     );
-    const body = await post(slideId, view);
+    const body = await post(slideId, view, new AbortController().signal);
     assert.equal(body.byteLength, serverEmbeddingValues * 2);
     assert.deepEqual(urls, [
       `/api/slides/${slideId}/embeddings/view`,
@@ -139,34 +144,50 @@ describe("live ViT-L view embeddings", () => {
     ]);
   });
 
-  it("refuses a short body", async () => {
-    const views = createViewEmbeddings({
-      post: () => Promise.resolve(new ArrayBuffer(12)),
-      wait: never,
-    });
-    assert.equal(await views.embedding(slideId, view), null);
+  it("shows the GPU wait while the first answer is still held and stops when it comes", async () => {
+    let release: (response: Response) => void = () => undefined;
+    const post = postViewEmbedding(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+      () => Promise.resolve(),
+      5,
+    );
+    const pending = post(slideId, view, new AbortController().signal);
+    await tick(30);
+    assert.deepEqual(
+      gpuWaits.current().map((wait) => wait.kind),
+      ["encoder"],
+    );
+    release(new Response(halves(), { status: 200, headers: { "Parfocal-Encoder": viewEncoder } }));
+    await pending;
+    assert.deepEqual(gpuWaits.current(), []);
   });
 
-  it("posts the view as JSON and refuses another encoder's answer", async () => {
+  it("posts the view as JSON and tells a refusal from an offline GPU", async () => {
     const seen: { url: string; init: RequestInit | undefined }[] = [];
     const sent = (init: RequestInit | undefined) =>
       typeof init?.body === "string" ? (JSON.parse(init.body) as unknown) : null;
     const answer = (encoder: string) =>
       new Response(halves(), { status: 200, headers: { "Parfocal-Encoder": encoder } });
     let encoder = viewEncoder;
+    const signal = new AbortController().signal;
     const post = postViewEmbedding((input, init) => {
       seen.push({ url: typeof input === "string" ? input : "", init });
       return Promise.resolve(answer(encoder));
     });
-    const body = await post(slideId, view);
+    const body = await post(slideId, view, signal);
     assert.equal(body.byteLength, serverEmbeddingValues * 2);
     assert.equal(seen[0]?.url, `/api/slides/${slideId}/embeddings/view`);
     assert.equal(seen[0]?.init?.method, "POST");
     assert.deepEqual(sent(seen[0]?.init), view);
     encoder = "pathosam-vit-b-histopathology-fp32";
-    await assert.rejects(post(slideId, view));
-    const refused = postViewEmbedding(() => Promise.resolve(new Response("", { status: 503 })));
-    await assert.rejects(refused(slideId, view));
+    await assert.rejects(post(slideId, view, signal), { reason: "refused" });
+    const status = (code: number) =>
+      postViewEmbedding(() => Promise.resolve(new Response("", { status: code })));
+    await assert.rejects(status(503)(slideId, view, signal), { reason: "offline" });
+    await assert.rejects(status(404)(slideId, view, signal), { reason: "refused" });
   });
 });
 
@@ -190,7 +211,7 @@ describe("Best outlines with the server embedding and falls back to the browser"
   const pixels = () => new Float32Array(4);
 
   function wrapped(
-    answer: Float32Array<ArrayBuffer> | null | "throw",
+    answer: ViewAnswer | "throw",
     options: { failAdopt?: boolean; downsample?: number | undefined } = {},
   ) {
     const { sam, calls } = recordingSam(options.failAdopt);
@@ -212,28 +233,40 @@ describe("Best outlines with the server embedding and falls back to the browser"
   }
 
   it("adopts the ViT-L embedding and never runs the browser encoder", async () => {
-    const { best, calls, asked, sources } = wrapped(new Float32Array(8).fill(0.5));
+    const { best, calls, asked, sources } = wrapped({ embedding: new Float32Array(8).fill(0.5) });
     await best.encode(id, pixels());
     assert.deepEqual(calls, [`adopt ${id} vit-l 0.5`]);
     assert.deepEqual(asked, [view]);
-    assert.deepEqual(sources, ["server"]);
+    assert.deepEqual(sources, ["asking", "server"]);
   });
 
-  it("encodes in the browser when the server has no answer, throws or the decoder is missing", async () => {
-    for (const { best, calls, sources } of [
-      wrapped(null),
-      wrapped("throw"),
-      wrapped(new Float32Array(8), { failAdopt: true }),
-      wrapped(new Float32Array(8), { downsample: undefined }),
-    ]) {
+  it("encodes in the browser and says why when the server cannot answer", async () => {
+    for (const [answer, options, said] of [
+      [{ fallback: "refused" }, {}, ["asking", "refused"]],
+      [{ fallback: "cancelled" }, {}, ["asking", "cancelled"]],
+      ["throw", {}, ["asking", "unsendable"]],
+      [{ embedding: new Float32Array(8) }, { failAdopt: true }, ["asking", "unsendable"]],
+      [{ embedding: new Float32Array(8) }, { downsample: undefined }, ["unsendable"]],
+    ] as const) {
+      const { best, calls, sources } = wrapped(answer, options);
       await best.encode(id, pixels());
       assert.equal(calls.at(-1), `encode ${id}`);
-      assert.deepEqual(sources, ["browser"]);
+      assert.deepEqual(sources, said);
     }
   });
 
+  it("lets the session forget a Good stand in only when asking Best again can help", async () => {
+    const evicted = async (answer: ViewAnswer) =>
+      (await wrapped(answer).best.encode(id, pixels())).evicted;
+    for (const fallback of ["offline", "gave-up", "cancelled"] as const) {
+      assert.deepEqual(await evicted({ fallback }), [id]);
+    }
+    assert.deepEqual(await evicted({ fallback: "refused" }), []);
+    assert.deepEqual(await evicted({ embedding: new Float32Array(8) }), []);
+  });
+
   it("leaves ids of other slides and of region passes to the browser without a server call", async () => {
-    const { best, calls, asked, sources } = wrapped(new Float32Array(8));
+    const { best, calls, asked, sources } = wrapped({ embedding: new Float32Array(8) });
     await best.encode("region:1:0", pixels());
     await best.encode(`${slideId}:3:0|0|0|512|512`, pixels());
     assert.deepEqual(calls, ["encode region:1:0", `encode ${slideId}:3:0|0|0|512|512`]);
@@ -257,11 +290,11 @@ describe("Best outlines with the server embedding and falls back to the browser"
     const heard: EncoderSource[] = [];
     const stop = signal.subscribe((source) => heard.push(source));
     assert.equal(signal.get(), null);
-    signal.set("browser");
+    signal.set("offline");
     signal.set("server");
     stop();
-    signal.set("browser");
-    assert.deepEqual(heard, ["browser", "server"]);
-    assert.equal(signal.get(), "browser");
+    signal.set("cancelled");
+    assert.deepEqual(heard, ["offline", "server"]);
+    assert.equal(signal.get(), "cancelled");
   });
 });
