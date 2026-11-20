@@ -188,7 +188,11 @@ async def upload_into(
         connection,
         cast(
             "Any",
-            SimpleNamespace(upload_max_bytes=SEED_MAX_BYTES, upload_part_bytes=SEED_PART_BYTES),
+            SimpleNamespace(
+                upload_max_bytes=SEED_MAX_BYTES,
+                upload_part_bytes=SEED_PART_BYTES,
+                project_storage_allowance_bytes=None,
+            ),
         ),
         cast("Any", NoMultipart()),
     )
