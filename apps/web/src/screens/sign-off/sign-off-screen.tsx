@@ -568,7 +568,7 @@ function blockersOf(summary: SignOffSummary, nameOf: (userId: string) => string)
   if (pending > 0) {
     list.push({
       key: "reviews",
-      title: t`${pending} reviews not submitted`,
+      title: pending === 1 ? t`1 review not submitted` : t`${pending} reviews not submitted`,
       sub: andJoin(
         summary.reviews.behind.map(
           (row) => t`${nameOf(row.user_id)} has ${plural(row.slides_left, "slide")} left`,

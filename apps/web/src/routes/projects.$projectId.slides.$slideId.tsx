@@ -79,6 +79,7 @@ function SlideView() {
         })
       }
       onMode={(mode) => onSearch({ mode })}
+      onModeCorrect={(mode) => onSearch({ mode })}
       onTab={(tab) => onSearch({ tab })}
     />
   );

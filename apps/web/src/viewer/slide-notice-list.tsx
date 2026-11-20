@@ -8,6 +8,7 @@ import { andJoin } from "../screens/format.ts";
 import { resultSetStates } from "./result-set-state.ts";
 import { type SlideNoticeKind, slideNoticesOf } from "./slide-notices.ts";
 import type { SlideStorageNote } from "./tile-grant.ts";
+import type { ViewerMode } from "./viewer-mode.ts";
 
 type SlideNoticeListProps = {
   storage: SlideStorageNote | null;
@@ -17,7 +18,10 @@ type SlideNoticeListProps = {
   slideLabel: string;
   onNext: (() => void) | null;
   onAsk: () => void;
+  modeFallback?: ModeFallback | undefined;
 };
+
+export type ModeFallback = { readonly asked: ViewerMode; readonly shown: ViewerMode };
 
 function Line({
   kind,
@@ -60,20 +64,37 @@ export function SlideNoticeList({
   slideLabel,
   onNext,
   onAsk,
+  modeFallback,
 }: SlideNoticeListProps) {
   const { t } = useLingui();
+  const modeWords: Record<ViewerMode, string> = {
+    look: t`Look`,
+    review: t`Review`,
+    guided: t`Guided`,
+    cells: t`Cells`,
+    annotate: t`Annotate`,
+  };
   const states = resultSetStates(resultSets);
   const kinds = slideNoticesOf({
     remoteOffline: storage?.storage === "remote" && storage.offline,
     noResult,
     resultSets: states,
     micronsPerPixel,
+    modeFallback: modeFallback !== undefined,
   });
   if (kinds.length === 0) return null;
   const failed = states?.failed ?? [];
   const importing = states?.importing ?? [];
   const line = (kind: SlideNoticeKind) => {
     switch (kind) {
+      case "mode-fallback":
+        return (
+          <Line key={kind} kind={kind} icon="warn" tone="dim" testId="mode-fallback">
+            {modeFallback?.asked === "cells"
+              ? t`This slide has no cell sample, so it opened in ${modeWords[modeFallback.shown]}.`
+              : t`This slide cannot open in ${modeWords[modeFallback?.asked ?? "review"]} here, so it opened in ${modeWords[modeFallback?.shown ?? "review"]}.`}
+          </Line>
+        );
       case "remote-offline":
         return (
           <Line key={kind} kind={kind} icon="link" tone="warn" testId="remote-offline">

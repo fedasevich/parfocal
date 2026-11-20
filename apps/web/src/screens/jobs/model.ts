@@ -80,18 +80,15 @@ export const jobIcon = (job: MyJob): JobIcon =>
 
 export type JobTarget =
   | { kind: "job"; projectId: string; jobId: string }
-  | { kind: "upload"; projectId: string; scene: "progress" | "done" }
+  | { kind: "upload"; projectId: string; scene: "progress" }
   | { kind: "project"; projectId: string }
   | { kind: "slide"; projectId: string; slideId: string };
 
 export function jobTarget(job: MyJob, newestUploadId: string | undefined): JobTarget {
   if (job.kind === "model-run") return { kind: "job", projectId: job.project.id, jobId: job.id };
   if (job.id !== newestUploadId) return { kind: "project", projectId: job.project.id };
-  return {
-    kind: "upload",
-    projectId: job.project.id,
-    scene: isRunning(job) ? "progress" : "done",
-  };
+  if (!isRunning(job)) return { kind: "job", projectId: job.project.id, jobId: job.id };
+  return { kind: "upload", projectId: job.project.id, scene: "progress" };
 }
 
 export function finishedTarget(job: MyJob): JobTarget {

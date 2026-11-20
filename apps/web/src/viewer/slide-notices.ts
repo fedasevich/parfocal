@@ -1,6 +1,7 @@
 import type { ResultSetStates } from "./result-set-state.ts";
 
 export const slideNoticeOrder = [
+  "mode-fallback",
   "remote-offline",
   "no-result",
   "result-failed",
@@ -15,10 +16,13 @@ export type SlideNoticeFacts = {
   readonly noResult: boolean;
   readonly resultSets: ResultSetStates | null;
   readonly micronsPerPixel: number | null | undefined;
+  readonly modeFallback?: boolean | undefined;
 };
 
 function shown(kind: SlideNoticeKind, facts: SlideNoticeFacts): boolean {
   switch (kind) {
+    case "mode-fallback":
+      return facts.modeFallback === true;
     case "remote-offline":
       return facts.remoteOffline;
     case "no-result":

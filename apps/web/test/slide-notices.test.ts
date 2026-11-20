@@ -21,6 +21,7 @@ test("every slide kind notice comes in one fixed order", () => {
       noResult: true,
       resultSets: { importing: ["Lymph v2"], failed: ["Lymph v1"] },
       micronsPerPixel: null,
+      modeFallback: true,
     }),
     slideNoticeOrder,
   );

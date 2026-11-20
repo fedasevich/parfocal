@@ -1,4 +1,4 @@
-import { delay, type RequestHandler } from "msw";
+import { delay, HttpResponse, http, type RequestHandler } from "msw";
 import {
   getCreateAnnouncementMockHandler,
   getEndAnnouncementMockHandler,
@@ -29,6 +29,7 @@ import type {
   SearchHit,
   SlideRow,
   State,
+  Target,
   TaskStates,
   TaskStatus,
 } from "../generated/api.ts";
@@ -217,6 +218,42 @@ const targetOf = (item: ScenarioNotification): Pick<InboxItem, "target_kind" | "
   }
   return { target_kind: "job", target_id: item.id };
 };
+
+const openTargetOf = (item: ScenarioNotification): Target | null => {
+  const project_id = projectByCode("P07").id;
+  const slide_id = slideByIndex(1).id;
+  const onSlide = { project_id, slide_id, task_id: taskIdOf("RT-14") };
+  const origin = { route: "task" as const, project_id, task_id: taskIdOf("RT-14") };
+  if (item.onDecision) {
+    return { kind: "decision", ...onSlide, object_id: item.objectId ?? null, origin };
+  }
+  if (item.kind === "mention" || item.kind === "reply") {
+    return { kind: "thread", ...onSlide, object_id: item.objectId ?? null, origin };
+  }
+  if (item.kind === "task-assigned") {
+    return { kind: "task", project_id, task_id: taskIdOf("RT-14"), origin: { route: "my-work" } };
+  }
+  if (item.kind === "task-signed-off") {
+    return { kind: "evaluation", project_id, task_id: taskIdOf("RT-09"), origin };
+  }
+  if (item.kind === "workspace-access-asked") return null;
+  return { kind: "project", project_id, origin: { route: "home" } };
+};
+
+const notificationTargetHandler = () =>
+  http.get("*/api/me/notifications/:notificationId/target", ({ params }) => {
+    const item = notifications.find(
+      (candidate) => candidate.id === params.notificationId && candidate.to === fakeView().viewer,
+    );
+    if (item === undefined) {
+      return HttpResponse.json({ status: 404, code: "target-gone" }, { status: 404 });
+    }
+    const target = openTargetOf(item);
+    if (target === null) {
+      return HttpResponse.json({ status: 409, code: "target-not-available" }, { status: 409 });
+    }
+    return HttpResponse.json(target);
+  });
 
 const notificationKinds = [
   "mention",
@@ -632,6 +669,7 @@ export function workHandlers(): RequestHandler[] {
     }),
     getListNotificationsMockHandler(({ request }) => inbox.list(new URL(request.url))),
     getGetNotificationCountsMockHandler(() => inbox.counts()),
+    notificationTargetHandler(),
     getMarkNotificationsReadMockHandler(async ({ request }) =>
       inbox.mark((await request.json()) as MarkRead),
     ),

@@ -181,6 +181,11 @@ test("a row opens the job window, the newest upload's page or the project", () =
     kind: "project",
     projectId: "p07",
   });
+  assert.deepEqual(jobTarget(job({ kind: "upload", id: "up", status: "done" }), "up"), {
+    kind: "job",
+    projectId: "p07",
+    jobId: "up",
+  });
 });
 
 test("a finished job opens its one slide, its job window or its project", () => {

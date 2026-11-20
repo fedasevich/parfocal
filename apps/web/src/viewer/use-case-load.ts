@@ -29,7 +29,7 @@ export function useCaseLoad(
   const wantsTask = taskId !== undefined;
   const taskQuery = useGetReviewTask(taskId ?? "", { query: { enabled: wantsTask } });
   const decisionsQuery = useListDecisions(taskId ?? "", slideId, undefined, {
-    query: { enabled: wantsTask },
+    query: { enabled: wantsTask && okData(taskQuery.data)?.kind === "review" },
   });
   if (projectQuery.isError || slidesQuery.isError) return { state: "failed" };
   if (project === undefined || slides === undefined) return { state: "loading" };

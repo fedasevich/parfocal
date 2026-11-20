@@ -17,6 +17,7 @@ import { installDisplayDefaults } from "./shell/display-defaults.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 import { installNameMask } from "./shell/hide-names.ts";
 import { installMotion } from "./shell/motion.ts";
+import { reloadOnStaleChunks } from "./shell/stale-chunks.ts";
 import { installTheme } from "./shell/theme.ts";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
 import { viewTransitions } from "./shell/view-transitions.ts";
@@ -27,6 +28,7 @@ import { watchSensitiveData } from "./telemetry/sensitive-data.ts";
 const config = readBuildConfig();
 setDraftsAnswered(config.fakeApi !== "off");
 
+reloadOnStaleChunks(window);
 installTheme();
 installMotion();
 installDisplayDefaults();

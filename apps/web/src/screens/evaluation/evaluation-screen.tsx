@@ -149,10 +149,19 @@ function EvaluationBody({
   };
   const pickedBlock = blocks.find((block) => block.kind === "comparison" && block.task_id);
   const offered = others.find((other) => other.id === pickedBlock?.task_id) ?? others[0] ?? null;
+  const showComparison = () =>
+    requestAnimationFrame(() =>
+      document
+        .querySelector('[data-kind="comparison"]')
+        ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+    );
   const compare = () => {
-    const shown = blocks.find((block) => block.kind === "comparison" && block.task_id);
-    if (shown) return;
     if (!offered) return;
+    if (pickedBlock) {
+      showComparison();
+      toast.show(t`${offered.code}, ${offered.name}, is already next to this one`);
+      return;
+    }
     const block: PageBlock = {
       id: `comparison-${Date.now()}`,
       kind: "comparison",
@@ -163,6 +172,7 @@ function EvaluationBody({
       task_id: offered.id,
     };
     change([...blocks, block]);
+    showComparison();
     toast.show(t`${offered.code}, ${offered.name}, is now next to this one`, () =>
       setBlocks(blocks),
     );

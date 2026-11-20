@@ -19,6 +19,9 @@ export const shellRouteIds: ReadonlySet<string> = new Set([
   "/tasks/$taskId/disagreements",
   "/tasks/$taskId/sign-off",
   "/tasks/$taskId/evaluation",
+  "/kpi",
+  "/study",
+  "/go/$notificationId",
 ]);
 
 export const foldedShellRouteIds: ReadonlySet<string> = new Set<string>([

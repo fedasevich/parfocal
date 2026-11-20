@@ -576,12 +576,12 @@ function CosignFlow({
           what={
             changed.length
               ? t`${andJoin(changed.map((row, index) => (index ? row.label.charAt(0).toLowerCase() + row.label.slice(1) : row.label)))}, changed by you`
-              : t`The report as he sent it`
+              : t`The report as ${senderFirst} sent it`
           }
           label={t`Note to ${senderFirst}`}
           placeholder={t`For example, measure the widest extent across the capsule.`}
           help={t`${senderFirst} sees your changes and the note.`}
-          hint={t`He can fix it and send it again.`}
+          hint={t`${senderFirst} can fix it and send it again.`}
           primary={t`Return with the note`}
           empty={t`Write a note. ${senderFirst} sees it with your changes.`}
           tooShort={t`Use at least 10 characters.`}

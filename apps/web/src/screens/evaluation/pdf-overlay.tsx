@@ -75,6 +75,15 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
   const [fileFailed, setFileFailed] = useState(false);
   const file = useRef<Promise<Blob> | null>(null);
   const { pages, allPages } = useLaterPages(preview, page, loadPages);
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      onClose();
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [onClose]);
   const name = preview?.file_name ?? "report.pdf";
   const landscape = preview?.orientation === "landscape";
   const act = (use: (blob: Blob) => void) => () => {
