@@ -7223,7 +7223,7 @@ msgid "Figma"
 msgstr ""
 
 #: src/screens/kpi/kpi-screen.tsx
-msgid "Figures from the ids-only timing events recorded on this device."
+msgid "Figures from the timing events of people who allow analytics, with no person, case or slide named."
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -10531,6 +10531,10 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "No template"
+msgstr ""
+
+#: src/screens/kpi/kpi-screen.tsx
+msgid "No timing recorded yet. Figures appear as people who allow analytics finish tasks."
 msgstr ""
 
 #: src/screens/upload/result-problems.tsx
@@ -14233,10 +14237,6 @@ msgstr ""
 msgid "See where we differ"
 msgstr ""
 
-#: src/screens/kpi/kpi-screen.tsx
-msgid "Seeded sample data. Real figures come from ids-only events of people who allow analytics."
-msgstr ""
-
 #: src/screens/developer/developer-screen.tsx
 msgid "Seeds from a detector"
 msgstr ""
@@ -15989,6 +15989,10 @@ msgstr ""
 #: src/screens/project/task-settings-drawer.tsx
 #: src/screens/project/tasks-tab.tsx
 msgid "Task settings"
+msgstr ""
+
+#: src/screens/kpi/kpi-screen.tsx
+msgid "task timing"
 msgstr ""
 
 #: src/screens/kpi/kpi-screen.tsx

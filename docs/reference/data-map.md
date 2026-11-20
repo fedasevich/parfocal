@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `phi` | 52 |
 | `personal` | 101 |
 | `secret` | 15 |
-| `operational` | 879 |
+| `operational` | 888 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1448,6 +1448,20 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_at` | operational |
 | `resolved_at` | operational |
 | `resolved_by_user_id` | personal |
+
+## timing_events
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `task_kind` | operational |
+| `area` | operational |
+| `duration_ms` | operational |
+| `estimated_ms` | operational |
+| `coverage_permille` | operational |
+| `recorded_at` | operational |
 
 ## uploads
 

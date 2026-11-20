@@ -81,6 +81,7 @@
     "tenant_keys",
     "thread_messages",
     "threads",
+    "timing_events",
     "uploads",
     "watched_files",
     "webhook_calls",

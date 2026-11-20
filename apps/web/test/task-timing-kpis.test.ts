@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { computeKpis, estimateErrors, type KpiEvent } from "../src/screens/kpi/kpi-model.ts";
-import { seededKpiEvents } from "../src/screens/kpi/kpi-seed.ts";
 import { eventSink } from "../src/telemetry/events.ts";
 import { createTaskTimer } from "../src/telemetry/task-timer.ts";
 
@@ -72,8 +71,20 @@ test("nothing is recorded after the analytics opt-out", () => {
   assert.equal(seen.length, 0);
 });
 
-test("the seeded data fills every measure and is judged against the kit targets", () => {
-  const kpis = computeKpis(seededKpiEvents);
+test("every measure is filled and judged against the kit targets", () => {
+  const kpis = computeKpis([
+    { name: "task_finished", task_kind: "review", duration_ms: 12 * 60_000 },
+    { name: "task_finished", task_kind: "report", duration_ms: 4 * 60_000 },
+    { name: "area_time_recorded", area: "viewer", duration_ms: 11 * 60_000 },
+    { name: "cell_review_timed", duration_ms: 7_000 },
+    { name: "chrome_coverage_measured", area: "viewer", coverage_permille: 320 },
+    {
+      name: "reading_time_compared",
+      task_kind: "review",
+      estimated_ms: 12 * 60_000,
+      duration_ms: 11 * 60_000,
+    },
+  ]);
   assert.ok(kpis.every((kpi) => kpi.samples > 0 && kpi.median !== null));
   assert.equal(kpis.find((kpi) => kpi.key === "review")?.target?.limit, 15);
   assert.equal(kpis.find((kpi) => kpi.key === "review")?.met, true);

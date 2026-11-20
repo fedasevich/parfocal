@@ -35,7 +35,6 @@ const developerPages = [
   "/spikes/worklist",
   "/issue-states",
   "/issue-pages/not-found",
-  "/kpi",
 ];
 
 test.beforeAll(async () => {

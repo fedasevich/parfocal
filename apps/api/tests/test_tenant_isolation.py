@@ -114,6 +114,7 @@ from parfocal_api.tables import (
     tenants,
     thread_messages,
     threads,
+    timing_events,
     uploads,
     users,
     watched_files,
@@ -1437,6 +1438,16 @@ async def seed_event_outbox(connection: AsyncConnection, seeded: Seeded) -> None
     seeded.markers.add(str(event_id))
 
 
+async def seed_timing_events(connection: AsyncConnection, seeded: Seeded) -> None:
+    duration = 100_000_000 + uuid.uuid4().int % 400_000_000
+    await connection.execute(
+        insert(timing_events).values(
+            tenant_id=seeded.tenant_id, name="cell_review_timed", duration_ms=duration
+        )
+    )
+    seeded.markers.add(str(duration))
+
+
 async def seed_event_attempts(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(event_attempts).values(
@@ -1757,6 +1768,7 @@ SEEDERS: dict[str, Seeder] = {
     "event_targets": seed_event_targets,
     "event_outbox": seed_event_outbox,
     "event_attempts": seed_event_attempts,
+    "timing_events": seed_timing_events,
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
@@ -1888,6 +1900,7 @@ GET_ROUTES = {
     "getAiCorrections": Route(
         Exposure.TENANT, lambda _: "/api/tenant/ai-corrections", admin_rights=True
     ),
+    "getTaskTiming": Route(Exposure.TENANT, lambda _: "/api/tenant/task-timing", admin_rights=True),
     "listLegalHolds": Route(
         Exposure.TENANT, lambda _: "/api/tenant/legal-holds", admin_rights=True
     ),

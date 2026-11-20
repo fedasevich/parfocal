@@ -221,6 +221,7 @@ OPEN_OPERATIONS = {
     "getMyAvailability": "member",
     "setMyAvailability": "member",
     "sendFeedback": "member",
+    "recordTimingEvents": "member",
     "listMembers": "platform",
 }
 
@@ -1212,6 +1213,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getRetentionPolicy": lambda _: Call("GET", "/api/tenant/retention"),
     "getAiUsage": lambda _: Call("GET", "/api/tenant/ai-usage"),
     "getAiCorrections": lambda _: Call("GET", "/api/tenant/ai-corrections"),
+    "getTaskTiming": lambda _: Call("GET", "/api/tenant/task-timing"),
     "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
     "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),
@@ -1673,6 +1675,11 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),
     "sendFeedback": lambda _: Call(
         "POST", "/api/feedback", {"text": "Matrix feedback", "route": "/my-work"}
+    ),
+    "recordTimingEvents": lambda _: Call(
+        "POST",
+        "/api/me/timing-events",
+        {"events": [{"name": "cell_review_timed", "duration_ms": 10}]},
     ),
 }
 

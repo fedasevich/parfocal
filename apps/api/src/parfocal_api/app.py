@@ -120,6 +120,7 @@ from parfocal_api import (
     task_changes,
     task_report_layout,
     task_runs,
+    task_timing,
     task_withdrawal,
     taxonomy,
     team_workload,
@@ -364,6 +365,8 @@ def create_app(
     app.include_router(patch_exports.router)
     app.include_router(ai_changes.router)
     app.include_router(ai_corrections.router)
+    app.include_router(task_timing.me_router)
+    app.include_router(task_timing.tenant_router)
     app.include_router(ai_usage.router)
     app.include_router(evaluation_versions.router)
     app.include_router(report_links.router)
