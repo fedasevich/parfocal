@@ -2133,8 +2133,9 @@ msgstr ""
 msgid "{resultName} · {count} objects"
 msgstr ""
 
+#. placeholder {0}: nucleiCount.toLocaleString("en-US")
 #: src/screens/developer/developer-screen.tsx
-msgid "{route} · {sample} · 9 levels · 100,000 nuclei"
+msgid "{route} · {0} synthetic nuclei"
 msgstr ""
 
 #: src/screens/upload/progress-step.tsx
@@ -2614,14 +2615,6 @@ msgstr ""
 msgid "15 Oct 11:35"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "18,240 drawn of 100,000"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "182 ms · decode 4.2 ms · 6 in flight"
-msgstr ""
-
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "2 CSV files saved to Downloads"
 msgstr ""
@@ -2632,10 +2625,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "2 px"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "2.1 ms · 412 tile loads"
 msgstr ""
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
@@ -2666,24 +2655,12 @@ msgstr ""
 msgid "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "41,220 cells so far · 3.1 tiles a second · about 6 min left"
-msgstr ""
-
 #: src/screens/upload/progress-step.tsx
 msgid "46% · about 3 min left"
 msgstr ""
 
 #: src/screens/admin/decision-preset.tsx
 msgid "5-point certainty"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "60 fps"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "60 fps · frame 6.2 ms"
 msgstr ""
 
 #. placeholder {0}: input.setA
@@ -3750,10 +3727,6 @@ msgstr ""
 msgid "Annotations"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "Annotations and reviews on this slide, for tests and fixtures."
-msgstr ""
-
 #: src/screens/admin/workspace-settings.tsx
 msgid "Announcement ended."
 msgstr ""
@@ -4524,14 +4497,6 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Cached"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Calibrated · ECE 0.031"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Calibration"
 msgstr ""
 
 #: src/screens/viewer/ai-record-blocks.tsx
@@ -5680,10 +5645,6 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "Connected · 3 models"
-msgstr ""
-
 #: src/screens/admin/connect-model.tsx
 msgid "Connected. Next, match its classes and choose who can run it."
 msgstr ""
@@ -6305,6 +6266,11 @@ msgstr ""
 #: ../../packages/ui/src/components/developer-drawer.tsx
 #: src/shell/page-title-names.ts
 msgid "Developer"
+msgstr ""
+
+#: src/screens/developer/developer-screen.tsx
+#: src/shell/palette-labels.tsx
+msgid "Developer mode"
 msgstr ""
 
 #: src/screens/admin/role-permissions.tsx
@@ -7783,7 +7749,6 @@ msgstr ""
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/routes/issue-states.tsx
 #: src/screens/admin/template-editor.tsx
-#: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Full viewer"
 msgstr ""
@@ -8998,10 +8963,6 @@ msgstr ""
 #. placeholder {2}: cell(last.zoom)
 #: src/screens/developer/bench-section.tsx
 msgid "Last run · {0} · {1} nuclei · zoom {2}"
-msgstr ""
-
-#: src/screens/developer/bench-section.tsx
-msgid "Last run 14:02 · {route} · 100k nuclei · zoom 2"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -10557,6 +10518,7 @@ msgid "No project sends events to a pipeline yet."
 msgstr ""
 
 #: src/screens/admin/storage.tsx
+#: src/screens/developer/developer-screen.tsx
 msgid "No projects yet."
 msgstr ""
 
@@ -10594,6 +10556,10 @@ msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "No reviewer gave a reason for disagreeing."
+msgstr ""
+
+#: src/screens/developer/bench-section.tsx
+msgid "No runs yet on {route}. Open a slide and run the pan sweep."
 msgstr ""
 
 #: src/screens/admin/storage.tsx
@@ -10820,6 +10786,14 @@ msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Not chosen yet"
+msgstr ""
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Not connected yet. Change the mouse wheel in Settings."
+msgstr ""
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Not connected yet. These controls show sample values."
 msgstr ""
 
 #: ../../packages/ui/src/components/disagreements.tsx
@@ -11389,10 +11363,6 @@ msgstr ""
 msgid "Offline. Its server is not answering."
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "ome-zarr · 6.4 Gpx · 9 levels"
-msgstr ""
-
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "On"
 msgstr ""
@@ -11493,10 +11463,6 @@ msgstr ""
 msgid "Only an owner of this project sets who can sign out."
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "Only for deck.gl 9.4"
-msgstr ""
-
 #: src/screens/review/display-tab.tsx
 msgid "Only for you, on {taskCode}. Every change redraws the slide at once."
 msgstr ""
@@ -11511,10 +11477,6 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Only objects inside the regions you draw are checked."
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Only on the WebGPU route"
 msgstr ""
 
 #: src/annotations/task-export.ts
@@ -11596,6 +11558,10 @@ msgstr ""
 
 #: src/screens/admin/role-permissions.tsx
 msgid "Open a clinical project they are not in"
+msgstr ""
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Open a project"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -11922,10 +11888,6 @@ msgstr ""
 
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Over target"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Overrides the doctor's Settings while testing."
 msgstr ""
 
 #: src/screens/admin/admin-shell.tsx
@@ -12435,10 +12397,6 @@ msgstr ""
 msgid "Pick the type in the bar next to the cell on the slide."
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "Pick Viv to change these."
-msgstr ""
-
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Pick who co-signs"
 msgstr ""
@@ -12699,10 +12657,6 @@ msgstr ""
 
 #: src/flow-map/prototype-bar.tsx
 msgid "Previous step"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Prewarm when idle"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
@@ -12973,10 +12927,6 @@ msgstr ""
 msgid "reading"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "Readouts on the Viv route"
-msgstr ""
-
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "ready"
 msgstr ""
@@ -12987,10 +12937,6 @@ msgstr ""
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "Ready to sign off"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Real tumor outlines from CAMELYON16, drawn over the slide."
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
@@ -13991,10 +13937,6 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Run your own evaluations and review for others"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Running"
 msgstr ""
 
 #. placeholder {0}: running.length
@@ -15808,10 +15750,6 @@ msgstr ""
 msgid "Starting point"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "Starts after 350 ms without input"
-msgstr ""
-
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 msgid "Starts from the upload button on Check."
@@ -16038,10 +15976,6 @@ msgstr ""
 msgid "Summary"
 msgstr ""
 
-#: src/screens/developer/developer-screen.tsx
-msgid "sure 14,102 · likely 3,410 · unsure 726"
-msgstr ""
-
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "SURGICAL PATHOLOGY REPORT"
 msgstr ""
@@ -16091,10 +16025,6 @@ msgstr ""
 
 #: src/screens/project/settings-tab.tsx
 msgid "T regions, C cells"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "T009 loaded · 14 rings · 2,210 vertices · 61 KB"
 msgstr ""
 
 #: src/screens/new-task/modals.tsx
@@ -16639,6 +16569,10 @@ msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
 msgid "The link could not be changed. Try again."
+msgstr ""
+
+#: src/screens/developer/developer-screen.tsx
+msgid "The live numbers show in the HUD over the open slide."
 msgstr ""
 
 #: src/screens/admin/join-settings.tsx
@@ -17220,6 +17154,10 @@ msgstr ""
 msgid "These questions show the AI's claim. With the AI hidden the first read uses Pick the class blind, then the claim is revealed."
 msgstr ""
 
+#: src/screens/developer/developer-screen.tsx
+msgid "These settings are saved in this browser and apply to every slide you open. To watch them change a slide, open one and pick Developer mode in the search palette, or press Ctrl+Shift+D. The drawer then stays over the panel until you close it."
+msgstr ""
+
 #: src/screens/admin/join-settings.tsx
 msgid "They ask, and someone with admin rights answers in Join requests on People."
 msgstr ""
@@ -17522,10 +17460,6 @@ msgstr ""
 #. placeholder {2}: progress.found
 #: src/annotations/auto-layer.tsx
 msgid "Tile {0} of {1} · {2} found"
-msgstr ""
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Tile 712 of 1,880, tumor first"
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx

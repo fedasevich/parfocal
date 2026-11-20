@@ -37,43 +37,40 @@ for (const theme of ["light", "dark"] as const) {
     }, theme);
 
     for (const backdrop of backdrops) {
-      const ratio = await page.evaluate(
-        ([rgb]) => {
-          const label = document.querySelector<HTMLElement>('[data-testid="text-shape"]');
-          const layer = document.querySelector<HTMLElement>('[data-testid="text-layer"]');
-          if (!label || !layer) throw new Error("no text annotation");
-          layer.style.backgroundColor = `rgb(${rgb.join(",")})`;
-          const canvas = document.createElement("canvas");
-          canvas.width = 1;
-          canvas.height = 1;
-          const context = canvas.getContext("2d", { willReadFrequently: true });
-          if (!context) throw new Error("no canvas");
-          const style = getComputedStyle(label);
-          const pixel = (fill: string, under: string | null) => {
-            context.clearRect(0, 0, 1, 1);
-            if (under !== null) {
-              context.fillStyle = under;
-              context.fillRect(0, 0, 1, 1);
-            }
-            context.fillStyle = fill;
+      const ratio = await page.evaluate((rgb) => {
+        const label = document.querySelector<HTMLElement>('[data-testid="text-shape"]');
+        const layer = document.querySelector<HTMLElement>('[data-testid="text-layer"]');
+        if (!label || !layer) throw new Error("no text annotation");
+        layer.style.backgroundColor = `rgb(${rgb.join(",")})`;
+        const canvas = document.createElement("canvas");
+        canvas.width = 1;
+        canvas.height = 1;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) throw new Error("no canvas");
+        const style = getComputedStyle(label);
+        const pixel = (fill: string, under: string | null) => {
+          context.clearRect(0, 0, 1, 1);
+          if (under !== null) {
+            context.fillStyle = under;
             context.fillRect(0, 0, 1, 1);
-            return Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3));
-          };
-          const plateRgb = pixel(style.backgroundColor, `rgb(${rgb.join(",")})`);
-          const text = { rgb: pixel(style.color, null) };
-          const luminance = (channels: number[]) => {
-            const [r = 0, g = 0, b = 0] = channels.map((channel) => {
-              const unit = channel / 255;
-              return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
-            });
-            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          };
-          const light = Math.max(luminance(plateRgb), luminance(text.rgb));
-          const dark = Math.min(luminance(plateRgb), luminance(text.rgb));
-          return (light + 0.05) / (dark + 0.05);
-        },
-        [backdrop.rgb],
-      );
+          }
+          context.fillStyle = fill;
+          context.fillRect(0, 0, 1, 1);
+          return Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3));
+        };
+        const plateRgb = pixel(style.backgroundColor, `rgb(${rgb.join(",")})`);
+        const text = { rgb: pixel(style.color, null) };
+        const luminance = (channels: number[]) => {
+          const [r = 0, g = 0, b = 0] = channels.map((channel) => {
+            const unit = channel / 255;
+            return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const light = Math.max(luminance(plateRgb), luminance(text.rgb));
+        const dark = Math.min(luminance(plateRgb), luminance(text.rgb));
+        return (light + 0.05) / (dark + 0.05);
+      }, backdrop.rgb);
       expect(ratio, backdrop.name).toBeGreaterThanOrEqual(minimumContrast);
     }
   });
