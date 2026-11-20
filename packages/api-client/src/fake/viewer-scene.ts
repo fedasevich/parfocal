@@ -8,9 +8,11 @@ export type FakeViewerIssue =
   | "slidefail"
   | "preparing"
   | "importing"
-  | "importfail";
+  | "importfail"
+  | "unassigned";
 
 const viewerIssues: readonly FakeViewerIssue[] = [
+  "unassigned",
   "withdrawn",
   "noresults",
   "empty",

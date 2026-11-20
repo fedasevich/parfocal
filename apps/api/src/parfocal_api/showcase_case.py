@@ -35,6 +35,7 @@ from parfocal_api.tables import (
     Extranodal,
     NodeCategory,
     ProjectRole,
+    Role,
     SignOutRight,
     TaskKind,
     TaskScope,
@@ -69,6 +70,10 @@ THREAD_BODY = "Is the tumour border here clear enough to measure?"
 THREAD_REPLY = "Yes, measure from the inked edge."
 SPECIMEN = "Sentinel lymph nodes, left axilla, excision"
 DIAGNOSIS = "Two sentinel lymph nodes, no metastatic carcinoma (0/2)."
+AGENT_UPLOAD_CASE = DRAFT_CASE
+BROKEN_SLIDE = "Missing file.svs"
+BROKEN_FROM = "CMU-1-Small-Region.svs"
+MISSING_FILE_FACTS = ("original_key", "file_bytes", "sha256")
 SEED_PART_BYTES = 5 * 1024 * 1024
 SEED_MAX_BYTES = 50 * 1024 * 1024 * 1024
 
@@ -82,6 +87,8 @@ class SeededCase:
     thread_id: uuid.UUID
     upload_id: uuid.UUID
     shared_url: str
+    broken_slide_id: uuid.UUID
+    agent_upload_ids: tuple[uuid.UUID, ...]
 
 
 class NoMultipart:
@@ -102,14 +109,14 @@ def seed_http(results: ResultStore | None = None) -> Request:
     return Request({"type": "http", "app": app, "headers": []})
 
 
-async def members_named(
+async def agent_principals(
     engine: Any, tenant_id: uuid.UUID, emails: Sequence[str]
-) -> list[uuid.UUID]:
+) -> list[MemberPrincipal]:
     if not emails:
         return []
     async with scoped_transaction(engine, DatabaseScope(platform=True, auth=True)) as connection:
-        found = await connection.scalars(
-            select(users.c.id)
+        rows = await connection.execute(
+            select(users.c.id, users.c.subject)
             .join(memberships, memberships.c.user_id == users.c.id)
             .where(
                 memberships.c.tenant_id == tenant_id,
@@ -117,7 +124,9 @@ async def members_named(
             )
             .order_by(users.c.email)
         )
-        return list(found.all())
+        return [
+            MemberPrincipal(row.subject, tenant_id, row.id, Role.RESEARCHER, True) for row in rows
+        ]
 
 
 async def clinical_project(
@@ -175,11 +184,12 @@ async def upload_into(
     creator: MemberPrincipal,
     project_id: uuid.UUID,
     case_id: uuid.UUID,
+    file: str,
     facts: Mapping[str, Any],
 ) -> tuple[uuid.UUID, uuid.UUID]:
     created = await create_upload(
         UploadDraft(
-            filename=UPLOADED_FILE,
+            filename=file,
             metadata=UploadMetadata(
                 project_id=project_id, case_id=case_id, size=int(facts["file_bytes"])
             ),
@@ -217,7 +227,7 @@ async def upload_into(
         connection,
         creator,
         project_id,
-        UPLOADED_FILE,
+        file,
         facts,
         case_id=case_id,
         upload_id=created.upload_id,
@@ -355,6 +365,30 @@ async def reports(
     )
 
 
+def missing_file(facts: Mapping[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in facts.items() if key not in MISSING_FILE_FACTS}
+
+
+async def audit_extras(
+    connection: AsyncConnection,
+    creator: MemberPrincipal,
+    agents: Sequence[MemberPrincipal],
+    project_id: uuid.UUID,
+    upload_case_id: uuid.UUID,
+    facts: Mapping[str, Mapping[str, Any]],
+) -> tuple[uuid.UUID, tuple[uuid.UUID, ...]]:
+    broken = await add_case_slide(
+        connection, creator, project_id, BROKEN_SLIDE, missing_file(facts[BROKEN_FROM])
+    )
+    uploaded: list[uuid.UUID] = []
+    for agent in agents[:1]:
+        upload_id, _ = await upload_into(
+            connection, agent, project_id, upload_case_id, UPLOADED_FILE, facts[UPLOADED_FILE]
+        )
+        uploaded.append(upload_id)
+    return broken, tuple(uploaded)
+
+
 async def seed_showcase_case(
     connection: AsyncConnection,
     creator: MemberPrincipal,
@@ -362,7 +396,7 @@ async def seed_showcase_case(
     results: ResultStore,
     clinical_study: str,
     facts: Mapping[str, Mapping[str, Any]],
-    experts: Sequence[uuid.UUID],
+    agents: Sequence[MemberPrincipal],
 ) -> SeededCase | None:
     project_id = await clinical_project(connection, creator.tenant_id, clinical_study)
     if project_id is None or await case_named(connection, project_id, SHOWCASE_CASE) is not None:
@@ -384,21 +418,37 @@ async def seed_showcase_case(
         )
         slide_ids.append(slide_id)
     upload_id, uploaded = await upload_into(
-        connection, creator, project_id, case_id, facts[UPLOADED_FILE]
+        connection, creator, project_id, case_id, UPLOADED_FILE, facts[UPLOADED_FILE]
     )
     slide_ids.append(uploaded)
     demo = DemoSets({}, {})
     for slide_id in slide_ids:
         await add_demo_sets(connection, creator, results, slide_id, demo)
     task_id = await case_task(
-        connection, creator, results, project_id, demo.regions, [owner.user_id, *experts]
+        connection,
+        creator,
+        results,
+        project_id,
+        demo.regions,
+        [owner.user_id, *(agent.user_id for agent in agents)],
     )
     first = next(iter(demo.regions))
     await decide_all(connection, owner, results, task_id, [first], submit=True)
     thread_id = await comment_thread(connection, owner, creator, task_id, first, results)
     link = await create_report_link(task_id, seed_http(), creator, connection)
+    broken, agent_uploads = await audit_extras(
+        connection, creator, agents, project_id, draft_case_id, facts
+    )
     seeded = SeededCase(
-        case_id, draft_case_id, cosign_case_id, task_id, thread_id, upload_id, link.url
+        case_id,
+        draft_case_id,
+        cosign_case_id,
+        task_id,
+        thread_id,
+        upload_id,
+        link.url,
+        broken,
+        agent_uploads,
     )
     await reports(connection, owner, creator, project_id, seeded)
     return seeded

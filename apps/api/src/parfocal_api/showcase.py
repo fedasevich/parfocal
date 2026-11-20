@@ -32,7 +32,7 @@ from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_
 from parfocal_api.sample_files import SampleFile, stored_facts
 from parfocal_api.seed_request import seed_request
 from parfocal_api.showcase_annotation import seed_annotation_example
-from parfocal_api.showcase_case import CASE_FILES, members_named, seed_showcase_case
+from parfocal_api.showcase_case import CASE_FILES, agent_principals, seed_showcase_case
 from parfocal_api.showcase_demo import (
     DemoSets,
     add_demo_sets,
@@ -1125,7 +1125,8 @@ async def seed_example(
     case_facts: Mapping[str, Mapping[str, Any]] | None,
 ) -> None:
     assert seeded.owner is not None
-    agents = await members_named(engine, seeded.tenant_id, agent_emails)
+    seats = await agent_principals(engine, seeded.tenant_id, agent_emails)
+    agents = [seat.user_id for seat in seats]
     creator = principal_of(seeded, "ada", Role.RESEARCHER, True)
     owner = MemberPrincipal(OWNER_SUBJECT, seeded.tenant_id, seeded.owner, Role.RESEARCHER, True)
     async with scoped_transaction(
@@ -1138,7 +1139,7 @@ async def seed_example(
             None
             if case_facts is None
             else await seed_showcase_case(
-                connection, creator, owner, results, workspace.clinical_study, case_facts, agents
+                connection, creator, owner, results, workspace.clinical_study, case_facts, seats
             )
         )
     if made is not None:

@@ -11,10 +11,10 @@ from scipy.io import savemat
 
 from parfocal_ml.datasets import (
     REGISTRY,
+    ChecksumError,
     ManualDownloadError,
     cache_dir,
     fetch,
-    md5_of,
     samples,
 )
 
@@ -55,11 +55,13 @@ def test_every_split_of_a_signed_in_dataset_has_a_loader_and_says_how_it_arrives
         assert archive.url.endswith(f"/pannuke/fold_{fold}.zip")
     assert REGISTRY["cryonuseg"].manual
     assert REGISTRY["lizard"].manual
-    assert REGISTRY["cryonuseg"].archive is None
-    assert REGISTRY["lizard"].archive is None
+    for name in ("cryonuseg", "lizard"):
+        archive = REGISTRY[name].archive
+        assert archive is not None
+        assert archive.file == REGISTRY[name].manual
 
 
-def test_a_signed_in_archive_says_where_it_goes_and_then_which_checksum_to_pin(
+def test_a_signed_in_archive_says_where_it_goes_and_then_refuses_a_wrong_file(
     tmp_path: Path,
 ) -> None:
     dataset = REGISTRY["lizard"]
@@ -68,7 +70,7 @@ def test_a_signed_in_archive_says_where_it_goes_and_then_which_checksum_to_pin(
     placed = tmp_path / "lizard" / "lizard-dataset.zip"
     placed.parent.mkdir()
     placed.write_bytes(b"parfocal")
-    with pytest.raises(ManualDownloadError, match=md5_of(placed)):
+    with pytest.raises(ChecksumError):
         fetch(dataset, tmp_path)
 
 

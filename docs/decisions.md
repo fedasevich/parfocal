@@ -15,8 +15,6 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Later
 
-- **The Zitadel login user** (decision 95, option A). A short session with you, about 15 minutes, when you want the app's own sign-in screens instead of the hosted Zitadel page.
-- **Two Kaggle downloads** (decision 131), CryoNuSeg and Lizard, when convenient.
 - **Production for the first real user.** Say when, and the lead books the deploy session.
 
 ## Open questions

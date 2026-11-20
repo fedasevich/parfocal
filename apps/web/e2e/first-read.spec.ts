@@ -110,14 +110,15 @@ const setsOf = (page: Page, path: string) =>
     return body.map((set) => set.name);
   }, path);
 
-for (const [name, extra] of [
-  ["full viewer", ""],
-  ["paged screen", "&pagedCells=2000"],
+for (const [name, route, extra] of [
+  ["full viewer", "", ""],
+  ["paged screen", "", "&pagedCells=2000"],
+  ["live route", "/live", ""],
 ] as const) {
   test(`the ${name} of a hide-the-AI task asks for the first read before the AI shows`, async ({
     page,
   }) => {
-    await page.goto(`/projects/${p07}/slides/${a1}?task=${rt17}${extra}`);
+    await page.goto(`/projects/${p07}/slides/${a1}${route}?task=${rt17}${extra}`);
     await expect(page.getByTestId("first-read-panel")).toBeVisible({ timeout: 60_000 });
     await expect(page.locator('main[data-ai="hidden"]')).toBeVisible();
     await expect(page.getByTestId("stage-review-objects")).toHaveCount(0);

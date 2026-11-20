@@ -23,10 +23,11 @@ export function slideDoneCounts(session: ReviewSession): SlideDoneCounts {
 type OpinionProps = {
   taskId: string;
   slideId: string;
+  readOnly?: string | undefined;
   onObjects: (object?: string) => void;
 };
 
-export function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
+export function ReviewOpinion({ taskId, slideId, readOnly, onObjects }: OpinionProps) {
   const { t } = useLingui();
   const navigate = useNavigate();
   const session = useReviewSession(taskId, slideId);
@@ -69,7 +70,8 @@ export function ReviewOpinion({ taskId, slideId, onObjects }: OpinionProps) {
       questions={questions}
       blockers={blockers}
       submitLabel={t`Submit`}
-      onAnswerChange={change}
+      readOnly={readOnly}
+      {...(readOnly === undefined ? { onAnswerChange: change } : {})}
       onSubmit={() => {
         submitReview.mutate({ taskId, slideId });
         void navigate({
@@ -86,15 +88,19 @@ export function StageOpinion({
   taskId,
   slideId,
   reviewTask,
+  readOnly,
   onObjects,
 }: {
   taskId: string | undefined;
   slideId: string;
   reviewTask: boolean;
+  readOnly?: string | undefined;
   onObjects: (object?: string) => void;
 }) {
   if (taskId !== undefined && reviewTask)
-    return <ReviewOpinion taskId={taskId} slideId={slideId} onObjects={onObjects} />;
+    return (
+      <ReviewOpinion taskId={taskId} slideId={slideId} readOnly={readOnly} onObjects={onObjects} />
+    );
   return (
     <InlineState data-testid="stage-opinion" icon="info" title={<Trans>No opinion asked</Trans>}>
       <Trans>

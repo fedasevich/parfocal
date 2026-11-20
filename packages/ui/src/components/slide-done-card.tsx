@@ -122,6 +122,7 @@ type SlideDoneCardProps = React.ComponentProps<"div"> & {
   failed?: boolean;
   warning?: string | undefined;
   lockedReason?: string;
+  readOnly?: string | undefined;
   panel?: boolean;
   onSubmit?: () => void;
   onAnswerChange?: AnswerChange;
@@ -137,6 +138,7 @@ function SlideDoneCard({
   failed = false,
   warning,
   lockedReason,
+  readOnly,
   panel = false,
   onSubmit,
   onAnswerChange,
@@ -178,6 +180,7 @@ function SlideDoneCard({
     <div
       data-slot="slide-done-card"
       data-panel={panel || undefined}
+      data-read-only={readOnly === undefined ? undefined : ""}
       className={cn("flex flex-col text-fg", panel ? "gap-5" : "gap-5.5", className)}
       {...props}
     >
@@ -222,10 +225,68 @@ function SlideDoneCard({
                 </span>
               ) : null}
             </div>
-            <QuestionControl question={question} onAnswerChange={onAnswerChange} />
+            {readOnly === undefined ? (
+              <QuestionControl question={question} onAnswerChange={onAnswerChange} />
+            ) : (
+              <p data-slot="read-only-answer" className="m-0 text-body-sm text-fg-dim">
+                {question.answer ? question.answer : t`No answer`}
+              </p>
+            )}
           </div>
         ))}
       </div>
+      {readOnly === undefined ? null : (
+        <p data-slot="read-only-reason" className="m-0 mt-auto text-body-sm text-fg-dim">
+          {readOnly}
+        </p>
+      )}
+      {readOnly === undefined ? (
+        <SubmitArea
+          blockers={blockers}
+          unsure={unsure}
+          listId={listId}
+          warning={warning}
+          off={off}
+          describedBy={describedBy}
+          panel={panel}
+          failed={failed}
+          submitLabel={submitLabel}
+          onSubmit={onSubmit}
+          under={under}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function SubmitArea({
+  blockers,
+  unsure,
+  listId,
+  warning,
+  off,
+  describedBy,
+  panel,
+  failed,
+  submitLabel,
+  onSubmit,
+  under,
+}: {
+  blockers: Blocker[];
+  unsure: Blocker[];
+  listId: string;
+  warning: string | undefined;
+  off: boolean;
+  describedBy: string | undefined;
+  panel: boolean;
+  failed: boolean;
+  submitLabel: string;
+  onSubmit: (() => void) | undefined;
+  under: React.ReactNode;
+}) {
+  const { t } = useLingui();
+  return (
+    <>
       <BeforeYouList id={listId} title={t`Before you submit`} blockers={blockers} />
       <BeforeYouList
         data-slot="unsure-list"
@@ -255,7 +316,7 @@ function SlideDoneCard({
         </button>
         {under}
       </div>
-    </div>
+    </>
   );
 }
 

@@ -113,6 +113,8 @@ def fetch(dataset: Dataset, folder: Path | None = None) -> Path:
     if dataset.archive is None:
         raise unpinned(dataset, folder or cache_dir())
     target = (folder or cache_dir()) / dataset.name / dataset.archive.file
+    if dataset.manual is not None and not target.exists():
+        raise unpinned(dataset, folder or cache_dir())
     if not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
         partial = target.with_suffix(target.suffix + ".part")
@@ -358,6 +360,12 @@ REGISTRY: dict[str, Dataset] = {
             mpp=0.25,
             loader=cryonuseg,
             manual="segmentation-of-nuclei-in-cryosectioned-he-images.zip",
+            archive=Archive(
+                file="segmentation-of-nuclei-in-cryosectioned-he-images.zip",
+                url="https://www.kaggle.com/datasets/ipateam/segmentation-of-nuclei-in-cryosectioned-he-images",
+                md5="46ead62d5ef90d4b6277b9a4dac055be",
+                size=172522035,
+            ),
         ),
         *(
             Dataset(
@@ -422,6 +430,12 @@ REGISTRY: dict[str, Dataset] = {
             mpp=0.5,
             loader=lizard,
             manual="lizard-dataset.zip",
+            archive=Archive(
+                file="lizard-dataset.zip",
+                url="https://www.kaggle.com/datasets/aadimator/lizard-dataset",
+                md5="4a157c786cb80097f15afc5950e88807",
+                size=786544364,
+            ),
         ),
         Dataset(
             name="camelyon16",

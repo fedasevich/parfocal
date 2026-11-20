@@ -27,10 +27,10 @@ import {
 import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { slideLink } from "../../shell/slide-link.ts";
 import { answerOf, answerWord } from "../disagreements/text.ts";
 import { okData } from "../placeholder.tsx";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
-import { viewerSearch } from "../viewer-links.tsx";
 import {
   comparisonRows,
   fixed,
@@ -60,9 +60,7 @@ function ObjectLink({
   if (!slideId) return children;
   return (
     <Link
-      to="/projects/$projectId/slides/$slideId"
-      params={{ projectId: report.project.id, slideId }}
-      search={viewerSearch({ taskId: report.task_id, object })}
+      {...slideLink({ projectId: report.project.id, slideId, taskId: report.task_id, object })}
       title={object ? t`Open ${object} in the full viewer` : t`Open the slide in the full viewer`}
       data-testid="report-viewer-link"
       className={

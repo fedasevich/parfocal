@@ -24,6 +24,7 @@ import { type LiveReview, liveReview } from "./live-review.ts";
 import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
 import { LiveSlidesPopover } from "./live-slides-popover.tsx";
 import { SlideExportMenu } from "./slide-export-menu.tsx";
+import type { ModeChoice } from "./viewer-mode.ts";
 import type { SlideWorkspace } from "./workspace.ts";
 
 const slidePage = 200;
@@ -126,6 +127,7 @@ type LiveTopBarProps = {
   load: CaseLoad | null;
   task: ReviewTaskDetail | undefined;
   workspace: SlideWorkspace;
+  choices: readonly ModeChoice[];
   guided?: boolean;
   onWorkspace: (next: SlideWorkspace) => void;
   onOpenSlide: (slideId: string) => void;
@@ -159,6 +161,7 @@ function TopBar({
   load,
   task,
   workspace,
+  choices,
   guided = false,
   onWorkspace,
   onOpenSlide,
@@ -175,6 +178,11 @@ function TopBar({
 }: LiveTopBarProps & { review: LiveReview | undefined }) {
   const { t } = useLingui();
   const navigate = useNavigate();
+  const choiceLabels: Record<ModeChoice, string> = {
+    guided: t`Guided`,
+    review: t`Full viewer`,
+    annotate: t`Annotate`,
+  };
   const me = okData(useGetMe().data);
   const projectSlides =
     okData(useListMySlides({ project_id: projectId, limit: slidePage }).data)?.slides ?? [];
@@ -277,31 +285,27 @@ function TopBar({
       {task !== undefined && !reviewTask ? (
         <SlideExportMenu slideId={slideId} taskId={task.id} />
       ) : null}
-      <SegmentedControl
-        aria-label={t`How to review`}
-        data-testid="workspace-switch"
-        className="shrink-0"
-        {...(guided ? { size: "lg" as const } : {})}
-        value={guided ? "guided" : workspace}
-        onValueChange={(next: string) => {
-          if (next === "guided" && task !== undefined) {
-            void navigate({
-              to: "/tasks/$taskId/guided",
-              params: { taskId: task.id },
-              search: { slide: slideId },
-            });
-            return;
-          }
-          if (next === "review" || next === "annotate") onWorkspace(next);
-        }}
-        options={[
-          ...(reviewTask ? [{ value: "guided", label: t`Guided` }] : []),
-          { value: "review", label: t`Full viewer` },
-          ...(reviewTask && workspace !== "annotate"
-            ? []
-            : [{ value: "annotate", label: t`Annotate` }]),
-        ]}
-      />
+      {choices.length < 2 ? null : (
+        <SegmentedControl
+          aria-label={t`How to review`}
+          data-testid="workspace-switch"
+          className="shrink-0"
+          {...(guided ? { size: "lg" as const } : {})}
+          value={guided ? "guided" : workspace}
+          onValueChange={(next: string) => {
+            if (next === "guided" && task !== undefined) {
+              void navigate({
+                to: "/tasks/$taskId/guided",
+                params: { taskId: task.id },
+                search: { slide: slideId },
+              });
+              return;
+            }
+            if (next === "review" || next === "annotate") onWorkspace(next);
+          }}
+          options={choices.map((value) => ({ value, label: choiceLabels[value] }))}
+        />
+      )}
       {reportCaseId !== undefined ? (
         <Button
           variant="primary"

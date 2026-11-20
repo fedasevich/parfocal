@@ -153,6 +153,7 @@ export function StageReviewObjects({
   onAddMissed,
   answersOff,
   readOnly = false,
+  opinionLocked,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -170,6 +171,7 @@ export function StageReviewObjects({
   onAddMissed?: () => void;
   answersOff?: string | undefined;
   readOnly?: boolean;
+  opinionLocked?: string | undefined;
 }) {
   const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
@@ -463,6 +465,7 @@ export function StageReviewObjects({
             <ReviewOpinion
               taskId={taskId}
               slideId={slideId}
+              readOnly={opinionLocked}
               onObjects={(id) => {
                 if (id === "cells") setGridOpen(true);
                 if (id !== undefined) jump(id);

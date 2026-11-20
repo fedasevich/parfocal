@@ -4,6 +4,8 @@ Every decision the owner has answered, newest first. Open ones are in [decisions
 
 ## Answers of 2026-11-20
 
+- Decision 131 (the two Kaggle downloads) is done. You downloaded CryoNuSeg and Lizard to `~/.cache/parfocal/datasets/`, their sizes and checksums are pinned in `workers/ml` and both loaders of MLEVAL-010 (loaders for datasets behind a sign-in) read them.
+- Decision 95 (the Zitadel login service user) is done. The login service user `parfocal-login` exists and the Modal secret `parfocal-api-login` is live, so IAM-027 (real sign-up and sign-in from the app's own screens) needs only its agent test run on app.parfocal.eu.
 - Decision 164 (whether the viewer becomes one shell on one route), option A. In your words, "build the whole migration, make it as good as possible, i'm getting lost in the app already". The 16 step migration of `docs/results/2026-11-20-viewer-state-machine.html` is on the board as PROTO-093 to PROTO-099 (the viewer migration), built in order.
 - Decision 163 (where a project slide row opens) is settled inside the one mode rule of PROTO-096 (one link helper and one mode rule): with no task, an owner or reviewer opens the slide in Annotate and a project viewer opens it to look, and the Full viewer is one click away. You also wrote A for it in decisions.md.
 

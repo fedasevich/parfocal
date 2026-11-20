@@ -1,4 +1,3 @@
-import type { TaskKind } from "@parfocal/api-client";
 import type { RailTool } from "../screens/review/viewer-frame.tsx";
 import { annotateRail, reviewRail } from "../screens/viewer-tools/rails.ts";
 
@@ -33,12 +32,20 @@ export const workspaceSetups: Record<SlideWorkspace, WorkspaceSetup> = {
   },
 };
 
-export function resolveWorkspace(
-  chosen: SlideWorkspace | undefined,
-  taskKind: TaskKind | undefined,
-): SlideWorkspace {
-  if (chosen !== undefined) return chosen;
-  return taskKind === "review" ? "review" : "annotate";
+const readOnlyTools = new Set(["select", "hand", "ruler"]);
+
+const lookOnly = (rail: RailTool[][]): RailTool[][] =>
+  rail
+    .map((group) => group.filter((item) => readOnlyTools.has(item.tool)))
+    .filter((group) => group.length > 0);
+
+export const readOnlySetups: Record<SlideWorkspace, WorkspaceSetup> = {
+  review: { ...workspaceSetups.review, rail: lookOnly(reviewRail) },
+  annotate: { ...workspaceSetups.annotate, rail: lookOnly(annotateRail), dragBehaviour: "pan" },
+};
+
+export function setupOf(workspace: SlideWorkspace, readOnly: boolean): WorkspaceSetup {
+  return (readOnly ? readOnlySetups : workspaceSetups)[workspace];
 }
 
 export function railHasTool(setup: WorkspaceSetup, tool: string): boolean {

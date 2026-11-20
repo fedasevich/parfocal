@@ -9,6 +9,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
+import { slideLink } from "../../shell/slide-link.ts";
 import { supportHref } from "../../upload/ingest-failure.ts";
 import { Thumb } from "./parts.tsx";
 import {
@@ -92,12 +93,7 @@ export function StepList({
           <Button
             size="sm"
             nativeButton={false}
-            render={
-              <Link
-                to="/projects/$projectId/slides/$slideId"
-                params={{ projectId, slideId: firstSlideId }}
-              />
-            }
+            render={<Link {...slideLink({ projectId, slideId: firstSlideId })} />}
           >
             {slide.steps_done >= slide.steps.length
               ? t`Open the slide`

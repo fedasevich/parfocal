@@ -146,7 +146,7 @@ function SlidePreview({
             }
           : {
               label: t`Open`,
-              run: () => void goTo(destinations.openSlide(row.project.id, row.id, mine?.task_id)),
+              run: () => void goTo(destinations.slide(row.project.id, row.id, mine?.task_id)),
             }
       }
       full={reviewing ? open : undefined}

@@ -256,7 +256,8 @@ export function AnnotateTaskPanel({
   const selectedAi = shownAi.find((object) => object.object === selected);
   const cells = useMemo(() => cellsOf(shownAi, pending), [shownAi, pending]);
   const step = slideStepOf(status, me);
-  const locked = step === "signed-off";
+  const lookOnly = task.readOnly === true;
+  const locked = step === "signed-off" || lookOnly;
   const counts = aiCheckCounts(ai);
   const classCounts = classCountsOf(classes, [
     ...drawn,
@@ -312,8 +313,8 @@ export function AnnotateTaskPanel({
   }
   const sending = useRef<Promise<unknown>>(Promise.resolve());
   const aiStamp = useRef(0);
-  const live = useRef({ cells, selection, aiHistory, locked });
-  live.current = { cells, selection, aiHistory, locked };
+  const live = useRef({ cells, selection, aiHistory, locked, lookOnly });
+  live.current = { cells, selection, aiHistory, locked, lookOnly };
 
   const send = useCallback(
     (states: readonly AiState[]) => {
@@ -364,7 +365,7 @@ export function AnnotateTaskPanel({
     (after: readonly AiState[], label: string, line?: (count: number) => string) => {
       const now = live.current;
       if (now.locked) {
-        setRefusal(sentenceOf("slide-signed-off"));
+        setRefusal(sentenceOf(now.lookOnly ? "not-assigned" : "slide-signed-off"));
         return;
       }
       const byId = new Map(now.cells.map((cell) => [cell.object, cell]));
@@ -580,7 +581,7 @@ export function AnnotateTaskPanel({
     ? "You marked this slide as having nothing to mark. Colleagues see it as checked."
     : `${counts.confirmed + counts.edited + counts.deleted} of ${counts.total} AI objects checked. The layer has ${drawn.length} drawn by hand.`;
   const markChecked =
-    step === "open" ? (
+    step === "open" && !lookOnly ? (
       <Button
         variant="primary"
         data-testid="mark-slide-checked"
@@ -761,11 +762,13 @@ export function AnnotateTaskPanel({
                 ))}
               </div>
               <p className="m-0 text-fg-dim" data-testid="ai-selection-hint">
-                {locked
-                  ? t`This slide is signed off and its layer is locked.`
-                  : selection.length >= maxBatchCells
-                    ? t`One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them.`
-                    : t`Keys 1 to 9 retype the selection, X deletes it, J goes to the next cell.`}
+                {lookOnly
+                  ? t`You can look at this layer but not change it.`
+                  : locked
+                    ? t`This slide is signed off and its layer is locked.`
+                    : selection.length >= maxBatchCells
+                      ? t`One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them.`
+                      : t`Keys 1 to 9 retype the selection, X deletes it, J goes to the next cell.`}
               </p>
               {!locked && selectedCells().some((cell) => cell.edited) ? (
                 <Button size="sm" data-testid="ai-restore" onClick={restoreSelection}>
@@ -804,7 +807,7 @@ export function AnnotateTaskPanel({
               </Button>
             </div>
           ) : null}
-          {newRuns.length > 0 && (!locked || task.owner) ? (
+          {newRuns.length > 0 && !lookOnly && (!locked || task.owner) ? (
             <ul aria-label={t`Runs to add`} className="m-0 grid list-none gap-1 p-0">
               {newRuns.map((set) => (
                 <li key={set.id}>
