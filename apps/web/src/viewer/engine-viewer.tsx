@@ -19,9 +19,11 @@ import { useRefusals } from "../screens/refusals.ts";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
+import { usePageTitleDetail } from "../shell/page-title.ts";
 import { useCompare } from "./compare-panes.tsx";
 import { FirstReadGuard } from "./first-read-guard.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
+import { useModeCorrection } from "./mode-correction.ts";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { useCellRetype } from "./picked-cell-retype.tsx";
 import { CopyIntoParfocal, RemoteSlideTag } from "./remote-slide-notice.tsx";
@@ -69,6 +71,7 @@ import {
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { stageLayoutOf, type ViewerLayout } from "./viewer-layout.ts";
 import {
+  cellSampleOf,
   type ModeChoice,
   panelTabOf,
   type ViewerMode,
@@ -114,6 +117,7 @@ export type EngineViewerProps = {
   onLayout?: ((change: LayoutChange) => void) | undefined;
   onOpenSlide: (slideId: string) => void;
   onMode: (mode: ModeChoice) => void;
+  onModeCorrect?: ((mode: ViewerMode) => void) | undefined;
   onTab?: ((tab: ViewerTab) => void) | undefined;
 };
 
@@ -139,6 +143,7 @@ function GuardedViewer({
   onLayout,
   onOpenSlide,
   onMode,
+  onModeCorrect,
   onTab: onRouteTab,
 }: EngineViewerProps) {
   const focus = layout === "focus";
@@ -178,7 +183,8 @@ function GuardedViewer({
   const taskQuery = useGetReviewTask(task ?? "", { query: { enabled: task !== undefined } });
   const taskDetail = okData(taskQuery.data);
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
-  const projectRole = okData(useGetProject(projectId).data)?.my_role ?? undefined;
+  const projectQuery = useGetProject(projectId);
+  const projectRole = okData(projectQuery.data)?.my_role ?? undefined;
   const owner = projectRole === "owner";
   const annotating = task !== undefined && taskDetail?.kind === "annotate";
   const annotateStatus = okData(
@@ -222,12 +228,27 @@ function GuardedViewer({
   const lookingOn =
     access.kind === "read-only" &&
     (access.reason === "not-assigned" || access.reason === "no-review-right");
+  usePageTitleDetail(
+    [load?.case?.label, load?.slide?.label].filter((part) => !!part).join(" ") || null,
+  );
+  const cellSample = cellSampleOf(okData(reviewObjects.data));
   const modeRule = viewerModeOf({
     hasTask: task !== undefined,
     taskKind: task === undefined ? undefined : (taskDetail?.kind ?? load?.task?.kind),
     access,
     chosen,
+    cellSample,
   });
+  const modeFallback = useModeCorrection(
+    slideId,
+    chosen,
+    modeRule,
+    meData !== undefined &&
+      !projectQuery.isPending &&
+      (task === undefined || taskDetail !== undefined) &&
+      (chosen !== "cells" || reviewTask === null || cellSample !== undefined),
+    onModeCorrect,
+  );
   const workspace = modeRule.workspace;
   const guided = modeRule.mode === "guided";
   const cells = modeRule.mode === "cells";
@@ -341,6 +362,7 @@ function GuardedViewer({
         slideLabel={load?.slide?.label ?? ""}
         onNext={openNext}
         onAsk={askResearcher}
+        modeFallback={modeFallback}
       />
       {focus ? (
         <StageFocusPill

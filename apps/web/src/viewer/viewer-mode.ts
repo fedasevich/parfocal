@@ -15,6 +15,7 @@ export type ModeFacts = {
   readonly taskKind: TaskKind | undefined;
   readonly access: ViewerAccess;
   readonly chosen: ViewerMode | undefined;
+  readonly cellSample?: boolean | undefined;
 };
 
 export type ModeRule = {
@@ -48,12 +49,31 @@ export function viewerModeOf(facts: ModeFacts): ModeRule {
     return rule(facts.chosen === "look" ? "look" : "annotate", noTaskChoices);
   }
   if (facts.taskKind === "annotate") return rule("annotate", []);
-  const chosen =
-    facts.chosen !== undefined && reviewTaskModes.has(facts.chosen) ? facts.chosen : "review";
+  const allowed =
+    facts.chosen !== undefined &&
+    reviewTaskModes.has(facts.chosen) &&
+    !(facts.chosen === "cells" && facts.cellSample === false);
+  const chosen = allowed && facts.chosen !== undefined ? facts.chosen : "review";
   if (facts.taskKind === undefined)
     return rule(chosen === "guided" || chosen === "cells" ? chosen : "review", []);
   if (!edit) return rule(chosen === "guided" ? "guided" : "review", []);
   return rule(chosen, reviewTaskChoices);
+}
+
+export function correctedMode(
+  chosen: ViewerMode | undefined,
+  rule: ModeRule,
+  settled: boolean,
+): ViewerMode | undefined {
+  if (!settled || chosen === undefined || chosen === rule.mode) return undefined;
+  return rule.mode;
+}
+
+export function cellSampleOf(
+  listed: { readonly objects: readonly { readonly kind: string }[] } | undefined,
+): boolean | undefined {
+  if (listed === undefined) return undefined;
+  return listed.objects.some((item) => item.kind === "cell");
 }
 
 export function modeOfWorkspace(workspace: "review" | "annotate", hasTask: boolean): ViewerMode {

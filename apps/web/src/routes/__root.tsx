@@ -25,6 +25,7 @@ import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 import { useRememberReturnPage } from "../viewer/use-return-page.ts";
 
 const TourHost = lazy(() => import("../help/tour-host.tsx"));
+const PageTitle = lazy(() => import("../shell/page-title.ts"));
 const StudyGuardHost = lazy(() => import("../study/study-guard-host.tsx"));
 
 export const Route = createRootRoute({
@@ -75,6 +76,9 @@ function RootContent() {
           <StudyGuardHost />
         </Suspense>
       ) : null}
+      <Suspense fallback={null}>
+        <PageTitle />
+      </Suspense>
       <SurveyHost />
       {signedIn ? (
         <Suspense fallback={null}>

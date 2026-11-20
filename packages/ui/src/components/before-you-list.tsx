@@ -77,7 +77,8 @@ function BeforeYouList({
 function blockerReason(blockers: Blocker[]) {
   if (blockers.length !== 1) return undefined;
   const [only] = blockers;
-  return typeof only?.text === "string" ? `${only.text}.` : undefined;
+  if (typeof only?.text !== "string") return undefined;
+  return /[.!?]$/.test(only.text) ? only.text : `${only.text}.`;
 }
 
 export {

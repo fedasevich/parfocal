@@ -1616,6 +1616,12 @@ msgstr ""
 #. placeholder {0}: offered.code
 #. placeholder {1}: offered.name
 #: src/screens/evaluation/evaluation-screen.tsx
+msgid "{0}, {1}, is already next to this one"
+msgstr ""
+
+#. placeholder {0}: offered.code
+#. placeholder {1}: offered.name
+#: src/screens/evaluation/evaluation-screen.tsx
 msgid "{0}, {1}, is now next to this one"
 msgstr ""
 
@@ -2146,6 +2152,10 @@ msgid "{seenPercent}% of the tissue seen at 10x or more"
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
+msgid "{senderFirst} can fix it and send it again."
+msgstr ""
+
+#: src/screens/clinical-report/cosign-screen.tsx
 msgid "{senderFirst} sees your changes and the note."
 msgstr ""
 
@@ -2549,6 +2559,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "1 px"
+msgstr ""
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "1 review not submitted"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
@@ -3308,6 +3322,7 @@ msgid "Address"
 msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Adjudication"
 msgstr ""
@@ -3331,6 +3346,7 @@ msgstr ""
 #: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 msgid "Admin"
 msgstr ""
 
@@ -3704,6 +3720,7 @@ msgstr ""
 #: src/screens/new-task/send-step.tsx
 #: src/screens/new-task/steps.tsx
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Annotate"
 msgstr ""
 
@@ -4724,6 +4741,7 @@ msgstr ""
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 #: src/screens/upload/check-step.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Cells"
 msgstr ""
 
@@ -6251,6 +6269,7 @@ msgid "Detector"
 msgstr ""
 
 #: ../../packages/ui/src/components/developer-drawer.tsx
+#: src/shell/page-title-names.ts
 msgid "Developer"
 msgstr ""
 
@@ -6325,6 +6344,7 @@ msgstr ""
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/viewer-links.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Disagreements"
 msgstr ""
@@ -6874,6 +6894,7 @@ msgstr ""
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Evaluation report"
 msgstr ""
 
@@ -7942,6 +7963,7 @@ msgstr ""
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/routes/issue-states.tsx
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Guided"
 msgstr ""
 
@@ -7980,10 +8002,6 @@ msgstr ""
 
 #: src/screens/team/team-screen.tsx
 msgid "Has these slides now"
-msgstr ""
-
-#: src/screens/clinical-report/cosign-screen.tsx
-msgid "He can fix it and send it again."
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -8122,6 +8140,7 @@ msgstr ""
 #: src/routes/prototype.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Home"
@@ -9425,6 +9444,7 @@ msgid "Logo letters"
 msgstr ""
 
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Look"
 msgstr ""
 
@@ -9985,6 +10005,7 @@ msgstr ""
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/my-work-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "My work"
 msgstr ""
@@ -11096,6 +11117,7 @@ msgstr ""
 #: src/screens/notifications/notifications-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/bell.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Notifications"
@@ -11671,6 +11693,10 @@ msgstr ""
 
 #: src/viewer/live-progress.tsx
 msgid "Opening"
+msgstr ""
+
+#: src/routes/go.$notificationId.tsx
+msgid "Opening the notification"
 msgstr ""
 
 #: src/viewer/live-top-bar.tsx
@@ -12657,6 +12683,7 @@ msgstr ""
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/team/team-screen.tsx
 #: src/screens/upload/live-wizard.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Project"
 msgstr ""
@@ -13497,6 +13524,7 @@ msgstr ""
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-inspector.tsx
 msgid "Review"
 msgstr ""
@@ -13823,6 +13851,7 @@ msgstr ""
 #: src/screens/project/slides-tab.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 msgid "Run a model"
 msgstr ""
@@ -14168,6 +14197,7 @@ msgstr ""
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/search/search-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Search"
 msgstr ""
@@ -14252,6 +14282,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/notifications-panel.tsx
 msgid "See all"
+msgstr ""
+
+#: src/routes/go.$notificationId.tsx
+msgid "See all notifications"
 msgstr ""
 
 #: src/screens/admin/role-permissions.tsx
@@ -14563,6 +14597,7 @@ msgstr ""
 #: src/screens/project/project-page.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/account-menu.tsx
+#: src/shell/page-title-names.ts
 msgid "Settings"
 msgstr ""
 
@@ -14903,6 +14938,7 @@ msgstr ""
 #: src/routes/issue-states.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Sign in"
 msgstr ""
 
@@ -14935,6 +14971,7 @@ msgstr ""
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/shell/page-title-names.ts
 msgid "Sign off"
 msgstr ""
 
@@ -15203,6 +15240,7 @@ msgstr ""
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-progress.tsx
 #: src/viewer/live-slides-popover.tsx
 #: src/viewer/live-top-bar.tsx
@@ -15829,6 +15867,7 @@ msgid "Strong"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/shell/page-title-names.ts
 msgid "Study"
 msgstr ""
 
@@ -16070,6 +16109,7 @@ msgid "task timing"
 msgstr ""
 
 #: src/screens/kpi/kpi-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Task timing"
 msgstr ""
 
@@ -16085,6 +16125,7 @@ msgstr ""
 #: src/routes/issue-states.tsx
 #: src/screens/team/team-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 msgid "Team"
 msgstr ""
 
@@ -16673,6 +16714,10 @@ msgstr ""
 msgid "The queue opens when every reviewer has submitted. {lockedName} has {0} slides left."
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "The queue opens when every reviewer has submitted. {lockedName} has 1 slide left."
+msgstr ""
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "The reason goes into the history of the layer."
 msgstr ""
@@ -16683,7 +16728,7 @@ msgid "The reason goes into the report."
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
-msgid "The report as he sent it"
+msgid "The report as {senderFirst} sent it"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
@@ -17186,6 +17231,10 @@ msgstr ""
 msgid "This MRXS slide has no data folder"
 msgstr ""
 
+#: src/routes/go.$notificationId.tsx
+msgid "This notification cannot be opened"
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "This page does not exist, or it was moved or deleted."
 msgstr ""
@@ -17230,8 +17279,19 @@ msgstr ""
 msgid "This slide cannot be read"
 msgstr ""
 
+#. placeholder {0}: modeWords[modeFallback?.asked ?? "review"]
+#. placeholder {1}: modeWords[modeFallback?.shown ?? "review"]
+#: src/viewer/slide-notice-list.tsx
+msgid "This slide cannot open in {0} here, so it opened in {1}."
+msgstr ""
+
 #: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
+msgstr ""
+
+#. placeholder {0}: modeWords[modeFallback.shown]
+#: src/viewer/slide-notice-list.tsx
+msgid "This slide has no cell sample, so it opened in {0}."
 msgstr ""
 
 #: src/viewer/area-keys.tsx
@@ -17910,6 +17970,7 @@ msgstr ""
 #: src/screens/project/project-page.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
+#: src/shell/page-title-names.ts
 msgid "Upload"
 msgstr ""
 
@@ -18431,6 +18492,10 @@ msgstr ""
 #: src/screens/new-task/modals.tsx
 #: src/screens/review/object-card.tsx
 msgid "What is wrong"
+msgstr ""
+
+#: src/routes/go.$notificationId.tsx
+msgid "What it points at was deleted, or it is no longer open to you."
 msgstr ""
 
 #: src/screens/admin/connect-model.tsx
@@ -19073,6 +19138,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "your new workspace"
+msgstr ""
+
+#: src/routes/go.$notificationId.tsx
+msgid "Your other notifications and your work are not affected."
 msgstr ""
 
 #: src/shell/issue-pages.tsx

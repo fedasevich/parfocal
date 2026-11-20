@@ -26,6 +26,7 @@ import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
 import { Route as StudyRouteImport } from "./routes/study.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
+import { Route as GoNotificationIdRouteImport } from "./routes/go.$notificationId.tsx";
 import { Route as InvitationsTokenRouteImport } from "./routes/invitations.$token.tsx";
 import { Route as IssuePagesKindRouteImport } from "./routes/issue-pages.$kind.tsx";
 import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
@@ -143,6 +144,11 @@ const TeamRoute = TeamRouteImport.update({
 const FlowMapIndexRoute = FlowMapIndexRouteImport.update({
   id: "/flow-map/",
   path: "/flow-map/",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const GoNotificationIdRoute = GoNotificationIdRouteImport.update({
+  id: "/go/$notificationId",
+  path: "/go/$notificationId",
   getParentRoute: () => rootRouteImport,
 } as any);
 const InvitationsTokenRoute = InvitationsTokenRouteImport.update({
@@ -342,6 +348,7 @@ export interface FileRoutesByFullPath {
   "/sign-up": typeof SignUpRoute;
   "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
+  "/go/$notificationId": typeof GoNotificationIdRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/issue-pages/$kind": typeof IssuePagesKindRoute;
   "/projects/new": typeof ProjectsNewRoute;
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   "/sign-up": typeof SignUpRoute;
   "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
+  "/go/$notificationId": typeof GoNotificationIdRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/issue-pages/$kind": typeof IssuePagesKindRoute;
   "/projects/new": typeof ProjectsNewRoute;
@@ -447,6 +455,7 @@ export interface FileRoutesById {
   "/sign-up": typeof SignUpRoute;
   "/study": typeof StudyRoute;
   "/team": typeof TeamRoute;
+  "/go/$notificationId": typeof GoNotificationIdRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
   "/issue-pages/$kind": typeof IssuePagesKindRoute;
   "/projects/new": typeof ProjectsNewRoute;
@@ -501,6 +510,7 @@ export interface FileRouteTypes {
     | "/sign-up"
     | "/study"
     | "/team"
+    | "/go/$notificationId"
     | "/invitations/$token"
     | "/issue-pages/$kind"
     | "/projects/new"
@@ -553,6 +563,7 @@ export interface FileRouteTypes {
     | "/sign-up"
     | "/study"
     | "/team"
+    | "/go/$notificationId"
     | "/invitations/$token"
     | "/issue-pages/$kind"
     | "/projects/new"
@@ -605,6 +616,7 @@ export interface FileRouteTypes {
     | "/sign-up"
     | "/study"
     | "/team"
+    | "/go/$notificationId"
     | "/invitations/$token"
     | "/issue-pages/$kind"
     | "/projects/new"
@@ -658,6 +670,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute;
   StudyRoute: typeof StudyRoute;
   TeamRoute: typeof TeamRoute;
+  GoNotificationIdRoute: typeof GoNotificationIdRoute;
   InvitationsTokenRoute: typeof InvitationsTokenRoute;
   IssuePagesKindRoute: typeof IssuePagesKindRoute;
   ProjectsNewRoute: typeof ProjectsNewRoute;
@@ -813,6 +826,13 @@ declare module "@tanstack/react-router" {
       path: "/flow-map";
       fullPath: "/flow-map/";
       preLoaderRoute: typeof FlowMapIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/go/$notificationId": {
+      id: "/go/$notificationId";
+      path: "/go/$notificationId";
+      fullPath: "/go/$notificationId";
+      preLoaderRoute: typeof GoNotificationIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/invitations/$token": {
@@ -1066,6 +1086,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   StudyRoute: StudyRoute,
   TeamRoute: TeamRoute,
+  GoNotificationIdRoute: GoNotificationIdRoute,
   InvitationsTokenRoute: InvitationsTokenRoute,
   IssuePagesKindRoute: IssuePagesKindRoute,
   ProjectsNewRoute: ProjectsNewRoute,

@@ -39,5 +39,5 @@ const firstName = (name: string) => name.split(" ")[0] ?? name;
 
 export function assignedNudgeMessage(name: string, task: AssignedTask, reviewer: ReviewerProgress) {
   const due = task.due_on ? ` is due ${formatDue(task.due_on)} and` : "";
-  return `Hi ${firstName(name)}, ${task.code}${due} has ${left(reviewer)} slides left for you. Could you fit some in this week?`;
+  return `Hi ${firstName(name)}, ${task.code}${due} has ${left(reviewer)} ${left(reviewer) === 1 ? "slide" : "slides"} left for you. Could you fit some in this week?`;
 }

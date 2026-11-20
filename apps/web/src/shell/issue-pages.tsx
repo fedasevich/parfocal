@@ -14,7 +14,7 @@ type IssuePageProps = {
   testId: string;
 };
 
-function IssuePage({ icon, title, happened, stillWorks, actions, testId }: IssuePageProps) {
+export function IssuePage({ icon, title, happened, stillWorks, actions, testId }: IssuePageProps) {
   return (
     <main data-testid={testId} className="mx-auto flex max-w-xl flex-col gap-4 px-6 py-16 text-fg">
       <Icon name={icon} size="lg" className="text-fg-dim" />
@@ -28,7 +28,7 @@ function IssuePage({ icon, title, happened, stillWorks, actions, testId }: Issue
   );
 }
 
-function GoHome({ primary = false }: { primary?: boolean }) {
+export function GoHome({ primary = false }: { primary?: boolean }) {
   const navigate = useNavigate();
   return (
     <Button variant={primary ? "primary" : "secondary"} onClick={() => void navigate({ to: "/" })}>

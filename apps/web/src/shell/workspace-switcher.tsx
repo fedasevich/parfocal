@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { destinations } from "./destinations.ts";
 import { useGoTo } from "./router-link.tsx";
+import { initialsOf } from "./workspace-initials.ts";
 
 const workspaceColours = ["#0f766e", "#7c3aed", "#2563eb", "#b45309"];
 
@@ -16,14 +17,6 @@ const subtitles: Record<Workspace["kind"], string> = {
   research: "Pathology and AI research",
   "second-opinion": "Second-opinion network",
 };
-
-const initialsOf = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter((word) => /^\p{Lu}/u.test(word))
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2);
 
 function optionOf(workspace: Workspace, index: number): WorkspaceOption {
   return {

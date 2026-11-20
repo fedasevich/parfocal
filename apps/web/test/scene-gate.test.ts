@@ -28,6 +28,7 @@ const productRoutes: Record<string, readonly string[]> = {
   "__root.tsx": [],
   "admin.tsx": ["tplnew", "tpledit", "addmodel", "addtested", "addfail", "addmap"],
   "developer.tsx": [],
+  "go.$notificationId.tsx": [],
   "index.tsx": [],
   "invitations.$token.tsx": [],
   "invite.tsx": ["landing", "account"],

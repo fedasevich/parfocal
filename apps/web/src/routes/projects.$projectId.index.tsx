@@ -1,15 +1,24 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ProjectPage, type ProjectTab } from "../screens/project/project-page.tsx";
 import { useResultsSlide } from "../screens/project/scene.ts";
 import { type ProjectSearch, projectSearch } from "../search/route-searches.ts";
 
-export const Route = createFileRoute("/projects/$projectId/")({
-  validateSearch: projectSearch,
-  component: ProjectRoute,
-});
-
 const tabOf = (tab: ProjectSearch["tab"]): ProjectTab =>
   tab === "tasks" || tab === "settings" ? tab : tab === "people" ? "settings" : "slides";
+
+export const Route = createFileRoute("/projects/$projectId/")({
+  validateSearch: projectSearch,
+  beforeLoad: ({ params, search }) => {
+    if (search.scene !== undefined || tabOf(search.tab) === search.tab) return;
+    throw redirect({
+      to: "/projects/$projectId",
+      params,
+      search: { ...search, tab: tabOf(search.tab) },
+      replace: true,
+    });
+  },
+  component: ProjectRoute,
+});
 
 function ProjectRoute() {
   const { projectId } = Route.useParams();

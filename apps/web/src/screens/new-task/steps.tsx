@@ -217,7 +217,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                   touched: { ...current.touched, groups: true, rset: true },
                 }))
               }
-              end={`${group.slideIds.length} slides`}
+              end={group.slideIds.length === 1 ? "1 slide" : `${group.slideIds.length} slides`}
             >
               <SlideThumb slideId={group.slideIds[0]} file={group.title} />
               <RowText title={group.title} sub={group.sub} />
@@ -276,7 +276,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                 update((current) => {
                   const objects = data.resultSets.find((set) => set.id === value)?.objects;
                   const fitting =
-                    objects && !current.touched["tplPicked"] && !isAnnotate(current)
+                    objects && !current.touched.tplPicked && !isAnnotate(current)
                       ? data.templates.find(
                           (item) =>
                             item.id === templateFor(data.templates, current.templateId, objects),

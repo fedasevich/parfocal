@@ -1618,6 +1618,12 @@ msgstr "{0}, {1} to {2}"
 #. placeholder {0}: offered.code
 #. placeholder {1}: offered.name
 #: src/screens/evaluation/evaluation-screen.tsx
+msgid "{0}, {1}, is already next to this one"
+msgstr "{0}, {1}, is already next to this one"
+
+#. placeholder {0}: offered.code
+#. placeholder {1}: offered.name
+#: src/screens/evaluation/evaluation-screen.tsx
 msgid "{0}, {1}, is now next to this one"
 msgstr "{0}, {1}, is now next to this one"
 
@@ -2148,6 +2154,10 @@ msgid "{seenPercent}% of the tissue seen at 10x or more"
 msgstr "{seenPercent}% of the tissue seen at 10x or more"
 
 #: src/screens/clinical-report/cosign-screen.tsx
+msgid "{senderFirst} can fix it and send it again."
+msgstr "{senderFirst} can fix it and send it again."
+
+#: src/screens/clinical-report/cosign-screen.tsx
 msgid "{senderFirst} sees your changes and the note."
 msgstr "{senderFirst} sees your changes and the note."
 
@@ -2552,6 +2562,10 @@ msgstr "1 file waits for a slide. Without one it stays out."
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "1 px"
 msgstr "1 px"
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "1 review not submitted"
+msgstr "1 review not submitted"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "1 setting"
@@ -3310,6 +3324,7 @@ msgid "Address"
 msgstr "Address"
 
 #: src/screens/my-work/to-review-tab.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Adjudication"
 msgstr "Adjudication"
@@ -3333,6 +3348,7 @@ msgstr "Adjustments"
 #: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 msgid "Admin"
 msgstr "Admin"
 
@@ -3706,6 +3722,7 @@ msgstr "Anna Kopecká with three objects to adjudicate on RT-14"
 #: src/screens/new-task/send-step.tsx
 #: src/screens/new-task/steps.tsx
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Annotate"
 msgstr "Annotate"
 
@@ -4726,6 +4743,7 @@ msgstr "Cell typing"
 #: src/screens/review/object-card.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 #: src/screens/upload/check-step.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Cells"
 msgstr "Cells"
 
@@ -6256,6 +6274,7 @@ msgid "Detector"
 msgstr "Detector"
 
 #: ../../packages/ui/src/components/developer-drawer.tsx
+#: src/shell/page-title-names.ts
 msgid "Developer"
 msgstr "Developer"
 
@@ -6330,6 +6349,7 @@ msgstr "Disagreed"
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/viewer-links.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Disagreements"
 msgstr "Disagreements"
@@ -6879,6 +6899,7 @@ msgstr "Evaluation"
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Evaluation report"
 msgstr "Evaluation report"
 
@@ -7947,6 +7968,7 @@ msgstr "Guess: level {0}, scaled by {1}"
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/routes/issue-states.tsx
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Guided"
 msgstr "Guided"
 
@@ -7986,10 +8008,6 @@ msgstr "Has a note"
 #: src/screens/team/team-screen.tsx
 msgid "Has these slides now"
 msgstr "Has these slides now"
-
-#: src/screens/clinical-report/cosign-screen.tsx
-msgid "He can fix it and send it again."
-msgstr "He can fix it and send it again."
 
 #: src/screens/admin/connect-model.tsx
 msgid "Header"
@@ -8127,6 +8145,7 @@ msgstr "Hold Z to see the whole slide"
 #: src/routes/prototype.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Home"
@@ -9430,6 +9449,7 @@ msgid "Logo letters"
 msgstr "Logo letters"
 
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "Look"
 msgstr "Look"
 
@@ -9990,6 +10010,7 @@ msgstr "My presets"
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/my-work-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "My work"
 msgstr "My work"
@@ -11101,6 +11122,7 @@ msgstr "Nothing, experts only draw"
 #: src/screens/notifications/notifications-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/bell.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Notifications"
@@ -11677,6 +11699,10 @@ msgstr "Opened from {mapTitle}, as"
 #: src/viewer/live-progress.tsx
 msgid "Opening"
 msgstr "Opening"
+
+#: src/routes/go.$notificationId.tsx
+msgid "Opening the notification"
+msgstr "Opening the notification"
 
 #: src/viewer/live-top-bar.tsx
 msgid "Opening the objects of this slide"
@@ -12666,6 +12692,7 @@ msgstr "Progress on this slide and in the whole task"
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/team/team-screen.tsx
 #: src/screens/upload/live-wizard.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Project"
 msgstr "Project"
@@ -13506,6 +13533,7 @@ msgstr "Returns"
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/viewer/live-top-bar.tsx
+#: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-inspector.tsx
 msgid "Review"
 msgstr "Review"
@@ -13832,6 +13860,7 @@ msgstr "Run"
 #: src/screens/project/slides-tab.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
+#: src/shell/page-title-names.ts
 #: src/shell/palette-labels.tsx
 msgid "Run a model"
 msgstr "Run a model"
@@ -14177,6 +14206,7 @@ msgstr "Screens lock after {0} without activity."
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/search/search-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-top-bar.tsx
 msgid "Search"
 msgstr "Search"
@@ -14262,6 +14292,10 @@ msgstr "security@hospital.example"
 #: ../../packages/ui/src/components/notifications-panel.tsx
 msgid "See all"
 msgstr "See all"
+
+#: src/routes/go.$notificationId.tsx
+msgid "See all notifications"
+msgstr "See all notifications"
 
 #: src/screens/admin/role-permissions.tsx
 msgid "See projects, cases and slides"
@@ -14572,6 +14606,7 @@ msgstr "Setting restored."
 #: src/screens/project/project-page.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/account-menu.tsx
+#: src/shell/page-title-names.ts
 msgid "Settings"
 msgstr "Settings"
 
@@ -14912,6 +14947,7 @@ msgstr "Side panel width"
 #: src/routes/issue-states.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Sign in"
 msgstr "Sign in"
 
@@ -14944,6 +14980,7 @@ msgstr "Sign in without a password next time"
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/shell/page-title-names.ts
 msgid "Sign off"
 msgstr "Sign off"
 
@@ -15212,6 +15249,7 @@ msgstr "Skipped, already in this project."
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/new-task/reviewers-step.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/shell/page-title-names.ts
 #: src/viewer/live-progress.tsx
 #: src/viewer/live-slides-popover.tsx
 #: src/viewer/live-top-bar.tsx
@@ -15838,6 +15876,7 @@ msgid "Strong"
 msgstr "Strong"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/shell/page-title-names.ts
 msgid "Study"
 msgstr "Study"
 
@@ -16079,6 +16118,7 @@ msgid "task timing"
 msgstr "task timing"
 
 #: src/screens/kpi/kpi-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Task timing"
 msgstr "Task timing"
 
@@ -16094,6 +16134,7 @@ msgstr "Teach MONAI"
 #: src/routes/issue-states.tsx
 #: src/screens/team/team-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/page-title-names.ts
 msgid "Team"
 msgstr "Team"
 
@@ -16682,6 +16723,10 @@ msgstr "The project owner can switch to clinical in project settings."
 msgid "The queue opens when every reviewer has submitted. {lockedName} has {0} slides left."
 msgstr "The queue opens when every reviewer has submitted. {lockedName} has {0} slides left."
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "The queue opens when every reviewer has submitted. {lockedName} has 1 slide left."
+msgstr "The queue opens when every reviewer has submitted. {lockedName} has 1 slide left."
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "The reason goes into the history of the layer."
 msgstr "The reason goes into the history of the layer."
@@ -16692,8 +16737,8 @@ msgid "The reason goes into the report."
 msgstr "The reason goes into the report."
 
 #: src/screens/clinical-report/cosign-screen.tsx
-msgid "The report as he sent it"
-msgstr "The report as he sent it"
+msgid "The report as {senderFirst} sent it"
+msgstr "The report as {senderFirst} sent it"
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "The report as pages"
@@ -17195,6 +17240,10 @@ msgstr "This map changed since you opened it, open it again"
 msgid "This MRXS slide has no data folder"
 msgstr "This MRXS slide has no data folder"
 
+#: src/routes/go.$notificationId.tsx
+msgid "This notification cannot be opened"
+msgstr "This notification cannot be opened"
+
 #: src/shell/issue-pages.tsx
 msgid "This page does not exist, or it was moved or deleted."
 msgstr "This page does not exist, or it was moved or deleted."
@@ -17239,9 +17288,20 @@ msgstr "this slide"
 msgid "This slide cannot be read"
 msgstr "This slide cannot be read"
 
+#. placeholder {0}: modeWords[modeFallback?.asked ?? "review"]
+#. placeholder {1}: modeWords[modeFallback?.shown ?? "review"]
+#: src/viewer/slide-notice-list.tsx
+msgid "This slide cannot open in {0} here, so it opened in {1}."
+msgstr "This slide cannot open in {0} here, so it opened in {1}."
+
 #: src/screens/review/review-order-state.tsx
 msgid "This slide could not be prepared"
 msgstr "This slide could not be prepared"
+
+#. placeholder {0}: modeWords[modeFallback.shown]
+#: src/viewer/slide-notice-list.tsx
+msgid "This slide has no cell sample, so it opened in {0}."
+msgstr "This slide has no cell sample, so it opened in {0}."
 
 #: src/viewer/area-keys.tsx
 msgid "This slide has no pixel size, so areas show in pixels and get no size category."
@@ -17919,6 +17979,7 @@ msgstr "up, and as disagree from"
 #: src/screens/project/project-page.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
+#: src/shell/page-title-names.ts
 msgid "Upload"
 msgstr "Upload"
 
@@ -18441,6 +18502,10 @@ msgstr "What is T2?"
 #: src/screens/review/object-card.tsx
 msgid "What is wrong"
 msgstr "What is wrong"
+
+#: src/routes/go.$notificationId.tsx
+msgid "What it points at was deleted, or it is no longer open to you."
+msgstr "What it points at was deleted, or it is no longer open to you."
 
 #: src/screens/admin/connect-model.tsx
 msgid "What it returns"
@@ -19083,6 +19148,10 @@ msgstr "Your name was not saved. Try again."
 #: src/screens/onboarding/setup-screen.tsx
 msgid "your new workspace"
 msgstr "your new workspace"
+
+#: src/routes/go.$notificationId.tsx
+msgid "Your other notifications and your work are not affected."
+msgstr "Your other notifications and your work are not affected."
 
 #: src/shell/issue-pages.tsx
 msgid "Your other projects and your work are not affected."

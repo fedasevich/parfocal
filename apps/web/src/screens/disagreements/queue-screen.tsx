@@ -157,7 +157,9 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const everyClosed = allClosed(rows);
   const lockedName = nameOf(locked?.user_id) ?? "A reviewer";
   const sub = locked
-    ? t`The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
+    ? locked.slides_left === 1
+      ? t`The queue opens when every reviewer has submitted. ${lockedName} has 1 slide left.`
+      : t`The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
     : t`${task?.name ?? ""} · ${rows.length} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""}`;
   const checkedRows = rows.filter((item) => checked.includes(item.key));
 
