@@ -52,8 +52,9 @@ test("reviewing a slide and signing it out sends slide, area and cell times", as
   );
 
   await page.goto("/kpi");
-  await expect(page.getByTestId("kpi-seeded-note")).toHaveAttribute("data-source", "recorded");
-  await expect(page.getByTestId("kpi-review")).toContainText("1");
+  await expect(page.getByTestId("kpi-source")).toHaveAttribute("data-source", "recorded");
+  await expect(page.getByTestId("kpi-review").getByRole("cell").nth(1)).toHaveText("1");
+  await expect(page.getByTestId("kpi-sign_out").getByRole("cell").nth(1)).toHaveText("1");
 });
 
 test("the full viewer samples how much of the screen its chrome covers", async ({ page }) => {
@@ -90,4 +91,7 @@ test("nothing is recorded or sent after the person opts out", async ({ page }) =
   await page.getByRole("button", { name: /Submit and open slide 9/ }).click();
   await expect(page).toHaveURL(/\/submitted\?/);
   expect(await logged(page)).toEqual([]);
+  expect(
+    await page.evaluate(() => window.sessionStorage.getItem("parfocal.fake.timing-events")),
+  ).toBeNull();
 });

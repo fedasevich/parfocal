@@ -7222,8 +7222,8 @@ msgid "Figma"
 msgstr "Figma"
 
 #: src/screens/kpi/kpi-screen.tsx
-msgid "Figures from the ids-only timing events recorded on this device."
-msgstr "Figures from the ids-only timing events recorded on this device."
+msgid "Figures from the timing events of people who allow analytics, with no person, case or slide named."
+msgstr "Figures from the timing events of people who allow analytics, with no person, case or slide named."
 
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -10532,6 +10532,10 @@ msgstr "No slides yet."
 #: src/screens/admin/workspace-settings.tsx
 msgid "No template"
 msgstr "No template"
+
+#: src/screens/kpi/kpi-screen.tsx
+msgid "No timing recorded yet. Figures appear as people who allow analytics finish tasks."
+msgstr "No timing recorded yet. Figures appear as people who allow analytics finish tasks."
 
 #: src/screens/upload/result-problems.tsx
 msgid "no tissue mask"
@@ -14238,10 +14242,6 @@ msgstr "See what the AI found.<0/>Say what you think."
 msgid "See where we differ"
 msgstr "See where we differ"
 
-#: src/screens/kpi/kpi-screen.tsx
-msgid "Seeded sample data. Real figures come from ids-only events of people who allow analytics."
-msgstr "Seeded sample data. Real figures come from ids-only events of people who allow analytics."
-
 #: src/screens/developer/developer-screen.tsx
 msgid "Seeds from a detector"
 msgstr "Seeds from a detector"
@@ -15995,6 +15995,10 @@ msgstr "Task set JSON"
 #: src/screens/project/tasks-tab.tsx
 msgid "Task settings"
 msgstr "Task settings"
+
+#: src/screens/kpi/kpi-screen.tsx
+msgid "task timing"
+msgstr "task timing"
 
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Task timing"

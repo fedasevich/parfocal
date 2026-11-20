@@ -4777,6 +4777,12 @@ export interface Metrics {
   [key: string]: number;
 }
 
+/**
+ * @minimum 0
+ * @maximum 604800000
+ */
+export type Milliseconds = number;
+
 export interface ModelAgainstModel {
   set_a_id: string | null;
   set_b_id: string | null;
@@ -5604,6 +5610,12 @@ export interface PendingAccessRequest {
   asked_at: string;
 }
 
+/**
+ * @minimum 0
+ * @maximum 1000
+ */
+export type Permille = number;
+
 export interface PersonCount {
   user_id: string;
   count: number;
@@ -6120,6 +6132,48 @@ export interface ReassignmentCreate {
   to_user_id: string;
   what?: ReassignWhat;
   note?: ReassignmentNote | null;
+}
+
+export type TimingEventName = (typeof TimingEventName)[keyof typeof TimingEventName];
+
+export const TimingEventName = {
+  task_finished: "task_finished",
+  area_time_recorded: "area_time_recorded",
+  cell_review_timed: "cell_review_timed",
+  chrome_coverage_measured: "chrome_coverage_measured",
+  reading_time_compared: "reading_time_compared",
+} as const;
+
+export type TimedTaskKind = (typeof TimedTaskKind)[keyof typeof TimedTaskKind];
+
+export const TimedTaskKind = {
+  review: "review",
+  annotate: "annotate",
+  upload: "upload",
+  report: "report",
+} as const;
+
+export type TimedArea = (typeof TimedArea)[keyof typeof TimedArea];
+
+export const TimedArea = {
+  home: "home",
+  cases: "cases",
+  search: "search",
+  lab: "lab",
+  viewer: "viewer",
+  reports: "reports",
+  admin: "admin",
+  account: "account",
+} as const;
+
+export interface RecordedTimingEvent {
+  name: TimingEventName;
+  task_kind?: TimedTaskKind | null;
+  area?: TimedArea | null;
+  duration_ms?: Milliseconds | null;
+  estimated_ms?: Milliseconds | null;
+  coverage_permille?: Permille | null;
+  recorded_at: string;
 }
 
 export type RegionOutput = (typeof RegionOutput)[keyof typeof RegionOutput];
@@ -7707,6 +7761,10 @@ export interface TaskStates {
   left_open?: number;
 }
 
+export interface TaskTiming {
+  events: RecordedTimingEvent[];
+}
+
 export interface TaxonomyChange {
   /** @maxItems 9 */
   classes: ClassDraft[];
@@ -7923,6 +7981,27 @@ export interface TileAccess {
   format: string | null;
   storage?: TileAccessStorage;
   offline?: boolean;
+}
+
+export interface TimingEvent {
+  name: TimingEventName;
+  task_kind?: TimedTaskKind | null;
+  area?: TimedArea | null;
+  duration_ms?: Milliseconds | null;
+  estimated_ms?: Milliseconds | null;
+  coverage_permille?: Permille | null;
+}
+
+export interface TimingEventBatch {
+  /**
+   * @minItems 1
+   * @maxItems 50
+   */
+  events: TimingEvent[];
+}
+
+export interface TimingEventsRecorded {
+  recorded: number;
 }
 
 export interface TokenRequest {
@@ -69555,6 +69634,353 @@ export function useGetAiCorrections<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetAiCorrectionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type recordTimingEventsResponse200 = {
+  data: TimingEventsRecorded;
+  status: 200;
+};
+
+export type recordTimingEventsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type recordTimingEventsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type recordTimingEventsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type recordTimingEventsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type recordTimingEventsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type recordTimingEventsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type recordTimingEventsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type recordTimingEventsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type recordTimingEventsResponseSuccess = recordTimingEventsResponse200 & {
+  headers: Headers;
+};
+export type recordTimingEventsResponseError = (
+  | recordTimingEventsResponse400
+  | recordTimingEventsResponse401
+  | recordTimingEventsResponse403
+  | recordTimingEventsResponse404
+  | recordTimingEventsResponse409
+  | recordTimingEventsResponse422
+  | recordTimingEventsResponse429
+  | recordTimingEventsResponse500
+) & {
+  headers: Headers;
+};
+
+export type recordTimingEventsResponse =
+  | recordTimingEventsResponseSuccess
+  | recordTimingEventsResponseError;
+
+export const getRecordTimingEventsUrl = () => {
+  return `/api/me/timing-events`;
+};
+
+/**
+ * @summary Record Timing Events
+ */
+export const recordTimingEvents = async (
+  timingEventBatch: TimingEventBatch,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<recordTimingEventsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<recordTimingEventsResponse>(getRecordTimingEventsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(timingEventBatch),
+  });
+};
+
+export const getRecordTimingEventsMutationKey = () => ["recordTimingEvents"] as const;
+
+export const getRecordTimingEventsMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recordTimingEvents>>,
+    TError,
+    RecordTimingEventsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recordTimingEvents>>,
+  TError,
+  RecordTimingEventsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRecordTimingEventsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recordTimingEvents>>,
+    RecordTimingEventsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return recordTimingEvents(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecordTimingEventsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recordTimingEvents>>
+>;
+export type RecordTimingEventsMutationBody = TimingEventBatch;
+export type RecordTimingEventsMutationError = Problem;
+export type RecordTimingEventsMutationVariables = { data: TimingEventBatch };
+
+/**
+ * @summary Record Timing Events
+ */
+export const useRecordTimingEvents = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof recordTimingEvents>>,
+      TError,
+      RecordTimingEventsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof recordTimingEvents>>,
+  TError,
+  RecordTimingEventsMutationVariables,
+  TContext
+> => {
+  return useMutation(getRecordTimingEventsMutationOptions(options), queryClient);
+};
+
+export type getTaskTimingResponse200 = {
+  data: TaskTiming;
+  status: 200;
+};
+
+export type getTaskTimingResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskTimingResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskTimingResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskTimingResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskTimingResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskTimingResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskTimingResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTaskTimingResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskTimingResponseSuccess = getTaskTimingResponse200 & {
+  headers: Headers;
+};
+export type getTaskTimingResponseError = (
+  | getTaskTimingResponse400
+  | getTaskTimingResponse401
+  | getTaskTimingResponse403
+  | getTaskTimingResponse404
+  | getTaskTimingResponse409
+  | getTaskTimingResponse422
+  | getTaskTimingResponse429
+  | getTaskTimingResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskTimingResponse = getTaskTimingResponseSuccess | getTaskTimingResponseError;
+
+export const getGetTaskTimingUrl = () => {
+  return `/api/tenant/task-timing`;
+};
+
+/**
+ * @summary Get Task Timing
+ */
+export const getTaskTiming = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskTimingResponse> => {
+  return apiFetch<getTaskTimingResponse>(getGetTaskTimingUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskTimingQueryKey = () => {
+  return [`/api/tenant/task-timing`] as const;
+};
+
+export const getGetTaskTimingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskTiming>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskTiming>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskTimingQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskTiming>>> = ({ signal }) =>
+    getTaskTiming({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTaskTiming>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTaskTimingQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskTiming>>>;
+export type GetTaskTimingQueryError = Problem;
+
+export function useGetTaskTiming<
+  TData = Awaited<ReturnType<typeof getTaskTiming>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskTiming>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskTiming>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskTiming>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskTiming<
+  TData = Awaited<ReturnType<typeof getTaskTiming>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskTiming>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskTiming>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskTiming>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskTiming<
+  TData = Awaited<ReturnType<typeof getTaskTiming>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskTiming>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Timing
+ */
+
+export function useGetTaskTiming<
+  TData = Awaited<ReturnType<typeof getTaskTiming>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskTiming>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskTimingQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

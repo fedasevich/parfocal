@@ -234,6 +234,7 @@ import type {
   TaskReportLayout,
   TaskSlide,
   TaskStates,
+  TaskTiming,
   TeamWorkload,
   Template,
   TemplateOffer,
@@ -245,6 +246,7 @@ import type {
   ThreadDetail,
   TierMapping,
   TileAccess,
+  TimingEventsRecorded,
   TrackRecord,
   TumorMapJob,
   UploadBatch,
@@ -382,6 +384,9 @@ import {
   TenantKind,
   TenantStatus,
   TierTask,
+  TimedArea,
+  TimedTaskKind,
+  TimingEventName,
   TyperClass,
   UncheckedExport,
   UploadKind,
@@ -14242,6 +14247,39 @@ export const getGetAiCorrectionsResponseMock = (
   ...overrideResponse,
 });
 
+export const getRecordTimingEventsResponseMock = (
+  overrideResponse: Partial<Extract<TimingEventsRecorded, object>> = {},
+): TimingEventsRecorded => ({ recorded: faker.number.int(), ...overrideResponse });
+
+export const getGetTaskTimingResponseMock = (
+  overrideResponse: Partial<Extract<TaskTiming, object>> = {},
+): TaskTiming => ({
+  events: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.helpers.arrayElement(Object.values(TimingEventName)),
+      task_kind: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(TimedTaskKind)),
+        null,
+      ]),
+      area: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(TimedArea)),
+        null,
+      ]),
+      duration_ms: faker.helpers.arrayElement([faker.number.int({ min: 0, max: 604800000 }), null]),
+      estimated_ms: faker.helpers.arrayElement([
+        faker.number.int({ min: 0, max: 604800000 }),
+        null,
+      ]),
+      coverage_permille: faker.helpers.arrayElement([
+        faker.number.int({ min: 0, max: 1000 }),
+        null,
+      ]),
+      recorded_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getGetAiUsageResponseMock = (
   overrideResponse: Partial<Extract<AiUsage, object>> = {},
 ): AiUsage => ({
@@ -27325,6 +27363,52 @@ export const getGetAiCorrectionsMockHandler = (
   );
 };
 
+export const getRecordTimingEventsMockHandler = (
+  overrideResponse?:
+    | TimingEventsRecorded
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<TimingEventsRecorded> | TimingEventsRecorded),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/me/timing-events",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getRecordTimingEventsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetTaskTimingMockHandler = (
+  overrideResponse?:
+    | TaskTiming
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TaskTiming> | TaskTiming),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/task-timing",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTaskTimingResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetAiUsageMockHandler = (
   overrideResponse?:
     | AiUsage
@@ -29876,6 +29960,8 @@ export const getParfocalAPIMock = () => [
   getDownloadPatchExportMockHandler(),
   getGetTaskAiChangesMockHandler(),
   getGetAiCorrectionsMockHandler(),
+  getRecordTimingEventsMockHandler(),
+  getGetTaskTimingMockHandler(),
   getGetAiUsageMockHandler(),
   getStartEvaluationVersionMockHandler(),
   getListEvaluationChangesMockHandler(),

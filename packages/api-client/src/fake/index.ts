@@ -31,6 +31,7 @@ import { statusHandlers } from "./status-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
+import { timingHandlers } from "./timing-handlers.ts";
 import { uploadHandlers } from "./upload-handlers.ts";
 import { viewerHandlers } from "./viewer-handlers.ts";
 import { viewerIssueHandlers } from "./viewer-issue-handlers.ts";
@@ -73,6 +74,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...deletedResultSetHandlers(),
     ...settingsHandlers(),
     ...correctionsHandlers(),
+    ...timingHandlers(),
     ...consoleHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),
@@ -220,6 +222,7 @@ export {
   tileAccessHandlers,
   toTileAccess,
 } from "./tile-access-handlers.ts";
+export { resetFakeTimingEvents } from "./timing-handlers.ts";
 export { defaultFakeView, type FakeView, fakeView, setFakeView } from "./view.ts";
 export { toSlideAiProgress, toSlideResultStats } from "./viewer-handlers.ts";
 export {

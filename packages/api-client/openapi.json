@@ -44986,6 +44986,235 @@
         "x-permission": "workspace-settings"
       }
     },
+    "/api/me/timing-events": {
+      "post": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Record Timing Events",
+        "operationId": "recordTimingEvents",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimingEventBatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimingEventsRecorded"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/task-timing": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Get Task Timing",
+        "operationId": "getTaskTiming",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskTiming"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "workspace-settings"
+      }
+    },
     "/api/tenant/ai-usage": {
       "get": {
         "tags": [
@@ -69637,6 +69866,11 @@
         },
         "type": "object"
       },
+      "Milliseconds": {
+        "type": "integer",
+        "maximum": 604800000.0,
+        "minimum": 0.0
+      },
       "ModelAgainstModel": {
         "properties": {
           "set_a_id": {
@@ -72821,6 +73055,11 @@
         ],
         "title": "PendingAccessRequest"
       },
+      "Permille": {
+        "type": "integer",
+        "maximum": 1000.0,
+        "minimum": 0.0
+      },
       "PersonChanges": {
         "properties": {
           "letter": {
@@ -75092,6 +75331,74 @@
       "ReassignmentNote": {
         "type": "string",
         "maxLength": 300
+      },
+      "RecordedTimingEvent": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TimingEventName"
+          },
+          "task_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimedTaskKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimedArea"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Milliseconds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimated_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Milliseconds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage_permille": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Permille"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recorded At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "recorded_at"
+        ],
+        "title": "RecordedTimingEvent"
       },
       "Region-Output": {
         "type": "string",
@@ -84239,6 +84546,22 @@
         ],
         "title": "TaskStatus"
       },
+      "TaskTiming": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/RecordedTimingEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "TaskTiming"
+      },
       "TaxonomyChange": {
         "properties": {
           "classes": {
@@ -85486,6 +85809,132 @@
           512,
           1024
         ]
+      },
+      "TimedArea": {
+        "type": "string",
+        "enum": [
+          "home",
+          "cases",
+          "search",
+          "lab",
+          "viewer",
+          "reports",
+          "admin",
+          "account"
+        ]
+      },
+      "TimedTaskKind": {
+        "type": "string",
+        "enum": [
+          "review",
+          "annotate",
+          "upload",
+          "report"
+        ]
+      },
+      "TimingEvent": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TimingEventName"
+          },
+          "task_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimedTaskKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimedArea"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Milliseconds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimated_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Milliseconds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage_permille": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Permille"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "TimingEvent"
+      },
+      "TimingEventBatch": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/TimingEvent"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "TimingEventBatch"
+      },
+      "TimingEventName": {
+        "type": "string",
+        "enum": [
+          "task_finished",
+          "area_time_recorded",
+          "cell_review_timed",
+          "chrome_coverage_measured",
+          "reading_time_compared"
+        ],
+        "title": "TimingEventName"
+      },
+      "TimingEventsRecorded": {
+        "properties": {
+          "recorded": {
+            "type": "integer",
+            "title": "Recorded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recorded"
+        ],
+        "title": "TimingEventsRecorded"
       },
       "TokenDays": {
         "type": "integer",

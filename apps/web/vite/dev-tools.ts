@@ -2,14 +2,13 @@ import { join } from "node:path";
 import type { Plugin } from "vite";
 
 export const devToolsFlag = "PARFOCAL_PUBLIC_DEV_TOOLS";
-export const developerRouteFiles = "^(prototype|flow-map|spikes|issue-states|issue-pages|kpi)\\.";
+export const developerRouteFiles = "^(prototype|flow-map|spikes|issue-states|issue-pages)\\.";
 export const developerRoutePaths = [
   "/prototype",
   "/flow-map",
   "/spikes/",
   "/issue-states",
   "/issue-pages/",
-  "/kpi",
 ] as const;
 
 const flagValues = ["", "on", "off"];
