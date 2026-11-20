@@ -157,6 +157,8 @@ test("the cells of a run added to an annotate task are confirmed, deleted and un
   expect(unconfirmed.status, JSON.stringify(unconfirmed.json)).toBe(204);
   expect(await counts(page, slide)).toEqual({ confirmed: 0, edited: 1, deleted: 0 });
 
-  await page.goto(`/projects/${projectId}/slides/${slideId}/annotate-task?task=${idOf(made)}`);
+  await page.goto(
+    `/projects/${projectId}/slides/${slideId}/annotate-task?task=${idOf(made)}&tab=objects`,
+  );
   await expect(page.getByText("1 edited").first()).toBeVisible({ timeout: 30_000 });
 });
