@@ -78,6 +78,19 @@ def test_extra_fields_outside_the_allow_list_are_replaced(
     assert fields["patient_name"] == REDACTED
 
 
+def test_gpu_wait_fields_reach_the_logs(logger: logging.Logger, capture: Capture) -> None:
+    logger.info(
+        "gpu call answered",
+        extra={"gpu_kind": "best", "waited_seconds": 389.2, "slow_wait": True},
+    )
+    fields = capture.records[0].__dict__
+    assert (fields["gpu_kind"], fields["waited_seconds"], fields["slow_wait"]) == (
+        "best",
+        389.2,
+        True,
+    )
+
+
 def test_allowed_fields_still_have_registered_strings_redacted(
     logger: logging.Logger, capture: Capture
 ) -> None:
