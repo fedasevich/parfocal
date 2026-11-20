@@ -209,7 +209,9 @@ const targetOf = (item: ScenarioNotification): Pick<InboxItem, "target_kind" | "
   if (item.kind === "mention" || item.kind === "reply") {
     return { target_kind: "thread", target_id: item.id };
   }
-  if (item.kind === "task-assigned") return { target_kind: "task", target_id: taskIdOf("RT-14") };
+  if (item.kind === "task-assigned" || item.kind === "adjudication-requested") {
+    return { target_kind: "task", target_id: taskIdOf("RT-14") };
+  }
   if (item.kind === "task-signed-off") {
     return { target_kind: "evaluation", target_id: taskIdOf("RT-09") };
   }
@@ -235,6 +237,15 @@ const openTargetOf = (item: ScenarioNotification): Target | null => {
   }
   if (item.kind === "task-signed-off") {
     return { kind: "evaluation", project_id, task_id: taskIdOf("RT-09"), origin };
+  }
+  if (item.kind === "adjudication-requested") {
+    return {
+      kind: "task",
+      project_id,
+      task_id: taskIdOf("RT-14"),
+      slide_id,
+      origin: { route: "my-work" },
+    };
   }
   if (item.kind === "workspace-access-asked") return null;
   return { kind: "project", project_id, origin: { route: "home" } };

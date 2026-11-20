@@ -12,7 +12,7 @@ import {
   useGetMe,
   useGetProject,
 } from "@parfocal/api-client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { okData } from "../placeholder.tsx";
 import { type Assembly, assembleReport } from "./case-report.ts";
@@ -20,16 +20,26 @@ import type { ReportWriter } from "./report-sync.ts";
 
 export type LoadedReport = Assembly & { server: CaseReport };
 
-async function loadReport(projectId: string, caseId: string): Promise<CaseReport> {
+async function loadReport(projectId: string, caseId: string): Promise<CaseReport | null> {
   try {
     const found = await getCaseReport(projectId, caseId);
     if (found.status === 200) return found.data;
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 404) throw error;
   }
-  const created = await createCaseReport(projectId, caseId);
-  if (created.status !== 201) throw new Error("The report was not created");
-  return created.data;
+  return null;
+}
+
+export function useStartReport(projectId: string, caseId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const created = await createCaseReport(projectId, caseId);
+      if (created.status !== 201) throw new Error("The report was not created");
+      return created.data;
+    },
+    onSuccess: (report) => client.setQueryData(getGetCaseReportQueryKey(projectId, caseId), report),
+  });
 }
 
 export function useCaseReportData(projectId: string, caseId: string) {
@@ -43,7 +53,7 @@ export function useCaseReportData(projectId: string, caseId: string) {
   const caseQuery = useGetCase(caseId);
   const project = useGetProject(projectId);
   const me = useGetMe();
-  const server = report.data;
+  const server = report.data ?? undefined;
   const first = useGetCaseReportVersion(projectId, caseId, 1, {
     query: { enabled: server !== undefined && server.versions.length > 1 },
   });
@@ -65,10 +75,16 @@ export function useCaseReportData(projectId: string, caseId: string) {
       server,
     };
   }, [server, caseDetail, projectDetail, user, firstVersion, waitingForFirst]);
+  const caseGone = caseQuery.error instanceof ApiError && caseQuery.error.status === 404;
+  const missing = report.data === null && caseDetail !== undefined;
+  const failure = report.error ?? caseQuery.error ?? project.error ?? me.error;
   return {
     loaded,
-    pending: !loaded && !(report.error ?? caseQuery.error ?? project.error ?? me.error),
-    failed: Boolean(report.error ?? caseQuery.error ?? project.error ?? me.error),
+    user,
+    caseGone,
+    missing,
+    pending: !loaded && !missing && !failure && !(report.data === null && caseGone),
+    failed: Boolean(failure),
   };
 }
 

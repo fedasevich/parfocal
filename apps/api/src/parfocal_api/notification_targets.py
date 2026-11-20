@@ -17,6 +17,8 @@ from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import review_slide
 from parfocal_api.search import SearchContext, current_ids
 from parfocal_api.tables import (
+    NotificationKind,
+    adjudication_objects,
     event_outbox,
     import_sources,
     jobs,
@@ -102,6 +104,18 @@ async def current_object(
     return resolved[0].text(ascii=True), object_id
 
 
+async def waiting_slide(connection: TenantConnection, payload: dict[str, Any]) -> uuid.UUID | None:
+    adjudication_id = uuid_or_none(payload.get("adjudication_id"))
+    if adjudication_id is None:
+        return None
+    return await connection.scalar(
+        select(adjudication_objects.c.slide_id)
+        .where(adjudication_objects.c.adjudication_id == adjudication_id)
+        .order_by(adjudication_objects.c.slide_id, adjudication_objects.c.number)
+        .limit(1)
+    )
+
+
 async def decision_target(
     connection: TenantConnection, principal: CurrentPrincipal, row: Any, payload: dict[str, Any]
 ) -> Target:
@@ -160,7 +174,18 @@ async def get_notification_target(
                 if whole
                 else Origin(route=OriginRoute.MY_WORK)
             )
-            return Target(kind=shown, project_id=task.project_id, task_id=task.id, origin=back)
+            waiting = (
+                await waiting_slide(connection, payload)
+                if row.kind == NotificationKind.ADJUDICATION_REQUESTED
+                else None
+            )
+            return Target(
+                kind=shown,
+                project_id=task.project_id,
+                task_id=task.id,
+                slide_id=waiting,
+                origin=back,
+            )
         case TargetKind.SLIDE:
             slide = (
                 await connection.execute(

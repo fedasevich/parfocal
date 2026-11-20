@@ -265,10 +265,10 @@ function GuardedViewer({
     reviewTaskId: reviewTask,
     slideId,
   });
-  const opinionForm = okData(
-    useGetOpinion(reviewTask ?? "", slideId, undefined, { query: { enabled: reviewTask !== null } })
-      .data,
-  );
+  const opinionQuery = useGetOpinion(reviewTask ?? "", slideId, undefined, {
+    query: { enabled: reviewTask !== null },
+  });
+  const opinionForm = okData(opinionQuery.data);
   const panel = viewerPanelOf(modeRule.mode, access, {
     taskKind: task === undefined ? undefined : (taskDetail?.kind ?? load?.task?.kind),
     hasResults: flagged,
@@ -277,6 +277,18 @@ function GuardedViewer({
     layout: stageLayoutOf(layout),
     openFailed,
   });
+  const shownTab = panelTabOf(panel, tab);
+  const panelSettled =
+    meData !== undefined &&
+    !projectQuery.isPending &&
+    loaded.state === "ready" &&
+    (task === undefined || taskDetail !== undefined) &&
+    (reviewTask === null || !opinionQuery.isPending);
+  useEffect(() => {
+    if (panelSettled && tab !== undefined && shownTab !== tab && onRouteTab !== undefined) {
+      onRouteTab(shownTab);
+    }
+  }, [panelSettled, tab, shownTab, onRouteTab]);
   const openState = useMemo(() => ({ rail: panel.rail, onFailed: setOpenFailed }), [panel.rail]);
   const submitSlide = useSlideSubmit(reviewTask, slideId);
   const opinionShown = taskDetail?.kind === "review" && panel.tabs.includes("opinion");
@@ -446,7 +458,7 @@ function GuardedViewer({
   };
   const inspector = {
     guided,
-    tab: panelTabOf(panel, tab),
+    tab: shownTab,
     tabs: panel.tabs,
     onTab,
     counts: tabCounts,

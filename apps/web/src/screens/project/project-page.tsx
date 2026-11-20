@@ -26,8 +26,9 @@ import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/t
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useFormat } from "../../format.ts";
+import { usePageTitleDetail } from "../../shell/page-title.ts";
 import { readDropped } from "../../upload/drop.ts";
 import { dropStore } from "../../upload/drop-store.ts";
 import { markTried } from "../home/getting-started.ts";
@@ -47,6 +48,7 @@ export type ProjectView = {
   importFailed?: boolean | undefined;
   addClass?: boolean | undefined;
   addPerson?: string | undefined;
+  movedFrom?: string | undefined;
 };
 
 const privacyTag = (project: Project) =>
@@ -78,6 +80,7 @@ export function ProjectPage({
 
   const projectQuery = useGetProject(projectId);
   const project = okData(projectQuery.data);
+  usePageTitleDetail(project?.name);
   const isSample = project?.sample === true;
   useEffect(() => {
     if (isSample) markTried("open-sample");
@@ -93,6 +96,19 @@ export function ProjectPage({
   const people = usePeople();
   const navigate = useNavigate();
   const toast = useScreenToast();
+  const movedFrom = view.movedFrom;
+  const showToast = useRef(toast.show);
+  showToast.current = toast.show;
+  useEffect(() => {
+    if (movedFrom === undefined) return;
+    const names: Record<string, string> = {
+      results: t`Results`,
+      report: t`Report`,
+      people: t`People`,
+    };
+    const where = view.tab === "settings" ? t`Settings` : t`Slides`;
+    showToast.current(t`The ${names[movedFrom] ?? movedFrom} tab moved to ${where}.`);
+  }, [movedFrom, view.tab, t]);
   const [bannerShut, setBannerShut] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const failure = view.importFailed && !bannerShut ? overview?.import_failure : null;

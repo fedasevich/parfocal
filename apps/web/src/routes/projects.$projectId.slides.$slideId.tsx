@@ -1,19 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GuidedGate } from "../screens/review/guided-gate.tsx";
 import { FullViewer } from "../screens/viewer/full-viewer.tsx";
+import { viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import { type SlideSearch, slideSearch } from "../search/route-searches.ts";
+import { unknownValuesOf } from "../search/unknown-values.ts";
 import { slidePath } from "../shell/slide-link.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { openSlideEarly } from "../viewer/load-engine.ts";
 import { slideRedirect } from "../viewer/old-slide-address.ts";
+import { SlideAddressCheck } from "../viewer/slide-address-check.tsx";
 import type { StageStart } from "../viewer/stage-start.tsx";
 import { TaskSlideCheck } from "../viewer/task-slide-check.tsx";
 import { layoutOfOldAddress } from "../viewer/viewer-layout.ts";
-import { modeOfWorkspace } from "../viewer/viewer-mode.ts";
+import { modeOfWorkspace, viewerModes } from "../viewer/viewer-mode.ts";
 
 export const Route = createFileRoute("/projects/$projectId/slides/$slideId")({
   validateSearch: slideSearch,
   beforeLoad: ({ params, search, location }) => {
+    const unknown = unknownValuesOf(location.searchStr, { mode: viewerModes, tab: viewerTabs });
+    if (unknown.length > 0) {
+      throw slideRedirect(
+        params,
+        { ...search },
+        Object.fromEntries(unknown.map((key) => [key, undefined])),
+      );
+    }
     const oldLayout = layoutOfOldAddress(location.search);
     if (search.workspace === undefined && oldLayout === null) return;
     throw slideRedirect(params, location.search, {
@@ -85,15 +96,17 @@ function SlideView() {
     />
   );
   return (
-    <TaskSlideCheck projectId={projectId} taskId={search.task} slideId={slideId}>
-      {search.task === undefined || search.mode !== "guided" ? (
-        viewer
-      ) : (
-        <GuidedGate taskId={search.task} slideId={slideId}>
-          {() => viewer}
-        </GuidedGate>
-      )}
-    </TaskSlideCheck>
+    <SlideAddressCheck projectId={projectId} slideId={slideId} search={search}>
+      <TaskSlideCheck projectId={projectId} taskId={search.task} slideId={slideId}>
+        {search.task === undefined || search.mode !== "guided" ? (
+          viewer
+        ) : (
+          <GuidedGate taskId={search.task} slideId={slideId}>
+            {() => viewer}
+          </GuidedGate>
+        )}
+      </TaskSlideCheck>
+    </SlideAddressCheck>
   );
 }
 

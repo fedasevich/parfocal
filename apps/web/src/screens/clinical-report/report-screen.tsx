@@ -13,13 +13,15 @@ import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { ReportDocument } from "@parfocal/ui/components/clinical-report";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Loader } from "@parfocal/ui/components/loader";
 import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
 import { Zone } from "@parfocal/ui/components/zone";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { destinations } from "../../shell/destinations.ts";
+import { NotFoundPage } from "../../shell/issue-pages.tsx";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { usePeople } from "../people.ts";
 import { okData, QueryState } from "../placeholder.tsx";
@@ -59,7 +61,12 @@ import {
   type Values,
 } from "./model.ts";
 import { fieldId, useLinkRenderer, useToast } from "./parts.tsx";
-import { type LoadedReport, useCaseReportData, useReportWriter } from "./report-data.ts";
+import {
+  type LoadedReport,
+  useCaseReportData,
+  useReportWriter,
+  useStartReport,
+} from "./report-data.ts";
 import { pushValues } from "./report-sync.ts";
 import {
   DonePanel,
@@ -103,7 +110,27 @@ export function ReportScreen(props: ReportScreenProps) {
   );
   const excision = okData(cases.data)?.[1]?.id;
   const caseId = props.scene === "nostaging" ? (excision ?? "") : props.caseId;
-  const { loaded, pending, failed } = useCaseReportData(props.projectId, caseId);
+  const { loaded, user, caseGone, missing, pending, failed } = useCaseReportData(
+    props.projectId,
+    caseId,
+  );
+  const navigate = useNavigate();
+  const sentToMe =
+    props.scene === undefined &&
+    loaded?.server.state === "sent" &&
+    user !== undefined &&
+    loaded.server.cosigner_user_id === user.user_id;
+  useEffect(() => {
+    if (!sentToMe) return;
+    void navigate({
+      to: "/projects/$projectId/cases/$caseId/co-sign",
+      params: { projectId: props.projectId, caseId },
+      replace: true,
+    });
+  }, [sentToMe, navigate, props.projectId, caseId]);
+  if (caseGone) return <NotFoundPage />;
+  if (missing) return <StartReport projectId={props.projectId} caseId={caseId} />;
+  if (sentToMe) return <Loader label={t`Opening the co-sign page`} size="page" />;
   if (!loaded) {
     return (
       <main className="p-8">
@@ -121,6 +148,30 @@ export function ReportScreen(props: ReportScreenProps) {
       {...props}
       caseId={caseId}
     />
+  );
+}
+
+function StartReport({ projectId, caseId }: { projectId: string; caseId: string }) {
+  const start = useStartReport(projectId, caseId);
+  return (
+    <main data-testid="report-not-started" className="grid content-start gap-3 p-8">
+      <h1 className="m-0 text-page-title text-fg">
+        <Trans>This case has no report yet</Trans>
+      </h1>
+      <p className="m-0 text-body text-fg-dim">
+        <Trans>Start a draft to fill in the findings. Nothing is created until you do.</Trans>
+      </p>
+      <div>
+        <Button variant="primary" disabled={start.isPending} onClick={() => start.mutate()}>
+          <Trans>Start the report</Trans>
+        </Button>
+      </div>
+      {start.isError ? (
+        <p role="alert" className="m-0 text-body text-danger">
+          <Trans>The report could not be started. Try again.</Trans>
+        </p>
+      ) : null}
+    </main>
   );
 }
 

@@ -1,4 +1,4 @@
-import { ApiError, getGetMeQueryKey, getPasswordSignIn } from "@parfocal/api-client";
+import { ApiError, getGetMeQueryKey, getMe, getPasswordSignIn } from "@parfocal/api-client";
 import type { FakeApiMode } from "../config.ts";
 import { isSessionLocked, locksAt, reauthUrl } from "./lock-rules.ts";
 
@@ -97,6 +97,18 @@ export async function passwordSignInAvailable(
       "available" in answer.data &&
       answer.data.available === true
     );
+  } catch {
+    return false;
+  }
+}
+
+export async function hasSession(
+  fakeApi: FakeApiMode,
+  check: AvailabilityCheck = getMe,
+): Promise<boolean> {
+  if (!usesHostedSignIn(fakeApi)) return false;
+  try {
+    return (await check()).status === 200;
   } catch {
     return false;
   }

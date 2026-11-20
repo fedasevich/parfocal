@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { EvaluationScreen } from "../screens/evaluation/evaluation-screen.tsx";
 import { evaluationSearch } from "../search/route-searches.ts";
+import { ReviewTaskOnly } from "../shell/review-task-only.tsx";
 
 export const Route = createFileRoute("/tasks/$taskId/evaluation")({
   validateSearch: evaluationSearch,
@@ -12,20 +13,22 @@ function EvaluationReport() {
   const { scene, view } = Route.useSearch();
   const navigate = Route.useNavigate();
   return (
-    <EvaluationScreen
-      taskId={taskId}
-      scene={scene ?? "report"}
-      onScene={(next) =>
-        void navigate({
-          search: (previous) => ({ ...previous, scene: next === "report" ? undefined : next }),
-        })
-      }
-      previewing={view === "pdf"}
-      onPreview={(open) =>
-        void navigate({
-          search: (previous) => ({ ...previous, view: open ? "pdf" : undefined }),
-        })
-      }
-    />
+    <ReviewTaskOnly taskId={taskId} what="evaluation">
+      <EvaluationScreen
+        taskId={taskId}
+        scene={scene ?? "report"}
+        onScene={(next) =>
+          void navigate({
+            search: (previous) => ({ ...previous, scene: next === "report" ? undefined : next }),
+          })
+        }
+        previewing={view === "pdf"}
+        onPreview={(open) =>
+          void navigate({
+            search: (previous) => ({ ...previous, view: open ? "pdf" : undefined }),
+          })
+        }
+      />
+    </ReviewTaskOnly>
   );
 }
