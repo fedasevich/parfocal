@@ -692,7 +692,7 @@ function PanePicker({
       role="listbox"
       aria-label={t`Slide for the ${sideName[side]} side`}
       className={cn(
-        "absolute top-13.5 left-3 z-20 grid w-82.5 gap-0.5 p-2",
+        "absolute top-13.5 left-3 z-20 grid max-h-[calc(100%-4.5rem)] w-82.5 gap-0.5 overflow-y-auto p-2",
         floatSurface,
         className,
       )}
