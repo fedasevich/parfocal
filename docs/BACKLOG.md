@@ -7081,6 +7081,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 20, 21 and 22 and rechecks 1 and 9. The other two workspaces have an empty clinical project. The signed clinical report prints empty headings. Wording slips remain ("1 slides", "10 reviews not submitted", "1 disagreements not resolved", "Decide 1 objects", "What he gets back"). `/api/status` names no release. A hint setting is still written on every tool change instead of once. Home, the clinical project and My work ask for the thumbnail of Missing file.svs and get 404.
   Done when unit tests cover the plural and pronoun forms, a DB test checks the status names the release, the report hides empty headings, a spec counts one hint write per hint, and the seed fills or removes the empty clinical projects after the next reset.
   Depends on nothing. Size: M.
+- [ ] PROTO-139 · The production reseed finishes in under 15 minutes
+  On 2026-11-20 the reset-production workflow spent over an hour in `parfocal_deploy.reset` on v0.32.2 (seed output from 22:17 to 23:17 UTC and still running when the lead cancelled it at 23:36), and earlier reseeds took 30 to 55 minutes. Each walkthrough uses up seeded examples, so a slow reseed holds up every deployed check. Measure where the seed spends its time against the Neon main branch (likely one round trip per row from the GitHub runner), and batch the writes or run the seed next to the database.
+  Done when a result file gives the seed time by phase before and after, and a reseed on the deployed app finishes in under 15 minutes.
+  Depends on nothing. Size: M.
 
 ---
 
