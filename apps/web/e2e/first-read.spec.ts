@@ -145,6 +145,7 @@ test("the slide and project result set lists hide the AI result of an open first
   expect((await setsOf(page, projectList)).some((name) => name.includes(camName))).toBe(false);
 
   await page.goto(`/projects/${p07}/slides/${a1}`);
+  await expect(page.getByTestId("boot-loader")).toHaveCount(0);
   await expect(page.getByRole("main").first()).toBeVisible();
   expect((await setsOf(page, slideList)).some((name) => name.includes(camName))).toBe(true);
   expect((await setsOf(page, projectList)).some((name) => name.includes(camName))).toBe(true);
