@@ -4976,7 +4976,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   On 2026-11-19 the owner asked to see a seeded example of annotation creation, editing and export on the biggest seeded slide, Philips-3.tiff. Seed an annotate task on it with shapes drawn in each class, two named groups, AI objects confirmed, edited and deleted with their history, typed cells picked and re-typed inside the annotate task (PROTO-069 left AI cells as dots inside tasks), groups saved inside the shared annotate task (PROTO-066 saves groups only on the personal layer), and one finished export in each documented format, all made through the app's own API calls so the example proves the flow.
   Done when a seed test finds the task, the shapes in classes and groups, the history, the typed cells and the exports on Philips-3.tiff, the export files download and re-import cleanly, and after the next reset the owner and agent accounts can open it from My work.
   Depends on TEST-051, PROTO-066, PROTO-069. Size: M.
-- [ ] TEST-055 · A seeded case shows every case feature
+- [x] TEST-055 · A seeded case shows every case feature
   On 2026-11-19 the owner asked for a seeded showcase of all case features. Seed a case in a clinical style project with slides from the gallery, AI results, a drafted and a signed clinical report, a co-sign request, a case comment thread, an upload into the case and a shared report link, made through the app's own route functions, and reachable by the owner and agent accounts.
   Done when a seed test finds each part, the case page, report, co-sign and shared report open on the fake API and after the next reset on the deployed app, and TEST-053 (the seed gives audits a task, a case, a finished job and a broken slide) takes its case from this one.
   Depends on PROTO-089, TEST-054. Size: M.
@@ -6797,7 +6797,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Row 1 and row 22 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the last step's Send to experts button does nothing because its handler returns undefined, and the stepper ticks every slide and every person, including the viewer test accounts, with no name or due date.
   Done when a spec walks the stepper on the fake API and on the real API e2e, the task is created and opens, nothing is ticked by default except what the user picks, and the form asks for a name and offers a due date.
   Depends on PROTO-030. Size: S.
-- [ ] PROTO-065 · A new review task becomes ready on the deployed app
+- [x] PROTO-065 · A new review task becomes ready on the deployed app
   Row 2 and row 19 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): a review task made in the form stays on Preparing this slide, its objects call answering 409 review-order-not-ready 50 minutes later, the screen has no way back, and its tabs read blank or Slide 5 is done.
   Done when the review order is built for a new task on the deployed app within a minute, the guided screen polls with a visible state, a back link and a retry, the tabs say the order is being prepared, and a real API e2e spec makes a task and reviews one object.
   Depends on OPS-038. Size: M.
@@ -6898,7 +6898,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when the project page has a primary New case button, every case form and modal fits a 1280 by 800 and a 1024 by 700 window with its own scroll and its actions in view, and a spec walks create case, add slides, move a slide, upload into the case, write the report and co-sign on the fake API with no element outside the window, the Slides tab fits 1280 and 1024 px wide with the longest seeded names, and a drag moves a slide between two cases and back to Loose slides.
   Also from the owner on 2026-11-20: the project's Slides tab overflows the page width because long result set names sit on one line, cutting off the row actions (Open, Edit slides), so names and result set chips wrap to a second line and the table always fits its width. Slides can be dragged between cases, from Loose slides into a case and back out, with a drop target on each case header, the move undoable and the same as the slide move dialog.
   Depends on PROTO-076. Size: M.
-- [ ] PROTO-090 · The PDF preview and Print work
+- [x] PROTO-090 · The PDF preview and Print work
   On 2026-11-19 the owner found the evaluation report's PDF preview at `/tasks/$id/evaluation?scene=pdf` broken (`apps/web/src/screens/evaluation/pdf-overlay.tsx`) and its Print button doing nothing. Make the preview render the real PDF pages readably with working page, zoom and thumbnail controls, make Print print the PDF, move the preview from the scene parameter to a plain `view=pdf` search parameter, and check every other PDF preview in the app (clinical report, shared report) the same way.
   Done when a spec opens each PDF preview, steps pages, zooms, sees readable text in the page canvas, and Print opens the browser's print for the PDF (checked through a stubbed print call), on the fake API and with a real PDF in the real API e2e.
   Depends on PROTO-079. Size: S.
@@ -6906,6 +6906,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-20 the owner found that finding objects such as cells in search does not work. `object_hits` in `apps/api/src/parfocal_api/search.py` answers a bare ID such as C1363, or the T2-C145 form the search box suggests, only when a slide is open, needs the full slide/C145 path otherwise, and never checks the object exists. A bare ID, a slide name with an ID separated by a space or a slash, and the suggested form find matching objects across the slides the person can see, checked against the result set chunks and the drawn layers through `result_membership.py`, and a hit opens the viewer centred on the object with it picked.
   Done when API tests find an AI cell, a drawn shape and a region by bare ID, by slide and ID and by the suggested form, and refuse one that does not exist, and a spec types each form into the search box and lands on the object in the viewer.
   Depends on PROTO-067, PROTO-069. Size: S.
+- [ ] PROTO-092 · Faults found in the v0.27.0 deployed check
+  The agent check of app.parfocal.eu on 2026-11-20 after v0.27.0 found these faults. Compare keeps reading Opening under the slide counter and keeps scene=picking in the URL after both panes draw, and its side panel shows fixed sample text that does not match the picked slides. Reloading the task is out page shows a task that does not exist. The co-sign page of a draft report reads METASTATIC CARCINOMA (0/null) and leaves drafted by blank. The evaluation PDF prints the raw reason code boundary_off instead of Boundary is off. Guided screens ask my-display and get 403 on read only and freshly made tasks. The ML workspace Start here card reads Slide 2 of 1. Object search takes 4 to 8 seconds and the palette shows nothing meanwhile. The Slides tab name column shrinks to 75 px at 1024 and 12 px at 820.
+  Done when each fault has a spec or test that fails before and passes after, on the fake API, and the API ones with a DB test.
+  Depends on PROTO-090, VIEW-075. Size: M.
 
 ---
 
