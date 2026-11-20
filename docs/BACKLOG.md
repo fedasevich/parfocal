@@ -7069,7 +7069,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issue 4. Two embedding calls after a click on Best got no reply in 10 seconds and the tool fell back to Good with no word on why. Find where the call waits (cold GPU, the region change of ADR 0407, gpu pools in any region, the embedding route or the client timeout), make Best show the GPU wait like other GPU calls and answer once warm, and log the wait in the OPS-038 (GPU wait log) format.
   Done when a result file has measured cold and warm Best times on the deployed app, Best shows the wait and then a proposal, and a spec on the fake API covers the slow answer and the refusal.
   Depends on nothing. Size: M.
-- [ ] PROTO-136 · Counts in the viewer and the reports are true
+- [x] PROTO-136 · Counts in the viewer and the reports are true
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 5, 7, 8, 11 and 12. "Cells 18,240" shows on every slide in Review. RT-1 (Every state review) shows 6 slides in one place and 7 in another and 4 or 5 left for the same reviewer. The evaluation comparison says a 1 slide task and a 7 slide task cover the same slides. A read only notice shows an empty name. The case ai-running says its objects are not there and then shows them.
   Done when each count comes from one source and a spec checks it on two different slides or tasks, and the empty name and the ai-running notice have specs.
   Depends on nothing. Size: M.
