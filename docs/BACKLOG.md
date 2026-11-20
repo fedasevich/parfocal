@@ -6932,7 +6932,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Migration steps 9 and 10. Redirect /live, /annotate and /annotate-task to the main slide route, move the guided and cells routes to a mode value on it keeping object, camera and tab in the address, and rename the workspace values so the address, the button and the code say the same word.
   Done when old addresses redirect with their parameters kept, specs and the real API e2e use the new route, and the same task kind always shows the same mode options.
   Depends on PROTO-096, PROTO-095. Size: M.
-- [ ] PROTO-098 · Compare and Focus are layouts of the one viewer, and live scenes are gone
+- [x] PROTO-098 · Compare and Focus are layouts of the one viewer, and live scenes are gone
   Migration steps 11, 12 and 13. Rebuild Compare as a layout of the engine stage with the rail and tabs of the current mode, remove the picking and picked scenes, make Focus a layout that works in every mode and delete the prototype FocusView branch, and take objects, travel, region, auto and models out of the live scene lists so prototype screens open only from the gallery.
   Done when specs use Compare and Focus in each mode with working rail tools and tabs, and the scene gate test allows no live scene on a slide route.
   Depends on PROTO-097. Size: M.
