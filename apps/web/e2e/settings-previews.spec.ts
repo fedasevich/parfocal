@@ -2,31 +2,55 @@ import { expect, type Page, test } from "./a11y.ts";
 
 const dialog = (page: Page) => page.getByRole("dialog", { name: "Settings" });
 
-const previewed: { section: string; groups: string[] }[] = [
+const plainChoices: { section: string; groups: string[] }[] = [
   { section: "display", groups: ["Theme", "Density"] },
-  {
-    section: "layout",
-    groups: ["Home", "Tools", "Side panel width", "Panel while moving", "Minimap"],
-  },
+  { section: "layout", groups: ["Home", "Side panel width", "Panel while moving", "Minimap"] },
 ];
 
-for (const { section, groups } of previewed) {
-  test(`every layout choice in ${section} shows a preview of what it looks like`, async ({
-    page,
-  }) => {
+for (const { section, groups } of plainChoices) {
+  test(`choices in ${section} are plain words with no picture`, async ({ page }) => {
     await page.goto(`/settings/${section}`);
     for (const name of groups) {
       const choice = dialog(page).getByRole("radiogroup", { name, exact: true });
       await expect(choice).toBeVisible();
-      const radios = choice.getByRole("radio");
-      const count = await radios.count();
-      expect(count, name).toBeGreaterThan(1);
-      for (let index = 0; index < count; index += 1) {
-        await expect(radios.nth(index).locator('[data-slot="setting-preview"]')).toBeVisible();
-      }
+      expect(await choice.getByRole("radio").count(), name).toBeGreaterThan(1);
+      await expect(choice.locator('[data-slot="setting-preview"]')).toHaveCount(0);
     }
   });
 }
+
+for (const section of ["display", "layout", "navigation", "ai"]) {
+  test(`only the Tools row in ${section} has pictures and no display row has a preview box`, async ({
+    page,
+  }) => {
+    await page.goto(`/settings/${section}`);
+    await expect(dialog(page).locator('[data-slot="settings-row"]').first()).toBeVisible();
+    const pictures = dialog(page).locator('[data-slot="setting-preview"]');
+    const count = await pictures.count();
+    if (section === "layout") {
+      expect(count).toBe(2);
+      const tools = dialog(page).getByRole("radiogroup", { name: "Tools", exact: true });
+      await expect(tools.locator('[data-slot="setting-preview"]')).toHaveCount(2);
+    } else {
+      expect(count).toBe(0);
+    }
+    await expect(dialog(page).locator('[data-testid^="preview-"]')).toHaveCount(0);
+  });
+}
+
+test("a changed plain row still saves", async ({ page }) => {
+  await page.goto("/settings/layout");
+  const minimap = dialog(page).getByRole("radiogroup", { name: "Minimap", exact: true });
+  const never = minimap.getByRole("radio", { name: "Never" });
+  await never.click();
+  await expect(never).toBeChecked();
+  await page.reload();
+  await expect(
+    dialog(page).getByRole("radiogroup", { name: "Minimap", exact: true }).getByRole("radio", {
+      name: "Never",
+    }),
+  ).toBeChecked();
+});
 
 test("the tools choice previews the left rail and the bottom dock", async ({ page }) => {
   await page.goto("/settings/layout");

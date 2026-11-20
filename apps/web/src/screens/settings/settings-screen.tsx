@@ -97,14 +97,6 @@ import {
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
-import {
-  ColormapStrip,
-  ConfidencePreview,
-  HeatmapPreview,
-  OpacityPreview,
-  PalettePreview,
-  TextSizePreview,
-} from "./display-preview.tsx";
 import { FeelPreview } from "./feel-preview.tsx";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
 import { Segments, Stepper } from "./row-controls.tsx";
@@ -361,7 +353,6 @@ function LoadedSettings({
     homeLayout: () => (
       <Segments
         label={t`Home`}
-        preview="home"
         value={values.home_layout}
         pairs={homeLayoutOptions.map((option) => [option.value, option.label])}
         onChange={(value) => {
@@ -376,7 +367,6 @@ function LoadedSettings({
     theme: () => (
       <Segments
         label={t`Theme`}
-        preview="theme"
         value={theme}
         pairs={[
           ["dark", t`Dark`],
@@ -405,91 +395,70 @@ function LoadedSettings({
       />
     ),
     textSize: () => (
-      <div className="flex items-center gap-3">
-        <Segments
-          label={t`Text size`}
-          value={displayDefaults.textSize}
-          pairs={[
-            ["small", t`Small`],
-            ["normal", t`Normal`],
-            ["large", t`Large`],
-          ]}
-          onChange={(value) => chooseDisplayDefault("textSize", value as TextSize)}
-        />
-        <TextSizePreview size={displayDefaults.textSize} />
-      </div>
+      <Segments
+        label={t`Text size`}
+        value={displayDefaults.textSize}
+        pairs={[
+          ["small", t`Small`],
+          ["normal", t`Normal`],
+          ["large", t`Large`],
+        ]}
+        onChange={(value) => chooseDisplayDefault("textSize", value as TextSize)}
+      />
     ),
     classPalette: () => (
-      <div className="flex items-center gap-3">
-        <Segments
-          label={t`Class colors`}
-          value={displayDefaults.classPalette}
-          pairs={[
-            ["standard", t`Standard`],
-            ["safe", t`Color-blind safe`],
-          ]}
-          onChange={(value) => chooseDisplayDefault("classPalette", value as ClassPalette)}
-        />
-        <PalettePreview palette={displayDefaults.classPalette} />
-      </div>
+      <Segments
+        label={t`Class colors`}
+        value={displayDefaults.classPalette}
+        pairs={[
+          ["standard", t`Standard`],
+          ["safe", t`Color-blind safe`],
+        ]}
+        onChange={(value) => chooseDisplayDefault("classPalette", value as ClassPalette)}
+      />
     ),
     fillOpacity: () => (
-      <div className="flex items-center gap-3">
-        <Stepper
-          label={t`Object opacity`}
-          value={displayDefaults.fillOpacity}
-          unit="%"
-          range={fillOpacityRange}
-          onChange={(value) => chooseDisplayDefault("fillOpacity", value)}
-        />
-        <OpacityPreview value={displayDefaults.fillOpacity} />
-      </div>
+      <Stepper
+        label={t`Object opacity`}
+        value={displayDefaults.fillOpacity}
+        unit="%"
+        range={fillOpacityRange}
+        onChange={(value) => chooseDisplayDefault("fillOpacity", value)}
+      />
     ),
     confidenceForm: () => (
-      <div className="flex items-center gap-3">
-        <Segments
-          label={t`Confidence shown as`}
-          value={displayDefaults.confidence}
-          pairs={[
-            ["number", t`Number`],
-            ["word", t`Word`],
-            ["color", t`Color`],
-            ["hidden", t`Hidden`],
-          ]}
-          onChange={(value) => chooseDisplayDefault("confidence", value as ConfidenceForm)}
-        />
-        <ConfidencePreview form={displayDefaults.confidence} />
-      </div>
+      <Segments
+        label={t`Confidence shown as`}
+        value={displayDefaults.confidence}
+        pairs={[
+          ["number", t`Number`],
+          ["word", t`Word`],
+          ["color", t`Color`],
+          ["hidden", t`Hidden`],
+        ]}
+        onChange={(value) => chooseDisplayDefault("confidence", value as ConfidenceForm)}
+      />
     ),
     heatmapOpacity: () => (
-      <div className="flex items-center gap-3">
-        <Stepper
-          label={t`Heatmap opacity`}
-          value={displayDefaults.heatmapOpacity}
-          unit="%"
-          range={heatmapOpacityRange}
-          onChange={(value) => chooseDisplayDefault("heatmapOpacity", value)}
-        />
-        <HeatmapPreview
-          value={displayDefaults.heatmapOpacity}
-          colormap={displayDefaults.colormap}
-        />
-      </div>
+      <Stepper
+        label={t`Heatmap opacity`}
+        value={displayDefaults.heatmapOpacity}
+        unit="%"
+        range={heatmapOpacityRange}
+        onChange={(value) => chooseDisplayDefault("heatmapOpacity", value)}
+      />
     ),
     colormap: () => (
-      <div className="flex items-center gap-3">
-        <Segments
-          label={t`Heatmap colors`}
-          value={displayDefaults.colormap}
-          pairs={[
-            ["viridis", t`Viridis`],
-            ["inferno", t`Inferno`],
-            ["turbo", t`Turbo`],
-          ]}
-          onChange={(value) => chooseDisplayDefault("colormap", value as ColormapChoice)}
-        />
-        <ColormapStrip colormap={displayDefaults.colormap} />
-      </div>
+      <Segments
+        label={t`Heatmap colors`}
+        value={displayDefaults.colormap}
+        pairs={[
+          ["viridis", t`Viridis`],
+          ["inferno", t`Inferno`],
+          ["turbo", t`Turbo`],
+        ]}
+        onChange={(value) => chooseDisplayDefault("colormap", value as ColormapChoice)}
+      />
     ),
     brightness: () => (
       <Stepper
@@ -503,7 +472,6 @@ function LoadedSettings({
     density: () => (
       <Segments
         label={t`Density`}
-        preview="density"
         value={values.density}
         pairs={[
           ["comfortable", t`Comfortable`],
@@ -621,7 +589,6 @@ function LoadedSettings({
     panelWidth: () => (
       <Segments
         label={t`Side panel width`}
-        preview="panelWidth"
         value={String(values.side_panel_width)}
         pairs={[
           ["300", t`Narrow`],
@@ -638,7 +605,6 @@ function LoadedSettings({
     panelMoving: () => (
       <Segments
         label={t`Panel while moving`}
-        preview="panelMoving"
         value={values.panel_while_moving}
         pairs={[
           ["pinned", t`Stays put`],
@@ -652,7 +618,6 @@ function LoadedSettings({
     minimap: () => (
       <Segments
         label={t`Minimap`}
-        preview="minimap"
         value={values.minimap}
         pairs={[
           ["useful", t`When useful`],

@@ -27,40 +27,42 @@ test("text size scales the root font size and is kept after a reload", async ({ 
   expect(await rootSize(page)).toBe(16);
   await dialog(page).getByRole("radiogroup", { name: "Text size" }).getByText("Large").click();
   await expect.poll(() => rootSize(page)).toBeCloseTo(18.4, 1);
-  await expect(page.getByTestId("preview-text-size")).toHaveAttribute("data-size", "large");
   await page.reload();
   await expect.poll(() => rootSize(page)).toBeCloseTo(18.4, 1);
   await dialog(page).getByRole("radiogroup", { name: "Text size" }).getByText("Small").click();
   await expect.poll(() => rootSize(page)).toBeCloseTo(14.4, 1);
 });
 
-test("each new Display row previews itself and is kept after a reload", async ({ page }) => {
+const groupChoice = (page: Page, group: string, name: string) =>
+  dialog(page).getByRole("radiogroup", { name: group }).getByRole("radio", { name });
+
+async function expectKept(page: Page) {
+  await expect(dialog(page).getByRole("slider", { name: "Object opacity" })).toHaveValue("70");
+  await expect(groupChoice(page, "Confidence shown as", "Word")).toBeChecked();
+  await expect(dialog(page).getByRole("slider", { name: "Heatmap opacity" })).toHaveValue("50");
+  await expect(groupChoice(page, "Heatmap colors", "Inferno")).toBeChecked();
+  await expect(groupChoice(page, "Class colors", "Color-blind safe")).toBeChecked();
+}
+
+test("each new Display row is kept after a reload", async ({ page }) => {
   await openDisplay(page);
   await raise(page, "Object opacity", 3);
-  await expect(page.getByTestId("preview-opacity")).toHaveAttribute("data-value", "70");
   await dialog(page)
     .getByRole("radiogroup", { name: "Confidence shown as" })
     .getByText("Word")
     .click();
-  await expect(page.getByTestId("preview-confidence")).toHaveAttribute("data-form", "word");
   await raise(page, "Heatmap opacity", 2);
-  await expect(page.getByTestId("preview-heatmap")).toHaveAttribute("data-value", "50");
   await dialog(page)
     .getByRole("radiogroup", { name: "Heatmap colors" })
     .getByText("Inferno")
     .click();
-  await expect(page.getByTestId("preview-heatmap")).toHaveAttribute("data-colormap", "inferno");
   await dialog(page)
     .getByRole("radiogroup", { name: "Class colors" })
     .getByText("Color-blind safe")
     .click();
-  await expect(page.getByTestId("preview-palette")).toHaveAttribute("data-palette", "safe");
+  await expectKept(page);
   await page.reload();
-  await expect(page.getByTestId("preview-opacity")).toHaveAttribute("data-value", "70");
-  await expect(page.getByTestId("preview-confidence")).toHaveAttribute("data-form", "word");
-  await expect(page.getByTestId("preview-heatmap")).toHaveAttribute("data-value", "50");
-  await expect(page.getByTestId("preview-heatmap")).toHaveAttribute("data-colormap", "inferno");
-  await expect(page.getByTestId("preview-palette")).toHaveAttribute("data-palette", "safe");
+  await expectKept(page);
 });
 
 test("the Display tab passes axe in both themes", async ({ page }) => {
