@@ -18,6 +18,7 @@ import { useRefusals } from "../screens/refusals.ts";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
+import { FirstReadGuard } from "./first-read-guard.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { useCellRetype } from "./picked-cell-retype.tsx";
@@ -85,7 +86,15 @@ export type EngineViewerProps = {
   onTab?: ((tab: ViewerTab) => void) | undefined;
 };
 
-export function EngineViewer({
+export function EngineViewer(props: EngineViewerProps) {
+  return (
+    <FirstReadGuard taskId={props.task} slideId={props.slideId}>
+      <GuardedViewer {...props} />
+    </FirstReadGuard>
+  );
+}
+
+function GuardedViewer({
   projectId,
   slideId,
   task,
