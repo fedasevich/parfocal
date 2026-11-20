@@ -2,6 +2,38 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.28.0 (2026-11-20)
+
+### Features
+
+- TEST-053: Seed the agent account a finished upload job and a slide that fails to open
+- MLEVAL-010: Pin the CryoNuSeg and Lizard archives the owner downloaded
+- PROTO-093: Derive viewer access once and make opinion, Submit and rail obey it
+- PROTO-094: Make annotate tasks read only for people not assigned and test the layer refusal
+- PROTO-095: Run the first read guard inside EngineViewer so every slide route gets it
+- PROTO-096: Open every slide through one link helper and one mode and tab table
+- OPS-037: Point every reader of the US bucket at parfocal-dev-eu
+- PROTO-097: Carry the viewer mode in the one slide address and redirect the old routes
+- PROTO-098: Make Compare and Focus layouts of the one viewer and drop live scenes
+- PROTO-099: One Submit, one notice list, object layout stages and a true back link
+
+### Fixes
+
+- MLEVAL-010: Ask for the sign-in download before fetching a pinned Kaggle archive
+- OPS-038: Mirror the GPU wait fields in the web scrubber allow-list
+
+### Docs
+
+- TEST-053: Log the audit seed
+- OPS-038: Log the v0.27.2 deploy
+- MLEVAL-010: Record decisions 131 and 95 as done
+- PROTO-096: Log the mode rule, tab table and first read guard
+- OPS-037: Log the move off the US bucket
+- PROTO-097: Log the one slide route
+- OPS-037: Tick the move off the US bucket after CI read from the EU
+- PROTO-098: Log Compare and Focus as layouts
+- PROTO-099: Log the last viewer migration step
+
 ## v0.27.2 (2026-11-20)
 
 ### Features
