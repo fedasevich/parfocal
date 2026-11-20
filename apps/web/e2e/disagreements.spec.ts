@@ -175,10 +175,11 @@ test("an object whose reviewers drew different outlines draws each one over the 
   page,
 }) => {
   await page.goto(`${base}/disagreements?stage=open`);
-  await page.getByRole("button", { name: /^T1 tumor_031/ }).click();
-  await slideDrawn(page);
+  await page.getByRole("button", { name: /^T5 / }).click();
+  await slideDrawn(page, "T5");
   const frame = objectStage(page).getByTestId("object-frame");
   await expect(frame).toHaveAttribute("data-outlines", "2");
+  await expect(frame).toHaveAttribute("data-drawn", "3");
   const legend = page.getByTestId("outline-legend");
   await expect(legend).toContainText("outline differs");
   await expect(legend).toContainText("42% overlap");

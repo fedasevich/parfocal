@@ -262,7 +262,8 @@ async def sent_objects(
 
 
 FINAL_OUTLINE = (
-    "e.split = '' AND e.geometry IS NOT NULL AND NOT e.deleted AND e.retired IS NULL "
+    "e.split = '' AND e.geometry IS NOT NULL AND ST_Dimension(e.geometry) = 2 "
+    "AND NOT e.deleted AND e.retired IS NULL "
     "AND EXISTS (SELECT 1 FROM review_assignments r WHERE r.task_id = e.task_id "
     "AND r.slide_id = e.slide_id AND r.user_id = e.user_id AND r.released_at IS NULL) "
     "AND NOT EXISTS (SELECT 1 FROM review_assignments p WHERE p.task_id = e.task_id "

@@ -81,6 +81,7 @@ export const queueRows: QueueSeedRow[] = [
       answer("LM", "disagree", "Artefact or fold", "Crush artefact at the cut edge."),
       answer("SM", "agree"),
     ],
+    outlineOverlap: 0.42,
   },
   {
     slide: 1,
@@ -117,7 +118,6 @@ export const queueRows: QueueSeedRow[] = [
       answer("LM", "agree"),
       answer("SM", "disagree", "Not tumor", "Germinal centre with tingible body macrophages."),
     ],
-    outlineOverlap: 0.42,
   },
   {
     slide: 5,

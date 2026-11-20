@@ -1,3 +1,4 @@
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -17,15 +18,22 @@ def iou(a, b):
 
 def shapes(kind):
     found = []
+    seen = set()
+    name = "cells.geojson" if kind == "cell" else "regions.parfocal.json"
     for folder in sorted(root.iterdir()):
+        path = folder / name
+        if not path.exists():
+            continue
+        raw = path.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        if digest in seen:
+            continue
+        seen.add(digest)
+        data = json.loads(raw)
         if kind == "cell":
-            data = json.loads((folder / "cells.geojson").read_text())
             items = [feature["geometry"] for feature in data["features"]]
-        elif (folder / "regions.parfocal.json").exists():
-            data = json.loads((folder / "regions.parfocal.json").read_text())
-            items = [item["geometry"] for item in data["objects"] if item["kind"] == "region"]
         else:
-            items = []
+            items = [item["geometry"] for item in data["objects"] if item["kind"] == "region"]
         found += [p for p in map(shape, items) if p.is_valid and p.area > 0]
     return found
 

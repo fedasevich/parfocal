@@ -24,6 +24,12 @@ CASES = {
     "cell equal": ("C1", CELL, CELL, None),
     "cell close": ("C1", CELL, square(96, 95, 10), None),
     "cell far": ("C1", CELL, square(101, 95, 10), 0.25),
+    "cell points": (
+        "C1",
+        {"type": "Point", "coordinates": [100, 100]},
+        {"type": "Point", "coordinates": [140, 100]},
+        None,
+    ),
 }
 
 
@@ -120,7 +126,7 @@ def test_differing_decisions_keep_their_reason_and_flag_the_outline(
     assert (row["tag"], row["outline_differs"]) == ("differ", True)
 
 
-def test_a_released_or_still_working_reviewer_is_not_compared(api: ApiAs, database: str) -> None:
+def test_a_reviewer_still_working_on_the_slide_is_not_compared(api: ApiAs, database: str) -> None:
     r = review(api, database)
     for who, shape in (("first", REGION), ("second", square(50, 0, 100))):
         assert edit(api, r, who, "T1", {"geometry": shape}).status_code == 200
