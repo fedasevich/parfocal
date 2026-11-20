@@ -73,3 +73,27 @@ A pan of this length makes about 70 range requests instead of 40. The account is
 - After the change the per tile bytes phase is still most of the dispatch to settle time, with up to 4 byte asks per tile. Whether those asks run one after another, and so cost a round trip each, was not measured. TODO.
 - The owner's 870.4 ms decode p95 and the 1419 ms range p95 of the cells slide lag run (PROTO-128, the AI cell outlines fix) were not reproduced. The runs here peaked at 556 ms with a warm edge from the owner's Mac. A cold edge, a slower link or a busier main thread could explain the rest, but none was measured. TODO.
 - Requests that hold more than one block have a length that depends on what the client already holds, so they repeat less often across users at the edge. At 256 KiB that was 11 of 68 requests in the replay.
+
+## Do a tile's byte requests run in sequence (PROTO-132)
+
+Measured on 2026-11-20 for backlog task PROTO-132 (a tile's byte requests run together, not one after another), on a local fixture and not on the deployed app. The test file is `packages/viewer-engine/test/decode/tile-requests.test.ts`. It builds a classic TIFF in memory with 400 uncompressed 16 by 16 tiles whose `TileOffsets` array sits after the tile data, so geotiff leaves it deferred as it does for a large level of a real slide. The file is read through `createRangeCache` with 4 KiB blocks and a fake fetch that waits 40 ms and records each request's start and end. The fixture is not the deployed slide and 40 ms is a chosen round trip, so only the count and the overlap carry over, not the milliseconds.
+
+Cause: geotiff's `getTileOrStrip` awaits the tile's offset, then its byte count, then the bytes. The byte counts are already loaded when a slide opens, but a large level's offsets are looked up per tile, and the bytes cannot be asked for before the offset is known. So the first read of a tile in a block of offsets that is not held makes 2 requests, one after the other.
+
+| Build | Requests for the first tile after opening | Overlap | Time from read to tile |
+| --- | --- | --- | --- |
+| Before | 2 (offsets block 102400-106495, then tile block 20480-24575) | none, the second started at 252.1 ms and the first ended at 251.4 ms | 87.5 ms |
+| After | 1 (tile block 20480-24575) | not applicable | 46.4 ms |
+
+With the offsets read straight after opening, the offsets request is one request for the slide and three tiles in distinct blocks make 4 requests in all, the three tile requests running together.
+
+## What changed for PROTO-132
+
+`packages/viewer-engine/src/pixel-source/tiff/tiff-source.ts` loads each level's whole `TileOffsets` array once, in the background as soon as the slide opens, and a read waits for that load of its level (and of its channel pages) before decoding. The array is 8 bytes a tile, about 400 KB for the 131072 by 100352 level of Philips-3.tiff, 256 KiB blocks around the first offset lookup were already fetched, and the cost is one more request of that size per level once per slide, against about 20 MB for a pan. After it a tile waits for one round trip, the one for its own bytes. A failed load is ignored and the tile falls back to the per tile lookup.
+
+The three tests in `tile-requests.test.ts` cover one request per tile after the offsets are held, a single offsets request when tiles are read straight after opening, and three distinct tile blocks asked for together within 1.8 round trips.
+
+## Still open for PROTO-132
+
+- The deployed app was not measured, before or after, because the new build is not deployed and serving a local build against the deployed API was not done. Philips-3.tiff has a 400 KB offsets array at the top level, above the 64 KiB limit for priming from the slide index, so it should show the same two step pattern, but that is reasoned, not measured. TODO.
+- The up to 4 requests per tile seen in PROTO-130 are tile bytes that span or skip cached blocks, which the range cache already asks for together, so they do not add round trips.
