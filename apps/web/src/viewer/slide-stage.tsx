@@ -1104,6 +1104,7 @@ function OpenedSlide({
                     ? inspector.extras({
                         ...session,
                         armTool: (next) => setTool(stageToolOf(next)),
+                        stage: hostNode,
                       })
                     : null}
                   {session ? (

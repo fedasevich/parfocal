@@ -1391,6 +1391,11 @@ msgstr "{0} run cancelled. Slides already done keep their results."
 msgid "{0} runs going now"
 msgstr "{0} runs going now"
 
+#. placeholder {0}: item.object
+#: src/viewer/stage-review-objects.tsx
+msgid "{0} saved as {name}. The AI result is not changed."
+msgstr "{0} saved as {name}. The AI result is not changed."
+
 #. placeholder {0}: model.name
 #: src/screens/admin/sections.tsx
 msgid "{0} shows in every model list again."
@@ -4633,6 +4638,7 @@ msgstr "cancel"
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
+#: src/viewer/stage-type-picker.tsx
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -10296,6 +10302,11 @@ msgstr "New map"
 msgid "new outline"
 msgstr "new outline"
 
+#. placeholder {0}: item.object
+#: src/viewer/stage-review-objects.tsx
+msgid "New outline saved for {0}. The AI result is not changed."
+msgstr "New outline saved for {0}. The AI result is not changed."
+
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "New password"
 msgstr "New password"
@@ -12531,6 +12542,11 @@ msgstr "Pick the class blind"
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Pick the keys for {0}"
 msgstr "Pick the keys for {0}"
+
+#. placeholder {0}: object.object
+#: src/viewer/stage-type-picker.tsx
+msgid "Pick the right type of {0}"
+msgstr "Pick the right type of {0}"
 
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx

@@ -413,6 +413,7 @@ function GuardedViewer({
               opinionLocked={accessLine}
               engine={session.engine}
               module={session.module}
+              stage={session.stage}
               taskId={reviewTask}
               slideId={slideId}
               object={object}

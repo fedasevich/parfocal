@@ -3,9 +3,12 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { polygonToGeoJson } from "../annotations/geojson.ts";
+import { closeDraft, type PolygonDraft } from "../annotations/polygon-draft.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf } from "../screens/review/decision-style.ts";
+import { disagreeOptions, reasonDraft } from "../screens/review/disagree-reasons.ts";
 import { drawChoicesOf, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
 import { useNoteKey } from "../screens/review/note-key.ts";
@@ -13,6 +16,7 @@ import { useObjectKeys } from "../screens/review/object-keys.ts";
 import { type ReviewSession, useReviewSession } from "../screens/review/review-data.ts";
 import { pendingOrder } from "../screens/review/review-order-state.ts";
 import { ReviewOrderTabNotice } from "../screens/review/review-order-state.tsx";
+import { answerFromDecision } from "../screens/review/review-state.ts";
 import {
   storedType,
   type TypeOption,
@@ -23,6 +27,7 @@ import {
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
+import { showUndoToast } from "../shell/undo-toasts.tsx";
 import {
   type CalmCamera,
   type CalmStep,
@@ -45,15 +50,20 @@ import {
   outlineCentre,
   placedObjects,
 } from "./stage-geometry.ts";
-import { StageGuidedCard } from "./stage-guided-card.tsx";
+import { type GuidedFix, StageGuidedCard } from "./stage-guided-card.tsx";
 import { StageGuidedView } from "./stage-guided-view.tsx";
 import { useStageRulers } from "./stage-measurements.tsx";
 import { StageObjectsPanel } from "./stage-objects-panel.tsx";
 import { ReviewOpinion } from "./stage-opinion.tsx";
+import { StageRedrawLayer } from "./stage-redraw-layer.tsx";
+import { type ReviewFix, ringOfFix, useReviewFixes } from "./stage-review-fixes.ts";
 import { StageSlideMarks, sampleOf, useSampleCollapsed } from "./stage-slide-marks.tsx";
+import { StageTypePicker } from "./stage-type-picker.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const overlayId = "review-objects";
+
+const dimmedShare = 0.35;
 
 const decisionNames = new Set(["agree", "disagree", "unsure"]);
 
@@ -61,6 +71,58 @@ function decisionNameOf(value: string | undefined) {
   return value !== undefined && decisionNames.has(value)
     ? (value as "agree" | "disagree" | "unsure")
     : null;
+}
+
+type Placed = ReturnType<typeof placedObjects>;
+
+function useDrawing(
+  engine: ViewerEngine,
+  module: ViewerModule,
+  id: string,
+  kind: "nuclei" | "human-annotations",
+  objects: Placed,
+  choices: ReturnType<typeof drawChoicesOf>,
+  current: string | null,
+) {
+  const drawing = useMemo(
+    () => module.createObjectDrawing({ id, host: engine, kind }),
+    [module, engine, id, kind],
+  );
+  useEffect(() => () => drawing.clear(), [drawing]);
+  useEffect(() => {
+    drawing.setObjects(objects);
+  }, [drawing, objects]);
+  useEffect(() => {
+    drawing.setChoices(choices);
+  }, [drawing, choices]);
+  useEffect(() => {
+    drawing.setCurrent(current);
+  }, [drawing, current]);
+}
+
+function withDecisions(shown: Placed, decisionKey: string): Placed {
+  if (decisionKey === "") return shown;
+  const decided = new Map(JSON.parse(decisionKey) as [string, string][]);
+  return shown.map((item) => ({ ...item, decision: decisionNameOf(decided.get(item.id)) }));
+}
+
+function reviewedObjects(
+  objects: readonly ReviewObject[],
+  fixed: ReadonlyMap<string, ReviewFix>,
+  classes: readonly { id: string; name: string }[],
+): ReviewObject[] {
+  return objects.flatMap((item) => {
+    const fix = fixed.get(item.object);
+    if (fix === undefined || fix.deleted) return [];
+    const name = classes.find((entry) => entry.id === fix.classId)?.name;
+    return [
+      {
+        ...item,
+        outline: ringOfFix(fix) ?? item.outline ?? null,
+        class_name: name ?? item.class_name,
+      },
+    ];
+  });
 }
 
 function ObjectOutlines({
@@ -72,6 +134,7 @@ function ObjectOutlines({
   collapsed,
   decisions,
   settings,
+  fixed,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -81,6 +144,7 @@ function ObjectOutlines({
   collapsed: boolean;
   decisions: ReviewSession["decisions"];
   settings: DisplaySettings;
+  fixed: ReadonlyMap<string, ReviewFix>;
 }) {
   const defaults = useDisplayDefaults();
   const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
@@ -97,36 +161,56 @@ function ObjectOutlines({
     settings.colorBy === "decision"
       ? JSON.stringify([...decisions].map(([id, decision]) => [id, decision.value]))
       : "";
-  const placed = useMemo(() => {
-    const shown = placedObjects(
-      collapsed ? objects.filter((item) => item.kind !== "cell") : objects,
-      projectClasses,
-      defaults.classPalette,
-    );
-    if (decisionKey === "") return shown;
-    const decided = new Map(JSON.parse(decisionKey) as [string, string][]);
-    return shown.map((item) => ({ ...item, decision: decisionNameOf(decided.get(item.id)) }));
-  }, [objects, projectClasses, collapsed, decisionKey, defaults.classPalette]);
-  const choices = useMemo(() => drawChoicesOf(settings), [settings]);
-  const drawing = useMemo(
-    () => module.createObjectDrawing({ id: overlayId, host: engine }),
-    [module, engine],
+  const shownObjects = useMemo(
+    () => (collapsed ? objects.filter((item) => item.kind !== "cell") : objects),
+    [collapsed, objects],
   );
-  useEffect(() => () => drawing.clear(), [drawing]);
-  useEffect(() => {
-    drawing.setObjects(placed);
-  }, [drawing, placed]);
-  useEffect(() => {
-    drawing.setChoices(choices);
-  }, [drawing, choices]);
-  useEffect(() => {
-    drawing.setCurrent(current);
-  }, [drawing, current]);
+  const placed = useMemo(
+    () =>
+      withDecisions(
+        placedObjects(shownObjects, projectClasses, defaults.classPalette),
+        decisionKey,
+      ),
+    [shownObjects, projectClasses, decisionKey, defaults.classPalette],
+  );
+  const reviewed = useMemo(
+    () =>
+      withDecisions(
+        placedObjects(
+          reviewedObjects(shownObjects, fixed, projectClasses),
+          projectClasses,
+          defaults.classPalette,
+        ),
+        decisionKey,
+      ),
+    [shownObjects, fixed, projectClasses, decisionKey, defaults.classPalette],
+  );
+  const kept = useMemo(() => placed.filter((item) => !fixed.has(item.id)), [placed, fixed]);
+  const dimmed = useMemo(() => placed.filter((item) => fixed.has(item.id)), [placed, fixed]);
+  const choices = useMemo(() => drawChoicesOf(settings), [settings]);
+  const dimmedChoices = useMemo(
+    () => ({ ...choices, opacity: Math.round((choices.opacity ?? 100) * dimmedShare) }),
+    [choices],
+  );
+  const currentReviewed = current !== null && reviewed.some((item) => item.id === current);
+  useDrawing(engine, module, overlayId, "nuclei", kept, choices, currentReviewed ? null : current);
+  useDrawing(engine, module, `${overlayId}-ai-dimmed`, "nuclei", dimmed, dimmedChoices, null);
+  useDrawing(
+    engine,
+    module,
+    `${overlayId}-reviewed`,
+    "human-annotations",
+    reviewed,
+    choices,
+    currentReviewed ? current : null,
+  );
   return (
     <div
       hidden
       data-testid="review-object-outlines"
       data-objects={placed.length}
+      data-dimmed={dimmed.map((item) => item.id).join(" ")}
+      data-reviewed={reviewed.map((item) => item.id).join(" ")}
       data-draw={choices.draw}
       data-width={choices.width}
       data-opacity={choices.opacity}
@@ -139,6 +223,7 @@ function ObjectOutlines({
 export function StageReviewObjects({
   engine,
   module,
+  stage = null,
   taskId,
   slideId,
   object,
@@ -157,6 +242,7 @@ export function StageReviewObjects({
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
+  stage?: HTMLElement | null;
   taskId: string;
   slideId: string;
   object: string | undefined;
@@ -182,6 +268,12 @@ export function StageReviewObjects({
     [session.myDisplay, labCutoff, defaults],
   );
   const saves = useDecisionSaves(session, session.style);
+  const fixes = useReviewFixes(taskId, slideId, session.ready);
+  const [fixing, setFixing] = useState<{
+    readonly object: string;
+    readonly step: "reasons" | "redraw" | "type";
+  } | null>(null);
+  const [draft, setDraft] = useState<PolygonDraft>([]);
   const objects = session.objects;
   const order = objects.map((item) => item.object);
   const decided = new Set(session.decisions.keys());
@@ -197,6 +289,8 @@ export function StageReviewObjects({
   const current =
     chosen ??
     (guided || focus !== null ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
+  const canFix = guided && focus === null && !readOnly && answersOff === undefined;
+  const fixStep = canFix && fixing !== null && fixing.object === current ? fixing.step : null;
   useNoteKey(() => {
     if (current !== null && decided.has(current)) onNote?.(current);
   });
@@ -293,6 +387,11 @@ export function StageReviewObjects({
     const value = option?.countsAs;
     if (value === undefined) return;
     saves.save(item.object, raw, value);
+    if (canFix && session.style.kind !== "blind" && value === "disagree") {
+      setCurrent(item.object);
+      setFixing({ object: item.object, step: "reasons" });
+      return;
+    }
     if (guided) advance(item.object);
     else setCurrent(item.object);
   };
@@ -325,7 +424,7 @@ export function StageReviewObjects({
       decideType(typedCell, raw);
       stepToOpenCell(typedCell);
     },
-    ready && typedCell !== null,
+    ready && typedCell !== null && fixStep === null,
   );
   const listKeysLive =
     ready && !guided && focus === null && currentItem !== undefined && typedCell === null;
@@ -345,7 +444,7 @@ export function StageReviewObjects({
     void engine.flyToFit();
   };
   const index = current === null ? -1 : order.indexOf(current);
-  const stepping = guided && ready && !done && focus === null;
+  const stepping = guided && ready && !done && focus === null && fixStep === null;
   useAnswerKeys(
     answersOf(session.style, session.classes, currentItem),
     (raw) => {
@@ -372,6 +471,72 @@ export function StageReviewObjects({
     if (jumpRequest.id === "cells") setGridOpen(true);
     jump(jumpRequest.id);
   }
+  const toggleReason = (item: ReviewObject, reason: string) => {
+    const decision = session.decisions.get(item.object);
+    if (decision === undefined) return;
+    const kept = answerFromDecision(decision, session.style, item, session.classes);
+    const reasons = kept.reasons.includes(reason)
+      ? kept.reasons.filter((entry) => entry !== reason)
+      : [...kept.reasons, reason];
+    saves.save(
+      item.object,
+      kept.raw,
+      kept.value,
+      reasonDraft(reasons, disagreeOptions(item.kind, item.class_name, session.classes)),
+      kept.note,
+    );
+  };
+  const saveFix = (item: ReviewObject, change: Partial<ReviewFix>, message: string) => {
+    const before = fixes.change(item.object, change);
+    setFixing({ object: item.object, step: "reasons" });
+    showUndoToast({
+      message,
+      undo: () => fixes.restore(item.object, before),
+    });
+  };
+  const finishRedraw = (item: ReviewObject, points: Float32Array | null) => {
+    const closed = points === null ? closeDraft(draft) : { kind: "closed" as const, points };
+    if (closed.kind !== "closed") return;
+    setDraft([]);
+    saveFix(
+      item,
+      { geometry: polygonToGeoJson(closed.points) },
+      t`New outline saved for ${item.object}. The AI result is not changed.`,
+    );
+  };
+  const cancelRedraw = (item: ReviewObject) => {
+    setDraft([]);
+    setFixing({ object: item.object, step: "reasons" });
+  };
+  const fixFor = (item: ReviewObject): GuidedFix => ({
+    open: fixStep !== null,
+    redrawPoints: fixStep === "redraw" ? draft.length : null,
+    typePicker:
+      fixStep === "type" ? (
+        <StageTypePicker
+          object={item}
+          classes={session.classes}
+          chosen={fixes.fixOf(item.object)?.classId ?? null}
+          onPick={(classId) => {
+            const name = session.classes.find((entry) => entry.id === classId)?.name ?? "";
+            saveFix(
+              item,
+              { classId },
+              t`${item.object} saved as ${name}. The AI result is not changed.`,
+            );
+          }}
+          onCancel={() => setFixing({ object: item.object, step: "reasons" })}
+        />
+      ) : null,
+    onReason: (reason) => toggleReason(item, reason),
+    onBack: () => setFixing(null),
+    onFix: (what) => {
+      setDraft([]);
+      setFixing({ object: item.object, step: what === "outline" ? "redraw" : "type" });
+    },
+    onFinishRedraw: () => finishRedraw(item, null),
+    onCancelRedraw: () => cancelRedraw(item),
+  });
   const coachPart = coachOn ? (
     <StageCoachAnswerTip
       keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
@@ -392,7 +557,18 @@ export function StageReviewObjects({
         collapsed={collapsed}
         decisions={session.decisions}
         settings={settings}
+        fixed={fixes.fixed}
       />
+      {fixStep === "redraw" && stage !== null && currentItem !== undefined ? (
+        <StageRedrawLayer
+          engine={engine}
+          stage={stage}
+          draft={draft}
+          onDraft={setDraft}
+          onClose={(points) => finishRedraw(currentItem, points)}
+          onCancel={() => cancelRedraw(currentItem)}
+        />
+      ) : null}
       {guided && ready && focus === null && currentItem !== undefined ? (
         <StageGuidedView
           key={currentItem.object}
@@ -440,7 +616,7 @@ export function StageReviewObjects({
           onClose={() => setGridOpen(false)}
         />
       ) : null}
-      {typedCell === null || readOnly ? null : (
+      {typedCell === null || readOnly || fixStep !== null ? null : (
         <StageCellTypeBar
           engine={engine}
           cell={typedCell}
@@ -492,6 +668,7 @@ export function StageReviewObjects({
               onAddMissed={() => onAddMissed?.()}
               answersOff={answersOff}
               readOnly={readOnly}
+              fix={fixFor(currentItem)}
             />
           ) : null}
           {orderWait ? (
