@@ -35,6 +35,8 @@ type AiLayerProps = {
   onReshape: (object: string, ring: Ring) => void;
   onDelete: () => void;
   onStep: (delta: 1 | -1) => void;
+  startEditing?: string | null;
+  onEditing?: (object: string | null) => void;
 };
 
 type Gesture =
@@ -166,11 +168,15 @@ export function AiLayer({
   onReshape,
   onDelete,
   onStep,
+  startEditing = null,
+  onEditing,
 }: AiLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const escRegistry = useEscRegistry();
-  const [editing, setEditing] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(startEditing);
+  const reportEditing = useRef(onEditing);
+  reportEditing.current = onEditing;
   const [draft, setDraft] = useState<Draft | null>(null);
   const [lasso, setLasso] = useState<readonly Point[] | null>(null);
   const chosen = useMemo(() => new Set(selection), [selection]);
@@ -207,6 +213,10 @@ export function AiLayer({
   useEffect(() => {
     if (editing !== null && (selection.length !== 1 || selection[0] !== editing)) setEditing(null);
   }, [editing, selection]);
+
+  useEffect(() => {
+    reportEditing.current?.(editing);
+  }, [editing]);
 
   useEffect(() => {
     if (draft !== null && !cells.some((cell) => cell.object === draft.object)) setDraft(null);
