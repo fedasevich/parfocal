@@ -6865,7 +6865,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Decision 162 (whether annotator and read-only viewer are roles of their own), option A: Researcher and Reviewer stay, with admin rights, and the owner says the reviewer doctor is also the annotator. Show a table in Admin, People and roles, of what each role and admin rights may do, read from the permission matrix, naming annotating under Reviewer.
   Done when a spec opens People and roles and finds the table, and a unit test checks every permission in the matrix appears in it.
   Depends on PROTO-072. Size: S.
-- [ ] PROTO-082 · The task timing page reads recorded timing events
+- [x] PROTO-082 · The task timing page reads recorded timing events
   From the mock views inventory (`docs/results/2026-11-20-mock-views-inventory.md`): `/kpi` falls back to a seeded sample and is dev tools only since PROTO-079. Read the recorded timing events from the API so the page works on the deployed app.
   Done when a real API e2e spec or an API test reaches the state on real data and a web spec shows it without a scene.
   Depends on PROTO-079. Size: S.
