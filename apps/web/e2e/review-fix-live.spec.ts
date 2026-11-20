@@ -1,14 +1,16 @@
 import { expect, type Page, test } from "./a11y.ts";
-import { area, ok, onRealApi, realTags, signIn, viewableTask } from "./real.ts";
+import { area, ok, realTags, signIn, viewableTask } from "./real.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
+const rt16 = "00000000-0000-4000-8043-000000000016";
 const a1 = "00000000-0000-4000-8005-000000000001";
+const disagreeing = /Disagree|Probably not/;
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-async function openGuided(page: Page, extra = "") {
-  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided${extra}`);
+async function openGuided(page: Page, extra = "", task = rt14) {
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${task}&mode=guided${extra}`);
   const panel = page.getByTestId("stage-review-objects");
   await expect(panel).toHaveAttribute("data-ready", "true", { timeout: 25_000 });
   const start = page.getByRole("button", { name: "Got it, start" });
@@ -20,7 +22,8 @@ async function disagreeOnCurrent(page: Page, panel: ReturnType<Page["getByTestId
   const object = (await panel.getAttribute("data-current")) ?? "";
   await page
     .getByRole("group", { name: `Your answer on ${object}` })
-    .getByRole("button", { name: /Disagree/ })
+    .getByRole("button", { name: disagreeing })
+    .first()
     .click();
   await expect(panel.getByText(`You disagree with the AI on ${object}`)).toBeVisible();
   return object;
@@ -128,6 +131,15 @@ test("a reviewer changes the type of a cell from the live card and keeps its out
   await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-reviewed", object);
 });
 
+test("a task at the default certainty style opens the reasons and the fix buttons", async ({
+  page,
+}) => {
+  const panel = await openGuided(page, "", rt16);
+  await disagreeOnCurrent(page, panel);
+  await expect(panel.getByRole("button", { name: "Redraw the outline" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Change the type" })).toBeVisible();
+});
+
 test("a read only reviewer sees no fix buttons on the live card", async ({ page }) => {
   const panel = await openGuided(page, "&as=DH");
   await expect(panel.getByRole("button", { name: /Disagree/ })).toHaveCount(0);
@@ -142,9 +154,6 @@ test(
     test.setTimeout(120_000);
     await signIn(page, "/my-work");
     const { project, task, slide } = await viewableTask(page, "review", true);
-    if (onRealApi) {
-      await ok(page, "PATCH", `/api/review-tasks/${task}`, { decision: { style: "agree" } });
-    }
     await page.goto(`/projects/${project}/slides/${slide}?task=${task}&mode=guided`);
     const panel = page.getByTestId("stage-review-objects");
     await expect(panel).toHaveAttribute("data-ready", "true", { timeout: 30_000 });

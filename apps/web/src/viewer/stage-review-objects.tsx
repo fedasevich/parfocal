@@ -387,7 +387,7 @@ export function StageReviewObjects({
     const value = option?.countsAs;
     if (value === undefined) return;
     saves.save(item.object, raw, value);
-    if (canFix && session.style.kind === "agree" && value === "disagree") {
+    if (canFix && session.style.kind !== "blind" && value === "disagree") {
       setCurrent(item.object);
       setFixing({ object: item.object, step: "reasons" });
       return;
