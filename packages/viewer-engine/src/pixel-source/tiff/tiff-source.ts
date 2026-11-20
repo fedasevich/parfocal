@@ -381,6 +381,23 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
       ? null
       : frameLayout(stitching, base.width, base.height);
   let closed = false;
+  const offsetLoads = new Map<GeoTIFFImage, Promise<void>>();
+  const loadOffsets = async (level: TiffLevel): Promise<void> => {
+    await Promise.all(
+      [level.image, ...level.siblings].map((image) => {
+        let load = offsetLoads.get(image);
+        if (load === undefined) {
+          load = loadTag(image, "TileOffsets").then(
+            () => undefined,
+            () => undefined,
+          );
+          offsetLoads.set(image, load);
+        }
+        return load;
+      }),
+    );
+  };
+  for (const level of levels) void loadOffsets(level);
   const nativeDecoder =
     request.nativeJpeg === "off"
       ? null
@@ -507,6 +524,8 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
     const height = window[3] - window[1];
     const tiles = storedTiles(level, window);
     if (tiles.every((index) => isAbsent(level, index))) return { absent: true, width, height };
+    await loadOffsets(level);
+    signal?.throwIfAborted();
     let planes: PixelArray[] | null = null;
     if (nativeLevels[levelIndex] && nativeDecoder !== null && (await decide()).jpeg === "native") {
       try {
