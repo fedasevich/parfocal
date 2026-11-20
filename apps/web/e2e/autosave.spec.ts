@@ -61,7 +61,7 @@ test("edits made while the network is cut for 30 seconds are all saved once it r
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   const shapes = page.getByTestId("polygon-shape");
 
-  await drawSquare(page, { x: box.x + 200, y: box.y + 120 });
+  await drawSquare(page, { x: box.x + 200, y: box.y + 260 });
   await expect(shapes).toHaveCount(1);
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await expect(page.getByTestId("save-status")).toHaveText("All edits saved");
@@ -70,8 +70,8 @@ test("edits made while the network is cut for 30 seconds are all saved once it r
   await page.evaluate(() => {
     window.__networkDown = true;
   });
-  await drawSquare(page, { x: box.x + 360, y: box.y + 120 });
-  await drawSquare(page, { x: box.x + 520, y: box.y + 120 });
+  await drawSquare(page, { x: box.x + 360, y: box.y + 260 });
+  await drawSquare(page, { x: box.x + 520, y: box.y + 260 });
   await expect(shapes).toHaveCount(3);
   await expect(stage).toHaveAttribute("data-save-state", "retrying");
   await expect(page.getByTestId("save-status")).toHaveText(
@@ -104,7 +104,7 @@ test("an edit undone while offline never reaches the server", async ({ page }) =
   await page.evaluate(() => {
     window.__networkDown = true;
   });
-  await drawSquare(page, { x: box.x + 200, y: box.y + 120 });
+  await drawSquare(page, { x: box.x + 200, y: box.y + 260 });
   await expect(stage).toHaveAttribute("data-save-state", "retrying");
   await page.keyboard.press("Control+z");
   await expect(shapes).toHaveCount(0);
