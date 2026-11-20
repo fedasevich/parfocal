@@ -89,6 +89,7 @@ const blockSelector = [
   '[data-testid="stage-pan-hint"]',
   '[data-testid="stage-coach"] > *',
   '[data-testid="viewer-banner"] > *',
+  '[data-testid="lab-hud"]',
   "[data-minimap-block]",
 ].join(",");
 

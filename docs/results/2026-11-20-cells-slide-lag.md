@@ -49,8 +49,9 @@ Written for backlog tasks PROTO-131 (every floating part of the viewer stage has
 
 Signed in as the agent test account on app.parfocal.eu, Chrome, on the same slide and task.
 
-- At 1512 by 982 the stage is 1120 by 938 px. After the 40× preset and then the 20× preset (⌥6 then ⌥4) the full size overview map sat at 904, 692 instead of its bottom right home at 952, 755, which is 48 px left and 63 px up. Nothing brings it back, so each switch between sizes can push the map further toward the middle.
-- Cause: `useDrawnExtra` in `apps/web/src/viewer/stage-minimap.tsx` measured the drawn map against the size planned one render earlier, so the switch from compact to full counted the whole difference, 46 by 60 px rounded up to 48 by 64, as padding the map needs, and that padding only ever grew. The map now measures itself against the size it is drawn at, read from its own `data-size`, and keeps the padding per size.
+- At 1512 by 982 the stage is 1120 by 938 px. After the 40× preset and then the 20× preset (⌥6 then ⌥4) the full size overview map sat at 904, 692 instead of its bottom right home at 952, 755, which is 48 px left and 63 px up, and it stayed there.
+- Likely cause: `useDrawnExtra` in `apps/web/src/viewer/stage-minimap.tsx` measured the drawn map against the size planned one render earlier, so a switch from compact to full could count the whole difference, 46 by 60 px rounded up to 48 by 64, as padding the map needs, and that padding never shrank. The map now measures itself against the size it is drawn at, read from its own `data-size`, and keeps the padding per size.
+- Locally, on the fake annotate slide at 1512 by 982 with the Minimap setting Always and the presets 40×, 1.25×, 40×, 2.5× and 1.25×, the old code left the compact map 22 px above the stage bottom and the new code 14 px, and both kept the full map 12 px from the right and 19 px from the bottom. The 48 by 63 px drift did not happen locally, so the fix is not verified on the deployed slide. TODO.
 - The marker did not go wrong. At 1512 by 982, 1470 by 956, 1280 by 800 and 1024 by 700, after wheel zoom, after the preset keys, after `object=C2` and with the map pinned top left, the marker centre matched the camera centre to three decimals. `object=T1+` names no object this account sees, so it opens the whole slide. Not tried: the developer drawer open, a narrow or wide side panel, and Safari. The marker check compares with the engine camera, so a camera that disagrees with the picture would not show. TODO.
 
 ### Home zones
@@ -69,7 +70,8 @@ Signed in as the agent test account on app.parfocal.eu, Chrome, on the same slid
 | Error toasts | Bottom right of the window, over the side panel | Outside the stage while the side panel is open. With the panel hidden they can sit over the map. TODO |
 | Undo toasts | Bottom centre of the window | Short lived. They can sit over the magnification bar for a few seconds. TODO |
 | Compare pane | Its own column beside the stage, with its pill top centre of that pane | A separate pane, never over the main stage |
-| Developer drawer and performance overlay | Over the right side panel | Outside the stage |
+| Developer drawer | Over the right side panel | Outside the stage |
+| Developer performance overlay and route chips | The overlay in the corner chosen in the lab settings, the chips bottom left, both inside the stage in developer mode | The map treats both as blocks. Not covered by the spec. TODO |
 | Guided parts: pan hint, guided controls, cell type bar, cells grid, whole slide button, travel map | Top left, bottom left and the edges the earlier overlap spec fixed | The map treats them as blocks |
 
 ### Tests
