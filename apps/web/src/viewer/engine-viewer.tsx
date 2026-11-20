@@ -12,6 +12,7 @@ import { readBuildConfig } from "../config.ts";
 import { useRememberResume } from "../screens/home/remember-resume.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { useRefusals } from "../screens/refusals.ts";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
@@ -25,6 +26,7 @@ import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
 import type { StageSession } from "./stage-inspector.tsx";
 import {
+  AccessNotice,
   ReadOnlyNotice,
   SignedOffNotice,
   StageIssueLayer,
@@ -51,6 +53,13 @@ import type { ThreadFocusRequest } from "./thread-focus.tsx";
 import type { SlideStorageNote } from "./tile-grant.ts";
 import { useCaseLoad } from "./use-case-load.ts";
 import { useSlideAreas } from "./use-slide-areas.ts";
+import {
+  assignedTo,
+  isReadOnly,
+  readOnlyCodeOf,
+  viewerAccessOf,
+  workspaceRoleOf,
+} from "./viewer-access.ts";
 import { resolveWorkspace, type SlideWorkspace } from "./workspace.ts";
 
 const fakeOutlines = readBuildConfig().fakeApi !== "off";
@@ -118,7 +127,8 @@ export function EngineViewer({
   const taskQuery = useGetReviewTask(task ?? "", { query: { enabled: task !== undefined } });
   const taskDetail = okData(taskQuery.data);
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
-  const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
+  const projectRole = okData(useGetProject(projectId).data)?.my_role ?? undefined;
+  const owner = projectRole === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner, object);
   const retype = useCellRetype(projectId, annotateTask);
   const withdrawn = taskDetail?.kind === "review" && isWithdrawn(taskDetail);
@@ -134,10 +144,27 @@ export function EngineViewer({
     query: { enabled: reviewTask !== null },
   });
   const nothingFound = reviewTask !== null && nothingFoundOf(okData(reviewObjects.data));
-  const me = okData(useGetMe().data)?.user_id;
+  const meData = okData(useGetMe().data);
+  const me = meData?.user_id;
   const othersReview =
     taskDetail?.kind === "review" ? othersReviewOf(taskDetail.slides, slideId, me) : null;
   const reviewers = useReviewerNames(othersReview?.map((id) => person(id)?.name ?? id) ?? null);
+  const access = viewerAccessOf({
+    role: workspaceRoleOf(meData),
+    projectRole,
+    taskKind: task === undefined ? undefined : taskDetail?.kind,
+    assigned: taskDetail === undefined ? undefined : assignedTo(taskDetail.slides, slideId, me),
+    withdrawn: isWithdrawn(taskDetail),
+    signedOff: signedOff !== null,
+  });
+  const { sentenceOf } = useRefusals();
+  const accessCode = readOnlyCodeOf(access);
+  const accessLine = accessCode === undefined ? undefined : sentenceOf(accessCode);
+  const lookingOn =
+    access.kind === "read-only" &&
+    (access.reason === "not-assigned" || access.reason === "no-review-right");
+  const stageReadOnly = isReadOnly(access) && taskDetail?.kind !== "annotate";
+  const opinionShown = taskDetail?.kind === "review" && !lookingOn;
   const taskSlideIds = taskDetail?.slides.map((item) => item.slide_id) ?? [];
   const nextSlideId = taskSlideIds[taskSlideIds.indexOf(slideId) + 1];
   const researcher = person(taskDetail?.created_by_user_id)?.name;
@@ -188,9 +215,14 @@ export function EngineViewer({
   const lock =
     reviewers !== null ? (
       <ReadOnlyNotice reviewers={reviewers} />
-    ) : signedOff === null ? null : (
+    ) : signedOff !== null ? (
       <SignedOffNotice at={signedOff.at} researcher={researcher} onAsk={askResearcher} />
-    );
+    ) : access.kind === "read-only" &&
+      accessLine !== undefined &&
+      !withdrawn &&
+      taskDetail?.kind !== "annotate" ? (
+      <AccessNotice reason={access.reason} sentence={accessLine} />
+    ) : null;
   const notices = useMemo(
     () => ({ banner, status, lock, finish, placeBanner: focus ? undefined : setBanner }),
     [banner, status, lock, finish, focus],
@@ -236,6 +268,8 @@ export function EngineViewer({
         signedOff={signedOff !== null}
         slideLabel={load?.slide?.label ?? ""}
         reviewers={reviewers}
+        readOnly={reviewers !== null || lookingOn}
+        readOnlyLine={accessLine}
         onAsk={askResearcher}
         onNext={
           nextSlideId === undefined || taskSlideIds.indexOf(slideId) < 0
@@ -248,6 +282,7 @@ export function EngineViewer({
             <StageReviewObjects
               answersOff={answersOff}
               readOnly={readOnly}
+              opinionLocked={accessLine}
               engine={session.engine}
               module={session.module}
               taskId={reviewTask}
@@ -296,7 +331,7 @@ export function EngineViewer({
   };
   const inspector = {
     guided,
-    tab: tab === "opinion" && taskDetail?.kind !== "review" ? undefined : tab,
+    tab: tab === "opinion" && !opinionShown ? undefined : tab,
     onTab,
     counts: tabCounts,
     focus: threadFocus?.slideId === slideId ? threadFocus.request : null,
@@ -327,19 +362,19 @@ export function EngineViewer({
         )}
       </>
     ),
-    opinion:
-      taskDetail?.kind === "review" ? (
-        <StageOpinion
-          taskId={task}
-          slideId={slideId}
-          reviewTask
-          onObjects={(id) => {
-            onTab("objects");
-            if (id !== undefined)
-              setJumpRequest((before) => ({ id, count: (before?.count ?? 0) + 1 }));
-          }}
-        />
-      ) : null,
+    opinion: opinionShown ? (
+      <StageOpinion
+        taskId={task}
+        slideId={slideId}
+        reviewTask
+        readOnly={accessLine}
+        onObjects={(id) => {
+          onTab("objects");
+          if (id !== undefined)
+            setJumpRequest((before) => ({ id, count: (before?.count ?? 0) + 1 }));
+        }}
+      />
+    ) : null,
   };
   return (
     <main
@@ -356,13 +391,17 @@ export function EngineViewer({
           guided={guided}
           onWorkspace={onWorkspace}
           onOpenSlide={onOpenSlide}
-          onSubmit={() => {
-            setLayout({ hidden: false });
-            if (guided) {
-              setDoneRequest((count) => count + 1);
-              onTab("objects");
-            } else onTab("opinion");
-          }}
+          onSubmit={
+            isReadOnly(access)
+              ? undefined
+              : () => {
+                  setLayout({ hidden: false });
+                  if (guided) {
+                    setDoneRequest((count) => count + 1);
+                    onTab("objects");
+                  } else onTab("opinion");
+                }
+          }
           onResultSets={() => {
             setLayout({ hidden: false });
             onTab("display");
@@ -416,6 +455,7 @@ export function EngineViewer({
             workspace={workspace}
             annotateTask={annotateTask}
             layerKnown={layerKnown}
+            readOnly={stageReadOnly}
             onOpenSlide={onOpenSlide}
             onStorage={(note) => setStorage({ slideId, note })}
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
