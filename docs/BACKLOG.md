@@ -7045,7 +7045,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner saw on 2026-11-20 on the Philips-3.tiff annotate task slide, focused with `object=T1+` at 37×, that the viewport marker of the overview map sat at the top left corner of the thumbnail while the view was on tissue further down and right. The agent test account could not reproduce it at 1440 by 900 and 1920 by 1080 on the engine route: the tiny crosshair marker sat on the camera centre after wheel zoom, and two specs in `apps/web/e2e/engine-viewer.spec.ts` now check the marker centre against the camera centre after a deep link and after an object focus. Still unknown are the owner's window size, renderer route (the owner's overlay said Viv), whether the map was pinned or moved, and the zoom path. Reproduce with those, then fix `apps/web/src/viewer/stage-minimap.tsx` or `MapViewport` in `packages/ui/src/components/smart-minimap.tsx`.
   Done when the owner's case is reproduced in a spec that fails before the fix and the marker centre stays within 2% of the camera centre after it.
   Depends on nothing. Size: S.
-- [ ] PROTO-130 · Tile range requests on the deployed app answer fast enough for a smooth pan
+- [x] PROTO-130 · Tile range requests on the deployed app answer fast enough for a smooth pan
   On the Philips-3.tiff slide the range requests for `original.tiff` took a p50 of 136 to 797 ms and a p95 of 347 to 1419 ms on 2026-11-20, and the owner's overlay showed a decode p95 of 870.4 ms, which the pool measures from dispatch to settle including the byte relay through the main thread. Find whether the time goes to the tile store, the edge, the range cache or the main thread queue, and check the tile size and the number of decode workers.
   Done when a result file splits the decode time into its parts on the deployed app and the largest part is cut or has its own task.
   Depends on PROTO-128. Size: M.
@@ -7053,6 +7053,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner found on 2026-11-20 that the overview map can float in the middle of the stage over tissue and that tooltips and coach bubbles pile on top of it and of each other. Give the overview map, the top stack (context bar, GPU wait, failure alert), the tool rail, the hint bar, tooltips and coach bubbles, the scale bar, the zoom controls, the object focus card, toasts and the compare pane each a fixed home zone, such as the map docked bottom right, hints bottom centre and toasts top right below the stack, keep them clear of each other and of the side panel, and keep a focused object from `object=` uncovered.
   Done when one spec opens an annotate task slide with `object=` at 1024 by 700, 1280 by 800 and 1440 by 900 and finds no two floating parts overlapping and the focused object uncovered, and the zone plan is written in a result file.
   Depends on nothing. Size: M.
+- [ ] PROTO-132 · A tile's byte requests run together, not one after another
+  PROTO-130 (tile range requests answer fast enough for a smooth pan) found on 2026-11-20 that one tile can still need up to 4 byte requests through the range cache, and did not measure whether they run in sequence, which would cost a round trip each. See `docs/results/2026-11-20-tile-request-time.md`. Measure it on the deployed app and, if they are sequential, prefetch or batch them so a tile waits for at most one round trip.
+  Done when a result file shows the requests per tile and their overlap before and after, and a unit test in the viewer engine covers the batching.
+  Depends on PROTO-130. Size: S.
 
 ---
 
