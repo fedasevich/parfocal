@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-124 Default lock after moved from 15 to 240 minutes in the API and web app. 1571 API tests pass.
 - VIEW-076 Deployed check passed: v0.29.1 deployed, production reset and reseeded at v0.29.1, thumbnail backfill stored 1, copied 93, failed 0, and the deployed seeded-formats smoke opened both converted zip slides. Production touches: deploys of v0.29.0 and v0.29.1, one reset, one backfill, cost TODO (Modal compute only).
 - PROTO-100 Folded into VIEW-076: the two zip slides read as CMU-1-Saved-1_16 (MIRAX) and CMU-1-JP2K-33005-v2 (DICOM).
 - VIEW-076 MIRAX and DICOM zips open: ADR 0408 converts them at ingest into one lossless tiled BigTIFF that the TIFF reader opens, because ADR 0043 lists both as not in the POC viewer and deflated zip members allow no range reads. Fixtures publish to fixture-slides/<slug>-pyramid-tiff/. Browser test opens and draws both, MIRAX matches OpenSlide pixel for pixel, seeded-formats smoke covers them, crops cut. Merged with PROTO-103 after an import conflict in showcase.py, test_showcase 26 of 26 pass. Production touch: published the two converted fixtures to parfocal-dev-eu, about 1.1 GB, about $0.02 a month. Uploaded zips are not converted yet. Decision 165 asks about JPEG q90 for converted slides.
