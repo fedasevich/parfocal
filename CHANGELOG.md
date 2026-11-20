@@ -2,6 +2,75 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.27.0 (2026-11-20)
+
+### Features
+
+- PROTO-074: Link every slide place to the viewer and fix report, due and imports
+- PROTO-072: Open other reviewers' slides read only and say refusals in plain sentences
+- PROTO-080: Land the cells strip's flight to a cell at 40x or the slide's scan power
+- PROTO-081: Show what each role and admin rights may do in People and roles
+- PROTO-083: Show guided review issue states from the real task, including an empty AI result
+- PROTO-082: Store task timing events in the API and read them on the task timing page
+- PROTO-084: Warn on Check when an upload does not fit the storage allowance
+- PROTO-085: Show session ended and no access pages from real API answers
+
+### Fixes
+
+- PROTO-071: Show sizes in micrometres, pixels without a pixel size and shapes by class
+- PROTO-065: Give the production reset its Modal token and public origin
+- PROTO-075: Fix the smaller viewer, route and wording rows of the viewer audit
+- PROTO-075: Keep slide notices above the tool hints so their buttons click
+- VIEW-075: Open compare without a task and keep the workspace
+- PROTO-084: Give the showcase upload seed the storage allowance setting
+- PROTO-075: Read the home week totals and its tasks in one query again
+- PROTO-077: List fake notifications newest first like the API
+- PROTO-072: Keep the side panel above the read only banner so its tabs click
+- PROTO-076: Let the top stack and hint bar use the stage width so short hints keep one line
+- PROTO-029: Overlay the viewer banner on the stage only so it never covers the side panel
+- PROTO-029: Draw the stage banner host from the stage notices so slide-stage stays short
+
+### Docs
+
+- PROTO-074: Log the viewer entry points and ask decision 163
+- PROTO-072: Log read only review for people not assigned
+- PROTO-071: Log sizes and units
+- PROTO-081: Log the role table in Admin
+- PROTO-065: Log the v0.26.0 deploy and reseed
+- PROTO-083: Log guided review real states
+- PROTO-075: Log the smaller audit fixes
+- PROTO-082: Log task timing from recorded events
+- PROTO-084: Log the real upload warnings
+- PROTO-085: Log the real sign-in states
+- VIEW-075: Log compare on the engine stage
+- VIEW-075: Log green CI and tick VIEW-075
+
+### Tests
+
+- TEST-052: List task timing, project access and shared groups in the isolation suites
+- PROTO-086: Expect five rows in the bell and See all on the notifications page
+- PROTO-078: Expect disagreement states to open without a scene
+- PROTO-057: Expect display opacity to reach zero
+- PROTO-075: Find a project card that has one result set
+- PROTO-091: Expect the palette to open the found cell itself
+- PROTO-087: Read the pin text from the app tooltip
+- TEST-052: Draw the autosave squares below the tool options bar
+- PROTO-066: Toggle the result set by its switch
+- PROTO-060: Wait for the minimap to finish moving before checking the stack clears it
+- PROTO-078: Count 239 prototype index links now disagreements have real routes
+- PROTO-089: Open the unflagged slide by its link, not the row centre
+- PROTO-075: Expect three inspector tabs on a slide outside a review task
+- PROTO-071: Read small cluster sizes in micrometres
+- PROTO-090: Fetch the report PDF through the page so the fake API answers it
+- PROTO-067: Wait for the review order of an added run before reading check progress
+- PROTO-086: Wait for the boot loader to go before fetching through the fake API
+- PROTO-087: Zoom out first so a still opened at full zoom can still move
+- IAM-033: Wait out the sign-in rate limit in the e2e sign-in helper
+- PROTO-086: Approve the UI baselines for loaders, drawers, case forms, cards and PDF pages
+- PROTO-075: Open the annotate task on its Objects tab to read the check progress
+- OPS-017: Match the task code as a whole word so RT-2 does not also find RT-20
+- OPS-017: Pick the Assigned by me row by task id since codes repeat across projects
+
 ## v0.26.0 (2026-11-19)
 
 ### Features
