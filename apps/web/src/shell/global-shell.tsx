@@ -13,6 +13,7 @@ import { personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense } from "react";
 import { canOpenAdmin } from "../screens/admin/admin-access.ts";
+import { openAdjudications } from "../screens/my-work/to-review-rows.ts";
 import { projectColour } from "../screens/palette.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { AccountMenu } from "./account-menu.tsx";
@@ -43,7 +44,7 @@ export function personOf(me: Me | undefined): PersonInfo {
 
 export function useToReviewCount(): number {
   const tasks = okData(useListMyReviewTasks().data) ?? [];
-  const adjudications = okData(useListMyAdjudications().data) ?? [];
+  const adjudications = openAdjudications(okData(useListMyAdjudications().data) ?? []);
   const active = tasks.filter(
     (task) => task.status === "in-review" || task.status === "not-started",
   );

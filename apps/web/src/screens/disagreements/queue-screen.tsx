@@ -160,7 +160,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     ? locked.slides_left === 1
       ? t`The queue opens when every reviewer has submitted. ${lockedName} has 1 slide left.`
       : t`The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
-    : t`${task?.name ?? ""} · ${rows.length} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""}`;
+    : t`${task?.name ?? ""} · ${rows.length - resolved} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""}`;
   const checkedRows = rows.filter((item) => checked.includes(item.key));
 
   const sendObjects = (keys: string[], adjudicatorId: string, note: string | null) => {

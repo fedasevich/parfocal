@@ -330,7 +330,7 @@ msgid "{0} · {1} GB · 40x"
 msgstr ""
 
 #. placeholder {0}: task?.name ?? ""
-#. placeholder {1}: rows.length
+#. placeholder {1}: rows.length - resolved
 #. placeholder {2}: queue?.total_objects ?? 0
 #. placeholder {3}: withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""
 #: src/screens/disagreements/queue-screen.tsx
@@ -2261,6 +2261,10 @@ msgstr ""
 #. placeholder {0}: summary.result_set.name
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{taskName} · {0}"
+msgstr ""
+
+#: src/viewer/task-slide-check.tsx
+msgid "{taskName} does not include this slide, so there is nothing to review on it here."
 msgstr ""
 
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -11718,6 +11722,10 @@ msgstr ""
 msgid "Open the slide"
 msgstr ""
 
+#: src/viewer/task-slide-check.tsx
+msgid "Open the slide alone"
+msgstr ""
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "Open the slide in the full viewer"
 msgstr ""
@@ -11728,6 +11736,7 @@ msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/viewer/task-slide-check.tsx
 msgid "Open the task"
 msgstr ""
 
@@ -17049,12 +17058,17 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/use-viewer-scene.tsx
+#: src/viewer/task-slide-check.tsx
 msgid "The task"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The task could not be created. Try again."
+msgstr ""
+
+#: src/viewer/task-slide-check.tsx
+msgid "The task in this address does not exist, or it was deleted."
 msgstr ""
 
 #: src/screens/refusals.ts
@@ -17388,6 +17402,10 @@ msgstr ""
 msgid "This slide is already submitted."
 msgstr ""
 
+#: src/viewer/task-slide-check.tsx
+msgid "This slide is not part of the task"
+msgstr ""
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off"
 msgstr ""
@@ -17413,6 +17431,10 @@ msgstr ""
 
 #: src/screens/review/first-read-notice.tsx
 msgid "This task asks for your own read of the slide before the AI result appears. Record it in guided review."
+msgstr ""
+
+#: src/viewer/task-slide-check.tsx
+msgid "This task cannot be opened"
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -19037,6 +19059,10 @@ msgstr ""
 
 #: src/screens/refusals.ts
 msgid "You can look at this slide but not change it."
+msgstr ""
+
+#: src/viewer/task-slide-check.tsx
+msgid "You can open the task, or look at the slide on its own. Nothing was changed."
 msgstr ""
 
 #. placeholder {0}: signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : t`Nobody can yet.`

@@ -23,6 +23,7 @@ export type ModeRule = {
   readonly workspace: SlideWorkspace;
   readonly choice: ModeChoice;
   readonly choices: readonly ModeChoice[];
+  readonly noCellSample: boolean;
 };
 
 export function workspaceOf(mode: ViewerMode): SlideWorkspace {
@@ -34,6 +35,7 @@ const rule = (mode: ViewerMode, choices: readonly ModeChoice[]): ModeRule => ({
   workspace: workspaceOf(mode),
   choice: mode === "cells" ? "review" : mode,
   choices,
+  noCellSample: false,
 });
 
 export const noTaskChoices: readonly ModeChoice[] = ["look", "annotate"];
@@ -43,6 +45,12 @@ export const reviewTaskChoices: readonly ModeChoice[] = ["guided", "review", "an
 const reviewTaskModes: ReadonlySet<ViewerMode> = new Set(["review", "guided", "cells", "annotate"]);
 
 export function viewerModeOf(facts: ModeFacts): ModeRule {
+  const picked = pickedModeOf(facts);
+  const noCellSample = facts.chosen === "cells" && facts.cellSample === false;
+  return { ...picked, noCellSample: noCellSample && picked.mode !== "cells" };
+}
+
+function pickedModeOf(facts: ModeFacts): ModeRule {
   const edit = facts.access.kind === "edit";
   if (!facts.hasTask) {
     if (!edit) return rule("look", []);
@@ -54,9 +62,8 @@ export function viewerModeOf(facts: ModeFacts): ModeRule {
     reviewTaskModes.has(facts.chosen) &&
     !(facts.chosen === "cells" && facts.cellSample === false);
   const chosen = allowed && facts.chosen !== undefined ? facts.chosen : "review";
-  if (facts.taskKind === undefined)
+  if (facts.taskKind === undefined || !edit)
     return rule(chosen === "guided" || chosen === "cells" ? chosen : "review", []);
-  if (!edit) return rule(chosen === "guided" ? "guided" : "review", []);
   return rule(chosen, reviewTaskChoices);
 }
 

@@ -773,6 +773,16 @@ export const adjudications = [
     decided: 0,
     sentAt: "2026-10-17T09:00:00+02:00",
   },
+  {
+    id: uuid(13, 2),
+    task: "RT-09",
+    adjudicator: "AK" as PersonKey,
+    askedBy: "DH" as PersonKey,
+    slide: 2,
+    objects: ["T2", "T3"],
+    decided: 2,
+    sentAt: "2026-10-08T09:00:00+02:00",
+  },
 ];
 
 export const cosignRequests = [

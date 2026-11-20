@@ -21,7 +21,11 @@ type SlideNoticeListProps = {
   modeFallback?: ModeFallback | undefined;
 };
 
-export type ModeFallback = { readonly asked: ViewerMode; readonly shown: ViewerMode };
+export type ModeFallback = {
+  readonly asked: ViewerMode;
+  readonly shown: ViewerMode;
+  readonly noCellSample: boolean;
+};
 
 function Line({
   kind,
@@ -90,7 +94,7 @@ export function SlideNoticeList({
       case "mode-fallback":
         return (
           <Line key={kind} kind={kind} icon="warn" tone="dim" testId="mode-fallback">
-            {modeFallback?.asked === "cells"
+            {modeFallback?.noCellSample === true
               ? t`This slide has no cell sample, so it opened in ${modeWords[modeFallback.shown]}.`
               : t`This slide cannot open in ${modeWords[modeFallback?.asked ?? "review"]} here, so it opened in ${modeWords[modeFallback?.shown ?? "review"]}.`}
           </Line>
