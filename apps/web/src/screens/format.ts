@@ -77,6 +77,8 @@ export function relativeTime(at: Date, today: Date): string {
 
 export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
+export const slidesText = (count: number) => (count === 1 ? "1 slide" : `${count} slides`);
+
 export function andJoin(items: readonly string[]): string {
   if (items.length < 2) return items.join("");
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;

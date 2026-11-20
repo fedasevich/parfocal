@@ -79,3 +79,25 @@ test("opening a slide writes no setting, and closing a tool hint is what marks i
   await page.getByTestId("hint-close").click();
   await expect.poll(() => writes.length).toBeGreaterThan(0);
 });
+
+test("going back and forth between two tools writes each tool hint once", async ({ page }) => {
+  const writes: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/me/setting-layers") && request.method() !== "GET") {
+      writes.push(request.postData() ?? "");
+    }
+  });
+  const project = "00000000-0000-4000-8003-000000000007";
+  const slide = "00000000-0000-4000-8005-000000000005";
+  await page.goto(`/projects/${project}/slides/${slide}?mode=annotate`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await expect(page.getByTestId("hint-close")).toBeVisible();
+  await stage.click({ position: { x: 20, y: 20 } });
+  for (const key of ["h", "v", "h", "v", "h", "v"]) {
+    await page.keyboard.press(key);
+    await page.waitForLoadState("networkidle");
+  }
+  expect(writes).toHaveLength(2);
+});

@@ -1075,7 +1075,7 @@ async def seed(
                     results,
                     workspace,
                     agent_emails,
-                    case_facts if workspace is WORKSPACES[0] else None,
+                    case_facts,
                 )
         return tenant_ids
     finally:

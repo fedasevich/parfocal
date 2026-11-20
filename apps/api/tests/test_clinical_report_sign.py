@@ -176,3 +176,33 @@ def test_the_signed_version_downloads_as_a_pdf(api: ApiAs, database: str, clinic
     assert "by lead" in text
     assert "2.5 mm" in text
     assert api(clinic.outsider).get(f"{clinic.url}/versions/1/pdf").status_code == 403
+
+
+def test_the_pdf_facts_leave_out_an_empty_microscopic_description_and_comment() -> None:
+    from datetime import UTC, datetime
+
+    from parfocal_api.clinical_report_pdf import facts_of
+
+    values = {
+        "specimen": "Node",
+        "category": None,
+        "nodes_examined": None,
+        "extranodal": None,
+        "diagnosis": "Negative",
+        "microscopic": " ",
+        "comment": "Seen twice",
+        "deposits": [],
+    }
+    facts = facts_of(
+        "S1",
+        "Template",
+        1,
+        {"values": values, "staging": None},
+        "Lead",
+        datetime.now(UTC),
+        None,
+        None,
+    )
+    labels = [label for label, _ in facts["rows"]]
+    assert "Microscopic description" not in labels
+    assert "Comment" in labels

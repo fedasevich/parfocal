@@ -71,7 +71,18 @@ def test_the_status_is_ok_for_anyone_when_nothing_is_paused(api: ApiAs) -> None:
     api.principal = None
     response = api.client.get(STATUS)
     assert response.status_code == 200, response.text
-    assert response.json() == {"status": "ok", "maintenance": None}
+    assert response.json() == {"status": "ok", "maintenance": None, "release": None}
+
+
+@pytest.mark.db
+def test_the_status_names_the_release_the_deploy_set(
+    api: ApiAs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    api.principal = None
+    monkeypatch.setenv("PARFOCAL_RELEASE", "v0.29.2")
+    response = api.client.get(STATUS)
+    assert response.status_code == 200, response.text
+    assert response.json()["release"] == "v0.29.2"
 
 
 @pytest.mark.db
@@ -103,7 +114,7 @@ def test_maintenance_blocks_writes_but_keeps_reads_until_it_ends(
 
     finished = api(OPERATOR).delete(PLATFORM)
     assert finished.status_code == 200, finished.text
-    assert finished.json() == {"status": "ok", "maintenance": None}
+    assert finished.json() == {"status": "ok", "maintenance": None, "release": None}
     assert api(person).post("/api/projects", json={"name": "Resumed"}).status_code == 201
 
     actions = owner(

@@ -160,6 +160,12 @@ const localSnapshot = (): string[] => {
   return localList;
 };
 
+export function unwrittenHints(written: ReadonlySet<string>, ids: readonly string[]): string[] {
+  return ids.filter((id) => !written.has(id));
+}
+
+let written: ReadonlySet<string> = new Set();
+
 export type HintWrites = {
   pending: () => string[] | null;
   push: (ids: string[], settled: () => void) => void;
@@ -223,6 +229,7 @@ export function useHintsSeen(): HintsSeen {
       const current = serverWrites.pending() ?? fetched;
       const updated = next(current);
       if (sameList(current, updated)) return;
+      written = new Set(updated);
       void queryClient.cancelQueries({ queryKey: key });
       queryClient.setQueryData<getMySettingLayersResponse>(key, {
         ...cached,
@@ -235,7 +242,7 @@ export function useHintsSeen(): HintsSeen {
 
   const markSeen = useCallback(
     (ids: readonly string[]) => {
-      if (ids.length > 0) store((current) => withSeen(current, ids));
+      if (unwrittenHints(written, ids).length > 0) store((current) => withSeen(current, ids));
     },
     [store],
   );

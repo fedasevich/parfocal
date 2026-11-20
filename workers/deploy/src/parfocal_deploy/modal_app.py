@@ -1,6 +1,7 @@
 import importlib
 import logging
 import os
+import subprocess
 import time
 import tomllib
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
@@ -134,8 +135,33 @@ def app_image() -> modal.Image:
     )
 
 
+RELEASE_VARIABLE = "PARFOCAL_RELEASE"
+
+
+def described_release() -> str:
+    return subprocess.run(
+        ["git", "describe", "--tags", "--always"],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=REPOSITORY,
+    ).stdout
+
+
+def release_of(describe: Callable[[], str] = described_release) -> str | None:
+    try:
+        text = describe()
+    except OSError, subprocess.CalledProcessError:
+        return None
+    return text.strip() or None
+
+
 def web_image(image: modal.Image) -> modal.Image:
-    return image.env({PRELOAD_VARIABLE: WEB_FUNCTION})
+    settings = {PRELOAD_VARIABLE: WEB_FUNCTION}
+    release = (os.environ.get(RELEASE_VARIABLE) or release_of()) if modal.is_local() else None
+    if release:
+        settings[RELEASE_VARIABLE] = release
+    return image.env(settings)
 
 
 def preload(

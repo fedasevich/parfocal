@@ -170,8 +170,8 @@ export function taskProgressOf(
   const total = statuses.length;
   const line =
     signedOff > 0
-      ? `${checked} of ${total} slides checked, ${signedOff} signed off`
-      : `${checked} of ${total} slides checked`;
+      ? `${checked} of ${total === 1 ? "1 slide" : `${total} slides`} checked, ${signedOff} signed off`
+      : `${checked} of ${total === 1 ? "1 slide" : `${total} slides`} checked`;
   return { total, checked, signedOff, line };
 }
 

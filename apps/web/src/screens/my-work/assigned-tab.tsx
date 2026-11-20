@@ -1,3 +1,4 @@
+import { plural as plurals } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type AssignedTask,
@@ -155,7 +156,7 @@ function AssignedRow({
               <ProgressBar
                 className="w-17.5 shrink-0"
                 value={percent(reviewer.slides_submitted, reviewer.slides_assigned)}
-                aria-label={t`${people(reviewer.user_id)?.name ?? "Reviewer"}, ${reviewer.slides_submitted} of ${reviewer.slides_assigned} slides`}
+                aria-label={t`${people(reviewer.user_id)?.name ?? "Reviewer"}, ${reviewer.slides_submitted} of ${plurals(reviewer.slides_assigned, { one: "# slide", other: "# slides" })}`}
               />
               <span className="font-mono text-fg-dim">
                 {reviewer.slides_submitted}/{reviewer.slides_assigned}

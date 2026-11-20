@@ -218,7 +218,7 @@ test("progress across the task's slides counts checked and signed off slides", (
     signedOff: 1,
     line: "2 of 4 slides checked, 1 signed off",
   });
-  assert.equal(taskProgressOf([status({})], "me").line, "0 of 1 slides checked");
+  assert.equal(taskProgressOf([status({})], "me").line, "0 of 1 slide checked");
   assert.equal(nextSlideOf(["a", "b", "c", "d"], "b", statuses, "me"), "c");
   assert.equal(nextSlideOf(["a"], "a", [status({ experts: [checked()] })], "me"), null);
 });

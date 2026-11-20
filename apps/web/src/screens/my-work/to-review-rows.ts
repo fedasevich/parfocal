@@ -1,6 +1,6 @@
 import type { MyTask, ResumeTarget, TaskScope } from "@parfocal/api-client";
 import { destinations } from "../../shell/destinations.ts";
-import { formatDue, percent } from "../format.ts";
+import { formatDue, percent, slidesText } from "../format.ts";
 import type { ListKey } from "./list-keys.ts";
 
 export const scopeWords: Record<TaskScope, string> = {
@@ -74,7 +74,7 @@ export function reviewRow(
     sub,
     progress: {
       value: percent(task.slides_submitted, task.slides_assigned),
-      label: `${task.slides_submitted} of ${task.slides_assigned} slides`,
+      label: `${task.slides_submitted} of ${slidesText(task.slides_assigned)}`,
     },
     tags: [
       ...(task.blinded ? [{ label: "Blind", tone: "neutral" as const }] : []),

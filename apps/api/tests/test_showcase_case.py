@@ -173,7 +173,7 @@ async def test_the_agent_project_owner_co_signs_the_sent_report(showcase: str) -
     async with rolled_back(showcase, agent) as connection:
         assert await current_role(connection, project_id, agent.user_id) is ProjectRole.OWNER
         requests = await list_my_cosign_requests(agent, connection)
-        assert [request.case_label for request in requests] == [COSIGN_CASE]
+        assert [request.case_label for request in requests] == [COSIGN_CASE] * len(WORKSPACES)
         sent = await get_clinical_report(project_id, case_id, agent, connection)
         assert sent.cosigner_user_id == agent.user_id
         signed = await sign_clinical_report(
@@ -258,13 +258,15 @@ async def test_the_agent_finds_a_finished_upload_job_with_its_slide(showcase: st
         jobs = await list_my_jobs(agent, connection)
     assert [(job.kind, job.status, job.percent) for job in jobs] == [
         (MyJobKind.UPLOAD, JobStatus.DONE, 100)
-    ]
-    assert [slide.label for slide in jobs[0].slides] == [UPLOADED_FILE]
+    ] * len(WORKSPACES)
+    assert [slide.label for job in jobs for slide in job.slides] == [UPLOADED_FILE] * len(
+        WORKSPACES
+    )
     case_id, _ = (await case_ids(showcase, agent.tenant_id))[AGENT_UPLOAD_CASE]
+    listed = ", ".join(f"'{slide.id}'" for job in jobs for slide in job.slides)
     rows = await run_sql(
         showcase,
-        f"SELECT count(*) FROM slides WHERE id = '{jobs[0].slides[0].id}' "
-        f"AND case_id = '{case_id}'",
+        f"SELECT count(*) FROM slides WHERE id IN ({listed}) AND case_id = '{case_id}'",
     )
     assert rows[0][0] == 1
 

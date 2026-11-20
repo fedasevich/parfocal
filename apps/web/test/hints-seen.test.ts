@@ -11,6 +11,7 @@ import {
   noteHintsSeen,
   readGuestHints,
   toolHintId,
+  unwrittenHints,
   withoutSeen,
   withSeen,
   writeGuestHints,
@@ -176,5 +177,26 @@ describe("hints seen", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.deepEqual(sent, [["a"], ["a", "b"]]);
     assert.equal(settled, 1);
+  });
+
+  it("writes a hint once however often the person comes back to its tool", async () => {
+    const sent: string[][] = [];
+    const writes = hintWrites((ids) => {
+      sent.push(ids);
+      return Promise.resolve();
+    });
+    let written: ReadonlySet<string> = new Set();
+    const mark = (id: string) => {
+      if (unwrittenHints(written, [id]).length === 0) return;
+      const next = withSeen(writes.pending() ?? [...written], [id]);
+      written = new Set(next);
+      writes.push(next, () => undefined);
+    };
+    for (const id of ["select", "hand", "select", "hand", "select", "ruler", "select"]) {
+      mark(toolHintId(id));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    assert.equal(sent.length, 3);
+    assert.deepEqual(unwrittenHints(new Set(["a"]), ["a", "b"]), ["b"]);
   });
 });

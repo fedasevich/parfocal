@@ -308,7 +308,7 @@ async def test_the_owner_can_open_the_format_gallery(seeded: str) -> None:
     )
     assert {(str(name), str(role)) for name, role in rows} == {
         *((workspace.gallery, "owner") for workspace in WORKSPACES),
-        (WORKSPACES[0].clinical_study, "owner"),
+        *((workspace.clinical_study, "owner") for workspace in WORKSPACES),
     }
 
 

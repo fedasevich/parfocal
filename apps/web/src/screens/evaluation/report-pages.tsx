@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CountsAsChange,
@@ -632,10 +632,13 @@ export function ReportPage({
               { label: t`Project`, value: `${report.project.name} (${report.project.code})` },
               { label: t`Task`, value: `${report.task_code} · ${report.round_name}` },
               { label: t`Model`, value: report.model },
-              { label: t`Slides`, value: `${report.slides} slides · ${report.objects} objects` },
+              {
+                label: t`Slides`,
+                value: t`${plural(report.slides, { one: "# slide", other: "# slides" })} · ${plural(report.objects, { one: "# object", other: "# objects" })}`,
+              },
               {
                 label: t`Reviewers`,
-                value: `${report.reviewer_ids.length} blind reviewers, ${report.adjudicators} adjudicator`,
+                value: t`${plural(report.reviewer_ids.length, { one: "# blind reviewer", other: "# blind reviewers" })}, ${plural(report.adjudicators, { one: "# adjudicator", other: "# adjudicators" })}`,
               },
               { label: t`Template`, value: `${report.template.name} v${templateVersion}` },
             ]}

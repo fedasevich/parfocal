@@ -581,7 +581,7 @@ function CosignFlow({
         <ReasonModal
           title={t`Return to ${sender?.name}`}
           subtitle={`${data.case.label} · ${changed.length ? `${plural(changed.length, "change")} highlighted` : "no changes"}`}
-          whatLabel={t`What he gets back`}
+          whatLabel={t`What they get back`}
           what={
             changed.length
               ? t`${andJoin(changed.map((row, index) => (index ? row.label.charAt(0).toLowerCase() + row.label.slice(1) : row.label)))}, changed by you`

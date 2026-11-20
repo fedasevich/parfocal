@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type AiModel,
@@ -490,12 +491,12 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                   <NameCell
                     lead={<Icon name="smart" />}
                     title={run.model}
-                    sub={t`${run.project.code} · ${run.slides} slides`}
+                    sub={t`${run.project.code} · ${plural(run.slides, { one: "# slide", other: "# slides" })}`}
                   />
                   {by ? <Person person={by} size={20} /> : <span />}
                   <ProgressBar
                     value={percent(run.slides_done, run.slides)}
-                    label={t`${run.slides_done} of ${run.slides} slides`}
+                    label={t`${run.slides_done} of ${plural(run.slides, { one: "# slide", other: "# slides" })}`}
                   />
                   <Button
                     size="sm"

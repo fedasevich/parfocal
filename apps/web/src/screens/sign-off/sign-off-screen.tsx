@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural as plurals, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetReviewTaskStatesQueryKey,
@@ -489,7 +489,10 @@ function SignOffModal({
                 <ReadinessRow
                   data-phi=""
                   tone="ok"
-                  title={t`All ${summary.reviews.slides} slides reviewed by both reviewers`}
+                  title={plurals(summary.reviews.slides, {
+                    one: "The slide was reviewed by both reviewers",
+                    other: "All # slides reviewed by both reviewers",
+                  })}
                   sub={t`${summary.reviews.submitted} of ${summary.reviews.total} reviews submitted, ${summary.reviews.opinion_forms} opinion forms`}
                 />
                 <ReadinessRow
@@ -502,7 +505,10 @@ function SignOffModal({
                   <ReadinessRow
                     data-phi=""
                     tone="warn"
-                    title={t`${summary.queue.left_open.length} objects left open on purpose`}
+                    title={plurals(summary.queue.left_open.length, {
+                      one: "# object left open on purpose",
+                      other: "# objects left open on purpose",
+                    })}
                     sub={t`${summary.queue.left_open.map((row) => t`${row.object} on ${row.slide_label}`).join(", ")} · allowed, in the report`}
                   />
                 ) : null}
@@ -520,7 +526,7 @@ function SignOffModal({
               data-phi=""
               tone="ok"
               title={t`Result set and IDs fixed`}
-              sub={t`${summary.result_set.name}, ${summary.result_set.objects} objects, plus ${summary.result_set.added} added by a reviewer`}
+              sub={t`${summary.result_set.name}, ${plurals(summary.result_set.objects, { one: "# object", other: "# objects" })}, plus ${summary.result_set.added} added by a reviewer`}
             />
           </ReadinessList>
         </SmallModalZone>
@@ -568,7 +574,10 @@ function blockersOf(summary: SignOffSummary, nameOf: (userId: string) => string)
   if (pending > 0) {
     list.push({
       key: "reviews",
-      title: pending === 1 ? t`1 review not submitted` : t`${pending} reviews not submitted`,
+      title: plurals(pending, {
+        one: "# review not submitted",
+        other: "# reviews not submitted",
+      }),
       sub: andJoin(
         summary.reviews.behind.map(
           (row) => t`${nameOf(row.user_id)} has ${plural(row.slides_left, "slide")} left`,
@@ -583,7 +592,10 @@ function blockersOf(summary: SignOffSummary, nameOf: (userId: string) => string)
       .join(", ");
     list.push({
       key: "queue",
-      title: t`${open} disagreements not resolved`,
+      title: plurals(open, {
+        one: "# disagreement not resolved",
+        other: "# disagreements not resolved",
+      }),
       sub: t`${summary.queue.resolved} of ${summary.queue.total} resolved so far${waiting ? `, ${waiting}` : ""}`,
     });
   }

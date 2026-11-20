@@ -1,3 +1,4 @@
+import os
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -52,6 +53,7 @@ class Maintenance(BaseModel):
 class PlatformStatus(BaseModel):
     status: ServiceStatus
     maintenance: Maintenance | None
+    release: str | None = None
 
 
 class MaintenanceStart(BaseModel):
@@ -77,10 +79,15 @@ async def current_maintenance(connection: AsyncConnection) -> Maintenance | None
     )
 
 
+def release_of() -> str | None:
+    return os.environ.get("PARFOCAL_RELEASE") or None
+
+
 def status_of(current: Maintenance | None) -> PlatformStatus:
+    release = release_of()
     if current is None:
-        return PlatformStatus(status=ServiceStatus.OK, maintenance=None)
-    return PlatformStatus(status=ServiceStatus.MAINTENANCE, maintenance=current)
+        return PlatformStatus(status=ServiceStatus.OK, maintenance=None, release=release)
+    return PlatformStatus(status=ServiceStatus.MAINTENANCE, maintenance=current, release=release)
 
 
 @dataclass
