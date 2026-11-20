@@ -114,9 +114,13 @@ test(
     await preview.getByRole("button", { name: "Print" }).click();
     await expect.poll(async () => (await printed(page)).length).toBe(1);
     expect((await printed(page))[0]?.pages).toBe(count);
-    const file = await page.request.get(`/api/review-tasks/${task}/evaluation/exports/report.pdf`);
-    expect(file.headers()["content-type"]).toContain("application/pdf");
-    expect((await file.body()).subarray(0, 5).toString()).toBe("%PDF-");
+    const file = await page.evaluate(async (path) => {
+      const response = await fetch(path, { credentials: "same-origin" });
+      const head = new Uint8Array(await response.arrayBuffer()).subarray(0, 5);
+      return { type: response.headers.get("content-type"), head: String.fromCharCode(...head) };
+    }, `/api/review-tasks/${task}/evaluation/exports/report.pdf`);
+    expect(file.type).toContain("application/pdf");
+    expect(file.head).toBe("%PDF-");
   },
 );
 
