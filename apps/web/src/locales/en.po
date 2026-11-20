@@ -2135,10 +2135,9 @@ msgstr "{redrawPoints, plural, one {# point} other {# points}}"
 msgid "{resultName} · {count} objects"
 msgstr "{resultName} · {count} objects"
 
-#. placeholder {0}: nucleiCount.toLocaleString("en-US")
 #: src/screens/developer/developer-screen.tsx
-msgid "{route} · {0} synthetic nuclei"
-msgstr "{route} · {0} synthetic nuclei"
+msgid "{route} · {sample} · 9 levels · 100,000 nuclei"
+msgstr "{route} · {sample} · 9 levels · 100,000 nuclei"
 
 #: src/screens/upload/progress-step.tsx
 msgid "{running} in progress"
@@ -2550,6 +2549,10 @@ msgstr "⌥1 to ⌥6"
 msgid "0 0 0 1.5px #ffffff"
 msgstr "0 0 0 1.5px #ffffff"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "0 is the sharpest level. Each level up halves the size."
+msgstr "0 is the sharpest level. Each level up halves the size."
+
 #: src/screens/upload/check-step.tsx
 msgid "1 case, {loose} loose"
 msgstr "1 case, {loose} loose"
@@ -2613,6 +2616,14 @@ msgstr "15 Oct 11:20"
 msgid "15 Oct 11:35"
 msgstr "15 Oct 11:35"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "18,240 drawn of 100,000"
+msgstr "18,240 drawn of 100,000"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "182 ms · decode 4.2 ms · 6 in flight"
+msgstr "182 ms · decode 4.2 ms · 6 in flight"
+
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "2 CSV files saved to Downloads"
 msgstr "2 CSV files saved to Downloads"
@@ -2624,6 +2635,10 @@ msgstr "2 of 3"
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "2 px"
 msgstr "2 px"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "2.1 ms · 412 tile loads"
+msgstr "2.1 ms · 412 tile loads"
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "2.5px solid #2563eb"
@@ -2653,6 +2668,10 @@ msgstr "3D mouse"
 msgid "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
 msgstr "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "41,220 cells so far · 3.1 tiles a second · about 6 min left"
+msgstr "41,220 cells so far · 3.1 tiles a second · about 6 min left"
+
 #: src/screens/upload/progress-step.tsx
 msgid "46% · about 3 min left"
 msgstr "46% · about 3 min left"
@@ -2660,6 +2679,14 @@ msgstr "46% · about 3 min left"
 #: src/screens/admin/decision-preset.tsx
 msgid "5-point certainty"
 msgstr "5-point certainty"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "60 fps"
+msgstr "60 fps"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "60 fps · frame 6.2 ms"
+msgstr "60 fps · frame 6.2 ms"
 
 #. placeholder {0}: input.setA
 #: src/screens/viewer/layer-views.tsx
@@ -3725,6 +3752,10 @@ msgstr "Annotate workspace"
 msgid "Annotations"
 msgstr "Annotations"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Annotations and reviews on this slide, for tests and fixtures."
+msgstr "Annotations and reviews on this slide, for tests and fixtures."
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Announcement ended."
 msgstr "Announcement ended."
@@ -4496,6 +4527,14 @@ msgstr "C cells · added by you"
 #: src/screens/developer/developer-screen.tsx
 msgid "Cached"
 msgstr "Cached"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Calibrated · ECE 0.031"
+msgstr "Calibrated · ECE 0.031"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Calibration"
+msgstr "Calibration"
 
 #: src/screens/viewer/ai-record-blocks.tsx
 msgid "Calibration details"
@@ -5643,6 +5682,10 @@ msgstr "Connect your own model"
 msgid "Connected"
 msgstr "Connected"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Connected · 3 models"
+msgstr "Connected · 3 models"
+
 #: src/screens/admin/connect-model.tsx
 msgid "Connected. Next, match its classes and choose who can run it."
 msgstr "Connected. Next, match its classes and choose who can run it."
@@ -5976,6 +6019,10 @@ msgstr "Current page"
 msgid "Cursor"
 msgstr "Cursor"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cut the patches"
+msgstr "Cut the patches"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Cutoff"
 msgstr "Cutoff"
@@ -5983,6 +6030,14 @@ msgstr "Cutoff"
 #: src/screens/admin/workspace-settings.tsx
 msgid "Cutoff restored."
 msgstr "Cutoff restored."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done."
+msgstr "Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cutting the patches"
+msgstr "Cutting the patches"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Cytology"
@@ -6257,11 +6312,6 @@ msgstr "Detector"
 msgid "Developer"
 msgstr "Developer"
 
-#: src/screens/developer/developer-screen.tsx
-#: src/shell/palette-labels.tsx
-msgid "Developer mode"
-msgstr "Developer mode"
-
 #: src/screens/admin/role-permissions.tsx
 msgid "Developer mode and API tokens"
 msgstr "Developer mode and API tokens"
@@ -6400,6 +6450,7 @@ msgstr "Does not line up"
 #: src/screens/upload/overlays.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/study/study-screen.tsx
+#: src/viewer/patch-export-dialog.tsx
 msgid "Done"
 msgstr "Done"
 
@@ -7664,6 +7715,10 @@ msgstr "Frequency"
 msgid "From"
 msgstr "From"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "From {smallestTile} to {largestTile}."
+msgstr "From {smallestTile} to {largestTile}."
+
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "From a link or storage"
@@ -7733,6 +7788,7 @@ msgstr "Full screen"
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/routes/issue-states.tsx
 #: src/screens/admin/template-editor.tsx
+#: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Full viewer"
 msgstr "Full viewer"
@@ -8301,6 +8357,10 @@ msgstr "ID matching"
 msgid "If a Parfocal JSON file is rejected"
 msgstr "If a Parfocal JSON file is rejected"
 
+#: src/annotations/task-export.ts
+msgid "Image tiles of the signed off slides with a class mask for each tile and an index, cut as a job"
+msgstr "Image tiles of the signed off slides with a class mask for each tile and an index, cut as a job"
+
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Import"
@@ -8656,6 +8716,11 @@ msgstr "Its screen is not built yet"
 msgid "J"
 msgstr "J"
 
+#. placeholder {0}: jobId.slice(0, 8)
+#: src/viewer/patch-export-dialog.tsx
+msgid "Job {0}"
+msgstr "Job {0}"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Job model"
 msgstr "Job model"
@@ -8940,6 +9005,10 @@ msgstr "Last call {0}"
 msgid "Last run · {0} · {1} nuclei · zoom {2}"
 msgstr "Last run · {0} · {1} nuclei · zoom {2}"
 
+#: src/screens/developer/bench-section.tsx
+msgid "Last run 14:02 · {route} · 100k nuclei · zoom 2"
+msgstr "Last run 14:02 · {route} · 100k nuclei · zoom 2"
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Last two magnifications"
 msgstr "Last two magnifications"
@@ -9096,6 +9165,7 @@ msgid "Let others on this slide see where you point"
 msgstr "Let others on this slide see where you point"
 
 #: src/screens/project/case-slides-editor.tsx
+#: src/viewer/patch-export-dialog.tsx
 msgid "Level"
 msgstr "Level"
 
@@ -10492,7 +10562,6 @@ msgid "No project sends events to a pipeline yet."
 msgstr "No project sends events to a pipeline yet."
 
 #: src/screens/admin/storage.tsx
-#: src/screens/developer/developer-screen.tsx
 msgid "No projects yet."
 msgstr "No projects yet."
 
@@ -10532,10 +10601,6 @@ msgstr "No reviewer answered the opinion form."
 msgid "No reviewer gave a reason for disagreeing."
 msgstr "No reviewer gave a reason for disagreeing."
 
-#: src/screens/developer/bench-section.tsx
-msgid "No runs yet on {route}. Open a slide and run the pan sweep."
-msgstr "No runs yet on {route}. Open a slide and run the pan sweep."
-
 #: src/screens/admin/storage.tsx
 msgid "No saved sources yet. Save one when you import slides from a link or a bucket."
 msgstr "No saved sources yet. Save one when you import slides from a link or a bucket."
@@ -10563,6 +10628,10 @@ msgstr "No slide in this task has objects to review."
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "No slide matches these filters."
 msgstr "No slide matches these filters."
+
+#: src/annotations/task-export.ts
+msgid "No slide of this task is signed off yet. Sign off at least one slide, then export again. Only signed off slides go into the training data."
+msgstr "No slide of this task is signed off yet. Sign off at least one slide, then export again. Only signed off slides go into the training data."
 
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -10757,14 +10826,6 @@ msgstr "Not checked"
 #: src/screens/upload/live-wizard.tsx
 msgid "Not chosen yet"
 msgstr "Not chosen yet"
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Not connected yet. Change the mouse wheel in Settings."
-msgstr "Not connected yet. Change the mouse wheel in Settings."
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Not connected yet. These controls show sample values."
-msgstr "Not connected yet. These controls show sample values."
 
 #: ../../packages/ui/src/components/disagreements.tsx
 msgid "not decided yet"
@@ -11333,6 +11394,10 @@ msgstr "offline"
 msgid "Offline. Its server is not answering."
 msgstr "Offline. Its server is not answering."
 
+#: src/screens/developer/developer-screen.tsx
+msgid "ome-zarr · 6.4 Gpx · 9 levels"
+msgstr "ome-zarr · 6.4 Gpx · 9 levels"
+
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "On"
 msgstr "On"
@@ -11375,6 +11440,10 @@ msgstr "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes
 #: src/screens/onboarding/setup-screen.tsx
 msgid "One finger"
 msgstr "One finger"
+
+#: src/annotations/task-export.ts
+msgid "One GeoJSON file per signed off slide with each object's class, origin and author letters, and a manifest"
+msgstr "One GeoJSON file per signed off slide with each object's class, origin and author letters, and a manifest"
 
 #: src/screens/settings/shortcuts-section.tsx
 msgid "One key can only do one thing in the same place. Choose what happens to {otherName}."
@@ -11429,6 +11498,10 @@ msgstr "Only an owner of this project changes its settings."
 msgid "Only an owner of this project sets who can sign out."
 msgstr "Only an owner of this project sets who can sign out."
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Only for deck.gl 9.4"
+msgstr "Only for deck.gl 9.4"
+
 #: src/screens/review/display-tab.tsx
 msgid "Only for you, on {taskCode}. Every change redraws the slide at once."
 msgstr "Only for you, on {taskCode}. Every change redraws the slide at once."
@@ -11444,6 +11517,14 @@ msgstr "Only members who can sign out this case can be picked."
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Only objects inside the regions you draw are checked."
 msgstr "Only objects inside the regions you draw are checked."
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Only on the WebGPU route"
+msgstr "Only on the WebGPU route"
+
+#: src/annotations/task-export.ts
+msgid "Only people who see the whole task can export its training data."
+msgstr "Only people who see the whole task can export its training data."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Only the cells inside those areas."
@@ -11521,10 +11602,6 @@ msgstr "Open {object} in the full viewer"
 #: src/screens/admin/role-permissions.tsx
 msgid "Open a clinical project they are not in"
 msgstr "Open a clinical project they are not in"
-
-#: src/screens/developer/developer-screen.tsx
-msgid "Open a project"
-msgstr "Open a project"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Open a review task first"
@@ -11852,6 +11929,10 @@ msgstr "Over 200 tumor cells"
 msgid "Over target"
 msgstr "Over target"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Overrides the doctor's Settings while testing."
+msgstr "Overrides the doctor's Settings while testing."
+
 #: src/screens/admin/admin-shell.tsx
 msgid "Overview"
 msgstr "Overview"
@@ -12094,6 +12175,11 @@ msgstr "Password for {email}"
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Password strength"
 msgstr "Password strength"
+
+#: src/annotations/task-export.ts
+#: src/viewer/patch-export-dialog.tsx
+msgid "Patches with masks"
+msgstr "Patches with masks"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Path or URL"
@@ -12353,6 +12439,10 @@ msgstr "Pick the slide you measured on."
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Pick the type in the bar next to the cell on the slide."
 msgstr "Pick the type in the bar next to the cell on the slide."
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Pick Viv to change these."
+msgstr "Pick Viv to change these."
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Pick who co-signs"
@@ -12619,6 +12709,10 @@ msgstr "Previous slide"
 #: src/flow-map/prototype-bar.tsx
 msgid "Previous step"
 msgstr "Previous step"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Prewarm when idle"
+msgstr "Prewarm when idle"
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Print"
@@ -12888,6 +12982,10 @@ msgstr "Read-only link"
 msgid "reading"
 msgstr "reading"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Readouts on the Viv route"
+msgstr "Readouts on the Viv route"
+
 #: src/screens/my-work/all-slides-tab.tsx
 msgid "ready"
 msgstr "ready"
@@ -12899,6 +12997,10 @@ msgstr "Ready to sign"
 #: src/screens/my-work/assigned-tab.tsx
 msgid "Ready to sign off"
 msgstr "Ready to sign off"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "Real tumor outlines from CAMELYON16, drawn over the slide."
+msgstr "Real tumor outlines from CAMELYON16, drawn over the slide."
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/clinical-report/report-screen.tsx
@@ -13900,6 +14002,10 @@ msgstr "Run pan sweep"
 msgid "Run your own evaluations and review for others"
 msgstr "Run your own evaluations and review for others"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Running"
+msgstr "Running"
+
 #. placeholder {0}: running.length
 #: ../../packages/ui/src/components/jobs.tsx
 msgid "Running · {0}"
@@ -14077,6 +14183,13 @@ msgstr "Save tasks"
 #: src/screens/admin/template-editor.tsx
 msgid "Save template"
 msgstr "Save template"
+
+#. placeholder {0}: phase.name
+#. placeholder {0}: result.name
+#: src/viewer/patch-export-dialog.tsx
+#: src/viewer/slide-export-menu.tsx
+msgid "Saved {0}"
+msgstr "Saved {0}"
 
 #. placeholder {0}: name.trim()
 #: src/screens/admin/template-editor.tsx
@@ -15704,6 +15817,10 @@ msgstr "Start with area {0}"
 msgid "Starting point"
 msgstr "Starting point"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Starts after 350 ms without input"
+msgstr "Starts after 350 ms without input"
+
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
 msgid "Starts from the upload button on Check."
@@ -15930,6 +16047,10 @@ msgstr "Suggested pN"
 msgid "Summary"
 msgstr "Summary"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "sure 14,102 · likely 3,410 · unsure 726"
+msgstr "sure 14,102 · likely 3,410 · unsure 726"
+
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "SURGICAL PATHOLOGY REPORT"
 msgstr "SURGICAL PATHOLOGY REPORT"
@@ -15980,6 +16101,10 @@ msgstr "System"
 #: src/screens/project/settings-tab.tsx
 msgid "T regions, C cells"
 msgstr "T regions, C cells"
+
+#: src/screens/developer/developer-screen.tsx
+msgid "T009 loaded · 14 rings · 2,210 vertices · 61 KB"
+msgstr "T009 loaded · 14 rings · 2,210 vertices · 61 KB"
 
 #: src/screens/new-task/modals.tsx
 msgid "T2"
@@ -16457,6 +16582,7 @@ msgstr "The draft is saved as you go."
 msgid "The due date is in the past."
 msgstr "The due date is in the past."
 
+#: src/annotations/task-export.ts
 #: src/viewer/slide-export-menu.tsx
 msgid "The export could not be made"
 msgstr "The export could not be made"
@@ -16523,10 +16649,6 @@ msgstr "The largest deposit, {0} mm on {1}, suggests"
 #: src/screens/evaluation/share-links.tsx
 msgid "The link could not be changed. Try again."
 msgstr "The link could not be changed. Try again."
-
-#: src/screens/developer/developer-screen.tsx
-msgid "The live numbers show in the HUD over the open slide."
-msgstr "The live numbers show in the HUD over the open slide."
 
 #: src/screens/admin/join-settings.tsx
 msgid "The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
@@ -16645,6 +16767,14 @@ msgstr "the Parfocal sample tile"
 #: src/screens/upload/link-import.tsx
 msgid "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
 msgstr "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "The patches are ready"
+msgstr "The patches are ready"
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "The patches could not be cut"
+msgstr "The patches could not be cut"
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "The patient banner is hidden."
@@ -17099,10 +17229,6 @@ msgstr "These apply in guided review."
 msgid "These questions show the AI's claim. With the AI hidden the first read uses Pick the class blind, then the claim is revealed."
 msgstr "These questions show the AI's claim. With the AI hidden the first read uses Pick the class blind, then the claim is revealed."
 
-#: src/screens/developer/developer-screen.tsx
-msgid "These settings are saved in this browser and apply to every slide you open. To watch them change a slide, open one and pick Developer mode in the search palette, or press Ctrl+Shift+D. The drawer then stays over the panel until you close it."
-msgstr "These settings are saved in this browser and apply to every slide you open. To watch them change a slide, open one and pick Developer mode in the search palette, or press Ctrl+Shift+D. The drawer then stays over the panel until you close it."
-
 #: src/screens/admin/join-settings.tsx
 msgid "They ask, and someone with admin rights answers in Join requests on People."
 msgstr "They ask, and someone with admin rights answers in Join requests on People."
@@ -17407,9 +17533,17 @@ msgstr "Tight"
 msgid "Tile {0} of {1} · {2} found"
 msgstr "Tile {0} of {1} · {2} found"
 
+#: src/screens/developer/developer-screen.tsx
+msgid "Tile 712 of 1,880, tumor first"
+msgstr "Tile 712 of 1,880, tumor first"
+
 #: src/screens/admin/connect-model.tsx
 msgid "Tile size"
 msgstr "Tile size"
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Tile size in pixels"
+msgstr "Tile size in pixels"
 
 #: src/screens/admin/connect-model.tsx
 msgid "Tiles"
@@ -17602,6 +17736,10 @@ msgstr "Track record block"
 #: src/screens/settings/settings-screen.tsx
 msgid "Trackpad"
 msgstr "Trackpad"
+
+#: src/annotations/task-export.ts
+msgid "Training dataset (QuPath GeoJSON zip)"
+msgstr "Training dataset (QuPath GeoJSON zip)"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Triggers"

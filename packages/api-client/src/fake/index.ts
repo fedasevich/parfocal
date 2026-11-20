@@ -28,6 +28,7 @@ import { settingsHandlers } from "./settings-handlers.ts";
 import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
 import { signUpHandlers } from "./sign-up-handlers.ts";
 import { statusHandlers } from "./status-handlers.ts";
+import { taskExportHandlers } from "./task-export-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
@@ -81,6 +82,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...coverageHandlers(),
     ...tissueHandlers(),
     ...annotationHandlers(),
+    ...taskExportHandlers(),
     ...paintedMapHandlers(),
     ...sharedLayerHandlers(),
     ...resumeHandlers(),
