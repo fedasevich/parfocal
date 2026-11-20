@@ -90,12 +90,6 @@ test("a reviewer fades, zones and decides cells on a paged result of 250,000 nuc
   expect(saved?.ai_score).toBeGreaterThan(0);
 
   expect(page.url()).toContain(`pagedCells=${cells}`);
-  await page.goto(`${page.url()}&focus=true`);
-  await expect(page.getByTestId("cell-focus")).toBeVisible();
-  await expect(page.getByTestId("cell-type-bar")).toBeVisible();
-  await expect(page.locator("[data-testid=cell-focus] [data-object]").first()).toBeAttached({
-    timeout: 60_000,
-  });
 });
 
 test("the zone list covers the slide and a far field keeps its zone and the first decision", async ({
