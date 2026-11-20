@@ -78,7 +78,16 @@ async function uploadCells(page: Page, projectId: string, slideId: string): Prom
 }
 
 async function counts(page: Page, slide: string): Promise<Counts> {
-  const status = await call(page, "GET", `${slide}/check-status`);
+  let status: Reply = { status: 0, json: null };
+  await expect
+    .poll(
+      async () => {
+        status = await call(page, "GET", `${slide}/check-status`);
+        return status.status;
+      },
+      { timeout: 60_000, intervals: [500, 1_000] },
+    )
+    .not.toBe(409);
   expect(status.status, JSON.stringify(status.json)).toBe(200);
   const found = Reflect.get(status.json ?? {}, "check_progress") as Counts;
   return { confirmed: found.confirmed, edited: found.edited, deleted: found.deleted };
