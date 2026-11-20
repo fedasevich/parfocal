@@ -6952,7 +6952,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken items 3, 4, 8, 9, 15 and 20. Smart select calls the server embedding as soon as it is armed and on every click with no Good choice and no working Enter, Clear all deletes drawn shapes with no question, the Annotate Objects tab heads shapes with a raw class id and renumbers them after a reload, closing a tool hint writes a setting on slide open, a slide that cannot open keeps saying Opening with every tool on, and read only guided review still coaches the person to answer.
   Done when each item has a spec or unit test that fails before and passes after, and the deployed smoke passes with no setting write on open.
   Depends on PROTO-099. Size: M.
-- [ ] PROTO-103 · Reports, co-sign, sign off and adjudication work on the seed
+- [x] PROTO-103 · Reports, co-sign, sign off and adjudication work on the seed
   From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken items 5, 6, 7 and 11. A clinical report with no tumor cannot pass Staging, a project owner cannot answer a co-sign request because sign out is refused, RT-2 reads signed off on Team but draft in its report, and no seeded task has a workable disagreement queue or adjudication, nor an adjudicator account.
   Done when DB tests and specs cover a negative node report, the owner co-signing, a signed off task with a signed report, and a seeded queue that an agent account can adjudicate after the next reset.
   Depends on TEST-053. Size: M.
