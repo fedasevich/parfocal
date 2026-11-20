@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-095 and PROTO-096 merged from agent, which also brought the PROTO-093 and PROTO-094 code that a stray lead checkout to HEAD~1 had dropped before the earlier push (the docs went out without the code). First read guard now runs inside EngineViewer for every route. Every slide link goes through shell/slide-link.ts, viewer-mode.ts picks the mode from task and access with decision 163 A, and one table gives tabs, first tab, rail tools, Submit and draw per mode and access. 45 unit tests and 23 viewer specs pass on the merged lead.
 - From the side session with the owner: decision 131 done, CryoNuSeg and Lizard downloaded, pinned and read by the MLEVAL-010 loaders (974ee98f, 74669bb8, 16 dataset tests pass). Decision 95 done, the login service user parfocal-login and Modal secret parfocal-api-login are live, IAM-027 needs only its agent test run. Both removed from the Later list.
 - Production touch: released and deployed v0.27.2, GPU pools now unpinned by ADR 0407 and the GPU wait fields reach the logs (OPS-038).
 - TEST-053 merged from agent: the seed gives the agent account a review task, an annotate task, the signed case report, one finished upload job of its own into Showcase draft report, and an unfiled broken slide Missing file.svs that opens with slide file not found. Four DB tests prove each. Moved to review until the next reset shows them on the deployed app.

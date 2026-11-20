@@ -6919,11 +6919,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From the viewer map of 2026-11-20, steps 3 and 4. The annotate layer write endpoints ask only for the review right, with no assignment check (`apps/api/src/parfocal_api/annotate_layer.py`), and the viewer offers every drawing tool to anyone. Add the assignment check to every annotate layer write, and use the PROTO-093 access rule to give annotate tasks a read only banner and rail for people not assigned and for withdrawn tasks.
   Done when a DB test refuses a write from a member who holds the review right and no assignment, and a spec shows the read only annotate view.
   Depends on PROTO-093. Size: S.
-- [ ] PROTO-095 · Every slide route runs the first read guard
+- [x] PROTO-095 · Every slide route runs the first read guard
   From the viewer map of 2026-11-20, step 5. The /live route skips the first read guard, so a task that hides the AI until the first read can open as a refused list. Run the guard inside EngineViewer so every route gets it.
   Done when a spec opens a blinded task through /live and sees the first read screen.
   Depends on PROTO-093. Size: S.
-- [ ] PROTO-096 · One link helper and one mode rule open every slide the same way
+- [x] PROTO-096 · One link helper and one mode rule open every slide the same way
   Decision 164 option A, migration steps 6, 7 and 8 of `docs/results/2026-11-20-viewer-state-machine.html` (the viewer map). Build every slide link through one helper and delete the forced workspace in viewer-links, so one rule picks the mode from the task and the role. Settle decision 163 there: with no task, an owner or reviewer opens Annotate, a project viewer opens in a look only mode and is never offered Annotate.
   The owner added on 2026-11-20 that the viewer tabs must always make total sense for the task. The side panel tabs, rail tools, actions and keys are looked up from the mode and the access value in one table, each tab shows only when it serves that task (for example Opinion only where a slide opinion is asked, Cells only where the task types cells, Comments wherever people discuss the slide), opens on the tab the task needs first, and never shows a tab whose content would be empty or refused.
   Done when a unit test covers the mode rule and the tab table for every task kind and role, a spec checks the visible tabs and the first open tab for each task kind, and a spec opens one slide from the project row, search, My work, the jobs tray, upload and a report and lands in the same mode each time.
