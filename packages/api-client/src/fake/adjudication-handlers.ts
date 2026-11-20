@@ -45,7 +45,7 @@ import {
   startNextVersion,
 } from "./queue-scene.ts";
 import { savedNoteOf } from "./review-decisions.ts";
-import { toThreads } from "./review-handlers.ts";
+import { toReviewObjects, toThreads } from "./review-handlers.ts";
 import {
   adjudications,
   type PersonKey,
@@ -147,6 +147,38 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
       ? { user_id: idOf(live.adjudicator.by), note: live.adjudicator.note }
       : null,
     edited: live.edited ? { by_user_id: idOf(editedRow.by), on: editedRow.on } : null,
+    ...outlinesOf(seed),
+  };
+};
+
+const fallbackRing = [4000, 3000, 4600, 3000, 4600, 3500, 4000, 3500];
+
+const outlinesOf = (
+  seed: QueueSeedRow,
+): Pick<QueueRow, "outline_differs" | "outline_overlap" | "outlines"> => {
+  if (seed.outlineOverlap === undefined) return {};
+  const slideId = slideByIndex(seed.slide).id;
+  const ai = toReviewObjects(task().id, slideId).objects.find(
+    (item) => item.object === seed.object,
+  );
+  const ring = ai?.outline ?? fallbackRing;
+  const xs = ring.filter((_, index) => index % 2 === 0);
+  const ys = ring.filter((_, index) => index % 2 === 1);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const width = Math.max(...xs) - Math.min(...xs);
+  const shrunk = ring.map(
+    (value, index) => (index % 2 === 0 ? cx : cy) + (value - (index % 2 === 0 ? cx : cy)) * 0.8,
+  );
+  const moved = ring.map((value, index) => (index % 2 === 0 ? value + width * 0.4 : value));
+  const [first, second] = seed.answers;
+  return {
+    outline_differs: true,
+    outline_overlap: seed.outlineOverlap,
+    outlines: [
+      { user_id: idOf(first.by), outline: shrunk },
+      { user_id: idOf(second.by), outline: moved },
+    ],
   };
 };
 

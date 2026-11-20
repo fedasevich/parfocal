@@ -2106,6 +2106,10 @@ msgstr "{out} result file{0} in Not matched yet. With no slide it stays out of t
 msgid "{out} slides are out. {0} GB fits in the {1} GB left in {projectCode}."
 msgstr "{out} slides are out. {0} GB fits in the {1} GB left in {projectCode}."
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "{overlapShare}% overlap"
+msgstr "{overlapShare}% overlap"
+
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "{pageCount} pages"
 msgstr "{pageCount} pages"
@@ -6779,6 +6783,10 @@ msgstr "Each reviewer gets every slide, which gives agreement between them."
 #: src/screens/new-task/new-task-screen.tsx
 msgid "Each reviewer gets one email, and the task shows at the top of their My work."
 msgstr "Each reviewer gets one email, and the task shows at the top of their My work."
+
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Each reviewer's outline is drawn over the AI one."
+msgstr "Each reviewer's outline is drawn over the AI one."
 
 #: src/screens/admin/tile-sharing-modal.tsx
 msgid "Each run of this model sends tiles of the project's slides to {host}. The lab that runs the server sees them. Slide labels and patient details are never sent."
@@ -12031,6 +12039,10 @@ msgstr "Out of focus"
 msgid "Outline"
 msgstr "Outline"
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "outline differs"
+msgstr "outline differs"
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 #: src/viewer/stage-display.tsx
@@ -12049,6 +12061,11 @@ msgstr "outline-2 outline-solid outline-offset-2 outline-accent"
 #: src/screens/project/settings-tab.tsx
 msgid "Outlines"
 msgstr "Outlines"
+
+#. placeholder {0}: rowLabel(row)
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Outlines of {0}"
+msgstr "Outlines of {0}"
 
 #: src/annotations/smart-layer.tsx
 msgid "Outlining"

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { QueueRow } from "@parfocal/api-client";
+import { reviewerOutlines } from "../src/screens/disagreements/reviewer-outlines.ts";
 import {
   allClosed,
   canSend,
@@ -157,4 +158,34 @@ test("declined and edited rows carry their own tags", () => {
     label: "edited after decisions",
     tone: "warn",
   });
+});
+
+test("an outline row says outline differs and gives each reviewer's outline its own colour", () => {
+  const style = toReviewStyle(undefined);
+  const square = [0, 0, 10, 0, 10, 10, 0, 10];
+  const outlined = row("T7", {
+    tag: "outline",
+    outline_differs: true,
+    outline_overlap: 0.25,
+    outlines: [
+      { user_id: "u2", outline: square },
+      { user_id: "u1", outline: square.map((value) => value + 5) },
+      { user_id: "u3", outline: [0, 0] },
+    ],
+  });
+  assert.deepEqual(rowTag(outlined, nameOf, { style, classes }), {
+    label: "outline differs",
+    tone: "neutral",
+  });
+  assert.equal(filterCounts([outlined]).rev, 1);
+  const drawn = reviewerOutlines(outlined);
+  assert.deepEqual(
+    drawn.map((entry) => [entry.id, entry.userId]),
+    [
+      ["T7:u1", "u1"],
+      ["T7:u2", "u2"],
+    ],
+  );
+  assert.notEqual(drawn[0]?.hex, drawn[1]?.hex);
+  assert.deepEqual(reviewerOutlines(row("T8")), []);
 });

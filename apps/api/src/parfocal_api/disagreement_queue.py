@@ -17,6 +17,7 @@ from parfocal_api.disagreements import (
     NoteDraft,
     QueuedObject,
     QueueHiddenError,
+    ReviewerOutline,
     ask_reviewers_to_look_again,
     decide_disagreement,
     keep_reviewer_decisions,
@@ -60,6 +61,7 @@ class QueueTag(StrEnum):
     DIFFER = "differ"
     BOTH_AI = "bothai"
     SECOND = "second"
+    OUTLINE = "outline"
 
 
 class QueueRowState(StrEnum):
@@ -85,7 +87,11 @@ class QueueAnswer(StrEnum):
     UNSURE = "unsure"
 
 
-TAGS = {Why.REVIEWERS_DIFFER: QueueTag.DIFFER, Why.AGAINST_THE_AI: QueueTag.BOTH_AI}
+TAGS = {
+    Why.REVIEWERS_DIFFER: QueueTag.DIFFER,
+    Why.AGAINST_THE_AI: QueueTag.BOTH_AI,
+    Why.OUTLINES_DIFFER: QueueTag.OUTLINE,
+}
 
 
 class AiCall(BaseModel):
@@ -131,6 +137,9 @@ class QueueRow(BaseModel):
     decision: QueueRowDecision | None
     adjudicator: QueueAdjudicator | None
     edited: QueueEdit | None
+    outline_differs: bool = False
+    outline_overlap: float | None = None
+    outlines: list[ReviewerOutline] = []
 
 
 class QueueLock(BaseModel):
@@ -407,6 +416,9 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
         edited=None
         if editor is None
         else QueueEdit(by_user_id=editor.user_id, on=editor.updated_at.date()),
+        outline_differs=item.outline_overlap is not None,
+        outline_overlap=item.outline_overlap,
+        outlines=item.outlines,
     )
 
 

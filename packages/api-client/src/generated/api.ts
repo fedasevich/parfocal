@@ -209,6 +209,7 @@ export const Why = {
   "reviewers-differ": "reviewers-differ",
   "against-the-ai": "against-the-ai",
   "second-look": "second-look",
+  "outlines-differ": "outlines-differ",
 } as const;
 
 export type DecisionStyle = (typeof DecisionStyle)[keyof typeof DecisionStyle];
@@ -2400,6 +2401,7 @@ export const QueueTag = {
   differ: "differ",
   bothai: "bothai",
   second: "second",
+  outline: "outline",
 } as const;
 
 export interface QueueAnswerRecord {
@@ -2438,6 +2440,11 @@ export interface QueueEdit {
   on: string;
 }
 
+export interface ReviewerOutline {
+  user_id: string;
+  outline: number[];
+}
+
 export interface QueueRow {
   key: string;
   slide_id: string;
@@ -2452,6 +2459,9 @@ export interface QueueRow {
   decision: QueueRowDecision | null;
   adjudicator: QueueAdjudicator | null;
   edited: QueueEdit | null;
+  outline_differs?: boolean;
+  outline_overlap?: number | null;
+  outlines?: ReviewerOutline[];
 }
 
 export interface DisagreementQueue {
@@ -5359,6 +5369,12 @@ export const Outcome = {
   unmatched: "unmatched",
 } as const;
 
+/**
+ * @minimum 1
+ * @maximum 99
+ */
+export type OutlineOverlap = number;
+
 export interface OutlineToType {
   /**
    * @minItems 6
@@ -6083,6 +6099,8 @@ export interface QueuedObject {
   number: number;
   why: Why;
   decisions: ReviewerAnswer[];
+  outline_overlap?: number | null;
+  outlines?: ReviewerOutline[];
   decision?: QueueDecision | null;
   left_open?: boolean;
   note?: string | null;
@@ -6637,6 +6655,7 @@ export interface ReviewTask {
   display: TaskDisplaySettings;
   check?: CheckOptions | null;
   blind_first?: boolean;
+  outline_overlap?: number;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -6695,6 +6714,7 @@ export interface ReviewTaskDetail {
   display: TaskDisplaySettings;
   check?: CheckOptions | null;
   blind_first?: boolean;
+  outline_overlap?: number;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -7711,6 +7731,7 @@ export interface TaskChange {
   display?: TaskDisplaySettings | null;
   check?: CheckChange | null;
   blind_first?: boolean | null;
+  outline_overlap?: OutlineOverlap | null;
 }
 
 export type TaskPresetSettings = { [key: string]: SettingValue };

@@ -26,6 +26,7 @@ export const tagText: Record<QueueRow["tag"], string> = {
   differ: "reviewers differ",
   bothai: "both vs AI",
   second: "second look asked",
+  outline: "outline differs",
 };
 
 export const rowLabel = (row: Pick<QueueRow, "object" | "slide_label">) =>

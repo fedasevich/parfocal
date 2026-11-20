@@ -19,6 +19,7 @@ export type QueueSeedRow = {
   score: number;
   sizeMm: number | null;
   answers: [QueueSeedAnswer, QueueSeedAnswer];
+  outlineOverlap?: number;
 };
 
 const answer = (
@@ -80,6 +81,7 @@ export const queueRows: QueueSeedRow[] = [
       answer("LM", "disagree", "Artefact or fold", "Crush artefact at the cut edge."),
       answer("SM", "agree"),
     ],
+    outlineOverlap: 0.42,
   },
   {
     slide: 1,

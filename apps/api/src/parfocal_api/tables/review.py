@@ -30,6 +30,7 @@ from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
 from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
+from parfocal_common.disagreements import OUTLINE_OVERLAP
 
 
 class TaskSplit(StrEnum):
@@ -157,6 +158,13 @@ review_tasks = Table(
     Column("blind_first", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     Column("blind_first_since", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("report_layout", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "outline_overlap",
+        SmallInteger,
+        nullable=False,
+        server_default=text(str(OUTLINE_OVERLAP)),
+        info=OPERATIONAL,
+    ),
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
@@ -206,6 +214,7 @@ review_tasks = Table(
     ),
     CheckConstraint("scope_score IS NULL OR scope_score BETWEEN 0 AND 255", name="scope_score"),
     CheckConstraint("cardinality(reminder_days) <= 3", name="reminders"),
+    CheckConstraint("outline_overlap BETWEEN 1 AND 99", name="outline_overlap"),
     tenant_unique("id", "project_id"),
     tenant_unique("id", "kind"),
 )

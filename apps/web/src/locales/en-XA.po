@@ -2104,6 +2104,10 @@ msgstr ""
 msgid "{out} slides are out. {0} GB fits in the {1} GB left in {projectCode}."
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "{overlapShare}% overlap"
+msgstr ""
+
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "{pageCount} pages"
 msgstr ""
@@ -6773,6 +6777,10 @@ msgstr ""
 
 #: src/screens/new-task/new-task-screen.tsx
 msgid "Each reviewer gets one email, and the task shows at the top of their My work."
+msgstr ""
+
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Each reviewer's outline is drawn over the AI one."
 msgstr ""
 
 #: src/screens/admin/tile-sharing-modal.tsx
@@ -12026,6 +12034,10 @@ msgstr ""
 msgid "Outline"
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "outline differs"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 #: src/viewer/stage-display.tsx
@@ -12043,6 +12055,11 @@ msgstr ""
 
 #: src/screens/project/settings-tab.tsx
 msgid "Outlines"
+msgstr ""
+
+#. placeholder {0}: rowLabel(row)
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Outlines of {0}"
 msgstr ""
 
 #: src/annotations/smart-layer.tsx
