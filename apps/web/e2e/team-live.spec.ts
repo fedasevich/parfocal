@@ -123,7 +123,7 @@ test(
     await page.goto("/my-work?tab=assigned");
     const nudgeButton = page
       .getByRole("row")
-      .filter({ hasText: new RegExp(`\\b${task.code}\\b`) })
+      .filter({ has: page.locator(`a[href*="task=${task.id}"]`) })
       .getByRole("button", { name: "Nudge" });
     await expect(nudgeButton).not.toHaveAttribute("title", "Nudge a reviewer");
     await nudgeButton.click();
