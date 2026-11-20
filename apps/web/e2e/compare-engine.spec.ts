@@ -1,22 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
+import { stillEngineOn as engineOn, openCompare, comparePane as pane } from "./compare-open.ts";
 
-async function openCompare(page: Page) {
-  await page.goto("/prototype");
-  const link = page
-    .getByRole("list", { name: "Screens" })
-    .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
-  await page.goto((await link.getAttribute("href")) ?? "");
-  await page.getByRole("button", { name: /^A1/ }).first().click();
-  const slides = page.getByRole("dialog", { name: "Slides in this case and task" });
-  await slides
-    .getByRole("button", { name: /Side by side with/ })
-    .first()
-    .click();
-  await expect(page).toHaveURL(/scene=picked/);
-}
-
-const pane = (page: Page, side: string) => page.locator(`[data-pane="${side}"]`);
-const engineOn = (page: Page, side: string) => pane(page, side).getByTestId("still-engine");
 const cameraOn = (page: Page, side: string) => engineOn(page, side).getAttribute("data-camera");
 
 const canvasFillsHost = (page: Page, side: string) =>
@@ -42,23 +26,21 @@ async function drag(page: Page, side: string, by: { x: number; y: number }) {
   await page.mouse.up();
 }
 
-test("each compare pane is an engine stage on its own real slide", async ({ page }) => {
+test("compare keeps the live engine stage on the left and draws the other slide on the right", async ({
+  page,
+}) => {
   test.setTimeout(90_000);
   await openCompare(page);
-  for (const side of ["left", "right"]) {
-    await expect(engineOn(page, side)).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-    await expect(engineOn(page, side).locator("canvas").first()).toBeVisible();
-    await expect(pane(page, side).locator('[data-slot="slide-still"] svg image')).toHaveCount(0);
-  }
-  const left = await engineOn(page, "left").getAttribute("data-slide");
-  const right = await engineOn(page, "right").getAttribute("data-slide");
-  expect(left).toBeTruthy();
-  expect(right).toBeTruthy();
-  expect(left).not.toEqual(right);
-  await expect(pane(page, "left").locator("path[stroke='var(--c-tumor)']")).toHaveCount(0);
+  await expect(pane(page, "left")).toHaveAttribute("data-testid", "slide-stage");
+  await expect(engineOn(page, "right")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
+  await expect(engineOn(page, "right").locator("canvas").first()).toBeVisible();
+  await expect(engineOn(page, "left")).toHaveCount(0);
+  await expect(page.getByTestId("rail-compare")).toHaveAttribute("aria-pressed", "true");
 });
 
-test("compare from the rail of a slide outside any task keeps the mode and draws both", async ({
+test("compare from the rail of a slide outside any task keeps the mode, its rail and its tabs", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -68,88 +50,79 @@ test("compare from the rail of a slide outside any task keeps the mode and draws
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });
+  const railBefore = await page.locator("[data-slot='tool-rail-button']").count();
   await page.getByTestId("rail-compare").click();
-  await expect(page).toHaveURL(/scene=picking/);
+  await expect(page).toHaveURL(/layout=compare/);
   await expect(page).toHaveURL(/mode=annotate/);
   await expect(page).not.toHaveURL(/task=/);
-  await expect(page.getByText("Loading the slide")).toHaveCount(0);
+  await expect(page).not.toHaveURL(/scene=/);
 
   await page
     .getByRole("listbox", { name: "Slide for the right side" })
     .getByRole("option", { name: /^A2/ })
     .click();
   await expect(pane(page, "right")).toHaveAccessibleName(/^Right: A2/);
-  for (const side of ["left", "right"]) {
-    await expect(engineOn(page, side)).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-    await expect(engineOn(page, side).locator("canvas").first()).toBeVisible();
-  }
-  expect(await engineOn(page, "left").getAttribute("data-slide")).toEqual(a1);
-  await expect(page).toHaveURL(/scene=picked/);
-  await expect(page).toHaveURL(/with=/);
-  await expect(page.getByTestId("slide-progress")).toContainText("Comparing 2 slides");
-  await expect(page.getByTestId("slide-progress")).not.toContainText("Opening");
-  await expect(page.getByText("Cytokeratin, marks tumor cells brown")).toHaveCount(0);
-  await expect(page.getByText(/capsule question/)).toHaveCount(0);
-  await expect(page.getByText("The slide you were reading")).toBeVisible();
-
-  await page.getByRole("tab", { name: /^Display/ }).click();
-  await expect(page).not.toHaveURL(/scene=/);
-  await expect(page).toHaveURL(/mode=annotate/);
-  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+  await expect(engineOn(page, "right")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });
+  await expect(page).toHaveURL(/with=/);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-workspace", "annotate");
+  await expect(page.locator("[data-slot='tool-rail-button']")).toHaveCount(railBefore);
+  await expect(page.locator("[data-compare]")).toHaveAttribute("data-compare", "drawn");
+
+  await page.getByRole("button", { name: "Polygon" }).first().click();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-tool", "polygon");
+  await page.getByRole("tab", { name: /^Display/ }).click();
+  await expect(page).toHaveURL(/layout=compare/);
+  await expect(page.getByRole("tab", { name: /^Display/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await page.getByTestId("rail-compare").click();
+  await expect(page).not.toHaveURL(/layout=/);
+  await expect(page).toHaveURL(/mode=annotate/);
+  await expect(pane(page, "right")).toHaveCount(0);
 });
 
-test("linked compare panes move both engine cameras and unlinked only the dragged one", async ({
+test("linked compare moves the right pane with the live stage and unlinked leaves it", async ({
   page,
 }) => {
   test.setTimeout(90_000);
   await openCompare(page);
-  for (const side of ["left", "right"]) {
-    await expect(engineOn(page, side)).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  }
-  const box = await pane(page, "left").boundingBox();
-  if (box === null) throw new Error("no left pane");
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.wheel(0, -400);
-  await page.mouse.wheel(0, -400);
-
-  const beforeLeft = await cameraOn(page, "left");
+  await expect(engineOn(page, "right")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
   const beforeRight = await cameraOn(page, "right");
   await drag(page, "left", { x: 120, y: -80 });
-  await expect.poll(() => cameraOn(page, "left")).not.toEqual(beforeLeft);
   await expect.poll(() => cameraOn(page, "right")).not.toEqual(beforeRight);
 
   await page.getByRole("switch", { name: "Linked" }).click();
   const heldRight = await cameraOn(page, "right");
-  const movedLeft = await cameraOn(page, "left");
   await drag(page, "left", { x: -100, y: 60 });
-  await expect.poll(() => cameraOn(page, "left")).not.toEqual(movedLeft);
+  await page.waitForTimeout(300);
   expect(await cameraOn(page, "right")).toEqual(heldRight);
 });
 
-test("rotating a compare pane turns its engine stage with the pane", async ({ page }) => {
+test("rotating the right compare pane turns its engine stage with the pane", async ({ page }) => {
   test.setTimeout(90_000);
   await openCompare(page);
   const turn = (side: string) => pane(page, side).getByTestId("engine-turn");
-  await expect(engineOn(page, "left")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await expect(turn("left")).toHaveAttribute("data-rotation", "0");
+  await expect(engineOn(page, "right")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
+  await expect(turn("right")).toHaveAttribute("data-rotation", "0");
 
-  await page.getByRole("button", { name: "Rotate left pane right" }).click();
-  await expect(turn("left")).toHaveAttribute("data-rotation", "15");
+  await page.getByRole("button", { name: "Rotate right pane right" }).click();
   await expect(turn("right")).toHaveAttribute("data-rotation", "15");
-  await expect(turn("left")).toHaveAttribute("style", /rotate\(15deg\)/);
-  const host = await turn("left").evaluate((node) => ({
+  await expect(turn("right")).toHaveAttribute("style", /rotate\(15deg\)/);
+  const host = await turn("right").evaluate((node) => ({
     width: (node as HTMLElement).offsetWidth,
     paneWidth: node.closest("[data-pane]")?.getBoundingClientRect().width ?? 0,
   }));
   expect(host.width).toBeGreaterThan(host.paneWidth);
-  await expect(engineOn(page, "left")).toHaveAttribute("data-state", "ready");
-  await expect.poll(() => canvasFillsHost(page, "left")).toBe(true);
+  await expect.poll(() => canvasFillsHost(page, "right")).toBe(true);
 
-  await page.getByRole("switch", { name: "Linked" }).click();
   await page.getByRole("button", { name: "Reset right pane rotation" }).click();
   await expect(turn("right")).toHaveAttribute("data-rotation", "0");
-  await expect(turn("left")).toHaveAttribute("data-rotation", "15");
-  await expect.poll(() => canvasFillsHost(page, "right")).toBe(true);
 });

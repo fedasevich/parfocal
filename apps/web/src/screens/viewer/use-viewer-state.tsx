@@ -461,7 +461,7 @@ export function useViewerState(props: BodyProps) {
       if (target.closest("input, textarea, [contenteditable], [role=dialog], [role=menu]")) return;
       if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
         event.preventDefault();
-        onSearch({ focus: true, scene: undefined, tool: undefined });
+        onSearch({ layout: "focus", scene: undefined, tool: undefined });
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
@@ -471,7 +471,7 @@ export function useViewerState(props: BodyProps) {
         !target.closest("button, a, summary, select")
       ) {
         event.preventDefault();
-        onSearch({ focus: true, scene: undefined, tool: undefined });
+        onSearch({ layout: "focus", scene: undefined, tool: undefined });
         return;
       }
       if (event.key !== "Escape") return;

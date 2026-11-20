@@ -58,7 +58,7 @@ test("review opens on Select, a drag still pans and Compare slides sits at the r
   const compareBox = (await compare.boundingBox()) ?? { y: 0, height: 0 };
   expect(railBox.y + railBox.height - (compareBox.y + compareBox.height)).toBeLessThanOrEqual(16);
   await compare.click();
-  await expect(page).toHaveURL(/scene=picking/);
+  await expect(page).toHaveURL(/layout=compare/);
   await expect(page.getByRole("listbox", { name: "Slide for the right side" })).toBeVisible();
 });
 

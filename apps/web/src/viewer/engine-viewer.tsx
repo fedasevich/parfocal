@@ -8,7 +8,7 @@ import {
   useListReviewObjects,
 } from "@parfocal/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { annotateTaskOf, layerKnownOf, withLookOnly } from "../annotations/annotate-task.ts";
 import { slideStatusQuery } from "../annotations/annotate-task-api.ts";
 import { readBuildConfig } from "../config.ts";
@@ -19,6 +19,7 @@ import { useRefusals } from "../screens/refusals.ts";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePeekKey } from "../screens/viewer-tools/slide-peek.tsx";
+import { useCompare } from "./compare-panes.tsx";
 import { FirstReadGuard } from "./first-read-guard.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
@@ -64,6 +65,8 @@ import {
   viewerAccessOf,
   workspaceRoleOf,
 } from "./viewer-access.ts";
+import type { ViewerEngine } from "./viewer-engine.ts";
+import type { ViewerLayout } from "./viewer-layout.ts";
 import {
   type ModeChoice,
   panelTabOf,
@@ -71,6 +74,26 @@ import {
   viewerModeOf,
   viewerPanelOf,
 } from "./viewer-mode.ts";
+
+export type LayoutChange = {
+  readonly layout: ViewerLayout | undefined;
+  readonly withSlideId?: string | undefined;
+  readonly slideId?: string | undefined;
+};
+
+function HomeEngine({
+  engine,
+  onEngine,
+}: {
+  engine: ViewerEngine;
+  onEngine: (engine: ViewerEngine | null) => void;
+}) {
+  useEffect(() => {
+    onEngine(engine);
+    return () => onEngine(null);
+  }, [engine, onEngine]);
+  return null;
+}
 
 const fakeOutlines = readBuildConfig().fakeApi !== "off";
 
@@ -83,8 +106,9 @@ export type EngineViewerProps = {
   start?: StageStart | undefined;
   object?: string | undefined;
   tool?: string | undefined;
-  focus?: boolean;
-  onFocus?: ((on: boolean) => void) | undefined;
+  layout?: ViewerLayout | undefined;
+  withSlideId?: string | undefined;
+  onLayout?: ((change: LayoutChange) => void) | undefined;
   onOpenSlide: (slideId: string) => void;
   onMode: (mode: ModeChoice) => void;
   onTab?: ((tab: ViewerTab) => void) | undefined;
@@ -107,14 +131,25 @@ function GuardedViewer({
   start,
   object,
   tool,
-  focus = false,
-  onFocus,
+  layout,
+  withSlideId,
+  onLayout,
   onOpenSlide,
   onMode,
   onTab: onRouteTab,
 }: EngineViewerProps) {
-  const showUi = () => onFocus?.(false);
-  useFocusKey(() => onFocus?.(!focus));
+  const focus = layout === "focus";
+  const showUi = () => {
+    if (focus) onLayout?.({ layout: undefined });
+  };
+  useFocusKey(() => onLayout?.({ layout: focus ? undefined : "focus" }));
+  const [homeEngine, setHomeEngine] = useState<{ slideId: string; engine: ViewerEngine } | null>(
+    null,
+  );
+  const onHomeEngine = useCallback(
+    (engine: ViewerEngine | null) => setHomeEngine(engine === null ? null : { slideId, engine }),
+    [slideId],
+  );
   const [ownTab, setOwnTab] = useState<ViewerTab | undefined>(undefined);
   const tab = onRouteTab === undefined ? ownTab : routeTab;
   const onTab = onRouteTab ?? setOwnTab;
@@ -269,6 +304,7 @@ function GuardedViewer({
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
+      <HomeEngine engine={session.engine} onEngine={onHomeEngine} />
       <StageMinimap
         engine={session.engine}
         slideId={slideId}
@@ -416,6 +452,27 @@ function GuardedViewer({
       />
     ) : null,
   };
+  const openCompare = () => onLayout?.({ layout: "compare", withSlideId });
+  const closeCompare = () => onLayout?.({ layout: undefined, withSlideId: undefined });
+  const compare = useCompare(
+    layout === "compare" && onLayout !== undefined
+      ? {
+          projectId,
+          slideId,
+          taskId: task,
+          reviewTaskId: reviewTask,
+          withSlideId,
+          home: homeEngine?.slideId === slideId ? homeEngine.engine : null,
+          onShow: (change) =>
+            onLayout({
+              layout: "compare",
+              slideId: change.slideId,
+              withSlideId: change.withSlideId,
+            }),
+          onClose: closeCompare,
+        }
+      : null,
+  );
   return (
     <main
       className="flex h-screen flex-col bg-chrome text-fg"
@@ -447,6 +504,7 @@ function GuardedViewer({
             setLayout({ hidden: false });
             onTab("display");
           }}
+          onCompare={onLayout === undefined ? undefined : () => openCompare()}
           percent={percent}
           objectTotal={areas.length}
           onPeek={() => setPeek(true)}
@@ -502,6 +560,15 @@ function GuardedViewer({
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
             inspector={inspector}
             bare={focus}
+            compare={compare}
+            compareToggle={
+              onLayout === undefined
+                ? undefined
+                : {
+                    on: compare !== null,
+                    onChange: (on) => (on ? openCompare() : closeCompare()),
+                  }
+            }
           />
         </NoticeSlotsProvider>
         <div

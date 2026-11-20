@@ -205,16 +205,14 @@ export function useReviewTopPopovers({
     clinicalNote: caseDetail?.clinical_note ?? undefined,
   });
   const compareStub = "Opens the compare view with the right side picker open";
-  const compareTo = (scene: "picking" | "picked") => {
+  const compareTo = () => {
     if (!projectId) return undefined;
-    return () => void goTo(destinations.compareSlides(projectId, session.slideId, task?.id, scene));
+    return () => void goTo(destinations.compareSlides(projectId, session.slideId, task?.id));
   };
   const openSideBySide = (otherSlideId: string) => {
     if (!projectId) return undefined;
     return () =>
-      void goTo(
-        destinations.compareSlides(projectId, session.slideId, task?.id, "picked", otherSlideId),
-      );
+      void goTo(destinations.compareSlides(projectId, session.slideId, task?.id, otherSlideId));
   };
   const slidesPopover = (
     <SlidesPopover
@@ -233,7 +231,7 @@ export function useReviewTopPopovers({
         onResultSets: projectId
           ? () => void goTo(destinations.slide(projectId, session.slideId, task?.id))
           : undefined,
-        onCompare: compareTo("picking"),
+        onCompare: compareTo(),
         compareTitle: compareStub,
         onAddSlides: projectId ? () => void goTo(destinations.upload(projectId)) : undefined,
         addSlidesTitle: "Add slides to this case",

@@ -10,7 +10,7 @@ const toolLink =
 async function toolLinks(page: Page) {
   await page.goto("/prototype");
   const links = page.getByRole("list", { name: "Screens" }).getByRole("link", { name: toolLink });
-  await expect(links).toHaveCount(14, { timeout: 20_000 });
+  await expect(links).toHaveCount(13, { timeout: 20_000 });
   return links.evaluateAll((anchors) =>
     anchors.map((anchor) => ({
       name: anchor.textContent ?? "",
@@ -48,8 +48,7 @@ const shows: Record<string, string> = {
   Measuring: "Drawn with the ruler across T1",
   "Annotate workspace · Auto region": "Accept as tumor",
   "Annotate workspace · Choosing a model": "Model for outlining nuclei",
-  "Compare slides · Slides picked": "Slides on screen",
-  "Compare slides · Picking the right side": "Show on the right",
+  "Compare slides": "Show on the right",
   "Focus mode": "AI score 52%. Still open.",
   "Whole-slide peek": "26% of tissue seen",
 };
@@ -209,17 +208,20 @@ test("the tier pill opens the model picker, and Accept adds the proposals", asyn
   await expect(page).not.toHaveURL(/annotate/);
 });
 
-test("picking a slide on one side swaps when it is on the other", async ({ page }) => {
+test("picking the reading slide for the right side swaps the sides", async ({ page }) => {
   const links = await toolLinks(page);
-  await page.goto(hrefOf(links, "Compare slides · Picking the right side"));
+  await page.goto(hrefOf(links, "Compare slides"));
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
   const right = page.getByRole("listbox", { name: "Slide for the right side" });
-  await right.getByRole("option", { name: /On the left now/ }).click();
+  const before = await page.locator('[data-slot="compare-home"]').getAttribute("aria-label");
+  await right.getByRole("option", { name: /swaps the sides/ }).click();
   await expect(right).toHaveCount(0);
-  await expect(page.getByRole("region", { name: /^Right: A1 · H&E/ })).toBeVisible();
-  await page.getByRole("button", { name: "Swap sides" }).click();
-  await expect(page.getByRole("region", { name: /^Left: A1 · H&E/ })).toBeVisible();
-  await page.getByRole("button", { name: "Change the right slide" }).click();
-  await expect(page.getByRole("listbox", { name: "Slide for the right side" })).toBeVisible();
+  await expect(page).toHaveURL(/layout=compare/);
+  await expect(page.locator('[data-pane="right"]')).toHaveAccessibleName(
+    (before ?? "").replace(/^Left/, "Right"),
+  );
 });
 
 test("focus mode answers from the keys and the key in the pill brings the interface back", async ({
@@ -244,6 +246,7 @@ test("focus mode answers from the keys and the key in the pill brings the interf
   await expect(page.getByTestId("focus-mode")).toHaveCount(0);
   await expect(page.getByTestId("stage-review-objects")).toBeVisible();
   expect(new URL(page.url()).searchParams.get("focus")).toBeNull();
+  expect(new URL(page.url()).searchParams.get("layout")).toBeNull();
 });
 
 test("in focus mode Shift+N on a decided object opens its note editor with the interface back", async ({
@@ -272,7 +275,7 @@ test("the focus key hides the top bar, rail and inspector and brings them back",
   await page.setViewportSize({ width: 1440, height: 900 });
   const links = await toolLinks(page);
   const viewer = new URL(hrefOf(links, "Focus mode"), "http://localhost");
-  viewer.searchParams.delete("focus");
+  viewer.searchParams.delete("layout");
   await page.goto(`${viewer.pathname}${viewer.search}`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 30_000,
@@ -321,41 +324,35 @@ test("focus mode opens from the More menu of the annotate workspace", async ({ p
   await expect(page.locator("header")).toHaveCount(0);
 });
 
-test("a layer set on one side moves with its slide when the sides swap", async ({ page }) => {
-  const links = await toolLinks(page);
-  await page.goto(hrefOf(links, "Compare slides · Slides picked"));
-  const onSide = (side: "left" | "right") =>
-    page.getByRole("button", { name: `Tumor map outline on the ${side}` });
-  await expect(onSide("left")).toHaveAttribute("aria-pressed", "true");
-  await expect(onSide("right")).toHaveAttribute("aria-pressed", "false");
-  await page.getByRole("button", { name: "Swap sides" }).click();
-  await expect(onSide("left")).toHaveAttribute("aria-pressed", "false");
-  await expect(onSide("right")).toHaveAttribute("aria-pressed", "true");
-});
+const outlineToggle = (page: Page) =>
+  page.getByRole("switch", { name: "Tumor map outline on the right" });
 
-test("the tumor map outline draws on the side that holds the task slide and follows a swap", async ({
-  page,
-}) => {
+async function compareWithOptions(page: Page, href: string) {
+  await page.goto(href);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Compare options" }).click();
+}
+
+test("the tumor map outline draws on the right once it holds the task slide", async ({ page }) => {
   const links = await toolLinks(page);
-  await page.goto(hrefOf(links, "Compare slides · Slides picked"));
-  const toggle = (side: "left" | "right") =>
-    page.getByRole("button", { name: `Tumor map outline on the ${side}` });
-  const engineOn = (side: "left" | "right") =>
-    page.locator(`[data-pane="${side}"]`).getByTestId("still-engine");
-  const drawn = (side: "left" | "right") =>
-    engineOn(side)
-      .getAttribute("data-overlays")
-      .then((value) => Number(value ?? 0));
-  await expect(engineOn("left")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await expect(engineOn("right")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await expect.poll(() => drawn("left")).toBeGreaterThan(0);
-  expect(await drawn("right")).toBe(0);
+  await compareWithOptions(page, hrefOf(links, "Compare slides"));
+  const engine = page.locator('[data-pane="right"]').getByTestId("still-engine");
+  const drawn = () => engine.getAttribute("data-overlays").then((value) => Number(value ?? 0));
   await page.getByRole("button", { name: "Swap sides" }).click();
-  await expect(engineOn("right")).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await expect.poll(() => drawn("right")).toBeGreaterThan(0);
-  await expect.poll(() => drawn("left")).toBe(0);
-  await toggle("right").click();
-  await expect.poll(() => drawn("right")).toBe(0);
+  await expect(page.locator('[data-pane="right"]')).toHaveAccessibleName(/^Right: A1/);
+  await expect(engine).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  expect(await drawn()).toBe(0);
+  if (!(await outlineToggle(page).isVisible())) {
+    await page.getByRole("button", { name: "Compare options" }).click();
+  }
+  await expect(outlineToggle(page)).toBeEnabled({ timeout: 20_000 });
+  await outlineToggle(page).click();
+  await expect.poll(drawn).toBeGreaterThan(0);
+  await outlineToggle(page).click();
+  await expect.poll(drawn).toBe(0);
 });
 
 const outlineSetOf = (slide: string, id: string) => ({
@@ -380,7 +377,7 @@ test("the tumor map outline draws a slide outside the task from its own result s
   page,
 }) => {
   const links = await toolLinks(page);
-  const compare = hrefOf(links, "Compare slides · Slides picked");
+  const compare = hrefOf(links, "Compare slides");
   await page.goto(compare);
   const engine = page.locator('[data-pane="right"]').getByTestId("still-engine");
   await expect(engine).toBeAttached({ timeout: 30_000 });
@@ -400,8 +397,8 @@ test("the tumor map outline draws a slide outside the task from its own result s
       status: { kind: "result", status: "ready", slide_id: slide, result_set_id: setId },
     },
   );
-  await page.goto(compare);
-  const toggle = page.getByRole("button", { name: "Tumor map outline on the right" });
+  await compareWithOptions(page, compare);
+  const toggle = outlineToggle(page);
   await expect(toggle).toBeEnabled({ timeout: 30_000 });
   await expect(engine).toHaveAttribute("data-objects", "0");
   await toggle.click();
@@ -416,8 +413,8 @@ test("the tumor map outline toggle of a slide with no tumor map is disabled with
   page,
 }) => {
   const links = await toolLinks(page);
-  await page.goto(hrefOf(links, "Compare slides · Slides picked"));
-  const toggle = page.getByRole("button", { name: "Tumor map outline on the right" });
+  await compareWithOptions(page, hrefOf(links, "Compare slides"));
+  const toggle = outlineToggle(page);
   await expect(toggle).toBeDisabled({ timeout: 30_000 });
   await expect(toggle).toHaveAttribute("title", "This slide has no tumor map");
 });

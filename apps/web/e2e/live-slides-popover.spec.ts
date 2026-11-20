@@ -86,7 +86,7 @@ test("Compare and Add slides in the slides popover open compare and the upload f
   await openA1(page);
   let popover = await openPopover(page);
   await popover.getByRole("button", { name: "Compare", exact: true }).click();
-  await expect(page).toHaveURL(/scene=picking/);
+  await expect(page).toHaveURL(/layout=compare/);
   await openA1(page);
   popover = await openPopover(page);
   await popover.getByRole("button", { name: "Add slides" }).click();

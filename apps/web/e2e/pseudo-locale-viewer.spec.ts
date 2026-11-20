@@ -58,9 +58,11 @@ test("the compare screen shows no English in the en-XA pseudo locale", async ({ 
   await page.getByRole("button", { name: /^A1/ }).first().click();
   const slides = page.getByRole("dialog");
   await slides.locator('[data-slot="side-by-side"]').first().click();
-  await expect(page).toHaveURL(/scene=picked/);
-  const viewer = page.getByTestId("full-viewer");
-  await expect(viewer).toBeVisible({ timeout: 20_000 });
+  await expect(page).toHaveURL(/layout=compare/);
+  const viewer = page.locator("main");
+  await expect(page.locator('[data-pane="right"]')).toBeVisible({ timeout: 20_000 });
+  await page.locator('[data-slot="floating-pill"] button[aria-expanded]').click();
+  await expect(viewer.locator("section").last()).toBeVisible();
   await expect(viewer).not.toContainText("Move both together");
   await expect(viewer).not.toContainText("Line up automatically");
   await expect(viewer).not.toContainText("Shared cursor");

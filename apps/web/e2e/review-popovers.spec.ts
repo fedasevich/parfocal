@@ -179,7 +179,7 @@ test("Side by side opens the chosen slide on the right and Compare slides opens 
   const label = (await button.getAttribute("aria-label")) ?? "";
   const target = label.replace("Side by side with ", "").split(" ")[0] ?? "";
   await button.click();
-  await expect(page).toHaveURL(/scene=picked/);
+  await expect(page).toHaveURL(/layout=compare/);
   await expect(page.getByRole("region", { name: /^Left: A1/ })).toBeVisible();
   await expect(page.getByRole("region", { name: new RegExp(`^Right: ${target}`) })).toBeVisible();
   await expect(page.getByRole("listbox", { name: "Slide for the right side" })).toHaveCount(0);
@@ -187,6 +187,6 @@ test("Side by side opens the chosen slide on the right and Compare slides opens 
   await page.goto(await fullViewerUrl(page));
   slides = await openSlidesPopover(page);
   await slides.getByRole("button", { name: "Compare slides" }).click();
-  await expect(page).toHaveURL(/scene=picking/);
+  await expect(page).toHaveURL(/layout=compare/);
   await expect(page.getByRole("listbox", { name: "Slide for the right side" })).toBeVisible();
 });

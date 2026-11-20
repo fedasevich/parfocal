@@ -187,7 +187,9 @@ function ViewerBody(props: BodyProps) {
         panel={inspector}
         panelTab={{ label: inspectorTabLabels[tab], count: tabCounts[tab] }}
         onToolChange={pickTool}
-        onCompare={() => onSearch({ scene: "picking", object: undefined, tool: undefined })}
+        onCompare={() =>
+          onSearch({ scene: undefined, layout: "compare", object: undefined, tool: undefined })
+        }
         overlay={
           peekOpen ? (
             <SlidePeek

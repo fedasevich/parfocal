@@ -121,11 +121,11 @@ test("the docked compare screen keeps the Linked pill above the dock", async ({ 
     .getByRole("button", { name: /Side by side with/ })
     .first()
     .click();
-  await expect(page).toHaveURL(/scene=picked/);
+  await expect(page).toHaveURL(/layout=compare/);
   const pill = page.getByText("Linked: pan, zoom and rotation move both").locator("..");
   await expect(pill).toBeVisible();
   const pillBox = await pill.boundingBox();
-  const dock = await boxOf(page, '[data-slot="tool-rail"]');
+  const dock = await boxOf(page, '[data-slot="stage-tools"]');
   if (!pillBox) throw new Error("No pill box");
   expect(pillBox.y + pillBox.height).toBeLessThanOrEqual(dock.y);
 });

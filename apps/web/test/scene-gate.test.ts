@@ -6,6 +6,7 @@ import type { z } from "zod";
 import * as routeSearches from "../src/search/route-searches.ts";
 import { type SceneFieldMeta, sceneField, sceneHarnessOn } from "../src/search/scene-harness.ts";
 import { overlaySearch } from "../src/shell/overlays.ts";
+import { layoutOfOldAddress } from "../src/viewer/viewer-layout.ts";
 import { developerRouteFiles } from "../vite/dev-tools.ts";
 
 const src = new URL("../src/", import.meta.url).pathname;
@@ -33,7 +34,7 @@ const productRoutes: Record<string, readonly string[]> = {
   "kpi.tsx": [],
   "my-work.tsx": [],
   "notifications.tsx": [],
-  "popout.tsx": ["objects", "travel", "picked", "picking"],
+  "popout.tsx": [],
   "projects.$projectId.cases.$caseId.co-sign.tsx": [],
   "projects.$projectId.cases.$caseId.report.tsx": [],
   "projects.$projectId.cases.$caseId.upload.tsx": [],
@@ -41,9 +42,9 @@ const productRoutes: Record<string, readonly string[]> = {
   "projects.$projectId.index.tsx": [],
   "projects.$projectId.jobs.$jobId.tsx": [],
   "projects.$projectId.run-model.tsx": [],
-  "projects.$projectId.slides.$slideId.tsx": ["objects", "travel", "picked", "picking"],
+  "projects.$projectId.slides.$slideId.tsx": [],
   "projects.$projectId.slides.$slideId_.annotate-task.tsx": [],
-  "projects.$projectId.slides.$slideId_.annotate.tsx": ["auto", "models"],
+  "projects.$projectId.slides.$slideId_.annotate.tsx": [],
   "projects.$projectId.slides.$slideId_.live.tsx": [],
   "projects.$projectId.tasks.new-annotate.tsx": [],
   "projects.$projectId.tasks.new.tsx": [],
@@ -62,7 +63,7 @@ const productRoutes: Record<string, readonly string[]> = {
   "tasks.$taskId.comments.tsx": [],
   "tasks.$taskId.disagreements.tsx": [],
   "tasks.$taskId.evaluation.tsx": ["report", "arrange"],
-  "tasks.$taskId.guided.tsx": ["region"],
+  "tasks.$taskId.guided.tsx": [],
   "tasks.$taskId.sign-off.tsx": [],
   "tasks.$taskId.submitted.tsx": [],
   "team.tsx": ["nudge", "reassign", "signoff"],
@@ -153,6 +154,41 @@ test("no product source reads a scene outside the dev tools gate", () => {
       return ungatedSceneRead.some((pattern) => pattern.test(text));
     });
   assert.deepEqual(offenders, []);
+});
+
+test("no slide route keeps a live scene, so a prototype screen opens only from the gallery", () => {
+  const slideRoutes = Object.keys(productRoutes).filter((name) =>
+    /slides|guided|cells|adjudicate|popout/.test(name),
+  );
+  assert.ok(slideRoutes.length > 5);
+  for (const name of slideRoutes) {
+    assert.deepEqual(productRoutes[name], [], name);
+    const searchName = searchOf(name);
+    const meta = searchName === undefined ? undefined : sceneMeta(searchName);
+    assert.deepEqual([...(meta?.live ?? [])], [], name);
+  }
+});
+
+test("old compare and focus addresses turn into a layout of the one viewer", () => {
+  assert.deepEqual(layoutOfOldAddress({ scene: "picking" }), {
+    scene: undefined,
+    focus: undefined,
+    layout: "compare",
+  });
+  assert.deepEqual(layoutOfOldAddress({ scene: "picked" })?.layout, "compare");
+  assert.deepEqual(layoutOfOldAddress({ focus: true })?.layout, "focus");
+  assert.deepEqual(layoutOfOldAddress({ scene: "objects", focus: true }), {
+    scene: undefined,
+    focus: undefined,
+    layout: "focus",
+  });
+  assert.equal(layoutOfOldAddress({ scene: "objects" }), null);
+  assert.equal(layoutOfOldAddress({}), null);
+  assert.deepEqual(routeSearches.slideSearch.read({ layout: "compare", with: "s2" }), {
+    layout: "compare",
+    with: "s2",
+  });
+  assert.equal(routeSearches.slideSearch.read({ scene: "picking" }).scene, undefined);
 });
 
 test("scenes run only with dev tools and the fake API both on", () => {

@@ -67,8 +67,8 @@ test("the compare panes paint the canvas colour in both themes", async ({ page }
     .getByRole("button", { name: /Side by side with/ })
     .first()
     .click();
-  await expect(page.locator("[data-pane]").first()).toBeVisible();
-  await expectCanvas(page, "[data-pane] > div > div");
+  await expect(page.locator('[data-pane="right"]')).toBeVisible();
+  await expectCanvas(page, '[data-pane="right"] > div > div');
 });
 
 test("the slide chip in the guided top bar has no fill of its own", async ({ page }) => {

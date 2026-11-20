@@ -132,6 +132,7 @@ type LiveTopBarProps = {
   onOpenSlide: (slideId: string) => void;
   onSubmit: (() => void) | undefined;
   onResultSets?: (() => void) | undefined;
+  onCompare?: (() => void) | undefined;
   percent: number | null;
   progressNote?: string | undefined;
   objectTotal: number;
@@ -166,6 +167,7 @@ function TopBar({
   onOpenSlide,
   onSubmit,
   onResultSets,
+  onCompare,
   percent,
   progressNote,
   objectTotal,
@@ -256,6 +258,7 @@ function TopBar({
               task={task}
               onPick={onOpenSlide}
               onResultSets={onResultSets}
+              onCompare={onCompare}
             />
           </SlidePicker>
         )}
