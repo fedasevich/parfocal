@@ -92,6 +92,17 @@ export function ReadOnlyNotice({ reviewers }: { reviewers: string }) {
   );
 }
 
+export function AccessNotice({ reason, sentence }: { reason: string; sentence: string }) {
+  return (
+    <Banner tone="info" icon="lock" data-testid="read-only-notice" data-reason={reason}>
+      <b>
+        <Trans>Read only.</Trans>
+      </b>{" "}
+      {sentence}
+    </Banner>
+  );
+}
+
 export function useAnswersOff(
   issue: StageIssue | null,
   signedOff: boolean,
@@ -219,6 +230,8 @@ export function StageIssueLayer({
   signedOff,
   slideLabel,
   reviewers = null,
+  readOnly = reviewers !== null,
+  readOnlyLine,
   onAsk,
   onNext,
   children,
@@ -232,6 +245,8 @@ export function StageIssueLayer({
   signedOff: boolean;
   slideLabel: string;
   reviewers?: string | null;
+  readOnly?: boolean;
+  readOnlyLine?: string | undefined;
   onAsk: () => void;
   onNext: (() => void) | null;
   children: (answersOff: string | undefined, readOnly: boolean) => ReactNode;
@@ -246,7 +261,8 @@ export function StageIssueLayer({
     resultMissing,
     nothingFound,
   });
-  const answersOff = useAnswersOff(issue, signedOff, slideLabel, reviewers);
+  const answersOff =
+    useAnswersOff(issue, signedOff, slideLabel, reviewers) ?? (readOnly ? readOnlyLine : undefined);
   const retry = () => {
     setRetried(slideId);
     for (const tile of route?.failedTiles() ?? []) route?.retryTile(tile.key);
@@ -262,7 +278,7 @@ export function StageIssueLayer({
           onNext={onNext}
         />
       )}
-      {children(answersOff, reviewers !== null)}
+      {children(answersOff, readOnly)}
     </>
   );
 }

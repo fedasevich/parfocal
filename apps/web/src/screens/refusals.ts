@@ -16,6 +16,8 @@ const sentences: Record<string, MessageDescriptor> = {
   "unknown-object": msg`That object is no longer in this result, so nothing was changed. Reload the slide and try again.`,
   "project-owners-only": msg`Only an owner of this project can do that.`,
   "task-signed-off": msg`The task is signed off. An owner can reopen it.`,
+  "task-withdrawn": msg`This task was withdrawn, so nothing can be changed. You can look at it read only.`,
+  "no-review-right": msg`You can look at this slide but not change it.`,
   "already-submitted": msg`This slide is already submitted.`,
   network: msg`You are offline, so nothing was saved. Try again when the connection is back.`,
   "401": msg`Your session has ended. Sign in again to carry on.`,

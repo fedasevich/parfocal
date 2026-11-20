@@ -3,6 +3,7 @@ import { useGetReviewTask } from "@parfocal/api-client";
 import { buttonVariants } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Link } from "@tanstack/react-router";
+import { slideLink } from "../shell/slide-link.ts";
 import { okData } from "./placeholder.tsx";
 
 export type ViewerTarget = {
@@ -12,20 +13,12 @@ export type ViewerTarget = {
   object?: string | undefined;
 };
 
-export const viewerSearch = (target: Pick<ViewerTarget, "taskId" | "object">) => ({
-  task: target.taskId,
-  object: target.object,
-  workspace: "review" as const,
-});
-
 const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
 
 export function ViewerLink({ target, label }: { target: ViewerTarget; label: string }) {
   return (
     <Link
-      to="/projects/$projectId/slides/$slideId"
-      params={{ projectId: target.projectId, slideId: target.slideId }}
-      search={viewerSearch(target)}
+      {...slideLink(target)}
       aria-label={label}
       title={label}
       data-testid="viewer-link"
@@ -48,9 +41,7 @@ export function TaskViewerLinks({ taskId, projectId }: { taskId: string; project
     <span className="inline-flex flex-wrap items-center gap-1" data-testid="task-viewer-links">
       {first ? (
         <Link
-          to="/projects/$projectId/slides/$slideId"
-          params={{ projectId, slideId: first }}
-          search={viewerSearch({ taskId })}
+          {...slideLink({ projectId, slideId: first, taskId })}
           title={t`Open the slides of this task in the full viewer`}
           onClick={stop}
           className={small}

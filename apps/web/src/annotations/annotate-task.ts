@@ -19,6 +19,7 @@ export type AnnotateTask = {
   readonly slideIds: readonly string[];
   readonly owner: boolean;
   readonly focusObject?: string | undefined;
+  readonly readOnly?: boolean;
 };
 
 export function annotateTaskOf(
@@ -40,6 +41,10 @@ export function annotateTaskOf(
     owner,
     focusObject,
   };
+}
+
+export function withLookOnly(task: AnnotateTask | null, lookOnly: boolean): AnnotateTask | null {
+  return task === null || !lookOnly ? task : { ...task, readOnly: true };
 }
 
 export function taskClassesOf(

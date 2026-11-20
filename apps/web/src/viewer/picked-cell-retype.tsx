@@ -10,6 +10,7 @@ export type CellRetype = {
   readonly slideId: string;
   readonly resultSetId: string;
   readonly classes: readonly ProjectClass[];
+  readonly readOnly?: boolean;
 };
 
 export function useCellRetype(projectId: string, task: AnnotateTask | null): CellRetype | null {
@@ -24,6 +25,7 @@ export function useCellRetype(projectId: string, task: AnnotateTask | null): Cel
       slideId: task.slideId,
       resultSetId: task.resultSetId,
       classes: taskClassesOf(task.classes, fetched ?? []),
+      readOnly: task.readOnly === true,
     };
   }, [task, fetched]);
 }

@@ -19,6 +19,7 @@ type StageInspectorProps = {
   layout: InspectorLayout;
   onLayout: (change: InspectorLayoutChange) => void;
   tab: ViewerTab;
+  tabs: readonly ViewerTab[];
   onTab: (tab: ViewerTab) => void;
   panning: boolean;
   counts: StageTabCounts;
@@ -30,6 +31,7 @@ type StageInspectorProps = {
 export type StageInspectorLink = {
   readonly guided?: boolean;
   readonly tab: ViewerTab | undefined;
+  readonly tabs: readonly ViewerTab[];
   readonly onTab: (tab: ViewerTab) => void;
   readonly counts?: StageTabCounts;
   readonly comments: ReactNode;
@@ -58,6 +60,7 @@ export function StageInspector({
   layout: chosenLayout,
   onLayout,
   tab,
+  tabs,
   onTab,
   panning,
   counts,
@@ -104,6 +107,12 @@ export function StageInspector({
     body: comments,
   };
   const opinionTab = { value: "opinion", label: labels.opinion, body: opinion };
+  const byValue = {
+    objects: objectsTab,
+    display: displayTab,
+    comments: commentsTab,
+    opinion: opinionTab,
+  };
   return (
     <InspectorDock
       layout={layout}
@@ -122,13 +131,7 @@ export function StageInspector({
         onValueChange={(next) => {
           if (isTab(next)) onTab(next);
         }}
-        tabs={
-          guided
-            ? [objectsTab, commentsTab, displayTab]
-            : opinion === null
-              ? [objectsTab, displayTab, commentsTab]
-              : [objectsTab, displayTab, commentsTab, opinionTab]
-        }
+        tabs={tabs.map((value) => byValue[value])}
       />
     </InspectorDock>
   );

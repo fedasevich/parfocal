@@ -54,7 +54,7 @@ export function assignedOpenPath(task: AssignedTask): string {
 export function slideOpenPath(row: SlideRow, me: string | undefined): string {
   const mine = row.reviews.find((review) => review.user_id === me);
   if (mine?.state === "in-review") return destinations.guided(mine.task_id, row.id);
-  return destinations.openSlide(row.project.id, row.id, mine?.task_id);
+  return destinations.slide(row.project.id, row.id, mine?.task_id);
 }
 
 const handled = "[role='dialog'], [role='menu'], [role='tablist'], [role='combobox']";

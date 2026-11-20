@@ -63,6 +63,7 @@ def shared_layer(api: ApiAs, database: str, kind: str = "annotate") -> Layer:
             "first": Role.REVIEWER,
             "second": Role.REVIEWER,
             "third": Role.REVIEWER,
+            "lab": Role.RESEARCHER,
         },
     )
     people, tenant = workspace.people, workspace.tenant_id
@@ -70,6 +71,7 @@ def shared_layer(api: ApiAs, database: str, kind: str = "annotate") -> Layer:
     join_project(database, project, people["owner"], "owner")
     for label in ("first", "second", "third"):
         join_project(database, project, people[label], "reviewer")
+    join_project(database, project, people["lab"], "viewer")
     slide = make_slide(database, tenant, project)
     tumor = make_class(database, tenant, project)
     result_set = uuid.UUID(
@@ -189,6 +191,35 @@ def test_only_assigned_experts_edit_the_layer(api: ApiAs, database: str) -> None
     unseen = draw(api, layer, "third", {"kind": "region", "geometry": SQUARE})
     assert unseen.status_code == 404
     assert api(layer.people["third"]).get(layer.base).status_code == 404
+
+
+def test_a_member_with_the_review_right_and_no_assignment_writes_nothing(
+    api: ApiAs, database: str
+) -> None:
+    layer = shared_layer(api, database)
+    drawn = draw(api, layer, "first", {"kind": "region", "geometry": SQUARE}).json()
+    confirmed = api(layer.people["first"]).post(f"{layer.base}/ai/T2/confirm", json={})
+    assert confirmed.status_code in (200, 201), confirmed.text
+    before = read(api, layer, "lab")
+    lab = api(layer.people["lab"])
+    task_slide = f"/api/review-tasks/{layer.task}/slides/{layer.slide}"
+    batch = {"changes": [{"object": "T1", "deleted": True}]}
+    upload = {"file_name": "shapes.geojson", "content": {"type": "FeatureCollection"}}
+    writes = [
+        lab.post(f"{layer.base}/objects", json={"kind": "region", "geometry": SQUARE}),
+        lab.patch(f"{layer.base}/objects/{drawn['id']}", json={"version": 1, "class_id": None}),
+        lab.delete(f"{layer.base}/objects/{drawn['id']}", params={"version": 1}),
+        lab.put(f"{layer.base}/ai/T1", json={"deleted": True}),
+        lab.post(f"{layer.base}/ai-changes", json=batch),
+        lab.post(f"{layer.base}/ai/T1/confirm", json={}),
+        lab.delete(f"{layer.base}/ai/T2/confirm", params={"version": 1}),
+        lab.post(f"{layer.base}/imports", json=upload),
+        lab.put(f"{layer.base}/groups", json={"groups": [], "members": []}),
+        lab.post(f"{task_slide}/runs", json={"result_set_id": str(layer.result_set)}),
+    ]
+    codes = [(response.status_code, response.json()["code"]) for response in writes]
+    assert codes == [(403, "not-assigned")] * len(writes)
+    assert read(api, layer, "lab") == before
 
 
 def test_an_ai_object_edited_and_one_deleted_leave_the_result_set_unchanged(

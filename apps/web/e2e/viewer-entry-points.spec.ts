@@ -6,7 +6,7 @@ const fullViewer = /\/projects\/[^/]+\/slides\/[^/?]+\?/;
 
 test("project slide rows are links into the viewer", async ({ page }) => {
   await page.goto(`/projects/${p07}`);
-  const live = /\/projects\/[^/]+\/slides\/[^/?]+\/live$/;
+  const live = /\/projects\/[^/]+\/slides\/[^/?]+$/;
   const link = page.getByTestId("slide-link").first();
   await expect(link).toHaveAttribute("href", live);
   const open = page.getByTestId("slide-row").first().getByRole("button", { name: "Open" });

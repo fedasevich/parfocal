@@ -22,6 +22,7 @@ import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useNavigate } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { useOpenJobsTray } from "../../shell/jobs-tray.tsx";
+import { slideHref as slideAddress } from "../../shell/slide-link.ts";
 import { useLocalToast } from "../local-toast.tsx";
 import { okData } from "../placeholder.tsx";
 import { ProjectPage } from "../project/project-page.tsx";
@@ -182,7 +183,7 @@ function UploadFlow({
   }
   if (background === "viewer") {
     const slideHref = firstSlide
-      ? `/projects/${projectId}/slides/${firstSlide}`
+      ? slideAddress({ projectId, slideId: firstSlide })
       : `/projects/${projectId}`;
     return (
       <main className="flex min-h-0 flex-1 flex-col">

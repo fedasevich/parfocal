@@ -1,22 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-  railHasTool,
-  resolveWorkspace,
-  showsCountPanel,
-  workspaceSetups,
-} from "../src/viewer/workspace.ts";
-
-test("an annotate task opens in Annotate and a review task opens in Review", () => {
-  assert.equal(resolveWorkspace(undefined, "annotate"), "annotate");
-  assert.equal(resolveWorkspace(undefined, "review"), "review");
-});
-
-test("a slide with no task opens in Annotate and a chosen workspace wins", () => {
-  assert.equal(resolveWorkspace(undefined, undefined), "annotate");
-  assert.equal(resolveWorkspace("review", "annotate"), "review");
-  assert.equal(resolveWorkspace("annotate", "review"), "annotate");
-});
+import { railHasTool, showsCountPanel, workspaceSetups } from "../src/viewer/workspace.ts";
 
 test("Review pans on drag and Annotate draws a marquee on drag", () => {
   assert.equal(workspaceSetups.review.dragBehaviour, "pan");

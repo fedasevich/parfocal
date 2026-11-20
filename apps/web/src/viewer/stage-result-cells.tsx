@@ -175,7 +175,7 @@ function SetCells({
           key={picked.id}
           set={set}
           cell={picked}
-          retype={retype?.resultSetId === set.id ? retype : null}
+          retype={retype?.resultSetId === set.id && retype.readOnly !== true ? retype : null}
         />
       )}
       <SetCellsMarker
