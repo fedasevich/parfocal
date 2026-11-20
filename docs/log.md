@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-21
 
+- PROTO-114 Training manifest format 2: each slide names result_set_name, model_name, model_version and source, and each feature carries versions and differs_from_ai (same, shape, class or both, null for human objects). test_training_exports 6 of 6 pass. Not covered: a class only or both difference and a multi version count.
 - PROTO-111 Disagree on the live guided card opens the reasons and the fix buttons on every decision style except blind (the lead's answer, since the owner wants reviewers to always be able to edit AI shapes). Redraw the outline saves a polygon and Change the type saves a class through saveReviewEdit, each sending the other field so neither wipes the other. The reviewed outline draws over the dimmed AI one, Undo restores the previous edit, read only and Focus get no fix buttons. review-fix-live spec passes on the fake API. The real API spec has not run.
 - PROTO-110 The upload done step offers Annotate these slides, beside Run a model or in a Next step zone, and opens the annotate task stepper with the uploaded slides ticked through a slides search parameter. upload-wizard spec passes on the fake API. The beside Run a model case is not covered.
 

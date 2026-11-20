@@ -7001,7 +7001,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 5. A save replaces the `review_edits` row and the audit entry has no geometry, so who changed what and from which shape cannot be shown or exported.
   Done when a migration that only adds creates an append only version table with the task, slide, reviewer, object, change kind, class and geometry after the change and the time, every save, clear, split and merge writes one row, `GET .../edits/{object_id}/history` returns them with the AI original first, the object card shows the list, and DB tests prove the rows cannot be updated or deleted by the app role. An ADR records the choice.
   Depends on nothing. Size: M.
-- [ ] PROTO-114 · The training dataset names the model and counts the edits
+- [x] PROTO-114 · The training dataset names the model and counts the edits
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 6. Provenance in the manifest stops at a result set ID.
   Done when each slide in the manifest carries the result set name, model name, model version and source, each feature carries the number of versions and whether its shape, its class or both differ from the AI object, the format version is raised, and the strict model and its tests are updated.
   Depends on nothing. Size: S.
