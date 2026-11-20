@@ -30,6 +30,17 @@ Recommended: A, because most row clicks start work on the slide.
 
 Your choice:
 
+### 164. Whether the viewer becomes one shell on one route
+
+The viewer map of 2026-11-20 (`docs/results/2026-11-20-viewer-state-machine.html`) shows six slide routes, a forced workspace in some links, and the scene parameter still picking real screens, so the same slide opens differently from different places. It proposes one viewer shell on one route, where the mode comes from the task and access comes from one rule, and Compare, Focus and adjudication become layouts of that shell. The gaps that lose work are already on the board as PROTO-093 (one viewer access rule), PROTO-094 (annotate tasks read only and checked by the API) and PROTO-095 (every route runs the first read guard).
+
+- A. Build the rest of the migration list, steps 6 to 16, as backlog tasks after those three. It touches many specs and takes several days of agent work.
+- B. Fix only the three gaps now and keep the routes as they are.
+
+Recommended: A, because the duplicate routes keep producing faults like the ones in the deployed audits, and decision 163 (where a project slide row opens) is settled inside that rule.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.
