@@ -6960,6 +6960,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken item 2 and its zip section. CMU-1-Saved-1_16.zip (MIRAX) and CMU-1-JP2K-33005-v2.zip (DICOM) never open: the engine registry has no MIRAX or DICOM opener, the range read of original.zip is refused because the slide has no ranges file, and tile-index.json is missing. Decide between a native browser reader and a converted pyramid made at ingest by the conversion rule the formats ADRs set, record it in an ADR, build it so both gallery slides open and draw on the deployed app, and fold in PROTO-100 so they read by stem and format.
   Done when both slides open and draw in the browser tests and on the deployed app after the next reset, the seeded-formats smoke stops skipping them, and their cell crops are cut.
   Depends on PROTO-100. Size: L.
+- [ ] PROTO-104 · A search hit opens its page and moves the camera to the object
+  The owner found on 2026-11-20 that picking an object from search does not move the viewer camera to the searched object, and the page of the hit does not open either. PROTO-091 (search finds cells and other objects by their ID) promised that a hit opens the viewer centred on the object with it picked, so the hit link, the route it lands on, or the viewer's reading of the object in the address is broken. Check both the search page and the ⌘K palette, for an AI cell, a drawn shape and a region, from home and from inside another slide, on the deployed app as well as the fake API.
+  Done when a spec on the fake API and a check on the deployed app pick each kind of hit from the search page and the palette and land on its slide with the camera centred on the object and the object picked.
+  Depends on PROTO-091. Size: S.
 
 ---
 
