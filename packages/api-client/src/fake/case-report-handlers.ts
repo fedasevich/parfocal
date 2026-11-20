@@ -209,7 +209,8 @@ const blockersOf = (stored: Stored, staging: CaseReportStaging | null): CaseRepo
   if (!(stored.diagnosis ?? "").trim())
     found.push({ code: "required-field-empty", field: "diagnosis" });
   if (staging === null) return found;
-  if (stored.category === null) found.push({ code: "required-field-empty", field: "category" });
+  if (stored.category === null && stored.deposits.length)
+    found.push({ code: "required-field-empty", field: "category" });
   if (stored.nodesExamined === null)
     found.push({ code: "required-field-empty", field: "nodes_examined" });
   if (stored.extranodal === null) found.push({ code: "required-field-empty", field: "extranodal" });

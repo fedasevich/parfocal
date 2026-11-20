@@ -159,7 +159,9 @@ function CategoryField({ report, errors, setValues, update }: StepProps) {
     ? values.category
       ? t`Suggested from ${from}: ${categoryNames[suggested].toLowerCase()}.`
       : t`Suggested from ${from}. Pick a category to confirm it.`
-    : t`Enter a deposit size to get a suggestion.`;
+    : values.deposits.length
+      ? t`Enter a deposit size to get a suggestion.`
+      : t`No deposit is listed, so the node is negative. Add a deposit if there is tumor.`;
   const against = suggested !== null && values.category !== null && values.category !== suggested;
   return (
     <div className="grid gap-3">

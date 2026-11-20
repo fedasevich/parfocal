@@ -61,6 +61,19 @@ test("a report with no deposits says so and leaves out an unknown node count", (
   );
 });
 
+test("a negative node report with no deposit and no category passes Staging as pN0(sn)", () => {
+  const report = sceneReport(data(), "sign");
+  const negative = {
+    ...report,
+    values: { ...report.values, deposits: [], category: null, ack: false },
+  };
+  assert.deepEqual(
+    issuesOf(data(), negative, true).filter((issue) => issue.step === "staging"),
+    [],
+  );
+  assert.equal(suggestedPn(data(), negative.values), "pN0(sn)");
+});
+
 test("a category against the size needs the confirmation", () => {
   const report = sceneReport(data(), "contra");
   assert.deepEqual(

@@ -570,6 +570,12 @@ msgid "{0} and Reviewed"
 msgstr ""
 
 #. placeholder {0}: sender?.name
+#. placeholder {1}: asked.name
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "{0} asks {1} to co-sign · sent {sentText}"
+msgstr ""
+
+#. placeholder {0}: sender?.name
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "{0} asks you to co-sign · sent {sentText}"
 msgstr ""
@@ -10402,6 +10408,10 @@ msgstr ""
 msgid "No decisions yet."
 msgstr ""
 
+#: src/screens/clinical-report/steps.tsx
+msgid "No deposit is listed, so the node is negative. Add a deposit if there is tumor."
+msgstr ""
+
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "No deposit yet. Add one from an object on a slide, or measure one by hand."
 msgstr ""
@@ -11399,6 +11409,11 @@ msgstr ""
 
 #: src/screens/viewer/layer-views.tsx
 msgid "One unsure"
+msgstr ""
+
+#. placeholder {0}: asked.name
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "Only {0} can co-sign this report."
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx

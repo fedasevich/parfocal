@@ -84,6 +84,8 @@ const pnOf: Record<Category, string> = {
   itc: "pN0(i+)(sn)",
 };
 
+export const negativePn = "pN0(sn)";
+
 export const fieldNames = { diag: "Final diagnosis", micro: "Microscopic", comment: "Comment" };
 
 export const fmtMm = (value: number) => value.toFixed(value < 1 ? 2 : 1);
@@ -142,7 +144,7 @@ export const positiveNodes = (data: ReportData, deposits: Dep[]) =>
   new Set(deposits.map((deposit) => slideOf(data, deposit.slide).node)).size;
 
 export function suggestedPn(data: ReportData, values: Values): string | null {
-  if (!values.category) return null;
+  if (!values.category) return values.deposits.length ? null : negativePn;
   if (values.category !== "macro") return pnOf[values.category];
   const positive = positiveNodes(data, values.deposits) || 1;
   return positive > 9 ? "pN3a" : positive > 3 ? "pN2a" : "pN1a(sn)";
@@ -220,14 +222,6 @@ export function issuesOf(data: ReportData, report: Report, withSign = false): Is
     add("findings", "specimen", "Use at least 3 characters.", "Specimen is too short");
   if (hasStep(data, "staging")) {
     const size = largestMm(values.deposits);
-    if (!values.deposits.length) {
-      add(
-        "staging",
-        "deps",
-        "Add at least one deposit, from an object on a slide or measured by hand.",
-        "No deposit is listed",
-      );
-    }
     values.deposits.forEach((deposit) => {
       const raw = deposit.size.trim();
       const field = `deps.${deposit.id}`;
@@ -242,7 +236,7 @@ export function issuesOf(data: ReportData, report: Report, withSign = false): Is
         add("staging", field, "Use 0.1 to 100 mm.", `${deposit.id} is not a size in mm`);
       }
     });
-    if (!values.category) {
+    if (!values.category && values.deposits.length) {
       add(
         "staging",
         "cat",

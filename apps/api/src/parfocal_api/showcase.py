@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import actor_of
 from parfocal_api.auth import SEEDED_OWNER_NAME, SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
-from parfocal_api.decision_styles import DecisionSettings
+from parfocal_api.evaluation_versions import SignOffConfirmation
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.projects import ProjectDraft, create_project
 from parfocal_api.realtime import NoRealtime
@@ -28,7 +28,8 @@ from parfocal_api.result_sets import (
     finish,
     insert_result_set,
 )
-from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
+from parfocal_api.review_states import sign_off_review_task
+from parfocal_api.review_tasks import Scope
 from parfocal_api.sample_files import SampleFile, stored_facts
 from parfocal_api.seed_request import seed_request
 from parfocal_api.showcase_annotation import seed_annotation_example
@@ -41,6 +42,15 @@ from parfocal_api.showcase_demo import (
     order_now,
 )
 from parfocal_api.showcase_results import REGIONS_MODEL, model_regions
+from parfocal_api.showcase_reviews import (
+    QUEUE_TASK,
+    Seeded,
+    agree_and_submit,
+    decide,
+    review_task,
+    seed_adjudication,
+    submit,
+)
 from parfocal_api.showcase_samples import SamplePool, sample_pool
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
@@ -55,13 +65,11 @@ from parfocal_api.tables import (
     Role,
     TaskKind,
     TaskScope,
-    TaskSplit,
     memberships,
     organisations,
     project_members,
     projects,
     review_assignments,
-    review_decisions,
     review_task_slides,
     review_tasks,
     slides,
@@ -203,17 +211,11 @@ CELL_TOUR = "Cell typing tour"
 HALF_DONE = "Half done review"
 SUBMITTED = "Submitted review"
 ANNOTATE_DEMO = "Tumour outline practice"
+QUEUE_SLIDES = ("Case queue 1", "Case queue 2")
 DEMO_TASKS = (GALLERY_TOUR, CELL_TOUR, HALF_DONE, SUBMITTED, ANNOTATE_DEMO)
 CELLS_CHECKED = 12
 OWNER_SUBJECT = f"{PLACEHOLDER_PREFIX}owner"
 ALREADY_STORED = 412
-
-
-@dataclass
-class Seeded:
-    tenant_id: uuid.UUID
-    people: dict[str, uuid.UUID]
-    owner: uuid.UUID | None = None
 
 
 def fixture_facts(manifest: Path = FIXTURES_MANIFEST) -> dict[str, Mapping[str, Any]]:
@@ -554,97 +556,6 @@ async def add_jobs(
     return made
 
 
-async def decide(
-    connection: AsyncConnection,
-    seeded: Seeded,
-    project_id: uuid.UUID,
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
-    key: str,
-    value: DecisionValue,
-    reasons: list[DecisionReason] | None = None,
-) -> None:
-    await connection.execute(
-        insert(review_decisions).values(
-            tenant_id=seeded.tenant_id,
-            project_id=project_id,
-            task_id=task_id,
-            slide_id=slide_id,
-            user_id=seeded.people[key],
-            kind="region",
-            number=1,
-            value=value,
-            style=DecisionStyle.AGREE,
-            answer=value,
-            reasons=[reason.value for reason in reasons or []],
-        )
-    )
-
-
-async def submit(connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID) -> None:
-    await connection.execute(
-        update(review_assignments)
-        .where(review_assignments.c.task_id == task_id, review_assignments.c.slide_id == slide_id)
-        .values(submitted_at=func.now())
-    )
-
-
-async def agree_and_submit(
-    connection: AsyncConnection,
-    seeded: Seeded,
-    project_id: uuid.UUID,
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
-) -> None:
-    for key in ("rhea", "remy"):
-        await decide(connection, seeded, project_id, task_id, slide_id, key, DecisionValue.AGREE)
-    await submit(connection, task_id, slide_id)
-
-
-async def review_task(
-    connection: AsyncConnection,
-    principal: MemberPrincipal,
-    results: ResultStore,
-    project_id: uuid.UUID,
-    name: str,
-    sets: Mapping[uuid.UUID, uuid.UUID | None],
-    reviewers: list[uuid.UUID],
-    style: DecisionStyle,
-    kind: TaskKind = TaskKind.REVIEW,
-    template_id: uuid.UUID | None = None,
-    scope: Scope | None = None,
-) -> uuid.UUID:
-    reviewing = kind is TaskKind.REVIEW
-    draft = TaskDraft(
-        name=name,
-        kind=kind,
-        slide_ids=list(sets),
-        result_sets=[
-            SlideSet(slide_id=slide_id, result_set_id=set_id)
-            for slide_id, set_id in sets.items()
-            if set_id is not None
-        ],
-        reviewer_ids=reviewers,
-        split=TaskSplit.EVERYONE,
-        scope=(scope or Scope(kind=TaskScope.ALL_REGIONS)) if reviewing else None,
-        blinded=False,
-        decision=DecisionSettings(style=style) if reviewing else None,
-    )
-    if template_id is not None:
-        draft = draft.model_copy(update={"study_template_id": template_id})
-    task = await create_review_task(
-        project_id,
-        draft,
-        principal,
-        connection,
-        results,
-        NoRealtime(),
-        BackgroundTasks(),
-        seed_request(),
-    )
-    return task.id
-
-
 async def seed_states(
     connection: AsyncConnection,
     seeded: Seeded,
@@ -724,11 +635,16 @@ async def seed_states(
         DecisionStyle.AGREE,
     )
     await agree_and_submit(connection, seeded, project_id, closed_id, signed_off)
-    await connection.execute(
-        update(review_tasks)
-        .where(review_tasks.c.id == closed_id)
-        .values(signed_off_at=func.now(), signed_off_by_user_id=principal.user_id)
+    await sign_off_review_task(
+        closed_id,
+        principal,
+        connection,
+        seed_request(),
+        BackgroundTasks(),
+        NoRealtime(),
+        SignOffConfirmation(confirmed_with="password"),
     )
+    await seed_queue(connection, seeded, principal, results, project_id, pool)
     running = await ready_set(
         connection,
         principal,
@@ -757,6 +673,47 @@ async def seed_states(
             )
             .values(result_set_id=set_id)
         )
+
+
+async def seed_queue(
+    connection: AsyncConnection,
+    seeded: Seeded,
+    principal: MemberPrincipal,
+    results: ResultStore,
+    project_id: uuid.UUID,
+    pool: SamplePool,
+) -> None:
+    sets: dict[uuid.UUID, uuid.UUID] = {}
+    for label in QUEUE_SLIDES:
+        taken = pool.next()
+        slide = await add_slide(connection, seeded, project_id, label, sample_facts(taken.stored))
+        sets[slide.id] = await ready_set(
+            connection, principal, slide, taken.file, "regions.parfocal.json"
+        )
+    queued = list(sets)
+    task_id = await review_task(
+        connection,
+        principal,
+        results,
+        project_id,
+        QUEUE_TASK,
+        sets,
+        [seeded.people["rhea"], seeded.people["remy"]],
+        DecisionStyle.AGREE,
+    )
+    for slide_id in queued:
+        await decide(connection, seeded, project_id, task_id, slide_id, "rhea", DecisionValue.AGREE)
+        await decide(
+            connection,
+            seeded,
+            project_id,
+            task_id,
+            slide_id,
+            "remy",
+            DecisionValue.DISAGREE,
+            [DecisionReason.BOUNDARY_OFF],
+        )
+        await submit(connection, task_id, slide_id)
 
 
 async def seed_styles(
@@ -1135,6 +1092,8 @@ async def seed_example(
         await seed_annotation_example(
             connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents]
         )
+        if agents:
+            await seed_adjudication(connection, creator, agents[0])
         made = (
             None
             if case_facts is None

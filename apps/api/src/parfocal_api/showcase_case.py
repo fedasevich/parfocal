@@ -335,14 +335,16 @@ async def reports(
     creator: MemberPrincipal,
     project_id: uuid.UUID,
     seeded: SeededCase,
+    agents: Sequence[MemberPrincipal],
 ) -> None:
-    await set_project_member_sign_out(
-        project_id,
-        owner.user_id,
-        SignOutChange(sign_out=SignOutRight.ANY_CASE),
-        creator,
-        connection,
-    )
+    for signer in [owner, *agents]:
+        await set_project_member_sign_out(
+            project_id,
+            signer.user_id,
+            SignOutChange(sign_out=SignOutRight.ANY_CASE),
+            creator,
+            connection,
+        )
     await create_clinical_report(project_id, seeded.case_id, owner, connection)
     await update_clinical_report(project_id, seeded.case_id, finished_report(), owner, connection)
     await sign_clinical_report(
@@ -359,7 +361,7 @@ async def reports(
     await send_clinical_report(
         project_id,
         seeded.cosign_case_id,
-        CaseReportCosign(cosigner_user_id=owner.user_id),
+        CaseReportCosign(cosigner_user_id=(agents[0] if agents else owner).user_id),
         creator,
         connection,
     )
@@ -450,5 +452,5 @@ async def seed_showcase_case(
         broken,
         agent_uploads,
     )
-    await reports(connection, owner, creator, project_id, seeded)
+    await reports(connection, owner, creator, project_id, seeded, agents)
     return seeded
