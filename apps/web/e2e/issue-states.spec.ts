@@ -34,8 +34,9 @@ for (const part of parts) {
       })),
     );
     for (const { key, href } of inPart(targets, part)) {
-      const scene = key.split(":")[1] ?? "";
-      expect(new URL(href, "http://localhost").searchParams.get("scene"), key).toBe(scene);
+      const [screen, scene = ""] = key.split(":");
+      const kept = screen === "disagree" ? null : scene;
+      expect(new URL(href, "http://localhost").searchParams.get("scene"), key).toBe(kept);
       await page.goto(href);
       await expect(page.locator("main, [role=dialog], h1, h2").first(), key).toBeVisible();
       await expect(page.getByRole("heading", { name: "Page not found" }), key).toHaveCount(0);
