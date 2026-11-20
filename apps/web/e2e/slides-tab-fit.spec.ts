@@ -9,6 +9,6 @@ for (const width of [820, 1024]) {
     const name = page.getByTestId("slide-name-cell").first();
     await expect(name).toBeVisible();
     const box = await name.boundingBox();
-    expect(box?.width ?? 0).toBeGreaterThanOrEqual(150);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(140);
   });
 }
