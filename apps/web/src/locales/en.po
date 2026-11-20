@@ -2956,6 +2956,10 @@ msgstr "A1 opened in the preview on the right"
 msgid "A4 · draft, from what you typed"
 msgstr "A4 · draft, from what you typed"
 
+#: src/screens/my-work/to-review-tab.tsx
+msgid "about"
+msgstr "about"
+
 #. placeholder {0}: estimate ?? "a few minutes"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "About {0} left. Objects appear as each tile finishes."
@@ -3963,10 +3967,6 @@ msgstr "Asked {ownerName}"
 #: src/screens/project/project-no-access.tsx
 msgid "Asked {ownerName} to add you to this project"
 msgstr "Asked {ownerName} to add you to this project"
-
-#: src/screens/my-work/to-review-tab.tsx
-msgid "asked about"
-msgstr "asked about"
 
 #: src/screens/new-task/check-step.tsx
 #: src/screens/project/settings-tab.tsx
@@ -9740,6 +9740,10 @@ msgstr "Members"
 msgid "Mention someone"
 msgstr "Mention someone"
 
+#: src/screens/my-work/to-review-tab.tsx
+msgid "mentioned you"
+msgstr "mentioned you"
+
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: src/screens/home/activity-card.tsx
 msgid "Mentions"
@@ -11330,10 +11334,9 @@ msgstr "on {0}"
 msgid "on {0} of {1}"
 msgstr "on {0} of {1}"
 
-#. placeholder {0}: payloadText(item, "slide_label")
 #: src/screens/my-work/to-review-tab.tsx
-msgid "on <0>{0}</0>"
-msgstr "on <0>{0}</0>"
+msgid "on <0>{slideLabel}</0>"
+msgstr "on <0>{slideLabel}</0>"
 
 #: src/screens/kpi/kpi-screen.tsx
 msgid "On target"
@@ -13144,8 +13147,8 @@ msgid "Replay screen"
 msgstr "Replay screen"
 
 #: src/screens/my-work/to-review-tab.tsx
-msgid "replied on"
-msgstr "replied on"
+msgid "replied in a thread"
+msgstr "replied in a thread"
 
 #: ../../packages/ui/src/components/comment-thread.tsx
 #: ../../packages/ui/src/components/thread-popover.tsx
@@ -15470,6 +15473,10 @@ msgstr "Some tiles did not load. Parts of the slide may look blank."
 #: src/annotations/pin-layer.tsx
 msgid "someone"
 msgstr "someone"
+
+#: src/screens/my-work/to-review-tab.tsx
+msgid "Someone"
+msgstr "Someone"
 
 #: src/screens/refusals.ts
 msgid "Someone changed this first. Reload to see the latest version, then try again."

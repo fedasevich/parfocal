@@ -660,9 +660,11 @@ async def tell_followers(
     )
     followers.discard(poster)
     followers.difference_update(mentioned)
-    payload = {"slide_id": str(place.slide_id)}
+    payload = {"slide_id": str(place.slide_id), "actor_user_id": str(poster)}
     if place.task_id is not None:
         payload["task_id"] = str(place.task_id)
+    if row.object_id:
+        payload["object_id"] = row.object_id
     await notify(
         connection,
         place.tenant_id,

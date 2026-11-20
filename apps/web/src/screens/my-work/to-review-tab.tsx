@@ -147,12 +147,14 @@ function TaskRow({ selected, colour, title, sub, progress, tags, action, onSelec
 }
 
 function MentionRow({ item }: { item: InboxItem }) {
+  const { t } = useLingui();
   const people = usePeople();
   const goTo = useGoTo();
   const actor = people(payloadText(item, "actor_user_id"));
   const objectId = payloadText(item, "object_id") ?? "";
   const quote = payloadText(item, "quote") ?? "";
   const said = quote ? `${quote[0]?.toLowerCase() ?? ""}${quote.slice(1)}` : "";
+  const slideLabel = payloadText(item, "slide_label") ?? "";
   return (
     <button
       type="button"
@@ -161,20 +163,27 @@ function MentionRow({ item }: { item: InboxItem }) {
     >
       <PersonAvatar person={actor} size={26} />
       <div>
-        <b className="text-fg">{actor?.name}</b>{" "}
+        <b className="text-fg">{actor?.name ?? t`Someone`}</b>{" "}
         {item.kind === "mention" ? (
-          <>
-            <Trans>asked about</Trans> <ObjectIdTag>{objectId}</ObjectIdTag>{" "}
-            <Trans>
-              on <span data-phi="">{payloadText(item, "slide_label")}</span>
-            </Trans>
-            : {said}
-          </>
+          <Trans>mentioned you</Trans>
         ) : (
-          <>
-            <Trans>replied on</Trans> <ObjectIdTag>{objectId}</ObjectIdTag>: {said}
-          </>
+          <Trans>replied in a thread</Trans>
         )}
+        {objectId ? (
+          <>
+            {" "}
+            <Trans>about</Trans> <ObjectIdTag>{objectId}</ObjectIdTag>
+          </>
+        ) : null}
+        {slideLabel ? (
+          <>
+            {" "}
+            <Trans>
+              on <span data-phi="">{slideLabel}</span>
+            </Trans>
+          </>
+        ) : null}
+        {said ? <>: {said}</> : null}
         <small className="mt-0.75 block text-caption text-fg-faint">
           {relativeTime(new Date(item.created_at), now())}
         </small>

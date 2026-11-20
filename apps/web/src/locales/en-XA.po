@@ -2954,6 +2954,10 @@ msgstr ""
 msgid "A4 · draft, from what you typed"
 msgstr ""
 
+#: src/screens/my-work/to-review-tab.tsx
+msgid "about"
+msgstr ""
+
 #. placeholder {0}: estimate ?? "a few minutes"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "About {0} left. Objects appear as each tile finishes."
@@ -3960,10 +3964,6 @@ msgstr ""
 
 #: src/screens/project/project-no-access.tsx
 msgid "Asked {ownerName} to add you to this project"
-msgstr ""
-
-#: src/screens/my-work/to-review-tab.tsx
-msgid "asked about"
 msgstr ""
 
 #: src/screens/new-task/check-step.tsx
@@ -9735,6 +9735,10 @@ msgstr ""
 msgid "Mention someone"
 msgstr ""
 
+#: src/screens/my-work/to-review-tab.tsx
+msgid "mentioned you"
+msgstr ""
+
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: src/screens/home/activity-card.tsx
 msgid "Mentions"
@@ -11325,9 +11329,8 @@ msgstr ""
 msgid "on {0} of {1}"
 msgstr ""
 
-#. placeholder {0}: payloadText(item, "slide_label")
 #: src/screens/my-work/to-review-tab.tsx
-msgid "on <0>{0}</0>"
+msgid "on <0>{slideLabel}</0>"
 msgstr ""
 
 #: src/screens/kpi/kpi-screen.tsx
@@ -13135,7 +13138,7 @@ msgid "Replay screen"
 msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
-msgid "replied on"
+msgid "replied in a thread"
 msgstr ""
 
 #: ../../packages/ui/src/components/comment-thread.tsx
@@ -15460,6 +15463,10 @@ msgstr ""
 
 #: src/annotations/pin-layer.tsx
 msgid "someone"
+msgstr ""
+
+#: src/screens/my-work/to-review-tab.tsx
+msgid "Someone"
 msgstr ""
 
 #: src/screens/refusals.ts

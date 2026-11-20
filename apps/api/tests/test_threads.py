@@ -349,6 +349,11 @@ def test_a_mention_notifies_the_colleague_and_breaks_a_mute(api: ApiAs, database
     assert reply_rows(database, thread["id"]) == []
     ok(api(s.people["owner"]).post(f"{path}/messages", json={"body": "No mention"}))
     assert {str(row[0]) for row in reply_rows(database, thread["id"])} == {s.user("first")}
+    payloads = owner(
+        database,
+        f"SELECT payload FROM notifications WHERE kind = 'reply' AND target_id = '{thread['id']}'",
+    )
+    assert [payload[0]["actor_user_id"] for payload in payloads] == [s.user("owner")]
     rows = audit_rows(database, thread["id"])
     assert rows[0][1]["mentions"] == 2
     assert "@[" not in json.dumps([details for _, details in rows])
