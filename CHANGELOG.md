@@ -2,6 +2,30 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.28.1 (2026-11-20)
+
+### Fixes
+
+- PROTO-098: Keep the cells strip Esc listener steady and end the study label task on the stage
+- PROTO-098: Join no live room while compare has no slide
+- PROTO-075: Name who replied or mentioned you and skip empty parts in My work
+- PROTO-075: Type the reply notification payload in the thread test
+
+### Performance
+
+- PROTO-099: Load the study guard only in a study task window and rebudget all code
+
+### Docs
+
+- PROTO-100: Log the smoke fix and add the zip slide task
+
+### Tests
+
+- PROTO-097: Read the slide id and mode from the one slide address in stale specs
+- PROTO-098: Count one compare link and drop the removed prototype cell focus check
+- PROTO-099: Wait for the adjudicator's object stage instead of the removed still engine
+- PROTO-099: Read no result from the notice list and the open work from the one Submit
+
 ## v0.28.0 (2026-11-20)
 
 ### Features
