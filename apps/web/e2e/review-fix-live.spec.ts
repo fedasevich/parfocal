@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
-import { area, ok, realTags, signIn, viewableTask } from "./real.ts";
+import { area, ok, onRealApi, realTags, signIn, viewableTask } from "./real.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
@@ -33,32 +33,20 @@ const editRequest = (page: Page, method: string, object: string) =>
   );
 
 async function drawSquare(page: Page) {
-  const corners = await page.evaluate(() => {
-    const host = document.querySelector('[data-testid="slide-host"]');
-    if (host === null) return [];
-    const box = host.getBoundingClientRect();
-    const free = (x: number, y: number) => {
-      const hit = document.elementFromPoint(x, y);
-      return hit !== null && host.contains(hit);
-    };
-    const side = Math.min(box.width, box.height) * 0.12;
-    for (let fy = 0.3; fy <= 0.8; fy += 0.05) {
-      for (let fx = 0.3; fx <= 0.7; fx += 0.05) {
-        const x = box.left + box.width * fx;
-        const y = box.top + box.height * fy;
-        const square = [
-          [x, y],
-          [x + side, y],
-          [x + side, y + side],
-          [x, y + side],
-        ];
-        if (square.every(([px, py]) => free(px ?? 0, py ?? 0))) return square;
-      }
-    }
-    return [];
-  });
-  expect(corners).toHaveLength(4);
-  for (const [x, y] of corners) await page.mouse.click(x ?? 0, y ?? 0);
+  const box = (await page.getByTestId("slide-host").boundingBox()) ?? {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  };
+  for (const [x, y] of [
+    [0.4, 0.4],
+    [0.6, 0.4],
+    [0.6, 0.6],
+    [0.4, 0.6],
+  ] as const) {
+    await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+  }
 }
 
 test("a reviewer redraws a region from the live card, sees it over the AI one and undoes it", async ({
@@ -132,6 +120,12 @@ test("a reviewer changes the type of a cell from the live card and keeps its out
   const back = (await restored).postDataJSON() as { class_id: string | null; geometry: unknown };
   expect(back.class_id).toBe(body.class_id);
   expect(back.geometry).toBeNull();
+
+  await page.reload();
+  await expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-ready", "true", {
+    timeout: 25_000,
+  });
+  await expect(page.getByTestId("review-object-outlines")).toHaveAttribute("data-reviewed", object);
 });
 
 test("a read only reviewer sees no fix buttons on the live card", async ({ page }) => {
@@ -148,6 +142,9 @@ test(
     test.setTimeout(120_000);
     await signIn(page, "/my-work");
     const { project, task, slide } = await viewableTask(page, "review", true);
+    if (onRealApi) {
+      await ok(page, "PATCH", `/api/review-tasks/${task}`, { decision: { style: "agree" } });
+    }
     await page.goto(`/projects/${project}/slides/${slide}?task=${task}&mode=guided`);
     const panel = page.getByTestId("stage-review-objects");
     await expect(panel).toHaveAttribute("data-ready", "true", { timeout: 30_000 });

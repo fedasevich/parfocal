@@ -289,7 +289,7 @@ export function StageReviewObjects({
   const current =
     chosen ??
     (guided || focus !== null ? (nextOpenObject(order, decided, null) ?? order[0] ?? null) : null);
-  const canFix = guided && !readOnly && answersOff === undefined;
+  const canFix = guided && focus === null && !readOnly && answersOff === undefined;
   const fixStep = canFix && fixing !== null && fixing.object === current ? fixing.step : null;
   useNoteKey(() => {
     if (current !== null && decided.has(current)) onNote?.(current);

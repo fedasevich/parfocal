@@ -41,13 +41,18 @@ export function useReviewFixes(taskId: string, slideId: string, enabled: boolean
   const layer = okData(
     useGetReviewedLayer(taskId, slideId, undefined, { query: { enabled } }).data,
   );
-  const [local, setLocal] = useState<ReadonlyMap<string, ReviewFix | null>>(new Map());
+  const slideKey = `${taskId}/${slideId}`;
+  const [kept, setKept] = useState<{
+    readonly slide: string;
+    readonly fixes: ReadonlyMap<string, ReviewFix | null>;
+  }>({ slide: slideKey, fixes: new Map() });
+  const local = kept.slide === slideKey ? kept.fixes : null;
   const fixed = useMemo(() => {
     const all = new Map<string, ReviewFix>();
     for (const edit of layer?.edits ?? []) {
       if (edit.retired === null && edit.merged_into === null) all.set(edit.object, fixOfEdit(edit));
     }
-    for (const [objectId, fix] of local) {
+    for (const [objectId, fix] of local ?? []) {
       if (fix === null) all.delete(objectId);
       else all.set(objectId, fix);
     }
@@ -62,7 +67,10 @@ export function useReviewFixes(taskId: string, slideId: string, enabled: boolean
   const saver = useSaveReviewEdit();
   const clearer = useClearReviewEdit();
   const keep = (objectId: string, fix: ReviewFix | null) =>
-    setLocal((now) => new Map(now).set(objectId, fix));
+    setKept((now) => ({
+      slide: slideKey,
+      fixes: new Map(now.slide === slideKey ? now.fixes : []).set(objectId, fix),
+    }));
   const put = (objectId: string, fix: ReviewFix) => {
     keep(objectId, fix);
     saver.mutate(
