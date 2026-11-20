@@ -220,6 +220,8 @@ function CosignFlow({
   const errors = Object.fromEntries(
     issues.filter((issue) => touched[issue.field]).map((issue) => [issue.field, issue.text]),
   );
+  const askedId = live ? server.cosigner_user_id : meId;
+  const asked = askedId === meId ? null : person(askedId);
   const can =
     !waiting &&
     (data.members.find((member) => member.user_id === meId)?.covers_case ?? false) &&
@@ -445,13 +447,15 @@ function CosignFlow({
     ? t`${senderFirst} sees your changes and the note. He sends it again when it is fixed.`
     : waiting
       ? t`This report is not waiting for your co-sign.`
-      : !can
-        ? t`You cannot sign out in this project. Ask the owner for the right.`
-        : issues.length
-          ? t`${plural(issues.length, "value")} to fix first.`
-          : changed.length
-            ? t`${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
-            : t`No changes yet. Co-signing keeps ${senderFirst}'s values.`;
+      : asked
+        ? t`Only ${asked.name} can co-sign this report.`
+        : !can
+          ? t`You cannot sign out in this project. Ask the owner for the right.`
+          : issues.length
+            ? t`${plural(issues.length, "value")} to fix first.`
+            : changed.length
+              ? t`${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
+              : t`No changes yet. Co-signing keeps ${senderFirst}'s values.`;
 
   const sentText = scene ? t`15 Oct 11:20` : clockOf(server.sent_at);
   const returnedTo = returned
@@ -499,7 +503,9 @@ function CosignFlow({
                 ? returnedTo
                 : senderId === null
                   ? t`Nobody has sent this report for co-sign yet`
-                  : t`${sender?.name} asks you to co-sign · sent ${sentText}`}
+                  : asked
+                    ? t`${sender?.name} asks ${asked.name} to co-sign · sent ${sentText}`
+                    : t`${sender?.name} asks you to co-sign · sent ${sentText}`}
             </span>
           </p>
         }

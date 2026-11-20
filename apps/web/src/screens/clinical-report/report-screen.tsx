@@ -301,6 +301,7 @@ function ReportFlow({
         const index = current.values.deposits.findIndex((deposit) => deposit.id === id);
         const deposit = current.values.deposits[index];
         if (!deposit) return current;
+        const left = current.values.deposits.filter((candidate) => candidate.id !== id);
         return {
           ...current,
           removed: { index, deposit },
@@ -310,7 +311,8 @@ function ReportFlow({
           values: followDiagnosis(data, {
             ...current.values,
             ack: false,
-            deposits: current.values.deposits.filter((candidate) => candidate.id !== id),
+            deposits: left,
+            ...(left.length ? {} : { category: null }),
           }),
         };
       });

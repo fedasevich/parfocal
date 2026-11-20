@@ -35,7 +35,27 @@ test("the co-sign page of a draft report names no sender and no unknown node cou
   await expect(review(page).getByText(/null\)/)).toHaveCount(0);
 });
 
-test("Tomáš sends for co-sign, Lenka returns it with a note, then co-signs it", async ({
+test("a request sent to Lenka names her to anyone else and does not blame their right", async ({
+  page,
+}) => {
+  await page.goto(`${report}?as=TB`);
+  await next(page, /Staging/);
+  await flow(page)
+    .getByRole("radio", { name: /Macrometastasis/ })
+    .click();
+  await flow(page).getByRole("radio", { name: "Absent" }).click();
+  await next(page, /Report text/);
+  await next(page, /Sign out/);
+  await sendToLenka(page);
+
+  await page.goto(`${coSign}?as=SM`);
+  await expect(review(page).getByText(/Tomáš Beneš asks Lenka Malá to co-sign/)).toBeVisible();
+  await expect(review(page).getByText("Only Lenka Malá can co-sign this report.")).toBeVisible();
+  await expect(review(page).getByText(/You cannot sign out in this project/)).toHaveCount(0);
+  await expect(review(page).getByRole("button", { name: "Co-sign and sign out" })).toBeDisabled();
+});
+
+test("Tomáš sends for co-sign, Lenka the project owner returns it with a note, then co-signs it", async ({
   page,
 }) => {
   await page.goto(`${report}?as=TB`);

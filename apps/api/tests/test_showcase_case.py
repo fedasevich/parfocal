@@ -11,11 +11,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from test_showcase import RESULTS, EmptyStore
 
+from parfocal_api.adjudications import list_my_adjudications
 from parfocal_api.cases import case_detail
-from parfocal_api.clinical_reports import get_clinical_report, list_my_cosign_requests
+from parfocal_api.clinical_reports import (
+    CaseReportSignOut,
+    get_clinical_report,
+    list_my_cosign_requests,
+    sign_clinical_report,
+)
+from parfocal_api.disagreement_queue import (
+    AdjudicationAnswer,
+    decide_adjudication,
+    get_my_adjudication,
+)
+from parfocal_api.disagreements import is_open, queue_of
 from parfocal_api.my_jobs import MyJobKind, list_my_jobs
 from parfocal_api.my_work import list_my_review_tasks
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.projects import current_role
 from parfocal_api.report_links import EXPIRED, shared_report
 from parfocal_api.showcase import WORKSPACES, seed
 from parfocal_api.showcase_case import (
@@ -32,7 +45,15 @@ from parfocal_api.showcase_case import (
     UPLOADED_FILE,
     seed_http,
 )
-from parfocal_api.tables import CaseReportState, Role, TaskKind, report_links, review_tasks
+from parfocal_api.showcase_reviews import QUEUE_TASK
+from parfocal_api.tables import (
+    CaseReportState,
+    ProjectRole,
+    Role,
+    TaskKind,
+    report_links,
+    review_tasks,
+)
 from parfocal_api.threads import get_thread
 from parfocal_api.tile_access import SlideFileNotFoundError, get_tile_access
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
@@ -95,6 +116,20 @@ async def as_member(url: str, principal: MemberPrincipal) -> AsyncGenerator[Asyn
         await engine.dispose()
 
 
+class RolledBackError(Exception):
+    pass
+
+
+@asynccontextmanager
+async def rolled_back(url: str, principal: MemberPrincipal) -> AsyncGenerator[AsyncConnection]:
+    try:
+        async with as_member(url, principal) as connection:
+            yield connection
+            raise RolledBackError
+    except RolledBackError:
+        pass
+
+
 async def test_the_owner_and_an_agent_open_the_case_with_its_gallery_slides(showcase: str) -> None:
     for email in (OWNER, AGENT):
         principal = await member(showcase, email)
@@ -124,14 +159,26 @@ async def test_the_case_holds_a_signed_a_drafted_and_a_sent_report(showcase: str
             label: (await get_clinical_report(project_id, case_id, owner, connection))
             for label, (case_id, project_id) in found.items()
         }
-        requests = await list_my_cosign_requests(owner, connection)
     assert states[SHOWCASE_CASE].state is CaseReportState.SIGNED
     assert len(states[SHOWCASE_CASE].versions) == 1
     assert states[DRAFT_CASE].state is CaseReportState.DRAFT
     assert states[DRAFT_CASE].blockers
     assert states[COSIGN_CASE].state is CaseReportState.SENT
-    assert states[COSIGN_CASE].cosigner_user_id == owner.user_id
-    assert [request.case_label for request in requests] == [COSIGN_CASE]
+
+
+async def test_the_agent_project_owner_co_signs_the_sent_report(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    case_id, project_id = (await case_ids(showcase, agent.tenant_id))[COSIGN_CASE]
+    async with rolled_back(showcase, agent) as connection:
+        assert await current_role(connection, project_id, agent.user_id) is ProjectRole.OWNER
+        requests = await list_my_cosign_requests(agent, connection)
+        assert [request.case_label for request in requests] == [COSIGN_CASE]
+        sent = await get_clinical_report(project_id, case_id, agent, connection)
+        assert sent.cosigner_user_id == agent.user_id
+        signed = await sign_clinical_report(
+            project_id, case_id, agent, connection, CaseReportSignOut(confirmed_with="password")
+        )
+        assert signed.state is CaseReportState.SIGNED
 
 
 async def test_a_comment_thread_with_a_reply_sits_on_a_case_slide(showcase: str) -> None:
@@ -236,3 +283,59 @@ async def test_a_seeded_slide_fails_to_open_for_the_agent(showcase: str) -> None
                 cast("Any", None),
                 cast("Any", None),
             )
+
+
+async def test_the_signed_off_review_has_a_signed_evaluation_report(showcase: str) -> None:
+    owner = await member(showcase, OWNER)
+    rows = await run_sql(
+        showcase,
+        "SELECT t.signed_off_at IS NOT NULL, v.signed_at IS NOT NULL, v.number "
+        "FROM review_tasks t JOIN evaluation_versions v ON v.task_id = t.id "
+        f"WHERE t.tenant_id = '{owner.tenant_id}' AND t.name = 'Signed-off review'",
+    )
+    assert [tuple(row) for row in rows] == [(True, True, 1)]
+
+
+async def test_an_agent_adjudicates_the_seeded_disagreement_queue(showcase: str) -> None:
+    agent = await member(showcase, AGENT)
+    task_id = uuid.UUID(
+        str(
+            (
+                await run_sql(
+                    showcase,
+                    f"SELECT id FROM review_tasks WHERE tenant_id = '{agent.tenant_id}' "
+                    f"AND name = '{QUEUE_TASK}'",
+                )
+            )[0][0]
+        )
+    )
+    pending = await run_sql(
+        showcase,
+        "SELECT count(*) FROM review_assignments "
+        f"WHERE task_id = '{task_id}' AND submitted_at IS NULL",
+    )
+    assert pending[0][0] == 0
+    async with rolled_back(showcase, agent) as connection:
+        queue = await queue_of(connection, task_id)
+        assert len(queue) == 2
+        assert all(is_open(item) for item in queue)
+        sent = [item for item in queue if item.adjudication is not None]
+        assert [item.adjudication.adjudicator_user_id for item in sent if item.adjudication] == [
+            agent.user_id
+        ]
+        mine = await list_my_adjudications(agent, connection)
+        assert (task_id, QUEUE_TASK) in [(item.task_id, item.task_name) for item in mine]
+        shown = await get_my_adjudication(task_id, agent, connection, RESULTS)  # type: ignore[arg-type]
+        assert [(item.slide_id, item.object) for item in shown.objects] == [
+            (sent[0].slide_id, sent[0].object)
+        ]
+        decided = await decide_adjudication(
+            task_id,
+            sent[0].slide_id,
+            sent[0].object,
+            AdjudicationAnswer(raw="agree"),
+            agent,
+            connection,
+            RESULTS,  # type: ignore[arg-type]
+        )
+        assert decided.decision == "agree"

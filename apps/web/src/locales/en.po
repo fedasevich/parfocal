@@ -572,6 +572,12 @@ msgid "{0} and Reviewed"
 msgstr "{0} and Reviewed"
 
 #. placeholder {0}: sender?.name
+#. placeholder {1}: asked.name
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "{0} asks {1} to co-sign · sent {sentText}"
+msgstr "{0} asks {1} to co-sign · sent {sentText}"
+
+#. placeholder {0}: sender?.name
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "{0} asks you to co-sign · sent {sentText}"
 msgstr "{0} asks you to co-sign · sent {sentText}"
@@ -10428,6 +10434,10 @@ msgstr "no connection"
 msgid "No decisions yet."
 msgstr "No decisions yet."
 
+#: src/screens/clinical-report/steps.tsx
+msgid "No deposit is listed, so the node is negative. Add a deposit if there is tumor."
+msgstr "No deposit is listed, so the node is negative. Add a deposit if there is tumor."
+
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "No deposit yet. Add one from an object on a slide, or measure one by hand."
 msgstr "No deposit yet. Add one from an object on a slide, or measure one by hand."
@@ -11427,6 +11437,11 @@ msgstr "One tile at a time, up to 4 at once. The origin is in level 0 pixels."
 #: src/screens/viewer/layer-views.tsx
 msgid "One unsure"
 msgstr "One unsure"
+
+#. placeholder {0}: asked.name
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "Only {0} can co-sign this report."
+msgstr "Only {0} can co-sign this report."
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "Only an annotate task counts how the experts changed the AI."

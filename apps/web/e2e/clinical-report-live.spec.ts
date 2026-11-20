@@ -94,6 +94,28 @@ test("Next on Staging asks for the answers that are still missing", async ({ pag
   await expect(flow(page).getByText("Pick one. Not assessed is an answer too.")).toBeVisible();
 });
 
+test("a negative node report with no deposit passes Staging with pN0(sn)", async ({ page }) => {
+  await page.goto(report);
+  await next(page, /Staging/);
+  for (const id of ["D1", "D2", "D3"]) {
+    await flow(page)
+      .getByRole("button", { name: `Remove ${id}` })
+      .click();
+    await expect(flow(page).getByText(`${id} removed`)).toBeVisible();
+  }
+  await expect(flow(page).getByText(/No deposit is listed, so the node is negative/)).toBeVisible();
+  await expect(flow(page).getByText("pN0(sn)", { exact: true })).toBeVisible();
+  await flow(page).getByRole("radio", { name: "Absent" }).click();
+  await next(page, /Report text/);
+  await expect(
+    flow(page)
+      .getByText(/NO METASTATIC CARCINOMA/)
+      .first(),
+  ).toBeVisible();
+  await next(page, /Sign out/);
+  await expect(flow(page).getByText("Check before you sign")).toBeVisible();
+});
+
 test("a template without Staging has three steps and no deposits", async ({ page }) => {
   await page.goto(`/projects/${p03}/cases/${excisionCase}/report`);
   await expect(flow(page).getByRole("heading", { name: "Clinical report" })).toBeVisible();

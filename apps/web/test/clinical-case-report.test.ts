@@ -90,6 +90,13 @@ test("a category that was ticked to keep goes out with its confirmation", () => 
   });
 });
 
+test("a category cleared with the last deposit goes out as no metastasis", () => {
+  const before = { ...valuesOfCaseReport(report()), category: "micro" as const };
+  const after = { ...before, deposits: [], category: null };
+  assert.deepEqual(changeBetween(before, after), { category: "none" });
+  assert.ok(isEmptyChange(changeBetween(after, after)));
+});
+
 test("a deposit from an object and one by hand become new deposits", () => {
   assert.deepEqual(
     newDepositOf({ slide, objectId: "T4", size: "1,5", note: " near the capsule " }),

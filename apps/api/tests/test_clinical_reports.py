@@ -233,7 +233,6 @@ def test_each_blocker(api: ApiAs, clinic: Clinic) -> None:
     assert codes(report) == [
         ("required-field-empty", "specimen"),
         ("required-field-empty", "diagnosis"),
-        ("required-field-empty", "category"),
         ("required-field-empty", "nodes_examined"),
         ("required-field-empty", "extranodal"),
     ]
@@ -251,6 +250,32 @@ def test_each_blocker(api: ApiAs, clinic: Clinic) -> None:
         ("deposit-without-size", None),
         ("category-not-confirmed", "category"),
     ]
+
+
+def test_a_negative_node_report_with_no_deposit_and_no_category_signs(
+    api: ApiAs, clinic: Clinic
+) -> None:
+    created(api, clinic)
+    body = {
+        "specimen": "Sentinel node, left axilla",
+        "nodes_examined": 2,
+        "extranodal": "na",
+        "diagnosis": "No metastatic carcinoma in two nodes",
+    }
+    report = api(clinic.junior).patch(clinic.url, json=body).json()
+    assert report["blockers"] == []
+    assert report["staging"]["suggested_category"] == "none"
+    assert report["staging"]["suggested_pn"] == "pN0(sn)"
+    signed = api(clinic.lead).post(f"{clinic.url}/sign")
+    assert signed.status_code == 200, signed.text
+    assert signed.json()["state"] == "signed"
+
+
+def test_the_category_needs_a_deposit_once_one_is_listed(api: ApiAs, clinic: Clinic) -> None:
+    created(api, clinic)
+    deposit(api, clinic, slide_id=str(clinic.first), size_mm=2.5)
+    report = fill(api, clinic, category=None)
+    assert codes(report) == [("required-field-empty", "category")]
 
 
 def test_the_lifecycle_with_co_sign(api: ApiAs, database: str, clinic: Clinic) -> None:

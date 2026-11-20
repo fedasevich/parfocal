@@ -400,7 +400,12 @@ def blockers_of(
 ) -> list[CaseReportBlocker]:
     empty = [name for name in REQUIRED_TEXT if not (getattr(row, name) or "").strip()]
     if staging is not None:
-        empty += [name for name in STAGING_FIELDS if getattr(row, name) is None]
+        negative = not rows
+        empty += [
+            name
+            for name in STAGING_FIELDS
+            if getattr(row, name) is None and not (negative and name == "category")
+        ]
     found = [
         CaseReportBlocker(code=CaseReportBlockerCode.REQUIRED_FIELD_EMPTY, field=name)
         for name in empty

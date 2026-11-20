@@ -268,6 +268,13 @@ test("a queue resolves with decisions, three objects sent to Anna and two left o
   await expect(page.getByText("4 resolved · 3 with the adjudicator")).toBeVisible();
 });
 
+test("a signed off task opens a signed evaluation report, never a draft", async ({ page }) => {
+  const rt09 = "00000000-0000-4000-8007-000000000009";
+  await page.goto(`/tasks/${rt09}/evaluation`);
+  await expect(page.getByText(/Signed by .* on /).first()).toBeVisible();
+  await expect(page.getByText("Not signed yet.")).toHaveCount(0);
+});
+
 test("Daniel sends T4 to Anna, she decides it on the drawn slide, and sign-off shows it", async ({
   page,
 }) => {

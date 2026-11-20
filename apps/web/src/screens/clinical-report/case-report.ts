@@ -97,6 +97,8 @@ export function changeBetween(before: Values, after: Values): CaseReportChange {
     const confirmed = after.ack && (before.category !== after.category || !before.ack);
     if (before.category !== after.category || confirmed) change.category = after.category;
     if (confirmed) change.confirm_category = true;
+  } else if (before.category !== null && !after.deposits.length) {
+    change.category = "none";
   }
   if (before.examined.trim() !== after.examined.trim()) {
     const count = parseNumber(after.examined, true);
