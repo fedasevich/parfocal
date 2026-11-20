@@ -2,6 +2,43 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.30.0 (2026-11-20)
+
+### Features
+
+- PROTO-124: Lock a workspace after 240 minutes by default
+
+### Fixes
+
+- PROTO-123: Keep Settings picture previews only for the Tools choice
+- PROTO-105: Draw text annotations dark on a light plate
+
+### Performance
+
+- PROTO-101: Lazy load the jobs tray and pan sweep, rebaseline the all code budget
+
+### Docs
+
+- VIEW-076: Log the v0.29 deploys, reseed and passing smoke
+- PROTO-104: Add the task for search hits that do not open or centre
+- PROTO-105: Add readable text annotations, renumber the zip task to VIEW-081
+- PROTO-108: Add the developer drawer from the palette and a working developer page
+- PROTO-099: Map the annotate, review and training export path
+- PROTO-099: Add the training data path tasks and decisions 166 to 170
+- PROTO-099: Record decisions 166 to 170 on the training data path
+- PROTO-123: Add settings pictures only for Tools
+- PROTO-124: Log the 240 minute default lock
+- PROTO-123: Log and tick settings pictures only for Tools
+- PROTO-105: Log and tick readable text annotations
+
+### Tests
+
+- PROTO-102: Pick Best for auto region, skip the rail on a failed slide, allow the tier bar
+
+### Other
+
+- PROTO-105: Claim readable text annotations
+
 ## v0.29.1 (2026-11-20)
 
 ### Fixes
