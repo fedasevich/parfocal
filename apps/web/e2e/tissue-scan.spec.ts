@@ -5,7 +5,11 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 async function openUnflaggedSlide(page: Page) {
   await page.setViewportSize({ width: 320, height: 560 });
   await page.goto(`/projects/${p07}?tab=slides`);
-  await page.getByTestId("slide-row").filter({ hasText: "tumor_052" }).click();
+  await page
+    .getByTestId("slide-row")
+    .filter({ hasText: "tumor_052" })
+    .getByTestId("slide-link")
+    .click();
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   await expect(stage).toHaveAttribute("data-coverage", "loaded");
