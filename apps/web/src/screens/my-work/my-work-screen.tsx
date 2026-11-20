@@ -27,7 +27,7 @@ import {
 } from "./list-keys.ts";
 import type { MyWorkState, MyWorkTab } from "./scenes.ts";
 import { slideQuery } from "./slide-filters.ts";
-import { continuePath, continuesHero, heroPath } from "./to-review-rows.ts";
+import { continuePath, continuesHero, heroPath, openAdjudications } from "./to-review-rows.ts";
 import { activeTasks, adjudicationKey, ToReviewTab } from "./to-review-tab.tsx";
 
 type Change = Partial<Omit<MyWorkState, "q" | "filters">> & {
@@ -49,7 +49,7 @@ export function MyWorkScreen({
   const adjudicationsQuery = useListMyAdjudications();
   const assignedQuery = useListTasksAssignedByMe();
   const tasks = okData(tasksQuery.data) ?? [];
-  const adjudications = okData(adjudicationsQuery.data) ?? [];
+  const adjudications = openAdjudications(okData(adjudicationsQuery.data) ?? []);
   const assigned = okData(assignedQuery.data) ?? [];
   const slides = okData(useListMySlides(slideQuery(state.filters, state.q)).data)?.slides ?? [];
   const me = okData(useGetMe().data);

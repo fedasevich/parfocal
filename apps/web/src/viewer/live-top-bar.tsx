@@ -325,7 +325,7 @@ function TopBar({
       )}
       {reportCaseId !== undefined ? (
         <Button
-          variant="primary"
+          variant={onSubmit && reviewTask ? "secondary" : "primary"}
           title={t`Open the clinical report of this case`}
           onClick={() =>
             void navigate({
@@ -336,7 +336,8 @@ function TopBar({
         >
           <Trans>Open report</Trans>
         </Button>
-      ) : onSubmit && reviewTask ? (
+      ) : null}
+      {onSubmit && reviewTask ? (
         <Button
           variant="primary"
           data-testid="top-submit"

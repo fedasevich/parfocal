@@ -7,6 +7,7 @@ import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { openSlideEarly } from "../viewer/load-engine.ts";
 import { slideRedirect } from "../viewer/old-slide-address.ts";
 import type { StageStart } from "../viewer/stage-start.tsx";
+import { TaskSlideCheck } from "../viewer/task-slide-check.tsx";
 import { layoutOfOldAddress } from "../viewer/viewer-layout.ts";
 import { modeOfWorkspace } from "../viewer/viewer-mode.ts";
 
@@ -83,11 +84,16 @@ function SlideView() {
       onTab={(tab) => onSearch({ tab })}
     />
   );
-  if (search.task === undefined || search.mode !== "guided") return viewer;
   return (
-    <GuidedGate taskId={search.task} slideId={slideId}>
-      {() => viewer}
-    </GuidedGate>
+    <TaskSlideCheck projectId={projectId} taskId={search.task} slideId={slideId}>
+      {search.task === undefined || search.mode !== "guided" ? (
+        viewer
+      ) : (
+        <GuidedGate taskId={search.task} slideId={slideId}>
+          {() => viewer}
+        </GuidedGate>
+      )}
+    </TaskSlideCheck>
   );
 }
 

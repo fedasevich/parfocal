@@ -77,6 +77,7 @@ from parfocal_api.tables import (
     users,
     workspace_settings,
 )
+from parfocal_api.task_changes import TaskReviewerCreate, add_task_reviewer
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.ingest import (
     RESTRICTED_RANGES_NAME,
@@ -1077,6 +1078,38 @@ async def seed(
         await engine.dispose()
 
 
+async def seat_on_cell_tour(
+    connection: AsyncConnection, creator: MemberPrincipal, gallery: str, reviewer: uuid.UUID
+) -> None:
+    task_id = await connection.scalar(
+        select(review_tasks.c.id)
+        .join(projects, projects.c.id == review_tasks.c.project_id)
+        .where(
+            projects.c.tenant_id == creator.tenant_id,
+            projects.c.name == gallery,
+            review_tasks.c.name == CELL_TOUR,
+        )
+    )
+    if task_id is None:
+        return
+    seated = await connection.scalar(
+        select(review_assignments.c.slide_id)
+        .where(review_assignments.c.task_id == task_id, review_assignments.c.user_id == reviewer)
+        .limit(1)
+    )
+    if seated is not None:
+        return
+    await add_task_reviewer(
+        task_id,
+        TaskReviewerCreate(user_id=reviewer),
+        creator,
+        connection,
+        seed_request(),
+        BackgroundTasks(),
+        NoRealtime(),
+    )
+
+
 async def seed_example(
     engine: Any,
     seeded: Seeded,
@@ -1098,6 +1131,7 @@ async def seed_example(
         )
         if agents:
             await seed_adjudication(connection, creator, agents[0])
+            await seat_on_cell_tour(connection, creator, workspace.gallery, agents[0])
         made = (
             None
             if case_facts is None

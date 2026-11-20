@@ -620,8 +620,21 @@ const insideBox = (outline: readonly number[], query: URLSearchParams) => {
 const aiHidden = () =>
   problem(403, "ai-hidden", "The AI stays hidden on this slide until you record your first read");
 
+const outsideTask = (taskId: string, slideId: string) => {
+  const task = reviewTasks.find((item) => item.id === taskId);
+  const slide = slides.find((item) => item.id === slideId);
+  return task !== undefined && slide !== undefined && slide.project !== task.project;
+};
+
 export function reviewHandlers(): RequestHandler[] {
   return [
+    http.get<{ taskId: string; slideId: string }>(
+      "*/api/review-tasks/:taskId/slides/:slideId/objects",
+      ({ params }) =>
+        outsideTask(params.taskId, params.slideId)
+          ? problem(404, "not-found", "Task slide not found")
+          : undefined,
+    ),
     getListReviewObjectsMockHandler(({ params }) =>
       toReviewObjects(String(params.taskId), String(params.slideId)),
     ),

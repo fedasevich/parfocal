@@ -22,6 +22,12 @@ export type ReviewRowView = {
   action: { label: "Continue" | "Start"; primary: boolean; path: string };
 };
 
+export function openAdjudications<
+  T extends { readonly decided: number; readonly objects: readonly unknown[] },
+>(items: readonly T[]): T[] {
+  return items.filter((item) => item.decided < item.objects.length);
+}
+
 export function activeTasks(tasks: MyTask[]) {
   return tasks.filter((task) => task.status === "in-review" || task.status === "not-started");
 }

@@ -332,7 +332,7 @@ msgid "{0} · {1} GB · 40x"
 msgstr "{0} · {1} GB · 40x"
 
 #. placeholder {0}: task?.name ?? ""
-#. placeholder {1}: rows.length
+#. placeholder {1}: rows.length - resolved
 #. placeholder {2}: queue?.total_objects ?? 0
 #. placeholder {3}: withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""
 #: src/screens/disagreements/queue-screen.tsx
@@ -2264,6 +2264,10 @@ msgstr "{taskCodeOrThe} was withdrawn."
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{taskName} · {0}"
 msgstr "{taskName} · {0}"
+
+#: src/viewer/task-slide-check.tsx
+msgid "{taskName} does not include this slide, so there is nothing to review on it here."
+msgstr "{taskName} does not include this slide, so there is nothing to review on it here."
 
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "{templateName} v{version} "
@@ -11686,6 +11690,10 @@ msgstr "Open the shortcut sheet"
 msgid "Open the slide"
 msgstr "Open the slide"
 
+#: src/viewer/task-slide-check.tsx
+msgid "Open the slide alone"
+msgstr "Open the slide alone"
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "Open the slide in the full viewer"
 msgstr "Open the slide in the full viewer"
@@ -11696,6 +11704,7 @@ msgstr "Open the slides of this task in the full viewer"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/viewer/task-slide-check.tsx
 msgid "Open the task"
 msgstr "Open the task"
 
@@ -17017,6 +17026,7 @@ msgstr "the task"
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/use-viewer-scene.tsx
+#: src/viewer/task-slide-check.tsx
 msgid "The task"
 msgstr "The task"
 
@@ -17024,6 +17034,10 @@ msgstr "The task"
 #: src/screens/new-task/new-task-screen.tsx
 msgid "The task could not be created. Try again."
 msgstr "The task could not be created. Try again."
+
+#: src/viewer/task-slide-check.tsx
+msgid "The task in this address does not exist, or it was deleted."
+msgstr "The task in this address does not exist, or it was deleted."
 
 #: src/screens/refusals.ts
 msgid "The task is signed off. An owner can reopen it."
@@ -17356,6 +17370,10 @@ msgstr "This slide is already stored in Parfocal."
 msgid "This slide is already submitted."
 msgstr "This slide is already submitted."
 
+#: src/viewer/task-slide-check.tsx
+msgid "This slide is not part of the task"
+msgstr "This slide is not part of the task"
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off"
 msgstr "This slide is signed off"
@@ -17382,6 +17400,10 @@ msgstr "this task"
 #: src/screens/review/first-read-notice.tsx
 msgid "This task asks for your own read of the slide before the AI result appears. Record it in guided review."
 msgstr "This task asks for your own read of the slide before the AI result appears. Record it in guided review."
+
+#: src/viewer/task-slide-check.tsx
+msgid "This task cannot be opened"
+msgstr "This task cannot be opened"
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "This task has no cells, so there are no cell types to compare."
@@ -19006,6 +19028,10 @@ msgstr "You can look at this layer but not change it."
 #: src/screens/refusals.ts
 msgid "You can look at this slide but not change it."
 msgstr "You can look at this slide but not change it."
+
+#: src/viewer/task-slide-check.tsx
+msgid "You can open the task, or look at the slide on its own. Nothing was changed."
+msgstr "You can open the task, or look at the slide on its own. Nothing was changed."
 
 #. placeholder {0}: signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : t`Nobody can yet.`
 #: src/screens/clinical-report/report-screen.tsx

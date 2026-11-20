@@ -18,9 +18,12 @@ export function useModeCorrection(
   const corrected = correctedMode(chosen, rule, settled);
   useEffect(() => {
     if (corrected === undefined || chosen === undefined || correct.current === undefined) return;
-    fallbackStore.setState({ slideId, fell: { asked: chosen, shown: corrected } }, true);
+    fallbackStore.setState(
+      { slideId, fell: { asked: chosen, shown: corrected, noCellSample: rule.noCellSample } },
+      true,
+    );
     correct.current(corrected);
-  }, [corrected, chosen, slideId]);
+  }, [corrected, chosen, slideId, rule.noCellSample]);
   return fallback?.slideId === slideId && fallback.fell.shown === rule.mode
     ? fallback.fell
     : undefined;

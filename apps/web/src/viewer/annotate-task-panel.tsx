@@ -864,11 +864,11 @@ export function AnnotateTaskPanel({
                 : { onNext: () => onOpenSlide(next) })}
             />
           ) : null}
-          {status && (canSignOff(status, task.owner) || locked) ? (
+          {status && (step === "signed-off" || (!lookOnly && canSignOff(status, task.owner))) ? (
             <SignOffCard
               slideName="this slide"
               openThreads={status.open_threads}
-              signedOff={locked}
+              signedOff={step === "signed-off"}
               experts={status.experts.map((expert) => ({
                 person: personOf(expert.user_id) ?? {
                   initials: "?",
