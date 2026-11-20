@@ -79,7 +79,7 @@ class DisplaySettings(BaseModel):
 
     draw_as: DrawAs = DrawAs.OUTLINE
     width: Annotated[int, Field(ge=1, le=3)] = 2
-    opacity: Annotated[int, Field(ge=20, le=100, multiple_of=10)] = 100
+    opacity: Annotated[int, Field(ge=0, le=100, multiple_of=10)] = 100
     colour_by: ColourBy = ColourBy.CLASS
     id_labels: StrictBool = True
     confidence: ConfidenceShown = ConfidenceShown.NUMBER

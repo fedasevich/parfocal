@@ -7877,7 +7877,7 @@ export const getCreateReviewTaskResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -8023,7 +8023,7 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
       defaults: {
         draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
         width: faker.number.int({ min: 1, max: 3 }),
-        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
         colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
         id_labels: faker.datatype.boolean(),
         confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -8154,7 +8154,7 @@ export const getGetReviewTaskResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -8300,7 +8300,7 @@ export const getChangeReviewTaskResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -8476,7 +8476,7 @@ export const getAddTaskReviewerResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -8622,7 +8622,7 @@ export const getWithdrawReviewTaskResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10710,7 +10710,7 @@ export const getGetMyDisplayResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10737,7 +10737,7 @@ export const getGetMyDisplayResponseMock = (
   settings: {
     draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
     width: faker.number.int({ min: 1, max: 3 }),
-    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
     colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
     id_labels: faker.datatype.boolean(),
     confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10763,7 +10763,7 @@ export const getGetMyDisplayResponseMock = (
       settings: {
         draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
         width: faker.number.int({ min: 1, max: 3 }),
-        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
         colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
         id_labels: faker.datatype.boolean(),
         confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10795,7 +10795,7 @@ export const getChooseMyDisplayResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10822,7 +10822,7 @@ export const getChooseMyDisplayResponseMock = (
   settings: {
     draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
     width: faker.number.int({ min: 1, max: 3 }),
-    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
     colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
     id_labels: faker.datatype.boolean(),
     confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10848,7 +10848,7 @@ export const getChooseMyDisplayResponseMock = (
       settings: {
         draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
         width: faker.number.int({ min: 1, max: 3 }),
-        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
         colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
         id_labels: faker.datatype.boolean(),
         confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10881,7 +10881,7 @@ export const getListDisplayPresetsResponseMock = (): DisplayPreset[] =>
     settings: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10912,7 +10912,7 @@ export const getSaveDisplayPresetResponseMock = (
   settings: {
     draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
     width: faker.number.int({ min: 1, max: 3 }),
-    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
     colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
     id_labels: faker.datatype.boolean(),
     confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -10944,7 +10944,7 @@ export const getChangeDisplayPresetResponseMock = (
   settings: {
     draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
     width: faker.number.int({ min: 1, max: 3 }),
-    opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+    opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
     colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
     id_labels: faker.datatype.boolean(),
     confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -13296,7 +13296,7 @@ export const getGetTaskEvaluationResponseMock = (
     defaults: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -14629,7 +14629,7 @@ export const getListStudyTemplateReviewDefaultsResponseMock = (
       display: {
         draw: faker.helpers.arrayElement(["outline", "fill", "dots"] as const),
         width: faker.number.int({ min: 1, max: 3 }),
-        opacity: faker.number.int({ min: 20, max: 100 }),
+        opacity: faker.number.int({ min: 0, max: 100 }),
         colorBy: faker.helpers.arrayElement(["class", "score", "decision"] as const),
         ids: faker.datatype.boolean(),
         conf: faker.helpers.arrayElement(["number", "word", "color", "hidden"] as const),
@@ -15004,7 +15004,7 @@ export const getListStudyTemplatesResponseMock = (): StudyTemplateSummary[] =>
       display: {
         draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
         width: faker.number.int({ min: 1, max: 3 }),
-        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
         colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
         id_labels: faker.datatype.boolean(),
         confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -15379,7 +15379,7 @@ export const getCreateStudyTemplateResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -15754,7 +15754,7 @@ export const getGetStudyTemplateResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -16129,7 +16129,7 @@ export const getEditStudyTemplateResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -16512,7 +16512,7 @@ export const getGetStudyTemplateVersionResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -16887,7 +16887,7 @@ export const getRetireStudyTemplateResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -17262,7 +17262,7 @@ export const getRestoreStudyTemplateResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -17636,7 +17636,7 @@ export const getListTemplateOffersResponseMock = (): TemplateOffer[] =>
       display: {
         draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
         width: faker.number.int({ min: 1, max: 3 }),
-        opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+        opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
         colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
         id_labels: faker.datatype.boolean(),
         confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -18007,7 +18007,7 @@ export const getOfferStudyTemplateResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),
@@ -18379,7 +18379,7 @@ export const getAcceptTemplateOfferResponseMock = (
     display: {
       draw_as: faker.helpers.arrayElement(Object.values(DrawAs)),
       width: faker.number.int({ min: 1, max: 3 }),
-      opacity: faker.number.int({ min: 20, max: 100, multipleOf: 10 }),
+      opacity: faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
       colour_by: faker.helpers.arrayElement(Object.values(ColourBy)),
       id_labels: faker.datatype.boolean(),
       confidence: faker.helpers.arrayElement(Object.values(ConfidenceShown)),

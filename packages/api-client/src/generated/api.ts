@@ -2525,7 +2525,7 @@ export interface DisplaySettings {
    */
   width?: number;
   /**
-   * @minimum 20
+   * @minimum 0
    * @maximum 100
    */
   opacity?: number;
@@ -2619,7 +2619,7 @@ export interface DisplayDefaults {
    */
   width: number;
   /**
-   * @minimum 20
+   * @minimum 0
    * @maximum 100
    */
   opacity: number;

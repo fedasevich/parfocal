@@ -171,6 +171,9 @@ def test_a_reviewer_keeps_a_locked_value_and_changes_the_rest(api: ApiAs, databa
     kept = choose(api, r, "first", {"confidence": "word", "draw_as": "fill", "opacity": 60})
     assert kept.status_code == 200, kept.text
     assert kept.json()["settings"]["draw_as"] == "fill"
+    hidden = choose(api, r, "first", {"confidence": "word", "opacity": 0})
+    assert hidden.status_code == 200, hidden.text
+    assert hidden.json()["settings"]["opacity"] == 0
     task_preset = save(
         api, r, "first", "Mine here", task_id=str(r.task), settings={"order": "random"}
     )

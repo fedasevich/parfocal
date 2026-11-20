@@ -64052,7 +64052,7 @@
           "opacity": {
             "type": "integer",
             "maximum": 100.0,
-            "minimum": 20.0,
+            "minimum": 0.0,
             "title": "Opacity"
           },
           "colorBy": {
@@ -64235,7 +64235,7 @@
             "type": "integer",
             "multipleOf": 10.0,
             "maximum": 100.0,
-            "minimum": 20.0,
+            "minimum": 0.0,
             "title": "Opacity",
             "default": 100
           },

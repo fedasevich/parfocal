@@ -64,7 +64,7 @@ class OtherSetsShown(BaseModel):
 class DisplayDefaults(BaseModel):
     draw: Literal["outline", "fill", "dots"]
     width: Annotated[int, Field(ge=1, le=3)]
-    opacity: Annotated[int, Field(ge=20, le=100)]
+    opacity: Annotated[int, Field(ge=0, le=100)]
     model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
 
     colour_by: Annotated[Literal["class", "score", "decision"], Field(alias="colorBy")]
