@@ -25,6 +25,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError
 from parfocal_api.projects import ProjectArchivedError, owned
 from parfocal_api.review_tasks import readable_task, task_row
+from parfocal_api.reviewer_progress import slides_left_by_reviewer
 from parfocal_api.tables import (
     NotificationKind,
     ResultStatus,
@@ -333,10 +334,13 @@ async def reviews_of(connection: AsyncConnection, task_id: uuid.UUID) -> Reviews
                 (review_task_slides.c.task_id == review_assignments.c.task_id)
                 & (review_task_slides.c.slide_id == review_assignments.c.slide_id),
             )
-            .where(review_assignments.c.task_id == task_id)
+            .where(
+                review_assignments.c.task_id == task_id,
+                review_assignments.c.released_at.is_(None),
+            )
         )
     ).all()
-    left = Counter(row.user_id for row in live if row.submitted_at is None)
+    left = await slides_left_by_reviewer(connection, task_id)
     task_slides = await connection.scalar(
         select(func.count()).where(review_task_slides.c.task_id == task_id)
     )

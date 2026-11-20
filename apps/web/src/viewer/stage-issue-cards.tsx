@@ -6,7 +6,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useFormat } from "../format.ts";
 import { CanvasNotice } from "../screens/review/guided-parts.tsx";
-import { highPowerFailed, highPowerLevels, type StageIssue, stageIssueOf } from "./stage-issues.ts";
+import {
+  highPowerFailed,
+  highPowerLevels,
+  reviewerNamesOf,
+  type StageIssue,
+  stageIssueOf,
+} from "./stage-issues.ts";
 import type { VivRoute } from "./viewer-engine.ts";
 
 const failedPollMs = 1000;
@@ -78,16 +84,21 @@ export function SignedOffNotice({
 
 export function useReviewerNames(names: readonly string[] | null): string | null {
   const { i18n } = useLingui();
-  if (names === null) return null;
-  return new Intl.ListFormat(i18n.locale, { type: "conjunction" }).format(names);
+  return reviewerNamesOf(names, i18n.locale);
 }
 
 export function ReadOnlyNotice({ reviewers }: { reviewers: string }) {
   return (
     <Banner tone="info" icon="lock" data-testid="read-only-notice">
-      <Trans>
-        <b>Read only.</b> This slide is assigned to {reviewers}, so you can look but not answer.
-      </Trans>
+      {reviewers === "" ? (
+        <Trans>
+          <b>Read only.</b> Nobody is assigned to this slide yet, so you can look but not answer.
+        </Trans>
+      ) : (
+        <Trans>
+          <b>Read only.</b> This slide is assigned to {reviewers}, so you can look but not answer.
+        </Trans>
+      )}
     </Banner>
   );
 }
@@ -110,6 +121,7 @@ export function useAnswersOff(
   reviewers: string | null = null,
 ): string | undefined {
   const { t } = useLingui();
+  if (reviewers === "") return t`Read only. Nobody is assigned to this slide yet.`;
   if (reviewers !== null) return t`Read only. This slide is assigned to ${reviewers}.`;
   if (signedOff) return t`Signed off. Ask the researcher to amend.`;
   if (issue === "withdrawn") return t`This task was withdrawn. There is nothing left to decide.`;

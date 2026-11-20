@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Evaluation } from "@parfocal/api-client";
-import { comparisonRows, opinionRows, reasonRows } from "../src/screens/evaluation/numbers.ts";
+import {
+  comparisonRows,
+  comparisonSlidesOf,
+  opinionRows,
+  reasonRows,
+} from "../src/screens/evaluation/numbers.ts";
 
 const evaluation = {
   reasons: [
@@ -53,4 +58,10 @@ test("a comparison lists each measure for both tasks with the change", () => {
   const cells = rows.find((row) => row.label === "Cells agreed");
   assert.deepEqual([cells?.left, cells?.right, cells?.change], ["91%", "87%", "-4 points"]);
   assert.equal(rows.at(-1)?.change, "+2");
+});
+
+test("the comparison says the slide sets differ when the two tasks have different slide counts", () => {
+  assert.deepEqual(comparisonSlidesOf(1, 7), { kind: "differ", left: 1, right: 7 });
+  assert.deepEqual(comparisonSlidesOf(7, 7), { kind: "same-size", slides: 7 });
+  assert.deepEqual(comparisonSlidesOf(12, 3), { kind: "differ", left: 12, right: 3 });
 });

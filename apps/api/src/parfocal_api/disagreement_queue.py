@@ -29,13 +29,13 @@ from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims, kind_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task, task_row
 from parfocal_api.reviewed_layer import ai_object
+from parfocal_api.reviewer_progress import slides_left_by_reviewer
 from parfocal_api.tables import (
     REASON_TEXT,
     DecisionStyle,
     adjudications,
     disagreement_decisions,
     project_classes,
-    review_assignments,
     review_decisions,
     review_edits,
     review_order,
@@ -420,20 +420,11 @@ async def total_objects(connection: AsyncConnection, task_id: uuid.UUID) -> int:
 
 
 async def lock_of(connection: AsyncConnection, task_id: uuid.UUID) -> QueueLock | None:
-    behind = (
-        await connection.execute(
-            select(review_assignments.c.user_id, func.count().label("left"))
-            .where(
-                review_assignments.c.task_id == task_id,
-                review_assignments.c.released_at.is_(None),
-                review_assignments.c.submitted_at.is_(None),
-            )
-            .group_by(review_assignments.c.user_id)
-            .order_by(func.count().desc(), review_assignments.c.user_id)
-            .limit(1)
-        )
-    ).one_or_none()
-    return None if behind is None else QueueLock(user_id=behind.user_id, slides_left=behind.left)
+    left = await slides_left_by_reviewer(connection, task_id)
+    if not left:
+        return None
+    user_id, slides_left = min(left.items(), key=lambda item: (-item[1], item[0]))
+    return QueueLock(user_id=user_id, slides_left=slides_left)
 
 
 async def queue_task(connection: AsyncConnection, principal: Any, task_id: uuid.UUID) -> Any:

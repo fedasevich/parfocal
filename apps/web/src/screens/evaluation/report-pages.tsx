@@ -33,6 +33,7 @@ import { okData } from "../placeholder.tsx";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   comparisonRows,
+  comparisonSlidesOf,
   fixed,
   headlineMetrics,
   headlineTiles,
@@ -409,6 +410,7 @@ function ComparisonBlock({
       </Empty>
     );
   const head = (side: EvaluationReport) => `${side.task_code}, ${side.model}`;
+  const slidesNote = comparisonSlidesOf(report.slides, otherReport.slides);
   return (
     <div className="grid gap-1.5" data-slot="comparison">
       <PaperTable
@@ -421,10 +423,18 @@ function ComparisonBlock({
         ])}
       />
       <span className="text-[7.5px] text-[#666]">
-        <Trans>
-          Change is {otherReport.task_code} minus {report.task_code}. Both tasks cover the same
-          slides.
-        </Trans>
+        {slidesNote.kind === "same-size" ? (
+          <Trans>
+            Change is {otherReport.task_code} minus {report.task_code}. Both tasks have{" "}
+            {slidesNote.slides} slides.
+          </Trans>
+        ) : (
+          <Trans>
+            Change is {otherReport.task_code} minus {report.task_code}. {report.task_code} has{" "}
+            {slidesNote.left} slides and {otherReport.task_code} has {slidesNote.right}, so the
+            slide sets differ.
+          </Trans>
+        )}
       </span>
     </div>
   );

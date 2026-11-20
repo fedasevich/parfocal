@@ -73,3 +73,10 @@ export function othersReviewOf(
   if (entry === undefined || entry.reviewer_ids.includes(me)) return null;
   return entry.reviewer_ids;
 }
+
+export function reviewerNamesOf(names: readonly string[] | null, locale: string): string | null {
+  if (names === null) return null;
+  return new Intl.ListFormat(locale, { type: "conjunction" }).format(
+    names.filter((name) => name.trim() !== ""),
+  );
+}

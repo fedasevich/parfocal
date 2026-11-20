@@ -508,11 +508,12 @@ async def ready_set(
     source_file: str,
     source: ResultSource = ResultSource.IMPORT,
     job_id: uuid.UUID | None = None,
+    name: str = "Tumour detector v1",
 ) -> uuid.UUID:
     found = model_regions(file)
     assert found is not None
     draft = ResultSetDraft(
-        name="Tumour detector v1",
+        name=name,
         model_version=REGIONS_MODEL,
         classes=found.classes,
         source_file=source_file,
@@ -654,6 +655,7 @@ async def seed_states(
         "run.geojson",
         ResultSource.RUN,
         job_ids[JobStatus.RUNNING],
+        "Tumour detector rerun",
     )
     broken = await insert_result_set(
         connection,

@@ -19,6 +19,7 @@ import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { type Count, countWord } from "./decision-style.ts";
 import { InspectorDock } from "./inspector-dock.tsx";
 import { useInspectorLayout } from "./inspector-layout.ts";
+import { sampledCellsOf } from "./object-counts.ts";
 import { regionRange } from "./region-range.ts";
 import type { ReviewSession } from "./review-data.ts";
 import { useRailKeys } from "./review-rail.ts";
@@ -320,7 +321,7 @@ export function AiSays({ setName, objects }: { setName: string; objects: ReviewO
     regions.map((item) => item.size_mm),
     units,
   );
-  const cells = objects.length - regions.length;
+  const cells = sampledCellsOf(objects);
   return (
     <Zone title={t`AI says`}>
       <FactList
@@ -339,7 +340,7 @@ export function AiSays({ setName, objects }: { setName: string; objects: ReviewO
                     ? `${range.count}, ${range.size}`
                     : t`${range.count}, ${range.low} to ${range.high}`,
           },
-          { icon: "target", label: "Cells", value: `18,240, ${cells} in your sample` },
+          { icon: "target", label: "Cells", value: t`${cells} in your sample` },
         ]}
       />
     </Zone>
