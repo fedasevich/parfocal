@@ -2,6 +2,29 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.32.0 (2026-11-20)
+
+### Features
+
+- PROTO-113: Keep every review edit in an append only history shown on the object card
+
+### Fixes
+
+- PROTO-132: Load a level's tile offsets once so a tile waits one round trip
+- PROTO-131: Keep the overview map in its corner, clear of floating parts and the focused object
+- PROTO-131: Keep the overview map off the developer overlay and record the drift as unverified
+
+### Docs
+
+- TEST-056: Add the v0.29.1 walkthrough fix tasks
+- PROTO-132: Log the batched tile offsets
+- PROTO-113: Log and tick the review edit history
+- PROTO-131: Log the overview map corner fix and zone plan
+
+### Tests
+
+- PROTO-108: Expect the real developer job and HUD sections in the settings spec
+
 ## v0.31.2 (2026-11-20)
 
 ### Fixes
