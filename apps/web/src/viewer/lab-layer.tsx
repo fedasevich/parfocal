@@ -164,7 +164,10 @@ export default function LabLayer({
         data-vector={plan.motionVector ? "on" : "off"}
         className="pointer-events-none absolute inset-0 size-full"
       />
-      <div className="pointer-events-none absolute bottom-3 left-3 grid gap-1 font-mono text-caption text-fg">
+      <div
+        data-minimap-block
+        className="pointer-events-none absolute bottom-3 left-3 grid gap-1 font-mono text-caption text-fg"
+      >
         {plan.routeNote ? (
           <p
             data-testid="lab-route-note"
