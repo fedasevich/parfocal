@@ -1,8 +1,11 @@
-import { TIFF_BLOCK_SIZE } from "../pixel-source/tiff/directory.ts";
 import type { OpenRequest, RestrictedRange } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 
-export const defaultCachedBlocks = 100;
+export const defaultRangeBlockSize = 256 * 1024;
+
+export const defaultCachedBytes = 100 * 1024 * 1024;
+
+export const defaultCachedBlocks = defaultCachedBytes / defaultRangeBlockSize;
 
 export interface RangeReply {
   readonly status: number;
@@ -86,8 +89,8 @@ function allowedSegments(
 }
 
 export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
-  const blockSize = options.blockSize ?? TIFF_BLOCK_SIZE;
-  const maxBlocks = options.maxBlocks ?? defaultCachedBlocks;
+  const blockSize = options.blockSize ?? defaultRangeBlockSize;
+  const maxBlocks = options.maxBlocks ?? Math.max(1, Math.floor(defaultCachedBytes / blockSize));
   const network = options.fetch ?? globalThis.fetch.bind(globalThis);
   const blocks = new Map<string, Block>();
   const pending = new Map<string, Promise<Block>>();

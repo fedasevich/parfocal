@@ -190,6 +190,8 @@ export {
 export {
   createRangeCache,
   defaultCachedBlocks,
+  defaultCachedBytes,
+  defaultRangeBlockSize,
   type RangeCache,
   type RangeCacheOptions,
   type RangeCacheStats,

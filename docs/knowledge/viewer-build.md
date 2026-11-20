@@ -147,7 +147,7 @@ Between frames the camera holds the value of the last frame. A wheel step, pan o
 
 ## Decode workers must share one byte cache
 
-geotiff reads 1 MiB blocks, and one block of CMU-1.svs holds many tiles. Six workers that each open the slide with their own geotiff source download a shared block up to six times. The decode workers instead fetch through a `MessagePort` to one range cache on the page (`src/decode/range-cache.ts`), and `createPixelSlideOpener` opens the page's own source through the same cache. A pan across CMU-1.svs then downloaded no byte twice. Source: VIEW-004, [ADR 0105](../adr/0105-decode-workers-behind-one-byte-cache.md), [result](../results/2026-10-23-decode-pool-pan-fetches.md).
+geotiff reads 1 MiB blocks, and one block of CMU-1.svs holds many tiles. Six workers that each open the slide with their own geotiff source download a shared block up to six times. The decode workers instead fetch through a `MessagePort` to one range cache on the page (`src/decode/range-cache.ts`), and `createPixelSlideOpener` opens the page's own source through the same cache. A pan across CMU-1.svs then downloaded no byte twice. The page's cache reads 256 KiB blocks and keeps 100 MiB, because 1 MiB blocks fetched 40.8 MB for 12.5 MB of tile bytes on a Philips TIFF with 512 pixel JPEG tiles ([result](../results/2026-11-20-tile-request-time.md)). Source: VIEW-004, [ADR 0105](../adr/0105-decode-workers-behind-one-byte-cache.md), [result](../results/2026-10-23-decode-pool-pan-fetches.md).
 
 ## Never abort a download the viewer started
 
