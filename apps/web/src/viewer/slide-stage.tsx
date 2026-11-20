@@ -51,6 +51,7 @@ import { GpuWaitNotice } from "../gpu/gpu-wait-notice.tsx";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
+import { DeveloperDrawerSlot } from "../lab/developer-drawer-slot.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
@@ -1176,6 +1177,7 @@ function OpenedSlide({
                   onSlot={placeSlot}
                 />
               )}
+              <DeveloperDrawerSlot />
             </div>
           </TopStackProvider>
         </ContextExtrasHost>

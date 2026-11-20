@@ -82,6 +82,8 @@ export function SearchScreen({
           projectId: projects[0]?.id ?? "",
           onSlide: false,
           developerMode,
+          developerAllowed: false,
+          openDeveloper: () => {},
           go: (href) => void goTo(href),
           measure: () => {},
           openNotifications: () => void overlay.set("notifications"),

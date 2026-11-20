@@ -15,7 +15,7 @@ import {
   NoSlideOpen,
   sweepAndLog,
 } from "../../lab/pan-sweep.ts";
-import { benchRuns, csvColumns } from "./developer-data.ts";
+import { csvColumns } from "./developer-data.ts";
 
 type RunRow = [string, string, string, string, string, string];
 
@@ -44,15 +44,6 @@ export function runRow(row: BenchmarkRow): RunRow {
     cell(row.fps),
   ];
 }
-
-const mockRuns: RunRow[] = benchRuns.map(([name, nuclei, zoom, p50, p95, fps]) => [
-  name,
-  nuclei,
-  String(zoom),
-  `${p50} ms`,
-  `${p95} ms`,
-  String(fps),
-]);
 
 export function BenchSection({
   route,
@@ -83,7 +74,7 @@ export function BenchSection({
       setRunning(false);
     }
   };
-  const shown = (count === 0 ? mockRuns : rows.map(runRow)).map((cells, position) => ({
+  const shown = rows.map(runRow).map((cells, position) => ({
     run: `run ${position + 1}`,
     cells,
   }));
@@ -100,27 +91,20 @@ export function BenchSection({
           <DevStatus live={status !== null}>
             {status ??
               (last === undefined
-                ? t`Last run 14:02 · ${route} · 100k nuclei · zoom 2`
+                ? t`No runs yet on ${route}. Open a slide and run the pan sweep.`
                 : t`Last run · ${cell(last.renderer)} · ${nucleiText(last.nuclei)} nuclei · zoom ${cell(last.zoom)}`)}
           </DevStatus>
         </div>
-        <DevFigures
-          items={
-            last === undefined
-              ? [
-                  ["6.2 ms", "frame p50"],
-                  ["11.8 ms", "frame p95"],
-                  ["60", "fps"],
-                  ["412", "tiles resident"],
-                ]
-              : [
-                  [ms(last.frameP50), "frame p50"],
-                  [ms(last.frameP95), "frame p95"],
-                  [cell(last.fps), "fps"],
-                  [cell(last.tilesResident), "tiles resident"],
-                ]
-          }
-        />
+        {last === undefined ? null : (
+          <DevFigures
+            items={[
+              [ms(last.frameP50), "frame p50"],
+              [ms(last.frameP95), "frame p95"],
+              [cell(last.fps), "fps"],
+              [cell(last.tilesResident), "tiles resident"],
+            ]}
+          />
+        )}
       </DevZone>
       <DevZone
         title={t`Runs`}

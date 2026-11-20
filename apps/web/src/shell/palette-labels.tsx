@@ -63,6 +63,7 @@ export function usePaletteLabels(): Record<string, string> {
     "setting-shortcuts": t`Keyboard shortcuts`,
     "setting-developer-mode-off": t`Turn developer mode off`,
     "setting-developer-mode-on": t`Turn developer mode on`,
+    "developer-drawer": t`Developer mode`,
     measure: t`Measure`,
     upload: t`Upload slides and results`,
     "run-model": t`Run a model`,
