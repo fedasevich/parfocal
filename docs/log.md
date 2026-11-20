@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-123 Settings keep pictures only in the Tools row: preview props removed from home, theme, density, panel width, panel while moving and minimap, display-preview.tsx deleted, setting-preview keeps only the tools kind. 14 touched Playwright tests pass. The Feel preview was not checked for an empty box.
 - PROTO-124 Default lock after moved from 15 to 240 minutes in the API and web app. 1571 API tests pass.
 - VIEW-076 Deployed check passed: v0.29.1 deployed, production reset and reseeded at v0.29.1, thumbnail backfill stored 1, copied 93, failed 0, and the deployed seeded-formats smoke opened both converted zip slides. Production touches: deploys of v0.29.0 and v0.29.1, one reset, one backfill, cost TODO (Modal compute only).
 - PROTO-100 Folded into VIEW-076: the two zip slides read as CMU-1-Saved-1_16 (MIRAX) and CMU-1-JP2K-33005-v2 (DICOM).
