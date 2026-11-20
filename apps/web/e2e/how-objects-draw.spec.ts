@@ -63,7 +63,7 @@ test("opacity fades the objects", async ({ page }) => {
   const slider = page.getByRole("slider", { name: "Opacity" });
   await slider.focus();
   await page.keyboard.press("Home");
-  await expect.poll(async () => (await drawn(page)).main?.opacity).toBe(0.2);
+  await expect.poll(async () => (await drawn(page)).main?.opacity).toBe(0);
   await page.keyboard.press("End");
   await expect.poll(async () => (await drawn(page)).main?.opacity).toBe(1);
 });
