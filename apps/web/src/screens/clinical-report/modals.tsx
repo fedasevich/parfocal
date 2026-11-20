@@ -311,6 +311,7 @@ export function useSignature({
   const sign = (method: "sso" | "password") =>
     onSign(method, (ok, error) => {
       if (ok) {
+        resumed.current = false;
         setState("idle");
         return;
       }

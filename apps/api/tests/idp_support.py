@@ -42,7 +42,6 @@ class FakeIdp:
     subject: str = "user-1"
     codes: dict[str, Grant] = field(default_factory=dict[str, Grant])
     refresh_tokens: dict[str, str] = field(default_factory=dict[str, str])
-    auth_times: dict[str, int] = field(default_factory=dict[str, int])
     signed_in_at: int = field(default_factory=lambda: int(time.time()))
     prompts: list[str | None] = field(default_factory=list[str | None])
     refreshes: int = 0
@@ -81,7 +80,6 @@ class FakeIdp:
     def tokens(self, subject: str, nonce: str | None, auth_time: int) -> dict[str, Any]:
         refresh_token = secrets.token_urlsafe(16)
         self.refresh_tokens[refresh_token] = subject
-        self.auth_times[refresh_token] = auth_time
         return {
             "access_token": "opaque",
             "id_token": self.id_token(subject, nonce, auth_time),
@@ -141,8 +139,7 @@ class FakeIdp:
         if subject is None:
             return httpx2.Response(400, json={"error": "invalid_request"})
         self.refreshes += 1
-        auth_time = self.auth_times.pop(form["refresh_token"])
-        return httpx2.Response(200, json=self.tokens(subject, None, auth_time))
+        return httpx2.Response(200, json=self.tokens(subject, None, int(time.time())))
 
 
 @dataclass

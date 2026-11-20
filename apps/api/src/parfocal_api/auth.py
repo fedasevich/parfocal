@@ -196,7 +196,7 @@ def sealed_tokens(
         "name": claims.get("name"),
         "email": claims.get("email"),
         "amr": factors_of(claims) or factors_of(before),
-        "auth_time": auth_time_of(claims) or auth_time_of(before),
+        "auth_time": auth_time_of(claims) if earlier is None else auth_time_of(before),
     }
 
 

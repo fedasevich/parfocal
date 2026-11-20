@@ -138,6 +138,7 @@ export {
 } from "./coverage-handlers.ts";
 export { resetCreatedRecords } from "./create-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
+export { forgetFakeSignIn, markFakeSignIn } from "./fresh-sign-in.ts";
 export { toProjectModels } from "./job-handlers.ts";
 export {
   type FakeJobsScene,
