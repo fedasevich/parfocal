@@ -37,6 +37,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useState } from "react";
 import { useFormat } from "../../format.ts";
 import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx";
+import { slideLink } from "../../shell/slide-link.ts";
 import { dotJoin } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { SlideThumb } from "../slide-thumb.tsx";
@@ -465,10 +466,7 @@ function SlideRow({
   const navigate = useNavigate();
   const people = usePeople();
   const own = slide.result_sets.flatMap((ref) => sets.filter((set) => set.id === ref.id));
-  const target = {
-    to: "/projects/$projectId/slides/$slideId/live",
-    params: { projectId: project.id, slideId: slide.id },
-  } as const;
+  const target = slideLink({ projectId: project.id, slideId: slide.id });
   const open = () => void navigate(target);
   const toggle = () =>
     void navigate({
@@ -643,11 +641,7 @@ function ResultSetDetail({ project, slide }: { project: Project; slide: ProjectS
   const format = useFormat();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState<ResultSet | undefined>();
-  const view = () =>
-    void navigate({
-      to: "/projects/$projectId/slides/$slideId",
-      params: { projectId: project.id, slideId: slide.id },
-    });
+  const view = () => void navigate(slideLink({ projectId: project.id, slideId: slide.id }));
   return (
     <TableRow>
       <TableCell colSpan={4} className="bg-surf-hl pr-4 pb-3.5 pl-18 whitespace-normal">

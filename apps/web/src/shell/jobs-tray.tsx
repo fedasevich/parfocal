@@ -28,9 +28,9 @@ import {
   trayValueText,
 } from "../screens/jobs/model.ts";
 import { okData } from "../screens/placeholder.tsx";
-import { viewerSearch } from "../screens/viewer-links.tsx";
 import { formatBytes, type UploadEntry } from "../upload/entries.ts";
 import { useUploads } from "../upload/use-uploads.ts";
+import { slideLink } from "./slide-link.ts";
 import { showUndoToast } from "./undo-toasts.tsx";
 
 export type JobsTrayControl = {
@@ -92,11 +92,7 @@ function useGoToTarget() {
       });
     }
     if (target.kind === "slide") {
-      return navigate({
-        to: "/projects/$projectId/slides/$slideId",
-        params: { projectId: target.projectId, slideId: target.slideId },
-        search: viewerSearch({}),
-      });
+      return navigate(slideLink({ projectId: target.projectId, slideId: target.slideId }));
     }
     if (target.kind === "upload") {
       return navigate({

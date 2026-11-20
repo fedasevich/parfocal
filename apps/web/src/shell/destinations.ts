@@ -1,4 +1,5 @@
 import type { SettingsSection } from "../screens/settings/section-keys.ts";
+import { slideHref } from "./slide-link.ts";
 
 const query = (params: Record<string, string | undefined>) => {
   const search = new URLSearchParams();
@@ -25,14 +26,7 @@ export const destinations = {
     taskId?: string,
     object?: string,
     view: { x?: number | undefined; y?: number | undefined; z?: number | undefined } = {},
-  ) =>
-    `/projects/${projectId}/slides/${slideId}${query({
-      task: taskId,
-      object,
-      x: view.x?.toString(),
-      y: view.y?.toString(),
-      z: view.z?.toString(),
-    })}`,
+  ) => slideHref({ projectId, slideId, taskId, object, view }),
   focus: (projectId: string, slideId: string, taskId?: string) =>
     `/projects/${projectId}/slides/${slideId}${query({ task: taskId, focus: "true" })}`,
   compareSlides: (
@@ -44,8 +38,6 @@ export const destinations = {
     workspace?: string,
   ) =>
     `/projects/${projectId}/slides/${slideId}${query({ task: taskId, workspace, scene, with: withSlideId })}`,
-  openSlide: (projectId: string, slideId: string, taskId?: string) =>
-    `/projects/${projectId}/slides/${slideId}/live${query({ task: taskId })}`,
   coSign: (projectId: string, caseId: string) => `/projects/${projectId}/cases/${caseId}/co-sign`,
   guided: (
     taskId: string,

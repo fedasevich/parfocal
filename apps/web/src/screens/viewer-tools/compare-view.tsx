@@ -645,6 +645,7 @@ export function CompareView({
           load={load}
           task={taskDetail}
           workspace={workspace ?? "review"}
+          choices={taskDetail?.kind === "review" ? ["guided", "review"] : ["review", "annotate"]}
           onWorkspace={(next) => backToViewer({ workspace: next })}
           onOpenSlide={(next) => backToViewer({ slideId: next })}
           onSubmit={() => backToViewer({ tab: "opinion" })}

@@ -1,6 +1,7 @@
 import {
   type Thread,
   useGetMe,
+  useGetOpinion,
   useGetProject,
   useGetReviewTask,
   useGetReviewTaskStates,
@@ -58,13 +59,13 @@ import { useCaseLoad } from "./use-case-load.ts";
 import { useSlideAreas } from "./use-slide-areas.ts";
 import {
   assignedTo,
-  isReadOnly,
   lookOnlyLayer,
   readOnlyCodeOf,
   viewerAccessOf,
   workspaceRoleOf,
 } from "./viewer-access.ts";
-import { resolveWorkspace, type SlideWorkspace } from "./workspace.ts";
+import { panelTabOf, viewerModeOf, viewerPanelOf } from "./viewer-mode.ts";
+import type { SlideWorkspace } from "./workspace.ts";
 
 const fakeOutlines = readBuildConfig().fakeApi !== "off";
 
@@ -135,7 +136,6 @@ function GuardedViewer({
   const flagged = load !== null && load.resultSets.length > 0;
   const slideAreas = useSlideAreas(slideId, flagged);
   const areas = slideAreas.areas;
-  const workspace = resolveWorkspace(chosen, load?.task?.kind);
   const taskQuery = useGetReviewTask(task ?? "", { query: { enabled: task !== undefined } });
   const taskDetail = okData(taskQuery.data);
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
@@ -183,8 +183,15 @@ function GuardedViewer({
   const lookingOn =
     access.kind === "read-only" &&
     (access.reason === "not-assigned" || access.reason === "no-review-right");
-  const stageReadOnly = annotating ? layerLookOnly : isReadOnly(access);
-  const opinionShown = taskDetail?.kind === "review" && !lookingOn;
+  const modeRule = viewerModeOf({
+    hasTask: task !== undefined,
+    taskKind: task === undefined ? undefined : (taskDetail?.kind ?? load?.task?.kind),
+    access,
+    chosen,
+    guided,
+    cells,
+  });
+  const workspace = modeRule.workspace;
   const taskSlideIds = taskDetail?.slides.map((item) => item.slide_id) ?? [];
   const nextSlideId = taskSlideIds[taskSlideIds.indexOf(slideId) + 1];
   const researcher = person(taskDetail?.created_by_user_id)?.name;
@@ -194,6 +201,17 @@ function GuardedViewer({
     reviewTaskId: reviewTask,
     slideId,
   });
+  const opinionForm = okData(
+    useGetOpinion(reviewTask ?? "", slideId, undefined, { query: { enabled: reviewTask !== null } })
+      .data,
+  );
+  const panel = viewerPanelOf(modeRule.mode, access, {
+    taskKind: task === undefined ? undefined : (taskDetail?.kind ?? load?.task?.kind),
+    hasResults: flagged,
+    opinionQuestions: opinionForm?.questions.length,
+    comments: tabCounts.comments ?? 0,
+  });
+  const opinionShown = taskDetail?.kind === "review" && panel.tabs.includes("opinion");
   const [noteObject, setNoteObject] = useState<string | null>(object ?? null);
   const [noteRequest, setNoteRequest] = useState<NoteRequest | null>(null);
   const [threadFocus, setThreadFocus] = useState<{
@@ -351,7 +369,8 @@ function GuardedViewer({
   };
   const inspector = {
     guided,
-    tab: tab === "opinion" && !opinionShown ? undefined : tab,
+    tab: panelTabOf(panel, tab),
+    tabs: panel.tabs,
     onTab,
     counts: tabCounts,
     focus: threadFocus?.slideId === slideId ? threadFocus.request : null,
@@ -408,11 +427,12 @@ function GuardedViewer({
           load={load}
           task={taskDetail}
           workspace={workspace}
+          choices={modeRule.choices}
           guided={guided}
           onWorkspace={onWorkspace}
           onOpenSlide={onOpenSlide}
           onSubmit={
-            isReadOnly(access)
+            !panel.submit
               ? undefined
               : () => {
                   setLayout({ hidden: false });
@@ -475,7 +495,7 @@ function GuardedViewer({
             workspace={workspace}
             annotateTask={annotateTask}
             layerKnown={layerKnown}
-            readOnly={stageReadOnly}
+            readOnly={panel.readOnly}
             onOpenSlide={onOpenSlide}
             onStorage={(note) => setStorage({ slideId, note })}
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}

@@ -1179,6 +1179,7 @@ function OpenedSlide({
                   layout={inspectorLayout}
                   onLayout={setInspectorLayout}
                   tab={tab}
+                  tabs={inspector.tabs}
                   onTab={inspector.onTab}
                   panning={panning}
                   counts={inspector.counts ?? noCounts}
