@@ -9,6 +9,7 @@ import { stayTools } from "../screens/review/review-rail.ts";
 import { mockScenes } from "../screens/scenes.ts";
 import { viewerTabs } from "../screens/viewer/viewer-scenes.ts";
 import { searchScopes } from "../shell/search-hits.ts";
+import { viewerLayouts } from "../viewer/viewer-layout.ts";
 import { viewerModes } from "../viewer/viewer-mode.ts";
 import { lenientSearch } from "./lenient-search.ts";
 import { sceneField } from "./scene-harness.ts";
@@ -23,14 +24,7 @@ const searchScopeValues = searchScopes.map((scope) => scope.value) as [
   ...(typeof searchScopes)[number]["value"][],
 ];
 
-const viewerScenes = [
-  ...mockScenes.case,
-  ...mockScenes.layers,
-  ...mockScenes.navigator,
-  ...mockScenes.compare,
-] as const;
-
-const liveViewerScenes = ["objects", "picking", "picked", "travel"] as const;
+const viewerScenes = [...mockScenes.case, ...mockScenes.layers, ...mockScenes.navigator] as const;
 
 const oldWorkspaces = ["review", "annotate"] as const;
 
@@ -90,7 +84,7 @@ export const popoutSearch = lenientSearch({
   project: z.string().optional(),
   slide: z.string().optional(),
   task: z.string().optional(),
-  scene: sceneField(viewerScenes, liveViewerScenes),
+  scene: sceneField(viewerScenes),
   tab: z.enum(viewerTabs).optional(),
   object: z.string().optional(),
 });
@@ -111,10 +105,11 @@ export const slideSearch = lenientSearch({
   z: z.number().min(0).max(20).optional(),
   object: z.string().optional(),
   with: z.string().optional(),
-  scene: sceneField(viewerScenes, liveViewerScenes),
+  scene: sceneField(viewerScenes),
   tool: z.enum(armTools).optional(),
   across: z.string().optional(),
   focus: z.boolean().optional(),
+  layout: z.enum(viewerLayouts).optional(),
   peek: z.boolean().optional(),
   tab: z.enum(viewerTabs).optional(),
   modal: z.enum(["preset"]).optional(),
@@ -142,7 +137,7 @@ export const newAnnotateSearch = lenientSearch({
 
 export const annotateSearch = lenientSearch({
   task: z.string().optional(),
-  scene: sceneField(mockScenes.annotate, ["auto", "models"]),
+  scene: sceneField(mockScenes.annotate),
   tool: z.enum(["smart"]).optional(),
 });
 
@@ -201,7 +196,7 @@ export const guidedSearch = lenientSearch({
   x: z.number().optional(),
   y: z.number().optional(),
   z: z.number().positive().max(100).optional(),
-  scene: sceneField(mockScenes.guided, ["region"]),
+  scene: sceneField(mockScenes.guided),
   submitted: z.boolean().optional(),
   tab: z.enum(["review", "comments", "display"]).optional(),
 });

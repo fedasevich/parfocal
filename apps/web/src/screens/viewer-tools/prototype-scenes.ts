@@ -20,15 +20,6 @@ export const annotateScenes: { scene: SceneOf<"annotate">; label: string; note: 
   { scene: "models", label: "Choosing a model", note: "Best, Good and Fast for outlining nuclei" },
 ];
 
-export const compareScenes: { scene: SceneOf<"compare">; label: string; note: string }[] = [
-  {
-    scene: "picked",
-    label: "Slides picked",
-    note: "A1 H&E on the left, the CK slide on the right",
-  },
-  { scene: "picking", label: "Picking the right side", note: "The right pane's slide list open" },
-];
-
 export function toolPrototypeLinks(projectId: string, taskId: string, slideId: string) {
   const params = { projectId, slideId };
   return [
@@ -62,16 +53,16 @@ export function toolPrototypeLinks(projectId: string, taskId: string, slideId: s
         search: { task: taskId, scene },
       }),
     })),
-    ...compareScenes.map(({ scene, label, note }) => ({
-      key: `compare-${scene}`,
-      label: `Compare slides · ${label}`,
-      note,
+    {
+      key: "compare",
+      label: "Compare slides",
+      note: "The slide on the left with the right side's slide list open",
       link: linkOptions({
         to: "/projects/$projectId/slides/$slideId",
         params,
-        search: { task: taskId, scene },
+        search: { task: taskId, layout: "compare" },
       }),
-    })),
+    },
     {
       key: "focus",
       label: "Focus mode",
@@ -79,7 +70,7 @@ export function toolPrototypeLinks(projectId: string, taskId: string, slideId: s
       link: linkOptions({
         to: "/projects/$projectId/slides/$slideId",
         params,
-        search: { task: taskId, object: "T5", focus: true },
+        search: { task: taskId, object: "T5", layout: "focus" },
       }),
     },
     {

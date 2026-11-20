@@ -43,7 +43,7 @@ export function topBarMoreItems({
     {
       icon: "layers",
       label: "Compare with another slide",
-      onSelect: open(destinations.compareSlides(projectId, slideId, taskId, "picking")),
+      onSelect: open(destinations.compareSlides(projectId, slideId, taskId)),
     },
     {
       icon: "expand",

@@ -1,19 +1,5 @@
 import { expect, type Page, test } from "./a11y.ts";
-
-async function openCompare(page: Page) {
-  await page.goto("/prototype");
-  const link = page
-    .getByRole("list", { name: "Screens" })
-    .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
-  await page.goto((await link.getAttribute("href")) ?? "");
-  await page.getByRole("button", { name: /^A1/ }).first().click();
-  const slides = page.getByRole("dialog", { name: "Slides in this case and task" });
-  await slides
-    .getByRole("button", { name: /Side by side with/ })
-    .first()
-    .click();
-  await expect(page).toHaveURL(/scene=picked/);
-}
+import { openCompare, openCompareOptions } from "./compare-open.ts";
 
 async function boxes(page: Page) {
   const found: Record<string, { x: number; y: number; width: number; height: number }> = {};
@@ -31,6 +17,7 @@ const layout = (page: Page, name: string) =>
 test("each layout places its panes where the layout says", async ({ page }) => {
   test.setTimeout(90_000);
   await openCompare(page);
+  await openCompareOptions(page);
   const frame = page.locator("[data-layout]:not([data-slot])");
 
   await expect(frame).toHaveAttribute("data-layout", "side");
@@ -67,15 +54,18 @@ test("four panes move together while linked and each pane picks its own slide", 
 }) => {
   test.setTimeout(90_000);
   await openCompare(page);
+  await openCompareOptions(page);
   await layout(page, "4").click();
-  for (const pane of ["left", "right", "bottomLeft", "bottomRight"]) {
+  for (const pane of ["right", "bottomLeft", "bottomRight"]) {
     await expect(page.getByTestId(`rotation-${pane}`)).toHaveText("0°");
   }
   await expect(page.locator('[data-slot="crosshair"]')).toHaveCount(4);
+  await page.getByRole("button", { name: "Compare options" }).click();
   await page.getByRole("button", { name: "Rotate bottom right pane right" }).click();
-  await expect(page.getByTestId("rotation-left")).toHaveText("15°");
-  await expect(page.getByTestId("rotation-bottomLeft")).toHaveText("15°");
+  await expect(page.getByTestId("rotation-bottomRight")).toHaveText("15°");
+  await expect(page.getByTestId("rotation-bottomLeft")).toHaveText("0°");
 
+  await page.getByRole("button", { name: "Compare options" }).click();
   await page.getByRole("button", { name: "Change the bottom left slide" }).click();
   await expect(page.getByRole("listbox", { name: "Slide for the bottom left side" })).toBeVisible();
 });

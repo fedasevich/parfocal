@@ -29,6 +29,7 @@ type LiveSlidesPopoverProps = {
   task: ReviewTaskDetail | undefined;
   onPick: (slideId: string) => void;
   onResultSets: (() => void) | undefined;
+  onCompare: (() => void) | undefined;
 };
 
 export function LiveSlidesPopover({
@@ -41,6 +42,7 @@ export function LiveSlidesPopover({
   task,
   onPick,
   onResultSets,
+  onCompare,
 }: LiveSlidesPopoverProps) {
   const { t } = useLingui();
   const goTo = useGoTo();
@@ -115,8 +117,7 @@ export function LiveSlidesPopover({
         resultSetsLabel: t`Result sets of ${slideLabel}`,
         onResultSets,
         compareLabel: t`Compare`,
-        onCompare: () =>
-          void goTo(destinations.compareSlides(projectId, slideId, task?.id, "picking")),
+        onCompare,
         compareTitle: t`Open this slide beside another one`,
         onAddSlides: () => void goTo(destinations.upload(projectId)),
         addSlidesTitle: grouped ? t`Add slides to this case` : t`Add slides to this project`,

@@ -58,6 +58,7 @@ export function StillEngine({
   tiles.current = onTiles;
   const [live, setLive] = useState<Live | null>(null);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [engineCamera, setEngineCamera] = useState("");
   const [drawn, setDrawn] = useState({
     overlays: 0,
@@ -73,6 +74,7 @@ export function StillEngine({
     if (container === null) return;
     let cancelled = false;
     let stop: (() => void) | null = null;
+    setFailed(false);
     const down = () => {
       setLive(null);
       setReady(false);
@@ -93,11 +95,16 @@ export function StillEngine({
             report.current(link);
           },
           onTiles: (failed) => tiles.current(failed),
-          onFail: down,
+          onFail: () => {
+            setFailed(true);
+            down();
+          },
         });
       },
       () => {
-        if (!cancelled) down();
+        if (cancelled) return;
+        setFailed(true);
+        down();
       },
     );
     return () => {
@@ -185,7 +192,7 @@ export function StillEngine({
         ref={host}
         data-testid="still-engine"
         data-slide={slideId}
-        data-state={ready ? "ready" : live === null ? "loading" : "opening"}
+        data-state={ready ? "ready" : failed ? "failed" : live === null ? "loading" : "opening"}
         data-objects={placed.length}
         data-overlays={drawn.overlays}
         data-below-cutoff={drawn.below}

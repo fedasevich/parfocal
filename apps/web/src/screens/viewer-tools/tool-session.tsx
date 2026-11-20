@@ -55,44 +55,6 @@ export function WithToolSession({
   );
 }
 
-export function WithOptionalToolSession({
-  projectId,
-  slideId,
-  task,
-  children,
-}: {
-  projectId: string;
-  slideId: string;
-  task: string | undefined;
-  children: (tools: ToolSession | null) => ReactNode;
-}) {
-  return (
-    <SlidePicture slideId={slideId}>
-      {task === undefined ? (
-        children(null)
-      ) : (
-        <OptionalSessionLoader projectId={projectId} slideId={slideId} taskId={task}>
-          {children}
-        </OptionalSessionLoader>
-      )}
-    </SlidePicture>
-  );
-}
-
-function OptionalSessionLoader({
-  projectId,
-  slideId,
-  taskId,
-  children,
-}: {
-  projectId: string;
-  slideId: string;
-  taskId: string;
-  children: (tools: ToolSession | null) => ReactNode;
-}) {
-  return children(useToolSession(projectId, slideId, taskId));
-}
-
 function SessionLoader({
   projectId,
   slideId,

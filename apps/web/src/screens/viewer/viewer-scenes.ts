@@ -11,9 +11,7 @@ export type LayersScene = SceneOf<"layers">;
 
 export type NavigatorScene = SceneOf<"navigator">;
 
-export type CompareScene = SceneOf<"compare">;
-
-export type ViewerScene = CaseScene | LayersScene | NavigatorScene | CompareScene;
+export type ViewerScene = CaseScene | LayersScene | NavigatorScene;
 
 export type LayerView =
   | "panel"
@@ -119,8 +117,6 @@ const scenes: Record<ViewerScene, Partial<ViewerSetup>> = {
   cells: {},
   focus: {},
   pointer: {},
-  picked: {},
-  picking: {},
 };
 
 export function viewerSetup(scene: ViewerScene | undefined): ViewerSetup {
@@ -164,6 +160,3 @@ const navigatorSceneSet: Record<NavigatorScene, true> = {
 
 export const isNavigatorScene = (scene: ViewerScene | undefined): scene is NavigatorScene =>
   scene !== undefined && scene in navigatorSceneSet;
-
-export const isCompareScene = (scene: ViewerScene | undefined): scene is CompareScene =>
-  scene === "picked" || scene === "picking";

@@ -1,4 +1,5 @@
 import type { SettingsSection } from "../screens/settings/section-keys.ts";
+import type { ViewerMode } from "../viewer/viewer-mode.ts";
 import { slideHref } from "./slide-link.ts";
 
 const query = (params: Record<string, string | undefined>) => {
@@ -28,16 +29,14 @@ export const destinations = {
     view: { x?: number | undefined; y?: number | undefined; z?: number | undefined } = {},
   ) => slideHref({ projectId, slideId, taskId, object, view }),
   focus: (projectId: string, slideId: string, taskId?: string) =>
-    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, focus: "true" })}`,
+    slideHref({ projectId, slideId, taskId, layout: "focus" }),
   compareSlides: (
     projectId: string,
     slideId: string,
     taskId: string | undefined,
-    scene: "picking" | "picked",
     withSlideId?: string,
-    mode?: string,
-  ) =>
-    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, mode, scene, with: withSlideId })}`,
+    mode?: ViewerMode,
+  ) => slideHref({ projectId, slideId, taskId, mode, layout: "compare", withSlideId }),
   coSign: (projectId: string, caseId: string) => `/projects/${projectId}/cases/${caseId}/co-sign`,
   guided: (
     taskId: string,

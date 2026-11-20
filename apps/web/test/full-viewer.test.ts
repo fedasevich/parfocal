@@ -5,7 +5,6 @@ import { mockScenes } from "../src/screens/scenes.ts";
 import { presetProblem } from "../src/screens/viewer/preset-name.ts";
 import {
   findingsObjects,
-  isCompareScene,
   isLayersScene,
   isNavigatorScene,
   layerViews,
@@ -27,7 +26,6 @@ test("every scene list on the slide route is apart from the others", () => {
     case: mockScenes.case,
     layers: mockScenes.layers,
     navigator: mockScenes.navigator,
-    compare: mockScenes.compare,
   };
   const seen = new Map<string, string>();
   for (const [screen, scenes] of Object.entries(lists)) {
@@ -41,9 +39,8 @@ test("every scene list on the slide route is apart from the others", () => {
     }
   }
   for (const scene of mockScenes.navigator) assert.ok(isNavigatorScene(scene), scene);
-  for (const scene of mockScenes.compare) assert.ok(isCompareScene(scene), scene);
   for (const scene of [...mockScenes.case, ...mockScenes.layers]) {
-    assert.ok(!isNavigatorScene(scene) && !isCompareScene(scene), scene);
+    assert.ok(!isNavigatorScene(scene), scene);
   }
 });
 

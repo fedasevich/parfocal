@@ -455,7 +455,6 @@ msgid "{0} · they do not block signing, the report lists them"
 msgstr ""
 
 #. placeholder {0}: current.object
-#: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0} · Tumor region"
 msgstr ""
@@ -536,16 +535,6 @@ msgstr ""
 #. placeholder {2}: Math.ceil( (profile.steps.length * (timing.countdownMs + timing.recordMs)) / 60_000, )
 #: src/screens/input-traces/input-traces.tsx
 msgid "{0} {1} steps, about {2} minutes."
-msgstr ""
-
-#. placeholder {0}: formatMillimetres(current.size_mm)
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "{0} across. Decided. Press a key again to change it."
-msgstr ""
-
-#. placeholder {0}: formatMillimetres(current.size_mm)
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "{0} across. Still open."
 msgstr ""
 
 #. placeholder {0}: plural(ids.length, "slide")
@@ -2213,11 +2202,11 @@ msgstr ""
 msgid "{source} wait for the source"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "{stain} stain, case {caseLabel}"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "{stain} stain, no case"
 msgstr ""
 
@@ -2517,7 +2506,6 @@ msgid "<0>The source of this slide is not answering.</0> The slide opens from th
 msgstr ""
 
 #. placeholder {0}: seenPercent.reading
-#: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer-tools/navigator-canvas.tsx
 msgid "<0>Whole slide</0> · {0}% seen"
 msgstr ""
@@ -5188,7 +5176,7 @@ msgstr ""
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/upload/formats-drawer.tsx
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Clear"
 msgstr ""
 
@@ -5236,6 +5224,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Click to open the whole slide (or hold Z)"
+msgstr ""
+
+#: src/viewer/compare-panes.tsx
+msgid "Click to show here"
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
@@ -5305,6 +5297,11 @@ msgstr ""
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/viewer/objects-panel.tsx
 msgid "Close (Esc)"
+msgstr ""
+
+#: src/viewer/compare-panes.tsx
+#: src/viewer/stage-compare.tsx
+msgid "Close compare"
 msgstr ""
 
 #: ../../packages/ui/src/components/developer-drawer.tsx
@@ -5502,6 +5499,10 @@ msgstr ""
 msgid "Compare and share"
 msgstr ""
 
+#: src/viewer/compare-panes.tsx
+msgid "Compare options"
+msgstr ""
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/routes/issue-states.tsx
 #: src/screens/review/viewer-frame.tsx
@@ -5531,11 +5532,7 @@ msgstr ""
 msgid "Compare, run again or add another"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "Comparing {shownCount} slides"
-msgstr ""
-
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Comparing the two overviews"
 msgstr ""
 
@@ -8947,14 +8944,13 @@ msgstr ""
 #: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/annotations/layers-panel.tsx
 #: src/screens/viewer-tools/annotate-view.tsx
-#: src/screens/viewer-tools/compare-view.tsx
 msgid "Layers"
 msgstr ""
 
 #: src/screens/admin/template-offers.tsx
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/settings/settings-screen.tsx
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Layout"
 msgstr ""
 
@@ -9024,10 +9020,6 @@ msgstr ""
 msgid "Left"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "Left · Right"
-msgstr ""
-
 #: src/screens/evaluation/report-pages.tsx
 msgid "Left open"
 msgstr ""
@@ -9061,6 +9053,11 @@ msgstr ""
 msgid "Left to right"
 msgstr ""
 
+#. placeholder {0}: link.slide.name
+#: src/viewer/compare-home.tsx
+msgid "Left: {0}"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Lengths"
@@ -9078,7 +9075,7 @@ msgstr ""
 msgid "Let others on this slide follow where you look"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Let others on this slide see where you point"
 msgstr ""
 
@@ -9124,7 +9121,7 @@ msgstr ""
 msgid "line {0}"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Line up automatically"
 msgstr ""
 
@@ -9144,7 +9141,7 @@ msgstr ""
 msgid "linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Lines the right pane up with the left. The two bottom panes keep their own view."
 msgstr ""
 
@@ -9152,11 +9149,11 @@ msgstr ""
 msgid "Link"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Linked"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Linked: pan, zoom and rotation move both"
 msgstr ""
 
@@ -9910,7 +9907,7 @@ msgstr ""
 msgid "Move a slide between cases"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Move both together"
 msgstr ""
 
@@ -10353,7 +10350,7 @@ msgstr ""
 msgid "No class"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "No clear match between these two. Line them up by hand."
 msgstr ""
 
@@ -11450,7 +11447,6 @@ msgstr ""
 
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 #: src/screens/review/viewer-frame.tsx
-#: src/screens/viewer-tools/focus-view.tsx
 #: src/screens/viewer/object-table.tsx
 #: src/viewer/stage-focus.tsx
 msgid "open"
@@ -11768,7 +11764,7 @@ msgstr ""
 msgid "Others on this slide can follow where you look. Click to stop"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Others on this slide see where you point. Click to stop"
 msgstr ""
 
@@ -12682,11 +12678,11 @@ msgstr ""
 msgid "Proposals"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Proposed from the overviews. Drag or rotate a pane to adjust."
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Proposes a starting offset and rotation from the overviews."
 msgstr ""
 
@@ -13260,9 +13256,8 @@ msgstr ""
 msgid "Reset"
 msgstr ""
 
-#. placeholder {0}: paneName[side]
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "Reset {0} pane rotation to 0°"
+#: src/viewer/compare-still-pane.tsx
+msgid "Reset {name} pane rotation to 0°"
 msgstr ""
 
 #: src/results/add-result-set.tsx
@@ -13736,19 +13731,16 @@ msgstr ""
 msgid "Rotate"
 msgstr ""
 
-#. placeholder {0}: paneName[side]
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "Rotate {0} pane"
+#: src/viewer/compare-still-pane.tsx
+msgid "Rotate {name} pane"
 msgstr ""
 
-#. placeholder {0}: paneName[side]
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "Rotate {0} pane left"
+#: src/viewer/compare-still-pane.tsx
+msgid "Rotate {name} pane left"
 msgstr ""
 
-#. placeholder {0}: paneName[side]
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "Rotate {0} pane right"
+#: src/viewer/compare-still-pane.tsx
+msgid "Rotate {name} pane right"
 msgstr ""
 
 #. placeholder {0}: round.number
@@ -14582,7 +14574,7 @@ msgstr ""
 msgid "Share {taskCode} read-only"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Share my cursor"
 msgstr ""
 
@@ -14595,7 +14587,7 @@ msgstr ""
 msgid "Share usage statistics"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Shared cursor"
 msgstr ""
 
@@ -14763,7 +14755,6 @@ msgstr ""
 msgid "Show the ID tags on the slide"
 msgstr ""
 
-#: src/screens/viewer-tools/focus-view.tsx
 #: src/viewer/stage-focus.tsx
 msgid "Show the interface"
 msgstr ""
@@ -14814,6 +14805,10 @@ msgstr ""
 msgid "Show, hide, compare and style the result sets of this slide"
 msgstr ""
 
+#: src/viewer/compare-panes.tsx
+msgid "Showing here"
+msgstr ""
+
 #: src/screens/viewer/object-table.tsx
 msgid "showing the regions, your added region and the cells with a note or a disagreement"
 msgstr ""
@@ -14826,6 +14821,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "Shown next: {list}."
+msgstr ""
+
+#: src/viewer/compare-panes.tsx
+msgid "Shown on another side now, picking it swaps the sides"
 msgstr ""
 
 #. placeholder {0}: imports.token.end
@@ -15120,14 +15119,6 @@ msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Size of {id} in mm"
-msgstr ""
-
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "Size unknown. Decided. Press a key again to change it."
-msgstr ""
-
-#: src/screens/viewer-tools/focus-view.tsx
-msgid "Size unknown. Still open."
 msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
@@ -16860,10 +16851,6 @@ msgstr ""
 msgid "The shapes with their groups, notes and cell calls, which Parfocal can import again"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "The shared cursor shows the same point on every pane."
-msgstr ""
-
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "The sign-off of this task could not be opened. The evaluation report shows whether it is signed."
 msgstr ""
@@ -16889,7 +16876,7 @@ msgstr ""
 msgid "The slide is still being inspected at its source."
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "The slide you were reading"
 msgstr ""
 
@@ -17216,7 +17203,7 @@ msgstr ""
 msgid "This slide has no pixel size, so areas show in pixels and get no size category."
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "This slide has no tumor map"
 msgstr ""
 
@@ -17631,6 +17618,10 @@ msgstr ""
 
 #: src/results/view-map-layer.tsx
 msgid "Tumor map for this view"
+msgstr ""
+
+#: src/viewer/compare-panes.tsx
+msgid "Tumor map outline on the right"
 msgstr ""
 
 #: src/screens/viewer/layer-views.tsx
@@ -18153,7 +18144,7 @@ msgid "Viewing now: {0}"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Views"
 msgstr ""
 
@@ -18947,7 +18938,7 @@ msgstr ""
 msgid "Your account"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
+#: src/viewer/compare-panes.tsx
 msgid "Your alignment is kept for this pair of slides. Clear puts the panes back."
 msgstr ""
 

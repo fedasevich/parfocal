@@ -39,7 +39,7 @@ test("each more item opens its destination and the annotate menu adds a second o
   assert.ok(visited.includes("/projects/p1/run-model"));
   assert.ok(visited.includes("/settings/shortcuts"));
   assert.ok(visited.includes("/tasks/t1/comments"));
-  assert.ok(visited.some((href) => href.includes("scene=picking")));
+  assert.ok(visited.some((href) => href.includes("layout=compare")));
 });
 
 test("project destinations do nothing before the project is known", () => {

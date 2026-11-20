@@ -272,14 +272,22 @@ export async function slidePairWithTiles(page: Page): Promise<SlidePair> {
     for (const slide of slides) {
       if (await hasTiles(page, slide.id)) withTiles.push(slide);
     }
+    const opens = new Map<string, boolean>();
+    const viewable = async (slide: string) => {
+      const known = opens.get(slide);
+      if (known !== undefined) return known;
+      const result = await opensInViewer(page, project.id, slide);
+      opens.set(slide, result);
+      return result;
+    };
     for (const left of withTiles) {
-      const right = withTiles.find(
-        (other) =>
-          other.id !== left.id && (left.case === null || other.case?.label === left.case.label),
-      );
-      if (right === undefined) continue;
-      if (!(await opensInViewer(page, project.id, left.id))) continue;
-      return { project: project.id, left: left.id, right: right.id, rightLabel: right.label };
+      if (!(await viewable(left.id))) continue;
+      for (const right of withTiles) {
+        if (right.id === left.id) continue;
+        if (left.case !== null && right.case?.label !== left.case.label) continue;
+        if (!(await viewable(right.id))) continue;
+        return { project: project.id, left: left.id, right: right.id, rightLabel: right.label };
+      }
     }
   }
   throw new Error("No project has two slides of one case with files the viewer can open");

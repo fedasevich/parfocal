@@ -14,6 +14,7 @@ export type ViewerSearch = CameraSearch & {
   across?: string | undefined;
   peek?: boolean | undefined;
   focus?: boolean | undefined;
+  layout?: "compare" | "focus" | undefined;
 };
 
 export type FullViewerProps = {

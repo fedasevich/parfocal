@@ -99,11 +99,11 @@ test("a sharer's cursor shows in a compare pane and a compare user's cursor reac
   const annaHost = await openAs(anna, "AK", comparedSlide);
   const janHost = await openAs(jan, "JR", comparedSlide);
   await simona.goto(
-    `/projects/${p07}/slides/${comparedSlide}?task=${blindedTask}&scene=picked&as=SM`,
+    `/projects/${p07}/slides/${comparedSlide}?task=${blindedTask}&layout=compare&as=SM`,
   );
   const lenka = await context.newPage();
   await lenka.goto(
-    `/projects/${p07}/slides/${comparedSlide}?task=${blindedTask}&scene=picked&as=LM`,
+    `/projects/${p07}/slides/${comparedSlide}?task=${blindedTask}&layout=compare&as=LM`,
   );
   const home = simona.locator('[data-pane="left"]');
   await expect(home).toBeVisible({ timeout: 20_000 });
@@ -115,7 +115,7 @@ test("a sharer's cursor shows in a compare pane and a compare user's cursor reac
     { timeout: 5000 },
   );
   await expect(lenka.getByTestId("presence")).toHaveCount(1);
-  await expect(simona.getByTestId("share-view")).toHaveCount(0);
+  await expect(simona.getByTestId("share-cursor")).toBeVisible();
 
   await anna.bringToFront();
   const stage = await annaHost.boundingBox();

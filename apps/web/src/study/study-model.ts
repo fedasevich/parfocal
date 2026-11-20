@@ -91,8 +91,7 @@ export type StudyState = { rounds: Round[]; sessions: StudySession[] };
 export const studySlide = "tumor_044";
 
 const reviewSlide = "/projects/{project}/slides/{slide}?task={task}&as=DH";
-const cellFindings =
-  "/projects/{taskProject}/slides/{taskSlide}?task={task}&object=T1·C145&scene=objects";
+const cellFindings = "/projects/{taskProject}/slides/{taskSlide}?task={task}&object=T1·C145";
 const cellGuard: TaskGuard = {
   stayOn: ["^/projects/{taskProject}/slides/{taskSlide}(/|$)"],
   where: "This task happens on the slide's cell findings screen. Stay on it until you are done.",
