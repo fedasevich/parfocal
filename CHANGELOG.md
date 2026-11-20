@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.32.1 (2026-11-20)
+
+### Fixes
+
+- PROTO-113: Grant only select and insert on review edit versions so the deploy guard passes
+
+### Docs
+
+- PROTO-138: Note the hint bar on an unopenable slide
+- PROTO-113: Log the deploy guard false alarm
+
+### Other
+
+- PROTO-136: Claim Best answers and true counts
+
 ## v0.32.0 (2026-11-20)
 
 ### Features
