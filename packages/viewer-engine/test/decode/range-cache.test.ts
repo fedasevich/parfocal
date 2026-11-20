@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createRangeCache, rangeCacheFor } from "../../src/index.ts";
+import {
+  createRangeCache,
+  defaultCachedBlocks,
+  defaultRangeBlockSize,
+  rangeCacheFor,
+} from "../../src/index.ts";
 
 const blockSize = 16;
 const url = "https://slides.example/slide.tiff";
@@ -273,5 +278,31 @@ describe("the shared range cache", () => {
       server.seen.map(({ range }) => range),
       ["bytes=0-19", "bytes=24-31", "bytes=32-49", "bytes=52-63"],
     );
+  });
+
+  it("reads a slide in 256 KiB blocks by default and keeps 100 MiB of them", async () => {
+    const size = 3 * 1024 * 1024;
+    const seen: string[] = [];
+    const fetch = (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const range = new Headers(init?.headers).get("range") ?? "";
+      seen.push(range);
+      const [, from = "0", to = "0"] = /^bytes=(\d+)-(\d+)$/.exec(range) ?? [];
+      const start = Number(from);
+      const end = Math.min(Number(to), size - 1);
+      return Promise.resolve(
+        new Response(new Uint8Array(end - start + 1), {
+          status: 206,
+          headers: { "content-range": `bytes ${start}-${end}/${size}` },
+        }),
+      );
+    };
+    const cache = createRangeCache({ fetch });
+    const tile = await cache.get(url, "bytes=300000-340000");
+    assert.equal(tile.bytes.byteLength, 40001);
+    await cache.get(url, "bytes=1000000-1000100");
+    await cache.get(url, "bytes=262144-262200");
+    assert.deepEqual(seen, ["bytes=262144-524287", "bytes=786432-1048575"]);
+    assert.equal(defaultRangeBlockSize, 256 * 1024);
+    assert.equal(defaultCachedBlocks * defaultRangeBlockSize, 100 * 1024 * 1024);
   });
 });
