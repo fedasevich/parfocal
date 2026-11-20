@@ -4517,6 +4517,7 @@ msgid "Brought back"
 msgstr "Brought back"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/viewer/stage-shape-edit.tsx
 msgid "Brush"
 msgstr "Brush"
 
@@ -6501,6 +6502,7 @@ msgstr "Does not line up"
 #: src/screens/upload/upload-page.tsx
 #: src/study/study-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
+#: src/viewer/stage-shape-edit.tsx
 msgid "Done"
 msgstr "Done"
 
@@ -6599,6 +6601,10 @@ msgstr "Draft, not signed"
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Draft. Not for clinical use until it is signed."
 msgstr "Draft. Not for clinical use until it is signed."
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Drag a point or the outline of {object}. Each move is saved as your edit."
+msgstr "Drag a point or the outline of {object}. Each move is saved as your edit."
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Drag one onto the page, or click it to add it after the selected block."
@@ -6824,6 +6830,10 @@ msgstr "Edit slides"
 #: src/screens/project/settings-tab.tsx
 msgid "Edit the form"
 msgstr "Edit the form"
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Edit the outline of {object}"
+msgstr "Edit the outline of {object}"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
@@ -10089,6 +10099,10 @@ msgstr "Move it to the {parfocalGpu}"
 msgid "Move on by itself"
 msgstr "Move on by itself"
 
+#: src/viewer/stage-shape-edit.tsx
+msgid "Move points"
+msgstr "Move points"
+
 #: src/screens/project/slide-move-dialog.tsx
 msgid "Move slide"
 msgstr "Move slide"
@@ -12134,6 +12148,10 @@ msgstr "Pages"
 msgid "Pages of the report"
 msgstr "Pages of the report"
 
+#: src/viewer/stage-shape-edit.tsx
+msgid "Paint to add to {object}, hold Shift to erase. The [ and ] keys change the size."
+msgstr "Paint to add to {object}, hold Shift to erase. The [ and ] keys change the size."
+
 #: src/results/painted-map-layer.tsx
 msgid "Painted map"
 msgstr "Painted map"
@@ -13574,6 +13592,7 @@ msgid "Restore {0}"
 msgstr "Restore {0}"
 
 #: src/viewer/annotate-task-panel.tsx
+#: src/viewer/stage-shape-edit.tsx
 msgid "Restore the AI original"
 msgstr "Restore the AI original"
 
