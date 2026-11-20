@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.29.1 (2026-11-20)
+
+### Fixes
+
+- VIEW-076: Serve MIRAX and DICOM zips as a lossless pyramid TIFF and name them by stem
+
+### Docs
+
+- VIEW-076: Log zip slides, ask decision 165 on converted slide storage
+
 ## v0.29.0 (2026-11-20)
 
 ### Fixes
