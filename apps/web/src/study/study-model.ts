@@ -75,8 +75,6 @@ export type StudySession = {
   blocks: BlockedAttempt[];
 };
 
-export const taskWindowName = "parfocal-study-task";
-
 export type ActiveGuard = {
   sessionId: string;
   taskId: string;

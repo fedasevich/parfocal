@@ -1,23 +1,13 @@
 import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { now } from "../clock.ts";
-import { isBlocked, taskWindowName } from "./study-model.ts";
+import { isBlocked } from "./study-model.ts";
 import { appendBlock, readGuard } from "./study-storage.ts";
 
-const insideTaskWindow = () => {
-  try {
-    return window.name === taskWindowName;
-  } catch {
-    return false;
-  }
-};
-
-export function StudyGuardHost() {
+export default function StudyGuardHost() {
   const [message, setMessage] = useState<string | null>(null);
-  const enabled = insideTaskWindow();
 
   useBlocker({
-    disabled: !enabled,
     enableBeforeUnload: false,
     shouldBlockFn: ({ next }) => {
       const guard = readGuard();

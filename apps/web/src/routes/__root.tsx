@@ -20,11 +20,12 @@ import { SettingsOverlayHost } from "../shell/settings-overlay.tsx";
 import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 import { SurveyHost } from "../shell/survey-host.tsx";
-import { StudyGuardHost } from "../study/study-guard-host.tsx";
+import { insideTaskWindow } from "../study/study-window.ts";
 import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 import { useRememberReturnPage } from "../viewer/use-return-page.ts";
 
 const TourHost = lazy(() => import("../help/tour-host.tsx"));
+const StudyGuardHost = lazy(() => import("../study/study-guard-host.tsx"));
 
 export const Route = createRootRoute({
   validateSearch: overlaySearch,
@@ -69,7 +70,11 @@ function RootContent() {
       <SettingsOverlayHost />
       <LabKey />
       <FeedbackHost />
-      <StudyGuardHost />
+      {insideTaskWindow() ? (
+        <Suspense fallback={null}>
+          <StudyGuardHost />
+        </Suspense>
+      ) : null}
       <SurveyHost />
       {signedIn ? (
         <Suspense fallback={null}>

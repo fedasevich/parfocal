@@ -20,9 +20,9 @@ import {
   startNextRound,
   startSession,
   summariseRound,
-  taskWindowName,
 } from "./study-model.ts";
 import { clearBlockLog, readBlockLog, readStudy, writeGuard, writeStudy } from "./study-storage.ts";
+import { taskWindowName } from "./study-window.ts";
 import { ReplayPanel } from "./trace/replay-panel.tsx";
 import { mergeBatches, type TraceEvent } from "./trace/trace-model.ts";
 import { createRecorder, type FrameTools, type Recorder } from "./trace/trace-recorder.ts";
