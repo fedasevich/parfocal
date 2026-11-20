@@ -69,7 +69,7 @@ test("the Annotate workspace opens its inspector on Display with the layers", as
   await expect(stage.getByTestId("measurement-list")).toHaveCount(0);
 });
 
-test("the live top bar has the slide picker and progress, and the inspector keeps all four tabs across a reload", async ({
+test("the live top bar has the slide picker and progress, and the inspector keeps its three tabs and the open tab across a reload", async ({
   page,
 }) => {
   await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=review&as=DH`);
@@ -85,9 +85,10 @@ test("the live top bar has the slide picker and progress, and the inspector keep
   await page.keyboard.press("Escape");
 
   const inspector = page.getByTestId("stage-inspector");
-  for (const name of ["Objects", "Display", "Comments", "Opinion"]) {
+  for (const name of ["Objects", "Display", "Comments"]) {
     await expect(inspector.getByRole("tab", { name })).toBeVisible();
   }
+  await expect(inspector.getByRole("tab", { name: /^Opinion/ })).toHaveCount(0);
   await inspector.getByRole("tab", { name: "Comments" }).click();
   await expect(page).toHaveURL(/tab=comments/);
   await expect(inspector.getByTestId("stage-comments")).toBeVisible();
@@ -97,12 +98,10 @@ test("the live top bar has the slide picker and progress, and the inspector keep
     "aria-selected",
     "true",
   );
-  await inspector.getByRole("tab", { name: "Opinion" }).click();
-  await expect(inspector.getByTestId("stage-opinion")).toBeVisible();
 
   await bar.getByTestId("workspace-switch").getByRole("radio", { name: "Annotate" }).click();
   await expect(stage).toHaveAttribute("data-workspace", "annotate");
-  await expect(inspector.getByRole("tab", { name: "Opinion" })).toHaveAttribute(
+  await expect(inspector.getByRole("tab", { name: "Comments" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -110,9 +109,9 @@ test("the live top bar has the slide picker and progress, and the inspector keep
   await bar.getByTestId("slide-picker").click();
   await rows.filter({ hasNotText: "tumor_044" }).first().click();
   await expect(page).not.toHaveURL(new RegExp(tumor044));
-  await expect(page).toHaveURL(/tab=opinion/);
+  await expect(page).toHaveURL(/tab=comments/);
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await expect(inspector.getByRole("tab", { name: "Opinion" })).toHaveAttribute(
+  await expect(inspector.getByRole("tab", { name: "Comments" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
