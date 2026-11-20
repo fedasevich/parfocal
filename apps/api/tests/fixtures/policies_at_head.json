@@ -58,6 +58,7 @@
     "retention_policies",
     "review_assignments",
     "review_decisions",
+    "review_edit_versions",
     "review_edits",
     "review_order",
     "review_skips",

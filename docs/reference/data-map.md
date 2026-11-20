@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 52 |
-| `personal` | 101 |
+| `personal` | 102 |
 | `secret` | 15 |
-| `operational` | 888 |
+| `operational` | 903 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1013,6 +1013,27 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `ai_score` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## review_edit_versions
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `sequence` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `user_id` | personal |
+| `kind` | operational |
+| `number` | operational |
+| `split` | operational |
+| `change` | operational |
+| `class_id` | operational |
+| `geometry` | operational |
+| `deleted` | operational |
+| `related` | operational |
+| `changed_at` | operational |
 
 ## review_edits
 

@@ -3471,6 +3471,10 @@ msgstr ""
 msgid "AI order"
 msgstr ""
 
+#: src/screens/review/object-edit-history.tsx
+msgid "AI original"
+msgstr ""
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "AI result"
 msgstr ""
@@ -4130,6 +4134,10 @@ msgstr ""
 msgid "Back to sign in"
 msgstr ""
 
+#: src/screens/review/object-edit-history.tsx
+msgid "Back to the AI original"
+msgstr ""
+
 #: src/screens/review/object-card.tsx
 msgid "Back to the answers"
 msgstr ""
@@ -4448,6 +4456,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Brightness"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Brought back"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -4836,6 +4848,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "changed"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Changed"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -6226,6 +6242,7 @@ msgstr ""
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/admin/deleted-projects.tsx
+#: src/screens/review/object-edit-history.tsx
 msgid "Deleted"
 msgstr ""
 
@@ -6717,6 +6734,10 @@ msgstr ""
 #. placeholder {0}: row.object
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Edit {0} myself in the viewer"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Edit history"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -9549,6 +9570,10 @@ msgstr ""
 msgid "Made by <0>{0}</0>, nobody has changed it."
 msgstr ""
 
+#: src/screens/review/object-edit-history.tsx
+msgid "Made by splitting {related}"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Made by the model and kept as it is by an expert"
 msgstr ""
@@ -9776,6 +9801,14 @@ msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
 msgid "Mentions and replies"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Merged into {related}"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Merged with {related}"
 msgstr ""
 
 #: ../../packages/ui/src/components/team.tsx
@@ -10176,6 +10209,10 @@ msgstr ""
 
 #: src/results/painted-map-layer.tsx
 msgid "New map"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "new outline"
 msgstr ""
 
 #: src/screens/onboarding/password-reset-forms.tsx
@@ -15641,6 +15678,10 @@ msgstr ""
 
 #: src/screens/new-task/reviewers-step.tsx
 msgid "Split evenly"
+msgstr ""
+
+#: src/screens/review/object-edit-history.tsx
+msgid "Split into {related}"
 msgstr ""
 
 #: src/screens/clinical-report/steps.tsx

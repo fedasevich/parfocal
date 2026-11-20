@@ -8,6 +8,7 @@ import { reviewConfidence } from "../screens/review/ai-wording.ts";
 import { cardText } from "../screens/review/decision-style.ts";
 import { noteAction } from "../screens/review/note-key.ts";
 import { ObjectCard, ObjectDots } from "../screens/review/object-card.tsx";
+import { ObjectEditHistory, useObjectEditHistory } from "../screens/review/object-edit-history.tsx";
 import { nextObjectAction, previousObjectAction } from "../screens/review/object-keys.ts";
 import type { ReviewSession } from "../screens/review/review-data.ts";
 import { answerFromDecision } from "../screens/review/review-state.ts";
@@ -58,6 +59,7 @@ export function StageGuidedCard({
         );
   };
   const kept = answer(object.object);
+  const history = useObjectEditHistory(session.taskId, session.slideId, object.object);
   const note = kept ? (
     <button
       type="button"
@@ -105,6 +107,7 @@ export function StageGuidedCard({
         disagreeOpen={false}
         note={note}
         coach={coach}
+        history={<ObjectEditHistory versions={history} classes={session.classes} />}
         onAnswer={onAnswer}
         onReason={() => undefined}
         onBackToAnswers={() => undefined}

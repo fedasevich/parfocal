@@ -174,6 +174,7 @@ import type {
   RetentionPolicy,
   ReviewDecision,
   ReviewEdit,
+  ReviewEditVersion,
   ReviewedLayer,
   ReviewerAgreement,
   ReviewerWorkload,
@@ -355,6 +356,7 @@ import {
   ResultStatus,
   ResumeMode,
   Retired,
+  ReviewEditChange,
   Role,
   Rule,
   ScopeKindKey,
@@ -9427,6 +9429,30 @@ export const getGetTaskDisplayResponseMock = (
   ),
   ...overrideResponse,
 });
+
+export const getListReviewEditHistoryResponseMock = (): ReviewEditVersion[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    change: faker.helpers.arrayElement([
+      "ai-original",
+      faker.helpers.arrayElement(Object.values(ReviewEditChange)),
+    ]),
+    class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    class_name: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([null]),
+    deleted: faker.datatype.boolean(),
+    related: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+    ),
+    reviewer_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    changed_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  }));
 
 export const getGetSlideResultStatsResponseMock = (
   overrideResponse: Partial<Extract<SlideResultStats, object>> = {},
@@ -24804,6 +24830,30 @@ export const getGetTaskDisplayMockHandler = (
   );
 };
 
+export const getListReviewEditHistoryMockHandler = (
+  overrideResponse?:
+    | ReviewEditVersion[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReviewEditVersion[]> | ReviewEditVersion[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/edits/:objectId/history",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListReviewEditHistoryResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetSlideResultStatsMockHandler = (
   overrideResponse?:
     | SlideResultStats
@@ -29891,6 +29941,7 @@ export const getParfocalAPIMock = () => [
   getListReviewObjectsMockHandler(),
   getGetSlideAgreementMockHandler(),
   getGetTaskDisplayMockHandler(),
+  getListReviewEditHistoryMockHandler(),
   getGetSlideResultStatsMockHandler(),
   getGetSlideAiProgressMockHandler(),
   getReportHighPowerFailureMockHandler(),

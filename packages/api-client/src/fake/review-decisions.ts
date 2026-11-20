@@ -6,6 +6,7 @@ import type {
   FirstRead,
   ReviewDecision,
   ReviewEdit,
+  ReviewEditVersion,
   ReviewedLayer,
   ReviewOrder,
 } from "../generated/api.ts";
@@ -288,7 +289,78 @@ export const rememberEdit = (
     };
   }
   writeEdits({ ...store, [key]: kept });
-  return kept[object];
+  const saved = kept[object];
+  const versions = readHistory();
+  const versionKey = `${key}:${object}`;
+  writeHistory({
+    ...versions,
+    [versionKey]: [
+      ...(versions[versionKey] ?? []),
+      {
+        object,
+        change: draft === null ? "cleared" : "edited",
+        class_id: saved?.class_id ?? null,
+        class_name: null,
+        geometry: saved?.geometry ?? null,
+        deleted: saved?.deleted ?? false,
+        related: draft === null ? [object] : [],
+        reviewer_id: people.LM.id,
+        changed_at: new Date().toISOString(),
+      },
+    ],
+  });
+  return saved;
+};
+
+const historyKey = "parfocal.fake.review-edit-history";
+
+type HistoryStore = Record<string, ReviewEditVersion[]>;
+
+let historyMemory: HistoryStore = {};
+
+const readHistory = (): HistoryStore => {
+  const stored = editSession()?.getItem(historyKey);
+  return stored === null || stored === undefined
+    ? historyMemory
+    : (JSON.parse(stored) as HistoryStore);
+};
+
+const writeHistory = (store: HistoryStore) => {
+  historyMemory = store;
+  editSession()?.setItem(historyKey, JSON.stringify(store));
+};
+
+const ringOf = (outline: number[]): ReviewEditVersion["geometry"] => {
+  const points: number[][] = [];
+  for (let index = 0; index + 1 < outline.length; index += 2) {
+    points.push([outline[index] ?? 0, outline[index + 1] ?? 0]);
+  }
+  const first = points[0];
+  return first ? { type: "Polygon", coordinates: [[...points, first]] } : null;
+};
+
+export const editHistoryFor = (
+  taskId: string,
+  slideId: string,
+  object: string,
+): ReviewEditVersion[] => {
+  const ai = reviewObjects.find((item) => item.object === object);
+  const original: ReviewEditVersion[] = ai
+    ? [
+        {
+          object,
+          change: "ai-original",
+          class_id: null,
+          class_name: ai.className,
+          geometry: ai.outline ? ringOf(ai.outline) : null,
+          deleted: false,
+          related: [],
+          reviewer_id: null,
+          changed_at: null,
+        },
+      ]
+    : [];
+  return [...original, ...(readHistory()[`${savedKey(taskId, slideId)}:${object}`] ?? [])];
 };
 
 export const reviewedLayerFor = (taskId: string, slideId: string): ReviewedLayer => {

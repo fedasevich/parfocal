@@ -12,6 +12,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     ForeignKeyConstraint,
+    Identity,
     Index,
     Integer,
     LargeBinary,
@@ -438,6 +439,73 @@ review_edits = Table(
         "(retired = 'merged') = (merged_into_number IS NOT NULL AND merged_into_split IS NOT NULL)",
         name="merged_into",
     ),
+)
+
+
+class ReviewEditChange(StrEnum):
+    EDITED = "edited"
+    CLEARED = "cleared"
+    RESTORED = "restored"
+    SPLIT = "split"
+    PART = "part"
+    MERGED = "merged"
+    MERGED_INTO = "merged-into"
+
+
+review_edit_versions = Table(
+    "review_edit_versions",
+    metadata,
+    *owned_ids(),
+    Column("sequence", BigInteger, Identity(), nullable=False, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), nullable=False, info=PERSONAL),
+    Column("kind", String(10), nullable=False, info=OPERATIONAL),
+    Column("number", Integer, nullable=False, info=OPERATIONAL),
+    Column("split", String(26), nullable=False, server_default=text("''"), info=OPERATIONAL),
+    Column("change", String(12), nullable=False, info=OPERATIONAL),
+    Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column[object]("geometry", Geometry(spatial_index=False), nullable=True, info=OPERATIONAL),
+    Column("deleted", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
+    Column(
+        "related",
+        ARRAY(String(30)),
+        nullable=False,
+        server_default=text("'{}'"),
+        info=OPERATIONAL,
+    ),
+    Column(
+        "changed_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "user_id", "tenant_id"],
+        [
+            "review_assignments.task_id",
+            "review_assignments.slide_id",
+            "review_assignments.user_id",
+            "review_assignments.tenant_id",
+        ],
+        name="fk_review_edit_versions_task_id_slide_id_user_id_tenant_id",
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    Index(
+        "ix_review_edit_versions_object",
+        "task_id",
+        "slide_id",
+        "user_id",
+        "kind",
+        "number",
+    ),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
+    one_of("change", ReviewEditChange),
+    CheckConstraint("geometry IS NULL OR ST_IsValid(geometry)", name="geometry_valid"),
+    CheckConstraint("split ~ '^[a-z]*$'", name="split"),
 )
 
 

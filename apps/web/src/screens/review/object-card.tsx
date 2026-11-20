@@ -296,6 +296,7 @@ type ObjectCardProps = {
   disagreeOpen: boolean;
   note: ReactNode;
   coach?: ReactNode;
+  history?: ReactNode;
   areaCall?: { value: AreaCall | null; role: string; onCall: (call: AreaCall) => void } | undefined;
   onAnswer: (raw: string) => void;
   onReason: (reason: string) => void;
@@ -324,6 +325,7 @@ export function ObjectCard({
   disagreeOpen,
   note,
   coach,
+  history,
   areaCall,
   onAnswer,
   onReason,
@@ -482,6 +484,7 @@ export function ObjectCard({
       ) : null}
       {shown ? note : null}
       {coach}
+      {history}
       {readOnly ? null : (
         <Button className="w-fit" disabled={disabled} onClick={onAddMissed}>
           <Icon name="poly" />

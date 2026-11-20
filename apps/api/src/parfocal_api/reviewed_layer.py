@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -39,11 +39,13 @@ from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
     AnnotationKind,
     PrivacyMode,
+    ReviewEditChange,
     annotations,
     projects,
     result_objects,
     result_sets,
     review_assignments,
+    review_edit_versions,
     review_edits,
     review_task_slides,
     review_tasks,
@@ -458,6 +460,42 @@ def mine(task_id: uuid.UUID, slide_id: uuid.UUID, user_id: uuid.UUID | None) -> 
     ]
 
 
+async def remember(
+    connection: AsyncConnection,
+    row: Any,
+    user_id: uuid.UUID | None,
+    kind: AnnotationKind,
+    key: Key,
+    change: ReviewEditChange,
+    related: list[str] | None = None,
+) -> None:
+    fixed = {
+        "tenant_id": row.tenant_id,
+        "project_id": row.project_id,
+        "task_id": row.task_id,
+        "slide_id": row.slide_id,
+        "user_id": user_id,
+        "kind": kind,
+        "number": key[0],
+        "split": key[1],
+        "change": change,
+        "related": related or [],
+    }
+    copied = select(
+        *(literal(value, type_=review_edit_versions.c[name].type) for name, value in fixed.items()),
+        review_edits.c.class_id,
+        review_edits.c.geometry,
+        review_edits.c.deleted,
+    ).where(*mine(row.task_id, row.slide_id, user_id), *same(kind, key))
+    written = await connection.execute(
+        insert(review_edit_versions)
+        .from_select([*fixed, "class_id", "geometry", "deleted"], copied)
+        .returning(review_edit_versions.c.id)
+    )
+    if written.first() is None:
+        await connection.execute(insert(review_edit_versions).values(**fixed))
+
+
 async def audit(
     connection: AsyncConnection,
     principal: Principal,
@@ -519,6 +557,7 @@ async def save_review_edit(
             index_elements=KEY_COLUMNS, set_={**values, "updated_at": func.now()}
         )
     )
+    await remember(connection, row, user_id, kind, key_of(found), ReviewEditChange.EDITED)
     changes = [
         name
         for name, present in (
@@ -598,14 +637,13 @@ async def clear_review_edit(
                 *mine(task_id, slide_id, user_id), *same(kind, (number, split))
             )
         )
-    await restore(
-        connection,
-        task_id,
-        slide_id,
-        user_id,
-        kind,
-        [alias for alias in aliases if alias not in gone] + ([key] if found.split else []),
-    )
+    restored = [alias for alias in aliases if alias not in gone] + ([key] if found.split else [])
+    await restore(connection, task_id, slide_id, user_id, kind, restored)
+    cleared = [found.text(ascii=True)]
+    for each in gone:
+        await remember(connection, row, user_id, kind, each, ReviewEditChange.CLEARED, cleared)
+    for each in restored:
+        await remember(connection, row, user_id, kind, each, ReviewEditChange.RESTORED, cleared)
     await audit(
         connection,
         principal,
@@ -676,12 +714,19 @@ async def split_review_object(
                 geometry=await outline(connection, kind, part.geometry),
             )
         )
+    names = [made.text(ascii=True) for made in parts]
+    parent_name = found.text(ascii=True)
+    await remember(connection, row, user_id, kind, key_of(found), ReviewEditChange.SPLIT, names)
+    for made in parts:
+        await remember(
+            connection, row, user_id, kind, key_of(made), ReviewEditChange.PART, [parent_name]
+        )
     await audit(
         connection,
         principal,
         AuditAction.REVIEW_OBJECT_SPLIT,
         row,
-        {"object": found.text(ascii=True), "parts": [made.text(ascii=True) for made in parts]},
+        {"object": parent_name, "parts": names},
     )
     return [
         await saved_edit(connection, task_id, slide_id, user_id, kind, key_of(made))
@@ -744,14 +789,29 @@ async def merge_review_objects(
             .values(**base, number=found.number, split=found.split, **alias)
             .on_conflict_do_update(index_elements=KEY_COLUMNS, set_=alias)
         )
+    keeper_name = keeper.text(ascii=True)
+    alias_names = [found.text(ascii=True) for found in others]
+    await remember(
+        connection, row, user_id, kind, key_of(keeper), ReviewEditChange.MERGED, alias_names
+    )
+    for found in others:
+        await remember(
+            connection,
+            row,
+            user_id,
+            kind,
+            key_of(found),
+            ReviewEditChange.MERGED_INTO,
+            [keeper_name],
+        )
     await audit(
         connection,
         principal,
         AuditAction.REVIEW_OBJECT_MERGED,
         row,
         {
-            "object": keeper.text(ascii=True),
-            "aliases": [found.text(ascii=True) for found in others],
+            "object": keeper_name,
+            "aliases": alias_names,
         },
     )
     return await saved_edit(connection, task_id, slide_id, user_id, kind, key_of(keeper))
