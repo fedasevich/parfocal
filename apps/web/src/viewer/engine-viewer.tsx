@@ -191,7 +191,10 @@ export function EngineViewer({
     ) : signedOff === null ? null : (
       <SignedOffNotice at={signedOff.at} researcher={researcher} onAsk={askResearcher} />
     );
-  const notices = useMemo(() => ({ banner, status, lock, finish }), [banner, status, lock, finish]);
+  const notices = useMemo(
+    () => ({ banner, status, lock, finish, placeBanner: focus ? undefined : setBanner }),
+    [banner, status, lock, finish, focus],
+  );
   const extras = (session: StageSession) => (
     <>
       {start === undefined ? null : <StageStartCamera engine={session.engine} start={start} />}
@@ -418,7 +421,6 @@ export function EngineViewer({
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
             inspector={inspector}
             bare={focus}
-            bannerRef={focus ? undefined : setBanner}
           />
         </NoticeSlotsProvider>
         <div

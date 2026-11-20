@@ -14,6 +14,7 @@ export type NoticeSlots = {
   readonly status: HTMLElement | null;
   readonly lock?: ReactNode;
   readonly finish?: HTMLElement | null;
+  readonly placeBanner?: ((node: HTMLElement | null) => void) | undefined;
 };
 
 const NoticeSlotsContext = createContext<NoticeSlots | null>(null);
@@ -92,6 +93,13 @@ export function StageNotices({
         };
   return (
     <>
+      {slots?.placeBanner ? (
+        <div
+          ref={slots.placeBanner}
+          data-testid="viewer-banner"
+          className="absolute inset-x-0 top-0 z-19 empty:hidden"
+        />
+      ) : null}
       <Into node={slots?.status}>
         {showSave ? <SaveStatusWord word={plan.word} unsaved={unsaved} /> : null}
       </Into>
