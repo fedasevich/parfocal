@@ -401,3 +401,41 @@ test("inside an annotate task a result set's cells stay dots and a review task d
   await expect(cells).toHaveCount(0);
   await expect(page.getByTestId("result-set-regions")).toHaveCount(0);
 });
+
+async function markerOffCamera(page: Page) {
+  return page.evaluate(() => {
+    const map = document.querySelector('[data-testid="stage-minimap"]');
+    const marker = map?.querySelector<SVGGraphicsElement>('[data-slot="map-viewport"]');
+    const picture = map?.querySelector("image");
+    const host = document.querySelector('[data-testid="slide-host"]');
+    const extent = (marker?.ownerSVGElement?.getAttribute("viewBox") ?? "").split(" ").map(Number);
+    const camera = (host?.getAttribute("data-camera") ?? "").split(",").map(Number);
+    if (!marker || !picture || extent.length !== 4 || camera.length !== 3) return null;
+    const mark = marker.getBoundingClientRect();
+    const frame = picture.getBoundingClientRect();
+    const [, , width = 1, height = 1] = extent;
+    const [x = 0, y = 0] = camera;
+    return Math.max(
+      Math.abs((mark.x + mark.width / 2 - frame.x) / frame.width - x / width),
+      Math.abs((mark.y + mark.height / 2 - frame.y) / frame.height - y / height),
+    );
+  });
+}
+
+for (const [name, path] of [
+  ["a deep link far from the slide origin", `${fullViewer}&x=0.8&y=0.7&z=8`],
+  ["an object focus", `${objectsViewer}&object=T5&as=DH`],
+] as const) {
+  test(`the minimap marker sits on the camera centre after ${name}`, async ({ page }) => {
+    await page.goto(path);
+    const stage = await ready(page);
+    const frame = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+    await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+    for (let step = 0; step < 4; step += 1) {
+      await page.mouse.wheel(0, -600);
+      await page.waitForTimeout(60);
+    }
+    await expect(page.getByTestId("stage-minimap")).toBeVisible();
+    await expect.poll(() => markerOffCamera(page)).toBeLessThan(0.02);
+  });
+}
