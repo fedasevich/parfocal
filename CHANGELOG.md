@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.31.2 (2026-11-20)
+
+### Fixes
+
+- PROTO-130: Read slide bytes in 256 KiB blocks and record the tile time split
+
+### Docs
+
+- PROTO-130: Log the tile time split, add sequential byte request task
+- TEST-056: Add the deployed walkthrough of v0.29.1
+
+### Other
+
+- PROTO-132: Claim batched tile byte requests
+
 ## v0.31.1 (2026-11-20)
 
 ### Fixes
