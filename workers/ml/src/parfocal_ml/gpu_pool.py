@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import NotRequired, TypedDict
@@ -12,7 +13,15 @@ MAX_CONTAINERS_PER_POOL = 4
 MAX_HOURLY_SPEND_USD = 5.0
 MAX_TIMEOUT_SECONDS = 3600
 INTERACTIVE_STARTUP_SECONDS = 300
-EU_POOL_REGION = "eu"
+GPU_REGION_VARIABLE = "PARFOCAL_GPU_REGION"
+
+
+def gpu_region(environment: dict[str, str] | None = None) -> str | None:
+    found = (os.environ if environment is None else environment).get(GPU_REGION_VARIABLE, "")
+    return found.strip() or None
+
+
+GPU_POOL_REGION = gpu_region()
 
 
 class Gpu(StrEnum):
@@ -86,7 +95,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=2,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
-        region=EU_POOL_REGION,
+        region=GPU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.DETECTOR_GOOD,
@@ -98,7 +107,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=2,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
-        region=EU_POOL_REGION,
+        region=GPU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.TYPER_BEST,
@@ -110,7 +119,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
-        region=EU_POOL_REGION,
+        region=GPU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.TYPER_GOOD,
@@ -122,7 +131,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
-        region=EU_POOL_REGION,
+        region=GPU_POOL_REGION,
     ),
     PoolLimits(
         family=Family.EMBEDDER,
@@ -134,7 +143,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=60,
         scaledown_window_seconds=INTERACTIVE_SCALEDOWN_SECONDS,
-        region=EU_POOL_REGION,
+        region=GPU_POOL_REGION,
         fallback_gpus=(Gpu.L4,),
         startup_timeout_seconds=INTERACTIVE_STARTUP_SECONDS,
     ),
@@ -148,7 +157,7 @@ POOLS: tuple[PoolLimits, ...] = (
         max_containers=1,
         timeout_seconds=MAX_TIMEOUT_SECONDS,
         scaledown_window_seconds=BATCH_SCALEDOWN_SECONDS,
-        region=EU_POOL_REGION,
+        region=GPU_POOL_REGION,
     ),
 )
 
@@ -179,8 +188,6 @@ def pool_problems(pool: PoolLimits) -> list[str]:
     problems: list[str] = []
     if any(pool.gpu_memory_budget_mib > GPU_MEMORY_MIB[gpu] for gpu in pool.gpus):
         problems.append("model GPU memory budget exceeds the card")
-    if pool.fallback_gpus and pool.region is None:
-        problems.append("a GPU fallback list needs a region pin")
     if pool.gpu is not None and pool.gpu in pool.fallback_gpus:
         problems.append("a fallback GPU repeats the first choice")
     if not 0 < pool.memory_request_mib <= pool.memory_limit_mib:

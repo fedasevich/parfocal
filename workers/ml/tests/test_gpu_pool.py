@@ -4,6 +4,8 @@ import pytest
 
 from parfocal_ml.gpu_pool import (
     GPU_MEMORY_MIB,
+    GPU_POOL_REGION,
+    GPU_REGION_VARIABLE,
     INTERACTIVE_SCALEDOWN_SECONDS,
     MAX_CONTAINERS_PER_POOL,
     MAX_HOURLY_SPEND_USD,
@@ -14,6 +16,7 @@ from parfocal_ml.gpu_pool import (
     concurrency_options,
     cpu_stand_in,
     function_options,
+    gpu_region,
     validate_pools,
     worst_case_hourly_usd,
 )
@@ -154,8 +157,12 @@ def test_cpu_stand_in_keeps_the_family_and_drops_the_gpu() -> None:
     validate_pools((stand_in,))
 
 
-def test_pools_are_pinned_to_the_eu() -> None:
-    assert all(function_options(pool).get("region") == "eu" for pool in POOLS)
+def test_pools_run_anywhere_unless_a_gpu_region_is_set() -> None:
+    assert gpu_region({}) is None
+    assert gpu_region({GPU_REGION_VARIABLE: " "}) is None
+    assert gpu_region({GPU_REGION_VARIABLE: "eu"}) == "eu"
+    pinned = all(function_options(pool).get("region") == GPU_POOL_REGION for pool in POOLS)
+    assert pinned
 
 
 def test_a_pinned_pool_passes_its_region_to_modal() -> None:
@@ -169,11 +176,11 @@ def test_a_pool_pinned_outside_the_eu_and_us_is_rejected() -> None:
         validate_pools((replace(pool_for(Family.DETECTOR_GOOD), region="uk"),))
 
 
-def test_the_interactive_pool_falls_back_to_an_l4_inside_the_eu() -> None:
+def test_the_interactive_pool_falls_back_to_an_l4() -> None:
     embedder = pool_for(Family.EMBEDDER)
     options = function_options(embedder)
     assert options["gpu"] == ["T4", "L4"]
-    assert options.get("region") == "eu"
+    validate_pools((replace(embedder, region=None),))
     assert embedder.hourly_usd_at_max == pytest.approx(0.80)
 
 
@@ -188,10 +195,8 @@ def test_a_cold_interactive_container_gets_longer_to_start_than_a_call_runs() ->
     )
 
 
-def test_a_fallback_list_needs_a_region_and_no_repeats() -> None:
+def test_a_fallback_list_has_no_repeats() -> None:
     embedder = pool_for(Family.EMBEDDER)
-    with pytest.raises(PoolLimitError, match="needs a region pin"):
-        validate_pools((replace(embedder, region=None),))
     with pytest.raises(PoolLimitError, match="repeats the first choice"):
         validate_pools((replace(embedder, fallback_gpus=(Gpu.T4,)),))
 

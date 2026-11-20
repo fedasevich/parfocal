@@ -58,7 +58,7 @@ from parfocal_ingest.settings import (
     PARSE_MEMORY_MIB,
     PARSE_SECONDS,
 )
-from parfocal_ml.gpu_pool import POOLS, function_options
+from parfocal_ml.gpu_pool import GPU_POOL_REGION, POOLS, function_options
 
 
 def test_the_app_registers_the_web_and_ingest_functions() -> None:
@@ -124,12 +124,13 @@ def test_the_backfills_and_the_parse_sandbox_run_in_the_worker_region() -> None:
     assert source.count("region=WORKER_REGION") == 3
 
 
-def test_every_gpu_pool_is_pinned_to_the_eu_next_to_the_database() -> None:
+def test_every_gpu_pool_follows_the_one_gpu_region_setting() -> None:
     assert POOLS
     for pool in POOLS:
-        assert pool.region == WORKER_REGION
-        assert function_options(pool).get("region") == WORKER_REGION
-        assert home_of(pool.region) is Region.EU
+        assert pool.region == GPU_POOL_REGION
+        assert function_options(pool).get("region") == GPU_POOL_REGION
+        if pool.region is not None:
+            assert home_of(pool.region) is not None
 
 
 def test_only_the_web_function_restores_from_a_memory_snapshot() -> None:
