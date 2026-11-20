@@ -2,6 +2,11 @@
 
 Every decision the owner has answered, newest first. Open ones are in [decisions.md](decisions.md).
 
+## Answers of 2026-11-20
+
+- Decision 164 (whether the viewer becomes one shell on one route), option A. In your words, "build the whole migration, make it as good as possible, i'm getting lost in the app already". The 16 step migration of `docs/results/2026-11-20-viewer-state-machine.html` is on the board as PROTO-093 to PROTO-099 (the viewer migration), built in order.
+- Decision 163 (where a project slide row opens) is settled inside the one mode rule of PROTO-096 (one link helper and one mode rule): with no task, an owner or reviewer opens the slide in Annotate and a project viewer opens it to look, and the Full viewer is one click away. This was the recommended option A, taken because you asked for the migration to be as good as possible.
+
 ## Answers of 2026-11-19
 
 - Decision 161 (how far the sample cells strip zooms on its first flight to a cell), option B. The first flight lands at 40x, or the slide's highest power if lower. PROTO-080 (the cells strip lands at 40x) builds it.

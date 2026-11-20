@@ -6922,6 +6922,22 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From the viewer map of 2026-11-20, step 5. The /live route skips the first read guard, so a task that hides the AI until the first read can open as a refused list. Run the guard inside EngineViewer so every route gets it.
   Done when a spec opens a blinded task through /live and sees the first read screen.
   Depends on PROTO-093. Size: S.
+- [ ] PROTO-096 · One link helper and one mode rule open every slide the same way
+  Decision 164 option A, migration steps 6, 7 and 8 of `docs/results/2026-11-20-viewer-state-machine.html` (the viewer map). Build every slide link through one helper and delete the forced workspace in viewer-links, so one rule picks the mode from the task and the role. Settle decision 163 there: with no task, an owner or reviewer opens Annotate, a project viewer opens in a look only mode and is never offered Annotate.
+  Done when a unit test covers the mode rule for every task kind and role, and a spec opens one slide from the project row, search, My work, the jobs tray, upload and a report and lands in the same mode each time.
+  Depends on PROTO-093. Size: M.
+- [ ] PROTO-097 · One slide route carries the mode in the address
+  Migration steps 9 and 10. Redirect /live, /annotate and /annotate-task to the main slide route, move the guided and cells routes to a mode value on it keeping object, camera and tab in the address, and rename the workspace values so the address, the button and the code say the same word.
+  Done when old addresses redirect with their parameters kept, specs and the real API e2e use the new route, and the same task kind always shows the same mode options.
+  Depends on PROTO-096, PROTO-095. Size: M.
+- [ ] PROTO-098 · Compare and Focus are layouts of the one viewer, and live scenes are gone
+  Migration steps 11, 12 and 13. Rebuild Compare as a layout of the engine stage with the rail and tabs of the current mode, remove the picking and picked scenes, make Focus a layout that works in every mode and delete the prototype FocusView branch, and take objects, travel, region, auto and models out of the live scene lists so prototype screens open only from the gallery.
+  Done when specs use Compare and Focus in each mode with working rail tools and tabs, and the scene gate test allows no live scene on a slide route.
+  Depends on PROTO-097. Size: M.
+- [ ] PROTO-099 · The viewer has one progress control, one Submit, one notice list and engine drawn adjudication
+  Migration steps 14, 15, 16 and the last line. Keep one progress control and one Submit in the top bar and make the Opinion tab card the form only, draw the disagreement queue and adjudication cards with the engine stage in an object layout and give the adjudicator a link to open the slide in review, turn tool keys off wherever the rail is hidden, make the back link return to the page the person came from, and move the slide kind notices (no pixel size, remote source offline, result importing or failed, no result) into one ordered list shown in every mode and layout.
+  Done when specs cover each item on the fake API and the viewer golden images pass.
+  Depends on PROTO-098. Size: M.
 
 ---
 
