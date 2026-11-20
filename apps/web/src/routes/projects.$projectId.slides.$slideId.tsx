@@ -3,7 +3,7 @@ import { FullViewer } from "../screens/viewer/full-viewer.tsx";
 import { isCompareScene } from "../screens/viewer/viewer-scenes.ts";
 import { CompareView } from "../screens/viewer-tools/compare-view.tsx";
 import { FocusView } from "../screens/viewer-tools/focus-view.tsx";
-import { WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
+import { WithOptionalToolSession, WithToolSession } from "../screens/viewer-tools/tool-session.tsx";
 import { type SlideSearch, slideSearch } from "../search/route-searches.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { FirstReadGuard } from "../viewer/first-read-guard.tsx";
@@ -23,31 +23,40 @@ function SlideView() {
   const onSearch = (change: Partial<SlideSearch>) =>
     void navigate({ search: (previous) => ({ ...previous, ...change }), replace: true });
   const prototypeFocus = search.focus === true && search.scene !== undefined;
-  if (prototypeFocus || isCompareScene(search.scene)) {
-    const scene = search.scene;
+  if (prototypeFocus) {
     return (
       <WithToolSession projectId={projectId} slideId={slideId} task={search.task}>
-        {(tools) =>
-          prototypeFocus ? (
-            <FocusView
-              tools={tools}
-              object={search.object}
-              onShowUi={() => onSearch({ focus: undefined, peek: undefined, scene: "objects" })}
-              onObject={(next) => onSearch({ object: next })}
-              peekOpen={search.peek === true}
-              onPeekChange={(open) => onSearch({ peek: open || undefined })}
-            />
-          ) : (
-            <CompareView
-              key={scene}
-              tools={tools}
-              scene={scene === "picking" ? "picking" : "picked"}
-              rightSlideId={search.with}
-              onLeave={(change) => onSearch(change)}
-            />
-          )
-        }
+        {(tools) => (
+          <FocusView
+            tools={tools}
+            object={search.object}
+            onShowUi={() => onSearch({ focus: undefined, peek: undefined, scene: "objects" })}
+            onObject={(next) => onSearch({ object: next })}
+            peekOpen={search.peek === true}
+            onPeekChange={(open) => onSearch({ peek: open || undefined })}
+          />
+        )}
       </WithToolSession>
+    );
+  }
+  if (isCompareScene(search.scene)) {
+    const scene = search.scene;
+    return (
+      <WithOptionalToolSession projectId={projectId} slideId={slideId} task={search.task}>
+        {(tools) => (
+          <CompareView
+            key={scene}
+            projectId={projectId}
+            slideId={slideId}
+            taskId={search.task}
+            workspace={search.workspace}
+            tools={tools}
+            scene={scene === "picking" ? "picking" : "picked"}
+            rightSlideId={search.with}
+            onLeave={(change) => onSearch({ ...change, with: undefined })}
+          />
+        )}
+      </WithOptionalToolSession>
     );
   }
   if (search.scene !== undefined) {

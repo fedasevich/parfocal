@@ -6,7 +6,24 @@ import {
   layoutOptions,
   panesOf,
 } from "../src/screens/viewer-tools/compare-layout.ts";
-import { pickSlide } from "../src/screens/viewer-tools/pane-slides.ts";
+import { pickSlide, slidesToCompare } from "../src/screens/viewer-tools/pane-slides.ts";
+
+test("compare offers the slide's case, or every project slide when it has no case", () => {
+  const slides = [
+    { id: "a1", case: { label: "A" } },
+    { id: "a2", case: { label: "A" } },
+    { id: "b1", case: { label: "B" } },
+    { id: "loose", case: null },
+  ];
+  assert.deepEqual(
+    slidesToCompare(slides, "a1").map((slide) => slide.id),
+    ["a1", "a2"],
+  );
+  assert.deepEqual(
+    slidesToCompare(slides, "loose").map((slide) => slide.id),
+    ["a1", "a2", "b1", "loose"],
+  );
+});
 
 test("the layouts show one, two, two and four panes", () => {
   assert.deepEqual(

@@ -21,12 +21,13 @@ export type SlideOutline = {
 };
 
 export function useSlideOutline(
-  taskId: string,
+  taskId: string | undefined,
   slideId: string | undefined,
   wanted: boolean,
 ): SlideOutline {
   const known = slideId !== undefined;
-  const listed = useListReviewObjects(taskId, slideId ?? "", { query: { enabled: known } });
+  const inTask = known && taskId !== undefined;
+  const listed = useListReviewObjects(taskId ?? "", slideId ?? "", { query: { enabled: inTask } });
   const sets = useListSlideResultSets(slideId ?? "", { query: { enabled: known } });
   const tumor = (okData(listed.data)?.objects ?? []).filter(isTumorRegion);
   const { objects: taskObjects } = useStillObjects(tumor, noDecision, null);
@@ -55,7 +56,7 @@ export function useSlideOutline(
   const signature = fromSets.map((item) => `${item.id}:${item.score}`).join("|");
   const kept = useRef<{ signature: string; value: readonly StillObject[] } | null>(null);
   if (kept.current?.signature !== signature) kept.current = { signature, value: fromSets };
-  const pending = known && (listed.isPending || sets.isPending);
+  const pending = known && ((inTask && listed.isPending) || sets.isPending);
   const available = !known || pending ? undefined : tumor.length > 0 || ready.length > 0;
   return { objects: tumor.length > 0 ? taskObjects : kept.current.value, available };
 }

@@ -41,8 +41,9 @@ export const destinations = {
     taskId: string | undefined,
     scene: "picking" | "picked",
     withSlideId?: string,
+    workspace?: string,
   ) =>
-    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, scene, with: withSlideId })}`,
+    `/projects/${projectId}/slides/${slideId}${query({ task: taskId, workspace, scene, with: withSlideId })}`,
   openSlide: (projectId: string, slideId: string, taskId?: string) =>
     `/projects/${projectId}/slides/${slideId}/live${query({ task: taskId })}`,
   coSign: (projectId: string, caseId: string) => `/projects/${projectId}/cases/${caseId}/co-sign`,

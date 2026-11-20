@@ -717,7 +717,7 @@ function OpenedSlide({
         projectId={projectId}
         slideId={slideId}
         taskId={taskId}
-        tipSide={toolsLayout === "dock" ? "top" : "right"}
+        workspace={workspace}
       />
     );
   const tab = inspector.tab ?? (workspace === "annotate" ? "display" : "objects");

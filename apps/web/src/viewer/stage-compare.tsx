@@ -2,20 +2,23 @@ import { useLingui } from "@lingui/react/macro";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { destinations } from "../shell/destinations.ts";
 import { useGoTo } from "../shell/router-link.tsx";
+import { useToolsLayout } from "../shell/tools-layout.ts";
+import type { SlideWorkspace } from "./workspace.ts";
 
 export function StageCompareButton({
   projectId,
   slideId,
   taskId,
-  tipSide,
+  workspace,
 }: {
   projectId: string;
   slideId: string;
   taskId: string | undefined;
-  tipSide: "top" | "right";
+  workspace: SlideWorkspace;
 }) {
   const { t } = useLingui();
   const goTo = useGoTo();
+  const tipSide = useToolsLayout() === "dock" ? "top" : "right";
   return (
     <ToolRailButton
       icon="slides"
@@ -24,7 +27,9 @@ export function StageCompareButton({
       data-testid="rail-compare"
       pressed={false}
       onPressedChange={() =>
-        void goTo(destinations.compareSlides(projectId, slideId, taskId, "picking"))
+        void goTo(
+          destinations.compareSlides(projectId, slideId, taskId, "picking", undefined, workspace),
+        )
       }
     />
   );
