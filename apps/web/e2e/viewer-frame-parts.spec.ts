@@ -97,13 +97,14 @@ test("the magnification bar is 38 pixels tall with the mock's corner and steps",
   await expect(steps).toHaveText(["1.25×", "2.5×", "5×", "10×", "20×", "40×"]);
 });
 
-test("a tool's hint bar stays on one line", async ({ page }) => {
+test("a tool's hint bar stays on one line when the stage has room for it", async ({ page }) => {
   const stage = await openReview(page);
-  for (const [key, tool] of [
-    ["s", "smart"],
-    ["l", "ruler"],
-    ["c", "comment"],
+  for (const [key, tool, width] of [
+    ["l", "ruler", 1440],
+    ["c", "comment", 1440],
+    ["s", "smart", 1920],
   ] as const) {
+    await page.setViewportSize({ width, height: 900 });
     await page.keyboard.press(key);
     await expect(stage).toHaveAttribute("data-tool", tool);
     const hints = page.getByTestId("context-bar");

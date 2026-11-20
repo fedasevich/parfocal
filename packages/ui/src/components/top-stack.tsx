@@ -25,7 +25,7 @@ function TopStack({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="top-stack"
       data-minimap-block
       className={cn(
-        "pointer-events-none absolute top-3 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2 empty:hidden",
+        "pointer-events-none absolute inset-x-4 top-3 z-20 mx-auto flex w-fit flex-col items-center gap-2 empty:hidden",
         className,
       )}
       {...props}

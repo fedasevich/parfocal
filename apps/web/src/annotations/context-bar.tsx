@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import type { ProjectClass } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { useTopStacked } from "@parfocal/ui/components/top-stack";
 import { ContextBar, ContextDivider, ContextPill } from "@parfocal/ui/components/viewer-tools";
 import { maxClassKeys } from "./classes.ts";
 import { acceptLabel, type ContextBarModel } from "./context-bar.ts";
@@ -9,9 +10,9 @@ import { ContextExtrasSlot } from "./context-extras.tsx";
 
 const centred = "right-3 left-3 mx-auto w-fit max-w-[calc(100%-1.5rem)] translate-x-0";
 
-const fitted = `${centred} flex-wrap justify-center gap-y-1.5 whitespace-normal`;
+const wrapping = "flex-wrap justify-center gap-y-1.5 whitespace-normal";
 
-const oneLine = fitted;
+const fitted = `${centred} ${wrapping}`;
 
 type ClassStripProps = {
   classes: readonly ProjectClass[];
@@ -88,6 +89,7 @@ export function ContextBarView({
   onCloseHints,
 }: ContextBarViewProps) {
   const { t } = useLingui();
+  const placed = useTopStacked() ? wrapping : fitted;
   const strip = model.classStrip ? (
     <ClassStrip
       classes={classes}
@@ -99,7 +101,7 @@ export function ContextBarView({
   if (proposals !== null) {
     return (
       <ContextBar
-        className={fitted}
+        className={placed}
         label={model.label === "Auto region" ? model.label : t`Proposals`}
         data-testid="context-bar"
         data-mode="proposals"
@@ -135,7 +137,7 @@ export function ContextBarView({
     );
   }
   return (
-    <ContextBar label={model.label} data-testid="context-bar" data-mode="tool" className={oneLine}>
+    <ContextBar label={model.label} data-testid="context-bar" data-mode="tool" className={placed}>
       {model.hints.length > 0 ? (
         <span
           data-testid="context-hints"
