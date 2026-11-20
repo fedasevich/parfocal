@@ -72,9 +72,9 @@ const developerScenes: [string, string][] = [
   ["heatmap", "Colormap"],
   ["models", "MONAI server"],
   ["typing", "Cell typing"],
-  ["job", "Tile 712 of 1,880, tumor first"],
+  ["job", "Eight averages rotated and flipped copies of each tile"],
   ["bench", "Pan sweep"],
-  ["hud", "Readouts on the Viv route"],
+  ["hud", "The live numbers show in the HUD over the open slide."],
   ["ref", "Debug handle"],
   ["webgpu", "Back to Viv"],
 ];
