@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type InboxItem,
@@ -85,12 +85,12 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
           <Trans>
             Slide {slidePosition(resume.position, task.slides_assigned)} of {task.slides_assigned}
           </Trans>
-          {minutes === null ? "" : ` · ${timeLeft(minutes)}`}
+          {minutes === null || minutes === 0 ? "" : ` · ${timeLeft(minutes)}`}
           {task.due_on ? t` · due ${formatDue(task.due_on)}` : ""}
         </p>
         <ProgressBar
           value={percent(task.slides_submitted, task.slides_assigned)}
-          aria-label={t`${task.slides_submitted} of ${task.slides_assigned} slides`}
+          aria-label={t`${task.slides_submitted} of ${plural(task.slides_assigned, { one: "# slide", other: "# slides" })}`}
         />
       </div>
       <Button variant="primary" size="lg" onClick={open}>
@@ -392,11 +392,14 @@ export function ToReviewTab({
                   key={item.id}
                   selected={selected === adjudicationKey(item)}
                   colour={colourOf(item.project.id)}
-                  title={t`Decide ${total} objects on ${item.task_code}`}
+                  title={plural(total, {
+                    one: `Decide # object on ${item.task_code}`,
+                    other: `Decide # objects on ${item.task_code}`,
+                  })}
                   sub={t`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
                   progress={{
                     value: percent(item.decided, total),
-                    label: t`${item.decided} of ${total} objects decided`,
+                    label: t`${item.decided} of ${plural(total, { one: "# object", other: "# objects" })} decided`,
                   }}
                   tags={
                     <StatusTag tone={allDone ? "ok" : "accent"}>

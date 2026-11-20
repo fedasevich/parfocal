@@ -272,6 +272,12 @@ msgstr "\"tile\""
 msgid "\"version\""
 msgstr "\"version\""
 
+#. placeholder {0}: report.reviewer_ids.length
+#. placeholder {1}: report.adjudicators
+#: src/screens/evaluation/report-pages.tsx
+msgid "{0, plural, one {# blind reviewer} other {# blind reviewers}}, {1, plural, one {# adjudicator} other {# adjudicators}}"
+msgstr "{0, plural, one {# blind reviewer} other {# blind reviewers}}, {1, plural, one {# adjudicator} other {# adjudicators}}"
+
 #. placeholder {0}: learnerView.examples
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0, plural, one {# example} other {# examples}}"
@@ -283,10 +289,20 @@ msgstr "{0, plural, one {# example} other {# examples}}"
 msgid "{0, plural, one {# object is still open.} other {# objects are still open.}}"
 msgstr "{0, plural, one {# object is still open.} other {# objects are still open.}}"
 
+#. placeholder {0}: summary.queue.left_open.length
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0, plural, one {# object left open on purpose} other {# objects left open on purpose}}"
+msgstr "{0, plural, one {# object left open on purpose} other {# objects left open on purpose}}"
+
 #. placeholder {0}: checkedRows.length
 #: src/screens/disagreements/queue-screen.tsx
 msgid "{0, plural, one {# object selected} other {# objects selected}}"
 msgstr "{0, plural, one {# object selected} other {# objects selected}}"
+
+#. placeholder {0}: progress.total
+#: src/screens/my-work/parts.tsx
+msgid "{0, plural, one {# object, none decided yet} other {# objects, none decided yet}}"
+msgstr "{0, plural, one {# object, none decided yet} other {# objects, none decided yet}}"
 
 #. placeholder {0}: adjudicated.length
 #: src/screens/evaluation/evaluation-screen.tsx
@@ -303,15 +319,40 @@ msgstr "{0, plural, one {# required question is not answered.} other {# required
 msgid "{0, plural, one {# reviewer} other {# reviewers}}"
 msgstr "{0, plural, one {# reviewer} other {# reviewers}}"
 
+#. placeholder {0}: report.slides
+#. placeholder {1}: report.objects
+#: src/screens/evaluation/report-pages.tsx
+msgid "{0, plural, one {# slide} other {# slides}} · {1, plural, one {# object} other {# objects}}"
+msgstr "{0, plural, one {# slide} other {# slides}} · {1, plural, one {# object} other {# objects}}"
+
 #. placeholder {0}: row.reviewer_decisions
 #: src/screens/disagreements/adjudication-rows.tsx
 msgid "{0, plural, one {Kept beside # reviewer decision} other {Kept beside # reviewer decisions}}"
 msgstr "{0, plural, one {Kept beside # reviewer decision} other {Kept beside # reviewer decisions}}"
 
+#. placeholder {0}: summary.reviews.slides
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0, plural, one {The slide was reviewed by both reviewers} other {All # slides reviewed by both reviewers}}"
+msgstr "{0, plural, one {The slide was reviewed by both reviewers} other {All # slides reviewed by both reviewers}}"
+
 #. placeholder {0}: tier.model
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "{0} - offline"
 msgstr "{0} - offline"
+
+#. placeholder {0}: task?.name ?? ""
+#. placeholder {1}: rows.length - resolved
+#. placeholder {2}: queue?.total_objects ?? 0
+#. placeholder {3}: withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""
+#: src/screens/disagreements/queue-screen.tsx
+msgid "{0} · {1, plural, one {# object needs} other {# objects need}} a decision out of {2} · {resolved} resolved{3}"
+msgstr "{0} · {1, plural, one {# object needs} other {# objects need}} a decision out of {2} · {resolved} resolved{3}"
+
+#. placeholder {0}: run.project.code
+#. placeholder {1}: run.slides
+#: src/screens/admin/sections.tsx
+msgid "{0} · {1, plural, one {# slide} other {# slides}}"
+msgstr "{0} · {1, plural, one {# slide} other {# slides}}"
 
 #. placeholder {0}: object.object
 #. placeholder {1}: object.class_name
@@ -330,20 +371,6 @@ msgstr "{0} · {1} blocks"
 #: src/screens/upload/files-step.tsx
 msgid "{0} · {1} GB · 40x"
 msgstr "{0} · {1} GB · 40x"
-
-#. placeholder {0}: task?.name ?? ""
-#. placeholder {1}: rows.length - resolved
-#. placeholder {2}: queue?.total_objects ?? 0
-#. placeholder {3}: withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""
-#: src/screens/disagreements/queue-screen.tsx
-msgid "{0} · {1} objects need a decision out of {2} · {resolved} resolved{3}"
-msgstr "{0} · {1} objects need a decision out of {2} · {resolved} resolved{3}"
-
-#. placeholder {0}: run.project.code
-#. placeholder {1}: run.slides
-#: src/screens/admin/sections.tsx
-msgid "{0} · {1} slides"
-msgstr "{0} · {1} slides"
 
 #. placeholder {0}: batch.storage.trimmed_slides
 #. placeholder {1}: gb(batch.storage.trimmed_gb)
@@ -1052,25 +1079,30 @@ msgstr "{0} object{1} sent to {2}"
 msgid "{0} object{1} still open."
 msgstr "{0} object{1} still open."
 
-#. placeholder {0}: summary.queue.left_open.length
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0} objects left open on purpose"
-msgstr "{0} objects left open on purpose"
-
 #. placeholder {0}: format.integer(overview.objects)
 #: src/screens/project/project-page.tsx
 msgid "{0} objects with an ID"
 msgstr "{0} objects with an ID"
 
-#. placeholder {0}: progress.total
-#: src/screens/my-work/parts.tsx
-msgid "{0} objects, none decided yet"
-msgstr "{0} objects, none decided yet"
-
 #. placeholder {0}: picked.results.objects
 #: src/results/add-result-set.tsx
 msgid "{0} objects, shown in cyan and not saved yet"
 msgstr "{0} objects, shown in cyan and not saved yet"
+
+#. placeholder {0}: progress.decided
+#. placeholder {1}: progress.total
+#: src/screens/my-work/parts.tsx
+msgid "{0} of {1, plural, one {# object} other {# objects}} decided"
+msgstr "{0} of {1, plural, one {# object} other {# objects}} decided"
+
+#. placeholder {0}: run.slides_done
+#. placeholder {0}: task.slides_submitted
+#. placeholder {1}: run.slides
+#. placeholder {1}: task.slides_assigned
+#: src/screens/admin/sections.tsx
+#: src/screens/my-work/to-review-tab.tsx
+msgid "{0} of {1, plural, one {# slide} other {# slides}}"
+msgstr "{0} of {1, plural, one {# slide} other {# slides}}"
 
 #. placeholder {0}: Math.min(slide.steps_done, slide.steps.length)
 #. placeholder {0}: chosen.length
@@ -1123,12 +1155,6 @@ msgstr "{0} of {1} GB"
 msgid "{0} of {1} matched"
 msgstr "{0} of {1} matched"
 
-#. placeholder {0}: progress.decided
-#. placeholder {1}: progress.total
-#: src/screens/my-work/parts.tsx
-msgid "{0} of {1} objects decided"
-msgstr "{0} of {1} objects decided"
-
 #. placeholder {0}: rows.length
 #. placeholder {1}: report.objects
 #: src/screens/evaluation/report-pages.tsx
@@ -1161,15 +1187,6 @@ msgstr "{0} of {1} reviews submitted, {2} opinion forms"
 #: src/screens/admin/people.tsx
 msgid "{0} of {1} shown. At least one researcher keeps admin rights, and giving or removing them is in the audit log."
 msgstr "{0} of {1} shown. At least one researcher keeps admin rights, and giving or removing them is in the audit log."
-
-#. placeholder {0}: run.slides_done
-#. placeholder {0}: task.slides_submitted
-#. placeholder {1}: run.slides
-#. placeholder {1}: task.slides_assigned
-#: src/screens/admin/sections.tsx
-#: src/screens/my-work/to-review-tab.tsx
-msgid "{0} of {1} slides"
-msgstr "{0} of {1} slides"
 
 #. placeholder {0}: sum.ns
 #. placeholder {1}: sum.all
@@ -1204,15 +1221,15 @@ msgstr "{0} of {maxLength}"
 msgid "{0} of {reasonMax}"
 msgstr "{0} of {reasonMax}"
 
+#. placeholder {0}: item.decided
+#: src/screens/my-work/to-review-tab.tsx
+msgid "{0} of {total, plural, one {# object} other {# objects}} decided"
+msgstr "{0} of {total, plural, one {# object} other {# objects}} decided"
+
 #. placeholder {0}: formatBytes(entry.bytesUploaded)
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "{0} of {total}"
 msgstr "{0} of {total}"
-
-#. placeholder {0}: item.decided
-#: src/screens/my-work/to-review-tab.tsx
-msgid "{0} of {total} objects decided"
-msgstr "{0} of {total} objects decided"
 
 #. placeholder {0}: note.length
 #: ../../packages/ui/src/components/team.tsx
@@ -1595,18 +1612,18 @@ msgstr "{0}_report_v{number}.pdf saved to Downloads"
 msgid "{0}_report_v1.pdf saved to Downloads"
 msgstr "{0}_report_v1.pdf saved to Downloads"
 
+#. placeholder {0}: summary.result_set.name
+#. placeholder {1}: summary.result_set.objects
+#. placeholder {2}: summary.result_set.added
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0}, {1, plural, one {# object} other {# objects}}, plus {2} added by a reviewer"
+msgstr "{0}, {1, plural, one {# object} other {# objects}}, plus {2} added by a reviewer"
+
 #. placeholder {0}: region.object
 #. placeholder {1}: dotStateWord(value, skip)
 #: src/screens/review/object-card.tsx
 msgid "{0}, {1}"
 msgstr "{0}, {1}"
-
-#. placeholder {0}: summary.result_set.name
-#. placeholder {1}: summary.result_set.objects
-#. placeholder {2}: summary.result_set.added
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0}, {1} objects, plus {2} added by a reviewer"
-msgstr "{0}, {1} objects, plus {2} added by a reviewer"
 
 #. placeholder {0}: people(reviewer.user_id)?.name ?? "Reviewer"
 #. placeholder {0}: people.byId(row.userId).name
@@ -1616,8 +1633,8 @@ msgstr "{0}, {1} objects, plus {2} added by a reviewer"
 #. placeholder {2}: row.total
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
-msgid "{0}, {1} of {2} slides"
-msgstr "{0}, {1} of {2} slides"
+msgid "{0}, {1} of {2, plural, one {# slide} other {# slides}}"
+msgstr "{0}, {1} of {2, plural, one {# slide} other {# slides}}"
 
 #. placeholder {0}: range.count
 #. placeholder {1}: range.low
@@ -2054,8 +2071,8 @@ msgid "{objectId} origin and history"
 msgstr "{objectId} origin and history"
 
 #: src/screens/sign-off/sign-off-screen.tsx
-msgid "{open} disagreements not resolved"
-msgstr "{open} disagreements not resolved"
+msgid "{open, plural, one {# disagreement not resolved} other {# disagreements not resolved}}"
+msgstr "{open, plural, one {# disagreement not resolved} other {# disagreements not resolved}}"
 
 #. placeholder {0}: open > 1 ? "s need" : " needs"
 #. placeholder {1}: plural(others, "file")
@@ -2089,8 +2106,8 @@ msgid "{pageCount} pages"
 msgstr "{pageCount} pages"
 
 #: src/screens/sign-off/sign-off-screen.tsx
-msgid "{pending} reviews not submitted"
-msgstr "{pending} reviews not submitted"
+msgid "{pending, plural, one {# review not submitted} other {# reviews not submitted}}"
+msgstr "{pending, plural, one {# review not submitted} other {# reviews not submitted}}"
 
 #. placeholder {0}: formatBytes(sent)
 #. placeholder {1}: formatBytes(total)
@@ -2334,6 +2351,12 @@ msgstr "{today} · {0} to review{1}"
 #: src/screens/my-work/my-work-screen.tsx
 msgid "{today} · {0} you assigned{1}"
 msgstr "{today} · {0} you assigned{1}"
+
+#. placeholder {0}: item.task_code
+#. placeholder {1}: item.task_code
+#: src/screens/my-work/to-review-tab.tsx
+msgid "{total, plural, one {Decide # object on {0}} other {Decide # objects on {1}}}"
+msgstr "{total, plural, one {Decide # object on {0}} other {Decide # objects on {1}}}"
 
 #: src/screens/input-traces/input-traces.tsx
 msgid "{total} events"
@@ -2590,10 +2613,6 @@ msgstr "1 file waits for a slide. Without one it stays out."
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "1 px"
 msgstr "1 px"
-
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "1 review not submitted"
-msgstr "1 review not submitted"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "1 setting"
@@ -3546,11 +3565,6 @@ msgstr "All {0}"
 #: ../../packages/ui/src/components/systematic-scan.tsx
 msgid "All {0} fields scanned."
 msgstr "All {0} fields scanned."
-
-#. placeholder {0}: summary.reviews.slides
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "All {0} slides reviewed by both reviewers"
-msgstr "All {0} slides reviewed by both reviewers"
 
 #: ../../packages/ui/src/components/team.tsx
 msgid "All {of} slides, including {done} with decisions"
@@ -6119,11 +6133,6 @@ msgstr "Debug handle"
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Decide"
 msgstr "Decide"
-
-#. placeholder {0}: item.task_code
-#: src/screens/my-work/to-review-tab.tsx
-msgid "Decide {total} objects on {0}"
-msgstr "Decide {total} objects on {0}"
 
 #: src/routes/issue-states.tsx
 msgid "Decide objects"
@@ -10515,6 +10524,10 @@ msgstr "No clinical note"
 #: src/screens/review/object-comments.tsx
 msgid "No comments on {object} yet. Write the first one below."
 msgstr "No comments on {object} yet. Write the first one below."
+
+#: src/screens/review/object-comments.tsx
+msgid "No comments yet. Write the first one below."
+msgstr "No comments yet. Write the first one below."
 
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "no connection"
@@ -18709,10 +18722,6 @@ msgstr "What happened, or what would help?"
 msgid "What happens"
 msgstr "What happens"
 
-#: src/screens/clinical-report/cosign-screen.tsx
-msgid "What he gets back"
-msgstr "What he gets back"
-
 #: src/viewer/start-run-panel.tsx
 msgid "What I see now"
 msgstr "What I see now"
@@ -18775,6 +18784,10 @@ msgstr "What the experts do"
 #: src/screens/clinical-report/steps.tsx
 msgid "What the sections show"
 msgstr "What the sections show"
+
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "What they get back"
+msgstr "What they get back"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/check-step.tsx

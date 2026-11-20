@@ -10,6 +10,7 @@ import {
   amendmentChanges,
   categoryOf,
   diagnosisOf,
+  documentOf,
   issuesOf,
   largestMm,
   nextDepositId,
@@ -131,4 +132,18 @@ test("the excision template has no staging and every scene maps to a step it has
   const plain = toClinicalReport(excision);
   assert.deepEqual(issuesOf(plain, sceneReport(plain, "nostaging"), true), []);
   for (const scene of mockScenes.creport) assert.ok(sceneStep[scene], scene);
+});
+
+test("the signed report leaves out the fields and headings that have nothing in them", () => {
+  const empty = {
+    ...data(),
+    case: { ...data().case, received: "", requested_by: "", clinical_history: "" },
+  };
+  const report = sceneReport(empty, "signed");
+  const document = documentOf(empty, report, "current", (id) => id);
+  const labels = document.head.map(([label]) => label);
+  assert.ok(!labels.includes("Received"));
+  assert.ok(!labels.includes("Requested by"));
+  assert.ok(labels.includes("Accession"));
+  assert.ok(!document.sections.some((section) => section.title === "Clinical history"));
 });

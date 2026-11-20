@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type SetRef, useListProjectResultSets, useListSlideThreads } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -88,8 +89,11 @@ export function ProgressSummary({ progress }: { progress: SlideProgress }) {
       <div>
         <b className="block text-body font-semibold text-fg">
           {progress.decided
-            ? t`${progress.decided} of ${progress.total} objects decided`
-            : t`${progress.total} objects, none decided yet`}
+            ? t`${progress.decided} of ${plural(progress.total, { one: "# object", other: "# objects" })} decided`
+            : plural(progress.total, {
+                one: "# object, none decided yet",
+                other: "# objects, none decided yet",
+              })}
         </b>
         <small className="mt-0.5 block text-caption text-fg-dim">
           {progress.decided

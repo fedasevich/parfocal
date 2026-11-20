@@ -73489,6 +73489,17 @@
                 "type": "null"
               }
             ]
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
           }
         },
         "type": "object",

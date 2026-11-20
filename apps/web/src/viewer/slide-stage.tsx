@@ -468,7 +468,7 @@ function OpenedSlide({
     counted: markerTotal,
   });
   const contextModel = selectionTakesClass ? { ...contextBase, classStrip: true } : contextBase;
-  const wantsHints = workspace === "annotate" || tool !== restingTool;
+  const wantsHints = phase.state !== "failed" && (workspace === "annotate" || tool !== restingTool);
   const { shown: hintsShown, dismiss: dismissHints } = useHintsOnce(tool, wantsHints);
   const hintBindings = useBindings(["viewer"], ["hidehint"], hintsShown);
   const onHintKey = useCallback(

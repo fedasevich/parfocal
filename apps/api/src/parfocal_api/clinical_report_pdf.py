@@ -72,9 +72,12 @@ def facts_of(
         ("Nodes examined", NONE if examined is None else str(examined)),
         ("Extranodal extension", values["extranodal"] or NONE),
         ("Final diagnosis", values["diagnosis"] or NONE),
-        ("Microscopic description", values["microscopic"] or NONE),
-        ("Comment", values["comment"] or NONE),
     ]
+    rows.extend(
+        (label, values[key].strip())
+        for label, key in (("Microscopic description", "microscopic"), ("Comment", "comment"))
+        if (values[key] or "").strip()
+    )
     return {
         "case": case_label,
         "template": template_name,

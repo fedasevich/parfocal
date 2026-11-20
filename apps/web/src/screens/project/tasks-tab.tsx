@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural as plurals, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
@@ -152,7 +152,7 @@ function TaskRow({
                 <Person person={people.byId(row.userId)} size={22} />
                 <ProgressBar
                   value={(100 * row.done) / Math.max(row.total, 1)}
-                  aria-label={t`${people.byId(row.userId).name}, ${row.done} of ${row.total} slides`}
+                  aria-label={t`${people.byId(row.userId).name}, ${row.done} of ${plurals(row.total, { one: "# slide", other: "# slides" })}`}
                 />
                 <span className="font-mono">
                   <Trans>

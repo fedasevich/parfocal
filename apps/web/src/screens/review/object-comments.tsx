@@ -148,7 +148,11 @@ export function ObjectThread({
         <CommentThread messages={messages} onReply={setReplyTo} />
       ) : (
         <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>No comments on {object} yet. Write the first one below.</Trans>
+          {object ? (
+            <Trans>No comments on {object} yet. Write the first one below.</Trans>
+          ) : (
+            <Trans>No comments yet. Write the first one below.</Trans>
+          )}
         </p>
       )}
       <CommentComposer

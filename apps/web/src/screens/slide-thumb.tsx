@@ -2,7 +2,29 @@ import { useState } from "react";
 import { formatNameOf } from "./format-name.ts";
 import { slideThumbUrl } from "./slide-thumb-url.ts";
 
-const missingThumbs = new Set<string>();
+const STORAGE_KEY = "parfocal.missing-thumbs";
+
+const rememberedMissing = (): Set<string> => {
+  try {
+    const stored: unknown = JSON.parse(globalThis.sessionStorage?.getItem(STORAGE_KEY) ?? "[]");
+    return new Set(
+      Array.isArray(stored) ? stored.filter((id): id is string => typeof id === "string") : [],
+    );
+  } catch {
+    return new Set();
+  }
+};
+
+const missingThumbs = rememberedMissing();
+
+const remember = (slideId: string) => {
+  missingThumbs.add(slideId);
+  try {
+    globalThis.sessionStorage?.setItem(STORAGE_KEY, JSON.stringify([...missingThumbs]));
+  } catch {
+    return;
+  }
+};
 
 export function SlideThumb({
   slideId,
@@ -34,7 +56,7 @@ export function SlideThumb({
       loading="lazy"
       draggable={false}
       onError={() => {
-        missingThumbs.add(slideId);
+        remember(slideId);
         setFailed(slideId);
       }}
       className={`object-cover ${className ?? ""}`}

@@ -422,6 +422,7 @@ export const getGetPlatformStatusResponseMock = (
     },
     null,
   ]),
+  release: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   ...overrideResponse,
 });
 
@@ -440,6 +441,7 @@ export const getStartMaintenanceResponseMock = (
     },
     null,
   ]),
+  release: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   ...overrideResponse,
 });
 
@@ -458,6 +460,7 @@ export const getEndMaintenanceResponseMock = (
     },
     null,
   ]),
+  release: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   ...overrideResponse,
 });
 

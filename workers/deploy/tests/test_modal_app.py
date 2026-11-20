@@ -463,3 +463,10 @@ def test_the_cache_sweep_runs_one_pass_with_the_api_settings(
     monkeypatch.setattr(parfocal_api.remote_cache_sweep, "run_once", run_once)
     modal_app.sweep_remote_caches()
     assert passes == [settings]
+
+
+def test_the_web_image_carries_the_release_the_checkout_describes() -> None:
+    from parfocal_deploy.modal_app import release_of
+
+    assert release_of(lambda: "v0.29.2-4-gabc123\n") == "v0.29.2-4-gabc123"
+    assert release_of(lambda: " \n") is None

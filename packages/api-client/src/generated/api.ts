@@ -5673,6 +5673,7 @@ export const ServiceStatus = {
 export interface PlatformStatus {
   status: ServiceStatus;
   maintenance: Maintenance | null;
+  release?: string | null;
 }
 
 export interface Preference {

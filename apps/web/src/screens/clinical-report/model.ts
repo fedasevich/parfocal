@@ -724,6 +724,9 @@ const longDate = (at: string, year: number) => {
 
 const stampWithYear = (at: string, year: number) => at.replace(/^(\d+ \w+) /, `$1 ${year}, `);
 
+const withContent = (pairs: [string, string | null | undefined][]): [string, string][] =>
+  pairs.flatMap(([label, value]) => (value?.trim() ? [[label, value] as [string, string]] : []));
+
 const labOf = (name: string) => ({ name, department: "", address: "", footer: "" });
 
 export function documentOf(
@@ -797,12 +800,12 @@ export function documentOf(
   return {
     status,
     lab: labOf(labName),
-    head: [
+    head: withContent([
       ["Accession", data.case.label],
       ["Received", data.case.received],
       ["Requested by", data.case.requested_by],
       ["Reported", reported],
-    ],
+    ]),
     amendment:
       amended && report.v1
         ? {
@@ -816,7 +819,7 @@ export function documentOf(
       { title: "Specimen", body: values.specimen },
       { title: "Clinical history", body: data.case.clinical_history },
       { title: "Final diagnosis", body: values.diagnosis, diagnosis: true },
-    ],
+    ].filter((section) => section.body.trim() !== ""),
     synopticTitle: staging
       ? "Synoptic report · Surgically removed lymph nodes for breast tumors"
       : "Report elements",
