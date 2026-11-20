@@ -7,7 +7,7 @@ import {
   deleteShapes,
   needsClearConfirmation,
 } from "../src/annotations/clear.ts";
-import { addShape, createDocument } from "../src/annotations/document.ts";
+import { addGroup, addShape, createDocument } from "../src/annotations/document.ts";
 import { createHistory, record, redo, undo } from "../src/annotations/history.ts";
 import { pinPoint, placePin } from "../src/annotations/pins.ts";
 
@@ -46,6 +46,23 @@ describe("clearing", () => {
     assert.equal(cleared.document, empty);
     assert.equal(cleared.removed, 0);
     assert.equal(record(createHistory(), empty, cleared.document, "Clear all").id, null);
+  });
+
+  test("clear all removes the groups it empties and keeps groups that were already empty", () => {
+    let doc = createDocument();
+    const held = addGroup(doc, "Group 1");
+    doc = held.document;
+    const spare = addGroup(doc, "Spare");
+    doc = spare.document;
+    doc = addShape(doc, {
+      kind: "polygon",
+      points: square(0, 0, 100),
+      groupId: held.group.id,
+    }).document;
+    const cleared = clearAll(doc).document;
+    assert.equal(cleared.shapes.size, 0);
+    assert.equal(cleared.groups.has(held.group.id), false);
+    assert.equal(cleared.groups.has(spare.group.id), true);
   });
 
   test("confirmation starts above the threshold", () => {

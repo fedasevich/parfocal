@@ -126,6 +126,27 @@ test("Enter accepts the proposal as a shape and the next click starts a new sess
   await expect(proposals(page)).toHaveAttribute("data-proposals", "1");
 });
 
+test("smart select starts on Good, asks the server for nothing, and Enter accepts after a rail click", async ({
+  page,
+}) => {
+  const embeds: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/embeddings/")) embeds.push(request.url());
+  });
+  const { stage, centre } = await openSmart(page);
+  await page.keyboard.press("Escape");
+  await expect(stage).toHaveAttribute("data-tool", "select");
+  await page.locator('button[data-tool="smart"]').click();
+  await expect(stage).toHaveAttribute("data-tool", "smart");
+  await expect(page.getByRole("button", { name: "Good" })).toHaveAttribute("aria-pressed", "true");
+  await page.mouse.click(centre.x, centre.y);
+  await settled(page);
+  await expect(proposals(page)).toHaveAttribute("data-proposals", "1");
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("polygon-shape")).toHaveCount(1);
+  expect(embeds).toEqual([]);
+});
+
 test("Escape discards the proposal and keeps the tool", async ({ page }) => {
   const { stage, centre } = await openSmart(page);
   await page.mouse.click(centre.x, centre.y);
@@ -142,18 +163,17 @@ test("Escape discards the proposal and keeps the tool", async ({ page }) => {
 test("picking a model, clicking a nucleus and accepting saves the outline", async ({ page }) => {
   test.slow();
   const { stage, centre } = await openSmart(page);
-  const choice = page.getByTestId("model-tier");
+  const choice = page.getByRole("group", { name: "Model for outlining nuclei" });
+  await expect(choice).toHaveAttribute("data-tier", "good");
+  const good = choice.getByRole("button", { name: "Good" });
+  const best = choice.getByRole("button", { name: "Best" });
+  await expect(good).toHaveAttribute("aria-pressed", "true");
+  await expect(best).toHaveAttribute("aria-pressed", "false");
+  await expect(good).toHaveAccessibleDescription(/PathoSAM ViT-B · on this computer/);
+  await best.click();
+  await expect(best).toHaveAttribute("aria-pressed", "true");
   await expect(choice).toHaveAttribute("data-tier", "best");
-  await choice.getByRole("button").click();
-  const picker = page.getByTestId("model-tier-picker");
-  await expect(picker.getByText("Model for outlining nuclei")).toBeVisible();
-  await expect(picker.getByRole("radio")).toHaveCount(2);
-  const good = picker.getByRole("radio", { name: /^Good/ });
-  await good.hover();
-  await expect(picker.getByText(/PathoSAM ViT-B · on this computer/)).toBeVisible();
-  await expect(picker.getByText(/\d+ MB, downloaded once/)).toBeVisible();
   await good.click();
-  await expect(picker).toHaveCount(0);
   await expect(choice).toHaveAttribute("data-tier", "good");
   await page.mouse.click(centre.x, centre.y);
   await settled(page);

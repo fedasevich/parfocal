@@ -43,7 +43,7 @@ import {
   withSavedGroups,
   writeLayerGroups,
 } from "./saved-groups.ts";
-import { draftOf, sameBody, shapeOf } from "./saved-shapes.ts";
+import { draftOf, inDrawnOrder, sameBody, shapeOf } from "./saved-shapes.ts";
 import type { GroupId, Shape, ShapeId } from "./shapes.ts";
 
 export type SaveState = QueuePhase;
@@ -93,7 +93,7 @@ export type SavedAnnotations = {
   readonly noteActivity: () => void;
 };
 
-type LoadedRecord = LayerRecord;
+type LoadedRecord = LayerRecord & { readonly created_at?: string };
 
 async function savedRecords(
   slideId: string,
@@ -101,11 +101,13 @@ async function savedRecords(
 ): Promise<readonly LoadedRecord[] | null> {
   if (sharedTaskId === null) {
     const saved = await listAnnotations(slideId);
-    return saved.status === 200 ? saved.data : null;
+    return saved.status === 200 ? inDrawnOrder(saved.data) : null;
   }
   const layer = await readSharedLayer(sharedTaskId, slideId);
   if (layer.status !== 200) return null;
-  return layer.data.objects.filter((item) => item.deleted_at === null && item.source === null);
+  return inDrawnOrder(
+    layer.data.objects.filter((item) => item.deleted_at === null && item.source === null),
+  );
 }
 
 export function useSavedAnnotations(

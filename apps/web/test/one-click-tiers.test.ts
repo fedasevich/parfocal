@@ -7,6 +7,7 @@ import {
   megabytes,
   oneClickTiers,
   shownTier,
+  startingTier,
   tierOfName,
   usesServerEmbeddings,
 } from "../src/aiseg/one-click-tiers.ts";
@@ -91,6 +92,15 @@ describe("shared services per tier", () => {
     await loader(context(undefined));
     await loader(context("good"));
     await loader(context("fast"));
-    assert.deepEqual(tiers, ["best", "good"]);
+    assert.deepEqual(tiers, ["best", undefined]);
+  });
+});
+
+describe("the tier a slide starts on", () => {
+  it("never starts on the server model, so only a click on Best calls it", () => {
+    assert.equal(startingTier(undefined), "good");
+    assert.equal(startingTier("best"), "good");
+    assert.equal(usesServerEmbeddings(startingTier("best")), false);
+    assert.equal(startingTier("fast"), "fast");
   });
 });

@@ -70,3 +70,15 @@ test("anything else gets the generic message without the raw error text", () => 
   assert.doesNotMatch(`${failure.title} ${failure.detail}`, /boom|tiles/);
   assert.equal(describeOpenFailure("odd").title, "This slide could not be opened");
 });
+
+test("Try again is offered only when a retry can help", () => {
+  assert.equal(describeOpenFailure(new NamedError("UnsupportedFormatError")).retry, false);
+  assert.equal(describeOpenFailure(new SlideNeedsReingestError("/tiles/s")).retry, false);
+  assert.equal(
+    describeOpenFailure(new NamedError("SlideBytesError", { status: 403 })).retry,
+    false,
+  );
+  assert.equal(describeOpenFailure(new ApiError("not-found", 404)).retry, true);
+  assert.equal(describeOpenFailure(new NamedError("SlideBytesError", { status: 503 })).retry, true);
+  assert.equal(describeOpenFailure(new Error("boom")).retry, true);
+});

@@ -34,6 +34,10 @@ export function usesServerEmbeddings(tier: OutlineTier): boolean {
   return tier === "best";
 }
 
+export function startingTier(saved: OutlineTier | undefined): OutlineTier {
+  return saved === undefined || usesServerEmbeddings(saved) ? "good" : saved;
+}
+
 export function shownTier(tier: OutlineTier): OutlineTier {
   return tier === "fast" ? "good" : tier;
 }

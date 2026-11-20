@@ -62,6 +62,21 @@ const pointOf = (record: SavedRecord) => {
   return point === null ? null : Float32Array.of(point.x, point.y);
 };
 
+const drawnTime = (record: { readonly created_at?: string }) => {
+  const time = record.created_at === undefined ? Number.NaN : Date.parse(record.created_at);
+  return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time;
+};
+
+export function inDrawnOrder<T extends { readonly created_at?: string }>(
+  records: readonly T[],
+): T[] {
+  return [...records].sort((a, b) => {
+    const left = drawnTime(a);
+    const right = drawnTime(b);
+    return left === right ? 0 : left < right ? -1 : 1;
+  });
+}
+
 export function shapeOf(record: SavedRecord): NewShape | null {
   switch (record.kind) {
     case savedPolygonKind: {

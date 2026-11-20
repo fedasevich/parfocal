@@ -2,6 +2,7 @@ import { useLingui } from "@lingui/react/macro";
 import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { TopStack, TopStackProvider } from "@parfocal/ui/components/top-stack";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startingTier } from "../aiseg/one-click-tiers.ts";
 import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
 import { useSharedSmartServices } from "../aiseg/shared-smart-services.ts";
 import {
@@ -82,6 +83,7 @@ import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OpenFailureAlert } from "./open-failure-alert.tsx";
 import { OutlineLayer } from "./outline-layer.tsx";
+import { useProposalEnter } from "./proposal-enter.ts";
 import { type EngineRouteId, pickRoutes, type RoutePicker } from "./route-picker.ts";
 import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
@@ -301,7 +303,7 @@ function OpenedSlide({
   const settings = useResolvedSettings();
   doubleClick.current = settings?.double_click ?? "zoom";
   const [pickedTier, setPickedTier] = useState<OutlineTier | null>(null);
-  const outlineTier = pickedTier ?? settings?.tier_outline ?? "best";
+  const outlineTier = pickedTier ?? startingTier(settings?.tier_outline);
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const [topStackNode, setTopStackNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);
@@ -492,23 +494,7 @@ function OpenedSlide({
       }),
     [escRegistry],
   );
-  useEffect(() => {
-    const onEnter = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" || event.defaultPrevented) return;
-      if (proposalNow.current.proposalCount === 0) return;
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        target.closest("input, textarea, button, [contenteditable]")
-      )
-        return;
-      if ((draftControl.current?.depth() ?? 0) > 0) return;
-      event.preventDefault();
-      proposalNow.current.acceptProposals();
-    };
-    window.addEventListener("keydown", onEnter);
-    return () => window.removeEventListener("keydown", onEnter);
-  }, []);
+  useProposalEnter(proposalNow, draftControl);
   const closeShape = useCallback(
     (points: Float32Array) => saved.savePolygon(points, activeClass),
     [saved.savePolygon, activeClass],
@@ -1056,6 +1042,7 @@ function OpenedSlide({
                         <StageMeasurementCard
                           document={annotations}
                           micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
+                          classes={classes}
                           onRemove={measurements.remove}
                           onApply={saved.apply}
                         />

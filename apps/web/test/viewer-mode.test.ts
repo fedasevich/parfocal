@@ -354,3 +354,18 @@ test("a tab the table does not show falls back to the first tab", () => {
   assert.equal(panelTabOf(panel, "display"), "display");
   assert.equal(panelTabOf(panel, undefined), "objects");
 });
+
+test("a slide that cannot open turns every tab, tool and answer off", () => {
+  for (const mode of viewerModes) {
+    const panel = viewerPanelOf(mode, editAccess, { ...annotateFacts, openFailed: true });
+    assert.deepEqual(panel.tabs, []);
+    assert.deepEqual(panel.tools, []);
+    assert.equal(panel.rail, false);
+    assert.equal(panel.toolKeys, false);
+    assert.equal(panel.draw, false);
+    assert.equal(panel.submit, false);
+    assert.equal(panel.decide, false);
+    assert.equal(panel.openFailed, true);
+  }
+  assert.equal(viewerPanelOf("annotate", editAccess, annotateFacts).rail, true);
+});

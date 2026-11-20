@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { getWarmSlideEmbedderUrl } from "@parfocal/api-client";
 import { deviceSpeed, type GpuProbe, warmEmbedderIfSlow } from "../src/aiseg/embedder-warm.ts";
 import { createFakeReader, createFakeSam } from "../src/aiseg/fake-sam.ts";
+import type { OutlineTier } from "../src/aiseg/prompt-fallback.ts";
 import { planPresetPatch } from "../src/aiseg/scale-presets.ts";
 import {
   type SmartServices,
@@ -16,9 +17,10 @@ const withAdapter: GpuProbe = { requestAdapter: () => Promise.resolve({}) };
 const withoutAdapter: GpuProbe = { requestAdapter: () => Promise.resolve(null) };
 const failingAdapter: GpuProbe = { requestAdapter: () => Promise.reject(new Error("lost")) };
 
-function context(slideId?: string): SmartServicesContext {
+function context(slideId?: string, tier: OutlineTier = "best"): SmartServicesContext {
   return {
     slide: { width: 4096, height: 4096 },
+    tier,
     ...(slideId === undefined ? {} : { slideId }),
     open: () => Promise.reject(new Error("not opened in this test")),
   };
@@ -64,6 +66,25 @@ describe("the embedder warm on tool open", () => {
       assert.equal(opened, 1);
       assert.equal(calls.length, expected);
       if (expected === 1) assert.deepEqual(calls[0], { slideId: "slide-1", device: "slow" });
+    }
+  });
+
+  it("sends nothing until the person picks Best", async () => {
+    for (const tier of [undefined, "good", "fast"] as const) {
+      const { calls, warm } = recorder();
+      const loader = withEmbedderWarm((open) => Promise.resolve(fakeServices(open.slide)), {
+        gpu: withoutAdapter,
+        warm,
+      });
+      const base = context("slide-1");
+      await loader({
+        slide: base.slide,
+        slideId: "slide-1",
+        open: base.open,
+        ...(tier === undefined ? {} : { tier }),
+      });
+      await settle();
+      assert.equal(calls.length, 0);
     }
   });
 

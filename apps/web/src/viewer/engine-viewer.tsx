@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   type Thread,
   useGetMe,
@@ -49,6 +50,7 @@ import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import type { NoteRequest } from "./stage-object-notes.tsx";
 import { StageObjectNotes } from "./stage-object-notes.tsx";
+import { StageOpenStateProvider } from "./stage-open-state.tsx";
 import { StageOpinion, useSlideSubmit } from "./stage-opinion.tsx";
 import { StageResultCells } from "./stage-result-cells.tsx";
 import { StageReviewObjects } from "./stage-review-objects.tsx";
@@ -159,6 +161,8 @@ function GuardedViewer({
   const loaded = useCaseLoad(projectId, slideId, task);
   const [percent, setPercent] = useState<number | null>(null);
   const [peek, setPeek] = useState(false);
+  const [openFailed, setOpenFailed] = useState(false);
+  const { t } = useLingui();
   const [storage, setStorage] = useState<{ slideId: string; note: SlideStorageNote } | null>(null);
   const [banner, setBanner] = useState<HTMLElement | null>(null);
   const [status, setStatus] = useState<HTMLElement | null>(null);
@@ -250,7 +254,9 @@ function GuardedViewer({
     opinionQuestions: opinionForm?.questions.length,
     comments: tabCounts.comments ?? 0,
     layout: stageLayoutOf(layout),
+    openFailed,
   });
+  const openState = useMemo(() => ({ rail: panel.rail, onFailed: setOpenFailed }), [panel.rail]);
   const submitSlide = useSlideSubmit(reviewTask, slideId);
   const opinionShown = taskDetail?.kind === "review" && panel.tabs.includes("opinion");
   const [noteObject, setNoteObject] = useState<string | null>(object ?? null);
@@ -508,6 +514,7 @@ function GuardedViewer({
           }}
           onCompare={onLayout === undefined ? undefined : () => openCompare()}
           percent={percent}
+          progressNote={panel.openFailed ? t`Could not open` : undefined}
           objectTotal={areas.length}
           onPeek={() => setPeek(true)}
           statusRef={setStatus}
@@ -540,34 +547,36 @@ function GuardedViewer({
           </div>
         ) : null}
         <NoticeSlotsProvider value={notices}>
-          <SlideStage
-            key={slideId}
-            slideId={slideId}
-            projectId={projectId}
-            {...(task === undefined ? {} : { taskId: task })}
-            areas={areas}
-            viewed={viewed}
-            outlines={fakeOutlines && task !== undefined && annotateTask === null}
-            workspace={workspace}
-            annotateTask={annotateTask}
-            layerKnown={layerKnown}
-            readOnly={panel.readOnly}
-            onOpenSlide={onOpenSlide}
-            onStorage={(note) => setStorage({ slideId, note })}
-            systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
-            inspector={inspector}
-            bare={focus}
-            toolKeys={panel.toolKeys}
-            compare={compare}
-            compareToggle={
-              onLayout === undefined
-                ? undefined
-                : {
-                    on: compare !== null,
-                    onChange: (on) => (on ? openCompare() : closeCompare()),
-                  }
-            }
-          />
+          <StageOpenStateProvider value={openState}>
+            <SlideStage
+              key={slideId}
+              slideId={slideId}
+              projectId={projectId}
+              {...(task === undefined ? {} : { taskId: task })}
+              areas={areas}
+              viewed={viewed}
+              outlines={fakeOutlines && task !== undefined && annotateTask === null}
+              workspace={workspace}
+              annotateTask={annotateTask}
+              layerKnown={layerKnown}
+              readOnly={panel.readOnly}
+              onOpenSlide={onOpenSlide}
+              onStorage={(note) => setStorage({ slideId, note })}
+              systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
+              inspector={inspector}
+              bare={focus}
+              toolKeys={panel.toolKeys}
+              compare={compare}
+              compareToggle={
+                onLayout === undefined
+                  ? undefined
+                  : {
+                      on: compare !== null,
+                      onChange: (on) => (on ? openCompare() : closeCompare()),
+                    }
+              }
+            />
+          </StageOpenStateProvider>
         </NoticeSlotsProvider>
         <div
           ref={setPeekHost}

@@ -17,6 +17,20 @@ test("a slide whose file cannot be read says so and offers another try", async (
   await expect(stage.locator("canvas")).toHaveCount(1);
 });
 
+test("a slide that cannot open says so in the top bar and turns tools and tabs off", async ({
+  page,
+}) => {
+  await page.goto(`${livePath}?mode=annotate`);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "failed");
+  await expect(page.getByText("Could not open")).toBeVisible();
+  await expect(page.getByText("Opening", { exact: true })).toHaveCount(0);
+  await expect(page.locator("button[data-tool]")).toHaveCount(0);
+  await expect(page.getByTestId("stage-inspector").getByRole("tab")).toHaveCount(0);
+  await page.keyboard.press("p");
+  await expect(stage).not.toHaveAttribute("data-tool", "polygon");
+});
+
 test("trying again opens the slide afresh on a single canvas", async ({ page }) => {
   await page.goto(livePath);
   const stage = page.getByTestId("slide-stage");

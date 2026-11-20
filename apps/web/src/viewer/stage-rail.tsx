@@ -1,6 +1,7 @@
 import { ToolRail, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
 import type { RailTool } from "../screens/review/viewer-frame.tsx";
 import { type CompareToggle, StageCompareButton } from "./stage-compare.tsx";
+import { useStageOpenState } from "./stage-open-state.tsx";
 import { StageRailButton } from "./stage-rail-button.tsx";
 
 type StageRailProps = {
@@ -11,6 +12,13 @@ type StageRailProps = {
 };
 
 const groupKey = (group: readonly RailTool[]) => group.map((item) => item.tool).join("-");
+
+const noRail: StageRailProps["rail"] = [];
+
+function useShownRail(props: StageRailProps): StageRailProps {
+  const { rail } = useStageOpenState();
+  return rail ? props : { ...props, rail: noRail, compareToggle: undefined };
+}
 
 function buttons(group: readonly RailTool[], props: StageRailProps, dock: boolean) {
   return group.map((item) => (
@@ -24,7 +32,8 @@ function buttons(group: readonly RailTool[], props: StageRailProps, dock: boolea
   ));
 }
 
-export function StageSideRail(props: StageRailProps) {
+export function StageSideRail(given: StageRailProps) {
+  const props = useShownRail(given);
   return (
     <ToolRail className="justify-between">
       <div className="grid gap-1">
@@ -41,7 +50,9 @@ export function StageSideRail(props: StageRailProps) {
   );
 }
 
-export function StageDockTools(props: StageRailProps) {
+export function StageDockTools(given: StageRailProps) {
+  const props = useShownRail(given);
+  if (props !== given) return null;
   return (
     <div
       data-slot="stage-tools"

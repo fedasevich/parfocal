@@ -5791,6 +5791,10 @@ msgstr "Could not create the account."
 msgid "Could not load {label}."
 msgstr "Could not load {label}."
 
+#: src/viewer/engine-viewer.tsx
+msgid "Could not open"
+msgstr "Could not open"
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Could not remove the passkey. Try again."
 msgstr "Could not remove the passkey. Try again."
@@ -6193,6 +6197,14 @@ msgstr "Delete {0}"
 #: src/screens/project/result-set-delete-dialog.tsx
 msgid "Delete {0}?"
 msgstr "Delete {0}?"
+
+#: src/viewer/stage-measurement-card.tsx
+msgid "Delete all {count} shapes on this slide?"
+msgstr "Delete all {count} shapes on this slide?"
+
+#: src/viewer/stage-measurement-card.tsx
+msgid "Delete all shapes"
+msgstr "Delete all shapes"
 
 #: src/screens/project/result-set-delete-dialog.tsx
 msgid "Delete anyway"
@@ -13033,6 +13045,10 @@ msgstr "Regions of interest"
 msgid "Regions, cells, classes, scores and IDs in one file. The native format."
 msgstr "Regions, cells, classes, scores and IDs in one file. The native format."
 
+#: src/viewer/stage-measurement-card.tsx
+msgid "Regions, rulers and markers go. Undo brings them back."
+msgstr "Regions, rulers and markers go. Undo brings them back."
+
 #: src/screens/admin/audit.tsx
 msgid "Rejected"
 msgstr "Rejected"
@@ -16483,10 +16499,6 @@ msgstr "the first object"
 msgid "The four lanes, each box opens its screen in its scene"
 msgstr "The four lanes, each box opens its screen in its scene"
 
-#: src/annotations/model-tier-choice.tsx
-msgid "The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
-msgstr "The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
-
 #: src/screens/new-task/send-step.tsx
 msgid "The full viewer"
 msgstr "The full viewer"
@@ -17850,6 +17862,10 @@ msgstr "unknown"
 #: src/screens/admin/connect-model.tsx
 msgid "Unknown"
 msgstr "Unknown"
+
+#: src/measure/measurement-list.tsx
+msgid "Unknown class"
+msgstr "Unknown class"
 
 #: ../../packages/ui/src/components/auth.tsx
 #: ../../packages/ui/src/components/lockable-row.tsx

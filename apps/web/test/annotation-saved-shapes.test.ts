@@ -13,7 +13,7 @@ import {
 } from "../src/annotations/document.ts";
 import { createSaveQueue, type Remote, type SaveQueue } from "../src/annotations/save-queue.ts";
 import { annotationTransport, editOf } from "../src/annotations/save-transport.ts";
-import { draftOf, sameBody, shapeOf } from "../src/annotations/saved-shapes.ts";
+import { draftOf, inDrawnOrder, sameBody, shapeOf } from "../src/annotations/saved-shapes.ts";
 import type { Shape } from "../src/annotations/shapes.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -206,4 +206,16 @@ test("a polygon always sends its class, so clearing the class clears it on the s
   assert.ok("class_id" in editOf(2, body));
   const loaded = shapeOf({ kind: "region", geometry: { ...body.geometry }, class_id: "c2" });
   assert.equal(loaded?.kind === "polygon" ? loaded.classKey : undefined, "c2");
+});
+
+test("saved shapes load in the order they were drawn, so M numbers stay put", () => {
+  const records = [
+    { id: "b", created_at: "2026-11-20T10:00:02Z" },
+    { id: "r", created_at: "2026-11-20T10:00:00Z" },
+    { id: "a", created_at: "2026-11-20T10:00:01Z" },
+  ];
+  assert.deepEqual(
+    inDrawnOrder(records).map((record) => record.id),
+    ["r", "a", "b"],
+  );
 });

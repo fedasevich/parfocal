@@ -49,7 +49,10 @@ describe("the measurement list", () => {
       classKey: "k9",
       groupId: grouped.group.id,
     });
-    assert.equal(buildMeasurementRows(withShape.document, null, new Map())[0]?.category, "k9");
+    assert.equal(
+      buildMeasurementRows(withShape.document, null, new Map())[0]?.category,
+      "Unknown class",
+    );
     const hidden = updateGroup(withShape.document, grouped.group.id, { hidden: true });
     assert.equal(buildMeasurementRows(hidden.document, null, new Map()).length, 0);
   });

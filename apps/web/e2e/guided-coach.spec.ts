@@ -68,3 +68,15 @@ test("the first scene keeps showing the tips and Got it, start opens the region 
   await gotIt(page).click();
   await expect(page).toHaveURL(/scene=region/);
 });
+
+test("read only guided review never coaches the person to answer", async ({ page }) => {
+  await page.goto(`${onStage}&as=DH`);
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-access", "read-only", {
+    timeout: 15_000,
+  });
+  await objectsReady(page);
+  await expect(page.getByText(/Answer with one of the buttons/)).toHaveCount(0);
+  await expect(firstTip(page)).toHaveCount(0);
+  await expect(gotIt(page)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "How guided review works" })).toHaveCount(0);
+});

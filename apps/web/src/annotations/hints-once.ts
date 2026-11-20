@@ -17,34 +17,30 @@ export type HintsOnce = {
   readonly dismiss: () => void;
 };
 
+export function hintLeftBehind(shownRail: string | null, rail: string): string | null {
+  return shownRail !== null && shownRail !== rail ? toolHintId(shownRail) : null;
+}
+
 export function useHintsOnce(tool: string, wanted: boolean): HintsOnce {
   const rail = railToolOf(tool);
   const { ready, seen, markSeen } = useHintsSeen();
   const [shown, setShown] = useState<string | null>(null);
   const seenRef = useRef(seen);
   const markRef = useRef(markSeen);
-  const leaving = useRef(false);
+  const shownRef = useRef<string | null>(null);
   seenRef.current = seen;
   markRef.current = markSeen;
   useEffect(() => {
-    leaving.current = false;
-    return () => {
-      leaving.current = true;
-    };
-  }, []);
-  useEffect(() => {
+    const left = hintLeftBehind(shownRef.current, rail);
+    if (left !== null) markRef.current([left]);
     const id = toolHintId(rail);
-    if (!wanted || !ready || seenRef.current.has(id)) {
-      setShown(null);
-      return;
-    }
-    setShown(rail);
-    return () => {
-      if (!leaving.current) markRef.current([id]);
-    };
+    const showing = wanted && ready && !seenRef.current.has(id);
+    shownRef.current = showing ? rail : null;
+    setShown(showing ? rail : null);
   }, [rail, wanted, ready]);
   const dismiss = useCallback(() => {
     markRef.current([toolHintId(rail)]);
+    shownRef.current = null;
     setShown(null);
   }, [rail]);
   return { shown: wanted && shown === rail, dismiss };

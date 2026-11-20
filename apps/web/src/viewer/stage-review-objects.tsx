@@ -266,7 +266,8 @@ export function StageReviewObjects({
   const ready = session.ready && objects.length > 0;
   const orderWait = pendingOrder(session.order, session.ready);
   const coach = useGuidedCoach(guided && object === undefined);
-  const coachOn = guided && coachShown(coach.open, ready ? objects.length : 0);
+  const coachOn =
+    guided && coachShown(coach.open, ready ? objects.length : 0, answersOff === undefined);
   const opening = useRef(true);
   const reported = useRef(onCurrent);
   reported.current = onCurrent;
@@ -375,11 +376,11 @@ export function StageReviewObjects({
     <StageCoachAnswerTip
       keys={answersOf(session.style, session.classes, currentItem).map((item) => item.key)}
     />
-  ) : (
+  ) : answersOff === undefined ? (
     <Button variant="ghost" size="sm" className="w-fit px-0" onClick={coach.reopen}>
       {t`How guided review works`}
     </Button>
-  );
+  ) : null;
   return (
     <>
       <ObjectOutlines

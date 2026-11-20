@@ -5789,6 +5789,10 @@ msgstr ""
 msgid "Could not load {label}."
 msgstr ""
 
+#: src/viewer/engine-viewer.tsx
+msgid "Could not open"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Could not remove the passkey. Try again."
 msgstr ""
@@ -6187,6 +6191,14 @@ msgstr ""
 #. placeholder {0}: set.name
 #: src/screens/project/result-set-delete-dialog.tsx
 msgid "Delete {0}?"
+msgstr ""
+
+#: src/viewer/stage-measurement-card.tsx
+msgid "Delete all {count} shapes on this slide?"
+msgstr ""
+
+#: src/viewer/stage-measurement-card.tsx
+msgid "Delete all shapes"
 msgstr ""
 
 #: src/screens/project/result-set-delete-dialog.tsx
@@ -13024,6 +13036,10 @@ msgstr ""
 msgid "Regions, cells, classes, scores and IDs in one file. The native format."
 msgstr ""
 
+#: src/viewer/stage-measurement-card.tsx
+msgid "Regions, rulers and markers go. Undo brings them back."
+msgstr ""
+
 #: src/screens/admin/audit.tsx
 msgid "Rejected"
 msgstr ""
@@ -16474,10 +16490,6 @@ msgstr ""
 msgid "The four lanes, each box opens its screen in its scene"
 msgstr ""
 
-#: src/annotations/model-tier-choice.tsx
-msgid "The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
-msgstr ""
-
 #: src/screens/new-task/send-step.tsx
 msgid "The full viewer"
 msgstr ""
@@ -17840,6 +17852,10 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "Unknown"
+msgstr ""
+
+#: src/measure/measurement-list.tsx
+msgid "Unknown class"
 msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx

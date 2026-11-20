@@ -1,5 +1,11 @@
-import { type AnnotationDocument, listShapes, removeShape } from "./document.ts";
-import type { ShapeId } from "./shapes.ts";
+import {
+  type AnnotationDocument,
+  groupChain,
+  listShapes,
+  removeGroup,
+  removeShape,
+} from "./document.ts";
+import type { GroupId, ShapeId } from "./shapes.ts";
 
 export const clearConfirmCount = 5000;
 
@@ -19,11 +25,33 @@ export function deleteShapes(doc: AnnotationDocument, ids: readonly ShapeId[]): 
   return { document, removed: doomed.size, orphanedThreads };
 }
 
+function groupsHolding(doc: AnnotationDocument): Set<GroupId> {
+  const held = new Set<GroupId>();
+  for (const shape of doc.shapes.values()) {
+    for (const group of groupChain(doc, shape.groupId)) held.add(group.id);
+  }
+  return held;
+}
+
+export function withoutEmptiedGroups(
+  before: AnnotationDocument,
+  after: AnnotationDocument,
+): AnnotationDocument {
+  const heldBefore = groupsHolding(before);
+  const heldAfter = groupsHolding(after);
+  let document = after;
+  for (const id of after.groups.keys()) {
+    if (heldBefore.has(id) && !heldAfter.has(id)) document = removeGroup(document, id);
+  }
+  return document;
+}
+
 export function clearAll(doc: AnnotationDocument): Deletion {
-  return deleteShapes(
+  const deletion = deleteShapes(
     doc,
     listShapes(doc).map((shape) => shape.id),
   );
+  return { ...deletion, document: withoutEmptiedGroups(doc, deletion.document) };
 }
 
 export function needsClearConfirmation(count: number): boolean {

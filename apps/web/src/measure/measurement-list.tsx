@@ -14,6 +14,7 @@ import {
   type MeasurementNames,
   noClass,
   noteDrawnTimes,
+  unknownClass,
 } from "./measurement-list.ts";
 
 export function MeasurementList({
@@ -29,8 +30,11 @@ export function MeasurementList({
 }) {
   const skipRulers = useRulersClaimed();
   const { t } = useLingui();
-  const groupName = (group: MeasurementGroup) =>
-    group.kind === "ruler" ? t`Rulers` : group.name === noClass ? t`No class` : group.name;
+  const groupName = (group: MeasurementGroup) => {
+    if (group.kind === "ruler") return t`Rulers`;
+    if (group.name === noClass) return t`No class`;
+    return group.name === unknownClass ? t`Unknown class` : group.name;
+  };
   const docked = useDocked();
 
   const times = useRef<ReadonlyMap<ShapeId, number>>(new Map());

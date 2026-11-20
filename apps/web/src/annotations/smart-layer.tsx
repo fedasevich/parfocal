@@ -96,7 +96,7 @@ export function SmartLayer({
   activeClass,
   loader,
   openRequest,
-  tier = "best",
+  tier = "good",
   onTierChange,
   onDocumentChange,
 }: SmartLayerProps) {

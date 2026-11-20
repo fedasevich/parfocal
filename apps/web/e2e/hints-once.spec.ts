@@ -49,3 +49,33 @@ test("old one-off hint keys fold into the hints list and Show all hints again br
   await page.goto("/?scene=new");
   await expect(guidedItem(page)).toBeVisible({ timeout: 20_000 });
 });
+
+test("opening a slide writes no setting, and closing a tool hint is what marks it seen", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/me/setting-layers") && request.method() !== "GET") {
+      writes.push(request.postData() ?? "");
+    }
+  });
+  const project = "00000000-0000-4000-8003-000000000007";
+  const slide = "00000000-0000-4000-8005-000000000005";
+  for (const mode of ["review", "annotate"]) {
+    await page.goto(`/projects/${project}/slides/${slide}?mode=${mode}`);
+    const stage = page.getByTestId("slide-stage");
+    await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+    await expect(stage).toHaveAttribute("data-annotations", "loaded");
+    await page.waitForLoadState("networkidle");
+  }
+  await expect(page.getByTestId("hint-close")).toBeVisible();
+  const modes = page.getByTestId("mode-switch");
+  await modes.getByRole("radio", { name: "Look" }).click();
+  await expect(page.getByTestId("hint-close")).toHaveCount(0);
+  await modes.getByRole("radio", { name: "Annotate" }).click();
+  await expect(page.getByTestId("hint-close")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(writes).toEqual([]);
+  await page.getByTestId("hint-close").click();
+  await expect.poll(() => writes.length).toBeGreaterThan(0);
+});

@@ -67,6 +67,7 @@ export type PanelFacts = {
   readonly opinionQuestions: number | undefined;
   readonly comments: number;
   readonly layout?: StageLayout | undefined;
+  readonly openFailed?: boolean | undefined;
 };
 
 export type ViewerPanel = {
@@ -79,6 +80,8 @@ export type ViewerPanel = {
   readonly submit: boolean;
   readonly draw: boolean;
   readonly comment: boolean;
+  readonly rail: boolean;
+  readonly openFailed: boolean;
 };
 
 const reviewingModes: ReadonlySet<ViewerMode> = new Set(["review", "guided", "cells"]);
@@ -110,6 +113,21 @@ export function viewerPanelOf(
   access: ViewerAccess,
   facts: PanelFacts,
 ): ViewerPanel {
+  if (facts.openFailed === true) {
+    return {
+      tabs: [],
+      first: firstTab(mode, facts),
+      readOnly: true,
+      tools: [],
+      toolKeys: false,
+      decide: false,
+      submit: false,
+      draw: false,
+      comment: false,
+      rail: false,
+      openFailed: true,
+    };
+  }
   const readOnly = stageReadOnly(access, facts.taskKind);
   const comment = commentsAllowed(access);
   const comments: ViewerTab[] = comment || facts.comments > 0 ? ["comments"] : [];
@@ -135,6 +153,8 @@ export function viewerPanelOf(
     submit: reviewing && access.kind === "edit",
     draw: mode === "annotate" && !readOnly,
     comment: comment && tools.includes("comment"),
+    rail: true,
+    openFailed: false,
   };
 }
 

@@ -41,7 +41,7 @@ export interface SmartServicesContext {
   readonly open: () => Promise<SmartOpenRequest>;
 }
 
-const serverFirst = (context: SmartServicesContext) => usesServerEmbeddings(context.tier ?? "best");
+const serverFirst = (context: SmartServicesContext) => usesServerEmbeddings(context.tier ?? "good");
 
 export type SmartServicesLoader = (context: SmartServicesContext) => Promise<SmartServices>;
 

@@ -19,6 +19,8 @@ export type MeasurementNames = ReadonlyMap<string, string>;
 
 export const noClass = "No class";
 
+export const unknownClass = "Unknown class";
+
 export const rulersGroup = "Rulers";
 
 export type MeasurementGroup = {
@@ -28,7 +30,7 @@ export type MeasurementGroup = {
 };
 
 const groupRank = (group: MeasurementGroup) =>
-  group.kind === "ruler" ? 2 : group.name === noClass ? 1 : 0;
+  group.kind === "ruler" ? 2 : group.name === noClass || group.name === unknownClass ? 1 : 0;
 
 export function groupMeasurementRows(rows: readonly MeasurementRow[]): MeasurementGroup[] {
   const groups = new Map<
@@ -83,7 +85,7 @@ export function buildMeasurementRows(
       value: formatPerimeter(measure, units),
       area: formatArea(measure, units),
       category:
-        shape.classKey === null ? noClass : (classNames.get(shape.classKey) ?? shape.classKey),
+        shape.classKey === null ? noClass : (classNames.get(shape.classKey) ?? unknownClass),
       drawnAt: time,
     });
   }

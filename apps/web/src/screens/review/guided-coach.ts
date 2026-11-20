@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
 import { guidedCoachHintId, useHintsSeen } from "../../hints/hints-seen.ts";
 
-export const coachShown = (asked: boolean, objectCount: number) => asked && objectCount > 0;
+export const coachShown = (asked: boolean, objectCount: number, answerable: boolean) =>
+  answerable && asked && objectCount > 0;
 
 export type GuidedCoach = { open: boolean; dismiss: () => void; reopen: () => void };
 
