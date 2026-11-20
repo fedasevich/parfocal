@@ -150,7 +150,9 @@ export const defaultTasks: StudyTask[] = [
     instruction: "Find a cell you can see is a lymphocyte and change the AI label to match.",
     startPath: cellFindings,
     targetSeconds: 60,
-    check: { text: ": disagree" },
+    check: {
+      selector: '[data-testid="cell-type-bar"]:not([data-chosen=""]):not([data-chosen="keep"])',
+    },
     guard: cellGuard,
   },
   {

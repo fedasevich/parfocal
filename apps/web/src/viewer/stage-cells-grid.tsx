@@ -1,5 +1,5 @@
 import type { ReviewObject } from "@parfocal/api-client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { actionOf } from "../keys/actions.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import { type Fired, isTyping } from "../keys/registry.ts";
@@ -82,21 +82,22 @@ export function StageCellsGrid({
         : stripStep(order, picked, suffix as Direction, stripColumns);
     if (next !== undefined && next !== picked) onStep(next);
   });
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (isTyping(event.target) || inLayer()) return;
-      if (event.key === "Escape") {
-        if (confirming) setConfirming(false);
-        else onClose();
-      } else if (event.key === "Enter" && confirming) {
-        event.preventDefault();
-        agreeRest();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  const onKey = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (isTyping(event.target) || inLayer()) return;
+    if (event.key === "Escape") {
+      if (confirming) setConfirming(false);
+      else onClose();
+    } else if (event.key === "Enter" && confirming) {
+      event.preventDefault();
+      agreeRest();
+    }
   });
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onKey(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
   return (
     <div
       data-testid="stage-cells-grid"
