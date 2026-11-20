@@ -101,7 +101,7 @@ test("only a small cluster asks for its size and its tumor cell count", async ({
   await expect(staging(page)).toHaveAttribute("data-state", "small-cluster");
   await expect(staging(page)).toHaveAttribute("data-phase", "open");
   const hero = staging(page).locator('[data-slot="staging-hero"]');
-  await expect(hero).toContainText("Small tumor cluster, about 0.18 mm");
+  await expect(hero).toContainText("Small tumor cluster, about 180 µm");
   await expect(hero).toContainText("ITC if confirmed");
   await expect(hero).toContainText(
     "both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis",
@@ -117,7 +117,7 @@ test("only a small cluster asks for its size and its tumor cell count", async ({
   await expect(staging(page).locator('[data-slot="cluster-steps"] [data-done]')).toHaveCount(0);
   const rows = staging(page).locator('[data-slot="region-row"]');
   await expect(rows.nth(0)).toHaveAttribute("data-area", "T5");
-  await expect(rows.nth(0)).toContainText("0.18 mm");
+  await expect(rows.nth(0)).toContainText("180 µm");
   await staging(page).getByRole("button", { name: "Start with area 1" }).click();
   await expect(page.locator("body")).toHaveAttribute("data-started", "T5");
 });
@@ -125,14 +125,14 @@ test("only a small cluster asks for its size and its tumor cell count", async ({
 test("the small cluster step list follows the staging state", async ({ page }) => {
   await page.goto(story("components-analysis-cards--small-cluster-measured"));
   const hero = staging(page).locator('[data-slot="staging-hero"]');
-  await expect(hero).toContainText("Small tumor cluster, about 0.17 mm");
+  await expect(hero).toContainText("Small tumor cluster, about 170 µm");
   await expect(hero).toContainText("ITC so far");
   await expect(hero).toContainText("To settle it, count its tumor cells.");
   const steps = staging(page).locator('[data-slot="cluster-steps"] li');
   await expect(steps.nth(0)).toHaveAttribute("data-done", "true");
   await expect(steps.nth(0)).toContainText("Area 1 confirmed");
   await expect(steps.nth(1)).toHaveAttribute("data-done", "true");
-  await expect(steps.nth(1)).toContainText("Measured 0.17 mm");
+  await expect(steps.nth(1)).toContainText("Measured 170 µm");
   await expect(steps.nth(2)).not.toHaveAttribute("data-done", /.*/);
   await expect(staging(page).getByRole("button", { name: "Submit" })).toHaveCount(0);
 });
@@ -142,7 +142,7 @@ test("a small cluster with a firm count under 200 settles as isolated tumor cell
 }) => {
   await page.goto(story("components-analysis-cards--small-cluster-settled"));
   await expect(staging(page)).toHaveAttribute("data-phase", "settled");
-  await expect(staging(page)).toContainText("Isolated tumor cells, 0.17 mm, settled");
+  await expect(staging(page)).toContainText("Isolated tumor cells, 170 µm, settled");
   await expect(staging(page)).toContainText("pN0(i+)(sn)");
   await expect(staging(page)).toContainText("holds under 200 tumor cells");
   await expect(staging(page).locator('[data-slot="cluster-steps"]')).toHaveCount(0);
