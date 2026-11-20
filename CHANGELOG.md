@@ -2,6 +2,30 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.27.1 (2026-11-20)
+
+### Fixes
+
+- PROTO-057: Let the API store display opacity down to zero
+- PROTO-092: Fix the faults found in the v0.27.0 deployed check
+- PROTO-092: Scroll the compare slide picker and keep the Slides tab within 1024 px
+- PROTO-092: Give the slide name column a 144 px floor so the table fits on Linux too
+
+### Docs
+
+- PROTO-065: Log the v0.27.0 deploy and reseed
+- PROTO-092: Log the v0.27.0 deployed check and add its faults
+- PROTO-092: Log the deployed check fixes
+- PROTO-092: Map which review and slide open which viewer, current and proposed
+- PROTO-093: Add the viewer gap tasks and ask decision 164
+- PROTO-096: Record decision 164 and add the viewer migration tasks
+- PROTO-096: Make the viewer tabs follow the task in the mode rule
+- PROTO-096: Record the owner's answer A to decision 163
+
+### Tests
+
+- PROTO-070: Open compare from the tool rail on the real API and draw both panes
+
 ## v0.27.0 (2026-11-20)
 
 ### Features
