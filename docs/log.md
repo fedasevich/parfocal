@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-113 Production touch: v0.32.1 deployed, migration 0143 (adds review_edit_versions) ran on the Neon main branch, smoke passed. Earlier production touches tonight: deploys of v0.30.0, v0.31.0, v0.31.1 and v0.31.2, all smokes passed, cost TODO (Modal compute only).
 - PROTO-113 The v0.32.0 deploy refused migration 0143 because the guard matched TRUNCATE in REVOKE UPDATE, DELETE, TRUNCATE. Nothing ran. The migration now revokes all and grants select and insert, the guard finds nothing and the history tests pass. Redeployed as v0.32.1.
 - PROTO-138 Also from the CI fix agent: an unopenable slide still shows the Select tool's hint bar (Drag on empty tissue for a marquee) although its tools are off. Fold it in here. The all-code bundle budget has about 6 KB of headroom since dae28a5a moved its baseline to 3553569.
 - PROTO-129 Marker did not reproduce at 1512 by 982, 1470 by 956, 1280 by 800 and 1024 by 700 with wheel zoom, preset keys, object focus and a pinned map. object=T1+ matches no object the agent account sees. Untried: developer drawer open, narrow or wide side panel, dragged map, Safari. Needs the owner's window size and steps.
