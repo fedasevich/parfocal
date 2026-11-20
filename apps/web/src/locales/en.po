@@ -10324,6 +10324,10 @@ msgstr "No AI results yet. Fine, you can run a model later."
 msgid "No announcements are showing."
 msgstr "No announcements are showing."
 
+#: ../../packages/ui/src/components/slide-done-card.tsx
+msgid "No answer"
+msgstr "No answer"
+
 #: ../../packages/ui/src/components/progress-meter.tsx
 msgid "No answers yet"
 msgstr "No answers yet"
@@ -12824,6 +12828,10 @@ msgstr "Read in place from a connected source. Nothing is copied."
 #: src/screens/admin/storage.tsx
 msgid "Read in place, not counted: <0>{0}</0> stays on your sources"
 msgstr "Read in place, not counted: <0>{0}</0> stays on your sources"
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "Read only."
+msgstr "Read only."
 
 #: src/viewer/stage-issue-cards.tsx
 msgid "Read only. This slide is assigned to {reviewers}."
@@ -17269,6 +17277,10 @@ msgstr "This task has no regions to measure."
 msgid "This task is signed off, so the mapping is locked."
 msgstr "This task is signed off, so the mapping is locked."
 
+#: src/screens/refusals.ts
+msgid "This task was withdrawn, so nothing can be changed. You can look at it read only."
+msgstr "This task was withdrawn, so nothing can be changed. You can look at it read only."
+
 #: src/viewer/stage-issue-cards.tsx
 msgid "This task was withdrawn."
 msgstr "This task was withdrawn."
@@ -18851,6 +18863,14 @@ msgstr "You can leave this page or close the tab. The upload keeps going on the 
 #: src/screens/viewer/objects-panel.tsx
 msgid "You can look at the slide meanwhile. Regions join the list as they are found, and the view never moves under you."
 msgstr "You can look at the slide meanwhile. Regions join the list as they are found, and the view never moves under you."
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "You can look at this layer but not change it."
+msgstr "You can look at this layer but not change it."
+
+#: src/screens/refusals.ts
+msgid "You can look at this slide but not change it."
+msgstr "You can look at this slide but not change it."
 
 #. placeholder {0}: signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : t`Nobody can yet.`
 #: src/screens/clinical-report/report-screen.tsx

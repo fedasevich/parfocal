@@ -5,6 +5,7 @@ import { permissionMatrix } from "../src/screens/admin/permission-matrix.generat
 import {
   assignedTo,
   holdsReviewRight,
+  lookOnlyLayer,
   type ViewerAccessFacts,
   viewerAccessOf,
   type WorkspaceRole,
@@ -104,6 +105,14 @@ for (const [name, change, expected] of cases) {
     assert.equal(access.kind === "edit" ? "edit" : access.reason, expected);
   });
 }
+
+test("an annotate layer is look only for every read only reason but signed off", () => {
+  const base = { ...open, taskKind: "annotate" as const };
+  assert.equal(lookOnlyLayer(viewerAccessOf({ ...base, assigned: false })), true);
+  assert.equal(lookOnlyLayer(viewerAccessOf({ ...base, withdrawn: true })), true);
+  assert.equal(lookOnlyLayer(viewerAccessOf({ ...base, signedOff: true })), false);
+  assert.equal(lookOnlyLayer(viewerAccessOf(base)), false);
+});
 
 test("the workspace role is the role in the active workspace", () => {
   const me = {

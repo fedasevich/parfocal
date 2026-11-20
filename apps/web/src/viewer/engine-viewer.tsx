@@ -6,8 +6,10 @@ import {
   useGetReviewTaskStates,
   useListReviewObjects,
 } from "@parfocal/api-client";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
+import { annotateTaskOf, layerKnownOf, withLookOnly } from "../annotations/annotate-task.ts";
+import { slideStatusQuery } from "../annotations/annotate-task-api.ts";
 import { readBuildConfig } from "../config.ts";
 import { useRememberResume } from "../screens/home/remember-resume.ts";
 import { usePeople } from "../screens/people.ts";
@@ -56,6 +58,7 @@ import { useSlideAreas } from "./use-slide-areas.ts";
 import {
   assignedTo,
   isReadOnly,
+  lookOnlyLayer,
   readOnlyCodeOf,
   viewerAccessOf,
   workspaceRoleOf,
@@ -129,8 +132,10 @@ export function EngineViewer({
   const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
   const projectRole = okData(useGetProject(projectId).data)?.my_role ?? undefined;
   const owner = projectRole === "owner";
-  const annotateTask = annotateTaskOf(taskDetail, slideId, owner, object);
-  const retype = useCellRetype(projectId, annotateTask);
+  const annotating = task !== undefined && taskDetail?.kind === "annotate";
+  const annotateStatus = okData(
+    useQuery({ ...slideStatusQuery(task ?? "", slideId), enabled: annotating }).data,
+  );
   const withdrawn = taskDetail?.kind === "review" && isWithdrawn(taskDetail);
   const reviewTask = task !== undefined && taskDetail?.kind === "review" ? task : null;
   const statesQuery = useGetReviewTaskStates(task ?? "", {
@@ -155,15 +160,21 @@ export function EngineViewer({
     taskKind: task === undefined ? undefined : taskDetail?.kind,
     assigned: taskDetail === undefined ? undefined : assignedTo(taskDetail.slides, slideId, me),
     withdrawn: isWithdrawn(taskDetail),
-    signedOff: signedOff !== null,
+    signedOff: annotating ? annotateStatus?.signed_off_at != null : signedOff !== null,
   });
+  const layerLookOnly = annotating && lookOnlyLayer(access);
+  const annotateTask = withLookOnly(
+    annotateTaskOf(taskDetail, slideId, owner, object),
+    layerLookOnly,
+  );
+  const retype = useCellRetype(projectId, annotateTask);
   const { sentenceOf } = useRefusals();
   const accessCode = readOnlyCodeOf(access);
   const accessLine = accessCode === undefined ? undefined : sentenceOf(accessCode);
   const lookingOn =
     access.kind === "read-only" &&
     (access.reason === "not-assigned" || access.reason === "no-review-right");
-  const stageReadOnly = isReadOnly(access) && taskDetail?.kind !== "annotate";
+  const stageReadOnly = annotating ? layerLookOnly : isReadOnly(access);
   const opinionShown = taskDetail?.kind === "review" && !lookingOn;
   const taskSlideIds = taskDetail?.slides.map((item) => item.slide_id) ?? [];
   const nextSlideId = taskSlideIds[taskSlideIds.indexOf(slideId) + 1];
@@ -220,7 +231,7 @@ export function EngineViewer({
     ) : access.kind === "read-only" &&
       accessLine !== undefined &&
       !withdrawn &&
-      taskDetail?.kind !== "annotate" ? (
+      (!annotating || layerLookOnly) ? (
       <AccessNotice reason={access.reason} sentence={accessLine} />
     ) : null;
   const notices = useMemo(

@@ -49,6 +49,10 @@ export function isReadOnly(access: ViewerAccess): boolean {
   return access.kind === "read-only";
 }
 
+export function lookOnlyLayer(access: ViewerAccess): boolean {
+  return access.kind === "read-only" && access.reason !== "signed-off";
+}
+
 const refusalCodes: Record<ReadOnlyReason, string> = {
   "no-review-right": "no-review-right",
   withdrawn: "task-withdrawn",
