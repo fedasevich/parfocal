@@ -57,7 +57,8 @@ def upgrade() -> None:
         f"CREATE INDEX ix_{TABLE}_tenant_id ON {TABLE} (tenant_id)",
         f"CREATE INDEX ix_{TABLE}_object ON {TABLE} (task_id, slide_id, user_id, kind, number)",
         *enable_tenant_isolation(TABLE),
-        f"REVOKE UPDATE, DELETE, TRUNCATE ON {TABLE} FROM {app_role()}",
+        f"REVOKE ALL ON {TABLE} FROM {app_role()}",
+        f"GRANT SELECT, INSERT ON {TABLE} TO {app_role()}",
     ):
         op.execute(statement)
 
