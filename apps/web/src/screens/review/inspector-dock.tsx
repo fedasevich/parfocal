@@ -119,7 +119,7 @@ export function InspectorDock({
       data-testid="inspector-dock"
       data-hidden-while-panning={panning ? "true" : undefined}
       className={cn(
-        "relative isolate z-4 flex min-h-0 shrink-0",
+        "relative isolate z-21 flex min-h-0 shrink-0",
         panning && "pointer-events-none overflow-hidden opacity-0",
         collapsed && "opacity-50",
       )}
