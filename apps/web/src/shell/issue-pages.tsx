@@ -84,7 +84,7 @@ export function SessionExpiredPage({
   onSignIn,
 }: {
   hours: number;
-  lastSaved: string;
+  lastSaved?: string;
   onSignIn: () => void;
 }) {
   const { t } = useLingui();
@@ -94,7 +94,11 @@ export function SessionExpiredPage({
       icon="clock"
       title={t`Your session ended`}
       happened={t`Your session ended after ${hours} hours.`}
-      stillWorks={t`Everything you saved is kept. Your last save was ${lastSaved}.`}
+      stillWorks={
+        lastSaved === undefined
+          ? t`Everything you saved is kept.`
+          : t`Everything you saved is kept. Your last save was ${lastSaved}.`
+      }
       actions={
         <Button variant="primary" onClick={onSignIn}>
           <Trans>Sign in to go on</Trans>
@@ -110,7 +114,7 @@ export function NoAccessPage({
   asked,
   onAsk,
 }: {
-  projectName: string;
+  projectName?: string;
   ownerName: string;
   asked: boolean;
   onAsk: () => void;
@@ -120,8 +124,14 @@ export function NoAccessPage({
     <IssuePage
       testId="issue-no-access"
       icon="lock"
-      title={t`No access to ${projectName}`}
-      happened={t`You are not a member of ${projectName}. Its owner is ${ownerName}.`}
+      title={
+        projectName === undefined ? t`No access to this project` : t`No access to ${projectName}`
+      }
+      happened={
+        projectName === undefined
+          ? t`You are not a member of this project. Its owner is ${ownerName}.`
+          : t`You are not a member of ${projectName}. Its owner is ${ownerName}.`
+      }
       stillWorks={t`Your other projects and your work are not affected.`}
       actions={
         <>

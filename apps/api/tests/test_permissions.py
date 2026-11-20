@@ -1427,6 +1427,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "requestProjectAccess": lambda w: Call(
         "POST", f"/api/projects/{w.outside_project}/access-requests"
     ),
+    "getProjectAccess": lambda w: Call(
+        "GET", f"/api/projects/{w.outside_project}/access-requests/mine"
+    ),
     "getProjectImports": lambda w: Call("GET", f"/api/projects/{w.project}/imports"),
     "getUploadBatch": lambda w: Call("GET", f"/api/projects/{w.project}/upload-batch"),
     "listThreadComments": lambda w: Call("GET", f"/api/threads/{w.thread}/comments"),

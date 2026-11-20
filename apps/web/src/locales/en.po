@@ -3949,6 +3949,10 @@ msgstr "Asked"
 msgid "Asked {ownerName}"
 msgstr "Asked {ownerName}"
 
+#: src/screens/project/project-no-access.tsx
+msgid "Asked {ownerName} to add you to this project"
+msgstr "Asked {ownerName} to add you to this project"
+
 #: src/screens/my-work/to-review-tab.tsx
 msgid "asked about"
 msgstr "asked about"
@@ -7071,6 +7075,10 @@ msgstr "Everything else in Parfocal works and nothing was changed."
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Everything here can be changed later in Settings. Skip any step."
 msgstr "Everything here can be changed later in Settings. Skip any step."
+
+#: src/shell/issue-pages.tsx
+msgid "Everything you saved is kept."
+msgstr "Everything you saved is kept."
 
 #: src/shell/issue-pages.tsx
 msgid "Everything you saved is kept. Your last save was {lastSaved}."
@@ -10269,6 +10277,10 @@ msgstr "No access"
 #: src/shell/issue-pages.tsx
 msgid "No access to {projectName}"
 msgstr "No access to {projectName}"
+
+#: src/shell/issue-pages.tsx
+msgid "No access to this project"
+msgstr "No access to this project"
 
 #: src/screens/kpi/corrections-card.tsx
 msgid "No AI nuclei have been reviewed yet."
@@ -16533,6 +16545,10 @@ msgstr "the other set"
 msgid "The outlines your server sends back show here, on the sample tile"
 msgstr "The outlines your server sends back show here, on the sample tile"
 
+#: src/screens/project/project-no-access.tsx
+msgid "the owner"
+msgstr "the owner"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The owner cannot sign a slide off while checks are missing."
 msgstr "The owner cannot sign a slide off while checks are missing."
@@ -18758,6 +18774,10 @@ msgstr "You are here"
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of {projectName}. Its owner is {ownerName}."
 msgstr "You are not a member of {projectName}. Its owner is {ownerName}."
+
+#: src/shell/issue-pages.tsx
+msgid "You are not a member of this project. Its owner is {ownerName}."
+msgstr "You are not a member of this project. Its owner is {ownerName}."
 
 #: src/screens/home/home-screen.tsx
 msgid "You are not in a workspace yet"

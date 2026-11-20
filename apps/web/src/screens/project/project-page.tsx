@@ -1,5 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
+  ApiError,
   type Project,
   useGetProject,
   useGetProjectOverview,
@@ -32,6 +33,7 @@ import { dropStore } from "../../upload/drop-store.ts";
 import { markTried } from "../home/getting-started.ts";
 import { okData } from "../placeholder.tsx";
 import { usePeople } from "./people.ts";
+import { ProjectNoAccess } from "./project-no-access.tsx";
 import { useScreenToast } from "./screen-toast.tsx";
 import { automaticImportsId, SettingsTab } from "./settings-tab.tsx";
 import { SlidesTab } from "./slides-tab.tsx";
@@ -58,6 +60,8 @@ const privacyTag = (project: Project) =>
     </StatusTag>
   );
 
+const isNotFound = (error: unknown) => error instanceof ApiError && error.kind === "not-found";
+
 const plural = (count: number, one: string, many = `${one}s`) =>
   `${count} ${count === 1 ? one : many}`;
 
@@ -72,7 +76,8 @@ export function ProjectPage({
 }) {
   const { t } = useLingui();
 
-  const project = okData(useGetProject(projectId).data);
+  const projectQuery = useGetProject(projectId);
+  const project = okData(projectQuery.data);
   const isSample = project?.sample === true;
   useEffect(() => {
     if (isSample) markTried("open-sample");
@@ -93,6 +98,10 @@ export function ProjectPage({
   const failure = view.importFailed && !bannerShut ? overview?.import_failure : null;
   const goTab = (tab: ProjectTab) =>
     void navigate({ to: "/projects/$projectId", params: { projectId }, search: { tab } });
+
+  if (project === undefined && isNotFound(projectQuery.error)) {
+    return <ProjectNoAccess projectId={projectId} />;
+  }
 
   if (project === undefined) {
     return (

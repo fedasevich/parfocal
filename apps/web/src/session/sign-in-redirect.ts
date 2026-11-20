@@ -61,8 +61,18 @@ export function leaveFor(
   return new Promise<never>(() => undefined);
 }
 
-export function signInPageUrl(returnTo: string): string {
-  return `/sign-in?${new URLSearchParams({ return_to: returnTo }).toString()}`;
+export function endedAfterHours(error: unknown): number | null {
+  if (!(error instanceof ApiError) || error.problem?.code !== "session-expired") return null;
+  const current = error.problem.current;
+  if (typeof current !== "object" || current === null || !("session_hours" in current)) return null;
+  const hours = current.session_hours;
+  return typeof hours === "number" && Number.isInteger(hours) && hours > 0 ? hours : null;
+}
+
+export function signInPageUrl(returnTo: string, endedAfter: number | null = null): string {
+  const query = new URLSearchParams({ return_to: returnTo });
+  if (endedAfter !== null) query.set("ended", String(endedAfter));
+  return `/sign-in?${query.toString()}`;
 }
 
 export function usesHostedSignIn(fakeApi: FakeApiMode): boolean {
@@ -92,9 +102,9 @@ export async function passwordSignInAvailable(
   }
 }
 
-export function signedOutTarget(place: Place): string | null {
+export function signedOutTarget(place: Place, error?: unknown): string | null {
   if (!locksAt(place.pathname)) return null;
-  return signInPageUrl(`${place.pathname}${place.search}`);
+  return signInPageUrl(`${place.pathname}${place.search}`, endedAfterHours(error));
 }
 
 export function redirectAllowed(lastAt: number | null, at: number): boolean {
@@ -107,8 +117,8 @@ type Browser = {
 };
 
 export function signInRedirect(browser: Browser, now = Date.now) {
-  return (): boolean => {
-    const target = signedOutTarget(browser.location);
+  return (error?: unknown): boolean => {
+    const target = signedOutTarget(browser.location, error);
     if (target === null) return false;
     const stored = browser.sessionStorage.getItem(lastRedirectKey);
     const at = now();
@@ -129,6 +139,6 @@ export function signedOutRedirect(browser: Browser, now = Date.now) {
   const go = signInRedirect(browser, now);
   return (error: unknown, queryKey?: readonly unknown[]) => {
     if (answersWhoIsSignedIn(queryKey) || !isSignedOut(error)) return;
-    go();
+    go(error);
   };
 }

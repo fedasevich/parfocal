@@ -146,6 +146,7 @@ import type {
   PolygonGeometry,
   Preference,
   Project,
+  ProjectAccess,
   ProjectAccessRequest,
   ProjectClass,
   ProjectImports,
@@ -1072,6 +1073,15 @@ export const getGetReviewTaskDefaultsResponseMock = (
   ),
   study_template_id: faker.string.alpha({ length: { min: 10, max: 20 } }),
   today: faker.date.past().toISOString().slice(0, 10),
+  ...overrideResponse,
+});
+
+export const getGetProjectAccessResponseMock = (
+  overrideResponse: Partial<Extract<ProjectAccess, object>> = {},
+): ProjectAccess => ({
+  project_id: faker.string.uuid(),
+  owner_id: faker.string.uuid(),
+  asked_at: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
   ...overrideResponse,
 });
 
@@ -20527,6 +20537,30 @@ export const getGetReviewTaskDefaultsMockHandler = (
   );
 };
 
+export const getGetProjectAccessMockHandler = (
+  overrideResponse?:
+    | ProjectAccess
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ProjectAccess> | ProjectAccess),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/access-requests/mine",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetProjectAccessResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getRequestProjectAccessMockHandler = (
   overrideResponse?:
     | ProjectAccessRequest
@@ -29661,6 +29695,7 @@ export const getParfocalAPIMock = () => [
   getListProjectSlidesMockHandler(),
   getGetProjectScopeOptionsMockHandler(),
   getGetReviewTaskDefaultsMockHandler(),
+  getGetProjectAccessMockHandler(),
   getRequestProjectAccessMockHandler(),
   getGetProjectImportsMockHandler(),
   getGetUploadBatchMockHandler(),

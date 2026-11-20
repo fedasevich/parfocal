@@ -3947,6 +3947,10 @@ msgstr ""
 msgid "Asked {ownerName}"
 msgstr ""
 
+#: src/screens/project/project-no-access.tsx
+msgid "Asked {ownerName} to add you to this project"
+msgstr ""
+
 #: src/screens/my-work/to-review-tab.tsx
 msgid "asked about"
 msgstr ""
@@ -7065,6 +7069,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Everything here can be changed later in Settings. Skip any step."
+msgstr ""
+
+#: src/shell/issue-pages.tsx
+msgid "Everything you saved is kept."
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -10263,6 +10271,10 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "No access to {projectName}"
+msgstr ""
+
+#: src/shell/issue-pages.tsx
+msgid "No access to this project"
 msgstr ""
 
 #: src/screens/kpi/corrections-card.tsx
@@ -16524,6 +16536,10 @@ msgstr ""
 msgid "The outlines your server sends back show here, on the sample tile"
 msgstr ""
 
+#: src/screens/project/project-no-access.tsx
+msgid "the owner"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "The owner cannot sign a slide off while checks are missing."
 msgstr ""
@@ -18748,6 +18764,10 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of {projectName}. Its owner is {ownerName}."
+msgstr ""
+
+#: src/shell/issue-pages.tsx
+msgid "You are not a member of this project. Its owner is {ownerName}."
 msgstr ""
 
 #: src/screens/home/home-screen.tsx

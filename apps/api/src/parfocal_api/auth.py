@@ -428,6 +428,33 @@ class SessionLockedError(UnauthenticatedError):
     title = "Your session is locked. Sign in again to continue"
 
 
+class SessionExpiredError(UnauthenticatedError):
+    code = "session-expired"
+    title = "Your session ended. Sign in again to continue"
+
+    def __init__(self, hours: int) -> None:
+        super().__init__()
+        self.current = {"session_hours": hours}
+
+
+async def end_expired_session(connection: AsyncConnection, session_id: str) -> int | None:
+    hours = (
+        await connection.execute(
+            select(session_policies.c.session_hours)
+            .select_from(
+                sessions.outerjoin(
+                    session_policies, session_policies.c.tenant_id == sessions.c.active_tenant_id
+                )
+            )
+            .where(sessions.c.id_hash == digest(session_id), sessions.c.expires_at <= func.now())
+        )
+    ).one_or_none()
+    if hours is None:
+        return None
+    await connection.execute(delete(sessions).where(sessions.c.id_hash == digest(session_id)))
+    return hours.session_hours or DEFAULT_SESSION_HOURS
+
+
 async def session_limits(connection: AsyncConnection, tenant_id: uuid.UUID | None) -> SessionLimits:
     row = (
         await connection.execute(
@@ -459,14 +486,18 @@ async def authenticate(request: Request) -> Principal:
     seen_due = False
     wait: int | None = None
     counted_already = False
+    ended_after: int | None = None
     async with scoped_transaction(state.engine, AUTH_SCOPE) as connection:
         checked = await read_session(connection, state, session_id)
-        if checked is not None:
+        if checked is None:
+            ended_after = await end_expired_session(connection, session_id)
+        else:
             row = checked.row
             if row.created_at + checked.limits.lifetime <= now():
                 await connection.execute(
                     delete(sessions).where(sessions.c.id_hash == digest(session_id))
                 )
+                ended_after = int(checked.limits.lifetime.total_seconds() // 3600)
             elif row.active_at + checked.limits.idle <= now():
                 locked = True
             else:
@@ -497,6 +528,8 @@ async def authenticate(request: Request) -> Principal:
                 counted_already = True
     if locked:
         raise SessionLockedError
+    if ended_after is not None:
+        raise SessionExpiredError(ended_after)
     if needs_refresh and not await refresh_once(state, session_id):
         resolved = None
     if resolved is None:

@@ -80,6 +80,24 @@ test("no access shows the shared page and the request turns into Asked", async (
   await expect(shown.getByRole("button", { name: "Asked Lenka Malá" })).toBeDisabled();
 });
 
+test("a project you are not a member of shows no access and asking turns into Asked", async ({
+  page,
+}) => {
+  await page.goto("/projects/00000000-0000-4000-8069-0000000000a1");
+  const shown = page.getByTestId("issue-no-access");
+  await expect(shown.getByRole("heading", { name: "No access to this project" })).toBeVisible();
+  await expect(shown).toContainText("Its owner is Lenka Malá");
+  await shown.getByRole("button", { name: "Ask for access" }).click();
+  await expect(shown.getByRole("button", { name: "Asked Lenka Malá" })).toBeDisabled();
+  await expect(page.getByTestId("project-page")).toHaveCount(0);
+});
+
+test("a project that does not exist shows not found, not no access", async ({ page }) => {
+  await page.goto("/projects/00000000-0000-4000-8069-0000000000a2");
+  await expect(page.getByTestId("issue-not-found")).toBeVisible();
+  await expect(page.getByTestId("issue-no-access")).toHaveCount(0);
+});
+
 test("the sign-in page shows the annotated slide picture on wide screens and hides it on narrow ones", async ({
   page,
 }) => {

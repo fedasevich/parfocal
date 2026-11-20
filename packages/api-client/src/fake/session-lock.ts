@@ -34,12 +34,23 @@ const redirectTo = (location: string) =>
 
 const fakeSessionKey = "parfocal.fake-session";
 
-type FakeSession = "signed-out" | "expired";
+type FakeSession = "signed-out" | "expired" | "ended";
 
 function fakeSession(): FakeSession | null {
   const value = globalThis.sessionStorage?.getItem(fakeSessionKey);
-  return value === "signed-out" || value === "expired" ? value : null;
+  return value === "signed-out" || value === "expired" || value === "ended" ? value : null;
 }
+
+const endedProblem = {
+  type: "about:blank",
+  title: "Your session ended. Sign in again to continue",
+  status: 401,
+  code: "session-expired",
+  current: { session_hours: sessionPolicy.sessionHours },
+};
+
+const problemFor = (session: FakeSession) =>
+  session === "expired" ? lockedProblem : session === "ended" ? endedProblem : signedOutProblem;
 
 const signedOutProblem = {
   type: "about:blank",
@@ -56,7 +67,7 @@ export function sessionLockHandlers() {
     http.all("*/api/*", ({ request }) => {
       const session = fakeSession();
       if (session === null || !answersSignedOut(new URL(request.url).pathname)) return undefined;
-      return HttpResponse.json(session === "expired" ? lockedProblem : signedOutProblem, {
+      return HttpResponse.json(problemFor(session), {
         status: 401,
         headers: { "content-type": problemMediaType },
       });

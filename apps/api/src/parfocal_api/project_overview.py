@@ -29,6 +29,7 @@ from parfocal_api.tables import (
     ResultStatus,
     annotations,
     audit_events,
+    audit_people,
     cases,
     project_classes,
     project_members,
@@ -144,6 +145,12 @@ class ProjectAccessRequest(BaseModel):
     user_id: uuid.UUID
     owner_id: uuid.UUID
     asked_at: datetime
+
+
+class ProjectAccess(BaseModel):
+    project_id: uuid.UUID
+    owner_id: uuid.UUID
+    asked_at: datetime | None
 
 
 class AlreadyInProjectError(ConflictError):
@@ -518,6 +525,36 @@ def asked_events(tenant_id: uuid.UUID, project_id: uuid.UUID, actor_id: uuid.UUI
         )
         .order_by(audit_events.c.seq)
         .limit(1)
+    )
+
+
+@router.get(
+    "/access-requests/mine",
+    operation_id="getProjectAccess",
+    **require(Permission.SEE_SLIDES),
+)
+async def get_project_access(
+    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> ProjectAccess:
+    member = member_of(principal)
+    await row_of(connection, project_id)
+    if await role_in(connection, principal, project_id) is not None:
+        raise AlreadyInProjectError
+    owner_id = await first_owner(connection, project_id)
+    actor_id = await connection.scalar(
+        select(audit_people.c.id).where(audit_people.c.subject == actor_of(principal).subject)
+    )
+    asked = (
+        None
+        if actor_id is None
+        else (
+            await connection.execute(asked_events(member.tenant_id, project_id, actor_id))
+        ).one_or_none()
+    )
+    return ProjectAccess(
+        project_id=project_id,
+        owner_id=owner_id,
+        asked_at=None if asked is None else asked.occurred_at,
     )
 
 
