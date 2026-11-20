@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import {
+  getDownloadDatasetVersionUrl,
   getDownloadPatchExportUrl,
   getExportTrainingDatasetUrl,
   startPatchExport,
@@ -41,6 +42,15 @@ export function refusalText(code: string | null): string {
   if (code === "dataset-hidden") {
     return t`Only people who see the whole task can export its training data.`;
   }
+  if (code === "not-an-annotate-task") {
+    return t`Only annotate tasks make a training dataset. A review task measures the model instead.`;
+  }
+  if (code === "nothing-chosen") {
+    return t`These filters leave no object. Choose more slides, classes or origins, then freeze again.`;
+  }
+  if (code === "dataset-version-changed") {
+    return t`The stored version no longer matches its checksum, so it was not sent.`;
+  }
   return t`The export could not be made`;
 }
 
@@ -70,15 +80,34 @@ export async function startPatches(
   taskId: string,
   level: number,
   tileSize: number,
+  datasetVersion: number | null = null,
 ): Promise<PatchStart> {
   try {
-    const started = await startPatchExport(taskId, { level, tile_size: tileSize });
+    const started = await startPatchExport(taskId, {
+      level,
+      tile_size: tileSize,
+      ...(datasetVersion === null ? {} : { dataset_version: datasetVersion }),
+    });
     if (started.status === 202) return { state: "started", jobId: started.data.job_id };
     return { state: "refused", code: null };
   } catch (error) {
     const code = (error as { problem?: { code?: string } }).problem?.code;
     return { state: "refused", code: code ?? null };
   }
+}
+
+export async function downloadDatasetVersion(
+  taskId: string,
+  version: number,
+): Promise<TaskExportResult> {
+  const response = await fetch(getDownloadDatasetVersionUrl(taskId, version), {
+    credentials: "same-origin",
+  });
+  if (!response.ok) return { state: "refused", code: await problemCodeOf(response) };
+  return {
+    state: "saved",
+    name: await saveResponse(response, `parfocal-dataset-v${version}.zip`),
+  };
 }
 
 export type PatchPoll =

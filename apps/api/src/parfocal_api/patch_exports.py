@@ -6,8 +6,10 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
+from parfocal_api.dataset_versions import version_row
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.review_tasks import code_of, readable_task
@@ -55,10 +57,22 @@ def patch_export_key(tenant_id: uuid.UUID, job_id: uuid.UUID) -> str:
 class PatchExportRequest(BaseModel):
     level: int = Field(default=0, ge=0, le=DEEPEST_LEVEL)
     tile_size: int = Field(default=DEFAULT_TILE, ge=SMALLEST_TILE, le=LARGEST_TILE)
+    dataset_version: int | None = Field(default=None, ge=1)
 
 
 class PatchExportStarted(BaseModel):
     job_id: uuid.UUID
+
+
+async def frozen_input(
+    connection: AsyncConnection, task_id: uuid.UUID, number: int
+) -> dict[str, Any]:
+    row = await version_row(connection, task_id, number)
+    return {
+        "dataset_version": row.number,
+        "dataset_key": row.object_key,
+        "dataset_sha256": row.sha256,
+    }
 
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}/patch-exports", tags=["review-tasks"])
@@ -90,12 +104,17 @@ async def start_patch_export(
     )
     if signed is None:
         raise NothingSignedOffError
+    frozen = (
+        {}
+        if body.dataset_version is None
+        else await frozen_input(connection, task_id, body.dataset_version)
+    )
     job_id = await enqueue(
         connection,
         PATCH_PLAN,
         task.tenant_id,
         task.project_id,
-        {"task_id": str(task_id), "level": body.level, "tile_size": body.tile_size},
+        {"task_id": str(task_id), "level": body.level, "tile_size": body.tile_size, **frozen},
     )
     return PatchExportStarted(job_id=job_id)
 

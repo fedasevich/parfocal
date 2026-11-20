@@ -371,3 +371,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0408](0408-mirax-and-dicom-slides-are-served-as-a-lossless-pyramid-tiff-made-at-ingest.md) | MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest | Accepted | 2026-11-20 |
 | [0409](0409-review-edits-keep-an-append-only-version-table.md) | Review edits keep an append only version table beside the current layer | Accepted | 2026-11-20 |
 | [0410](0410-a-signature-needs-a-sign-in-from-the-last-5-minutes.md) | A signature needs a sign-in from the last 5 minutes, proved by the identity provider's auth_time | Accepted | 2026-11-20 |
+| [0411](0411-a-dataset-version-is-one-write-once-zip-in-the-tenant-prefix.md) | A dataset version is one write once zip in the tenant prefix with a number, note, filters, who, when and a SHA-256 | Accepted | 2026-11-21 |

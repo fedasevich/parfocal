@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 
 | Class | Columns |
 |---|---|
-| `phi` | 52 |
-| `personal` | 102 |
+| `phi` | 53 |
+| `personal` | 103 |
 | `secret` | 15 |
-| `operational` | 903 |
+| `operational` | 914 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -250,6 +250,24 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## dataset_versions
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `number` | operational |
+| `note` | phi |
+| `filters` | operational |
+| `counts` | operational |
+| `object_key` | operational |
+| `sha256` | operational |
+| `bytes` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
 
 ## disagreement_decisions
 

@@ -52,6 +52,7 @@ export const destinations = {
       z: view?.z.toString(),
     })}`,
   disagreements: (taskId: string) => `/tasks/${taskId}/disagreements`,
+  dataset: (taskId: string) => `/tasks/${taskId}/dataset`,
   adjudicate: (taskId: string) => `/tasks/${taskId}/adjudicate`,
   signOff: (taskId: string) => `/tasks/${taskId}/sign-off`,
   evaluation: (taskId: string) => `/tasks/${taskId}/evaluation`,

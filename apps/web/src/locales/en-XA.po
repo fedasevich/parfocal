@@ -1721,6 +1721,17 @@ msgstr ""
 msgid "{0}, comment by {1}: {2}"
 msgstr ""
 
+#. placeholder {0}: objectsLine(total, version.counts.slides.length)
+#. placeholder {1}: version.created_by
+#: src/screens/dataset/dataset-screen.tsx
+msgid "{0}, frozen by {1} on {when}"
+msgstr ""
+
+#. placeholder {0}: objectsLine(total, version.counts.slides.length)
+#: src/screens/dataset/dataset-screen.tsx
+msgid "{0}, frozen by a service on {when}"
+msgstr ""
+
 #. placeholder {0}: plural(changed.length, "change")
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "{0}, highlighted. {senderFirst} sees each one."
@@ -2073,6 +2084,10 @@ msgstr ""
 msgid "{objectId} origin and history"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "{objects, plural, one {# object} other {# objects}}"
+msgstr ""
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{open, plural, one {# disagreement not resolved} other {# disagreements not resolved}}"
 msgstr ""
@@ -2224,6 +2239,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "{slideName} locks for everyone once you sign it off."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "{slides, plural, one {{counted} on # slide} other {{counted} on # slides}}"
 msgstr ""
 
 #: ../../packages/ui/src/components/drop-overlay.tsx
@@ -3308,6 +3327,10 @@ msgstr ""
 msgid "Added"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Added by a person"
+msgstr ""
+
 #: src/screens/admin/role-permissions.tsx
 msgid "Added by admin rights"
 msgstr ""
@@ -3552,6 +3575,18 @@ msgstr ""
 
 #: src/viewer/stage-focus.tsx
 msgid "AI score {score}%. Still open."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "AI, agreed"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "AI, edited"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "AI, not checked"
 msgstr ""
 
 #: src/results/add-result-set.tsx
@@ -4543,12 +4578,20 @@ msgstr ""
 msgid "by {names}<0>Show</0>"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "By class"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "By hand"
 msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "by hand on"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "By origin"
 msgstr ""
 
 #: src/screens/admin/storage.tsx
@@ -5183,6 +5226,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/screens/dataset/dataset-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/new-task/how-step.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -5916,6 +5960,10 @@ msgstr ""
 msgid "Counted as 1.0"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Counting the dataset"
+msgstr ""
+
 #: src/annotations/count-panel.tsx
 msgid "Counts"
 msgstr ""
@@ -6063,6 +6111,10 @@ msgstr ""
 msgid "Cursor"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Cut patches"
+msgstr ""
+
 #: src/viewer/patch-export-dialog.tsx
 msgid "Cut the patches"
 msgstr ""
@@ -6077,6 +6129,10 @@ msgstr ""
 
 #: src/viewer/patch-export-dialog.tsx
 msgid "Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done."
+msgstr ""
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cuts image tiles and class masks from the stored GeoJSON of this frozen version. It runs as a job and downloads when it is done."
 msgstr ""
 
 #: src/viewer/patch-export-dialog.tsx
@@ -6107,6 +6163,18 @@ msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Data folder missing"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Dataset"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Dataset of {code}"
+msgstr ""
+
+#: src/viewer/slide-export-menu.tsx
+msgid "Dataset page"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -6532,6 +6600,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
+#: src/screens/dataset/dataset-screen.tsx
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Download"
@@ -7432,6 +7501,10 @@ msgstr ""
 msgid "Filter by {0}"
 msgstr ""
 
+#: src/viewer/slide-export-menu.tsx
+msgid "Filter by origin, class and slide, and freeze numbered versions"
+msgstr ""
+
 #: src/screens/project/slides-tab.tsx
 msgid "Filter by slide, file or case"
 msgstr ""
@@ -7753,6 +7826,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Freehand"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Freeze a version"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -8529,6 +8606,10 @@ msgstr ""
 msgid "Include {0}"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Include AI objects nobody checked"
+msgstr ""
+
 #: src/screens/upload/overlays.tsx
 msgid "Incoming webhook"
 msgstr ""
@@ -9181,6 +9262,12 @@ msgstr ""
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Left out of this upload"
+msgstr ""
+
+#. placeholder {0}: summary.unchecked_left_out
+#. placeholder {1}: summary.filtered_out
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Left out: {0} not checked, {1} by the filters"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -10124,6 +10211,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/routes/issue-states.tsx
+#: src/screens/dataset/dataset-screen.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/my-work-screen.tsx
@@ -10524,6 +10612,7 @@ msgid "No changes yet. Co-signing keeps {senderFirst}'s values."
 msgstr ""
 
 #: src/measure/measurement-list.tsx
+#: src/screens/dataset/dataset-screen.tsx
 msgid "No class"
 msgstr ""
 
@@ -10602,6 +10691,10 @@ msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
 msgid "No object has a decision yet."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "No object matches these filters."
 msgstr ""
 
 #: ../../packages/ui/src/components/token-field.tsx
@@ -10792,6 +10885,10 @@ msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "No values changed. Fix it and send it again."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "No version is frozen yet."
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -11060,6 +11157,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: ../../packages/ui/src/components/team.tsx
+#: src/screens/dataset/dataset-screen.tsx
 #: src/screens/hotkeys-spike/hotkeys-spike.tsx
 msgid "Note"
 msgstr ""
@@ -11418,6 +11516,10 @@ msgstr ""
 msgid "Objects under it draw dashed and faint"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Objects with no class go in only while every class is chosen."
+msgstr ""
+
 #: src/screens/upload/result-problems.tsx
 msgid "Objects with no score"
 msgstr ""
@@ -11598,6 +11700,10 @@ msgstr ""
 msgid "Only an owner of this project sets who can sign out."
 msgstr ""
 
+#: src/annotations/task-export.ts
+msgid "Only annotate tasks make a training dataset. A review task measures the model instead."
+msgstr ""
+
 #: src/screens/review/display-tab.tsx
 msgid "Only for you, on {taskCode}. Every change redraws the slide at once."
 msgstr ""
@@ -11616,6 +11722,10 @@ msgstr ""
 
 #: src/annotations/task-export.ts
 msgid "Only people who see the whole task can export its training data."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Only signed off slides go in. By default only objects a person checked go in: added, agreed and edited. Freeze a version to name exactly which data trained a model."
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -11982,6 +12092,10 @@ msgstr ""
 msgid "Orientation"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Origin"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Other"
@@ -12284,6 +12398,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Password strength"
+msgstr ""
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Patches of version {datasetVersion}"
 msgstr ""
 
 #: src/annotations/task-export.ts
@@ -12866,6 +12984,7 @@ msgstr ""
 #: src/screens/admin/deleted-projects.tsx
 #: src/screens/admin/sections.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/dataset/dataset-screen.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/my-work/all-slides-tab.tsx
@@ -14284,6 +14403,7 @@ msgstr ""
 
 #. placeholder {0}: phase.name
 #. placeholder {0}: result.name
+#: src/screens/dataset/dataset-screen.tsx
 #: src/viewer/patch-export-dialog.tsx
 #: src/viewer/slide-export-menu.tsx
 msgid "Saved {0}"
@@ -14824,6 +14944,12 @@ msgstr ""
 msgid "Setup steps"
 msgstr ""
 
+#. placeholder {0}: shortChecksum(version.sha256)
+#. placeholder {1}: sizeText(version.bytes)
+#: src/screens/dataset/dataset-screen.tsx
+msgid "SHA-256 {0}, {1}"
+msgstr ""
+
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Share"
@@ -15307,6 +15433,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Signed off by: ____________  Date: ________"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Signed off slides"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-state.tsx
@@ -16069,6 +16199,10 @@ msgstr ""
 #. placeholder {0}: tb(overview.capacity_tb)
 #: src/screens/admin/overview.tsx
 msgid "Stored, of {0}"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Stores the manifest and the GeoJSON of these filters once, with a number and a checksum. Nobody can change a frozen version."
 msgstr ""
 
 #: src/screens/onboarding/invite-screen.tsx
@@ -17200,6 +17334,10 @@ msgstr ""
 msgid "The source is not answering, so the slide cannot be copied now."
 msgstr ""
 
+#: src/annotations/task-export.ts
+msgid "The stored version no longer matches its checksum, so it was not sent."
+msgstr ""
+
 #: src/screens/project/task-settings-drawer.tsx
 msgid "The style cannot change once a decision exists."
 msgstr ""
@@ -17356,6 +17494,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "These apply in guided review."
+msgstr ""
+
+#: src/annotations/task-export.ts
+msgid "These filters leave no object. Choose more slides, classes or origins, then freeze again."
 msgstr ""
 
 #: src/screens/new-task/how-step.tsx
@@ -18450,8 +18592,15 @@ msgid "Version"
 msgstr ""
 
 #. placeholder {0}: item.version
+#. placeholder {0}: version.number
 #: src/results/painted-map-layer.tsx
+#: src/screens/dataset/dataset-screen.tsx
 msgid "Version {0}"
+msgstr ""
+
+#. placeholder {0}: response.data.number
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Version {0} is frozen"
 msgstr ""
 
 #: src/screens/clinical-report/steps.tsx
@@ -18472,6 +18621,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Version 2, replaces version 1"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Versions"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -18803,6 +18956,10 @@ msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "What they get back"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "What this version is for, such as the model it trains"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx

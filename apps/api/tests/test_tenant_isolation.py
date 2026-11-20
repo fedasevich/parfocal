@@ -17,6 +17,7 @@ import httpx2
 import numpy as np
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
+from dataset_support import SEEDED_FILTERS, seeded_counts
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from link_support import Site
 from pypdf import PdfReader
@@ -25,6 +26,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
+from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.display_settings import DisplaySettings
 from parfocal_api.identifiers import ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
@@ -48,6 +50,7 @@ from parfocal_api.tables import (
     clinical_deposits,
     clinical_report_versions,
     clinical_reports,
+    dataset_versions,
     disagreement_decisions,
     display_choices,
     display_presets,
@@ -244,6 +247,7 @@ CASE_TABLES = {
     "review_skips",
     "review_edits",
     "review_edit_versions",
+    "dataset_versions",
     "review_order",
     "review_tasks",
     "review_task_slides",
@@ -1080,6 +1084,32 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         await ObjectStore(TEST_STORAGE, http).put_object(
             patch_export_key(seeded.tenant_id, patch_job), patches.getvalue(), "application/zip"
         )
+    dataset_note = f"Dataset {seeded.tenant_id}"
+    frozen = io.BytesIO()
+    with zipfile.ZipFile(frozen, "w") as archive:
+        archive.writestr("manifest.json", json.dumps({"note": dataset_note}))
+    version_id = uuid.uuid4()
+    version_key = dataset_version_key(seeded.tenant_id, annotate_id, version_id)
+    async with httpx2.AsyncClient(timeout=30) as http:
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            version_key, frozen.getvalue(), "application/zip"
+        )
+    await connection.execute(
+        insert(dataset_versions).values(
+            id=version_id,
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=annotate_id,
+            number=1,
+            note=dataset_note,
+            filters=SEEDED_FILTERS,
+            counts=seeded_counts(),
+            object_key=version_key,
+            sha256=hashlib.sha256(frozen.getvalue()).hexdigest(),
+            bytes=len(frozen.getvalue()),
+        )
+    )
+    seeded.markers.add(dataset_note)
     shared_id = await connection.scalar(
         insert(annotations)
         .values(
@@ -2078,6 +2108,16 @@ GET_ROUTES = {
     "exportTrainingDataset": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/training-dataset",
+    ),
+    "getTaskDataset": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/dataset"
+    ),
+    "listDatasetVersions": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/dataset-versions"
+    ),
+    "downloadDatasetVersion": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/dataset-versions/1",
     ),
     "downloadPatchExport": Route(
         Exposure.TENANT,

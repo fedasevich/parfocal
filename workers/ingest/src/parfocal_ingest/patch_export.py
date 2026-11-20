@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import hashlib
 import io
 import json
 import math
@@ -25,8 +26,10 @@ from shapely import STRtree, box
 from shapely.geometry import shape as shape_of
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncConnection
 from wsidicom import WsiDicom
 
+from parfocal_api.dataset_versions import DatasetVersionChangedError, frozen_parts
 from parfocal_api.patch_exports import (
     PATCH_KIND,
     PATCH_LEASE_SECONDS,
@@ -36,6 +39,7 @@ from parfocal_api.patch_exports import (
 from parfocal_api.review_order_job import still_mine
 from parfocal_api.tables import review_tasks, slides
 from parfocal_api.training_exports import (
+    Manifest,
     ManifestClass,
     ManifestTask,
     NothingSignedOffError,
@@ -124,6 +128,7 @@ class PatchManifest(Strict):
     slides: list[PatchSlide]
     skipped: list[PatchSkipped]
     tiles: int
+    dataset_version: int | None = None
 
 
 MASK_RULE = MaskRule(
@@ -428,7 +433,12 @@ class PatchWriter:
         self.rows += rows
         self.slides.append(slide)
 
-    def finish(self, task: ManifestTask, classes: list[ManifestClass]) -> PatchManifest:
+    def finish(
+        self,
+        task: ManifestTask,
+        classes: list[ManifestClass],
+        dataset_version: int | None = None,
+    ) -> PatchManifest:
         index = io.StringIO()
         writer = csv.writer(index, lineterminator="\n")
         writer.writerow(INDEX_COLUMNS)
@@ -447,6 +457,7 @@ class PatchWriter:
             slides=self.slides,
             skipped=self.skipped,
             tiles=len(self.rows),
+            dataset_version=dataset_version,
         )
         self.archive.writestr(MANIFEST, manifest.model_dump_json(indent=2))
         self.archive.close()
@@ -538,6 +549,21 @@ async def isolated_slide(
     return facts, part
 
 
+async def source_dataset(
+    step: StepRun, connection: AsyncConnection, task: Any, store: ObjectStore
+) -> tuple[Manifest, dict[str, bytes]]:
+    key = step.input.get("dataset_key")
+    if key is None:
+        try:
+            return await dataset(connection, task, ObjectResultStore(store))
+        except NothingSignedOffError as error:
+            raise StepFailedError(error.code) from error
+    content = await store.get_object(str(key))
+    if hashlib.sha256(content).hexdigest() != step.input.get("dataset_sha256"):
+        raise StepFailedError(DatasetVersionChangedError.code)
+    return frozen_parts(content)
+
+
 async def export_patches(step: StepRun, resources: Resources) -> Mapping[str, Any]:
     task_id = uuid.UUID(step.input["task_id"])
     async with httpx2.AsyncClient(timeout=60) as http:
@@ -550,10 +576,7 @@ async def export_patches(step: StepRun, resources: Resources) -> Mapping[str, An
             ).one_or_none()
             if task is None:
                 raise StepFailedError("task-missing")
-            try:
-                made, files = await dataset(connection, task, ObjectResultStore(store))
-            except NothingSignedOffError as error:
-                raise StepFailedError(error.code) from error
+            made, files = await source_dataset(step, connection, task, store)
             originals = {
                 row.id: row.original_key
                 for row in await connection.execute(
@@ -578,7 +601,7 @@ async def export_patches(step: StepRun, resources: Resources) -> Mapping[str, An
                     step, resources, store, entry.slide_id, key, geojson
                 )
                 await asyncio.to_thread(writer.merge, entry.slide_id, geojson, facts, part)
-            manifest = writer.finish(made.task, made.classes)
+            manifest = writer.finish(made.task, made.classes, made.dataset_version)
         finally:
             shutil.rmtree(folder, ignore_errors=True)
         await store.put_object(

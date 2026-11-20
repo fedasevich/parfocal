@@ -939,3 +939,41 @@ site_validations = Table(
     ),
     CheckConstraint("threshold >= 0 AND threshold <= 1", name="threshold"),
 )
+
+
+dataset_versions = Table(
+    "dataset_versions",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("number", Integer, nullable=False, info=OPERATIONAL),
+    Column("note", String(500), nullable=False, server_default=text("''"), info=PHI),
+    Column("filters", JSONB, nullable=False, info=OPERATIONAL),
+    Column("counts", JSONB, nullable=False, info=OPERATIONAL),
+    Column("object_key", String(200), nullable=False, info=OPERATIONAL),
+    Column("sha256", String(64), nullable=False, info=OPERATIONAL),
+    Column("bytes", BigInteger, nullable=False, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    UniqueConstraint("task_id", "number"),
+    ForeignKeyConstraint(
+        ["task_id", "project_id", "tenant_id"],
+        ["review_tasks.id", "review_tasks.project_id", "review_tasks.tenant_id"],
+    ),
+    CheckConstraint("number > 0", name="number"),
+    CheckConstraint("sha256 ~ '^[0-9a-f]{64}$'", name="sha256"),
+    CheckConstraint("bytes > 0", name="bytes"),
+)

@@ -47,6 +47,8 @@ import type {
   CreatedReportLink,
   CreatedServiceAccount,
   CreatedUpload,
+  DatasetSummary,
+  DatasetVersion,
   Deactivation,
   DecisionNote,
   DeletedProject,
@@ -296,6 +298,7 @@ import {
   ColourBy,
   ConfidenceBand,
   ConfidenceShown,
+  DatasetOrigin,
   DeactivationState,
   Decision,
   DecisionKind,
@@ -14183,6 +14186,198 @@ export const getStartPatchExportResponseMock = (
 export const getDownloadPatchExportResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getGetTaskDatasetResponseMock = (
+  overrideResponse: Partial<Extract<DatasetSummary, object>> = {},
+): DatasetSummary => ({
+  filters: {
+    origins: faker.helpers.arrayElements(Object.values(DatasetOrigin)),
+    class_ids: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.string.uuid(),
+      ),
+      null,
+    ]),
+    slide_ids: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.string.uuid(),
+      ),
+      null,
+    ]),
+    include_unchecked: faker.datatype.boolean(),
+  },
+  signed_off_slides: faker.number.int(),
+  objects: {
+    [faker.string.alphanumeric(5)]: faker.number.int(),
+  },
+  classes: {
+    [faker.string.alphanumeric(5)]: faker.number.int(),
+  },
+  unchecked_left_out: faker.number.int(),
+  filtered_out: faker.number.int(),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide_id: faker.string.uuid(),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      objects: {
+        [faker.string.alphanumeric(5)]: faker.number.int(),
+      },
+      classes: {
+        [faker.string.alphanumeric(5)]: faker.number.int(),
+      },
+      unchecked_left_out: faker.number.int(),
+      filtered_out: faker.number.int(),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getListDatasetVersionsResponseMock = (): DatasetVersion[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    number: faker.number.int(),
+    note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    filters: {
+      origins: faker.helpers.arrayElements(Object.values(DatasetOrigin)),
+      class_ids: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          faker.string.uuid(),
+        ),
+        null,
+      ]),
+      slide_ids: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          faker.string.uuid(),
+        ),
+        null,
+      ]),
+      include_unchecked: faker.datatype.boolean(),
+    },
+    counts: {
+      filters: {
+        origins: faker.helpers.arrayElements(Object.values(DatasetOrigin)),
+        class_ids: faker.helpers.arrayElement([
+          Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+            faker.string.uuid(),
+          ),
+          null,
+        ]),
+        slide_ids: faker.helpers.arrayElement([
+          Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+            faker.string.uuid(),
+          ),
+          null,
+        ]),
+        include_unchecked: faker.datatype.boolean(),
+      },
+      signed_off_slides: faker.number.int(),
+      objects: {
+        [faker.string.alphanumeric(5)]: faker.number.int(),
+      },
+      classes: {
+        [faker.string.alphanumeric(5)]: faker.number.int(),
+      },
+      unchecked_left_out: faker.number.int(),
+      filtered_out: faker.number.int(),
+      slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          slide_id: faker.string.uuid(),
+          label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          objects: {
+            [faker.string.alphanumeric(5)]: faker.number.int(),
+          },
+          classes: {
+            [faker.string.alphanumeric(5)]: faker.number.int(),
+          },
+          unchecked_left_out: faker.number.int(),
+          filtered_out: faker.number.int(),
+        }),
+      ),
+    },
+    sha256: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    bytes: faker.number.int(),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    created_by: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+  }));
+
+export const getFreezeDatasetVersionResponseMock = (
+  overrideResponse: Partial<Extract<DatasetVersion, object>> = {},
+): DatasetVersion => ({
+  id: faker.string.uuid(),
+  number: faker.number.int(),
+  note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  filters: {
+    origins: faker.helpers.arrayElements(Object.values(DatasetOrigin)),
+    class_ids: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.string.uuid(),
+      ),
+      null,
+    ]),
+    slide_ids: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+        faker.string.uuid(),
+      ),
+      null,
+    ]),
+    include_unchecked: faker.datatype.boolean(),
+  },
+  counts: {
+    filters: {
+      origins: faker.helpers.arrayElements(Object.values(DatasetOrigin)),
+      class_ids: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          faker.string.uuid(),
+        ),
+        null,
+      ]),
+      slide_ids: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          faker.string.uuid(),
+        ),
+        null,
+      ]),
+      include_unchecked: faker.datatype.boolean(),
+    },
+    signed_off_slides: faker.number.int(),
+    objects: {
+      [faker.string.alphanumeric(5)]: faker.number.int(),
+    },
+    classes: {
+      [faker.string.alphanumeric(5)]: faker.number.int(),
+    },
+    unchecked_left_out: faker.number.int(),
+    filtered_out: faker.number.int(),
+    slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        slide_id: faker.string.uuid(),
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        objects: {
+          [faker.string.alphanumeric(5)]: faker.number.int(),
+        },
+        classes: {
+          [faker.string.alphanumeric(5)]: faker.number.int(),
+        },
+        unchecked_left_out: faker.number.int(),
+        filtered_out: faker.number.int(),
+      }),
+    ),
+  },
+  sha256: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  bytes: faker.number.int(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  created_by: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getDownloadDatasetVersionResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getGetTaskAiChangesResponseMock = (
   overrideResponse: Partial<Extract<AiChanges, object>> = {},
 ): AiChanges => ({
@@ -27414,6 +27609,102 @@ export const getDownloadPatchExportMockHandler = (
   );
 };
 
+export const getGetTaskDatasetMockHandler = (
+  overrideResponse?:
+    | DatasetSummary
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DatasetSummary> | DatasetSummary),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/dataset",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTaskDatasetResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListDatasetVersionsMockHandler = (
+  overrideResponse?:
+    | DatasetVersion[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DatasetVersion[]> | DatasetVersion[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/dataset-versions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListDatasetVersionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getFreezeDatasetVersionMockHandler = (
+  overrideResponse?:
+    | DatasetVersion
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<DatasetVersion> | DatasetVersion),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/dataset-versions",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getFreezeDatasetVersionResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDownloadDatasetVersionMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/dataset-versions/:number",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDownloadDatasetVersionResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getGetTaskAiChangesMockHandler = (
   overrideResponse?:
     | AiChanges
@@ -30057,6 +30348,10 @@ export const getParfocalAPIMock = () => [
   getExportTrainingDatasetMockHandler(),
   getStartPatchExportMockHandler(),
   getDownloadPatchExportMockHandler(),
+  getGetTaskDatasetMockHandler(),
+  getListDatasetVersionsMockHandler(),
+  getFreezeDatasetVersionMockHandler(),
+  getDownloadDatasetVersionMockHandler(),
   getGetTaskAiChangesMockHandler(),
   getGetAiCorrectionsMockHandler(),
   getRecordTimingEventsMockHandler(),

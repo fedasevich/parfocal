@@ -830,6 +830,22 @@ export const Appendix = {
   methods: "methods",
 } as const;
 
+export type DatasetOrigin = (typeof DatasetOrigin)[keyof typeof DatasetOrigin];
+
+export const DatasetOrigin = {
+  human: "human",
+  "ai-confirmed": "ai-confirmed",
+  "ai-edited": "ai-edited",
+  "ai-unchecked": "ai-unchecked",
+} as const;
+
+export interface AppliedFilters {
+  origins: DatasetOrigin[];
+  class_ids: string[] | null;
+  slide_ids: string[] | null;
+  include_unchecked: boolean;
+}
+
 export interface Arrival {
   at: string;
   event: string;
@@ -2227,6 +2243,13 @@ export interface CreatedUpload {
   part_count: number;
 }
 
+export interface DatasetFilters {
+  origins?: DatasetOrigin[] | null;
+  class_ids?: string[] | null;
+  slide_ids?: string[] | null;
+  include_unchecked?: boolean | null;
+}
+
 /**
  * @minLength 1
  * @maxLength 400
@@ -2252,6 +2275,41 @@ export interface DatasetLicenceOut {
   dataset: string;
   licence: string;
   licence_class: LicenceClass;
+}
+
+export type DatasetSummaryClasses = { [key: string]: number };
+
+export type SlideCountsClasses = { [key: string]: number };
+
+export interface SlideCounts {
+  slide_id: string;
+  label: string;
+  objects: Partial<Record<DatasetOrigin, number>>;
+  classes: SlideCountsClasses;
+  unchecked_left_out: number;
+  filtered_out: number;
+}
+
+export interface DatasetSummary {
+  filters: AppliedFilters;
+  signed_off_slides: number;
+  objects: Partial<Record<DatasetOrigin, number>>;
+  classes: DatasetSummaryClasses;
+  unchecked_left_out: number;
+  filtered_out: number;
+  slides: SlideCounts[];
+}
+
+export interface DatasetVersion {
+  id: string;
+  number: number;
+  note: string;
+  filters: AppliedFilters;
+  counts: DatasetSummary;
+  sha256: string;
+  bytes: number;
+  created_at: string;
+  created_by: string | null;
 }
 
 export type DeactivationState = (typeof DeactivationState)[keyof typeof DeactivationState];
@@ -3623,6 +3681,12 @@ export interface FrameSummary {
    * @maximum 1000000
    */
   long_frames: number;
+}
+
+export interface FreezeRequest {
+  /** @maxLength 500 */
+  note?: string;
+  filters?: DatasetFilters;
 }
 
 export interface GpuWaiting {
@@ -5566,6 +5630,7 @@ export interface PatchExportRequest {
    * @maximum 2048
    */
   tile_size?: number;
+  dataset_version?: number | null;
 }
 
 export interface PatchExportStarted {
@@ -8720,6 +8785,13 @@ export type PreviewSavedStudyTemplateParams = {
 
 export type DownloadSavedStudyTemplatePreviewParams = {
   locale?: Locale;
+};
+
+export type GetTaskDatasetParams = {
+  origin?: DatasetOrigin[] | null;
+  class_id?: string[] | null;
+  slide_id?: string[] | null;
+  include_unchecked?: boolean | null;
 };
 
 export type GetAiCorrectionsParams = {
@@ -69742,6 +69814,800 @@ export function useDownloadPatchExport<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getDownloadPatchExportQueryOptions(taskId, jobId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getTaskDatasetResponse200 = {
+  data: DatasetSummary;
+  status: 200;
+};
+
+export type getTaskDatasetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskDatasetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskDatasetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskDatasetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskDatasetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskDatasetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskDatasetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTaskDatasetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskDatasetResponseSuccess = getTaskDatasetResponse200 & {
+  headers: Headers;
+};
+export type getTaskDatasetResponseError = (
+  | getTaskDatasetResponse400
+  | getTaskDatasetResponse401
+  | getTaskDatasetResponse403
+  | getTaskDatasetResponse404
+  | getTaskDatasetResponse409
+  | getTaskDatasetResponse422
+  | getTaskDatasetResponse429
+  | getTaskDatasetResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskDatasetResponse = getTaskDatasetResponseSuccess | getTaskDatasetResponseError;
+
+export const getGetTaskDatasetUrl = (taskId: string, params?: GetTaskDatasetParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["origin", "class_id", "slide_id"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/dataset?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/dataset`;
+};
+
+/**
+ * @summary Get Task Dataset
+ */
+export const getTaskDataset = async (
+  taskId: string,
+  params?: GetTaskDatasetParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskDatasetResponse> => {
+  return apiFetch<getTaskDatasetResponse>(getGetTaskDatasetUrl(taskId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskDatasetQueryKey = (taskId: string, params?: GetTaskDatasetParams) => {
+  return [`/api/review-tasks/${taskId}/dataset`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetTaskDatasetQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: GetTaskDatasetParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDataset>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskDatasetQueryKey(taskId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskDataset>>> = ({ signal }) =>
+    getTaskDataset(taskId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTaskDataset>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTaskDatasetQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskDataset>>>;
+export type GetTaskDatasetQueryError = Problem;
+
+export function useGetTaskDataset<
+  TData = Awaited<ReturnType<typeof getTaskDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params: undefined | GetTaskDatasetParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDataset>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskDataset>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskDataset>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskDataset<
+  TData = Awaited<ReturnType<typeof getTaskDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: GetTaskDatasetParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDataset>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskDataset>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskDataset>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskDataset<
+  TData = Awaited<ReturnType<typeof getTaskDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: GetTaskDatasetParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDataset>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Dataset
+ */
+
+export function useGetTaskDataset<
+  TData = Awaited<ReturnType<typeof getTaskDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: GetTaskDatasetParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskDataset>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskDatasetQueryOptions(taskId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listDatasetVersionsResponse200 = {
+  data: DatasetVersion[];
+  status: 200;
+};
+
+export type listDatasetVersionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listDatasetVersionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listDatasetVersionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listDatasetVersionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listDatasetVersionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listDatasetVersionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listDatasetVersionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listDatasetVersionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listDatasetVersionsResponseSuccess = listDatasetVersionsResponse200 & {
+  headers: Headers;
+};
+export type listDatasetVersionsResponseError = (
+  | listDatasetVersionsResponse400
+  | listDatasetVersionsResponse401
+  | listDatasetVersionsResponse403
+  | listDatasetVersionsResponse404
+  | listDatasetVersionsResponse409
+  | listDatasetVersionsResponse422
+  | listDatasetVersionsResponse429
+  | listDatasetVersionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listDatasetVersionsResponse =
+  | listDatasetVersionsResponseSuccess
+  | listDatasetVersionsResponseError;
+
+export const getListDatasetVersionsUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/dataset-versions`;
+};
+
+/**
+ * @summary List Dataset Versions
+ */
+export const listDatasetVersions = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listDatasetVersionsResponse> => {
+  return apiFetch<listDatasetVersionsResponse>(getListDatasetVersionsUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDatasetVersionsQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/dataset-versions`] as const;
+};
+
+export const getListDatasetVersionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDatasetVersions>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDatasetVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDatasetVersionsQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDatasetVersions>>> = ({ signal }) =>
+    listDatasetVersions(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listDatasetVersions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListDatasetVersionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDatasetVersions>>
+>;
+export type ListDatasetVersionsQueryError = Problem;
+
+export function useListDatasetVersions<
+  TData = Awaited<ReturnType<typeof listDatasetVersions>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDatasetVersions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDatasetVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listDatasetVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDatasetVersions<
+  TData = Awaited<ReturnType<typeof listDatasetVersions>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDatasetVersions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDatasetVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listDatasetVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDatasetVersions<
+  TData = Awaited<ReturnType<typeof listDatasetVersions>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDatasetVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Dataset Versions
+ */
+
+export function useListDatasetVersions<
+  TData = Awaited<ReturnType<typeof listDatasetVersions>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDatasetVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListDatasetVersionsQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type freezeDatasetVersionResponse201 = {
+  data: DatasetVersion;
+  status: 201;
+};
+
+export type freezeDatasetVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type freezeDatasetVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type freezeDatasetVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type freezeDatasetVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type freezeDatasetVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type freezeDatasetVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type freezeDatasetVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type freezeDatasetVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type freezeDatasetVersionResponseSuccess = freezeDatasetVersionResponse201 & {
+  headers: Headers;
+};
+export type freezeDatasetVersionResponseError = (
+  | freezeDatasetVersionResponse400
+  | freezeDatasetVersionResponse401
+  | freezeDatasetVersionResponse403
+  | freezeDatasetVersionResponse404
+  | freezeDatasetVersionResponse409
+  | freezeDatasetVersionResponse422
+  | freezeDatasetVersionResponse429
+  | freezeDatasetVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type freezeDatasetVersionResponse =
+  | freezeDatasetVersionResponseSuccess
+  | freezeDatasetVersionResponseError;
+
+export const getFreezeDatasetVersionUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/dataset-versions`;
+};
+
+/**
+ * @summary Freeze Dataset Version
+ */
+export const freezeDatasetVersion = async (
+  taskId: string,
+  freezeRequest: FreezeRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<freezeDatasetVersionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<freezeDatasetVersionResponse>(getFreezeDatasetVersionUrl(taskId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(freezeRequest),
+  });
+};
+
+export const getFreezeDatasetVersionMutationKey = () => ["freezeDatasetVersion"] as const;
+
+export const getFreezeDatasetVersionMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof freezeDatasetVersion>>,
+    TError,
+    FreezeDatasetVersionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof freezeDatasetVersion>>,
+  TError,
+  FreezeDatasetVersionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFreezeDatasetVersionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof freezeDatasetVersion>>,
+    FreezeDatasetVersionMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return freezeDatasetVersion(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FreezeDatasetVersionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof freezeDatasetVersion>>
+>;
+export type FreezeDatasetVersionMutationBody = FreezeRequest;
+export type FreezeDatasetVersionMutationError = Problem;
+export type FreezeDatasetVersionMutationVariables = { taskId: string; data: FreezeRequest };
+
+/**
+ * @summary Freeze Dataset Version
+ */
+export const useFreezeDatasetVersion = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof freezeDatasetVersion>>,
+      TError,
+      FreezeDatasetVersionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof freezeDatasetVersion>>,
+  TError,
+  FreezeDatasetVersionMutationVariables,
+  TContext
+> => {
+  return useMutation(getFreezeDatasetVersionMutationOptions(options), queryClient);
+};
+
+export type downloadDatasetVersionResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type downloadDatasetVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type downloadDatasetVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type downloadDatasetVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type downloadDatasetVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type downloadDatasetVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type downloadDatasetVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type downloadDatasetVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type downloadDatasetVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type downloadDatasetVersionResponseSuccess = downloadDatasetVersionResponse200 & {
+  headers: Headers;
+};
+export type downloadDatasetVersionResponseError = (
+  | downloadDatasetVersionResponse400
+  | downloadDatasetVersionResponse401
+  | downloadDatasetVersionResponse403
+  | downloadDatasetVersionResponse404
+  | downloadDatasetVersionResponse409
+  | downloadDatasetVersionResponse422
+  | downloadDatasetVersionResponse429
+  | downloadDatasetVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type downloadDatasetVersionResponse =
+  | downloadDatasetVersionResponseSuccess
+  | downloadDatasetVersionResponseError;
+
+export const getDownloadDatasetVersionUrl = (taskId: string, number: number) => {
+  return `/api/review-tasks/${taskId}/dataset-versions/${number}`;
+};
+
+/**
+ * @summary Download Dataset Version
+ */
+export const downloadDatasetVersion = async (
+  taskId: string,
+  number: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<downloadDatasetVersionResponse> => {
+  return apiFetch<downloadDatasetVersionResponse>(getDownloadDatasetVersionUrl(taskId, number), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadDatasetVersionQueryKey = (taskId: string, number: number) => {
+  return [`/api/review-tasks/${taskId}/dataset-versions/${number}`] as const;
+};
+
+export const getDownloadDatasetVersionQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadDatasetVersion>>,
+  TError = Problem,
+>(
+  taskId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadDatasetVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDownloadDatasetVersionQueryKey(taskId, number);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadDatasetVersion>>> = ({ signal }) =>
+    downloadDatasetVersion(taskId, number, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && number !== null && number !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof downloadDatasetVersion>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type DownloadDatasetVersionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadDatasetVersion>>
+>;
+export type DownloadDatasetVersionQueryError = Problem;
+
+export function useDownloadDatasetVersion<
+  TData = Awaited<ReturnType<typeof downloadDatasetVersion>>,
+  TError = Problem,
+>(
+  taskId: string,
+  number: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadDatasetVersion>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadDatasetVersion>>,
+          TError,
+          Awaited<ReturnType<typeof downloadDatasetVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadDatasetVersion<
+  TData = Awaited<ReturnType<typeof downloadDatasetVersion>>,
+  TError = Problem,
+>(
+  taskId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadDatasetVersion>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadDatasetVersion>>,
+          TError,
+          Awaited<ReturnType<typeof downloadDatasetVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadDatasetVersion<
+  TData = Awaited<ReturnType<typeof downloadDatasetVersion>>,
+  TError = Problem,
+>(
+  taskId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadDatasetVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download Dataset Version
+ */
+
+export function useDownloadDatasetVersion<
+  TData = Awaited<ReturnType<typeof downloadDatasetVersion>>,
+  TError = Problem,
+>(
+  taskId: string,
+  number: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadDatasetVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDownloadDatasetVersionQueryOptions(taskId, number, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
