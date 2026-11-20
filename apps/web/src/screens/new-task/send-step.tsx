@@ -247,7 +247,11 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
   );
 }
 
-export function SentPanel({ draft, data }: Pick<StepProps, "draft" | "data">) {
+export function SentPanel({
+  draft,
+  data,
+  code,
+}: Pick<StepProps, "draft" | "data"> & { code: string }) {
   const { t } = useLingui();
 
   const people = draft.reviewers.flatMap((id) => {
@@ -258,7 +262,7 @@ export function SentPanel({ draft, data }: Pick<StepProps, "draft" | "data">) {
     <section className="grid justify-items-center gap-2.5 rounded-zone border border-surf-edge bg-surf-section px-10 py-15 text-center">
       <Icon name="check" size="xl" className="text-ok" />
       <h2 className="m-0 text-page-title font-semibold">
-        <Trans>{data.code} is out</Trans>
+        <Trans>{code} is out</Trans>
       </h2>
       {people.length ? (
         <>

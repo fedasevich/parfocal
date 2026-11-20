@@ -42,6 +42,7 @@ import {
   percent,
   plural,
 } from "../format.ts";
+import { slidePosition } from "../my-work/review-progress.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -90,7 +91,8 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
         </span>
         <span className="flex flex-wrap items-center gap-2 text-body-sm text-fg-dim">
           <Trans>
-            Slide {resume.position + 1} of {resume.slides_assigned}
+            Slide {slidePosition(resume.position, resume.slides_assigned)} of{" "}
+            {resume.slides_assigned}
           </Trans>
           {progress ? (
             <>

@@ -30,6 +30,7 @@ from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task, task_row
 from parfocal_api.reviewed_layer import ai_object
 from parfocal_api.tables import (
+    REASON_TEXT,
     DecisionStyle,
     adjudications,
     disagreement_decisions,
@@ -53,19 +54,6 @@ type Key = tuple[uuid.UUID, str, int]
 type ObjectKind = Literal["region", "cell"]
 
 CLASS_ANSWER = "class"
-REASON_TEXT = {
-    "not_class": "Not this class",
-    "boundary_off": "Boundary is off",
-    "two_regions": "Two regions, not one",
-    "artefact": "Artefact or fold",
-    "not_a_cell": "Not a cell",
-    "wrong_class": "Wrong class",
-    "need_deeper_level": "Need a deeper level",
-    "need_ihc": "Need IHC",
-    "border_unclear": "Border unclear",
-    "out_of_focus": "Out of focus",
-    "need_second_look": "Need a second look",
-}
 
 
 class QueueTag(StrEnum):

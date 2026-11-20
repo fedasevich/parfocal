@@ -157,6 +157,7 @@ export const newTaskSearch = lenientSearch({
   scene: sceneField(mockScenes.task),
   step: z.enum(["kind", "slides", "reviewers", "check", "how", "send", "sent"]).optional(),
   modal: z.enum(["addslides", "dpreview"]).optional(),
+  task: z.string().optional(),
 });
 
 export const uploadSearch = lenientSearch({

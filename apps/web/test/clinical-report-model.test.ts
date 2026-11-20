@@ -47,6 +47,20 @@ test("nodes positive counts nodes, not deposits, and sets the pN for a macrometa
   assert.equal(suggestedPn(data(), { ...report.values, category: "micro" }), "pN1mi(sn)");
 });
 
+test("a report with no deposits says so and leaves out an unknown node count", () => {
+  const report = sceneReport(data(), "findings");
+  const empty = { ...report.values, deposits: [], examined: "" };
+  const unknown = { ...data(), case: { ...data().case, examined: null } };
+  assert.equal(
+    diagnosisOf(unknown, empty),
+    "Lymph nodes, sentinel, left axilla, excision: NO METASTATIC CARCINOMA.",
+  );
+  assert.equal(
+    diagnosisOf(data(), { ...empty, examined: "2" }),
+    "Lymph nodes, sentinel, left axilla, excision: NO METASTATIC CARCINOMA (0/2).",
+  );
+});
+
 test("a category against the size needs the confirmation", () => {
   const report = sceneReport(data(), "contra");
   assert.deepEqual(

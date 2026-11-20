@@ -296,7 +296,7 @@ msgstr ""
 msgid "{0, plural, one {# required question is not answered.} other {# required questions are not answered.}}"
 msgstr ""
 
-#. placeholder {0}: draft.reviewers.length
+#. placeholder {0}: created?.reviewer_count ?? draft.reviewers.length
 #: src/screens/new-task/new-task-screen.tsx
 msgid "{0, plural, one {# reviewer} other {# reviewers}}"
 msgstr ""
@@ -471,6 +471,12 @@ msgstr ""
 #. placeholder {2}: sender?.name
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "{0} {1} · drafted by {2}"
+msgstr ""
+
+#. placeholder {0}: data.template.name
+#. placeholder {1}: data.template.version
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "{0} {1} · not sent for co-sign yet"
 msgstr ""
 
 #. placeholder {0}: data.template.name
@@ -890,11 +896,6 @@ msgstr ""
 #. placeholder {0}: template.name
 #: src/screens/admin/templates.tsx
 msgid "{0} is now the default for new projects"
-msgstr ""
-
-#. placeholder {0}: data.code
-#: src/screens/new-task/send-step.tsx
-msgid "{0} is out"
 msgstr ""
 
 #. placeholder {0}: template.name
@@ -1855,6 +1856,10 @@ msgstr ""
 msgid "{code} {name} is back in every list."
 msgstr ""
 
+#: src/screens/new-task/send-step.tsx
+msgid "{code} is out"
+msgstr ""
+
 #: ../../packages/ui/src/components/new-forms.tsx
 msgid "{code} when created"
 msgstr ""
@@ -2206,6 +2211,14 @@ msgstr ""
 
 #: src/screens/upload/progress-step.tsx
 msgid "{source} wait for the source"
+msgstr ""
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "{stain} stain, case {caseLabel}"
+msgstr ""
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "{stain} stain, no case"
 msgstr ""
 
 #. placeholder {0}: chapters.length
@@ -5516,6 +5529,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/visualize.tsx
 msgid "Compare, run again or add another"
+msgstr ""
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Comparing {shownCount} slides"
 msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx
@@ -10588,6 +10605,10 @@ msgstr ""
 msgid "Nobody can yet."
 msgstr ""
 
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "Nobody has sent this report for co-sign yet"
+msgstr ""
+
 #: src/screens/team/team-screen.tsx
 msgid "Nobody is behind right now"
 msgstr ""
@@ -14161,6 +14182,10 @@ msgstr ""
 msgid "Searching"
 msgstr ""
 
+#: ../../packages/ui/src/components/command-palette.tsx
+msgid "Searching slides and objects"
+msgstr ""
+
 #: src/session/second-factor-screen.tsx
 msgid "Second factor needed"
 msgstr ""
@@ -15157,7 +15182,7 @@ msgstr ""
 msgid "Slide · {0} {1}"
 msgstr ""
 
-#. placeholder {0}: resume.position + 1
+#. placeholder {0}: slidePosition(resume.position, resume.slides_assigned)
 #. placeholder {0}: slidePosition(resume.position, task.slides_assigned)
 #. placeholder {1}: resume.slides_assigned
 #. placeholder {1}: task.slides_assigned
@@ -16262,10 +16287,6 @@ msgstr ""
 msgid "The browser's own window · mocked"
 msgstr ""
 
-#: src/screens/viewer-tools/compare-view.tsx
-msgid "The capsule question in the comments is answered on the CK level at the same spot. The shared cursor shows the same point on both."
-msgstr ""
-
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "The category is settled."
 msgstr ""
@@ -16828,6 +16849,10 @@ msgstr ""
 msgid "The shapes with their groups, notes and cell calls, which Parfocal can import again"
 msgstr ""
 
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "The shared cursor shows the same point on every pane."
+msgstr ""
+
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "The sign-off of this task could not be opened. The evaluation report shows whether it is signed."
 msgstr ""
@@ -16851,6 +16876,10 @@ msgstr ""
 
 #: src/viewer/remote-slide-notice.tsx
 msgid "The slide is still being inspected at its source."
+msgstr ""
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "The slide you were reading"
 msgstr ""
 
 #: src/screens/jobs/run-model-window.tsx

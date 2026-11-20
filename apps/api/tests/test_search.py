@@ -9,6 +9,8 @@ import pytest
 from case_support import seed_case
 from chunk_support import CellRow, chunk_bytes, put_chunk
 from db_support import APP_URL, ApiAs, with_database
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from storage_support import ensure_bucket
 from test_my_work import task
 from test_review_tasks import Study, study
@@ -306,3 +308,81 @@ def test_search_meets_the_latency_budget_on_100_000_cases(api: ApiAs, database: 
         assert timings[int(0.95 * len(timings)) - 1] < 100, statistics.median(timings)
     finally:
         owner(database, f"DELETE FROM cases WHERE project_id = '{project}'")
+
+
+def clone_slides_with_results(database: str, s: Study, count: int) -> None:
+    source = s.slides[2]
+    owner(
+        database,
+        f"""
+        DO $$
+        DECLARE slide_cols text; set_cols text; original uuid;
+        BEGIN
+          PERFORM set_config('session_replication_role', 'replica', true);
+          SELECT string_agg(quote_ident(column_name), ',') INTO slide_cols
+            FROM information_schema.columns
+           WHERE table_name = 'slides' AND is_generated = 'NEVER'
+             AND column_name NOT IN ('id', 'label');
+          SELECT string_agg(quote_ident(column_name), ',') INTO set_cols
+            FROM information_schema.columns
+           WHERE table_name = 'result_sets' AND is_generated = 'NEVER'
+             AND column_name NOT IN ('id', 'slide_id');
+          SELECT id INTO original FROM result_sets
+           WHERE slide_id = '{source}' AND status = 'ready' LIMIT 1;
+          CREATE TEMP TABLE clones AS
+            SELECT gen_random_uuid() AS slide_id, gen_random_uuid() AS set_id, g
+              FROM generate_series(1, {count}) g;
+          EXECUTE format(
+            'INSERT INTO slides (id, label, %s) SELECT c.slide_id, ''bulk-'' || c.g, %s '
+            'FROM slides, clones c WHERE slides.id = %L', slide_cols, slide_cols, '{source}');
+          EXECUTE format(
+            'INSERT INTO result_sets (id, slide_id, %s) SELECT c.set_id, c.slide_id, %s '
+            'FROM result_sets, clones c WHERE result_sets.id = %L', set_cols, set_cols, original);
+          INSERT INTO result_objects (tenant_id, result_set_id, kind, number, geometry, score)
+            SELECT '{s.tenant_id}', c.set_id, 'region', 1,
+                   ST_GeomFromText('POLYGON((0 0,9 0,9 9,0 9,0 0))', 0), 200
+              FROM clones c;
+        END $$
+        """,
+    )
+
+
+def statements_during(call: Any) -> int:
+    seen: list[str] = []
+
+    def count(*_: Any) -> None:
+        seen.append("statement")
+
+    event.listen(Engine, "before_cursor_execute", count)
+    try:
+        call()
+    finally:
+        event.remove(Engine, "before_cursor_execute", count)
+    return len(seen)
+
+
+def test_a_bare_id_search_asks_the_database_a_fixed_number_of_times(
+    api: ApiAs, database: str
+) -> None:
+    s = seeded(database)
+    before = statements_during(lambda: objects(api, s.people["owner"], "T9"))
+    clone_slides_with_results(database, s, 40)
+    after = statements_during(lambda: objects(api, s.people["owner"], "T9"))
+    assert objects(api, s.people["owner"], "T9") == []
+    assert after == before
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PARFOCAL_PERF"), reason="latency runs on demand, see the search spike"
+)
+def test_a_bare_id_search_over_200_slides_with_results_is_quick(api: ApiAs, database: str) -> None:
+    s = seeded(database)
+    clone_slides_with_results(database, s, 200)
+    for q in ("T9", "T1", "C5"):
+        timings: list[float] = []
+        for _ in range(5):
+            started = time.perf_counter()
+            objects(api, s.people["owner"], q)
+            timings.append((time.perf_counter() - started) * 1000)
+        print(f"{q}: median {statistics.median(timings):.1f} ms")
+        assert statistics.median(timings) < 500, timings

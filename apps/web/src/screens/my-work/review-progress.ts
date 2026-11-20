@@ -1,7 +1,7 @@
 export const minutesPerSlide = 16;
 
 export function slidePosition(position: number, slidesAssigned: number): number {
-  return Math.min(Math.max(position + 1, 1), Math.max(slidesAssigned, 1));
+  return Math.min(Math.max(position, 1), Math.max(slidesAssigned, 1));
 }
 
 export function minutesLeft(slidesSubmitted: number, slidesAssigned: number): number | null {

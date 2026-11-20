@@ -5,7 +5,6 @@ import {
   useDecideAdjudication,
   useGetMe,
   useGetMyAdjudication,
-  useGetMyDisplay,
   useGetMySettingLayers,
   useGetReviewTask,
   useListProjectClasses,
@@ -40,6 +39,7 @@ import { answersOf, showsClaim } from "../review/decision-style.ts";
 import { taskDisplayView } from "../review/display-model.ts";
 import { DisplayTab } from "../review/display-tab.tsx";
 import { fromMentionTokens } from "../review/mention-picking.ts";
+import { useMyDisplay } from "../review/use-my-display.ts";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   adjudicatorCard,
@@ -67,7 +67,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
 
   const adjudication = okData(useGetMyAdjudication(taskId).data);
   const task = okData(useGetReviewTask(taskId).data);
-  const myDisplay = okData(useGetMyDisplay(taskId).data);
+  const myDisplay = useMyDisplay(taskId);
   const display = myDisplay ? taskDisplayView(myDisplay, task?.code ?? "") : undefined;
   const me = okData(useGetMe().data);
   const classList = okData(

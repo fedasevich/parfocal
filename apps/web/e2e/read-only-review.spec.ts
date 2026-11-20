@@ -64,6 +64,20 @@ test("guided review of another reviewer's task shows the object without answers"
   await expect(page.getByTestId("read-only-notice")).toBeVisible();
 });
 
+test("guided review read only never asks for display settings it may not have", async ({
+  page,
+}) => {
+  const asked: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/my-display")) asked.push(request.url());
+  });
+  await page.goto(`/tasks/${rt14}/guided?as=DH`);
+  await ready(page);
+  await expect(page.getByTestId("stage-review-object")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("read-only-notice")).toBeVisible();
+  expect(asked).toEqual([]);
+});
+
 for (const [code, sentence] of [
   [
     "not-assigned",

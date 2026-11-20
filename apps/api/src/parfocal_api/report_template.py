@@ -6,6 +6,7 @@ from datetime import date
 
 from parfocal_api.evaluation import Evaluation
 from parfocal_api.locales import DEFAULT_LOCALE, Locale, day, decimal, translated
+from parfocal_api.tables.review import REASON_TEXT
 from parfocal_common.report_blocks import (
     Comparison,
     ConfusionMatrix,
@@ -515,7 +516,7 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         shown = data.reasons[: block.top] if block.top else data.reasons
         return table(
             (messages["report.reason"], messages["report.count"]),
-            [(reason, str(count)) for reason, count in shown],
+            [(REASON_TEXT.get(reason, reason), str(count)) for reason, count in shown],
             "report.empty.disagreement-reasons",
         )
 

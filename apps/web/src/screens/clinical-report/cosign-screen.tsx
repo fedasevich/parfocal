@@ -478,9 +478,15 @@ function CosignFlow({
               {data.case.label}
             </span>{" "}
             ·{" "}
-            <Trans>
-              {data.template.name} {data.template.version} · drafted by {sender?.name}
-            </Trans>
+            {senderId === null ? (
+              <Trans>
+                {data.template.name} {data.template.version} · not sent for co-sign yet
+              </Trans>
+            ) : (
+              <Trans>
+                {data.template.name} {data.template.version} · drafted by {sender?.name}
+              </Trans>
+            )}
           </>
         }
         steps={[]}
@@ -489,7 +495,11 @@ function CosignFlow({
           <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
             <Icon name={returned ? "back" : "users"} className="text-fg-dim" />
             <span>
-              {returned ? returnedTo : t`${sender?.name} asks you to co-sign · sent ${sentText}`}
+              {returned
+                ? returnedTo
+                : senderId === null
+                  ? t`Nobody has sent this report for co-sign yet`
+                  : t`${sender?.name} asks you to co-sign · sent ${sentText}`}
             </span>
           </p>
         }

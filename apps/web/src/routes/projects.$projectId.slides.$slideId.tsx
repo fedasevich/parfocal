@@ -45,7 +45,6 @@ function SlideView() {
       <WithOptionalToolSession projectId={projectId} slideId={slideId} task={search.task}>
         {(tools) => (
           <CompareView
-            key={scene}
             projectId={projectId}
             slideId={slideId}
             taskId={search.task}
@@ -53,6 +52,7 @@ function SlideView() {
             tools={tools}
             scene={scene === "picking" ? "picking" : "picked"}
             rightSlideId={search.with}
+            onShown={(right) => onSearch({ scene: "picked", with: right })}
             onLeave={(change) => onSearch({ ...change, with: undefined })}
           />
         )}

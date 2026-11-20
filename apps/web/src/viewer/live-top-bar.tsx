@@ -132,6 +132,7 @@ type LiveTopBarProps = {
   onSubmit: (() => void) | undefined;
   onResultSets?: (() => void) | undefined;
   percent: number | null;
+  progressNote?: string | undefined;
   objectTotal: number;
   onPeek: () => void;
   statusRef: (node: HTMLElement | null) => void;
@@ -164,6 +165,7 @@ function TopBar({
   onSubmit,
   onResultSets,
   percent,
+  progressNote,
   objectTotal,
   onPeek,
   statusRef,
@@ -263,6 +265,7 @@ function TopBar({
           task={task}
           review={review}
           percent={percent}
+          note={progressNote}
           objectTotal={objectTotal}
           onPeek={onPeek}
           onOpenSlide={onOpenSlide}

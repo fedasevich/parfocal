@@ -232,3 +232,11 @@ def test_a_signed_report_keeps_its_layout_after_the_template_changes(
     assert text.index("SIGNED-FIRST") < text.index("SIGNED-SECOND")
     assert "LATER-ONLY" not in text
     assert "Signed off: 03/11/2026" in text
+
+
+def test_the_reasons_print_as_words_and_not_as_codes() -> None:
+    report = replace(FULL_REPORT, reasons=(("boundary_off", 3), ("need_ihc", 1)))
+    text = " ".join(pages_of(pdf_of(render_report(report), SIGNED)))
+    assert "Boundary is off 3" in text
+    assert "Need IHC 1" in text
+    assert "boundary_off" not in text

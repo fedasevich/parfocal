@@ -1,5 +1,5 @@
 import { useLingui } from "@lingui/react/macro";
-import { useGetMyDisplay, useGetReviewTask } from "@parfocal/api-client";
+import { useGetReviewTask } from "@parfocal/api-client";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { useCallback, useMemo, useState } from "react";
@@ -7,6 +7,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { taskDisplayView } from "../screens/review/display-model.ts";
 import { DisplayTab, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { useDisplayChoice, useShiftPresetKeys } from "../screens/review/use-display-choice.ts";
+import { useMyDisplay } from "../screens/review/use-my-display.ts";
 import { SavePresetModal } from "../screens/viewer/save-preset-modal.tsx";
 import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
 import { useLabDecisionCutoff } from "../shell/resolved-settings.ts";
@@ -17,9 +18,7 @@ import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from ".
 type SlotPlacer = (section: InspectorSection, node: HTMLElement | null) => void;
 
 export function useStageDisplay(taskId: string | undefined): DisplaySettings {
-  const my = okData(
-    useGetMyDisplay(taskId ?? "", { query: { enabled: taskId !== undefined } }).data,
-  );
+  const my = useMyDisplay(taskId);
   const labCutoff = useLabDecisionCutoff();
   const defaults = useDisplayDefaults();
   return useMemo(
@@ -48,7 +47,7 @@ function TaskDisplay({
   slideLabel: string;
   onSlot: SlotPlacer;
 }) {
-  const myDisplay = okData(useGetMyDisplay(taskId).data);
+  const myDisplay = useMyDisplay(taskId);
   const taskCode = okData(useGetReviewTask(taskId).data)?.code ?? "";
   const display = useMemo(
     () => (myDisplay ? taskDisplayView(myDisplay, taskCode) : undefined),

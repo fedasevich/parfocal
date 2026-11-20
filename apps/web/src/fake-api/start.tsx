@@ -8,6 +8,7 @@ import {
   setFakeJobsScene,
   setFakeQueueScene,
   setFakeRefusal,
+  setFakeSearchDelay,
   setFakeSuspendedWorkspace,
   setFakeTeamScene,
   setFakeView,
@@ -56,6 +57,7 @@ export async function startFakeApi(
   setFakeViewerIssue(search["issue"]);
   setFakeRefusal(search["refuse"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
+  setFakeSearchDelay(Number(search["searchDelay"] ?? 0) || 0);
   const sessionLock = scope === "all" ? sessionLockHandlers() : [];
   await startFakeWorker([...sessionLock, ...fakeApiHandlers(scope)]);
   mountFakeDataBadge(scope, queryClient);

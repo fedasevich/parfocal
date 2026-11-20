@@ -4,7 +4,6 @@ import {
   getGetCellSummaryUrl,
   type ResultSet,
   type SetRegion,
-  useGetMyDisplay,
   useGetResultSet,
   useGetReviewTask,
   useListProjectClasses,
@@ -18,6 +17,7 @@ import { slideAt } from "../annotations/stage-pointer.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { shownSetsOf, taskDisplayView } from "../screens/review/display-model.ts";
 import { useDisplayChoice } from "../screens/review/use-display-choice.ts";
+import { useMyDisplay } from "../screens/review/use-my-display.ts";
 import { useDisplayDefaults } from "../shell/display-defaults.ts";
 import { type ClassPaint, classPaints } from "./class-paint.ts";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
@@ -506,7 +506,7 @@ function SlideResultSets({ engine, module, slideId, inTask = false, retype = nul
 }
 
 function ReviewResultSets({ engine, module, slideId, taskId }: SetsProps & { taskId: string }) {
-  const myDisplay = okData(useGetMyDisplay(taskId).data);
+  const myDisplay = useMyDisplay(taskId);
   const task = okData(useGetReviewTask(taskId).data);
   const display = useMemo(
     () => (myDisplay ? taskDisplayView(myDisplay, task?.code ?? "") : undefined),

@@ -109,20 +109,14 @@ const plainSlide: StillDrawChoices = {
   confidence: "all",
 };
 
-function toCompareSlide(slide: ProjectSlide, currentId: string): CompareSlide {
-  const ihc = slide.stain !== "H&E";
+function toCompareSlide(slide: ProjectSlide, note: string): CompareSlide {
   return {
     key: slide.id,
     id: slide.id,
     name: `${slide.label} · ${slide.stain}`,
-    ihc,
+    ihc: slide.stain !== "H&E",
     thumb: { backgroundImage: `url(${slideThumbUrl(slide.id)})` },
-    note:
-      slide.id === currentId
-        ? "The slide you were reading"
-        : ihc
-          ? "Cytokeratin, marks tumor cells brown"
-          : "Second level of the same block",
+    note,
   };
 }
 
@@ -136,6 +130,7 @@ type CompareViewProps = {
   tools: ToolSession | null;
   scene: SceneOf<"compare">;
   rightSlideId?: string | undefined;
+  onShown?: (rightSlideId: string | undefined) => void;
   onLeave: (change: {
     scene?: undefined;
     tab?: "objects" | "display" | "comments" | "opinion";
@@ -150,6 +145,7 @@ export function CompareView({
   tools,
   scene,
   rightSlideId,
+  onShown,
   onLeave,
 }: CompareViewProps) {
   const { t } = useLingui();
@@ -183,7 +179,17 @@ export function CompareView({
         ...(change.tab ? { tab: change.tab } : {}),
       },
     });
-  const caseSlides = slidesToCompare(all, slideId).map((slide) => toCompareSlide(slide, slideId));
+  const noteOf = (slide: ProjectSlide) => {
+    if (slide.id === slideId) return t`The slide you were reading`;
+    const stain = slide.stain;
+    const caseLabel = slide.case?.label;
+    return caseLabel === undefined
+      ? t`${stain} stain, no case`
+      : t`${stain} stain, case ${caseLabel}`;
+  };
+  const caseSlides = slidesToCompare(all, slideId).map((slide) =>
+    toCompareSlide(slide, noteOf(slide)),
+  );
   const [chosen, setChosen] = useState<Partial<Record<PaneSide, string | null | undefined>>>({
     left: null,
     right: rightSlideId ?? null,
@@ -249,7 +255,10 @@ export function CompareView({
     };
   }, [sendingCursor, sender]);
   const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
-  const show = (next: PaneSlideIds) => setChosen({ ...next });
+  const show = (next: PaneSlideIds) => {
+    setChosen({ ...next });
+    onShown?.(next.right);
+  };
   const pick = (side: PaneSide, id: string) => {
     show(pickSlide(ids, side, id, visible));
     setPicking(null);
@@ -335,6 +344,10 @@ export function CompareView({
   useHotkeys(bindings, ({ action }) => {
     if (action === "linkviews") setLink((state) => toggleLinked(state, linkReference));
   });
+
+  useEffect(() => {
+    if (scene === "picking") setPicking("right");
+  }, [scene]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -519,6 +532,10 @@ export function CompareView({
     return slide ? [{ side, slide, note: slide.note }] : [];
   });
   const slideLabel = load?.slide?.label ?? tools?.session.slideName.split(" · ")[0] ?? "";
+  const panesDrawn =
+    slots.length > 0 && (!webgl || slots.every(({ side }) => frames[side] !== undefined));
+  const shownCount = slots.length;
+  const progressNote = panesDrawn ? t`Comparing ${shownCount} slides` : undefined;
   const body = (
     <>
       {tools === null ? null : (
@@ -611,10 +628,7 @@ export function CompareView({
           </p>
         </div>
         <p className="m-0 text-caption text-fg-dim">
-          <Trans>
-            The capsule question in the comments is answered on the CK level at the same spot. The
-            shared cursor shows the same point on both.
-          </Trans>
+          <Trans>The shared cursor shows the same point on every pane.</Trans>
         </p>
       </PanelSection>
     </>
@@ -636,6 +650,7 @@ export function CompareView({
           onSubmit={() => backToViewer({ tab: "opinion" })}
           onResultSets={() => backToViewer({ tab: "display" })}
           percent={null}
+          progressNote={progressNote}
           objectTotal={0}
           onPeek={() => backToViewer({})}
           statusRef={() => undefined}

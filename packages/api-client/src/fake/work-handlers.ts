@@ -1,4 +1,4 @@
-import type { RequestHandler } from "msw";
+import { delay, type RequestHandler } from "msw";
 import {
   getCreateAnnouncementMockHandler,
   getEndAnnouncementMockHandler,
@@ -561,6 +561,11 @@ export const reviewOrderOf = reviewOrderFor;
 export const decisionsOf = decisionsFor;
 
 let bulkSlideCount = 0;
+let searchDelayMs = 0;
+
+export function setFakeSearchDelay(ms: number): void {
+  searchDelayMs = Math.max(0, Math.floor(ms));
+}
 
 export function setFakeBulkSlides(count: number): void {
   bulkSlideCount = Math.max(0, Math.floor(count));
@@ -630,7 +635,8 @@ export function workHandlers(): RequestHandler[] {
     getMarkNotificationsReadMockHandler(async ({ request }) =>
       inbox.mark((await request.json()) as MarkRead),
     ),
-    getSearchMockHandler(({ request }) => {
+    getSearchMockHandler(async ({ request }) => {
+      if (searchDelayMs > 0) await delay(searchDelayMs);
       const params = new URL(request.url).searchParams;
       const query = params.get("q") ?? "";
       return {

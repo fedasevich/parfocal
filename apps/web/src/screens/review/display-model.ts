@@ -94,6 +94,24 @@ export function toApi(values: PanelValues): ApiSettings {
 
 export const presetKeys = ["⇧2", "⇧3", "⇧4"];
 
+type TaskWithReviewers = {
+  display: MyDisplay["task"];
+  slides: readonly { reviewer_ids: readonly string[] }[];
+};
+
+export const reviewsTask = (task: TaskWithReviewers, userId: string) =>
+  task.slides.some((slide) => slide.reviewer_ids.includes(userId));
+
+export function taskDefaultDisplay(task: TaskWithReviewers): MyDisplay {
+  return {
+    task: task.display,
+    preset_id: null,
+    preset: "Task default",
+    settings: task.display.defaults ?? {},
+    presets: [],
+  };
+}
+
 export function taskDisplayView(my: MyDisplay | undefined, taskCode: string): TaskDisplayView {
   const defaults = fromApi(my?.task.defaults);
   const locks = Object.entries(my?.task.locks ?? {}).flatMap(([setting, reason]) => {

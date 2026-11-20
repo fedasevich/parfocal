@@ -18,9 +18,15 @@ function NewReviewTask() {
       step={search.step}
       modal={search.modal}
       keep={search.scene === undefined}
+      sentTask={search.task}
       onNavigate={(to) =>
         void navigate({
-          search: (previous) => ({ ...previous, step: to.step, modal: to.modal }),
+          search: (previous) => ({
+            ...previous,
+            step: to.step,
+            modal: to.modal,
+            ...("task" in to ? { task: to.task } : {}),
+          }),
           replace: to.step === search.step,
         })
       }

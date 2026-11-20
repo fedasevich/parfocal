@@ -39,6 +39,7 @@ type LiveProgressProps = {
   task: ReviewTaskDetail | undefined;
   review: LiveReview | undefined;
   percent: number | null;
+  note?: string | undefined;
   objectTotal: number;
   onPeek: () => void;
   onOpenSlide: (slideId: string) => void;
@@ -52,6 +53,7 @@ export function LiveProgress({
   task,
   review,
   percent,
+  note,
   objectTotal,
   onPeek,
   onOpenSlide,
@@ -69,7 +71,7 @@ export function LiveProgress({
         {review !== undefined || inTask
           ? t`${timeLeft} left`
           : percent === null
-            ? t`Opening`
+            ? (note ?? t`Opening`)
             : t`${percent}% of the tissue seen`}
       </small>
     </span>

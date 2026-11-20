@@ -63,27 +63,30 @@ function hitRow(hit: SearchHit, query: string, run: () => void): Row {
 
 type OpenSlide = { projectId: string; slideId: string; taskId: string | undefined };
 
-function usePlaces(query: string, close: () => void, open: OpenSlide | null): Row[] {
+function usePlaces(
+  query: string,
+  close: () => void,
+  open: OpenSlide | null,
+): { rows: Row[]; searching: boolean } {
   const goTo = useGoTo();
   const router = useRouter();
   const projects = okData(useListProjects().data) ?? [];
-  const hits =
-    okData(
-      useSearch(
-        {
-          q: query,
-          ...(open === null
-            ? {}
-            : {
-                project_id: open.projectId,
-                slide_id: open.slideId,
-                ...(open.taskId === undefined ? {} : { task_id: open.taskId }),
-              }),
-        },
-        { query: { enabled: query.length >= 2 } },
-      ).data,
-    )?.hits ?? [];
-  if (query.length < 2) return [];
+  const search = useSearch(
+    {
+      q: query,
+      ...(open === null
+        ? {}
+        : {
+            project_id: open.projectId,
+            slide_id: open.slideId,
+            ...(open.taskId === undefined ? {} : { task_id: open.taskId }),
+          }),
+    },
+    { query: { enabled: query.length >= 2 } },
+  );
+  const hits = okData(search.data)?.hits ?? [];
+  if (query.length < 2) return { rows: [], searching: false };
+  const searching = search.isFetching;
   const opener = (href: string) => () => {
     close();
     void goTo(href);
@@ -120,7 +123,7 @@ function usePlaces(query: string, close: () => void, open: OpenSlide | null): Ro
     const row = hitRow(hit, query, opener(destinations.project(project.id)));
     return known.has(row.id) ? [] : [row];
   });
-  return [...fromServer, ...fromList];
+  return { rows: [...fromServer, ...fromList], searching };
 }
 
 function PaletteBody({ initial, close }: { initial: string; close: () => void }) {
@@ -147,7 +150,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
           taskId: typeof search.task === "string" ? search.task : undefined,
         }
       : null;
-  const places = usePlaces(trimmed, close, openSlide);
+  const { rows: places, searching } = usePlaces(trimmed, close, openSlide);
   const entries = paletteEntries({
     projectId: params.projectId ?? projects[0]?.id ?? "",
     onSlide: /^\/projects\/[^/]+\/slides\/[^/]+$/.test(pathname),
@@ -253,6 +256,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
       current={current}
       onCurrentChange={setActive}
       onKeyDown={onKeyDown}
+      searching={searching}
     />
   );
 }

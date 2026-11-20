@@ -20,7 +20,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, database_scope
 from parfocal_api.project_access import readable, readable_slide
 from parfocal_api.projects import code_of
-from parfocal_api.result_membership import missing_cells, missing_regions
+from parfocal_api.result_membership import missing_cells
 from parfocal_api.review_order import ResultFilesMissingError, ResultFilesUnreadableError
 from parfocal_api.tables import (
     AnnotationKind,
@@ -30,6 +30,7 @@ from parfocal_api.tables import (
     cases,
     memberships,
     projects,
+    result_chunks,
     result_objects,
     result_sets,
     review_edits,
@@ -313,60 +314,92 @@ def split_term(term: str) -> tuple[list[str], ObjectId] | None:
         return None
 
 
-async def ai_object_exists(
-    connection: AsyncConnection, store: ResultStore, slide_id: uuid.UUID, found: ObjectId
-) -> bool:
-    set_ids = list(
+def is_ai(found: ObjectId) -> bool:
+    return found.letter in AI_LETTERS and not found.person
+
+
+def holding_sets(found: ObjectId, slide_ids: list[uuid.UUID]) -> Any:
+    statement = select(result_sets.c.id, result_sets.c.slide_id).where(
+        result_sets.c.slide_id.in_(slide_ids),
+        result_sets.c.status == ResultStatus.READY.value,
+        result_sets.c.deleted_at.is_(None),
+    )
+    if found.region is not None:
+        region = result_objects.alias("region")
+        statement = statement.join(
+            region,
+            and_(
+                region.c.result_set_id == result_sets.c.id,
+                region.c.kind == "region",
+                region.c.number == found.region,
+            ),
+        )
+    if found.letter is Letter.CELL:
+        return statement.where(
+            select(result_chunks.c.chunk)
+            .where(result_chunks.c.result_set_id == result_sets.c.id)
+            .exists()
+        )
+    return statement.join(
+        result_objects,
+        and_(
+            result_objects.c.result_set_id == result_sets.c.id,
+            result_objects.c.kind == ("region" if found.letter is Letter.REGION else "zone"),
+            result_objects.c.number == found.number,
+        ),
+    )
+
+
+async def ai_holders(
+    connection: AsyncConnection,
+    store: ResultStore,
+    found: ObjectId,
+    slide_ids: list[uuid.UUID],
+) -> set[uuid.UUID]:
+    rows = list(await connection.execute(holding_sets(found, slide_ids)))
+    if found.letter is not Letter.CELL:
+        return {row.slide_id for row in rows}
+    holders: set[uuid.UUID] = set()
+    for row in rows:
+        if row.slide_id in holders:
+            continue
+        try:
+            if not await missing_cells(connection, store, row.id, {found.number}):
+                holders.add(row.slide_id)
+        except ResultFilesMissingError, ResultFilesUnreadableError:
+            continue
+    return holders
+
+
+async def drawn_holders(
+    connection: AsyncConnection, found: ObjectId, slide_ids: list[uuid.UUID]
+) -> set[uuid.UUID]:
+    kind = DRAWN_KINDS.get(found.letter)
+    if kind is None:
+        return set()
+    return set(
         await connection.scalars(
-            select(result_sets.c.id).where(
-                result_sets.c.slide_id == slide_id,
-                result_sets.c.status == ResultStatus.READY.value,
-                result_sets.c.deleted_at.is_(None),
+            select(annotations.c.slide_id).where(
+                annotations.c.slide_id.in_(slide_ids),
+                annotations.c.kind == kind.value,
+                annotations.c.number == found.number,
+                annotations.c.deleted_at.is_(None),
             )
         )
     )
-    for set_id in set_ids:
-        if found.region is not None and await missing_regions(connection, set_id, {found.region}):
-            continue
-        if found.letter is Letter.CELL:
-            try:
-                if not await missing_cells(connection, store, set_id, {found.number}):
-                    return True
-            except ResultFilesMissingError, ResultFilesUnreadableError:
-                continue
-            continue
-        kind = "region" if found.letter is Letter.REGION else "zone"
-        present = select(result_objects).where(
-            result_objects.c.result_set_id == set_id,
-            result_objects.c.kind == kind,
-            result_objects.c.number == found.number,
-        )
-        if await connection.scalar(select(present.exists())):
-            return True
-    return False
 
 
-async def drawn_object_exists(
-    connection: AsyncConnection, slide_id: uuid.UUID, found: ObjectId
-) -> bool:
-    kind = DRAWN_KINDS.get(found.letter)
-    if kind is None:
-        return False
-    present = select(annotations).where(
-        annotations.c.slide_id == slide_id,
-        annotations.c.kind == kind.value,
-        annotations.c.number == found.number,
-        annotations.c.deleted_at.is_(None),
-    )
-    return bool(await connection.scalar(select(present.exists())))
-
-
-async def object_exists(
-    connection: AsyncConnection, store: ResultStore, slide_id: uuid.UUID, found: ObjectId
-) -> bool:
-    if found.letter in AI_LETTERS and not found.person:
-        return await ai_object_exists(connection, store, slide_id, found)
-    return await drawn_object_exists(connection, slide_id, found)
+async def slides_holding(
+    connection: AsyncConnection,
+    store: ResultStore,
+    found: ObjectId,
+    slide_ids: list[uuid.UUID],
+) -> set[uuid.UUID]:
+    if not slide_ids:
+        return set()
+    if is_ai(found):
+        return await ai_holders(connection, store, found, slide_ids)
+    return await drawn_holders(connection, found, slide_ids)
 
 
 async def object_hits(
@@ -383,13 +416,14 @@ async def object_hits(
     statement = object_query(principal, segments, context)
     if statement is None:
         return []
-    if found.letter in AI_LETTERS and not found.person:
+    if is_ai(found):
         statement = statement.where(~ai_hidden(principal, slides.c.project_id, slides.c.id))
-    rows = await connection.execute(statement.order_by(slides.c.label).limit(SCANNED_SLIDES))
+    rows = list(await connection.execute(statement.order_by(slides.c.label).limit(SCANNED_SLIDES)))
+    holders = await slides_holding(connection, store, found, [row.id for row in rows])
     typed = found.text(ascii=True)
     hits: list[SearchHit] = []
     for row in rows:
-        if not await object_exists(connection, store, row.id, found):
+        if row.id not in holders:
             continue
         task_id, resolved = await current_ids(connection, principal, row.id, found, context)
         for item in resolved:

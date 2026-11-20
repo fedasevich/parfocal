@@ -494,7 +494,7 @@ export const resumePoint = {
   caseLabel: "S26-04812",
   slideLabel: "A1",
   object: objectIds.region(4),
-  position: 7,
+  position: 8,
 };
 
 export const fullObjectIdPattern = /^P\d{2}\/S\d{2}-\d{5}\/[A-Z]\d+\/[TZRM]\d+(·C\d+)?$/;

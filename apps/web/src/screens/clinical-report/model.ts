@@ -161,11 +161,14 @@ export function diagnosisOf(data: ReportData, values: Values): string {
   const size = largestMm(values.deposits);
   const count = values.deposits.length;
   const examined = parseNumber(values.examined, true) ?? data.case.examined;
+  const positive = positiveNodes(data, values.deposits);
+  const nodes = examined === null || examined === undefined ? "" : ` (${positive}/${examined})`;
+  if (count === 0) return `${data.case.site}: NO METASTATIC CARCINOMA${nodes}.`;
   const detail =
     size === null
       ? ""
       : `, ${categoryNames[categoryOf(size)].toLowerCase()}, ${count > 1 ? `${count} deposits, largest ` : ""}${mmText(size)}`;
-  return `${data.case.site}: METASTATIC CARCINOMA${detail} (${positiveNodes(data, values.deposits)}/${examined}).`;
+  return `${data.case.site}: METASTATIC CARCINOMA${detail}${nodes}.`;
 }
 
 export function withDiagnosis(data: ReportData, values: Values): Values {

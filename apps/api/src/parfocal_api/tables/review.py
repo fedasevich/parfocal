@@ -461,6 +461,21 @@ class DecisionReason(StrEnum):
     NEED_SECOND_LOOK = "need_second_look"
 
 
+REASON_TEXT: dict[str, str] = {
+    DecisionReason.NOT_CLASS: "Not this class",
+    DecisionReason.BOUNDARY_OFF: "Boundary is off",
+    DecisionReason.TWO_REGIONS: "Two regions, not one",
+    DecisionReason.ARTEFACT: "Artefact or fold",
+    DecisionReason.NOT_A_CELL: "Not a cell",
+    DecisionReason.WRONG_CLASS: "Wrong class",
+    DecisionReason.NEED_DEEPER_LEVEL: "Need a deeper level",
+    DecisionReason.NEED_IHC: "Need IHC",
+    DecisionReason.BORDER_UNCLEAR: "Border unclear",
+    DecisionReason.OUT_OF_FOCUS: "Out of focus",
+    DecisionReason.NEED_SECOND_LOOK: "Need a second look",
+}
+
+
 AI_CALL = {
     **OPERATIONAL,
     "note": "The AI call at decision time, read from the result set for a region and reported "

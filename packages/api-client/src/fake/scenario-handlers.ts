@@ -325,7 +325,7 @@ const storedTarget = (viewer: PersonKey): Home["resume"] => {
     case_label: slide.caseLabel,
     position: same
       ? derived.position
-      : slides.filter((candidate) => candidate.project === task.project).indexOf(slide),
+      : slides.filter((candidate) => candidate.project === task.project).indexOf(slide) + 1,
     decisions_on_slide: same ? derived.decisions_on_slide : 0,
     object_id: stored.object_id ?? null,
     mode: stored.mode,

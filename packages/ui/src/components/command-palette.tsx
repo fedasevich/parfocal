@@ -22,6 +22,7 @@ type CommandPaletteViewProps = {
   current: number;
   onCurrentChange: (index: number) => void;
   onKeyDown: KeyboardEventHandler<HTMLInputElement>;
+  searching?: boolean;
 };
 
 function Highlight({
@@ -78,6 +79,7 @@ function CommandPaletteView({
   current,
   onCurrentChange,
   onKeyDown,
+  searching = false,
 }: CommandPaletteViewProps) {
   const { t } = useLingui();
   const groupTitles: Record<string, string> = {
@@ -145,7 +147,17 @@ function CommandPaletteView({
             </div>
           );
         })}
-        {commands.length === 0 ? (
+        {searching ? (
+          <p
+            role="status"
+            data-testid="palette-searching"
+            className="m-0 flex items-center gap-2 px-5 py-3 text-body-sm text-fg-dim"
+          >
+            <Icon name="search" />
+            <Trans>Searching slides and objects</Trans>
+          </p>
+        ) : null}
+        {commands.length === 0 && !searching ? (
           <p className="px-5 py-6 text-body-sm text-fg-dim">
             <Trans>Nothing matches "{trimmed}".</Trans>
           </p>

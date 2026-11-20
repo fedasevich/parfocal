@@ -24,6 +24,17 @@ async function sendToLenka(page: Page) {
   await expect(flow(page).getByText(/Sent to Lenka Malá, .* · waiting/)).toBeVisible();
 }
 
+test("the co-sign page of a draft report names no sender and no unknown node count", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p03}/cases/00000000-0000-4000-8004-000000000007/co-sign`);
+  await expect(review(page).getByRole("heading", { name: "Co-sign the report" })).toBeVisible();
+  await expect(review(page).getByText(/not sent for co-sign yet/)).toBeVisible();
+  await expect(review(page).getByText("Nobody has sent this report for co-sign yet")).toBeVisible();
+  await expect(review(page).getByText(/drafted by\s*$/)).toHaveCount(0);
+  await expect(review(page).getByText(/null\)/)).toHaveCount(0);
+});
+
 test("Tomáš sends for co-sign, Lenka returns it with a note, then co-signs it", async ({
   page,
 }) => {

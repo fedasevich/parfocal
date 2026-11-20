@@ -3,6 +3,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type TaskDraft,
   useCreateReviewTask,
+  useGetReviewTask,
   useInviteTaskReviewer,
   usePublishOpinionForm,
 } from "@parfocal/api-client";
@@ -18,7 +19,7 @@ import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
-import { QueryState } from "../placeholder.tsx";
+import { okData, QueryState } from "../placeholder.tsx";
 import { decisionSettings } from "../review/decision-style.ts";
 import { checkChangeOf, checkPresetOf } from "./annotate-draft.ts";
 import { CheckStep } from "./check-step.tsx";
@@ -61,7 +62,11 @@ import { useTaskData } from "./use-task-data.ts";
 
 export type TaskModal = "addslides" | "dpreview";
 
-export type NewTaskNavigation = { step?: PageKey | undefined; modal?: TaskModal | undefined };
+export type NewTaskNavigation = {
+  step?: PageKey | undefined;
+  modal?: TaskModal | undefined;
+  task?: string | undefined;
+};
 
 type NewTaskScreenProps = {
   projectId: string;
@@ -70,6 +75,7 @@ type NewTaskScreenProps = {
   modal: TaskModal | undefined;
   onNavigate: (to: NewTaskNavigation) => void;
   keep?: boolean;
+  sentTask?: string | undefined;
 };
 
 const reveal: Partial<Record<TaskScene, string>> = {
@@ -190,6 +196,7 @@ function NewTaskFlow({
   modal,
   onNavigate,
   keep = false,
+  sentTask,
 }: NewTaskScreenProps & { data: TaskData; owner: string | undefined }) {
   const { t } = useLingui();
 
@@ -217,6 +224,23 @@ function NewTaskFlow({
   const page: PageKey = step ?? kept ?? (keep ? "kind" : sceneStep[scene]);
   const all = issues(draft, data);
   const errors = fieldErrors(draft, data);
+  const sent = page === "sent";
+  const createdId = sentTaskId ?? sentTask ?? null;
+  const createdQuery = useGetReviewTask(createdId ?? "", {
+    query: { enabled: sent && keep && createdId !== null },
+  });
+  const created = okData(createdQuery.data);
+  const createdMissing =
+    sent &&
+    keep &&
+    sentTaskId === null &&
+    (createdId === null || (createdQuery.data !== undefined && created === undefined));
+  const sentCode = created?.code ?? (sentTaskId !== null || !keep ? data.code : null);
+  const sentName = created?.name ?? draft.name.trim();
+
+  useEffect(() => {
+    if (createdMissing) onNavigate({ step: "kind", task: undefined });
+  }, [createdMissing, onNavigate]);
 
   useEffect(() => {
     if (page === "sent") forget();
@@ -259,7 +283,6 @@ function NewTaskFlow({
 
   const update = (change: (current: Draft) => Draft) => setDraft(change);
   const projectHref = `/projects/${data.projectId}`;
-  const sent = page === "sent";
   const taskTitle = isAnnotate(draft) ? t`New annotate task` : t`New review task`;
   const index = sent ? stepKeys.length : stepKeys.indexOf(page);
 
@@ -342,7 +365,10 @@ function NewTaskFlow({
             const sentOn =
               response.status === 201 ? response.data.created_at : new Date().toISOString();
             setDraft((current) => ({ ...current, sentAt: shortDate(sentOn) }));
-            onNavigate({ step: "sent" });
+            onNavigate({
+              step: "sent",
+              task: response.status === 201 ? response.data.id : undefined,
+            });
           },
           onError: () => setToast(t`The task could not be created. Try again.`),
         },
@@ -377,7 +403,7 @@ function NewTaskFlow({
               children: t`Back to the project`,
             })}
             {renderLink({
-              href: `/team?task=${encodeURIComponent(sentTaskId ?? data.taskId)}`,
+              href: `/team?task=${encodeURIComponent(createdId ?? data.taskId)}`,
               className: buttonVariants({ variant: "primary" }),
               children: t`Track it in Team`,
             })}
@@ -442,11 +468,11 @@ function NewTaskFlow({
     );
   }
 
-  const reviewerCount = pluralOf(draft.reviewers.length, {
+  const reviewerCount = pluralOf(created?.reviewer_count ?? draft.reviewers.length, {
     one: "# reviewer",
     other: "# reviewers",
   });
-  const sentOn = draft.sentAt ?? shortDate(data.today);
+  const sentOn = draft.sentAt ?? (created ? shortDate(created.created_at) : shortDate(data.today));
   const sentLine = (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="check" className="text-ok" />
@@ -469,12 +495,12 @@ function NewTaskFlow({
         crumbs={[
           { label: data.projectName, href: `${projectHref}?tab=slides` },
           { label: t`Review tasks`, href: `${projectHref}?tab=tasks` },
-          { label: sent ? data.code : taskTitle },
+          { label: sent ? (sentCode ?? "") : taskTitle },
         ]}
         title={
           sent ? (
             <>
-              <span className="font-mono">{data.code}</span> · {draft.name.trim()}
+              <span className="font-mono">{sentCode}</span> · {sentName}
             </>
           ) : (
             taskTitle
@@ -497,7 +523,7 @@ function NewTaskFlow({
         {page === "check" ? <CheckStep {...stepProps} /> : null}
         {page === "how" ? <HowStep {...stepProps} /> : null}
         {page === "send" ? <SendStep {...stepProps} /> : null}
-        {sent ? <SentPanel draft={draft} data={data} /> : null}
+        {sent && sentCode !== null ? <SentPanel draft={draft} data={data} code={sentCode} /> : null}
       </FlowPage>
       {modal === "addslides" ? (
         <AddSlidesModal

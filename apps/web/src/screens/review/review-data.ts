@@ -7,7 +7,6 @@ import {
   type ReviewTaskDetail,
   type Thread,
   useGetMe,
-  useGetMyDisplay,
   useGetOpinion,
   useGetReviewTask,
   useGetSlideNeighbours,
@@ -30,6 +29,7 @@ import {
   preparingInterval,
   type ReviewOrderState,
 } from "./review-order-state.ts";
+import { useMyDisplay } from "./use-my-display.ts";
 
 export type SlideThread = {
   id: string;
@@ -95,7 +95,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const decisions = okData(useListDecisions(taskId, slideId).data) ?? [];
   const person = usePeople();
   const nameOf = (userId: string) => person(userId)?.name;
-  const myDisplay = okData(useGetMyDisplay(taskId).data);
+  const myDisplay = useMyDisplay(taskId);
   const opinion = okData(useGetOpinion(taskId, slideId).data);
   const neighbours = okData(useGetSlideNeighbours(slideId, { from: "task", task_id: taskId }).data);
   const classes = okData(

@@ -47,6 +47,34 @@ test("the sent scene says RT-16 is out and offers Team", async ({ page }) => {
   );
 });
 
+test("reloading the sent page shows the created task, and a sent page without one starts over", async ({
+  page,
+}) => {
+  const rt13 = "00000000-0000-4000-8007-000000000013";
+  await page.goto(`${newTask}?step=sent&task=${rt13}`);
+  await expect(page.getByRole("heading", { name: "RT-13 is out" })).toBeVisible();
+  await expect(flow(page).getByText("Certainty re-read · CAMELYON v1.0").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Track it in Team" })).toHaveAttribute(
+    "href",
+    `/team?task=${rt13}`,
+  );
+
+  await page.goto(`${newTask}?step=sent`);
+  await expect(flow(page)).toHaveAttribute("data-step", "kind");
+  await expect(page.getByRole("heading", { name: /is out$/ })).toHaveCount(0);
+});
+
+test("Send puts the created task in the address so a reload keeps it", async ({ page }) => {
+  await page.goto(`${newTask}?scene=slides`);
+  for (const step of ["Reviewers", "What to check", "How it runs", "Send"]) {
+    await flow(page).getByRole("button", { name: "Next" }).click();
+    await expect(flow(page).locator('[aria-current="step"]')).toHaveText(new RegExp(step));
+  }
+  await flow(page).getByRole("button", { name: "Create and notify 2 reviewers" }).click();
+  await expect(page.getByRole("heading", { name: "RT-16 is out" })).toBeVisible();
+  await expect(page).toHaveURL(/task=00000000-0000-4000-8043-000000000016/);
+});
+
 test("Add slides and Preview open as small modals", async ({ page }) => {
   await page.goto(`${newTask}?scene=slides&modal=addslides`);
   const add = page.getByRole("dialog", { name: "Add slides" });

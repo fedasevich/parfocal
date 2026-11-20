@@ -496,7 +496,7 @@ function SlideRow({
         onClick={open}
       >
         <TableCell>
-          <span className="flex min-w-0 items-center gap-3">
+          <span data-testid="slide-name-cell" className="flex min-w-52 items-center gap-3">
             <Link
               {...target}
               data-testid="slide-link"

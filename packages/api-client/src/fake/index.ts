@@ -243,6 +243,7 @@ export {
   bulkSlideRows,
   searchScenario,
   setFakeBulkSlides,
+  setFakeSearchDelay,
   tasksAssignedBy,
   toSlideRow,
 } from "./work-handlers.ts";

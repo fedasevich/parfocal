@@ -32,6 +32,16 @@ test("an object is found by a piece of its path and Enter opens it on the slide"
   await expect(page).not.toHaveURL(/open=palette/);
 });
 
+test("a slow object search says it is searching, then shows what it found", async ({ page }) => {
+  await page.goto("/my-work?searchDelay=1500");
+  const palette = await openPalette(page);
+  await palette.getByRole("combobox").fill("s26-04812 c145");
+  await expect(palette.getByTestId("palette-searching")).toHaveText("Searching slides and objects");
+  await expect(palette.getByText(/Nothing matches/)).toHaveCount(0);
+  await expect(palette.getByRole("option", { name: /C145 on A1/ }).first()).toBeVisible();
+  await expect(palette.getByTestId("palette-searching")).toHaveCount(0);
+});
+
 test("a setting is found by loose letters, shows its keys and opens its section", async ({
   page,
 }) => {

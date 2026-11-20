@@ -5,8 +5,10 @@ import {
   composeValues,
   fromApi,
   overridesOf,
+  reviewsTask,
   saveState,
   shiftPreset,
+  taskDefaultDisplay,
   taskDisplayView,
   toApi,
   withOtherSets,
@@ -15,6 +17,22 @@ import {
 const id = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
 
 const stamp = "2026-10-15T10:00:00+02:00";
+
+test("someone who reviews no slide of the task gets the task default without asking", () => {
+  const task = {
+    display: { defaults: { draw_as: "fill" as const }, locks: { order: "Same for all" } },
+    slides: [{ reviewer_ids: [id(1)] }, { reviewer_ids: [id(2)] }],
+  };
+  assert.equal(reviewsTask(task, id(2)), true);
+  assert.equal(reviewsTask(task, id(3)), false);
+  const shown = taskDefaultDisplay(task);
+  assert.deepEqual(shown.settings, { draw_as: "fill" });
+  assert.equal(shown.preset_id, null);
+  assert.deepEqual(shown.presets, []);
+  assert.deepEqual(taskDisplayView(shown, "RT-1").locks, [
+    { setting: "order", value: "", reason: "Same for all" },
+  ]);
+});
 
 const standing = {
   draw_as: "outline",

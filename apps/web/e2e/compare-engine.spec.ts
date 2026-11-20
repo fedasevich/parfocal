@@ -84,6 +84,13 @@ test("compare from the rail of a slide outside any task keeps the workspace and 
     await expect(engineOn(page, side).locator("canvas").first()).toBeVisible();
   }
   expect(await engineOn(page, "left").getAttribute("data-slide")).toEqual(a1);
+  await expect(page).toHaveURL(/scene=picked/);
+  await expect(page).toHaveURL(/with=/);
+  await expect(page.getByTestId("slide-progress")).toContainText("Comparing 2 slides");
+  await expect(page.getByTestId("slide-progress")).not.toContainText("Opening");
+  await expect(page.getByText("Cytokeratin, marks tumor cells brown")).toHaveCount(0);
+  await expect(page.getByText(/capsule question/)).toHaveCount(0);
+  await expect(page.getByText("The slide you were reading")).toBeVisible();
 
   await page.getByRole("tab", { name: /^Display/ }).click();
   await expect(page).not.toHaveURL(/scene=/);
