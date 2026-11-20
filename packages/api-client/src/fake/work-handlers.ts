@@ -400,7 +400,8 @@ export function createInbox() {
     const matching = mine()
       .map(toItem)
       .filter((item) => kinds.length === 0 || kinds.includes(item.kind))
-      .filter((item) => readParam === null || String(item.read) === readParam);
+      .filter((item) => readParam === null || String(item.read) === readParam)
+      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
     const end = start + limit;
     return {
       notifications: matching.slice(start, end),
