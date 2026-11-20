@@ -475,6 +475,7 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
                 .filter(review_decisions.c.value == DecisionValue.AGREE)
                 .label("agreed"),
                 func.max(review_decisions.c.updated_at).label("latest"),
+                func.grouping(review_decisions.c.task_id).label("total"),
             )
             .join(projects, projects.c.id == review_decisions.c.project_id)
             .where(
@@ -482,13 +483,16 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
                 review_decisions.c.updated_at >= func.now() - WEEK,
                 NOT_SAMPLE,
             )
-            .group_by(review_decisions.c.task_id)
+            .group_by(func.rollup(review_decisions.c.task_id))
         )
     ).all()
-    since = rows[0].since if rows else (await connection.execute(select(since_column))).scalar_one()
-    checked = sum(row.checked for row in rows)
-    agreed = sum(row.agreed for row in rows)
-    busiest = max(rows, key=lambda row: (row.checked, row.latest), default=None)
+    total = next(row for row in rows if row.total)
+    since, checked, agreed = total.since, total.checked, total.agreed
+    busiest = max(
+        (row for row in rows if not row.total),
+        key=lambda row: (row.checked, row.latest),
+        default=None,
+    )
     open_disagreements: int | None = None
     disagreements_task_id: uuid.UUID | None = None
     if adjudicated:
