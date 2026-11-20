@@ -51,6 +51,7 @@ import {
 import type { StillFrame } from "../../viewer/still-frame.ts";
 import { useCaseLoad } from "../../viewer/use-case-load.ts";
 import { useWebglAvailable } from "../../viewer/webgl.ts";
+import type { SlideWorkspace } from "../../viewer/workspace.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { ObjectsSummary, ViewerFrame } from "../review/viewer-frame.tsx";
@@ -91,7 +92,7 @@ import {
   rotationOfView,
   rotationStep,
 } from "./link-camera.ts";
-import { type PaneSlideIds, pickSlide, swapSlides } from "./pane-slides.ts";
+import { type PaneSlideIds, pickSlide, slidesToCompare, swapSlides } from "./pane-slides.ts";
 import { reviewRail } from "./rails.ts";
 import { pairKeyOf, savedOffsetOf, useSavedAlignments } from "./saved-alignments.ts";
 import { grayPixelsOf } from "./thumbnail-pixels.ts";
@@ -128,47 +129,61 @@ function toCompareSlide(slide: ProjectSlide, currentId: string): CompareSlide {
 const linkReference: PaneSide = "left";
 
 type CompareViewProps = {
-  tools: ToolSession;
+  projectId: string;
+  slideId: string;
+  taskId: string | undefined;
+  workspace: SlideWorkspace | undefined;
+  tools: ToolSession | null;
   scene: SceneOf<"compare">;
   rightSlideId?: string | undefined;
   onLeave: (change: {
-    scene?: "objects";
+    scene?: undefined;
     tab?: "objects" | "display" | "comments" | "opinion";
   }) => void;
 };
 
-export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareViewProps) {
+export function CompareView({
+  projectId,
+  slideId,
+  taskId,
+  workspace,
+  tools,
+  scene,
+  rightSlideId,
+  onLeave,
+}: CompareViewProps) {
   const { t } = useLingui();
   const docked = useToolsLayout() === "dock";
-  const { session, projectId, counts } = tools;
+  const counts = tools?.counts;
   const navigate = useNavigate();
   const all = okData(useListProjectSlides(projectId).data) ?? [];
-  const loaded = useCaseLoad(projectId, session.slideId, session.taskId);
+  const loaded = useCaseLoad(projectId, slideId, taskId);
   const load = loaded.state === "ready" ? loaded.load : null;
-  const taskDetail = okData(useGetReviewTask(session.taskId).data);
+  const taskDetail = okData(
+    useGetReviewTask(taskId ?? "", { query: { enabled: taskId !== undefined } }).data,
+  );
+  const reviewTaskId = taskDetail?.kind === "review" ? taskId : undefined;
   const tabCounts = useStageTabCounts({
     projectId,
-    taskId: session.taskId,
-    reviewTaskId: taskDetail?.kind === "review" ? session.taskId : null,
-    slideId: session.slideId,
+    taskId,
+    reviewTaskId: reviewTaskId ?? null,
+    slideId,
   });
   const backToViewer = (change: {
     slideId?: string;
-    workspace?: "review" | "annotate";
+    workspace?: SlideWorkspace;
     tab?: "opinion" | "display";
   }) =>
     void navigate({
       to: "/projects/$projectId/slides/$slideId",
-      params: { projectId, slideId: change.slideId ?? session.slideId },
+      params: { projectId, slideId: change.slideId ?? slideId },
       search: {
-        task: session.taskId,
-        ...(change.workspace ? { workspace: change.workspace } : {}),
+        task: taskId,
+        workspace: change.workspace ?? workspace,
         ...(change.tab ? { tab: change.tab } : {}),
       },
     });
-  const caseSlides = all
-    .filter((slide) => slide.case?.label === session.caseLabel)
-    .map((slide) => toCompareSlide(slide, session.slideId));
+  const caseSlides = slidesToCompare(all, slideId).map((slide) => toCompareSlide(slide, slideId));
   const [chosen, setChosen] = useState<Partial<Record<PaneSide, string | null | undefined>>>({
     left: null,
     right: rightSlideId ?? null,
@@ -195,15 +210,15 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const ids = assignSlides(
     caseSlides.map((slide) => slide.id),
     chosen,
-    { left: session.slideId, right: fallbackRight?.id },
+    { left: slideId, right: fallbackRight?.id },
   );
   const outlineWanted = (side: PaneSide) =>
     layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
   const outlines = {
-    left: useSlideOutline(session.taskId, ids.left, outlineWanted("left")),
-    right: useSlideOutline(session.taskId, ids.right, outlineWanted("right")),
-    bottomLeft: useSlideOutline(session.taskId, ids.bottomLeft, outlineWanted("bottomLeft")),
-    bottomRight: useSlideOutline(session.taskId, ids.bottomRight, outlineWanted("bottomRight")),
+    left: useSlideOutline(reviewTaskId, ids.left, outlineWanted("left")),
+    right: useSlideOutline(reviewTaskId, ids.right, outlineWanted("right")),
+    bottomLeft: useSlideOutline(reviewTaskId, ids.bottomLeft, outlineWanted("bottomLeft")),
+    bottomRight: useSlideOutline(reviewTaskId, ids.bottomRight, outlineWanted("bottomRight")),
   } satisfies Record<PaneSide, SlideOutline>;
   const noOutline = t`This slide has no tumor map`;
   const layerRows = layers.map((row) => {
@@ -215,13 +230,13 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     );
     return { ...row, unavailable };
   });
-  const blinded = useBlindedOn(session.taskId, session.slideId);
+  const blinded = useBlindedOn(taskId, slideId);
   const { cursors: liveCursors, send: sendCursor } = useRoomCursors(
-    session.slideId,
+    slideId,
     okData(useGetMe().data)?.user_id,
     blinded,
   );
-  const homeSide = paneSides.find((side) => ids[side] === session.slideId);
+  const homeSide = paneSides.find((side) => ids[side] === slideId);
   const [shareCursor, setShareCursor] = useState(false);
   const canShareCursor = !blinded && homeSide !== undefined;
   const sendingCursor = shareCursor && canShareCursor;
@@ -503,14 +518,16 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     const slide = slideOn(side);
     return slide ? [{ side, slide, note: slide.note }] : [];
   });
-  const slideLabel = load?.slide?.label ?? session.slideName.split(" · ")[0] ?? "";
+  const slideLabel = load?.slide?.label ?? tools?.session.slideName.split(" · ")[0] ?? "";
   const body = (
     <>
-      <ObjectsSummary
-        slideLabel={slideLabel}
-        counts={counts}
-        added={session.added.map((item) => item.object)}
-      />
+      {tools === null ? null : (
+        <ObjectsSummary
+          slideLabel={slideLabel}
+          counts={tools.counts}
+          added={tools.session.added.map((item) => item.object)}
+        />
+      )}
       <SlidesOnScreenPanel
         slots={slots}
         onChange={setPicking}
@@ -605,18 +622,17 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
 
   return (
     <ViewerFrame
-      session={session}
       counts={counts}
       tool="select"
       topBar={
         <LiveTopBar
           projectId={projectId}
-          slideId={session.slideId}
+          slideId={slideId}
           load={load}
           task={taskDetail}
-          workspace="review"
-          onWorkspace={(workspace) => backToViewer({ workspace })}
-          onOpenSlide={(slideId) => backToViewer({ slideId })}
+          workspace={workspace ?? "review"}
+          onWorkspace={(next) => backToViewer({ workspace: next })}
+          onOpenSlide={(next) => backToViewer({ slideId: next })}
           onSubmit={() => backToViewer({ tab: "opinion" })}
           onResultSets={() => backToViewer({ tab: "display" })}
           percent={null}
@@ -628,14 +644,19 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       }
       railGroups={reviewRail}
       onToolChange={(tool) => {
-        if (tool === "select") onLeave({ scene: "objects" });
+        if (tool === "select") onLeave({ scene: undefined });
       }}
       onCompare={() => setPicking("right")}
       tab="objects"
-      onTabChange={(tab) => onLeave({ scene: "objects", tab: tab as "display" })}
+      onTabChange={(tab) => onLeave({ scene: undefined, tab: tab as "display" })}
       scene={scene}
       tabs={[
-        { value: "objects", label: "Objects", count: counts.total, body },
+        {
+          value: "objects",
+          label: "Objects",
+          count: counts?.total ?? tabCounts.objects ?? 0,
+          body,
+        },
         { value: "display", label: "Display", body: null },
         { value: "comments", label: "Comments", count: tabCounts.comments ?? 0, body: null },
         { value: "opinion", label: "Opinion", body: null },

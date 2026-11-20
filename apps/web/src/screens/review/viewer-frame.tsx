@@ -70,7 +70,7 @@ const tools: RailTool[] = [
 ];
 
 type ViewerFrameProps = {
-  session: ReviewSession;
+  session?: ReviewSession | undefined;
   counts: SlideCounts | undefined;
   tool: string;
   railGroups?: RailTool[][] | undefined;
@@ -147,23 +147,24 @@ export function ViewerFrame({
       data-scene={scene}
       data-tools={toolsLayout}
     >
-      {topBar ?? (
-        <ReviewTop
-          mode="full"
-          session={session}
-          counts={counts}
-          progressSub={progressSub}
-          submitReason={
-            counts?.open
-              ? plural(counts.open, {
-                  one: "# object is still open.",
-                  other: "# objects are still open.",
-                })
-              : undefined
-          }
-          {...(onSubmit ? { onSubmit } : {})}
-        />
-      )}
+      {topBar ??
+        (session === undefined ? null : (
+          <ReviewTop
+            mode="full"
+            session={session}
+            counts={counts}
+            progressSub={progressSub}
+            submitReason={
+              counts?.open
+                ? plural(counts.open, {
+                    one: "# object is still open.",
+                    other: "# objects are still open.",
+                  })
+                : undefined
+            }
+            {...(onSubmit ? { onSubmit } : {})}
+          />
+        ))}
       {banner}
       <div className="relative flex min-h-0 flex-1">
         {docked ? null : (

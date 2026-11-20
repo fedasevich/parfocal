@@ -4,6 +4,17 @@ export type PaneSlideIds = Partial<Record<PaneSide, string | undefined>>;
 
 const sideBySide: readonly PaneSide[] = ["left", "right"];
 
+type CaseSlide = { readonly id: string; readonly case?: { readonly label: string } | null };
+
+export function slidesToCompare<Slide extends CaseSlide>(
+  all: readonly Slide[],
+  slideId: string,
+): Slide[] {
+  const caseLabel = all.find((slide) => slide.id === slideId)?.case?.label;
+  if (caseLabel === undefined) return [...all];
+  return all.filter((slide) => slide.case?.label === caseLabel);
+}
+
 export function pickSlide(
   shown: PaneSlideIds,
   side: PaneSide,
