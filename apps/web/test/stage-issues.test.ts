@@ -6,6 +6,7 @@ import {
   nothingFoundOf,
   othersReviewOf,
   resultMissingOf,
+  reviewerNamesOf,
   signedOffOf,
   stageIssueOf,
 } from "../src/viewer/stage-issues.ts";
@@ -76,6 +77,13 @@ describe("stage issues", () => {
       null,
     );
     assert.equal(signedOffOf(undefined, "a"), null);
+  });
+
+  it("gives an empty name for a slide nobody is assigned to, so the notice can say so", () => {
+    assert.equal(reviewerNamesOf([], "en"), "");
+    assert.equal(reviewerNamesOf(["", " "], "en"), "");
+    assert.equal(reviewerNamesOf(["Lenka", "Simona"], "en"), "Lenka and Simona");
+    assert.equal(reviewerNamesOf(null, "en"), null);
   });
 
   it("names the reviewers of a slide only to someone not assigned to it", () => {

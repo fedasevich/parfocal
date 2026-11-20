@@ -1030,20 +1030,38 @@ async def list_review_tasks(
         mine = select(review_assignments.c.task_id).where(own_assignments(principal))
         statement = statement.where(review_tasks.c.id.in_(mine))
     rows = (await connection.execute(statement.order_by(review_tasks.c.number))).all()
-    counts = {
-        task_id: (slides_count, people)
-        for task_id, slides_count, people in await connection.execute(
-            select(
-                review_assignments.c.task_id,
-                func.count(func.distinct(review_assignments.c.slide_id)),
-                func.count(func.distinct(review_assignments.c.user_id)),
+    task_ids = [row.id for row in rows]
+    slide_counts = dict(
+        (
+            await connection.execute(
+                select(review_task_slides.c.task_id, func.count())
+                .where(review_task_slides.c.task_id.in_(task_ids))
+                .group_by(review_task_slides.c.task_id)
             )
-            .where(
-                review_assignments.c.task_id.in_([row.id for row in rows]),
-                review_assignments.c.released_at.is_(None),
-            )
-            .group_by(review_assignments.c.task_id)
         )
+        .tuples()
+        .all()
+    )
+    people_counts = dict(
+        (
+            await connection.execute(
+                select(
+                    review_assignments.c.task_id,
+                    func.count(func.distinct(review_assignments.c.user_id)),
+                )
+                .where(
+                    review_assignments.c.task_id.in_(task_ids),
+                    review_assignments.c.released_at.is_(None),
+                )
+                .group_by(review_assignments.c.task_id)
+            )
+        )
+        .tuples()
+        .all()
+    )
+    counts = {
+        task_id: (slide_counts.get(task_id, 0), people_counts.get(task_id, 0))
+        for task_id in task_ids
     }
     return [task_of(row, *counts.get(row.id, (0, 0))) for row in rows]
 

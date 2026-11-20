@@ -178,3 +178,11 @@ export function comparisonRows(left: Evaluation, right: Evaluation, decimals = 2
   });
   return rows;
 }
+
+export type ComparisonSlides =
+  | { kind: "same-size"; slides: number }
+  | { kind: "differ"; left: number; right: number };
+
+export function comparisonSlidesOf(left: number, right: number): ComparisonSlides {
+  return left === right ? { kind: "same-size", slides: left } : { kind: "differ", left, right };
+}

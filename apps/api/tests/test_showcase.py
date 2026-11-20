@@ -8,11 +8,14 @@ from typing import Any
 
 import pytest
 from db_support import OWNER_URL, migrated_database, run_sql, with_database
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from parfocal_api.auth import sign_in_user
+from parfocal_api.disagreement_queue import lock_of
 from parfocal_api.evaluation_report import get_evaluation_report
+from parfocal_api.evaluation_versions import reviews_of
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.problems import NotFoundError
 from parfocal_api.project_overview import (
     get_project_overview,
     get_project_scope_options,
@@ -23,6 +26,8 @@ from parfocal_api.project_uploads import get_project_imports, get_upload_batch
 from parfocal_api.review_decisions import ReviewDecisionDraft, list_decisions, save_decision
 from parfocal_api.review_objects import list_review_objects
 from parfocal_api.review_states import State, states_of, task_of
+from parfocal_api.review_tasks import detail_of, list_review_tasks, task_row
+from parfocal_api.reviewer_progress import slides_left_by_reviewer
 from parfocal_api.sample_files import SampleFile
 from parfocal_api.settings import ApiSettings
 from parfocal_api.showcase import (
@@ -65,6 +70,7 @@ from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
     Role,
+    review_task_slides,
     review_tasks,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
@@ -661,6 +667,80 @@ async def test_every_demo_slide_has_the_results_its_model_runs_made(seeded: str)
     assert {str(label) for label, regions, _ in rows if int(str(regions)) > 0} == WITH_REGIONS
     assert {str(label) for label, _, cells in rows if int(str(cells)) > 0} == WITH_CELLS
     assert len(WITH_CELLS) >= len(FORMAT_GALLERY) - 1
+
+
+async def test_the_result_sets_of_one_slide_can_be_told_apart_by_name(seeded: str) -> None:
+    await run_seed(seeded)
+    rows = await run_sql(
+        seeded,
+        "SELECT slide_id, name || ' ' || coalesce(model_version, '') FROM result_sets",
+    )
+    labels = [(str(slide), str(label)) for slide, label in rows]
+    assert len(labels) == len(set(labels))
+    running = await run_sql(
+        seeded,
+        "SELECT name FROM result_sets r JOIN slides s ON s.id = r.slide_id "
+        "WHERE s.label = 'Case ai-running' AND r.status = 'importing'",
+    )
+    assert running
+    assert {str(name) for (name,) in running} == {"Tumour detector rerun"}
+
+
+async def test_every_seeded_task_counts_its_slides_and_slides_left_from_one_source(
+    seeded: str,
+) -> None:
+    await run_seed(seeded)
+    tenant_id, user_id = (
+        await run_sql(
+            seeded,
+            "SELECT t.tenant_id, a.user_id FROM review_tasks t "
+            "JOIN review_assignments a ON a.task_id = t.id "
+            "WHERE t.name = 'Every state review' LIMIT 1",
+        )
+    )[0]
+    principal = MemberPrincipal(
+        "seed:reviewer",
+        uuid.UUID(str(tenant_id)),
+        uuid.UUID(str(user_id)),
+        Role.RESEARCHER,
+        True,
+    )
+    engine = create_engine(seeded)
+    checked = 0
+    names: set[str] = set()
+    try:
+        async with scoped_transaction(
+            engine, DatabaseScope(tenant_id=principal.tenant_id)
+        ) as connection:
+            for project_id in await connection.scalars(
+                select(review_tasks.c.project_id)
+                .where(review_tasks.c.tenant_id == principal.tenant_id)
+                .distinct()
+            ):
+                try:
+                    listed = await list_review_tasks(project_id, principal, connection)
+                except NotFoundError:
+                    continue
+                for task in listed:
+                    row = await task_row(connection, task.id)
+                    detail = await detail_of(connection, principal, row, True)
+                    stored = await connection.scalar(
+                        select(func.count()).where(review_task_slides.c.task_id == task.id)
+                    )
+                    assert task.slide_count == detail.slide_count == stored
+                    left = await slides_left_by_reviewer(connection, task.id)
+                    reviews = await reviews_of(connection, task.id)
+                    assert {row.user_id: row.slides_left for row in reviews.behind} == left
+                    lock = await lock_of(connection, task.id)
+                    assert (lock is None) == (not left)
+                    if lock is not None:
+                        assert lock.slides_left == max(left.values())
+                    checked += 1
+                    names.add(task.name)
+    finally:
+        await engine.dispose()
+    assert checked > 2
+    assert "Every state review" in names
 
 
 async def test_every_seeded_project_with_cells_or_results_has_classes(seeded: str) -> None:

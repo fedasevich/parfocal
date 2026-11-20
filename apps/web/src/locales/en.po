@@ -1837,6 +1837,10 @@ msgstr "{atSeconds}s / {totalSeconds}s"
 msgid "{builtIn} come with Parfocal, {0} made here"
 msgstr "{builtIn} come with Parfocal, {0} made here"
 
+#: src/screens/review/viewer-frame.tsx
+msgid "{cells} in your sample"
+msgstr "{cells} in your sample"
+
 #. placeholder {0}: cells.length
 #: src/screens/review/object-card.tsx
 msgid "{cellsDone} of {0}"
@@ -2492,6 +2496,10 @@ msgstr "<0>Not enough space.</0> This upload needs {0} GB and {projectCode} has 
 #: src/screens/upload/server-check.tsx
 msgid "<0>Not enough space.</0> This upload needs {needed} and the project has {left} left of its {allowance} allowance. Remove some slides from this upload, or ask an admin to raise the allowance."
 msgstr "<0>Not enough space.</0> This upload needs {needed} and the project has {left} left of its {allowance} allowance. Remove some slides from this upload, or ask an admin to raise the allowance."
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "<0>Read only.</0> Nobody is assigned to this slide yet, so you can look but not answer."
+msgstr "<0>Read only.</0> Nobody is assigned to this slide yet, so you can look but not answer."
 
 #: src/viewer/stage-issue-cards.tsx
 msgid "<0>Read only.</0> This slide is assigned to {reviewers}, so you can look but not answer."
@@ -4811,9 +4819,20 @@ msgstr "Change due date"
 
 #. placeholder {0}: otherReport.task_code
 #. placeholder {1}: report.task_code
+#. placeholder {2}: report.task_code
+#. placeholder {3}: slidesNote.left
+#. placeholder {4}: otherReport.task_code
+#. placeholder {5}: slidesNote.right
 #: src/screens/evaluation/report-pages.tsx
-msgid "Change is {0} minus {1}. Both tasks cover the same slides."
-msgstr "Change is {0} minus {1}. Both tasks cover the same slides."
+msgid "Change is {0} minus {1}. {2} has {3} slides and {4} has {5}, so the slide sets differ."
+msgstr "Change is {0} minus {1}. {2} has {3} slides and {4} has {5}, so the slide sets differ."
+
+#. placeholder {0}: otherReport.task_code
+#. placeholder {1}: report.task_code
+#. placeholder {2}: slidesNote.slides
+#: src/screens/evaluation/report-pages.tsx
+msgid "Change is {0} minus {1}. Both tasks have {2} slides."
+msgstr "Change is {0} minus {1}. Both tasks have {2} slides."
 
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Change it"
@@ -12944,6 +12963,10 @@ msgstr "Read in place, not counted: <0>{0}</0> stays on your sources"
 #: src/viewer/stage-issue-cards.tsx
 msgid "Read only."
 msgstr "Read only."
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "Read only. Nobody is assigned to this slide yet."
+msgstr "Read only. Nobody is assigned to this slide yet."
 
 #: src/viewer/stage-issue-cards.tsx
 msgid "Read only. This slide is assigned to {reviewers}."

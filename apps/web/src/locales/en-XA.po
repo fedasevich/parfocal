@@ -1835,6 +1835,10 @@ msgstr ""
 msgid "{builtIn} come with Parfocal, {0} made here"
 msgstr ""
 
+#: src/screens/review/viewer-frame.tsx
+msgid "{cells} in your sample"
+msgstr ""
+
 #. placeholder {0}: cells.length
 #: src/screens/review/object-card.tsx
 msgid "{cellsDone} of {0}"
@@ -2489,6 +2493,10 @@ msgstr ""
 
 #: src/screens/upload/server-check.tsx
 msgid "<0>Not enough space.</0> This upload needs {needed} and the project has {left} left of its {allowance} allowance. Remove some slides from this upload, or ask an admin to raise the allowance."
+msgstr ""
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "<0>Read only.</0> Nobody is assigned to this slide yet, so you can look but not answer."
 msgstr ""
 
 #: src/viewer/stage-issue-cards.tsx
@@ -4809,8 +4817,19 @@ msgstr ""
 
 #. placeholder {0}: otherReport.task_code
 #. placeholder {1}: report.task_code
+#. placeholder {2}: report.task_code
+#. placeholder {3}: slidesNote.left
+#. placeholder {4}: otherReport.task_code
+#. placeholder {5}: slidesNote.right
 #: src/screens/evaluation/report-pages.tsx
-msgid "Change is {0} minus {1}. Both tasks cover the same slides."
+msgid "Change is {0} minus {1}. {2} has {3} slides and {4} has {5}, so the slide sets differ."
+msgstr ""
+
+#. placeholder {0}: otherReport.task_code
+#. placeholder {1}: report.task_code
+#. placeholder {2}: slidesNote.slides
+#: src/screens/evaluation/report-pages.tsx
+msgid "Change is {0} minus {1}. Both tasks have {2} slides."
 msgstr ""
 
 #: src/screens/onboarding/sign-up-screen.tsx
@@ -12934,6 +12953,10 @@ msgstr ""
 
 #: src/viewer/stage-issue-cards.tsx
 msgid "Read only."
+msgstr ""
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "Read only. Nobody is assigned to this slide yet."
 msgstr ""
 
 #: src/viewer/stage-issue-cards.tsx
