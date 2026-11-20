@@ -6944,6 +6944,22 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-20 the owner asked whether slides named like `CMU-1-Saved-1_16.zip` are expected. They are: MIRAX (a .mrxs file with its data folder) and DICOM (a folder of instances) are several files, so they arrive as one zip, and the format gallery seed labels each slide by its fixture file name. The row then reads as a zip, not as a slide. Show such slides by their stem with the format inside (for example MIRAX or DICOM) in the slide row, the viewer title and search, keep the zip only as the file line, and seed the gallery labels the same way, updating the seed tests, the seeded-formats smoke and the model result keys that use the label.
   Done when the project Slides tab, the viewer title and search show the two gallery zips by stem and format on the fake API and after the next reset, and the seed tests pass.
   Depends on TEST-055. Size: S.
+- [ ] PROTO-101 · Every link and page from the walkthrough reaches its screen
+  From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken items 1, 10, 12, 13, 14, 16, 17, 18, 19, 21 and 22. Notification Open links go to a missing /go route, /tasks/id/submitted hangs on an empty slide id, an annotate task opens with mode=guided and mode=cells falls back silently, a finished job opens an empty upload wizard, the PDF preview ignores Esc, home and My work ask for thumbnails and decisions that cannot exist, Compare with RT-1 gives no sign, every tab is named Parfocal, /kpi, /study, /projects/new and several tab values are dead ends, a stale chunk after a deploy hangs on Loading Parfocal, and plurals and pronouns slip.
+  Done when each item has a spec on the fake API that fails before and passes after, and the API ones a DB test.
+  Depends on PROTO-099. Size: M.
+- [ ] PROTO-102 · The viewer keeps work safe and states honest from the walkthrough
+  From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken items 3, 4, 8, 9, 15 and 20. Smart select calls the server embedding as soon as it is armed and on every click with no Good choice and no working Enter, Clear all deletes drawn shapes with no question, the Annotate Objects tab heads shapes with a raw class id and renumbers them after a reload, closing a tool hint writes a setting on slide open, a slide that cannot open keeps saying Opening with every tool on, and read only guided review still coaches the person to answer.
+  Done when each item has a spec or unit test that fails before and passes after, and the deployed smoke passes with no setting write on open.
+  Depends on PROTO-099. Size: M.
+- [ ] PROTO-103 · Reports, co-sign, sign off and adjudication work on the seed
+  From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken items 5, 6, 7 and 11. A clinical report with no tumor cannot pass Staging, a project owner cannot answer a co-sign request because sign out is refused, RT-2 reads signed off on Team but draft in its report, and no seeded task has a workable disagreement queue or adjudication, nor an adjudicator account.
+  Done when DB tests and specs cover a negative node report, the owner co-signing, a signed off task with a signed report, and a seeded queue that an agent account can adjudicate after the next reset.
+  Depends on TEST-053. Size: M.
+- [ ] VIEW-076 · Slides that arrive as a MIRAX or DICOM zip open in the viewer
+  From `docs/results/2026-11-20-deployed-walkthrough.md` (the deployed walkthrough of v0.28.1), broken item 2 and its zip section. CMU-1-Saved-1_16.zip (MIRAX) and CMU-1-JP2K-33005-v2.zip (DICOM) never open: the engine registry has no MIRAX or DICOM opener, the range read of original.zip is refused because the slide has no ranges file, and tile-index.json is missing. Decide between a native browser reader and a converted pyramid made at ingest by the conversion rule the formats ADRs set, record it in an ADR, build it so both gallery slides open and draw on the deployed app, and fold in PROTO-100 so they read by stem and format.
+  Done when both slides open and draw in the browser tests and on the deployed app after the next reset, the seeded-formats smoke stops skipping them, and their cell crops are cut.
+  Depends on PROTO-100. Size: L.
 
 ---
 
