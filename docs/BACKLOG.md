@@ -4959,7 +4959,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   After VIEW-075 (the rest of the viewer runs on the engine stage) three web tests failed: the four-pane compare accessibility spec on the rotation reset buttons (axe target size under 24 pixels), the viewer tools spec that expects the Focus mode link to show the prototype card text, and `onboarding-scenes.test.ts`, whose inventory check still dropped the forgot and reset sign-in scenes that IAM-033 (reset a forgotten password) brought back and listed them in a different order than the inventory.
   Done when `compare-layouts.spec.ts`, `viewer-tools.spec.ts` part 1 and `onboarding-scenes.test.ts` pass.
   Size: S.
-- [ ] TEST-051 · Every seeded AI result comes from real inference
+- [x] TEST-051 · Every seeded AI result comes from real inference
   On 2026-11-18 the owner asked that the seeded data look real, with seeded cells and all results made by real models on the Mac or on Modal within the $30 a month budget. TEST-047 (the demo seed carries real model results made on the owner's Mac) made real cells and regions for test_065, CMU-1-Small-Region and Philips-4 only, and every other seeded result still comes from the drawn shapes in `apps/api/src/parfocal_api/showcase_shapes.py`.
   Run the cell, typer and region models the ML worker wraps over crops of every other seeded slide, on the Mac within the RAM limit or on Modal on demand, store the outputs in `packages/test-fixtures/model-results/` and make `showcase_results.py` import them, so that `showcase_shapes.py` draws nothing that claims to be an AI result. Record each run's time and cost.
   Done when a result file lists every seeded slide with the model, crop, time and cost, a seed test fails if any seeded AI result comes from drawn shapes, and after the next reset the deployed demo shows only real results.
@@ -6654,7 +6654,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Let an expert select any cell from an imported result set or the seed, change its type from the class list or by key, move or reshape its outline, delete it, and change many at once by a lasso or by type. Store each change as an edit on the shared layer with the original kept, as ADR 0237 (annotate tasks on one shared layer) describes, so an AI result is never rewritten in place.
   Done when a browser test changes the type of one seeded cell by key and of several by lasso, reshapes one outline, deletes one, reloads and sees every change, and an API test shows the original result set unchanged.
   Depends on PROTO-029. Size: M.
-- [ ] PROTO-036 · One-click annotation has its model picker and works end to end
+- [x] PROTO-036 · One-click annotation has its model picker and works end to end
   On 2026-11-18 the owner found that the model select for one-click annotations, shown in the frozen mock, is missing, and that one-click annotations do not work at all.
   Add the mock's model picker to the smart select and one-click tools, listing the models the workspace can run with their size and where they run, load the chosen model in the browser or call the worker, and make a click on a nucleus draw an accepted outline on the real slide.
   Done when a browser test picks a model, clicks a nucleus on a fixture slide and accepts an outline that is saved, and the deployed app does the same on a seeded slide.
