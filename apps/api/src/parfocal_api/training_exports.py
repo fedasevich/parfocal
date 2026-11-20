@@ -28,21 +28,24 @@ from parfocal_api.review_tasks import code_of, readable_task
 from parfocal_api.reviewed_export import path_parts
 from parfocal_api.tables import (
     AnnotationKind,
+    ResultSource,
     annotation_versions,
     annotations,
     result_objects,
     result_set_classes,
+    result_sets,
     review_task_slides,
     slides,
 )
 from parfocal_api.task_kinds import annotate_only
 from parfocal_api.taxonomy import ProjectClass
 from parfocal_common.chunk_store import read_chunk
+from parfocal_common.model_runs import model_runs
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import ResultStore
 
 FORMAT = "parfocal-training-dataset"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 MANIFEST = "manifest.json"
 EXPORTED_KINDS = (AnnotationKind.ROI, AnnotationKind.REGION, AnnotationKind.CELL)
 LEFT_OUT_KINDS = (AnnotationKind.MEASUREMENT, AnnotationKind.ARROW, AnnotationKind.TEXT)
@@ -55,6 +58,13 @@ class DatasetOrigin(StrEnum):
     AI_CONFIRMED = "ai-confirmed"
     AI_EDITED = "ai-edited"
     AI_UNCHECKED = "ai-unchecked"
+
+
+class AiDifference(StrEnum):
+    SAME = "same"
+    SHAPE = "shape"
+    CLASS = "class"
+    BOTH = "both"
 
 
 class NothingSignedOffError(ConflictError):
@@ -102,6 +112,10 @@ class ManifestSlide(Strict):
     width: int | None
     height: int | None
     result_set_id: uuid.UUID | None
+    result_set_name: str | None
+    model_name: str | None
+    model_version: str | None
+    source: ResultSource | None
     sign_off: ManifestSignOff
     annotators: list[str]
     objects: dict[DatasetOrigin, int]
@@ -116,7 +130,7 @@ class ManifestTask(Strict):
 
 class Manifest(Strict):
     format: Literal["parfocal-training-dataset"]
-    version: Literal[1]
+    version: Literal[2]
     created_at: datetime
     task: ManifestTask
     coordinates: Literal["level-0-pixels"]
@@ -141,6 +155,8 @@ class Shape:
     author: str | None
     changed_by: str | None
     source: str | None
+    versions: int
+    differs: AiDifference | None
 
 
 @dataclass(frozen=True)
@@ -203,6 +219,8 @@ def qupath_feature(
         "changed_by": shape.changed_by,
         "source": shape.source,
         "class_key": found.key if found else None,
+        "versions": shape.versions,
+        "differs_from_ai": shape.differs.value if shape.differs else None,
     }
     classification = (
         {"name": name, "color": rgb_of(found.colour)} if found else {"name": name} if name else None
@@ -271,6 +289,30 @@ async def ai_shapes(
     return found
 
 
+def rounded(value: Any) -> Any:
+    if isinstance(value, float):
+        return round(value, 6)
+    if isinstance(value, list):
+        return [rounded(item) for item in value]
+    if isinstance(value, dict):
+        return {key: rounded(item) for key, item in value.items()}
+    return value
+
+
+def difference_of(
+    geometry: dict[str, Any], class_id: uuid.UUID | None, source: AiShape | None
+) -> AiDifference | None:
+    if source is None:
+        return None
+    shape_differs = rounded(geometry) != rounded(source.geometry)
+    class_differs = class_id is not None and class_id != source.class_id
+    if shape_differs and class_differs:
+        return AiDifference.BOTH
+    if shape_differs:
+        return AiDifference.SHAPE
+    return AiDifference.CLASS if class_differs else AiDifference.SAME
+
+
 def is_checked(row: Any) -> bool:
     return state_of(row.origin, row.deleted_at is not None) is not CheckState.UNCHECKED
 
@@ -304,6 +346,7 @@ async def slide_objects(
                 annotations.c.origin,
                 annotations.c.source_number,
                 annotations.c.class_id,
+                annotations.c.version,
                 annotations.c.created_by_user_id,
                 annotations.c.deleted_at,
                 func.ST_AsGeoJSON(annotations.c.geometry).label("geojson"),
@@ -332,12 +375,13 @@ async def slide_objects(
             marks += 1
             continue
         source = ai.get((kind, row.source_number)) if row.source_number is not None else None
+        geometry = json.loads(row.geojson)
         shapes.append(
             Shape(
                 str(row.id),
                 kind,
                 ObjectId(LETTERS[kind], row.number, person=kind in PERSON_MADE_AI_KINDS),
-                json.loads(row.geojson),
+                geometry,
                 row.class_id or (source.class_id if source else None),
                 None if row.class_id or source is None else source.class_name,
                 origin,
@@ -346,6 +390,8 @@ async def slide_objects(
                 None
                 if row.source_number is None
                 else ObjectId(LETTERS[kind], row.source_number).text(ascii=True),
+                row.version,
+                difference_of(geometry, row.class_id, source),
             )
         )
     left_out = 0
@@ -366,6 +412,8 @@ async def slide_objects(
                 DatasetOrigin.AI_UNCHECKED,
                 None,
                 None,
+                None,
+                0,
                 None,
             )
         )
@@ -397,8 +445,18 @@ async def signed_off_slides(connection: AsyncConnection, task_id: uuid.UUID) -> 
             slides.c.mpp_y,
             slides.c.width,
             slides.c.height,
+            result_sets.c.name.label("result_set_name"),
+            result_sets.c.source.label("result_set_source"),
+            func.coalesce(model_runs.c.typer, model_runs.c.detector).label("model_name"),
+            func.coalesce(
+                model_runs.c.typer_version,
+                model_runs.c.detector_version,
+                result_sets.c.model_version,
+            ).label("model_version"),
         )
         .join(slides, slides.c.id == review_task_slides.c.slide_id)
+        .outerjoin(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
+        .outerjoin(model_runs, model_runs.c.job_id == result_sets.c.job_id)
         .where(
             review_task_slides.c.task_id == task_id,
             review_task_slides.c.signed_off_at.is_not(None),
@@ -451,6 +509,10 @@ async def dataset(
                 width=slide.width,
                 height=slide.height,
                 result_set_id=slide.result_set_id,
+                result_set_name=slide.result_set_name,
+                model_name=slide.model_name,
+                model_version=slide.model_version,
+                source=slide.result_set_source,
                 sign_off=ManifestSignOff(
                     signed_off_at=slide.signed_off_at,
                     signed_off_by=letters.of(slide.signed_off_by_user_id),
