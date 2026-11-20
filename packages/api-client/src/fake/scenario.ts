@@ -65,6 +65,7 @@ export type ScenarioSlide = {
   file: string;
   sets: ResultSetKey[];
   remote?: string;
+  format?: "mirax" | "dicom";
 };
 
 export type ResultSetKey = "cam" | "sam" | "rev";
@@ -261,7 +262,7 @@ const slide = (
   caseLabel: string | null,
   label: string,
   stain: string,
-  more: Partial<Pick<ScenarioSlide, "state" | "file" | "sets" | "remote">> = {},
+  more: Partial<Pick<ScenarioSlide, "state" | "file" | "sets" | "remote" | "format">> = {},
 ): ScenarioSlide => ({
   id: uuid(5, index),
   project,
@@ -302,6 +303,16 @@ export const slides: ScenarioSlide[] = [
   }),
   slide(22, "P03", "Showcase case", "CMU-1.ndpi", "H&E", { file: "CMU-1.ndpi" }),
   slide(23, "P03", "Showcase case", "Philips-4.tiff", "H&E", { file: "Philips-4.tiff" }),
+  slide(24, "P11", null, "CMU-1-Saved-1_16 (MIRAX)", "H&E", {
+    file: "CMU-1-Saved-1_16.zip",
+    format: "mirax",
+    sets: [],
+  }),
+  slide(25, "P11", null, "CMU-1-JP2K-33005-v2 (DICOM)", "H&E", {
+    file: "CMU-1-JP2K-33005-v2.zip",
+    format: "dicom",
+    sets: [],
+  }),
 ];
 
 export const resultSets: ScenarioResultSet[] = [

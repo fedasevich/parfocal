@@ -5,6 +5,7 @@ from pathlib import Path
 
 import httpx2
 import pytest
+from fixture_support import fixture_path
 
 from parfocal_common.ingest import fixture_folder, fixture_original_key
 from parfocal_common.object_store import ObjectStore, StorageLocation
@@ -100,8 +101,34 @@ def test_a_fixture_missing_locally_is_read_from_the_shared_fixtures_folder() -> 
 
 
 def test_fixture_folders_fit_the_edge_folder_rule() -> None:
-    assert fixture_folder("CMU-1-Saved-1_16.zip") == "fixture-slides/CMU-1-Saved-1_16-zip/"
+    assert fixture_folder("CMU-1-Saved-1_16.zip") == (
+        "fixture-slides/CMU-1-Saved-1_16-zip-pyramid-tiff/"
+    )
     assert fixture_original_key("synthetic-zlib.ome.tiff") == (
         "fixture-slides/synthetic-zlib-ome-tiff/original.tiff"
     )
     assert Path(fixture_folder("Philips-4.tiff")).name == "Philips-4-tiff"
+
+
+@pytest.mark.db
+def test_a_zipped_mirax_fixture_is_published_as_a_pyramid_tiff_beside_no_archive() -> None:
+    mirax = "CMU-1-Saved-1_16.zip"
+    local = fixture_path(mirax)
+
+    async def published() -> tuple[list[Outcome], dict[str, bytes]]:
+        async with httpx2.AsyncClient(timeout=60) as http:
+            store = ObjectStore(STORAGE, http)
+            await fresh(store)
+            outcomes = await send_fixtures(store, [mirax], [local.parent])
+            stored = {key: await store.get_object(key) for key in await store.list_keys("")}
+            return outcomes, stored
+
+    outcomes, stored = asyncio.run(published())
+    assert [outcome.state for outcome in outcomes] == ["stored"]
+    files = names_in(stored, mirax)
+    assert DERIVED | {"original.tiff", "tile-index.json"} <= files
+    assert not any(name.endswith(".zip") for name in files)
+    facts = json.loads(stored[f"{fixture_folder(mirax)}facts.json"])
+    assert (facts["format"], facts["variant"]) == ("mirax", "pyramid-tiff")
+    assert facts["file_bytes"] == len(stored[fixture_original_key(mirax)])
+    assert stored[fixture_original_key(mirax)][:4] == b"II+\x00"

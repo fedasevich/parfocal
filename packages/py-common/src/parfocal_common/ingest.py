@@ -265,16 +265,23 @@ FIXTURES_PREFIX = "fixtures/"
 FIXTURE_SLIDES_PREFIX = "fixture-slides/"
 
 
+PYRAMID_SUFFIX = ".pyramid.tiff"
+
+
 def fixture_slug(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "-", name)[:64]
 
 
+def served_fixture(name: str) -> str:
+    return f"{name}{PYRAMID_SUFFIX}" if name.lower().endswith(".zip") else name
+
+
 def fixture_folder(name: str) -> str:
-    return f"{FIXTURE_SLIDES_PREFIX}{fixture_slug(name)}/"
+    return f"{FIXTURE_SLIDES_PREFIX}{fixture_slug(served_fixture(name))}/"
 
 
 def fixture_original_key(name: str) -> str:
-    return f"{fixture_folder(name)}original{original_suffix(name)}"
+    return f"{fixture_folder(name)}original{original_suffix(served_fixture(name))}"
 
 
 def folder_of(key: str) -> str:

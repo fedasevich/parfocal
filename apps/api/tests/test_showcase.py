@@ -47,6 +47,7 @@ from parfocal_api.showcase_results import (
     CELLS_MODEL,
     MODEL_RESULTS,
     REGIONS_MODEL,
+    gallery_label,
     model_cells,
     model_regions,
 )
@@ -105,7 +106,10 @@ SUFFIX_FORMATS = {
 
 
 OPENABLE = ("CMU-1-Small-Region.svs", "Philips-4.tiff")
-DEMO_LABELS = (VIEWER_SAMPLE, *(slide.file for slide in FORMAT_GALLERY))
+DEMO_LABELS = (
+    VIEWER_SAMPLE,
+    *(gallery_label(slide.file, slide.format) for slide in FORMAT_GALLERY),
+)
 WITH_REGIONS = {label for label in DEMO_LABELS if model_regions(label) is not None}
 WITH_CELLS = {label for label in DEMO_LABELS if model_cells(label) is not None}
 

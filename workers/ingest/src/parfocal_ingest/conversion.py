@@ -31,9 +31,11 @@ LITTLE_ENDIAN = {"name": "bytes", "configuration": {"endian": "little"}}
 
 class Trigger(StrEnum):
     JPEG2000_DECODE_BUDGET = "jpeg2000-decode-budget"
+    MIRAX_OR_DICOM = "mirax-or-dicom"
 
 
-FIRED: frozenset[Trigger] = frozenset()
+FIRED: frozenset[Trigger] = frozenset({Trigger.MIRAX_OR_DICOM})
+WITHOUT_BROWSER_READER = frozenset({Format.MIRAX, Format.DICOM})
 
 
 class Chunks(StrEnum):
@@ -69,6 +71,12 @@ def trigger_for(pyramid: Pyramid, fired: Collection[Trigger] = FIRED) -> Trigger
         and pyramid.levels[0].stored.compression == "jpeg2000"
     ):
         return Trigger.JPEG2000_DECODE_BUDGET
+    return None
+
+
+def format_trigger(found: Format, fired: Collection[Trigger] = FIRED) -> Trigger | None:
+    if Trigger.MIRAX_OR_DICOM in fired and found in WITHOUT_BROWSER_READER:
+        return Trigger.MIRAX_OR_DICOM
     return None
 
 

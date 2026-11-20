@@ -9,6 +9,7 @@ from parfocal_api.showcase import FORMAT_GALLERY, VIEWER_SAMPLE
 from parfocal_api.showcase_results import (
     MODEL_RESULTS,
     folder_of,
+    gallery_label,
     model_cells,
     model_regions,
 )
@@ -87,3 +88,19 @@ def test_real_regions_exist_only_where_the_tumour_model_ran(label: str) -> None:
 def test_a_slide_without_files_has_no_real_results(tmp_path: Path) -> None:
     assert model_cells("Leica-1.scn", tmp_path) is None
     assert model_regions("Leica-1.scn", tmp_path) is None
+
+
+def test_zipped_gallery_slides_read_by_stem_and_format_and_keep_their_results() -> None:
+    shown = {
+        slide.file: gallery_label(slide.file, slide.format)
+        for slide in FORMAT_GALLERY
+        if slide.file.endswith(".zip")
+    }
+    assert shown == {
+        "CMU-1-Saved-1_16.zip": "CMU-1-Saved-1_16 (MIRAX)",
+        "CMU-1-JP2K-33005-v2.zip": "CMU-1-JP2K-33005-v2 (DICOM)",
+    }
+    for file, label in shown.items():
+        assert folder_of(label) == folder_of(file)
+    assert model_cells(shown["CMU-1-JP2K-33005-v2.zip"]) is not None
+    assert gallery_label("CMU-1.ndpi", "hamamatsu-ndpi") == "CMU-1.ndpi"

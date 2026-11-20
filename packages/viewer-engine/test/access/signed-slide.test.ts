@@ -14,6 +14,7 @@ import {
   slideIndexFromLevelTable,
 } from "../../src/access/signed-slide.ts";
 import { type Fetcher, TileAccess } from "../../src/access/tile-access.ts";
+import { createDefaultPixelSourceRegistry } from "../../src/index.ts";
 import { UnsupportedFormatError } from "../../src/pixel-source/types.ts";
 
 const TABLE = {
@@ -345,6 +346,37 @@ describe("signedOpenRequest", () => {
     });
     assert.equal(request.formatId, "generic-tiff");
   });
+
+  for (const format of ["mirax", "dicom"]) {
+    test(`opens the pyramid TIFF ingest made from a ${format} slide`, async () => {
+      const request = await signedOpenRequest({
+        access: access(),
+        basePath: "/tiles/s/",
+        baseUrl: "https://app.test/",
+        original: "original.tiff",
+        identifiedFormat: format,
+        fetcher: tableFetcher([]),
+      });
+      assert.equal(request.formatId, "generic-tiff");
+      assert.equal(request.url, "https://app.test/tiles/s/original.tiff");
+    });
+
+    test(`keeps ${format} for an archive no pyramid was made from`, async () => {
+      const request = await signedOpenRequest({
+        access: access(),
+        basePath: "/tiles/s/",
+        baseUrl: "https://app.test/",
+        original: "original.zip",
+        identifiedFormat: format,
+        fetcher: tableFetcher([]),
+      });
+      assert.equal(request.formatId, format);
+      await assert.rejects(
+        createDefaultPixelSourceRegistry().open(request),
+        UnsupportedFormatError,
+      );
+    });
+  }
 });
 
 describe("createSlideAccess", () => {

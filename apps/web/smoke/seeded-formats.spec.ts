@@ -15,11 +15,8 @@ const openedInTheBrowser = [
   ["argos-avs", "Argos-1.avs"],
   ["generic-tiff", "CMU-1.tiff"],
   ["ome-tiff", "synthetic-zlib.ome.tiff"],
-] as const;
-
-const notInTheBrowserYet = [
-  ["mirax", "CMU-1-Saved-1_16.zip"],
-  ["dicom", "CMU-1-JP2K-33005-v2.zip"],
+  ["mirax", "CMU-1-Saved-1_16 (MIRAX)"],
+  ["dicom", "CMU-1-JP2K-33005-v2 (DICOM)"],
 ] as const;
 
 test.describe.configure({ timeout: 600_000 });
@@ -71,10 +68,4 @@ test.describe("seeded fixture slides open in the deployed viewer", () => {
     expect(refused, refused.join("\n")).toEqual([]);
     expect(seen.problems, report(seen.problems)).toEqual([]);
   });
-
-  for (const [format, label] of notInTheBrowserYet) {
-    test(`a seeded ${format} slide opens and serves its bytes`, () => {
-      test.skip(true, `${label} needs a ${format} pixel source in the viewer engine first`);
-    });
-  }
 });
