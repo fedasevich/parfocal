@@ -1,4 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import { useListProjects } from "@parfocal/api-client";
 import { BrandMark } from "@parfocal/ui/components/brand-mark";
 import { Button } from "@parfocal/ui/components/button";
 import {
@@ -9,8 +10,6 @@ import {
   DevStatus,
   DevToggle,
   DevZone,
-  HudReadouts,
-  PerformanceHud,
 } from "@parfocal/ui/components/developer-drawer";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
@@ -42,8 +41,10 @@ import {
   nucleiChipFor,
   syntheticCounts,
 } from "../../lab/synthetic-data.ts";
+import { destinations } from "../../shell/destinations.ts";
+import { useGoTo } from "../../shell/router-link.tsx";
 import { type OutlineModeChoice, useOutlineMode } from "../../viewer/outline-mode.ts";
-import { SlideStill } from "../review/slide-still.tsx";
+import { okData } from "../placeholder.tsx";
 import { BenchSection } from "./bench-section.tsx";
 import {
   benchParameters,
@@ -57,8 +58,6 @@ import {
   routeName,
   sampleSlides,
   urlParameters,
-  vivReadouts,
-  webgpuReadouts,
 } from "./developer-data.ts";
 
 type Values = Record<string, string | boolean>;
@@ -205,22 +204,25 @@ function ReferenceTable({ rows }: { rows: string[][] }) {
 
 const live = (text: ReactNode) => <DevStatus live>{text}</DevStatus>;
 
-type DeveloperScreenProps = {
+type DeveloperPanelProps = {
   section: DeveloperSection;
   renderer: Renderer;
   onSection: (section: DeveloperSection) => void;
   onRenderer: (renderer: Renderer) => void;
   onClose: () => void;
+  className?: string;
 };
 
-export function DeveloperScreen({
+export function DeveloperPanel({
   section,
   renderer,
   onSection,
   onRenderer,
   onClose,
-}: DeveloperScreenProps) {
+  className,
+}: DeveloperPanelProps) {
   const { t } = useLingui();
+  const notYet = t`Not connected yet. These controls show sample values.`;
 
   const [values, setValues] = useState<Values>({});
   const lab = useLabSettings();
@@ -266,7 +268,6 @@ export function DeveloperScreen({
   const gpu = renderer === "webgpu";
   const route = routeName(renderer, text("backend", "webgl"));
   const sample = text("sample", "IDR OME-Zarr");
-  const hud = on("hud", true);
   const nucleiCount = countOf(lab.nuclei);
   const nucleiChip = nucleiChipFor(nucleiCount);
   const fieldChip = fieldChipFor(text("grid", "256"));
@@ -299,11 +300,7 @@ export function DeveloperScreen({
             onChange={(value) => onRenderer(value as Renderer)}
           />
           <span className="text-body-sm leading-[1.45] text-fg-dim">{rendererHints[renderer]}</span>
-          <DevRow
-            label={t`deck.gl backend`}
-            disabled={renderer !== "deck"}
-            {...(renderer === "deck" ? {} : { hint: t`Only for deck.gl 9.4` })}
-          >
+          <DevRow label={t`deck.gl backend`} disabled hint={notYet}>
             {seg(
               "backend",
               "deck.gl backend",
@@ -317,13 +314,13 @@ export function DeveloperScreen({
         </DevZone>
         <DevZone
           title={t`Viv switches`}
-          off={!viv}
+          off
           end={
             <StatusTag tone={viv ? "accent" : "neutral"}>
               <Trans>Viv only</Trans>
             </StatusTag>
           }
-          note={viv ? undefined : t`Pick Viv to change these.`}
+          note={notYet}
         >
           {tog("vivzarr", t`Read Zarr on the main thread`, false, t`Off decodes in a worker`)}
           {tog("vivtex", t`Float textures`, true)}
@@ -374,7 +371,11 @@ export function DeveloperScreen({
           )}
           {tog("vector", t`Show the motion vector`, false)}
         </DevZone>
-        <DevZone title={t`Mouse wheel`} note={t`Overrides the doctor's Settings while testing.`}>
+        <DevZone
+          title={t`Mouse wheel`}
+          off
+          note={t`Not connected yet. Change the mouse wheel in Settings.`}
+        >
           {seg(
             "wheel",
             t`Mouse wheel`,
@@ -419,7 +420,7 @@ export function DeveloperScreen({
       );
       return (
         <>
-          <DevZone title={t`Open a slide`}>
+          <DevZone title={t`Open a slide`} off note={notYet}>
             <DevRow label={t`From`}>
               {seg(
                 "src",
@@ -480,6 +481,7 @@ export function DeveloperScreen({
           </DevZone>
           <DevZone
             title={t`Sample slides`}
+            off
             end={
               <span className="text-caption text-fg-faint">
                 <Trans>20 samples</Trans>
@@ -501,10 +503,7 @@ export function DeveloperScreen({
               {bigSlides.map(item)}
             </div>
           </DevZone>
-          <DevZone
-            title={t`Files`}
-            note={t`Annotations and reviews on this slide, for tests and fixtures.`}
-          >
+          <DevZone title={t`Files`} off note={notYet}>
             <div className="flex flex-wrap gap-2">
               <Button size="sm">
                 <Icon name="download" />
@@ -563,14 +562,11 @@ export function DeveloperScreen({
               }
             />
           </DevRow>
-          <DevRow label={t`Fill opacity`}>
+          <DevRow label={t`Fill opacity`} disabled hint={notYet}>
             <Level label={t`Fill opacity`} value={35} text="35%" />
           </DevRow>
         </DevZone>
-        <DevZone
-          title={t`CAMELYON16 annotations`}
-          note={t`Real tumor outlines from CAMELYON16, drawn over the slide.`}
-        >
+        <DevZone title={t`CAMELYON16 annotations`} off note={notYet}>
           <div className="flex flex-wrap gap-2">
             {camelyonSlides.map((name) => (
               <Button key={name} size="sm">
@@ -581,9 +577,8 @@ export function DeveloperScreen({
               <Trans>Clear</Trans>
             </Button>
           </div>
-          {live(t`T009 loaded · 14 rings · 2,210 vertices · 61 KB`)}
         </DevZone>
-        <DevZone title={t`Channels`}>
+        <DevZone title={t`Channels`} off note={notYet}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
             {[
               ["Channel 0", "ch0"],
@@ -600,7 +595,7 @@ export function DeveloperScreen({
       </>
     ),
     heatmap: () => (
-      <DevZone title={t`Heatmap`}>
+      <DevZone title={t`Heatmap`} off note={notYet}>
         {tog("heat", t`Show the heatmap`, true)}
         <DevRow label={t`Source`}>
           {seg(
@@ -661,7 +656,7 @@ export function DeveloperScreen({
     ),
     models: () => (
       <>
-        <DevZone title={t`Segmentation model`}>
+        <DevZone title={t`Segmentation model`} off note={notYet}>
           <DevRow
             label={t`Provider`}
             hint={t`PathoSAM ViT-B, SlimSAM-77, flood fill, MONAI NuClick or watershed`}
@@ -680,7 +675,7 @@ export function DeveloperScreen({
           />
           <ProgressBar value={62} label={t`SlimSAM-77 weights · 38 MB`} valueText="62%" />
         </DevZone>
-        <DevZone title={t`Auto segmentation`}>
+        <DevZone title={t`Auto segmentation`} off note={notYet}>
           <DevRow label={t`Intent`}>
             {seg(
               "intent",
@@ -729,16 +724,8 @@ export function DeveloperScreen({
             true,
             t`Resumes 200 ms after the slide stops`,
           )}
-          {tog("prewarm", t`Prewarm when idle`, true, t`Starts after 350 ms without input`)}
         </DevZone>
-        <DevZone
-          title={t`MONAI server`}
-          end={
-            <StatusTag tone="ok">
-              <Trans>Connected · 3 models</Trans>
-            </StatusTag>
-          }
-        >
+        <DevZone title={t`MONAI server`} off note={notYet}>
           <DevRow label={t`Address`}>
             <Input aria-label={t`MONAI address`} className="font-mono" defaultValue="/monai" />
           </DevRow>
@@ -779,7 +766,7 @@ export function DeveloperScreen({
     ),
     typing: () => (
       <>
-        <DevZone title={t`Cell typing`}>
+        <DevZone title={t`Cell typing`} off note={notYet}>
           <DevRow label={t`Typer`}>
             {seg(
               "typer",
@@ -816,7 +803,7 @@ export function DeveloperScreen({
           <DevRow label={t`Display`} hint={t`Off, mark, fade, bands or map`}>
             <ConfidenceDisplay />
           </DevRow>
-          <DevRow label={t`Words`}>
+          <DevRow label={t`Words`} disabled hint={notYet}>
             {seg(
               "words",
               t`Words`,
@@ -828,23 +815,15 @@ export function DeveloperScreen({
               "plain",
             )}
           </DevRow>
-          <DevRow label={t`Tumor cutoff`}>
+          <DevRow label={t`Tumor cutoff`} disabled hint={notYet}>
             <Input aria-label={t`Tumor cutoff`} className="w-28 font-mono" defaultValue="0.20" />
-          </DevRow>
-          <DevRow label={t`Calibration`}>
-            <StatusTag tone="ok">
-              <Trans>Calibrated · ECE 0.031</Trans>
-            </StatusTag>
-            <DevStatus>
-              <Trans>sure 14,102 · likely 3,410 · unsure 726</Trans>
-            </DevStatus>
           </DevRow>
         </DevZone>
       </>
     ),
     job: () => (
       <>
-        <DevZone title={t`Whole-slide job`}>
+        <DevZone title={t`Whole-slide job`} off note={notYet}>
           <DevRow label={t`Scope`}>
             {seg(
               "scope",
@@ -917,18 +896,12 @@ export function DeveloperScreen({
             </Button>
           </div>
         </DevZone>
-        <DevZone title={t`Running`} highlight>
-          <ProgressBar value={38} label={t`Tile 712 of 1,880, tumor first`} valueText="38%" />
-          <DevStatus>
-            <Trans>41,220 cells so far · 3.1 tiles a second · about 6 min left</Trans>
-          </DevStatus>
-        </DevZone>
       </>
     ),
     bench: () => <BenchSection route={route} />,
     hud: () => (
       <>
-        <DevZone title={t`HUD`}>
+        <DevZone title={t`HUD`} note={t`The live numbers show in the HUD over the open slide.`}>
           {tog("hud", t`Show the HUD`, true, t`Refreshes every 250 ms`)}
           <DevRow label={t`Corner`}>
             {seg(
@@ -942,7 +915,7 @@ export function DeveloperScreen({
               "tl",
             )}
           </DevRow>
-          <DevRow label={t`Frame probe`}>
+          <DevRow label={t`Frame probe`} disabled hint={notYet}>
             {seg(
               "probe",
               t`Frame probe`,
@@ -954,20 +927,6 @@ export function DeveloperScreen({
               "off",
             )}
           </DevRow>
-        </DevZone>
-        <DevZone title={t`Readouts on the Viv route`}>
-          <HudReadouts boxes={vivReadouts} />
-        </DevZone>
-        <DevZone
-          title={t`Only on the WebGPU route`}
-          off={!gpu}
-          end={
-            <StatusTag tone={gpu ? "accent" : "neutral"}>
-              <Trans>WebGPU only</Trans>
-            </StatusTag>
-          }
-        >
-          <HudReadouts boxes={webgpuReadouts} />
         </DevZone>
       </>
     ),
@@ -1007,69 +966,84 @@ export function DeveloperScreen({
     ),
   };
 
-  const corner = text("corner", "tl");
+  return (
+    <DeveloperDrawer
+      onClose={onClose}
+      {...(className ? { className } : {})}
+      nav={
+        <DeveloperNav
+          groups={developerNav}
+          value={section}
+          onValueChange={(value) => onSection(value as DeveloperSection)}
+        />
+      }
+      footer={
+        <>
+          <i className="size-2 rounded-full bg-ok" />
+          <span data-testid="developer-footer">
+            <Trans>
+              {route} · {nucleiCount.toLocaleString("en-US")} synthetic nuclei
+            </Trans>
+          </span>
+        </>
+      }
+    >
+      {bodies[section]()}
+    </DeveloperDrawer>
+  );
+}
+
+type DeveloperScreenProps = Omit<DeveloperPanelProps, "className">;
+
+export function DeveloperScreen(props: DeveloperScreenProps) {
+  const goTo = useGoTo();
+  const projects = okData(useListProjects().data) ?? [];
   return (
     <main className="relative h-screen overflow-hidden bg-canvas">
       <header className="flex h-11 items-center gap-2 border-b border-line bg-chrome px-3 text-body-sm text-fg-dim">
         <BrandMark className="size-5" />
         <span>
-          <Trans>Full viewer</Trans>
+          <Trans>Developer mode</Trans>
         </span>
       </header>
-      <div className="absolute inset-x-0 top-11 bottom-0" aria-hidden="true" inert>
-        <SlideStill
-          view={{ kind: "whole" }}
-          camera={null}
-          onCameraChange={() => undefined}
-          regionDecisions={{}}
-          bare
-          minimap={false}
-          hint={false}
-          className="h-full"
-        />
-      </div>
-      {hud ? (
-        <PerformanceHud
-          route={route}
-          summary={t`60 fps · frame 6.2 ms`}
-          className={cn(
-            corner === "tr" && "right-[736px] left-auto",
-            corner === "bl" && "top-auto bottom-4",
-          )}
-          lines={[
-            ["source", t`ome-zarr · 6.4 Gpx · 9 levels`],
-            ["render", t`2.1 ms · 412 tile loads`],
-            ["nuclei", t`18,240 drawn of 100,000`],
-            ["net", t`182 ms · decode 4.2 ms · 6 in flight`],
-          ]}
-        />
-      ) : null}
-      <DeveloperDrawer
-        onClose={onClose}
-        nav={
-          <DeveloperNav
-            groups={developerNav}
-            value={section}
-            onValueChange={(value) => onSection(value as DeveloperSection)}
-          />
-        }
-        footer={
-          <>
-            <i className="size-2 rounded-full bg-ok" />
-            <span>
-              <Trans>
-                {route} · {sample} · 9 levels · 100,000 nuclei
-              </Trans>
-            </span>
-            <span className="flex-1" />
-            <span>
-              <Trans>60 fps</Trans>
-            </span>
-          </>
-        }
+      <section
+        data-testid="developer-intro"
+        className="absolute top-11 bottom-0 left-0 grid content-start gap-4 overflow-y-auto p-8 md:right-[720px]"
       >
-        {bodies[section]()}
-      </DeveloperDrawer>
+        <h1 className="font-semibold text-page-title text-fg">
+          <Trans>Developer mode</Trans>
+        </h1>
+        <p className="max-w-prose text-body text-fg-dim">
+          <Trans>
+            These settings are saved in this browser and apply to every slide you open. To watch
+            them change a slide, open one and pick Developer mode in the search palette, or press
+            Ctrl+Shift+D. The drawer then stays over the panel until you close it.
+          </Trans>
+        </p>
+        <h2 className="font-semibold text-lead text-fg">
+          <Trans>Open a project</Trans>
+        </h2>
+        {projects.length === 0 ? (
+          <p className="text-body text-fg-dim">
+            <Trans>No projects yet.</Trans>
+          </p>
+        ) : (
+          <ul data-testid="developer-projects" className="grid gap-1">
+            {projects.map((project) => (
+              <li key={project.id}>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => void goTo(destinations.project(project.id))}
+                >
+                  {project.code} · {project.name}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <DeveloperPanel {...props} />
     </main>
   );
 }

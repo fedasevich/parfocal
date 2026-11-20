@@ -53,6 +53,35 @@ test("the controls change the stored lab settings", async ({ page }) => {
   });
 });
 
+test("the developer page lists real projects and its buttons act", async ({ page }) => {
+  await page.goto("/developer");
+  await expect(page.getByRole("heading", { name: "Developer mode", level: 1 })).toBeVisible();
+  const projects = page.getByTestId("developer-projects").getByRole("button");
+  await expect(projects.first()).toBeVisible();
+  await expect(page.getByTestId("developer-footer")).toContainText("100,000 synthetic nuclei");
+  await page
+    .getByRole("radiogroup", { name: "Renderer" })
+    .getByRole("radio", { name: "WebGPU" })
+    .click();
+  expect(await stored(page)).toMatchObject({ renderer: "webgpu" });
+  await page.getByRole("button", { name: "Back to Viv" }).click();
+  expect(await stored(page)).toMatchObject({ renderer: "viv" });
+  await page
+    .getByRole("navigation", { name: "Developer sections" })
+    .getByRole("button", { name: "Benchmark" })
+    .click();
+  await page.getByRole("button", { name: "Run pan sweep" }).click();
+  await expect(page.getByText("Open a slide in the viewer to run the pan sweep")).toBeVisible();
+  await page.goto("/developer?section=job");
+  await expect(page.getByRole("group").filter({ hasText: "Start" }).first()).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  await page.goto("/developer");
+  await projects.first().click();
+  await expect(page).toHaveURL(/\/projects\//);
+});
+
 test("a doctor gets no drawer from the address or the keyboard", async ({ page }) => {
   await page.goto("/developer?as=LM");
   await expect(page.getByTestId("developer-refused")).toBeVisible();

@@ -76,15 +76,24 @@ test("Measure shows only on a slide and arms the ruler", async ({ page }) => {
   await expect(page).toHaveURL(/tool=ruler/);
 });
 
+test("a doctor gets no developer commands in the palette", async ({ page }) => {
+  await page.goto("/?as=LM");
+  const palette = await openPalette(page);
+  await palette.getByRole("combobox").fill("developer mode");
+  await expect(palette.getByRole("option", { name: /^All results/ })).toBeVisible();
+  await expect(
+    palette.getByRole("option", { name: /^(Developer mode|Turn developer mode)/ }),
+  ).toHaveCount(0);
+});
+
 test("lab actions appear only once developer mode is on", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?as=DH");
   let palette = await openPalette(page);
   await palette.getByRole("combobox").fill("benchmark");
   await expect(palette.getByRole("option", { name: /^Benchmark/ })).toHaveCount(0);
   await expect(palette.getByText("Lab", { exact: true })).toHaveCount(0);
   await palette.getByRole("combobox").fill("developer mode");
-  await expect(palette.getByRole("option").first()).toHaveText(/Turn developer mode on/);
-  await page.keyboard.press("Enter");
+  await palette.getByRole("option", { name: /Turn developer mode on/ }).click();
   await expect(palette).toHaveCount(0);
   palette = await openPalette(page);
   await palette.getByRole("combobox").fill("benchmark");
@@ -95,5 +104,5 @@ test("lab actions appear only once developer mode is on", async ({ page }) => {
   await palette.waitFor({ state: "detached" });
   palette = await openPalette(page);
   await palette.getByRole("combobox").fill("developer mode");
-  await expect(palette.getByRole("option").first()).toHaveText(/Turn developer mode off/);
+  await expect(palette.getByRole("option", { name: /Turn developer mode off/ })).toBeVisible();
 });

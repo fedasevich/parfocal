@@ -29,6 +29,8 @@ export type PaletteContext = {
   projectId: string;
   onSlide: boolean;
   developerMode: boolean;
+  developerAllowed: boolean;
+  openDeveloper: (section?: string) => void;
   go: (href: string) => void;
   measure: () => void;
   openNotifications: () => void;
@@ -110,7 +112,9 @@ function settingEntries(ctx: PaletteContext): PaletteEntry[] {
     keywords: ["hints", "explanations", "notes", "tips", "reset", "coach", "settings"],
     run: ctx.showAllHints,
   };
-  return [...rows, shortcuts, hints, developer];
+  return ctx.developerAllowed
+    ? [...rows, shortcuts, hints, developer]
+    : [...rows, shortcuts, hints];
 }
 
 function actionEntries(ctx: PaletteContext): PaletteEntry[] {
@@ -206,8 +210,18 @@ function actionEntries(ctx: PaletteContext): PaletteEntry[] {
 }
 
 function labEntries(ctx: PaletteContext): PaletteEntry[] {
-  if (!ctx.developerMode) return [];
-  return developerNav.flatMap((group) =>
+  if (!ctx.developerAllowed) return [];
+  const drawer: PaletteEntry = {
+    id: "developer-drawer",
+    group: "Lab",
+    icon: "gear",
+    label: "Developer mode",
+    keys: keysOf("developer"),
+    keywords: ["developer", "lab", "drawer", "renderer", "culling"],
+    run: () => ctx.openDeveloper(),
+  };
+  if (!ctx.developerMode) return [drawer];
+  const sections = developerNav.flatMap((group) =>
     group.items.map(
       (item): PaletteEntry => ({
         id: `lab-${item.value}`,
@@ -215,10 +229,11 @@ function labEntries(ctx: PaletteContext): PaletteEntry[] {
         icon: "gear",
         label: item.label,
         keywords: ["developer", "lab", group.title],
-        run: () => ctx.go(destinations.developer(item.value)),
+        run: () => ctx.openDeveloper(item.value),
       }),
     ),
   );
+  return [drawer, ...sections];
 }
 
 export function paletteEntries(ctx: PaletteContext): PaletteEntry[] {

@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dial
 import { useParams, useRouter, useRouterState } from "@tanstack/react-router";
 import { type KeyboardEvent, useState } from "react";
 import { useHintsSeen } from "../hints/hints-seen.ts";
+import { isSlidePath, openDeveloperDrawer } from "../lab/developer-drawer-state.ts";
+import { useDeveloperAllowed } from "../lab/use-developer-allowed.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "./destinations.ts";
 import { setDeveloperMode, useDeveloperMode } from "./developer-mode.ts";
@@ -138,6 +140,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
   const params = useParams({ strict: false });
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const developerMode = useDeveloperMode();
+  const developerAllowed = useDeveloperAllowed();
   const hints = useHintsSeen();
   const projects = okData(useListProjects().data) ?? [];
   const trimmed = query.trim();
@@ -155,6 +158,12 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
     projectId: params.projectId ?? projects[0]?.id ?? "",
     onSlide: /^\/projects\/[^/]+\/slides\/[^/]+$/.test(pathname),
     developerMode,
+    developerAllowed,
+    openDeveloper: (section) => {
+      close();
+      if (isSlidePath(pathname)) openDeveloperDrawer(section);
+      else void goTo(destinations.developer(section));
+    },
     go: (href) => {
       close();
       void goTo(href);
