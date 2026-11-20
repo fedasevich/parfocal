@@ -2,6 +2,7 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { problemMediaType } from "../problem.ts";
 import { projectSlideRows, toSlideResultSets } from "./project-handlers.ts";
 import { toReviewObjects } from "./review-handlers.ts";
+import { annotateStubTaskId } from "./scenario-review.ts";
 import { fakeViewerIssue } from "./viewer-scene.ts";
 import { reviewTaskDetailOf } from "./work-handlers.ts";
 
@@ -33,6 +34,7 @@ export const viewerIssueHandlers = (): RequestHandler[] => [
   http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
     const issue = fakeViewerIssue();
     if (issue !== "noresults" && issue !== "withdrawn") return undefined;
+    if (params.taskId === annotateStubTaskId) return undefined;
     const detail = reviewTaskDetailOf(params.taskId);
     if (issue === "withdrawn") {
       return HttpResponse.json({

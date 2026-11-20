@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
-import { ToolRail, ToolRailButton, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
+import { ToolRail, ToolRailGroup } from "@parfocal/ui/components/tool-rail-button";
 import { TopStack, TopStackProvider } from "@parfocal/ui/components/top-stack";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OutlineTier } from "../aiseg/prompt-fallback.ts";
@@ -48,7 +48,6 @@ import { engineWheelMode, navigationEvent, readNavigation } from "../devices/nav
 import { createPenDoubleTap, createToolHistory } from "../devices/pen-touch.ts";
 import { applyMainCalibration } from "../devices/stage-calibration.ts";
 import { GpuWaitNotice } from "../gpu/gpu-wait-notice.tsx";
-import { toolHintId, useHintsSeen } from "../hints/hints-seen.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -95,6 +94,7 @@ import { StageMeasurementCard } from "./stage-measurement-card.tsx";
 import { StageDockProvider, useStageMeasurementsValue } from "./stage-measurements.tsx";
 import { StageNotices } from "./stage-notices.tsx";
 import { StageOpening } from "./stage-opening.tsx";
+import { StageRailButton } from "./stage-rail-button.tsx";
 import type { StageTabCounts } from "./stage-tab-counts.ts";
 import { StageTips } from "./stage-tips.tsx";
 import { stageToolOf } from "./stage-tools.ts";
@@ -103,7 +103,6 @@ import { threadAnchorPoint } from "./thread-target.ts";
 import { firstGrant, type Grant, grantFor, type SlideStorageNote } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
-import { toolHintText } from "./tool-hint-text.ts";
 import { usePanelKey, usePanHide } from "./use-pan-hide.ts";
 import { useSelectionClass } from "./use-selection-class.ts";
 import { useStageDevices } from "./use-stage-devices.ts";
@@ -113,7 +112,7 @@ import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
 import { type SelectionArea, selectionArea, zoomTargetArea } from "./viewer-keys.ts";
-import { railHasTool, type SlideWorkspace, showsCountPanel, workspaceSetups } from "./workspace.ts";
+import { railHasTool, type SlideWorkspace, setupOf, showsCountPanel } from "./workspace.ts";
 
 type Phase =
   | { readonly state: "loading" }
@@ -194,6 +193,7 @@ export function SlideStage({
   workspace = "annotate",
   annotateTask = null,
   layerKnown = true,
+  readOnly = false,
   onOpenSlide,
   onStorage,
   inspector,
@@ -206,6 +206,7 @@ export function SlideStage({
   taskId?: string;
   annotateTask?: AnnotateTask | null;
   layerKnown?: boolean;
+  readOnly?: boolean;
   onOpenSlide?: (slideId: string) => void;
   onStorage?: (note: SlideStorageNote) => void;
   areas?: readonly SlideAreaEntry[];
@@ -228,6 +229,7 @@ export function SlideStage({
       workspace={workspace}
       annotateTask={annotateTask}
       layerKnown={layerKnown}
+      readOnly={readOnly}
       onOpenSlide={onOpenSlide}
       onStorage={onStorage}
       inspector={inspector}
@@ -238,6 +240,8 @@ export function SlideStage({
 }
 
 const noCounts: StageTabCounts = {};
+
+const keepDocument = () => {};
 
 function OpenedSlide({
   slideId,
@@ -250,6 +254,7 @@ function OpenedSlide({
   workspace,
   annotateTask,
   layerKnown,
+  readOnly,
   onOpenSlide,
   onStorage,
   onRetry,
@@ -263,6 +268,7 @@ function OpenedSlide({
   taskId: string | undefined;
   annotateTask: AnnotateTask | null;
   layerKnown: boolean;
+  readOnly: boolean;
   onOpenSlide: ((slideId: string) => void) | undefined;
   onStorage: ((note: SlideStorageNote) => void) | undefined;
   areas: readonly SlideAreaEntry[];
@@ -291,10 +297,9 @@ function OpenedSlide({
     host.current = node;
     setHostNode(node);
   }, []);
-  const setup = workspaceSetups[workspace];
+  const setup = setupOf(workspace, readOnly);
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
-  const hintsSeen = useHintsSeen();
   const [addingResults, setAddingResults] = useState(false);
   const heatmapChoices = useHeatmapChoices();
   const [resultPreview, setResultPreview] = useState<{
@@ -692,25 +697,15 @@ function OpenedSlide({
   }, [session, brightness]);
 
   useFrameMonitor(hostNode, session?.shownRoute, appFrameReporter);
-  const railButtons = (item: (typeof setup.rail)[number][number]) => {
-    const stageTool = stageToolOf(item.tool);
-    const hint = hintsSeen.seen.has(toolHintId(item.tool)) ? toolHintText(item.tool) : undefined;
-    return (
-      <ToolRailButton
-        key={item.tool}
-        {...(hint === undefined ? {} : { hint })}
-        icon={item.icon}
-        label={item.label}
-        tipSide={toolsLayout === "dock" ? "top" : "right"}
-        ai={item.ai ?? false}
-        {...(item.action === undefined ? {} : { action: item.action })}
-        data-tool={item.tool}
-        className={toolsLayout === "dock" ? undefined : "[@media(max-height:760px)]:size-7"}
-        pressed={tool === stageTool}
-        onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
-      />
-    );
-  };
+  const railButtons = (item: (typeof setup.rail)[number][number]) => (
+    <StageRailButton
+      key={item.tool}
+      item={item}
+      tool={tool}
+      dock={toolsLayout === "dock"}
+      onTool={(next) => setTool(next ?? restingTool)}
+    />
+  );
   const compareButton =
     projectId === undefined ? null : (
       <StageCompareButton
@@ -755,6 +750,7 @@ function OpenedSlide({
                 data-renderer-route={session?.shownRoute}
                 data-tool={tool}
                 data-workspace={workspace}
+                data-access={readOnly ? "read-only" : "edit"}
                 data-tools={toolsLayout}
                 data-layer={sharedTaskId === null ? "slide" : "shared"}
                 data-drag={setup.dragBehaviour}
@@ -894,9 +890,9 @@ function OpenedSlide({
                       stage={hostNode}
                       active={tool === "select"}
                       document={annotations}
-                      onDocumentChange={setAnnotations}
-                      onCommit={saved.commit}
-                      onEditText={(id) => textControl.current?.edit(id)}
+                      onDocumentChange={readOnly ? keepDocument : setAnnotations}
+                      {...(readOnly ? {} : { onCommit: saved.commit })}
+                      onEditText={(id) => (readOnly ? undefined : textControl.current?.edit(id))}
                       onSelectionChange={setSelectedIds}
                       onMarquee={onAiMarquee}
                       pinRegistry={pinRegistry}
@@ -1024,7 +1020,7 @@ function OpenedSlide({
                       {workspace === "annotate" ? (
                         <LayersPanel
                           document={annotations}
-                          onApply={saved.apply}
+                          onApply={readOnly ? keepDocument : saved.apply}
                           classes={classes}
                           areas={areas}
                           target={saved.target}

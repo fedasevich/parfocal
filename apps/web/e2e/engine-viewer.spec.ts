@@ -55,7 +55,24 @@ for (const [name, path] of [
     await page.mouse.up();
     await expect.poll(() => cameraOf(page)).not.toBe(zoomed);
   });
+}
 
+test("someone not assigned measures but gets no comment tool", async ({ page }) => {
+  await page.goto(fullViewer);
+  const stage = await ready(page);
+  await expect(stage).toHaveAttribute("data-access", "read-only");
+  await page.keyboard.press("l");
+  await expect(stage).toHaveAttribute("data-tool", "ruler");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("c");
+  await expect(stage).not.toHaveAttribute("data-tool", "comment");
+});
+
+for (const [name, path] of [
+  ["full viewer in a task", objectsViewer],
+  ["guided review", objectsGuided],
+  ["annotate task", annotateTaskViewer],
+] as const) {
   test(`the ${name} measures with the ruler and arms select and comment`, async ({ page }) => {
     await page.goto(path);
     const stage = await ready(page);

@@ -10319,6 +10319,10 @@ msgstr ""
 msgid "No announcements are showing."
 msgstr ""
 
+#: ../../packages/ui/src/components/slide-done-card.tsx
+msgid "No answer"
+msgstr ""
+
 #: ../../packages/ui/src/components/progress-meter.tsx
 msgid "No answers yet"
 msgstr ""
@@ -12814,6 +12818,10 @@ msgstr ""
 #. placeholder {0}: sizeText(usage.in_place_bytes)
 #: src/screens/admin/storage.tsx
 msgid "Read in place, not counted: <0>{0}</0> stays on your sources"
+msgstr ""
+
+#: src/viewer/stage-issue-cards.tsx
+msgid "Read only."
 msgstr ""
 
 #: src/viewer/stage-issue-cards.tsx
@@ -17260,6 +17268,10 @@ msgstr ""
 msgid "This task is signed off, so the mapping is locked."
 msgstr ""
 
+#: src/screens/refusals.ts
+msgid "This task was withdrawn, so nothing can be changed. You can look at it read only."
+msgstr ""
+
 #: src/viewer/stage-issue-cards.tsx
 msgid "This task was withdrawn."
 msgstr ""
@@ -18841,6 +18853,14 @@ msgstr ""
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "You can look at the slide meanwhile. Regions join the list as they are found, and the view never moves under you."
+msgstr ""
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "You can look at this layer but not change it."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "You can look at this slide but not change it."
 msgstr ""
 
 #. placeholder {0}: signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : t`Nobody can yet.`

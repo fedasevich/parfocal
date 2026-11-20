@@ -110,7 +110,14 @@ import {
   toSharedAiObjects,
 } from "./shared-layer-handlers.ts";
 import { fakeView } from "./view.ts";
+import { fakeViewerIssue } from "./viewer-scene.ts";
 import { toReviewTaskDetail, toTaskStates } from "./work-handlers.ts";
+
+const annotateWithdrawnAt = "2026-10-16T09:30:00Z";
+
+const viewerPerson = () => people[fakeView().viewer];
+
+const annotateOtherExpert = () => (fakeView().viewer === "TB" ? people.SM : people.TB);
 
 const taskById = (taskId: string) =>
   [...reviewTasks, rt16, rt17].find((task) => task.id === taskId);
@@ -666,11 +673,19 @@ export function reviewHandlers(): RequestHandler[] {
           slide_count: 2,
           reviewer_count: 1,
           blind_first: annotateBlindFirst(),
+          ...(fakeViewerIssue() === "withdrawn"
+            ? {
+                withdrawn_at: annotateWithdrawnAt,
+                withdrawn_by_user_id: toReviewTaskDetail(rt13).created_by_user_id,
+              }
+            : {}),
           slides: [annotateTaskSlides.withResults, annotateTaskSlides.byHand].map((slideId) => ({
             slide_id: slideId,
             result_set_id: toSharedAiObjects(annotateStubTaskId, slideId).result_set_id,
             run_set_ids: fakeRunSetIds(annotateStubTaskId, slideId),
-            reviewer_ids: [people[fakeView().viewer].id],
+            reviewer_ids: [
+              fakeViewerIssue() === "unassigned" ? annotateOtherExpert().id : viewerPerson().id,
+            ],
           })),
         });
       const extra = [rt13, rt16, rt17].find((task) => task.id === params.taskId);
