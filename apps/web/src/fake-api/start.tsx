@@ -3,6 +3,7 @@ import {
   scenario,
   sessionLockHandlers,
   setFakeAiStreaming,
+  setFakeBestScene,
   setFakeBulkSlides,
   setFakeConnectModelScene,
   setFakeJobsScene,
@@ -56,6 +57,7 @@ export async function startFakeApi(
   setFakeAiStreaming(search["stream"] === "1");
   setFakeViewerIssue(search["issue"]);
   setFakeRefusal(search["refuse"]);
+  setFakeBestScene(search["best"]);
   setFakeBulkSlides(Number(search["bulk"] ?? 0) || 0);
   setFakeSearchDelay(Number(search["searchDelay"] ?? 0) || 0);
   const sessionLock = scope === "all" ? sessionLockHandlers() : [];

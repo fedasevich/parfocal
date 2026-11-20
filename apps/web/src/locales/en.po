@@ -4280,8 +4280,12 @@ msgid "Best"
 msgstr "Best"
 
 #: src/annotations/smart-layer.tsx
-msgid "Best is not answering yet, Good outlined this view"
-msgstr "Best is not answering yet, Good outlined this view"
+msgid "Best cannot outline this view, Good outlined it"
+msgstr "Best cannot outline this view, Good outlined it"
+
+#: src/annotations/smart-layer.tsx
+msgid "Best's GPU is not answering, Good outlined this view. Click again to ask Best again"
+msgstr "Best's GPU is not answering, Good outlined this view. Click again to ask Best again"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Big slides"
@@ -10494,6 +10498,10 @@ msgstr "no events, run it again"
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "No files yet."
 msgstr "No files yet."
+
+#: src/annotations/smart-layer.tsx
+msgid "No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again"
+msgstr "No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again"
 
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "no key"
@@ -16982,6 +16990,10 @@ msgstr "The server could not place these files"
 msgid "The server is fetching {0}. They are checked and published like any upload."
 msgstr "The server is fetching {0}. They are checked and published like any upload."
 
+#: src/annotations/smart-layer.tsx
+msgid "The server refused Best here, Good outlined this view"
+msgstr "The server refused Best here, Good outlined this view"
+
 #: ../../packages/ui/src/components/viewer-notices.tsx
 msgid "The server refused them, so a reload shows the last saved version."
 msgstr "The server refused them, so a reload shows the last saved version."
@@ -19107,6 +19119,10 @@ msgstr "You see what {0} sees until you move the slide"
 #: src/screens/clinical-report/steps.tsx
 msgid "You send the report to a colleague instead of signing it yourself. "
 msgstr "You send the report to a colleague instead of signing it yourself. "
+
+#: src/annotations/smart-layer.tsx
+msgid "You stopped waiting for Best, Good outlined this view. Click again to ask Best again"
+msgstr "You stopped waiting for Best, Good outlined this view. Click again to ask Best again"
 
 #: src/screens/review/guided-review.tsx
 msgid "You submitted this slide. Changes are saved and {otherReviewer} is told."

@@ -5,6 +5,7 @@ import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
 import { passwordSignInHandlers } from "./auth-handlers.ts";
+import { bestEmbeddingHandlers } from "./best-embedding-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { caseReportHandlers, cosignRequestHandlers } from "./case-report-handlers.ts";
 import { clinicalReportHandlers } from "./clinical-handlers.ts";
@@ -49,6 +50,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
   faker.seed(fakeDataSeed);
   return [
     ...statusHandlers(),
+    ...bestEmbeddingHandlers(),
     ...runStreamHandlers(),
     ...viewerIssueHandlers(),
     ...draftHandlers(),
@@ -107,6 +109,7 @@ export {
   toInvitePreview,
 } from "./admin-handlers.ts";
 export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.ts";
+export { type FakeBestScene, setFakeBestScene } from "./best-embedding-handlers.ts";
 export { resetSlideEdits } from "./case-handlers.ts";
 export { clinicalCaseId, resetFakeCaseReports } from "./case-report-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";

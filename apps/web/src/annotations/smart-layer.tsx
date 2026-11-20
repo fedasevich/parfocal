@@ -18,7 +18,7 @@ import {
   type SmartSession,
   type SmartSnapshot,
 } from "../aiseg/smart-session.ts";
-import type { EncoderSource } from "../aiseg/view-embeddings.ts";
+import type { BestFallback, EncoderSource } from "../aiseg/view-embeddings.ts";
 import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
@@ -427,6 +427,18 @@ export function SmartLayer({
     height: Math.abs(corners.b.y - corners.a.y),
   });
 
+  const fallback =
+    encoderSource === null || encoderSource === "asking" || encoderSource === "server"
+      ? null
+      : encoderSource;
+  const fallbackText: Record<BestFallback, string> = {
+    unsendable: t`Best cannot outline this view, Good outlined it`,
+    refused: t`The server refused Best here, Good outlined this view`,
+    offline: t`Best's GPU is not answering, Good outlined this view. Click again to ask Best again`,
+    "gave-up": t`No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again`,
+    cancelled: t`You stopped waiting for Best, Good outlined this view. Click again to ask Best again`,
+  };
+
   return (
     <>
       <svg
@@ -487,9 +499,14 @@ export function SmartLayer({
           >
             {hoverOn ? t`Hover preview on` : t`Hover preview off`}
           </button>
-          {tier === "best" && encoderSource === "browser" ? (
-            <span data-testid="smart-encoder-fallback" role="status" className={contextChip}>
-              {t`Best is not answering yet, Good outlined this view`}
+          {tier === "best" && fallback !== null ? (
+            <span
+              data-testid="smart-encoder-fallback"
+              data-reason={fallback}
+              role="status"
+              className={contextChip}
+            >
+              {fallbackText[fallback]}
             </span>
           ) : null}
           {snapshot.phase === "thinking" || snapshot.message !== null ? (

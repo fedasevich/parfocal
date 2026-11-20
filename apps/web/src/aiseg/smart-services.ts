@@ -53,12 +53,34 @@ export function modelsUrl(): string {
 
 async function loadFakeServices(context: SmartServicesContext): Promise<SmartServices> {
   const { createFakeReader, createFakeSam } = await import("./fake-sam.ts");
-  return {
-    reader: createFakeReader(context.slide),
-    sam: createFakeSam(),
-    plan: (preset) => Promise.resolve(planPresetPatch([{ downsample: 1 }], null, preset)),
-    close: () => undefined,
+  const reader = createFakeReader(context.slide);
+  const sam = createFakeSam();
+  const plan = (preset: ScalePresetId) =>
+    Promise.resolve(planPresetPatch([{ downsample: 1 }], null, preset));
+  const { slideId } = context;
+  if (!serverFirst(context) || slideId === undefined) {
+    return { reader, sam, plan, close: () => undefined };
+  }
+  const encoderSource = createEncoderSource();
+  const best = withViewEmbeddings(
+    { ...sam, adopt: (id: string) => Promise.resolve({ id, ms: 1, evicted: [] }) },
+    {
+      views: createViewEmbeddings(),
+      slideId,
+      slide: context.slide,
+      downsampleOf: () => 1,
+      onSource: (source) => encoderSource.set(source),
+    },
+  );
+  const windowed: SmartReader = {
+    async read(query, signal) {
+      const read = await reader.read(query, signal);
+      const { patch } = read;
+      const key = [patch.level, patch.x, patch.y, patch.width, patch.height].join("|");
+      return { ...read, patch: { ...patch, key } };
+    },
   };
+  return { reader: windowed, sam: best, plan, encoderSource, close: () => undefined };
 }
 
 async function loadRealServices(context: SmartServicesContext): Promise<SmartServices> {

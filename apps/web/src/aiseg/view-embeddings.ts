@@ -1,6 +1,11 @@
 import type { GpuWaiting, ViewToEmbed } from "@parfocal/api-client";
 import type { SamClient, SamEncoded } from "@parfocal/viewer-engine";
-import { type GpuCancel, serverGpuCancel, untilGpuAnswers } from "../gpu/gpu-wait.ts";
+import {
+  GpuCallCancelledError,
+  type GpuCancel,
+  serverGpuCancel,
+  untilGpuAnswers,
+} from "../gpu/gpu-wait.ts";
 import type { PresetPatchReader } from "./patch-reader.ts";
 import {
   decodeFloat16,
@@ -12,23 +17,30 @@ import {
 export const viewEncoder = "pathosam-vit-l-histopathology-fp32";
 export const minViewSide = 16;
 export const maxViewSide = 4096;
-export const viewTimeoutMs = 6000;
-export const viewRetryAfterMs = 20_000;
+export const viewShowWaitAfterMs = 8000;
+export const viewGiveUpMs = 180_000;
 
-export type EncoderSource = "server" | "browser";
+export type BestFallback = "unsendable" | "refused" | "offline" | "gave-up" | "cancelled";
 
-export type ViewEmbeddingPost = (slideId: string, view: ViewToEmbed) => Promise<ArrayBuffer>;
+export type EncoderSource = "asking" | "server" | BestFallback;
+
+export type ViewAnswer =
+  | { readonly embedding: Float32Array<ArrayBuffer> }
+  | { readonly fallback: BestFallback };
+
+export type ViewEmbeddingPost = (
+  slideId: string,
+  view: ViewToEmbed,
+  signal: AbortSignal,
+) => Promise<ArrayBuffer>;
 
 export interface ViewEmbeddings {
-  embedding(slideId: string, view: ViewToEmbed): Promise<Float32Array<ArrayBuffer> | null>;
+  embedding(slideId: string, view: ViewToEmbed): Promise<ViewAnswer>;
 }
 
 export interface ViewEmbeddingsOptions {
   readonly post?: ViewEmbeddingPost;
-  readonly timeoutMs?: number;
-  readonly retryAfterMs?: number;
-  readonly now?: () => number;
-  readonly wait?: (ms: number) => Promise<void>;
+  readonly giveUpMs?: number;
 }
 
 export interface EncoderSourceSignal {
@@ -44,11 +56,25 @@ export interface SlideSize {
 
 export type ViewSam = Pick<SamClient, "encode" | "adopt">;
 
+export class BestRefusedError extends Error {
+  readonly reason: "refused" | "offline";
+
+  constructor(reason: "refused" | "offline") {
+    super(reason === "refused" ? "The server refused Best" : "Best's GPU is not answering");
+    this.name = "BestRefusedError";
+    this.reason = reason;
+  }
+}
+
+const reasonOfStatus = (status: number): "refused" | "offline" =>
+  status >= 500 || status === 429 ? "offline" : "refused";
+
 export function postViewEmbedding(
   fetcher: typeof fetch = (input, init) => fetch(input, init),
   cancelCall: GpuCancel = serverGpuCancel,
+  showAfterMs: number = viewShowWaitAfterMs,
 ): ViewEmbeddingPost {
-  return (slideId, view) =>
+  return (slideId, view, outside) =>
     untilGpuAnswers(
       "encoder",
       async (call, signal) => {
@@ -61,43 +87,41 @@ export function postViewEmbedding(
           signal,
         });
         if (response.status === 202) return { waiting: (await response.json()) as GpuWaiting };
-        if (!response.ok) throw new Error("The server did not embed the view");
+        if (!response.ok) throw new BestRefusedError(reasonOfStatus(response.status));
         if (response.headers.get("Parfocal-Encoder") !== viewEncoder) {
-          throw new Error("The server embedded the view with another encoder");
+          throw new BestRefusedError("refused");
         }
         return { answered: await response.arrayBuffer() };
       },
       cancelCall,
+      { showAfterMs, signal: outside },
     );
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 export function createViewEmbeddings(options: ViewEmbeddingsOptions = {}): ViewEmbeddings {
   const post = options.post ?? postViewEmbedding();
-  const timeoutMs = options.timeoutMs ?? viewTimeoutMs;
-  const retryAfterMs = options.retryAfterMs ?? viewRetryAfterMs;
-  const now = options.now ?? (() => Date.now());
-  const wait = options.wait ?? sleep;
-  let pausedUntil = 0;
+  const giveUpMs = options.giveUpMs ?? viewGiveUpMs;
 
   return {
     async embedding(slideId, view) {
-      if (now() < pausedUntil) return null;
-      const answered = post(slideId, view).then(
-        (body) => {
-          if (body.byteLength !== serverEmbeddingValues * 2) return null;
-          pausedUntil = 0;
-          return decodeFloat16(body);
-        },
-        () => null,
-      );
-      const first = await Promise.race([answered, wait(timeoutMs).then(() => "late" as const)]);
-      if (first === "late" || first === null) {
-        pausedUntil = now() + retryAfterMs;
-        return null;
+      const controller = new AbortController();
+      let gaveUp = false;
+      const timer = setTimeout(() => {
+        gaveUp = true;
+        controller.abort();
+      }, giveUpMs);
+      try {
+        const body = await post(slideId, view, controller.signal);
+        if (body.byteLength !== serverEmbeddingValues * 2) return { fallback: "refused" };
+        return { embedding: decodeFloat16(body) };
+      } catch (error) {
+        if (gaveUp) return { fallback: "gave-up" };
+        if (error instanceof GpuCallCancelledError) return { fallback: "cancelled" };
+        if (error instanceof BestRefusedError) return { fallback: error.reason };
+        return { fallback: "offline" };
+      } finally {
+        clearTimeout(timer);
       }
-      return first;
     },
   };
 }
@@ -146,13 +170,22 @@ export function withViewEmbeddings<S extends ViewSam>(sam: S, context: ViewEmbed
     if (parsed === null || parsed.slideId !== context.slideId) return null;
     const downsample = context.downsampleOf(parsed.window.level);
     const view = downsample === undefined ? null : viewOf(parsed.window, downsample, context.slide);
+    if (view === null) {
+      context.onSource?.("unsendable");
+      return null;
+    }
     try {
-      const embedding = view === null ? null : await context.views.embedding(parsed.slideId, view);
-      const adopted = embedding === null ? null : await sam.adopt(id, embedding, "vit-l");
-      context.onSource?.(adopted === null ? "browser" : "server");
+      context.onSource?.("asking");
+      const answer = await context.views.embedding(parsed.slideId, view);
+      if ("fallback" in answer) {
+        context.onSource?.(answer.fallback);
+        return null;
+      }
+      const adopted = await sam.adopt(id, answer.embedding, "vit-l");
+      context.onSource?.("server");
       return adopted;
     } catch {
-      context.onSource?.("browser");
+      context.onSource?.("unsendable");
       return null;
     }
   }
