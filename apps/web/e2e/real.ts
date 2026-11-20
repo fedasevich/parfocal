@@ -244,6 +244,47 @@ async function slideWithTiles(page: Page): Promise<FoundSlide> {
   throw new Error("No slide in a project the user owns has a file the viewer can open");
 }
 
+export interface SlidePair {
+  project: string;
+  left: string;
+  right: string;
+  rightLabel: string;
+}
+
+interface PairSlide {
+  id: string;
+  label: string;
+  case: { label: string } | null;
+}
+
+export async function slidePairWithTiles(page: Page): Promise<SlidePair> {
+  if (!onRealApi) {
+    return {
+      project: "00000000-0000-4000-8003-000000000007",
+      left: "00000000-0000-4000-8005-000000000001",
+      right: "00000000-0000-4000-8005-000000000002",
+      rightLabel: "A2",
+    };
+  }
+  for (const project of await openProjects(page)) {
+    const slides = await ok<PairSlide[]>(page, "GET", `/api/projects/${project.id}/slides`);
+    const withTiles: PairSlide[] = [];
+    for (const slide of slides) {
+      if (await hasTiles(page, slide.id)) withTiles.push(slide);
+    }
+    for (const left of withTiles) {
+      const right = withTiles.find(
+        (other) =>
+          other.id !== left.id && (left.case === null || other.case?.label === left.case.label),
+      );
+      if (right === undefined) continue;
+      if (!(await opensInViewer(page, project.id, left.id))) continue;
+      return { project: project.id, left: left.id, right: right.id, rightLabel: right.label };
+    }
+  }
+  throw new Error("No project has two slides of one case with files the viewer can open");
+}
+
 async function createTask(
   page: Page,
   found: FoundSlide,
