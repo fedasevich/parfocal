@@ -4,6 +4,13 @@ Every decision the owner has answered, newest first. Open ones are in [decisions
 
 ## Answers of 2026-11-20
 
+You answered decisions 166 to 170 in chat on 2026-11-20 with "Yes, all recommended".
+
+- Decision 166 (which task carries training data from reviewed AI objects), option A, as recommended. Both kinds of task feed one export: a signed off review task becomes a final layer that the existing dataset builder reads (PROTO-118, a signed off review task becomes a final layer).
+- Decision 167 (who settles two different outlines for one object), option A. The adjudicator picks an outline or draws a new one, below a per task overlap threshold whose starting value is measured in PROTO-116 (reviewers' outlines that differ reach the queue).
+- Decision 168 (which training format comes next), option A. COCO JSON beside the patch tiles (PROTO-121, COCO as a format of the patch export).
+- Decision 169 (what a dataset version is), option A. A frozen, write once manifest and GeoJSON with a number and checksum, with patches cut again on demand (PROTO-115, a dataset page with filters and stored versions).
+- Decision 170 (which objects go into a dataset by default), option A. Only objects a person checked: agreed, edited and added. Unsure and open objects are left out and counted.
 - Decision 131 (the two Kaggle downloads) is done. You downloaded CryoNuSeg and Lizard to `~/.cache/parfocal/datasets/`, their sizes and checksums are pinned in `workers/ml` and both loaders of MLEVAL-010 (loaders for datasets behind a sign-in) read them.
 - Decision 95 (the Zitadel login service user) is done. The login service user `parfocal-login` exists and the Modal secret `parfocal-api-login` is live, so IAM-027 (real sign-up and sign-in from the app's own screens) needs only its agent test run on app.parfocal.eu.
 - Decision 164 (whether the viewer becomes one shell on one route), option A. In your words, "build the whole migration, make it as good as possible, i'm getting lost in the app already". The 16 step migration of `docs/results/2026-11-20-viewer-state-machine.html` is on the board as PROTO-093 to PROTO-099 (the viewer migration), built in order.
