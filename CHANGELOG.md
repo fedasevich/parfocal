@@ -2,6 +2,26 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.31.0 (2026-11-20)
+
+### Features
+
+- PROTO-108: Open the developer drawer over the viewer from the palette, real /developer page
+- PROTO-109: Offer the training dataset and the patches in the Export menu
+
+### Fixes
+
+- PROTO-105: Type the contrast spec argument and re-extract merged messages
+
+### Docs
+
+- PROTO-108: Log the developer drawer from the palette
+- PROTO-109: Log the training dataset export buttons
+
+### Other
+
+- PROTO-109: Claim the training dataset export buttons
+
 ## v0.30.0 (2026-11-20)
 
 ### Features
