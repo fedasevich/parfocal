@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- From the side session with the owner: decision 131 done, CryoNuSeg and Lizard downloaded, pinned and read by the MLEVAL-010 loaders (974ee98f, 74669bb8, 16 dataset tests pass). Decision 95 done, the login service user parfocal-login and Modal secret parfocal-api-login are live, IAM-027 needs only its agent test run. Both removed from the Later list.
 - Production touch: released and deployed v0.27.2, GPU pools now unpinned by ADR 0407 and the GPU wait fields reach the logs (OPS-038).
 - TEST-053 merged from agent: the seed gives the agent account a review task, an annotate task, the signed case report, one finished upload job of its own into Showcase draft report, and an unfiled broken slide Missing file.svs that opens with slide file not found. Four DB tests prove each. Moved to review until the next reset shows them on the deployed app.
 - Owner asked to let GPUs run anywhere so they start earlier. PARFOCAL_GPU_REGION now sets every GPU pool's region at deploy time, empty means any region, ADR 0407 (GPU pools run in any region until real patient data arrives). OPS-014 must set it to eu before real data.

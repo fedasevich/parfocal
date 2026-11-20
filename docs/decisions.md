@@ -13,8 +13,6 @@ None. All five steps of 2026-11-19 are done and checked.
 ## Later
 
 - **The US bucket `parfocal-dev`.** It still serves CI's test fixtures and local dev, so deleting it now would break CI. OPS-037 (nothing reads the US bucket) moves the readers to the EU bucket first, then asks you for one delete. It saves about $0.57 a month.
-- **The Zitadel login user** (decision 95, option A). A short session with you, about 15 minutes, when you want the app's own sign-in screens instead of the hosted Zitadel page.
-- **Two Kaggle downloads** (decision 131), CryoNuSeg and Lizard, when convenient.
 - **Production for the first real user.** Say when, and the lead books the deploy session.
 
 ## Open questions
