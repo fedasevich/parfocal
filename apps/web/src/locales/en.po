@@ -2549,6 +2549,10 @@ msgstr "⌥1 to ⌥6"
 msgid "0 0 0 1.5px #ffffff"
 msgstr "0 0 0 1.5px #ffffff"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "0 is the sharpest level. Each level up halves the size."
+msgstr "0 is the sharpest level. Each level up halves the size."
+
 #: src/screens/upload/check-step.tsx
 msgid "1 case, {loose} loose"
 msgstr "1 case, {loose} loose"
@@ -6015,6 +6019,10 @@ msgstr "Current page"
 msgid "Cursor"
 msgstr "Cursor"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cut the patches"
+msgstr "Cut the patches"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Cutoff"
 msgstr "Cutoff"
@@ -6022,6 +6030,14 @@ msgstr "Cutoff"
 #: src/screens/admin/workspace-settings.tsx
 msgid "Cutoff restored."
 msgstr "Cutoff restored."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done."
+msgstr "Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Cutting the patches"
+msgstr "Cutting the patches"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Cytology"
@@ -6434,6 +6450,7 @@ msgstr "Does not line up"
 #: src/screens/upload/overlays.tsx
 #: src/screens/upload/upload-page.tsx
 #: src/study/study-screen.tsx
+#: src/viewer/patch-export-dialog.tsx
 msgid "Done"
 msgstr "Done"
 
@@ -7698,6 +7715,10 @@ msgstr "Frequency"
 msgid "From"
 msgstr "From"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "From {smallestTile} to {largestTile}."
+msgstr "From {smallestTile} to {largestTile}."
+
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "From a link or storage"
@@ -8336,6 +8357,10 @@ msgstr "ID matching"
 msgid "If a Parfocal JSON file is rejected"
 msgstr "If a Parfocal JSON file is rejected"
 
+#: src/annotations/task-export.ts
+msgid "Image tiles of the signed off slides with a class mask for each tile and an index, cut as a job"
+msgstr "Image tiles of the signed off slides with a class mask for each tile and an index, cut as a job"
+
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Import"
@@ -8690,6 +8715,11 @@ msgstr "Its screen is not built yet"
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "J"
 msgstr "J"
+
+#. placeholder {0}: jobId.slice(0, 8)
+#: src/viewer/patch-export-dialog.tsx
+msgid "Job {0}"
+msgstr "Job {0}"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Job model"
@@ -9135,6 +9165,7 @@ msgid "Let others on this slide see where you point"
 msgstr "Let others on this slide see where you point"
 
 #: src/screens/project/case-slides-editor.tsx
+#: src/viewer/patch-export-dialog.tsx
 msgid "Level"
 msgstr "Level"
 
@@ -10598,6 +10629,10 @@ msgstr "No slide in this task has objects to review."
 msgid "No slide matches these filters."
 msgstr "No slide matches these filters."
 
+#: src/annotations/task-export.ts
+msgid "No slide of this task is signed off yet. Sign off at least one slide, then export again. Only signed off slides go into the training data."
+msgstr "No slide of this task is signed off yet. Sign off at least one slide, then export again. Only signed off slides go into the training data."
+
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "No slide yet"
@@ -11406,6 +11441,10 @@ msgstr "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes
 msgid "One finger"
 msgstr "One finger"
 
+#: src/annotations/task-export.ts
+msgid "One GeoJSON file per signed off slide with each object's class, origin and author letters, and a manifest"
+msgstr "One GeoJSON file per signed off slide with each object's class, origin and author letters, and a manifest"
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "One key can only do one thing in the same place. Choose what happens to {otherName}."
 msgstr "One key can only do one thing in the same place. Choose what happens to {otherName}."
@@ -11482,6 +11521,10 @@ msgstr "Only objects inside the regions you draw are checked."
 #: src/screens/developer/developer-screen.tsx
 msgid "Only on the WebGPU route"
 msgstr "Only on the WebGPU route"
+
+#: src/annotations/task-export.ts
+msgid "Only people who see the whole task can export its training data."
+msgstr "Only people who see the whole task can export its training data."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Only the cells inside those areas."
@@ -12132,6 +12175,11 @@ msgstr "Password for {email}"
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Password strength"
 msgstr "Password strength"
+
+#: src/annotations/task-export.ts
+#: src/viewer/patch-export-dialog.tsx
+msgid "Patches with masks"
+msgstr "Patches with masks"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Path or URL"
@@ -14135,6 +14183,13 @@ msgstr "Save tasks"
 #: src/screens/admin/template-editor.tsx
 msgid "Save template"
 msgstr "Save template"
+
+#. placeholder {0}: phase.name
+#. placeholder {0}: result.name
+#: src/viewer/patch-export-dialog.tsx
+#: src/viewer/slide-export-menu.tsx
+msgid "Saved {0}"
+msgstr "Saved {0}"
 
 #. placeholder {0}: name.trim()
 #: src/screens/admin/template-editor.tsx
@@ -16527,6 +16582,7 @@ msgstr "The draft is saved as you go."
 msgid "The due date is in the past."
 msgstr "The due date is in the past."
 
+#: src/annotations/task-export.ts
 #: src/viewer/slide-export-menu.tsx
 msgid "The export could not be made"
 msgstr "The export could not be made"
@@ -16711,6 +16767,14 @@ msgstr "the Parfocal sample tile"
 #: src/screens/upload/link-import.tsx
 msgid "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
 msgstr "The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses your connection and closing the tab stops nothing."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "The patches are ready"
+msgstr "The patches are ready"
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "The patches could not be cut"
+msgstr "The patches could not be cut"
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "The patient banner is hidden."
@@ -17477,6 +17541,10 @@ msgstr "Tile 712 of 1,880, tumor first"
 msgid "Tile size"
 msgstr "Tile size"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "Tile size in pixels"
+msgstr "Tile size in pixels"
+
 #: src/screens/admin/connect-model.tsx
 msgid "Tiles"
 msgstr "Tiles"
@@ -17668,6 +17736,10 @@ msgstr "Track record block"
 #: src/screens/settings/settings-screen.tsx
 msgid "Trackpad"
 msgstr "Trackpad"
+
+#: src/annotations/task-export.ts
+msgid "Training dataset (QuPath GeoJSON zip)"
+msgstr "Training dataset (QuPath GeoJSON zip)"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Triggers"

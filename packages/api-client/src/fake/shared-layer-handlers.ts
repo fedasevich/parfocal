@@ -328,6 +328,9 @@ function writeLayer(params: Params, change: (objects: LayerObject[]) => LayerObj
 export const fakeRunSetIds = (taskId: string, slideId: string): string[] =>
   joinedRunsOf(taskId, slideId).filter((setId) => setId !== resultSetOf(taskId, slideId));
 
+export const taskHasSignedOffSlide = (taskId: string): boolean =>
+  Object.keys(readStore().signOffs).some((key) => key.startsWith(`${taskId}/`));
+
 const isSignedOff = (params: Params) =>
   readStore().signOffs[keyOf(params.taskId, params.slideId)] !== undefined;
 

@@ -49,7 +49,11 @@ export async function downloadSlideExport(
   });
   const response = await fetch(url, { credentials: "same-origin" });
   if (!response.ok) return null;
-  const name = fileNameOf(response, `parfocal-export.${format}`);
+  return saveResponse(response, `parfocal-export.${format}`);
+}
+
+export async function saveResponse(response: Response, fallback: string): Promise<string> {
+  const name = fileNameOf(response, fallback);
   const href = URL.createObjectURL(await response.blob());
   const link = document.createElement("a");
   link.href = href;
