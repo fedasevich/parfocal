@@ -86,7 +86,7 @@ test("the projects are cards with a strip of slides, the counts, the privacy mod
   page,
 }) => {
   await page.goto("/");
-  const cards = page.getByRole("button", { name: /result sets/ });
+  const cards = page.getByRole("button", { name: /result sets?/ });
   await expect(cards.first()).toContainText("Sentinel node AI evaluation");
   await expect(cards.first()).toContainText("P07 · 61 slides · 3 result sets");
   await expect(cards.first()).toContainText("+57");
