@@ -2,6 +2,28 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.29.0 (2026-11-20)
+
+### Fixes
+
+- PROTO-102: Keep viewer work safe and its states honest from the walkthrough
+- PROTO-101: Open notification links, correct viewer modes and fix walkthrough dead ends
+- PROTO-103: Finish negative node reports and seed a signed sign-off, co-sign and adjudication
+
+### Docs
+
+- TEST-056: Log the v0.28 deploys and reseed
+- TEST-056: Add the deployed walkthrough of v0.28.1
+- TEST-056: Add the walkthrough fix tasks
+- PROTO-102: Log and tick the viewer safety fixes
+- PROTO-101: Log and tick the links and pages fixes
+- PROTO-103: Log and tick reports and adjudication on the seed
+
+### Other
+
+- PROTO-103: Claim reports and adjudication on the seed
+- VIEW-076: Claim zip slides opening in the viewer
+
 ## v0.28.1 (2026-11-20)
 
 ### Fixes
