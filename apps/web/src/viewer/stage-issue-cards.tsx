@@ -234,6 +234,7 @@ export function StageIssueLayer({
   readOnlyLine,
   onAsk,
   onNext,
+  listed = [],
   children,
 }: {
   route: VivRoute | null;
@@ -249,6 +250,7 @@ export function StageIssueLayer({
   readOnlyLine?: string | undefined;
   onAsk: () => void;
   onNext: (() => void) | null;
+  listed?: readonly StageIssue[];
   children: (answersOff: string | undefined, readOnly: boolean) => ReactNode;
 }) {
   const failedLevels = useFailedLevels(route);
@@ -269,7 +271,7 @@ export function StageIssueLayer({
   };
   return (
     <>
-      {issue === null ? null : (
+      {issue === null || listed.includes(issue) ? null : (
         <StageIssueCard
           issue={issue}
           slideLabel={slideLabel}

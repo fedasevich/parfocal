@@ -198,11 +198,13 @@ export function SlideStage({
   onStorage,
   inspector,
   bare = false,
+  toolKeys = true,
   compare = null,
   compareToggle,
 }: {
   inspector: StageInspectorLink;
   bare?: boolean;
+  toolKeys?: boolean;
   compare?: StageCompare | null;
   compareToggle?: CompareToggle | undefined;
   slideId: string;
@@ -238,6 +240,7 @@ export function SlideStage({
       onStorage={onStorage}
       inspector={inspector}
       bare={bare}
+      toolKeys={toolKeys}
       compare={compare}
       compareToggle={compareToggle}
       onRetry={() => setAttempt((count) => count + 1)}
@@ -266,11 +269,13 @@ function OpenedSlide({
   onRetry,
   inspector,
   bare,
+  toolKeys,
   compare,
   compareToggle,
 }: {
   inspector: StageInspectorLink;
   bare: boolean;
+  toolKeys: boolean;
   compare: StageCompare | null;
   compareToggle: CompareToggle | undefined;
   slideId: string;
@@ -322,7 +327,8 @@ function OpenedSlide({
   const onToolKey = useCallback(
     ({ phase, action }: { phase: string; action: string }) => {
       const railTool = toolOfAction[action];
-      if (phase !== "press" || railTool === undefined || !railHasTool(setup, railTool)) return;
+      if (!toolKeys || phase !== "press" || railTool === undefined) return;
+      if (!railHasTool(setup, railTool)) return;
       const pressed = stageToolOf(railTool);
       if (pressed === "hand") {
         setTool("hand");
@@ -330,7 +336,7 @@ function OpenedSlide({
       }
       setTool((current) => (current === pressed ? restingTool : pressed));
     },
-    [setup, restingTool],
+    [setup, restingTool, toolKeys],
   );
   useHotkeys(toolBindings, onToolKey);
   const escRegistry = useNewEscRegistry();

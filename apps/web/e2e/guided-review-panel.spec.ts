@@ -45,16 +45,19 @@ test("guided review has the mock's own panel and walks a slide to the done card"
     .click();
   await expect(panel(page)).toHaveAttribute("data-current", afterFirst);
   for (let step = 0; step < 60; step += 1) {
-    if (await page.getByText("Slide 8 is done").isVisible()) break;
+    if (await page.getByTestId("stage-opinion").isVisible()) break;
     const at = (await panel(page).getAttribute("data-current")) ?? "";
     await page.keyboard.press("k");
     await expect
       .poll(async () => {
-        const done = await page.getByText("Slide 8 is done").isVisible();
+        const done = await page.getByTestId("stage-opinion").isVisible();
         return done ? "done" : panel(page).getAttribute("data-current");
       })
       .not.toBe(at);
   }
   await expect(inspector).toHaveAttribute("data-tab", "objects");
-  await expect(inspector.getByTestId("stage-opinion")).toContainText("Slide 8 is done");
+  const form = inspector.getByTestId("stage-opinion");
+  await expect(form).toHaveAttribute("data-form-only", "true");
+  await expect(form.getByRole("button", { name: /^Submit/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Submit/ })).toHaveCount(1);
 });

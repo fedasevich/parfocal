@@ -2501,7 +2501,7 @@ msgstr ""
 msgid "<0>Slow source.</0> The scanner archive answers in 2.4 s. Keep reading, the view sharpens as tiles arrive. Lower magnifications come first."
 msgstr ""
 
-#: src/viewer/remote-slide-notice.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "<0>The source of this slide is not answering.</0> The slide opens from the 7-day tile cache. Places never viewed stay empty until the source is back."
 msgstr ""
 
@@ -2996,6 +2996,10 @@ msgstr ""
 msgid "About {toCheck} objects to check, roughly {0} per expert"
 msgstr ""
 
+#: src/viewer/slide-notice-list.tsx
+msgid "About this slide"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 msgid "above"
 msgstr ""
@@ -3300,6 +3304,7 @@ msgid "Address"
 msgstr ""
 
 #: src/screens/my-work/to-review-tab.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Adjudication"
 msgstr ""
 
@@ -3934,6 +3939,7 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Ask the researcher"
 msgstr ""
@@ -4082,6 +4088,10 @@ msgstr ""
 msgid "Back to {backLabel}"
 msgstr ""
 
+#: src/viewer/live-top-bar.tsx
+msgid "Back to {backLabel}. Every answer is saved"
+msgstr ""
+
 #: src/screens/review/guided-parts.tsx
 msgid "Back to {currentId}"
 msgstr ""
@@ -4108,7 +4118,6 @@ msgid "Back to My work"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Back to My work. Every answer is saved"
 msgstr ""
 
@@ -5478,6 +5487,7 @@ msgstr ""
 msgid "Comment on {object}"
 msgstr ""
 
+#: src/viewer/live-top-bar.tsx
 #: src/viewer/stage-inspector.tsx
 msgid "Comments"
 msgstr ""
@@ -6315,6 +6325,7 @@ msgstr ""
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/viewer-links.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Disagreements"
 msgstr ""
 
@@ -6854,6 +6865,7 @@ msgstr ""
 
 #: src/screens/home/home-screen.tsx
 #: src/screens/viewer-links.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Evaluation"
 msgstr ""
 
@@ -8111,6 +8123,7 @@ msgstr ""
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/global-shell.tsx
 #: src/shell/palette-labels.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Home"
 msgstr ""
 
@@ -10243,6 +10256,7 @@ msgstr ""
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/review/guided-review.tsx
+#: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Next slide"
 msgstr ""
@@ -10301,6 +10315,7 @@ msgstr ""
 msgid "No AI nuclei have been reviewed yet."
 msgstr ""
 
+#: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "No AI result on {slideLabel} yet."
 msgstr ""
@@ -11078,6 +11093,7 @@ msgstr ""
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/bell.tsx
 #: src/shell/palette-labels.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Notifications"
 msgstr ""
 
@@ -11474,6 +11490,11 @@ msgstr ""
 msgid "Open {0} in the full viewer"
 msgstr ""
 
+#. placeholder {0}: shown.object
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "Open {0} on the whole slide in Review"
+msgstr ""
+
 #: src/screens/evaluation/report-pages.tsx
 msgid "Open {object} in the full viewer"
 msgstr ""
@@ -11505,6 +11526,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Open in a new window"
+msgstr ""
+
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "Open in Review"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -11593,14 +11618,6 @@ msgstr ""
 #: src/screens/jobs/job-window-screen.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "Open the slide"
-msgstr ""
-
-#: src/viewer/live-top-bar.tsx
-msgid "Open the Slide done card in the Opinion tab"
-msgstr ""
-
-#: src/viewer/live-top-bar.tsx
-msgid "Open the Slide done card in the Review tab"
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -12637,6 +12654,7 @@ msgstr ""
 #: src/screens/my-work/all-slides-tab.tsx
 #: src/screens/team/team-screen.tsx
 #: src/screens/upload/live-wizard.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Project"
 msgstr ""
 
@@ -13509,6 +13527,7 @@ msgid "Review the first slide <0/>"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
+#: src/viewer/slide-notice-list.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Review the slide without AI, or ask the researcher to run the model."
 msgstr ""
@@ -14146,6 +14165,7 @@ msgstr ""
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/search/search-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Search"
 msgstr ""
 
@@ -14376,6 +14396,10 @@ msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Send to someone else"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Send your decisions and answers on this slide"
 msgstr ""
 
 #: ../../packages/ui/src/components/ingest-failure.tsx
@@ -14984,6 +15008,10 @@ msgstr ""
 #. placeholder {0}: hoursText(value)
 #: src/screens/admin/workspace-settings.tsx
 msgid "Sign-ins last {0} now."
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Sign-off"
 msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
@@ -16698,22 +16726,22 @@ msgid "The researcher"
 msgstr ""
 
 #. placeholder {0}: andJoin(failed)
-#: src/viewer/result-set-notice.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "The result set {0} did not import, so its objects are not shown."
 msgstr ""
 
 #. placeholder {0}: andJoin(importing)
-#: src/viewer/result-set-notice.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "The result set {0} is still importing. Its objects show when it is ready."
 msgstr ""
 
 #. placeholder {0}: andJoin(importing)
-#: src/viewer/result-set-notice.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "The result sets {0} are still importing. Their objects show when they are ready."
 msgstr ""
 
 #. placeholder {0}: andJoin(failed)
-#: src/viewer/result-set-notice.tsx
+#: src/viewer/slide-notice-list.tsx
 msgid "The result sets {0} did not import, so their objects are not shown."
 msgstr ""
 
@@ -17201,6 +17229,10 @@ msgstr ""
 
 #: src/viewer/area-keys.tsx
 msgid "This slide has no pixel size, so areas show in pixels and get no size category."
+msgstr ""
+
+#: src/viewer/slide-notice-list.tsx
+msgid "This slide has no pixel size, so lengths and areas show in pixels and areas get no size category."
 msgstr ""
 
 #: src/viewer/compare-panes.tsx

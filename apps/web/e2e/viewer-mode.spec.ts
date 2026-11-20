@@ -222,6 +222,11 @@ test("one slide lands in the same mode from the project row, search and My work"
   await page.goto(`/projects/${p07}`);
   await page.locator(`[data-testid=slide-link][href$="${a3}"]`).click();
   await landsInAnnotate(page, a3);
+  await expect(page.getByTestId("viewer-back")).toHaveText("Project");
+  await expect(page.getByTestId("viewer-back")).toHaveAttribute(
+    "href",
+    `/projects/${p07}?tab=slides`,
+  );
 
   await page.goto("/search");
   await page.getByRole("textbox", { name: "Search everything" }).fill("S26-04812 A3");
@@ -230,12 +235,16 @@ test("one slide lands in the same mode from the project row, search and My work"
     .first()
     .click();
   await landsInAnnotate(page, a3);
+  await expect(page.getByTestId("viewer-back")).toHaveText("Search");
 
   await page.goto("/my-work?tab=all");
   const mine = page.locator(`[data-testid=slide-link][href$="${a3}"]`);
   await expect(mine).toHaveAttribute("href", `/projects/${p07}/slides/${a3}`);
   await mine.dblclick();
   await landsInAnnotate(page, a3);
+  await expect(page.getByTestId("viewer-back")).toHaveText("My work");
+  await page.getByTestId("viewer-back").click();
+  await expect(page).toHaveURL(/\/my-work\?tab=all(&|$)/);
 });
 
 test("the report and the task Slides link open the task slide in the same Review mode", async ({
@@ -258,3 +267,21 @@ test("the report and the task Slides link open the task slide in the same Review
     .getByRole("link", { name: "Slides" });
   await expect(slides).not.toHaveAttribute("href", /workspace=/);
 });
+
+for (const [name, search, armed] of [
+  ["Review with the rail", "mode=review", true],
+  ["Guided, where the rail is hidden", "mode=guided", false],
+  ["Focus, where the rail is hidden", "mode=review&layout=focus", false],
+  ["Annotate in Focus", "mode=annotate&layout=focus", false],
+] as const) {
+  test(`tool keys ${armed ? "arm a tool" : "do nothing"} in ${name}`, async ({ page }) => {
+    await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&${search}`);
+    const stage = await ready(page);
+    await page.keyboard.press("l");
+    if (armed) await expect(stage).toHaveAttribute("data-tool", "ruler");
+    else {
+      await page.keyboard.press("c");
+      await expect(stage).not.toHaveAttribute("data-tool", /^(ruler|comment)$/);
+    }
+  });
+}

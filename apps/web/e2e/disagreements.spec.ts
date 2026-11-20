@@ -16,7 +16,7 @@ function watchErrors(page: Page) {
   return errors;
 }
 
-const engine = (page: Page) => page.getByTestId("still-engine");
+const objectStage = (page: Page) => page.getByTestId("object-stage");
 
 const goInApp = (page: Page, url: string) =>
   page.evaluate((target) => {
@@ -24,10 +24,19 @@ const goInApp = (page: Page, url: string) =>
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, url);
 
-async function slideDrawn(page: Page) {
-  await expect(engine(page)).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
-  await expect(engine(page).locator("canvas").first()).toBeVisible();
-  await expect(page.locator('[data-slot="slide-still"] svg image')).toHaveCount(0);
+async function slideDrawn(page: Page, object?: string) {
+  const stage = objectStage(page);
+  await expect(stage).toHaveAttribute("data-layout", "object");
+  await expect(stage.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 20_000,
+  });
+  await expect(stage.locator("canvas").first()).toBeVisible();
+  await expect(page.locator('[data-slot="slide-still"]')).toHaveCount(0);
+  await expect(stage.getByRole("toolbar", { name: "Tools" })).toHaveCount(0);
+  await expect(stage.getByTestId("stage-inspector")).toHaveCount(0);
+  if (object !== undefined) {
+    await expect(stage.getByTestId("object-frame")).toHaveAttribute("data-object", object);
+  }
 }
 
 const scenes: { path: string; persona: string; sees: string; dialog?: string }[] = [
@@ -153,7 +162,13 @@ test("the disagreements stage draws the slide under the object", async ({ page }
   await page.goto(`${base}/disagreements?stage=open`);
   await slideDrawn(page);
   await page.getByRole("button", { name: /^T4 / }).click();
-  await slideDrawn(page);
+  await slideDrawn(page, "T4");
+  await expect(objectStage(page).getByTestId("object-frame")).toHaveAttribute("data-drawn", "1");
+  await page.keyboard.press("l");
+  await expect(objectStage(page).getByTestId("slide-stage")).not.toHaveAttribute(
+    "data-tool",
+    "ruler",
+  );
 });
 
 test("a declined object shows the note and can go to someone else", async ({ page }) => {
@@ -175,6 +190,9 @@ test("Edit myself opens the viewer at that object", async ({ page }) => {
   await page.getByRole("button", { name: /^T4 / }).click();
   await page.getByRole("button", { name: "Edit T4 myself in the viewer" }).click();
   await expect(page).toHaveURL(new RegExp(`/slides/[^?]+\\?task=${rt14}&object=T4`));
+  const back = page.getByTestId("viewer-back");
+  await expect(back).toHaveText("Disagreements");
+  await expect(back).toHaveAttribute("data-return", "disagreements");
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Disagreements in RT-14" })).toBeVisible();
 });
@@ -313,6 +331,23 @@ test("the adjudicator decides all three and the researcher sees them in the queu
   const done = page.getByRole("row", { name: /T5/ });
   await expect(done).toContainText("Disagree");
   await expect(page.getByRole("row", { name: /T1·C145/ })).toContainText("Not sure");
+});
+
+test("the adjudicator opens the object on the whole slide in Review and comes back", async ({
+  page,
+}) => {
+  await page.goto(`${base}/adjudicate?stage=sent`);
+  await slideDrawn(page);
+  const open = page.getByTestId("open-in-review");
+  await expect(open).toHaveText("Open in Review");
+  const object = (await objectStage(page).getAttribute("data-object")) ?? "";
+  await open.click();
+  await expect(page).toHaveURL(new RegExp(`task=${rt14}&mode=review&object=${object}`));
+  await expect(page.getByTestId("live-top-bar")).toBeVisible();
+  const back = page.getByTestId("viewer-back");
+  await expect(back).toHaveText("Adjudication");
+  await back.click();
+  await expect(page).toHaveURL(new RegExp(`${base}/adjudicate`));
 });
 
 test("the adjudicator can go back to My work once everything is decided", async ({ page }) => {

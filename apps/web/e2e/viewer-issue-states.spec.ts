@@ -30,18 +30,37 @@ async function answersOff(page: Page, reason: string) {
   await expect(foot.getByTestId("answers-off")).toHaveText(reason);
 }
 
-test("a slide with no result says so on the slide and moves to the next slide", async ({
-  page,
-}) => {
+const notices = (page: Page) =>
+  page.locator('[data-slot="top-stack"]').getByTestId("slide-notices");
+
+for (const [mode, layout] of [
+  ["review", undefined],
+  ["guided", undefined],
+  ["annotate", undefined],
+  ["review", "focus"],
+  ["review", "compare"],
+] as const) {
+  test(`a slide with no result says so in the notice list in ${mode}${layout ? ` ${layout}` : ""}`, async ({
+    page,
+  }) => {
+    const extra = layout === undefined ? "" : `&layout=${layout}`;
+    await page.goto(`${viewerOf(rt14, "noresults")}&mode=${mode}${extra}`);
+    await ready(page);
+    await expect(page.getByTestId("stage-issue")).toHaveCount(0);
+    const list = notices(page);
+    await expect(list).toHaveAttribute("data-notices", /(^| )no-result( |$)/);
+    const line = list.getByTestId("no-result-notice");
+    await expect(line).toContainText(/No AI result on .+ yet\./);
+    await expect(line).toContainText(
+      "Review the slide without AI, or ask the researcher to run the model.",
+    );
+  });
+}
+
+test("the no result notice moves to the next slide", async ({ page }) => {
   await page.goto(viewerOf(rt14, "noresults"));
   await ready(page);
-  const card = page.getByTestId("stage-issue");
-  await expect(card).toHaveAttribute("data-issue", "noresults");
-  await expect(card).toContainText(/No AI result on .+ yet\./);
-  await expect(card).toContainText(
-    "Review the slide without AI, or ask the researcher to run the model.",
-  );
-  await card.getByRole("button", { name: "Next slide" }).click();
+  await notices(page).getByRole("button", { name: "Next slide" }).click();
   await expect(page).not.toHaveURL(new RegExp(a1));
 });
 
@@ -138,7 +157,7 @@ for (const [issue, state, text] of [
   test(`a result set that is ${state} says so once in the top stack`, async ({ page }) => {
     await page.goto(`/projects/${p07}/slides/${tumor044}?issue=${issue}`);
     await ready(page);
-    const notice = page.locator('[data-slot="top-stack"]').getByTestId("result-set-notice");
+    const notice = notices(page).getByTestId("result-set-notice");
     await expect(notice).toHaveCount(1);
     await expect(notice).toHaveAttribute("data-state", state);
     await expect(notice).toContainText(text);

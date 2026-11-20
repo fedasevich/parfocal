@@ -1,6 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useCopyRemoteSlide } from "@parfocal/api-client";
-import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { CategoryTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
@@ -19,18 +18,6 @@ export function RemoteSlideTag({ note }: { note: SlideStorageNote | null }) {
     >
       <Trans>remote</Trans>
     </CategoryTag>
-  );
-}
-
-export function RemoteSlideOffline({ note }: { note: SlideStorageNote | null }) {
-  if (note?.storage !== "remote" || !note.offline) return null;
-  return (
-    <Banner tone="warn" icon="link" data-testid="remote-offline">
-      <Trans>
-        <b>The source of this slide is not answering.</b> The slide opens from the 7-day tile cache.
-        Places never viewed stay empty until the source is back.
-      </Trans>
-    </Banner>
   );
 }
 

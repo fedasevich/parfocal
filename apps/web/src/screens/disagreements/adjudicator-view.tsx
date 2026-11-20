@@ -9,7 +9,7 @@ import {
   useGetReviewTask,
   useListProjectClasses,
 } from "@parfocal/api-client";
-import { Button } from "@parfocal/ui/components/button";
+import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { KeyValueList } from "@parfocal/ui/components/connect-model";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import {
@@ -25,12 +25,13 @@ import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AccountMenu } from "../../shell/account-menu.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { useRouterLink } from "../../shell/router-link.tsx";
+import { slideLink } from "../../shell/slide-link.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { reviewConfidence } from "../review/ai-wording.ts";
@@ -317,12 +318,28 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       />
       <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_470px]">
         <div className="relative flex min-h-0 overflow-hidden bg-canvas">
+          {shown && task ? (
+            <Link
+              {...slideLink({
+                projectId: task.project_id,
+                slideId: shown.slide_id,
+                taskId,
+                mode: "review",
+                object: shown.object,
+              })}
+              data-testid="open-in-review"
+              title={t`Open ${shown.object} on the whole slide in Review`}
+              className={`absolute top-3 right-3 z-30 ${buttonVariants({ size: "sm" })}`}
+            >
+              <Icon name="eye" />
+              <Trans>Open in Review</Trans>
+            </Link>
+          ) : null}
           {shown ? (
             <DisagreementStage
               taskId={taskId}
               slideId={shown.slide_id}
               object={shown.object}
-              slideLabel={shown.slide_label}
               claimHidden={!showsClaim(look.style)}
             />
           ) : null}

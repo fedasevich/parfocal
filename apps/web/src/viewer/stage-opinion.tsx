@@ -27,12 +27,24 @@ type OpinionProps = {
   onObjects: (object?: string) => void;
 };
 
+export function useSlideSubmit(taskId: string | null, slideId: string): () => void {
+  const navigate = useNavigate();
+  const submitReview = useSubmitSlideReview();
+  return () => {
+    if (taskId === null) return;
+    submitReview.mutate({ taskId, slideId });
+    void navigate({
+      to: "/tasks/$taskId/submitted",
+      params: { taskId },
+      search: { slide: slideId },
+    });
+  };
+}
+
 export function ReviewOpinion({ taskId, slideId, readOnly, onObjects }: OpinionProps) {
   const { t } = useLingui();
-  const navigate = useNavigate();
   const session = useReviewSession(taskId, slideId);
   const { answers, change } = useOpinionDraft(session);
-  const submitReview = useSubmitSlideReview();
   const questions = opinionQuestions(session, answers, []);
   const counts = slideDoneCounts(session);
   const undecided = session.objects.filter((object) => !session.decisions.has(object.object));
@@ -64,6 +76,7 @@ export function ReviewOpinion({ taskId, slideId, readOnly, onObjects }: OpinionP
   return (
     <SlideDoneCard
       panel
+      formOnly
       data-testid="stage-opinion"
       slideNumber={session.neighbours?.position ?? 1}
       counts={counts}
@@ -72,14 +85,6 @@ export function ReviewOpinion({ taskId, slideId, readOnly, onObjects }: OpinionP
       submitLabel={t`Submit`}
       readOnly={readOnly}
       {...(readOnly === undefined ? { onAnswerChange: change } : {})}
-      onSubmit={() => {
-        submitReview.mutate({ taskId, slideId });
-        void navigate({
-          to: "/tasks/$taskId/submitted",
-          params: { taskId },
-          search: { slide: slideId },
-        });
-      }}
     />
   );
 }

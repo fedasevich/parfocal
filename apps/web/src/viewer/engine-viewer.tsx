@@ -24,8 +24,8 @@ import { FirstReadGuard } from "./first-read-guard.tsx";
 import { LiveTopBar } from "./live-top-bar.tsx";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { useCellRetype } from "./picked-cell-retype.tsx";
-import { CopyIntoParfocal, RemoteSlideOffline, RemoteSlideTag } from "./remote-slide-notice.tsx";
-import { ResultSetNotice } from "./result-set-notice.tsx";
+import { CopyIntoParfocal, RemoteSlideTag } from "./remote-slide-notice.tsx";
+import { SlideNoticeList } from "./slide-notice-list.tsx";
 import { SlideStage } from "./slide-stage.tsx";
 import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
 import { StageFocusPill, useFocusKey } from "./stage-focus.tsx";
@@ -42,13 +42,14 @@ import {
   nothingFoundOf,
   othersReviewOf,
   resultMissingOf,
+  type StageIssue,
   signedOffOf,
 } from "./stage-issues.ts";
 import { StageMinimap } from "./stage-minimap.tsx";
 import { NoticeSlotsProvider } from "./stage-notices.tsx";
 import type { NoteRequest } from "./stage-object-notes.tsx";
 import { StageObjectNotes } from "./stage-object-notes.tsx";
-import { StageOpinion } from "./stage-opinion.tsx";
+import { StageOpinion, useSlideSubmit } from "./stage-opinion.tsx";
 import { StageResultCells } from "./stage-result-cells.tsx";
 import { StageReviewObjects } from "./stage-review-objects.tsx";
 import { type StageStart, StageStartCamera } from "./stage-start.tsx";
@@ -66,7 +67,7 @@ import {
   workspaceRoleOf,
 } from "./viewer-access.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
-import type { ViewerLayout } from "./viewer-layout.ts";
+import { stageLayoutOf, type ViewerLayout } from "./viewer-layout.ts";
 import {
   type ModeChoice,
   panelTabOf,
@@ -96,6 +97,8 @@ function HomeEngine({
 }
 
 const fakeOutlines = readBuildConfig().fakeApi !== "off";
+
+const listedIssues: readonly StageIssue[] = ["noresults"];
 
 export type EngineViewerProps = {
   projectId: string;
@@ -246,7 +249,9 @@ function GuardedViewer({
     hasResults: flagged,
     opinionQuestions: opinionForm?.questions.length,
     comments: tabCounts.comments ?? 0,
+    layout: stageLayoutOf(layout),
   });
+  const submitSlide = useSlideSubmit(reviewTask, slideId);
   const opinionShown = taskDetail?.kind === "review" && panel.tabs.includes("opinion");
   const [noteObject, setNoteObject] = useState<string | null>(object ?? null);
   const [noteRequest, setNoteRequest] = useState<NoteRequest | null>(null);
@@ -268,7 +273,6 @@ function GuardedViewer({
   const [jumpRequest, setJumpRequest] = useState<{ id: string; count: number } | null>(null);
   const toolLink = useRef<ArmTool | null>(null);
   const [currentObject, setCurrentObject] = useState<string | null>(object ?? null);
-  const [doneRequest, setDoneRequest] = useState(0);
   useRememberResume(
     reviewTask === null || reviewers !== null
       ? null
@@ -286,6 +290,10 @@ function GuardedViewer({
     onTab("comments");
     toolLink.current?.("comment");
   };
+  const openNext =
+    nextSlideId === undefined || taskSlideIds.indexOf(slideId) < 0
+      ? null
+      : () => onOpenSlide(nextSlideId);
   const lock =
     reviewers !== null ? (
       <ReadOnlyNotice reviewers={reviewers} />
@@ -325,7 +333,15 @@ function GuardedViewer({
         reviewTaskId={reviewTask ?? undefined}
       />
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
-      {load ? <ResultSetNotice resultSets={load.resultSets} /> : null}
+      <SlideNoticeList
+        storage={storageNote}
+        resultSets={load?.resultSets ?? []}
+        noResult={resultMissing}
+        micronsPerPixel={session.engine.getSlide()?.micronsPerPixel}
+        slideLabel={load?.slide?.label ?? ""}
+        onNext={openNext}
+        onAsk={askResearcher}
+      />
       {focus ? (
         <StageFocusPill
           label={load?.case?.label || load?.slide?.label || ""}
@@ -346,11 +362,8 @@ function GuardedViewer({
         readOnly={reviewers !== null || lookingOn}
         readOnlyLine={accessLine}
         onAsk={askResearcher}
-        onNext={
-          nextSlideId === undefined || taskSlideIds.indexOf(slideId) < 0
-            ? null
-            : () => onOpenSlide(nextSlideId)
-        }
+        onNext={openNext}
+        listed={listedIssues}
       >
         {(answersOff, readOnly) =>
           reviewTask === null ? null : (
@@ -367,7 +380,6 @@ function GuardedViewer({
               cellsGrid={cells}
               jumpRequest={jumpRequest}
               focus={focus ? { onShowUi: showUi } : null}
-              doneRequest={doneRequest}
               onAddMissed={() => session.armTool("smart")}
               onCurrent={(id) => {
                 setCurrentObject(id);
@@ -489,17 +501,7 @@ function GuardedViewer({
           guided={guided}
           onMode={onMode}
           onOpenSlide={onOpenSlide}
-          onSubmit={
-            !panel.submit
-              ? undefined
-              : () => {
-                  setLayout({ hidden: false });
-                  if (guided) {
-                    setDoneRequest((count) => count + 1);
-                    onTab("objects");
-                  } else onTab("opinion");
-                }
-          }
+          onSubmit={panel.submit ? submitSlide : undefined}
           onResultSets={() => {
             setLayout({ hidden: false });
             onTab("display");
@@ -518,12 +520,7 @@ function GuardedViewer({
           }
         />
       )}
-      {focus ? null : (
-        <>
-          {load ? <CasePatientBanner load={load} /> : null}
-          <RemoteSlideOffline note={storageNote} />
-        </>
-      )}
+      {focus || load === null ? null : <CasePatientBanner load={load} />}
       <div className="relative min-h-0 flex-1">
         {focus ? (
           <div
@@ -560,6 +557,7 @@ function GuardedViewer({
             systematicScan={load !== null && slideAreas.loaded && areas.length === 0}
             inspector={inspector}
             bare={focus}
+            toolKeys={panel.toolKeys}
             compare={compare}
             compareToggle={
               onLayout === undefined

@@ -82,6 +82,7 @@ test("the assigned reviewer of an open task keeps the full rail, the form and Su
   const opinion = page.getByTestId("stage-opinion");
   await expect(opinion).toBeVisible({ timeout: 15_000 });
   await expect(opinion).not.toHaveAttribute("data-read-only", "");
-  await expect(opinion.getByRole("button", { name: /^Submit/ })).toBeVisible();
+  await expect(opinion.getByRole("button", { name: /^Submit/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Submit/ })).toHaveCount(1);
   await expect(page.getByTestId("read-only-notice")).toHaveCount(0);
 });

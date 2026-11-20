@@ -22,6 +22,7 @@ import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 import { SurveyHost } from "../shell/survey-host.tsx";
 import { StudyGuardHost } from "../study/study-guard-host.tsx";
 import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
+import { useRememberReturnPage } from "../viewer/use-return-page.ts";
 
 const TourHost = lazy(() => import("../help/tour-host.tsx"));
 
@@ -51,6 +52,7 @@ function RootContent() {
   useAppliedOutlineMode();
   useReadingReport();
   useAnalyticsConsentSync();
+  useRememberReturnPage();
   return (
     <KeyBindingsProvider>
       <RouteProgress />

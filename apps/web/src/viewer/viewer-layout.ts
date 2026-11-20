@@ -2,6 +2,30 @@ export const viewerLayouts = ["compare", "focus"] as const;
 
 export type ViewerLayout = (typeof viewerLayouts)[number];
 
+export type StageLayout = "single" | ViewerLayout | "object";
+
+export type LayoutChrome = {
+  readonly topBar: boolean;
+  readonly rail: boolean;
+  readonly panel: boolean;
+  readonly toolKeys: boolean;
+};
+
+const layoutChrome: Record<StageLayout, LayoutChrome> = {
+  single: { topBar: true, rail: true, panel: true, toolKeys: true },
+  compare: { topBar: true, rail: true, panel: true, toolKeys: true },
+  focus: { topBar: false, rail: false, panel: false, toolKeys: false },
+  object: { topBar: false, rail: false, panel: false, toolKeys: false },
+};
+
+export function stageLayoutOf(layout: ViewerLayout | undefined): StageLayout {
+  return layout ?? "single";
+}
+
+export function layoutChromeOf(layout: StageLayout): LayoutChrome {
+  return layoutChrome[layout];
+}
+
 const oldCompareScenes: ReadonlySet<unknown> = new Set(["picking", "picked"]);
 
 export function layoutOfOldAddress(given: {

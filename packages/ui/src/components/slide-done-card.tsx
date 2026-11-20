@@ -124,6 +124,7 @@ type SlideDoneCardProps = React.ComponentProps<"div"> & {
   lockedReason?: string;
   readOnly?: string | undefined;
   panel?: boolean;
+  formOnly?: boolean;
   onSubmit?: () => void;
   onAnswerChange?: AnswerChange;
 };
@@ -140,6 +141,7 @@ function SlideDoneCard({
   lockedReason,
   readOnly,
   panel = false,
+  formOnly = false,
   onSubmit,
   onAnswerChange,
   className,
@@ -181,30 +183,35 @@ function SlideDoneCard({
       data-slot="slide-done-card"
       data-panel={panel || undefined}
       data-read-only={readOnly === undefined ? undefined : ""}
+      data-form-only={formOnly || undefined}
       className={cn("flex flex-col text-fg", panel ? "gap-5" : "gap-5.5", className)}
       {...props}
     >
-      <div className="grid justify-items-start gap-2">
-        {done ? (
-          <span className="grid size-10 place-items-center rounded-full bg-[color-mix(in_srgb,var(--ok)_16%,transparent)] text-ok">
-            <Icon name="check" size="md" />
-          </span>
-        ) : (
-          <ProgressRing
-            split={{
-              agree: counts.agree,
-              disagree: counts.disagree,
-              unsure: counts.unsure,
-              open: counts.open,
-            }}
-            size={40}
-          />
-        )}
-        <h2 className={cn("m-0 font-semibold", panel ? "text-title-sm" : "text-page-title")}>
-          {done ? t`Slide ${slideNumber} is done` : t`${counts.open} left on slide ${slideNumber}`}
-        </h2>
-        <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">{doneLine(counts)}</p>
-      </div>
+      {formOnly ? null : (
+        <div className="grid justify-items-start gap-2">
+          {done ? (
+            <span className="grid size-10 place-items-center rounded-full bg-[color-mix(in_srgb,var(--ok)_16%,transparent)] text-ok">
+              <Icon name="check" size="md" />
+            </span>
+          ) : (
+            <ProgressRing
+              split={{
+                agree: counts.agree,
+                disagree: counts.disagree,
+                unsure: counts.unsure,
+                open: counts.open,
+              }}
+              size={40}
+            />
+          )}
+          <h2 className={cn("m-0 font-semibold", panel ? "text-title-sm" : "text-page-title")}>
+            {done
+              ? t`Slide ${slideNumber} is done`
+              : t`${counts.open} left on slide ${slideNumber}`}
+          </h2>
+          <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">{doneLine(counts)}</p>
+        </div>
+      )}
       <div className="grid gap-4">
         {questions.map((question, index) => (
           <div
@@ -240,7 +247,7 @@ function SlideDoneCard({
           {readOnly}
         </p>
       )}
-      {readOnly === undefined ? (
+      {readOnly === undefined && !formOnly ? (
         <SubmitArea
           blockers={blockers}
           unsure={unsure}

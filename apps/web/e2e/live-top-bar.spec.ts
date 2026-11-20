@@ -29,7 +29,8 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
   await expect(header).toContainText("Sentinel node AI evaluation · due Fri 23 Oct");
   await expect(header).not.toContainText("RT-14");
   await expect(header).not.toContainText("result set");
-  await expect(bar(page).getByRole("link", { name: "My work" })).toHaveAttribute(
+  await expect(bar(page).getByTestId("viewer-back")).toHaveText("My work");
+  await expect(bar(page).getByTestId("viewer-back")).toHaveAttribute(
     "title",
     "Back to My work. Every answer is saved",
   );
@@ -66,9 +67,11 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
 
   await inspector(page).getByRole("tab", { name: "Opinion" }).click();
   const opinion = inspector(page).getByTestId("stage-opinion");
-  await expect(opinion).toContainText("7 left on slide 8");
-  await expect(opinion).toContainText("48 of 55 objects checked");
-  await expect(opinion).toContainText("1 added");
+  await expect(opinion).toHaveAttribute("data-form-only", "true");
+  await expect(opinion.getByText("Required", { exact: true }).first()).toBeVisible();
+  await expect(opinion).not.toContainText("objects checked");
+  await expect(opinion.getByRole("button", { name: "Submit" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Submit" })).toHaveCount(1);
 
   await inspector(page).getByRole("tab", { name: "Objects" }).click();
   const card = page.getByTestId("object-foot");
@@ -90,18 +93,14 @@ test("the top bar of RT-14 shows the task, the slide chip, the decision ring and
   }
   await expect(progress.getByTestId("decision-ring")).toHaveAttribute("aria-label", /^100% done/);
   await expect(submit).toBeEnabled();
-  await expect(submit).toHaveAttribute("title", "Open the Slide done card in the Opinion tab");
+  await expect(submit).toHaveAttribute("title", "Send your decisions and answers on this slide");
 
   await bar(page).getByTestId("progress-trigger").click();
   await expect(popover).toContainText("55 of 55");
   await expect(popover).toContainText("Still open0");
   await page.keyboard.press("Escape");
-  await page.keyboard.press("i");
-  await expect(page.getByTestId("inspector-tab")).toBeVisible();
   await submit.click();
-  await expect(page).toHaveURL(/tab=opinion/);
-  await expect(opinion.getByRole("button", { name: "Submit" })).toBeVisible();
-  await expect(opinion).toContainText("55 objects checked");
+  await expect(page).toHaveURL(new RegExp(`/tasks/${rt14}/submitted`));
 });
 
 test("guided review checks Guided, and the account menu leads back to Parfocal home", async ({

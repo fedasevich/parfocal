@@ -70,7 +70,6 @@ test("someone not assigned measures but gets no comment tool", async ({ page }) 
 
 for (const [name, path] of [
   ["full viewer in a task", objectsViewer],
-  ["guided review", objectsGuided],
   ["annotate task", annotateTaskViewer],
 ] as const) {
   test(`the ${name} measures with the ruler and arms select and comment`, async ({ page }) => {

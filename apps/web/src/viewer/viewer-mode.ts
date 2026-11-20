@@ -1,6 +1,7 @@
 import type { TaskKind } from "@parfocal/api-client";
 import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { lookOnlyLayer, type ViewerAccess } from "./viewer-access.ts";
+import { layoutChromeOf, type StageLayout } from "./viewer-layout.ts";
 import { type SlideWorkspace, setupOf } from "./workspace.ts";
 
 export const viewerModes = ["look", "review", "guided", "cells", "annotate"] as const;
@@ -65,6 +66,7 @@ export type PanelFacts = {
   readonly hasResults: boolean;
   readonly opinionQuestions: number | undefined;
   readonly comments: number;
+  readonly layout?: StageLayout | undefined;
 };
 
 export type ViewerPanel = {
@@ -128,7 +130,7 @@ export function viewerPanelOf(
     first: firstTab(mode, facts),
     readOnly,
     tools,
-    toolKeys: tools.length > 0,
+    toolKeys: tools.length > 0 && layoutChromeOf(facts.layout ?? "single").toolKeys,
     decide: reviewing && access.kind === "edit",
     submit: reviewing && access.kind === "edit",
     draw: mode === "annotate" && !readOnly,

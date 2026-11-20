@@ -30,6 +30,7 @@ All are set by the web app for features the user uses, hold no name or contact d
 | `parfocal.study` | localStorage | The moderator's study rounds, task sets and session timings on the study page. Participant codes only, no names or patient data | Lets a moderated test run and its rounds compare. Written only on the study page, deleted by clearing site data |
 | `parfocal.study.guard` | localStorage | The study task in progress: its session and task IDs and the screens it may visit. No names or patient data | Shows a visible message when a participant leaves the task's screens. Written while a study task runs, removed when it ends or by clearing site data |
 | `parfocal.study.blocks` | localStorage | A list of the wrong destinations a participant tried during a study task. Screen paths and times only | Lets the moderator see where participants got lost. Written while a study task runs, removed when the moderator clears it or by clearing site data |
+| `parfocal.viewer-return` | sessionStorage | The address of the last page a slide was opened from, such as My work, a project or the disagreements queue, without any search text | Lets the viewer's back link return to that page. Cleared when the tab closes |
 | `parfocal.pinned-slide-strip` | localStorage | On or off | Keeps the slide strip pinned in the viewer |
 | `parfocal.slide-brightness` | localStorage | A number | Keeps the viewer's brightness setting |
 | `parfocal.outline-mode` | localStorage | One of fade, mark-unsure or bands | Keeps how the review viewer shows AI confidence on outlines |

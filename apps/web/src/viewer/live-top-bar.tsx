@@ -9,7 +9,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { ViewingNow } from "../presence/viewing-now.tsx";
 import { formatDue } from "../screens/format.ts";
@@ -23,7 +23,9 @@ import { LiveProgress, useSlideStepKeys } from "./live-progress.tsx";
 import { type LiveReview, liveReview } from "./live-review.ts";
 import { type LiveSlideList, liveSlideList, withNeighbours } from "./live-slides.ts";
 import { LiveSlidesPopover } from "./live-slides-popover.tsx";
+import type { ReturnKind } from "./return-page.ts";
 import { SlideExportMenu } from "./slide-export-menu.tsx";
+import { useReturnPage } from "./use-return-page.ts";
 import type { ModeChoice } from "./viewer-mode.ts";
 
 const slidePage = 200;
@@ -209,6 +211,20 @@ function TopBar({
   const title = load?.task?.name ?? load?.project.name ?? "";
   const slideLabel = review?.slideName || (load?.slide?.label ?? t`Slide`);
   const reportCaseId = load?.clinical ? load.case?.id : undefined;
+  const back = useReturnPage();
+  const backLabels: Record<ReturnKind, string> = {
+    "my-work": t`My work`,
+    project: t`Project`,
+    disagreements: t`Disagreements`,
+    adjudication: t`Adjudication`,
+    evaluation: t`Evaluation`,
+    "sign-off": t`Sign-off`,
+    "task-comments": t`Comments`,
+    search: t`Search`,
+    notifications: t`Notifications`,
+    home: t`Home`,
+  };
+  const backLabel = backLabels[back.kind];
   useSlideStepKeys(list, slideId, onOpenSlide);
   return (
     <header
@@ -216,16 +232,21 @@ function TopBar({
       data-guided={guided || undefined}
       className={`flex shrink-0 items-center gap-3 border-line border-b bg-chrome px-3 text-body-sm ${guided ? "h-16" : "h-11"}`}
     >
-      <Link
-        to="/my-work"
-        title={t`Back to My work. Every answer is saved`}
+      <a
+        href={back.href}
+        data-testid="viewer-back"
+        data-return={back.kind}
+        onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+          event.preventDefault();
+          void navigate({ href: back.href });
+        }}
+        title={t`Back to ${backLabel}. Every answer is saved`}
         className={`inline-flex shrink-0 items-center gap-1.5 rounded-ctl px-2 font-medium ${guided ? "h-10" : "h-8"} text-fg-dim no-underline hover:text-fg`}
       >
         <Icon name="back" />
-        <span>
-          <Trans>My work</Trans>
-        </span>
-      </Link>
+        <span>{backLabel}</span>
+      </a>
       <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
       <div data-testid="case-header" data-phi="" className="flex min-w-0 items-center gap-3">
         <div className="grid min-w-0 leading-tight">
@@ -324,10 +345,7 @@ function TopBar({
           title={
             review === undefined
               ? t`Opening the objects of this slide`
-              : (review.submitReason ??
-                (guided
-                  ? t`Open the Slide done card in the Review tab`
-                  : t`Open the Slide done card in the Opinion tab`))
+              : (review.submitReason ?? t`Send your decisions and answers on this slide`)
           }
           onClick={onSubmit}
         >

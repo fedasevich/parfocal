@@ -32,9 +32,14 @@ test("a remote slide whose source is down opens from the cache and says so", asy
     timeout: 15_000,
   });
   await expect(page.getByTestId("remote-tag")).toBeVisible();
-  await expect(page.getByTestId("remote-offline")).toContainText(
+  const notices = page.locator('[data-slot="top-stack"]').getByTestId("slide-notices");
+  await expect(notices.getByTestId("remote-offline")).toContainText(
     "The source of this slide is not answering",
   );
+  await expect(notices).toHaveAttribute("data-notices", /^remote-offline/);
+  await page.goto(`/projects/${project}/slides/remote-offline-1?layout=focus`);
+  await expect(page.getByTestId("focus-mode")).toBeVisible();
+  await expect(notices.getByTestId("remote-offline")).toBeVisible();
 });
 
 test("an uploaded slide shows neither the remote tag nor the offline notice", async ({ page }) => {

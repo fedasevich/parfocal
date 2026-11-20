@@ -312,7 +312,6 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   taskId={taskId}
                   slideId={row.slide_id}
                   object={row.object}
-                  slideLabel={row.slide_label}
                   className="h-full"
                 />
               </div>

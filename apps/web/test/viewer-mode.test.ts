@@ -335,6 +335,18 @@ test("Annotate on a review task opens on Display with the layers, an annotate ta
   assert.equal(viewerPanelOf("annotate", editAccess, facts).submit, false);
 });
 
+test("tool keys follow the rail, so they are off in guided, focus and the object layout", () => {
+  assert.equal(viewerPanelOf("review", editAccess, facts).toolKeys, true);
+  assert.equal(viewerPanelOf("review", editAccess, { ...facts, layout: "compare" }).toolKeys, true);
+  assert.equal(viewerPanelOf("guided", editAccess, facts).toolKeys, false);
+  assert.equal(viewerPanelOf("review", editAccess, { ...facts, layout: "focus" }).toolKeys, false);
+  assert.equal(
+    viewerPanelOf("annotate", editAccess, { ...annotateFacts, layout: "focus" }).toolKeys,
+    false,
+  );
+  assert.equal(viewerPanelOf("look", editAccess, { ...facts, layout: "object" }).toolKeys, false);
+});
+
 test("a tab the table does not show falls back to the first tab", () => {
   const panel = viewerPanelOf("review", readOnly("not-assigned"), facts);
   assert.equal(panelTabOf(panel, "opinion"), "objects");
