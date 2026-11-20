@@ -221,6 +221,7 @@ export const signInSearch = lenientSearch({
   ]),
   return_to: z.string().optional(),
   sso: z.literal("none").optional(),
+  ended: z.coerce.number().int().min(1).max(24).optional(),
   code: z.unknown().optional(),
   user_id: z.unknown().optional(),
 });

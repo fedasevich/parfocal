@@ -5822,6 +5822,12 @@ export interface Project {
   members: ProjectMember[];
 }
 
+export interface ProjectAccess {
+  project_id: string;
+  owner_id: string;
+  asked_at: string | null;
+}
+
 export interface ProjectAccessRequest {
   id: string;
   project_id: string;
@@ -15435,6 +15441,195 @@ export function useGetReviewTaskDefaults<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetReviewTaskDefaultsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getProjectAccessResponse200 = {
+  data: ProjectAccess;
+  status: 200;
+};
+
+export type getProjectAccessResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getProjectAccessResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getProjectAccessResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getProjectAccessResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getProjectAccessResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getProjectAccessResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getProjectAccessResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getProjectAccessResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getProjectAccessResponseSuccess = getProjectAccessResponse200 & {
+  headers: Headers;
+};
+export type getProjectAccessResponseError = (
+  | getProjectAccessResponse400
+  | getProjectAccessResponse401
+  | getProjectAccessResponse403
+  | getProjectAccessResponse404
+  | getProjectAccessResponse409
+  | getProjectAccessResponse422
+  | getProjectAccessResponse429
+  | getProjectAccessResponse500
+) & {
+  headers: Headers;
+};
+
+export type getProjectAccessResponse =
+  | getProjectAccessResponseSuccess
+  | getProjectAccessResponseError;
+
+export const getGetProjectAccessUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/access-requests/mine`;
+};
+
+/**
+ * @summary Get Project Access
+ */
+export const getProjectAccess = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getProjectAccessResponse> => {
+  return apiFetch<getProjectAccessResponse>(getGetProjectAccessUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProjectAccessQueryKey = (projectId: string) => {
+  return [`/api/projects/${projectId}/access-requests/mine`] as const;
+};
+
+export const getGetProjectAccessQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProjectAccess>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetProjectAccessQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectAccess>>> = ({ signal }) =>
+    getProjectAccess(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getProjectAccess>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetProjectAccessQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectAccess>>>;
+export type GetProjectAccessQueryError = Problem;
+
+export function useGetProjectAccess<
+  TData = Awaited<ReturnType<typeof getProjectAccess>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectAccess>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectAccess>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectAccess<
+  TData = Awaited<ReturnType<typeof getProjectAccess>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectAccess>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectAccess>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetProjectAccess<
+  TData = Awaited<ReturnType<typeof getProjectAccess>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Project Access
+ */
+
+export function useGetProjectAccess<
+  TData = Awaited<ReturnType<typeof getProjectAccess>>,
+  TError = Problem,
+>(
+  projectId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectAccess>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetProjectAccessQueryOptions(projectId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

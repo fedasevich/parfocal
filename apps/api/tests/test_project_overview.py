@@ -147,6 +147,30 @@ def test_review_task_defaults_come_from_the_project(api: ApiAs, database: str) -
     assert defaults["study_template_id"] == ""
 
 
+def test_a_hidden_project_names_its_owner_and_whether_you_asked(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    tenant = uuid.UUID(str(tenant_of(database, r)))
+    closed = make_project(database, tenant, "de-identified")
+    join_project(database, closed, r.people["owner"], "owner")
+    asker = api(r.people["first"])
+    assert asker.get(f"/api/projects/{closed}").status_code == 404
+    url = f"/api/projects/{closed}/access-requests/mine"
+    before = asker.get(url)
+    assert before.status_code == 200, before.text
+    assert before.json() == {
+        "project_id": str(closed),
+        "owner_id": str(r.people["owner"].user_id),
+        "asked_at": None,
+    }
+    assert "name" not in before.json()
+    asked = asker.post(f"/api/projects/{closed}/access-requests").json()
+    assert asker.get(url).json()["asked_at"] == asked["asked_at"]
+    member = api(r.people["owner"]).get(url)
+    assert member.status_code == 409
+    assert member.json()["code"] == "already-in-project"
+    assert asker.get(f"/api/projects/{uuid.uuid4()}/access-requests/mine").status_code == 404
+
+
 def test_asking_for_project_access_records_one_request(api: ApiAs, database: str) -> None:
     r = review(api, database)
     tenant = uuid.UUID(str(tenant_of(database, r)))

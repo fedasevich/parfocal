@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiError, getGetMeQueryKey } from "@parfocal/api-client";
 import {
+  endedAfterHours,
   isSignedOut,
   leaveFor,
   loginUrl,
@@ -133,6 +134,29 @@ test("leaving for the hosted login never lets the sign-in page render", async ()
   const settled = await Promise.race([left.then(() => true), Promise.resolve(false)]);
   assert.equal(settled, false);
   assert.deepEqual(visited, ["/api/auth/login?return_to=%2F"]);
+});
+
+const ended = (current: unknown) =>
+  new ApiError("unauthenticated", 401, {
+    type: "about:blank",
+    title: "Your session ended",
+    status: 401,
+    code: "session-expired",
+    current,
+  });
+
+test("a session that ended says after how many hours on the sign-in page", () => {
+  assert.equal(endedAfterHours(ended({ session_hours: 8 })), 8);
+  assert.equal(endedAfterHours(ended({ session_hours: "8" })), null);
+  assert.equal(endedAfterHours(ended(undefined)), null);
+  assert.equal(endedAfterHours(unauthenticated), null);
+  assert.equal(isSignedOut(ended({ session_hours: 8 })), true);
+  const browser = fakeBrowser("/my-work");
+  signedOutRedirect(browser)(ended({ session_hours: 8 }));
+  assert.deepEqual(browser.visited, ["/sign-in?return_to=%2Fmy-work&ended=8"]);
+  const gate = fakeBrowser("/my-work");
+  signInRedirect(gate)(ended({ session_hours: 12 }));
+  assert.deepEqual(gate.visited, ["/sign-in?return_to=%2Fmy-work&ended=12"]);
 });
 
 test("other failures do not redirect", () => {

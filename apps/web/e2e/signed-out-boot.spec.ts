@@ -13,7 +13,7 @@ function allowedBeforeSignIn(path: string): boolean {
   return path === "/api/me" || path === "/api/status" || path.startsWith("/api/auth/");
 }
 
-async function startAs(page: Page, session: "signed-out" | "expired") {
+async function startAs(page: Page, session: "signed-out" | "expired" | "ended") {
   await page.addInitScript(([key, value]) => window.sessionStorage.setItem(key, value), [
     fakeSessionKey,
     session,
@@ -63,6 +63,21 @@ test("an expired session goes to sign-in with the return path, never to the lock
   await expect(page.getByRole("region", { name: "Locked" })).toHaveCount(0);
   await page.waitForLoadState("networkidle");
   expect(asked.filter((path) => !allowedBeforeSignIn(path))).toEqual([]);
+});
+
+test("a session that ended shows the session ended page, then the sign-in form", async ({
+  page,
+}) => {
+  await startAs(page, "ended");
+  await page.goto("/my-work");
+  await expect(page).toHaveURL(/\/sign-in\?return_to=%2Fmy-work&ended=8$/);
+  const shown = page.getByTestId("issue-session-expired");
+  await expect(shown).toContainText("Your session ended after 8 hours");
+  await expect(shown).toContainText("Everything you saved is kept.");
+  await expect(shown).not.toContainText("Your last save was");
+  await shown.getByRole("button", { name: "Sign in to go on" }).click();
+  await expect(signInHeading(page)).toBeVisible();
+  await expect(page.getByTestId("issue-session-expired")).toHaveCount(0);
 });
 
 test("the first paint shows the boot loader with the product name", async ({ browser }) => {

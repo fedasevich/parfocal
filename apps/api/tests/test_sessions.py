@@ -160,9 +160,24 @@ def test_the_workspace_sets_the_session_lifetime(browser: Browser) -> None:
     browser.login()
     member_of_new_workspace(browser, session_hours=1)
     shift(browser, "created_at", 61)
-    assert session_code(browser) == (401, "unauthenticated")
+    ended = browser.session()
+    assert ended.status_code == 401
+    assert ended.json()["code"] == "session-expired"
+    assert ended.json()["current"] == {"session_hours": 1}
     count = browser.sql(f"SELECT count(*) FROM sessions WHERE subject = '{browser.idp.subject}'")
     assert count == [(0,)]
+    assert session_code(browser) == (401, "unauthenticated")
+
+
+def test_a_session_past_its_end_says_it_ended(browser: Browser) -> None:
+    browser.login()
+    member_of_new_workspace(browser, session_hours=8)
+    shift(browser, "expires_at", 1)
+    ended = browser.session()
+    assert ended.status_code == 401
+    assert ended.json()["code"] == "session-expired"
+    assert ended.json()["current"] == {"session_hours": 8}
+    assert browser.client.get("/api/me").json()["code"] == "unauthenticated"
 
 
 def test_a_person_sees_their_sessions_and_ends_the_others(

@@ -27,6 +27,8 @@ type Props = {
   returnTo: string | null;
   ssoUnknown?: boolean;
   resetLink?: ResetLink | null;
+  endedAfter?: number | null;
+  signInAgain?: (() => void) | null;
 };
 
 const defaultSessionHours = 8;
@@ -37,6 +39,8 @@ export function SignInScreen({
   returnTo,
   ssoUnknown = false,
   resetLink = null,
+  endedAfter = null,
+  signInAgain = null,
 }: Props) {
   const signedInScene = scene === "lock" || scene === "lockkey" || scene === "expired";
   const needsPerson = signedInScene || scene === "passkey" || scene === "passkeyqr";
@@ -107,6 +111,15 @@ export function SignInScreen({
   }
 
   if (scene === "noaccess") return <NoAccess />;
+
+  if (endedAfter !== null && !signingInAgain) {
+    return (
+      <SessionExpiredPage
+        hours={endedAfter}
+        onSignIn={signInAgain ?? (() => setSigningInAgain(true))}
+      />
+    );
+  }
 
   if (scene === "expired" && !signingInAgain) {
     return (

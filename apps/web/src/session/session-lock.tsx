@@ -80,16 +80,16 @@ function useActivity(active: boolean, idleMinutes: number, onLocked: () => void)
 const LockScreen = lazy(() => import("./lock-screen.tsx"));
 const SecondFactorScreen = lazy(() => import("./second-factor-screen.tsx"));
 
-function SignInNeeded() {
+function SignInNeeded({ error }: { error: unknown }) {
   const tried = useRef(false);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
     if (tried.current) return;
     tried.current = true;
-    if (!signInRedirect(window)()) setPaused(true);
-  }, []);
+    if (!signInRedirect(window)(error)) setPaused(true);
+  }, [error]);
   if (!paused) return <BootLoader />;
-  return <SignInPrompt href={signedOutTarget(window.location) ?? "/sign-in"} />;
+  return <SignInPrompt href={signedOutTarget(window.location, error) ?? "/sign-in"} />;
 }
 
 export function SessionLock({ children }: { children: ReactNode }) {
@@ -107,7 +107,7 @@ export function SessionLock({ children }: { children: ReactNode }) {
     error: me.error,
   });
   if (gate === "wait") return <BootLoader />;
-  if (gate === "sign-in") return <SignInNeeded />;
+  if (gate === "sign-in") return <SignInNeeded error={me.error} />;
   return (
     <LockGuard guarded={guarded} person={known}>
       {children}

@@ -41,6 +41,7 @@ import type {
   Member,
   MemberActivity,
   NamedAuditEvent,
+  ProjectAccess,
   ProjectAccessRequest,
   SecuritySettings,
   ServiceAccount,
@@ -53,6 +54,7 @@ import type {
   Workspace,
   WorkspaceAccessRequest,
 } from "../generated/api.ts";
+import { problemMediaType } from "../problem.ts";
 import { isModelHidden } from "./hidden-models.ts";
 import {
   type PersonKey,
@@ -579,6 +581,18 @@ export function adminHandlers(): RequestHandler[] {
     getGetSecuritySettingsMockHandler(() => toSecuritySettings()),
     invitePreviewHandler(),
     getListInvitationsMockHandler(() => toInvitations()),
+    http.get<{ projectId: string }>(
+      "*/api/projects/:projectId/access-requests/mine",
+      ({ params }) => {
+        const access = toProjectAccess(params.projectId);
+        return access === null
+          ? HttpResponse.json(
+              { type: "about:blank", title: "Project not found", status: 404, code: "not-found" },
+              { status: 404, headers: { "content-type": problemMediaType } },
+            )
+          : HttpResponse.json(access);
+      },
+    ),
     getRequestProjectAccessMockHandler(({ params }) =>
       toProjectAccessRequest(String(params.projectId)),
     ),
@@ -697,7 +711,26 @@ export const invitePreviewHandler = (overrideResponse?: InvitePreview) =>
       : HttpResponse.json(overrideResponse ?? toInvitePreview()),
   );
 
+const hiddenProjectId = "00000000-0000-4000-8069-0000000000a1";
+
+let hiddenProjectAskedAt: string | null = null;
+
+export const toProjectAccess = (projectId: string): ProjectAccess | null => {
+  if (projectId !== hiddenProjectId) return null;
+  return { project_id: hiddenProjectId, owner_id: people.LM.id, asked_at: hiddenProjectAskedAt };
+};
+
 export const toProjectAccessRequest = (projectId: string): ProjectAccessRequest => {
+  if (projectId === hiddenProjectId) {
+    hiddenProjectAskedAt ??= scenarioNow;
+    return {
+      id: "00000000-0000-4000-8069-000000000003",
+      project_id: hiddenProjectId,
+      user_id: people.AK.id,
+      owner_id: people.LM.id,
+      asked_at: hiddenProjectAskedAt,
+    };
+  }
   const project = projects.find((item) => item.id === projectId) ?? projects[0];
   return {
     id: "00000000-0000-4000-8069-000000000002",
