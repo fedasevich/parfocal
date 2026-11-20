@@ -2,6 +2,7 @@ import { HttpResponse, http, type RequestHandler } from "msw";
 import { z } from "zod";
 import type { PasskeyCreation, SavedPasskeySummary, SignInLanding } from "../generated/api.ts";
 import { defaultReturnPath, isSafeReturnPath } from "./admin-handlers.ts";
+import { markFakeSignIn } from "./fresh-sign-in.ts";
 import { people } from "./scenario.ts";
 import { signInSecrets } from "./scenario-admin.ts";
 
@@ -52,6 +53,7 @@ const passwordSignInHandler = () =>
     if (parsed.data.password !== signInSecrets.password) {
       return problem(401, "The email or password is wrong", "invalid-credentials");
     }
+    markFakeSignIn();
     return HttpResponse.json(landing(parsed.data.return_to ?? null));
   });
 

@@ -801,11 +801,11 @@ function ReportFlow({
                       if (response.status !== 200) return doneWith(false);
                       finish(remember(response));
                     },
-                    onError: () => doneWith(false),
+                    onError: (error) => doneWith(false, error),
                   },
                 );
               })
-              .catch(() => doneWith(false));
+              .catch((error: unknown) => doneWith(false, error));
           }}
         />
       ) : null}

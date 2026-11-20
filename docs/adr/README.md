@@ -369,3 +369,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0406](0406-task-timing-events-are-stored-by-the-api.md) | Task timing events are stored by the API without person, case or slide ids | Accepted | 2026-11-20 |
 | [0407](0407-gpu-pools-run-in-any-region-until-real-data-arrives.md) | GPU pools run in any region until real patient data arrives | Accepted | 2026-11-20 |
 | [0408](0408-mirax-and-dicom-slides-are-served-as-a-lossless-pyramid-tiff-made-at-ingest.md) | MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest | Accepted | 2026-11-20 |
+| [0409](0410-a-signature-needs-a-sign-in-from-the-last-5-minutes.md) | A signature needs a sign-in from the last 5 minutes, proved by the identity provider's auth_time | Accepted | 2026-11-20 |

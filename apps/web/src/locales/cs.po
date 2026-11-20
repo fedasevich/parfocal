@@ -16252,6 +16252,10 @@ msgstr ""
 msgid "That object is no longer in this result, so nothing was changed. Reload the slide and try again."
 msgstr ""
 
+#: src/screens/clinical-report/modals.tsx
+msgid "That password did not work. Nothing was signed."
+msgstr ""
+
 #: src/screens/upload/formats-drawer.tsx
 msgid "The \"format\" field must be \"parfocal-results\"."
 msgstr ""

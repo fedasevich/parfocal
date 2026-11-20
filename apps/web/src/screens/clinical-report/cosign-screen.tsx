@@ -24,6 +24,7 @@ import { Textarea } from "@parfocal/ui/components/textarea";
 import { Zone } from "@parfocal/ui/components/zone";
 import { type ReactNode, useRef, useState } from "react";
 import { useLengthUnits } from "../../measure/length-units.ts";
+import { currentPath, signingPending } from "../../session/signature-sign-in.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { formatClock, formatDayMonth } from "../format.ts";
@@ -191,7 +192,9 @@ function CosignFlow({
     return null;
   });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [modal, setModal] = useState<"return" | "sign" | null>(null);
+  const [modal, setModal] = useState<"return" | "sign" | null>(() =>
+    live && signingPending(currentPath()) ? "sign" : null,
+  );
   const [signed, setSigned] = useState<Report | null>(null);
   const toast = useToast();
   const renderLink = useLinkRenderer();
@@ -676,7 +679,7 @@ function CosignFlow({
                     finish(keep(response));
                   }),
               )
-              .catch(() => done(false));
+              .catch((error: unknown) => done(false, error));
           }}
         />
       ) : null}

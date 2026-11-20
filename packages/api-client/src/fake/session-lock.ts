@@ -1,5 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { problemMediaType } from "../problem.ts";
+import { markFakeSignIn } from "./fresh-sign-in.ts";
 import { sessionPolicy } from "./scenario-admin.ts";
 
 let activeAt = Date.now();
@@ -74,11 +75,16 @@ export function sessionLockHandlers() {
     }),
     http.get("*/api/auth/login", ({ request }) => {
       resetFakeSessionLock();
-      return redirectTo(safeReturnPath(new URL(request.url).searchParams.get("return_to")));
+      const query = new URL(request.url).searchParams;
+      if (query.get("reauth") === "true") markFakeSignIn();
+      return redirectTo(safeReturnPath(query.get("return_to")));
     }),
     http.post("*/api/auth/login", async ({ request }) => {
       resetFakeSessionLock();
       const body: unknown = await request.json().catch(() => null);
+      if (typeof body === "object" && body !== null && "reauth" in body && body.reauth === true) {
+        markFakeSignIn();
+      }
       const returnTo =
         typeof body === "object" && body !== null && "return_to" in body
           ? String(body.return_to)

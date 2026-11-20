@@ -33,6 +33,7 @@ import type {
 } from "../generated/api.ts";
 import { answersFor, countedFromAnswers, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
+import { freshSignInRefusal } from "./fresh-sign-in.ts";
 import {
   fakeQueueScene,
   type LiveRow,
@@ -594,6 +595,7 @@ export function adjudicationHandlers(): RequestHandler[] {
         started_at: scenarioNow,
       };
     }),
+    http.post("*/api/review-tasks/:taskId/sign-off", () => freshSignInRefusal() ?? undefined),
     getSignOffReviewTaskMockHandler(({ params }) => {
       const signing = otherTask(String(params.taskId)) ?? task();
       signTask(signing);
