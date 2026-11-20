@@ -230,6 +230,16 @@ export function identifiedSlideFormat(format: string | null | undefined): SlideF
   return slideFormatIds.find((formatId) => formatId === format) ?? null;
 }
 
+const convertedAtIngest: ReadonlySet<string> = new Set<SlideFormatId>(["mirax", "dicom"]);
+
+export function servedPyramidFormat(
+  format: string | null | undefined,
+  original: string,
+): SlideFormatId | null {
+  if (format == null || !convertedAtIngest.has(format)) return null;
+  return slideFormatFromName(original) === "generic-tiff" ? "generic-tiff" : null;
+}
+
 export interface SignedSlideOptions {
   readonly access: TileAccess;
   readonly basePath: string;
@@ -308,6 +318,7 @@ export async function signedOpenRequest(options: SignedSlideOptions): Promise<Op
   const { access, basePath, original, baseUrl, fetcher, signal } = options;
   const formatId =
     options.formatId ??
+    servedPyramidFormat(options.identifiedFormat, original) ??
     identifiedSlideFormat(options.identifiedFormat) ??
     slideFormatFromName(original);
   if (formatId === null) throw new UnsupportedFormatError(original);

@@ -1,11 +1,18 @@
 import { HttpResponse, http, passthrough, type RequestHandler } from "msw";
 import type { TileAccess } from "../generated/api.ts";
-import { sampleSlides } from "./scenario.ts";
+import { sampleSlides, slides } from "./scenario.ts";
 
 export const fakeTileLifetimeSeconds = 600;
 export const fakeRemotePrefix = "remote-";
 export const fakeOfflinePrefix = "remote-offline-";
 export const fakeBrokenPrefix = "broken-";
+
+const servedFile = (slideId: string): Pick<TileAccess, "original" | "format"> => {
+  const converted = slides.find((slide) => slide.id === slideId)?.format;
+  if (converted !== undefined) return { original: "original.tiff", format: converted };
+  const sample = sampleSlides.some((item) => item.id === slideId);
+  return { original: sample ? "original.tif" : "slide.tiff", format: "generic-tiff" };
+};
 
 export const toTileAccess = (slideId: string, now: Date = new Date()): TileAccess => {
   const remote = slideId.startsWith(fakeRemotePrefix);
@@ -14,8 +21,7 @@ export const toTileAccess = (slideId: string, now: Date = new Date()): TileAcces
     expires_at: new Date(now.getTime() + fakeTileLifetimeSeconds * 1000).toISOString(),
     lifetime_seconds: fakeTileLifetimeSeconds,
     base_path: remote ? `/api/remote-tiles/${slideId}/` : `/tiles/${slideId}/`,
-    original: sampleSlides.some((sample) => sample.id === slideId) ? "original.tif" : "slide.tiff",
-    format: "generic-tiff",
+    ...servedFile(slideId),
     storage: remote ? "remote" : "uploaded",
     offline: slideId.startsWith(fakeOfflinePrefix),
   };

@@ -41,7 +41,7 @@ from parfocal_api.showcase_demo import (
     decide_all,
     order_now,
 )
-from parfocal_api.showcase_results import REGIONS_MODEL, model_regions
+from parfocal_api.showcase_results import REGIONS_MODEL, gallery_label, model_regions
 from parfocal_api.showcase_reviews import (
     QUEUE_TASK,
     Seeded,
@@ -788,7 +788,11 @@ async def seed_gallery(
     for slide in FORMAT_GALLERY:
         stored = await stored_facts(store, fixture_folder(slide.file))
         await add_slide(
-            connection, seeded, project.id, slide.file, gallery_facts(slide, manifest, stored)
+            connection,
+            seeded,
+            project.id,
+            gallery_label(slide.file, slide.format),
+            gallery_facts(slide, manifest, stored),
         )
 
 

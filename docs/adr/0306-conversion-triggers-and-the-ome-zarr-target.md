@@ -4,6 +4,7 @@
 - Status: Accepted
 - Amended by [ADR 0310](0310-converted-jpeg-2000-slides-are-lossless-and-keep-the-source-levels.md) (converted JPEG 2000 slides are lossless and keep the source levels)
 - Trigger list settled by [ADR 0316](0316-jpeg-2000-slides-stay-native.md) (JPEG 2000 slides stay native): `jpeg2000-decode-budget` was measured on 2026-11-15 and has not fired
+- Trigger `mirax-or-dicom` added and fired by [ADR 0408](0408-mirax-and-dicom-slides-are-served-as-a-lossless-pyramid-tiff-made-at-ingest.md) (MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest), whose target is a BigTIFF, not OME-Zarr
 - Deciders: Yurii Fedas
 - Backlog: INGEST-015 (conversion fallback worker). Builds on [ADR 0043](0043-server-slide-reading.md) (server slide reading, whose rule 6 says a conversion trigger needs its own ADR), [ADR 0111](0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md) (JPEG 2000 in the decode workers, which names the only trigger so far) and [ADR 0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) (the JPEG chunk layout the browser reads).
 

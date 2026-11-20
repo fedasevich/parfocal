@@ -1,3 +1,4 @@
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -65,8 +66,24 @@ class ModelCells:
     cells: list[Cell]
 
 
+ZIPPED_FORMAT_NAMES = {"mirax": "MIRAX", "dicom": "DICOM"}
+SHOWN_ZIP = re.compile(rf"^(?P<stem>.+) \((?:{'|'.join(ZIPPED_FORMAT_NAMES.values())})\)$")
+
+
+def gallery_label(file: str, format: str) -> str:
+    name = ZIPPED_FORMAT_NAMES.get(format)
+    if name is None or not file.lower().endswith(".zip"):
+        return file
+    return f"{file[: -len('.zip')]} ({name})"
+
+
+def fixture_file_of(label: str) -> str:
+    shown = SHOWN_ZIP.match(label)
+    return label if shown is None else f"{shown['stem']}.zip"
+
+
 def folder_of(label: str, root: Path = MODEL_RESULTS) -> Path:
-    return root / label.lower().replace("_", "-").replace(".", "-")
+    return root / fixture_file_of(label).lower().replace("_", "-").replace(".", "-")
 
 
 def scaled(value: float | None) -> int:

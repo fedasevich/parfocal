@@ -368,3 +368,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0405](0405-best-one-click-outlines-use-a-live-vit-l-embedding-and-the-vit-l-decoder.md) | Best one-click outlines use a live ViT-L embedding from the server and the ViT-L decoder in the browser | Accepted | 2026-11-19 |
 | [0406](0406-task-timing-events-are-stored-by-the-api.md) | Task timing events are stored by the API without person, case or slide ids | Accepted | 2026-11-20 |
 | [0407](0407-gpu-pools-run-in-any-region-until-real-data-arrives.md) | GPU pools run in any region until real patient data arrives | Accepted | 2026-11-20 |
+| [0408](0408-mirax-and-dicom-slides-are-served-as-a-lossless-pyramid-tiff-made-at-ingest.md) | MIRAX and DICOM slides are served as a lossless pyramid TIFF made at ingest | Accepted | 2026-11-20 |

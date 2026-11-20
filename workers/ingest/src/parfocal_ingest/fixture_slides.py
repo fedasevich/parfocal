@@ -1,12 +1,15 @@
 import argparse
 import asyncio
+import dataclasses
+import gzip
 import hashlib
 import os
+import shutil
 import sys
 import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import httpx2
 
@@ -16,6 +19,7 @@ from parfocal_common.ingest import (
     SAMPLE_FACTS_NAME,
     fixture_folder,
     fixture_original_key,
+    served_fixture,
 )
 from parfocal_common.jobs import StepFailedError
 from parfocal_common.object_store import ObjectStore, StorageError
@@ -24,6 +28,7 @@ from parfocal_common.settings import load_settings
 from parfocal_ingest.identify import Identified
 from parfocal_ingest.parse_jobs import READER_ERRORS, identify_file, unpacked_in
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
+from parfocal_ingest.pyramid_tiff import CONVERTED_VARIANT, convert_original
 from parfocal_ingest.sample_files import (
     DerivedFile,
     NotASampleSlideError,
@@ -49,6 +54,7 @@ class Prepared:
     identified: Identified
     found: Pyramid
     files: list[DerivedFile]
+    served: Path
 
 
 @dataclass(frozen=True)
@@ -76,6 +82,8 @@ def local_copy(name: str, folders: Sequence[Path]) -> Path | None:
 
 
 def prepared(local: Path, work: Path) -> Prepared:
+    if served_fixture(local.name) != local.name:
+        return converted(local, work)
     identified = identify_file(local, local.name)
     if identified.format is None:
         raise NotASampleSlideError(f"{local.name} is not a slide this app reads")
@@ -83,7 +91,24 @@ def prepared(local: Path, work: Path) -> Prepared:
     found = read_pyramid(readable, identified)
     if not isinstance(found, Pyramid):
         raise NotASampleSlideError(f"{local.name} has no readable pyramid")
-    return Prepared(identified, found, derived_files(local, readable, identified, found))
+    return Prepared(identified, found, derived_files(local, readable, identified, found), local)
+
+
+def converted(local: Path, work: Path) -> Prepared:
+    target = work / served_fixture(local.name)
+    source_identified, source, _ = convert_original(local, target, work / "conversion")
+    identified = identify_file(target, target.name)
+    found = read_pyramid(target, identified)
+    if not isinstance(found, Pyramid):
+        raise NotASampleSlideError(f"{target.name} has no readable pyramid")
+    files = derived_files(target, target, identified, found)
+    shown = Identified(source_identified.format, CONVERTED_VARIANT)
+    return Prepared(
+        shown,
+        dataclasses.replace(found, scale=source.scale, notices=source.notices),
+        files,
+        target,
+    )
 
 
 def sha256_of(path: Path) -> str:
@@ -118,7 +143,7 @@ async def store_original(store: ObjectStore, name: str, local: Path, size: int) 
     if stored is not None:
         raise FixtureConflictError(f"{key} holds {stored} bytes, the fixture has {size}")
     source = f"{FIXTURES_PREFIX}{name}"
-    if await store.head_object(source) == size:
+    if served_fixture(name) == name and await store.head_object(source) == size:
         await store.copy_object(source, key, size, COPY_PART_BYTES)
     else:
         await send_original(store, local, key)
@@ -132,22 +157,22 @@ async def send_fixture(
     facts_key = f"{folder}{SAMPLE_FACTS_NAME}"
     with tempfile.TemporaryDirectory(prefix="fixture-slide-") as work:
         ready = await asyncio.to_thread(prepared, local, Path(work))
-    planned = (
-        *(f"{folder}{file.name}" for file in ready.files),
-        fixture_original_key(name),
-        facts_key,
-    )
-    if dry_run:
-        return Outcome(name, "planned", planned)
-    written: list[str] = []
-    for file in ready.files:
-        key = f"{folder}{file.name}"
-        if await put_new(store, key, file.body, file.content_type, file.content_encoding):
-            written.append(key)
-    size = (await asyncio.to_thread(local.stat)).st_size
-    if await store_original(store, name, local, size):
-        written.append(fixture_original_key(name))
-    sha256 = await asyncio.to_thread(sha256_of, local)
+        planned = (
+            *(f"{folder}{file.name}" for file in ready.files),
+            fixture_original_key(name),
+            facts_key,
+        )
+        if dry_run:
+            return Outcome(name, "planned", planned)
+        written: list[str] = []
+        for file in ready.files:
+            key = f"{folder}{file.name}"
+            if await put_new(store, key, file.body, file.content_type, file.content_encoding):
+                written.append(key)
+        size = (await asyncio.to_thread(ready.served.stat)).st_size
+        if await store_original(store, name, ready.served, size):
+            written.append(fixture_original_key(name))
+        sha256 = await asyncio.to_thread(sha256_of, ready.served)
     facts = facts_of(fixture_original_key(name), size, sha256, ready.identified, ready.found)
     if await put_new(store, facts_key, facts.model_dump_json().encode(), "application/json"):
         written.append(facts_key)
@@ -187,6 +212,26 @@ async def stored_copy(store: ObjectStore, name: str, folder: Path) -> Path | Non
     return target
 
 
+def write_folder(name: str, local: Path, folder: Path) -> list[str]:
+    folder.mkdir(parents=True, exist_ok=True)
+    original = PurePosixPath(fixture_original_key(name)).name
+    with tempfile.TemporaryDirectory(prefix="fixture-slide-") as work:
+        ready = prepared(local, Path(work))
+        for file in ready.files:
+            body = gzip.decompress(file.body) if file.content_encoding == "gzip" else file.body
+            (folder / file.name).write_bytes(body)
+        shutil.copyfile(ready.served, folder / original)
+    facts = facts_of(
+        fixture_original_key(name),
+        (folder / original).stat().st_size,
+        sha256_of(folder / original),
+        ready.identified,
+        ready.found,
+    )
+    (folder / SAMPLE_FACTS_NAME).write_text(facts.model_dump_json())
+    return sorted(path.name for path in folder.iterdir())
+
+
 def unfinished(outcomes: Sequence[Outcome]) -> list[Outcome]:
     return [outcome for outcome in outcomes if outcome.state not in FINISHED]
 
@@ -201,10 +246,19 @@ async def main() -> None:
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--from", dest="folders", type=Path, action="append", default=[])
+    parser.add_argument("--into", type=Path)
     parser.add_argument("names", nargs="*")
     arguments = parser.parse_args()
     folders = [*arguments.folders, cache_folder(), SYNTHETIC_FOLDER]
     names = arguments.names or gallery_files()
+    if arguments.into is not None:
+        for name in names:
+            local = local_copy(name, folders)
+            if local is None:
+                sys.exit(f"{name} is not in {', '.join(map(str, folders))}")
+            target = arguments.into / fixture_folder(name)
+            print(name, " ".join(write_folder(name, local, target)))
+        return
     settings = load_settings(IngestSettings)
     async with httpx2.AsyncClient(timeout=300) as http:
         outcomes = await send_fixtures(
