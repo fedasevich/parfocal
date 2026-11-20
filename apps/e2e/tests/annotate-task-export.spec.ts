@@ -47,7 +47,7 @@ test("an annotate task exports its objects as Parfocal JSON and the file imports
   await flow.getByRole("button", { name: "Send to experts" }).click();
   await expect(flow.getByRole("status")).toContainText("Export the sample was sent");
   await flow.getByRole("button", { name: "Open the task" }).click();
-  await expect(page).toHaveURL(/\/annotate-task\?task=/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+\?task=[^&]+&mode=annotate/);
   const taskId = new URL(page.url()).searchParams.get("task") ?? "";
   expect(taskId).not.toBe("");
 

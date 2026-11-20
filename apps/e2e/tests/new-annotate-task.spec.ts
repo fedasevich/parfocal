@@ -28,7 +28,7 @@ test("an annotate task is created from its stepper and opens", async ({ page, re
   await expect(flow.getByRole("status")).toContainText("Annotate the sample was sent");
 
   await flow.getByRole("button", { name: "Open the task" }).click();
-  await expect(page).toHaveURL(/\/annotate-task\?task=/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+\?task=[^&]+&mode=annotate/);
   const taskId = new URL(page.url()).searchParams.get("task") ?? "";
   const task = await call(page, "GET", `/api/review-tasks/${taskId}`);
   expect(task.status, JSON.stringify(task.json)).toBe(200);

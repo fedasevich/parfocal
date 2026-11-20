@@ -159,7 +159,7 @@ test("a heatmap starts with the chosen colour map and opacity", async ({ page })
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 30_000,
   });
-  const slideId = /slides\/([^/]+)\//.exec(page.url())?.[1] ?? "";
+  const slideId = /slides\/([^/?]+)/.exec(page.url())?.[1] ?? "";
   await page.addInitScript(
     ({ id, slide }) => {
       const grid = Array.from({ length: 64 }, (_, index) => (index % 8) * 30);

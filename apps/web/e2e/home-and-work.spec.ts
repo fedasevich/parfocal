@@ -233,7 +233,7 @@ test("To review continues into guided review at the next open object in one acti
   });
   await page.goBack();
   await page.getByRole("button", { name: /^Continue reviewing/ }).click();
-  await expect(page).toHaveURL(/&object=T5$/);
+  await expect(page).toHaveURL(/\/slides\/[0-9a-f-]+\?object=T5&task=[0-9a-f-]+&mode=guided$/);
   const url = new URL(page.url());
   url.searchParams.set("object", "T3");
   await page.goto(url.toString());

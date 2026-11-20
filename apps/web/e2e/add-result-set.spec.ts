@@ -105,7 +105,7 @@ test("a GeoJSON is previewed on the slide, shifted and scaled, saved and listed 
     };
   });
   const stage = await openSlide(page);
-  const slideId = /slides\/([^/]+)\//.exec(page.url())?.[1] ?? "";
+  const slideId = /slides\/([^/?]+)/.exec(page.url())?.[1] ?? "";
   const rows = page.getByTestId("result-set-layer");
   await expect(page.getByTestId("result-set-layers")).toBeVisible();
   const before = await rows.count();
@@ -191,7 +191,7 @@ test("a stored heatmap is drawn on the slide and listed in Layers with colour ma
 }) => {
   test.setTimeout(90_000);
   await openSlide(page);
-  const slideId = /slides\/([^/]+)\//.exec(page.url())?.[1] ?? "";
+  const slideId = /slides\/([^/?]+)/.exec(page.url())?.[1] ?? "";
   const setId = "00000000-0000-4000-8009-0000000000b1";
   await page.addInitScript(
     ({ id, slide }) => {
@@ -251,7 +251,7 @@ test("a stored heatmap is drawn on the slide and listed in Layers with colour ma
 test("a long result set name is shown in full in the Display tab", async ({ page }) => {
   test.setTimeout(90_000);
   await openSlide(page);
-  const slideId = /slides\/([^/]+)\//.exec(page.url())?.[1] ?? "";
+  const slideId = /slides\/([^/?]+)/.exec(page.url())?.[1] ?? "";
   const name = "( InstanSeg ) Tumour bed nuclei, second pass with a long descriptive name";
   await page.addInitScript(
     ({ slide, label }) => {
