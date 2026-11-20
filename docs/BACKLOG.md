@@ -6910,11 +6910,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The agent check of app.parfocal.eu on 2026-11-20 after v0.27.0 found these faults. Compare keeps reading Opening under the slide counter and keeps scene=picking in the URL after both panes draw, and its side panel shows fixed sample text that does not match the picked slides. Reloading the task is out page shows a task that does not exist. The co-sign page of a draft report reads METASTATIC CARCINOMA (0/null) and leaves drafted by blank. The evaluation PDF prints the raw reason code boundary_off instead of Boundary is off. Guided screens ask my-display and get 403 on read only and freshly made tasks. The ML workspace Start here card reads Slide 2 of 1. Object search takes 4 to 8 seconds and the palette shows nothing meanwhile. The Slides tab name column shrinks to 75 px at 1024 and 12 px at 820.
   Done when each fault has a spec or test that fails before and passes after, on the fake API, and the API ones with a DB test.
   Depends on PROTO-090, VIEW-075. Size: M.
-- [ ] PROTO-093 · One viewer access rule makes review read only where it should be
+- [x] PROTO-093 · One viewer access rule makes review read only where it should be
   From the viewer map of 2026-11-20 (`docs/results/2026-11-20-viewer-state-machine.html`, steps 1 and 2 of its migration list). Read only stops at the objects card, so a person not assigned, or a signed off or withdrawn task, still gets the editable Opinion form, two Submit buttons and the full rail, and the server refuses the save. Add one access function for the viewer that returns edit, or read only with a reason, from role, assignment and task state, and make the Opinion form, both Submit buttons and the rail obey it.
   Done when a unit test checks the function against the permissions matrix and specs show each read only case with no editable control.
   Depends on PROTO-072. Size: S.
-- [ ] PROTO-094 · Annotate tasks are read only for people not assigned, and the API checks it
+- [x] PROTO-094 · Annotate tasks are read only for people not assigned, and the API checks it
   From the viewer map of 2026-11-20, steps 3 and 4. The annotate layer write endpoints ask only for the review right, with no assignment check (`apps/api/src/parfocal_api/annotate_layer.py`), and the viewer offers every drawing tool to anyone. Add the assignment check to every annotate layer write, and use the PROTO-093 access rule to give annotate tasks a read only banner and rail for people not assigned and for withdrawn tasks.
   Done when a DB test refuses a write from a member who holds the review right and no assignment, and a spec shows the read only annotate view.
   Depends on PROTO-093. Size: S.
