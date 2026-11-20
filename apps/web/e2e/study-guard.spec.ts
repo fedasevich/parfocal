@@ -20,7 +20,7 @@ const tasks = [
     slide: "tumor_044",
     startPath: slideList,
     guard: { stayOn: ["^/projects/{project}$"], where: "This task happens on the slide list." },
-    check: { path: "/slides/{slide}/live" },
+    check: { path: "/slides/{slide}(\\?|$)" },
   },
   {
     id: "c",
@@ -63,14 +63,14 @@ test("a guard blocks a wrong destination with its message, lets the completing o
   await expect(row).toBeVisible({ timeout: 30_000 });
   await row.click();
   await expect(page.getByTestId("study-task-card")).toContainText("3/3", { timeout: 15_000 });
-  await expect(task).toHaveURL(/\/slides\/.+\/live/);
+  await expect(task).toHaveURL(/\/slides\/[^/?]+(\?|$)/);
   await expect(task.getByTestId("study-guard-message")).toHaveCount(0);
   await expect(page.getByTestId("study-row-b").getByRole("cell").nth(4)).toHaveText("0");
 
   await page.getByRole("button", { name: "Start task" }).click();
   await expect(task.getByTestId("slide-row").first()).toBeVisible({ timeout: 30_000 });
   await task.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
-  await expect(task).toHaveURL(/\/slides\/.+\/live/);
+  await expect(task).toHaveURL(/\/slides\/[^/?]+(\?|$)/);
   await expect(task.getByTestId("study-guard-message")).toHaveCount(0);
   await expect(page.getByTestId("study-row-c").getByRole("cell").nth(4)).toHaveText("0");
 });

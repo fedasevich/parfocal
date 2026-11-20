@@ -15,5 +15,5 @@ test("an unfinished step opens the guided review of the sample", async ({ page }
     .getByRole("region", { name: "Getting started" })
     .getByRole("button", { name: "Review one slide in guided review" })
     .click();
-  await expect(page).toHaveURL(/\/tasks\/sample\/guided/);
+  await expect(page).toHaveURL(/\/tasks\/sample\/guided|mode=guided/);
 });

@@ -18,7 +18,7 @@ test("the cells address opens the engine stage with a grid of stored crops", asy
       crops.push(response.status());
     }
   });
-  await page.goto(`/tasks/${rt14}/cells?slide=${cellsSlide}`);
+  await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}&mode=cells`);
   await ready(page);
   const grid = page.getByTestId("stage-cells-grid");
   const tiles = grid.locator("[data-crop]");
@@ -82,7 +82,7 @@ async function picked(page: Page, cell: string) {
 }
 
 async function openCells(page: Page) {
-  await page.goto(`/tasks/${rt14}/cells?slide=${cellsSlide}`);
+  await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}&mode=cells`);
   await ready(page);
   await expect(page.getByTestId("stage-cells-grid").locator("[data-crop]")).toHaveCount(3);
   return settledCamera(page);

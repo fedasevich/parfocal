@@ -35,8 +35,8 @@ async function settledCamera(page: Page) {
     .toBe(true);
   return last;
 }
-const switchTo = (page: Page, name: "Full viewer" | "Annotate") =>
-  page.getByTestId("workspace-switch").getByRole("radio", { name }).click();
+const switchTo = (page: Page, name: "Look" | "Annotate") =>
+  page.getByTestId("mode-switch").getByRole("radio", { name }).click();
 
 async function dragAcross(page: Page) {
   const box = (await stage(page).boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
@@ -59,21 +59,19 @@ test("an annotate task opens in Annotate", async ({ page }) => {
   await openSlide(page, `?task=${annotateTask}`);
   await expect(page.getByTestId("case-header")).toContainText("Certainty re-read · CAMELYON v1.0");
   await expect(stage(page)).toHaveAttribute("data-workspace", "annotate");
-  await expect(
-    page.getByTestId("workspace-switch").getByRole("radio", { name: "Annotate" }),
-  ).toBeChecked();
+  await expect(page.getByTestId("mode-switch")).toHaveCount(0);
 });
 
 test("a review task opens in Review with the short rail and a pan on drag", async ({ page }) => {
   await openSlide(page, `?task=${rt14}`);
-  await expect(stage(page)).toHaveAttribute("data-workspace", "review");
+  await expect(stage(page)).toHaveAttribute("data-workspace", "look");
   await expect(stage(page)).toHaveAttribute("data-drag", "pan");
   await expect(stage(page)).toHaveAttribute("data-tool", "select");
   await expect(page.locator("button[data-tool]")).toHaveCount(5);
   await expect(page.locator('button[data-tool="poly"]')).toHaveCount(0);
 });
 
-test("switching workspaces changes the rail and the drag but leaves the camera and the canvas alone", async ({
+test("switching modes changes the rail and the drag but leaves the camera and the canvas alone", async ({
   page,
 }) => {
   await openSlide(page);
@@ -83,11 +81,11 @@ test("switching workspaces changes the rail and the drag but leaves the camera a
   const before = await settledCamera(page);
   const canvas = await stage(page).locator("canvas").elementHandle();
 
-  await switchTo(page, "Full viewer");
-  await expect(stage(page)).toHaveAttribute("data-workspace", "review");
+  await switchTo(page, "Look");
+  await expect(stage(page)).toHaveAttribute("data-workspace", "look");
   await expect(page.locator("button[data-tool]")).toHaveCount(5);
   await expect(stage(page)).toHaveAttribute("data-tool", "select");
-  await expect(page).toHaveURL(/workspace=review/);
+  await expect(page).toHaveURL(/mode=look/);
   expect(await cameraOf(page)).toBe(before);
   expect(await canvas?.evaluate((node) => node.isConnected)).toBe(true);
   await expect(stage(page).locator("canvas")).toHaveCount(1);
@@ -100,7 +98,7 @@ test("switching workspaces changes the rail and the drag but leaves the camera a
   expect(await canvas?.evaluate((node) => node.isConnected)).toBe(true);
 });
 
-test("a drag pans in Review and draws a marquee without moving the camera in Annotate", async ({
+test("a drag pans in Look and draws a marquee without moving the camera in Annotate", async ({
   page,
 }) => {
   await openSlide(page);
@@ -114,7 +112,7 @@ test("a drag pans in Review and draws a marquee without moving the camera in Ann
   await page.mouse.up();
   expect(await cameraOf(page)).toBe(start);
 
-  await switchTo(page, "Full viewer");
+  await switchTo(page, "Look");
   await dragAcross(page);
   await expect(page.getByTestId("select-marquee")).toHaveCount(0);
   await page.mouse.up();
@@ -124,7 +122,7 @@ test("a drag pans in Review and draws a marquee without moving the camera in Ann
 test("the Review rail ignores the drawing keys and the marker panel stays out of Review", async ({
   page,
 }) => {
-  await openSlide(page, "?workspace=review");
+  await openSlide(page, "?mode=look");
   await page.keyboard.press("p");
   await expect(stage(page)).toHaveAttribute("data-tool", "select");
   await page.keyboard.press("l");

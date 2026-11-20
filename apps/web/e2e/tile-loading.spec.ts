@@ -2,7 +2,7 @@ import { expect, test } from "./a11y.ts";
 
 const sampleProject = "00000000-0000-4000-8003-000000000001";
 const tumor001 = "00000000-0000-4000-8005-000000000101";
-const livePath = `/projects/${sampleProject}/slides/${tumor001}/live`;
+const livePath = `/projects/${sampleProject}/slides/${tumor001}`;
 
 test("a delayed tile server labels the stage as loading before the first tile and shows the slow source after five", async ({
   page,

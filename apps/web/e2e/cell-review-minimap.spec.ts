@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "./a11y.ts";
 
+const p07 = "00000000-0000-4000-8003-000000000007";
+
 test.use({ viewport: { width: 1440, height: 900 } });
 test.setTimeout(90_000);
 
@@ -122,7 +124,7 @@ test("the arrow keys on the grip move the cell review minimap between corners", 
 });
 
 const liveSlide = "00000000-0000-4000-8005-000000000008";
-const liveCellReview = `/tasks/${rt14}/cells?slide=${liveSlide}`;
+const liveCellReview = `/projects/${p07}/slides/${liveSlide}?task=${rt14}&mode=cells`;
 const liveMinimap = (page: Page) => page.getByTestId("stage-minimap");
 
 async function openLiveCellReview(page: Page) {

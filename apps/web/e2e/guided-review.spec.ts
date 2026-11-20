@@ -105,7 +105,7 @@ test("a reviewer submits, reopens, submits again and the next slide opens", asyn
   await expect(page).toHaveURL(/\/submitted\?/);
   const card = page.getByRole("dialog", { name: "Slide 8 submitted" });
   await card.getByRole("button", { name: "Open slide 9" }).click();
-  await expect(page).toHaveURL(new RegExp(`/guided\\?slide=${a2}`));
+  await expect(page).toHaveURL(new RegExp(`/slides/${a2}\\?.*mode=guided`));
 });
 
 test("a failed submit says every decision is saved and Try again submits", async ({ page }) => {

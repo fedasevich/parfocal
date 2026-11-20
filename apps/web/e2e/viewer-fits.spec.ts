@@ -12,11 +12,11 @@ const sizes = [
   { width: 1024, height: 700 },
 ] as const;
 
-const annotateUrl = `/projects/${p07}/slides/${withResults}/live?task=${annotateTask}&tab=objects&as=DH`;
+const annotateUrl = `/projects/${p07}/slides/${withResults}?task=${annotateTask}&tab=objects&as=DH`;
 
 const routes = [
   ["the full viewer", `/projects/${p07}/slides/${a1}?task=${rt14}`],
-  ["guided review", `/tasks/${rt14}/guided?slide=${a1}`],
+  ["guided review", `/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`],
   ["the annotate task viewer", annotateUrl],
 ] as const;
 
@@ -67,7 +67,7 @@ for (const size of sizes) {
     }
 
     test("every chip and key in the slides popover sits inside its box", async ({ page }) => {
-      await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&as=DH`);
+      await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&as=DH`);
       await ready(page);
       await page.getByTestId("live-top-bar").getByTestId("slide-picker").click();
       const popover = page.getByRole("dialog", { name: "Slides in this case and task" });

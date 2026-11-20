@@ -23,6 +23,14 @@ test("one helper builds the slide address with no workspace and no second route"
   assert.ok(!("workspace" in link.search));
 });
 
+test("the mode and the tab ride in the address of the one slide route", () => {
+  assert.equal(
+    slideHref({ projectId, slideId, taskId: "t1", mode: "guided", object: "T4", tab: "comments" }),
+    `${plain}?task=t1&mode=guided&object=T4&tab=comments`,
+  );
+  assert.equal(slideHref({ projectId, slideId, mode: "look" }), `${plain}?mode=look`);
+});
+
 test("search, My work, home and the shell all reach the slide through the same address", () => {
   const hit = {
     kind: "slide",

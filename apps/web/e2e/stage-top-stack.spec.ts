@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "./a11y.ts";
 
-const annotate = "/projects/p-1/slides/broken-1/live?workspace=annotate&as=DH";
+const annotate = "/projects/p-1/slides/broken-1?mode=annotate&as=DH";
 
 type Box = { x: number; y: number; width: number; height: number };
 

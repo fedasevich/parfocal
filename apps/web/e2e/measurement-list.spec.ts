@@ -45,7 +45,7 @@ test("an area row keeps its size on one line with the perimeter under it, and th
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`/projects/${p07}/slides/${tumor044}/live?workspace=annotate&tab=objects`);
+  await page.goto(`/projects/${p07}/slides/${tumor044}?mode=annotate&tab=objects`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };

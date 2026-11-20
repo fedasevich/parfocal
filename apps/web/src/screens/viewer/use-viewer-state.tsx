@@ -395,9 +395,9 @@ export function useViewerState(props: BodyProps) {
     if (route === null) return;
     if (route.kind === "annotate") {
       void navigate({
-        to: "/projects/$projectId/slides/$slideId/annotate",
+        to: "/projects/$projectId/slides/$slideId",
         params: { projectId, slideId },
-        search: { task: session.taskId, ...(route.tool ? { tool: route.tool } : {}) },
+        search: { task: session.taskId, mode: "annotate", tool: route.tool },
       });
       return;
     }

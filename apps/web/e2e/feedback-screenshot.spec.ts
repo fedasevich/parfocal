@@ -132,7 +132,7 @@ test("the feedback screenshot is blurred over the slide and the patient banner b
   expect(sent).toHaveLength(1);
   const body = JSON.parse(sent[0] ?? "{}") as Record<string, unknown>;
   expect(body["screenshot_png"]).toBe(source.slice("data:image/png;base64,".length));
-  expect(body["route"]).toBe("/projects/$projectId/slides/$slideId_/live");
+  expect(body["route"]).toBe("/projects/$projectId/slides/$slideId");
   expect(body).not.toHaveProperty("path");
 });
 

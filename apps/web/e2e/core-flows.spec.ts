@@ -65,8 +65,8 @@ test(
   realTags(area.review),
   async ({ page }) => {
     await signIn(page, "/my-work");
-    const { task, slide } = await viewableTask(page, "review", true);
-    await page.goto(`/tasks/${task}/guided?slide=${slide}`);
+    const { project, task, slide } = await viewableTask(page, "review", true);
+    await page.goto(`/projects/${project}/slides/${slide}?task=${task}&mode=guided`);
     const decisions = `/api/review-tasks/${task}/slides/${slide}/decisions`;
     const stored = async () => (await ok<Decision[]>(page, "GET", decisions)).length;
     const answers = page.getByRole("group", { name: /^Your (answer|call) on / }).first();
@@ -110,7 +110,7 @@ test("a slide uploaded into a project finishes", realTags(area.upload), async ({
 test("an annotate task slide keeps a drawn region", realTags(area.annotate), async ({ page }) => {
   await signIn(page, "/my-work");
   const { project, task, slide } = await viewableTask(page, "annotate");
-  await page.goto(`/projects/${project}/slides/${slide}/live?task=${task}&tab=objects`);
+  await page.goto(`/projects/${project}/slides/${slide}?task=${task}&tab=objects`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   await expect(stage).toHaveAttribute("data-layer", "shared");

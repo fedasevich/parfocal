@@ -7721,7 +7721,6 @@ msgstr "Full screen"
 #: src/screens/admin/template-editor.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/how-step.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Full viewer"
 msgstr "Full viewer"
 
@@ -8224,7 +8223,6 @@ msgid "How the work is split"
 msgstr "How the work is split"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "How to review"
 msgstr "How to review"
 
@@ -9265,10 +9263,9 @@ msgstr "Loading the project"
 msgid "Loading the report"
 msgstr "Loading the report"
 
-#: src/routes/tasks.$taskId.cells.tsx
-#: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
 #: src/viewer/first-read-guard.tsx
+#: src/viewer/task-slide-redirect.tsx
 msgid "Loading the review"
 msgstr "Loading the review"
 
@@ -9421,6 +9418,10 @@ msgstr "Logo colour {colour}"
 #: src/screens/admin/join-settings.tsx
 msgid "Logo letters"
 msgstr "Logo letters"
+
+#: src/viewer/live-top-bar.tsx
+msgid "Look"
+msgstr "Look"
 
 #: src/screens/viewer/viewer-notices.tsx
 msgid "Look at the slide without AI, or ask the researcher to run the model."
@@ -9792,6 +9793,7 @@ msgid "Mock only"
 msgstr "Mock only"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Mode"
 msgstr "Mode"
 
@@ -13487,6 +13489,7 @@ msgstr "Returns"
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/live-top-bar.tsx
 #: src/viewer/stage-inspector.tsx
 msgid "Review"
 msgstr "Review"

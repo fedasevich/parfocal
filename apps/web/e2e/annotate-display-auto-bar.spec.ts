@@ -12,7 +12,7 @@ async function openAnnotate(page: Page) {
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 25_000 });
   const url = new URL(page.url());
-  await page.goto(`${url.pathname}?task=${rt14}&workspace=annotate`);
+  await page.goto(`${url.pathname}?task=${rt14}&mode=annotate`);
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 25_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   return stage;

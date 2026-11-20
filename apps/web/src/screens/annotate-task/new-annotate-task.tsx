@@ -32,6 +32,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { now } from "../../clock.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
+import { slideLink } from "../../shell/slide-link.ts";
 import { plural } from "../format.ts";
 import { checkChangeOf, checkPresetOf } from "../new-task/annotate-draft.ts";
 import { toPersonInfo } from "../people.ts";
@@ -214,11 +215,7 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       });
       return;
     }
-    void navigate({
-      to: "/projects/$projectId/slides/$slideId/annotate-task",
-      params: { projectId, slideId: first },
-      search: { task: task.id },
-    });
+    void navigate(slideLink({ projectId, slideId: first, taskId: task.id, mode: "annotate" }));
   };
 
   const steps: FlowStep[] = annotateStepKeys.map((key) => ({ label: stepNames[key] }));

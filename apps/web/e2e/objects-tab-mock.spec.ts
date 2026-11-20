@@ -9,7 +9,7 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 test.describe.configure({ timeout: 90_000 });
 test.use({ viewport: { width: 1440, height: 900 } });
 
-const openLive = async (page: Page, path = `${slide}/live?task=${rt14}&workspace=review`) => {
+const openLive = async (page: Page, path = `${slide}?task=${rt14}&mode=review`) => {
   await page.goto(`/projects/${p07}/slides/${path}`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 25_000,

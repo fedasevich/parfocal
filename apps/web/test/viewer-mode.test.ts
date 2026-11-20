@@ -11,10 +11,12 @@ import {
 } from "../src/viewer/viewer-access.ts";
 import {
   type ModeFacts,
+  modeOfWorkspace,
   type PanelFacts,
   panelTabOf,
   type ViewerMode,
   viewerModeOf,
+  viewerModes,
   viewerPanelOf,
 } from "../src/viewer/viewer-mode.ts";
 
@@ -25,8 +27,6 @@ const noTask: ModeFacts = {
   taskKind: undefined,
   access: editAccess,
   chosen: undefined,
-  guided: false,
-  cells: false,
 };
 
 const facts: PanelFacts = {
@@ -67,27 +67,68 @@ test("with no task an owner or a reviewer opens Annotate and a project viewer op
 test("a project viewer stays in Look even when the address asks for Annotate", () => {
   const rule = viewerModeOf({ ...noTask, access: readOnly("no-review-right"), chosen: "annotate" });
   assert.equal(rule.mode, "look");
-  assert.equal(rule.workspace, "review");
+  assert.equal(rule.workspace, "look");
   assert.deepEqual(rule.choices, []);
 });
 
-test("with no task the Full viewer choice opens Look with the review rail", () => {
-  const rule = viewerModeOf({ ...noTask, chosen: "review" });
+test("with no task the Look choice opens Look with the look rail", () => {
+  const rule = viewerModeOf({ ...noTask, chosen: "look" });
   assert.equal(rule.mode, "look");
-  assert.deepEqual(rule.choices, ["review", "annotate"]);
+  assert.equal(rule.workspace, "look");
+  assert.equal(rule.choice, "look");
+  assert.deepEqual(rule.choices, ["look", "annotate"]);
+});
+
+test("the address, the switch and the code name the mode with one word", () => {
+  const review = { ...noTask, hasTask: true, taskKind: "review" as const };
+  for (const mode of ["review", "guided", "annotate"] as const) {
+    const rule = viewerModeOf({ ...review, chosen: mode });
+    assert.equal(rule.mode, mode);
+    assert.equal(rule.choice, mode);
+    assert.ok(rule.choices.includes(rule.choice));
+  }
+  for (const mode of ["look", "annotate"] as const) {
+    const rule = viewerModeOf({ ...noTask, chosen: mode });
+    assert.equal(rule.choice, mode);
+    assert.ok(rule.choices.includes(rule.choice));
+  }
+  assert.equal(viewerModeOf({ ...review, chosen: "cells" }).choice, "review");
+});
+
+test("the same task kind always offers the same modes, whatever the address asks", () => {
+  const review = { ...noTask, hasTask: true, taskKind: "review" as const };
+  const annotate = { ...noTask, hasTask: true, taskKind: "annotate" as const };
+  for (const chosen of [undefined, ...viewerModes]) {
+    assert.deepEqual(
+      viewerModeOf({ ...noTask, chosen }).choices,
+      ["look", "annotate"],
+      String(chosen),
+    );
+    assert.deepEqual(
+      viewerModeOf({ ...review, chosen }).choices,
+      ["guided", "review", "annotate"],
+      String(chosen),
+    );
+    assert.deepEqual(viewerModeOf({ ...annotate, chosen }).choices, [], String(chosen));
+    assert.equal(viewerModeOf({ ...annotate, chosen }).mode, "annotate", String(chosen));
+  }
 });
 
 test("the mode follows the task kind and never the entry point", () => {
   const review = { ...noTask, hasTask: true, taskKind: "review" as const };
   assert.equal(viewerModeOf(review).mode, "review");
-  assert.equal(viewerModeOf({ ...review, chosen: "review" }).mode, "review");
-  assert.equal(viewerModeOf({ ...review, guided: true }).mode, "guided");
-  assert.equal(viewerModeOf({ ...review, cells: true }).mode, "cells");
-  assert.deepEqual(viewerModeOf(review).choices, ["guided", "review"]);
-  const annotate = { ...noTask, hasTask: true, taskKind: "annotate" as const };
-  assert.equal(viewerModeOf(annotate).mode, "annotate");
-  assert.equal(viewerModeOf({ ...annotate, chosen: "review" }).mode, "annotate");
-  assert.deepEqual(viewerModeOf(annotate).choices, []);
+  assert.equal(viewerModeOf({ ...review, chosen: "look" }).mode, "review");
+  assert.equal(viewerModeOf({ ...review, chosen: "guided" }).mode, "guided");
+  assert.equal(viewerModeOf({ ...review, chosen: "cells" }).mode, "cells");
+  assert.equal(viewerModeOf({ ...review, chosen: "annotate" }).workspace, "annotate");
+  assert.equal(viewerModeOf({ ...noTask, chosen: "review" }).mode, "annotate");
+});
+
+test("an old workspace value maps to the mode of the same name", () => {
+  assert.equal(modeOfWorkspace("annotate", false), "annotate");
+  assert.equal(modeOfWorkspace("annotate", true), "annotate");
+  assert.equal(modeOfWorkspace("review", false), "look");
+  assert.equal(modeOfWorkspace("review", true), "review");
 });
 
 test("a read only review task opens Review and is not offered Guided", () => {
@@ -127,7 +168,7 @@ const rows: readonly {
     tools: ["select", "hand", "smart", "auto", "poly"],
   },
   {
-    name: "no task, Full viewer with result sets",
+    name: "no task, Look with result sets",
     mode: "look",
     access: editAccess,
     facts: { ...facts, taskKind: undefined },

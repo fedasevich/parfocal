@@ -130,7 +130,7 @@ test("the sign-off page of an annotate task says slides are signed off in the vi
   await page.goto(`/tasks/${annotateTask}/sign-off`);
   await expect(page.getByTestId("sign-off-annotate")).toBeVisible();
   await page.getByRole("button", { name: "Open the task" }).click();
-  await expect(page).toHaveURL(/\/annotate-task\?.*tab=objects/);
+  await expect(page).toHaveURL(/\/slides\/[^/?]+\?.*mode=annotate.*tab=objects/);
 });
 
 test("the report's Methods block says how the decisions were counted", async ({ page }) => {

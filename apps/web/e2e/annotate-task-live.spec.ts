@@ -8,7 +8,7 @@ const byHand = "00000000-0000-4000-8005-000000000014";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openTaskSlide(page: Page, slideId: string) {
-  await page.goto(`/projects/${p07}/slides/${slideId}/live?task=${annotateTask}&tab=objects&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${slideId}?task=${annotateTask}&tab=objects&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
@@ -113,7 +113,7 @@ test("an annotate task slide draws on the shared layer, fixes AI, checks two sli
   await expect(page.getByTestId("add-run")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Next slide" }).click();
-  await expect(page).toHaveURL(new RegExp(`/slides/${byHand}/live`));
+  await expect(page).toHaveURL(new RegExp(`/slides/${byHand}`));
   await expect(stage).toHaveAttribute("data-annotations", "loaded", { timeout: 20_000 });
   await expect(panel).toHaveAttribute("data-ai", "none");
   await expect(page.getByTestId("no-result-set")).toBeVisible();
@@ -126,9 +126,7 @@ test("an annotate task slide draws on the shared layer, fixes AI, checks two sli
 test("the annotate task route honours its tab, shows one tissue progress control and no Opinion tab", async ({
   page,
 }) => {
-  await page.goto(
-    `/projects/${p07}/slides/${withResults}/annotate-task?task=${annotateTask}&tab=objects&as=DH`,
-  );
+  await page.goto(`/projects/${p07}/slides/${withResults}?task=${annotateTask}&tab=objects&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   const inspector = page.getByTestId("stage-inspector");

@@ -72,7 +72,7 @@ test("the docked annotate workspace puts the magnification bar at the top right"
   page,
 }) => {
   await chooseTools(page, "Bottom dock");
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=annotate&as=LM`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=annotate&as=LM`);
   const area = await stageReady(page);
   await expectTopRight(page, area);
   const bar = page.getByTestId("magnification-bar");
@@ -87,7 +87,7 @@ test("the docked annotate workspace puts the magnification bar at the top right"
 for (const layout of ["Left rail", "Bottom dock"] as const) {
   test(`Whole slide sits level with the bar row in ${layout}`, async ({ page }) => {
     await chooseTools(page, layout);
-    await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review&as=LM`);
+    await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=review&as=LM`);
     const area = await stageReady(page);
     await page.getByTestId("sample-chip").click();
     const whole = page.getByTestId("whole-slide-button");
@@ -132,7 +132,7 @@ test("the docked compare screen keeps the Linked pill above the dock", async ({ 
 
 test("the dock is 48 px tall with 36 px tools", async ({ page }) => {
   await chooseTools(page, "Bottom dock");
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review&as=LM`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=review&as=LM`);
   await stageReady(page);
   const dock = await boxOf(page, '[data-slot="stage-tools"]');
   expect(Math.round(dock.height)).toBe(48);

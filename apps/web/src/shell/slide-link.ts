@@ -1,3 +1,6 @@
+import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
+import type { ViewerMode } from "../viewer/viewer-mode.ts";
+
 export type SlideView = {
   readonly x?: number | undefined;
   readonly y?: number | undefined;
@@ -8,8 +11,10 @@ export type SlideLinkTarget = {
   readonly projectId: string;
   readonly slideId: string;
   readonly taskId?: string | undefined;
+  readonly mode?: ViewerMode | undefined;
   readonly object?: string | undefined;
   readonly view?: SlideView | undefined;
+  readonly tab?: ViewerTab | undefined;
 };
 
 export const slidePath = "/projects/$projectId/slides/$slideId" as const;
@@ -20,10 +25,12 @@ export function slideLink(target: SlideLinkTarget) {
     params: { projectId: target.projectId, slideId: target.slideId },
     search: {
       task: target.taskId,
+      mode: target.mode,
       object: target.object,
       x: target.view?.x,
       y: target.view?.y,
       z: target.view?.z,
+      tab: target.tab,
     },
   };
 }

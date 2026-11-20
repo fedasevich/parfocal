@@ -58,19 +58,19 @@ test("each compare pane is an engine stage on its own real slide", async ({ page
   await expect(pane(page, "left").locator("path[stroke='var(--c-tumor)']")).toHaveCount(0);
 });
 
-test("compare from the rail of a slide outside any task keeps the workspace and draws both", async ({
+test("compare from the rail of a slide outside any task keeps the mode and draws both", async ({
   page,
 }) => {
   test.setTimeout(90_000);
   const p07 = "00000000-0000-4000-8003-000000000007";
   const a1 = "00000000-0000-4000-8005-000000000001";
-  await page.goto(`/projects/${p07}/slides/${a1}?workspace=annotate`);
+  await page.goto(`/projects/${p07}/slides/${a1}?mode=annotate`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });
   await page.getByTestId("rail-compare").click();
   await expect(page).toHaveURL(/scene=picking/);
-  await expect(page).toHaveURL(/workspace=annotate/);
+  await expect(page).toHaveURL(/mode=annotate/);
   await expect(page).not.toHaveURL(/task=/);
   await expect(page.getByText("Loading the slide")).toHaveCount(0);
 
@@ -94,7 +94,7 @@ test("compare from the rail of a slide outside any task keeps the workspace and 
 
   await page.getByRole("tab", { name: /^Display/ }).click();
   await expect(page).not.toHaveURL(/scene=/);
-  await expect(page).toHaveURL(/workspace=annotate/);
+  await expect(page).toHaveURL(/mode=annotate/);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 20_000,
   });

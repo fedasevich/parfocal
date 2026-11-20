@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "./a11y.ts";
 
+const p07 = "00000000-0000-4000-8003-000000000007";
+
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 
@@ -9,7 +11,7 @@ const lastTip = (page: Page) =>
   );
 const firstTip = (page: Page) => page.getByText("The AI found this. It is outlined in white.");
 const gotIt = (page: Page) => page.getByRole("button", { name: "Got it, start" });
-const onStage = `/tasks/${rt14}/guided?slide=${a1}`;
+const onStage = `/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`;
 const objectsReady = (page: Page) =>
   expect(page.getByTestId("stage-review-objects")).toHaveAttribute("data-ready", "true", {
     timeout: 20_000,

@@ -8,7 +8,7 @@ const a1 = "00000000-0000-4000-8005-000000000001";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-const taskSlide = `/projects/${p07}/slides/${tumor044}/live?task=${rt14}&workspace=review&as=DH`;
+const taskSlide = `/projects/${p07}/slides/${tumor044}?task=${rt14}&mode=review&as=DH`;
 
 async function ready(page: Page) {
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
@@ -68,7 +68,7 @@ test("Open report takes the place of Submit in a clinical project", async ({ pag
 });
 
 test("Go to on a comment thread moves the camera to its area", async ({ page }) => {
-  await page.goto(`/projects/${p07}/slides/${a1}/live?task=${rt14}&workspace=review&as=DH`);
+  await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=review&as=DH`);
   await ready(page);
   await page.getByTestId("stage-inspector").getByRole("tab", { name: "Comments" }).click();
   const before = await magnification(page);

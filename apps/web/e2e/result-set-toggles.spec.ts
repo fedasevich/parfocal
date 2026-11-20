@@ -2,7 +2,7 @@ import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const a1 = "00000000-0000-4000-8005-000000000001";
-const live = `/projects/${p07}/slides/${a1}/live?as=DH`;
+const live = `/projects/${p07}/slides/${a1}?as=DH`;
 
 async function unclipped(page: Page): Promise<string[]> {
   return page.getByTestId("result-set-toggle").evaluateAll((buttons) => {

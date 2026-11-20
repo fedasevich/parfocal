@@ -7716,7 +7716,6 @@ msgstr ""
 #: src/screens/admin/template-editor.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/how-step.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "Full viewer"
 msgstr ""
 
@@ -8219,7 +8218,6 @@ msgid "How the work is split"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
-#: src/viewer/live-top-bar.tsx
 msgid "How to review"
 msgstr ""
 
@@ -9260,10 +9258,9 @@ msgstr ""
 msgid "Loading the report"
 msgstr ""
 
-#: src/routes/tasks.$taskId.cells.tsx
-#: src/routes/tasks.$taskId.guided.tsx
 #: src/screens/review/guided-gate.tsx
 #: src/viewer/first-read-guard.tsx
+#: src/viewer/task-slide-redirect.tsx
 msgid "Loading the review"
 msgstr ""
 
@@ -9415,6 +9412,10 @@ msgstr ""
 
 #: src/screens/admin/join-settings.tsx
 msgid "Logo letters"
+msgstr ""
+
+#: src/viewer/live-top-bar.tsx
+msgid "Look"
 msgstr ""
 
 #: src/screens/viewer/viewer-notices.tsx
@@ -9787,6 +9788,7 @@ msgid "Mock only"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/viewer/live-top-bar.tsx
 msgid "Mode"
 msgstr ""
 
@@ -13478,6 +13480,7 @@ msgstr ""
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/viewer/live-top-bar.tsx
 #: src/viewer/stage-inspector.tsx
 msgid "Review"
 msgstr ""

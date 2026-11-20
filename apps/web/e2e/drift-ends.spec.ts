@@ -4,7 +4,7 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const a1 = "00000000-0000-4000-8005-000000000001";
 const viewer = `/projects/${p07}/slides/${a1}?task=${rt14}`;
-const guided = `/tasks/${rt14}/guided?slide=${a1}`;
+const guided = `/projects/${p07}/slides/${a1}?task=${rt14}&mode=guided`;
 
 test.use({ viewport: { width: 1440, height: 900 } });
 test.setTimeout(90_000);
