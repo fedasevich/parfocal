@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-20
 
+- PROTO-109 Export menu of an annotate task offers Training dataset (QuPath GeoJSON zip) and Patches with masks with a level and tile size dialog and its job line, and explains nothing-signed-off in words. annotate-task-dataset spec passes on the fake API. The real API spec is written but not run.
 - PROTO-108 Developer drawer: a palette command Developer mode for researchers opens the drawer over the viewer's right panel tabs until closed, Ctrl+Shift+D and ?lab open it in place, /developer lists real projects and greys out sections with nothing behind them instead of fake numbers. developer-viewer spec, palette unit test and verify-changed pass. First page 364200 gzip bytes. Deployed check pending with a researcher account.
 - PROTO-105 Text annotations are dark text on a white plate at 85 percent with a thin dark border, independent of the theme. text-annotation-contrast spec measures at least 4.5 to 1 over white, pink and dark purple in both themes. arrow-text passes. select, saved-marks and marker-tools specs not rerun.
 - PROTO-123 Settings keep pictures only in the Tools row: preview props removed from home, theme, density, panel width, panel while moving and minimap, display-preview.tsx deleted, setting-preview keeps only the tools kind. 14 touched Playwright tests pass. The Feel preview was not checked for an empty box.
