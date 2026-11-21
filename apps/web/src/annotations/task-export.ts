@@ -43,7 +43,13 @@ export function refusalText(code: string | null): string {
     return t`Only people who see the whole task can export its training data.`;
   }
   if (code === "not-an-annotate-task") {
-    return t`Only annotate tasks make a training dataset. A review task measures the model instead.`;
+    return t`This works only in an annotate task.`;
+  }
+  if (code === "final-layer-missing") {
+    return t`The final layer of this review task is missing or older than its sign off. Build the final layer, then export again.`;
+  }
+  if (code === "task-not-signed-off") {
+    return t`Sign off the review task first. Its final layer is built from the signed off decisions.`;
   }
   if (code === "nothing-chosen") {
     return t`These filters leave no object. Choose more slides, classes or origins, then freeze again.`;

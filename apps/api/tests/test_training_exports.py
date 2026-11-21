@@ -278,7 +278,7 @@ def test_nothing_signed_off_means_nothing_to_export(api: ApiAs, database: str) -
     hidden = api(o.people["first"]).get(f"/api/review-tasks/{task}/training-dataset")
     assert hidden.status_code in {403, 404}
     review = api(o.people["owner"]).get(f"/api/review-tasks/{o.task}/training-dataset")
-    assert review.json()["code"] == "not-an-annotate-task"
+    assert review.json()["code"] == "nothing-signed-off"
 
 
 def test_letters_and_colours_are_plain() -> None:

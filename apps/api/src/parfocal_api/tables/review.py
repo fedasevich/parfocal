@@ -1041,3 +1041,46 @@ dataset_versions = Table(
     CheckConstraint("sha256 ~ '^[0-9a-f]{64}$'", name="sha256"),
     CheckConstraint("bytes > 0", name="bytes"),
 )
+
+final_layers = Table(
+    "final_layers",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("build", Integer, nullable=False, info=OPERATIONAL),
+    Column("task_version", Integer, nullable=False, info=OPERATIONAL),
+    Column("objects", JSONB, nullable=False, info=PERSONAL),
+    Column("counts", JSONB, nullable=False, info=OPERATIONAL),
+    Column(
+        "built_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "built_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    UniqueConstraint("task_id", "slide_id", "build"),
+    ForeignKeyConstraint(
+        ["task_id", "project_id", "tenant_id"],
+        ["review_tasks.id", "review_tasks.project_id", "review_tasks.tenant_id"],
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
+        name="fk_final_layers_task_id_slide_id_tenant_id",
+    ),
+    CheckConstraint("build > 0", name="build"),
+    CheckConstraint("task_version > 0", name="task_version"),
+)

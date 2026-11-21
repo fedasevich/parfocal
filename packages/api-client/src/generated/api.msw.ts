@@ -70,6 +70,7 @@ import type {
   ExpertChanges,
   ExportReviewedLayer200,
   FeedbackSent,
+  FinalLayerStatus,
   FirstRead,
   FormVersion,
   GetResultsSchema200,
@@ -14706,6 +14707,8 @@ export const getGetTaskDatasetResponseMock = (
     [faker.string.alphanumeric(5)]: faker.number.int(),
   },
   unchecked_left_out: faker.number.int(),
+  unsure_left_out: faker.number.int(),
+  open_left_out: faker.number.int(),
   filtered_out: faker.number.int(),
   slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -14718,9 +14721,28 @@ export const getGetTaskDatasetResponseMock = (
         [faker.string.alphanumeric(5)]: faker.number.int(),
       },
       unchecked_left_out: faker.number.int(),
+      unsure_left_out: faker.number.int(),
+      open_left_out: faker.number.int(),
       filtered_out: faker.number.int(),
     }),
   ),
+  final_layer: faker.helpers.arrayElement([
+    {
+      build: faker.number.int(),
+      task_version: faker.number.int(),
+      current: faker.datatype.boolean(),
+      built_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      counts: {
+        confirmed: faker.number.int(),
+        edited: faker.number.int(),
+        rejected: faker.number.int(),
+        added: faker.number.int(),
+        unsure: faker.number.int(),
+        open: faker.number.int(),
+      },
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -14770,6 +14792,8 @@ export const getListDatasetVersionsResponseMock = (): DatasetVersion[] =>
         [faker.string.alphanumeric(5)]: faker.number.int(),
       },
       unchecked_left_out: faker.number.int(),
+      unsure_left_out: faker.number.int(),
+      open_left_out: faker.number.int(),
       filtered_out: faker.number.int(),
       slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
         () => ({
@@ -14782,9 +14806,28 @@ export const getListDatasetVersionsResponseMock = (): DatasetVersion[] =>
             [faker.string.alphanumeric(5)]: faker.number.int(),
           },
           unchecked_left_out: faker.number.int(),
+          unsure_left_out: faker.number.int(),
+          open_left_out: faker.number.int(),
           filtered_out: faker.number.int(),
         }),
       ),
+      final_layer: faker.helpers.arrayElement([
+        {
+          build: faker.number.int(),
+          task_version: faker.number.int(),
+          current: faker.datatype.boolean(),
+          built_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+          counts: {
+            confirmed: faker.number.int(),
+            edited: faker.number.int(),
+            rejected: faker.number.int(),
+            added: faker.number.int(),
+            unsure: faker.number.int(),
+            open: faker.number.int(),
+          },
+        },
+        null,
+      ]),
     },
     sha256: faker.string.alpha({ length: { min: 10, max: 20 } }),
     bytes: faker.number.int(),
@@ -14842,6 +14885,8 @@ export const getFreezeDatasetVersionResponseMock = (
       [faker.string.alphanumeric(5)]: faker.number.int(),
     },
     unchecked_left_out: faker.number.int(),
+    unsure_left_out: faker.number.int(),
+    open_left_out: faker.number.int(),
     filtered_out: faker.number.int(),
     slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({
@@ -14854,9 +14899,28 @@ export const getFreezeDatasetVersionResponseMock = (
           [faker.string.alphanumeric(5)]: faker.number.int(),
         },
         unchecked_left_out: faker.number.int(),
+        unsure_left_out: faker.number.int(),
+        open_left_out: faker.number.int(),
         filtered_out: faker.number.int(),
       }),
     ),
+    final_layer: faker.helpers.arrayElement([
+      {
+        build: faker.number.int(),
+        task_version: faker.number.int(),
+        current: faker.datatype.boolean(),
+        built_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        counts: {
+          confirmed: faker.number.int(),
+          edited: faker.number.int(),
+          rejected: faker.number.int(),
+          added: faker.number.int(),
+          unsure: faker.number.int(),
+          open: faker.number.int(),
+        },
+      },
+      null,
+    ]),
   },
   sha256: faker.string.alpha({ length: { min: 10, max: 20 } }),
   bytes: faker.number.int(),
@@ -14870,6 +14934,24 @@ export const getFreezeDatasetVersionResponseMock = (
 
 export const getDownloadDatasetVersionResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getBuildFinalLayerResponseMock = (
+  overrideResponse: Partial<Extract<FinalLayerStatus, object>> = {},
+): FinalLayerStatus => ({
+  build: faker.number.int(),
+  task_version: faker.number.int(),
+  current: faker.datatype.boolean(),
+  built_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  counts: {
+    confirmed: faker.number.int(),
+    edited: faker.number.int(),
+    rejected: faker.number.int(),
+    added: faker.number.int(),
+    unsure: faker.number.int(),
+    open: faker.number.int(),
+  },
+  ...overrideResponse,
+});
 
 export const getGetTaskAiChangesResponseMock = (
   overrideResponse: Partial<Extract<AiChanges, object>> = {},
@@ -28290,6 +28372,30 @@ export const getDownloadDatasetVersionMockHandler = (
   );
 };
 
+export const getBuildFinalLayerMockHandler = (
+  overrideResponse?:
+    | FinalLayerStatus
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<FinalLayerStatus> | FinalLayerStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/final-layer",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getBuildFinalLayerResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetTaskAiChangesMockHandler = (
   overrideResponse?:
     | AiChanges
@@ -30941,6 +31047,7 @@ export const getParfocalAPIMock = () => [
   getListDatasetVersionsMockHandler(),
   getFreezeDatasetVersionMockHandler(),
   getDownloadDatasetVersionMockHandler(),
+  getBuildFinalLayerMockHandler(),
   getGetTaskAiChangesMockHandler(),
   getGetAiCorrectionsMockHandler(),
   getRecordTimingEventsMockHandler(),

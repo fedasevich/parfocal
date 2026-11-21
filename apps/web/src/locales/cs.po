@@ -2919,6 +2919,10 @@ msgstr ""
 msgid "A result sits next to its slide with the same name, or in a folder named like the slide."
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "A review task goes in once it is signed off, through its final layer. Only objects a person checked go in: added, agreed and edited. Unsure and open objects are left out and counted. Freeze a version to name exactly which data trained a model."
+msgstr ""
+
 #: src/screens/admin/template-editor.tsx
 msgid "A review task made from this template starts with these. The researcher can change each one in the task, and the report keeps the template."
 msgstr ""
@@ -4568,6 +4572,25 @@ msgstr ""
 
 #: src/results/painted-map-layer.tsx
 msgid "Brush your own map of the tissue on the slide, then name, save and export it"
+msgstr ""
+
+#. placeholder {0}: status.build
+#. placeholder {1}: counts.confirmed ?? 0
+#. placeholder {2}: counts.edited ?? 0
+#. placeholder {3}: counts.rejected ?? 0
+#. placeholder {4}: counts.added ?? 0
+#. placeholder {5}: counts.unsure ?? 0
+#. placeholder {6}: counts.open ?? 0
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Build {0} on {when}: {1} agreed, {2} edited, {3} rejected, {4} added, {5} unsure and {6} open left out."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Build the final layer"
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Build the final layer again"
 msgstr ""
 
 #. placeholder {0}: classListNames(taxonomies)
@@ -7548,6 +7571,15 @@ msgstr ""
 msgid "Final diagnosis"
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Final layer"
+msgstr ""
+
+#. placeholder {0}: response.data.build
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Final layer build {0} is ready"
+msgstr ""
+
 #: src/screens/disagreements/outline-settle.tsx
 msgid "Final outline"
 msgstr ""
@@ -9308,6 +9340,14 @@ msgstr ""
 msgid "Left out: {0} not checked, {1} by the filters"
 msgstr ""
 
+#. placeholder {0}: summary.unsure_left_out ?? 0
+#. placeholder {1}: summary.open_left_out ?? 0
+#. placeholder {2}: summary.unchecked_left_out
+#. placeholder {3}: summary.filtered_out
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Left out: {0} unsure, {1} open, {2} not checked, {3} by the filters"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Left rail"
 msgstr ""
@@ -10722,6 +10762,10 @@ msgstr ""
 msgid "No files yet."
 msgstr ""
 
+#: src/screens/dataset/dataset-screen.tsx
+msgid "No final layer is built yet."
+msgstr ""
+
 #: src/annotations/smart-layer.tsx
 msgid "No GPU answered Best in 3 minutes, Good outlined this view. Click again to ask Best again"
 msgstr ""
@@ -11747,10 +11791,6 @@ msgstr ""
 
 #: src/screens/project/settings-zones.tsx
 msgid "Only an owner of this project sets who can sign out."
-msgstr ""
-
-#: src/annotations/task-export.ts
-msgid "Only annotate tasks make a training dataset. A review task measures the model instead."
 msgstr ""
 
 #: src/screens/review/display-tab.tsx
@@ -15419,6 +15459,10 @@ msgstr ""
 msgid "Sign off the evaluation"
 msgstr ""
 
+#: src/annotations/task-export.ts
+msgid "Sign off the review task first. Its final layer is built from the signed off decisions."
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Sign off this slide"
 msgstr ""
@@ -15570,6 +15614,10 @@ msgstr ""
 
 #: src/screens/clinical-report/steps.tsx
 msgid "Signing locks this version. A change after it is an amendment with a reason, and the signed version stays readable."
+msgstr ""
+
+#: src/screens/dataset/dataset-screen.tsx
+msgid "Signing off the task turns its decisions and edits into one final layer. Agreed objects go in as agreed, redrawn or retyped ones as edited with who edited them, the adjudicator's outcome wins, rejected objects are deleted and added ones go in as added by a person."
 msgstr ""
 
 #: src/screens/upload/overlays.tsx
@@ -16953,6 +17001,10 @@ msgstr ""
 msgid "The file is not valid JSON. The line shows where reading stopped."
 msgstr ""
 
+#: src/annotations/task-export.ts
+msgid "The final layer of this review task is missing or older than its sign off. Build the final layer, then export again."
+msgstr ""
+
 #: src/routes/prototype.tsx
 msgid "the first object"
 msgstr ""
@@ -17884,6 +17936,10 @@ msgstr ""
 msgid "This week in your projects"
 msgstr ""
 
+#: src/annotations/task-export.ts
+msgid "This works only in an annotate task."
+msgstr ""
+
 #: src/session/second-factor-screen.tsx
 msgid "This workspace asks for a second factor"
 msgstr ""
@@ -18130,6 +18186,10 @@ msgstr ""
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Trackpad"
+msgstr ""
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "Training dataset"
 msgstr ""
 
 #: src/annotations/task-export.ts

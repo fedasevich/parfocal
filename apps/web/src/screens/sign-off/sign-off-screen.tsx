@@ -370,6 +370,15 @@ function SignOffModal({
                   <Trans>Pick at least one file</Trans>
                 </span>
               )}
+              <span className="flex-1" />
+              <Button
+                variant="ghost"
+                data-testid="sign-off-dataset"
+                onClick={() => void navigate({ to: "/tasks/$taskId/dataset", params: { taskId } })}
+              >
+                <Icon name="database" />
+                <Trans>Training dataset</Trans>
+              </Button>
             </div>
           </SmallModalZone>
           {summary.changes.length ? (

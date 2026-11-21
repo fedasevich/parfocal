@@ -60,6 +60,7 @@ from parfocal_api.tables import (
     event_attempts,
     event_outbox,
     event_targets,
+    final_layers,
     gpu_usage,
     hidden_models,
     import_sources,
@@ -250,6 +251,7 @@ CASE_TABLES = {
     "review_edit_versions",
     "review_ai_outlines",
     "dataset_versions",
+    "final_layers",
     "review_order",
     "review_tasks",
     "review_task_slides",
@@ -847,6 +849,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             kind="region",
             number=1,
             outline=func.ST_GeomFromText("POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))", 0),
+        )
+    )
+    await connection.execute(
+        insert(final_layers).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            build=1,
+            task_version=1,
+            objects=[],
+            counts={},
         )
     )
     decision_note = f"Decision note {uuid.uuid4().hex[:8]}"
@@ -3047,7 +3061,7 @@ def test_a_row_cannot_name_a_parent_pair_in_another_workspace(
     scope = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
     assert asyncio.run(seen_as_the_app(owner, scope, a.tenant_id)) == ("parfocal_app", 0)
     keys = composite_keys(owner)
-    assert len(keys) == 49
+    assert len(keys) == 51
     accepted: list[str] = []
     for key in keys:
         refusal = asyncio.run(

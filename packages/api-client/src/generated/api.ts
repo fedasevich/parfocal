@@ -2313,7 +2313,26 @@ export interface SlideCounts {
   objects: Partial<Record<DatasetOrigin, number>>;
   classes: SlideCountsClasses;
   unchecked_left_out: number;
+  unsure_left_out?: number;
+  open_left_out?: number;
   filtered_out: number;
+}
+
+export interface FinalCounts {
+  confirmed?: number;
+  edited?: number;
+  rejected?: number;
+  added?: number;
+  unsure?: number;
+  open?: number;
+}
+
+export interface FinalLayerStatus {
+  build: number;
+  task_version: number;
+  current: boolean;
+  built_at: string;
+  counts: FinalCounts;
 }
 
 export interface DatasetSummary {
@@ -2322,8 +2341,11 @@ export interface DatasetSummary {
   objects: Partial<Record<DatasetOrigin, number>>;
   classes: DatasetSummaryClasses;
   unchecked_left_out: number;
+  unsure_left_out?: number;
+  open_left_out?: number;
   filtered_out: number;
   slides: SlideCounts[];
+  final_layer?: FinalLayerStatus | null;
 }
 
 export interface DatasetVersion {
@@ -71362,6 +71384,151 @@ export function useDownloadDatasetVersion<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type buildFinalLayerResponse200 = {
+  data: FinalLayerStatus;
+  status: 200;
+};
+
+export type buildFinalLayerResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type buildFinalLayerResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type buildFinalLayerResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type buildFinalLayerResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type buildFinalLayerResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type buildFinalLayerResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type buildFinalLayerResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type buildFinalLayerResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type buildFinalLayerResponseSuccess = buildFinalLayerResponse200 & {
+  headers: Headers;
+};
+export type buildFinalLayerResponseError = (
+  | buildFinalLayerResponse400
+  | buildFinalLayerResponse401
+  | buildFinalLayerResponse403
+  | buildFinalLayerResponse404
+  | buildFinalLayerResponse409
+  | buildFinalLayerResponse422
+  | buildFinalLayerResponse429
+  | buildFinalLayerResponse500
+) & {
+  headers: Headers;
+};
+
+export type buildFinalLayerResponse = buildFinalLayerResponseSuccess | buildFinalLayerResponseError;
+
+export const getBuildFinalLayerUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/final-layer`;
+};
+
+/**
+ * @summary Build Task Final Layer
+ */
+export const buildFinalLayer = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<buildFinalLayerResponse> => {
+  return apiFetch<buildFinalLayerResponse>(getBuildFinalLayerUrl(taskId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getBuildFinalLayerMutationKey = () => ["buildFinalLayer"] as const;
+
+export const getBuildFinalLayerMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof buildFinalLayer>>,
+    TError,
+    BuildFinalLayerMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof buildFinalLayer>>,
+  TError,
+  BuildFinalLayerMutationVariables,
+  TContext
+> => {
+  const mutationKey = getBuildFinalLayerMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof buildFinalLayer>>,
+    BuildFinalLayerMutationVariables
+  > = (props) => {
+    const { taskId } = props ?? {};
+
+    return buildFinalLayer(taskId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BuildFinalLayerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof buildFinalLayer>>
+>;
+
+export type BuildFinalLayerMutationError = Problem;
+export type BuildFinalLayerMutationVariables = { taskId: string };
+
+/**
+ * @summary Build Task Final Layer
+ */
+export const useBuildFinalLayer = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof buildFinalLayer>>,
+      TError,
+      BuildFinalLayerMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof buildFinalLayer>>,
+  TError,
+  BuildFinalLayerMutationVariables,
+  TContext
+> => {
+  return useMutation(getBuildFinalLayerMutationOptions(options), queryClient);
+};
 
 export type getTaskAiChangesResponse200 = {
   data: AiChanges;

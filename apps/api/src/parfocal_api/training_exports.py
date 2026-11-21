@@ -5,7 +5,7 @@ import string
 import uuid
 import zipfile
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, Literal, cast
@@ -13,7 +13,7 @@ from typing import Any, Literal, cast
 from fastapi import APIRouter
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select
+from sqlalchemy import DateTime, Uuid, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.adjudications import reviewers_of
@@ -21,6 +21,7 @@ from parfocal_api.annotation_exports import chunk_rows, path_of
 from parfocal_api.annotations import LETTERS, PERSON_MADE_AI_KINDS
 from parfocal_api.check_options import CheckOptions, UncheckedExport, check_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.final_layers import FinalState, LayerRow, current_layers, layer_rows
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, ForbiddenError
 from parfocal_api.review_order import CheckState, Results, state_of
@@ -29,6 +30,7 @@ from parfocal_api.reviewed_export import path_parts
 from parfocal_api.tables import (
     AnnotationKind,
     ResultSource,
+    TaskKind,
     annotation_versions,
     annotations,
     result_objects,
@@ -37,7 +39,6 @@ from parfocal_api.tables import (
     review_task_slides,
     slides,
 )
-from parfocal_api.task_kinds import annotate_only
 from parfocal_api.taxonomy import ProjectClass
 from parfocal_common.chunk_store import read_chunk
 from parfocal_common.model_runs import model_runs
@@ -167,6 +168,8 @@ class ManifestSlide(Strict):
     objects: dict[DatasetOrigin, int]
     classes: dict[str, int] = Field(default_factory=dict)
     unchecked_left_out: int
+    unsure_left_out: int = 0
+    open_left_out: int = 0
     filtered_out: int = 0
     marks_left_out: int
 
@@ -189,6 +192,8 @@ class Manifest(Strict):
     annotators: list[ManifestAnnotator]
     slides: list[ManifestSlide]
     unchecked_left_out: int
+    unsure_left_out: int = 0
+    open_left_out: int = 0
     filtered_out: int = 0
     filters: AppliedFilters
     dataset_version: int | None = None
@@ -364,14 +369,8 @@ def difference_of(
     return AiDifference.CLASS if class_differs else AiDifference.SAME
 
 
-def is_checked(row: Any) -> bool:
-    return state_of(row.origin, row.deleted_at is not None) is not CheckState.UNCHECKED
-
-
-def origin_of(row: Any) -> DatasetOrigin | None:
-    if row.deleted_at is not None:
-        return None
-    return DatasetOrigin(row.origin)
+def is_checked(row: LayerRow) -> bool:
+    return state_of(row.origin, row.deleted) is not CheckState.UNCHECKED
 
 
 @dataclass(frozen=True)
@@ -379,15 +378,10 @@ class SlideObjects:
     shapes: list[Shape]
     left_out: int
     marks: int
+    undecided: Counter[str] = field(default_factory=Counter[str])
 
 
-async def slide_objects(
-    connection: AsyncConnection,
-    store: ResultStore,
-    slide: Any,
-    letters: Letters,
-    unchecked: UncheckedExport,
-) -> SlideObjects:
+async def annotate_rows(connection: AsyncConnection, slide: Any) -> list[LayerRow]:
     rows = (
         await connection.execute(
             select(
@@ -407,6 +401,38 @@ async def slide_objects(
         )
     ).all()
     changers = await last_changers(connection, [row.id for row in rows])
+    return [
+        LayerRow(
+            id=str(row.id),
+            kind=row.kind,
+            number=row.number,
+            person=AnnotationKind(row.kind) in PERSON_MADE_AI_KINDS,
+            origin=row.origin,
+            source_number=row.source_number,
+            class_id=row.class_id,
+            version=row.version,
+            created_by_user_id=row.created_by_user_id,
+            changed_by_user_id=changers.get(row.id),
+            deleted=row.deleted_at is not None,
+            geojson=row.geojson,
+        )
+        for row in rows
+    ]
+
+
+async def slide_objects(
+    connection: AsyncConnection,
+    store: ResultStore,
+    slide: Any,
+    letters: Letters,
+    unchecked: UncheckedExport,
+    final: Any = None,
+) -> SlideObjects:
+    undecided: dict[tuple[str, int], str] = {}
+    if final is None:
+        rows = await annotate_rows(connection, slide)
+    else:
+        rows, undecided = layer_rows(final.objects)
     ai = (
         {}
         if slide.result_set_id is None
@@ -417,27 +443,31 @@ async def slide_objects(
     marks = 0
     for row in rows:
         kind = AnnotationKind(row.kind)
-        origin = origin_of(row)
         if row.source_number is not None and is_checked(row):
             covered.add((kind, row.source_number))
-        if origin is None:
+        if row.deleted:
             continue
         if kind not in EXPORTED_KINDS:
             marks += 1
             continue
         source = ai.get((kind, row.source_number)) if row.source_number is not None else None
-        geometry = json.loads(row.geojson)
+        if row.geojson is not None:
+            geometry = json.loads(row.geojson)
+        elif source is not None:
+            geometry = source.geometry
+        else:
+            continue
         shapes.append(
             Shape(
-                str(row.id),
+                row.id,
                 kind,
-                ObjectId(LETTERS[kind], row.number, person=kind in PERSON_MADE_AI_KINDS),
+                ObjectId(LETTERS[kind], row.number, person=row.person),
                 geometry,
                 row.class_id or (source.class_id if source else None),
                 None if row.class_id or source is None else source.class_name,
-                origin,
+                DatasetOrigin(row.origin),
                 letters.of(row.created_by_user_id),
-                letters.of(changers.get(row.id)),
+                letters.of(row.changed_by_user_id),
                 None
                 if row.source_number is None
                 else ObjectId(LETTERS[kind], row.source_number).text(ascii=True),
@@ -445,6 +475,7 @@ async def slide_objects(
                 difference_of(geometry, row.class_id, source),
             )
         )
+    covered.update((AnnotationKind(kind), number) for kind, number in undecided)
     left_out = 0
     for key, item in ai.items():
         if key in covered:
@@ -468,7 +499,7 @@ async def slide_objects(
                 None,
             )
         )
-    return SlideObjects(shapes, left_out, marks)
+    return SlideObjects(shapes, left_out, marks, Counter(undecided.values()))
 
 
 async def last_changers(
@@ -484,14 +515,27 @@ async def last_changers(
     return {row.annotation_id: row.changed_by_user_id for row in rows if row.changed_by_user_id}
 
 
-async def signed_off_slides(connection: AsyncConnection, task_id: uuid.UUID) -> list[Any]:
+async def signed_off_slides(connection: AsyncConnection, task: Any) -> list[Any]:
+    review = task.kind == TaskKind.REVIEW
+    if review and task.signed_off_at is None:
+        return []
+    signed_at = (
+        literal(task.signed_off_at, DateTime(timezone=True)).label("signed_off_at")
+        if review
+        else review_task_slides.c.signed_off_at
+    )
+    signed_by = (
+        literal(task.signed_off_by_user_id, Uuid()).label("signed_off_by_user_id")
+        if review
+        else review_task_slides.c.signed_off_by_user_id
+    )
     rows = await connection.execute(
         select(
             review_task_slides.c.task_id,
             review_task_slides.c.slide_id,
             review_task_slides.c.result_set_id,
-            review_task_slides.c.signed_off_at,
-            review_task_slides.c.signed_off_by_user_id,
+            signed_at,
+            signed_by,
             slides.c.mpp_x,
             slides.c.mpp_y,
             slides.c.width,
@@ -509,8 +553,8 @@ async def signed_off_slides(connection: AsyncConnection, task_id: uuid.UUID) -> 
         .outerjoin(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
         .outerjoin(model_runs, model_runs.c.job_id == result_sets.c.job_id)
         .where(
-            review_task_slides.c.task_id == task_id,
-            review_task_slides.c.signed_off_at.is_not(None),
+            review_task_slides.c.task_id == task.id,
+            *(() if review else (review_task_slides.c.signed_off_at.is_not(None),)),
         )
         .order_by(review_task_slides.c.position)
     )
@@ -527,9 +571,10 @@ async def dataset(
     store: ResultStore,
     filters: DatasetFilters | None = None,
 ) -> tuple[Manifest, dict[str, bytes]]:
-    signed = await signed_off_slides(connection, task.id)
+    signed = await signed_off_slides(connection, task)
     if not signed:
         raise NothingSignedOffError
+    finals = await current_layers(connection, task) if task.kind == TaskKind.REVIEW else {}
     options = check_of(task.check_options)
     applied = applied_filters(filters, options)
     unchecked = UncheckedExport.INCLUDE if applied.include_unchecked else UncheckedExport.LEAVE_OUT
@@ -545,7 +590,11 @@ async def dataset(
     files: dict[str, bytes] = {}
     entries: list[ManifestSlide] = []
     for slide in chosen:
-        found = await slide_objects(connection, store, slide, letters, unchecked)
+        if task.kind == TaskKind.REVIEW and slide.slide_id not in finals:
+            continue
+        found = await slide_objects(
+            connection, store, slide, letters, unchecked, finals.get(slide.slide_id)
+        )
         shapes = [shape for shape in found.shapes if kept(shape, applied)]
         where = await path_parts(connection, slide.slide_id)
         content = encoded(
@@ -585,6 +634,8 @@ async def dataset(
                 objects={origin: counts[origin] for origin in DatasetOrigin},
                 classes=dict(sorted(by_class.items())),
                 unchecked_left_out=found.left_out,
+                unsure_left_out=found.undecided[FinalState.UNSURE],
+                open_left_out=found.undecided[FinalState.OPEN],
                 filtered_out=len(found.shapes) - len(shapes),
                 marks_left_out=found.marks,
             )
@@ -605,6 +656,8 @@ async def dataset(
         annotators=letters.listed(),
         slides=entries,
         unchecked_left_out=sum(entry.unchecked_left_out for entry in entries),
+        unsure_left_out=sum(entry.unsure_left_out for entry in entries),
+        open_left_out=sum(entry.open_left_out for entry in entries),
         filtered_out=sum(entry.filtered_out for entry in entries),
         filters=applied,
     )
@@ -639,7 +692,6 @@ async def export_training_dataset(
     results: Results,
 ) -> Response:
     task, whole = await readable_task(connection, principal, task_id)
-    annotate_only(task.kind)
     if not whole:
         raise DatasetHiddenError
     manifest, files = await dataset(connection, task, results)

@@ -1,0 +1,200 @@
+import io
+import json
+import zipfile
+from typing import Any
+
+import pytest
+from db_support import ApiAs
+from submit_support import submitted
+from test_outline_disagreements import square
+from test_reviewed_layer import Review, ai_snapshot, edit, review
+from test_settled_outlines import same_shape
+from workspace_support import owner
+
+pytestmark = pytest.mark.db
+
+REDRAWN = square(0, 0, 80)
+DRAWN = square(390, 90, 20)
+ADDED = square(300, 300, 40)
+ADDED_AGAIN = square(302, 302, 40)
+
+DECISIONS: dict[str, dict[str, dict[str, Any]]] = {
+    "first": {
+        "T1": {"value": "agree"},
+        "T2": {"value": "agree"},
+        "C1": {"value": "disagree", "reasons": ["artefact"]},
+        "C2": {"value": "agree"},
+        "C3": {"value": "agree"},
+        "C4": {"value": "unsure"},
+        "C5": {"value": "agree"},
+    },
+    "second": {
+        "T1": {"value": "agree"},
+        "T2": {"value": "agree"},
+        "C1": {"value": "disagree", "reasons": ["artefact"]},
+        "C2": {"value": "disagree", "reasons": ["boundary_off"]},
+        "C3": {"value": "disagree", "reasons": ["artefact"]},
+        "C4": {"value": "unsure"},
+        "C5": {"value": "disagree", "reasons": ["artefact"]},
+    },
+}
+
+QUEUE_ANSWERS: dict[str, str | None] = {
+    "C1": "disagree",
+    "C2": "agree",
+    "C3": "disagree",
+    "C4": "unsure",
+    "C5": None,
+    "T2": "agree",
+}
+
+
+def ok(response: Any, status: int = 200) -> Any:
+    assert response.status_code == status, response.text
+    return response
+
+
+def worked_review(api: ApiAs, database: str) -> Review:
+    r = review(api, database)
+    for who, given in DECISIONS.items():
+        for object_id, body in given.items():
+            ok(api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body))
+    ok(edit(api, r, "first", "T2", {"geometry": REDRAWN}))
+    ok(
+        api(r.people["first"]).post(f"{r.base}/added", json={"kind": "region", "geometry": ADDED}),
+        201,
+    )
+    ok(
+        api(r.people["second"]).post(
+            f"{r.base}/added", json={"kind": "region", "geometry": ADDED_AGAIN}
+        ),
+        201,
+    )
+    for who in DECISIONS:
+        ok(submitted(api(r.people[who]), r.base))
+    as_owner = api(r.people["owner"])
+    task = f"/api/review-tasks/{r.task}"
+    queued = {item["object"] for item in ok(as_owner.get(f"{task}/disagreements")).json()}
+    assert {"C2", "C3", "C5"} <= queued
+    decide = f"{task}/disagreements/{r.slide}"
+    outline = f"{task}/disagreement-queue/{r.slide}/C2/outline"
+    ok(as_owner.put(outline, json={"geometry": DRAWN}))
+    for object_id in sorted(queued):
+        answer = QUEUE_ANSWERS[object_id]
+        if answer is None:
+            ok(as_owner.put(f"{decide}/{object_id}/left-open", json={"note": "Later"}))
+        else:
+            ok(as_owner.put(f"{decide}/{object_id}", json={"answer": answer}))
+    return r
+
+
+def exported(api: ApiAs, r: Review) -> tuple[dict[str, Any], dict[str, Any]]:
+    response = ok(api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/training-dataset"))
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        collection = json.loads(archive.read(f"slides/{r.slide}.geojson"))
+    features = {
+        feature["properties"]["parfocal"]["id"]: feature for feature in collection["features"]
+    }
+    return manifest, features
+
+
+def test_a_signed_off_review_exports_what_its_decisions_and_edits_say(
+    api: ApiAs, database: str
+) -> None:
+    r = worked_review(api, database)
+    before = ai_snapshot(database, r)
+    task = f"/api/review-tasks/{r.task}"
+    early = api(r.people["owner"]).post(f"{task}/final-layer")
+    assert (early.status_code, early.json()["code"]) == (409, "task-not-signed-off")
+    ok(api(r.people["owner"]).post(f"{task}/sign-off"))
+    manifest, features = exported(api, r)
+    parfocal = {key: feature["properties"]["parfocal"] for key, feature in features.items()}
+    [added] = [key for key, item in parfocal.items() if item["origin"] == "human"]
+    assert set(parfocal) == {"T1", "T2", "C2", added}
+    first = parfocal["T2"]["author"]
+    assert first in {"A", "B"}
+    assert (parfocal["T1"]["origin"], parfocal["T1"]["author"]) == ("ai-confirmed", first)
+    assert parfocal["T1"]["differs_from_ai"] == "same"
+    assert parfocal["T2"]["origin"] == "ai-edited"
+    assert parfocal["T2"]["source"] == "T2"
+    assert same_shape(features["T2"]["geometry"], REDRAWN)
+    assert parfocal["T2"]["differs_from_ai"] == "shape"
+    assert parfocal["C2"]["origin"] == "ai-edited"
+    assert parfocal["C2"]["author"] == parfocal["C2"]["changed_by"]
+    assert parfocal["C2"]["author"] not in {"A", "B"}
+    assert same_shape(features["C2"]["geometry"], DRAWN)
+    assert features["C2"]["properties"]["objectType"] == "cell"
+    assert (parfocal[added]["author"], parfocal[added]["source"]) == (first, None)
+    assert same_shape(features[added]["geometry"], ADDED)
+    [slide] = manifest["slides"]
+    assert slide["objects"] == {"human": 1, "ai-confirmed": 1, "ai-edited": 2, "ai-unchecked": 0}
+    assert (slide["unsure_left_out"], slide["open_left_out"], slide["unchecked_left_out"]) == (
+        1,
+        1,
+        0,
+    )
+    assert (manifest["unsure_left_out"], manifest["open_left_out"]) == (1, 1)
+    assert slide["sign_off"]["signed_off_at"]
+    with_unchecked = ok(
+        api(r.people["owner"]).get(f"{task}/dataset", params={"include_unchecked": "true"})
+    ).json()
+    assert with_unchecked["objects"]["ai-unchecked"] == 0
+    assert (with_unchecked["unsure_left_out"], with_unchecked["open_left_out"]) == (1, 1)
+    assert with_unchecked["final_layer"]["counts"] == {
+        "confirmed": 1,
+        "edited": 2,
+        "rejected": 2,
+        "added": 1,
+        "unsure": 1,
+        "open": 1,
+    }
+    assert with_unchecked["final_layer"]["current"] is True
+    assert ai_snapshot(database, r) == before
+
+
+def test_the_dataset_page_builds_the_layer_again_and_patches_accept_the_task(
+    api: ApiAs, database: str
+) -> None:
+    r = worked_review(api, database)
+    task = f"/api/review-tasks/{r.task}"
+    as_owner = api(r.people["owner"])
+    ok(as_owner.post(f"{task}/sign-off"))
+    assert as_owner.get(f"{task}/dataset").json()["final_layer"]["build"] == 1
+    rebuilt = ok(as_owner.post(f"{task}/final-layer")).json()
+    assert (rebuilt["build"], rebuilt["current"]) == (2, True)
+    refused = api(r.people["first"]).post(f"{task}/final-layer")
+    assert refused.status_code in {403, 404}
+    builds = owner(
+        database,
+        f"SELECT build, count(*) FROM final_layers WHERE task_id = '{r.task}' "
+        "GROUP BY build ORDER BY build",
+    )
+    assert builds == [(1, 1), (2, 1)]
+    actions = owner(
+        database,
+        f"SELECT count(*) FROM audit_events WHERE action = 'review.final-layer-built' "
+        f"AND target_id = '{r.task}'",
+    )
+    assert actions == [(2,)]
+    _, features = exported(api, r)
+    assert {"T1", "T2", "C2"} <= set(features)
+    ok(as_owner.post(f"{task}/patch-exports", json={}), 202)
+    frozen = ok(as_owner.post(f"{task}/dataset-versions", json={"note": "Review"}), 201).json()
+    assert frozen["counts"]["open_left_out"] == 1
+
+
+def test_an_unbuilt_layer_is_refused_by_the_dataset(api: ApiAs, database: str) -> None:
+    r = worked_review(api, database)
+    task = f"/api/review-tasks/{r.task}"
+    ok(api(r.people["owner"]).post(f"{task}/sign-off"))
+    owner(
+        database,
+        f"UPDATE evaluation_versions SET number = number + 10 WHERE task_id = '{r.task}'",
+    )
+    stale = api(r.people["owner"]).get(f"{task}/training-dataset")
+    assert (stale.status_code, stale.json()["code"]) == (409, "final-layer-missing")
+    patches = api(r.people["owner"]).post(f"{task}/patch-exports", json={})
+    assert (patches.status_code, patches.json()["code"]) == (409, "final-layer-missing")
+    ok(api(r.people["owner"]).post(f"{task}/final-layer"))
+    ok(api(r.people["owner"]).get(f"{task}/training-dataset"))
