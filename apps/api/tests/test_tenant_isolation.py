@@ -677,19 +677,34 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             geometry="SRID=0;POLYGON((0 0,9 0,9 9,0 9,0 0))",
         )
     )
-    await connection.execute(
-        insert(result_chunks).values(
-            tenant_id=seeded.tenant_id,
-            result_set_id=set_id,
-            chunk=0,
-            x=0,
-            y=0,
-            width=2048,
-            height=2048,
-            cell_count=1,
-            vertex_count=16,
-            object_key=f"cells/{set_id}/chunk-00000.pfc",
+    judged_cells = build_cells(
+        seeded.tenant_id,
+        case.loose_slide_id,
+        set_id,
+        [Cell(1, [0, 0, 9, 0, 9, 9, 0, 9], 0, 100)],
+        1,
+    )
+    async with httpx2.AsyncClient(timeout=30) as http:
+        judged_entries = await write_cells(
+            ObjectResultStore(ObjectStore(TEST_STORAGE, http)), judged_cells
         )
+    await connection.execute(
+        insert(result_chunks),
+        [
+            {
+                "tenant_id": seeded.tenant_id,
+                "result_set_id": set_id,
+                "chunk": entry.chunk,
+                "x": entry.x,
+                "y": entry.y,
+                "width": entry.width,
+                "height": entry.height,
+                "cell_count": entry.cell_count,
+                "vertex_count": entry.vertex_count,
+                "object_key": entry.object_key,
+            }
+            for entry in judged_entries
+        ],
     )
     await connection.execute(
         update(result_sets).where(result_sets.c.id == set_id).values(status="ready", region_count=1)

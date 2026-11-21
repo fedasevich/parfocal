@@ -173,11 +173,15 @@ async def cell_classes(
     store: ResultStore,
     task_id: uuid.UUID,
     names: dict[uuid.UUID, str],
+    slide_ids: set[uuid.UUID],
 ) -> dict[tuple[uuid.UUID, str, int], str]:
     found: dict[tuple[uuid.UUID, str, int], str] = {}
+    if not slide_ids:
+        return found
     sets = await connection.execute(
         select(review_task_slides.c.slide_id, review_task_slides.c.result_set_id).where(
-            review_task_slides.c.task_id == task_id
+            review_task_slides.c.task_id == task_id,
+            review_task_slides.c.slide_id.in_(slide_ids),
         )
     )
     for slide_id, set_id in sets.all():
@@ -226,8 +230,6 @@ async def ai_objects(
     store: ResultStore | None = None,
 ) -> list[engine.AiObject]:
     classes = await object_classes(connection, task_id, names)
-    if store is not None:
-        classes |= await cell_classes(connection, store, task_id, names)
     decisions = {
         (row.slide_id, row.kind, row.number): choice_value(row)
         for row in await connection.execute(
@@ -245,6 +247,9 @@ async def ai_objects(
                 names.get(row.reason_class_id) if row.reason_class_id else None,
             )
         )
+    if store is not None:
+        judged_cells = {slide_id for slide_id, kind, _ in grouped if kind == "cell"}
+        classes |= await cell_classes(connection, store, task_id, names, judged_cells)
     return [
         engine.AiObject(
             slide=str(slide_id),
