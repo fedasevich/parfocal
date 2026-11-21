@@ -106,9 +106,9 @@ export function createViewEmbeddings(options: ViewEmbeddingsOptions = {}): Closa
   const post = options.post ?? postViewEmbedding();
   const giveUpMs = options.giveUpMs ?? viewGiveUpMs;
   const open = new Set<AbortController>();
-  const asking = new Map<string, ReturnType<ViewEmbeddings["embedding"]>>();
+  const asking = new Map<string, Promise<ViewAnswer>>();
 
-  async function ask(slideId: string, view: ViewToEmbed) {
+  async function ask(slideId: string, view: ViewToEmbed): Promise<ViewAnswer> {
     const controller = new AbortController();
     open.add(controller);
     let gaveUp = false;

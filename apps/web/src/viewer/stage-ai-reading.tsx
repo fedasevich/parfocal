@@ -12,7 +12,7 @@ export function StageAiReading({
   objects,
 }: {
   slideId: string;
-  resultSetId: string | undefined;
+  resultSetId: string | null | undefined;
   objects: readonly ReviewObject[];
 }) {
   const progress = okData(

@@ -118,7 +118,7 @@ export function useViewerState(props: BodyProps) {
   const submitReview = useSubmitSlideReview();
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const othersOn = useOthersNotes(session.taskId, session.slideId, session.meId);
-  const taskSetId = session.task?.slides[0]?.result_set_id;
+  const taskSetId = session.task?.slides.find((item) => item.slide_id === slideId)?.result_set_id;
   const progress = okData(
     useGetSlideAiProgress(slideId, taskSetId ? { result_set_id: taskSetId } : undefined, {
       query: {

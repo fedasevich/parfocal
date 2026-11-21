@@ -7,7 +7,7 @@ import pytest
 from db_support import ApiAs
 from test_gpu_warm import FakeModal
 from test_lab_model_stage import MemoryStore, job_of
-from test_model_runs import Lab, make_lab, run_async, started
+from test_model_runs import Lab, control, make_lab, ok, run_async, started
 from workspace_support import owner
 
 from parfocal_common.model_runs import NUCLEI_POOL_FUNCTION, run_prefix, tile_key
@@ -44,8 +44,12 @@ def thumbnail(tissue_right: int) -> np.ndarray:
 class FakeSlides:
     def __init__(self, tissue_right: int) -> None:
         self.tissue_right = tissue_right
+        self.folders: list[str | None] = []
 
-    async def __call__(self, tenant_id: uuid.UUID, slide_id: uuid.UUID) -> SlideImage:
+    async def __call__(
+        self, tenant_id: uuid.UUID, slide_id: uuid.UUID, folder: str | None
+    ) -> SlideImage:
+        self.folders.append(folder)
         return SlideImage(
             FlatReader(), thumbnail(self.tissue_right), DOWNSAMPLE, WIDTH, HEIGHT, 0.25
         )
@@ -97,8 +101,14 @@ def test_a_whole_slide_nuclei_run_reads_only_tissue_tiles_and_logs_its_gpu_time(
     api: ApiAs, lab: Lab, database: str
 ) -> None:
     [run] = started(api, lab, parameters=NUCLEI)
-    store, model = MemoryStore(), BlankMaps()
-    assert drained(database, lab, FakeSlides(tissue_right=20), model, store) == 1
+    owner(
+        database,
+        "UPDATE slides SET original_key = 'imports/seed/case-7/original.svs' "
+        f"WHERE id = '{lab.slides[0]}'",
+    )
+    store, model, slides = MemoryStore(), BlankMaps(), FakeSlides(tissue_right=20)
+    assert drained(database, lab, slides, model, store) == 1
+    assert slides.folders == ["imports/seed/case-7/"]
     assert job_of(database, run) == ("done", None)
     assert model_stage(database, run) == ("done", 1)
     prefix = run_prefix(lab.tenant, lab.slides[0], uuid.UUID(run["id"]))
@@ -130,3 +140,18 @@ def test_a_parfocal_detector_without_a_worker_fails_with_a_code_instead_of_waiti
     assert drained(database, lab, FakeSlides(tissue_right=20), model, MemoryStore()) == 1
     assert job_of(database, run) == ("failed", "model-not-served")
     assert model.calls == 0
+
+
+def test_resuming_a_cancelled_nuclei_run_wakes_the_pool_again_and_cancelling_does_not(
+    api: ApiAs, lab: Lab
+) -> None:
+    [run] = started(api, lab, parameters=NUCLEI)
+    modal = FakeModal()
+    api.app.state.gpu_pools = modal
+    try:
+        ok(control(api, lab, run, "cancel"))
+        assert modal.spawned == []
+        ok(control(api, lab, run, "resume"))
+    finally:
+        del api.app.state.gpu_pools
+    assert modal.spawned == [(NUCLEI_POOL_FUNCTION, {"kind": "detect"})]

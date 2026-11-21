@@ -8,11 +8,12 @@ from pathlib import Path
 from typing import Any
 
 import httpx2
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from parfocal_common.db import create_engine
 from parfocal_common.gpu_usage import report_gpu_seconds
+from parfocal_common.ingest import folder_of
 from parfocal_common.jobs import StepFailedError, StepFunction, StepRun, Workflow
 from parfocal_common.model_artifacts import ModelArtifacts
 from parfocal_common.model_runs import (
@@ -48,7 +49,8 @@ WEIGHTS_FAMILY = "pathosam-vit-b-ais"
 WEIGHTS_VERSION = "v1.2"
 WEIGHTS_FILES = (GRAPHS.encoder, GRAPHS.ais_decoder_full)
 
-type SlideOpener = Callable[[uuid.UUID, uuid.UUID], Awaitable[SlideImage]]
+type SlideOpener = Callable[[uuid.UUID, uuid.UUID, str | None], Awaitable[SlideImage]]
+ORIGINAL_KEY = text("SELECT original_key FROM slides WHERE id = :slide_id")
 
 
 def quality_of(settings: RunSettings) -> Quality:
@@ -82,12 +84,13 @@ def bounds_of(settings: RunSettings, slide: Window) -> Window:
     return slide
 
 
-async def settings_for(step: StepRun) -> RunSettings:
+async def run_of(step: StepRun, slide_id: uuid.UUID) -> tuple[RunSettings, str | None]:
     async with step.transaction() as connection:
         row = (
             await connection.execute(select(model_runs).where(model_runs.c.job_id == step.job_id))
         ).one()
-    return settings_of(row)
+        original = await connection.scalar(ORIGINAL_KEY, {"slide_id": slide_id})
+    return settings_of(row), None if original is None else folder_of(str(original))
 
 
 def nuclei_running(
@@ -97,11 +100,11 @@ def nuclei_running(
     gpu: str | None = None,
 ) -> StepFunction:
     async def run(step: StepRun) -> Mapping[str, Any]:
-        settings = await settings_for(step)
+        slide_id = uuid.UUID(str(step.input["slide_id"]))
+        settings, folder = await run_of(step, slide_id)
         if settings.detector not in NUCLEI_DETECTORS:
             raise StepFailedError(NOT_SERVED)
-        slide_id = uuid.UUID(str(step.input["slide_id"]))
-        image = await slide_of(step.tenant_id, slide_id)
+        image = await slide_of(step.tenant_id, slide_id, folder)
         if image.mpp is None:
             raise StepFailedError(NO_SCALE)
         quality = quality_of(settings)
@@ -161,13 +164,6 @@ async def fetched_weights(storage: ObjectStore, folder: Path) -> Path:
     return folder
 
 
-def opener_of(slides: StoredSlides) -> SlideOpener:
-    async def opened(tenant_id: uuid.UUID, slide_id: uuid.UUID) -> SlideImage:
-        return await slides.open(tenant_id, slide_id)
-
-    return opened
-
-
 async def drained_from_environment(call: Mapping[str, object], gpu: str | None) -> int:
     location = load_settings(StorageSettings).storage()
     engine = create_engine(os.environ["DATABASE_URL"])
@@ -180,9 +176,7 @@ async def drained_from_environment(call: Mapping[str, object], gpu: str | None) 
                 refuse_cpu_on_a_gpu(tuple(model.encoder.get_providers()), gpu)
                 slides = StoredSlides(storage, Path(folder))
                 try:
-                    plan = nuclei_run_workflow(
-                        opener_of(slides), model, ObjectResultStore(storage), gpu
-                    )
+                    plan = nuclei_run_workflow(slides.open, model, ObjectResultStore(storage), gpu)
                     return await drain_nuclei_runs(engine, plan, worker_name(), drain_of(call))
                 finally:
                     slides.close()
