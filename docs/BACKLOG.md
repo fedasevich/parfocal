@@ -7013,7 +7013,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 8. Two different redraws of one object are not noticed today.
   Done when the disagreement rule adds an object whose reviewers' outlines overlap less than the task's threshold, the queue card says "outline differs" and draws each outline in its own colour over the AI one, and DB tests cover equal, close and far outlines for regions and cells.
   Depends on PROTO-113 and on decision 167 (who settles different outlines). Size: M.
-- [ ] PROTO-117 · The adjudicator settles the shape
+- [x] PROTO-117 · The adjudicator settles the shape
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 9. The queue decision stores an answer and a class and no geometry.
   Done when the adjudicator and the owner in the queue can pick one reviewer's outline or draw a new one, it is stored on the decision with who and when, the consensus export uses it and covers cells, and specs cover pick, draw and undo.
   Depends on PROTO-116. Size: M.
