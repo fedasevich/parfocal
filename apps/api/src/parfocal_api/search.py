@@ -20,8 +20,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, database_scope
 from parfocal_api.project_access import readable, readable_slide
 from parfocal_api.projects import code_of
-from parfocal_api.result_membership import missing_cells
-from parfocal_api.review_order import ResultFilesMissingError, ResultFilesUnreadableError
+from parfocal_api.result_membership import chunk_keys_of, sets_holding_cell
 from parfocal_api.tables import (
     AnnotationKind,
     PrivacyMode,
@@ -359,16 +358,10 @@ async def ai_holders(
     rows = list(await connection.execute(holding_sets(found, slide_ids)))
     if found.letter is not Letter.CELL:
         return {row.slide_id for row in rows}
-    holders: set[uuid.UUID] = set()
-    for row in rows:
-        if row.slide_id in holders:
-            continue
-        try:
-            if not await missing_cells(connection, store, row.id, {found.number}):
-                holders.add(row.slide_id)
-        except ResultFilesMissingError, ResultFilesUnreadableError:
-            continue
-    return holders
+    slide_of = {row.id: row.slide_id for row in rows}
+    keys = await chunk_keys_of(connection, list(slide_of))
+    held = await sets_holding_cell(store, found.number, keys)
+    return {slide_of[set_id] for set_id in held}
 
 
 async def drawn_holders(

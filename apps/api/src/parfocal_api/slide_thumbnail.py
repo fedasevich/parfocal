@@ -4,7 +4,6 @@ from fastapi import APIRouter, Response
 
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
-from parfocal_api.problems import NotFoundError
 from parfocal_api.slide_coverage import readable_slide
 from parfocal_common.ingest import FIXTURES_PREFIX, folder_of, slide_prefix
 from parfocal_common.object_store import StorageError
@@ -15,16 +14,12 @@ THUMBNAIL_HEADERS = {"Cache-Control": "private, max-age=3600"}
 router = APIRouter(prefix="/api/slides/{slide_id}/thumbnail", tags=["slides"])
 
 
-class ThumbnailMissingError(NotFoundError):
-    code = "thumbnail-missing"
-    title = "This slide has no stored thumbnail yet"
-
-
 @router.get(
     "",
     operation_id="getSlideThumbnail",
     response_class=Response,
     responses={200: {"content": {"image/jpeg": {}}}},
+    description="A slide with no stored thumbnail yet answers 204 with no body.",
     **require(Permission.SEE_SLIDES),
 )
 async def get_slide_thumbnail(
@@ -49,5 +44,5 @@ async def get_slide_thumbnail(
             if error.status != 404:
                 raise
     if stored is None:
-        raise ThumbnailMissingError
+        return Response(status_code=204, headers=THUMBNAIL_HEADERS)
     return Response(stored, media_type="image/jpeg", headers=THUMBNAIL_HEADERS)

@@ -64,7 +64,8 @@ export function useMinimapImage(slideId: string, overview: StageSession["overvie
     };
     fetch(thumbnail, { credentials: "same-origin", signal: stop.signal })
       .then((response) => {
-        if (response.ok) setImage({ src: thumbnail, source: "thumbnail" });
+        if (response.ok && response.status !== 204)
+          setImage({ src: thumbnail, source: "thumbnail" });
         else void fallBack();
       })
       .catch(() => {

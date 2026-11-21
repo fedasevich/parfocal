@@ -69,7 +69,9 @@ export function LiveProgress({
       </b>
       <small className="text-caption text-fg-dim">
         {review !== undefined || inTask
-          ? t`${timeLeft} left`
+          ? timeLeft === null
+            ? t`Last slide`
+            : t`${timeLeft} left`
           : percent === null
             ? (note ?? t`Opening`)
             : t`${percent}% of the tissue seen`}
@@ -120,7 +122,7 @@ export function LiveProgress({
             slideTotal={list.total}
             submittedCount={position - 1}
             dueText={task.due_on ? formatDue(task.due_on) : t`No due date`}
-            timeLeft={timeLeft}
+            timeLeft={timeLeft ?? t`Last slide`}
             onPrevious={previous === undefined ? undefined : () => onOpenSlide(previous)}
             onNext={next === undefined ? undefined : () => onOpenSlide(next)}
           />

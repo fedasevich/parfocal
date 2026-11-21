@@ -13,7 +13,7 @@ from parfocal_api.auth import auth_state
 from parfocal_api.context import TenantConnection
 from parfocal_api.hidden_models import hidden_names
 from parfocal_api.model_area import running_now
-from parfocal_api.model_catalogue import CATALOGUE
+from parfocal_api.model_registry import offered_catalogue
 from parfocal_api.permissions import Permission, require, sign_out_right
 from parfocal_api.projects import code_of
 from parfocal_api.remote_reads import OFFLINE_AFTER_FAILURES
@@ -242,7 +242,7 @@ async def sign_out_people(connection: AsyncConnection) -> list[uuid.UUID]:
 
 async def model_count(connection: AsyncConnection) -> int:
     hidden = await hidden_names(connection)
-    shown = sum(1 for model in CATALOGUE if model.name not in hidden)
+    shown = sum(1 for model in offered_catalogue() if model.name not in hidden)
     labbed = await connection.scalar(select(func.count()).select_from(lab_models))
     return shown + int(labbed or 0)
 

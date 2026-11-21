@@ -33,6 +33,19 @@ def test_the_overview_counts_the_project_from_stored_data(api: ApiAs, database: 
     assert api(r.people["first"]).get(url).status_code == 404
 
 
+def test_the_overview_counts_zones_with_regions_and_cells(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    owner(
+        database,
+        "INSERT INTO result_sets (tenant_id, project_id, slide_id, name, source, status, "
+        "cell_count, region_count, zone_count) "
+        f"SELECT tenant_id, project_id, id, 'Zones', 'import', 'ready', 0, 0, 3 "
+        f"FROM slides WHERE id = '{r.slide}'",
+    )
+    overview = api(r.people["owner"]).get(f"/api/projects/{r.project}/overview").json()
+    assert overview["objects"] == 10
+
+
 def test_the_overview_names_the_uploaded_file_only_in_a_clinical_project(
     api: ApiAs, database: str
 ) -> None:

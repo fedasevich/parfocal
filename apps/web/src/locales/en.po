@@ -6862,6 +6862,15 @@ msgstr "Drawn by"
 msgid "Drawn or imported by an expert"
 msgstr "Drawn or imported by an expert"
 
+#: src/measure/measurement-list.tsx
+msgid "Drawn shapes and measurements"
+msgstr "Drawn shapes and measurements"
+
+#. placeholder {0}: rows.length
+#: src/measure/measurement-list.tsx
+msgid "Drawn shapes and measurements <0>{0}</0>"
+msgstr "Drawn shapes and measurements <0>{0}</0>"
+
 #: src/screens/viewer/objects-panel.tsx
 msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
 msgstr "Drawn with the ruler across {across}. It is yours only and is not a decision."
@@ -9315,6 +9324,10 @@ msgstr "Last call {0}"
 #: src/screens/developer/bench-section.tsx
 msgid "Last run · {0} · {1} nuclei · zoom {2}"
 msgstr "Last run · {0} · {1} nuclei · zoom {2}"
+
+#: src/viewer/live-progress.tsx
+msgid "Last slide"
+msgstr "Last slide"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Last two magnifications"
@@ -12353,6 +12366,10 @@ msgstr "outline differs"
 #: src/viewer/stage-display.tsx
 msgid "Outline display"
 msgstr "Outline display"
+
+#: src/annotations/smart-layer.tsx
+msgid "Outline found"
+msgstr "Outline found"
 
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx

@@ -276,7 +276,12 @@ async def get_project_overview(
     )
     object_count = await connection.scalar(
         select(
-            func.coalesce(func.sum(result_sets.c.region_count + result_sets.c.cell_count), 0)
+            func.coalesce(
+                func.sum(
+                    result_sets.c.region_count + result_sets.c.cell_count + result_sets.c.zone_count
+                ),
+                0,
+            )
         ).where(live_sets(project_id), result_sets.c.status == ResultStatus.READY)
     )
     used_bytes = await connection.scalar(

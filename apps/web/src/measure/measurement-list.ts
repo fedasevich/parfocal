@@ -32,6 +32,9 @@ export type MeasurementGroup = {
 const groupRank = (group: MeasurementGroup) =>
   group.kind === "ruler" ? 2 : group.name === noClass || group.name === unknownClass ? 1 : 0;
 
+export const holdsDrawnShapes = (rows: readonly MeasurementRow[]): boolean =>
+  rows.some((row) => row.kind === "area");
+
 export function groupMeasurementRows(rows: readonly MeasurementRow[]): MeasurementGroup[] {
   const groups = new Map<
     string,

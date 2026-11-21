@@ -44,7 +44,8 @@ export const mayBeHeatmap = (set: ResultSet): boolean =>
   set.status === "ready" && set.cell_count === 0 && set.region_count === 0 && set.zone_count === 0;
 
 export const useSetHeatmap = (set: ResultSet): HeatmapFacts | undefined =>
-  okData(useGetHeatmap(set.id, { query: { enabled: mayBeHeatmap(set), retry: false } }).data);
+  okData(useGetHeatmap(set.id, { query: { enabled: mayBeHeatmap(set), retry: false } }).data) ??
+  undefined;
 
 async function fetchGrid(setId: string): Promise<Uint8Array> {
   const response = await fetch(getGetHeatmapGridUrl(setId), { credentials: "same-origin" });

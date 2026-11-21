@@ -145,16 +145,16 @@ def test_the_stored_thumbnail_is_served_as_a_jpeg(lab: Lab) -> None:
 
 
 @pytest.mark.db
-def test_a_slide_without_a_thumbnail_answers_missing(lab: Lab) -> None:
+def test_a_slide_without_a_thumbnail_answers_no_content_instead_of_an_error(lab: Lab) -> None:
     response = lab.api(lab.people["owner"]).get(f"/api/slides/{lab.bare}/thumbnail")
-    assert (response.status_code, response.json()["code"]) == (404, "thumbnail-missing")
+    assert (response.status_code, response.content) == (204, b"")
 
 
 @pytest.mark.db
 def test_a_person_who_cannot_read_the_slide_gets_no_thumbnail(lab: Lab) -> None:
     response = lab.api(lab.people["unassigned"]).get(f"/api/slides/{lab.slide}/thumbnail")
     assert response.status_code == 404, response.text
-    assert response.json()["code"] != "thumbnail-missing"
+    assert response.headers["content-type"].startswith("application/problem+json")
 
 
 SAMPLE_FOLDER = "samples/camelyon16/thumbnail_lab/"

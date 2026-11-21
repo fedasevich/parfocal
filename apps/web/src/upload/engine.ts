@@ -162,8 +162,10 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
     const response = await fetch(`${endpoint}/open?${query}`);
     if (response.status === 404) return null;
     if (!response.ok) throw new Error("The open upload could not be looked up");
-    const body = (await response.json()) as { key?: unknown; uploadId?: unknown };
-    if (typeof body.key !== "string" || typeof body.uploadId !== "string") return null;
+    const body = (await response.json()) as { key?: unknown; uploadId?: unknown } | null;
+    if (body === null || typeof body.key !== "string" || typeof body.uploadId !== "string") {
+      return null;
+    }
     return { key: body.key, uploadId: body.uploadId };
   }
 

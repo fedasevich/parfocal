@@ -69,7 +69,9 @@ def test_a_started_tumor_map_is_served_through_the_heatmap_route(
     assert started["slide_id"] == str(lab.slides[0])
     set_id = started["result_set_id"]
     reader = api(lab.people["owner"])
-    assert problem(reader.get(f"/api/result-sets/{set_id}/heatmap")) == (404, "no-heatmap")
+    waiting = reader.get(f"/api/result-sets/{set_id}/heatmap")
+    assert (waiting.status_code, waiting.json()) == (200, None)
+    assert problem(reader.get(f"/api/result-sets/{set_id}/heatmap/grid")) == (404, "no-heatmap")
 
     assert work(database, lab.tenant)
 

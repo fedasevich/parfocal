@@ -35174,7 +35174,7 @@ export function useListResultSetRegions<
 }
 
 export type getHeatmapResponse200 = {
-  data: HeatmapFacts;
+  data: HeatmapFacts | null;
   status: 200;
 };
 
@@ -36231,7 +36231,7 @@ export const useCreateUpload = <TError = Problem, TContext = unknown>(
 };
 
 export type findOpenUploadResponse200 = {
-  data: OpenUpload;
+  data: OpenUpload | null;
   status: 200;
 };
 
@@ -87877,6 +87877,7 @@ export const getGetSlideThumbnailUrl = (slideId: string) => {
 };
 
 /**
+ * A slide with no stored thumbnail yet answers 204 with no body.
  * @summary Get Slide Thumbnail
  */
 export const getSlideThumbnail = async (

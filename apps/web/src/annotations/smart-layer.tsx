@@ -26,6 +26,7 @@ import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { ContextExtra, contextChip } from "./context-extras.tsx";
 import type { AnnotationDocument } from "./document.ts";
 import { ModelTierChoice } from "./model-tier-choice.tsx";
+import { smartStatusOf } from "./smart-status.ts";
 import {
   bindSpacePan,
   buttonReleased,
@@ -427,6 +428,7 @@ export function SmartLayer({
     height: Math.abs(corners.b.y - corners.a.y),
   });
 
+  const status = smartStatusOf(snapshot);
   const fallback =
     encoderSource === null || encoderSource === "asking" || encoderSource === "server"
       ? null
@@ -509,9 +511,18 @@ export function SmartLayer({
               {fallbackText[fallback]}
             </span>
           ) : null}
-          {snapshot.phase === "thinking" || snapshot.message !== null ? (
-            <span data-testid="smart-status" role="status" className={contextChip}>
-              {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}
+          {status !== null ? (
+            <span
+              data-testid="smart-status"
+              data-status={status}
+              role="status"
+              className={contextChip}
+            >
+              {status === "outlining"
+                ? t`Outlining`
+                : status === "found"
+                  ? t`Outline found`
+                  : snapshot.message}
               {canStartModel(snapshot.message) ? (
                 <button
                   type="button"

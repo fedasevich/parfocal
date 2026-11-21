@@ -7031,17 +7031,18 @@ export const getListResultSetRegionsResponseMock = (
   ...overrideResponse,
 });
 
-export const getGetHeatmapResponseMock = (
-  overrideResponse: Partial<Extract<HeatmapFacts, object>> = {},
-): HeatmapFacts => ({
-  width: faker.number.int(),
-  height: faker.number.int(),
-  level: faker.helpers.arrayElement([faker.number.int(), null]),
-  downsample: faker.number.float({ fractionDigits: 2 }),
-  mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
-  tissue_share: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
-  ...overrideResponse,
-});
+export const getGetHeatmapResponseMock = (): HeatmapFacts | null =>
+  faker.helpers.arrayElement([
+    {
+      width: faker.number.int(),
+      height: faker.number.int(),
+      level: faker.helpers.arrayElement([faker.number.int(), null]),
+      downsample: faker.number.float({ fractionDigits: 2 }),
+      mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      tissue_share: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    },
+    null,
+  ]);
 
 export const getGetHeatmapGridResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
@@ -7075,19 +7076,20 @@ export const getCreateUploadResponseMock = (
   ...overrideResponse,
 });
 
-export const getFindOpenUploadResponseMock = (
-  overrideResponse: Partial<Extract<OpenUpload, object>> = {},
-): OpenUpload => ({
-  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  uploadId: faker.string.uuid(),
-  part_size: faker.number.int(),
-  part_count: faker.number.int(),
-  project_id: faker.string.uuid(),
-  case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  size: faker.number.int(),
-  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
-  ...overrideResponse,
-});
+export const getFindOpenUploadResponseMock = (): OpenUpload | null =>
+  faker.helpers.arrayElement([
+    {
+      key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      uploadId: faker.string.uuid(),
+      part_size: faker.number.int(),
+      part_count: faker.number.int(),
+      project_id: faker.string.uuid(),
+      case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      size: faker.number.int(),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]);
 
 export const getFindSentUploadsResponseMock = (): UploadState[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -23964,9 +23966,10 @@ export const getListResultSetRegionsMockHandler = (
 export const getGetHeatmapMockHandler = (
   overrideResponse?:
     | HeatmapFacts
+    | null
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<HeatmapFacts> | HeatmapFacts),
+      ) => Promise<HeatmapFacts | null> | HeatmapFacts | null),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -24106,7 +24109,10 @@ export const getCreateUploadMockHandler = (
 export const getFindOpenUploadMockHandler = (
   overrideResponse?:
     | OpenUpload
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<OpenUpload> | OpenUpload),
+    | null
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<OpenUpload | null> | OpenUpload | null),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(

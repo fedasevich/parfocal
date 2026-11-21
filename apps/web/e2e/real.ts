@@ -123,7 +123,7 @@ export async function storageStandIn(page: Page, storage: string): Promise<void>
     const path = new URL(request.url()).pathname.replace(new URL(storage).pathname, "");
     if (method === "OPTIONS") return route.fulfill({ status: 204, headers });
     if (method === "GET" && path === "/uploads/open") {
-      return route.fulfill({ status: 404, headers, json: { type: "no-open-upload" } });
+      return route.fulfill({ status: 200, headers, json: null });
     }
     if (method === "POST" && path === "/uploads/s3/multipart") {
       counter += 1;

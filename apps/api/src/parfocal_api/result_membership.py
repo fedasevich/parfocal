@@ -1,5 +1,6 @@
+import asyncio
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from sqlalchemy import select
@@ -21,6 +22,46 @@ async def stored_cells(store: ResultStore, object_key: str) -> list[Cell]:
         raise ResultFilesMissingError from error
     except ChunkError as error:
         raise ResultFilesUnreadableError from error
+
+
+PARALLEL_CHUNK_READS = 16
+
+
+async def sets_holding_cell(
+    store: ResultStore, number: int, chunk_keys: Mapping[uuid.UUID, Sequence[str]]
+) -> set[uuid.UUID]:
+    gate = asyncio.Semaphore(PARALLEL_CHUNK_READS)
+
+    async def holds(keys: Sequence[str]) -> bool:
+        for key in keys:
+            try:
+                async with gate:
+                    cells = await stored_cells(store, key)
+            except ResultFilesMissingError, ResultFilesUnreadableError:
+                return False
+            if any(cell.number == number for cell in cells):
+                return True
+        return False
+
+    sets = list(chunk_keys)
+    answers = await asyncio.gather(*(holds(chunk_keys[set_id]) for set_id in sets))
+    return {set_id for set_id, held in zip(sets, answers, strict=True) if held}
+
+
+async def chunk_keys_of(
+    connection: AsyncConnection, set_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, list[str]]:
+    keys: dict[uuid.UUID, list[str]] = {set_id: [] for set_id in set_ids}
+    if not set_ids:
+        return keys
+    rows = await connection.execute(
+        select(result_chunks.c.result_set_id, result_chunks.c.object_key)
+        .where(result_chunks.c.result_set_id.in_(set_ids))
+        .order_by(result_chunks.c.result_set_id, result_chunks.c.chunk)
+    )
+    for row in rows:
+        keys[row.result_set_id].append(row.object_key)
+    return keys
 
 
 async def missing_regions(

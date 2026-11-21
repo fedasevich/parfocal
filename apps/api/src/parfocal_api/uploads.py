@@ -212,11 +212,6 @@ class UploadNotFoundError(NotFoundError):
     title = "Upload not found"
 
 
-class NoOpenUploadError(NotFoundError):
-    code = "no-open-upload"
-    title = "No open upload matches this file"
-
-
 class CaseNotFoundError(NotFoundError):
     code = "case-not-found"
     title = "Case not found in this project"
@@ -529,7 +524,7 @@ async def find_open_upload(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     last_modified: Annotated[int | None, Query(ge=0)] = None,
-) -> OpenUpload:
+) -> OpenUpload | None:
     await visible(connection, principal, project_id)
     row = (
         await connection.execute(
@@ -547,7 +542,7 @@ async def find_open_upload(
         )
     ).one_or_none()
     if row is None:
-        raise NoOpenUploadError
+        return None
     return OpenUpload(
         **plan_of(row).model_dump(),
         project_id=row.project_id,

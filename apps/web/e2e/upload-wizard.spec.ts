@@ -83,7 +83,7 @@ async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
     }
     const path = url.pathname.replace("/e2e", "");
     if (request.method() === "GET" && path === "/uploads/open") {
-      await route.fulfill({ status: 404, headers, json: { type: "no-open-upload" } });
+      await route.fulfill({ status: 200, headers, json: null });
       return;
     }
     if (request.method() === "POST" && path === "/uploads/s3/multipart") {

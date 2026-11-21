@@ -61,7 +61,9 @@ def test_the_model_list_names_parfocal_and_lab_models_and_the_runs_going_on(
     started(api, lab)
     listed = ok(as_owner(api, lab).get(MODELS))
     parfocal = [model for model in listed["models"] if model["source"] == "parfocal"]
-    assert [model["id"] for model in parfocal] == [model.name for model in CATALOGUE]
+    assert [model["id"] for model in parfocal] == [
+        model.name for model in CATALOGUE if model.name != "hovernet"
+    ]
     assert {model["runs_on"] for model in parfocal} == {PARFOCAL_SERVER}
     labbed = [model for model in listed["models"] if model["source"] == "lab"]
     assert [(model["name"], model["runs_on"], model["who_can_run"]) for model in labbed] == [

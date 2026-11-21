@@ -20,6 +20,11 @@ export type LiveSlideList = {
   readonly nextId?: string | null;
 };
 
+const labelOrder = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+
+const byLabel = (slides: readonly LiveSlideRow[]): readonly LiveSlideRow[] =>
+  [...slides].sort((a, b) => labelOrder.compare(a.label, b.label));
+
 export function liveSlideList(input: {
   readonly slideId: string;
   readonly slides: readonly LiveSlideRow[];
@@ -42,8 +47,8 @@ export function liveSlideList(input: {
     input.taskSlideIds !== undefined && input.taskSlideIds.length > 0
       ? ["task", pick(input.taskSlideIds)]
       : input.caseSlideIds !== undefined && input.caseSlideIds.length > 0
-        ? ["case", pick(input.caseSlideIds)]
-        : ["project", input.slides];
+        ? ["case", byLabel(pick(input.caseSlideIds))]
+        : ["project", byLabel(input.slides)];
   const [scope, slides] = scoped;
   const index = slides.findIndex((slide) => slide.id === input.slideId);
   return { scope, slides, position: index + 1, total: slides.length };
@@ -82,8 +87,9 @@ export function liveDecisionSplit(
 
 const minutesPerSlide = 20;
 
-export function timeLeftText(position: number, total: number): string {
+export function timeLeftText(position: number, total: number): string | null {
   const minutes = Math.max(0, total - position) * minutesPerSlide;
+  if (minutes === 0) return null;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   if (hours === 0) return `about ${rest} min`;

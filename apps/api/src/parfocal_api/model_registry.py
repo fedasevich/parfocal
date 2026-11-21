@@ -15,6 +15,7 @@ from parfocal_api.context import CurrentPrincipal, PlatformConnection, TenantCon
 from parfocal_api.model_catalogue import (
     CALIBRATIONS,
     CATALOGUE,
+    CatalogueModel,
     LicenceClass,
     ModelHost,
     ModelMakes,
@@ -321,6 +322,15 @@ REGISTRY: Mapping[tuple[str, str], RegisteredModel] = register(BUILT_INS)
 
 def registered(name: str, version: str) -> RegisteredModel | None:
     return REGISTRY.get((name, version))
+
+
+def offered_catalogue() -> list[CatalogueModel]:
+    return [
+        model
+        for model in CATALOGUE
+        if (entry := registered(model.name, model.version)) is None
+        or entry.status is not ModelStatus.RETIRED
+    ]
 
 
 def catalogue_without_registry() -> list[str]:

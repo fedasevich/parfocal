@@ -10,6 +10,7 @@ import {
   buildMeasurementRows,
   formatDrawnTime,
   groupMeasurementRows,
+  holdsDrawnShapes,
   type MeasurementGroup,
   type MeasurementNames,
   noClass,
@@ -49,10 +50,11 @@ export function MeasurementList({
     [doc, micronsPerPixel, drawn, classNames, units, skipRulers],
   );
   if (skipRulers && rows.length === 0) return null;
+  const shapes = holdsDrawnShapes(rows);
 
   return (
     <section
-      aria-label={t`Measurements`}
+      aria-label={shapes ? t`Drawn shapes and measurements` : t`Measurements`}
       data-testid="measurement-list"
       className={
         docked
@@ -61,9 +63,16 @@ export function MeasurementList({
       }
     >
       <h2 className="m-0 text-body-sm font-semibold">
-        <Trans>
-          Measurements <span className="font-mono text-fg-dim">{rows.length}</span>
-        </Trans>
+        {shapes ? (
+          <Trans>
+            Drawn shapes and measurements{" "}
+            <span className="font-mono text-fg-dim">{rows.length}</span>
+          </Trans>
+        ) : (
+          <Trans>
+            Measurements <span className="font-mono text-fg-dim">{rows.length}</span>
+          </Trans>
+        )}
       </h2>
       {rows.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">

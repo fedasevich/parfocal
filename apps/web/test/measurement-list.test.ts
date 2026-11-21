@@ -5,6 +5,7 @@ import {
   buildMeasurementRows,
   formatDrawnTime,
   groupMeasurementRows,
+  holdsDrawnShapes,
   noteDrawnTimes,
 } from "../src/measure/measurement-list.ts";
 
@@ -26,6 +27,8 @@ describe("the measurement list", () => {
         ["M2", "area", "6.00 mm", "2.00 mm²", "Tumor"],
       ],
     );
+    assert.equal(holdsDrawnShapes(rows), true);
+    assert.equal(holdsDrawnShapes(rows.slice(0, 1)), false);
   });
 
   test("without a pixel size values stay in pixels", () => {

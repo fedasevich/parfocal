@@ -196,10 +196,7 @@ export const tissueHandlers = (): RequestHandler[] => [
   ),
   http.get<{ slideId: string }>("*/api/slides/:slideId/thumbnail", ({ params }) =>
     thumbless(params.slideId)
-      ? HttpResponse.json(
-          { status: 404, code: "thumbnail-missing", title: "No thumbnail yet" },
-          { status: 404 },
-        )
+      ? new HttpResponse(null, { status: 204 })
       : HttpResponse.text(thumbnailSvg(params.slideId), {
           headers: { "Content-Type": "image/svg+xml" },
         }),

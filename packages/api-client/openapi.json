@@ -19089,7 +19089,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HeatmapFacts"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/HeatmapFacts"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getheatmap"
                 }
               }
             }
@@ -19836,7 +19844,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OpenUpload"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/OpenUpload"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Findopenupload"
                 }
               }
             }
@@ -58035,6 +58051,7 @@
           "slides"
         ],
         "summary": "Get Slide Thumbnail",
+        "description": "A slide with no stored thumbnail yet answers 204 with no body.",
         "operationId": "getSlideThumbnail",
         "parameters": [
           {

@@ -306,7 +306,7 @@ const noHeatmap = () =>
 export const uploadHandlers = (): RequestHandler[] => [
   http.get<{ setId: string }>("*/api/result-sets/:setId/heatmap", ({ params }) => {
     const found = overrides().heatmaps?.[params.setId];
-    return found === undefined ? noHeatmap() : HttpResponse.json(found.facts);
+    return found === undefined ? HttpResponse.json(null) : HttpResponse.json(found.facts);
   }),
   http.get<{ setId: string }>("*/api/result-sets/:setId/heatmap/grid", ({ params }) => {
     const found = overrides().heatmaps?.[params.setId];

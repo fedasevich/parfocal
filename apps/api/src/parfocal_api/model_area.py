@@ -10,6 +10,7 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.hidden_models import hidden_names
 from parfocal_api.lab_models import SampleTile, SentClass, host_of, project_rows_of
 from parfocal_api.model_catalogue import CATALOGUE, PARFOCAL_SERVER
+from parfocal_api.model_registry import offered_catalogue
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
 from parfocal_api.projects import code_of, visible
@@ -212,7 +213,7 @@ async def list_ai_models(connection: TenantConnection) -> AiModels:
             status="hidden" if model.name in hidden else "active",
             latency_ms=None,
         )
-        for model in CATALOGUE
+        for model in offered_catalogue()
     ]
     rows = await connection.execute(select(lab_models).order_by(lab_models.c.created_at))
     lab = [

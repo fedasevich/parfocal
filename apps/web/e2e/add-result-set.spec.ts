@@ -46,7 +46,7 @@ async function fakeStorage(page: Page) {
     const path = new URL(request.url()).pathname.replace("/e2e", "");
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
     if (request.method() === "GET" && path === "/uploads/open")
-      return route.fulfill({ status: 404, headers, json: { type: "no-open-upload" } });
+      return route.fulfill({ status: 200, headers, json: null });
     if (request.method() === "POST" && path === "/uploads/s3/multipart") {
       created.push(request.postDataJSON() as (typeof created)[number]);
       return route.fulfill({

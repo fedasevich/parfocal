@@ -242,18 +242,18 @@ def test_a_reloaded_page_finds_the_open_upload(api: ApiAs, team: Team) -> None:
         miss = api(team.lead).get(
             "/api/uploads/open", params={**lookup, "last_modified": 1_700_000_000_000, **changed}
         )
-        assert (miss.status_code, miss.json()["code"]) == (404, "no-open-upload")
+        assert (miss.status_code, miss.json()) == (200, None)
     without_time = api(team.lead).get("/api/uploads/open", params=lookup)
-    assert without_time.status_code == 404
+    assert (without_time.status_code, without_time.json()) == (200, None)
     colleague = api(team.colleague).get(
         "/api/uploads/open", params={**lookup, "last_modified": 1_700_000_000_000}
     )
-    assert colleague.status_code == 404
+    assert (colleague.status_code, colleague.json()) == (200, None)
     api(team.lead).delete(path(upload), params=query(upload))
     gone = api(team.lead).get(
         "/api/uploads/open", params={**lookup, "last_modified": 1_700_000_000_000}
     )
-    assert gone.status_code == 404
+    assert (gone.status_code, gone.json()) == (200, None)
 
 
 def test_abort_removes_the_stored_parts_and_is_repeatable(

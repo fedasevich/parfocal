@@ -746,13 +746,16 @@ async def get_heatmap(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     results: Results,
-) -> HeatmapFacts:
-    row = await heatmap_row(connection, principal, result_set_id)
+) -> HeatmapFacts | None:
+    try:
+        row = await heatmap_row(connection, principal, result_set_id)
+    except NoHeatmapError:
+        return None
     prefix = result_set_prefix(row.tenant_id, row.slide_id, result_set_id)
     try:
         stored = json.loads(await results.get(f"{prefix}{HEATMAP_FACTS}"))
-    except MissingObjectError as error:
-        raise NoHeatmapError from error
+    except MissingObjectError:
+        return None
     return HeatmapFacts.model_validate(stored)
 
 

@@ -316,9 +316,10 @@ def test_a_set_without_a_heatmap_has_none_to_serve(
     assert choose(api, lab, started, unclassified_class_id=ids["Tumor"]).status_code == 200
     run_worker(database, lab.tenant_id, tmp_path)
     set_id = status_of(api, lab.lead, started)["result_set_id"]
-    for tail in ("heatmap", "heatmap/grid"):
-        missing = api(lab.lead).get(f"/api/result-sets/{set_id}/{tail}")
-        assert (missing.status_code, missing.json()["code"]) == (404, "no-heatmap")
+    facts = api(lab.lead).get(f"/api/result-sets/{set_id}/heatmap")
+    assert (facts.status_code, facts.json()) == (200, None)
+    grid = api(lab.lead).get(f"/api/result-sets/{set_id}/heatmap/grid")
+    assert (grid.status_code, grid.json()["code"]) == (404, "no-heatmap")
 
 
 def test_a_corrupt_png_heatmap_is_refused_with_its_named_problem(
