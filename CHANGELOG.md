@@ -2,6 +2,27 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.12 (2026-11-21)
+
+### Features
+
+- PROTO-158: Send a result import notice and meter Best embedding GPU seconds
+
+### Fixes
+
+- PROTO-156: Warn before the lock, hide the page while locked, write nothing on open
+- PROTO-156: Save a kept report draft that differs from the server on open
+
+### Docs
+
+- OPS-038: Log the v0.35.11 deploy
+- PROTO-156: List the signature and settings notes storage keys
+
+### Other
+
+- PROTO-156: Merge the lock warning and quiet pages
+- PROTO-158: Merge the import notice and Best GPU seconds
+
 ## v0.35.11 (2026-11-21)
 
 ### Fixes
