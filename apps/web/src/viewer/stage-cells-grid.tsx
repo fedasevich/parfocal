@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
-import { useEffect, useEffectEvent, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { actionOf } from "../keys/actions.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import { type Fired, isTyping } from "../keys/registry.ts";
@@ -111,6 +111,17 @@ export function StageCellsGrid({
       agreeRest();
     }
   });
+  const frame = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (current === null) return;
+    const grid = frame.current?.querySelector<HTMLElement>('[data-slot="cells-panel-grid"]');
+    const tile = grid?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!grid || !tile) return;
+    const view = grid.getBoundingClientRect();
+    const box = tile.getBoundingClientRect();
+    if (box.top < view.top) grid.scrollTop -= view.top - box.top;
+    else if (box.bottom > view.bottom) grid.scrollTop += box.bottom - view.bottom;
+  }, [current]);
   useEffect(() => {
     const listener = (event: KeyboardEvent) => onKey(event);
     window.addEventListener("keydown", listener);
@@ -118,8 +129,9 @@ export function StageCellsGrid({
   }, []);
   return (
     <div
+      ref={frame}
       data-testid="stage-cells-grid"
-      className="absolute bottom-18 left-1/2 z-10 w-fit max-w-[calc(100%-2rem)] -translate-x-1/2"
+      className="absolute bottom-18 left-1/2 z-10 flex max-h-[calc(100%-6rem)] w-fit max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col"
     >
       <CellsGrid
         slideId={slideId}

@@ -382,7 +382,7 @@ function CheckedCard({
 type SignOffExpert = { person: PersonInfo; checked: boolean; sub?: string };
 
 type SignOffCardProps = React.ComponentProps<"section"> & {
-  slideName: string;
+  slideName?: string;
   experts: SignOffExpert[];
   openThreads: number;
   signedOff?: boolean;
@@ -423,9 +423,13 @@ function SignOffCard({
           {signedOff ? t`Signed off` : t`Sign off this slide`}
         </h3>
         <p className="m-0 text-body-sm text-fg-dim" data-phi="">
-          {signedOff
-            ? t`${slideName} is locked. Later changes go to the change log.`
-            : t`${slideName} locks for everyone once you sign it off.`}
+          {slideName === undefined
+            ? signedOff
+              ? t`This slide is locked. Later changes go to the change log.`
+              : t`This slide locks for everyone once you sign it off.`
+            : signedOff
+              ? t`${slideName} is locked. Later changes go to the change log.`
+              : t`${slideName} locks for everyone once you sign it off.`}
         </p>
       </header>
       <ul aria-label={t`Experts`} className="m-0 grid list-none gap-2 p-0">

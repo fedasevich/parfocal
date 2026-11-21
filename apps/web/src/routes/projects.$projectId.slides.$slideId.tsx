@@ -7,6 +7,7 @@ import { unknownValuesOf } from "../search/unknown-values.ts";
 import { slidePath } from "../shell/slide-link.ts";
 import { EngineViewer } from "../viewer/engine-viewer.tsx";
 import { openSlideEarly } from "../viewer/load-engine.ts";
+import { NarrowScreenGate } from "../viewer/narrow-screen-gate.tsx";
 import { slideRedirect } from "../viewer/old-slide-address.ts";
 import { SlideAddressCheck } from "../viewer/slide-address-check.tsx";
 import type { StageStart } from "../viewer/stage-start.tsx";
@@ -98,12 +99,18 @@ function SlideView() {
   return (
     <SlideAddressCheck projectId={projectId} slideId={slideId} search={search}>
       <TaskSlideCheck projectId={projectId} taskId={search.task} slideId={slideId}>
-        {search.task === undefined || search.mode !== "guided" ? (
+        {search.task === undefined ? (
           viewer
         ) : (
-          <GuidedGate taskId={search.task} slideId={slideId}>
-            {() => viewer}
-          </GuidedGate>
+          <NarrowScreenGate>
+            {search.mode !== "guided" ? (
+              viewer
+            ) : (
+              <GuidedGate taskId={search.task} slideId={slideId}>
+                {() => viewer}
+              </GuidedGate>
+            )}
+          </NarrowScreenGate>
         )}
       </TaskSlideCheck>
     </SlideAddressCheck>

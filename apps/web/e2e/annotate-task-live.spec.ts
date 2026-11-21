@@ -96,6 +96,17 @@ test("an annotate task slide draws on the shared layer, fixes AI, checks two sli
   await expect(topBar.getByTestId("mark-slide-checked")).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Slide checked" })).toBeVisible();
   await expect(page.getByTestId("task-progress")).toHaveText("1 of 2 slides checked");
+  const signOff = panel.locator('[data-slot="sign-off-card"]');
+  await expect(signOff).toBeInViewport();
+  await expect(signOff).toContainText("This slide locks for everyone once you sign it off.");
+  const above = await panel.evaluate((root) => {
+    const card = root.querySelector('[data-slot="sign-off-card"]');
+    const list = root.querySelector('ul[aria-label="Objects"]');
+    return card !== null && list !== null
+      ? Boolean(card.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING)
+      : false;
+  });
+  expect(above).toBe(true);
 
   await page.getByRole("button", { name: "Sign off", exact: true }).click();
   await expect(panel).toHaveAttribute("data-step", "signed-off");

@@ -758,6 +758,35 @@ export function AnnotateTaskPanel({
           <p className="m-0 text-body-sm text-fg-dim" data-testid="task-progress">
             {progress.line}
           </p>
+          {status && (step === "signed-off" || (!lookOnly && showsSignOff(status, task.owner))) ? (
+            <SignOffCard
+              className="w-auto"
+              openThreads={status.open_threads}
+              signedOff={step === "signed-off"}
+              experts={status.experts.map((expert) => ({
+                person: personOf(expert.user_id) ?? {
+                  initials: "?",
+                  name: t`Expert`,
+                  color: "var(--fg-dim)",
+                },
+                checked: expert.checked_at !== null,
+                sub: expert.nothing_to_mark ? t`Nothing to mark` : t`Checked`,
+              }))}
+              onSignOff={() => void run(() => signOffSlide(taskId, slideId))}
+            />
+          ) : null}
+          {step !== "open" ? (
+            <CheckedCard
+              nothingToMark={
+                status?.experts.find((expert) => expert.user_id === me)?.nothing_to_mark ?? false
+              }
+              summary={summary}
+              {...(locked ? {} : { onUndo: () => void run(() => uncheckSlide(taskId, slideId)) })}
+              {...(next === null || onOpenSlide === undefined
+                ? {}
+                : { onNext: () => onOpenSlide(next) })}
+            />
+          ) : null}
           {view.available ? (
             <AiResultToggle
               checked={view.shown}
@@ -1003,35 +1032,6 @@ export function AnnotateTaskPanel({
             </p>
           ) : null}
           {finishSlot === null ? markChecked : null}
-          {step !== "open" ? (
-            <CheckedCard
-              nothingToMark={
-                status?.experts.find((expert) => expert.user_id === me)?.nothing_to_mark ?? false
-              }
-              summary={summary}
-              {...(locked ? {} : { onUndo: () => void run(() => uncheckSlide(taskId, slideId)) })}
-              {...(next === null || onOpenSlide === undefined
-                ? {}
-                : { onNext: () => onOpenSlide(next) })}
-            />
-          ) : null}
-          {status && (step === "signed-off" || (!lookOnly && showsSignOff(status, task.owner))) ? (
-            <SignOffCard
-              slideName="this slide"
-              openThreads={status.open_threads}
-              signedOff={step === "signed-off"}
-              experts={status.experts.map((expert) => ({
-                person: personOf(expert.user_id) ?? {
-                  initials: "?",
-                  name: "Expert",
-                  color: "var(--fg-dim)",
-                },
-                checked: expert.checked_at !== null,
-                sub: expert.nothing_to_mark ? "Nothing to mark" : "Checked",
-              }))}
-              onSignOff={() => void run(() => signOffSlide(taskId, slideId))}
-            />
-          ) : null}
         </section>
       </DockCard>
     </>

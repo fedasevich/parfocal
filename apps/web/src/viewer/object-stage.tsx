@@ -1,5 +1,5 @@
 import type { ReviewObject } from "@parfocal/api-client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { PolygonDraft } from "../annotations/polygon-draft.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { SlideStage } from "./slide-stage.tsx";
@@ -20,6 +20,8 @@ export type StageOutline = {
 };
 
 export type StageDraw = {
+  readonly draft: PolygonDraft;
+  readonly onDraft: (draft: PolygonDraft) => void;
   readonly onClose: (points: Float32Array) => void;
   readonly onCancel: () => void;
 };
@@ -35,21 +37,14 @@ function ObjectDraw({
   stage: HTMLElement;
   draw: StageDraw;
 }) {
-  const [draft, setDraft] = useState<PolygonDraft>([]);
   return (
     <StageRedrawLayer
       engine={engine}
       stage={stage}
-      draft={draft}
-      onDraft={setDraft}
-      onClose={(points) => {
-        setDraft([]);
-        draw.onClose(points);
-      }}
-      onCancel={() => {
-        setDraft([]);
-        draw.onCancel();
-      }}
+      draft={draw.draft}
+      onDraft={draw.onDraft}
+      onClose={draw.onClose}
+      onCancel={draw.onCancel}
     />
   );
 }

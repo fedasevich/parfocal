@@ -4264,6 +4264,7 @@ msgstr ""
 #: src/screens/review/guided-review.tsx
 #: src/screens/review/slide-submitted.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/narrow-screen-gate.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Back to My work"
 msgstr ""
@@ -5203,6 +5204,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/smart-minimap.tsx
+#: src/viewer/annotate-task-panel.tsx
 msgid "Checked"
 msgstr ""
 
@@ -5455,7 +5457,7 @@ msgid "Click to open the whole slide (or hold Z)"
 msgstr ""
 
 #: src/screens/disagreements/outline-settle.tsx
-msgid "Click to place points. Double click or Enter closes the outline."
+msgid "Click to place points. Double click, Enter or Finish outline closes the outline. Decision keys wait until you finish."
 msgstr ""
 
 #: src/viewer/compare-panes.tsx
@@ -7452,6 +7454,10 @@ msgstr ""
 msgid "expert"
 msgstr ""
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "Expert"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/new-task/send-step.tsx
@@ -7706,6 +7712,7 @@ msgstr ""
 msgid "Findings"
 msgstr ""
 
+#: src/screens/disagreements/outline-settle.tsx
 #: src/screens/review/first-read.tsx
 #: src/screens/review/object-card.tsx
 msgid "Finish outline"
@@ -10574,8 +10581,8 @@ msgstr ""
 msgid "New outline saved for {0}. The AI result is not changed."
 msgstr ""
 
-#. placeholder {0}: current.object
-#. placeholder {0}: rowLabel(row)
+#. placeholder {0}: rowLabel(target)
+#. placeholder {0}: target.object
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/disagreements/queue-screen.tsx
 msgid "New outline settled for {0}"
@@ -12150,6 +12157,10 @@ msgstr ""
 
 #: src/viewer/live-slides-popover.tsx
 msgid "Open this slide beside another one"
+msgstr ""
+
+#: src/viewer/narrow-screen-gate.tsx
+msgid "Open this task on a tablet or a computer. Everything you decided so far is saved."
 msgstr ""
 
 #: src/popout/popout-screen.tsx
@@ -14107,6 +14118,10 @@ msgstr ""
 
 #: src/screens/project/settings-tab.tsx
 msgid "Review defaults"
+msgstr ""
+
+#: src/viewer/narrow-screen-gate.tsx
+msgid "Review needs a wider screen"
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
@@ -17628,6 +17643,10 @@ msgstr ""
 msgid "The slide you were reading"
 msgstr ""
 
+#: src/viewer/narrow-screen-gate.tsx
+msgid "The slide, its objects and the decision panel do not fit on a phone screen."
+msgstr ""
+
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
 msgstr ""
@@ -18017,6 +18036,10 @@ msgstr ""
 msgid "This slide is already submitted."
 msgstr ""
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "This slide is locked. Later changes go to the change log."
+msgstr ""
+
 #: src/viewer/task-slide-check.tsx
 msgid "This slide is not part of the task"
 msgstr ""
@@ -18028,6 +18051,10 @@ msgstr ""
 #: src/screens/refusals.ts
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off and its layer is locked."
+msgstr ""
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "This slide locks for everyone once you sign it off."
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx

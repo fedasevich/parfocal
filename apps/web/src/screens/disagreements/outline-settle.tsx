@@ -14,17 +14,21 @@ export function OutlineSettle({
   choices,
   settledFrom,
   drawing,
+  canFinish,
   busy,
   onPick,
   onDraw,
+  onFinishDraw,
   onCancelDraw,
 }: {
   choices: readonly OutlineChoice[];
   settledFrom: SettledFrom;
   drawing: boolean;
+  canFinish: boolean;
   busy: boolean;
   onPick: (key: string) => void;
   onDraw: () => void;
+  onFinishDraw: () => void;
   onCancelDraw: () => void;
 }) {
   const { t } = useLingui();
@@ -61,13 +65,21 @@ export function OutlineSettle({
         </span>
       ))}
       {drawing ? (
-        <span className="flex items-center justify-between gap-2">
+        <span className="grid gap-1.5">
           <small className="text-caption text-fg-dim">
-            <Trans>Click to place points. Double click or Enter closes the outline.</Trans>
+            <Trans>
+              Click to place points. Double click, Enter or Finish outline closes the outline.
+              Decision keys wait until you finish.
+            </Trans>
           </small>
-          <Button size="xs" variant="ghost" onClick={onCancelDraw}>
-            <Trans>Cancel drawing</Trans>
-          </Button>
+          <span className="flex items-center gap-2">
+            <Button size="xs" variant="primary" disabled={!canFinish} onClick={onFinishDraw}>
+              <Trans>Finish outline</Trans>
+            </Button>
+            <Button size="xs" variant="ghost" onClick={onCancelDraw}>
+              <Trans>Cancel drawing</Trans>
+            </Button>
+          </span>
         </span>
       ) : (
         <span className="flex items-center justify-between gap-2">

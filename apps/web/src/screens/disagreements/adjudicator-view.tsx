@@ -56,6 +56,7 @@ import {
   sentNoteLine,
 } from "./adjudicator-card.ts";
 import { DisagreementStage } from "./disagreement-stage.tsx";
+import { useOutlineDrawing } from "./outline-drawing.ts";
 import { OutlineSettle } from "./outline-settle.tsx";
 import { type LetterOutline, letterOutlines, settledStageOutline } from "./reviewer-outlines.ts";
 import { countOf } from "./text.ts";
@@ -118,7 +119,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
     void queryClient.invalidateQueries({ queryKey: getGetMyAdjudicationQueryKey(taskId) });
   const settleOutline = useSettleAdjudicationOutline({ mutation: { onSuccess: refreshMine } });
   const clearOutline = useClearAdjudicationOutline({ mutation: { onSuccess: refreshMine } });
-  const [drawingKey, setDrawingKey] = useState<string | null>(null);
+  const drawing = useOutlineDrawing();
   const objectOf = (target: AdjudicationObject) => ({
     taskId,
     slideId: target.slide_id,
@@ -146,6 +147,12 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       { onSuccess: () => toast.show(message, () => restoreOutline(target, before)) },
     );
   };
+  const settleDrawn = (target: AdjudicationObject) => (points: Float32Array) =>
+    settle(
+      target,
+      { geometry: polygonToGeoJson(points) },
+      t`New outline settled for ${target.object}`,
+    );
   const objects = adjudication?.objects ?? [];
   const decided = objects.filter((object) => object.decision !== null);
   const counted = decidedRows(decided, look);
@@ -159,7 +166,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const current = objects[Math.max(0, Math.min(objects.length - 1, index))];
   const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? t`The researcher`;
   const goTo = (next: number) => {
-    setDrawingKey(null);
+    drawing.stop();
     setIndex(((next % objects.length) + objects.length) % objects.length);
   };
   const outlines = useMemo(() => letterOutlines(current), [current]);
@@ -185,6 +192,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey || allDone) return;
+      if (drawing.drawingKey !== null) return;
       const raw = current
         ? answersOf(look.style, look.classes, { class_name: current.ai.class_name }).find(
             (item) => item.key.toLowerCase() === event.key.toLowerCase(),
@@ -280,7 +288,8 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
           settledFrom={
             current.settled_outline ? (current.settled_outline.from_reviewer ?? null) : undefined
           }
-          drawing={drawingKey === current.key}
+          drawing={drawing.drawingKey === current.key}
+          canFinish={drawing.canFinish}
           busy={settleOutline.isPending || clearOutline.isPending}
           onPick={(letter) =>
             settle(
@@ -289,8 +298,9 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               t`Outline of reviewer ${letter} settled for ${current.object}`,
             )
           }
-          onDraw={() => setDrawingKey(current.key)}
-          onCancelDraw={() => setDrawingKey(null)}
+          onDraw={() => drawing.start(current.key)}
+          onFinishDraw={() => drawing.finish(settleDrawn(current))}
+          onCancelDraw={drawing.stop}
         />
       ) : null}
       <DecisionButtons
@@ -417,18 +427,8 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               claimHidden={!showsClaim(look.style)}
               outlines={shown === current ? stageOutlines : noStageOutlines}
               draw={
-                current && shown === current && drawingKey === current.key
-                  ? {
-                      onClose: (points) => {
-                        setDrawingKey(null);
-                        settle(
-                          current,
-                          { geometry: polygonToGeoJson(points) },
-                          t`New outline settled for ${current.object}`,
-                        );
-                      },
-                      onCancel: () => setDrawingKey(null),
-                    }
+                current && shown === current
+                  ? drawing.stageDraw(current.key, settleDrawn(current))
                   : null
               }
             />

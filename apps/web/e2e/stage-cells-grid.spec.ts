@@ -47,6 +47,30 @@ test("the engine viewer opens the cells grid and agrees with the rest", async ({
   await expect(grid).toHaveCount(0);
 });
 
+test("with 200 cells the grid keeps its count and Agree with the rest in view and scrolls the cells", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __parfocalFake: unknown }).__parfocalFake = { cellSample: 200 };
+  });
+  await page.goto(`/projects/${p07}/slides/${cellsSlide}?task=${rt14}&mode=cells`);
+  await ready(page);
+  const grid = page.getByTestId("stage-cells-grid");
+  await expect(grid.locator("[data-crop]")).toHaveCount(200);
+  const header = grid.getByText("Cells in your sample", { exact: true });
+  await expect(header).toBeInViewport();
+  await expect(grid.getByText("0 of 200")).toBeInViewport();
+  const frame = await grid.boundingBox();
+  const stage = await page.getByTestId("slide-stage").boundingBox();
+  expect(frame && stage && frame.y >= stage.y).toBe(true);
+  const cells = grid.locator('[data-slot="cells-panel-grid"]');
+  const scrolls = await cells.evaluate((node) => node.scrollHeight > node.clientHeight);
+  expect(scrolls).toBe(true);
+  await grid.getByRole("button", { name: /Agree with the rest/ }).click();
+  await grid.getByRole("button", { name: /Agree with 200/ }).click();
+  await expect(grid.getByText("200 of 200")).toBeInViewport();
+});
+
 const cameraOf = (page: Page) => page.getByTestId("slide-host").getAttribute("data-camera");
 
 async function settledCamera(page: Page) {

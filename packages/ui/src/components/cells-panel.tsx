@@ -58,14 +58,14 @@ function CellsPanel({
       data-folded={fold || undefined}
       aria-label={t`Cells in your sample`}
       className={cn(
-        "grid gap-2.5 rounded-zone border border-line bg-chrome p-3 text-fg shadow-pop",
+        "flex min-h-0 flex-col gap-2.5 rounded-zone border border-line bg-chrome p-3 text-fg shadow-pop",
         fold && "py-2",
         className,
       )}
       {...props}
     >
       {confirming ? (
-        <div className="flex items-start gap-3">
+        <div className="flex shrink-0 items-start gap-3">
           <span className="grid min-w-0 gap-0.5">
             <b className="text-body-sm font-semibold">
               <Trans>Agree with {confirmRest} open cell</Trans>
@@ -88,7 +88,7 @@ function CellsPanel({
           </Button>
         </div>
       ) : (
-        <div className="flex items-center gap-2" title={t`Drag to move the panel`}>
+        <div className="flex shrink-0 items-center gap-2" title={t`Drag to move the panel`}>
           <Icon name="target" className="text-fg-dim" />
           <b className="text-body-sm font-semibold">
             <Trans>Cells in your sample</Trans>
@@ -134,12 +134,13 @@ function CellsPanel({
           <div
             role="group"
             aria-label={t`Sampled cells`}
-            className="grid gap-1.5"
+            data-slot="cells-panel-grid"
+            className="-m-2.5 grid min-h-0 gap-1.5 overflow-x-hidden overflow-y-auto p-2.5"
             style={{ gridTemplateColumns: `repeat(${columns}, 40px)` }}
           >
             {children}
           </div>
-          <span className="flex flex-wrap items-center gap-1 text-caption text-fg-dim">
+          <span className="flex shrink-0 flex-wrap items-center gap-1 text-caption text-fg-dim">
             <Trans>
               <Keycap keys="←" size="sm" />
               <Keycap keys="→" size="sm" />
