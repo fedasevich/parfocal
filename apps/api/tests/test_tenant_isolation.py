@@ -3034,7 +3034,7 @@ def test_a_row_cannot_name_a_parent_pair_in_another_workspace(
     scope = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
     assert asyncio.run(seen_as_the_app(owner, scope, a.tenant_id)) == ("parfocal_app", 0)
     keys = composite_keys(owner)
-    assert len(keys) == 47
+    assert len(keys) == 48
     accepted: list[str] = []
     for key in keys:
         refusal = asyncio.run(
