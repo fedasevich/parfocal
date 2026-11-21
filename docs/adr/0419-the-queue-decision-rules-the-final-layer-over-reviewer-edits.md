@@ -24,5 +24,5 @@ The deployed walkthrough of v0.35.3 found two objects whose training data contra
 
 ## Consequences
 
-- The consensus export of ADR 0413 (the settled outline is a copy on the queue decision) still takes the earliest redraw of any reviewer for an agreed object and has no retype. It is left as it is and differs from the final layer for an object the queue agreed over a disagreeing reviewer's redraw. TODO: align it in a later task.
+- The consensus export of ADR 0413 (the settled outline is a copy on the queue decision) follows the same rule for an agreed object: the settled outline first, then the earliest redraw of a reviewer who agreed when the queue decided it.
 - Settling an outline and then answering Disagree drops the settled outline from the training data, and the pane says so.

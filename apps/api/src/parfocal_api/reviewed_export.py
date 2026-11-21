@@ -24,6 +24,7 @@ from parfocal_api.evaluation import (
     first_of_each_match,
     region_classes,
 )
+from parfocal_api.final_layers import Key, facts_of, upheld_by
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import project_grant, reads_whole
@@ -267,7 +268,7 @@ async def layer_items(
     return out
 
 
-type Shapes = dict[tuple[str, int], str]
+type Shapes = dict[Key, str]
 
 
 async def settled_shapes(connection: AsyncConnection, row: Any) -> Shapes:
@@ -287,25 +288,13 @@ async def settled_shapes(connection: AsyncConnection, row: Any) -> Shapes:
     }
 
 
-async def earliest_redraws(connection: AsyncConnection, row: Any) -> Shapes:
-    reshaped: Shapes = {}
-    for edit in await connection.execute(
-        select(
-            review_edits.c.kind,
-            review_edits.c.number,
-            func.ST_AsGeoJSON(review_edits.c.geometry).label("geojson"),
-        )
-        .where(
-            review_edits.c.task_id == row.task_id,
-            review_edits.c.slide_id == row.slide_id,
-            review_edits.c.split == "",
-            review_edits.c.geometry.is_not(None),
-            review_edits.c.deleted.is_(False),
-        )
-        .order_by(review_edits.c.created_at, review_edits.c.user_id)
-    ):
-        reshaped.setdefault((edit.kind, edit.number), edit.geojson)
-    return reshaped
+async def agreed_redraws(connection: AsyncConnection, row: Any, agreed: set[Key]) -> Shapes:
+    facts = await facts_of(connection, row.task_id, row.slide_id)
+    return {
+        key: drawn.geometry
+        for key in agreed
+        if (drawn := facts.redraw(key, upheld_by(key, facts))) is not None
+    }
 
 
 def final_shape(
@@ -329,7 +318,7 @@ async def consensus_items(
         if item_.slide == str(row.slide_id) and engine.consensus(item_) is engine.Consensus.AGREE
     }
     settled = await settled_shapes(connection, row)
-    reshaped = await earliest_redraws(connection, row)
+    reshaped = await agreed_redraws(connection, row, agreed)
     out: list[dict[str, Any]] = []
     for region in await ai_regions(connection, row.result_set_id):
         if ("region", region.number) not in agreed:

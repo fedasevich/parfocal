@@ -65,7 +65,8 @@ def test_the_owner_picks_a_reviewers_outline_and_undoes_it(api: ApiAs, database:
     assert stored(database, r) == []
     actions = owner(
         database,
-        "SELECT action FROM audit_events WHERE action LIKE 'review.outline-%' ORDER BY occurred_at",
+        "SELECT action FROM audit_events WHERE action LIKE 'review.outline-%' AND tenant_id = "
+        f"(SELECT tenant_id FROM review_tasks WHERE id = '{r.task}') ORDER BY occurred_at",
     )
     assert actions == [("review.outline-settled",), ("review.outline-cleared",)]
 

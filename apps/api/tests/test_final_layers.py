@@ -17,6 +17,7 @@ REDRAWN = square(0, 0, 80)
 DRAWN = square(390, 90, 20)
 ADDED = square(300, 300, 40)
 ADDED_AGAIN = square(302, 302, 40)
+AI_T2 = {"type": "Polygon", "coordinates": [[[0, 0], [200, 0], [200, 50], [0, 50], [0, 0]]]}
 
 DECISIONS: dict[str, dict[str, dict[str, Any]]] = {
     "first": {
@@ -303,3 +304,32 @@ def test_the_queue_shows_and_settles_a_single_reviewers_redraw_and_retype(
     t1 = features["T1"]["properties"]["parfocal"]
     assert (t1["origin"], t1["class_key"]) == ("ai-edited", None)
     assert same_shape(features["T1"]["geometry"], REDRAWN)
+
+
+def test_the_consensus_export_keeps_only_the_agreeing_reviewers_redraw(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    disagree = {"value": "disagree", "reasons": ["artefact"]}
+    answers = {
+        "first": {"T1": {"value": "agree"}, "T2": disagree},
+        "second": {"T1": disagree, "T2": {"value": "agree"}},
+    }
+    for who, given in answers.items():
+        for object_id, body in given.items():
+            ok(api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body))
+    ok(edit(api, r, "second", "T1", {"geometry": DRAWN}))
+    ok(edit(api, r, "first", "T1", {"geometry": REDRAWN}))
+    ok(edit(api, r, "first", "T2", {"geometry": ADDED}))
+    for who in answers:
+        ok(submitted(api(r.people[who]), r.base))
+    as_owner = api(r.people["owner"])
+    decide = f"/api/review-tasks/{r.task}/disagreements/{r.slide}"
+    for object_id in ("T1", "T2"):
+        ok(as_owner.put(f"{decide}/{object_id}", json={"answer": "agree"}))
+    consensus = ok(api(r.people["owner"]).get(f"{r.base}/export", params={"consensus": "true"}))
+    features = {feature["id"]: feature for feature in consensus.json()["features"]}
+    assert {"T1", "T2"} <= set(features)
+    assert same_shape(features["T1"]["geometry"], REDRAWN)
+    assert same_shape(features["T2"]["geometry"], AI_T2)
+    assert features["T2"]["properties"]["parfocal"]["changed"] == []
