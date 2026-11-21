@@ -70,10 +70,11 @@ export async function signIn(
   page: Page,
   deepLink: string,
   email: string = username,
+  secret: string = password,
 ): Promise<void> {
   await page.goto(`/sign-in?return_to=${encodeURIComponent(deepLink)}`);
   await page.getByLabel("Work email").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Password", { exact: true }).fill(secret);
   const submit = page.getByRole("button", { name: "Sign in", exact: true });
   await submit.click();
   const later = page.getByRole("button", { name: "Not now", exact: true });
