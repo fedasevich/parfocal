@@ -1942,43 +1942,43 @@
     },
     {
       "file": "components-models-and-jobs--tray-before-a-run--dark--comfortable.png",
-      "sha256": "3a65906b9b9b4e097629df9676e453cc0907ca2003fa80802a028befb84d5b0a",
-      "bytes": 51506
+      "sha256": "8f994965b00f872dd68fb3f65dfdae7bc8026ce05ca80cb204f5db839ff37e60",
+      "bytes": 52265
     },
     {
       "file": "components-models-and-jobs--tray-before-a-run--light--comfortable.png",
-      "sha256": "51b0c83353d467c10fd20e9ae4aede9505145bc4aff9134d831483c95dfe37cf",
-      "bytes": 51441
+      "sha256": "82024e786b5730dccb3dfe65fa8392655f4c9480bdf8e25a530573b9d96af847",
+      "bytes": 51854
     },
     {
       "file": "components-models-and-jobs--tray-nothing-running--dark--comfortable.png",
-      "sha256": "43b7d9641c180c1ac39aef01b53d4d85c157262b88cffc08158e43889ef1edae",
-      "bytes": 30061
+      "sha256": "176943837b374300c9debdd59435ae77509c5bcfb68c2fc84718f6daa6a48e60",
+      "bytes": 30606
     },
     {
       "file": "components-models-and-jobs--tray-nothing-running--light--comfortable.png",
-      "sha256": "93090275fffc68022097b21a46853fe6c08743bcf8bc38e219fc9711353eb659",
-      "bytes": 29969
+      "sha256": "1249edde0cf45f0737dc9dee2e6a7b35305cb3801789b7626e4ba7fc40ecdf83",
+      "bytes": 30197
     },
     {
       "file": "components-models-and-jobs--tray-opening--dark--comfortable.png",
-      "sha256": "8bf778546b27b6be530ed395f58a8a72acef8c9cfa157a2b19591cfa57ed6c18",
-      "bytes": 37090
+      "sha256": "218fd0ce6388544adb198203b382d80105d092491c8fe12fd056035657ddc1b2",
+      "bytes": 37837
     },
     {
       "file": "components-models-and-jobs--tray-opening--light--comfortable.png",
-      "sha256": "5578ddf993866ce9f20c5ff38a0003492b92fb8428c45bcd0a3ca1d0d7476245",
-      "bytes": 36919
+      "sha256": "fc606b6d126ca5a302b85fd1bea3de29543c0aace7cf1c89ed9d55380a6be6ba",
+      "bytes": 37339
     },
     {
       "file": "components-models-and-jobs--tray-with-problems--dark--comfortable.png",
-      "sha256": "061bdc8b11b4f876a424dccd95e54f0ffc8f5dd74b5507ba3bd9ca19316c49a8",
-      "bytes": 42809
+      "sha256": "b9192d414979d33cb45d54a39d8e581bb7c244b7491258877377b5cced07e07e",
+      "bytes": 43338
     },
     {
       "file": "components-models-and-jobs--tray-with-problems--light--comfortable.png",
-      "sha256": "fa35af2a733a3b390a47e1afd7e5b8119bf8733edfaacf30478bcf718d1b7b3b",
-      "bytes": 42686
+      "sha256": "597e4cdf77df4718d190628484de950ee62c29a8053bf7ec418cfad62142054a",
+      "bytes": 42898
     },
     {
       "file": "components-motion--normal--dark--comfortable.png",
