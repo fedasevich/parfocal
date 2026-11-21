@@ -2,6 +2,20 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.2 (2026-11-21)
+
+### Features
+
+- PROTO-145: Run whole slide nuclei on the GPU pool and scope review progress to its set
+
+### Fixes
+
+- PROTO-145: Open nuclei run slides from their folder and fix the review progress types
+
+### Other
+
+- PROTO-145: Merge whole slide cell detection
+
 ## v0.35.1 (2026-11-21)
 
 ### Features
