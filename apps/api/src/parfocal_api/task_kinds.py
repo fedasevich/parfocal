@@ -20,3 +20,13 @@ class NotAnAnnotateTaskError(ConflictError):
 def annotate_only(kind: str) -> None:
     if kind != TaskKind.ANNOTATE:
         raise NotAnAnnotateTaskError
+
+
+class TaskSignedOffError(ConflictError):
+    code = "task-signed-off"
+    title = "The task is signed off. An owner can reopen it"
+
+
+class TaskWithdrawnError(ConflictError):
+    code = "task-withdrawn"
+    title = "The task was withdrawn. There is nothing left to decide"

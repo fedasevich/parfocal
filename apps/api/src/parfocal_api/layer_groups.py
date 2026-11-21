@@ -4,12 +4,15 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.annotate_layer import editable_layer, readable_layer
 from parfocal_api.annotations import drawable_slide, slide_row
+from parfocal_api.blinding import sees_reviewer
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
-from parfocal_api.tables import review_task_slides, slides
+from parfocal_api.principals import Principal
+from parfocal_api.tables import annotations, review_task_slides, slides
 
 MAX_GROUPS = 500
 MAX_MEMBERS = 20_000
@@ -56,13 +59,44 @@ class LayerGroups(BaseModel):
 router = APIRouter(prefix="/api/slides/{slide_id}/layer-groups", tags=["annotations"])
 
 
+async def hidden_from(
+    connection: AsyncConnection, principal: Principal, slide: Any, members: list[LayerMember]
+) -> set[uuid.UUID]:
+    rows = await connection.execute(
+        select(annotations.c.id, annotations.c.task_id, annotations.c.created_by_user_id).where(
+            annotations.c.slide_id == slide.id,
+            annotations.c.task_id.is_not(None),
+            annotations.c.id.in_({member.annotation_id for member in members}),
+        )
+    )
+    authors: dict[tuple[uuid.UUID, uuid.UUID | None], list[uuid.UUID]] = {}
+    for row in rows:
+        authors.setdefault((row.task_id, row.created_by_user_id), []).append(row.id)
+    hidden: set[uuid.UUID] = set()
+    for (task_id, author), ids in authors.items():
+        if not await sees_reviewer(
+            connection, principal, slide.project_id, task_id, slide.id, author
+        ):
+            hidden.update(ids)
+    return hidden
+
+
+async def stored_groups(connection: AsyncConnection, slide_id: uuid.UUID) -> LayerGroups:
+    stored = await connection.scalar(select(slides.c.layer_groups).where(slides.c.id == slide_id))
+    return LayerGroups.model_validate(stored or {})
+
+
 @router.get("", operation_id="getLayerGroups", **require(Permission.SEE_SLIDES, emergency=True))
 async def get_layer_groups(
     slide_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> LayerGroups:
-    await slide_row(connection, principal, slide_id)
-    stored = await connection.scalar(select(slides.c.layer_groups).where(slides.c.id == slide_id))
-    return LayerGroups.model_validate(stored or {})
+    slide = await slide_row(connection, principal, slide_id)
+    saved = await stored_groups(connection, slide_id)
+    hidden = await hidden_from(connection, principal, slide, saved.members)
+    return LayerGroups(
+        groups=saved.groups,
+        members=[member for member in saved.members if member.annotation_id not in hidden],
+    )
 
 
 @router.put("", operation_id="setLayerGroups", **require(Permission.REVIEW, write=True))
@@ -72,13 +106,29 @@ async def set_layer_groups(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> LayerGroups:
-    await drawable_slide(connection, principal, slide_id)
+    slide = await drawable_slide(connection, principal, slide_id)
+    saved = await stored_groups(connection, slide_id)
+    kept = {group.id for group in body.groups}
+    unseen = await hidden_from(connection, principal, slide, [*saved.members, *body.members])
+    members = [
+        *(member for member in body.members if member.annotation_id not in unseen),
+        *(
+            member
+            for member in saved.members
+            if member.annotation_id in unseen and member.group_id in kept
+        ),
+    ]
     await connection.execute(
         update(slides)
         .where(slides.c.id == slide_id)
-        .values(layer_groups=body.model_dump(mode="json"))
+        .values(
+            layer_groups=LayerGroups(groups=body.groups, members=members).model_dump(mode="json")
+        )
     )
-    return body
+    return LayerGroups(
+        groups=body.groups,
+        members=[member for member in members if member.annotation_id not in unseen],
+    )
 
 
 shared_router = APIRouter(

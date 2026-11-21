@@ -59094,12 +59094,7 @@
       "AddedDraft": {
         "properties": {
           "kind": {
-            "type": "string",
-            "enum": [
-              "region",
-              "cell"
-            ],
-            "title": "Kind"
+            "$ref": "#/components/schemas/AnnotationKind"
           },
           "geometry": {
             "$ref": "#/components/schemas/Geometry"
@@ -59115,6 +59110,16 @@
               }
             ],
             "title": "Class Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Words"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -80442,6 +80447,14 @@
             },
             "type": "array",
             "title": "Added"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/Annotation"
+            },
+            "type": "array",
+            "title": "Marks",
+            "default": []
           },
           "summary": {
             "$ref": "#/components/schemas/LayerSummary"

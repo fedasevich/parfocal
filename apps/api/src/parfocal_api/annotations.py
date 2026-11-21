@@ -23,12 +23,15 @@ from parfocal_api.tables import (
     AnnotationChange,
     AnnotationKind,
     PrivacyMode,
+    TaskKind,
     annotation_versions,
     annotations,
     project_classes,
     projects,
+    review_tasks,
     slides,
 )
+from parfocal_api.task_kinds import TaskSignedOffError, TaskWithdrawnError
 from parfocal_common.object_ids import Letter, ObjectId
 
 MAX_BULK = 10_000
@@ -408,10 +411,28 @@ async def add(
     ]
 
 
+async def require_open_review(connection: AsyncConnection, task_id: uuid.UUID) -> None:
+    task = (
+        await connection.execute(
+            select(
+                review_tasks.c.kind, review_tasks.c.signed_off_at, review_tasks.c.withdrawn_at
+            ).where(review_tasks.c.id == task_id)
+        )
+    ).one_or_none()
+    if task is None or task.kind != TaskKind.REVIEW:
+        return
+    if task.signed_off_at is not None:
+        raise TaskSignedOffError
+    if task.withdrawn_at is not None:
+        raise TaskWithdrawnError
+
+
 async def changeable(
     connection: AsyncConnection, principal: Principal, slide: Any, annotation_id: uuid.UUID
 ) -> Annotation:
     current = await one_annotation(connection, slide.id, annotation_id)
+    if current.task_id is not None:
+        await require_open_review(connection, current.task_id)
     if current.task_id is None or current.created_by_user_id == author_of(principal):
         return current
     grant = await project_grant(connection, principal, slide.project_id, Permission.REVIEW)

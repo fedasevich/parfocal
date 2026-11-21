@@ -8,7 +8,7 @@ import type {
   ReviewedLayer,
   ReviewOrder,
 } from "../generated/api.ts";
-import { addedOn } from "./added-objects.ts";
+import { addedOn, marksOn } from "./added-objects.ts";
 import { people, resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
@@ -344,6 +344,7 @@ export const reviewedLayerFor = (taskId: string, slideId: string): ReviewedLayer
     reviewer_id: noReviewer,
     edits,
     added: structuredClone(addedOn(taskId, slideId)),
+    marks: structuredClone(marksOn(taskId, slideId)),
     summary: {
       regions: null,
       cells: null,

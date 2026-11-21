@@ -306,8 +306,8 @@ function TopBar({
       {storage}
       <span className="flex-1" />
       <span ref={statusRef} data-slot="live-save-status" className="min-w-0" />
-      {task !== undefined && !reviewTask ? (
-        <SlideExportMenu slideId={slideId} taskId={task.id} />
+      {task !== undefined && (!reviewTask || choice === "annotate") ? (
+        <SlideExportMenu slideId={slideId} taskId={task.id} slideOnly={reviewTask} />
       ) : null}
       {choices.length < 2 ? null : (
         <SegmentedControl

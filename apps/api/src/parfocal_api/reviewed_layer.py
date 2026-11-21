@@ -2,7 +2,7 @@ import json
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any, Literal
+from typing import Any
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field, model_validator
@@ -52,7 +52,7 @@ from parfocal_api.tables import (
     review_tasks,
     slide_counters,
 )
-from parfocal_api.task_kinds import review_only
+from parfocal_api.task_kinds import TaskSignedOffError, TaskWithdrawnError, review_only
 from parfocal_common.object_ids import (
     Letter,
     ObjectId,
@@ -103,10 +103,11 @@ class ObjectResolution(BaseModel):
     current: list[str]
 
 
-class AddedDraft(BaseModel):
-    kind: Literal[AnnotationKind.REGION, AnnotationKind.CELL]
-    geometry: Geometry
-    class_id: uuid.UUID | None = None
+OBJECT_KINDS = frozenset({AnnotationKind.REGION, AnnotationKind.CELL})
+
+
+class AddedDraft(AnnotationDraft):
+    pass
 
 
 class ReviewEdit(BaseModel):
@@ -140,6 +141,7 @@ class ReviewedLayer(BaseModel):
     reviewer_id: uuid.UUID
     edits: list[ReviewEdit]
     added: list[Annotation]
+    marks: list[Annotation] = []
     summary: LayerSummary
 
 
@@ -171,16 +173,6 @@ class SplitPartError(ConflictError):
 class UnknownObjectError(NotFoundError):
     code = "unknown-object"
     title = "The result set has no such object"
-
-
-class TaskSignedOffError(ConflictError):
-    code = "task-signed-off"
-    title = "The task is signed off. An owner can reopen it"
-
-
-class TaskWithdrawnError(ConflictError):
-    code = "task-withdrawn"
-    title = "The task was withdrawn. There is nothing left to decide"
 
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}/slides/{slide_id}", tags=["review-tasks"])
@@ -868,8 +860,7 @@ async def add_review_object(
 ) -> Annotation:
     row = await assigned_slide(connection, principal, task_id, slide_id)
     slide = SimpleNamespace(id=slide_id, project_id=row.project_id)
-    annotation = AnnotationDraft(kind=draft.kind, geometry=draft.geometry, class_id=draft.class_id)
-    (made,) = await add(connection, principal, slide, [annotation], task_id=task_id)
+    (made,) = await add(connection, principal, slide, [draft], task_id=task_id)
     created = (
         await connection.execute(select(*ANNOTATION_COLUMNS).where(annotations.c.id == made.id))
     ).one()
@@ -903,7 +894,7 @@ async def get_reviewed_layer(
             .order_by(review_edits.c.kind, review_edits.c.number, review_edits.c.split)
         )
     ]
-    added = [
+    drawn = [
         annotation_of(item)
         for item in await connection.execute(
             select(*ANNOTATION_COLUMNS)
@@ -912,11 +903,12 @@ async def get_reviewed_layer(
                 annotations.c.slide_id == slide_id,
                 annotations.c.created_by_user_id == reviewer,
                 annotations.c.deleted_at.is_(None),
-                annotations.c.kind.in_([AnnotationKind.REGION, AnnotationKind.CELL]),
             )
             .order_by(annotations.c.kind, annotations.c.number)
         )
     ]
+    added = [item for item in drawn if item.kind in OBJECT_KINDS]
+    marks = [item for item in drawn if item.kind not in OBJECT_KINDS]
     counts = (
         await connection.execute(
             select(result_sets.c.region_count, result_sets.c.cell_count).where(
@@ -933,6 +925,7 @@ async def get_reviewed_layer(
         reviewer_id=reviewer,
         edits=edits,
         added=added,
+        marks=marks,
         summary=LayerSummary(
             regions=None if hidden else counts.region_count,
             cells=None if hidden else counts.cell_count,

@@ -25,9 +25,34 @@ const keyOf = (taskId: string, slideId: string) => `${taskId}/${slideId}`;
 
 const viewerId = () => people[fakeView().viewer].id;
 
-export const addedOn = (taskId: string, slideId: string): Annotation[] =>
+const isObject = (kind: Annotation["kind"]) => kind === "region" || kind === "cell";
+
+const markLetters: Record<Annotation["kind"], string> = {
+  roi: "R",
+  measurement: "M",
+  region: "T",
+  cell: "C",
+  arrow: "A",
+  text: "N",
+};
+
+export const drawnOn = (taskId: string, slideId: string): Annotation[] =>
   (readAdded()[keyOf(taskId, slideId)] ?? []).filter(
     (item) => item.deleted_at === null && item.created_by_user_id === viewerId(),
+  );
+
+export const addedOn = (taskId: string, slideId: string): Annotation[] =>
+  drawnOn(taskId, slideId).filter((item) => isObject(item.kind));
+
+export const marksOn = (taskId: string, slideId: string): Annotation[] =>
+  drawnOn(taskId, slideId).filter((item) => !isObject(item.kind));
+
+export const hiddenAddedIds = (slideId: string): Set<string> =>
+  new Set(
+    Object.values(readAdded())
+      .flat()
+      .filter((item) => item.slide_id === slideId && item.created_by_user_id !== viewerId())
+      .map((item) => item.id),
   );
 
 export const addObject = (taskId: string, slideId: string, draft: AddedDraft): Annotation => {
@@ -40,9 +65,10 @@ export const addObject = (taskId: string, slideId: string, draft: AddedDraft): A
     slide_id: slideId,
     kind: draft.kind,
     number,
-    code: `${draft.kind === "cell" ? "C" : "T"}${number}⁺`,
+    code: `${markLetters[draft.kind]}${number}${isObject(draft.kind) ? "⁺" : ""}`,
     geometry: { ...draft.geometry },
     class_id: draft.class_id ?? null,
+    text: draft.kind === "text" ? (draft.text?.trim() ?? null) : null,
     task_id: taskId,
     version: 1,
     created_by_user_id: viewerId(),
@@ -100,6 +126,7 @@ export const changeAddedObject = (
           ? where.found.geometry
           : { ...edit.geometry },
       class_id: edit.class_id === undefined ? where.found.class_id : edit.class_id,
+      text: edit.text === undefined || edit.text === null ? (where.found.text ?? null) : edit.text,
       version: where.found.version + 1,
       updated_at: new Date().toISOString(),
     }),

@@ -14,7 +14,7 @@ from parfocal_api.annotate_layer import readable_layer
 from parfocal_api.annotations import LETTERS as ANNOTATION_LETTERS
 from parfocal_api.annotations import PERSON_MADE_AI_KINDS
 from parfocal_api.blind_first import seen_by
-from parfocal_api.blinding import require_ai_shown
+from parfocal_api.blinding import require_ai_shown, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import class_names
 from parfocal_api.permissions import Permission, require
@@ -22,9 +22,11 @@ from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.result_sets import set_row, slide_row
 from parfocal_api.review_order import Results
 from parfocal_api.reviewed_export import path_parts
+from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.tables import (
     AnnotationKind,
     ResultStatus,
+    TaskKind,
     annotations,
     result_chunks,
     result_objects,
@@ -244,6 +246,28 @@ async def annotation_rows(
     ]
 
 
+async def task_annotation_rows(
+    connection: AsyncConnection,
+    principal: CurrentPrincipal,
+    slide_id: uuid.UUID,
+    names: dict[uuid.UUID, str],
+    task_id: uuid.UUID | None,
+) -> list[Feature]:
+    if task_id is None:
+        return await annotation_rows(connection, slide_id, names)
+    task = await task_slide(connection, principal, task_id, slide_id)
+    if task.kind == TaskKind.REVIEW:
+        mine = [annotations.c.created_by_user_id == user_of(principal)]
+        return [
+            *await annotation_rows(connection, slide_id, names),
+            *await annotation_rows(connection, slide_id, names, task_id, mine),
+        ]
+    layer = await readable_layer(connection, principal, task_id, slide_id)
+    return await annotation_rows(
+        connection, slide_id, names, task_id, seen_by(layer.blind_first, principal)
+    )
+
+
 async def set_classes(connection: AsyncConnection, set_id: uuid.UUID) -> dict[int, str]:
     rows = await connection.execute(
         select(result_set_classes.c.position, result_set_classes.c.source_name).where(
@@ -298,14 +322,9 @@ async def plan_of(
     task_id: uuid.UUID | None = None,
 ) -> Plan:
     slide = await slide_row(connection, principal, slide_id)
-    seen: list[ColumnElement[bool]] = []
-    if task_id is not None:
-        layer = await readable_layer(connection, principal, task_id, slide_id)
-        seen = seen_by(layer.blind_first, principal)
+    names = await class_names(connection, slide.project_id)
     where = await path_parts(connection, slide_id)
-    rows = await annotation_rows(
-        connection, slide_id, await class_names(connection, slide.project_id), task_id, seen
-    )
+    rows = await task_annotation_rows(connection, principal, slide_id, names, task_id)
     if result_set_id is None:
         return Plan(where, "Annotations", len(rows), rows, [], {})
     found = await set_row(connection, principal, result_set_id)
