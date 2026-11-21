@@ -12,7 +12,13 @@ from test_showcase import RESULTS, EmptyStore
 
 from parfocal_api.annotate_import import LayerImport, import_shared_objects
 from parfocal_api.annotate_layer import get_shared_layer, list_shared_object_history
+from parfocal_api.annotate_sign_off import (
+    check_annotate_slide,
+    get_annotate_slide_status,
+    sign_off_annotate_slide,
+)
 from parfocal_api.annotation_exports import ExportFormat, export_slide_objects
+from parfocal_api.dataset_versions import get_task_dataset
 from parfocal_api.evaluation import class_names
 from parfocal_api.layer_groups import get_shared_layer_groups
 from parfocal_api.my_work import list_my_review_tasks
@@ -214,3 +220,46 @@ async def test_each_export_downloads_and_imports_back_cleanly(
         assert sorted(
             (item.kind, str(item.class_id), item.text) for item in imported.objects
         ) == sorted((item.kind, str(item.class_id), item.text) for item in live)
+
+
+class RolledBackError(Exception):
+    pass
+
+
+async def rolled_back(url: str, principal: MemberPrincipal) -> AsyncIterator[AsyncConnection]:
+    engine = create_engine(url)
+    try:
+        async with scoped_transaction(
+            engine, DatabaseScope(tenant_id=principal.tenant_id, user_id=principal.user_id)
+        ) as connection:
+            yield connection
+            raise RolledBackError
+    except RolledBackError:
+        pass
+    finally:
+        await engine.dispose()
+
+
+async def test_the_agent_finishes_the_example_alone_and_reaches_its_dataset(example: str) -> None:
+    task_id, slide_id, _, agent = await person(example, AGENT)
+    async for connection in rolled_back(example, agent):
+        before = await get_annotate_slide_status(task_id, slide_id, agent, connection)
+        waiting = [item.user_id for item in before.experts if item.checked_at is None]
+        assert (len(before.experts), waiting) == (2, [agent.user_id])
+        await check_annotate_slide(
+            task_id, slide_id, agent, connection, BackgroundTasks(), NoRealtime()
+        )
+        signed = await sign_off_annotate_slide(task_id, slide_id, agent, connection)
+        assert signed.signed_off_at is not None
+        summary = await get_task_dataset(
+            task_id,
+            agent,
+            connection,
+            RESULTS,  # type: ignore[arg-type]
+            origin=None,
+            class_id=None,
+            slide_id=None,
+            include_unchecked=None,
+        )
+        assert summary.signed_off_slides == 1
+        assert sum(summary.objects.values()) > 0

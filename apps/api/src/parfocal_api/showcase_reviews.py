@@ -1,17 +1,23 @@
 import uuid
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 from fastapi import BackgroundTasks
+from pydantic import TypeAdapter
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
+from starlette.requests import Request
 
 from parfocal_api.adjudications import AdjudicationDraft, ObjectRef, send_to_adjudicator
+from parfocal_api.annotations import Geometry
 from parfocal_api.decision_styles import DecisionSettings
 from parfocal_api.disagreements import queue_of
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.realtime import NoRealtime
+from parfocal_api.review_objects import list_review_objects
 from parfocal_api.review_tasks import Scope, SlideSet, TaskDraft, create_review_task
+from parfocal_api.reviewed_layer import EditDraft, save_review_edit
 from parfocal_api.seed_request import seed_request
 from parfocal_api.tables import (
     DecisionReason,
@@ -25,9 +31,12 @@ from parfocal_api.tables import (
     review_decisions,
     review_tasks,
 )
+from parfocal_common.disagreements import Why
 from parfocal_common.result_store import ResultStore
 
 QUEUE_TASK = "Disagreement queue example"
+OUTLINE_SHIFT = 0.6
+GEOMETRY = TypeAdapter[Geometry](Geometry)
 
 
 @dataclass
@@ -46,6 +55,7 @@ async def decide(
     key: str,
     value: DecisionValue,
     reasons: list[DecisionReason] | None = None,
+    number: int = 1,
 ) -> None:
     await connection.execute(
         insert(review_decisions).values(
@@ -55,7 +65,7 @@ async def decide(
             slide_id=slide_id,
             user_id=seeded.people[key],
             kind="region",
-            number=1,
+            number=number,
             value=value,
             style=DecisionStyle.AGREE,
             answer=value,
@@ -128,6 +138,42 @@ async def review_task(
     return task.id
 
 
+def box(left: float, top: float, right: float, bottom: float) -> Geometry:
+    ring = [[left, top], [right, top], [right, bottom], [left, bottom], [left, top]]
+    return GEOMETRY.validate_python({"type": "Polygon", "coordinates": [ring]})
+
+
+async def redraw_apart(
+    connection: AsyncConnection,
+    reviewers: Sequence[MemberPrincipal],
+    results: ResultStore,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+) -> int | None:
+    listed = await list_review_objects(task_id, slide_id, reviewers[0], connection, results)
+    regions = [item for item in listed.objects if item.kind == "region" and item.outline]
+    if len(regions) < 2:
+        return None
+    target = regions[1]
+    ring: list[float] = target.outline or []
+    xs, ys = ring[0::2], ring[1::2]
+    left, top, right, bottom = min(xs), min(ys), max(xs), max(ys)
+    shift = (right - left) * OUTLINE_SHIFT
+    request = Request({"type": "http", "app": SimpleNamespace(results=results), "headers": []})
+    for index, reviewer in enumerate(reviewers):
+        moved = shift * index
+        await save_review_edit(
+            task_id,
+            slide_id,
+            target.object,
+            EditDraft(geometry=box(left + moved, top, right + moved, bottom)),
+            reviewer,
+            connection,
+            request,
+        )
+    return target.number
+
+
 async def seed_adjudication(
     connection: AsyncConnection, creator: MemberPrincipal, adjudicator: uuid.UUID
 ) -> None:
@@ -146,7 +192,8 @@ async def seed_adjudication(
     )
     if sent is not None:
         return
-    first = (await queue_of(connection, task.id))[0]
+    queued = await queue_of(connection, task.id)
+    first = next((item for item in queued if item.why is Why.OUTLINES_DIFFER), queued[0])
     await send_to_adjudicator(
         task.id,
         AdjudicationDraft(

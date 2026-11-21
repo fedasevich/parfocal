@@ -92,7 +92,8 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     name: item.name,
     color: item.colour,
   }));
-  const look = { style, classes };
+  const alone = task?.reviewer_count === 1;
+  const look = { style, classes, reviewers: task?.reviewer_count };
   const person = usePeople();
   const nameOf = (userId: string | null | undefined) => person(userId)?.name;
   const renderLink = useRouterLink();
@@ -303,7 +304,10 @@ export function QueueScreen({ taskId }: { taskId: string }) {
             options={[
               { value: "all", label: `All ${counts.all}` },
               { value: "rev", label: t`Reviewers differ ${counts.rev}` },
-              { value: "ai", label: t`Both vs AI ${counts.ai}` },
+              {
+                value: "ai",
+                label: alone ? t`Reviewer vs AI ${counts.ai}` : t`Both vs AI ${counts.ai}`,
+              },
             ]}
           />
           <QueueTable aria-label={t`Queued objects`}>
@@ -353,7 +357,11 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                 <Trans>Nothing to decide yet</Trans>
               </b>
               <span>
-                <Trans>Decisions open here once both reviews are in.</Trans>
+                {alone ? (
+                  <Trans>Decisions open here once the review is in.</Trans>
+                ) : (
+                  <Trans>Decisions open here once both reviews are in.</Trans>
+                )}
               </span>
             </div>
           </section>
@@ -557,7 +565,11 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                       objectId: row.object,
                       data: { action: "look-again" },
                     });
-                    toast.show(t`Both reviewers have ${row.object} open again`);
+                    toast.show(
+                      alone
+                        ? t`The reviewer has ${row.object} open again`
+                        : t`Both reviewers have ${row.object} open again`,
+                    );
                   }}
                   onKeep={() =>
                     update.mutate({
@@ -613,7 +625,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
 type DecidePanelProps = {
   row: QueueRow;
   rows: QueueRow[];
-  look: { style: ReviewStyle; classes: ProjectClass[] };
+  look: { style: ReviewStyle; classes: ProjectClass[]; reviewers?: number | undefined };
   note: string;
   reviewerIds: string[];
   nameOf: (userId: string | null | undefined) => string | undefined;
@@ -663,10 +675,17 @@ function DecidePanel({
       <div className="grid gap-3">
         {head}
         <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>
-            Both reviewers have {row.object} open again with your note. It comes back here when they
-            decide.
-          </Trans>
+          {look.reviewers === 1 ? (
+            <Trans>
+              The reviewer has {row.object} open again with your note. It comes back here when they
+              decide.
+            </Trans>
+          ) : (
+            <Trans>
+              Both reviewers have {row.object} open again with your note. It comes back here when
+              they decide.
+            </Trans>
+          )}
         </p>
       </div>
     );
@@ -735,13 +754,21 @@ function DecidePanel({
               day: "numeric",
               month: "short",
             })}
-            <Trans>
-              , after both reviewers decided. Their decisions are about the old outline.
-            </Trans>
+            {look.reviewers === 1 ? (
+              <Trans>, after the reviewer decided. The decision is about the old outline.</Trans>
+            ) : (
+              <Trans>
+                , after both reviewers decided. Their decisions are about the old outline.
+              </Trans>
+            )}
           </span>
           <div className="flex flex-wrap gap-2">
             <Button onClick={onLookAgain}>
-              <Trans>Ask both to look again</Trans>
+              {look.reviewers === 1 ? (
+                <Trans>Ask the reviewer to look again</Trans>
+              ) : (
+                <Trans>Ask both to look again</Trans>
+              )}
             </Button>
             <Button variant="ghost" onClick={onKeep}>
               <Trans>Keep the decisions</Trans>

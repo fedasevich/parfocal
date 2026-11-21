@@ -156,6 +156,10 @@ msgstr ""
 msgid ", after both reviewers decided. Their decisions are about the old outline."
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid ", after the reviewer decided. The decision is about the old outline."
+msgstr ""
+
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid ", done"
 msgstr ""
@@ -331,6 +335,11 @@ msgstr ""
 #. placeholder {0}: summary.reviews.slides
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0, plural, one {The slide was reviewed by both reviewers} other {All # slides reviewed by both reviewers}}"
+msgstr ""
+
+#. placeholder {0}: summary.reviews.slides
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0, plural, one {The slide was reviewed by the reviewer} other {All # slides reviewed by the reviewer}}"
 msgstr ""
 
 #. placeholder {0}: tier.model
@@ -1087,6 +1096,13 @@ msgstr ""
 msgid "{0} of {1, plural, one {# object} other {# objects}} decided"
 msgstr ""
 
+#. placeholder {0}: summary.reviews.submitted
+#. placeholder {1}: summary.reviews.total
+#. placeholder {2}: summary.reviews.opinion_forms
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} of {1, plural, one {# review} other {# reviews}} submitted, {2, plural, one {# opinion form} other {# opinion forms}}"
+msgstr ""
+
 #. placeholder {0}: run.slides_done
 #. placeholder {0}: task.slides_submitted
 #. placeholder {1}: run.slides
@@ -1165,13 +1181,6 @@ msgstr ""
 #. placeholder {2}: waiting ? `, ${waiting}` : ""
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} of {1} resolved so far{2}"
-msgstr ""
-
-#. placeholder {0}: summary.reviews.submitted
-#. placeholder {1}: summary.reviews.total
-#. placeholder {2}: summary.reviews.opinion_forms
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0} of {1} reviews submitted, {2} opinion forms"
 msgstr ""
 
 #. placeholder {0}: rows.length
@@ -4084,6 +4093,10 @@ msgstr ""
 msgid "Ask the researcher to amend"
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Ask the reviewer to look again"
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Asked"
 msgstr ""
@@ -6345,6 +6358,10 @@ msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Decisions open here once both reviews are in."
+msgstr ""
+
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Decisions open here once the review is in."
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -14135,6 +14152,11 @@ msgstr ""
 msgid "Reviewer only, added {0}"
 msgstr ""
 
+#. placeholder {0}: counts.ai
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Reviewer vs AI {0}"
+msgstr ""
+
 #: src/screens/admin/role-permissions.tsx
 msgid "Reviewer, reviews and annotates"
 msgstr ""
@@ -17429,6 +17451,16 @@ msgstr ""
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "the reviewer"
+msgstr ""
+
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "The reviewer has {0} open again"
+msgstr ""
+
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "The reviewer has {0} open again with your note. It comes back here when they decide."
 msgstr ""
 
 #: src/screens/admin/decision-preset.tsx
