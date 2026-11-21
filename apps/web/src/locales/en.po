@@ -4266,6 +4266,7 @@ msgstr "Back to my work"
 #: src/screens/review/guided-review.tsx
 #: src/screens/review/slide-submitted.tsx
 #: src/screens/viewer/viewer-notices.tsx
+#: src/viewer/narrow-screen-gate.tsx
 #: src/viewer/stage-issue-cards.tsx
 msgid "Back to My work"
 msgstr "Back to My work"
@@ -12163,6 +12164,10 @@ msgstr "Open the whole slide"
 msgid "Open this slide beside another one"
 msgstr "Open this slide beside another one"
 
+#: src/viewer/narrow-screen-gate.tsx
+msgid "Open this task on a tablet or a computer. Everything you decided so far is saved."
+msgstr "Open this task on a tablet or a computer. Everything you decided so far is saved."
+
 #: src/popout/popout-screen.tsx
 msgid "Open this window from the viewer."
 msgstr "Open this window from the viewer."
@@ -14123,6 +14128,10 @@ msgstr "Review CSV"
 #: src/screens/project/settings-tab.tsx
 msgid "Review defaults"
 msgstr "Review defaults"
+
+#: src/viewer/narrow-screen-gate.tsx
+msgid "Review needs a wider screen"
+msgstr "Review needs a wider screen"
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Review progress"
@@ -17642,6 +17651,10 @@ msgstr "The slide was not submitted. Nothing was lost."
 #: src/viewer/compare-panes.tsx
 msgid "The slide you were reading"
 msgstr "The slide you were reading"
+
+#: src/viewer/narrow-screen-gate.tsx
+msgid "The slide, its objects and the decision panel do not fit on a phone screen."
+msgstr "The slide, its objects and the decision panel do not fit on a phone screen."
 
 #: src/screens/jobs/run-model-window.tsx
 msgid "The slides without results are picked for you."
