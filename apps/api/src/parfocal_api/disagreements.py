@@ -2,7 +2,7 @@ import uuid
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, StringConstraints, model_validator
@@ -39,6 +39,7 @@ from parfocal_api.tables import (
     review_decisions,
     review_edits,
     review_task_slides,
+    review_tasks,
 )
 from parfocal_api.task_kinds import TaskSignedOffError, review_only
 from parfocal_common.disagreements import Why, why_queued
@@ -320,28 +321,44 @@ def overlap_of(first: str, second: str) -> str:
     )
 
 
-OUTLINE_GAPS = text(
-    "WITH final AS (SELECT e.task_id, e.slide_id, e.kind, e.number, e.user_id, e.geometry "
-    f"FROM review_edits e WHERE e.task_id = ANY(:task_ids) AND {FINAL_OUTLINE}), "
-    "pairs AS (SELECT a.task_id, a.slide_id, a.kind, a.number, "
-    f"{overlap_of('a.geometry', 'b.geometry')} AS overlap "
-    "FROM final a JOIN final b ON a.task_id = b.task_id AND a.slide_id = b.slide_id "
-    "AND a.kind = b.kind AND a.number = b.number AND a.user_id < b.user_id "
-    "UNION ALL "
-    f"SELECT f.task_id, f.slide_id, f.kind, f.number, {overlap_of('f.geometry', 'ai.outline')} "
-    "FROM final f JOIN review_ai_outlines ai ON ai.task_id = f.task_id "
-    "AND ai.slide_id = f.slide_id AND ai.kind = f.kind AND ai.number = f.number "
-    "WHERE EXISTS (SELECT 1 FROM review_assignments r WHERE r.task_id = f.task_id "
-    "AND r.slide_id = f.slide_id AND r.released_at IS NULL "
-    "AND NOT EXISTS (SELECT 1 FROM review_edits k WHERE k.task_id = r.task_id "
-    "AND k.slide_id = r.slide_id AND k.user_id = r.user_id AND k.kind = f.kind "
-    "AND k.number = f.number AND k.split = '' "
-    "AND (k.deleted OR k.retired IS NOT NULL OR k.geometry IS NOT NULL)))) "
-    "SELECT pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, "
-    "min(pairs.overlap) AS overlap FROM pairs JOIN review_tasks t ON t.id = pairs.task_id "
-    "GROUP BY pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, t.outline_overlap "
-    "HAVING min(pairs.overlap) * 100 < t.outline_overlap"
+OPEN_TASKS_OF_PROJECTS = (
+    "SELECT o.id FROM review_tasks o WHERE o.project_id = ANY(:project_ids) "
+    "AND o.archived_at IS NULL AND o.signed_off_at IS NULL"
 )
+
+
+def outline_gaps_sql(tasks: str) -> str:
+    return (
+        "WITH final AS (SELECT e.task_id, e.slide_id, e.kind, e.number, e.user_id, e.geometry "
+        f"FROM review_edits e WHERE {tasks} AND {FINAL_OUTLINE}), "
+        "pairs AS (SELECT a.task_id, a.slide_id, a.kind, a.number, "
+        f"{overlap_of('a.geometry', 'b.geometry')} AS overlap "
+        "FROM final a JOIN final b ON a.task_id = b.task_id AND a.slide_id = b.slide_id "
+        "AND a.kind = b.kind AND a.number = b.number AND a.user_id < b.user_id "
+        "UNION ALL "
+        f"SELECT f.task_id, f.slide_id, f.kind, f.number, {overlap_of('f.geometry', 'ai.outline')} "
+        "FROM final f JOIN review_ai_outlines ai ON ai.task_id = f.task_id "
+        "AND ai.slide_id = f.slide_id AND ai.kind = f.kind AND ai.number = f.number "
+        "WHERE EXISTS (SELECT 1 FROM review_assignments r WHERE r.task_id = f.task_id "
+        "AND r.slide_id = f.slide_id AND r.released_at IS NULL "
+        "AND NOT EXISTS (SELECT 1 FROM review_edits k WHERE k.task_id = r.task_id "
+        "AND k.slide_id = r.slide_id AND k.user_id = r.user_id AND k.kind = f.kind "
+        "AND k.number = f.number AND k.split = '' "
+        "AND (k.deleted OR k.retired IS NOT NULL OR k.geometry IS NOT NULL)))) "
+        "SELECT pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, "
+        "min(pairs.overlap) AS overlap, "
+        "bool_or(d.value IS NOT NULL) IS TRUE AS decided, "
+        "bool_or(d.left_open) IS TRUE AS left_open "
+        "FROM pairs JOIN review_tasks t ON t.id = pairs.task_id "
+        "LEFT JOIN disagreement_decisions d ON d.task_id = pairs.task_id "
+        "AND d.slide_id = pairs.slide_id AND d.kind = pairs.kind AND d.number = pairs.number "
+        "GROUP BY pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, t.outline_overlap "
+        "HAVING min(pairs.overlap) * 100 < t.outline_overlap"
+    )
+
+
+OUTLINE_GAPS = text(outline_gaps_sql("e.task_id = ANY(:task_ids)"))
+OPEN_OUTLINE_GAPS = text(outline_gaps_sql(f"e.task_id IN ({OPEN_TASKS_OF_PROJECTS})"))
 
 FINAL_OUTLINES = text(
     "SELECT e.task_id, e.slide_id, e.kind, e.number, e.user_id, "
@@ -387,9 +404,16 @@ def queued_why(rows: list[Any]) -> Why | None:
     return why_queued({row.user_id: row.value for row in rows}, second_look)
 
 
-async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> dict[uuid.UUID, int]:
+async def open_disagreements(
+    connection: AsyncConnection, project_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, int]:
     pending = review_assignments.alias("pending")
     reviewer = review_assignments.alias("reviewer")
+    open_tasks = select(review_tasks.c.id).where(
+        review_tasks.c.project_id.in_(project_ids),
+        review_tasks.c.archived_at.is_(None),
+        review_tasks.c.signed_off_at.is_(None),
+    )
     rows = await connection.execute(
         select(
             review_decisions.c.task_id,
@@ -411,7 +435,7 @@ async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> dict
             & (disagreement_decisions.c.number == review_decisions.c.number),
         )
         .where(
-            review_decisions.c.task_id.in_(task_ids),
+            review_decisions.c.task_id.in_(open_tasks),
             exists().where(
                 reviewer.c.task_id == review_decisions.c.task_id,
                 reviewer.c.slide_id == review_decisions.c.slide_id,
@@ -429,13 +453,10 @@ async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> dict
     grouped: dict[TaskKey, list[Any]] = {}
     for row in rows:
         grouped.setdefault((row.task_id, row.slide_id, row.kind, row.number), []).append(row)
-    listed: list[uuid.UUID] = (
-        cast(list[uuid.UUID], task_ids)
-        if isinstance(task_ids, list)
-        else list(await connection.scalars(task_ids))
-    )
-    gaps = await outline_gaps(connection, listed) if listed else {}
-    choices = await outline_choices(connection, gaps.keys() - grouped.keys())
+    gaps = {
+        (row.task_id, row.slide_id, row.kind, row.number): (row.decided, row.left_open)
+        for row in await connection.execute(OPEN_OUTLINE_GAPS, {"project_ids": project_ids})
+    }
     by_task: dict[uuid.UUID, int] = {}
     for key, found in grouped.items():
         if (queued_why(found) is not None or key in gaps) and counts_as_open(
@@ -445,31 +466,10 @@ async def open_disagreements(connection: AsyncConnection, task_ids: Any) -> dict
         ):
             by_task[key[0]] = by_task.get(key[0], 0) + 1
     for key in gaps.keys() - grouped.keys():
-        decided, left_open = choices.get(key, (False, False))
+        decided, left_open = gaps[key]
         if counts_as_open(looking_again=False, decided=decided, left_open=left_open):
             by_task[key[0]] = by_task.get(key[0], 0) + 1
     return by_task
-
-
-async def outline_choices(
-    connection: AsyncConnection, keys: Collection[TaskKey]
-) -> dict[TaskKey, tuple[bool, bool]]:
-    if not keys:
-        return {}
-    rows = await connection.execute(
-        select(
-            disagreement_decisions.c.task_id,
-            disagreement_decisions.c.slide_id,
-            disagreement_decisions.c.kind,
-            disagreement_decisions.c.number,
-            disagreement_decisions.c.value,
-            disagreement_decisions.c.left_open,
-        ).where(disagreement_decisions.c.task_id.in_({key[0] for key in keys}))
-    )
-    return {
-        (row.task_id, row.slide_id, row.kind, row.number): (row.value is not None, row.left_open)
-        for row in rows
-    }
 
 
 async def queues_of(

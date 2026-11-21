@@ -496,14 +496,7 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
     open_disagreements: int | None = None
     disagreements_task_id: uuid.UUID | None = None
     if adjudicated:
-        by_task = await count_open_disagreements(
-            connection,
-            select(review_tasks.c.id).where(
-                review_tasks.c.project_id.in_(adjudicated),
-                review_tasks.c.archived_at.is_(None),
-                review_tasks.c.signed_off_at.is_(None),
-            ),
-        )
+        by_task = await count_open_disagreements(connection, adjudicated)
         open_disagreements = sum(by_task.values())
         disagreements_task_id = max(by_task, key=lambda task_id: by_task[task_id], default=None)
     return Week(
