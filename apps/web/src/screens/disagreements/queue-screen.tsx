@@ -2,7 +2,10 @@ import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetDisagreementQueueQueryKey,
+  type OutlineDraft,
   type QueueRow,
+  type SettledOutline,
+  useClearQueuedOutline,
   useGetDisagreementQueue,
   useGetProject,
   useGetReviewTask,
@@ -10,6 +13,7 @@ import {
   useListProjectClasses,
   useNudgeReviewer,
   useSendToAdjudicator,
+  useSettleQueuedOutline,
   useUpdateQueuedObject,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -33,6 +37,7 @@ import { Textarea } from "@parfocal/ui/components/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { personProp, usePeople } from "../people.ts";
@@ -43,7 +48,8 @@ import { answersOf } from "../review/decision-style.ts";
 import { fromMentionTokens } from "../review/mention-picking.ts";
 import { ViewerLink } from "../viewer-links.tsx";
 import { DisagreementStage } from "./disagreement-stage.tsx";
-import { reviewerOutlines } from "./reviewer-outlines.ts";
+import { OutlineSettle } from "./outline-settle.tsx";
+import { reviewerOutlines, settledStageOutline } from "./reviewer-outlines.ts";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
 import {
   allClosed,
@@ -104,12 +110,23 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const update = useUpdateQueuedObject({ mutation: { onSuccess: () => void refresh() } });
   const sendTo = useSendToAdjudicator({ mutation: { onSuccess: () => void refresh() } });
   const nudge = useNudgeReviewer();
+  const settleOutline = useSettleQueuedOutline({ mutation: { onSuccess: () => void refresh() } });
+  const clearOutline = useClearQueuedOutline({ mutation: { onSuccess: () => void refresh() } });
+  const [drawingKey, setDrawingKey] = useState<string | null>(null);
   const rows = queue?.rows ?? [];
   const row =
     rows.find((candidate) => candidate.key === selectedKey) ??
     rows.find((candidate) => !isClosed(candidate)) ??
     rows[0];
   const outlines = useMemo(() => (row ? reviewerOutlines(row) : []), [row]);
+  const stageOutlines = useMemo(
+    () => settledStageOutline(outlines, row?.object ?? "", row?.settled_outline?.outline),
+    [outlines, row?.object, row?.settled_outline?.outline],
+  );
+  const outlineSettles =
+    row !== undefined &&
+    outlines.length > 0 &&
+    !["with-adjudicator", "adjudicated", "look-again"].includes(row.state);
   const overlapShare =
     row?.outline_overlap === null || row?.outline_overlap === undefined
       ? null
@@ -118,7 +135,37 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const reviewerIds = [...new Set(rows.flatMap((item) => item.answers.map((a) => a.user_id)))];
   const taskCode = task?.code ?? "RT-14";
 
-  const select = (key: string) => setSelectedKey(key);
+  const select = (key: string) => {
+    setSelectedKey(key);
+    setDrawingKey(null);
+  };
+
+  const objectOf = (target: QueueRow) => ({
+    taskId,
+    slideId: target.slide_id,
+    objectId: target.object,
+  });
+
+  const restoreOutline = (target: QueueRow, before: SettledOutline | null | undefined) => {
+    if (!before) {
+      clearOutline.mutate(objectOf(target));
+      return;
+    }
+    settleOutline.mutate({
+      ...objectOf(target),
+      data: before.from_user_id
+        ? { from_user_id: before.from_user_id }
+        : { geometry: polygonToGeoJson(Float32Array.from(before.outline)) },
+    });
+  };
+
+  const settle = (target: QueueRow, data: OutlineDraft, message: string) => {
+    const before = target.settled_outline;
+    settleOutline.mutate(
+      { ...objectOf(target), data },
+      { onSuccess: () => toast.show(message, () => restoreOutline(target, before)) },
+    );
+  };
 
   const decide = (target: QueueRow, raw: string) => {
     const note = notes[target.key]?.trim() || null;
@@ -320,7 +367,22 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   taskId={taskId}
                   slideId={row.slide_id}
                   object={row.object}
-                  outlines={outlines}
+                  outlines={stageOutlines}
+                  draw={
+                    drawingKey === row.key && outlineSettles
+                      ? {
+                          onClose: (points) => {
+                            setDrawingKey(null);
+                            settle(
+                              row,
+                              { geometry: polygonToGeoJson(points) },
+                              t`New outline settled for ${rowLabel(row)}`,
+                            );
+                          },
+                          onCancel: () => setDrawingKey(null),
+                        }
+                      : null
+                  }
                   className="h-full"
                 />
               </div>
@@ -354,6 +416,29 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                     <Trans>Each reviewer's outline is drawn over the AI one.</Trans>
                   </small>
                 </section>
+              ) : null}
+              {outlineSettles ? (
+                <OutlineSettle
+                  choices={outlines.map((entry) => ({
+                    key: entry.userId,
+                    hex: entry.hex,
+                    label: <Person {...personProp(person(entry.userId))} size={20} />,
+                  }))}
+                  settledFrom={
+                    row.settled_outline ? (row.settled_outline.from_user_id ?? null) : undefined
+                  }
+                  drawing={drawingKey === row.key}
+                  busy={settleOutline.isPending || clearOutline.isPending}
+                  onPick={(userId) =>
+                    settle(
+                      row,
+                      { from_user_id: userId },
+                      t`Outline of ${nameOf(userId) ?? ""} settled for ${rowLabel(row)}`,
+                    )
+                  }
+                  onDraw={() => setDrawingKey(row.key)}
+                  onCancelDraw={() => setDrawingKey(null)}
+                />
               ) : null}
               <EvidenceList>
                 <EvidenceRow

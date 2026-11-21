@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { QueueRow } from "@parfocal/api-client";
-import { reviewerOutlines } from "../src/screens/disagreements/reviewer-outlines.ts";
+import {
+  letterOutlines,
+  reviewerOutlines,
+  settledHex,
+  settledStageOutline,
+} from "../src/screens/disagreements/reviewer-outlines.ts";
 import {
   allClosed,
   canSend,
@@ -188,4 +193,48 @@ test("an outline row says outline differs and gives each reviewer's outline its 
   );
   assert.notEqual(drawn[0]?.hex, drawn[1]?.hex);
   assert.deepEqual(reviewerOutlines(row("T8")), []);
+});
+
+test("the settled outline draws in white after the reviewers' outlines", () => {
+  const square = [0, 0, 10, 0, 10, 10, 0, 10];
+  const outlined = row("T7", {
+    outlines: [
+      { user_id: "u1", outline: square },
+      { user_id: "u2", outline: square.map((value) => value + 5) },
+    ],
+  });
+  const drawn = reviewerOutlines(outlined);
+  assert.equal(settledStageOutline(drawn, "T7", undefined).length, 2);
+  assert.equal(settledStageOutline(drawn, "T7", [0, 0]).length, 2);
+  const settled = settledStageOutline(drawn, "T7", square).at(-1);
+  assert.deepEqual([settled?.id, settled?.hex], ["T7:settled", settledHex]);
+});
+
+test("the adjudicator's outlines carry letters only, in letter order", () => {
+  const square = [0, 0, 10, 0, 10, 10, 0, 10];
+  const drawn = letterOutlines({
+    key: "A1:T5",
+    slide_id: "s1",
+    slide_label: "A1",
+    object: "T5",
+    kind: "region",
+    ai: { class_name: "Tumor", score: 0.5 },
+    size_mm: null,
+    reviewer_a: { raw: "agree", reason: null, note: null },
+    reviewer_b: { raw: "disagree", reason: null, note: null },
+    decision: null,
+    decision_note: null,
+    outlines: [
+      { reviewer: "B", outline: square },
+      { reviewer: "A", outline: square },
+    ],
+  });
+  assert.deepEqual(
+    drawn.map((entry) => [entry.id, entry.letter]),
+    [
+      ["T5:A", "A"],
+      ["T5:B", "B"],
+    ],
+  );
+  assert.deepEqual(letterOutlines(undefined), []);
 });

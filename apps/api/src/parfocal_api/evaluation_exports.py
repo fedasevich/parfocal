@@ -77,6 +77,7 @@ from parfocal_common.report_blocks import (
     SlideFigure,
     TextBlock,
 )
+from parfocal_common.result_store import ResultStore
 
 CHECKSUM_HEADER = "X-Parfocal-Evaluation-Checksum"
 VERSION_HEADER = "X-Parfocal-Evaluation-Version"
@@ -401,18 +402,20 @@ async def object_rows(
 
 
 async def annotation_layers(
-    connection: AsyncConnection, task: Any
+    connection: AsyncConnection, store: ResultStore, task: Any
 ) -> list[tuple[Any, list[dict[str, Any]]]]:
     names = await class_names(connection, task.project_id)
     return [
-        (row, await consensus_items(connection, row, names))
+        (row, await consensus_items(connection, store, row, names))
         for row in await slide_rows(connection, task.id)
     ]
 
 
-async def annotations_json(connection: AsyncConnection, task: Any, version: Version) -> str:
+async def annotations_json(
+    connection: AsyncConnection, store: ResultStore, task: Any, version: Version
+) -> str:
     slides_out: list[dict[str, Any]] = []
-    for row, items in await annotation_layers(connection, task):
+    for row, items in await annotation_layers(connection, store, task):
         set_name = await connection.scalar(
             select(result_sets.c.name).where(result_sets.c.id == row.result_set_id)
         )
@@ -429,8 +432,12 @@ async def annotations_json(connection: AsyncConnection, task: Any, version: Vers
     )
 
 
-async def annotations_geojson(connection: AsyncConnection, task: Any, version: Version) -> str:
-    items = [item for _, found in await annotation_layers(connection, task) for item in found]
+async def annotations_geojson(
+    connection: AsyncConnection, store: ResultStore, task: Any, version: Version
+) -> str:
+    items = [
+        item for _, found in await annotation_layers(connection, store, task) for item in found
+    ]
     return json.dumps(
         {**as_geojson(items), "parfocal": {"evaluation": version.stamp()}}, ensure_ascii=False
     )
@@ -689,9 +696,9 @@ async def export_task_evaluation(
         case ExportKind.OBJECTS:
             content = csv_text(OBJECT_COLUMNS, await object_rows(connection, task, version))
         case ExportKind.ANNOTATIONS_JSON:
-            content = await annotations_json(connection, task, version)
+            content = await annotations_json(connection, results, task, version)
         case ExportKind.ANNOTATIONS_GEOJSON:
-            content = await annotations_geojson(connection, task, version)
+            content = await annotations_geojson(connection, results, task, version)
     return attachment(kind, content, version)
 
 

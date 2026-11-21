@@ -373,3 +373,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0410](0410-a-signature-needs-a-sign-in-from-the-last-5-minutes.md) | A signature needs a sign-in from the last 5 minutes, proved by the identity provider's auth_time | Accepted | 2026-11-20 |
 | [0411](0411-a-dataset-version-is-one-write-once-zip-in-the-tenant-prefix.md) | A dataset version is one write once zip in the tenant prefix with a number, note, filters, who, when and a SHA-256 | Accepted | 2026-11-21 |
 | [0412](0412-outlines-differ-below-a-per-task-overlap-of-reviewers-redraws.md) | Outlines differ below a per task overlap of reviewers' redraws | Accepted | 2026-11-21 |
+| [0413](0413-the-settled-outline-is-a-copy-on-the-queue-decision.md) | The settled outline is a copy on the queue decision | Accepted | 2026-11-21 |

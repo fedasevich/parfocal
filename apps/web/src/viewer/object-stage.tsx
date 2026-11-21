@@ -1,9 +1,11 @@
 import type { ReviewObject } from "@parfocal/api-client";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { PolygonDraft } from "../annotations/polygon-draft.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import { SlideStage } from "./slide-stage.tsx";
 import { outlineArea, placedObjects } from "./stage-geometry.ts";
 import type { StageInspectorLink } from "./stage-inspector.tsx";
+import { StageRedrawLayer } from "./stage-redraw-layer.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { layoutChromeOf } from "./viewer-layout.ts";
 
@@ -17,7 +19,40 @@ export type StageOutline = {
   readonly colour: readonly [number, number, number, number];
 };
 
+export type StageDraw = {
+  readonly onClose: (points: Float32Array) => void;
+  readonly onCancel: () => void;
+};
+
 const noOutlines: readonly StageOutline[] = [];
+
+function ObjectDraw({
+  engine,
+  stage,
+  draw,
+}: {
+  engine: ViewerEngine;
+  stage: HTMLElement;
+  draw: StageDraw;
+}) {
+  const [draft, setDraft] = useState<PolygonDraft>([]);
+  return (
+    <StageRedrawLayer
+      engine={engine}
+      stage={stage}
+      draft={draft}
+      onDraft={setDraft}
+      onClose={(points) => {
+        setDraft([]);
+        draw.onClose(points);
+      }}
+      onCancel={() => {
+        setDraft([]);
+        draw.onCancel();
+      }}
+    />
+  );
+}
 
 function ObjectFrame({
   engine,
@@ -25,12 +60,16 @@ function ObjectFrame({
   object,
   claimHidden,
   outlines,
+  stage,
+  draw,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
   object: ReviewObject | undefined;
   claimHidden: boolean;
   outlines: readonly StageOutline[];
+  stage: HTMLElement | null;
+  draw: StageDraw | null;
 }) {
   const outline = object?.outline;
   const id = object?.object;
@@ -65,13 +104,19 @@ function ObjectFrame({
     drawing.setCurrent(id ?? null);
   }, [drawing, placed, id]);
   return (
-    <div
-      hidden
-      data-testid="object-frame"
-      data-object={id ?? ""}
-      data-drawn={placed.length}
-      data-outlines={outlines.length}
-    />
+    <>
+      <div
+        hidden
+        data-testid="object-frame"
+        data-object={id ?? ""}
+        data-drawn={placed.length}
+        data-outlines={outlines.length}
+        data-drawing={draw === null ? "false" : "true"}
+      />
+      {draw !== null && stage !== null ? (
+        <ObjectDraw engine={engine} stage={stage} draw={draw} />
+      ) : null}
+    </>
   );
 }
 
@@ -81,6 +126,7 @@ export function ObjectStage({
   objectId,
   claimHidden = false,
   outlines = noOutlines,
+  draw = null,
   className = "",
 }: {
   slideId: string;
@@ -88,6 +134,7 @@ export function ObjectStage({
   objectId: string;
   claimHidden?: boolean;
   outlines?: readonly StageOutline[];
+  draw?: StageDraw | null;
   className?: string;
 }) {
   const inspector: StageInspectorLink = {
@@ -103,6 +150,8 @@ export function ObjectStage({
         object={object}
         claimHidden={claimHidden}
         outlines={outlines}
+        stage={session.stage}
+        draw={draw}
       />
     ),
   };

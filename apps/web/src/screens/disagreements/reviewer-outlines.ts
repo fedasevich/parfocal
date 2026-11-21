@@ -1,4 +1,4 @@
-import type { QueueRow } from "@parfocal/api-client";
+import type { AdjudicationObject, QueueRow } from "@parfocal/api-client";
 
 type Rgba = readonly [number, number, number, number];
 
@@ -18,6 +18,38 @@ const reviewerColours: readonly { colour: Rgba; hex: string }[] = [
 ];
 
 const white = { colour: [255, 255, 255, 255] as Rgba, hex: "#ffffff" };
+
+export const settledHex = white.hex;
+
+export function settledStageOutline<Outline extends { readonly ring: readonly number[] }>(
+  outlines: readonly Outline[],
+  object: string,
+  settled: readonly number[] | undefined,
+): (Outline | { id: string; ring: readonly number[]; colour: Rgba; hex: string })[] {
+  if (settled === undefined || settled.length < 6) return [...outlines];
+  return [...outlines, { id: `${object}:settled`, ring: settled, ...white }];
+}
+
+export type LetterOutline = {
+  readonly id: string;
+  readonly letter: string;
+  readonly ring: readonly number[];
+  readonly colour: Rgba;
+  readonly hex: string;
+};
+
+export function letterOutlines(object: AdjudicationObject | undefined): LetterOutline[] {
+  if (object === undefined) return [];
+  return [...(object.outlines ?? [])]
+    .filter((entry) => entry.outline.length >= 6)
+    .sort((a, b) => a.reviewer.localeCompare(b.reviewer))
+    .map((entry, index) => ({
+      id: `${object.object}:${entry.reviewer}`,
+      letter: entry.reviewer,
+      ring: entry.outline,
+      ...(reviewerColours[index % reviewerColours.length] ?? white),
+    }));
+}
 
 export function reviewerOutlines(
   row: Pick<QueueRow, "object" | "outlines" | "answers">,

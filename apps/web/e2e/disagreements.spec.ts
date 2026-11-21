@@ -429,3 +429,103 @@ test("the report arranges blocks, previews the PDF and keeps the arrangement", a
   await expect(preview).toHaveCount(0);
   await expect(page.getByText("Arranged for this task.").first()).toBeVisible();
 });
+
+async function drawOnStage(page: Page) {
+  await objectStage(page).scrollIntoViewIfNeeded();
+  const box = (await objectStage(page).boundingBox()) ?? {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  };
+  for (const [x, y] of [
+    [0.4, 0.4],
+    [0.6, 0.4],
+    [0.6, 0.6],
+    [0.4, 0.6],
+  ] as const) {
+    await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+  }
+  await expect(page.getByTestId("redraw-vertex")).toHaveCount(4);
+  await page.keyboard.press("Enter");
+}
+
+const outlineRequest = (page: Page, method: string, prefix: string) =>
+  page.waitForRequest(
+    (request) =>
+      request.method() === method && new RegExp(`/${prefix}/[^/]+/T5/outline$`).test(request.url()),
+  );
+
+test("the owner picks one reviewer's outline for an object and undoes it", async ({ page }) => {
+  await page.goto(`${base}/disagreements?stage=open`);
+  await page.getByRole("button", { name: /^T5 / }).click();
+  await slideDrawn(page, "T5");
+  const settle = page.getByTestId("outline-settle");
+  await expect(settle).toHaveAttribute("data-settled", "none");
+  const picked = outlineRequest(page, "PUT", "disagreement-queue");
+  await settle.getByRole("button", { name: "Use this outline" }).first().click();
+  expect(Object.keys((await picked).postDataJSON() as object)).toEqual(["from_user_id"]);
+  await expect(settle).toHaveAttribute("data-settled", "picked");
+  await expect(settle.getByRole("button", { name: "Settled" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const frame = objectStage(page).getByTestId("object-frame");
+  await expect(frame).toHaveAttribute("data-outlines", "3");
+  const cleared = outlineRequest(page, "DELETE", "disagreement-queue");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await cleared;
+  await expect(settle).toHaveAttribute("data-settled", "none");
+  await expect(frame).toHaveAttribute("data-outlines", "2");
+});
+
+test("the owner draws a new outline for an object and undoes it", async ({ page }) => {
+  await page.goto(`${base}/disagreements?stage=open`);
+  await page.getByRole("button", { name: /^T5 / }).click();
+  await slideDrawn(page, "T5");
+  const settle = page.getByTestId("outline-settle");
+  await settle.getByRole("button", { name: "Draw a new outline" }).click();
+  const frame = objectStage(page).getByTestId("object-frame");
+  await expect(frame).toHaveAttribute("data-drawing", "true");
+  const drawn = outlineRequest(page, "PUT", "disagreement-queue");
+  await drawOnStage(page);
+  const body = (await drawn).postDataJSON() as {
+    geometry: { type: string; coordinates: number[][][] };
+  };
+  expect(body.geometry.type).toBe("Polygon");
+  expect(body.geometry.coordinates[0]).toHaveLength(5);
+  await expect(settle).toHaveAttribute("data-settled", "drawn");
+  await expect(frame).toHaveAttribute("data-drawing", "false");
+  await expect(settle).toContainText("A new outline is settled.");
+  const cleared = outlineRequest(page, "DELETE", "disagreement-queue");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await cleared;
+  await expect(settle).toHaveAttribute("data-settled", "none");
+});
+
+test("the adjudicator picks a reviewer's outline by letter, draws a new one and undoes it", async ({
+  page,
+}) => {
+  await page.goto(`${base}/adjudicate?stage=sent`);
+  await expect(page.getByText("The AI says T4 is tumor, 58% sure.")).toBeVisible();
+  await page.keyboard.press("x");
+  await slideDrawn(page);
+  await expect(objectStage(page)).toHaveAttribute("data-object", "T5");
+  const settle = page.getByTestId("outline-settle");
+  await expect(settle).toContainText("Outline of reviewer A");
+  await expect(settle).toContainText("Outline of reviewer B");
+  await expect(page.getByText("Lenka Malá")).toHaveCount(0);
+  const picked = outlineRequest(page, "PUT", "adjudication");
+  await settle.getByRole("button", { name: "Use this outline" }).last().click();
+  expect((await picked).postDataJSON()).toEqual({ reviewer: "B" });
+  await expect(settle).toHaveAttribute("data-settled", "picked");
+  await settle.getByRole("button", { name: "Draw a new outline" }).click();
+  const drawn = outlineRequest(page, "PUT", "adjudication");
+  await drawOnStage(page);
+  expect(Object.keys((await drawn).postDataJSON() as object)).toEqual(["geometry"]);
+  await expect(settle).toHaveAttribute("data-settled", "drawn");
+  const back = outlineRequest(page, "PUT", "adjudication");
+  await page.getByRole("button", { name: "Undo" }).click();
+  expect((await back).postDataJSON()).toEqual({ reviewer: "B" });
+  await expect(settle).toHaveAttribute("data-settled", "picked");
+});
