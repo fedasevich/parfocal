@@ -36,6 +36,9 @@ test("a 401 is expected only while signed out", () => {
   assert.equal(apiFailed(500, true), true);
   assert.equal(apiFailed(404, false), true);
   assert.equal(apiFailed(204, false), false);
+  assert.equal(apiFailed(404, false, "/api/slides/abc/thumbnail"), false);
+  assert.equal(apiFailed(404, false, "/api/slides/abc"), true);
+  assert.equal(apiFailed(500, false, "/api/slides/abc/thumbnail"), true);
 });
 
 test("resource load lines are left to the network watch", () => {

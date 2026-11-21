@@ -34,8 +34,11 @@ export function blocksWrite(method: string, address: string, origin: string): bo
   return !new URL(address).pathname.startsWith(allowedWritePrefix);
 }
 
-export function apiFailed(status: number, signedOut: boolean): boolean {
+const THUMBNAIL_PATH = /^\/api\/slides\/[^/]+\/thumbnail$/;
+
+export function apiFailed(status: number, signedOut: boolean, path = ""): boolean {
   if (signedOut && status === 401) return false;
+  if (status === 404 && THUMBNAIL_PATH.test(path)) return false;
   return status >= 400;
 }
 
@@ -97,7 +100,7 @@ export async function watch(context: BrowserContext, origin: string): Promise<Wa
     });
     page.on("response", (response) => {
       if (!isApiCall(response.url(), origin)) return;
-      if (!apiFailed(response.status(), signedOut)) return;
+      if (!apiFailed(response.status(), signedOut, pathOf(response.url()))) return;
       problems.push({
         kind: "api",
         where,
