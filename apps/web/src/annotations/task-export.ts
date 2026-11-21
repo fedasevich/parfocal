@@ -3,6 +3,7 @@ import {
   getDownloadDatasetVersionUrl,
   getDownloadPatchExportUrl,
   getExportTrainingDatasetUrl,
+  getPatchExportStatus,
   startPatchExport,
 } from "@parfocal/api-client";
 import { saveResponse } from "./slide-export.ts";
@@ -126,12 +127,16 @@ export type PatchPoll =
   | { readonly state: "failed" };
 
 export async function pollPatches(taskId: string, jobId: string): Promise<PatchPoll> {
-  const response = await fetch(getDownloadPatchExportUrl(taskId, jobId), {
-    credentials: "same-origin",
-  });
-  if (response.ok) {
+  try {
+    const polled = await getPatchExportStatus(taskId, jobId);
+    if (polled.status !== 200 || polled.data.state === "failed") return { state: "failed" };
+    if (polled.data.state === "cutting") return { state: "cutting" };
+    const response = await fetch(getDownloadPatchExportUrl(taskId, jobId), {
+      credentials: "same-origin",
+    });
+    if (!response.ok) return { state: "failed" };
     return { state: "saved", name: await saveResponse(response, "parfocal-patches.zip") };
+  } catch {
+    return { state: "failed" };
   }
-  const code = await problemCodeOf(response);
-  return code === "patch-export-not-ready" ? { state: "cutting" } : { state: "failed" };
 }

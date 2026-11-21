@@ -1,7 +1,7 @@
 import io
 import json
 import zipfile
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from db_support import ApiAs
@@ -179,7 +179,13 @@ def test_the_dataset_page_builds_the_layer_again_and_patches_accept_the_task(
     assert actions == [(2,)]
     _, features = exported(api, r)
     assert {"T1", "T2", "C2"} <= set(features)
-    ok(as_owner.post(f"{task}/patch-exports", json={}), 202)
+    job = ok(as_owner.post(f"{task}/patch-exports", json={}), 202).json()["job_id"]
+    status = f"{task}/patch-exports/{job}/status"
+    assert ok(as_owner.get(status)).json()["state"] == "cutting"
+    owner(database, f"UPDATE jobs SET status = 'failed' WHERE id = '{job}'")
+    assert ok(as_owner.get(status)).json()["state"] == "failed"
+    owner(database, f"UPDATE jobs SET status = 'done' WHERE id = '{job}'")
+    assert ok(as_owner.get(status)).json()["state"] == "done"
     frozen = ok(as_owner.post(f"{task}/dataset-versions", json={"note": "Review"}), 201).json()
     assert frozen["counts"]["open_left_out"] == 1
 
@@ -198,3 +204,34 @@ def test_an_unbuilt_layer_is_refused_by_the_dataset(api: ApiAs, database: str) -
     assert (patches.status_code, patches.json()["code"]) == (409, "final-layer-missing")
     ok(api(r.people["owner"]).post(f"{task}/final-layer"))
     ok(api(r.people["owner"]).get(f"{task}/training-dataset"))
+
+
+def test_the_final_layer_of_a_review_task_holds_the_project_classes(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    ok(edit(api, r, "first", "T1", {"class_id": str(r.tumor)}))
+    for who in ("first", "second"):
+        for object_id in ("T1", "T2"):
+            ok(api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json={"value": "agree"}))
+        ok(submitted(api(r.people[who]), r.base))
+    task = f"/api/review-tasks/{r.task}"
+    as_owner = api(r.people["owner"])
+    ok(as_owner.post(f"{task}/sign-off"))
+    [(stored,)] = owner(database, f"SELECT classes FROM final_layers WHERE task_id = '{r.task}'")
+    assert isinstance(stored, list)
+    assert [(item["key"], item["name"]) for item in cast("list[dict[str, Any]]", stored)] == [
+        (1, "Tumor")
+    ]
+    manifest, features = exported(api, r)
+    assert [(item["id"], item["key"], item["name"]) for item in manifest["classes"]] == [
+        (str(r.tumor), 1, "Tumor")
+    ]
+    keys = {key: item["properties"]["parfocal"]["class_key"] for key, item in features.items()}
+    assert keys == {"T1": 1, "T2": None}
+    summary = ok(as_owner.get(f"{task}/dataset")).json()
+    assert summary["classes"] == {str(r.tumor): 1, "none": 1}
+    assert [item["name"] for item in summary["class_names"]] == ["Tumor"]
+    owner(database, f"UPDATE final_layers SET classes = NULL WHERE task_id = '{r.task}'")
+    older, _ = exported(api, r)
+    assert [item["key"] for item in older["classes"]] == [1]

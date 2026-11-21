@@ -31,6 +31,7 @@ from parfocal_api.tables import (
     review_edits,
     review_task_slides,
 )
+from parfocal_api.taxonomy import ProjectClass, classes_of
 from parfocal_common import evaluation as engine
 
 FEATURE_NAMESPACE = uuid.UUID("0c2f6b8e-6a41-4f0e-b7d3-5e1a9c4d2f70")
@@ -368,6 +369,9 @@ async def build_final_layer(connection: AsyncConnection, task: Any, principal: P
             .order_by(review_task_slides.c.position)
         )
     ).scalars()
+    snapshot = [
+        item.model_dump(mode="json") for item in await classes_of(connection, task.project_id)
+    ]
     totals: Counter[str] = Counter()
     for slide_id in list(slide_ids):
         facts = await facts_of(connection, task.id, slide_id)
@@ -397,6 +401,7 @@ async def build_final_layer(connection: AsyncConnection, task: Any, principal: P
                 task_version=version,
                 objects=objects,
                 counts=FinalCounts(**counts).model_dump(),
+                classes=snapshot,
                 built_by_user_id=user_of(principal),
             )
         )
@@ -484,6 +489,15 @@ async def status_of(connection: AsyncConnection, task: Any) -> FinalLayerStatus 
         built_at=max(layer.built_at for layer in layers),
         counts=FinalCounts(**totals),
     )
+
+
+async def layer_classes(
+    connection: AsyncConnection, task: Any, layers: list[Any]
+) -> list[ProjectClass]:
+    stored = next((layer.classes for layer in layers if layer.classes is not None), None)
+    if stored is None:
+        return await classes_of(connection, task.project_id)
+    return [ProjectClass.model_validate(item) for item in stored]
 
 
 async def current_layers(connection: AsyncConnection, task: Any) -> dict[uuid.UUID, Any]:

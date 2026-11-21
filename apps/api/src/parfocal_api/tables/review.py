@@ -1053,6 +1053,7 @@ final_layers = Table(
     Column("task_version", Integer, nullable=False, info=OPERATIONAL),
     Column("objects", JSONB, nullable=False, info=PERSONAL),
     Column("counts", JSONB, nullable=False, info=OPERATIONAL),
+    Column("classes", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     Column(
         "built_by_user_id",
         Uuid[uuid.UUID](),

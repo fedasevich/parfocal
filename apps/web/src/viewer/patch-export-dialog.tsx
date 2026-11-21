@@ -47,17 +47,22 @@ export function PatchExportDialog({
   useEffect(() => {
     if (cuttingJob === null) return;
     let live = true;
-    const timer = setInterval(() => {
-      void pollPatches(taskId, cuttingJob).then((poll) => {
-        if (!live || poll.state === "cutting") return;
-        if (poll.state === "saved")
-          setPhase({ state: "saved", jobId: cuttingJob, name: poll.name });
-        else setPhase({ state: "stopped", message: t`The patches could not be cut` });
-      });
-    }, pollEveryMs);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const next = () => {
+      timer = setTimeout(() => {
+        void pollPatches(taskId, cuttingJob).then((poll) => {
+          if (!live) return;
+          if (poll.state === "cutting") next();
+          else if (poll.state === "saved")
+            setPhase({ state: "saved", jobId: cuttingJob, name: poll.name });
+          else setPhase({ state: "stopped", message: t`The patches could not be cut` });
+        });
+      }, pollEveryMs);
+    };
+    next();
     return () => {
       live = false;
-      clearInterval(timer);
+      clearTimeout(timer);
     };
   }, [cuttingJob, taskId, t]);
 

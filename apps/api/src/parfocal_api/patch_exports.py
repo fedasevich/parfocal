@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any, Literal
 
 from fastapi import APIRouter
@@ -69,6 +70,17 @@ class PatchExportStarted(BaseModel):
     job_id: uuid.UUID
 
 
+class PatchExportState(StrEnum):
+    CUTTING = "cutting"
+    DONE = "done"
+    FAILED = "failed"
+
+
+class PatchExportStatus(BaseModel):
+    job_id: uuid.UUID
+    state: PatchExportState
+
+
 async def frozen_input(
     connection: AsyncConnection, task_id: uuid.UUID, number: int
 ) -> dict[str, Any]:
@@ -123,6 +135,45 @@ async def start_patch_export(
     return PatchExportStarted(job_id=job_id)
 
 
+async def job_status(connection: AsyncConnection, task_id: uuid.UUID, job_id: uuid.UUID) -> str:
+    status = await connection.scalar(
+        select(jobs.c.status).where(
+            jobs.c.id == job_id,
+            jobs.c.kind == PATCH_KIND,
+            jobs.c.input["task_id"].astext == str(task_id),
+        )
+    )
+    if status is None:
+        raise NotFoundError("Patch export not found")
+    return str(status)
+
+
+def state_of(status: str) -> PatchExportState:
+    if status in {JobStatus.FAILED, JobStatus.CANCELLED}:
+        return PatchExportState.FAILED
+    if status == JobStatus.DONE:
+        return PatchExportState.DONE
+    return PatchExportState.CUTTING
+
+
+@router.get(
+    "/{job_id}/status",
+    operation_id="getPatchExportStatus",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def get_patch_export_status(
+    task_id: uuid.UUID,
+    job_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> PatchExportStatus:
+    _, whole = await readable_task(connection, principal, task_id)
+    if not whole:
+        raise DatasetHiddenError
+    state = state_of(await job_status(connection, task_id, job_id))
+    return PatchExportStatus(job_id=job_id, state=state)
+
+
 @router.get(
     "/{job_id}",
     operation_id="downloadPatchExport",
@@ -145,18 +196,10 @@ async def download_patch_export(
     task, whole = await readable_task(connection, principal, task_id)
     if not whole:
         raise DatasetHiddenError
-    status = await connection.scalar(
-        select(jobs.c.status).where(
-            jobs.c.id == job_id,
-            jobs.c.kind == PATCH_KIND,
-            jobs.c.input["task_id"].astext == str(task_id),
-        )
-    )
-    if status is None:
-        raise NotFoundError("Patch export not found")
-    if status in {JobStatus.FAILED, JobStatus.CANCELLED}:
+    state = state_of(await job_status(connection, task_id, job_id))
+    if state is PatchExportState.FAILED:
         raise PatchExportFailedError
-    if status != JobStatus.DONE:
+    if state is PatchExportState.CUTTING:
         raise PatchExportNotReadyError
     content = await store.get_object(patch_export_key(task.tenant_id, job_id))
     return Response(

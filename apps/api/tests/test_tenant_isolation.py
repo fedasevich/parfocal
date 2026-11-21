@@ -1104,6 +1104,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     assert isinstance(patch_job, uuid.UUID)
     seeded.ids["patch_job"] = patch_job
+    seeded.markers.add(str(patch_job))
     patches = io.BytesIO()
     with zipfile.ZipFile(patches, "w") as archive:
         archive.writestr("index.csv", f"tile,slide_id\ntiles/a.png,{case.loose_slide_id}\n")
@@ -2149,6 +2150,12 @@ GET_ROUTES = {
     "downloadPatchExport": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/patch-exports/{a.ids['patch_job']}",
+    ),
+    "getPatchExportStatus": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['annotate_task']}/patch-exports/{a.ids['patch_job']}/status"
+        ),
     ),
     "getTaskAiChanges": Route(
         Exposure.TENANT,

@@ -141,6 +141,7 @@ import type {
   PasskeyRequest,
   PasswordSignInAvailability,
   PatchExportStarted,
+  PatchExportStatus,
   PatientData,
   PendingAccessRequest,
   PersonalData,
@@ -344,6 +345,7 @@ import {
   Ordering,
   OriginRoute,
   Outcome,
+  PatchExportState,
   Plan,
   PrivacyMode,
   ProjectRole,
@@ -14720,6 +14722,14 @@ export const getStartPatchExportResponseMock = (
   overrideResponse: Partial<Extract<PatchExportStarted, object>> = {},
 ): PatchExportStarted => ({ job_id: faker.string.uuid(), ...overrideResponse });
 
+export const getGetPatchExportStatusResponseMock = (
+  overrideResponse: Partial<Extract<PatchExportStatus, object>> = {},
+): PatchExportStatus => ({
+  job_id: faker.string.uuid(),
+  state: faker.helpers.arrayElement(Object.values(PatchExportState)),
+  ...overrideResponse,
+});
+
 export const getDownloadPatchExportResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
@@ -14769,6 +14779,15 @@ export const getGetTaskDatasetResponseMock = (
       filtered_out: faker.number.int(),
     }),
   ),
+  class_names: faker.helpers.arrayElement([
+    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      id: faker.string.uuid(),
+      key: faker.number.int(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    })),
+    null,
+  ]),
   final_layer: faker.helpers.arrayElement([
     {
       build: faker.number.int(),
@@ -14854,6 +14873,15 @@ export const getListDatasetVersionsResponseMock = (): DatasetVersion[] =>
           filtered_out: faker.number.int(),
         }),
       ),
+      class_names: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+          id: faker.string.uuid(),
+          key: faker.number.int(),
+          name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        })),
+        null,
+      ]),
       final_layer: faker.helpers.arrayElement([
         {
           build: faker.number.int(),
@@ -14947,6 +14975,15 @@ export const getFreezeDatasetVersionResponseMock = (
         filtered_out: faker.number.int(),
       }),
     ),
+    class_names: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+        id: faker.string.uuid(),
+        key: faker.number.int(),
+        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      })),
+      null,
+    ]),
     final_layer: faker.helpers.arrayElement([
       {
         build: faker.number.int(),
@@ -28295,6 +28332,30 @@ export const getStartPatchExportMockHandler = (
   );
 };
 
+export const getGetPatchExportStatusMockHandler = (
+  overrideResponse?:
+    | PatchExportStatus
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PatchExportStatus> | PatchExportStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/patch-exports/:jobId/status",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetPatchExportStatusResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getDownloadPatchExportMockHandler = (
   overrideResponse?:
     | Blob
@@ -31085,6 +31146,7 @@ export const getParfocalAPIMock = () => [
   getSetTaskReportLayoutMockHandler(),
   getExportTrainingDatasetMockHandler(),
   getStartPatchExportMockHandler(),
+  getGetPatchExportStatusMockHandler(),
   getDownloadPatchExportMockHandler(),
   getGetTaskDatasetMockHandler(),
   getListDatasetVersionsMockHandler(),

@@ -6245,6 +6245,7 @@ msgid "Data folder missing"
 msgstr "Data folder missing"
 
 #: src/screens/dataset/dataset-screen.tsx
+#: src/shell/page-title-names.ts
 msgid "Dataset"
 msgstr "Dataset"
 

@@ -39,6 +39,7 @@ test("the dataset page filters its counts, freezes a version and gives it back b
   await page.getByTestId("export-menu").click();
   await page.getByTestId("export-dataset-page").click();
   await expect(page).toHaveURL(new RegExp(`/tasks/${annotateTask}/dataset`));
+  await expect(page).toHaveTitle(/Dataset/);
   const total = page.getByTestId("dataset-total");
   await expect(total).toHaveText("11 objects on 1 slide");
   await expect(page.getByTestId("dataset-left-out")).toContainText("4 not checked");

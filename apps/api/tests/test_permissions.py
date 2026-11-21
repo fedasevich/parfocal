@@ -1270,6 +1270,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "downloadPatchExport": lambda w: Call(
         "GET", f"/api/review-tasks/{w.signed_annotate_task}/patch-exports/{w.patch_job}"
     ),
+    "getPatchExportStatus": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.signed_annotate_task}/patch-exports/{w.patch_job}/status"
+    ),
     "getTaskDataset": lambda w: Call("GET", f"/api/review-tasks/{w.signed_annotate_task}/dataset"),
     "listDatasetVersions": lambda w: Call(
         "GET", f"/api/review-tasks/{w.signed_annotate_task}/dataset-versions"

@@ -44,11 +44,18 @@ export const taskExportHandlers = (): RequestHandler[] => [
     },
   ),
   http.get<{ taskId: string; jobId: string }>(
-    "*/api/review-tasks/:taskId/patch-exports/:jobId",
+    "*/api/review-tasks/:taskId/patch-exports/:jobId/status",
     ({ params }) => {
       const seen = (polled.get(params.jobId) ?? 0) + 1;
       polled.set(params.jobId, seen);
-      if (seen <= cuttingPolls) {
+      const state = seen <= cuttingPolls ? "cutting" : "done";
+      return HttpResponse.json({ job_id: params.jobId, state });
+    },
+  ),
+  http.get<{ taskId: string; jobId: string }>(
+    "*/api/review-tasks/:taskId/patch-exports/:jobId",
+    ({ params }) => {
+      if ((polled.get(params.jobId) ?? 0) <= cuttingPolls) {
         return refused("patch-export-not-ready", "The patches of this task are still being cut");
       }
       const coco = formats.get(params.jobId) === "coco";

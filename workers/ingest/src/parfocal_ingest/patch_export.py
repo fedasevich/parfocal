@@ -273,6 +273,15 @@ class Painter:
         self.downsample = downsample
         self.tree = STRtree([shape.geometry for shape in self.shapes])
 
+    def touches(self, tile: Tile) -> bool:
+        scale = self.downsample
+        left, top = tile.x * scale, tile.y * scale
+        area = box(left, top, left + tile.width * scale, top + tile.height * scale)
+        return any(
+            not self.shapes[int(hit)].geometry.touches(area)
+            for hit in self.tree.query(area, predicate="intersects")
+        )
+
     def mask(self, tile: Tile) -> NDArray[np.uint8]:
         scale = self.downsample
         found = np.zeros((tile.height, tile.width), dtype=np.uint8)
@@ -441,7 +450,7 @@ def drawn(
     level = source.pyramid.levels[level_number]
     shapes, unclassed = labelled_of(json.loads(source.geojson)["features"])
     painter = Painter(shapes, level.downsample)
-    tiles = tiles_of(level, tile_size)
+    tiles = [tile for tile in tiles_of(level, tile_size) if painter.touches(tile)]
     rows: list[Row] = []
     cut = CocoSlide(images=[], annotations=[])
     with level_reader(source, level) as read:

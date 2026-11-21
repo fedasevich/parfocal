@@ -37,4 +37,5 @@ export const routeTitleMessages: Readonly<Record<string, MessageDescriptor>> = {
   "/tasks/$taskId/sign-off": msg`Sign off`,
   "/tasks/$taskId/disagreements": msg`Disagreements`,
   "/tasks/$taskId/adjudicate": msg`Adjudication`,
+  "/tasks/$taskId/dataset": msg`Dataset`,
 };

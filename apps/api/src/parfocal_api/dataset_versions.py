@@ -28,6 +28,7 @@ from parfocal_api.training_exports import (
     DatasetHiddenError,
     DatasetOrigin,
     Manifest,
+    ManifestClass,
     dataset,
     signed_off_slides,
     zipped,
@@ -67,6 +68,7 @@ class DatasetSummary(BaseModel):
     open_left_out: int = 0
     filtered_out: int
     slides: list[SlideCounts]
+    class_names: list[ManifestClass] | None = None
     final_layer: FinalLayerStatus | None = None
 
 
@@ -124,6 +126,7 @@ async def summary_of(
         signed_off_slides=signed,
         objects={origin: objects[origin] for origin in DatasetOrigin},
         classes=dict(sorted(classes.items())),
+        class_names=manifest.classes,
         unchecked_left_out=manifest.unchecked_left_out,
         unsure_left_out=manifest.unsure_left_out,
         open_left_out=manifest.open_left_out,

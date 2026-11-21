@@ -21,7 +21,13 @@ from parfocal_api.annotation_exports import chunk_rows, path_of
 from parfocal_api.annotations import LETTERS, PERSON_MADE_AI_KINDS
 from parfocal_api.check_options import CheckOptions, UncheckedExport, check_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.final_layers import FinalState, LayerRow, current_layers, layer_rows
+from parfocal_api.final_layers import (
+    FinalState,
+    LayerRow,
+    current_layers,
+    layer_classes,
+    layer_rows,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, ForbiddenError
 from parfocal_api.review_order import CheckState, Results, state_of
@@ -584,7 +590,11 @@ async def dataset(
         else [slide for slide in signed if slide.slide_id in applied.slide_ids]
     )
     stored: list[Any] = list(task.class_snapshot or [])
-    snapshot = [ProjectClass.model_validate(item) for item in stored]
+    snapshot = (
+        await layer_classes(connection, task, list(finals.values()))
+        if task.kind == TaskKind.REVIEW
+        else [ProjectClass.model_validate(item) for item in stored]
+    )
     classes = {item.id: item for item in snapshot}
     letters = Letters(await reviewers_of(connection, task.id))
     files: dict[str, bytes] = {}

@@ -18,14 +18,20 @@ from pycocotools.coco import COCO
 from shapely.geometry import shape as shape_of
 
 from parfocal_api.check_options import check_of
+from parfocal_api.tables import AnnotationKind
+from parfocal_api.taxonomy import ProjectClass
 from parfocal_api.training_exports import (
+    DatasetOrigin,
     Manifest,
     ManifestClass,
     ManifestTask,
+    Shape,
     applied_filters,
+    qupath_feature,
     zipped,
 )
 from parfocal_common.jobs import StepFailedError
+from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_ingest.patch_export import (
     INDEX_COLUMNS,
     PatchManifest,
@@ -132,7 +138,7 @@ def test_every_mask_matches_the_geojson_it_came_from(tmp_path: Any) -> None:
     archive, slide_id = exported(tmp_path)
     manifest = PatchManifest.model_validate_json(archive.read("manifest.json"))
     assert manifest.skipped == []
-    assert manifest.tiles == 6
+    assert manifest.tiles == 4
     assert manifest.slides[0].unclassed_left_out == 1
     assert manifest.slides[0].downsample == 2
     features = json.loads(archive.read(manifest.slides[0].geojson))["features"]
@@ -144,7 +150,6 @@ def test_every_mask_matches_the_geojson_it_came_from(tmp_path: Any) -> None:
     assert tuple(rows[0].keys()) == INDEX_COLUMNS
     assert len(rows) == manifest.tiles
     seen: set[int] = set()
-    empty = 0
     compared = 0
     for row in rows:
         assert row["slide_id"] == str(slide_id)
@@ -161,10 +166,23 @@ def test_every_mask_matches_the_geojson_it_came_from(tmp_path: Any) -> None:
         present = sorted(int(key) for key in np.unique(mask) if key)
         assert row["classes"] == ";".join(str(key) for key in present)
         seen.update(present)
-        empty += not present
     assert seen == {1, 2, 3}
-    assert empty >= 1
-    assert compared > 0.9 * 512 * 384
+    assert compared > 0.9 * sum(int(row["width"]) * int(row["height"]) for row in rows)
+
+
+def test_only_tiles_an_object_touches_are_cut(tmp_path: Any) -> None:
+    cell = feature("cell", 3, [[(450, 400), (482, 400), (482, 431), (450, 431)]])
+    geojson = json.dumps({"type": "FeatureCollection", "features": [cell]}).encode()
+    source = source_of(uuid.UUID(int=7), fixture_path(SLIDE), geojson)
+    assert source is not None
+    target = io.BytesIO()
+    writer = PatchWriter(target, LEVEL, TILE)
+    writer.add(source)
+    manifest = writer.finish(TASK, CLASSES)
+    assert manifest.tiles == 1
+    archive = zipfile.ZipFile(target)
+    rows = list(csv.DictReader(io.StringIO(archive.read("index.csv").decode())))
+    assert [(row["x"], row["y"], row["classes"]) for row in rows] == [("400", "400", "3")]
 
 
 def test_a_slide_without_the_chosen_level_is_skipped(tmp_path: Any) -> None:
@@ -283,7 +301,7 @@ def test_the_coco_file_loads_and_its_areas_match_the_masks() -> None:
     index = COCO()
     index.dataset = document
     index.createIndex()
-    assert len(document["images"]) == 6
+    assert len(document["images"]) == 4
     names = {item["file_name"] for item in document["images"]}
     assert names <= set(archive.namelist())
     identities = {item["parfocal_id"]: item["origin"] for item in document["annotations"]}
@@ -315,3 +333,49 @@ def test_a_patch_export_without_coco_has_no_annotation_file(tmp_path: Any) -> No
     assert "annotations.json" not in archive.namelist()
     manifest = PatchManifest.model_validate_json(archive.read("manifest.json"))
     assert manifest.annotations is None
+
+
+def final_shape(number: int, class_id: uuid.UUID | None, ring: list[tuple[int, int]]) -> Shape:
+    return Shape(
+        feature_id=str(uuid.UUID(int=100 + number)),
+        kind=AnnotationKind.REGION,
+        object_id=ObjectId(Letter.REGION, number),
+        geometry={"type": "Polygon", "coordinates": [[list(point) for point in ring + ring[:1]]]},
+        class_id=class_id,
+        class_name=None,
+        origin=DatasetOrigin.AI_CONFIRMED,
+        author="A",
+        changed_by=None,
+        source=None,
+        versions=1,
+        differs=None,
+    )
+
+
+def test_features_of_a_class_snapshot_cut_labelled_masks_and_coco() -> None:
+    stroma = ProjectClass(id=uuid.UUID(int=12), key=2, name="Stroma", colour="#112233")
+    shapes = [
+        final_shape(1, stroma.id, [(500, 450), (780, 470), (760, 740), (520, 700)]),
+        final_shape(2, None, [(20, 650), (90, 650), (90, 740), (20, 740)]),
+    ]
+    where = ("Project", None, "Slide")
+    features = [qupath_feature(item, where, {stroma.id: stroma}) for item in shapes]
+    assert [item["properties"]["parfocal"]["class_key"] for item in features] == [2, None]
+    geojson = json.dumps({"type": "FeatureCollection", "features": features}).encode()
+    source = source_of(uuid.UUID(int=7), fixture_path(SLIDE), geojson)
+    assert source is not None
+    target = io.BytesIO()
+    writer = PatchWriter(target, LEVEL, TILE, coco=True)
+    writer.add(source)
+    manifest = writer.finish(TASK, [ManifestClass.model_validate(stroma.model_dump())])
+    assert manifest.slides[0].unclassed_left_out == 1
+    archive = zipfile.ZipFile(target)
+    document = json.loads(archive.read("annotations.json"))
+    assert [(item["id"], item["name"]) for item in document["categories"]] == [(2, "Stroma")]
+    assert {item["category_id"] for item in document["annotations"]} == {2}
+    assert {item["parfocal_id"] for item in document["annotations"]} == {"T1"}
+    painted = 0
+    for image in document["images"]:
+        name = image["file_name"].replace("tiles/", "masks/")
+        painted += int((np.asarray(Image.open(io.BytesIO(archive.read(name)))) == 2).sum())
+    assert painted > 0

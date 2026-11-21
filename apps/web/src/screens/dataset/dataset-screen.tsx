@@ -24,6 +24,7 @@ import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { downloadDatasetVersion, refusalText } from "../../annotations/task-export.ts";
 import { destinations } from "../../shell/destinations.ts";
+import { usePageTitleDetail } from "../../shell/page-title.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { useScreenToast } from "../project/screen-toast.tsx";
@@ -49,6 +50,16 @@ const PatchExportDialog = lazy(async () => ({
 function problemCode(error: unknown): string | null {
   const code = (error as { problem?: { code?: string } } | null)?.problem?.code;
   return typeof code === "string" ? code : null;
+}
+
+function whenText(iso: string): string {
+  return new Date(iso).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function objectsLine(objects: number, slides: number): string {
@@ -121,13 +132,8 @@ function FinalLayer({
   building: boolean;
   onBuild: () => void;
 }) {
-  const { i18n } = useLingui();
   const counts = status?.counts;
-  const when = status
-    ? new Intl.DateTimeFormat(i18n.locale, { dateStyle: "medium", timeStyle: "short" }).format(
-        new Date(status.built_at),
-      )
-    : "";
+  const when = status ? whenText(status.built_at) : "";
   return (
     <Section title={<Trans>Final layer</Trans>}>
       <p className="m-0 text-body-sm text-fg-dim">
@@ -290,11 +296,8 @@ function VersionRow({
   onDownload: () => void;
   onPatches: () => void;
 }) {
-  const { i18n, t } = useLingui();
-  const when = new Intl.DateTimeFormat(i18n.locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(version.created_at));
+  const { t } = useLingui();
+  const when = whenText(version.created_at);
   const total = totalOf(version.counts.objects);
   return (
     <li
@@ -360,8 +363,9 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
   const freeze = useFreezeDatasetVersion();
   const rebuild = useBuildFinalLayer();
   const review = task?.kind === "review";
-  const classes = task?.classes ?? [];
+  const classes = task?.classes ?? base?.class_names ?? [];
   const code = task?.code ?? "";
+  usePageTitleDetail(code || null);
 
   const freezeNow = () => {
     freeze.mutate(
@@ -397,7 +401,12 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
     toast.show(result.state === "saved" ? t`Saved ${result.name}` : refusalText(result.code));
   };
 
-  const refusal = baseQuery.isError ? refusalText(problemCode(baseQuery.error)) : null;
+  const refusedCode = baseQuery.isError ? problemCode(baseQuery.error) : null;
+  const unsignedReview =
+    review && (refusedCode === "nothing-signed-off" || refusedCode === "task-not-signed-off");
+  const refusal = baseQuery.isError
+    ? refusalText(unsignedReview ? "task-not-signed-off" : refusedCode)
+    : null;
 
   return (
     <main
@@ -438,7 +447,7 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
           )}
         </p>
       </header>
-      {review ? (
+      {review && !unsignedReview ? (
         <FinalLayer status={base?.final_layer} building={rebuild.isPending} onBuild={buildNow} />
       ) : null}
       {refusal !== null ? (
