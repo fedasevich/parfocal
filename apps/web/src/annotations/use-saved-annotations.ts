@@ -1,6 +1,7 @@
 import {
   type AnnotationDraft,
   getGetReviewedLayerQueryKey,
+  getListReviewObjectsQueryKey,
   getReviewedLayer,
   listAnnotations,
   useGetMe,
@@ -170,6 +171,9 @@ export function useSavedAnnotations(
           ? reviewTaskTransport(reviewTaskId, slideId, () => {
               void queryClient.invalidateQueries({
                 queryKey: getGetReviewedLayerQueryKey(reviewTaskId, slideId),
+              });
+              void queryClient.invalidateQueries({
+                queryKey: getListReviewObjectsQueryKey(reviewTaskId, slideId),
               });
             })
           : sharedTaskId === null

@@ -16,6 +16,15 @@ const corners = [
   [10, 90],
 ] as const;
 
+async function drawSquare(page: Page) {
+  const stage = page.getByTestId("slide-stage");
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const origin = { x: box.x + box.width / 2 - 60, y: box.y + box.height / 2 - 50 };
+  if ((await stage.getAttribute("data-tool")) !== "polygon") await page.keyboard.press("p");
+  for (const [x, y] of corners) await page.mouse.click(origin.x + x, origin.y + y);
+  await page.mouse.click(origin.x + 2, origin.y + 1);
+}
+
 async function openAnnotate(page: Page, persona = "") {
   await page.goto(`/projects/${p07}/slides/${a1}?task=${rt14}&mode=annotate${persona}`);
   const stage = page.getByTestId("slide-stage");
@@ -55,11 +64,7 @@ test("a shape a reviewer draws in Annotate mode is the task's added object, hidd
   const added = page.waitForRequest(
     (request) => request.method() === "POST" && request.url().endsWith("/added"),
   );
-  const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
-  const origin = { x: box.x + box.width / 2 - 60, y: box.y + box.height / 2 - 50 };
-  if ((await stage.getAttribute("data-tool")) !== "polygon") await page.keyboard.press("p");
-  for (const [x, y] of corners) await page.mouse.click(origin.x + x, origin.y + y);
-  await page.mouse.click(origin.x + 2, origin.y + 1);
+  await drawSquare(page);
   await added;
   await expect(shapes).toHaveCount(before + 1);
   await expect(stage).toHaveAttribute("data-save-state", "saved");
@@ -72,6 +77,13 @@ test("a shape a reviewer draws in Annotate mode is the task's added object, hidd
   expect(drawn?.created_by_user_id).toBe(lenka);
   expect(drawn?.code.endsWith("⁺")).toBe(true);
   expect(saved.wide).not.toContain(drawn?.id);
+  await page.getByRole("tab", { name: /^Objects/ }).click();
+  await expect(
+    page
+      .getByRole("tabpanel")
+      .getByText(drawn?.code ?? "none")
+      .first(),
+  ).toBeVisible();
 
   await page.reload();
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
@@ -80,5 +92,26 @@ test("a shape a reviewer draws in Annotate mode is the task's added object, hidd
 
   await openAnnotate(page, "&as=SM");
   await expect(shapes).toHaveCount(before);
+  expect((await readBoth(page)).added).toEqual([]);
+});
+
+test("undoing a shape drawn in a review task deletes the task's added object", async ({ page }) => {
+  const stage = await openAnnotate(page);
+  const shapes = page.getByTestId("polygon-shape");
+  const before = await shapes.count();
+  const added = page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().endsWith("/added"),
+  );
+  await drawSquare(page);
+  await added;
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
+  const removed = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" && request.url().includes(`/api/slides/${a1}/annotations/`),
+  );
+  await page.keyboard.press("Control+z");
+  await removed;
+  await expect(shapes).toHaveCount(before);
+  await expect(stage).toHaveAttribute("data-save-state", "saved");
   expect((await readBoth(page)).added).toEqual([]);
 });

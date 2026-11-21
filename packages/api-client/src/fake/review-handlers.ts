@@ -155,9 +155,10 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
   added:
     taskId === rt17.id
       ? addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null }))
-      : reviewsA1(taskId, slideId)
-        ? addedByLenka
-        : [],
+      : [
+          ...(reviewsA1(taskId, slideId) ? addedByLenka : []),
+          ...addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null })),
+        ],
 });
 
 export const toTaskDisplay = (taskId: string): TaskDisplay => {

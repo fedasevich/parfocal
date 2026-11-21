@@ -211,7 +211,10 @@ function GuardedViewer({
   const meData = okData(meQuery.data);
   const me = meData?.user_id;
   const reviewLayerTaskId =
-    reviewTask !== null && taskDetail !== undefined && assignedTo(taskDetail.slides, slideId, me)
+    reviewTask !== null &&
+    taskDetail !== undefined &&
+    !resultMissingOf(taskDetail.slides, slideId) &&
+    assignedTo(taskDetail.slides, slideId, me)
       ? reviewTask
       : null;
   const othersReview =
