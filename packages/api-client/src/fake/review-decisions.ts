@@ -1,6 +1,4 @@
 import type {
-  AddedDraft,
-  Annotation,
   DecisionNote,
   EditDraft,
   FirstRead,
@@ -10,6 +8,7 @@ import type {
   ReviewedLayer,
   ReviewOrder,
 } from "../generated/api.ts";
+import { addedOn } from "./added-objects.ts";
 import { people, resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
@@ -58,7 +57,6 @@ const reviewsOutlinedCells = (taskId: string, slideId: string) =>
   slideId === outlinedCellsSlide.id && reviewsA1(taskId, reviewedSlide.id);
 
 const firstReads = new Map<string, FirstRead>();
-const addedObjects = new Map<string, Annotation[]>();
 
 const firstReadKey = (taskId: string, slideId: string) => `${taskId}/${slideId}`;
 
@@ -118,32 +116,6 @@ export const recordFirstRead = (
   };
   firstReads.set(firstReadKey(taskId, slideId), recorded);
   return recorded;
-};
-
-export const addedOn = (taskId: string, slideId: string): Annotation[] =>
-  addedObjects.get(firstReadKey(taskId, slideId)) ?? [];
-
-export const addObject = (taskId: string, slideId: string, draft: AddedDraft): Annotation => {
-  const kept = addedOn(taskId, slideId);
-  const number = kept.length + 1;
-  const now = new Date().toISOString();
-  const added: Annotation = {
-    id: crypto.randomUUID(),
-    slide_id: slideId,
-    kind: draft.kind,
-    number,
-    code: `${draft.kind === "cell" ? "C" : "T"}${number}⁺`,
-    geometry: { ...draft.geometry },
-    class_id: draft.class_id ?? null,
-    task_id: taskId,
-    version: 1,
-    created_by_user_id: null,
-    created_at: now,
-    updated_at: now,
-    deleted_at: null,
-  };
-  addedObjects.set(firstReadKey(taskId, slideId), [...kept, added]);
-  return added;
 };
 
 export const objectsOn = (taskId: string, slideId: string) => {
@@ -371,7 +343,7 @@ export const reviewedLayerFor = (taskId: string, slideId: string): ReviewedLayer
     result_set_id: noReviewer,
     reviewer_id: noReviewer,
     edits,
-    added: [],
+    added: structuredClone(addedOn(taskId, slideId)),
     summary: {
       regions: null,
       cells: null,
@@ -380,7 +352,7 @@ export const reviewedLayerFor = (taskId: string, slideId: string): ReviewedLayer
       deleted: 0,
       split: 0,
       merged: 0,
-      added: 0,
+      added: addedOn(taskId, slideId).length,
     },
   };
 };
