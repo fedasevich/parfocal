@@ -641,6 +641,7 @@ async def store(
     found: ObjectId,
     inserted: dict[str, Any],
     changed: dict[str, Any],
+    touch: bool = True,
 ) -> None:
     await connection.execute(
         upsert(disagreement_decisions)
@@ -660,7 +661,7 @@ async def store(
                 disagreement_decisions.c.kind,
                 disagreement_decisions.c.number,
             ],
-            set_={**changed, "updated_at": func.now()},
+            set_={**changed, "updated_at": func.now()} if touch else changed,
         )
     )
 
@@ -1023,7 +1024,7 @@ async def settle_outline(
         "outline_by_user_id": decider(principal),
         "outline_at": func.now(),
     }
-    await store(connection, task, item.slide_id, found, UNDECIDED | values, values)
+    await store(connection, task, item.slide_id, found, UNDECIDED | values, values, touch=False)
     await audit(
         connection,
         principal,
@@ -1056,9 +1057,7 @@ async def clear_outline(
             disagreement_decisions.c.edits_settled_at.is_(None),
         )
     )
-    await connection.execute(
-        update(disagreement_decisions).where(*where).values(**UNSETTLED, updated_at=func.now())
-    )
+    await connection.execute(update(disagreement_decisions).where(*where).values(**UNSETTLED))
     await audit(
         connection,
         principal,

@@ -312,7 +312,7 @@ def final_shape(
     key: tuple[str, int], settled: Shapes, reshaped: Shapes
 ) -> tuple[str | None, list[str]]:
     if key in settled:
-        return settled[key], ["settled"]
+        return settled[key], ["reshaped", "settled"]
     if key in reshaped:
         return reshaped[key], ["reshaped"]
     return None, []

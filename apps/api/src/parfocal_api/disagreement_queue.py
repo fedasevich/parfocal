@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.adjudications import decide_as_adjudicator, me, reviewers_of
-from parfocal_api.annotations import Geometry
+from parfocal_api.annotations import Geometry, checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import ANSWERS
 from parfocal_api.disagreements import (
@@ -212,6 +212,8 @@ class AdjudicatorOutlineDraft(BaseModel):
     def picks_or_draws(self) -> AdjudicatorOutlineDraft:
         if (self.reviewer is None) == (self.geometry is None):
             raise ValueError("Pick one reviewer's outline or draw a new one")
+        if self.geometry is not None:
+            checked(self.geometry)
         return self
 
 
@@ -588,8 +590,11 @@ POSITIONS: tuple[ReviewerLetter, ReviewerLetter] = ("A", "B")
 
 
 def positions_of(item: QueuedObject, letters: dict[uuid.UUID, str]) -> dict[uuid.UUID, Any]:
-    given = sorted(item.reviewers(), key=lambda answer: letters.get(answer.user_id, "~"))
-    return {answer.user_id: position for answer, position in zip(given, POSITIONS, strict=False)}
+    people = {answer.user_id for answer in item.reviewers()} | {
+        drawn.user_id for drawn in item.outlines
+    }
+    given = sorted(people, key=lambda person: (letters.get(person, "~"), str(person)))
+    return dict(zip(given, POSITIONS, strict=False))
 
 
 def anonymous_outlines(
@@ -615,17 +620,18 @@ def anonymous_outlines(
 
 
 def anonymous(item: QueuedObject, facts: QueueFacts, letters: dict[uuid.UUID, str]) -> list[Any]:
-    given = sorted(item.reviewers(), key=lambda answer: letters.get(answer.user_id, "~"))
-    shown = [
-        AnonymousAnswer(
+    placed = positions_of(item, letters)
+    given = {
+        placed[answer.user_id]: AnonymousAnswer(
             raw=facts.raw(item, answer.user_id, answer.answer),
             reason=reason_of(answer.reasons),
             note=answer.note,
         )
-        for answer in given
-    ]
+        for answer in item.reviewers()
+        if answer.user_id in placed
+    }
     empty = AnonymousAnswer(raw="", reason=None, note=None)
-    return [*shown, empty, empty][:2]
+    return [given.get(position, empty) for position in POSITIONS]
 
 
 def adjudication_object(

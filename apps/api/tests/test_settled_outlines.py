@@ -175,10 +175,40 @@ def test_the_consensus_export_uses_the_settled_outline_and_covers_cells(
     features = {feature["id"]: feature for feature in response.json()["features"]}
     assert {"T1", "C1", "C2"} <= set(features)
     assert same_shape(features["T1"]["geometry"], DRAWN)
-    assert features["T1"]["properties"]["parfocal"]["changed"] == ["settled"]
+    assert features["T1"]["properties"]["parfocal"]["changed"] == ["reshaped", "settled"]
     assert same_shape(features["C1"]["geometry"], CELL_FAR)
     assert features["C1"]["properties"]["objectType"] == "cell"
-    assert features["C1"]["properties"]["parfocal"]["changed"] == ["settled"]
+    assert features["C1"]["properties"]["parfocal"]["changed"] == ["reshaped", "settled"]
     assert features["C2"]["properties"]["parfocal"]["changed"] == []
     assert features["C2"]["geometry"]["type"] == "Polygon"
     assert ring_of(features["C2"]["geometry"])
+    task = api(r.people["owner"]).get(
+        f"/api/review-tasks/{r.task}/evaluation/exports/annotations.geojson"
+    )
+    assert task.status_code == 200, task.text
+    exported = {feature["id"]: feature for feature in task.json()["features"]}
+    assert same_shape(exported["C1"]["geometry"], CELL_FAR)
+
+
+def test_the_adjudicator_gets_letters_for_redraws_without_answers(
+    api: ApiAs, database: str
+) -> None:
+    r = redrawn(api, database, "C1", CELL, CELL_FAR)
+    sent = api(r.people["owner"]).post(
+        f"/api/review-tasks/{r.task}/disagreements/adjudications",
+        json={
+            "adjudicator_user_id": str(r.people["third"].user_id),
+            "objects": [{"slide_id": str(r.slide), "object": "C1"}],
+        },
+    )
+    assert sent.status_code in (200, 201), sent.text
+    mine = api(r.people["third"]).get(f"/api/review-tasks/{r.task}/adjudication")
+    [shown] = mine.json()["objects"]
+    assert [entry["reviewer"] for entry in shown["outlines"]] == ["A", "B"]
+    picked = api(r.people["third"]).put(adjudication_url(r, "C1"), json={"reviewer": "A"})
+    assert picked.status_code == 200, picked.text
+    broken = api(r.people["third"]).put(
+        adjudication_url(r, "C1"),
+        json={"geometry": {"type": "Polygon", "coordinates": [[[0, 0], [1, 1], [0, 0]]]}},
+    )
+    assert broken.status_code in (400, 422), broken.text
