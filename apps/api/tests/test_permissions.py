@@ -392,6 +392,8 @@ NEEDS_A_TASK = frozenset(
         "reopenSlideReview",
         "saveDecision",
         "clearDecision",
+        "saveDecisionBatch",
+        "clearDecisionBatch",
         "skipObject",
         "clearSkip",
         "getMyDisplay",
@@ -1380,6 +1382,32 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "clearDecision": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions/T1"
+    ),
+    "saveDecisionBatch": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions/batch",
+        {"decisions": [{"object": "T2", "answer": "4"}]},
+    ),
+    "clearDecisionBatch": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions/batch-clear",
+        {"objects": ["T2"]},
+    ),
+    "settleQueuedOutline": lambda w: Call(
+        "PUT",
+        f"/api/review-tasks/{w.queued_task}/disagreement-queue/{w.slide}/T1/outline",
+        {"geometry": SQUARE},
+    ),
+    "clearQueuedOutline": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.queued_task}/disagreement-queue/{w.slide}/T1/outline"
+    ),
+    "settleAdjudicationOutline": lambda w: Call(
+        "PUT",
+        f"/api/review-tasks/{w.queued_task}/adjudication/{w.slide}/T10/outline",
+        {"geometry": SQUARE},
+    ),
+    "clearAdjudicationOutline": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.queued_task}/adjudication/{w.slide}/T10/outline"
     ),
     "listSkips": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/skips"),
     "skipObject": lambda w: Call(
