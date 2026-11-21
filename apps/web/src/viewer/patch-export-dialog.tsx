@@ -1,11 +1,13 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Input } from "@parfocal/ui/components/input";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { useEffect, useState } from "react";
 import {
   deepestLevel,
   defaultTile,
   largestTile,
+  type PatchFormat,
   pollPatches,
   refusalText,
   smallestTile,
@@ -33,6 +35,7 @@ export function PatchExportDialog({
   const { t } = useLingui();
   const [level, setLevel] = useState("0");
   const [tile, setTile] = useState(String(defaultTile));
+  const [format, setFormat] = useState<PatchFormat>("masks");
   const [phase, setPhase] = useState<Phase>({ state: "asking" });
   const levelNumber = Number(level);
   const tileNumber = Number(tile);
@@ -60,7 +63,7 @@ export function PatchExportDialog({
 
   const start = async () => {
     setPhase({ state: "starting" });
-    const started = await startPatches(taskId, levelNumber, tileNumber, datasetVersion);
+    const started = await startPatches(taskId, levelNumber, tileNumber, datasetVersion, format);
     if (started.state === "started") setPhase({ state: "cutting", jobId: started.jobId });
     else setPhase({ state: "stopped", message: refusalText(started.code) });
   };
@@ -135,6 +138,32 @@ export function PatchExportDialog({
             </Trans>
           </small>
         </label>
+        <div className="grid gap-1">
+          <span id="patch-export-format-label">
+            <Trans>Annotations</Trans>
+          </span>
+          <SegmentedControl
+            aria-labelledby="patch-export-format-label"
+            data-testid="patch-export-format"
+            value={format}
+            disabled={!asking}
+            onValueChange={(next) => setFormat(next as PatchFormat)}
+            options={[
+              { value: "masks", label: t`Class masks` },
+              { value: "coco", label: t`Masks and COCO` },
+            ]}
+          />
+          <small className="text-caption text-fg-dim">
+            {format === "coco" ? (
+              <Trans>
+                Also writes annotations.json in COCO form, one polygon per object clipped to its
+                tile.
+              </Trans>
+            ) : (
+              <Trans>One class mask per tile.</Trans>
+            )}
+          </small>
+        </div>
         {jobId === null ? null : (
           <p className="m-0 grid gap-0.5" data-testid="patch-export-job" aria-live="polite">
             <span>

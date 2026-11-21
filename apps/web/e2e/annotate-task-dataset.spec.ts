@@ -45,8 +45,14 @@ test("the Export menu offers the training dataset and the patches and downloads 
   await page.getByTestId("export-patches").click();
   await page.getByTestId("patch-export-level").fill("1");
   await page.getByTestId("patch-export-tile").fill("256");
+  await expect(page.getByTestId("patch-export-format")).toContainText("Class masks");
+  await page.getByRole("radio", { name: "Masks and COCO" }).click();
   const patchDownload = page.waitForEvent("download");
+  const patchRequest = page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().endsWith("/patch-exports"),
+  );
   await page.getByRole("button", { name: "Cut the patches" }).click();
+  expect((await patchRequest).postDataJSON()).toMatchObject({ format: "coco", level: 1 });
   await expect(page.getByTestId("patch-export-job")).toContainText("Job ");
   expect((await patchDownload).suggestedFilename()).toMatch(/patches\.zip$/);
   await expect(page.getByTestId("patch-export-job")).toContainText("The patches are ready");

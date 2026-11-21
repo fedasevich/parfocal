@@ -23,8 +23,10 @@ from numpy.typing import NDArray
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, ValidationError
 from shapely import STRtree, box
+from shapely.geometry import Polygon
 from shapely.geometry import shape as shape_of
 from shapely.geometry.base import BaseGeometry
+from shapely.geometry.polygon import orient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from wsidicom import WsiDicom
@@ -66,6 +68,7 @@ FORMAT = "parfocal-patch-dataset"
 FORMAT_VERSION = 1
 MANIFEST = "manifest.json"
 INDEX = "index.csv"
+COCO = "annotations.json"
 PART = "patches.zip"
 MEMBER_LIMIT_BYTES = 64 * 1024 * 1024
 BACKGROUND = 0
@@ -99,6 +102,57 @@ class MaskRule(Strict):
     bits: Literal[8]
 
 
+class CocoImage(Strict):
+    id: int
+    file_name: str
+    width: int
+    height: int
+    slide_id: uuid.UUID
+    level: int
+    downsample: int
+    x: int
+    y: int
+
+
+class CocoAnnotation(Strict):
+    id: int
+    image_id: int
+    category_id: int
+    segmentation: list[list[float]]
+    area: float
+    bbox: list[float]
+    iscrowd: Literal[0]
+    parfocal_id: str | None
+    origin: str | None
+    kind: str
+
+
+class CocoSlide(Strict):
+    images: list[CocoImage]
+    annotations: list[CocoAnnotation]
+
+
+class CocoCategory(Strict):
+    id: int
+    name: str
+    colour: str
+    parfocal_class_id: uuid.UUID
+
+
+class CocoInfo(Strict):
+    description: str
+    version: int
+    date_created: datetime
+    dataset_version: int | None
+
+
+class CocoFile(Strict):
+    info: CocoInfo
+    categories: list[CocoCategory]
+    images: list[CocoImage]
+    annotations: list[CocoAnnotation]
+
+
 class PatchSlide(Strict):
     slide_id: uuid.UUID
     geojson: str
@@ -129,6 +183,7 @@ class PatchManifest(Strict):
     skipped: list[PatchSkipped]
     tiles: int
     dataset_version: int | None = None
+    annotations: str | None = None
 
 
 MASK_RULE = MaskRule(
@@ -145,6 +200,9 @@ MASK_RULE = MaskRule(
 class Labelled:
     key: int
     geometry: BaseGeometry
+    kind: str = "region"
+    object_id: str | None = None
+    origin: str | None = None
 
 
 @dataclass(frozen=True)
@@ -182,7 +240,13 @@ def labelled_of(features: Sequence[Mapping[str, Any]]) -> tuple[list[Labelled], 
             (
                 DRAWN_KINDS.index(parfocal["kind"]),
                 -geometry.area,
-                Labelled(int(parfocal["class_key"]), geometry),
+                Labelled(
+                    int(parfocal["class_key"]),
+                    geometry,
+                    str(parfocal["kind"]),
+                    parfocal.get("id"),
+                    parfocal.get("origin"),
+                ),
             )
         )
     ranked.sort(key=lambda item: (item[0], item[1]))
@@ -227,6 +291,68 @@ class Painter:
             inside = shapely.contains_xy(shape.geometry, grid_x, grid_y)
             found[top:bottom, left:right][inside] = shape.key
         return found
+
+
+def flat_ring(points: Sequence[Sequence[float]]) -> list[float]:
+    return [round(value, 2) for point in points for value in point]
+
+
+def bridged(polygon: Polygon) -> list[float]:
+    oriented = orient(polygon)
+    ring = list(oriented.exterior.coords)[:-1]
+    for hole in oriented.interiors:
+        opening = list(hole.coords)[:-1]
+        pairs = [(i, j) for i in range(len(ring)) for j in range(len(opening))]
+        i, j = min(pairs, key=lambda pair: math.dist(ring[pair[0]], opening[pair[1]]))
+        around = opening[j:] + opening[:j] + [opening[j]]
+        ring = ring[: i + 1] + around + [ring[i]] + ring[i + 1 :]
+    return flat_ring(ring)
+
+
+def polygons_of(geometry: BaseGeometry) -> list[Polygon]:
+    if isinstance(geometry, Polygon):
+        return [] if geometry.is_empty else [geometry]
+    return [polygon for part in getattr(geometry, "geoms", []) for polygon in polygons_of(part)]
+
+
+def coco_of(
+    painter: Painter, tile: Tile, image_id: int, first_annotation: int
+) -> list[CocoAnnotation]:
+    scale = painter.downsample
+    left, top = tile.x * scale, tile.y * scale
+    area = box(left, top, left + tile.width * scale, top + tile.height * scale)
+    found: list[CocoAnnotation] = []
+    for index in sorted(int(hit) for hit in painter.tree.query(area)):
+        shape = painter.shapes[index]
+        geometry = shape.geometry if shape.geometry.is_valid else shapely.make_valid(shape.geometry)
+        pieces = [
+            shapely.transform(piece, lambda points: (points - (left, top)) / scale)
+            for piece in polygons_of(geometry.intersection(area))
+        ]
+        pieces = [piece for piece in pieces if piece.area > 0]
+        if not pieces:
+            continue
+        low_x, low_y, high_x, high_y = shapely.union_all(pieces).bounds
+        found.append(
+            CocoAnnotation(
+                id=first_annotation + len(found),
+                image_id=image_id,
+                category_id=shape.key,
+                segmentation=[bridged(piece) for piece in pieces],
+                area=round(sum(piece.area for piece in pieces), 2),
+                bbox=[
+                    round(low_x, 2),
+                    round(low_y, 2),
+                    round(high_x - low_x, 2),
+                    round(high_y - low_y, 2),
+                ],
+                iscrowd=0,
+                parfocal_id=shape.object_id,
+                origin=shape.origin,
+                kind=shape.kind,
+            )
+        )
+    return found
 
 
 @contextmanager
@@ -306,13 +432,18 @@ type Row = list[str | int]
 
 
 def drawn(
-    source: SlideSource, level_number: int, tile_size: int, archive: zipfile.ZipFile
-) -> tuple[list[Row], PatchSlide]:
+    source: SlideSource,
+    level_number: int,
+    tile_size: int,
+    archive: zipfile.ZipFile,
+    coco: bool = False,
+) -> tuple[list[Row], PatchSlide, CocoSlide]:
     level = source.pyramid.levels[level_number]
     shapes, unclassed = labelled_of(json.loads(source.geojson)["features"])
     painter = Painter(shapes, level.downsample)
     tiles = tiles_of(level, tile_size)
     rows: list[Row] = []
+    cut = CocoSlide(images=[], annotations=[])
     with level_reader(source, level) as read:
         for tile in tiles:
             x, y = tile.x * level.downsample, tile.y * level.downsample
@@ -321,6 +452,21 @@ def drawn(
             archive.writestr(f"tiles/{name}", png(read(tile)))
             archive.writestr(f"masks/{name}", png(Image.fromarray(mask)))
             present = [int(key) for key in np.unique(mask) if key != BACKGROUND]
+            if coco:
+                cut.images.append(
+                    CocoImage(
+                        id=len(cut.images) + 1,
+                        file_name=f"tiles/{name}",
+                        width=tile.width,
+                        height=tile.height,
+                        slide_id=source.slide_id,
+                        level=level_number,
+                        downsample=level.downsample,
+                        x=x,
+                        y=y,
+                    )
+                )
+                cut.annotations += coco_of(painter, tile, len(cut.images), len(cut.annotations) + 1)
             rows.append(
                 [
                     f"tiles/{name}",
@@ -345,7 +491,7 @@ def drawn(
         tiles=len(tiles),
         unclassed_left_out=unclassed,
     )
-    return rows, slide
+    return rows, slide, cut
 
 
 def geojson_name(slide_id: uuid.UUID) -> str:
@@ -361,9 +507,14 @@ def patch_slide(arguments: Mapping[str, Any], storage: ScopedStorage) -> dict[st
     level = int(arguments["level"])
     if level >= len(source.pyramid.levels):
         return {"skipped": "level-missing"}
+    coco = bool(arguments.get("coco"))
     with zipfile.ZipFile(Path(arguments["out"]) / PART, "w", zipfile.ZIP_DEFLATED) as archive:
-        rows, slide = drawn(source, level, int(arguments["tile_size"]), archive)
-    return {"rows": rows, "slide": slide.model_dump(mode="json")}
+        rows, slide, cut = drawn(source, level, int(arguments["tile_size"]), archive, coco)
+    return {
+        "rows": rows,
+        "slide": slide.model_dump(mode="json"),
+        "coco": cut.model_dump(mode="json"),
+    }
 
 
 def checked_row(row: object, slide: PatchSlide) -> Row:
@@ -385,10 +536,13 @@ def checked_row(row: object, slide: PatchSlide) -> Row:
 
 
 class PatchWriter:
-    def __init__(self, target: BinaryIO, level: int, tile_size: int) -> None:
+    def __init__(self, target: BinaryIO, level: int, tile_size: int, coco: bool = False) -> None:
         self.archive = zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED)
         self.level = level
         self.tile_size = tile_size
+        self.coco = coco
+        self.images: list[CocoImage] = []
+        self.objects: list[CocoAnnotation] = []
         self.rows: list[Row] = []
         self.slides: list[PatchSlide] = []
         self.skipped: list[PatchSkipped] = []
@@ -400,10 +554,22 @@ class PatchWriter:
         if self.level >= len(source.pyramid.levels):
             self.skip(source.slide_id, "level-missing")
             return
-        rows, slide = drawn(source, self.level, self.tile_size, self.archive)
+        rows, slide, cut = drawn(source, self.level, self.tile_size, self.archive, self.coco)
         self.archive.writestr(slide.geojson, source.geojson)
+        self.add_coco(cut)
         self.rows += rows
         self.slides.append(slide)
+
+    def add_coco(self, cut: CocoSlide) -> None:
+        if not self.coco:
+            return
+        shift = len(self.images)
+        first = len(self.objects)
+        self.images += [image.model_copy(update={"id": image.id + shift}) for image in cut.images]
+        self.objects += [
+            item.model_copy(update={"id": item.id + first, "image_id": item.image_id + shift})
+            for item in cut.annotations
+        ]
 
     def merge(
         self, slide_id: uuid.UUID, geojson: bytes, facts: Mapping[str, Any], part: bytes
@@ -424,12 +590,20 @@ class PatchWriter:
             if len(rows) != slide.tiles:
                 raise ValueError("rows")
             members = merged_members(part, {str(name) for row in rows for name in row[:2]})
+            cut = CocoSlide(images=[], annotations=[])
+            if self.coco:
+                cut = CocoSlide.model_validate(facts.get("coco"))
+                if [image.file_name for image in cut.images] != [row[0] for row in rows] or any(
+                    item.image_id < 1 or item.image_id > len(cut.images) for item in cut.annotations
+                ):
+                    raise ValueError("coco")
         except ValidationError, ValueError, TypeError, zipfile.BadZipFile:
             self.skip(slide_id, "unreadable")
             return
         for name, data in members:
             self.archive.writestr(name, data)
         self.archive.writestr(slide.geojson, geojson)
+        self.add_coco(cut)
         self.rows += rows
         self.slides.append(slide)
 
@@ -444,6 +618,29 @@ class PatchWriter:
         writer.writerow(INDEX_COLUMNS)
         writer.writerows(self.rows)
         self.archive.writestr(INDEX, index.getvalue())
+        if self.coco:
+            self.archive.writestr(
+                COCO,
+                CocoFile(
+                    info=CocoInfo(
+                        description=f"Parfocal patches of {task.code}",
+                        version=FORMAT_VERSION,
+                        date_created=datetime.now(UTC),
+                        dataset_version=dataset_version,
+                    ),
+                    categories=[
+                        CocoCategory(
+                            id=item.key,
+                            name=item.name,
+                            colour=item.colour,
+                            parfocal_class_id=item.id,
+                        )
+                        for item in classes
+                    ],
+                    images=self.images,
+                    annotations=self.objects,
+                ).model_dump_json(),
+            )
         manifest = PatchManifest(
             format=FORMAT,
             version=FORMAT_VERSION,
@@ -458,6 +655,7 @@ class PatchWriter:
             skipped=self.skipped,
             tiles=len(self.rows),
             dataset_version=dataset_version,
+            annotations=COCO if self.coco else None,
         )
         self.archive.writestr(MANIFEST, manifest.model_dump_json(indent=2))
         self.archive.close()
@@ -532,6 +730,7 @@ async def isolated_slide(
                 "geojson": str(source),
                 "level": int(step.input["level"]),
                 "tile_size": int(step.input["tile_size"]),
+                "coco": step.input.get("format") == "coco",
                 "out": str(out),
             },
             JobScope(step.tenant_id, slide_id, (key,)),
@@ -587,7 +786,12 @@ async def export_patches(step: StepRun, resources: Resources) -> Mapping[str, An
             }
         folder = resources.work_dir / str(step.job_id)
         buffer = io.BytesIO()
-        writer = PatchWriter(buffer, int(step.input["level"]), int(step.input["tile_size"]))
+        writer = PatchWriter(
+            buffer,
+            int(step.input["level"]),
+            int(step.input["tile_size"]),
+            step.input.get("format") == "coco",
+        )
         try:
             for entry in made.slides:
                 if await step.should_stop():

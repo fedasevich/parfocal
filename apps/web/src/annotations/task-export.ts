@@ -72,6 +72,8 @@ export async function downloadTrainingDataset(taskId: string): Promise<TaskExpor
   return { state: "saved", name: await saveResponse(response, "parfocal-dataset.zip") };
 }
 
+export type PatchFormat = "masks" | "coco";
+
 export type PatchStart =
   | { readonly state: "started"; readonly jobId: string }
   | { readonly state: "refused"; readonly code: string | null };
@@ -81,11 +83,13 @@ export async function startPatches(
   level: number,
   tileSize: number,
   datasetVersion: number | null = null,
+  format: PatchFormat = "masks",
 ): Promise<PatchStart> {
   try {
     const started = await startPatchExport(taskId, {
       level,
       tile_size: tileSize,
+      format,
       ...(datasetVersion === null ? {} : { dataset_version: datasetVersion }),
     });
     if (started.status === 202) return { state: "started", jobId: started.data.job_id };
