@@ -2,6 +2,56 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.34.0 (2026-11-21)
+
+### Features
+
+- PROTO-116: Queue objects whose reviewers' outlines overlap below the task threshold
+- PROTO-115: Add a dataset page with filters and frozen, write once versions
+- PROTO-117: Let the adjudicator and the owner pick or draw the final outline
+- PROTO-119: Save shapes drawn in a review task's Annotate mode as the task's added objects
+- PROTO-119: List a review task's drawn shapes in the objects panel and cover undo
+- PROTO-140: Compare a redraw with the kept AI outline and set the overlap per task
+- PROTO-118: Build a final layer from a signed off review task
+- PROTO-118: Show the final layer on the Dataset page and record ADR 0415
+- PROTO-121: Write COCO annotations beside the patch tiles
+
+### Fixes
+
+- PROTO-116: Compare only area outlines and draw the AI outline under reviewers' ones
+- PROTO-117: Give letters to redraws without answers and keep the decision time
+- PROTO-115: Type the dataset version number and the rounding helper
+- PROTO-141: Skip tenant keys younger than the bucket lock in the reset
+
+### Performance
+
+- PROTO-139: Seed workspaces side by side and delete tenant objects 32 at a time
+
+### Docs
+
+- PROTO-139: Add a faster production reseed
+- PROTO-116: Log outline disagreements, add the kept AI outline follow-up
+- PROTO-115: Log and tick the dataset page and versions
+- PROTO-117: Log and tick the adjudicator settling the shape
+- PROTO-139: Log the faster seed, add locked object and task mark follow-ups
+- PROTO-119: Log and tick review shapes belonging to the task
+- PROTO-141: Log and tick the locked tenant objects
+- PROTO-140: Log and tick redraws against the kept AI outline
+- PROTO-118: Log and tick the final layer of a signed off review
+- PROTO-121: Log and tick COCO in the patch export
+
+### Tests
+
+- PROTO-115: Count the dataset version task key among composite keys
+
+### Other
+
+- PROTO-139: Claim a faster production reseed
+- PROTO-117: Claim the adjudicator settling the shape
+- PROTO-141: Claim locked tenant objects and task marks
+- PROTO-121: Claim COCO in the patch export
+- PROTO-122: Claim the whole path spec
+
 ## v0.33.0 (2026-11-20)
 
 ### Features
