@@ -202,6 +202,34 @@ def test_a_result_paired_with_a_ready_slide_is_imported_at_once_and_keeps_ids(
     ) == (3,)
 
 
+def test_an_imported_result_sends_one_notice_to_the_person_who_uploaded_it(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    slide_id = make_slide(database, lab.tenant_id, lab.project, "Biopsy")
+    upload = upload_result(api, lab, "Biopsy.json", parfocal_file(), slide_id=str(slide_id))
+    run_worker(database, lab.tenant_id, tmp_path / "work")
+    status = status_of(api, lab.lead, upload)
+    assert status["status"] == "ready"
+    notices = owner(
+        database,
+        "SELECT user_id, kind, target_type, payload->>'slide_id', payload->>'result_set_id' "
+        f"FROM notifications WHERE tenant_id = '{lab.tenant_id}' AND kind LIKE 'result-%'",
+    )
+    assert notices == [
+        (
+            lab.lead.user_id,
+            "result-import-done",
+            "job",
+            str(slide_id),
+            status["result_set_id"],
+        )
+    ]
+    inbox = api(lab.lead).get("/api/me/notifications")
+    assert inbox.status_code == 200, inbox.text
+    kinds = [item["kind"] for item in inbox.json()["notifications"]]
+    assert kinds.count("result-import-done") == 1
+
+
 def test_a_new_set_inherits_the_ids_of_the_objects_it_shares_with_an_older_set(
     api: ApiAs, database: str, lab: Lab, tmp_path: Path
 ) -> None:

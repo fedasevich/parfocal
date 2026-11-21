@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { detailOf, kindIcons, kindTitles, titleOf } from "../src/shell/activity.ts";
+import { detailOf, filterKinds, kindIcons, kindTitles, titleOf } from "../src/shell/activity.ts";
 
 test("a task notification without a written detail names its task and slide count", () => {
   const item = { payload: { task_name: "Round 2 review", slides: 4 } };
@@ -17,6 +17,11 @@ test("a notification without a written title is named by its kind", () => {
     "Ana mentioned you",
   );
   assert.equal(titleOf({ kind: "mention", payload: { title: "" } } as never), "You were mentioned");
+});
+
+test("a finished result import is a job notice with its own title", () => {
+  assert.equal(titleOf({ kind: "result-import-done", payload: {} } as never), "Import done");
+  assert.ok(filterKinds.jobs?.includes("result-import-done"));
 });
 
 test("every kind with an icon has a title", () => {

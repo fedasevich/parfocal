@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import ColumnElement, and_, func, select
+from sqlalchemy import ColumnElement, Uuid, and_, cast, func, select
 
 from parfocal_api.context import TenantConnection
 from parfocal_api.permissions import Permission, require
@@ -99,6 +99,9 @@ async def get_ai_usage(
         .order_by(seconds.desc(), gpu_usage.c.model, gpu_usage.c.model_version)
     )
     last = func.max(gpu_usage.c.recorded_at).label("last_recorded_at")
+    slide = func.coalesce(model_runs.c.slide_id, cast(jobs.c.input["slide_id"].astext, Uuid)).label(
+        "slide_id"
+    )
     recent = await connection.execute(
         select(
             gpu_usage.c.job_id,
@@ -106,7 +109,7 @@ async def get_ai_usage(
             gpu_usage.c.model,
             gpu_usage.c.model_version,
             jobs.c.project_id,
-            model_runs.c.slide_id,
+            slide,
             seconds,
             last,
         )
@@ -122,7 +125,7 @@ async def get_ai_usage(
             gpu_usage.c.model,
             gpu_usage.c.model_version,
             jobs.c.project_id,
-            model_runs.c.slide_id,
+            slide,
         )
         .order_by(last.desc(), gpu_usage.c.job_id)
         .limit(LISTED_JOBS)

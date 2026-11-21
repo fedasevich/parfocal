@@ -73956,7 +73956,8 @@
           "slide-moved",
           "workspace-access-asked",
           "template-offered",
-          "project-access-asked"
+          "project-access-asked",
+          "result-import-done"
         ],
         "title": "NotificationKind"
       },

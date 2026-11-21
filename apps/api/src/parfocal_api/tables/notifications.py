@@ -51,6 +51,7 @@ class NotificationKind(StrEnum):
     WORKSPACE_ACCESS_ASKED = "workspace-access-asked"
     TEMPLATE_OFFERED = "template-offered"
     PROJECT_ACCESS_ASKED = "project-access-asked"
+    RESULT_IMPORT_DONE = "result-import-done"
 
 
 class EmailStatus(StrEnum):
