@@ -56,6 +56,27 @@ export const outlinedCellsSlide = slideByIndex(8);
 const reviewsOutlinedCells = (taskId: string, slideId: string) =>
   slideId === outlinedCellsSlide.id && reviewsA1(taskId, reviewedSlide.id);
 
+const cellSampleSize = () =>
+  (globalThis as { __parfocalFake?: { cellSample?: number } }).__parfocalFake?.cellSample;
+
+const sampledCellStep = 60;
+
+function sampledCells<T extends { object: string; outline?: number[] }>(cells: readonly T[]) {
+  const size = cellSampleSize();
+  if (size === undefined || cells.length === 0) return cells;
+  return Array.from({ length: size }, (_, index) => {
+    const base = cells[index % cells.length] as T;
+    const shift = Math.floor(index / cells.length) * sampledCellStep;
+    return {
+      ...base,
+      object: `C${index + 1}`,
+      ...(base.outline === undefined
+        ? {}
+        : { outline: base.outline.map((value, at) => (at % 2 === 0 ? value + shift : value)) }),
+    };
+  });
+}
+
 const firstReads = new Map<string, FirstRead>();
 
 const firstReadKey = (taskId: string, slideId: string) => `${taskId}/${slideId}`;
@@ -123,7 +144,7 @@ export const objectsOn = (taskId: string, slideId: string) => {
   if (readsFirst(taskId, slideId)) return reviewObjects;
   if (reviewsA1(taskId, slideId) || looksAtA1(taskId, slideId)) return placedReviewObjects;
   if (reviewsOutlined(taskId, slideId)) return outlinedObjects;
-  if (reviewsOutlinedCells(taskId, slideId)) return outlinedCells;
+  if (reviewsOutlinedCells(taskId, slideId)) return sampledCells(outlinedCells);
   if (reviewsNext(taskId, slideId)) {
     return reviewObjects.filter(
       (item, index) => item.kind === "cell" || index < nextSlideFacts.regions,
