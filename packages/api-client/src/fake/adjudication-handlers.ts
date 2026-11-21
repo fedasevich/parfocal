@@ -84,11 +84,13 @@ import {
   resultSetFacts,
   reviewerA,
   reviewerB,
+  shownQueueRows,
   signature,
   worstObjects,
 } from "./scenario-adjudication.ts";
 import { rt13, rt18 } from "./scenario-review.ts";
 import { studyTemplates } from "./scenario-task.ts";
+import { outlineOverlapOf } from "./task-outline-overlap.ts";
 import { fakeView } from "./view.ts";
 import { toTaskStates } from "./work-handlers.ts";
 import { inScenarioWorkspace } from "./workspace-scene.ts";
@@ -106,6 +108,7 @@ const idOf = (key: PersonKey) => people[key].id;
 
 const tagOf = (seed: QueueSeedRow): QueueRow["tag"] => {
   const [a, b] = seed.answers;
+  if (seed.againstAi) return "outline";
   if (seed.answers.some((item) => item.reason === "Need a second look")) return "second";
   if (a.raw !== b.raw) return "differ";
   return "bothai";
@@ -183,6 +186,13 @@ const outlinesOf = (
   );
   const moved = ring.map((value, index) => (index % 2 === 0 ? value + width * 0.4 : value));
   const [first, second] = seed.answers;
+  if (seed.againstAi) {
+    return {
+      outline_differs: true,
+      outline_overlap: seed.outlineOverlap,
+      outlines: [{ user_id: idOf(first.by), outline: shrunk }],
+    };
+  }
   return {
     outline_differs: true,
     outline_overlap: seed.outlineOverlap,
@@ -197,7 +207,7 @@ export const toDisagreementQueue = (taskId: string): DisagreementQueue => ({
   task_id: taskId,
   total_objects: queueTotalObjects,
   locked: reviewsAreIn() ? null : { user_id: idOf(lockedBy.by), slides_left: lockedBy.slidesLeft },
-  rows: queueRows.map(toQueueRow),
+  rows: shownQueueRows(outlineOverlapOf(taskId)).map(toQueueRow),
 });
 
 const seedOf = (slideId: string, object: string) =>
@@ -327,7 +337,10 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
   if (own !== undefined) return ownSignOffSummary(own);
   const current = task();
   const state = queueState();
-  const live = queueRows.map((seed) => ({ seed, live: liveRow(queueKey(seed)) }));
+  const live = shownQueueRows(outlineOverlapOf(taskId)).map((seed) => ({
+    seed,
+    live: liveRow(queueKey(seed)),
+  }));
   const total = current.slides * current.reviewers.length;
   const inAll = reviewsAreIn();
   const submitted = inAll

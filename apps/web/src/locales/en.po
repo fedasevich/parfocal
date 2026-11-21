@@ -12211,6 +12211,10 @@ msgstr "Outline of reviewer {0}"
 msgid "Outline of reviewer {letter} settled for {0}"
 msgstr "Outline of reviewer {letter} settled for {0}"
 
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Outline overlap"
+msgstr "Outline overlap"
+
 #: ../../packages/ui/src/components/disagreements.tsx
 msgid "outline-2 outline-solid outline-offset-2 outline-accent"
 msgstr "outline-2 outline-solid outline-offset-2 outline-accent"
@@ -12218,6 +12222,11 @@ msgstr "outline-2 outline-solid outline-offset-2 outline-accent"
 #: src/screens/project/settings-tab.tsx
 msgid "Outlines"
 msgstr "Outlines"
+
+#. placeholder {0}: task.code
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Outlines now differ below {overlap}% overlap on {0}."
+msgstr "Outlines now differ below {overlap}% overlap on {0}."
 
 #. placeholder {0}: rowLabel(row)
 #: src/screens/disagreements/queue-screen.tsx
@@ -14480,6 +14489,10 @@ msgstr "Save for this task"
 #: src/screens/developer/developer-screen.tsx
 msgid "Save JSON"
 msgstr "Save JSON"
+
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Save Outline overlap"
+msgstr "Save Outline overlap"
 
 #: src/screens/project/case-slides-editor.tsx
 msgid "Save slides"
@@ -17081,6 +17094,10 @@ msgstr "the other set"
 msgid "The outlines your server sends back show here, on the sample tile"
 msgstr "The outlines your server sends back show here, on the sample tile"
 
+#: src/screens/project/task-settings-drawer.tsx
+msgid "The overlap cannot change after sign-off."
+msgstr "The overlap cannot change after sign-off."
+
 #: src/screens/project/project-no-access.tsx
 msgid "the owner"
 msgstr "the owner"
@@ -17844,6 +17861,10 @@ msgstr "This task has no regions to measure."
 msgid "This task is signed off, so the mapping is locked."
 msgstr "This task is signed off, so the mapping is locked."
 
+#: src/screens/project/task-settings-drawer.tsx
+msgid "This task is signed off, so the overlap is locked."
+msgstr "This task is signed off, so the overlap is locked."
+
 #: src/screens/refusals.ts
 msgid "This task was withdrawn, so nothing can be changed. You can look at it read only."
 msgstr "This task was withdrawn, so nothing can be changed. You can look at it read only."
@@ -18260,6 +18281,10 @@ msgstr "Turn off if keys fire by accident, for example with speech input. Keys w
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Two fingers"
 msgstr "Two fingers"
+
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it."
+msgstr "Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it."
 
 #: src/screens/new-task/modals.tsx
 msgid "Two regions, not one"

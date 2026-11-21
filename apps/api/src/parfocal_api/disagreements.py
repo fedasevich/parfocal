@@ -310,16 +310,33 @@ FINAL_OUTLINE = (
     "AND p.slide_id = e.slide_id AND p.released_at IS NULL AND p.submitted_at IS NULL)"
 )
 
+
+def overlap_of(first: str, second: str) -> str:
+    return (
+        f"CASE WHEN ST_Area(ST_Union({first}, {second})) > 0 "
+        f"THEN ST_Area(ST_Intersection({first}, {second})) "
+        f"/ ST_Area(ST_Union({first}, {second})) "
+        f"WHEN ST_Equals({first}, {second}) THEN 1 ELSE 0 END"
+    )
+
+
 OUTLINE_GAPS = text(
     "WITH final AS (SELECT e.task_id, e.slide_id, e.kind, e.number, e.user_id, e.geometry "
     f"FROM review_edits e WHERE e.task_id = ANY(:task_ids) AND {FINAL_OUTLINE}), "
     "pairs AS (SELECT a.task_id, a.slide_id, a.kind, a.number, "
-    "CASE WHEN ST_Area(ST_Union(a.geometry, b.geometry)) > 0 "
-    "THEN ST_Area(ST_Intersection(a.geometry, b.geometry)) "
-    "/ ST_Area(ST_Union(a.geometry, b.geometry)) "
-    "WHEN ST_Equals(a.geometry, b.geometry) THEN 1 ELSE 0 END AS overlap "
+    f"{overlap_of('a.geometry', 'b.geometry')} AS overlap "
     "FROM final a JOIN final b ON a.task_id = b.task_id AND a.slide_id = b.slide_id "
-    "AND a.kind = b.kind AND a.number = b.number AND a.user_id < b.user_id) "
+    "AND a.kind = b.kind AND a.number = b.number AND a.user_id < b.user_id "
+    "UNION ALL "
+    f"SELECT f.task_id, f.slide_id, f.kind, f.number, {overlap_of('f.geometry', 'ai.outline')} "
+    "FROM final f JOIN review_ai_outlines ai ON ai.task_id = f.task_id "
+    "AND ai.slide_id = f.slide_id AND ai.kind = f.kind AND ai.number = f.number "
+    "WHERE EXISTS (SELECT 1 FROM review_assignments r WHERE r.task_id = f.task_id "
+    "AND r.slide_id = f.slide_id AND r.released_at IS NULL "
+    "AND NOT EXISTS (SELECT 1 FROM review_edits k WHERE k.task_id = r.task_id "
+    "AND k.slide_id = r.slide_id AND k.user_id = r.user_id AND k.kind = f.kind "
+    "AND k.number = f.number AND k.split = '' "
+    "AND (k.deleted OR k.retired IS NOT NULL OR k.geometry IS NOT NULL)))) "
     "SELECT pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, "
     "min(pairs.overlap) AS overlap FROM pairs JOIN review_tasks t ON t.id = pairs.task_id "
     "GROUP BY pairs.task_id, pairs.slide_id, pairs.kind, pairs.number, t.outline_overlap "
