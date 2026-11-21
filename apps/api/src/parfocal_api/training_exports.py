@@ -12,7 +12,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter
 from fastapi.responses import Response
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -104,6 +104,52 @@ class ManifestFile(Strict):
     bytes: int
 
 
+CHECKED_ORIGINS = (DatasetOrigin.HUMAN, DatasetOrigin.AI_CONFIRMED, DatasetOrigin.AI_EDITED)
+UNCLASSED = "none"
+
+
+class DatasetFilters(Strict):
+    origins: list[DatasetOrigin] | None = None
+    class_ids: list[uuid.UUID] | None = None
+    slide_ids: list[uuid.UUID] | None = None
+    include_unchecked: bool | None = None
+
+
+class AppliedFilters(Strict):
+    origins: list[DatasetOrigin]
+    class_ids: list[uuid.UUID] | None
+    slide_ids: list[uuid.UUID] | None
+    include_unchecked: bool
+
+
+def applied_filters(filters: DatasetFilters | None, options: CheckOptions) -> AppliedFilters:
+    chosen = filters or DatasetFilters()
+    include = (
+        options.unchecked_export is UncheckedExport.INCLUDE
+        if chosen.include_unchecked is None
+        else chosen.include_unchecked
+    )
+    origins = [
+        origin for origin in CHECKED_ORIGINS if chosen.origins is None or origin in chosen.origins
+    ]
+    return AppliedFilters(
+        origins=origins,
+        class_ids=None if chosen.class_ids is None else sorted(set(chosen.class_ids), key=str),
+        slide_ids=None if chosen.slide_ids is None else sorted(set(chosen.slide_ids), key=str),
+        include_unchecked=include,
+    )
+
+
+def class_key(class_id: uuid.UUID | None) -> str:
+    return UNCLASSED if class_id is None else str(class_id)
+
+
+def kept(shape: Shape, applied: AppliedFilters) -> bool:
+    if shape.origin is not DatasetOrigin.AI_UNCHECKED and shape.origin not in applied.origins:
+        return False
+    return applied.class_ids is None or shape.class_id in applied.class_ids
+
+
 class ManifestSlide(Strict):
     slide_id: uuid.UUID
     file: ManifestFile
@@ -119,7 +165,9 @@ class ManifestSlide(Strict):
     sign_off: ManifestSignOff
     annotators: list[str]
     objects: dict[DatasetOrigin, int]
+    classes: dict[str, int] = Field(default_factory=dict)
     unchecked_left_out: int
+    filtered_out: int = 0
     marks_left_out: int
 
 
@@ -141,6 +189,9 @@ class Manifest(Strict):
     annotators: list[ManifestAnnotator]
     slides: list[ManifestSlide]
     unchecked_left_out: int
+    filtered_out: int = 0
+    filters: AppliedFilters
+    dataset_version: int | None = None
 
 
 @dataclass(frozen=True)
@@ -471,33 +522,43 @@ def encoded(value: Any) -> bytes:
 
 
 async def dataset(
-    connection: AsyncConnection, task: Any, store: ResultStore
+    connection: AsyncConnection,
+    task: Any,
+    store: ResultStore,
+    filters: DatasetFilters | None = None,
 ) -> tuple[Manifest, dict[str, bytes]]:
     signed = await signed_off_slides(connection, task.id)
     if not signed:
         raise NothingSignedOffError
     options = check_of(task.check_options)
+    applied = applied_filters(filters, options)
+    unchecked = UncheckedExport.INCLUDE if applied.include_unchecked else UncheckedExport.LEAVE_OUT
+    chosen = (
+        signed
+        if applied.slide_ids is None
+        else [slide for slide in signed if slide.slide_id in applied.slide_ids]
+    )
     stored: list[Any] = list(task.class_snapshot or [])
     snapshot = [ProjectClass.model_validate(item) for item in stored]
     classes = {item.id: item for item in snapshot}
     letters = Letters(await reviewers_of(connection, task.id))
     files: dict[str, bytes] = {}
     entries: list[ManifestSlide] = []
-    for slide in signed:
-        found = await slide_objects(connection, store, slide, letters, options.unchecked_export)
+    for slide in chosen:
+        found = await slide_objects(connection, store, slide, letters, unchecked)
+        shapes = [shape for shape in found.shapes if kept(shape, applied)]
         where = await path_parts(connection, slide.slide_id)
         content = encoded(
             {
                 "type": "FeatureCollection",
-                "features": [qupath_feature(shape, where, classes) for shape in found.shapes],
+                "features": [qupath_feature(shape, where, classes) for shape in shapes],
             }
         )
         path = f"slides/{slide.slide_id}.geojson"
         files[path] = content
-        counts = Counter(shape.origin for shape in found.shapes)
-        authors = {shape.author for shape in found.shapes} | {
-            shape.changed_by for shape in found.shapes
-        }
+        counts = Counter(shape.origin for shape in shapes)
+        by_class = Counter(class_key(shape.class_id) for shape in shapes)
+        authors = {shape.author for shape in shapes} | {shape.changed_by for shape in shapes}
         entries.append(
             ManifestSlide(
                 slide_id=slide.slide_id,
@@ -522,7 +583,9 @@ async def dataset(
                     key=lambda letter: (len(letter), letter),
                 ),
                 objects={origin: counts[origin] for origin in DatasetOrigin},
+                classes=dict(sorted(by_class.items())),
                 unchecked_left_out=found.left_out,
+                filtered_out=len(found.shapes) - len(shapes),
                 marks_left_out=found.marks,
             )
         )
@@ -534,16 +597,16 @@ async def dataset(
         coordinates="level-0-pixels",
         kinds=list(EXPORTED_KINDS),
         origins=[
-            origin
-            for origin in DatasetOrigin
-            if origin is not DatasetOrigin.AI_UNCHECKED
-            or options.unchecked_export is UncheckedExport.INCLUDE
+            *applied.origins,
+            *([DatasetOrigin.AI_UNCHECKED] if applied.include_unchecked else []),
         ],
         classes=[ManifestClass.model_validate(item.model_dump()) for item in snapshot],
         check_options=options,
         annotators=letters.listed(),
         slides=entries,
         unchecked_left_out=sum(entry.unchecked_left_out for entry in entries),
+        filtered_out=sum(entry.filtered_out for entry in entries),
+        filters=applied,
     )
     return manifest, files
 

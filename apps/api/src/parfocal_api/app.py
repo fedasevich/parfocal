@@ -29,6 +29,7 @@ from parfocal_api import (
     clinical_notes,
     clinical_report_views,
     clinical_reports,
+    dataset_versions,
     deactivation,
     decision_notes,
     disagreement_queue,
@@ -365,6 +366,7 @@ def create_app(
     app.include_router(task_report_layout.router)
     app.include_router(training_exports.router)
     app.include_router(patch_exports.router)
+    app.include_router(dataset_versions.router)
     app.include_router(ai_changes.router)
     app.include_router(ai_corrections.router)
     app.include_router(task_timing.me_router)

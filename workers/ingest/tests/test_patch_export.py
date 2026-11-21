@@ -1,20 +1,37 @@
 import csv
+import hashlib
 import io
 import itertools
 import json
 import uuid
 import zipfile
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
+import pytest
 import shapely
 import tifffile
 from fixture_support import fixture_path
 from PIL import Image
 from shapely.geometry import shape as shape_of
 
-from parfocal_api.training_exports import ManifestClass, ManifestTask
-from parfocal_ingest.patch_export import INDEX_COLUMNS, PatchManifest, PatchWriter, source_of
+from parfocal_api.check_options import check_of
+from parfocal_api.training_exports import (
+    Manifest,
+    ManifestClass,
+    ManifestTask,
+    applied_filters,
+    zipped,
+)
+from parfocal_common.jobs import StepFailedError
+from parfocal_ingest.patch_export import (
+    INDEX_COLUMNS,
+    PatchManifest,
+    PatchWriter,
+    source_dataset,
+    source_of,
+)
 from parfocal_ingest.pyramid import main_series
 
 SLIDE = "synthetic-big-endian.tiff"
@@ -156,3 +173,62 @@ def test_a_slide_without_the_chosen_level_is_skipped(tmp_path: Any) -> None:
     assert [(item.slide_id, item.reason) for item in manifest.skipped] == [
         (slide_id, "level-missing")
     ]
+
+
+class FrozenStore:
+    def __init__(self, objects: dict[str, bytes]) -> None:
+        self.objects = objects
+
+    async def get_object(self, key: str) -> bytes:
+        return self.objects[key]
+
+
+class FrozenStep:
+    def __init__(self, values: dict[str, Any]) -> None:
+        self.input = values
+
+
+def frozen_version() -> tuple[bytes, dict[str, bytes]]:
+    options = check_of(None)
+    manifest = Manifest(
+        format="parfocal-training-dataset",
+        version=2,
+        created_at=datetime.now(UTC),
+        task=TASK,
+        coordinates="level-0-pixels",
+        kinds=[],
+        origins=[],
+        classes=CLASSES,
+        check_options=options,
+        annotators=[],
+        slides=[],
+        unchecked_left_out=0,
+        filters=applied_filters(None, options),
+        dataset_version=3,
+    )
+    files = {"slides/one.geojson": b'{"type":"FeatureCollection","features":[]}'}
+    return zipped(manifest, files), files
+
+
+async def test_patches_of_a_frozen_version_read_its_stored_files_and_name_it() -> None:
+    content, files = frozen_version()
+    step = FrozenStep(
+        {"dataset_key": "frozen.zip", "dataset_sha256": hashlib.sha256(content).hexdigest()}
+    )
+    store = FrozenStore({"frozen.zip": content})
+    made, read = await source_dataset(step, None, None, store)  # type: ignore[arg-type]
+    assert read == files
+    assert made.dataset_version == 3
+    buffer = io.BytesIO()
+    finished = PatchWriter(buffer, LEVEL, TILE).finish(
+        made.task, made.classes, made.dataset_version
+    )
+    assert finished.dataset_version == 3
+
+
+async def test_a_frozen_version_that_changed_is_refused() -> None:
+    content, _ = frozen_version()
+    step = FrozenStep({"dataset_key": "frozen.zip", "dataset_sha256": "0" * 64})
+    store = FrozenStore({"frozen.zip": content})
+    with pytest.raises(StepFailedError, match="dataset-version-changed"):
+        await source_dataset(step, None, None, store)  # type: ignore[arg-type]

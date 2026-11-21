@@ -14,6 +14,7 @@
     "clinical_deposits",
     "clinical_report_versions",
     "clinical_reports",
+    "dataset_versions",
     "disagreement_decisions",
     "display_choices",
     "display_presets",

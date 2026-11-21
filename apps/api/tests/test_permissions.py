@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import gzip
+import hashlib
 import io
 import json
 import threading
@@ -18,12 +19,14 @@ import httpx2
 import numpy as np
 import pytest
 from case_support import TEST_KEYRING, seed_case, seed_project
+from dataset_support import SEEDED_FILTERS, seeded_counts
 from db_support import OWNER_URL, ApiAs, query, with_database
 from link_support import Served, Site
 from sqlalchemy import func, insert, update
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
+from parfocal_api.dataset_versions import dataset_version_key
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys, seal_field
 from parfocal_api.openapi import openapi_schema
 from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
@@ -53,6 +56,7 @@ from parfocal_api.tables import (
     clinical_deposits,
     clinical_report_versions,
     clinical_reports,
+    dataset_versions,
     display_presets,
     event_outbox,
     event_targets,
@@ -1265,6 +1269,16 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "downloadPatchExport": lambda w: Call(
         "GET", f"/api/review-tasks/{w.signed_annotate_task}/patch-exports/{w.patch_job}"
+    ),
+    "getTaskDataset": lambda w: Call("GET", f"/api/review-tasks/{w.signed_annotate_task}/dataset"),
+    "listDatasetVersions": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.signed_annotate_task}/dataset-versions"
+    ),
+    "freezeDatasetVersion": lambda w: Call(
+        "POST", f"/api/review-tasks/{w.signed_annotate_task}/dataset-versions", {}
+    ),
+    "downloadDatasetVersion": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.signed_annotate_task}/dataset-versions/1"
     ),
     "createReportLink": lambda w: Call("POST", f"/api/review-tasks/{w.task}/evaluation/links"),
     "listReportLinks": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation/links"),
@@ -2861,7 +2875,38 @@ async def seed_patch_job(
     await store.put_object(
         patch_export_key(tenant_id, patch_job), patches.getvalue(), "application/zip"
     )
+    await seed_dataset_version(connection, store, tenant_id, project_id, task_id)
     return patch_job
+
+
+async def seed_dataset_version(
+    connection: AsyncConnection,
+    store: ObjectStore,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    task_id: uuid.UUID,
+) -> None:
+    version_id = uuid.uuid4()
+    frozen = io.BytesIO()
+    with zipfile.ZipFile(frozen, "w") as archive:
+        archive.writestr("manifest.json", "{}")
+    content = frozen.getvalue()
+    key = dataset_version_key(tenant_id, task_id, version_id)
+    await store.put_object(key, content, "application/zip")
+    await connection.execute(
+        insert(dataset_versions).values(
+            id=version_id,
+            tenant_id=tenant_id,
+            project_id=project_id,
+            task_id=task_id,
+            number=1,
+            filters=SEEDED_FILTERS,
+            counts=seeded_counts(),
+            object_key=key,
+            sha256=hashlib.sha256(content).hexdigest(),
+            bytes=len(content),
+        )
+    )
 
 
 async def seed_runs(

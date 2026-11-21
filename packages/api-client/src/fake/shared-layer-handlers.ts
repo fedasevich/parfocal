@@ -331,6 +331,11 @@ export const fakeRunSetIds = (taskId: string, slideId: string): string[] =>
 export const taskHasSignedOffSlide = (taskId: string): boolean =>
   Object.keys(readStore().signOffs).some((key) => key.startsWith(`${taskId}/`));
 
+export const signedOffSlidesOf = (taskId: string): string[] =>
+  Object.keys(readStore().signOffs)
+    .filter((key) => key.startsWith(`${taskId}/`))
+    .map((key) => key.slice(taskId.length + 1));
+
 const isSignedOff = (params: Params) =>
   readStore().signOffs[keyOf(params.taskId, params.slideId)] !== undefined;
 

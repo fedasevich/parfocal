@@ -21,7 +21,15 @@ type Phase =
 
 const pollEveryMs = 1500;
 
-export function PatchExportDialog({ taskId, onClose }: { taskId: string; onClose: () => void }) {
+export function PatchExportDialog({
+  taskId,
+  datasetVersion = null,
+  onClose,
+}: {
+  taskId: string;
+  datasetVersion?: number | null;
+  onClose: () => void;
+}) {
   const { t } = useLingui();
   const [level, setLevel] = useState("0");
   const [tile, setTile] = useState(String(defaultTile));
@@ -52,7 +60,7 @@ export function PatchExportDialog({ taskId, onClose }: { taskId: string; onClose
 
   const start = async () => {
     setPhase({ state: "starting" });
-    const started = await startPatches(taskId, levelNumber, tileNumber);
+    const started = await startPatches(taskId, levelNumber, tileNumber, datasetVersion);
     if (started.state === "started") setPhase({ state: "cutting", jobId: started.jobId });
     else setPhase({ state: "stopped", message: refusalText(started.code) });
   };
@@ -66,8 +74,14 @@ export function PatchExportDialog({ taskId, onClose }: { taskId: string; onClose
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={t`Patches with masks`}
-      subtitle={t`Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done.`}
+      title={
+        datasetVersion === null ? t`Patches with masks` : t`Patches of version ${datasetVersion}`
+      }
+      subtitle={
+        datasetVersion === null
+          ? t`Cuts image tiles and class masks from the signed off slides. It runs as a job and downloads when it is done.`
+          : t`Cuts image tiles and class masks from the stored GeoJSON of this frozen version. It runs as a job and downloads when it is done.`
+      }
       hint={
         phase.state === "stopped" ? (
           <span role="alert" data-testid="patch-export-refusal" className="text-bad">

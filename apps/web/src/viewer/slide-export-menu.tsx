@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
+import { useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 import { downloadSlideExport, slideExportChoices } from "../annotations/slide-export.ts";
 import {
@@ -27,6 +28,7 @@ export function SlideExportMenu({ slideId, taskId }: { slideId: string; taskId: 
   const choices = slideExportChoices();
   const taskChoices = taskExportChoices();
   const [patchesOpen, setPatchesOpen] = useState(false);
+  const navigate = useNavigate();
   const save = async (choice: (typeof choices)[number]) => {
     const name = await downloadSlideExport(slideId, choice.format, taskId);
     showUndoToast({
@@ -82,6 +84,22 @@ export function SlideExportMenu({ slideId, taskId }: { slideId: string; taskId: 
               </span>
             </DropdownMenuItem>
           ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            data-testid="export-dataset-page"
+            className="items-start gap-2.5"
+            onClick={() => void navigate({ to: "/tasks/$taskId/dataset", params: { taskId } })}
+          >
+            <Icon name="database" className="mt-0.5" />
+            <span className="grid">
+              <span>
+                <Trans>Dataset page</Trans>
+              </span>
+              <small className="text-caption text-fg-dim">
+                <Trans>Filter by origin, class and slide, and freeze numbered versions</Trans>
+              </small>
+            </span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {patchesOpen ? (

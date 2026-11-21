@@ -46,6 +46,7 @@ import { Route as TasksTaskIdIndexRouteImport } from "./routes/tasks.$taskId.ind
 import { Route as TasksTaskIdAdjudicateRouteImport } from "./routes/tasks.$taskId.adjudicate.tsx";
 import { Route as TasksTaskIdCellsRouteImport } from "./routes/tasks.$taskId.cells.tsx";
 import { Route as TasksTaskIdCommentsRouteImport } from "./routes/tasks.$taskId.comments.tsx";
+import { Route as TasksTaskIdDatasetRouteImport } from "./routes/tasks.$taskId.dataset.tsx";
 import { Route as TasksTaskIdDisagreementsRouteImport } from "./routes/tasks.$taskId.disagreements.tsx";
 import { Route as TasksTaskIdEvaluationRouteImport } from "./routes/tasks.$taskId.evaluation.tsx";
 import { Route as TasksTaskIdGuidedRouteImport } from "./routes/tasks.$taskId.guided.tsx";
@@ -251,6 +252,11 @@ const TasksTaskIdCommentsRoute = TasksTaskIdCommentsRouteImport.update({
   path: "/tasks/$taskId/comments",
   getParentRoute: () => rootRouteImport,
 } as any);
+const TasksTaskIdDatasetRoute = TasksTaskIdDatasetRouteImport.update({
+  id: "/tasks/$taskId/dataset",
+  path: "/tasks/$taskId/dataset",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const TasksTaskIdDisagreementsRoute =
   TasksTaskIdDisagreementsRouteImport.update({
     id: "/tasks/$taskId/disagreements",
@@ -385,6 +391,7 @@ export interface FileRoutesByFullPath {
   "/tasks/$taskId/adjudicate": typeof TasksTaskIdAdjudicateRoute;
   "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
   "/tasks/$taskId/comments": typeof TasksTaskIdCommentsRoute;
+  "/tasks/$taskId/dataset": typeof TasksTaskIdDatasetRoute;
   "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
   "/tasks/$taskId/evaluation": typeof TasksTaskIdEvaluationRoute;
   "/tasks/$taskId/guided": typeof TasksTaskIdGuidedRoute;
@@ -441,6 +448,7 @@ export interface FileRoutesByTo {
   "/tasks/$taskId/adjudicate": typeof TasksTaskIdAdjudicateRoute;
   "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
   "/tasks/$taskId/comments": typeof TasksTaskIdCommentsRoute;
+  "/tasks/$taskId/dataset": typeof TasksTaskIdDatasetRoute;
   "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
   "/tasks/$taskId/evaluation": typeof TasksTaskIdEvaluationRoute;
   "/tasks/$taskId/guided": typeof TasksTaskIdGuidedRoute;
@@ -498,6 +506,7 @@ export interface FileRoutesById {
   "/tasks/$taskId/adjudicate": typeof TasksTaskIdAdjudicateRoute;
   "/tasks/$taskId/cells": typeof TasksTaskIdCellsRoute;
   "/tasks/$taskId/comments": typeof TasksTaskIdCommentsRoute;
+  "/tasks/$taskId/dataset": typeof TasksTaskIdDatasetRoute;
   "/tasks/$taskId/disagreements": typeof TasksTaskIdDisagreementsRoute;
   "/tasks/$taskId/evaluation": typeof TasksTaskIdEvaluationRoute;
   "/tasks/$taskId/guided": typeof TasksTaskIdGuidedRoute;
@@ -556,6 +565,7 @@ export interface FileRouteTypes {
     | "/tasks/$taskId/adjudicate"
     | "/tasks/$taskId/cells"
     | "/tasks/$taskId/comments"
+    | "/tasks/$taskId/dataset"
     | "/tasks/$taskId/disagreements"
     | "/tasks/$taskId/evaluation"
     | "/tasks/$taskId/guided"
@@ -612,6 +622,7 @@ export interface FileRouteTypes {
     | "/tasks/$taskId/adjudicate"
     | "/tasks/$taskId/cells"
     | "/tasks/$taskId/comments"
+    | "/tasks/$taskId/dataset"
     | "/tasks/$taskId/disagreements"
     | "/tasks/$taskId/evaluation"
     | "/tasks/$taskId/guided"
@@ -668,6 +679,7 @@ export interface FileRouteTypes {
     | "/tasks/$taskId/adjudicate"
     | "/tasks/$taskId/cells"
     | "/tasks/$taskId/comments"
+    | "/tasks/$taskId/dataset"
     | "/tasks/$taskId/disagreements"
     | "/tasks/$taskId/evaluation"
     | "/tasks/$taskId/guided"
@@ -725,6 +737,7 @@ export interface RootRouteChildren {
   TasksTaskIdAdjudicateRoute: typeof TasksTaskIdAdjudicateRoute;
   TasksTaskIdCellsRoute: typeof TasksTaskIdCellsRoute;
   TasksTaskIdCommentsRoute: typeof TasksTaskIdCommentsRoute;
+  TasksTaskIdDatasetRoute: typeof TasksTaskIdDatasetRoute;
   TasksTaskIdDisagreementsRoute: typeof TasksTaskIdDisagreementsRoute;
   TasksTaskIdEvaluationRoute: typeof TasksTaskIdEvaluationRoute;
   TasksTaskIdGuidedRoute: typeof TasksTaskIdGuidedRoute;
@@ -1008,6 +1021,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof TasksTaskIdCommentsRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/tasks/$taskId/dataset": {
+      id: "/tasks/$taskId/dataset";
+      path: "/tasks/$taskId/dataset";
+      fullPath: "/tasks/$taskId/dataset";
+      preLoaderRoute: typeof TasksTaskIdDatasetRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/tasks/$taskId/disagreements": {
       id: "/tasks/$taskId/disagreements";
       path: "/tasks/$taskId/disagreements";
@@ -1165,6 +1185,7 @@ const rootRouteChildren: RootRouteChildren = {
   TasksTaskIdAdjudicateRoute: TasksTaskIdAdjudicateRoute,
   TasksTaskIdCellsRoute: TasksTaskIdCellsRoute,
   TasksTaskIdCommentsRoute: TasksTaskIdCommentsRoute,
+  TasksTaskIdDatasetRoute: TasksTaskIdDatasetRoute,
   TasksTaskIdDisagreementsRoute: TasksTaskIdDisagreementsRoute,
   TasksTaskIdEvaluationRoute: TasksTaskIdEvaluationRoute,
   TasksTaskIdGuidedRoute: TasksTaskIdGuidedRoute,
