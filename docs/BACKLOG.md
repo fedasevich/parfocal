@@ -859,7 +859,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   IAM-027 (real sign-up and sign-in from the app's own screens) dropped Forgot password from the app's sign-in page, so a person who forgets the password has no way back without the hosted Zitadel page. The app asks Zitadel for a reset code (`POST /v2/users/{id}/password_reset` with a returned or emailed code, sent through the Resend SMTP provider), takes the code and a new password on its own screen and signs in. Settings also lists saved passkeys with their device names and removes one, and an email can send a passkey setup link for another device.
   Done when API tests against a faked Zitadel cover the reset request, a wrong code and a new password, an E2E resets a password and removes a passkey, and one reset email sent from app.parfocal.eu to an agent test mailbox shows as delivered in Resend.
   Depends on IAM-032. Size: M.
-- [ ] IAM-034 · The reset email link opens the app's reset screen
+- [x] IAM-034 · The reset email link opens the app's reset screen
   The password reset email from app.parfocal.eu has a Reset password button that opens Zitadel's hosted page (`/ui/v2/login/password/set`) instead of the app's own reset screen, where the six-character code from the same email works. Ask Zitadel for a link with a URL template that points to the app and opens the reset scene with the code filled in (the person's address is not in the template, so the link also needs a way to find the address, such as the user ID the template can carry).
   Done when API tests against a faked Zitadel check the URL template, a web test opens the link and lands on the reset screen with the code filled in, and a reset email from app.parfocal.eu shows a link to the app origin.
   Depends on IAM-033. Size: S.
@@ -1825,7 +1825,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the ID labels and translucent outline goldens pass on the route at Viv's tolerance, compute culling and the detail tiers draw 1.6M nuclei within the VIEW-029 budget on the Mac's GPU, and a test loses the device and the route recovers.
   Depends on VIEW-038.
   Size: L.
-- [ ] VIEW-074 · Every viewer screen draws the real slide through one engine stage
+- [x] VIEW-074 · Every viewer screen draws the real slide through one engine stage
   The owner opened a review task's full viewer on app.parfocal.eu on 2026-11-17 and found a blurred broken image in place of Huron-1-40x.tif, half the buttons doing nothing, the slide not panning under the tools, and an oversized "Hide while panning" checkbox. The full viewer (`screens/viewer/full-viewer.tsx`), guided review, annotate and compare screens came over from the prototype (ADR 0129, the prototype moves into React) and draw `SlideStill`, a fixed photo from `/mock-assets/` with outlines on top, and use the real Viv engine only as an optional backdrop. `/mock-assets/overview.jpg` is not deployed, so production shows a broken image whenever the backdrop fails. The real engine stage (`viewer/slide-stage.tsx`, route `/slides/$slideId/live`) is a separate viewer. 29 source files still read `lookUrl`, `coverTile` or `/mock-assets/`.
   Make every screen that shows a slide (full viewer in and out of a task, guided review, annotate, annotate task, compare) draw it through the one engine stage with the mock's frame around it, so pan, zoom, tools, overlays and the minimap act on the real slide. A slide that cannot open shows the stage's "format cannot be opened" notice, never a stand-in picture. Remove the prototype stills and mock assets from every production path, keep them only for Storybook and the fake API if needed, and make every visible control either work or not be shown. Fix the oversized checkbox.
   Done when a guard test fails on any `lookUrl`, `coverTile` or `/mock-assets/` use outside Storybook and the fake API, browser tests pan, zoom, use the select, ruler and comment tools and decide an object on the real stage in the full viewer, guided review and annotate task, the viewer golden images pass, and a walk on the deployed app opens a review task's slide with real tiles.
@@ -3843,7 +3843,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a result file records precision at 10 and 50 per cell type against PanNuke's labels, compared with a random ranking.
   Depends on AISEG-014, MLEVAL-010.
   Size: M.
-- [ ] AISEG-024 · Best one-click outlines run PathoSAM ViT-L on the server
+- [x] AISEG-024 · Best one-click outlines run PathoSAM ViT-L on the server
   Decision 156 (what the Best model does for one-click outlines) chose option B. Today Best and Good both run PathoSAM ViT-B, so they give the same outline. ADR 0202 (the v1 model line-up per tier) puts the ViT-L embedding on the server for Best, with the decoder in the browser.
   Export the PathoSAM ViT-L encoder for a Modal GPU function in the `eu` region, return the image embedding for the clicked view, and let the browser's existing decoder use it when Best is picked. Check the file size and peak memory first and keep a local run under about 8 GB. Log the cost of the GPU calls.
   Done when a test on the deployed app clicks one nucleus with Best and with Good on a seeded slide, gets a ViT-L outline from the server for Best, and a result file compares both outlines against a labelled nucleus set the repository already scores.
@@ -4647,7 +4647,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Seeded showcase slides keep their original and `levels.json` in a shared sample folder (`samples/camelyon16/<label>/`), but the view map runner and the tumor map job open slides only from `t/{tenant}/s/{slide}/`, so both fail on them with `tumor-map-slide-missing`. Carry the folder beside the slide's `original_key` in the view map call and in the tumor map job input, the way OPS-026 (export and publish the HoVer-NeXt typer) did for the typer, and open the slide from it.
   Done when ML tests map a view tile and run a tumor map on a slide stored in a sample folder, API tests show the folder sent in the view map call and the tumor map job input, and a view map and a tumor map run on a seeded slide on app.parfocal.eu after a deploy.
   Depends on OPS-026. Size: S.
-- [ ] OPS-035 · Agents get a signed-in session on the dev app
+- [x] OPS-035 · Agents get a signed-in session on the dev app
   The owner asked on 2026-11-18, answering decision 147 (how an agent checks the viewer typing tool), for a way for local agents to use a seeded account on `app.parfocal.eu` without typing a password into a browser ([ADR 0397](adr/0397-agents-sign-in-to-the-dev-app-as-a-seeded-test-account-by-script.md), agents sign in to the dev app as a seeded test account by script). `scripts/agent_session.py` posts a test account's password from `~/.config/parfocal/agent-account.env` (mode 600) to `/api/auth/sign-in`, refuses hosts not declared development in `infra/app-environments.json`, accounts not listed there and accounts holding any workspace outside the seeded ČVUT ones, and saves a Playwright storage state. The seed seats `SEED_AGENT_EMAILS` as admin researchers and project owners in the seeded workspaces.
   Done when script tests cover each refusal against a local HTTP server, a seed test covers the agent seat, and after the owner's step in decision 153 (the one-time owner step for the agent test account) one run against `app.parfocal.eu` saves a session that opens a seeded slide in Playwright.
   Depends on OPS-016. Size: S.
@@ -4665,12 +4665,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Measure where the cold start goes (container start, imports, database pool, first query), then cut it at no monthly cost, for example with Modal memory snapshots, lazy imports of heavy modules such as image and ML libraries in the web function, and a lighter web image. Keep min_containers at 0 and record the measured cost of any longer scale-down window before changing it.
   Done when a result file reports the cold start before and after, measured from outside against the deployed app at least three times each, and the first call after idle answers in under 3 s.
   Size: M.
-- [ ] OPS-029 · A queued job starts a worker in the deployed app
+- [x] OPS-029 · A queued job starts a worker in the deployed app
   The click-through of app.parfocal.eu on 2026-11-17 created a review task and its guided review stayed on "Loading the review", because `/objects` answered 409 review-order-not-ready for ever. The Modal `ingest` function runs every queued job kind (ingest, result import, link fetch, remote inspect and copy, review order, patch export), but nothing in the deployment spawns it and it has no schedule, so queued jobs wait until someone runs it by hand.
   After the API enqueues a job, spawn the `ingest` function, at most once per few seconds per container like the events spawner, and add a schedule as a backstop that drains anything left. Keep min_containers at 0. The guided review shows "Preparing this slide" with progress while the order is not ready, and an error with a retry when it failed, instead of an endless loader.
   Done when a unit test proves enqueueing spawns the function once within the gap, a deploy test lists the schedule, and on the deployed app a new review task opens its first slide's objects within a minute of being sent, recorded in the log.
   Size: M.
-- [ ] OPS-030 · A warm API call answers in under 300 ms
+- [x] OPS-030 · A warm API call answers in under 300 ms
   After v0.5.0 was deployed on 2026-11-17, warm calls to app.parfocal.eu measured from Europe took 0.95 s for `/api/status`, 2.4 s for `/api/me`, 3.8 s for `/api/projects` and 7.5 s for `/api/me/home`, one at a time, so neither the cold start (OPS-028) nor the session lock (IAM-031) explains them. Likely causes are many database round trips per request between Modal and Neon in different regions, IAM-031's extra short transactions, and N+1 queries in the home and project lists. Decision 140 (region) is still open.
   Add a Server-Timing header with database time, query count and handler time to every API answer, measure the slow routes on the deployed app, find where Modal runs and where Neon runs, and cut the time at no added monthly cost: fewer round trips per request (one transaction for the session check where safe, batched or joined queries, no N+1), pool settings, and moving Modal next to Neon if region selection costs nothing extra on the current plan. Record the before and after numbers in a result file.
   Done when a result file reports Server-Timing for the ten slowest routes before and after, measured on the deployed app, and warm `/api/me`, `/api/projects` and `/api/me/home` each answer in under 300 ms at the median of ten calls.
@@ -4802,7 +4802,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Dropped by [ADR 0011](adr/0011-hosted-ci-only.md). No self-hosted runners are used.
   Size: S.
 
-- [ ] TEST-020 · Showcase seed over every feature and the real fixture slides
+- [x] TEST-020 · Showcase seed over every feature and the real fixture slides
   One command that fills a workspace with everything there is to try, so the owner and agents can check the whole app on real slides. Its slide rows point at the 28 public fixture slides already in R2 under `parfocal-dev/fixtures/` (small, formats, viewer, big, huge and CAMELYON16), the way ONB-007 (sample slide files) points at shared originals, so nothing is uploaded or copied twice. The deployed app reads them in place, because it keeps its slides in `parfocal-dev` until staging returns ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). The seed holds every role with a fake person, projects in each privacy mode with their class lists and templates, every slide format, result sets in each import format, review tasks in every style and state, decisions of each kind with reasons, annotate tasks with each origin mark and checked slides, disagreements, adjudication and sign-off, threads, notifications, model runs and jobs in each state, compare pairs, evaluation reports and exports, settings and shortcut presets, and the empty and error states a user can reach. It uses only fake identities, never PHI. It runs locally and on production, is safe to run twice, and never touches `fixtures/`. A manual GitHub workflow `Reset production`, gated by the `production` environment's approval, brings production back to this checkpoint in one click: it empties the application database and the tenant prefix `t/` in the slide bucket, runs the migrations and the seed, and logs the reset, as ADR 0293 allows while production holds only the owner's test data. The seed makes the owner's own login, read from the secret `SEED_OWNER_EMAIL` and never committed, an admin of the seeded workspace with every role it can try, so the owner signs in and finds everything set up. Every later feature task adds its own variants to the seed, which the coverage test enforces.
   Done when an API test seeds a fresh database twice with the same counts, a coverage test fails when any task state, decision kind, role, privacy mode, slide format, result format or job state has no seeded row, an E2E test on production opens one seeded slide of each format, a test proves the reset leaves `fixtures/` untouched, and one run of `Reset production` ends with the owner signed in to the seeded workspace.
   Depends on ONB-007, TEST-012.
@@ -4935,12 +4935,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The full viewer spec where G then n visits each area fails axe's target-size rule on the "Hide while panning" checkbox. It fails on the train branch with and without load, so it is a real defect and not a flake. Give the checkbox a hit area of at least 24 by 24 CSS pixels, or the spacing the rule accepts, without changing the panel's layout in Storybook.
   Done when `apps/web/e2e/full-viewer.spec.ts` passes three times in a row and a component test or story checks the checkbox's hit area.
   Size: S.
-- [ ] TEST-046 · The dev app holds a ready demo workflow the owner can click through
+- [x] TEST-046 · The dev app holds a ready demo workflow the owner can click through
   The click-through of app.parfocal.eu on 2026-11-17 found the owner's workspace with one project whose AI result covers 1 of 13 slides, so a new review task had one slide, and the default cells template on that regions result gave the guided review nothing to decide. The owner wants to click the whole workflow later without setting anything up.
   Extend the showcase seed so the owner's workspace holds a demo project where every fixture slide that opens has a regions result and a cells result, one review task assigned to the owner ready in guided review with objects to decide, one annotate task, one task half done and one submitted with a report, and the hint bubbles match what is on screen. Run the Reset production workflow against the dev app (ADR 0390, the deployed app is dev), then walk the whole flow in the deployed app: open My work, decide objects, submit, see the report, and log the walk.
   Done when the seed tests cover the new states, and the log records a walk on app.parfocal.eu from My work through a submitted review to its report with no error screen and no endless loader.
   Depends on OPS-029, TEST-020. Size: M.
-- [ ] TEST-047 · The demo seed carries real model results made on the owner's Mac
+- [x] TEST-047 · The demo seed carries real model results made on the owner's Mac
   On 2026-11-17 the owner asked that the seeded demo hold real AI results instead of drawn shapes, made by running the project's models locally on small crops of the fixture slides, so the deployed app looks the way it will with real data.
   Run the cell and region models the ML worker already wraps (for example the InstanSeg cells model and the tumour region model) on CPU or the Mac's GPU over small crops of a few fixture slides that open in the deployed viewer, store the outputs as result files in the project's import formats, and make the showcase seed import them instead of `showcase_shapes.py` where real results exist. Keep the run small enough for a 24 GB Mac and record the timings.
   Done when a result file reports which models ran on which crops with the times, the seed tests pass with the real result files, and after the next reset the demo project shows the real cells and regions in the deployed viewer.
@@ -4969,7 +4969,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The browser timing budgets from ADR 0353 (main path budgets are a p95 after a warm up) ran inside the sharded web browser job beside a second Playwright worker, so on 2026-11-19 decision-next-object measured 130 and 163 ms against its 126 ms limit on a shard that ran 32% slower, while local and container benches showed no regression (42 to 48 ms). Tag the budget tests `@budget`, leave them out of the sharded run in CI, and run them alone with one worker after shard 1 of the web job.
   Done when the decision-next-object and auto-region budget tests carry the `@budget` tag, the sharded CI run skips them, a single worker step runs only them in CI, and `playwright test --grep @budget --workers=1` passes locally.
   Depends on TEST-050. Size: S.
-- [ ] TEST-053 · The seed gives audits a task, a case, a finished job and a broken slide
+- [x] TEST-053 · The seed gives audits a task, a case, a finished job and a broken slide
   Row 37 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed gives the agent account no task, has no case so the case page, clinical report and co-sign cannot be reached, no finished job so Jobs is empty, and no broken slide to raise the open failure alert.
   Done when a seed test finds for the agent account one review task, one annotate task, one case with a report, one finished job and one slide that fails to open, and the next reset shows them.
   Depends on TEST-051. Size: S.
@@ -6600,7 +6600,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Build the four as the mock's scenes 19 to 29 show them, with Q and E in the shortcut registry so they can be rebound.
   Done when a browser test steps with Q and E, opens the progress popover, opens the report from a clinical project and moves the camera with Go to on a thread.
   Depends on PROTO-023. Size: S.
-- [ ] PROTO-025 · Home, My work, the task wizards, upload, jobs and sign-in show real data and real images
+- [x] PROTO-025 · Home, My work, the task wizards, upload, jobs and sign-in show real data and real images
   On 2026-11-17 the owner asked that the deployed app never show prototype stand-ins. These screens still draw pictures from `/mock-assets/` through `lookUrl` or `coverTile`, which production does not serve, or read the fake API: `screens/home/home-screen.tsx`, `screens/my-work/parts.tsx`, `screens/my-work/to-review-tab.tsx`, `screens/new-task/parts.tsx`, `screens/upload/parts.tsx`, `screens/upload/upload-page.tsx`, `screens/onboarding/auth-side.tsx`, `screens/jobs/job-window-screen.tsx`, `screens/jobs/run-model-window.tsx`, `screens/admin/connect-model.tsx` and `popout/popout-screen.tsx`. They are listed in `apps/web/test/no-prototype-in-production.test.ts` (no production screen gains prototype pictures, fake data or mock dates).
   Replace each picture with the real slide thumbnail from `GET /api/slides/{id}/thumbnail` through `SlideThumb`, a real overview from the engine, or no picture where none is real, and replace each fake data read with the real API or an honest empty state. Remove each fixed file from the guard's list.
   Done when none of these files is in the guard's list, their unit and browser tests pass, and the deployed Home, My work, wizard and upload screens show only real slide images.
@@ -6818,7 +6818,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Rows 7, 8, 10 and 42 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): the seed project with the cell results has no classes so digits do nothing and cells read No type with no reason given, a digit does not re-class a selected outline, an AI cell cannot be picked or show its ID, type and score, and K and X carry two names in cell review.
   Done when the seed gives every project with cells its classes, an empty class list shows how to add classes, digits re-class the selection and persist, a click picks an AI cell and shows its ID, type and score, K and X have one name, with specs for each.
   Depends on TEST-051. Size: M.
-- [ ] PROTO-070 · Compare slides opens on the deployed app
+- [x] PROTO-070 · Compare slides opens on the deployed app
   Row 9 of the deployed viewer audit of 2026-11-19 (`docs/results/2026-11-19-deployed-viewer-audit.md`): Compare slides goes to scene=picking, drops the workspace and stays on Loading the slide.
   Done when a spec opens compare from the tool rail on the fake API and the real API e2e, picks a second slide and both draw.
   Depends on VIEW-075. Size: S.
@@ -6936,7 +6936,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Migration steps 11, 12 and 13. Rebuild Compare as a layout of the engine stage with the rail and tabs of the current mode, remove the picking and picked scenes, make Focus a layout that works in every mode and delete the prototype FocusView branch, and take objects, travel, region, auto and models out of the live scene lists so prototype screens open only from the gallery.
   Done when specs use Compare and Focus in each mode with working rail tools and tabs, and the scene gate test allows no live scene on a slide route.
   Depends on PROTO-097. Size: M.
-- [ ] PROTO-099 · The viewer has one progress control, one Submit, one notice list and engine drawn adjudication
+- [x] PROTO-099 · The viewer has one progress control, one Submit, one notice list and engine drawn adjudication
   Migration steps 14, 15, 16 and the last line. Keep one progress control and one Submit in the top bar and make the Opinion tab card the form only, draw the disagreement queue and adjudication cards with the engine stage in an object layout and give the adjudicator a link to open the slide in review, turn tool keys off wherever the rail is hidden, make the back link return to the page the person came from, and move the slide kind notices (no pixel size, remote source offline, result importing or failed, no result) into one ordered list shown in every mode and layout.
   Done when specs cover each item on the fake API and the viewer golden images pass.
   Depends on PROTO-098. Size: M.
@@ -6969,7 +6969,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner found on 2026-11-20 that a text annotation such as "Check this border with a second expert" is unreadable: pale letters with a pale glow over pink tissue and white fat. `apps/web/src/annotations/text-layer.tsx` draws the label in the theme text colour `text-fg` with a white `text-shadow`, so in a dark theme it is near white on white, and in any theme a thin glow is too weak over busy tissue. Draw the label with a contrast that holds on any slide colour, such as dark text on a solid or semi opaque light plate with a border, or the label colour from its class with a dark outline, independent of the app theme, and keep it the same in exports and screenshots. Check the engine and Viv stages and the compare pane.
   Done when a spec draws a text annotation over a white, a pink and a dark purple area in the light and the dark theme and measures a text to background contrast of at least 4.5 to 1 in each, and a golden image is updated.
   Depends on nothing. Size: S.
-- [ ] PROTO-108 · Developer mode opens as a drawer over the viewer from the palette and its page works on the deployed app
+- [x] PROTO-108 · Developer mode opens as a drawer over the viewer from the palette and its page works on the deployed app
   The owner found on 2026-11-20 on app.parfocal.eu that developer mode on a slide shows only the small performance overlay (fps, frame, tiles, decode, annotations), never the developer drawer of LAB-001 (developer drawer with the controls of ADR 0189, developer drawer control list), and that `/developer` shows empty sections whose buttons do nothing. Add a "Developer mode" command to the Cmd+K palette for people with the developer permission. It opens the drawer over the right panel tabs of the viewer and stays open until closed, with Ctrl+Shift+D and `?lab` doing the same. Every control drives the open viewer, and `/developer` shows real data from the deployed app instead of the fake scene, or links to the drawer where it has none.
   Done when a spec opens the drawer from the palette on a task slide, changes the renderer and a culling control and sees the viewer change, closes it, a spec checks `/developer` shows content and its buttons act, and the lead checks both on app.parfocal.eu after deploy.
   Depends on nothing. Size: M.
@@ -6981,7 +6981,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   The owner asked on 2026-11-20 to set the default "Lock after" to the current maximum. `DEFAULT_IDLE_LOCK_MINUTES` in the API and `defaultIdleLockMinutes` in the web app move from 15 to 240, the top of the allowed range of 1 to 240. A workspace whose admin saved a policy keeps its own value.
   Done when the session and admin control DB tests expect 240 for a workspace with no saved policy.
   Depends on nothing. Size: S.
-- [ ] PROTO-109 · An annotate task offers its training dataset and its patches in the app
+- [x] PROTO-109 · An annotate task offers its training dataset and its patches in the app
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 1. The routes of EVAL-014 (training dataset export) and EVAL-015 (patch and mask export) have no caller, so the end product of the path cannot be reached from the screen.
   Done when the Export menu of an annotate task lists "Training dataset (QuPath GeoJSON zip)" and "Patches with masks", each with one line on what it holds, the patch export asks for the level and tile size and shows its job, `nothing-signed-off` is explained in words, and a spec downloads both on the fake API and one on the real API.
   Depends on PROTO-088 (an annotate task offers its exports in the app). Size: S.
@@ -6989,7 +6989,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 2. After a batch upload the next step of the path is not shown.
   Done when the done step has "Annotate these slides" beside "Run a model", it opens the annotate task stepper with the batch chosen, and a spec covers it.
   Depends on PROTO-064 (an annotate task can be created from its stepper). Size: S.
-- [ ] PROTO-111 · A reviewer fixes an AI object from the live review card
+- [x] PROTO-111 · A reviewer fixes an AI object from the live review card
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 3. `stage-guided-card.tsx` never opens the reasons and its fix buttons do nothing, so the redraw and retype of RSET-007 (the reviewed layer) are unreachable in the viewer people use.
   Done when Disagree opens the reasons in the live viewer, "Redraw the outline" and "Change the type" save through `saveReviewEdit`, the redrawn outline is drawn over the dimmed AI one, Undo clears the edit, a read only reviewer sees no fix buttons, and specs cover a region and a cell on the fake API and one on the real API.
   Depends on PROTO-099 (one progress control, one Submit and engine drawn adjudication). Size: M.
@@ -7049,19 +7049,19 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On the Philips-3.tiff slide the range requests for `original.tiff` took a p50 of 136 to 797 ms and a p95 of 347 to 1419 ms on 2026-11-20, and the owner's overlay showed a decode p95 of 870.4 ms, which the pool measures from dispatch to settle including the byte relay through the main thread. Find whether the time goes to the tile store, the edge, the range cache or the main thread queue, and check the tile size and the number of decode workers.
   Done when a result file splits the decode time into its parts on the deployed app and the largest part is cut or has its own task.
   Depends on PROTO-128. Size: M.
-- [ ] PROTO-131 · Every floating part of the viewer stage has a home zone and none overlaps another
+- [x] PROTO-131 · Every floating part of the viewer stage has a home zone and none overlaps another
   The owner found on 2026-11-20 that the overview map can float in the middle of the stage over tissue and that tooltips and coach bubbles pile on top of it and of each other. Give the overview map, the top stack (context bar, GPU wait, failure alert), the tool rail, the hint bar, tooltips and coach bubbles, the scale bar, the zoom controls, the object focus card, toasts and the compare pane each a fixed home zone, such as the map docked bottom right, hints bottom centre and toasts top right below the stack, keep them clear of each other and of the side panel, and keep a focused object from `object=` uncovered.
   Done when one spec opens an annotate task slide with `object=` at 1024 by 700, 1280 by 800 and 1440 by 900 and finds no two floating parts overlapping and the focused object uncovered, and the zone plan is written in a result file.
   Depends on nothing. Size: M.
-- [ ] PROTO-132 · A tile's byte requests run together, not one after another
+- [x] PROTO-132 · A tile's byte requests run together, not one after another
   PROTO-130 (tile range requests answer fast enough for a smooth pan) found on 2026-11-20 that one tile can still need up to 4 byte requests through the range cache, and did not measure whether they run in sequence, which would cost a round trip each. See `docs/results/2026-11-20-tile-request-time.md`. Measure it on the deployed app and, if they are sequential, prefetch or batch them so a tile waits for at most one round trip.
   Done when a result file shows the requests per tile and their overlap before and after, and a unit test in the viewer engine covers the batching.
   Depends on PROTO-130. Size: S.
-- [ ] PROTO-133 · A reviewed slide submits, cells mode opens and a task's state reads true in the viewer
+- [x] PROTO-133 · A reviewed slide submits, cells mode opens and a task's state reads true in the viewer
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issues 1, 2, 9, 10 and 15 and recheck 16. RT-1 (Showcase case review) shows Open report where Submit should be and stays at 0 of 3 submitted. RT-2 (Cell typing tour) says "no cell sample" beside 12 sampled cells and falls back to Review, and no agent account owns a cell typing task. RT-8 (Tumour annotation), never started, shows a "Signed off, this slide is locked" card. A task address with a slide outside the task stays on "Loading the review". A finished adjudication still reads as open.
   Done when specs cover submitting a reviewed slide, cells mode opening on a task with a cell sample, a never started task showing no lock, a slide outside the task showing a clear notice with a way back, and a finished adjudication reading as done, and the seed gives the first agent account a cell typing task after the next reset.
   Depends on nothing. Size: M.
-- [ ] PROTO-134 · Signing with single sign-on asks for the sign-in step every time
+- [x] PROTO-134 · Signing with single sign-on asks for the sign-in step every time
   From `docs/results/2026-11-20-deployed-walkthrough-v0.29.1.md` (the deployed walkthrough of v0.29.1), new issue 3. "Sign with single sign-on" signs at once with no sign-in step on task sign-off, report sign out and co-sign. A signature must re-prove the signer through the identity provider (a fresh authentication or step-up), as the signing ADRs describe, or say plainly when the app runs without one.
   Done when DB tests prove a sign-off, a sign out and a co-sign are refused without a fresh authentication inside the allowed window, and a spec on the fake API walks the sign-in step for each.
   Depends on nothing. Size: M.
@@ -7097,11 +7097,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   PROTO-119 (shapes drawn in a review task's Annotate mode belong to the task) saves regions and cells with the task, but notes, arrows and rulers still save slide wide, where other reviewers can see them while blinding holds. Layer groups also save slide wide and can hold the ids of a reviewer's hidden shapes, the slide export from Annotate leaves task shapes out, shapes saved slide wide before PROTO-119 are not moved, and the API still lets an author change or delete a task shape after sign-off or withdrawal. Save every kind of mark with the task while blinding holds, refuse changes after sign-off in the API, and include task shapes in the slide export.
   Done when DB tests cover the refusal after sign-off and a note hidden from the other reviewer, and a spec draws a note, an arrow and a ruler in a review task and finds them only in the author's layer.
   Depends on PROTO-119. Size: M.
-- [ ] PROTO-143 · Agree with the rest holds at 200 cells and a failed submit says so
+- [x] PROTO-143 · Agree with the rest holds at 200 cells and a failed submit says so
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 1 and 2. Agree with the rest on 200 cells saved 80 and answered 500 for 120 on v0.34.2, and the API answered 500 to other calls for about a minute. "Slide 1 submitted" showed although the submit call answered 500. Find the cause (likely one request or transaction per cell exhausting the database pool), make agreeing with the rest one batched call, and show a failed submit as failed with a retry.
   Done when a DB test agrees with the rest on 1,000 cells in one call within a time bound, a spec shows a failed submit as failed, and the deployed app agrees with the rest on the seeded 200 cell slide with no 500.
   Depends on nothing. Size: M.
-- [ ] PROTO-144 · Patches and the dataset carry class names and stay small
+- [x] PROTO-144 · Patches and the dataset carry class names and stay small
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 3, 8, 9 and 19. Patches with masks and COCO from a review task held no labels (0 annotations, no category, blank masks, 199 objects dropped as unclassed) because the manifest's class snapshot is empty, and the dataset page shows class IDs instead of names. A patch export of one object wrote 575 MB in 1,115 tiles in 240 s and polled with 409 answers, 110 console errors.
   Done when the class snapshot of a review task's final layer and dataset holds the project classes, a test exports patches with masks and COCO from a review task and finds labelled masks and annotations, the patch export of one object cuts only tiles that object touches, and the job poll stops on a finished or refused job.
   Depends on nothing. Size: M.
@@ -7109,47 +7109,47 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 4, 18 and 20. Find nuclei on the whole slide stayed queued for at least 17 minutes on "0 of 0 tiles" and never started. A queued run of another result set shows inside a review. One Best click asks the GPU twice.
   Done when a whole slide run on a seeded slide starts and finishes on the deployed app with its time and GPU cost logged, a test covers a run with no tiles planned, a review lists only its own result set's runs, and one Best click makes one GPU call.
   Depends on nothing. Size: M.
-- [ ] PROTO-146 · Every way into editing a reviewed object is visible and works
+- [x] PROTO-146 · Every way into editing a reviewed object is visible and works
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 6, 7, 12 and 13. "Edit T1 myself in the viewer" from the disagreement queue opens the slide read only. In a 5 point certainty task key 1 saved "Probably not, wrong class Tumor", key 5 did nothing and Disagree offers no Redraw. Handles and brush have no visible way in. After a reload Guided has no way to the opinion questions.
   Done when specs cover editing from the queue, the number keys on 2, 3 and 5 point tasks, a visible Edit shape button opening handles and brush, and the opinion questions after a reload.
   Depends on nothing. Size: M.
-- [ ] PROTO-147 · An annotate task can be signed off and the seed has a real outline disagreement
+- [x] PROTO-147 · An annotate task can be signed off and the seed has a real outline disagreement
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 10, 11 and 17. An annotate task shows no way to sign its slide off, so its dataset could not be reached. The seed has no object with two different outlines and its reviewers left most objects open, so the outline queue and the adjudicator outline pick could not be walked. A task with one reviewer speaks of both reviewers.
   Done when a spec signs off an annotate slide and reaches its dataset, the seed gives the first agent account an outline differs item to adjudicate after the next reset, and the one reviewer wording has a unit test.
   Depends on nothing. Size: M.
-- [ ] PROTO-148 · Names and wording after an upload and in the task wizard
+- [x] PROTO-148 · Names and wording after an upload and in the task wizard
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 14, 15 and 16. An uploaded slide is called "Slide" instead of its file name, a fresh sign-in lands in Machine Learning Lab rather than the last workspace, and the task wizard has wording slips.
   Done when unit tests cover the upload name and the wizard wording, and a spec signs in and lands in the last used workspace.
   Depends on nothing. Size: S.
-- [ ] PROTO-149 · The final layer follows the queue decision and the queue shows a single reviewer's edits
+- [x] PROTO-149 · The final layer follows the queue decision and the queue shows a single reviewer's edits
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 1, 5 and 10. An object the owner rejected in the disagreement queue went into the training data as edited, and a reviewer's retype beat the owner's Agree with the AI. The queue does not show a single reviewer's redraw or retype, and the sign-off window miscounts who resolved what and hides objects nobody decided.
   Done when a DB test builds a final layer after a queue reject and a queue agree over a reviewer's retype and finds the queue's decision in both, a spec shows a single reviewer's redraw and retype in the queue, and a unit test covers the sign-off counts with undecided objects.
   Depends on nothing. Size: M.
-- [ ] PROTO-150 · Upload and model run jobs tell one story and Run a model offers only served models
+- [x] PROTO-150 · Upload and model run jobs tell one story and Run a model offers only served models
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 2, 6, 8, 11 and 16. The upload job sat queued for about ten minutes and then said Failed while the slide was usable, and the tray, the notification and the job page disagree. A finished model run shows no steps, no GPU time and sends no notice. Find nuclei starts with one click and says "0 of 0 tiles" while it waits. Run a model picks a slide whose file is missing, and its only model is not served, so it always fails.
   Done when tests show an upload job turns done when its slide is ready and every screen reads the same state, a finished run lists its steps and GPU seconds and sends a notice, the waiting run says it is starting, Run a model lists only served models and skips slides with no file, and the deployed app shows a fresh upload as done.
   Depends on nothing. Size: M.
-- [ ] PROTO-151 · Review and annotate panels keep their controls in reach
+- [x] PROTO-151 · Review and annotate panels keep their controls in reach
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 3, 7, 9, 12 and 13. With 200 cells the grid's count and its Agree with the rest button sit behind the top bar. The annotate sign-off card sits under 4,393 object rows. A key press while the adjudicator draws decides the object and drops the outline, and that screen has no Finish button. A task opens on a slide already submitted. Guided review is wider than a phone screen.
   Done when specs cover the grid header at 200 cells, the sign-off card above a long object list, keys ignored while drawing with a visible Finish, a task opening on its first open slide, and guided review at 375 px width.
   Depends on nothing. Size: M.
-- [ ] PROTO-152 · The evaluation report of a cell task counts its cells and names their types
+- [x] PROTO-152 · The evaluation report of a cell task counts its cells and names their types
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issue 4. The evaluation report of a cell task says the task has no cells and calls every cell "Unclassified cell".
   Done when a test builds the report of a seeded cell task and finds its cell count and type names.
   Depends on nothing. Size: S.
-- [ ] PROTO-153 · Round four slips, noise and the partly fixed items
+- [x] PROTO-153 · Round four slips, noise and the partly fixed items
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 14 and 15 and the partly fixed rechecks of round three issues 11, 19 and 20 and round two items 9 and 22. Console and network noise, small slips in numbers and words such as "about 0 min left" and "1 disagreements resolved", the seeded reviewers deciding only the first region, the leftover dataset page items, a Best click one second after picking Best sending two embedding calls, and the read only banner of a task never started.
   Done when unit tests cover each wording fix, a spec opens the main screens with no console errors, the seed's reviewers decide most objects, and a test shows one Best click right after picking Best sends one call.
   Depends on nothing. Size: M.
-- [ ] PROTO-154 · Sign-off export, the report appendix and a fresh sign-in for annotate sign-off
+- [x] PROTO-154 · Sign-off export, the report appendix and a fresh sign-in for annotate sign-off
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 1, 2 and 5 and the partly fixed recheck of round four issue 4. "Download 3 files" in the sign-off window downloads nothing. The report appendix calls disagreed cells "Not sure". An annotate sign-off asks for no fresh sign-in, unlike a review sign-off under ADR 0410 (a signature needs a sign-in within 5 minutes). What the recheck left of the cell task report.
   Done when a spec downloads the three files from the sign-off window, a test builds the appendix with agreed, disagreed and unsure objects and finds each named right, and a test refuses an annotate sign-off without a fresh sign-in.
   Depends on nothing. Size: M.
-- [ ] PROTO-155 · A run's page speaks plainly and its estimate fits the slide
+- [x] PROTO-155 · A run's page speaks plainly and its estimate fits the slide
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 4 and 6 and the partly fixed recheck of round four issue 6. The run's step list shows raw keys and wrong figures such as "11 mm²" and "1 cells", and the estimate said about 17 minutes for a run of 100 seconds.
   Done when unit tests cover each step's label and figures and the estimate for a small and a large slide.
   Depends on nothing. Size: S.
-- [ ] PROTO-156 · The lock warns and hides the page, and opening a page writes nothing
+- [x] PROTO-156 · The lock warns and hides the page, and opening a page writes nothing
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 9, 10 and 11. The idle lock gives no warning before it locks and only blurs the page. Two calls the app expects to fail still go out. Opening a Preferences section or a draft report writes to the server.
   Done when a spec sees the warning before the lock and no slide or patient text in the locked page, and specs open Preferences and a draft report with no write and without the two calls.
   Depends on nothing. Size: S.
@@ -7157,9 +7157,13 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 7, 8 and 12 and the partly fixed recheck of round four issue 15. A case has no link on the project page, the slide counter restarts after a submit, and the remaining number and word slips.
   Done when unit tests or specs cover each item.
   Depends on nothing. Size: S.
-- [ ] PROTO-158 · A result import notice, GPU seconds for Best and names for hand drawn outlines
+- [x] PROTO-158 · A result import notice, GPU seconds for Best and names for hand drawn outlines
   Left over from PROTO-157 (round five small slips), from `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` issues 12 and 15. Importing a result set sends no notification, which needs a new notification kind. A Best embedding records no GPU seconds, so ai usage and Admin cannot show them. Hand drawn outlines list as M1 and M2 while one click and model objects use their class letter.
   Done when a test sends the import notice, a test finds an ai usage row with GPU seconds after a Best embedding, and a unit test names a hand drawn outline by its class like other objects, or the owner is asked in `docs/decisions.md` if the naming is a real product choice.
+  Depends on nothing. Size: M.
+- [ ] PROTO-159 · Round six slips after the v0.35.12 walk
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.12.md` (the deployed walkthrough of v0.35.12), new issues 1 to 7. The decisions CSV of the sign-off window says "unclassified" for every cell while the report and dataset name the types. The top bar Upload button on a project's upload page opens the first project and drops the picked files. A slide outside an annotate task opens with no notice and two 404 calls, and one outside a review task makes three 404 calls. Guided review opens a 15 µm region at 297× as a blur and the first coach bubble covers the object. /objects answers 409 with console errors while a new task prepares. Picking Best and then clicking makes two GPU calls on the deployed app. The run notice says "pathosam-hovernext v1.2", the job counts 16 units against 11 tiles, the import job reads running after its notice, and the walk's project says "100% reviewed".
+  Done when unit tests or specs cover each item and the next deployed walk finds none of them.
   Depends on nothing. Size: M.
 
 ---
