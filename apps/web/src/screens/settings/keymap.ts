@@ -88,7 +88,10 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         "The class: Tumor, Stroma, Immune, Other",
         ["1 … 4"],
         "qp",
-        { range: true, note: "in the style Pick the class blind" },
+        {
+          range: true,
+          note: "in the style Pick the class blind, and on cells in Agree with the AI",
+        },
       ],
       ["dunsure", "Not sure", ["U"], "new", { note: "every style but 5-point certainty" }],
       [

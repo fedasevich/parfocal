@@ -16,6 +16,8 @@ import { useResolvedSettings } from "../shell/resolved-settings.ts";
 
 export type GuidedFix = {
   readonly open: boolean;
+  readonly offered: boolean;
+  readonly onEditShape: (() => void) | null;
   readonly redrawPoints: number | null;
   readonly typePicker: ReactNode;
   readonly onReason: (reason: string) => void;
@@ -27,6 +29,8 @@ export type GuidedFix = {
 
 const noFix: GuidedFix = {
   open: false,
+  offered: false,
+  onEditShape: null,
   redrawPoints: null,
   typePicker: null,
   onReason: () => undefined,
@@ -95,6 +99,33 @@ export function StageGuidedCard({
       <Keycap action={noteAction} size="sm" />
     </button>
   ) : null;
+  const fixesShown = !readOnly && answersOff === undefined;
+  const redoOffered = fixesShown && fix.offered && kept?.value === "disagree";
+  const editShape = fixesShown ? fix.onEditShape : null;
+  const fixRow =
+    redoOffered || editShape !== null ? (
+      <div data-testid="object-fix-row" className="flex flex-wrap items-center gap-2">
+        {editShape === null ? null : (
+          <Button onClick={editShape}>
+            <Icon name="poly" />
+            <Trans>Edit shape</Trans>
+            <Keycap keys="↵" size="sm" />
+          </Button>
+        )}
+        {redoOffered ? (
+          <>
+            <Button onClick={() => fix.onFix("outline")}>
+              <Icon name="pen" />
+              <Trans>Redraw the outline</Trans>
+            </Button>
+            <Button onClick={() => fix.onFix("type")}>
+              <Icon name="pen" />
+              <Trans>Change the type</Trans>
+            </Button>
+          </>
+        ) : null}
+      </div>
+    ) : null;
   return (
     <div
       data-testid="stage-review-object"
@@ -137,6 +168,7 @@ export function StageGuidedCard({
         onBackToAnswers={fix.onBack}
         onFix={fix.onFix}
         typePicker={fix.typePicker}
+        fixRow={fixRow}
         redrawPoints={readOnly ? null : fix.redrawPoints}
         onFinishRedraw={fix.onFinishRedraw}
         onCancelRedraw={fix.onCancelRedraw}

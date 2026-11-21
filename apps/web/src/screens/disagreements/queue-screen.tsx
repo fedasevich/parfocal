@@ -124,9 +124,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     [outlines, row?.object, row?.settled_outline?.outline],
   );
   const outlineSettles =
-    row !== undefined &&
-    outlines.length > 0 &&
-    !["with-adjudicator", "adjudicated", "look-again"].includes(row.state);
+    row !== undefined && !["with-adjudicator", "adjudicated", "look-again"].includes(row.state);
   const overlapShare =
     row?.outline_overlap === null || row?.outline_overlap === undefined
       ? null
@@ -547,15 +545,10 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                     toast.show(t`${rowLabel(row)} is left open. Sign-off counts it on purpose.`);
                   }}
                   onSend={(keys, excluded) => setSend({ keys, excluded })}
-                  onEdit={() =>
-                    void navigate({
-                      href: destinations.slide(
-                        task?.project_id ?? "",
-                        row.slide_id,
-                        taskId,
-                        row.object,
-                      ),
-                    })
+                  onEdit={
+                    outlineSettles && drawingKey !== row.key && !settleOutline.isPending
+                      ? () => setDrawingKey(row.key)
+                      : null
                   }
                   onLookAgain={() => {
                     update.mutate({
@@ -629,7 +622,7 @@ type DecidePanelProps = {
   onDecide: (raw: string) => void;
   onLeaveOpen: () => void;
   onSend: (keys: string[], excluded: string[]) => void;
-  onEdit: () => void;
+  onEdit: (() => void) | null;
   onLookAgain: () => void;
   onKeep: () => void;
 };
@@ -783,10 +776,12 @@ function DecidePanel({
         </div>
       ) : null}
       <div className="grid justify-items-start gap-2">
-        <button type="button" className={linkClass} onClick={onEdit}>
-          <Icon name="pen" />
-          <Trans>Edit {row.object} myself in the viewer</Trans>
-        </button>
+        {onEdit === null ? null : (
+          <button type="button" className={linkClass} onClick={onEdit}>
+            <Icon name="pen" />
+            <Trans>Redraw {row.object} myself</Trans>
+          </button>
+        )}
         {row.state === "decided" ? null : (
           <>
             <button

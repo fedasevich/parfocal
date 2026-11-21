@@ -11,7 +11,7 @@ import {
   type ReviewConfidence,
   sureText,
 } from "./ai-wording.ts";
-import type { Count, ReviewStyle } from "./decision-mapping.ts";
+import { type Count, countsAs, type ReviewStyle } from "./decision-mapping.ts";
 
 export * from "./decision-mapping.ts";
 
@@ -27,6 +27,17 @@ export function answersOf(
     agreeFrom: style.agreeFrom,
     disagreeTo: style.disagreeTo,
   });
+}
+
+export function answerCount(
+  style: ReviewStyle,
+  classes: ProjectClass[],
+  object: Pick<ReviewObject, "class_name"> | undefined,
+  raw: string,
+): Count | undefined {
+  const option = answersOf(style, classes, object).find((entry) => entry.raw === raw);
+  if (option === undefined) return undefined;
+  return option.countsAs ?? countsAs(style, raw, object);
 }
 
 export function rawLabel(style: ReviewStyle, raw: string, classes: ProjectClass[]): string {

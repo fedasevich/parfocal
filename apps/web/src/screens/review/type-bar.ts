@@ -101,6 +101,8 @@ export function typeChoice(
   };
 }
 
+export const typesCells = (style: Pick<ReviewStyle, "kind">) => style.kind === "agree";
+
 export const typeAnswers: DecisionAnswer[] = [
   ...typeOptions.map((option) => ({
     raw: option.id,

@@ -5018,6 +5018,7 @@ msgid "Change the slide on this side"
 msgstr ""
 
 #: src/screens/review/object-card.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Change the type"
 msgstr ""
 
@@ -6806,6 +6807,10 @@ msgstr ""
 msgid "Draw a new outline"
 msgstr ""
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Draw a new outline if the AI's is wrong."
+msgstr ""
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Draw as"
@@ -6972,17 +6977,16 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#. placeholder {0}: row.object
-#: src/screens/disagreements/queue-screen.tsx
-msgid "Edit {0} myself in the viewer"
-msgstr ""
-
 #: src/screens/review/object-edit-history.tsx
 msgid "Edit history"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Edit in the Display panel"
+msgstr ""
+
+#: src/viewer/stage-guided-card.tsx
+msgid "Edit shape"
 msgstr ""
 
 #: src/screens/project/case-slides-editor.tsx
@@ -13500,7 +13504,13 @@ msgstr ""
 msgid "Rectangle"
 msgstr ""
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Redraw {0} myself"
+msgstr ""
+
 #: src/screens/review/object-card.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Redraw the outline"
 msgstr ""
 
