@@ -86,7 +86,7 @@ export function ProjectPage({
     if (isSample) markTried("open-sample");
   }, [isSample]);
   const format = useFormat();
-  const overview = okData(useGetProjectOverview(projectId).data);
+  const overview = okData(useGetProjectOverview(projectId, { query: { staleTime: 0 } }).data);
   const tasksQuery = useListReviewTasks(projectId);
   const tasks = okData(tasksQuery.data) ?? [];
   const slidesFirst = { query: { enabled: view.tab === "slides" } };

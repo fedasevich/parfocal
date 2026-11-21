@@ -45,7 +45,7 @@ def test_a_task_steps_through_my_slides_and_skips_submitted_ones(api: ApiAs, dat
         "loose-0",
         "A1",
         1,
-        3,
+        4,
         False,
     )
     every = {**in_task, "skip_submitted": "false"}
@@ -58,8 +58,8 @@ def test_a_task_steps_through_my_slides_and_skips_submitted_ones(api: ApiAs, dat
         "A1",
         "A2",
         None,
-        3,
-        3,
+        4,
+        4,
         True,
     )
     assert around(neighbours(api, s, "owner", s.slides[1], **in_task))[:3] == (

@@ -35,6 +35,7 @@ type ReviewTopProps = {
   onWholeSlide?: (() => void) | undefined;
   object?: string | undefined;
   onHowItWorks?: (() => void) | undefined;
+  modeNote?: string | undefined;
 };
 
 export function ReviewTop({
@@ -50,6 +51,7 @@ export function ReviewTop({
   onWholeSlide,
   object,
   onHowItWorks,
+  modeNote,
 }: ReviewTopProps) {
   const popovers = useReviewTopPopovers({ mode, session, counts, onWholeSlide });
   const me = okData(useGetMe().data);
@@ -63,6 +65,7 @@ export function ReviewTop({
     <>
       <ReviewTopBar
         mode={mode}
+        modeNote={modeNote}
         taskName={session.taskName}
         taskSub={session.taskSub}
         slideName={session.slideName}

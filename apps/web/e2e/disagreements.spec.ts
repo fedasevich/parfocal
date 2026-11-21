@@ -208,6 +208,7 @@ test("one reviewer's redraw and retype show in the queue and the outline can be 
   await expect(page.getByTestId("answer-redrawn")).toHaveCount(1);
   await expect(page.getByTestId("answer-retyped")).toHaveText("retyped to Tumor");
   await expect(page.getByTestId("queue-training-note")).toContainText("Disagree removes T2·C88");
+  await expect(page.getByTestId("queue-mapping")).toContainText("leaves the training data");
   const settle = page.getByTestId("outline-settle");
   await expect(settle).toContainText("Lenka Malá");
   await settle.getByRole("button", { name: "Use this outline" }).click();
@@ -238,6 +239,9 @@ test("Redraw myself draws the settled outline in the queue and stays there", asy
   const frame = objectStage(page).getByTestId("object-frame");
   await expect(frame).toHaveAttribute("data-drawing", "true");
   await expect(decide.getByRole("button", { name: "Redraw T4 myself" })).toHaveCount(0);
+  await expect(
+    decide.getByRole("group", { name: "Your decision on T4" }).getByRole("button").first(),
+  ).toBeDisabled();
   const drawn = page.waitForRequest(
     (request) =>
       request.method() === "PUT" && /\/disagreement-queue\/[^/]+\/T4\/outline$/.test(request.url()),

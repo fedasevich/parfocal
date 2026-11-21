@@ -2,6 +2,8 @@ import { expect, test } from "./a11y.ts";
 
 test("hiding a Parfocal model dims its row and undo brings it back", async ({ page }) => {
   await page.goto("/admin?section=models");
+  await expect(page.getByText(/Kept up to date by Parfocal/)).toBeVisible();
+  await expect(page.getByText(/Always ready/)).toHaveCount(0);
   const first = page.getByRole("switch", { name: /^Show / }).first();
   await expect(first).toBeChecked();
   await first.click();

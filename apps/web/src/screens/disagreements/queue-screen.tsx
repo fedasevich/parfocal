@@ -550,6 +550,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   person={person}
                   onNote={(text) => setNotes((now) => ({ ...now, [row.key]: text }))}
                   onDecide={(raw) => decide(row, raw)}
+                  drawing={drawing.drawingKey === row.key}
                   onLeaveOpen={() => {
                     update.mutate({
                       taskId,
@@ -639,6 +640,7 @@ type DecidePanelProps = {
   person: ReturnType<typeof usePeople>;
   onNote: (text: string) => void;
   onDecide: (raw: string) => void;
+  drawing: boolean;
   onLeaveOpen: () => void;
   onSend: (keys: string[], excluded: string[]) => void;
   onEdit: (() => void) | null;
@@ -659,6 +661,7 @@ function DecidePanel({
   person,
   onNote,
   onDecide,
+  drawing,
   onLeaveOpen,
   onSend,
   onEdit,
@@ -743,7 +746,7 @@ function DecidePanel({
     .map((answer) => nameOf(answer.user_id) ?? "");
   const mapping = t`Agree keeps the AI's call.${
     disagreeing.length
-      ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.`
+      ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}, and ${row.object} leaves the training data.`
       : ""
   }`;
   const declinedKeys = rows.filter((item) => item.state === "declined").map((item) => item.key);
@@ -791,9 +794,12 @@ function DecidePanel({
         label={t`Your decision on ${row.object}`}
         value={row.state === "decided" ? row.decision?.raw : undefined}
         onValueChange={onDecide}
+        disabled={drawing}
       />
       {look.style.kind === "agree" ? (
-        <p className="m-0 text-body-sm text-fg-dim">{mapping}</p>
+        <p data-testid="queue-mapping" className="m-0 text-body-sm text-fg-dim">
+          {mapping}
+        </p>
       ) : null}
       {(row.outlines ?? []).length ||
       row.settled_outline ||

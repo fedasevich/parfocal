@@ -106,8 +106,9 @@ msgid " and stay out: {0}"
 msgstr ""
 
 #. placeholder {0}: disagreeing.length === 2 ? "both reviewers" : disagreeing[0]
+#. placeholder {1}: row.object
 #: src/screens/disagreements/queue-screen.tsx
-msgid " Disagree goes with {0}."
+msgid " Disagree goes with {0}, and {1} leaves the training data."
 msgstr ""
 
 #. placeholder {0}: batch.done.first_ids
@@ -2991,6 +2992,10 @@ msgstr ""
 msgid "A run always uses the latest version, and the result set records which one."
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "A run finished on this slide. Load last run shows it."
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "A sentinel node is staged by the size of its largest deposit, so this stays hidden unless you ask for it."
 msgstr ""
@@ -3506,7 +3511,7 @@ msgstr ""
 msgid "Agree"
 msgstr ""
 
-#. placeholder {0}: disagreeing.length ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.` : ""
+#. placeholder {0}: disagreeing.length ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}, and ${row.object} leaves the training data.` : ""
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Agree keeps the AI's call.{0}"
 msgstr ""
@@ -3765,10 +3770,6 @@ msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Always"
-msgstr ""
-
-#: src/screens/admin/sections.tsx
-msgid "Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
 msgstr ""
 
 #: src/screens/clinical-report/report-screen.tsx
@@ -4942,6 +4943,10 @@ msgstr ""
 
 #: src/screens/project/settings-zones.tsx
 msgid "Cells match when their centres are at most this many µm apart"
+msgstr ""
+
+#: src/screens/review/guided-review.tsx
+msgid "Cells mode"
 msgstr ""
 
 #: src/screens/viewer/use-viewer-panels.tsx
@@ -9190,6 +9195,10 @@ msgstr ""
 msgid "Kept next to the copy already here"
 msgstr ""
 
+#: src/screens/admin/sections.tsx
+msgid "Kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
+msgstr ""
+
 #: src/screens/upload/result-problems.tsx
 msgid "Kept with no score"
 msgstr ""
@@ -12090,6 +12099,7 @@ msgstr ""
 msgid "Open on the slide"
 msgstr ""
 
+#: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Open report"

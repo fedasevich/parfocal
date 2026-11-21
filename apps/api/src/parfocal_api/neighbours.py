@@ -181,6 +181,10 @@ async def get_slide_neighbours(
     if slide_id not in ordered:
         raise NotInListError
     index = ordered.index(slide_id)
+    position, total = index + 1, len(ordered)
+    if kind is ListKind.TASK and task_id is not None and skip_submitted:
+        whole_order = await task_order(connection, principal, task_id, slide_id, False)
+        position, total = whole_order.index(slide_id) + 1, len(whole_order)
     before = ordered[index - 1] if index > 0 else None
     after = ordered[index + 1] if index + 1 < len(ordered) else None
     found = await refs(
@@ -190,7 +194,7 @@ async def get_slide_neighbours(
         current=found[slide_id],
         previous=found.get(before) if before else None,
         next=found.get(after) if after else None,
-        position=index + 1,
-        total=len(ordered),
+        position=position,
+        total=total,
         at_end=after is None,
     )

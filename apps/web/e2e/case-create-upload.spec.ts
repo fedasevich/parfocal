@@ -112,6 +112,10 @@ for (const mode of modes) {
     }, mode.owner);
     const group = page.getByRole("row", { name: new RegExp(mode.label) });
     await expect(group).toBeVisible();
+    await expect(group.getByRole("link", { name: "Open report" })).toHaveAttribute(
+      "href",
+      new RegExp(`/cases/${caseId}/report$`),
+    );
     await group.getByRole("button", { name: "Upload slides" }).click();
     await expect(page).toHaveURL(new RegExp(`/cases/${caseId}/upload`));
     await page.getByTestId("file-input").setInputFiles({
