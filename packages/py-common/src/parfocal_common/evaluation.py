@@ -235,8 +235,9 @@ def cell_agreement(objects: Iterable[AiObject]) -> tuple[Ratio, Ratio]:
     cells = [item for item in objects if item.kind == "cell" and item.decisions]
     decided = [item for item in cells if consensus(item) is not Consensus.UNDECIDED]
     agreeing = sum(consensus(item) is Consensus.AGREE for item in decided)
-    unanimous = sum(len({v.value for v in item.decisions.values()}) == 1 for item in cells)
-    return ratio(agreeing, len(decided)), ratio(unanimous, len(cells))
+    shared = [item for item in cells if len(item.decisions) > 1]
+    unanimous = sum(len({v.value for v in item.decisions.values()}) == 1 for item in shared)
+    return ratio(agreeing, len(decided)), ratio(unanimous, len(shared))
 
 
 def reasons(objects: Iterable[AiObject]) -> list[tuple[str, int]]:

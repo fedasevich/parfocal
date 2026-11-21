@@ -739,12 +739,6 @@ msgstr ""
 msgid "{0} does nothing yet. Click any action below, then press {1} to give it that key."
 msgstr ""
 
-#. placeholder {0}: plural(picked.length, "file")
-#. placeholder {1}: andJoin( exportsList .filter((item) => picked.includes(item.key)) .map((item) => item.label.toLowerCase()), )
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0} downloading: {1}"
-msgstr ""
-
 #. placeholder {0}: shortName(home.resume)
 #. placeholder {1}: formatWeekday(home.resume.due_on)
 #: src/screens/home/home-screen.tsx
@@ -1149,6 +1143,12 @@ msgstr ""
 msgid "{0} of {1} done"
 msgstr ""
 
+#. placeholder {0}: saved.length
+#. placeholder {1}: kinds.length
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} of {1} files saved. Try the others again from the evaluation report."
+msgstr ""
+
 #. placeholder {0}: row.gb
 #. placeholder {0}: space.gb
 #. placeholder {1}: row.cap_gb
@@ -1408,6 +1408,11 @@ msgstr ""
 #. placeholder {0}: item.object
 #: src/viewer/stage-review-objects.tsx
 msgid "{0} saved as {name}. The AI result is not changed."
+msgstr ""
+
+#. placeholder {0}: plural(saved.length, "file")
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} saved to Downloads"
 msgstr ""
 
 #. placeholder {0}: model.name
@@ -12267,10 +12272,6 @@ msgstr ""
 #: src/screens/new-task/send-step.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Opinion form"
-msgstr ""
-
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "Opinion forms"
 msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
