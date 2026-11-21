@@ -20,6 +20,7 @@ from parfocal_api.annotate_layer import (
     delete_shared_object,
     list_shared_ai_objects,
 )
+from parfocal_api.annotate_sign_off import check_annotate_slide
 from parfocal_api.annotations import AnnotationDraft, AnnotationEdit, Geometry
 from parfocal_api.evaluation import class_names
 from parfocal_api.layer_groups import LayerGroup, LayerGroups, LayerMember, set_shared_layer_groups
@@ -336,4 +337,7 @@ async def seed_annotation_example(
     drawn = await draw_shapes(layer, classes, x, y)
     await work_ai_cells(layer, classes, drawn)
     await save_groups(layer, drawn)
+    await check_annotate_slide(
+        task.id, slide_id, owner, connection, BackgroundTasks(), NoRealtime()
+    )
     return task.id

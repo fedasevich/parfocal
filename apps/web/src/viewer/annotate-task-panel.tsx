@@ -57,11 +57,11 @@ import {
   aiCheckCounts,
   aiResultViewOf,
   aiWithChecks,
-  canSignOff,
   classCountsOf,
   nextSlideOf,
   originMarkOf,
   runsToAddOf,
+  showsSignOff,
   slideStepOf,
   taskProgressOf,
 } from "../annotations/annotate-task.ts";
@@ -1015,7 +1015,7 @@ export function AnnotateTaskPanel({
                 : { onNext: () => onOpenSlide(next) })}
             />
           ) : null}
-          {status && (step === "signed-off" || (!lookOnly && canSignOff(status, task.owner))) ? (
+          {status && (step === "signed-off" || (!lookOnly && showsSignOff(status, task.owner))) ? (
             <SignOffCard
               slideName="this slide"
               openThreads={status.open_threads}

@@ -48,6 +48,7 @@ from parfocal_api.showcase_reviews import (
     Seeded,
     agree_and_submit,
     decide,
+    redraw_apart,
     review_task,
     seed_adjudication,
     submit,
@@ -706,7 +707,21 @@ async def seed_queue(
         [seeded.people["rhea"], seeded.people["remy"]],
         DecisionStyle.AGREE,
     )
+    reviewers = [principal_of(seeded, key, Role.REVIEWER, False) for key in ("rhea", "remy")]
     for slide_id in queued:
+        redrawn = await redraw_apart(connection, reviewers, results, task_id, slide_id)
+        if redrawn is not None:
+            for key in ("rhea", "remy"):
+                await decide(
+                    connection,
+                    seeded,
+                    project_id,
+                    task_id,
+                    slide_id,
+                    key,
+                    DecisionValue.AGREE,
+                    number=redrawn,
+                )
         await decide(connection, seeded, project_id, task_id, slide_id, "rhea", DecisionValue.AGREE)
         await decide(
             connection,
@@ -1189,7 +1204,7 @@ async def seed_example(
         engine, DatabaseScope(tenant_id=seeded.tenant_id, user_id=seeded.people["ada"])
     ) as connection:
         await seed_annotation_example(
-            connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents]
+            connection, creator, owner, results, workspace.gallery, [seeded.owner, *agents[:1]]
         )
         if agents:
             await seed_adjudication(connection, creator, agents[0])

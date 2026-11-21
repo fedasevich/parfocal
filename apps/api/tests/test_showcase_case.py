@@ -58,6 +58,7 @@ from parfocal_api.tables import (
 from parfocal_api.threads import get_thread
 from parfocal_api.tile_access import SlideFileNotFoundError, get_tile_access
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.disagreements import OUTLINE_OVERLAP, Why
 from parfocal_common.jobs import JobStatus
 
 pytestmark = pytest.mark.db
@@ -325,12 +326,18 @@ async def test_an_agent_adjudicates_the_seeded_disagreement_queue(showcase: str)
     assert pending[0][0] == 0
     async with rolled_back(showcase, agent) as connection:
         queue = await queue_of(connection, task_id)
-        assert len(queue) == 2
+        whys = [item.why for item in queue]
+        assert whys.count(Why.REVIEWERS_DIFFER) == 2
+        assert whys.count(Why.OUTLINES_DIFFER) >= 1
         assert all(is_open(item) for item in queue)
         sent = [item for item in queue if item.adjudication is not None]
         assert [item.adjudication.adjudicator_user_id for item in sent if item.adjudication] == [
             agent.user_id
         ]
+        assert sent[0].why is Why.OUTLINES_DIFFER
+        assert len(sent[0].outlines) == 2
+        assert sent[0].outline_overlap is not None
+        assert sent[0].outline_overlap * 100 < OUTLINE_OVERLAP
         mine = await list_my_adjudications(agent, connection)
         assert (task_id, QUEUE_TASK) in [(item.task_id, item.task_name) for item in mine]
         shown = await get_my_adjudication(task_id, agent, connection, RESULTS)  # type: ignore[arg-type]

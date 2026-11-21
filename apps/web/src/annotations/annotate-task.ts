@@ -175,9 +175,10 @@ export function taskProgressOf(
   return { total, checked, signedOff, line };
 }
 
-export function canSignOff(status: AnnotateSlideStatus | undefined, owner: boolean): boolean {
-  if (!owner || status === undefined || status.signed_off_at !== null) return false;
-  return status.experts.length > 0 && status.experts.every((expert) => expert.checked_at !== null);
+export function showsSignOff(status: AnnotateSlideStatus | undefined, owner: boolean): boolean {
+  if (status === undefined) return false;
+  if (status.signed_off_at !== null) return true;
+  return owner && status.experts.length > 0;
 }
 
 export function nextSlideOf(

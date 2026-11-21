@@ -18,6 +18,7 @@ import {
   rowTag,
   styledText,
   styledWord,
+  tagOf,
 } from "../src/screens/disagreements/text.ts";
 import { toReviewStyle } from "../src/screens/review/decision-mapping.ts";
 
@@ -163,6 +164,18 @@ test("declined and edited rows carry their own tags", () => {
     label: "edited after decisions",
     tone: "warn",
   });
+});
+
+test("a task with one reviewer says the reviewer vs AI and two reviewers say both", () => {
+  const style = toReviewStyle(undefined);
+  const lone = row("T5", {
+    tag: "bothai",
+    answers: [{ user_id: "u1", raw: "disagree", reason: null, note: null }],
+  });
+  assert.equal(rowTag(lone, nameOf, { style, classes, reviewers: 1 }).label, "the reviewer vs AI");
+  assert.equal(rowTag(lone, nameOf, { style, classes, reviewers: 2 }).label, "both vs AI");
+  assert.equal(rowTag(lone, nameOf, { style, classes }).label, "both vs AI");
+  assert.equal(tagOf("differ", 1), "reviewers differ");
 });
 
 test("an outline row says outline differs and gives each reviewer's outline its own colour", () => {

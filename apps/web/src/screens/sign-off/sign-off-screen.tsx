@@ -498,11 +498,18 @@ function SignOffModal({
                 <ReadinessRow
                   data-phi=""
                   tone="ok"
-                  title={plurals(summary.reviews.slides, {
-                    one: "The slide was reviewed by both reviewers",
-                    other: "All # slides reviewed by both reviewers",
-                  })}
-                  sub={t`${summary.reviews.submitted} of ${summary.reviews.total} reviews submitted, ${summary.reviews.opinion_forms} opinion forms`}
+                  title={
+                    summary.reviewer_ids.length === 1
+                      ? plurals(summary.reviews.slides, {
+                          one: "The slide was reviewed by the reviewer",
+                          other: "All # slides reviewed by the reviewer",
+                        })
+                      : plurals(summary.reviews.slides, {
+                          one: "The slide was reviewed by both reviewers",
+                          other: "All # slides reviewed by both reviewers",
+                        })
+                  }
+                  sub={t`${summary.reviews.submitted} of ${plurals(summary.reviews.total, { one: "# review", other: "# reviews" })} submitted, ${plurals(summary.reviews.opinion_forms, { one: "# opinion form", other: "# opinion forms" })}`}
                 />
                 <ReadinessRow
                   data-phi=""

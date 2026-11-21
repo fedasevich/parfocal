@@ -69,6 +69,29 @@ test("the Export menu offers the training dataset and the patches and downloads 
   expect(polls.filter((poll) => poll.status !== 200)).toEqual([]);
 });
 
+test("the owner sees who still has to check, signs the slide off in the viewer and reaches the dataset", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await openTask(page);
+  const card = page.getByRole("region", { name: "Sign off" });
+  const signOff = card.getByRole("button", { name: "Sign off", exact: true });
+  await expect(card).toContainText("has not checked this slide yet");
+  await expect(signOff).toBeDisabled();
+  await page
+    .getByTestId("live-top-bar")
+    .getByRole("button", { name: "Mark slide checked" })
+    .click();
+  await expect(page.getByTestId("annotate-task-panel")).toHaveAttribute("data-step", "checked");
+  await expect(card).not.toContainText("has not checked this slide yet");
+  await signOff.click();
+  await expect(page.getByTestId("annotate-task-panel")).toHaveAttribute("data-step", "signed-off");
+  await page.getByTestId("export-menu").click();
+  await page.getByTestId("export-dataset-page").click();
+  await expect(page).toHaveURL(new RegExp(`/tasks/${annotateTask}/dataset`));
+  await expect(page.getByTestId("dataset-total")).toContainText("on 1 slide");
+});
+
 test("a task with nothing signed off explains why both exports are refused", async ({ page }) => {
   test.setTimeout(90_000);
   await openTask(page);

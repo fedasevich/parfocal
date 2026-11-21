@@ -12,12 +12,12 @@ import {
   aiResultViewOf,
   aiWithChecks,
   annotateTaskOf,
-  canSignOff,
   classCountsOf,
   layerKnownOf,
   nextSlideOf,
   originMarkOf,
   runsToAddOf,
+  showsSignOff,
   slideStepOf,
   taskClassesOf,
   taskProgressOf,
@@ -223,15 +223,15 @@ test("progress across the task's slides counts checked and signed off slides", (
   assert.equal(nextSlideOf(["a"], "a", [status({ experts: [checked()] })], "me"), null);
 });
 
-test("only an owner signs off, and only once every expert has checked", () => {
+test("an owner sees the sign off card before every expert has checked, others never", () => {
   const ready = status({ experts: [checked(), checked("anna")] });
-  assert.equal(canSignOff(ready, true), true);
-  assert.equal(canSignOff(ready, false), false);
-  assert.equal(
-    canSignOff(status({ experts: [checked(), { ...checked("anna"), checked_at: null }] }), true),
-    false,
-  );
-  assert.equal(canSignOff({ ...ready, signed_off_at: "2026-11-08T12:00:00Z" }, true), false);
+  const waiting = status({ experts: [checked(), { ...checked("anna"), checked_at: null }] });
+  assert.equal(showsSignOff(ready, true), true);
+  assert.equal(showsSignOff(waiting, true), true);
+  assert.equal(showsSignOff(ready, false), false);
+  assert.equal(showsSignOff(status({ experts: [] }), true), false);
+  assert.equal(showsSignOff(undefined, true), false);
+  assert.equal(showsSignOff({ ...ready, signed_off_at: "2026-11-08T12:00:00Z" }, false), true);
 });
 
 test("a task without the opened slide is not an annotate task for that slide", () => {

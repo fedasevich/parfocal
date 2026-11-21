@@ -29,6 +29,8 @@ export const tagText: Record<QueueRow["tag"], string> = {
   outline: "outline differs",
 };
 
+export const tagOf = (tag: QueueRow["tag"], reviewers?: number) =>
+  tag === "bothai" && reviewers === 1 ? "the reviewer vs AI" : tagText[tag];
 export const rowLabel = (row: Pick<QueueRow, "object" | "slide_label">) =>
   row.slide_label === "A1" ? row.object : `${row.object} on ${row.slide_label}`;
 
@@ -40,7 +42,7 @@ const firstName = (name: string | undefined) => name?.split(" ")[0] ?? "";
 export function rowTag(
   row: QueueRow,
   nameOf: (userId: string | null | undefined) => string | undefined,
-  look: { style: ReviewStyle; classes: ProjectClass[] },
+  look: { style: ReviewStyle; classes: ProjectClass[]; reviewers?: number | undefined },
 ): { label: string; tone: Tone } {
   const who = nameOf(row.adjudicator?.user_id) ?? "the adjudicator";
   if (row.state === "decided" && row.decision) {
@@ -60,7 +62,7 @@ export function rowTag(
   if (row.state === "declined") return { label: `declined by ${who}`, tone: "warn" };
   if (row.state === "look-again") return { label: "asked to look again", tone: "accent" };
   if (row.edited) return { label: "edited after decisions", tone: "warn" };
-  return { label: tagText[row.tag], tone: "neutral" };
+  return { label: tagOf(row.tag, look.reviewers), tone: "neutral" };
 }
 
 export const isClosed = (row: QueueRow) =>
