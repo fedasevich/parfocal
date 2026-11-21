@@ -8,6 +8,8 @@ import {
 import { keyRegistry } from "../src/keys/catalogue.ts";
 import { answerKeyIds } from "../src/screens/review/answer-keys.ts";
 import { decisionKeyActions } from "../src/screens/review/decision-mapping.ts";
+import { answerCount } from "../src/screens/review/decision-style.ts";
+import { typeAnswers, typesCells } from "../src/screens/review/type-bar.ts";
 
 const classes: ProjectClass[] = [
   { name: "Tumor", color: "#f87171" },
@@ -71,4 +73,28 @@ test("the keys of one style never collide", () => {
     const keys = answersFor(style, classes).map((answer) => answer.key);
     assert.equal(new Set(keys).size, keys.length);
   }
+});
+
+test("every answer of every style counts as agree, disagree or unsure", () => {
+  for (const kind of styles) {
+    const style = { kind, question: null, agreeFrom: 4, disagreeTo: 2 };
+    for (const answer of answersFor(kind, classes, "Tumor"))
+      assert.ok(
+        answerCount(style, classes, { class_name: "Tumor" }, answer.raw),
+        `${kind} ${answer.raw}`,
+      );
+  }
+  const yesno = { kind: "yesno" as const, question: null, agreeFrom: 4, disagreeTo: 2 };
+  assert.equal(answerCount(yesno, classes, { class_name: "Tumor" }, "yes"), "agree");
+  assert.equal(answerCount(yesno, classes, { class_name: "Tumor" }, "no"), "disagree");
+});
+
+test("only the Agree with the AI style puts the cell type bar keys on a cell", () => {
+  assert.deepEqual(
+    styles.filter((kind) => typesCells({ kind })),
+    ["agree"],
+  );
+  const typeKeys = typeAnswers.map((answer) => answer.key);
+  for (const answer of answersFor("agree", classes))
+    assert.ok(typeKeys.includes(answer.key), `${answer.key} keeps its meaning on a cell`);
 });

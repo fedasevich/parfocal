@@ -74,9 +74,11 @@ export function OutlineSettle({
           <small className="text-caption text-fg-dim">
             {settled === "drawn" ? (
               <Trans>A new outline is settled.</Trans>
-            ) : settled === "none" ? (
+            ) : settled !== "none" ? null : choices.length === 0 ? (
+              <Trans>Draw a new outline if the AI's is wrong.</Trans>
+            ) : (
               <Trans>Pick one outline or draw a new one.</Trans>
-            ) : null}
+            )}
           </small>
           <Button size="xs" variant="secondary" disabled={busy} onClick={onDraw}>
             <Trans>Draw a new outline</Trans>

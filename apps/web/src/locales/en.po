@@ -5020,6 +5020,7 @@ msgid "Change the slide on this side"
 msgstr "Change the slide on this side"
 
 #: src/screens/review/object-card.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Change the type"
 msgstr "Change the type"
 
@@ -6811,6 +6812,10 @@ msgstr "Draw a line across {splitting} to split it into parts."
 msgid "Draw a new outline"
 msgstr "Draw a new outline"
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Draw a new outline if the AI's is wrong."
+msgstr "Draw a new outline if the AI's is wrong."
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Draw as"
@@ -6977,11 +6982,6 @@ msgstr "Earcut triangulation"
 msgid "Edit"
 msgstr "Edit"
 
-#. placeholder {0}: row.object
-#: src/screens/disagreements/queue-screen.tsx
-msgid "Edit {0} myself in the viewer"
-msgstr "Edit {0} myself in the viewer"
-
 #: src/screens/review/object-edit-history.tsx
 msgid "Edit history"
 msgstr "Edit history"
@@ -6989,6 +6989,10 @@ msgstr "Edit history"
 #: src/screens/settings/settings-screen.tsx
 msgid "Edit in the Display panel"
 msgstr "Edit in the Display panel"
+
+#: src/viewer/stage-guided-card.tsx
+msgid "Edit shape"
+msgstr "Edit shape"
 
 #: src/screens/project/case-slides-editor.tsx
 #: src/screens/project/slides-tab.tsx
@@ -13509,7 +13513,13 @@ msgstr "Recording: {0} s left, {count} events"
 msgid "Rectangle"
 msgstr "Rectangle"
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Redraw {0} myself"
+msgstr "Redraw {0} myself"
+
 #: src/screens/review/object-card.tsx
+#: src/viewer/stage-guided-card.tsx
 msgid "Redraw the outline"
 msgstr "Redraw the outline"
 

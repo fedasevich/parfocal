@@ -201,16 +201,26 @@ test("an object redrawn after the decisions asks to look again", async ({ page }
   await expect(page.getByText("after both reviewers decided")).toBeVisible();
 });
 
-test("Edit myself opens the viewer at that object", async ({ page }) => {
+test("Redraw myself draws the settled outline in the queue and stays there", async ({ page }) => {
   await page.goto(`${base}/disagreements?stage=open`);
   await page.getByRole("button", { name: /^T4 / }).click();
-  await page.getByRole("button", { name: "Edit T4 myself in the viewer" }).click();
-  await expect(page).toHaveURL(new RegExp(`/slides/[^?]+\\?task=${rt14}&object=T4`));
-  const back = page.getByTestId("viewer-back");
-  await expect(back).toHaveText("Disagreements");
-  await expect(back).toHaveAttribute("data-return", "disagreements");
-  await page.goBack();
+  await slideDrawn(page, "T4");
+  const decide = page.getByRole("complementary", { name: "Decide" });
+  await expect(decide.getByRole("button", { name: /myself in the viewer/ })).toHaveCount(0);
+  await decide.getByRole("button", { name: "Redraw T4 myself" }).click();
+  const frame = objectStage(page).getByTestId("object-frame");
+  await expect(frame).toHaveAttribute("data-drawing", "true");
+  await expect(decide.getByRole("button", { name: "Redraw T4 myself" })).toHaveCount(0);
+  const drawn = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" && /\/disagreement-queue\/[^/]+\/T4\/outline$/.test(request.url()),
+  );
+  await drawOnStage(page);
+  const body = (await drawn).postDataJSON() as { geometry: { type: string } };
+  expect(body.geometry.type).toBe("Polygon");
+  await expect(page.getByTestId("outline-settle")).toHaveAttribute("data-settled", "drawn");
   await expect(page.getByRole("heading", { name: "Disagreements in RT-14" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open T4 in the full viewer" })).toBeVisible();
 });
 
 test("the prototype index links the queue and the adjudication without scenes", async ({

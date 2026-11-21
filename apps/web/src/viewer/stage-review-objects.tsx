@@ -12,7 +12,7 @@ import { slideAt } from "../annotations/stage-pointer.ts";
 import { isTyping } from "../keys/registry.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
 import { rawFor } from "../screens/review/decision-mapping.ts";
-import { answersOf } from "../screens/review/decision-style.ts";
+import { answerCount, answersOf } from "../screens/review/decision-style.ts";
 import { disagreeOptions, reasonDraft } from "../screens/review/disagree-reasons.ts";
 import { drawChoicesOf, myDisplaySettings } from "../screens/review/display-tab.tsx";
 import { coachShown, useGuidedCoach } from "../screens/review/guided-coach.ts";
@@ -28,6 +28,7 @@ import {
   typeAnswers,
   typeChoice,
   typeOptions,
+  typesCells,
 } from "../screens/review/type-bar.ts";
 import { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
 import { personalPanelValues, useDisplayDefaults } from "../shell/display-defaults.ts";
@@ -318,6 +319,7 @@ export function StageReviewObjects({
   const objects = session.objects;
   const order = objects.map((item) => item.object);
   const decided = new Set(session.decisions.keys());
+  const allDecided = order.length > 0 && order.every((id) => decided.has(id));
   const [chosen, setCurrent] = useState<string | null>(object ?? null);
   const [gridOpen, setGridOpen] = useState(cellsGrid);
   const [done, setDone] = useState(false);
@@ -406,12 +408,18 @@ export function StageReviewObjects({
   const opening = useRef(true);
   const reported = useRef(onCurrent);
   reported.current = onCurrent;
+  const opensOnOpinion =
+    guided && object === undefined && answersOff === undefined && !readOnly && allDecided;
   useEffect(() => {
     if (!ready || !opening.current) return;
     opening.current = false;
+    if (opensOnOpinion) {
+      setDone(true);
+      return;
+    }
     const area = outlineArea(objects.find((item) => item.object === current)?.outline);
     if (area !== null) void engine.flyToArea(area);
-  }, [ready, objects, engine, current]);
+  }, [ready, objects, engine, current, opensOnOpinion]);
   useEffect(() => {
     if (ready) reported.current?.(current);
   }, [ready, current]);
@@ -422,12 +430,13 @@ export function StageReviewObjects({
   };
   const answer = (item: ReviewObject, raw: string) => {
     if (answersOff !== undefined) return;
-    const option = answersOf(session.style, session.classes, item).find(
-      (entry) => entry.raw === raw,
-    );
-    const value = option?.countsAs;
+    const value = answerCount(session.style, session.classes, item, raw);
     if (value === undefined) return;
-    saves.save(item.object, raw, value);
+    const stored = session.decisions.get(item.object);
+    const again =
+      stored !== undefined &&
+      answerFromDecision(stored, session.style, item, session.classes).raw === raw;
+    if (!again) saves.save(item.object, raw, value);
     if (canFix && session.style.kind !== "blind" && value === "disagree") {
       setCurrent(item.object);
       setShaping(null);
@@ -539,7 +548,11 @@ export function StageReviewObjects({
     };
   }, [shapeEntry, stage, current, currentRing, engine]);
   const typedCell =
-    currentItem?.kind === "cell" && outlineArea(currentItem.outline) !== null ? currentItem : null;
+    currentItem?.kind === "cell" &&
+    typesCells(session.style) &&
+    outlineArea(currentItem.outline) !== null
+      ? currentItem
+      : null;
   const decideType = (cell: ReviewObject, id: string) => {
     if (answersOff !== undefined) return;
     const option = typeOptions.find((item) => item.id === id);
@@ -650,6 +663,11 @@ export function StageReviewObjects({
   };
   const fixFor = (item: ReviewObject): GuidedFix => ({
     open: fixStep !== null,
+    offered: canFix && session.style.kind !== "blind",
+    onEditShape:
+      shapeEntry && current === item.object
+        ? () => setShaping({ object: item.object, tool: "handles" })
+        : null,
     redrawPoints: fixStep === "redraw" ? draft.length : null,
     typePicker:
       fixStep === "type" ? (

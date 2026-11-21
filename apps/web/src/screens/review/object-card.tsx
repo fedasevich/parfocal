@@ -303,6 +303,7 @@ type ObjectCardProps = {
   onBackToAnswers: () => void;
   onFix: (what: string) => void;
   typePicker?: ReactNode;
+  fixRow?: ReactNode;
   redrawPoints: number | null;
   onFinishRedraw: () => void;
   onCancelRedraw: () => void;
@@ -333,6 +334,7 @@ export function ObjectCard({
   onBackToAnswers,
   onFix,
   typePicker,
+  fixRow,
   redrawPoints,
   onFinishRedraw,
   onCancelRedraw,
@@ -489,6 +491,7 @@ export function ObjectCard({
         </span>
       ) : null}
       {shown ? note : null}
+      {fixRow}
       {coach}
       {history}
       {readOnly ? null : (
