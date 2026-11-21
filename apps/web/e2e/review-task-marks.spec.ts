@@ -30,6 +30,8 @@ const readLayer = (page: Page) =>
     [rt14, a1] as const,
   );
 
+const rulerLabels = (page: Page) => page.getByTestId("ruler-layer").locator("text");
+
 async function drag(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
@@ -84,10 +86,12 @@ test("a note, an arrow and a ruler drawn in a review task stay in the author's l
   await expect(stage).toHaveAttribute("data-annotations", "loaded", { timeout: 30_000 });
   await expect(page.getByTestId("text-shape")).toHaveCount(1);
   await expect(page.getByTestId("arrow-shape")).toHaveCount(1);
+  await expect(rulerLabels(page)).toHaveCount(1);
 
   await openAnnotate(page, "&as=SM");
   await expect(page.getByTestId("text-shape")).toHaveCount(0);
   await expect(page.getByTestId("arrow-shape")).toHaveCount(0);
+  await expect(rulerLabels(page)).toHaveCount(0);
   expect((await readLayer(page)).marks).toEqual([]);
 });
 

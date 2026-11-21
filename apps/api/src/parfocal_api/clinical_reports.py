@@ -476,6 +476,7 @@ async def findings_of(connection: AsyncConnection, case_id: uuid.UUID) -> CaseRe
         .where(
             annotations.c.slide_id.in_(case_slides),
             annotations.c.kind == AnnotationKind.MEASUREMENT,
+            annotations.c.task_id.is_(None),
             annotations.c.deleted_at.is_(None),
         )
         .order_by(annotations.c.slide_id, annotations.c.number)
@@ -811,6 +812,7 @@ async def measured_length(
                 annotations.c.slide_id == slide_id,
                 annotations.c.kind == AnnotationKind.MEASUREMENT,
                 annotations.c.number == parsed.number,
+                annotations.c.task_id.is_(None),
                 annotations.c.deleted_at.is_(None),
             )
         )

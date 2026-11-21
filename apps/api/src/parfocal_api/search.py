@@ -383,6 +383,7 @@ async def drawn_holders(
                 annotations.c.slide_id.in_(slide_ids),
                 annotations.c.kind == kind.value,
                 annotations.c.number == found.number,
+                annotations.c.task_id.is_(None),
                 annotations.c.deleted_at.is_(None),
             )
         )
