@@ -7021,7 +7021,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 10. `annotate_only` shuts review tasks out of the training export, so a doctor's corrections never reach a dataset.
   Done when signing off a review task, or a button on its Dataset page, builds the final layer by the rule of the chosen option (agreed objects as `ai-confirmed`, edited ones as `ai-edited` with their author, adjudicated ones with the adjudicator's outcome, rejected ones as deletions, added ones as `human`), the training dataset and the patch export accept the task, an object left open or unsure is left out and counted, and tests compare the export with the decisions and edits it came from. An ADR records where the final layer lives.
   Depends on PROTO-113 and PROTO-117 and on decision 166 (which task carries training data). Size: L.
-- [ ] PROTO-119 · Shapes drawn in a review task's Annotate mode belong to the task
+- [x] PROTO-119 · Shapes drawn in a review task's Annotate mode belong to the task
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 11. They are saved to the slide wide layer today, so they are in no reviewer's layer and no dataset.
   Done when a shape drawn by an assigned reviewer in a review task is saved with the task, shows as an added object with its person mark in the reviewer's layer and the consensus, stays hidden from other reviewers while blinding holds, and specs cover it.
   Depends on decision 166 (which task carries training data). Size: M.
