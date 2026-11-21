@@ -87,3 +87,28 @@ Against the M4 baselines of 9.0, 12.3 and 12.4 ms on the same work, SwiftShader 
 
 - TODO: once seven green hosted runs exist, recompute the median per slide and tighten the three limits if the slides differ.
 - TODO: repeat the frame run before the M2 gate and when a change targets rendering speed, as ADR 0011 says.
+
+## Request and byte counts after 256 KiB blocks, 2026-11-21
+
+PROTO-130 (tile range requests answer fast enough for a smooth pan) cut the range cache block from 1 MiB to 256 KiB, and PROTO-132 (a tile's byte requests run together) loads each level's tile offsets once after opening. The `browser (viewer-engine)` job of CI run 44889628730 then failed `viewer.fitted-requests` with 15 requests against a limit of 9. The spec runs in serial mode, so every later slide and RTT was skipped. Each case was then run on its own on the Apple M4 with `packages/viewer-engine/browser/budgets.spec.ts`, fastest of three rounds.
+
+| Slide | RTT | Fitted requests | Fitted bytes | Fitted ms | Jump requests | Jump bytes | Sharp after jump ms |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CMU-1.svs | 0 | 15 | 4013251 | 822 | 19 | 5242880 | 444 |
+| CMU-1.svs | 50 | 15 | 4013251 | 1562 | 19 | 5242880 | 1182 |
+| CMU-1.svs | 100 | 15 | 4013251 | 2381 | 19 | 5242880 | 2082 |
+| CMU-1.svs | 200 | 15 | 4013251 | 4218 | 19 | 5242880 | 3881 |
+| CMU-1-JP2K-33005.svs | 0 | 7 | 1755487 | 729 | 11 | 2883584 | 395 |
+| CMU-1-JP2K-33005.svs | 50 | 7 | 1755487 | 1351 | 11 | 2883584 | 831 |
+| CMU-1-JP2K-33005.svs | 100 | 7 | 1755487 | 2024 | 11 | 2883584 | 1379 |
+| CMU-1-JP2K-33005.svs | 200 | 7 | 1755487 | 3772 | 11 | 2883584 | 2496 |
+| CMU-1.tiff | 0 | 8 | 2004822 | 351 | 5 | 1310720 | 263 |
+| CMU-1.tiff | 50 | 8 | 2004822 | 1152 | 5 | 1310720 | 514 |
+| CMU-1.tiff | 100 | 8 | 2004822 | 1938 | 5 | 1310720 | 763 |
+| CMU-1.tiff | 200 | 8 | 2004822 | 3575 | 5 | 1310720 | 1263 |
+
+The hosted runner at 0 ms RTT gave 15 fitted requests and 4013251 bytes for CMU-1.svs, and 20 jump requests. Counts and bytes do not change with RTT. The twelve count and byte budgets now take these as their baselines. A request limit is the baseline plus one, or plus two for the CMU-1.svs jump because the runner saw 20, and a byte limit is just under 1.2 times the baseline. The bytes fell by about half, so the byte limits are tighter than before.
+
+The time budgets were not changed. The requests cost more round trips, though. The same open at 100 ms RTT, measured by the lifecycle spec test where a tab is hidden before the first tile read, took 1796 ms from showing the tab to a complete view with 256 KiB blocks and 873 ms with 1 MiB blocks, on the same build with only `defaultRangeBlockSize` changed. The hosted runner took 2048 ms, over that test's 2 s line.
+
+- TODO: decide whether opening a slide on a slow link may cost about twice the round trips, or whether the open path reads larger blocks first.
