@@ -1,5 +1,8 @@
+import uuid
+
 import pytest
 from db_support import ApiAs
+from order_support import run_orders
 from test_clinical_report_cosign import ready, send
 from test_clinical_reports import Clinic, audit_actions, created, make_clinic
 from test_decision_styles import cells_in_chunks
@@ -33,7 +36,7 @@ def test_the_evaluation_report_reads_the_task(api: ApiAs, database: str) -> None
     report = response.json()
     assert report["task_code"].startswith("RT-")
     assert (report["round_name"], report["model"]) == ("Layer task", "HoVer-NeXt")
-    assert (report["slides"], report["objects"], report["adjudicators"]) == (1, 7, 0)
+    assert (report["slides"], report["objects"], report["adjudicators"]) == (1, 2, 0)
     assert sorted(report["reviewer_ids"]) == sorted(
         str(r.people[who].user_id) for who in ("first", "second")
     )
@@ -72,6 +75,28 @@ def test_the_evaluation_report_counts_cells_and_names_their_types(
     assert named["C1"] == "Tumor cell"
     assert named["C2"] == "Stroma cell"
     assert named["C3"] == "Unclassified cell"
+
+
+def test_the_evaluation_report_counts_only_the_sampled_objects(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    cells_in_chunks(database, r)
+    created = api(r.people["owner"]).post(
+        f"/api/projects/{r.project}/review-tasks",
+        json={
+            "name": "Sampled task",
+            "slide_ids": [str(r.slide)],
+            "result_sets": [{"slide_id": str(r.slide), "result_set_id": str(r.result_set)}],
+            "reviewer_ids": [str(r.people["first"].user_id), str(r.people["second"].user_id)],
+            "split": "everyone",
+            "scope": {"kind": "random-cells", "count": 3},
+        },
+    )
+    assert created.status_code == 201, created.text
+    tenant = owner(database, f"SELECT tenant_id FROM projects WHERE id = '{r.project}'")[0][0]
+    run_orders(database, uuid.UUID(str(tenant)))
+    url = f"/api/review-tasks/{created.json()['id']}/evaluation-report"
+    report = api(r.people["owner"]).get(url).json()
+    assert report["objects"] == 3
 
 
 def test_the_evaluation_report_leaves_failed_and_importing_sets_out(

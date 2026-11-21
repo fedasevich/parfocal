@@ -434,6 +434,7 @@ async def result_set_of(connection: AsyncConnection, task: Any) -> ResultSetFact
     rows = (
         await connection.execute(
             select(
+                review_task_slides.c.slide_id,
                 result_sets.c.name,
                 result_sets.c.cell_count,
                 result_sets.c.region_count,
@@ -447,9 +448,17 @@ async def result_set_of(connection: AsyncConnection, task: Any) -> ResultSetFact
     added, _ = await added_objects(
         connection, task.id, await class_names(connection, task.project_id)
     )
+    in_task = await connection.scalar(
+        select(func.sum(review_order.c.count)).where(
+            review_order.c.task_id == task.id,
+            review_order.c.slide_id.in_([row.slide_id for row in rows]),
+        )
+    )
     return ResultSetFacts(
         name=", ".join(dict.fromkeys(row.name for row in rows)),
-        objects=sum(row.cell_count + row.region_count for row in rows),
+        objects=int(in_task)
+        if in_task is not None
+        else sum(row.cell_count + row.region_count for row in rows),
         added=len(added),
     )
 
