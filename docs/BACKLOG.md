@@ -7157,6 +7157,10 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 7, 8 and 12 and the partly fixed recheck of round four issue 15. A case has no link on the project page, the slide counter restarts after a submit, and the remaining number and word slips.
   Done when unit tests or specs cover each item.
   Depends on nothing. Size: S.
+- [ ] PROTO-158 · A result import notice, GPU seconds for Best and names for hand drawn outlines
+  Left over from PROTO-157 (round five small slips), from `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` issues 12 and 15. Importing a result set sends no notification, which needs a new notification kind. A Best embedding records no GPU seconds, so ai usage and Admin cannot show them. Hand drawn outlines list as M1 and M2 while one click and model objects use their class letter.
+  Done when a test sends the import notice, a test finds an ai usage row with GPU seconds after a Best embedding, and a unit test names a hand drawn outline by its class like other objects, or the owner is asked in `docs/decisions.md` if the naming is a real product choice.
+  Depends on nothing. Size: M.
 
 ---
 
