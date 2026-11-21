@@ -4,8 +4,10 @@ import {
   type PolygonGeometry,
   type ReviewDecisionDraft,
   useClearDecision,
+  useClearDecisionBatch,
   useClearReviewEdit,
   useSaveDecision,
+  useSaveDecisionBatch,
   useSaveReviewEdit,
 } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,8 +15,14 @@ import { taskTimer } from "../../telemetry/app-events.ts";
 import { type Count, decisionBody, type ReviewStyle, shownCall } from "./decision-style.ts";
 import { toMentionTokens } from "./mention-picking.ts";
 import type { ReviewSession } from "./review-data.ts";
-import type { Answer } from "./review-state.ts";
+import type { Answer, Answers } from "./review-state.ts";
 import { useMentionable } from "./use-mentionable.ts";
+
+export function withoutAnswers(answers: Answers, objectIds: string[]): Answers {
+  const next = new Map(answers);
+  for (const objectId of objectIds) next.delete(objectId);
+  return next;
+}
 
 export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
   const queryClient = useQueryClient();
@@ -49,6 +57,35 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
       },
     });
   };
+  const batchSaver = useSaveDecisionBatch();
+  const batchClearer = useClearDecisionBatch();
+  const saveAll = async (items: { objectId: string; raw: string }[], value: Count) => {
+    try {
+      await batchSaver.mutateAsync({
+        taskId,
+        slideId,
+        data: {
+          decisions: items.map(({ objectId, raw }) => ({
+            object: objectId,
+            ...decisionBody(style, raw, classes, value),
+            ...shownCall(
+              objects.find((item) => item.object === objectId),
+              classes,
+            ),
+          })),
+        },
+      });
+    } finally {
+      refresh();
+    }
+  };
+  const clearAll = async (objectIds: string[]) => {
+    try {
+      await batchClearer.mutateAsync({ taskId, slideId, data: { objects: objectIds } });
+    } finally {
+      refresh();
+    }
+  };
   const refreshLayer = () =>
     void queryClient.invalidateQueries({ queryKey: getGetReviewedLayerQueryKey(taskId, slideId) });
   const edits = useSaveReviewEdit({ mutation: { onSuccess: refreshLayer } });
@@ -60,5 +97,5 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
     if (before === undefined) clearer.mutate({ taskId, slideId, objectId });
     else save(objectId, before.raw, before.value);
   };
-  return { save, restore, saveOutline, clearOutline };
+  return { save, saveAll, restore, clearAll, saveOutline, clearOutline };
 }

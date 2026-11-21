@@ -65,7 +65,7 @@ import {
   typeOptions,
 } from "../review/type-bar.ts";
 import { useCellArrows } from "../review/type-bar.tsx";
-import { useDecisionSaves } from "../review/use-decision-saves.ts";
+import { useDecisionSaves, withoutAnswers } from "../review/use-decision-saves.ts";
 import { useDisplayChoice, useShiftPresetKeys } from "../review/use-display-choice.ts";
 import { useOpinionDraft } from "../review/use-opinion-draft.ts";
 import { usePagedReview } from "../review/use-paged-review.ts";
@@ -554,20 +554,43 @@ export function useViewerState(props: BodyProps) {
     if (openZone === undefined || buttonsOff || openZoneCells.length === 0) return;
     const before = overrides;
     const next = new Map(overrides);
-    for (const cell of openZoneCells) {
-      const raw = rawFor(style, "agree", cell);
-      decisions.save(cell.object, raw, "agree");
-      next.set(cell.object, { value: "agree", raw, reasons: [], note: null });
+    const items = openZoneCells.map((cell) => ({
+      objectId: cell.object,
+      raw: rawFor(style, "agree", cell),
+    }));
+    for (const { objectId, raw } of items) {
+      next.set(objectId, { value: "agree", raw, reasons: [], note: null });
     }
     setOverrides(next);
-    setToast({
-      id: Date.now(),
-      text: t`${openZoneCells.length} cells in ${openZone.name} marked agree`,
-      undo: () => {
-        setOverrides(before);
-        for (const cell of openZoneCells) decisions.restore(cell.object, undefined);
+    const count = items.length;
+    const zoneName = openZone.name;
+    decisions.saveAll(items, "agree").then(
+      () =>
+        setToast({
+          id: Date.now(),
+          text: t`${count} cells in ${zoneName} marked agree`,
+          undo: () => {
+            setOverrides(before);
+            decisions
+              .clearAll(items.map((item) => item.objectId))
+              .catch(() =>
+                setToast({ id: Date.now(), text: t`The undo was not saved. Try again.` }),
+              );
+          },
+        }),
+      () => {
+        setOverrides((current) =>
+          withoutAnswers(
+            current,
+            items.map((item) => item.objectId),
+          ),
+        );
+        setToast({
+          id: Date.now(),
+          text: t`${count} cells were not saved. Nothing changed, try again.`,
+        });
       },
-    });
+    );
   };
 
   const zoneKeys = openZone !== undefined && tab === "objects";

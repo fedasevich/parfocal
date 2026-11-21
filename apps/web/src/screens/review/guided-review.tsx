@@ -97,7 +97,7 @@ import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "
 import { ReviewTop } from "./review-top.tsx";
 import { type Camera, homeCamera, SlideStill, type StillView } from "./slide-still.tsx";
 import { ThreadsTab, useOpenThreadsWarning } from "./threads-tab.tsx";
-import { useDecisionSaves } from "./use-decision-saves.ts";
+import { useDecisionSaves, withoutAnswers } from "./use-decision-saves.ts";
 import { useDisplayChoice, useShiftPresetKeys } from "./use-display-choice.ts";
 import { useOpinionDraft } from "./use-opinion-draft.ts";
 
@@ -545,6 +545,37 @@ function GuidedBody({
           void toSubmitted();
         },
         onError: () => setFailed(true),
+      },
+    );
+  };
+  const agreeRest = () => {
+    const before = overrides;
+    const next = new Map(overrides);
+    const items = openCells.map((cell) => ({
+      objectId: cell.object,
+      raw: rawFor(style, "agree", cell),
+    }));
+    const ids = items.map((item) => item.objectId);
+    for (const objectId of ids) {
+      next.set(objectId, { value: "agree", raw: "agree", reasons: [], note: null });
+    }
+    setOverrides(next);
+    setConfirmRest(false);
+    const count = items.length;
+    decisions.saveAll(items, "agree").then(
+      () =>
+        showUndoToast({
+          message: t`${count} cells marked agree`,
+          undo: () => {
+            setOverrides(before);
+            decisions
+              .clearAll(ids)
+              .catch(() => showUndoToast({ message: t`The undo was not saved. Try again.` }));
+          },
+        }),
+      () => {
+        setOverrides((current) => withoutAnswers(current, ids));
+        showUndoToast({ message: t`${count} cells were not saved. Nothing changed, try again.` });
       },
     );
   };
@@ -1047,28 +1078,7 @@ function GuidedBody({
                       onNotNucleus={buttonsOff ? undefined : notNucleus}
                       onAgreeRest={() => setConfirmRest(true)}
                       onCancelRest={() => setConfirmRest(false)}
-                      onApplyRest={() => {
-                        const next = new Map(overrides);
-                        const before = overrides;
-                        for (const cell of openCells) {
-                          decisions.save(cell.object, rawFor(style, "agree", cell), "agree");
-                          next.set(cell.object, {
-                            value: "agree",
-                            raw: "agree",
-                            reasons: [],
-                            note: null,
-                          });
-                        }
-                        setOverrides(next);
-                        setConfirmRest(false);
-                        showUndoToast({
-                          message: `${openCells.length} cells marked agree`,
-                          undo: () => {
-                            setOverrides(before);
-                            for (const cell of openCells) decisions.restore(cell.object, undefined);
-                          },
-                        });
-                      }}
+                      onApplyRest={agreeRest}
                       onFoldChange={setCellsFolded}
                       onClose={() => setCellsShut(true)}
                     />

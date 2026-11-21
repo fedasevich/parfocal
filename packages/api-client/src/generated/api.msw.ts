@@ -11116,6 +11116,35 @@ export const getListDecisionsResponseMock = (): ReviewDecision[] =>
     ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
   }));
 
+export const getSaveDecisionBatchResponseMock = (): ReviewDecision[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+    number: faker.number.int(),
+    style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
+    answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answer_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    value: faker.helpers.arrayElement(Object.values(DecisionValue)),
+    reasons: faker.helpers.arrayElements(Object.values(DecisionReason)),
+    reason_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    reopened_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    reopened_note: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    preset: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    ai_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
+  }));
+
 export const getListDecisionNotesResponseMock = (): DecisionNote[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -26952,6 +26981,49 @@ export const getListDecisionsMockHandler = (
   );
 };
 
+export const getSaveDecisionBatchMockHandler = (
+  overrideResponse?:
+    | ReviewDecision[]
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReviewDecision[]> | ReviewDecision[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/decisions/batch",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSaveDecisionBatchResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getClearDecisionBatchMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/decisions/batch-clear",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getListDecisionNotesMockHandler = (
   overrideResponse?:
     | DecisionNote[]
@@ -31026,6 +31098,8 @@ export const getParfocalAPIMock = () => [
   getSaveDecisionMockHandler(),
   getClearDecisionMockHandler(),
   getListDecisionsMockHandler(),
+  getSaveDecisionBatchMockHandler(),
+  getClearDecisionBatchMockHandler(),
   getListDecisionNotesMockHandler(),
   getSkipObjectMockHandler(),
   getClearSkipMockHandler(),

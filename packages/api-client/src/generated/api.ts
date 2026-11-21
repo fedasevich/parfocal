@@ -1057,6 +1057,21 @@ export interface BandRecord {
   recorded_accuracy: number | null;
 }
 
+/**
+ * @minimum 0
+ * @maximum 255
+ */
+export type Score = number;
+
+export interface BatchDecisionDraft {
+  object: string;
+  answer?: Answer | null;
+  answer_class_id?: string | null;
+  value?: DecisionValue | null;
+  ai_class_id?: string | null;
+  ai_score?: Score | null;
+}
+
 export interface BatchDone {
   minutes: number;
   first_ids: string;
@@ -2413,6 +2428,22 @@ export const Decision = {
   "keep-ai": "keep-ai",
   "go-with-reviewers": "go-with-reviewers",
 } as const;
+
+export interface DecisionBatch {
+  /**
+   * @minItems 1
+   * @maxItems 5000
+   */
+  decisions: BatchDecisionDraft[];
+}
+
+export interface DecisionClearBatch {
+  /**
+   * @minItems 1
+   * @maxItems 5000
+   */
+  objects: string[];
+}
 
 export type DecisionCountsAnswers = { [key: string]: number };
 
@@ -6655,12 +6686,6 @@ export interface ReviewDecision {
  * @maxLength 500
  */
 export type ParfocalApiReviewDecisionsNote = string;
-
-/**
- * @minimum 0
- * @maximum 255
- */
-export type Score = number;
 
 export interface ReviewDecisionDraft {
   answer?: Answer | null;
@@ -59427,6 +59452,361 @@ export function useListDecisions<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type saveDecisionBatchResponse200 = {
+  data: ReviewDecision[];
+  status: 200;
+};
+
+export type saveDecisionBatchResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type saveDecisionBatchResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type saveDecisionBatchResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type saveDecisionBatchResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type saveDecisionBatchResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type saveDecisionBatchResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type saveDecisionBatchResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type saveDecisionBatchResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type saveDecisionBatchResponseSuccess = saveDecisionBatchResponse200 & {
+  headers: Headers;
+};
+export type saveDecisionBatchResponseError = (
+  | saveDecisionBatchResponse400
+  | saveDecisionBatchResponse401
+  | saveDecisionBatchResponse403
+  | saveDecisionBatchResponse404
+  | saveDecisionBatchResponse409
+  | saveDecisionBatchResponse422
+  | saveDecisionBatchResponse429
+  | saveDecisionBatchResponse500
+) & {
+  headers: Headers;
+};
+
+export type saveDecisionBatchResponse =
+  | saveDecisionBatchResponseSuccess
+  | saveDecisionBatchResponseError;
+
+export const getSaveDecisionBatchUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/decisions/batch`;
+};
+
+/**
+ * Saves a decision for each object that has none yet from this reviewer, in one transaction, and leaves objects already decided as they are. Returns the decisions it saved.
+ * @summary Save Decision Batch
+ */
+export const saveDecisionBatch = async (
+  taskId: string,
+  slideId: string,
+  decisionBatch: DecisionBatch,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<saveDecisionBatchResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<saveDecisionBatchResponse>(getSaveDecisionBatchUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(decisionBatch),
+  });
+};
+
+export const getSaveDecisionBatchMutationKey = () => ["saveDecisionBatch"] as const;
+
+export const getSaveDecisionBatchMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveDecisionBatch>>,
+    TError,
+    SaveDecisionBatchMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveDecisionBatch>>,
+  TError,
+  SaveDecisionBatchMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveDecisionBatchMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveDecisionBatch>>,
+    SaveDecisionBatchMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return saveDecisionBatch(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveDecisionBatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveDecisionBatch>>
+>;
+export type SaveDecisionBatchMutationBody = DecisionBatch;
+export type SaveDecisionBatchMutationError = Problem;
+export type SaveDecisionBatchMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: DecisionBatch;
+};
+
+/**
+ * @summary Save Decision Batch
+ */
+export const useSaveDecisionBatch = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveDecisionBatch>>,
+      TError,
+      SaveDecisionBatchMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveDecisionBatch>>,
+  TError,
+  SaveDecisionBatchMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveDecisionBatchMutationOptions(options), queryClient);
+};
+
+export type clearDecisionBatchResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearDecisionBatchResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearDecisionBatchResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearDecisionBatchResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearDecisionBatchResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearDecisionBatchResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearDecisionBatchResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearDecisionBatchResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type clearDecisionBatchResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearDecisionBatchResponseSuccess = clearDecisionBatchResponse204 & {
+  headers: Headers;
+};
+export type clearDecisionBatchResponseError = (
+  | clearDecisionBatchResponse400
+  | clearDecisionBatchResponse401
+  | clearDecisionBatchResponse403
+  | clearDecisionBatchResponse404
+  | clearDecisionBatchResponse409
+  | clearDecisionBatchResponse422
+  | clearDecisionBatchResponse429
+  | clearDecisionBatchResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearDecisionBatchResponse =
+  | clearDecisionBatchResponseSuccess
+  | clearDecisionBatchResponseError;
+
+export const getClearDecisionBatchUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/decisions/batch-clear`;
+};
+
+/**
+ * @summary Clear Decision Batch
+ */
+export const clearDecisionBatch = async (
+  taskId: string,
+  slideId: string,
+  decisionClearBatch: DecisionClearBatch,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearDecisionBatchResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<clearDecisionBatchResponse>(getClearDecisionBatchUrl(taskId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(decisionClearBatch),
+  });
+};
+
+export const getClearDecisionBatchMutationKey = () => ["clearDecisionBatch"] as const;
+
+export const getClearDecisionBatchMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearDecisionBatch>>,
+    TError,
+    ClearDecisionBatchMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearDecisionBatch>>,
+  TError,
+  ClearDecisionBatchMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearDecisionBatchMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearDecisionBatch>>,
+    ClearDecisionBatchMutationVariables
+  > = (props) => {
+    const { taskId, slideId, data } = props ?? {};
+
+    return clearDecisionBatch(taskId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearDecisionBatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearDecisionBatch>>
+>;
+export type ClearDecisionBatchMutationBody = DecisionClearBatch;
+export type ClearDecisionBatchMutationError = Problem;
+export type ClearDecisionBatchMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: DecisionClearBatch;
+};
+
+/**
+ * @summary Clear Decision Batch
+ */
+export const useClearDecisionBatch = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearDecisionBatch>>,
+      TError,
+      ClearDecisionBatchMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearDecisionBatch>>,
+  TError,
+  ClearDecisionBatchMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearDecisionBatchMutationOptions(options), queryClient);
+};
 
 export type listDecisionNotesResponse200 = {
   data: DecisionNote[];

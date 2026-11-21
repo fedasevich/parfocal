@@ -210,6 +210,40 @@ test("Submit opens the Slide done card in the Opinion tab and Try again clears t
   await expect(page.getByText("T5 is still open")).toBeVisible();
 });
 
+test("a submit the server refuses shows as failed, stays on the slide and Try again sends it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const real = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const method = input instanceof Request ? input.method : (init?.method ?? "GET");
+      if (url.endsWith("/submit") && method === "POST" && sessionStorage.getItem("refuse")) {
+        sessionStorage.setItem("refused", String(Number(sessionStorage.getItem("refused")) + 1));
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ type: "about:blank", title: "Failed", status: 500, code: "server" }),
+            { status: 500, headers: { "content-type": "application/problem+json" } },
+          ),
+        );
+      }
+      return real(input, init);
+    };
+  });
+  const links = await viewerLinks(page);
+  await page.goto(hrefOf(links, "Full viewer · Issue · submit failed"));
+  await page.evaluate(() => sessionStorage.setItem("refuse", "yes"));
+  const before = page.url();
+  await page.getByRole("button", { name: /Try again/ }).click();
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("refused"))).toBe("1");
+  await expect(page.getByText("The review could not be submitted")).toBeVisible();
+  expect(page.url()).toBe(before);
+  await expect(page.getByRole("dialog", { name: /submitted/ })).toHaveCount(0);
+  await page.evaluate(() => sessionStorage.removeItem("refuse"));
+  await page.getByRole("button", { name: /Try again/ }).click();
+  await expect(page).toHaveURL(/\/submitted\?/);
+});
+
 test("Guided and Full viewer switch between the two ways to review", async ({ page }) => {
   const links = await viewerLinks(page);
   await page.goto(hrefOf(links, "Full viewer · Objects tab"));

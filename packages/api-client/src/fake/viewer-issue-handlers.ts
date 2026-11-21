@@ -51,6 +51,9 @@ export const viewerIssueHandlers = (): RequestHandler[] => [
   http.put("*/api/review-tasks/:taskId/slides/:slideId/decisions/:objectId", () =>
     fakeViewerIssue() === "withdrawn" ? taskWithdrawn() : undefined,
   ),
+  http.post("*/api/review-tasks/:taskId/slides/:slideId/decisions/batch", () =>
+    fakeViewerIssue() === "withdrawn" ? taskWithdrawn() : undefined,
+  ),
   http.get<{ taskId: string; slideId: string }>(
     "*/api/review-tasks/:taskId/slides/:slideId/objects",
     ({ params }) =>

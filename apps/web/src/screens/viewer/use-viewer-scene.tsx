@@ -36,7 +36,6 @@ export function useViewerScene(props: BodyProps, model: ReturnType<typeof useVie
     confidence,
     counts,
     current,
-    failed,
     firstReadOpen,
     format,
     hiddenClasses,
@@ -317,17 +316,22 @@ export function useViewerScene(props: BodyProps, model: ReturnType<typeof useVie
           goTo: t`Answer it`,
         }));
   const submit = () => {
-    if (failed) {
-      setFailed(false);
-      return;
-    }
-    submitReview.mutate({ taskId: session.taskId, slideId: session.slideId });
-    timing.finish();
-    void navigate({
-      to: "/tasks/$taskId/submitted",
-      params: { taskId: session.taskId },
-      search: { slide: session.slideId },
-    });
+    if (submitReview.isPending) return;
+    setFailed(false);
+    submitReview.mutate(
+      { taskId: session.taskId, slideId: session.slideId },
+      {
+        onSuccess: () => {
+          timing.finish();
+          void navigate({
+            to: "/tasks/$taskId/submitted",
+            params: { taskId: session.taskId },
+            search: { slide: session.slideId },
+          });
+        },
+        onError: () => setFailed(true),
+      },
+    );
   };
 
   const noTask = search.task === undefined && session.objects.length === 0;

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { actionOf } from "../keys/actions.ts";
@@ -11,10 +12,12 @@ import { rawFor } from "../screens/review/decision-mapping.ts";
 import { answersOf, showsClaim } from "../screens/review/decision-style.ts";
 import type { ReviewSession } from "../screens/review/review-data.ts";
 import { baseAnswers } from "../screens/review/review-state.ts";
+import type { useDecisionSaves } from "../screens/review/use-decision-saves.ts";
+import { showUndoToast } from "../shell/undo-toasts.tsx";
 import { cellsInTissueOrder } from "./stage-geometry.ts";
 import { holdCellArrows } from "./viewer-keys.ts";
 
-type Saves = { save: (object: string, raw: string, value: "agree") => void };
+type Saves = Pick<ReturnType<typeof useDecisionSaves>, "saveAll" | "clearAll">;
 
 const stripActions = ["dnear", "drest"];
 const directions = new Set<string>(["left", "right", "up", "down"]);
@@ -40,6 +43,7 @@ export function StageCellsGrid({
   onStep: (object: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
   const [folded, setFolded] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const cells = useMemo(() => cellsInTissueOrder<ReviewObject>(session.objects), [session.objects]);
@@ -55,11 +59,25 @@ export function StageCellsGrid({
   const currentCell = cells.find((cell) => cell.object === current) ?? cells[0];
   const agreeRest = () => {
     if (readOnly) return;
-    for (const cell of cells) {
-      if (!answer(cell.object))
-        saves.save(cell.object, rawFor(session.style, "agree", cell), "agree");
-    }
     setConfirming(false);
+    const items = cells
+      .filter((cell) => !answer(cell.object))
+      .map((cell) => ({ objectId: cell.object, raw: rawFor(session.style, "agree", cell) }));
+    if (items.length === 0) return;
+    const count = items.length;
+    saves.saveAll(items, "agree").then(
+      () =>
+        showUndoToast({
+          message: t`${count} cells marked agree`,
+          undo: () => {
+            saves
+              .clearAll(items.map((item) => item.objectId))
+              .catch(() => showUndoToast({ message: t`The undo was not saved. Try again.` }));
+          },
+        }),
+      () =>
+        showUndoToast({ message: t`${count} cells were not saved. Nothing changed, try again.` }),
+    );
   };
   const order = cells.map((cell) => cell.object);
   const picked = current !== null && order.includes(current) ? current : undefined;
