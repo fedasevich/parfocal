@@ -82,6 +82,7 @@ test("a model run on a drawn selection streams onto the slide, joins the task an
     "ai-edited",
   );
   await expect(objects).toHaveCount(before - 1);
+  await expect(page.getByTestId("start-run-finished")).toContainText("A run finished");
 });
 
 test("the cells of an added run are confirmed, deleted and undone and the counters follow", async ({

@@ -351,7 +351,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
     <>
       <Zone
         title={t`Parfocal models`}
-        sub={t`Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list.`}
+        sub={t`Kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list.`}
       >
         <Table className={tableClass}>
           <TableHeader>

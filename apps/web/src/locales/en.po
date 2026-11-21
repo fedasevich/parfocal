@@ -106,9 +106,10 @@ msgid " and stay out: {0}"
 msgstr " and stay out: {0}"
 
 #. placeholder {0}: disagreeing.length === 2 ? "both reviewers" : disagreeing[0]
+#. placeholder {1}: row.object
 #: src/screens/disagreements/queue-screen.tsx
-msgid " Disagree goes with {0}."
-msgstr " Disagree goes with {0}."
+msgid " Disagree goes with {0}, and {1} leaves the training data."
+msgstr " Disagree goes with {0}, and {1} leaves the training data."
 
 #. placeholder {0}: batch.done.first_ids
 #: src/screens/upload/progress-step.tsx
@@ -2993,6 +2994,10 @@ msgstr "A reviewer submits a slide of my task"
 msgid "A run always uses the latest version, and the result set records which one."
 msgstr "A run always uses the latest version, and the result set records which one."
 
+#: src/viewer/start-run-panel.tsx
+msgid "A run finished on this slide. Load last run shows it."
+msgstr "A run finished on this slide. Load last run shows it."
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "A sentinel node is staged by the size of its largest deposit, so this stays hidden unless you ask for it."
 msgstr "A sentinel node is staged by the size of its largest deposit, so this stays hidden unless you ask for it."
@@ -3508,7 +3513,7 @@ msgstr "After this the AI result appears and you can give your decisions."
 msgid "Agree"
 msgstr "Agree"
 
-#. placeholder {0}: disagreeing.length ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.` : ""
+#. placeholder {0}: disagreeing.length ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}, and ${row.object} leaves the training data.` : ""
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Agree keeps the AI's call.{0}"
 msgstr "Agree keeps the AI's call.{0}"
@@ -3768,10 +3773,6 @@ msgstr "Also writes annotations.json in COCO form, one polygon per object clippe
 #: src/screens/settings/settings-screen.tsx
 msgid "Always"
 msgstr "Always"
-
-#: src/screens/admin/sections.tsx
-msgid "Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
-msgstr "Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
 
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Amend"
@@ -4945,6 +4946,10 @@ msgstr "Cells in your sample"
 #: src/screens/project/settings-zones.tsx
 msgid "Cells match when their centres are at most this many µm apart"
 msgstr "Cells match when their centres are at most this many µm apart"
+
+#: src/screens/review/guided-review.tsx
+msgid "Cells mode"
+msgstr "Cells mode"
 
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "Cells on {slideLabel}"
@@ -9194,6 +9199,10 @@ msgstr "Kept fixed so there is always a way back"
 #: src/screens/upload/server-check.tsx
 msgid "Kept next to the copy already here"
 msgstr "Kept next to the copy already here"
+
+#: src/screens/admin/sections.tsx
+msgid "Kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
+msgstr "Kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
 
 #: src/screens/upload/result-problems.tsx
 msgid "Kept with no score"

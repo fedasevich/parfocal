@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type ModelRunDraft,
   startModelRuns,
+  useListModelRuns,
   useListProjectModels,
   useListProjectSlides,
 } from "@parfocal/api-client";
@@ -50,6 +51,13 @@ export function StartRunPanel(props: StartRunPanelProps) {
     (item) => item.name === nucleiDetector,
   );
 
+  const earlier = okData(
+    useListModelRuns(
+      props.projectId,
+      { slide_id: props.slideId, status: ["done"], limit: 1 },
+      { query: { staleTime: 0 } },
+    ).data,
+  );
   const slide = okData(useListProjectSlides(props.projectId).data)?.find(
     (item) => item.id === props.slideId,
   );
@@ -126,6 +134,11 @@ export function StartRunPanel(props: StartRunPanelProps) {
           </Button>
         ) : null}
       </div>
+      {earlier && earlier.length > 0 ? (
+        <span className="text-fg-dim" data-testid="start-run-finished">
+          <Trans>A run finished on this slide. Load last run shows it.</Trans>
+        </span>
+      ) : null}
       {model ? (
         <span className="text-fg-dim" data-testid="start-run-model">
           <Trans>

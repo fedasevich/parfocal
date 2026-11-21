@@ -972,6 +972,11 @@ function GuidedBody({
     >
       <ReviewTop
         mode="guided"
+        modeNote={
+          current?.kind === "cell" && !cellsShut && !showDone && !noResults
+            ? t`Cells mode`
+            : undefined
+        }
         onHowItWorks={coach.reopen}
         object={currentId || undefined}
         session={session}

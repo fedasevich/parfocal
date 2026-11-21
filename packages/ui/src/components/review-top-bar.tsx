@@ -38,6 +38,7 @@ type ReviewTopBarProps = React.ComponentProps<"header"> & {
   primaryDisabledReason?: string | undefined;
   primaryTitle?: string | undefined;
   onPrimary?: (() => void) | undefined;
+  modeNote?: string | undefined;
   onModeChange?: (mode: "guided" | "full" | "annotate") => void;
   backHref?: string | undefined;
   backLabel?: string;
@@ -58,6 +59,7 @@ function ReviewTopBar({
   slideThumb,
   slideSummary,
   showAnnotate = false,
+  modeNote,
   panelHidden,
   onTogglePanel,
   progress,
@@ -205,6 +207,14 @@ function ReviewTopBar({
         </span>
       )}
       <span className="flex-1" />
+      {modeNote ? (
+        <span
+          data-testid="mode-note"
+          className="inline-flex h-6 shrink-0 items-center rounded-full bg-accent-soft px-2.5 text-caption font-medium text-fg"
+        >
+          {modeNote}
+        </span>
+      ) : null}
       {mode === "adjudicate" ? null : (
         <SegmentedControl
           aria-label={t`How to review`}

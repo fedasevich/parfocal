@@ -45,6 +45,14 @@ for (const { scene, shows, slide } of guided) {
   });
 }
 
+test("the top bar says Cells mode while cells are being reviewed", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=grid`);
+  await expect(page.getByTestId("mode-note")).toHaveText("Cells mode");
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.").first()).toBeVisible();
+  await expect(page.getByTestId("mode-note")).toHaveCount(0);
+});
+
 test("the mention scene offers only people who may see the comment", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=mention`);
   const picker = page.getByRole("listbox", { name: "Mention someone" });
