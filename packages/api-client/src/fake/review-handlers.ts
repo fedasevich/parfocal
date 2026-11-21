@@ -123,6 +123,7 @@ import {
   fakeRunSetIds,
   toSharedAiObjects,
 } from "./shared-layer-handlers.ts";
+import { markSlideSubmitted } from "./submitted-slides.ts";
 import { fakeView } from "./view.ts";
 import { fakeViewerIssue } from "./viewer-scene.ts";
 import { toReviewTaskDetail, toTaskStates } from "./work-handlers.ts";
@@ -913,9 +914,10 @@ export function reviewHandlers(): RequestHandler[] {
           ? problem(409, "first-read-needed", "Record your first read before you submit")
           : undefined,
     ),
-    getSubmitSlideReviewMockHandler(({ params }) =>
-      submittedStates(String(params["taskId"]), String(params["slideId"])),
-    ),
+    getSubmitSlideReviewMockHandler(({ params }) => {
+      markSlideSubmitted(String(params["taskId"]), String(params["slideId"]), fakeView().viewer);
+      return submittedStates(String(params["taskId"]), String(params["slideId"]));
+    }),
   ];
 }
 

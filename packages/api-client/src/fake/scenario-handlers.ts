@@ -52,7 +52,9 @@ import {
   workspaces,
 } from "./scenario.ts";
 import { adminRightsHolders, workspaceBrands } from "./scenario-admin.ts";
+import { submittedThisSession } from "./submitted-slides.ts";
 import { fakeView } from "./view.ts";
+import { toReviewTaskDetail } from "./work-handlers.ts";
 import {
   activeFakeWorkspace,
   inScenarioWorkspace,
@@ -177,6 +179,13 @@ const myStatus = (task: ScenarioReviewTask, done: number, assigned: number): MyS
 export const assignedTo = (task: ScenarioReviewTask) =>
   task.split === "even" ? Math.ceil(task.slides / task.reviewers.length) : task.slides;
 
+const nextOpenSlide = (task: ScenarioReviewTask, viewer: string): string | null => {
+  const done = submittedThisSession(task.id, viewer);
+  if (done.size === 0) return slides[0]?.id ?? null;
+  const own = toReviewTaskDetail(task).slides.map((slide) => slide.slide_id);
+  return own.find((slideId) => !done.has(slideId)) ?? null;
+};
+
 export const toMyTask = (task: ScenarioReviewTask, viewer = fakeView().viewer): MyTask => {
   const project = projectByCode(task.project);
   const done = task.progress[viewer] ?? 0;
@@ -194,7 +203,7 @@ export const toMyTask = (task: ScenarioReviewTask, viewer = fakeView().viewer): 
     slides_assigned: assigned,
     decisions: done * 24,
     status: myStatus(task, done, assigned),
-    next_slide_id: task.status === "signed" ? null : (slides[0]?.id ?? null),
+    next_slide_id: task.status === "signed" ? null : nextOpenSlide(task, viewer),
     created_by_user_id: people[project.owner].id,
   };
 };
