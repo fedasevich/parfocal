@@ -288,7 +288,7 @@ export function NewAnnotateTask({ projectId, step, preset, slides, onStep }: New
                 {
                   value: "review",
                   title: t`Review AI results`,
-                  text: t`Experts decide whether the AI result is right, without drawing.`,
+                  text: t`Experts decide whether each AI result is right, and can redraw an outline that is wrong.`,
                 },
                 {
                   value: "annotate",

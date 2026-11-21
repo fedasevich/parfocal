@@ -13,6 +13,7 @@ import {
   type Draft,
   isAnnotate,
   perSlideOn,
+  plural,
   type ScopeKind,
   slidesInTask,
   summary,
@@ -20,7 +21,7 @@ import {
   whoReviews,
 } from "./model.ts";
 import { CheckRow, FieldNote, fieldId, RadioRows, RowText, Warn } from "./parts.tsx";
-import { rsShort, type StepProps, TextLink } from "./steps.tsx";
+import { type StepProps, TextLink } from "./steps.tsx";
 
 function personItems(draft: Draft, data: TaskData): TokenItem[] {
   return [
@@ -54,7 +55,6 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
     (person) => person.awayUntil && draft.reviewers.includes(person.id),
   );
   const ceil = Math.ceil(sum.ns / Math.max(1, sum.n));
-  const short = rsShort(data, draft.resultSetId);
   const counts = sum.counts;
   const unpick = (id: string) =>
     update((current) => {
@@ -124,14 +124,7 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
           )}
         </div>
       </Zone>
-      <Zone
-        title={t`How the work is split`}
-        sub={
-          isAnnotate(draft)
-            ? t`${plural(sum.ns, "slide")} in this task.`
-            : t`${plural(sum.ns, "slide")} with ${short} in this task.`
-        }
-      >
+      <Zone title={t`How the work is split`} sub={t`${plural(sum.ns, "slide")} in this task.`}>
         <div className="grid gap-1.5" id={fieldId("split")}>
           <RadioRows
             label={t`How the work is split`}
@@ -173,8 +166,6 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
     </>
   );
 }
-
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 function PerSlideGrid({ draft, data, update }: Pick<StepProps, "draft" | "data" | "update">) {
   const { t } = useLingui();

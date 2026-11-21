@@ -257,7 +257,7 @@ def test_a_copy_into_a_de_identified_project_has_a_stable_pseudonym_and_no_label
     label, barcode, project, sha = single(
         database, f"SELECT label, barcode, project_id, sha256 FROM slides WHERE id = '{copied}'"
     )
-    assert (label, barcode, project) == ("Slide", None, study.research)
+    assert (label, barcode, project) == ("Slide 1", None, study.research)
     assert sha == single(database, f"SELECT sha256 FROM slides WHERE id = '{source}'")[0]
     assert keys_under(slide_prefix(study.tenant_id, copied)) == keys_under(
         slide_prefix(study.tenant_id, source)

@@ -49,7 +49,7 @@ export function AddSlidesModal({
       }}
       width={560}
       title={t`Add slides`}
-      subtitle={t`To ${draft.name.trim() || t`the new task`} · from P07`}
+      subtitle={t`To ${draft.name.trim() || t`the new task`} · from ${data.projectCode}`}
       hint={`${count} picked`}
       primaryLabel={count ? t`Add ${count} slide${count > 1 ? "s" : ""}` : t`Add slides`}
       blockers={count ? [] : [{ id: "pick", text: t`Pick at least one slide`, goTo: "" }]}

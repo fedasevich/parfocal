@@ -194,6 +194,7 @@ export type TaskData = {
   taskId: string;
   projectId: string;
   projectName: string;
+  projectCode: string;
   today: string;
   slides: SlideChoice[];
   groups: SlideGroup[];
@@ -208,6 +209,9 @@ export type TaskData = {
   forms: FormChoice[];
   defaults: { resultSetId: string; reviewerIds: string[]; due: string; reminders: ReminderKey };
 };
+
+export const taskNameFor = (resultSetName: string) =>
+  resultSetName.trim() === "" ? "" : `Review of ${resultSetName.trim()}`;
 
 export type Draft = {
   kind: TaskKindKey;

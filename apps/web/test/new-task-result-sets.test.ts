@@ -85,3 +85,15 @@ test("the preferred template stays when none fits", () => {
 test("the send date reads as day and month of the real timestamp", () => {
   assert.equal(shortDate("2026-11-17T10:00:00+01:00"), "17 Nov");
 });
+
+test("a version already in the name is not repeated and a queued run is not offered", () => {
+  const { choices } = groupResultSets([
+    setOf("a", "s1", { name: "HoVer-Net v0.9", model_version: "v0.9", source: "run" }),
+    setOf("b", "s2", { name: "PathoSAM", model_version: "v1", status: "importing" }),
+    setOf("c", "s3", { name: "GeoJSON import", model_version: null, status: "failed" }),
+  ]);
+  assert.deepEqual(
+    choices.map((choice) => choice.label),
+    ["HoVer-Net v0.9"],
+  );
+});
