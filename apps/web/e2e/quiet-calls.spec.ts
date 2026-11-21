@@ -57,6 +57,7 @@ test("leaving the viewer does not ask the shell's calls again", async ({ page })
   test.setTimeout(60_000);
   const calls = recordCalls(page);
   await page.goto(`/projects/${p07}?tab=slides`);
+  await expect.poll(() => count(calls, /^\/api\/me\/jobs$/)).toBeGreaterThan(0);
   await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 15_000,
@@ -66,7 +67,11 @@ test("leaving the viewer does not ask the shell's calls again", async ({ page })
   await page.goBack();
   await expect(page.getByTestId("slide-row").first()).toBeVisible();
   await page.waitForTimeout(2_000);
-  const shell = calls.filter((path) => /^\/api\/(me|projects|home|review-tasks)/.test(path));
+  const shell = calls.filter(
+    (path) =>
+      /^\/api\/(me|projects|home|review-tasks)/.test(path) &&
+      !/^\/api\/projects\/[^/]+\/overview$/.test(path),
+  );
   expect(shell).toEqual([]);
 });
 

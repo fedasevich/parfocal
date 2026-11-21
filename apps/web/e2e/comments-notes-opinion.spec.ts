@@ -18,19 +18,22 @@ test("a decision note is listed under Your decision notes and a thread opens at 
 }) => {
   await page.goto(objectsViewer);
   await ready(page);
-  const row = page.locator('[data-testid="object-row"][data-object="T2"]');
+  const row = page.locator('[data-testid="object-row"][data-object="T3"]');
   await row.getByRole("button").click();
   await page
     .getByTestId("object-foot")
-    .getByRole("group", { name: "Your answer on T2" })
+    .getByRole("group", { name: "Your answer on T3" })
     .getByRole("button", { name: /Disagree/ })
     .click();
   await page
     .getByTestId("object-foot")
     .getByRole("button", { name: /Add a note/ })
     .click();
-  await page.getByRole("button", { name: "Boundary is off" }).click();
-  const field = page.getByRole("textbox", { name: "Note on your decision for T2" });
+  await page
+    .getByTestId("stage-object-notes")
+    .getByRole("button", { name: "Boundary is off" })
+    .click();
+  const field = page.getByRole("textbox", { name: "Note on your decision for T3" });
   await field.pressSequentially("Runs past the fold");
   await page.keyboard.press("Enter");
   const stage = page.getByTestId("slide-stage");
@@ -49,7 +52,7 @@ test("a decision note is listed under Your decision notes and a thread opens at 
   await expect(comments.getByRole("button", { name: /New comment on an ID/ })).toBeVisible();
   const notes = comments.locator('[data-slot="decision-notes"]');
   await expect(notes).toContainText("Your decision notes");
-  await expect(notes).toContainText("T2");
+  await expect(notes).toContainText("T3");
   await expect(notes).toContainText("Disagree");
   await expect(notes).toContainText("Runs past the fold");
   await comments

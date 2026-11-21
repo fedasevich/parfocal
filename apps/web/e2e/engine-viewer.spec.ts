@@ -298,24 +298,27 @@ test("guided review on outlined cells moves to the next cell after a type", asyn
 test("a decision note with a reason is written and saved on the stage", async ({ page }) => {
   await page.goto(objectsViewer);
   await ready(page);
-  const row = page.locator('[data-testid="object-row"][data-object="T2"]');
+  const row = page.locator('[data-testid="object-row"][data-object="T3"]');
   await row.getByRole("button").click();
   const card = page.getByTestId("object-foot");
   await card
-    .getByRole("group", { name: "Your answer on T2" })
+    .getByRole("group", { name: "Your answer on T3" })
     .getByRole("button", { name: /Disagree/ })
     .click();
   await expect(row).toHaveAttribute("data-decision", "disagree");
   await card.getByRole("button", { name: /Add a note/ }).click();
   const notes = page.getByTestId("stage-object-notes");
-  const field = page.getByRole("textbox", { name: "Note on your decision for T2" });
+  const field = page.getByRole("textbox", { name: "Note on your decision for T3" });
   await expect(field).toBeFocused();
-  await page.getByRole("button", { name: "Boundary is off" }).click();
+  await page
+    .getByTestId("stage-object-notes")
+    .getByRole("button", { name: "Boundary is off" })
+    .click();
   await field.pressSequentially("Runs past the fold");
   const put = page.waitForRequest(
     (request) =>
       request.method() === "PUT" &&
-      request.url().includes("/decisions/T2") &&
+      request.url().includes("/decisions/T3") &&
       (request.postData() ?? "").includes("Runs past the fold"),
   );
   await page.keyboard.press("Enter");
@@ -337,7 +340,7 @@ test("a decision note with a reason is written and saved on the stage", async ({
   const edited = page.waitForRequest(
     (request) =>
       request.method() === "PUT" &&
-      request.url().includes("/decisions/T2") &&
+      request.url().includes("/decisions/T3") &&
       (request.postData() ?? "").includes("and more"),
   );
   await page.keyboard.press("Enter");
@@ -387,13 +390,13 @@ test("a result set's cells page in as outlines and its regions draw outside a ta
   await expect(cells).toHaveAttribute("data-drawn", "outlines");
 });
 
-test("inside an annotate task a result set's cells stay dots and a review task draws only its sample", async ({
+test("inside an annotate task its own result set outlines the cells to retype and a review task draws only its sample", async ({
   page,
 }) => {
   await page.goto(`/projects/${p07}/slides/${tumor044}?task=${annotateTask}&as=DH`);
   await ready(page);
   const cells = page.getByTestId("result-set-cells");
-  await expect(cells.first()).toHaveAttribute("data-drawn", "dots", { timeout: 15_000 });
+  await expect(cells.first()).toHaveAttribute("data-drawn", "outlines", { timeout: 15_000 });
   await expect(page.getByTestId("result-set-regions")).toHaveCount(0);
   await page.goto(`${objectsViewer}&as=LM`);
   await ready(page);
