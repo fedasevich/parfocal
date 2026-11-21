@@ -31,6 +31,7 @@ from parfocal_common.model_runs import (
     ClaimedRun,
     RunScopeKind,
     claim_model_run,
+    run_model_run,
     workflow,
 )
 
@@ -851,3 +852,66 @@ def test_a_run_reads_the_gpu_seconds_its_workers_recorded(
     assert ok(read(api, lab, run))["gpu_seconds"] == 58.6
     listed = ok(api(lab.people["owner"]).get(lab.runs))
     assert [item["gpu_seconds"] for item in listed if item["id"] == run["id"]] == [58.6]
+
+
+def run_notices(database: str, lab: Lab) -> list[tuple[object, ...]]:
+    return owner(
+        database,
+        "SELECT user_id, target_id, payload->>'status', payload->>'reason', payload->>'title' "
+        f"FROM notifications WHERE tenant_id = '{lab.tenant}' AND kind = 'model-run-finished' "
+        "ORDER BY created_at",
+    )
+
+
+def settle(database: str, claimed: ClaimedRun) -> None:
+    async def go(engine: Any) -> None:
+        await run_model_run(engine, claimed, "worker-1")
+
+    run_async(database, go)
+
+
+def test_the_starter_hears_when_a_run_is_done_and_when_it_fails(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    done, failed = started(api, lab, lab.slides[:2])
+    owner(
+        database,
+        f"UPDATE model_runs SET started_by_user_id = '{lab.people['owner'].user_id}' "
+        f"WHERE job_id IN ('{done['id']}', '{failed['id']}')",
+    )
+    settle(database, claim(database, lab, Tiles().plan()))
+    settle(database, claim(database, lab, Tiles(fail_at=1).plan()))
+    starter = lab.people["owner"].user_id
+    assert [
+        (str(user), str(target), status, reason, title)
+        for user, target, status, reason, title in run_notices(database, lab)
+    ] == [
+        (str(starter), done["id"], "done", None, "Model run finished"),
+        (str(starter), failed["id"], "failed", "gpu-lost", "Model run failed"),
+    ]
+
+
+def test_a_cancelled_run_and_a_turned_off_notice_send_nothing(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    starter = lab.people["owner"].user_id
+    owner(
+        database,
+        f"UPDATE model_runs SET started_by_user_id = '{starter}' WHERE job_id = '{run['id']}'",
+    )
+    owner(
+        database,
+        "INSERT INTO notification_preferences (tenant_id, user_id, kind, in_app, email, realtime) "
+        f"VALUES ('{lab.tenant}', '{starter}', 'model-run-finished', false, false, false)",
+    )
+    settle(database, claim(database, lab, Tiles().plan()))
+    assert run_notices(database, lab) == []
+    other = one_run(api, lab)
+    owner(
+        database,
+        f"DELETE FROM notification_preferences WHERE tenant_id = '{lab.tenant}'",
+    )
+    settle(database, claim(database, lab, Tiles(cancel_at=1).plan()))
+    assert ok(read(api, lab, other))["status"] == "cancelled"
+    assert run_notices(database, lab) == []

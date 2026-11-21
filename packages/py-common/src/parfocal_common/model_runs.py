@@ -195,6 +195,9 @@ async def run_model_run(
     async def sealed(job: Claimed) -> None:
         await seal_run_result(engine, job)
 
+    async def told(job: Claimed) -> None:
+        await tell_starter(engine, job)
+
     await run_job(
         engine,
         claimed.job,
@@ -202,7 +205,53 @@ async def run_model_run(
         worker,
         labels_of(claimed, tier, machine),
         on_finished=sealed,
+        on_settled=told,
     )
+
+
+RUN_NOTICE = text(
+    """
+    INSERT INTO notifications (
+      tenant_id, user_id, kind, target_type, target_id, payload,
+      in_app, realtime, email_status, project_id
+    )
+    SELECT
+      r.tenant_id, r.started_by_user_id, 'model-run-finished', 'job', r.job_id,
+      CASE WHEN j.status = 'done' THEN jsonb_build_object(
+        'status', 'done',
+        'title', 'Model run finished',
+        'detail', r.detector || ' ' || r.detector_version || ' finished on its slide.',
+        'action', 'Open the run'
+      ) ELSE jsonb_build_object(
+        'status', 'failed',
+        'reason', coalesce(j.error_code, 'unknown'),
+        'title', 'Model run failed',
+        'detail', r.detector || ' ' || r.detector_version || ' stopped with the code '
+          || coalesce(j.error_code, 'unknown') || '.',
+        'action', 'See why'
+      ) END,
+      coalesce(p.in_app, true),
+      coalesce(p.realtime, true),
+      CASE WHEN coalesce(p.email, false) THEN 'pending' ELSE 'none' END,
+      r.project_id
+    FROM model_runs r
+    JOIN jobs j ON j.id = r.job_id
+    JOIN projects pr ON pr.id = r.project_id AND pr.deleted_at IS NULL
+    LEFT JOIN notification_preferences p
+      ON p.tenant_id = r.tenant_id
+     AND p.user_id = r.started_by_user_id
+     AND p.kind = 'model-run-finished'
+    WHERE r.job_id = :job_id
+      AND r.started_by_user_id IS NOT NULL
+      AND j.status IN ('done', 'failed')
+      AND (coalesce(p.in_app, true) OR coalesce(p.email, false) OR coalesce(p.realtime, true))
+    """
+)
+
+
+async def tell_starter(engine: AsyncEngine, job: Claimed) -> None:
+    async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
+        await connection.execute(RUN_NOTICE, {"job_id": job.job_id})
 
 
 SEAL_RESULT = text(
