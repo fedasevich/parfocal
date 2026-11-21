@@ -12,6 +12,7 @@ import {
   mappingOk,
   mappingText,
   type Preset,
+  plural,
   preselectedTemplate,
   sceneDraft,
   scopePhrase,
@@ -22,6 +23,7 @@ import {
   stepState,
   summary,
   type TaskData,
+  taskNameFor,
   taskScenes,
   templateChanges,
 } from "../src/screens/new-task/model.ts";
@@ -67,6 +69,7 @@ const data: TaskData = {
   taskId: "rt16",
   projectId: "p07",
   projectName: "Sentinel node AI evaluation",
+  projectCode: "P04",
   today: "2026-10-15",
   slides: [
     slide("a1", "S26-04812", ["cam", "sam"]),
@@ -463,4 +466,14 @@ test("a project without its own default starts from the workspace default", () =
   assert.equal(preselectedTemplate("", "c", templates), "");
   assert.equal(preselectedTemplate("", null, templates), "");
   assert.equal(preselectedTemplate("c", "b", templates), "b");
+});
+
+test("the default task name says what it reviews", () => {
+  assert.equal(taskNameFor("GeoJSON import"), "Review of GeoJSON import");
+  assert.equal(taskNameFor("  "), "");
+});
+
+test("a count is singular for one slide", () => {
+  assert.equal(plural(1, "slide"), "1 slide");
+  assert.equal(plural(2, "slide"), "2 slides");
 });

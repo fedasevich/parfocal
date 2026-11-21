@@ -306,7 +306,10 @@ async def add_member(
             avatar_colour=len(name) % 12,
             last_tenant_id=tenant_id,
         )
-        .on_conflict_do_update(index_elements=[users.c.subject], set_={"last_tenant_id": tenant_id})
+        .on_conflict_do_update(
+            index_elements=[users.c.subject],
+            set_={"last_tenant_id": func.coalesce(users.c.last_tenant_id, tenant_id)},
+        )
         .returning(users.c.id)
     )
     assert isinstance(user_id, uuid.UUID)
@@ -1030,7 +1033,7 @@ async def seed(
                     created.append((tenant_id, workspace))
                 tenant_ids.append(tenant_id)
             if owner_email:
-                for tenant_id in reversed(tenant_ids):
+                for tenant_id in tenant_ids:
                     owners[tenant_id] = await add_owner(connection, tenant_id, owner_email)
             if created or owners:
                 await pseudonymise(connection, shared_actors(bool(owners)))

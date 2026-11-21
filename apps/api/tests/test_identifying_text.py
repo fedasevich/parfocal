@@ -123,7 +123,7 @@ def test_a_de_identified_project_reads_an_svs_without_the_name_in_its_descriptio
     label, sha, key = single(
         database, f"SELECT label, sha256, original_key FROM slides WHERE id = '{slide_id}'"
     )
-    assert label == "Slide"
+    assert label == "Slide 1"
     original = stored(key)
     assert hashlib.sha256(original).hexdigest() == sha == hashlib.sha256(data).hexdigest()
 
@@ -245,7 +245,7 @@ def test_switching_to_de_identified_replaces_file_name_labels_and_pairing_keeps_
     assert switched.status_code == 200, switched.text
     rows = owner(database, f"SELECT id, label FROM slides WHERE project_id = '{project}'")
     named = {str(row[0]): str(row[1]) for row in rows}
-    assert {named[str(first)], named[str(second)]} == {"Slide", "Slide (2)"}
+    assert {named[str(first)], named[str(second)]} == {"Slide 1", "Slide 2"}
     [details] = owner(
         database,
         "SELECT details FROM audit_events WHERE action = 'project.privacy-changed' "

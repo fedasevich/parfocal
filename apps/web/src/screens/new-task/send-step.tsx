@@ -16,6 +16,7 @@ import {
   mapping as mappingOf,
   mappingOk,
   numberList,
+  plural,
   reminderChoices,
   type StepKey,
   scopeKinds,
@@ -129,7 +130,9 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
         [
           "slides",
           t`Slides`,
-          sum.ns ? t`${sum.ns} of ${sum.all} slides${out ? t`, ${out} without ${short}` : ""}` : "",
+          sum.ns
+            ? t`${sum.ns} of ${plural(sum.all, "slide")}${out ? t`, ${out} without ${short}` : ""}`
+            : "",
         ],
         ["layers", "AI result", set?.label ?? ""],
         ["text", t`Task name`, draft.name.trim()],

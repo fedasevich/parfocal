@@ -1180,18 +1180,18 @@ msgstr ""
 msgid "{0} of {1} shown. At least one researcher keeps admin rights, and giving or removing them is in the audit log."
 msgstr ""
 
-#. placeholder {0}: sum.ns
-#. placeholder {1}: sum.all
-#. placeholder {2}: out ? t`, ${out} without ${short}` : ""
-#: src/screens/new-task/send-step.tsx
-msgid "{0} of {1} slides{2}"
-msgstr ""
-
 #. placeholder {0}: tb(used)
 #. placeholder {1}: tb(totalTb)
 #. placeholder {2}: tb(free)
 #: ../../packages/ui/src/components/admin.tsx
 msgid "{0} of {1} used. {split}, free {2}"
+msgstr ""
+
+#. placeholder {0}: sum.ns
+#. placeholder {1}: plural(sum.all, "slide")
+#. placeholder {2}: out ? t`, ${out} without ${short}` : ""
+#: src/screens/new-task/send-step.tsx
+msgid "{0} of {1}{2}"
 msgstr ""
 
 #. placeholder {0}: text.length
@@ -1569,11 +1569,6 @@ msgstr ""
 #. placeholder {1}: nameOf(row.user_id)
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} with {1}"
-msgstr ""
-
-#. placeholder {0}: plural(sum.ns, "slide")
-#: src/screens/new-task/reviewers-step.tsx
-msgid "{0} with {short} in this task."
 msgstr ""
 
 #. placeholder {0}: project.code
@@ -7444,7 +7439,7 @@ msgid "Experts check {0}, {order}, {finish}, and {exported}."
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
-msgid "Experts decide whether the AI result is right, without drawing."
+msgid "Experts decide whether each AI result is right, and can redraw an outline that is wrong."
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -14153,7 +14148,7 @@ msgid "Reviewers are told once signed."
 msgstr ""
 
 #: src/screens/new-task/steps.tsx
-msgid "Reviewers decide whether the AI result is right, without drawing."
+msgid "Reviewers decide whether each AI result is right, and can redraw an outline that is wrong."
 msgstr ""
 
 #. placeholder {0}: counts.rev
@@ -18164,8 +18159,9 @@ msgid "to {0} · {1}"
 msgstr ""
 
 #. placeholder {0}: draft.name.trim() || t`the new task`
+#. placeholder {1}: data.projectCode
 #: src/screens/new-task/modals.tsx
-msgid "To {0} · from P07"
+msgid "To {0} · from {1}"
 msgstr ""
 
 #: src/screens/project/add-class-modal.tsx

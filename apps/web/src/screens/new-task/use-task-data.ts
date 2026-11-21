@@ -26,6 +26,7 @@ import {
   shortDate,
   type TaskData,
   type TemplateChoice,
+  taskNameFor,
 } from "./model.ts";
 import { groupResultSets, templateFor } from "./result-sets.ts";
 
@@ -206,13 +207,14 @@ export function useTaskData(projectId: string): {
     taskId: defaults.task_id,
     projectId,
     projectName: project.name,
+    projectCode: project.code,
     today: defaults.today,
     slides,
     groups,
     pool,
     resultSets: grouped.choices,
     names: Object.fromEntries(
-      defaults.names.map((item) => [groupedSetId(item.result_set_id), item.name]),
+      defaults.names.map((item) => [groupedSetId(item.result_set_id), taskNameFor(item.name)]),
     ),
     templates: choices,
     defaultTemplateId: templateFor(

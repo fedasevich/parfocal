@@ -84,7 +84,7 @@ export function KindStep({ draft, update }: StepProps) {
             {
               value: "review",
               title: t`Review AI results`,
-              text: t`Reviewers decide whether the AI result is right, without drawing.`,
+              text: t`Reviewers decide whether each AI result is right, and can redraw an outline that is wrong.`,
             },
             {
               value: "annotate",

@@ -78,13 +78,22 @@ async def taken_labels(
         select(slides.c.label).where(
             place,
             slides.c.deleted_at.is_(None),
-            or_(slides.c.label == stem, slides.c.label.startswith(f"{stem} (", autoescape=True)),
+            or_(
+                slides.c.label == stem,
+                slides.c.label.startswith(f"{stem} (", autoescape=True),
+                slides.c.label.startswith(f"{stem} ", autoescape=True),
+            ),
         )
     )
     return set(rows)
 
 
 def free_label(stem: str, taken: set[str]) -> str:
+    if stem == NEUTRAL_LABEL:
+        number = 1
+        while f"{stem} {number}" in taken:
+            number += 1
+        return f"{stem} {number}"
     if stem not in taken:
         return stem
     number = 2

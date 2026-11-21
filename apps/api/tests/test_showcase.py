@@ -860,7 +860,7 @@ async def test_a_listed_viewer_can_see_every_project_without_admin_rights(seeded
         seeded,
         "SELECT t.slug FROM users u JOIN tenants t ON t.id = u.last_tenant_id "
         "WHERE u.email = 'watcher@example.test'",
-    ) == {WORKSPACES[-1].slug}
+    ) == {WORKSPACES[0].slug}
     roles = await values(
         seeded,
         "SELECT pm.role FROM project_members pm JOIN users u ON u.id = pm.user_id "

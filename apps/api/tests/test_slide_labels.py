@@ -39,3 +39,8 @@ def test_every_failure_has_a_plain_message() -> None:
     assert failure_message("truncated").startswith("The file is cut short")
     assert failure_message("upload-expired").startswith("The upload stopped")
     assert failure_message("something-new") == "Parfocal could not take this file in."
+
+
+def test_a_de_identified_slide_is_numbered_from_one() -> None:
+    assert free_label("Slide", set()) == "Slide 1"
+    assert free_label("Slide", {"Slide 1", "Slide 3"}) == "Slide 2"

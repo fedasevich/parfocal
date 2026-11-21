@@ -50,7 +50,7 @@ async def strip_restricted_images(
 
 
 def numbered(index: int) -> str:
-    return NEUTRAL_LABEL if index == 0 else f"{NEUTRAL_LABEL} ({index + 1})"
+    return f"{NEUTRAL_LABEL} {index + 1}"
 
 
 async def neutral_labels(connection: AsyncConnection, project_id: uuid.UUID) -> int:

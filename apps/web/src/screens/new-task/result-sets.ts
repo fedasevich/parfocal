@@ -6,6 +6,9 @@ const resultSetKeys = ["cam", "sam"] as const;
 const groupKeyOf = (set: ResultSet) =>
   [set.name, set.model_version ?? "", set.source, set.source_file ?? ""].join("|");
 
+export const namedWithVersion = (name: string, version: string) =>
+  version === "" || name.includes(version) ? name.trim() : `${name} ${version}`.trim();
+
 export type GroupedResultSets = {
   choices: ResultSetChoice[];
   groupOf: Map<string, string>;
@@ -13,7 +16,7 @@ export type GroupedResultSets = {
 
 export function groupResultSets(sets: readonly ResultSet[]): GroupedResultSets {
   const members = new Map<string, ResultSet[]>();
-  for (const set of sets) {
+  for (const set of sets.filter((candidate) => candidate.status === "ready")) {
     const key = groupKeyOf(set);
     members.set(key, [...(members.get(key) ?? []), set]);
   }
@@ -27,8 +30,8 @@ export function groupResultSets(sets: readonly ResultSet[]): GroupedResultSets {
     return {
       id: first.id,
       key: resultSetKeys[index] ?? "sam",
-      label: `${first.name} ${version}`.trim(),
-      short: `${brand} ${version}`.trim(),
+      label: namedWithVersion(first.name, version),
+      short: namedWithVersion(brand, version),
       detail:
         first.source === "import"
           ? `Imported ${date} from ${first.source_file ?? "a file"}`
