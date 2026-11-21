@@ -7029,7 +7029,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 12. OBJ-003 (split, merge and added objects) built the routes and nothing calls them, and Annotate has neither.
   Done when the Select tool splits a selected shape along a drawn line and merges two or more selected shapes, in a review task through the split and merge routes and in an annotate task as one atomic batch that keeps the source numbers, undo restores the original, and specs cover both kinds of task.
   Depends on PROTO-112 and PROTO-113. Size: L.
-- [ ] PROTO-121 · COCO as a format of the patch export
+- [x] PROTO-121 · COCO as a format of the patch export
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 13. The owner named COCO and most detection and instance segmentation trainers read it.
   Done when the patch export can write `annotations.json` in COCO form beside the tiles, with categories from the class snapshot, one polygon per object clipped to its tile and the Parfocal object ID and origin in each annotation, and a test loads it with `pycocotools` and compares areas with the masks.
   Depends on PROTO-115 and on decision 168 (which training format comes next). Size: M.
