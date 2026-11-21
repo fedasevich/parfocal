@@ -2,7 +2,9 @@ import argparse
 import asyncio
 import os
 import sys
-from collections.abc import Callable, Mapping, Sequence
+import time
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from typing import Protocol
 
 import httpx2
@@ -29,6 +31,7 @@ BUCKET_LOCKED = "ObjectLockedByBucketPolicy"
 KEPT_TABLES = frozenset({"alembic_version", "platform_operators"})
 AUDIT_TABLE = "audit_events"
 AUDIT_TRUNCATE_GUARD = "audit_events_no_truncate"
+DELETE_CONCURRENCY = 32
 metadata = slides.metadata
 SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.showcase")
 PUBLISH_FIXTURES = (
@@ -71,17 +74,22 @@ class Deleter(Protocol):
     async def delete_object(self, key: str) -> None: ...
 
 
-async def remove_unlocked(store: Deleter, keys: Sequence[str]) -> int:
-    removed = 0
-    for key in keys:
-        try:
-            await store.delete_object(key)
-        except StorageError as error:
-            if error.code != BUCKET_LOCKED:
-                raise
-            continue
-        removed += 1
-    return removed
+async def remove_unlocked(
+    store: Deleter, keys: Sequence[str], concurrency: int = DELETE_CONCURRENCY
+) -> int:
+    gate = asyncio.Semaphore(concurrency)
+
+    async def remove(key: str) -> bool:
+        async with gate:
+            try:
+                await store.delete_object(key)
+            except StorageError as error:
+                if error.code != BUCKET_LOCKED:
+                    raise
+                return False
+            return True
+
+    return sum(await asyncio.gather(*(remove(key) for key in keys)))
 
 
 def storage_location(target: Environment, settings: Mapping[str, str]) -> StorageLocation:
@@ -100,6 +108,16 @@ def start_ingest(target: Environment) -> None:
     modal.Function.from_name(
         APP_NAME, INGEST_FUNCTION, environment_name=target.modal_environment
     ).spawn()
+
+
+@contextmanager
+def phase(name: str) -> Iterator[None]:
+    started = time.monotonic()
+    try:
+        yield
+    finally:
+        sys.stderr.write(f"reset: {name} took {time.monotonic() - started:.0f} s\n")
+        sys.stderr.flush()
 
 
 def reset(
@@ -122,21 +140,26 @@ def reset(
         "STORAGE_ACCESS_KEY_ID": location.access_key_id,
         "STORAGE_SECRET_ACCESS_KEY": location.secret_access_key,
     }
-    tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
-    tools.run(PUBLISH_FIXTURES, None, storage)
-    tools.sql(direct, reset_statement())
-    removed = asyncio.run(empty_tenant_objects(location))
-    tools.run(
-        SEED,
-        None,
-        {
-            **storage,
-            "DATABASE_URL": neon.engine_uri(direct),
-            "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
-            "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
-            "SEED_AGENT_EMAILS": local.get("SEED_AGENT_EMAILS", ""),
-        },
-    )
+    with phase("migrate"):
+        tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
+    with phase("publish fixtures"):
+        tools.run(PUBLISH_FIXTURES, None, storage)
+    with phase("truncate"):
+        tools.sql(direct, reset_statement())
+    with phase("empty tenant objects"):
+        removed = asyncio.run(empty_tenant_objects(location))
+    with phase("seed"):
+        tools.run(
+            SEED,
+            None,
+            {
+                **storage,
+                "DATABASE_URL": neon.engine_uri(direct),
+                "SEED_OWNER_EMAIL": settings["SEED_OWNER_EMAIL"],
+                "SEED_VIEWER_EMAILS": local.get("SEED_VIEWER_EMAILS", ""),
+                "SEED_AGENT_EMAILS": local.get("SEED_AGENT_EMAILS", ""),
+            },
+        )
     drain_jobs(target)
     return removed
 
