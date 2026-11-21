@@ -7005,7 +7005,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 6. Provenance in the manifest stops at a result set ID.
   Done when each slide in the manifest carries the result set name, model name, model version and source, each feature carries the number of versions and whether its shape, its class or both differ from the AI object, the format version is raised, and the strict model and its tests are updated.
   Depends on nothing. Size: S.
-- [ ] PROTO-115 · A dataset page with filters and stored versions
+- [x] PROTO-115 · A dataset page with filters and stored versions
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 7. A researcher needs "only agreed", "only edited", one class or some slides, and needs to say later exactly which data trained a model.
   Done when a task has a Dataset page that shows counts by origin and class for the signed off slides, filters by origin, class, slide and "include unchecked" change the counts, "Freeze a version" stores the manifest and the GeoJSON files as write once objects with a number, a note, the filters, who and when and a checksum, the list of versions downloads any of them again byte for byte, patches are made on demand from a frozen version, and API and browser tests cover it. An ADR records the storage and the cost per version.
   Depends on PROTO-109 and PROTO-114 and on decision 169 (what a dataset version is). Size: L.
