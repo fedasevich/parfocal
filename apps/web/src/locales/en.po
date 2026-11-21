@@ -17573,6 +17573,10 @@ msgstr "The sample project stays in your workspace as Sample · sentinel nodes a
 msgid "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
 msgstr "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
 
+#: src/session/session-lock.tsx
+msgid "The screen locks soon without input. Press a key or click to keep working."
+msgstr "The screen locks soon without input. Press a key or click to keep working."
+
 #: src/study/study-screen.tsx
 msgid "The screen recorder did not load. An ad blocker may be blocking it. Sessions will record the pointer and keys only, without the screen."
 msgstr "The screen recorder did not load. An ad blocker may be blocking it. Sessions will record the pointer and keys only, without the screen."

@@ -217,6 +217,7 @@ function ReportFlow({
   const { writer, keep: remember } = useReportWriter(projectId, caseId);
   const savedRef = useRef<Values>(valuesOfCaseReport(loaded.server, flow.draft.values));
   const latest = useRef<Values>(report.values);
+  const opened = useRef<Values>(report.values);
   const serverRef = useRef<CaseReport>(loaded.server);
   const chain = useRef<Promise<unknown>>(Promise.resolve());
   const flush = useCallback((): Promise<CaseReport> => {
@@ -267,7 +268,7 @@ function ReportFlow({
 
   useEffect(() => {
     latest.current = report.values;
-    if (!live || done || sent) return;
+    if (!live || done || sent || report.values === opened.current) return;
     const timer = window.setTimeout(() => {
       flush().catch(() => toast.show({ text: t`The draft could not be saved. Try again.` }));
     }, 700);
@@ -276,7 +277,7 @@ function ReportFlow({
 
   useEffect(
     () => () => {
-      if (live) void flush().catch(() => undefined);
+      if (live && latest.current !== opened.current) void flush().catch(() => undefined);
     },
     [live, flush],
   );

@@ -38,6 +38,14 @@ export function idleCheckDue(lastInput: number, at: number, idleMinutes: number)
   return at - lastInput >= idleMinutes * 60_000;
 }
 
+export const warningCheckMs = 15_000;
+export const warningLeadMinutes = 2;
+
+export function idleWarningDue(lastInput: number, at: number, idleMinutes: number): boolean {
+  const lead = Math.min(warningLeadMinutes, idleMinutes / 2);
+  return at - lastInput >= (idleMinutes - lead) * 60_000;
+}
+
 export function reauthUrl(returnTo: string): string {
   const query = new URLSearchParams({ reauth: "true", return_to: returnTo });
   return `/api/auth/login?${query.toString()}`;

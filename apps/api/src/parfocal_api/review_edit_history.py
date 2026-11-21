@@ -12,9 +12,17 @@ from parfocal_api.blinding import ai_hidden_on, require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
+from parfocal_api.result_membership import require_ai_object
 from parfocal_api.review_objects import ai_claims
 from parfocal_api.review_order import Results
-from parfocal_api.reviewed_layer import KINDS, ai_object, fates_of, require_known, review_slide
+from parfocal_api.reviewed_layer import (
+    KINDS,
+    UnknownObjectError,
+    ai_object,
+    fates_of,
+    require_known,
+    review_slide,
+)
 from parfocal_api.tables import ReviewEditChange, result_objects, review_edit_versions
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import ResultStore
@@ -34,6 +42,17 @@ class ReviewEditVersion(BaseModel):
     related: list[str]
     reviewer_id: uuid.UUID | None
     changed_at: datetime | None
+
+
+async def require_listed(
+    connection: AsyncConnection, store: ResultStore, row: Any, rows: dict[Any, Any], found: ObjectId
+) -> None:
+    try:
+        await require_known(connection, row, rows, found)
+    except UnknownObjectError:
+        if found.split:
+            raise
+        await require_ai_object(connection, store, row, found)
 
 
 def ring_of(outline: list[float]) -> dict[str, Any]:
@@ -93,8 +112,9 @@ async def list_review_edit_history(
         connection, principal, row.project_id, task_id, slide_id, reviewer
     )
     found = ai_object(object_id)
-    await require_known(
+    await require_listed(
         connection,
+        results,
         row,
         await fates_of(connection, task_id, slide_id, reviewer, found.letter),
         found,

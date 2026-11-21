@@ -88188,6 +88188,11 @@ export type getSlideEmbeddingsResponse200 = {
   status: 200;
 };
 
+export type getSlideEmbeddingsResponse204 = {
+  data: void;
+  status: 204;
+};
+
 export type getSlideEmbeddingsResponse400 = {
   data: Problem;
   status: 400;
@@ -88228,7 +88233,10 @@ export type getSlideEmbeddingsResponse500 = {
   status: 500;
 };
 
-export type getSlideEmbeddingsResponseSuccess = getSlideEmbeddingsResponse200 & {
+export type getSlideEmbeddingsResponseSuccess = (
+  | getSlideEmbeddingsResponse200
+  | getSlideEmbeddingsResponse204
+) & {
   headers: Headers;
 };
 export type getSlideEmbeddingsResponseError = (

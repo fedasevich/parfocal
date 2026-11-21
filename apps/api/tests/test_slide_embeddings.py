@@ -106,9 +106,9 @@ def test_a_missing_or_short_tile_answers_missing(lab: Lab) -> None:
 
 
 @pytest.mark.db
-def test_a_slide_without_embeddings_answers_missing(lab: Lab) -> None:
+def test_a_slide_without_embeddings_answers_no_content(lab: Lab) -> None:
     response = lab.api(lab.people["owner"]).get(lab.path(slide=lab.bare))
-    assert (response.status_code, response.json()["code"]) == (404, "embeddings-missing")
+    assert (response.status_code, response.content) == (204, b"")
 
 
 @pytest.mark.db

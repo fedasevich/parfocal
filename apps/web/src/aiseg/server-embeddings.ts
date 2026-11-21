@@ -224,7 +224,7 @@ export function httpEmbeddingTransport(
   return {
     async manifest(slideId) {
       const response = await fetcher(getGetSlideEmbeddingsUrl(slideId), init);
-      if (!response.ok) return null;
+      if (!response.ok || response.status === 204) return null;
       return manifestOf((await response.json()) as SlideEmbeddings);
     },
     async tile(slideId, column, row) {

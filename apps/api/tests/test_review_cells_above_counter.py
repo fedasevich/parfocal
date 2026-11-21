@@ -65,3 +65,15 @@ def test_a_thread_can_open_on_a_cell_of_the_run_above_the_hand_drawn_counter(
     )
     assert missing.status_code == 400, missing.text
     assert missing.json()["code"] == "bad-anchor"
+
+
+def test_a_cell_of_the_run_above_the_hand_drawn_counter_has_a_history(
+    api: ApiAs, database: str
+) -> None:
+    r = below_the_cells(api, database)
+    reviewer = api(r.people["first"])
+    history = reviewer.get(f"{r.base}/edits/C4/history")
+    assert history.status_code == 200, history.text
+    assert [version["change"] for version in history.json()] == ["ai-original"]
+    missing = reviewer.get(f"{r.base}/edits/C9/history")
+    assert missing.status_code == 404, missing.text

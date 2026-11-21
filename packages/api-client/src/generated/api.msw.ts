@@ -30734,22 +30734,24 @@ export const getGetCellCropMockHandler = (
 export const getGetSlideEmbeddingsMockHandler = (
   overrideResponse?:
     | SlideEmbeddings
+    | void
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<SlideEmbeddings> | SlideEmbeddings),
+      ) => Promise<SlideEmbeddings | void> | SlideEmbeddings | void),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
     "*/api/slides/:slideId/embeddings",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-      return HttpResponse.json(
+      const resolvedBody =
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetSlideEmbeddingsResponseMock(),
-        { status: 200 },
-      );
+          : getGetSlideEmbeddingsResponseMock();
+      return resolvedBody === undefined
+        ? new HttpResponse(null, { status: 204 })
+        : HttpResponse.json(resolvedBody, { status: 200 });
     },
     options,
   );

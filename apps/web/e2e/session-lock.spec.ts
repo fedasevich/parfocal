@@ -128,3 +128,47 @@ test("a passkey unlocks a locked slide to the same camera position", async ({ pa
   await expect(page).toHaveURL(lockedAt);
   await expectSameCamera(page, still, before);
 });
+
+const warningText = "The screen locks soon without input";
+
+test("an idle lock warns first, then leaves no slide or case text in the page", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const href = await objectsTabHref(page);
+  await page.goto(href);
+  const viewer = page.getByTestId("full-viewer");
+  await expect(viewer.getByRole("img", { name: "The whole slide" })).toBeVisible();
+  const named = ["S26-04812", "A1 · H&E", "CAMELYON", "Objects on A1"];
+  for (const part of named) await expect(page.locator("body")).toContainText(part);
+
+  const warning = page.getByRole("alert").filter({ hasText: warningText });
+  const lock = page.getByRole("region", { name: "Locked" });
+  await page.clock.fastForward("13:30");
+  await expect(warning).toBeVisible();
+  await expect(lock).toHaveCount(0);
+
+  await page.clock.fastForward("03:00");
+  await expect(lock).toBeVisible();
+  await expect(warning).toHaveCount(0);
+  await expect(viewer).toHaveCount(0);
+  const text = await page.locator("body").innerText();
+  for (const part of named) expect(text).not.toContain(part);
+  await expect(page).toHaveTitle("Parfocal");
+});
+
+test("input during the warning keeps the page open", async ({ page }) => {
+  await page.clock.install();
+  const href = await objectsTabHref(page);
+  await page.goto(href);
+  const still = page.getByTestId("full-viewer").getByRole("img", { name: "The whole slide" });
+  await expect(still).toBeVisible();
+  const warning = page.getByRole("alert").filter({ hasText: warningText });
+  await page.clock.fastForward("13:30");
+  await expect(warning).toBeVisible();
+  await page.keyboard.press("Shift");
+  await expect(warning).toHaveCount(0);
+  await page.clock.fastForward("03:00");
+  await expect(page.getByRole("region", { name: "Locked" })).toHaveCount(0);
+  await expect(still).toBeVisible();
+});

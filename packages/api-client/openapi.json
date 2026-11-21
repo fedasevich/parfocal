@@ -58411,6 +58411,9 @@
               }
             },
             "description": "Something went wrong"
+          },
+          "204": {
+            "description": "The slide has no server embeddings yet"
           }
         },
         "x-permission": "see-slides"
