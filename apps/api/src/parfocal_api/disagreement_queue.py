@@ -110,6 +110,7 @@ class QueueAnswerRecord(BaseModel):
     raw: str
     reason: str | None
     note: str | None
+    retyped_to: str | None = None
 
 
 class QueueRowDecision(BaseModel):
@@ -349,6 +350,25 @@ async def last_editors(connection: AsyncConnection, task_id: uuid.UUID) -> dict[
     return {(row.slide_id, row.kind, row.number): row for row in rows}
 
 
+async def reviewer_retypes(connection: AsyncConnection, task_id: uuid.UUID) -> dict[Any, uuid.UUID]:
+    rows = await connection.execute(
+        select(
+            review_edits.c.slide_id,
+            review_edits.c.kind,
+            review_edits.c.number,
+            review_edits.c.user_id,
+            review_edits.c.class_id,
+        ).where(
+            review_edits.c.task_id == task_id,
+            review_edits.c.class_id.is_not(None),
+            review_edits.c.split == "",
+            review_edits.c.deleted.is_(False),
+            review_edits.c.retired.is_(None),
+        )
+    )
+    return {(row.slide_id, row.kind, row.number, row.user_id): row.class_id for row in rows}
+
+
 def state_of(item: QueuedObject) -> QueueRowState:
     sent = item.adjudication
     decision = item.decision
@@ -376,6 +396,7 @@ class QueueFacts:
         claims: dict[Key, AiClaim],
         decided: dict[Key, datetime],
         editors: dict[Key, Any],
+        retypes: dict[Any, uuid.UUID],
     ) -> None:
         self.labels = labels
         self.names = names
@@ -383,6 +404,7 @@ class QueueFacts:
         self.claims = claims
         self.decided = decided
         self.editors = editors
+        self.retypes = retypes
 
     def label(self, item: QueuedObject) -> str:
         return self.labels.get(item.slide_id, "")
@@ -392,6 +414,10 @@ class QueueFacts:
 
     def raw(self, item: QueuedObject, user_id: uuid.UUID, answer: str) -> str:
         return raw_of(answer, self.picked.get((*key_of(item), user_id)), self.names)
+
+    def retyped_to(self, item: QueuedObject, user_id: uuid.UUID) -> str | None:
+        class_id = self.retypes.get((*key_of(item), user_id))
+        return None if class_id is None else self.names.get(class_id)
 
 
 async def facts_of(
@@ -407,6 +433,7 @@ async def facts_of(
         claims=await claims_of(connection, store, task.id, queue),
         decided=await decided_at(connection, task.id),
         editors=await last_editors(connection, task.id),
+        retypes=await reviewer_retypes(connection, task.id),
     )
 
 
@@ -431,6 +458,7 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
                 raw=facts.raw(item, given.user_id, given.answer),
                 reason=reason_of(given.reasons),
                 note=given.note,
+                retyped_to=facts.retyped_to(item, given.user_id),
             )
             for given in item.reviewers()
         ],

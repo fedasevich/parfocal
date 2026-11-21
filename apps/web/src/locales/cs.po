@@ -280,6 +280,11 @@ msgstr ""
 msgid "{0, plural, one {# blind reviewer} other {# blind reviewers}}, {1, plural, one {# adjudicator} other {# adjudicators}}"
 msgstr ""
 
+#. placeholder {0}: summary.queue.total
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0, plural, one {# disagreement resolved} other {# disagreements resolved}}"
+msgstr ""
+
 #. placeholder {0}: learnerView.examples
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0, plural, one {# example} other {# examples}}"
@@ -622,8 +627,8 @@ msgstr ""
 msgid "{0} at {1}"
 msgstr ""
 
-#. placeholder {0}: row.count
-#. placeholder {1}: nameOf(row.user_id)
+#. placeholder {0}: part.count
+#. placeholder {1}: nameOf(part.userId)
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} by {1}"
 msgstr ""
@@ -633,7 +638,7 @@ msgstr ""
 msgid "{0} by name. Parfocal remembers this for the server, so its next runs need nothing."
 msgstr ""
 
-#. placeholder {0}: summary.queue.by_researcher
+#. placeholder {0}: part.count
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} by you"
 msgstr ""
@@ -726,11 +731,6 @@ msgstr ""
 #. placeholder {0}: task.open_disagreements
 #: src/screens/my-work/assigned-tab.tsx
 msgid "{0} disagreements"
-msgstr ""
-
-#. placeholder {0}: summary.queue.total
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0} disagreements resolved"
 msgstr ""
 
 #. placeholder {0}: state.findKey
@@ -996,7 +996,7 @@ msgstr ""
 msgid "{0} left on slide {slideNumber}"
 msgstr ""
 
-#. placeholder {0}: summary.queue.left_open.length
+#. placeholder {0}: part.count
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} left open"
 msgstr ""
@@ -1094,6 +1094,12 @@ msgstr ""
 #. placeholder {1}: progress.total
 #: src/screens/my-work/parts.tsx
 msgid "{0} of {1, plural, one {# object} other {# objects}} decided"
+msgstr ""
+
+#. placeholder {0}: undecided.undecided
+#. placeholder {1}: undecided.total
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} of {1, plural, one {# object} other {# objects}} not decided by any reviewer"
 msgstr ""
 
 #. placeholder {0}: summary.reviews.submitted
@@ -8728,6 +8734,11 @@ msgstr ""
 msgid "In the test"
 msgstr ""
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "In the training data, Disagree removes {0}, a settled outline included. Agree keeps the settled outline, or else the edits of the reviewers who agreed."
+msgstr ""
+
 #: src/screens/admin/role-permissions.tsx
 msgid "In their tasks"
 msgstr ""
@@ -13526,6 +13537,10 @@ msgstr ""
 msgid "Redraw the outline"
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "redrew the outline"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Reduced"
 msgstr ""
@@ -14057,6 +14072,11 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "Returns"
+msgstr ""
+
+#. placeholder {0}: answer.retyped_to
+#: src/screens/disagreements/queue-screen.tsx
+msgid "retyped to {0}"
 msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
@@ -17799,6 +17819,10 @@ msgstr ""
 
 #: src/screens/project/add-person-dialog.tsx
 msgid "They asked for access. They join as a reviewer and see this project from then on."
+msgstr ""
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "They do not block signing and stay out of the training data"
 msgstr ""
 
 #: ../../packages/ui/src/components/token-field.tsx

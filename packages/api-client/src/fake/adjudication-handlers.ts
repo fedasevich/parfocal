@@ -146,6 +146,7 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
       raw: item.raw,
       reason: item.reason,
       note: noteOf(seed, item.by, item.note),
+      retyped_to: seed.edited?.by === item.by ? seed.edited.retypedTo : null,
     })),
     state: live.state,
     decision,
@@ -170,7 +171,7 @@ const fallbackRing = [4000, 3000, 4600, 3000, 4600, 3500, 4000, 3500];
 const outlinesOf = (
   seed: QueueSeedRow,
 ): Pick<QueueRow, "outline_differs" | "outline_overlap" | "outlines"> => {
-  if (seed.outlineOverlap === undefined) return {};
+  if (seed.outlineOverlap === undefined && seed.edited === undefined) return {};
   const slideId = slideByIndex(seed.slide).id;
   const ai = toReviewObjects(task().id, slideId).objects.find(
     (item) => item.object === seed.object,
@@ -186,16 +187,19 @@ const outlinesOf = (
   );
   const moved = ring.map((value, index) => (index % 2 === 0 ? value + width * 0.4 : value));
   const [first, second] = seed.answers;
+  if (seed.outlineOverlap === undefined && seed.edited !== undefined) {
+    return { outlines: [{ user_id: idOf(seed.edited.by), outline: shrunk }] };
+  }
   if (seed.againstAi) {
     return {
       outline_differs: true,
-      outline_overlap: seed.outlineOverlap,
+      outline_overlap: seed.outlineOverlap ?? null,
       outlines: [{ user_id: idOf(first.by), outline: shrunk }],
     };
   }
   return {
     outline_differs: true,
-    outline_overlap: seed.outlineOverlap,
+    outline_overlap: seed.outlineOverlap ?? null,
     outlines: [
       { user_id: idOf(first.by), outline: shrunk },
       { user_id: idOf(second.by), outline: moved },
@@ -322,6 +326,7 @@ const ownSignOffSummary = (current: ScenarioReviewTask): SignOffSummary => {
       with_adjudicator: [],
       left_open: [],
     },
+    objects: { total: resultSetFacts.objects, undecided: 0 },
     open_threads: { total: 0, slides: [] },
     result_set: resultSetFacts,
     signature: signed
@@ -385,6 +390,7 @@ export const toSignOffSummary = (taskId: string): SignOffSummary => {
         .filter((item) => item.live.state === "left-open")
         .map((item) => ({ object: item.seed.object, slide_label: item.seed.slideLabel })),
     },
+    objects: { total: resultSetFacts.objects, undecided: 0 },
     open_threads: {
       total: openThreads.reduce((sum, row) => sum + row.count, 0),
       slides: openThreads,

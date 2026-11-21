@@ -35,6 +35,7 @@ import { ProjectBackground } from "../jobs/project-background.tsx";
 import { personProp, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useScreenToast } from "../project/screen-toast.tsx";
+import { resolvedParts, undecidedObjects } from "./counts.ts";
 
 export type SignOffScene = "blocked" | "ready" | "ssofail" | "signed" | "amend";
 
@@ -438,6 +439,7 @@ function SignOffModal({
   }
 
   const blockers = blockersOf(summary, nameOf);
+  const undecided = undecidedObjects(summary);
   const busy = signature.busy || sign.isPending;
   return (
     <>
@@ -514,8 +516,11 @@ function SignOffModal({
                 <ReadinessRow
                   data-phi=""
                   tone="ok"
-                  title={t`${summary.queue.total} disagreements resolved`}
-                  sub={resolvedText(summary, nameOf)}
+                  title={plurals(summary.queue.total, {
+                    one: "# disagreement resolved",
+                    other: "# disagreements resolved",
+                  })}
+                  sub={resolvedText(summary, me?.user_id, nameOf)}
                 />
                 {summary.queue.left_open.length ? (
                   <ReadinessRow
@@ -530,6 +535,15 @@ function SignOffModal({
                 ) : null}
               </>
             )}
+            {undecided ? (
+              <ReadinessRow
+                data-phi=""
+                data-testid="sign-off-undecided"
+                tone="warn"
+                title={t`${undecided.undecided} of ${plurals(undecided.total, { one: "# object", other: "# objects" })} not decided by any reviewer`}
+                sub={t`They do not block signing and stay out of the training data`}
+              />
+            ) : null}
             {summary.open_threads.total ? (
               <ReadinessRow
                 data-phi=""
@@ -618,10 +632,18 @@ function blockersOf(summary: SignOffSummary, nameOf: (userId: string) => string)
   return list;
 }
 
-function resolvedText(summary: SignOffSummary, nameOf: (userId: string) => string) {
-  const parts = [t`${summary.queue.by_researcher} by you`];
-  for (const row of summary.queue.by_adjudicator)
-    parts.push(t`${row.count} by ${nameOf(row.user_id)}`);
-  if (summary.queue.left_open.length) parts.push(t`${summary.queue.left_open.length} left open`);
-  return parts.join(", ");
+function resolvedText(
+  summary: SignOffSummary,
+  myUserId: string | undefined,
+  nameOf: (userId: string) => string,
+) {
+  return resolvedParts(summary.queue, myUserId)
+    .map((part) =>
+      part.kind === "you"
+        ? t`${part.count} by you`
+        : part.kind === "person"
+          ? t`${part.count} by ${nameOf(part.userId)}`
+          : t`${part.count} left open`,
+    )
+    .join(", ");
 }

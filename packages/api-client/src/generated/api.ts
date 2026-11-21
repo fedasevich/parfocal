@@ -2558,6 +2558,7 @@ export interface QueueAnswerRecord {
   raw: string;
   reason: string | null;
   note: string | null;
+  retyped_to?: string | null;
 }
 
 export type QueueRowState = (typeof QueueRowState)[keyof typeof QueueRowState];
@@ -5379,6 +5380,11 @@ export interface NudgeCreate {
   message: NudgeMessage;
 }
 
+export interface ObjectCoverage {
+  total: number;
+  undecided: number;
+}
+
 export interface ObjectResolution {
   task_id: string;
   slide_id: string;
@@ -7304,6 +7310,7 @@ export interface SignOffSummary {
   reviewer_ids: string[];
   reviews: Reviews;
   queue: QueueSummary;
+  objects: ObjectCoverage;
   open_threads: OpenThreads;
   result_set: ResultSetFacts;
   signature: ParfocalApiEvaluationVersionsSignature | null;

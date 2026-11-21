@@ -282,6 +282,11 @@ msgstr "\"version\""
 msgid "{0, plural, one {# blind reviewer} other {# blind reviewers}}, {1, plural, one {# adjudicator} other {# adjudicators}}"
 msgstr "{0, plural, one {# blind reviewer} other {# blind reviewers}}, {1, plural, one {# adjudicator} other {# adjudicators}}"
 
+#. placeholder {0}: summary.queue.total
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0, plural, one {# disagreement resolved} other {# disagreements resolved}}"
+msgstr "{0, plural, one {# disagreement resolved} other {# disagreements resolved}}"
+
 #. placeholder {0}: learnerView.examples
 #: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0, plural, one {# example} other {# examples}}"
@@ -624,8 +629,8 @@ msgstr "{0} asks you to co-sign · sent {sentText}"
 msgid "{0} at {1}"
 msgstr "{0} at {1}"
 
-#. placeholder {0}: row.count
-#. placeholder {1}: nameOf(row.user_id)
+#. placeholder {0}: part.count
+#. placeholder {1}: nameOf(part.userId)
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} by {1}"
 msgstr "{0} by {1}"
@@ -635,7 +640,7 @@ msgstr "{0} by {1}"
 msgid "{0} by name. Parfocal remembers this for the server, so its next runs need nothing."
 msgstr "{0} by name. Parfocal remembers this for the server, so its next runs need nothing."
 
-#. placeholder {0}: summary.queue.by_researcher
+#. placeholder {0}: part.count
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} by you"
 msgstr "{0} by you"
@@ -729,11 +734,6 @@ msgstr "{0} deleted"
 #: src/screens/my-work/assigned-tab.tsx
 msgid "{0} disagreements"
 msgstr "{0} disagreements"
-
-#. placeholder {0}: summary.queue.total
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0} disagreements resolved"
-msgstr "{0} disagreements resolved"
 
 #. placeholder {0}: state.findKey
 #. placeholder {1}: state.findKey
@@ -998,7 +998,7 @@ msgstr "{0} left in this file"
 msgid "{0} left on slide {slideNumber}"
 msgstr "{0} left on slide {slideNumber}"
 
-#. placeholder {0}: summary.queue.left_open.length
+#. placeholder {0}: part.count
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "{0} left open"
 msgstr "{0} left open"
@@ -1097,6 +1097,12 @@ msgstr "{0} objects, shown in cyan and not saved yet"
 #: src/screens/my-work/parts.tsx
 msgid "{0} of {1, plural, one {# object} other {# objects}} decided"
 msgstr "{0} of {1, plural, one {# object} other {# objects}} decided"
+
+#. placeholder {0}: undecided.undecided
+#. placeholder {1}: undecided.total
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} of {1, plural, one {# object} other {# objects}} not decided by any reviewer"
+msgstr "{0} of {1, plural, one {# object} other {# objects}} not decided by any reviewer"
 
 #. placeholder {0}: summary.reviews.submitted
 #. placeholder {1}: summary.reviews.total
@@ -8733,6 +8739,11 @@ msgstr "In the file"
 msgid "In the test"
 msgstr "In the test"
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid "In the training data, Disagree removes {0}, a settled outline included. Agree keeps the settled outline, or else the edits of the reviewers who agreed."
+msgstr "In the training data, Disagree removes {0}, a settled outline included. Agree keeps the settled outline, or else the edits of the reviewers who agreed."
+
 #: src/screens/admin/role-permissions.tsx
 msgid "In their tasks"
 msgstr "In their tasks"
@@ -13535,6 +13546,10 @@ msgstr "Redraw {0} myself"
 msgid "Redraw the outline"
 msgstr "Redraw the outline"
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "redrew the outline"
+msgstr "redrew the outline"
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Reduced"
 msgstr "Reduced"
@@ -14067,6 +14082,11 @@ msgstr "Returned to {0}{1}"
 #: src/screens/admin/connect-model.tsx
 msgid "Returns"
 msgstr "Returns"
+
+#. placeholder {0}: answer.retyped_to
+#: src/screens/disagreements/queue-screen.tsx
+msgid "retyped to {0}"
+msgstr "retyped to {0}"
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/onboarding/invite-screen.tsx
@@ -17809,6 +17829,10 @@ msgstr "They ask, and someone with admin rights answers in Join requests on Peop
 #: src/screens/project/add-person-dialog.tsx
 msgid "They asked for access. They join as a reviewer and see this project from then on."
 msgstr "They asked for access. They join as a reviewer and see this project from then on."
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "They do not block signing and stay out of the training data"
+msgstr "They do not block signing and stay out of the training data"
 
 #: ../../packages/ui/src/components/token-field.tsx
 msgid "They get a one-step sign-up, then the task"

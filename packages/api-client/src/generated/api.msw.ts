@@ -9683,6 +9683,10 @@ export const getGetDisagreementQueueResponseMock = (
           faker.string.alpha({ length: { min: 10, max: 20 } }),
           null,
         ]),
+        retyped_to: faker.helpers.arrayElement([
+          faker.string.alpha({ length: { min: 10, max: 20 } }),
+          null,
+        ]),
       }),
     ),
     state: faker.helpers.arrayElement(Object.values(QueueRowState)),
@@ -9760,6 +9764,10 @@ export const getUpdateQueuedObjectResponseMock = (
         null,
       ]),
       note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      retyped_to: faker.helpers.arrayElement([
         faker.string.alpha({ length: { min: 10, max: 20 } }),
         null,
       ]),
@@ -9842,6 +9850,10 @@ export const getSettleQueuedOutlineResponseMock = (
         faker.string.alpha({ length: { min: 10, max: 20 } }),
         null,
       ]),
+      retyped_to: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
     }),
   ),
   state: faker.helpers.arrayElement(Object.values(QueueRowState)),
@@ -9918,6 +9930,10 @@ export const getClearQueuedOutlineResponseMock = (
         null,
       ]),
       note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      retyped_to: faker.helpers.arrayElement([
         faker.string.alpha({ length: { min: 10, max: 20 } }),
         null,
       ]),
@@ -15319,6 +15335,7 @@ export const getGetSignOffSummaryResponseMock = (
       }),
     ),
   },
+  objects: { total: faker.number.int(), undecided: faker.number.int() },
   open_threads: {
     total: faker.number.int(),
     slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(

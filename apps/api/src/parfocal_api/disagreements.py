@@ -505,7 +505,7 @@ async def queues_of(
     redrawn = await last_redrawn(connection, task_ids)
     sent = await sent_objects(connection, task_ids)
     gaps = await outline_gaps(connection, task_ids)
-    drawn = await outlines_of(connection, task_ids, gaps.keys())
+    drawn = await outlines_of(connection, task_ids, grouped.keys() | gaps.keys())
     for key in sorted(grouped.keys() | gaps.keys()):
         task_id, slide_id, kind, number = key
         rows = grouped.get(key, [])

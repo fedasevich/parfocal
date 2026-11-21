@@ -467,6 +467,16 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                         <StatusTag tone={answerTone[countOf(style, answer.raw, row.ai.class_name)]}>
                           {styledText(style, answer, classes, row.ai.class_name)}
                         </StatusTag>
+                        {outlines.some((entry) => entry.userId === answer.user_id) ? (
+                          <StatusTag tone="accent" data-testid="answer-redrawn">
+                            <Trans>redrew the outline</Trans>
+                          </StatusTag>
+                        ) : null}
+                        {answer.retyped_to ? (
+                          <StatusTag tone="accent" data-testid="answer-retyped">
+                            <Trans>retyped to {answer.retyped_to}</Trans>
+                          </StatusTag>
+                        ) : null}
                         {answer.note ? (
                           <QuotedNote>
                             {fromMentionTokens(answer.note, (userId) => person(userId)?.name)}
@@ -787,6 +797,16 @@ function DecidePanel({
       />
       {look.style.kind === "agree" ? (
         <p className="m-0 text-body-sm text-fg-dim">{mapping}</p>
+      ) : null}
+      {(row.outlines ?? []).length ||
+      row.settled_outline ||
+      row.answers.some((a) => a.retyped_to) ? (
+        <p data-testid="queue-training-note" className="m-0 text-body-sm text-fg-dim">
+          <Trans>
+            In the training data, Disagree removes {row.object}, a settled outline included. Agree
+            keeps the settled outline, or else the edits of the reviewers who agreed.
+          </Trans>
+        </p>
       ) : null}
       {row.state === "declined" && row.adjudicator ? (
         <div className="grid gap-2 rounded-zone bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] p-3 text-body-sm text-fg">

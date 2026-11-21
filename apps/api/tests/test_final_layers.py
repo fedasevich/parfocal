@@ -235,3 +235,71 @@ def test_the_final_layer_of_a_review_task_holds_the_project_classes(
     owner(database, f"UPDATE final_layers SET classes = NULL WHERE task_id = '{r.task}'")
     older, _ = exported(api, r)
     assert [item["key"] for item in older["classes"]] == [1]
+
+
+def test_the_queue_decision_wins_over_the_reviewers_edits(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    first = str(r.people["first"].user_id)
+    answers = {
+        "first": {"T1": {"value": "agree"}, "T2": {"value": "disagree", "reasons": ["artefact"]}},
+        "second": {"T1": {"value": "agree"}, "T2": {"value": "agree"}},
+    }
+    for who, given in answers.items():
+        for object_id, body in given.items():
+            ok(api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body))
+    ok(edit(api, r, "first", "T1", {"geometry": REDRAWN}))
+    ok(edit(api, r, "second", "T1", {"geometry": DRAWN}))
+    ok(edit(api, r, "first", "T2", {"geometry": ADDED, "class_id": str(r.tumor)}))
+    for who in answers:
+        ok(submitted(api(r.people[who]), r.base))
+    as_owner = api(r.people["owner"])
+    task = f"/api/review-tasks/{r.task}"
+    ok(
+        as_owner.put(
+            f"{task}/disagreement-queue/{r.slide}/T1/outline", json={"from_user_id": first}
+        )
+    )
+    ok(as_owner.put(f"{task}/disagreements/{r.slide}/T1", json={"answer": "disagree"}))
+    ok(as_owner.put(f"{task}/disagreements/{r.slide}/T2", json={"answer": "agree"}))
+    ok(as_owner.post(f"{task}/sign-off"))
+    _, features = exported(api, r)
+    assert set(features) == {"T2"}
+    t2 = features["T2"]["properties"]["parfocal"]
+    assert (t2["origin"], t2["differs_from_ai"], t2["class_key"]) == ("ai-confirmed", "same", None)
+    counts = ok(as_owner.get(f"{task}/dataset")).json()["final_layer"]["counts"]
+    assert (counts["rejected"], counts["confirmed"], counts["edited"]) == (1, 1, 0)
+
+
+def test_the_queue_shows_and_settles_a_single_reviewers_redraw_and_retype(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database, reviewers=("first",))
+    first = str(r.people["first"].user_id)
+    task = f"/api/review-tasks/{r.task}"
+    disagree = {"value": "disagree", "reasons": ["artefact"]}
+    ok(api(r.people["first"]).put(f"{r.base}/decisions/T1", json=disagree))
+    summary = ok(api(r.people["owner"]).get(f"{task}/sign-off-summary")).json()
+    assert summary["objects"] == {"total": 2, "undecided": 1}
+    ok(api(r.people["first"]).put(f"{r.base}/decisions/T2", json={"value": "agree"}))
+    ok(edit(api, r, "first", "T1", {"geometry": REDRAWN, "class_id": str(r.tumor)}))
+    ok(submitted(api(r.people["first"]), r.base))
+    as_owner = api(r.people["owner"])
+    rows = ok(as_owner.get(f"{task}/disagreement-queue")).json()["rows"]
+    [row] = [row for row in rows if row["object"] == "T1"]
+    assert row["outline_differs"] is False
+    [drawn] = row["outlines"]
+    assert drawn["user_id"] == first
+    assert same_shape(drawn["outline"], REDRAWN)
+    [answer] = row["answers"]
+    assert answer["retyped_to"] == "Tumor"
+    ok(
+        as_owner.put(
+            f"{task}/disagreement-queue/{r.slide}/T1/outline", json={"from_user_id": first}
+        )
+    )
+    ok(as_owner.put(f"{task}/disagreements/{r.slide}/T1", json={"answer": "agree"}))
+    ok(as_owner.post(f"{task}/sign-off"))
+    _, features = exported(api, r)
+    t1 = features["T1"]["properties"]["parfocal"]
+    assert (t1["origin"], t1["class_key"]) == ("ai-edited", None)
+    assert same_shape(features["T1"]["geometry"], REDRAWN)

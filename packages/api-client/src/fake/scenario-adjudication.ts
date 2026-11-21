@@ -21,6 +21,7 @@ export type QueueSeedRow = {
   answers: [QueueSeedAnswer, QueueSeedAnswer];
   outlineOverlap?: number;
   againstAi?: boolean;
+  edited?: { by: PersonKey; retypedTo: string | null };
 };
 
 const answer = (
@@ -132,6 +133,7 @@ export const queueRows: QueueSeedRow[] = [
       answer("LM", "disagree", "It is a tumor cell", "Large nucleolus, a tumor cell."),
       answer("SM", "disagree", "It is a tumor cell"),
     ],
+    edited: { by: "LM", retypedTo: "Tumor" },
   },
   {
     slide: 1,

@@ -35,7 +35,9 @@ class Review:
         return f"/api/review-tasks/{self.task}/slides/{self.slide}"
 
 
-def review(api: ApiAs, database: str, cell_count: int = 5) -> Review:
+def review(
+    api: ApiAs, database: str, cell_count: int = 5, reviewers: tuple[str, ...] = ("first", "second")
+) -> Review:
     workspace = make_workspace(
         database,
         {
@@ -94,7 +96,7 @@ def review(api: ApiAs, database: str, cell_count: int = 5) -> Review:
             "name": "Layer task",
             "slide_ids": [str(slide)],
             "result_sets": [{"slide_id": str(slide), "result_set_id": str(result_set)}],
-            "reviewer_ids": [str(people["first"].user_id), str(people["second"].user_id)],
+            "reviewer_ids": [str(people[label].user_id) for label in reviewers],
             "split": "everyone",
             "scope": {"kind": "all-regions"},
             "decision": {"style": "agree"},

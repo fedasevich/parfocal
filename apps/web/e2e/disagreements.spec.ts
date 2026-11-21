@@ -187,6 +187,21 @@ test("an object whose reviewers drew different outlines draws each one over the 
   await expect(legend).toContainText("Simona Marková");
 });
 
+test("one reviewer's redraw and retype show in the queue and the outline can be settled", async ({
+  page,
+}) => {
+  await page.goto(`${base}/disagreements?stage=open`);
+  await page.getByRole("button", { name: /^T2·C88 / }).click();
+  await expect(page.getByTestId("outline-legend")).toHaveCount(0);
+  await expect(page.getByTestId("answer-redrawn")).toHaveCount(1);
+  await expect(page.getByTestId("answer-retyped")).toHaveText("retyped to Tumor");
+  await expect(page.getByTestId("queue-training-note")).toContainText("Disagree removes T2·C88");
+  const settle = page.getByTestId("outline-settle");
+  await expect(settle).toContainText("Lenka Malá");
+  await settle.getByRole("button", { name: "Use this outline" }).click();
+  await expect(settle).toHaveAttribute("data-settled", "picked");
+});
+
 test("a declined object shows the note and can go to someone else", async ({ page }) => {
   await page.goto(`${base}/disagreements?stage=declined`);
   await page.getByRole("button", { name: /^T4 / }).click();

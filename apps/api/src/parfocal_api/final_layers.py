@@ -1,6 +1,7 @@
 import json
 import uuid
 from collections import Counter
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -132,9 +133,15 @@ class Retype:
 class Facts:
     decisions: dict[Key, list[Any]]
     adjudicated: dict[Key, Any]
-    redraws: dict[Key, Redraw]
-    retypes: dict[Key, Retype]
+    redraws: dict[Key, list[Redraw]]
+    retypes: dict[Key, list[Retype]]
     edit_versions: Counter[Key]
+
+    def redraw(self, key: Key, by: Collection[uuid.UUID | None] | None = None) -> Redraw | None:
+        return next((d for d in self.redraws.get(key, []) if by is None or d.user_id in by), None)
+
+    def retype(self, key: Key, by: Collection[uuid.UUID | None] | None = None) -> Retype | None:
+        return next((r for r in self.retypes.get(key, []) if by is None or r.user_id in by), None)
 
 
 router = APIRouter(prefix="/api/review-tasks/{task_id}/final-layer", tags=["review-tasks"])
@@ -164,8 +171,8 @@ async def facts_of(connection: AsyncConnection, task_id: uuid.UUID, slide_id: uu
             )
         )
     }
-    redraws: dict[Key, Redraw] = {}
-    retypes: dict[Key, Retype] = {}
+    redraws: dict[Key, list[Redraw]] = {}
+    retypes: dict[Key, list[Retype]] = {}
     for edit in await connection.execute(
         select(
             review_edits.c.kind,
@@ -184,9 +191,9 @@ async def facts_of(connection: AsyncConnection, task_id: uuid.UUID, slide_id: uu
     ):
         key = (edit.kind, edit.number)
         if edit.geojson is not None:
-            redraws.setdefault(key, Redraw(edit.geojson, edit.user_id))
+            redraws.setdefault(key, []).append(Redraw(edit.geojson, edit.user_id))
         if edit.class_id is not None:
-            retypes.setdefault(key, Retype(edit.class_id, edit.user_id))
+            retypes.setdefault(key, []).append(Retype(edit.class_id, edit.user_id))
     edit_versions: Counter[Key] = Counter(
         (row.kind, row.number)
         for row in await connection.execute(
@@ -238,14 +245,17 @@ def outcome_of(consensus: engine.Consensus, key: Key, facts: Facts) -> Outcome:
         else None
     )
     if consensus is engine.Consensus.DISAGREE:
+        if decided and retype is None:
+            return Outcome(FinalState.REJECTED, author=judge, settled_by=settled_by)
         if not decided:
-            shape = shape or facts.redraws.get(key)
-            retype = retype or facts.retypes.get(key) or wrong_class_of(given)
+            shape = shape or facts.redraw(key)
+            retype = retype or facts.retype(key) or wrong_class_of(given)
         if shape is None and retype is None:
             return Outcome(FinalState.REJECTED, author=judge, settled_by=settled_by)
     else:
-        shape = shape or facts.redraws.get(key)
-        retype = retype or facts.retypes.get(key)
+        upheld = {row.user_id for row in given if row.value == engine.AGREE} if decided else None
+        shape = shape or facts.redraw(key, upheld)
+        retype = retype or facts.retype(key, upheld)
     if shape is None and retype is None:
         return Outcome(
             FinalState.CONFIRMED,

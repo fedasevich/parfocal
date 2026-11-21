@@ -34,6 +34,8 @@ from parfocal_api.tables import (
     opinions,
     result_sets,
     review_assignments,
+    review_decisions,
+    review_order,
     review_task_slides,
     review_tasks,
     slides,
@@ -104,6 +106,11 @@ class QueueSummary(BaseModel):
     left_open: list[LeftOpenObject]
 
 
+class ObjectCoverage(BaseModel):
+    total: int
+    undecided: int
+
+
 class SlideThreads(BaseModel):
     slide_label: str
     count: int
@@ -149,6 +156,7 @@ class SignOffSummary(BaseModel):
     reviewer_ids: list[uuid.UUID]
     reviews: Reviews
     queue: QueueSummary
+    objects: ObjectCoverage
     open_threads: OpenThreads
     result_set: ResultSetFacts
     signature: Signature | None
@@ -393,6 +401,24 @@ def queue_summary(queue: list[QueuedObject], labels: dict[uuid.UUID, str]) -> Qu
     )
 
 
+async def coverage_of(connection: AsyncConnection, task_id: uuid.UUID) -> ObjectCoverage:
+    total = await connection.scalar(
+        select(func.coalesce(func.sum(review_order.c.count), 0)).where(
+            review_order.c.task_id == task_id
+        )
+    )
+    decided = await connection.scalar(
+        select(func.count()).select_from(
+            select(review_decisions.c.slide_id, review_decisions.c.kind, review_decisions.c.number)
+            .where(review_decisions.c.task_id == task_id)
+            .distinct()
+            .subquery()
+        )
+    )
+    in_scope = int(total or 0)
+    return ObjectCoverage(total=in_scope, undecided=max(0, in_scope - int(decided or 0)))
+
+
 async def open_threads_of(
     connection: AsyncConnection, task_id: uuid.UUID
 ) -> list[tuple[uuid.UUID, int]]:
@@ -515,6 +541,7 @@ async def get_sign_off_summary(
         reviewer_ids=await reviewers_of(connection, task_id),
         reviews=await reviews_of(connection, task_id),
         queue=queue_summary(queue, labels),
+        objects=await coverage_of(connection, task_id),
         open_threads=OpenThreads(
             total=sum(count for _, count in open_threads),
             slides=[
