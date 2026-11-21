@@ -59,7 +59,14 @@ export function FullViewer(props: FullViewerProps) {
 function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
   const session = useReviewSession(props.taskId, props.slideId, props.projectId);
   const project = okData(useGetProject(props.projectId).data);
-  const progress = useGetSlideAiProgress(props.slideId);
+  const taskSetId = session.task?.slides.find(
+    (item) => item.slide_id === props.slideId,
+  )?.result_set_id;
+  const progress = useGetSlideAiProgress(
+    props.slideId,
+    taskSetId ? { result_set_id: taskSetId } : undefined,
+    { query: { enabled: session.ready } },
+  );
   if (!session.ready || project === undefined || progress.isPending) return <SlideLoader />;
   return (
     <ReviewLearnerEmbeddings slideId={props.slideId}>
