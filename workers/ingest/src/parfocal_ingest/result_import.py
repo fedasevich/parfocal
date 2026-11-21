@@ -646,7 +646,7 @@ async def store_heatmap(context: Context, values: NDArray[Any], guess: Guess) ->
             name=HEATMAP_NAME, source_file=locked.file_name[:FILE_NAME_LENGTH], classes=[]
         )
         await store_result_set(connection, locked, slide, set_id, draft, [], context.step.job_id)
-    await context.store.delete_object(upload.object_key)
+    await context.store.discard_object(upload.object_key)
     shutil.rmtree(context.folder, ignore_errors=True)
     return {"result_set_id": str(set_id), "heatmap": facts, "notices": []}
 
@@ -746,7 +746,7 @@ async def import_step(context: Context) -> Mapping[str, Any]:
         *([ImportNotice.PROBABILITIES_DROPPED.value] if written.probabilities_dropped else []),
         *([ImportNotice.OBJECTS_SKIPPED.value] if parsed.skipped else []),
     ]
-    await context.store.delete_object(upload.object_key)
+    await context.store.discard_object(upload.object_key)
     shutil.rmtree(context.folder, ignore_errors=True)
     crops = await crops_after_import(context, slide.id) if written.entries else None
     return {
@@ -789,7 +789,7 @@ async def crops_after_import(context: Context, slide_id: uuid.UUID) -> str | Non
 async def refuse(context: Context, code: str) -> None:
     async with context.step.transaction() as connection:
         await record_refusal(connection, context.upload.row, code)
-    await context.store.delete_object(context.upload.row.object_key)
+    await context.store.discard_object(context.upload.row.object_key)
     shutil.rmtree(context.folder, ignore_errors=True)
 
 

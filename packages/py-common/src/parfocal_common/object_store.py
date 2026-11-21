@@ -78,6 +78,9 @@ class NoSuchUploadError(StorageError):
     pass
 
 
+BUCKET_LOCKED = "ObjectLockedByBucketPolicy"
+
+
 def uri_encode(value: str, *, keep_slash: bool = False) -> str:
     return quote(value, safe="-_.~/" if keep_slash else "-_.~")
 
@@ -401,6 +404,15 @@ class ObjectStore:
 
     async def delete_object(self, key: str) -> None:
         await self.send("DELETE", key)
+
+    async def discard_object(self, key: str) -> bool:
+        try:
+            await self.delete_object(key)
+        except StorageError as error:
+            if error.code != BUCKET_LOCKED:
+                raise
+            return False
+        return True
 
     async def get_object(self, key: str) -> bytes:
         return (await self.send("GET", key)).content

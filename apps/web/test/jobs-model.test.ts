@@ -8,6 +8,8 @@ import {
   cancellableRuns,
   canOpenSlide,
   finishedTarget,
+  gpuText,
+  isSettled,
   jobIcon,
   jobTarget,
   pausedRuns,
@@ -34,6 +36,7 @@ const job = (patch: Partial<MyJob>): MyJob => ({
   title: "PathoSAM + HoVer-NeXt v1.2",
   project: { id: "p07", code: "P07", name: "Sentinel node AI evaluation" },
   status: "running",
+  error_code: null,
   detail: "tumor_052 and tumor_060 in P07",
   percent: 3,
   minutes_left: 34,
@@ -95,6 +98,7 @@ const run = (status: ModelRun["status"], stages: ModelRun["stages"]): ModelRun =
   attempts: 1,
   created_at: "2026-10-15T08:20:00+02:00",
   finished_at: null,
+  gpu_seconds: 0,
   stages,
   actions: [],
 });
@@ -152,7 +156,11 @@ test("failed and cancelled jobs say so in their own tone and leave the ring", ()
     finished_at: local(15, 14, 0),
   });
   const cancelled = job({ status: "cancelled", percent: 12, finished_at: local(15, 14, 0) });
-  assert.equal(trayValueText(failed), "Failed");
+  assert.equal(trayValueText(failed), "Failed, no reason was recorded");
+  assert.equal(
+    trayValueText({ ...failed, error_code: "model-not-served" }),
+    "Failed, this model has no worker yet",
+  );
   assert.equal(trayTone(failed), "bad");
   assert.equal(trayDetail(failed, today), "tumor_052 and tumor_060 in P07 · today 14:00");
   assert.equal(trayValueText(cancelled), "Cancelled");
@@ -278,6 +286,16 @@ test("a finished slide names its cells, its IDs and the result set", () => {
 test("the whole run reads starting, paused or done in its minutes", () => {
   assert.equal(runSummary(job({})).text, "Starting · about 34 min");
   assert.equal(runSummary(job({ status: "paused", percent: 38 })).text, "Paused at 38%");
+  assert.equal(runSummary(job({ status: "queued" })).text, "Waiting to start");
+  assert.equal(trayValueText(job({ status: "queued" })), "Waiting to start");
+  const failed = runSummary(job({ status: "failed", error_code: "too-many-claims" }));
+  assert.deepEqual(
+    [failed.state, failed.text],
+    ["failed", "Failed, the worker stopped three times"],
+  );
+  assert.equal(isSettled(failed), true);
+  assert.equal(isSettled(runSummary(job({}))), false);
+  assert.equal(runSummary(job({ status: "cancelled" })).text, "Cancelled");
   assert.equal(
     runSummary(
       job({
@@ -330,4 +348,11 @@ test("cancel stops every slide that is not finished and leaves the finished ones
     pausedRuns(runs).map((item) => item.id),
     ["paused"],
   );
+});
+
+test("a finished run names the GPU seconds its slides used and a failed slide says so", () => {
+  const done = { ...run("done", []), gpu_seconds: 40.2 };
+  assert.equal(gpuText([done, { ...done, gpu_seconds: 18.4 }]), "58.6 GPU seconds");
+  assert.equal(gpuText([run("done", [])]), null);
+  assert.equal(slideValueText(run("failed", [])), "Failed");
 });

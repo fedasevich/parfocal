@@ -379,3 +379,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0417](0417-a-review-tasks-class-snapshot-lives-on-its-final-layer.md) | A review task's class snapshot lives on its final layer | Accepted | 2026-11-21 |
 | [0418](0418-find-nuclei-runs-pathosam-ais-on-the-best-detector-pool.md) | Find nuclei runs PathoSAM AIS on the best detector pool | Accepted | 2026-11-21 |
 | [0419](0419-the-queue-decision-rules-the-final-layer-over-reviewer-edits.md) | The queue decision rules the final layer over reviewer edits | Accepted | 2026-11-21 |
+| [0420](0420-a-worker-leaves-a-staged-upload-the-bucket-lock-keeps.md) | A worker leaves a staged upload the bucket lock keeps, and background jobs wait behind uploads | Accepted | 2026-11-21 |

@@ -392,7 +392,7 @@ async def publish(context: Context) -> Mapping[str, Any]:
         published = await publish_slide(connection, upload.row, facts)
     if not kept:
         await delete_restricted_images(context.store, upload.tenant_id, slide_id)
-    await context.store.delete_object(upload.object_key)
+    await context.store.discard_object(upload.object_key)
     await finished(context)
     return {"slide_id": str(slide_id), "published": published}
 
@@ -400,7 +400,7 @@ async def publish(context: Context) -> Mapping[str, Any]:
 async def refuse(context: Context, code: str) -> None:
     async with context.step.transaction() as connection:
         await record_refusal(connection, context.upload.row, code)
-    await context.store.delete_object(context.upload.object_key)
+    await context.store.discard_object(context.upload.object_key)
     await finished(context)
 
 

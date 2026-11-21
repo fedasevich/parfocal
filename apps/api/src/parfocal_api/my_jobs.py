@@ -57,6 +57,7 @@ class MyJob(BaseModel):
     title: str
     project: JobProject
     status: JobStatus
+    error_code: str | None
     detail: str
     percent: int = Field(ge=0, le=100)
     minutes_left: int | None = Field(ge=0)
@@ -158,6 +159,7 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
                 jobs.c.id,
                 jobs.c.project_id,
                 jobs.c.status,
+                jobs.c.error_code,
                 jobs.c.pause_reason,
                 jobs.c.created_at,
                 jobs.c.finished_at,
@@ -202,6 +204,7 @@ async def list_my_jobs(principal: CurrentPrincipal, connection: TenantConnection
                 title=row.title,
                 project=JobProject(id=row.project_id, code=code, name=row.project_name),
                 status=status,
+                error_code=row.error_code if status is JobStatus.FAILED else None,
                 detail=f"{shown[0].label} in {code}" if shown else code,
                 percent=percent_of(status, row.units_done, row.units_total),
                 minutes_left=None,

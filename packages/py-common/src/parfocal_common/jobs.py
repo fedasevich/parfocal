@@ -23,6 +23,7 @@ from sqlalchemy import (
     String,
     Table,
     Uuid,
+    case,
     column,
     func,
     insert,
@@ -255,6 +256,7 @@ class Workflow:
     kind: str
     steps: Sequence[Step]
     lease_seconds: float = 60.0
+    background: bool = False
 
 
 @dataclass(frozen=True)
@@ -383,7 +385,7 @@ async def claim(
                     & (jobs.c.lease_until < func.clock_timestamp())
                 ),
             )
-            .order_by(jobs.c.created_at)
+            .order_by(waiting_order(kinds), jobs.c.created_at)
             .with_for_update(skip_locked=True)
             .limit(1)
             .scalar_subquery()
@@ -443,6 +445,13 @@ async def fail_running_steps(
                 .where(job_steps.c.job_id == job_id, job_steps.c.status == StepStatus.RUNNING)
                 .values(status=StepStatus.FAILED, finished_at=func.now())
             )
+
+
+def waiting_order(kinds: Mapping[str, Workflow]) -> Any:
+    background = [kind for kind, workflow in kinds.items() if workflow.background]
+    if not background:
+        return jobs.c.created_at
+    return case((jobs.c.kind.in_(background), 1), else_=0)
 
 
 def kinds_lease(kinds: Mapping[str, Workflow]) -> float:

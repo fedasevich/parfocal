@@ -22,7 +22,13 @@ import { now } from "../../clock.ts";
 import { formatDayMonth } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { runEstimate } from "./model.ts";
-import { modelGroups, runBlockers, slideItems, startingSlides } from "./run-model-parts.ts";
+import {
+  modelGroups,
+  runBlockers,
+  slideItems,
+  startingModel,
+  startingSlides,
+} from "./run-model-parts.ts";
 
 export type RunModelScene = "pick" | "menu" | "lab";
 
@@ -59,7 +65,10 @@ export function RunModelWindow({
       models={models}
       setNames={new Map(sets.map((set) => [set.id, set.name]))}
       initialSlides={startingSlides(slideIds, defaults.slide_ids, slides)}
-      initialModel={scene === "lab" && labModel ? labModel.id : defaults.model_id}
+      initialModel={startingModel(
+        models,
+        scene === "lab" && labModel ? labModel.id : defaults.model_id,
+      )}
       menuOpen={scene === "menu"}
       onClose={onClose}
       onStarted={onStarted}
@@ -74,7 +83,7 @@ type RunModelFormProps = {
   models: ProjectModel[];
   setNames: Map<string, string>;
   initialSlides: string[];
-  initialModel: string;
+  initialModel: string | null;
   menuOpen: boolean;
   onClose: () => void;
   onStarted: () => void;
@@ -105,7 +114,7 @@ function RunModelForm({
   const blockers = runBlockers(picked.length, model);
   const estimate = model ? runEstimate(model, picked.length, now()) : null;
   const run = async () => {
-    if (!model || model.serving === "offline" || picked.length === 0) return;
+    if (model?.serving !== "ready" || picked.length === 0) return;
     await start.mutateAsync({
       projectId,
       data: {

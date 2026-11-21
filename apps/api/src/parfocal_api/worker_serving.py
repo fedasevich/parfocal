@@ -8,6 +8,7 @@ from fastapi import Request
 class Serving(StrEnum):
     READY = "ready"
     OFFLINE = "offline"
+    NOT_SERVED = "not-served"
 
 
 class WorkerProbe(Protocol):

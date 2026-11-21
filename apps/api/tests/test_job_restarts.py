@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 from collections.abc import Awaitable, Callable, Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +12,7 @@ from storage_support import TEST_STORAGE
 from test_model_runs import Lab as RunLab
 from test_model_runs import make_lab as make_run_lab
 from test_model_runs import ok, one_run, read, stage
-from upload_support import Lab, send_file, start_upload, status_of
+from upload_support import Lab, exists, send_file, start_upload, status_of
 from workspace_support import join_project, make_project, make_workspace, owner
 
 from parfocal_api.tables import Role
@@ -30,7 +31,7 @@ from parfocal_common.jobs import (
     run_job,
 )
 from parfocal_common.model_runs import STAGES, claim_model_run, workflow
-from parfocal_common.object_store import ObjectStore
+from parfocal_common.object_store import BUCKET_LOCKED, ObjectStore, StorageError
 from parfocal_ingest.workflow import Resources, ingest_workflow
 from parfocal_ml.whole_slide import (
     SlideTiles,
@@ -572,3 +573,54 @@ def test_a_pre_read_whose_gpu_worker_dies_resumes_to_the_same_chunks(
     finished = ok(read(api, run_lab, run_info))
     assert (finished["status"], finished["attempts"]) == ("done", 2)
     assert stage(finished, "model-running")["status"] == "done"
+
+
+def locked_store(locked: str) -> type[ObjectStore]:
+    class LockedStore(ObjectStore):
+        async def delete_object(self, key: str) -> None:
+            if key == locked:
+                raise StorageError(409, BUCKET_LOCKED)
+            await super().delete_object(key)
+
+    return LockedStore
+
+
+def test_an_upload_the_bucket_lock_keeps_still_finishes_its_ingest_on_the_first_claim(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    upload, job = uploaded(api, lab, "locked-upload.tiff")
+    stored = owner(
+        database,
+        "SELECT object_key FROM uploads WHERE id = "
+        f"(SELECT (input->>'upload_id')::uuid FROM jobs WHERE id = '{job}')",
+    )
+    key = str(stored[0][0])
+    take_and_run(
+        database, ingest_with(tmp_path / "a", locked_store(key)), "worker-a", lab.tenant_id
+    )
+    assert job_row(database, job) == ("done", 1, "worker-a", None)
+    assert status_of(api, lab.lead, upload)["status"] == "ready"
+    assert slides_of(database, lab) == 1
+    assert exists(key)
+    assert not (tmp_path / "a" / str(job)).exists()
+
+
+def test_a_waiting_upload_is_claimed_before_an_older_background_job(database: str) -> None:
+    background = replace(Counting().workflow("test-background"), background=True)
+    upload = Counting().workflow("test-upload")
+    tenant, older = make_job(database, background)
+
+    async def go(engine: Any) -> list[uuid.UUID]:
+        async with scoped_transaction(engine, DatabaseScope(tenant_id=tenant)) as connection:
+            await enqueue(connection, upload, tenant)
+        kinds = {background.kind: background, upload.kind: upload}
+        taken: list[uuid.UUID] = []
+        for worker in ("worker-a", "worker-b"):
+            claimed = await claim(engine, worker, kinds, tenant)
+            assert claimed is not None
+            taken.append(claimed[0].job_id)
+        return taken
+
+    first, second = run(database, go)
+    assert second == older
+    assert first != older

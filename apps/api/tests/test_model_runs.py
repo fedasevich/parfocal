@@ -826,3 +826,28 @@ def test_the_shared_queue_needs_a_tenant_scope(database: str) -> None:
 
     with pytest.raises(DBAPIError, match="needs a tenant scope"):
         run_async(database, go)
+
+
+def test_only_a_model_with_a_worker_reads_as_served(api: ApiAs, lab: Lab) -> None:
+    listed = ok(api(lab.people["owner"]).get(f"/api/projects/{lab.project}/models"))
+    assert {model["name"]: model["serving"] for model in listed} == {
+        "camelyon-tumor": "not-served",
+        "pathosam-hovernext": "ready",
+        "hovernet": "not-served",
+    }
+
+
+def test_a_run_reads_the_gpu_seconds_its_workers_recorded(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    assert ok(read(api, lab, run))["gpu_seconds"] == 0
+    owner(
+        database,
+        "INSERT INTO gpu_usage (tenant_id, job_id, kind, worker, seconds) VALUES "
+        f"('{lab.tenant}', '{run['id']}', 'model-run', 'w', 40.25), "
+        f"('{lab.tenant}', '{run['id']}', 'model-run', 'w', 18.4)",
+    )
+    assert ok(read(api, lab, run))["gpu_seconds"] == 58.6
+    listed = ok(api(lab.people["owner"]).get(lab.runs))
+    assert [item["gpu_seconds"] for item in listed if item["id"] == run["id"]] == [58.6]
