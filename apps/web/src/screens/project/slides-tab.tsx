@@ -363,6 +363,16 @@ export function SlidesTab({
                           <Icon name={expanded ? "down" : "next"} />
                           <b className="font-semibold text-fg">{group.label}</b>
                         </button>
+                        {group.key !== "loose" && caseIdOf(group.key) ? (
+                          <Link
+                            to="/projects/$projectId/cases/$caseId/report"
+                            params={{ projectId: project.id, caseId: caseIdOf(group.key) ?? "" }}
+                            className="text-accent"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <Trans>Open report</Trans>
+                          </Link>
+                        ) : null}
                         <span>{group.sub}</span>
                         {owner && group.key !== "loose" && caseIdOf(group.key) ? (
                           <span className="ml-auto flex gap-1">

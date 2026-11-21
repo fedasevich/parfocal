@@ -12090,6 +12090,7 @@ msgstr ""
 msgid "Open on the slide"
 msgstr ""
 
+#: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Open report"

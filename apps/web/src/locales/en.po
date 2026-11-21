@@ -12095,6 +12095,7 @@ msgstr "Open on the second monitor"
 msgid "Open on the slide"
 msgstr "Open on the slide"
 
+#: src/screens/project/slides-tab.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/viewer/live-top-bar.tsx
 msgid "Open report"

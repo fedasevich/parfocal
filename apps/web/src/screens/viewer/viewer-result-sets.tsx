@@ -5,6 +5,7 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { destinations } from "../../shell/destinations.ts";
 import { formatDayMonth } from "../format.ts";
 import { setColours } from "./layer-views.tsx";
+import { resultSetName } from "./result-set-name.ts";
 
 export function ViewerResultSets({
   projectId,
@@ -47,7 +48,7 @@ export function ViewerResultSets({
           const task = set.id === taskSetId;
           return {
             key: set.id,
-            name: `${set.name} ${set.model_version ?? ""}`.trim(),
+            name: resultSetName(set.name, set.model_version),
             sub: `${set.source === "run" ? t`Run here` : t`Imported`} ${formatDayMonth(new Date(set.produced_at ?? set.created_at))}${task ? t` · the result this task checks` : ""}`,
             color: task ? setColours.a : setColours.b,
             fixed: task,
