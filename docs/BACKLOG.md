@@ -7141,6 +7141,22 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 14 and 15 and the partly fixed rechecks of round three issues 11, 19 and 20 and round two items 9 and 22. Console and network noise, small slips in numbers and words such as "about 0 min left" and "1 disagreements resolved", the seeded reviewers deciding only the first region, the leftover dataset page items, a Best click one second after picking Best sending two embedding calls, and the read only banner of a task never started.
   Done when unit tests cover each wording fix, a spec opens the main screens with no console errors, the seed's reviewers decide most objects, and a test shows one Best click right after picking Best sends one call.
   Depends on nothing. Size: M.
+- [ ] PROTO-154 · Sign-off export, the report appendix and a fresh sign-in for annotate sign-off
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 1, 2 and 5 and the partly fixed recheck of round four issue 4. "Download 3 files" in the sign-off window downloads nothing. The report appendix calls disagreed cells "Not sure". An annotate sign-off asks for no fresh sign-in, unlike a review sign-off under ADR 0410 (a signature needs a sign-in within 5 minutes). What the recheck left of the cell task report.
+  Done when a spec downloads the three files from the sign-off window, a test builds the appendix with agreed, disagreed and unsure objects and finds each named right, and a test refuses an annotate sign-off without a fresh sign-in.
+  Depends on nothing. Size: M.
+- [ ] PROTO-155 · A run's page speaks plainly and its estimate fits the slide
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 4 and 6 and the partly fixed recheck of round four issue 6. The run's step list shows raw keys and wrong figures such as "11 mm²" and "1 cells", and the estimate said about 17 minutes for a run of 100 seconds.
+  Done when unit tests cover each step's label and figures and the estimate for a small and a large slide.
+  Depends on nothing. Size: S.
+- [ ] PROTO-156 · The lock warns and hides the page, and opening a page writes nothing
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 9, 10 and 11. The idle lock gives no warning before it locks and only blurs the page. Two calls the app expects to fail still go out. Opening a Preferences section or a draft report writes to the server.
+  Done when a spec sees the warning before the lock and no slide or patient text in the locked page, and specs open Preferences and a draft report with no write and without the two calls.
+  Depends on nothing. Size: S.
+- [ ] PROTO-157 · Round five small slips
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md` (the deployed walkthrough of v0.35.8), new issues 7, 8 and 12 and the partly fixed recheck of round four issue 15. A case has no link on the project page, the slide counter restarts after a submit, and the remaining number and word slips.
+  Done when unit tests or specs cover each item.
+  Depends on nothing. Size: S.
 
 ---
 

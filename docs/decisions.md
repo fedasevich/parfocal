@@ -47,6 +47,16 @@ From PROTO-150 (upload and model run jobs tell one story). In a de-identified pr
 
 Your choice:
 
+### 173. When a reviewer disagrees and retypes a cell, can the disagreement queue keep the reviewer's type?
+
+From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md`, issue 3). Today the queue offers only Disagree, which leaves the cell out of the training data, and Agree with the AI, which keeps the AI's class. A reviewer's new type for the cell cannot be kept.
+
+- A. The queue offers a third answer, "Keep with the reviewer's type", which keeps the outline and the new type. (Recommended, since a corrected type is the most useful training data and the choice stays explicit.)
+- B. Keep it as it is. Disagree removes the cell and Agree keeps the AI's class.
+- C. Agree keeps the reviewer's type on its own when a reviewer retyped the cell.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.
