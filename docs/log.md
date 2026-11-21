@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-21
 
+- OPS-038 Deployed v0.35.11 (PROTO-157 round five slips) to Modal main. Cost TODO.
 - OPS-038 Deployed v0.35.9 (PROTO-155 run page wording and estimate) and v0.35.10 (PROTO-154 sign-off export, report appendix, annotate sign-off needs a fresh sign-in) to Modal main. Cost TODO.
 - PROTO-155 Step labels and figures by stage key (tiles, cells from a new RunStage.objects, C1 to Cn), model display name in job titles, estimate scaled by slide width and height (new ProjectSlide width/height). API DB tests not run here.
 - PROTO-154 The sign-off window downloads the ticked exports through the evaluation export API (PDF, decisions CSV, Parfocal JSON, GeoJSON as its own row; Opinion forms dropped, no export exists). The report appendix names each answer and the queue decision by the task's decision style, and cell agreement between reviewers counts only cells with two or more reviewers, so one reviewer reads n/a. The annotate slide sign-off now asks for a sign-in within 5 minutes like every other signature under ADR 0410, and the viewer sends the owner to a fresh sign-in and resumes. Tests: test_annotate_sign_off, test_evaluation, test_showcase_annotation, report-appendix.test.ts, disagreements and evaluation-report specs. The disagreements spec for the annotate sign-off page fails axe color-contrast locally, a file this task did not change.
