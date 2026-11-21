@@ -512,12 +512,23 @@ const runsToAddInAnnotateTask = (request: Request, slideId: string): ResultSetKe
   return inTask && slideId === annotateTaskSlides.withResults ? ["cam"] : [];
 };
 
+const unlistedSlidesCursor = "fake-unlisted-slides";
+
+const viewedSlideOf = (request: Request): string | undefined => {
+  const page = request.referrer || request.headers.get("referer") || "";
+  return /\/slides\/([^/?#]+)/.exec(page)?.[1];
+};
+
 export function projectHandlers(): RequestHandler[] {
   return [
     http.get("*/api/me/slides", ({ request }) => {
       const projectId = new URL(request.url).searchParams.get("project_id");
-      if (!projectId) return undefined;
-      return HttpResponse.json({ slides: projectSlideRows(projectId), next_cursor: null });
+      if (projectId) {
+        return HttpResponse.json({ slides: projectSlideRows(projectId), next_cursor: null });
+      }
+      const viewed = viewedSlideOf(request);
+      if (viewed === undefined || slides.some((slide) => slide.id === viewed)) return undefined;
+      return HttpResponse.json({ slides: [], next_cursor: unlistedSlidesCursor });
     }),
     getGetProjectOverviewMockHandler(({ params }) => toProjectOverview(String(params.projectId))),
     getGetUploadBatchMockHandler(({ params }) => toUploadBatch(String(params.projectId))),
