@@ -12,8 +12,8 @@ from parfocal_api.audit import AuditAction
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.review_order import Results, store_order, stored_seeds
+from parfocal_api.review_task_errors import NoResultSetError
 from parfocal_api.review_tasks import (
-    NoResultSetError,
     TaskSlide,
     audit,
     by_least_sure,

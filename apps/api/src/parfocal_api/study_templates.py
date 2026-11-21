@@ -19,7 +19,8 @@ from parfocal_api.opinion_questions import (
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, NotFoundError
-from parfocal_api.review_tasks import Scope, StudyTemplateRetiredError
+from parfocal_api.review_task_errors import StudyTemplateRetiredError
+from parfocal_api.review_tasks import Scope
 from parfocal_api.settings_api import lab_of
 from parfocal_api.tables import (
     BuiltInTemplate,
