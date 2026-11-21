@@ -2,6 +2,22 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.8 (2026-11-21)
+
+### Fixes
+
+- PROTO-153: Fix round four slips, quiet the main screens and make one Best click one call
+- PROTO-153: Answer missing heatmaps, thumbnails and open uploads without errors
+
+### Docs
+
+- OPS-038: Log the v0.35.7 deploy
+- PROTO-153: Move the round four slips task to review
+
+### Other
+
+- PROTO-153: Merge round four slips
+
 ## v0.35.7 (2026-11-21)
 
 ### Fixes
