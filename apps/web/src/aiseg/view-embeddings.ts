@@ -106,33 +106,43 @@ export function createViewEmbeddings(options: ViewEmbeddingsOptions = {}): Closa
   const post = options.post ?? postViewEmbedding();
   const giveUpMs = options.giveUpMs ?? viewGiveUpMs;
   const open = new Set<AbortController>();
+  const asking = new Map<string, Promise<ViewAnswer>>();
+
+  async function ask(slideId: string, view: ViewToEmbed): Promise<ViewAnswer> {
+    const controller = new AbortController();
+    open.add(controller);
+    let gaveUp = false;
+    const timer = setTimeout(() => {
+      gaveUp = true;
+      controller.abort();
+    }, giveUpMs);
+    try {
+      const body = await post(slideId, view, controller.signal);
+      if (body.byteLength !== serverEmbeddingValues * 2) return { fallback: "refused" };
+      return { embedding: decodeFloat16(body) };
+    } catch (error) {
+      if (gaveUp) return { fallback: "gave-up" };
+      if (error instanceof GpuCallCancelledError) return { fallback: "cancelled" };
+      if (error instanceof BestRefusedError) return { fallback: error.reason };
+      return { fallback: "offline" };
+    } finally {
+      clearTimeout(timer);
+      open.delete(controller);
+    }
+  }
 
   return {
     close() {
       for (const controller of open) controller.abort();
       open.clear();
     },
-    async embedding(slideId, view) {
-      const controller = new AbortController();
-      open.add(controller);
-      let gaveUp = false;
-      const timer = setTimeout(() => {
-        gaveUp = true;
-        controller.abort();
-      }, giveUpMs);
-      try {
-        const body = await post(slideId, view, controller.signal);
-        if (body.byteLength !== serverEmbeddingValues * 2) return { fallback: "refused" };
-        return { embedding: decodeFloat16(body) };
-      } catch (error) {
-        if (gaveUp) return { fallback: "gave-up" };
-        if (error instanceof GpuCallCancelledError) return { fallback: "cancelled" };
-        if (error instanceof BestRefusedError) return { fallback: error.reason };
-        return { fallback: "offline" };
-      } finally {
-        clearTimeout(timer);
-        open.delete(controller);
-      }
+    embedding(slideId, view) {
+      const key = `${slideId}|${view.x},${view.y},${view.width},${view.height}`;
+      const known = asking.get(key);
+      if (known !== undefined) return known;
+      const pending = ask(slideId, view).finally(() => asking.delete(key));
+      asking.set(key, pending);
+      return pending;
     },
   };
 }

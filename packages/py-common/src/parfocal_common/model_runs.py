@@ -54,6 +54,9 @@ MODEL_STAGE = "model-running"
 LAB_MODEL_INPUT = "lab_model"
 LAB_POOL_FUNCTION = "lab_model"
 LAB_POOL_KIND = "lab-model"
+NUCLEI_DETECTORS = frozenset({"pathosam-hovernext"})
+NUCLEI_POOL_FUNCTION = "detector_best"
+NUCLEI_POOL_KIND = "detect"
 
 logger = logging.getLogger("parfocal.model_runs")
 LEASE_SECONDS = 60.0
@@ -347,5 +350,18 @@ def wake_lab_model_pool(pools: Pools) -> bool:
         pools.spawn(LAB_POOL_FUNCTION, lab_drain_call())
     except Exception as error:
         logger.warning("lab model pool spawn failed: %s", type(error).__name__)
+        return False
+    return True
+
+
+def nuclei_drain_call() -> dict[str, object]:
+    return {"kind": NUCLEI_POOL_KIND}
+
+
+def wake_nuclei_pool(pools: Pools) -> bool:
+    try:
+        pools.spawn(NUCLEI_POOL_FUNCTION, nuclei_drain_call())
+    except Exception as error:
+        logger.warning("nuclei pool spawn failed: %s", type(error).__name__)
         return False
     return True

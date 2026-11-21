@@ -8,13 +8,15 @@ const progressPollMs = 3000;
 
 export function StageAiReading({
   slideId,
+  resultSetId,
   objects,
 }: {
   slideId: string;
+  resultSetId: string | null | undefined;
   objects: readonly ReviewObject[];
 }) {
   const progress = okData(
-    useGetSlideAiProgress(slideId, {
+    useGetSlideAiProgress(slideId, resultSetId ? { result_set_id: resultSetId } : undefined, {
       query: {
         refetchInterval: (query) =>
           okData(query.state.data)?.state === "running" ? progressPollMs : false,

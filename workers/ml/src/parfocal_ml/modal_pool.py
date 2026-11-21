@@ -27,6 +27,7 @@ STORAGE_SECRET = "parfocal-api-config"
 TUMOR_MAP_SECRETS = (DATABASE_SECRET, STORAGE_SECRET)
 VIEW_MAP_SECRETS = (STORAGE_SECRET,)
 LAB_MODEL_SECRETS = (DATABASE_SECRET, STORAGE_SECRET)
+NUCLEI_SECRETS = (DATABASE_SECRET, STORAGE_SECRET)
 LOCK_PATH = "workers/deploy/locks/ml.txt"
 UV_VERSION = "0.13.8"
 LOCKED_INSTALL_OPTIONS = "--require-hashes --no-deps"
@@ -57,6 +58,7 @@ type Runner = Callable[[Mapping[str, object]], Mapping[str, object]]
 TUMOR_MAP_FAMILY = Family.DETECTOR_GOOD
 VIEW_MAP_FAMILY = Family.EMBEDDER
 LAB_MODEL_FAMILY = Family.LAB_MODEL
+NUCLEI_FAMILY = Family.DETECTOR_BEST
 
 
 def tumor_map_runner(pool: PoolLimits) -> Runner:
@@ -66,6 +68,17 @@ def tumor_map_runner(pool: PoolLimits) -> Runner:
         from parfocal_ml.tumor_map_worker import run_tumor_maps
 
         return run_tumor_maps(call, gpu)
+
+    return run
+
+
+def nuclei_runner(pool: PoolLimits) -> Runner:
+    gpu = pool.gpu.value if pool.gpu is not None else None
+
+    def run(call: Mapping[str, object]) -> Mapping[str, object]:
+        from parfocal_ml.nuclei_run_worker import run_nuclei_runs
+
+        return run_nuclei_runs(call, gpu)
 
     return run
 
@@ -99,6 +112,8 @@ def secret_names(pool: PoolLimits) -> tuple[str, ...]:
         return TUMOR_MAP_SECRETS
     if pool.family is LAB_MODEL_FAMILY:
         return LAB_MODEL_SECRETS
+    if pool.family is NUCLEI_FAMILY:
+        return NUCLEI_SECRETS
     if pool.family is VIEW_MAP_FAMILY:
         return VIEW_MAP_SECRETS
     return ()
@@ -115,6 +130,8 @@ def default_runners(pool: PoolLimits) -> dict[str, Runner]:
         }
     if pool.family is LAB_MODEL_FAMILY:
         return {Kind.LAB_MODEL: lab_model_runner}
+    if pool.family is NUCLEI_FAMILY:
+        return {Kind.DETECT: nuclei_runner(pool)}
     return {}
 
 

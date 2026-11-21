@@ -1,6 +1,6 @@
 import json
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Annotated, Any, Literal, Self
@@ -73,6 +73,7 @@ from parfocal_common.model_runs import (
     RunSettings,
     enqueue_model_run,
     wake_lab_model_pool,
+    wake_nuclei_pool,
 )
 from parfocal_common.object_ids import Letter, ObjectIdError, parse
 from parfocal_common.warm_gate import Pools
@@ -601,6 +602,10 @@ def result_set_draft(parameters: RunParameters) -> ResultSetDraft:
     return ResultSetDraft(name=f"{title} {detector.version}"[:120], model_version=detector.version)
 
 
+def wake_pool_for(detector: str) -> Callable[[Pools], bool]:
+    return wake_nuclei_pool if latest_version(detector) is not None else wake_lab_model_pool
+
+
 def started_by(principal: Principal) -> uuid.UUID | None:
     return principal.user_id if isinstance(principal, MemberPrincipal) else None
 
@@ -681,8 +686,7 @@ async def start_model_runs(
                 "tier": settings.tier.value if settings.tier else None,
             },
         )
-    if lab_model:
-        await run_in_threadpool(wake_lab_model_pool, pools)
+    await run_in_threadpool(wake_pool_for(parameters.detector.name), pools)
     rows = (
         await connection.execute(
             run_query()
@@ -766,6 +770,7 @@ async def control_run(
     project_id: uuid.UUID,
     run_id: uuid.UUID,
     control: JobControl,
+    pools: Pools | None = None,
 ) -> ModelRun:
     row = await readable_run(connection, principal, project_id, run_id)
     await require_controlling(connection, principal, project_id, row.archived_at is not None)
@@ -790,6 +795,8 @@ async def control_run(
             "to": moved.after.value,
         },
     )
+    if pools is not None:
+        await run_in_threadpool(wake_pool_for(row.detector), pools)
     fresh = (await connection.execute(run_query().where(model_runs.c.job_id == run_id))).one()
     return (await runs_of(connection, [fresh], True))[0]
 
@@ -818,8 +825,9 @@ async def resume_model_run(
     run_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    pools: Annotated[Pools, Depends(gpu_pools_of)],
 ) -> ModelRun:
-    return await control_run(connection, principal, project_id, run_id, JobControl.RESUME)
+    return await control_run(connection, principal, project_id, run_id, JobControl.RESUME, pools)
 
 
 @router.post(
@@ -832,8 +840,9 @@ async def retry_model_run(
     run_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    pools: Annotated[Pools, Depends(gpu_pools_of)],
 ) -> ModelRun:
-    return await control_run(connection, principal, project_id, run_id, JobControl.RETRY)
+    return await control_run(connection, principal, project_id, run_id, JobControl.RETRY, pools)
 
 
 class ModelRunMove(BaseModel):
@@ -863,6 +872,7 @@ async def move_model_run(
     change: ModelRunMove,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    pools: Annotated[Pools, Depends(gpu_pools_of)],
 ) -> ModelRun:
     row = await readable_run(connection, principal, project_id, run_id)
     await require_controlling(connection, principal, project_id, row.archived_at is not None)
@@ -870,7 +880,7 @@ async def move_model_run(
         raise LabModelCannotMoveError
     if JobStatus(row.status) is not JobStatus.PAUSED:
         raise ModelRunNotMovableError(f"The run is {row.status}")
-    return await control_run(connection, principal, project_id, run_id, JobControl.RESUME)
+    return await control_run(connection, principal, project_id, run_id, JobControl.RESUME, pools)
 
 
 def first_start() -> Any:

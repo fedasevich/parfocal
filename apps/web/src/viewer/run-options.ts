@@ -16,7 +16,7 @@ export type ViewRect = {
 
 export const defaultRunOptions: RunOptions = { scope: "slide", ordering: "raster" };
 
-export const nucleiDetector = "hovernet";
+export const nucleiDetector = "pathosam-hovernext";
 
 const clampTo = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high);
 

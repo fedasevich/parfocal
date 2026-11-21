@@ -882,7 +882,13 @@ export function StageReviewObjects({
           {orderWait ? (
             <ReviewOrderTabNotice order={orderWait} onRetry={session.retryOrder} />
           ) : null}
-          <StageAiReading slideId={slideId} objects={objects} />
+          <StageAiReading
+            slideId={slideId}
+            resultSetId={
+              session.task?.slides.find((item) => item.slide_id === slideId)?.result_set_id
+            }
+            objects={objects}
+          />
           {readOnly && answersOff !== undefined ? (
             <p
               data-testid="read-only-note"
