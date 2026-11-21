@@ -2,6 +2,28 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.0 (2026-11-21)
+
+### Fixes
+
+- PROTO-144: Carry class names into review task datasets and cut only touched patch tiles
+- PROTO-143: Agree with the rest in one batched call and show a refused submit as failed
+
+### Docs
+
+- TEST-056: Add the deployed walkthrough of v0.34.1
+- TEST-056: Add the v0.34.1 walkthrough fix tasks and decision 171
+- PROTO-143: Log the batched agree with the rest and move it to review
+- PROTO-146: Claim the edit entry points task
+
+### Tests
+
+- PROTO-144: Cover empty slides, crossed outlines and a poll that stops
+
+### Other
+
+- PROTO-143: Merge agree with the rest batching
+
 ## v0.34.2 (2026-11-21)
 
 ### Features
