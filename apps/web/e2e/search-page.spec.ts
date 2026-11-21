@@ -7,7 +7,7 @@ test("the sidebar opens Search and an object ID opens the slide at the object", 
   await page.getByRole("link", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL(/\/search$/);
   await page.getByRole("textbox", { name: "Search everything" }).fill("T2·C145");
-  await expect(page).not.toHaveURL(/[?&]q=/);
+  await expect(page).toHaveURL(/[?&]q=T2%C2%B7C145/);
   const row = page.getByRole("button", { name: /T2·C145 on A1/ });
   await expect(row).toBeVisible();
   await expect(page.getByRole("region", { name: "Object IDs" })).toBeVisible();
@@ -39,11 +39,11 @@ test("the palette All results row carries the query to the search page", async (
   }).toPass();
   await palette.getByRole("combobox").fill("c145");
   await palette.getByRole("option", { name: /All results for "c145"/ }).click();
-  await expect(page).toHaveURL(/\/search$/);
+  await expect(page).toHaveURL(/\/search\?q=c145$/);
   await expect(page.getByRole("textbox", { name: "Search everything" })).toHaveValue("c145");
   await expect(page.getByRole("region", { name: "Object IDs" })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("textbox", { name: "Search everything" })).toHaveValue("");
+  await expect(page.getByRole("textbox", { name: "Search everything" })).toHaveValue("c145");
 });
 
 test("the Actions scope lists matching actions", async ({ page }) => {

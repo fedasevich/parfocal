@@ -29,30 +29,25 @@ for (const viewport of [
   { width: 1280, height: 800 },
   { width: 1024, height: 700 },
 ]) {
-  test(`on a slide that cannot open, the context bar, the GPU wait and the failure alert stack without overlap at ${viewport.width} by ${viewport.height}`, async ({
+  test(`on a slide that cannot open, the GPU wait and the failure alert stack without overlap and no hint bar shows at ${viewport.width} by ${viewport.height}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
     const stage = await failedOpenWithWait(page);
     const stack = stage.locator('[data-slot="top-stack"]');
-    const bar = stack.getByTestId("context-bar");
     const wait = stack.getByTestId("gpu-wait");
     const alert = stack.getByRole("alert");
-    await expect(bar).toBeVisible();
     await expect(wait).toBeVisible();
     await expect(alert).toBeVisible();
+    await expect(stage.getByTestId("context-bar")).toHaveCount(0);
 
-    const [barBox, waitBox, alertBox, stackBox, stageBox] = await Promise.all([
-      boxOf(bar),
+    const [waitBox, alertBox, stackBox, stageBox] = await Promise.all([
       boxOf(wait),
       boxOf(alert),
       boxOf(stack),
       boxOf(stage),
     ]);
-    expect(meets(barBox, waitBox)).toBe(false);
-    expect(meets(barBox, alertBox)).toBe(false);
     expect(meets(waitBox, alertBox)).toBe(false);
-    expect(barBox.y).toBeLessThan(waitBox.y);
     expect(waitBox.y).toBeLessThan(alertBox.y);
     expect(stackBox.x).toBeGreaterThanOrEqual(stageBox.x);
     expect(stackBox.x + stackBox.width).toBeLessThanOrEqual(stageBox.x + stageBox.width);
@@ -64,7 +59,7 @@ for (const viewport of [
     for (const other of await others.all()) {
       if (!(await other.isVisible())) continue;
       const box = await boxOf(other);
-      for (const notice of [barBox, waitBox, alertBox]) expect(meets(notice, box)).toBe(false);
+      for (const notice of [waitBox, alertBox]) expect(meets(notice, box)).toBe(false);
     }
   });
 }
