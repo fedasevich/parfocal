@@ -34,11 +34,20 @@ export function trayPercent(jobs: MyJob[]): number {
   return Math.round(running.reduce((sum, job) => sum + job.percent, 0) / running.length);
 }
 
+const failureTexts: Record<string, string> = {
+  "model-not-served": "this model has no worker yet",
+  "too-many-claims": "the worker stopped three times",
+};
+
+export const failureText = (code: string | null) =>
+  code === null ? "no reason was recorded" : (failureTexts[code] ?? code.replaceAll("-", " "));
+
 export function trayValueText(job: MyJob): string {
-  if (job.status === "failed") return "Failed";
+  if (job.status === "failed") return `Failed, ${failureText(job.error_code)}`;
   if (job.status === "cancelled") return "Cancelled";
   if (job.status === "done") return "Done";
   if (job.status === "paused") return `Paused at ${job.percent}%`;
+  if (job.status === "queued") return "Waiting to start";
   if (job.percent < 5 && job.minutes_left !== null) return `Starting · ${job.minutes_left} min`;
   return job.minutes_left === null
     ? `${job.percent}%`
@@ -126,6 +135,8 @@ export function slidePercent(run: ModelRun): number {
 
 export function slideValueText(run: ModelRun): string {
   if (run.status === "done") return "Done";
+  if (run.status === "failed") return "Failed";
+  if (run.status === "cancelled") return "Cancelled";
   if (run.status === "paused") return "Paused";
   if (run.status === "queued") return "Waiting";
   return run.stages[currentIndex(run)]?.name ?? "Running";
@@ -133,7 +144,8 @@ export function slideValueText(run: ModelRun): string {
 
 export function slideTone(run: ModelRun): ProgressTone {
   if (run.status === "done") return "ok";
-  return run.status === "paused" ? "warn" : "accent";
+  if (run.status === "failed") return "bad";
+  return run.status === "paused" || run.status === "cancelled" ? "warn" : "accent";
 }
 
 const thousands = (count: number) => count.toLocaleString("en-US");
@@ -197,7 +209,7 @@ export const cancellableRuns = (runs: ModelRun[]) =>
   runs.filter((run) => run.actions.includes("cancel"));
 
 export type RunSummary = {
-  state: "running" | "paused" | "done";
+  state: "running" | "paused" | "done" | "failed" | "cancelled";
   percent: number;
   text: string;
 };
@@ -215,7 +227,20 @@ export function runSummary(job: MyJob): RunSummary {
   if (job.status === "paused") {
     return { state: "paused", percent: job.percent, text: `Paused at ${job.percent}%` };
   }
+  if (job.status === "failed") {
+    return {
+      state: "failed",
+      percent: job.percent,
+      text: `Failed, ${failureText(job.error_code)}`,
+    };
+  }
+  if (job.status === "cancelled") {
+    return { state: "cancelled", percent: job.percent, text: "Cancelled" };
+  }
   const percent = job.percent;
+  if (job.status === "queued") {
+    return { state: "running", percent, text: "Waiting to start" };
+  }
   if (percent < 5) {
     return {
       state: "running",
@@ -261,3 +286,11 @@ export function runEstimate(model: ProjectModel, slides: number, now: Date): Run
 }
 
 export const makesLabel = { regions: "Regions", cells: "Cells", heatmap: "Heatmap" } as const;
+
+export const isSettled = (summary: RunSummary) =>
+  summary.state !== "running" && summary.state !== "paused";
+
+export function gpuText(runs: ModelRun[]): string | null {
+  const seconds = runs.reduce((sum, run) => sum + run.gpu_seconds, 0);
+  return seconds > 0 ? `${seconds.toFixed(1)} GPU seconds` : null;
+}

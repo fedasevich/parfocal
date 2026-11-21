@@ -27,6 +27,14 @@ export function slideItems(
   });
 }
 
+export const servedModels = (models: ProjectModel[]) =>
+  models.filter((model) => model.serving !== "not-served");
+
+export function startingModel(models: ProjectModel[], wanted: string | undefined): string | null {
+  const served = servedModels(models);
+  return (served.find((model) => model.id === wanted) ?? served[0])?.id ?? null;
+}
+
 export function modelGroups(models: ProjectModel[]): ModelGroup[] {
   const option = (model: ProjectModel) => ({
     id: model.id,
@@ -39,11 +47,15 @@ export function modelGroups(models: ProjectModel[]): ModelGroup[] {
   return [
     {
       title: "Parfocal models",
-      options: models.filter((model) => model.host === "parfocal").map(option),
+      options: servedModels(models)
+        .filter((model) => model.host === "parfocal")
+        .map(option),
     },
     {
       title: "Your lab's models",
-      options: models.filter((model) => model.host === "lab").map(option),
+      options: servedModels(models)
+        .filter((model) => model.host === "lab")
+        .map(option),
     },
   ];
 }
@@ -52,6 +64,15 @@ export function runBlockers(pickedCount: number, model: ProjectModel | undefined
   return [
     ...(pickedCount ? [] : [{ id: "slides", text: "Pick at least one slide.", goTo: "Slides" }]),
     ...(model ? [] : [{ id: "model", text: "Pick a model.", goTo: "Model" }]),
+    ...(model?.serving === "not-served"
+      ? [
+          {
+            id: "not-served",
+            text: `${model.title} has no worker yet. Pick another model.`,
+            goTo: "Model",
+          },
+        ]
+      : []),
     ...(model?.serving === "offline"
       ? [
           {

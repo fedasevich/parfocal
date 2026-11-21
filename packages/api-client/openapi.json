@@ -72765,6 +72765,11 @@
             ],
             "title": "Finished At"
           },
+          "gpu_seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Gpu Seconds"
+          },
           "stages": {
             "items": {
               "$ref": "#/components/schemas/RunStage"
@@ -72797,6 +72802,7 @@
           "attempts",
           "created_at",
           "finished_at",
+          "gpu_seconds",
           "stages",
           "actions"
         ],
@@ -73194,6 +73200,17 @@
           "status": {
             "$ref": "#/components/schemas/JobStatus"
           },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
           "detail": {
             "type": "string",
             "title": "Detail"
@@ -73280,6 +73297,7 @@
           "title",
           "project",
           "status",
+          "error_code",
           "detail",
           "percent",
           "minutes_left",
@@ -82671,7 +82689,8 @@
         "type": "string",
         "enum": [
           "ready",
-          "offline"
+          "offline",
+          "not-served"
         ],
         "title": "Serving"
       },

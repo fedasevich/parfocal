@@ -22,6 +22,7 @@ from parfocal_api.tables import (
     slides,
 )
 from parfocal_common.jobs import JobStatus
+from parfocal_common.model_runs import NUCLEI_DETECTORS
 
 LAB_TILES_AT_ONCE = 4
 LAB_HEALTH_CHECK_MINUTES = 5
@@ -127,12 +128,17 @@ async def get_model_run_defaults(
         .where(
             slides.c.project_id == project_id,
             slides.c.deleted_at.is_(None),
+            slides.c.original_key.is_not(None),
             slides.c.id.not_in(with_results),
         )
         .order_by(slides.c.created_at, slides.c.id)
     )
     hidden = await hidden_names(connection)
-    shown = [model.name for model in CATALOGUE if model.name not in hidden]
+    shown = [
+        model.name
+        for model in CATALOGUE
+        if model.name not in hidden and model.name in NUCLEI_DETECTORS
+    ]
     return ModelRunDefaults(
         slide_ids=list(without.all()), model_id=(shown or [CATALOGUE[0].name])[0]
     )

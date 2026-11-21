@@ -38,11 +38,18 @@ def connect(database: str, lab: Lab) -> str:
     return str(made)
 
 
-def test_run_defaults_pick_slides_without_results_and_a_shown_model(api: ApiAs, lab: Lab) -> None:
+def test_run_defaults_pick_slides_without_results_and_a_shown_model(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    owner(
+        database,
+        "UPDATE slides SET original_key = 'k' "
+        f"WHERE id IN ({', '.join(repr(str(slide)) for slide in lab.slides[1:-1])})",
+    )
     url = f"/api/projects/{lab.project}/model-runs/defaults"
     defaults = ok(as_owner(api, lab).get(url))
-    assert defaults["slide_ids"] == [str(slide) for slide in lab.slides[1:]]
-    assert defaults["model_id"] in {model.name for model in CATALOGUE}
+    assert defaults["slide_ids"] == [str(slide) for slide in lab.slides[1:-1]]
+    assert defaults["model_id"] == "pathosam-hovernext"
     unknown = f"/api/projects/{uuid.uuid4()}/model-runs/defaults"
     assert problem(as_owner(api, lab).get(unknown))[0] == 404
 

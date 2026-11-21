@@ -1,7 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useGetMe, useGetProject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AnnotateTask } from "../annotations/annotate-task.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { DockCard, useDocked } from "./inspector-slots.tsx";
@@ -35,6 +35,28 @@ function Remaining({ ms }: { ms: number | null }) {
   );
 }
 
+export const waitsForGpu = (progress: RunStreamControls["progress"]) =>
+  progress !== null &&
+  (progress.status === "queued" ||
+    (progress.status === "running" && progress.done === 0 && !progress.total));
+
+function WaitingForGpu() {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const timer = window.setInterval(
+      () => setSeconds(Math.round((Date.now() - started) / msPerSecond)),
+      msPerSecond,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
+  return (
+    <span data-testid="run-stream-waiting">
+      <Trans>Waiting for a GPU, {seconds} s</Trans>
+    </span>
+  );
+}
+
 function Status({ controls }: { controls: RunStreamControls }) {
   const { phase, progress, drawn } = controls;
   if (phase === "failed") return <Trans>The run could not stream onto this slide</Trans>;
@@ -51,6 +73,7 @@ function Status({ controls }: { controls: RunStreamControls }) {
   if (progress.status === "cancelling" || progress.cancelRequested) {
     return <Trans>Cancelling, keeping the finished tiles</Trans>;
   }
+  if (waitsForGpu(progress)) return <WaitingForGpu />;
   return (
     <>
       <Trans>

@@ -5115,6 +5115,8 @@ export interface ModelRun {
   attempts: number;
   created_at: string;
   finished_at: string | null;
+  /** @minimum 0 */
+  gpu_seconds: number;
   stages: RunStage[];
   actions: JobControl[];
 }
@@ -5249,6 +5251,7 @@ export interface MyJob {
   title: string;
   project: JobProject;
   status: JobStatus;
+  error_code: string | null;
   detail: string;
   /**
    * @minimum 0
@@ -6123,6 +6126,7 @@ export type Serving = (typeof Serving)[keyof typeof Serving];
 export const Serving = {
   ready: "ready",
   offline: "offline",
+  "not-served": "not-served",
 } as const;
 
 export interface ProjectModel {

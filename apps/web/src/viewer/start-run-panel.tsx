@@ -1,11 +1,13 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type ModelRunDraft, startModelRuns } from "@parfocal/api-client";
+import { type ModelRunDraft, startModelRuns, useListProjectModels } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useState } from "react";
+import { okData } from "../screens/placeholder.tsx";
 import { useDocked } from "./inspector-slots.tsx";
 import {
   buildRunDraft,
   defaultRunOptions,
+  nucleiDetector,
   type RunOptions,
   type RunScopeChoice,
   type ViewRect,
@@ -38,6 +40,9 @@ export function StartRunPanel(props: StartRunPanelProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice>("none");
+  const model = okData(useListProjectModels(props.projectId).data)?.find(
+    (item) => item.name === nucleiDetector,
+  );
 
   const used: RunOptions = props.canTune
     ? {
@@ -110,6 +115,13 @@ export function StartRunPanel(props: StartRunPanelProps) {
           </Button>
         ) : null}
       </div>
+      {model ? (
+        <span className="text-fg-dim" data-testid="start-run-model">
+          <Trans>
+            {model.title} on the {model.server}, about {model.minutes_per_slide} min a slide
+          </Trans>
+        </span>
+      ) : null}
       {props.canTune && open ? (
         <div className="flex flex-col gap-2" data-testid="start-run-options-body">
           <label className="flex items-center justify-between gap-2">

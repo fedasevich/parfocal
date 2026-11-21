@@ -1267,6 +1267,13 @@ msgstr "{0} on {1}"
 msgid "{0} on {1} measured {2} with the ruler"
 msgstr "{0} on {1} measured {2} with the ruler"
 
+#. placeholder {0}: model.title
+#. placeholder {1}: model.server
+#. placeholder {2}: model.minutes_per_slide
+#: src/viewer/start-run-panel.tsx
+msgid "{0} on the {1}, about {2} min a slide"
+msgstr "{0} on the {1}, about {2} min a slide"
+
 #. placeholder {0}: row.name
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "{0} on the {side}"
@@ -19032,6 +19039,10 @@ msgstr "Waiting"
 #: src/gpu/gpu-wait-notice.tsx
 msgid "Waiting for a GPU"
 msgstr "Waiting for a GPU"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for a GPU, {seconds} s"
+msgstr "Waiting for a GPU, {seconds} s"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "waiting for its admin"

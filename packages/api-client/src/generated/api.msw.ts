@@ -4324,6 +4324,7 @@ export const getStartModelRunsResponseMock = (): ModelRun[] =>
       faker.date.past().toISOString().slice(0, 19) + "Z",
       null,
     ]),
+    gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
     stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({
         name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -4472,6 +4473,7 @@ export const getListModelRunsResponseMock = (): ModelRun[] =>
       faker.date.past().toISOString().slice(0, 19) + "Z",
       null,
     ]),
+    gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
     stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
       () => ({
         name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -4618,6 +4620,7 @@ export const getGetModelRunResponseMock = (
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
   ]),
+  gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
   stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -4765,6 +4768,7 @@ export const getCancelModelRunResponseMock = (
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
   ]),
+  gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
   stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -4912,6 +4916,7 @@ export const getResumeModelRunResponseMock = (
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
   ]),
+  gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
   stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -5059,6 +5064,7 @@ export const getRetryModelRunResponseMock = (
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
   ]),
+  gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
   stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -5206,6 +5212,7 @@ export const getMoveModelRunResponseMock = (
     faker.date.past().toISOString().slice(0, 19) + "Z",
     null,
   ]),
+  gpu_seconds: faker.number.float({ min: 0, fractionDigits: 2 }),
   stages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       name: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -10488,6 +10495,10 @@ export const getListMyJobsResponseMock = (): MyJob[] =>
       name: faker.string.alpha({ length: { min: 10, max: 20 } }),
     },
     status: faker.helpers.arrayElement(Object.values(JobStatus)),
+    error_code: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
     detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
     percent: faker.number.int({ min: 0, max: 100 }),
     minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),

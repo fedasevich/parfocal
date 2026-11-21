@@ -96,3 +96,21 @@ def test_my_jobs_leaves_out_runs_on_slides_i_may_not_read(api: ApiAs, database: 
 
     assert my_jobs(api, s, "first") == []
     assert my_jobs(api, s, "outsider") == []
+
+
+def test_a_failed_job_names_its_reason_and_a_running_one_does_not(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    failed = run(database, s, "owner", s.slides[0], "2 minutes")
+    owner(
+        database,
+        f"UPDATE jobs SET status = 'failed', error_code = 'model-not-served' WHERE id = '{failed}'",
+    )
+    running = run(database, s, "owner", s.slides[0], "1 minute")
+    owner(
+        database,
+        f"UPDATE jobs SET status = 'running', error_code = 'stale' WHERE id = '{running}'",
+    )
+    found = {entry["id"]: entry["error_code"] for entry in my_jobs(api, s, "owner")}
+    assert found == {str(failed): "model-not-served", str(running): None}

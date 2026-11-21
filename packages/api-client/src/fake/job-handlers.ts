@@ -47,6 +47,7 @@ export const toMyJob = (job: JobRow): MyJob => {
     title: job.title,
     project: { id: project.id, code: project.code, name: project.name },
     status: job.status,
+    error_code: null,
     detail: job.detail,
     percent: job.percent,
     minutes_left: job.minutesLeft,
@@ -100,6 +101,7 @@ export function toModelRun(batch: RunBatchSeed, slide: RunSlideSeed): ModelRun {
     attempts: 1,
     created_at: batch.createdAt,
     finished_at: slide.state === "done" ? batch.finishedAt : null,
+    gpu_seconds: 0,
     stages: runSteps.map((name, index) => {
       const units = slide.units[index];
       const stage = stageStatus(slide, index);

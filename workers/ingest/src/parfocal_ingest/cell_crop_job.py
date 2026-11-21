@@ -45,7 +45,10 @@ def cell_crop_workflow(resources: Callable[[], Resources]) -> Workflow:
         return await cut_ordered_cells(step, resources())
 
     return Workflow(
-        kind=CROP_KIND, steps=[Step(CROP_STEP, cut_step)], lease_seconds=CROP_LEASE_SECONDS
+        kind=CROP_KIND,
+        steps=[Step(CROP_STEP, cut_step)],
+        lease_seconds=CROP_LEASE_SECONDS,
+        background=True,
     )
 
 

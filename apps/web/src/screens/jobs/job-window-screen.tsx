@@ -6,6 +6,7 @@ import {
   type ModelRun,
   type MyJob,
   resumeModelRun,
+  useGetModelRun,
   useListModelRuns,
   useListMyJobs,
   useListProjectModels,
@@ -27,6 +28,8 @@ import { slideThumbUrl } from "../slide-thumb-url.ts";
 import {
   cancellableRuns,
   canOpenSlide,
+  gpuText,
+  isSettled,
   pausedRuns,
   runSummary,
   slidePercent,
@@ -47,7 +50,12 @@ const parfocalGpu = "Parfocal GPU";
 
 export function JobWindowScreen({ projectId, jobId, onClose }: JobWindowScreenProps) {
   const job = okData(useListMyJobs().data)?.find((item) => item.id === jobId);
-  const runs = okData(useListModelRuns(projectId, { batch_id: jobId }).data);
+  const byId = useGetModelRun(projectId, jobId);
+  const batchId = okData(byId.data)?.batch_id ?? jobId;
+  const runs = okData(
+    useListModelRuns(projectId, { batch_id: batchId }, { query: { enabled: !byId.isPending } })
+      .data,
+  );
   if (!job || !runs) return null;
   return <JobWindowBody job={job} runs={runs} projectId={projectId} onClose={onClose} />;
 }
@@ -116,38 +124,40 @@ function JobWindowBody({
       void Promise.all(stopped.map((run) => resumeModelRun(projectId, run.id))).then(refresh);
     });
   };
-  const footer =
-    summary.state === "done" ? (
-      <>
-        <span className="flex-1" />
-        <Button variant="ghost" onClick={onClose}>
-          <Trans>Close</Trans>
-        </Button>
-        <Button
-          variant="primary"
-          nativeButton={false}
-          render={<Link to="/projects/$projectId" params={{ projectId: job.project.id }} />}
-        >
-          <Trans>Open the project</Trans>
-        </Button>
-      </>
-    ) : (
-      <>
-        <Button variant="ghost" onClick={() => void cancel()}>
-          <Trans>Cancel the run</Trans>
-        </Button>
-        <span className="flex-1" />
-        <Button variant={summary.state === "paused" ? "secondary" : "primary"} onClick={onClose}>
-          <Trans>Close, it keeps going</Trans>
-        </Button>
-      </>
-    );
+  const gpu = gpuText(runs);
+  const footer = isSettled(summary) ? (
+    <>
+      <span className="flex-1" />
+      <Button variant="ghost" onClick={onClose}>
+        <Trans>Close</Trans>
+      </Button>
+      <Button
+        variant="primary"
+        nativeButton={false}
+        render={<Link to="/projects/$projectId" params={{ projectId: job.project.id }} />}
+      >
+        <Trans>Open the project</Trans>
+      </Button>
+    </>
+  ) : (
+    <>
+      <Button variant="ghost" onClick={() => void cancel()}>
+        <Trans>Cancel the run</Trans>
+      </Button>
+      <span className="flex-1" />
+      <Button variant={summary.state === "paused" ? "secondary" : "primary"} onClick={onClose}>
+        <Trans>Close, it keeps going</Trans>
+      </Button>
+    </>
+  );
   return (
     <JobWindow
       open
       onOpenChange={(next) => (next ? undefined : onClose())}
       title={`${job.title} · ${summary.state}`}
-      subtitle={`${job.project.code} · ${startedText(job, by, today)} · ${summary.text}`}
+      subtitle={[job.project.code, startedText(job, by, today), summary.text, gpu]
+        .filter(Boolean)
+        .join(" · ")}
       footer={footer}
     >
       {summary.state === "paused" && job.pause ? (

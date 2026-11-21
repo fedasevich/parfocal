@@ -52,6 +52,7 @@ from parfocal_api.result_sets import ResultSetDraft, insert_result_set
 from parfocal_api.tables import (
     PrivacyMode,
     ResultSource,
+    gpu_usage,
     job_steps,
     job_units,
     jobs,
@@ -67,6 +68,7 @@ from parfocal_api.worker_serving import Serving, WorkerProbe, probe_of, serving_
 from parfocal_common.jobs import ALLOWED_FROM, JobControl, JobStatus, StepStatus, move
 from parfocal_common.model_runs import KIND as MODEL_RUN
 from parfocal_common.model_runs import (
+    NUCLEI_DETECTORS,
     ModelTier,
     Ordering,
     RunScopeKind,
@@ -235,6 +237,7 @@ class ModelRun(BaseModel):
     attempts: int
     created_at: datetime
     finished_at: datetime | None
+    gpu_seconds: float = Field(ge=0)
     stages: list[RunStage]
     actions: list[JobControl]
 
@@ -458,6 +461,15 @@ async def stages_of(
     return stages
 
 
+def gpu_seconds_of() -> Any:
+    return (
+        select(func.coalesce(func.sum(gpu_usage.c.seconds), 0.0))
+        .where(gpu_usage.c.job_id == model_runs.c.job_id)
+        .correlate(model_runs)
+        .scalar_subquery()
+    )
+
+
 def run_query() -> Any:
     return (
         select(
@@ -468,6 +480,7 @@ def run_query() -> Any:
             jobs.c.claims,
             jobs.c.finished_at,
             result_sets.c.id.label("result_set_id"),
+            gpu_seconds_of().label("gpu_seconds"),
         )
         .join(jobs, jobs.c.id == model_runs.c.job_id)
         .outerjoin(
@@ -508,6 +521,7 @@ async def runs_of(
             attempts=row.claims,
             created_at=row.created_at,
             finished_at=row.finished_at,
+            gpu_seconds=round(float(row.gpu_seconds), 1),
             stages=mark_waiting(stages[row.job_id], row.pause_reason),
             actions=actions_for(JobStatus(row.status), controls),
         )
@@ -966,7 +980,9 @@ async def list_project_models(
             runs_ahead=len(ahead),
             queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now, shared),
             latency_ms=None,
-            serving=serving_of(probe, model.name),
+            serving=serving_of(probe, model.name)
+            if model.name in NUCLEI_DETECTORS
+            else Serving.NOT_SERVED,
         )
         for model in CATALOGUE
         if model.name not in hidden

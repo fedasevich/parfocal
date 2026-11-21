@@ -6,6 +6,7 @@ import {
   modelGroups,
   runBlockers,
   slideItems,
+  startingModel,
   startingSlides,
 } from "../src/screens/jobs/run-model-parts.ts";
 
@@ -17,7 +18,7 @@ const model = (patch: Partial<ProjectModel>): ProjectModel =>
     title: "PathoSAM + HoVer-NeXt",
     description: "Finds and classifies cells",
     host: "parfocal",
-    serving: "online",
+    serving: "ready",
     makes: ["regions", "cells"],
     minutes_per_slide: 17,
     queue_minutes: 4,
@@ -96,4 +97,19 @@ test("the estimate multiplies the time per slide and names the queue or the lab 
   assert.match(gpu.perSlide, /One run is ahead of yours, about 4 min/);
   const lab = runEstimate(model({ host: "lab", server: "Lab server", latency_ms: 210 }), 2, now);
   assert.match(lab.perSlide, /answers now in 210 ms/);
+});
+
+test("a model with no worker is left out of the picker and never picked first", () => {
+  const unserved = model({ id: "m3", title: "CAMELYON tumor model", serving: "not-served" });
+  const groups = modelGroups([unserved, model({})]);
+  assert.deepEqual(
+    groups[0]?.options.map((option) => option.id),
+    ["m1"],
+  );
+  assert.equal(startingModel([unserved, model({})], "m3"), "m1");
+  assert.equal(startingModel([unserved], "m3"), null);
+  assert.deepEqual(
+    runBlockers(1, unserved).map((item) => item.id),
+    ["not-served"],
+  );
 });
