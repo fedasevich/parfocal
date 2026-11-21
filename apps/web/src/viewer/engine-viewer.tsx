@@ -550,7 +550,8 @@ function GuardedViewer({
           guided={guided}
           onMode={onMode}
           onOpenSlide={onOpenSlide}
-          onSubmit={panel.submit ? submitSlide : undefined}
+          onSubmit={panel.submit ? submitSlide.submit : undefined}
+          submitState={submitSlide}
           onResultSets={() => {
             setLayout({ hidden: false });
             onTab("display");

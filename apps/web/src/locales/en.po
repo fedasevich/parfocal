@@ -653,12 +653,6 @@ msgstr "{0} cell{1} in the sample {2} still open"
 msgid "{0} cells came back without a <0>geometry</0>"
 msgstr "{0} cells came back without a <0>geometry</0>"
 
-#. placeholder {0}: openZoneCells.length
-#. placeholder {1}: openZone.name
-#: src/screens/viewer/use-viewer-state.tsx
-msgid "{0} cells in {1} marked agree"
-msgstr "{0} cells in {1} marked agree"
-
 #. placeholder {0}: openCells.length
 #: src/viewer/stage-opinion.tsx
 msgid "{0} cells in the sample are still open"
@@ -1916,6 +1910,21 @@ msgstr "{comments} comments on {object}"
 #: src/screens/developer/bench-section.tsx
 msgid "{count, plural, one {Export CSV, # run} other {Export CSV, # runs}}"
 msgstr "{count, plural, one {Export CSV, # run} other {Export CSV, # runs}}"
+
+#: src/screens/viewer/use-viewer-state.tsx
+msgid "{count} cells in {zoneName} marked agree"
+msgstr "{count} cells in {zoneName} marked agree"
+
+#: src/screens/review/guided-review.tsx
+#: src/viewer/stage-cells-grid.tsx
+msgid "{count} cells marked agree"
+msgstr "{count} cells marked agree"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/use-viewer-state.tsx
+#: src/viewer/stage-cells-grid.tsx
+msgid "{count} cells were not saved. Nothing changed, try again."
+msgstr "{count} cells were not saved. Nothing changed, try again."
 
 #: ../../packages/ui/src/components/inspector.tsx
 msgid "{count} cells, the line is at {line}"
@@ -16484,6 +16493,10 @@ msgstr "Submit your opinion form"
 msgid "Submitted"
 msgstr "Submitted"
 
+#: src/viewer/live-top-bar.tsx
+msgid "Submitting"
+msgstr "Submitting"
+
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Subtitle"
 msgstr "Subtitle"
@@ -17552,6 +17565,10 @@ msgstr "The slide has objects, so it is not empty."
 msgid "The slide is still being inspected at its source."
 msgstr "The slide is still being inspected at its source."
 
+#: src/viewer/live-top-bar.tsx
+msgid "The slide was not submitted. Nothing was lost."
+msgstr "The slide was not submitted. Nothing was lost."
+
 #: src/viewer/compare-panes.tsx
 msgid "The slide you were reading"
 msgstr "The slide you were reading"
@@ -17665,6 +17682,12 @@ msgstr "The type was not saved. Try again."
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
 msgstr "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/use-viewer-state.tsx
+#: src/viewer/stage-cells-grid.tsx
+msgid "The undo was not saved. Try again."
+msgstr "The undo was not saved. Try again."
 
 #: src/screens/upload/live-wizard.tsx
 msgid "The upload does not fit in the project's storage. Remove some slides to go on."
@@ -18294,6 +18317,7 @@ msgstr "True positives"
 #: src/screens/review/review-order-state.tsx
 #: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
+#: src/viewer/live-top-bar.tsx
 #: src/viewer/open-failure-alert.tsx
 msgid "Try again"
 msgstr "Try again"

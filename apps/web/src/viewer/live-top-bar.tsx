@@ -133,6 +133,7 @@ type LiveTopBarProps = {
   onMode: (next: ModeChoice) => void;
   onOpenSlide: (slideId: string) => void;
   onSubmit: (() => void) | undefined;
+  submitState?: { sending: boolean; failed: boolean } | undefined;
   onResultSets?: (() => void) | undefined;
   onCompare?: (() => void) | undefined;
   percent: number | null;
@@ -168,6 +169,7 @@ function TopBar({
   onMode,
   onOpenSlide,
   onSubmit,
+  submitState,
   onResultSets,
   onCompare,
   percent,
@@ -337,12 +339,19 @@ function TopBar({
           <Trans>Open report</Trans>
         </Button>
       ) : null}
+      {onSubmit && reviewTask && submitState?.failed && !submitState.sending ? (
+        <span role="alert" data-testid="top-submit-failed" className="shrink-0 text-sm text-danger">
+          <Trans>The slide was not submitted. Nothing was lost.</Trans>
+        </span>
+      ) : null}
       {onSubmit && reviewTask ? (
         <Button
           variant="primary"
           data-testid="top-submit"
           {...(guided ? { size: "lg" as const } : {})}
-          disabled={review === undefined || review.submitReason !== undefined}
+          disabled={
+            review === undefined || review.submitReason !== undefined || submitState?.sending
+          }
           title={
             review === undefined
               ? t`Opening the objects of this slide`
@@ -350,7 +359,13 @@ function TopBar({
           }
           onClick={onSubmit}
         >
-          <Trans>Submit</Trans>
+          {submitState?.sending ? (
+            <Trans>Submitting</Trans>
+          ) : submitState?.failed ? (
+            <Trans>Try again</Trans>
+          ) : (
+            <Trans>Submit</Trans>
+          )}
         </Button>
       ) : null}
       {task !== undefined && !reviewTask && finishRef !== undefined ? (

@@ -27,18 +27,26 @@ type OpinionProps = {
   onObjects: (object?: string) => void;
 };
 
-export function useSlideSubmit(taskId: string | null, slideId: string): () => void {
+export type SlideSubmit = { submit: () => void; sending: boolean; failed: boolean };
+
+export function useSlideSubmit(taskId: string | null, slideId: string): SlideSubmit {
   const navigate = useNavigate();
   const submitReview = useSubmitSlideReview();
-  return () => {
-    if (taskId === null) return;
-    submitReview.mutate({ taskId, slideId });
-    void navigate({
-      to: "/tasks/$taskId/submitted",
-      params: { taskId },
-      search: { slide: slideId },
-    });
+  const submit = () => {
+    if (taskId === null || submitReview.isPending) return;
+    submitReview.mutate(
+      { taskId, slideId },
+      {
+        onSuccess: () =>
+          void navigate({
+            to: "/tasks/$taskId/submitted",
+            params: { taskId },
+            search: { slide: slideId },
+          }),
+      },
+    );
   };
+  return { submit, sending: submitReview.isPending, failed: submitReview.isError };
 }
 
 export function ReviewOpinion({ taskId, slideId, readOnly, onObjects }: OpinionProps) {

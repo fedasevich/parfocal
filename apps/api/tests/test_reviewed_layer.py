@@ -35,7 +35,7 @@ class Review:
         return f"/api/review-tasks/{self.task}/slides/{self.slide}"
 
 
-def review(api: ApiAs, database: str) -> Review:
+def review(api: ApiAs, database: str, cell_count: int = 5) -> Review:
     workspace = make_workspace(
         database,
         {
@@ -72,18 +72,21 @@ def review(api: ApiAs, database: str) -> Review:
         )
     ensure_bucket()
     key = chunk_key(result_set_prefix(tenant, slide, result_set), 0)
-    cells: list[CellRow] = [(number, 255, 100, number * 100.0, 100.0) for number in range(1, 6)]
+    cells: list[CellRow] = [
+        (number, 255, 100, number * 100.0 % 2000, 100.0 + number * 100 // 2000 * 30)
+        for number in range(1, cell_count + 1)
+    ]
     add_chunk(database, tenant, key, result_set, 0, cells)
     put_chunk(key, chunk_bytes(cells, None))
     owner(
         database,
-        "UPDATE result_sets SET status = 'ready', region_count = 2, cell_count = 5 "
+        f"UPDATE result_sets SET status = 'ready', region_count = 2, cell_count = {cell_count} "
         f"WHERE id = '{result_set}'",
     )
     owner(
         database,
         "INSERT INTO slide_counters (tenant_id, slide_id, letter, last) "
-        f"VALUES ('{tenant}', '{slide}', 'T', 2), ('{tenant}', '{slide}', 'C', 5)",
+        f"VALUES ('{tenant}', '{slide}', 'T', 2), ('{tenant}', '{slide}', 'C', {cell_count})",
     )
     task = api(people["owner"]).post(
         f"/api/projects/{project}/review-tasks",

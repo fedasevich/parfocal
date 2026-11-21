@@ -1,6 +1,7 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import {
   getAddReviewObjectMockHandler,
+  getClearDecisionBatchMockHandler,
   getClearDecisionMockHandler,
   getClearReviewEditMockHandler,
   getCreateThreadMockHandler,
@@ -32,6 +33,7 @@ import {
   getReplyToThreadOnSlideMockHandler,
   getResolveThreadMockHandler,
   getResolveThreadOnSlideMockHandler,
+  getSaveDecisionBatchMockHandler,
   getSaveDecisionMockHandler,
   getSaveOpinionMockHandler,
   getSaveReviewEditMockHandler,
@@ -41,6 +43,8 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   AddedDraft,
+  DecisionBatch,
+  DecisionClearBatch,
   EditDraft,
   Mentionable,
   MergeDraft,
@@ -51,6 +55,7 @@ import type {
   OpinionChange,
   PinMove,
   ProjectClass,
+  ReviewDecision,
   ReviewDecisionDraft,
   ReviewEdit,
   ReviewObjects,
@@ -72,6 +77,7 @@ import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
 import { pagedCellSource } from "./paged-cell-source.ts";
 import { toResultSetDetail } from "./project-handlers.ts";
 import {
+  decisionsFor,
   editHistoryFor,
   firstReadOf,
   firstReadOpen,
@@ -813,32 +819,35 @@ export function reviewHandlers(): RequestHandler[] {
     ),
     getSaveDecisionMockHandler(async ({ request, params }) => {
       const body = (await request.json()) as ReviewDecisionDraft;
-      const objectId = String(params["objectId"]);
-      const index = reviewObjects.findIndex((item) => item.object === objectId);
-      const settings = decisionSettingsFor(taskById(String(params["taskId"]))?.code ?? "RT-14");
-      const answer = body.answer ?? body.value ?? "unsure";
-      const aiClass = sentinelClasses.find((item) => item.name === reviewObjects[index]?.className);
-      const saved = {
-        object: objectId,
-        kind:
-          reviewObjects[index]?.kind === "cell" || body.ai_class_id != null
-            ? ("cell" as const)
-            : ("region" as const),
-        number: index + 1,
-        style: settings.style,
-        answer,
-        answer_class_id: body.answer_class_id ?? null,
-        value: countedAs(settings, answer, body.answer_class_id, aiClass?.key),
-        reasons: body.reasons ?? [],
-        reason_class_id: body.reason_class_id ?? null,
-        note: body.note ?? null,
-        ai_class_id: body.ai_class_id ?? null,
-        ai_score: body.ai_score ?? null,
-        preset: presetInForce(String(params["taskId"])),
-        updated_at: "2026-10-15T10:52:00+02:00",
-      };
-      rememberDecision(String(params["taskId"]), String(params["slideId"]), objectId, saved);
+      const taskId = String(params["taskId"]);
+      const slideId = String(params["slideId"]);
+      const saved = fakeDecision(taskId, String(params["objectId"]), body);
+      rememberDecision(taskId, slideId, saved.object, saved);
       return saved;
+    }),
+    http.post<{ taskId: string; slideId: string }>(
+      "*/api/review-tasks/:taskId/slides/:slideId/decisions/batch",
+      ({ params }) =>
+        firstReadOpen(params.taskId, params.slideId)
+          ? problem(409, "first-read-open", "Record your first read before you judge the AI")
+          : undefined,
+    ),
+    getSaveDecisionBatchMockHandler(async ({ request, params }) => {
+      const batch = (await request.json()) as DecisionBatch;
+      const taskId = String(params["taskId"]);
+      const slideId = String(params["slideId"]);
+      const decided = new Set(decisionsFor(taskId, slideId).map((item) => item.object));
+      const saved = batch.decisions
+        .filter((item) => !decided.has(item.object))
+        .map(({ object, ...draft }) => fakeDecision(taskId, object, draft));
+      for (const item of saved) rememberDecision(taskId, slideId, item.object, item);
+      return saved;
+    }),
+    getClearDecisionBatchMockHandler(async ({ request, params }) => {
+      const batch = (await request.json()) as DecisionClearBatch;
+      for (const object of batch.objects) {
+        rememberDecision(String(params["taskId"]), String(params["slideId"]), object, null);
+      }
     }),
     getClearDecisionMockHandler(({ params }) => {
       rememberDecision(
@@ -908,4 +917,31 @@ export function reviewHandlers(): RequestHandler[] {
       submittedStates(String(params["taskId"]), String(params["slideId"])),
     ),
   ];
+}
+
+function fakeDecision(taskId: string, objectId: string, body: ReviewDecisionDraft): ReviewDecision {
+  const index = reviewObjects.findIndex((item) => item.object === objectId);
+  const settings = decisionSettingsFor(taskById(taskId)?.code ?? "RT-14");
+  const answer = body.answer ?? body.value ?? "unsure";
+  const aiClass = sentinelClasses.find((item) => item.name === reviewObjects[index]?.className);
+  const saved = {
+    object: objectId,
+    kind:
+      reviewObjects[index]?.kind === "cell" || body.ai_class_id != null
+        ? ("cell" as const)
+        : ("region" as const),
+    number: index + 1,
+    style: settings.style,
+    answer,
+    answer_class_id: body.answer_class_id ?? null,
+    value: countedAs(settings, answer, body.answer_class_id, aiClass?.key),
+    reasons: body.reasons ?? [],
+    reason_class_id: body.reason_class_id ?? null,
+    note: body.note ?? null,
+    ai_class_id: body.ai_class_id ?? null,
+    ai_score: body.ai_score ?? null,
+    preset: presetInForce(taskId),
+    updated_at: "2026-10-15T10:52:00+02:00",
+  };
+  return saved;
 }

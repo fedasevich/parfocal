@@ -373,6 +373,38 @@ async def record_many(
     )
 
 
+async def record_each(
+    connection: AsyncConnection,
+    actor: Actor,
+    action: AuditAction,
+    target_type: AuditTarget,
+    target_id: uuid.UUID,
+    *,
+    tenant_id: uuid.UUID | None,
+    details: Sequence[dict[str, Any]],
+) -> None:
+    if not details:
+        return
+    actor_id = actor.service_id
+    if actor.subject is not None:
+        actor_id = await pseudonym_of(connection, actor.subject)
+    await connection.execute(
+        insert(audit_events),
+        [
+            {
+                "tenant_id": tenant_id,
+                "actor_kind": actor.kind,
+                "actor_id": actor_id,
+                "action": action,
+                "target_type": target_type,
+                "target_id": target_id,
+                "details": canonical(each),
+            }
+            for each in details
+        ],
+    )
+
+
 def event_of(row: Any) -> AuditEvent:
     values = dict(row._mapping)
     values["prev_hash"] = bytes(values["prev_hash"]).hex()
