@@ -3,7 +3,7 @@ import asyncio
 import json
 import os
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,7 +15,7 @@ from sqlalchemy import func, insert, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.audit import actor_of
+from parfocal_api.audit import actor_of, pseudonym_of
 from parfocal_api.auth import SEEDED_OWNER_NAME, SEEDED_SUBJECT_PREFIX
 from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.evaluation_versions import SignOffConfirmation
@@ -1032,33 +1032,27 @@ async def seed(
             if owner_email:
                 for tenant_id in reversed(tenant_ids):
                     owners[tenant_id] = await add_owner(connection, tenant_id, owner_email)
+            if created or owners:
+                await pseudonymise(connection, shared_actors(bool(owners)))
         facts = manifest if manifest is not None else fixture_facts()
-        for tenant_id, workspace in created:
-            people = await people_of(engine, tenant_id)
-            async with scoped_transaction(
-                engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
-            ) as connection:
-                await seed_projects(
-                    connection, workspace, Seeded(tenant_id, people), store, results, facts
-                )
-        for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True):
-            owner = owners.get(tenant_id)
-            if owner is None:
-                continue
-            people = await people_of(engine, tenant_id)
-            async with scoped_transaction(
-                engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
-            ) as connection:
-                await seed_gallery_tour(
-                    connection,
-                    Seeded(tenant_id, people, owner),
-                    store,
-                    results,
-                    facts,
-                    workspace.gallery,
-                )
+        fresh = {tenant_id for tenant_id, _ in created}
+        await side_by_side(
+            seed_tenant(
+                engine,
+                tenant_id,
+                workspace,
+                owners.get(tenant_id),
+                tenant_id in fresh,
+                store,
+                results,
+                facts,
+            )
+            for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True)
+        )
         await seat_accounts(engine, tenant_ids, viewer_emails, SEEDED_VIEWER)
         await seat_accounts(engine, tenant_ids, agent_emails, SEEDED_AGENT)
+        if owners:
+            await pseudonymise_example_actors(engine, owners.values(), agent_emails)
         case_facts = {
             slide.file: gallery_facts(
                 slide, facts, await stored_facts(store, fixture_folder(slide.file))
@@ -1066,20 +1060,82 @@ async def seed(
             for slide in FORMAT_GALLERY
             if slide.file in CASE_FILES
         }
-        for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True):
-            owner = owners.get(tenant_id)
-            if owner is not None:
-                await seed_example(
-                    engine,
-                    Seeded(tenant_id, await people_of(engine, tenant_id), owner),
-                    results,
-                    workspace,
-                    agent_emails,
-                    case_facts,
-                )
+        links = await side_by_side(
+            seed_example(engine, tenant_id, owner, results, workspace, agent_emails, case_facts)
+            for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True)
+            if (owner := owners.get(tenant_id)) is not None
+        )
+        for link in links:
+            if link is not None:
+                print(link)
         return tenant_ids
     finally:
         await engine.dispose()
+
+
+def shared_actors(owned: bool) -> list[str]:
+    ada = next(person.subject for person in PEOPLE if person.key == "ada")
+    return [ada, OWNER_SUBJECT] if owned else [ada]
+
+
+async def pseudonymise(connection: AsyncConnection, subjects: Iterable[str]) -> None:
+    for subject in subjects:
+        await pseudonym_of(connection, subject)
+
+
+async def pseudonymise_example_actors(
+    engine: Any, owner_ids: Iterable[uuid.UUID], agent_emails: Sequence[str]
+) -> None:
+    async with scoped_transaction(engine, DatabaseScope(platform=True, auth=True)) as connection:
+        owners = await connection.scalars(
+            select(users.c.subject).where(users.c.id.in_(set(owner_ids))).order_by(users.c.subject)
+        )
+        subjects = list(owners)
+        addresses = [email.strip().lower() for email in agent_emails]
+        first_agent = await connection.scalar(
+            select(users.c.subject)
+            .where(func.lower(users.c.email).in_(addresses))
+            .order_by(users.c.email)
+            .limit(1)
+        )
+        if first_agent is not None:
+            subjects.append(first_agent)
+        await pseudonymise(connection, subjects)
+
+
+async def side_by_side[T](steps: Iterable[Coroutine[Any, Any, T]]) -> list[T]:
+    async with asyncio.TaskGroup() as group:
+        tasks = [group.create_task(step) for step in steps]
+    return [task.result() for task in tasks]
+
+
+async def seed_tenant(
+    engine: Any,
+    tenant_id: uuid.UUID,
+    workspace: Workspace,
+    owner: uuid.UUID | None,
+    fresh: bool,
+    store: ObjectStore,
+    results: ResultStore,
+    facts: Mapping[str, Mapping[str, Any]],
+) -> None:
+    if fresh:
+        people = await people_of(engine, tenant_id)
+        async with scoped_transaction(
+            engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
+        ) as connection:
+            await seed_projects(
+                connection, workspace, Seeded(tenant_id, people), store, results, facts
+            )
+    if owner is None:
+        return
+    people = await people_of(engine, tenant_id)
+    async with scoped_transaction(
+        engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
+    ) as connection:
+        await seed_gallery_tour(
+            connection, Seeded(tenant_id, people, owner), store, results, facts, workspace.gallery
+        )
 
 
 async def seat_on_cell_tour(
@@ -1116,12 +1172,14 @@ async def seat_on_cell_tour(
 
 async def seed_example(
     engine: Any,
-    seeded: Seeded,
+    tenant_id: uuid.UUID,
+    owner_id: uuid.UUID,
     results: ResultStore,
     workspace: Workspace,
     agent_emails: Sequence[str],
     case_facts: Mapping[str, Mapping[str, Any]] | None,
-) -> None:
+) -> str | None:
+    seeded = Seeded(tenant_id, await people_of(engine, tenant_id), owner_id)
     assert seeded.owner is not None
     seats = await agent_principals(engine, seeded.tenant_id, agent_emails)
     agents = [seat.user_id for seat in seats]
@@ -1143,8 +1201,9 @@ async def seed_example(
                 connection, creator, owner, results, workspace.clinical_study, case_facts, seats
             )
         )
-    if made is not None:
-        print(f"shared report link for {workspace.clinical_study}: {made.shared_url}")
+    if made is None:
+        return None
+    return f"shared report link for {workspace.clinical_study}: {made.shared_url}"
 
 
 async def unpublished_gallery(store: ObjectStore) -> list[str]:

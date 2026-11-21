@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 import type { AnnotationDraft } from "@parfocal/api-client";
-import { annotationTransport, sharedLayerTransport } from "../src/annotations/save-transport.ts";
+import {
+  annotationTransport,
+  reviewTaskTransport,
+  sharedLayerTransport,
+} from "../src/annotations/save-transport.ts";
 
 type Call = { url: string; method: string; body: unknown };
 
@@ -145,5 +149,75 @@ describe("personal layer saves", () => {
     globalThis.fetch = () => Promise.reject(new TypeError("Failed to fetch"));
     const outcome = await annotationTransport("s-1").update("o-1", 2, draft);
     assert.equal(outcome.kind, "retry");
+  });
+});
+
+describe("review task saves", () => {
+  const saved = { ...colleagueObject, id: "a-1", version: 1, task_id: "t-1" };
+
+  test("a region drawn in a review task is added to the task", async () => {
+    let told = 0;
+    const calls = answer(json(201, saved));
+    const outcome = await reviewTaskTransport("t-1", "s-1", () => {
+      told += 1;
+    }).create({ ...draft, class_id: "k-1" });
+    assert.deepEqual(outcome, { kind: "done", value: { id: "a-1", version: 1 } });
+    assert.equal(calls[0]?.method, "POST");
+    assert.ok(calls[0]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/added"));
+    assert.deepEqual(calls[0]?.body, { kind: "region", geometry: draft.geometry, class_id: "k-1" });
+    assert.equal(told, 1);
+  });
+
+  test("a cell marker is added to the task too", async () => {
+    const calls = answer(json(201, saved));
+    const marker: AnnotationDraft = {
+      kind: "cell",
+      geometry: { type: "Point", coordinates: [3, 4] },
+    };
+    await reviewTaskTransport("t-1", "s-1").create(marker);
+    assert.ok(calls[0]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/added"));
+    assert.deepEqual(calls[0]?.body, { kind: "cell", geometry: marker.geometry, class_id: null });
+  });
+
+  test("a note or an arrow stays on the slide", async () => {
+    const calls = answer(json(201, { ...saved, kind: "arrow", task_id: null }));
+    await reviewTaskTransport("t-1", "s-1").create({
+      kind: "arrow",
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [0, 0],
+          [4, 4],
+        ],
+      },
+    });
+    assert.ok(calls[0]?.url.endsWith("/api/slides/s-1/annotations"));
+  });
+
+  test("its author changes and deletes it through the slide routes", async () => {
+    let told = 0;
+    const calls = answer(json(200, { ...saved, version: 2 }), new Response(null, { status: 204 }));
+    const transport = reviewTaskTransport("t-1", "s-1", () => {
+      told += 1;
+    });
+    assert.deepEqual(await transport.update("a-1", 1, draft), {
+      kind: "done",
+      value: { version: 2 },
+    });
+    assert.deepEqual(await transport.remove("a-1", 2), { kind: "done", value: null });
+    assert.equal(calls[0]?.method, "PATCH");
+    assert.ok(calls[0]?.url.endsWith("/api/slides/s-1/annotations/a-1"));
+    assert.equal(calls[1]?.method, "DELETE");
+    assert.equal(told, 2);
+  });
+
+  test("a refused add is not retried and tells nobody", async () => {
+    let told = 0;
+    answer(problem(403, "not-assigned"));
+    const outcome = await reviewTaskTransport("t-1", "s-1", () => {
+      told += 1;
+    }).create(draft);
+    assert.equal(outcome.kind, "rejected");
+    assert.equal(told, 0);
   });
 });

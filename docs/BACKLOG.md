@@ -7021,7 +7021,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 10. `annotate_only` shuts review tasks out of the training export, so a doctor's corrections never reach a dataset.
   Done when signing off a review task, or a button on its Dataset page, builds the final layer by the rule of the chosen option (agreed objects as `ai-confirmed`, edited ones as `ai-edited` with their author, adjudicated ones with the adjudicator's outcome, rejected ones as deletions, added ones as `human`), the training dataset and the patch export accept the task, an object left open or unsure is left out and counted, and tests compare the export with the decisions and edits it came from. An ADR records where the final layer lives.
   Depends on PROTO-113 and PROTO-117 and on decision 166 (which task carries training data). Size: L.
-- [ ] PROTO-119 · Shapes drawn in a review task's Annotate mode belong to the task
+- [x] PROTO-119 · Shapes drawn in a review task's Annotate mode belong to the task
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 11. They are saved to the slide wide layer today, so they are in no reviewer's layer and no dataset.
   Done when a shape drawn by an assigned reviewer in a review task is saved with the task, shows as an added object with its person mark in the reviewer's layer and the consensus, stays hidden from other reviewers while blinding holds, and specs cover it.
   Depends on decision 166 (which task carries training data). Size: M.
@@ -7089,6 +7089,14 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   PROTO-116 (reviewers' outlines that differ reach the disagreement queue) compares only two redraws. When one reviewer redraws and the other keeps the AI outline, nothing is flagged, because AI cell outlines live in chunk files the queue cannot read cheaply. Store the AI outline beside the first redraw of an object (or read it once per sign-off) so a redraw is compared with the kept AI outline too, and add a control for `outline_overlap` (1 to 99 percent, default 60, ADR 0412) to the review task settings.
   Done when DB tests cover a redraw against a kept AI region and cell below and above the threshold, and a spec changes the overlap in the task settings and sees the queue change.
   Depends on PROTO-116. Size: M.
+- [x] PROTO-141 · A reset leaves no tenant objects behind in the slide bucket
+  PROTO-139 (the production reseed finishes in under 15 minutes) found on 2026-11-21 that every reset logs "0 tenant objects" deleted, because the seven day bucket lock on `parfocal-dev-eu` refuses each delete of a `t/` key, so tenant objects from every reseed stay in the bucket and the key list the reset walks grows each time. Skip keys younger than the lock age in the reset, and make sure keys older than the lock are removed, by the reset or by a bucket lifecycle rule declared in OpenTofu. Measure how many objects and bytes have piled up first, and log the storage it costs.
+  Done when a result file gives the piled up count and bytes, the reset deletes or skips every `t/` key without an error, and a test covers the age rule. Any bucket rule is an additive `tofu apply`.
+  Depends on PROTO-139. Size: S.
+- [ ] PROTO-142 · A reviewer's notes, arrows and rulers stay with the task and nothing changes after sign-off
+  PROTO-119 (shapes drawn in a review task's Annotate mode belong to the task) saves regions and cells with the task, but notes, arrows and rulers still save slide wide, where other reviewers can see them while blinding holds. Layer groups also save slide wide and can hold the ids of a reviewer's hidden shapes, the slide export from Annotate leaves task shapes out, shapes saved slide wide before PROTO-119 are not moved, and the API still lets an author change or delete a task shape after sign-off or withdrawal. Save every kind of mark with the task while blinding holds, refuse changes after sign-off in the API, and include task shapes in the slide export.
+  Done when DB tests cover the refusal after sign-off and a note hidden from the other reviewer, and a spec draws a note, an arrow and a ruler in a review task and finds them only in the author's layer.
+  Depends on PROTO-119. Size: M.
 
 ---
 

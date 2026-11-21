@@ -53,6 +53,20 @@ class StoredObject:
     etag: str
 
 
+@dataclass(frozen=True)
+class ListedObject:
+    key: str
+    size: int
+    modified: datetime | None
+
+
+def parse_modified(text: str | None) -> datetime | None:
+    if not text:
+        return None
+    parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
 class StorageError(Exception):
     def __init__(self, status: int, code: str) -> None:
         super().__init__(f"{status} {code}")
@@ -442,7 +456,10 @@ class ObjectStore:
             raise
 
     async def list_keys(self, prefix: str) -> list[str]:
-        keys: list[str] = []
+        return [listed.key for listed in await self.list_objects(prefix)]
+
+    async def list_objects(self, prefix: str) -> list[ListedObject]:
+        listed: list[ListedObject] = []
         token: str | None = None
         while True:
             query = {
@@ -453,10 +470,14 @@ class ObjectStore:
             if token:
                 query["continuation-token"] = token
             root = parse((await self.send("GET", "", query)).content)
-            keys.extend(
-                visible_key(self.location, child_text(item, "Key") or "")
+            listed.extend(
+                ListedObject(
+                    key=visible_key(self.location, child_text(item, "Key") or ""),
+                    size=int(child_text(item, "Size") or 0),
+                    modified=parse_modified(child_text(item, "LastModified")),
+                )
                 for item in children(root, "Contents")
             )
             token = child_text(root, "NextContinuationToken")
             if (child_text(root, "IsTruncated") or "false").lower() != "true" or not token:
-                return keys
+                return listed

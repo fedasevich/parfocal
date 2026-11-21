@@ -2,6 +2,7 @@ import {
   type AnnotationDraft,
   type AnnotationEdit,
   ApiError,
+  addReviewObject,
   changeAnnotation,
   changeSharedObject,
   createAnnotation,
@@ -71,6 +72,46 @@ export function annotationTransport(slideId: string): Transport<AnnotationDraft>
         return isStale(error) ? conflictAt(id, version) : failureOf(error);
       }
     },
+  };
+}
+
+const isTaskObject = (body: AnnotationDraft) => body.kind === "region" || body.kind === "cell";
+
+export function reviewTaskTransport(
+  taskId: string,
+  slideId: string,
+  onChanged: () => void = () => undefined,
+): Transport<AnnotationDraft> {
+  const slideWide = annotationTransport(slideId);
+  const told = async <T>(outcome: Promise<Outcome<T>>): Promise<Outcome<T>> => {
+    const settled = await outcome;
+    if (settled.kind === "done") onChanged();
+    return settled;
+  };
+  return {
+    create: (body) => {
+      if (!isTaskObject(body)) return slideWide.create(body);
+      return told(
+        (async (): Promise<Outcome<{ id: string; version: number }>> => {
+          try {
+            const response = await addReviewObject(taskId, slideId, {
+              kind: body.kind === "cell" ? "cell" : "region",
+              geometry: body.geometry,
+              class_id: body.class_id ?? null,
+            });
+            if (response.status !== 201) return failure(response.status);
+            return {
+              kind: "done",
+              value: { id: response.data.id, version: response.data.version },
+            };
+          } catch (error) {
+            return failureOf(error);
+          }
+        })(),
+      );
+    },
+    update: (id, version, body) => told(slideWide.update(id, version, body)),
+    remove: (id, version) => told(slideWide.remove(id, version)),
   };
 }
 
