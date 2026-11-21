@@ -32,7 +32,7 @@ from parfocal_api.projects import code_of as project_code
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.review_tasks import readable_task, task_row
-from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object
+from parfocal_api.reviewed_layer import KINDS, ai_object
 from parfocal_api.tables import (
     Availability,
     DecisionReason,
@@ -51,7 +51,7 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_api.task_changes import person_of
-from parfocal_api.task_kinds import review_only
+from parfocal_api.task_kinds import TaskSignedOffError, review_only
 from parfocal_common.disagreements import Why
 
 type SendNote = Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)]

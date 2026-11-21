@@ -118,7 +118,9 @@ async function reviewRecords(
   if (saved.status !== 200 || layer.status !== 200) return null;
   return inDrawnOrder([
     ...saved.data,
-    ...layer.data.added.filter((item) => item.deleted_at === null),
+    ...[...layer.data.added, ...(layer.data.marks ?? [])].filter(
+      (item) => item.deleted_at === null,
+    ),
   ]);
 }
 

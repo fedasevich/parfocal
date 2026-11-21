@@ -22,7 +22,9 @@ export const failureOf = (error: unknown): Outcome<never> =>
   error instanceof ApiError && error.kind !== "network" ? failure(error.status) : { kind: "retry" };
 
 const isStale = (error: unknown): error is ApiError =>
-  error instanceof ApiError && error.status === 409;
+  error instanceof ApiError &&
+  error.status === 409 &&
+  (error.problem?.code ?? "annotation-changed") === "annotation-changed";
 
 const isGone = (error: unknown) => error instanceof ApiError && error.status === 404;
 
@@ -75,8 +77,6 @@ export function annotationTransport(slideId: string): Transport<AnnotationDraft>
   };
 }
 
-const isTaskObject = (body: AnnotationDraft) => body.kind === "region" || body.kind === "cell";
-
 export function reviewTaskTransport(
   taskId: string,
   slideId: string,
@@ -89,16 +89,11 @@ export function reviewTaskTransport(
     return settled;
   };
   return {
-    create: (body) => {
-      if (!isTaskObject(body)) return slideWide.create(body);
-      return told(
+    create: (body) =>
+      told(
         (async (): Promise<Outcome<{ id: string; version: number }>> => {
           try {
-            const response = await addReviewObject(taskId, slideId, {
-              kind: body.kind === "cell" ? "cell" : "region",
-              geometry: body.geometry,
-              class_id: body.class_id ?? null,
-            });
+            const response = await addReviewObject(taskId, slideId, body);
             if (response.status !== 201) return failure(response.status);
             return {
               kind: "done",
@@ -108,8 +103,7 @@ export function reviewTaskTransport(
             return failureOf(error);
           }
         })(),
-      );
-    },
+      ),
     update: (id, version, body) => told(slideWide.update(id, version, body)),
     remove: (id, version) => told(slideWide.remove(id, version)),
   };

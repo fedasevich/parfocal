@@ -35,7 +35,7 @@ from parfocal_api.problems import BadRequestError, NotFoundError
 from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims, kind_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task, task_row
-from parfocal_api.reviewed_layer import TaskSignedOffError, ai_object
+from parfocal_api.reviewed_layer import ai_object
 from parfocal_api.reviewer_progress import slides_left_by_reviewer
 from parfocal_api.tables import (
     REASON_TEXT,
@@ -49,7 +49,7 @@ from parfocal_api.tables import (
     review_task_slides,
     slides,
 )
-from parfocal_api.task_kinds import review_only
+from parfocal_api.task_kinds import TaskSignedOffError, review_only
 from parfocal_common.disagreements import Why
 from parfocal_common.object_ids import Letter
 from parfocal_common.result_store import ResultStore

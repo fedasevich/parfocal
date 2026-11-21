@@ -176,12 +176,22 @@ describe("review task saves", () => {
     };
     await reviewTaskTransport("t-1", "s-1").create(marker);
     assert.ok(calls[0]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/added"));
-    assert.deepEqual(calls[0]?.body, { kind: "cell", geometry: marker.geometry, class_id: null });
+    assert.deepEqual(calls[0]?.body, marker);
   });
 
-  test("a note or an arrow stays on the slide", async () => {
-    const calls = answer(json(201, { ...saved, kind: "arrow", task_id: null }));
-    await reviewTaskTransport("t-1", "s-1").create({
+  test("a note and an arrow are added to the task as well", async () => {
+    const calls = answer(
+      json(201, { ...saved, kind: "text", text: "Look" }),
+      json(201, { ...saved, id: "a-2", kind: "arrow" }),
+    );
+    const note: AnnotationDraft = {
+      kind: "text",
+      geometry: { type: "Point", coordinates: [1, 2] },
+      text: "Look",
+    };
+    const transport = reviewTaskTransport("t-1", "s-1");
+    await transport.create(note);
+    await transport.create({
       kind: "arrow",
       geometry: {
         type: "LineString",
@@ -191,7 +201,28 @@ describe("review task saves", () => {
         ],
       },
     });
-    assert.ok(calls[0]?.url.endsWith("/api/slides/s-1/annotations"));
+    assert.ok(calls[0]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/added"));
+    assert.deepEqual(calls[0]?.body, note);
+    assert.ok(calls[1]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/added"));
+  });
+
+  test("a change refused after sign off is rejected, not shown as a conflict", async () => {
+    answer(
+      new Response(
+        JSON.stringify({
+          type: "about:blank",
+          status: 409,
+          title: "Signed off",
+          code: "task-signed-off",
+        }),
+        {
+          status: 409,
+          headers: { "content-type": "application/problem+json" },
+        },
+      ),
+    );
+    const outcome = await reviewTaskTransport("t-1", "s-1").update("a-1", 1, draft);
+    assert.equal(outcome.kind, "rejected");
   });
 
   test("its author changes and deletes it through the slide routes", async () => {

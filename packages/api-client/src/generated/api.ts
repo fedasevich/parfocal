@@ -107,11 +107,15 @@ export const ActorKind = {
   service: "service",
 } as const;
 
-export type AddedDraftKind = (typeof AddedDraftKind)[keyof typeof AddedDraftKind];
+export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
 
-export const AddedDraftKind = {
+export const AnnotationKind = {
+  roi: "roi",
+  measurement: "measurement",
   region: "region",
   cell: "cell",
+  arrow: "arrow",
+  text: "text",
 } as const;
 
 export type PointGeometryType = (typeof PointGeometryType)[keyof typeof PointGeometryType];
@@ -185,10 +189,17 @@ export interface MultiPolygonGeometry {
 
 export type Geometry = PointGeometry | LineStringGeometry | PolygonGeometry | MultiPolygonGeometry;
 
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type Words = string;
+
 export interface AddedDraft {
-  kind: AddedDraftKind;
+  kind: AnnotationKind;
   geometry: Geometry;
   class_id?: string | null;
+  text?: Words | null;
 }
 
 export interface AddedObject {
@@ -697,17 +708,6 @@ export interface AnnotateSlideStatus {
 
 export type AnnotationGeometry = { [key: string]: unknown };
 
-export type AnnotationKind = (typeof AnnotationKind)[keyof typeof AnnotationKind];
-
-export const AnnotationKind = {
-  roi: "roi",
-  measurement: "measurement",
-  region: "region",
-  cell: "cell",
-  arrow: "arrow",
-  text: "text",
-} as const;
-
 export interface Annotation {
   id: string;
   slide_id: string;
@@ -733,12 +733,6 @@ export const AnnotationChange = {
   deleted: "deleted",
   restored: "restored",
 } as const;
-
-/**
- * @minLength 1
- * @maxLength 200
- */
-export type Words = string;
 
 export interface AnnotationDraft {
   kind: AnnotationKind;
@@ -6836,6 +6830,7 @@ export interface ReviewedLayer {
   reviewer_id: string;
   edits: ReviewEdit[];
   added: Annotation[];
+  marks?: Annotation[];
   summary: LayerSummary;
 }
 

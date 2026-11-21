@@ -23,12 +23,18 @@ const PatchExportDialog = lazy(async () => ({
   default: (await import("./patch-export-dialog.tsx")).PatchExportDialog,
 }));
 
-export function SlideExportMenu({ slideId, taskId }: { slideId: string; taskId: string }) {
+export function SlideExportMenu({
+  slideId,
+  taskId,
+  slideOnly = false,
+}: {
+  slideId: string;
+  taskId: string;
+  slideOnly?: boolean;
+}) {
   const { t } = useLingui();
   const choices = slideExportChoices();
-  const taskChoices = taskExportChoices();
   const [patchesOpen, setPatchesOpen] = useState(false);
-  const navigate = useNavigate();
   const save = async (choice: (typeof choices)[number]) => {
     const name = await downloadSlideExport(slideId, choice.format, taskId);
     showUndoToast({
@@ -69,37 +75,7 @@ export function SlideExportMenu({ slideId, taskId }: { slideId: string; taskId: 
               </span>
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          {taskChoices.map((choice) => (
-            <DropdownMenuItem
-              key={choice.kind}
-              data-testid={`export-${choice.kind}`}
-              className="items-start gap-2.5"
-              onClick={() => void saveTask(choice.kind)}
-            >
-              <Icon name="download" className="mt-0.5" />
-              <span className="grid">
-                <span>{choice.label}</span>
-                <small className="text-caption text-fg-dim">{choice.line}</small>
-              </span>
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            data-testid="export-dataset-page"
-            className="items-start gap-2.5"
-            onClick={() => void navigate({ to: "/tasks/$taskId/dataset", params: { taskId } })}
-          >
-            <Icon name="database" className="mt-0.5" />
-            <span className="grid">
-              <span>
-                <Trans>Dataset page</Trans>
-              </span>
-              <small className="text-caption text-fg-dim">
-                <Trans>Filter by origin, class and slide, and freeze numbered versions</Trans>
-              </small>
-            </span>
-          </DropdownMenuItem>
+          {slideOnly ? null : <TaskExportItems taskId={taskId} onSave={saveTask} />}
         </DropdownMenuContent>
       </DropdownMenu>
       {patchesOpen ? (
@@ -107,6 +83,52 @@ export function SlideExportMenu({ slideId, taskId }: { slideId: string; taskId: 
           <PatchExportDialog taskId={taskId} onClose={() => setPatchesOpen(false)} />
         </Suspense>
       ) : null}
+    </>
+  );
+}
+
+function TaskExportItems({
+  taskId,
+  onSave,
+}: {
+  taskId: string;
+  onSave: (kind: TaskExportKind) => Promise<void>;
+}) {
+  const taskChoices = taskExportChoices();
+  const navigate = useNavigate();
+  return (
+    <>
+      <DropdownMenuSeparator />
+      {taskChoices.map((choice) => (
+        <DropdownMenuItem
+          key={choice.kind}
+          data-testid={`export-${choice.kind}`}
+          className="items-start gap-2.5"
+          onClick={() => void onSave(choice.kind)}
+        >
+          <Icon name="download" className="mt-0.5" />
+          <span className="grid">
+            <span>{choice.label}</span>
+            <small className="text-caption text-fg-dim">{choice.line}</small>
+          </span>
+        </DropdownMenuItem>
+      ))}
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        data-testid="export-dataset-page"
+        className="items-start gap-2.5"
+        onClick={() => void navigate({ to: "/tasks/$taskId/dataset", params: { taskId } })}
+      >
+        <Icon name="database" className="mt-0.5" />
+        <span className="grid">
+          <span>
+            <Trans>Dataset page</Trans>
+          </span>
+          <small className="text-caption text-fg-dim">
+            <Trans>Filter by origin, class and slide, and freeze numbered versions</Trans>
+          </small>
+        </span>
+      </DropdownMenuItem>
     </>
   );
 }

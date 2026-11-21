@@ -22,7 +22,7 @@ from parfocal_api.project_access import role_in
 from parfocal_api.review_decisions import ai_class_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task
-from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object, outline
+from parfocal_api.reviewed_layer import KINDS, ai_object, outline
 from parfocal_api.tables import (
     AnnotationKind,
     Decision,
@@ -40,7 +40,7 @@ from parfocal_api.tables import (
     review_edits,
     review_task_slides,
 )
-from parfocal_api.task_kinds import review_only
+from parfocal_api.task_kinds import TaskSignedOffError, review_only
 from parfocal_common.disagreements import Why, why_queued
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import ResultStore

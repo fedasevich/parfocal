@@ -23,7 +23,6 @@ from parfocal_api.review_tasks import (
     detail_of,
     task_row,
 )
-from parfocal_api.reviewed_layer import TaskSignedOffError
 from parfocal_api.tables import (
     NotificationKind,
     ReassignWhat,
@@ -40,6 +39,7 @@ from parfocal_api.tables import (
     task_reassignments,
     users,
 )
+from parfocal_api.task_kinds import TaskSignedOffError
 from parfocal_api.task_notices import iso, told
 from parfocal_api.worklist_events import announce_worklist, task_people
 
