@@ -305,4 +305,50 @@ describe("the shared range cache", () => {
     assert.equal(defaultRangeBlockSize, 256 * 1024);
     assert.equal(defaultCachedBlocks * defaultRangeBlockSize, 100 * 1024 * 1024);
   });
+
+  it("reads whole opening groups until the slide is open, then only the blocks asked for", async () => {
+    const file = fileOf(200);
+    const server = fakeServer(file);
+    const cache = createRangeCache({
+      blockSize,
+      openingReadSize: 4 * blockSize,
+      fetch: server.fetch,
+    });
+    const header = await cache.get(url, "bytes=0-7");
+    assert.deepEqual([...header.bytes], [...file.slice(0, 8)]);
+    const directory = await cache.get(url, "bytes=50-60");
+    assert.deepEqual([...directory.bytes], [...file.slice(50, 61)]);
+    assert.deepEqual(
+      server.seen.map((entry) => entry.range),
+      ["bytes=0-63"],
+    );
+    const later = await cache.get(url, "bytes=70-75");
+    assert.deepEqual([...later.bytes], [...file.slice(70, 76)]);
+    assert.deepEqual(
+      server.seen.map((entry) => entry.range),
+      ["bytes=0-63", "bytes=64-127"],
+    );
+    cache.opened();
+    const tile = await cache.get(url, "bytes=130-135");
+    assert.deepEqual([...tile.bytes], [...file.slice(130, 136)]);
+    assert.deepEqual(server.seen.at(-1)?.range, "bytes=128-143");
+    assert.equal(server.seen.length, 3);
+  });
+
+  it("stops an opening group at the end of a file of known size", async () => {
+    const file = fileOf(40);
+    const server = fakeServer(file);
+    const cache = createRangeCache({
+      blockSize,
+      openingReadSize: 4 * blockSize,
+      fetch: server.fetch,
+    });
+    await cache.get(url, "bytes=0-3");
+    const tail = await cache.get(url, "bytes=36-39");
+    assert.deepEqual([...tail.bytes], [...file.slice(36, 40)]);
+    assert.deepEqual(
+      server.seen.map((entry) => entry.range),
+      ["bytes=0-63"],
+    );
+  });
 });

@@ -3,6 +3,8 @@ import { absoluteUrl } from "../pixel-source/url.ts";
 
 export const defaultRangeBlockSize = 256 * 1024;
 
+export const defaultOpeningReadSize = 1024 * 1024;
+
 export const defaultCachedBytes = 100 * 1024 * 1024;
 
 export const defaultCachedBlocks = defaultCachedBytes / defaultRangeBlockSize;
@@ -26,6 +28,7 @@ export type { RestrictedRange };
 export interface RangeCacheOptions {
   readonly blockSize?: number;
   readonly maxBlocks?: number;
+  readonly openingReadSize?: number;
   readonly fetch?: typeof globalThis.fetch;
   readonly restricted?: Readonly<Record<string, readonly RestrictedRange[]>>;
 }
@@ -33,6 +36,7 @@ export interface RangeCacheOptions {
 export interface RangeCache {
   get(url: string, range: string | null): Promise<RangeReply>;
   stats(): RangeCacheStats;
+  opened(): void;
   clear(): void;
 }
 
@@ -98,6 +102,7 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
   const totals = new Map<string, number>();
   const refused = new Set<string>();
   const counts = { fetches: 0, bytes: 0, blockHits: 0, blockJoins: 0 };
+  let openingGroup = Math.max(1, Math.floor((options.openingReadSize ?? blockSize) / blockSize));
 
   const blockKey = (url: string, index: number) => `${index}@${url}`;
 
@@ -260,11 +265,34 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     for (let index = first; index <= last; index++) {
       if (refused.has(blockKey(url, index))) return uncached(url, exact);
     }
+    if (openingGroup > 1) readAround(url, first, last, known);
     try {
       return await fromBlocks(url, start, end, first, last);
     } catch (error) {
       if (error instanceof RefusedBlocksError) return uncached(url, exact);
       throw error;
+    }
+  };
+
+  const readAround = (url: string, first: number, last: number, known: number | undefined) => {
+    const from = Math.floor(first / openingGroup) * openingGroup;
+    const lastBlock =
+      known === undefined ? Number.POSITIVE_INFINITY : Math.floor((known - 1) / blockSize);
+    const to = Math.min(Math.ceil((last + 1) / openingGroup) * openingGroup - 1, lastBlock);
+    if (overlaps(closedRanges(url), from * blockSize, (to + 1) * blockSize)) return;
+    for (let index = from; index <= to; index++) {
+      if (refused.has(blockKey(url, index))) return;
+    }
+    let missingFrom: number | null = null;
+    for (let index = from; index <= to + 1; index++) {
+      const held =
+        index <= to && (blocks.has(blockKey(url, index)) || pending.has(blockKey(url, index)));
+      if (index <= to && !held) {
+        missingFrom ??= index;
+        continue;
+      }
+      if (missingFrom !== null) void Promise.allSettled(fetchRun(url, missingFrom, index - 1));
+      missingFrom = null;
     }
   };
 
@@ -321,6 +349,9 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     },
     stats() {
       return { ...counts, cachedBlocks: blocks.size };
+    },
+    opened() {
+      openingGroup = 1;
     },
     clear() {
       blocks.clear();

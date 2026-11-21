@@ -107,8 +107,27 @@ PROTO-130 (tile range requests answer fast enough for a smooth pan) cut the rang
 | CMU-1.tiff | 100 | 8 | 2004822 | 1938 | 5 | 1310720 | 763 |
 | CMU-1.tiff | 200 | 8 | 2004822 | 3575 | 5 | 1310720 | 1263 |
 
-The hosted runner at 0 ms RTT gave 15 fitted requests and 4013251 bytes for CMU-1.svs, and 20 jump requests. Counts and bytes do not change with RTT. The twelve count and byte budgets now take these as their baselines. A request limit is the baseline plus one, or plus two for the CMU-1.svs jump because the runner saw 20, and a byte limit is just under 1.2 times the baseline. The bytes fell by about half, so the byte limits are tighter than before.
+The hosted runner at 0 ms RTT gave 15 fitted requests and 4013251 bytes for CMU-1.svs, and 20 jump requests. Counts and bytes do not change with RTT.
 
-The time budgets were not changed. The requests cost more round trips, though. The same open at 100 ms RTT, measured by the lifecycle spec test where a tab is hidden before the first tile read, took 1796 ms from showing the tab to a complete view with 256 KiB blocks and 873 ms with 1 MiB blocks, on the same build with only `defaultRangeBlockSize` changed. The hosted runner took 2048 ms, over that test's 2 s line.
+The requests cost more round trips on a slow link. The lifecycle spec test where a tab is hidden before the first tile read, at 100 ms RTT, took 1796 ms from showing the tab to a complete view with 256 KiB blocks and 873 ms with 1 MiB blocks, on the same build with only `defaultRangeBlockSize` changed. The hosted runner took 2048 ms, over that test's 2 s line. Most of the extra round trips are header and directory reads while the slide opens, which run one after another.
 
-- TODO: decide whether opening a slide on a slow link may cost about twice the round trips, or whether the open path reads larger blocks first.
+So the range cache now reads whole 1 MiB groups of blocks until the pixel slide opener says the slide is open, and only the 256 KiB blocks asked for after that. Tile reads keep the PROTO-130 block size. With that change, on the same machine:
+
+| Slide | RTT | Fitted requests | Fitted bytes | Fitted ms | Jump requests | Jump bytes | Sharp after jump ms |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CMU-1.svs | 0 | 8 | 6372547 | 760 | 19 | 5242880 | 430 |
+| CMU-1.svs | 50 | 8 | 6372547 | 1404 | 19 | 5242880 | 1182 |
+| CMU-1.svs | 100 | 8 | 6372547 | 1962 | 18 | 5242880 | 2093 |
+| CMU-1.svs | 200 | 8 | 6372547 | 3431 | 18 | 5242880 | 3929 |
+| CMU-1-JP2K-33005.svs | 0 | 4 | 3590495 | 532 | 11 | 2883584 | 344 |
+| CMU-1-JP2K-33005.svs | 50 | 4 | 3590495 | 1093 | 11 | 2883584 | 831 |
+| CMU-1-JP2K-33005.svs | 100 | 4 | 3590495 | 1848 | 11 | 2883584 | 1378 |
+| CMU-1-JP2K-33005.svs | 200 | 4 | 3590495 | 3368 | 11 | 2883584 | 2477 |
+| CMU-1.tiff | 0 | 7 | 6199126 | 373 | 5 | 1310720 | 263 |
+| CMU-1.tiff | 50 | 7 | 6199126 | 1125 | 5 | 1310720 | 512 |
+| CMU-1.tiff | 100 | 7 | 6199126 | 1855 | 5 | 1310720 | 760 |
+| CMU-1.tiff | 200 | 7 | 6199126 | 3404 | 5 | 1310720 | 1262 |
+
+The lifecycle test then took 1268 ms, and the two tests that hide the tab mid-load took 694 and 787 ms against their 1 s line, where the build without the opening read gave 775 and 990 ms. The twelve count and byte budgets take the second table as their baselines. A request limit is the baseline plus one, or plus two for the CMU-1.svs jump because the runner saw 20, and a byte limit is just under 1.2 times the baseline. The fitted counts are back at the 1 MiB numbers and the jump bytes fell by about 60 percent. The time budgets were not changed.
+
+- TODO: take the hosted fitted and jump numbers at 200 ms RTT from the next green run and check that sharp after jump on CMU-1.svs stays under its 4390 ms limit.
