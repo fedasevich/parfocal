@@ -47,6 +47,11 @@ test("the Export menu offers the training dataset and the patches and downloads 
   await page.getByTestId("patch-export-tile").fill("256");
   await expect(page.getByTestId("patch-export-format")).toContainText("Class masks");
   await page.getByRole("radio", { name: "Masks and COCO" }).click();
+  const polls: { url: string; status: number }[] = [];
+  page.on("response", (response) => {
+    if (response.url().includes("/patch-exports/"))
+      polls.push({ url: response.url(), status: response.status() });
+  });
   const patchDownload = page.waitForEvent("download");
   const patchRequest = page.waitForRequest(
     (request) => request.method() === "POST" && request.url().endsWith("/patch-exports"),
@@ -56,6 +61,12 @@ test("the Export menu offers the training dataset and the patches and downloads 
   await expect(page.getByTestId("patch-export-job")).toContainText("Job ");
   expect((await patchDownload).suggestedFilename()).toMatch(/patches\.zip$/);
   await expect(page.getByTestId("patch-export-job")).toContainText("The patches are ready");
+  const statusCalls = () => polls.filter((poll) => poll.url.endsWith("/status")).length;
+  const settled = statusCalls();
+  await page.waitForTimeout(3_500);
+  expect(statusCalls()).toBe(settled);
+  expect(settled).toBeGreaterThan(0);
+  expect(polls.filter((poll) => poll.status !== 200)).toEqual([]);
 });
 
 test("a task with nothing signed off explains why both exports are refused", async ({ page }) => {

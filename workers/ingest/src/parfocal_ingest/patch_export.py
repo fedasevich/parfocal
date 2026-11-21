@@ -277,10 +277,11 @@ class Painter:
         scale = self.downsample
         left, top = tile.x * scale, tile.y * scale
         area = box(left, top, left + tile.width * scale, top + tile.height * scale)
-        return any(
-            not self.shapes[int(hit)].geometry.touches(area)
-            for hit in self.tree.query(area, predicate="intersects")
-        )
+        for hit in self.tree.query(area, predicate="intersects"):
+            geometry = self.shapes[int(hit)].geometry
+            if not (geometry if geometry.is_valid else shapely.make_valid(geometry)).touches(area):
+                return True
+        return False
 
     def mask(self, tile: Tile) -> NDArray[np.uint8]:
         scale = self.downsample

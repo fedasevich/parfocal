@@ -185,6 +185,17 @@ def test_only_tiles_an_object_touches_are_cut(tmp_path: Any) -> None:
     assert [(row["x"], row["y"], row["classes"]) for row in rows] == [("400", "400", "3")]
 
 
+def test_a_crossed_outline_still_picks_its_tiles(tmp_path: Any) -> None:
+    bow_tie = feature("region", 1, [[(450, 420), (520, 480), (520, 420), (450, 480)]])
+    geojson = json.dumps({"type": "FeatureCollection", "features": [bow_tie]}).encode()
+    source = source_of(uuid.UUID(int=7), fixture_path(SLIDE), geojson)
+    assert source is not None
+    target = io.BytesIO()
+    writer = PatchWriter(target, LEVEL, TILE)
+    writer.add(source)
+    assert writer.finish(TASK, CLASSES).tiles == 1
+
+
 def test_a_slide_without_the_chosen_level_is_skipped(tmp_path: Any) -> None:
     archive, slide_id = exported(tmp_path, level=9)
     manifest = PatchManifest.model_validate_json(archive.read("manifest.json"))

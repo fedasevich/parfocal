@@ -82,6 +82,19 @@ async def test_patch_tiles_are_read_in_the_parse_process_and_match_the_worker(
     assert leftovers(tmp_path) == []
 
 
+async def test_a_slide_without_objects_cuts_no_tile_and_still_merges(tmp_path: Path) -> None:
+    empty = json.dumps({"type": "FeatureCollection", "features": []}).encode()
+    store = cast("ObjectStore", Store())
+    step = step_of(uuid.uuid4())
+    facts, part = await isolated_slide(step, resources_in(tmp_path), store, SLIDE_ID, KEY, empty)
+    merged = io.BytesIO()
+    writer = PatchWriter(merged, LEVEL, TILE)
+    writer.merge(SLIDE_ID, empty, dict(facts), part)
+    assert writer.skipped == []
+    assert [(slide.slide_id, slide.tiles) for slide in writer.slides] == [(SLIDE_ID, 0)]
+    assert writer.rows == []
+
+
 def tampered(part: bytes, name: str, data: bytes) -> bytes:
     target = io.BytesIO()
     with zipfile.ZipFile(io.BytesIO(part)) as source, zipfile.ZipFile(target, "w") as archive:
