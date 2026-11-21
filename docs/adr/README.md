@@ -377,3 +377,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0415](0415-a-review-tasks-final-layer-is-an-append-only-snapshot-per-slide.md) | A review task's final layer is an append only snapshot per slide | Accepted | 2026-11-21 |
 | [0416](0416-agree-with-the-rest-is-one-batched-call-that-fills-open-objects.md) | Agree with the rest is one batched call that fills open objects | Accepted | 2026-11-21 |
 | [0417](0417-a-review-tasks-class-snapshot-lives-on-its-final-layer.md) | A review task's class snapshot lives on its final layer | Accepted | 2026-11-21 |
+| [0418](0418-find-nuclei-runs-pathosam-ais-on-the-best-detector-pool.md) | Find nuclei runs PathoSAM AIS on the best detector pool | Accepted | 2026-11-21 |

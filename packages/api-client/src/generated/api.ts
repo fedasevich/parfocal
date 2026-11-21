@@ -8806,6 +8806,10 @@ export type ListReviewEditHistoryParams = {
   reviewer_id?: string | null;
 };
 
+export type GetSlideAiProgressParams = {
+  result_set_id?: string | null;
+};
+
 export type ExportReviewedLayerParams = {
   format?: ParfocalApiReviewedExportExportFormat;
   reviewer_id?: string | null;
@@ -49714,8 +49718,20 @@ export type getSlideAiProgressResponse =
   | getSlideAiProgressResponseSuccess
   | getSlideAiProgressResponseError;
 
-export const getGetSlideAiProgressUrl = (slideId: string) => {
-  return `/api/slides/${slideId}/ai-progress`;
+export const getGetSlideAiProgressUrl = (slideId: string, params?: GetSlideAiProgressParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/slides/${slideId}/ai-progress?${stringifiedParams}`
+    : `/api/slides/${slideId}/ai-progress`;
 };
 
 /**
@@ -49723,16 +49739,20 @@ export const getGetSlideAiProgressUrl = (slideId: string) => {
  */
 export const getSlideAiProgress = async (
   slideId: string,
+  params?: GetSlideAiProgressParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<getSlideAiProgressResponse> => {
-  return apiFetch<getSlideAiProgressResponse>(getGetSlideAiProgressUrl(slideId), {
+  return apiFetch<getSlideAiProgressResponse>(getGetSlideAiProgressUrl(slideId, params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetSlideAiProgressQueryKey = (slideId: string) => {
-  return [`/api/slides/${slideId}/ai-progress`] as const;
+export const getGetSlideAiProgressQueryKey = (
+  slideId: string,
+  params?: GetSlideAiProgressParams,
+) => {
+  return [`/api/slides/${slideId}/ai-progress`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetSlideAiProgressQueryOptions = <
@@ -49740,6 +49760,7 @@ export const getGetSlideAiProgressQueryOptions = <
   TError = Problem,
 >(
   slideId: string,
+  params?: GetSlideAiProgressParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -49747,10 +49768,10 @@ export const getGetSlideAiProgressQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetSlideAiProgressQueryKey(slideId);
+  const queryKey = queryOptions?.queryKey ?? getGetSlideAiProgressQueryKey(slideId, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideAiProgress>>> = ({ signal }) =>
-    getSlideAiProgress(slideId, { signal, ...requestOptions });
+    getSlideAiProgress(slideId, params, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -49772,6 +49793,7 @@ export function useGetSlideAiProgress<
   TError = Problem,
 >(
   slideId: string,
+  params: undefined | GetSlideAiProgressParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>> &
       Pick<
@@ -49791,6 +49813,7 @@ export function useGetSlideAiProgress<
   TError = Problem,
 >(
   slideId: string,
+  params?: GetSlideAiProgressParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>
@@ -49812,6 +49835,7 @@ export function useGetSlideAiProgress<
   TError = Problem,
 >(
   slideId: string,
+  params?: GetSlideAiProgressParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
@@ -49827,13 +49851,14 @@ export function useGetSlideAiProgress<
   TError = Problem,
 >(
   slideId: string,
+  params?: GetSlideAiProgressParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideAiProgress>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetSlideAiProgressQueryOptions(slideId, options);
+  const queryOptions = getGetSlideAiProgressQueryOptions(slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

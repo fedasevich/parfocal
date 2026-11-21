@@ -118,8 +118,9 @@ export function useViewerState(props: BodyProps) {
   const submitReview = useSubmitSlideReview();
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const othersOn = useOthersNotes(session.taskId, session.slideId, session.meId);
+  const taskSetId = session.task?.slides[0]?.result_set_id;
   const progress = okData(
-    useGetSlideAiProgress(slideId, {
+    useGetSlideAiProgress(slideId, taskSetId ? { result_set_id: taskSetId } : undefined, {
       query: {
         refetchInterval: (query) =>
           okData(query.state.data)?.state === "running" ? aiProgressPollMs : false,
@@ -285,7 +286,6 @@ export function useViewerState(props: BodyProps) {
     const set = slideSets.find((item) => item.id === id);
     return set ? `${set.name.split(" ")[0]} ${set.model_version ?? ""}`.trim() : "";
   };
-  const taskSetId = session.task?.slides[0]?.result_set_id;
   const otherSet = slideSets.find((item) => item.id !== taskSetId);
   const setA = setName;
   const setsLock = session.display?.locks.find((lock) => lock.setting === "other-sets");

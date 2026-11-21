@@ -30067,6 +30067,23 @@
               "format": "uuid",
               "title": "Slide Id"
             }
+          },
+          {
+            "name": "result_set_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Result Set Id"
+            }
           }
         ],
         "responses": {

@@ -143,14 +143,19 @@ async def step_percent(connection: AsyncConnection, job_id: uuid.UUID, row: Any)
     return round(min(100.0, 100 * done / row.units_total), 1)
 
 
-async def active_run(connection: AsyncConnection, slide_id: uuid.UUID) -> uuid.UUID | None:
-    return await connection.scalar(
+async def active_run(
+    connection: AsyncConnection, slide_id: uuid.UUID, result_set_id: uuid.UUID | None = None
+) -> uuid.UUID | None:
+    query = (
         select(model_runs.c.job_id)
         .join(jobs, jobs.c.id == model_runs.c.job_id)
         .where(model_runs.c.slide_id == slide_id, jobs.c.status.in_(ACTIVE))
-        .order_by(jobs.c.created_at.desc())
-        .limit(1)
     )
+    if result_set_id is not None:
+        query = query.join(result_sets, result_sets.c.job_id == model_runs.c.job_id).where(
+            result_sets.c.id == result_set_id
+        )
+    return await connection.scalar(query.order_by(jobs.c.created_at.desc()).limit(1))
 
 
 @slide_router.get(
@@ -159,11 +164,14 @@ async def active_run(connection: AsyncConnection, slide_id: uuid.UUID) -> uuid.U
     **require(Permission.SEE_SLIDES, emergency=True),
 )
 async def get_slide_ai_progress(
-    slide_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    result_set_id: uuid.UUID | None = None,
 ) -> SlideAiProgress:
     slide = await readable_slide(connection, principal, slide_id)
     hidden = await ai_hidden_on(connection, principal, slide.project_id, slide_id)
-    job_id = None if hidden else await active_run(connection, slide_id)
+    job_id = None if hidden else await active_run(connection, slide_id, result_set_id)
     if job_id is None:
         return SlideAiProgress(slide_id=slide_id, state="ready", steps=[], found=[])
     stages = {

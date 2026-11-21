@@ -250,3 +250,19 @@ def test_ai_progress_follows_the_running_model_run(api: ApiAs, database: str) ->
     assert (steps["regions"]["state"], steps["regions"]["percent"]) == ("running", 25)
     assert steps["cells"]["state"] == "queued"
     assert api(lab.people["outsider"]).get(url).status_code == 404
+
+
+def test_ai_progress_for_one_result_set_leaves_out_the_runs_of_another(
+    api: ApiAs, database: str
+) -> None:
+    lab = make_lab(api, database)
+    run = one_run(api, lab)
+    [(own,)] = owner(database, f"SELECT id FROM result_sets WHERE job_id = '{run['id']}'")
+    [(other,)] = owner(
+        database,
+        f"SELECT id FROM result_sets WHERE slide_id = '{lab.slides[0]}' AND id <> '{own}' LIMIT 1",
+    )
+    url = f"/api/slides/{lab.slides[0]}/ai-progress"
+    reader = api(lab.people["owner"])
+    assert reader.get(url, params={"result_set_id": str(own)}).json()["state"] == "running"
+    assert reader.get(url, params={"result_set_id": str(other)}).json()["state"] == "ready"

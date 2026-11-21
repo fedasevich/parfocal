@@ -4,13 +4,19 @@ from dataclasses import replace
 
 import pytest
 
-from parfocal_common.model_runs import LAB_POOL_FUNCTION, lab_drain_call
+from parfocal_common.model_runs import (
+    LAB_POOL_FUNCTION,
+    NUCLEI_POOL_FUNCTION,
+    lab_drain_call,
+    nuclei_drain_call,
+)
 from parfocal_common.tumor_maps import POOL_FUNCTION, drain_call, wake_tumor_map_pool
 from parfocal_ml.gpu_pool import POOLS, Family, PoolLimitError, cpu_stand_in
 from parfocal_ml.modal_pool import (
     APP_NAME,
     DATABASE_SECRET,
     LAB_MODEL_SECRETS,
+    NUCLEI_SECRETS,
     STORAGE_SECRET,
     TUMOR_MAP_SECRETS,
     VIEW_MAP_SECRETS,
@@ -44,7 +50,7 @@ def test_a_probe_reports_its_family_and_container() -> None:
 
 def test_a_family_without_a_runner_refuses_other_calls() -> None:
     with pytest.raises(ValueError, match="no runner"):
-        pool_entry(POOLS[0])({"kind": "detect"})
+        pool_entry(POOLS[0])({"kind": "type"})
 
 
 def test_only_the_detector_good_pool_runs_tumor_maps() -> None:
@@ -87,6 +93,7 @@ def test_the_tumor_map_pool_reads_the_database_and_the_view_map_pool_only_storag
         POOL_FAMILY: TUMOR_MAP_SECRETS,
         Family.EMBEDDER: VIEW_MAP_SECRETS,
         Family.LAB_MODEL: LAB_MODEL_SECRETS,
+        Family.DETECTOR_BEST: NUCLEI_SECRETS,
     }
     assert VIEW_MAP_SECRETS == (STORAGE_SECRET,)
     assert DATABASE_SECRET in TUMOR_MAP_SECRETS
@@ -145,3 +152,12 @@ def test_the_api_wakes_the_lab_model_pool_with_a_call_it_runs() -> None:
     assert accepts(pool, str(lab_drain_call()["kind"]))
     assert str(lab_drain_call()["kind"]) in default_runners(pool)
     assert drain_of(lab_drain_call()) == Drain()
+
+
+def test_the_api_wakes_the_best_detector_pool_with_a_nuclei_call_it_runs() -> None:
+    pool = next(pool for pool in POOLS if pool.family is Family.DETECTOR_BEST)
+    assert pool.function_name == NUCLEI_POOL_FUNCTION
+    assert NUCLEI_POOL_FUNCTION in pool_functions
+    assert accepts(pool, str(nuclei_drain_call()["kind"]))
+    assert str(nuclei_drain_call()["kind"]) in default_runners(pool)
+    assert drain_of(nuclei_drain_call()) == Drain()

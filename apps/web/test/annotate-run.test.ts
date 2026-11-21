@@ -32,7 +32,7 @@ test("a run on the selection from an annotate task carries the task and the sele
         ],
       },
     },
-    parameters: { detector: { name: "hovernet" }, ordering: "raster" },
+    parameters: { detector: { name: "pathosam-hovernext" }, ordering: "raster" },
   });
 });
 

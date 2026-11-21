@@ -28,6 +28,7 @@ import { useModeCorrection } from "./mode-correction.ts";
 import { CasePatientBanner } from "./patient-banner-view.tsx";
 import { useCellRetype } from "./picked-cell-retype.tsx";
 import { CopyIntoParfocal, RemoteSlideTag } from "./remote-slide-notice.tsx";
+import { setsOfTask } from "./result-set-state.ts";
 import { SlideNoticeList } from "./slide-notice-list.tsx";
 import { SlideStage } from "./slide-stage.tsx";
 import { ReviewStageComments, StageComments } from "./stage-comments.tsx";
@@ -382,7 +383,12 @@ function GuardedViewer({
       <StageToolLink armTool={session.armTool} link={toolLink} armFirst={tool} />
       <SlideNoticeList
         storage={storageNote}
-        resultSets={load?.resultSets ?? []}
+        resultSets={setsOfTask(
+          load?.resultSets ?? [],
+          reviewTask === null
+            ? undefined
+            : taskDetail?.slides.find((item) => item.slide_id === slideId)?.result_set_id,
+        )}
         noResult={resultMissing}
         micronsPerPixel={session.engine.getSlide()?.micronsPerPixel}
         slideLabel={load?.slide?.label ?? ""}

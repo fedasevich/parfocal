@@ -21,6 +21,7 @@ from parfocal_common.link_fetch import policy_of
 from parfocal_common.model_runs import (
     LAB_POOL_FUNCTION,
     MODEL_STAGE,
+    NUCLEI_POOL_FUNCTION,
     PLAN,
     Detectors,
     claim_model_run,
@@ -280,7 +281,7 @@ def test_the_stage_pins_the_taxonomy_classes_with_their_counts(
     assert pinned == [(0, "Tumor", 4), (1, "Stroma", 0), (2, "Immune", 1), (3, "Other", 0)]
 
 
-def test_starting_a_lab_run_wakes_the_lab_model_pool_once_and_a_parfocal_run_does_not(
+def test_a_lab_run_wakes_the_lab_model_pool_once_and_a_parfocal_run_the_nuclei_pool(
     linked: ApiAs, lab: Lab, site: Site
 ) -> None:
     modal = FakeModal()
@@ -288,7 +289,7 @@ def test_starting_a_lab_run_wakes_the_lab_model_pool_once_and_a_parfocal_run_doe
     try:
         detector = {"detector": {"name": "hovernet", "version": "v0.9"}}
         started(linked, lab, [lab.slides[1]], parameters=detector)
-        assert modal.spawned == []
+        assert modal.spawned == [(NUCLEI_POOL_FUNCTION, {"kind": "detect"})]
         site.json(INFER, ANSWER)
         ok(linked(lab.people["owner"]).post(MODELS, json=draft(site, lab, name=NAME)))
         body = {
@@ -298,7 +299,7 @@ def test_starting_a_lab_run_wakes_the_lab_model_pool_once_and_a_parfocal_run_doe
         }
         runs = ok(linked(lab.people["owner"]).post(lab.runs, json=body))
         assert len(runs) == 2
-        assert modal.spawned == [(LAB_POOL_FUNCTION, {"kind": "lab-model"})]
+        assert modal.spawned[1:] == [(LAB_POOL_FUNCTION, {"kind": "lab-model"})]
     finally:
         del linked.app.state.gpu_pools
 

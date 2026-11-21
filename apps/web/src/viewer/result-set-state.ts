@@ -15,3 +15,10 @@ export function resultSetStates(
   const failed = sets.filter((set) => set.status === "failed").map(nameOf);
   return importing.length === 0 && failed.length === 0 ? null : { importing, failed };
 }
+
+export function setsOfTask<T extends Pick<ResultSet, "id">>(
+  sets: readonly T[],
+  taskSetId: string | null | undefined,
+): readonly T[] {
+  return taskSetId ? sets.filter((set) => set.id === taskSetId) : sets;
+}

@@ -65,6 +65,29 @@ describe("live ViT-L view embeddings", () => {
     assert.deepEqual(asked, [view]);
   });
 
+  it("asks the GPU once when one Best click wants the same view twice", async () => {
+    let release: (body: ArrayBuffer) => void = () => undefined;
+    let posts = 0;
+    const views = createViewEmbeddings({
+      post: () => {
+        posts += 1;
+        return new Promise((resolve) => {
+          release = resolve;
+        });
+      },
+    });
+    const both = Promise.all([views.embedding(slideId, view), views.embedding(slideId, view)]);
+    await tick();
+    release(halves());
+    assert.deepEqual((await both).map(first), [0.5, 0.5]);
+    assert.equal(posts, 1);
+    const later = views.embedding(slideId, view);
+    await tick();
+    release(halves());
+    assert.equal(first(await later), 0.5);
+    assert.equal(posts, 2);
+  });
+
   it("waits for a slow server past the old six seconds and answers once it is warm", async () => {
     let release: (body: ArrayBuffer) => void = () => undefined;
     const views = createViewEmbeddings({
