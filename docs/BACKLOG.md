@@ -7025,7 +7025,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 11. They are saved to the slide wide layer today, so they are in no reviewer's layer and no dataset.
   Done when a shape drawn by an assigned reviewer in a review task is saved with the task, shows as an added object with its person mark in the reviewer's layer and the consensus, stays hidden from other reviewers while blinding holds, and specs cover it.
   Depends on decision 166 (which task carries training data). Size: M.
-- [ ] PROTO-120 · Split and merge on screen
+- [x] PROTO-120 · Split and merge on screen
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 12. OBJ-003 (split, merge and added objects) built the routes and nothing calls them, and Annotate has neither.
   Done when the Select tool splits a selected shape along a drawn line and merges two or more selected shapes, in a review task through the split and merge routes and in an annotate task as one atomic batch that keeps the source numbers, undo restores the original, and specs cover both kinds of task.
   Depends on PROTO-112 and PROTO-113. Size: L.
