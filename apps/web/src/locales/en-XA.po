@@ -5203,6 +5203,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/smart-minimap.tsx
+#: src/viewer/annotate-task-panel.tsx
 msgid "Checked"
 msgstr ""
 
@@ -7450,6 +7451,10 @@ msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "expert"
+msgstr ""
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Expert"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -18018,6 +18023,10 @@ msgstr ""
 msgid "This slide is already submitted."
 msgstr ""
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "This slide is locked. Later changes go to the change log."
+msgstr ""
+
 #: src/viewer/task-slide-check.tsx
 msgid "This slide is not part of the task"
 msgstr ""
@@ -18029,6 +18038,10 @@ msgstr ""
 #: src/screens/refusals.ts
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off and its layer is locked."
+msgstr ""
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "This slide locks for everyone once you sign it off."
 msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx

@@ -5205,6 +5205,7 @@ msgstr "Check, fix and comment on what the AI found"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/smart-minimap.tsx
+#: src/viewer/annotate-task-panel.tsx
 msgid "Checked"
 msgstr "Checked"
 
@@ -7456,6 +7457,10 @@ msgstr "Expected back at {until}."
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "expert"
 msgstr "expert"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Expert"
+msgstr "Expert"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -18027,6 +18032,10 @@ msgstr "This slide is already stored in Parfocal."
 msgid "This slide is already submitted."
 msgstr "This slide is already submitted."
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "This slide is locked. Later changes go to the change log."
+msgstr "This slide is locked. Later changes go to the change log."
+
 #: src/viewer/task-slide-check.tsx
 msgid "This slide is not part of the task"
 msgstr "This slide is not part of the task"
@@ -18039,6 +18048,10 @@ msgstr "This slide is signed off"
 #: src/viewer/annotate-task-panel.tsx
 msgid "This slide is signed off and its layer is locked."
 msgstr "This slide is signed off and its layer is locked."
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "This slide locks for everyone once you sign it off."
+msgstr "This slide locks for everyone once you sign it off."
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "This slide, {slideName}"
