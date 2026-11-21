@@ -7121,6 +7121,26 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 14, 15 and 16. An uploaded slide is called "Slide" instead of its file name, a fresh sign-in lands in Machine Learning Lab rather than the last workspace, and the task wizard has wording slips.
   Done when unit tests cover the upload name and the wizard wording, and a spec signs in and lands in the last used workspace.
   Depends on nothing. Size: S.
+- [ ] PROTO-149 · The final layer follows the queue decision and the queue shows a single reviewer's edits
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 1, 5 and 10. An object the owner rejected in the disagreement queue went into the training data as edited, and a reviewer's retype beat the owner's Agree with the AI. The queue does not show a single reviewer's redraw or retype, and the sign-off window miscounts who resolved what and hides objects nobody decided.
+  Done when a DB test builds a final layer after a queue reject and a queue agree over a reviewer's retype and finds the queue's decision in both, a spec shows a single reviewer's redraw and retype in the queue, and a unit test covers the sign-off counts with undecided objects.
+  Depends on nothing. Size: M.
+- [ ] PROTO-150 · Upload and model run jobs tell one story and Run a model offers only served models
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 2, 6, 8, 11 and 16. The upload job sat queued for about ten minutes and then said Failed while the slide was usable, and the tray, the notification and the job page disagree. A finished model run shows no steps, no GPU time and sends no notice. Find nuclei starts with one click and says "0 of 0 tiles" while it waits. Run a model picks a slide whose file is missing, and its only model is not served, so it always fails.
+  Done when tests show an upload job turns done when its slide is ready and every screen reads the same state, a finished run lists its steps and GPU seconds and sends a notice, the waiting run says it is starting, Run a model lists only served models and skips slides with no file, and the deployed app shows a fresh upload as done.
+  Depends on nothing. Size: M.
+- [ ] PROTO-151 · Review and annotate panels keep their controls in reach
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 3, 7, 9, 12 and 13. With 200 cells the grid's count and its Agree with the rest button sit behind the top bar. The annotate sign-off card sits under 4,393 object rows. A key press while the adjudicator draws decides the object and drops the outline, and that screen has no Finish button. A task opens on a slide already submitted. Guided review is wider than a phone screen.
+  Done when specs cover the grid header at 200 cells, the sign-off card above a long object list, keys ignored while drawing with a visible Finish, a task opening on its first open slide, and guided review at 375 px width.
+  Depends on nothing. Size: M.
+- [ ] PROTO-152 · The evaluation report of a cell task counts its cells and names their types
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issue 4. The evaluation report of a cell task says the task has no cells and calls every cell "Unclassified cell".
+  Done when a test builds the report of a seeded cell task and finds its cell count and type names.
+  Depends on nothing. Size: S.
+- [ ] PROTO-153 · Round four slips, noise and the partly fixed items
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.35.3.md` (the deployed walkthrough of v0.35.3), new issues 14 and 15 and the partly fixed rechecks of round three issues 11, 19 and 20 and round two items 9 and 22. Console and network noise, small slips in numbers and words such as "about 0 min left" and "1 disagreements resolved", the seeded reviewers deciding only the first region, the leftover dataset page items, a Best click one second after picking Best sending two embedding calls, and the read only banner of a task never started.
+  Done when unit tests cover each wording fix, a spec opens the main screens with no console errors, the seed's reviewers decide most objects, and a test shows one Best click right after picking Best sends one call.
+  Depends on nothing. Size: M.
 
 ---
 
