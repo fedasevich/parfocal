@@ -1487,6 +1487,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "reopenReviewTask": lambda w: Call(
         "POST", f"/api/review-tasks/{w.signed_task}/reopen", {"reason": "Measured again on A1"}
     ),
+    "buildFinalLayer": lambda w: Call("POST", f"/api/review-tasks/{w.signed_task}/final-layer"),
     "startEvaluationVersion": lambda w: Call(
         "POST",
         f"/api/review-tasks/{w.versioned_task}/evaluation-versions",

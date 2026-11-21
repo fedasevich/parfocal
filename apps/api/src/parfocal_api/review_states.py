@@ -30,6 +30,7 @@ from parfocal_api.evaluation_versions import (
     start_next_version,
 )
 from parfocal_api.event_emit import emit, subscribed
+from parfocal_api.final_layers import build_final_layer
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
@@ -647,6 +648,7 @@ async def sign_off_review_task(
         .values(signed_off_at=func.now(), signed_off_by_user_id=user_of(principal))
     )
     number = await record_signature(connection, principal, task, confirmed_with, http, background)
+    await build_final_layer(connection, task, principal)
     await record(
         connection,
         actor_of(principal),

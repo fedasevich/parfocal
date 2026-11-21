@@ -10,12 +10,16 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.dataset_versions import version_row
+from parfocal_api.final_layers import current_layers
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.review_tasks import code_of, readable_task
-from parfocal_api.tables import review_task_slides
-from parfocal_api.task_kinds import annotate_only
-from parfocal_api.training_exports import DatasetHiddenError, NothingSignedOffError
+from parfocal_api.tables import TaskKind
+from parfocal_api.training_exports import (
+    DatasetHiddenError,
+    NothingSignedOffError,
+    signed_off_slides,
+)
 from parfocal_common.jobs import JobStatus, Step, StepRun, Workflow, enqueue, jobs
 
 PATCH_KIND = "patch-export"
@@ -91,19 +95,12 @@ async def start_patch_export(
     connection: TenantConnection,
 ) -> PatchExportStarted:
     task, whole = await readable_task(connection, principal, task_id)
-    annotate_only(task.kind)
     if not whole:
         raise DatasetHiddenError
-    signed = await connection.scalar(
-        select(review_task_slides.c.slide_id)
-        .where(
-            review_task_slides.c.task_id == task_id,
-            review_task_slides.c.signed_off_at.is_not(None),
-        )
-        .limit(1)
-    )
-    if signed is None:
+    if not await signed_off_slides(connection, task):
         raise NothingSignedOffError
+    if task.kind == TaskKind.REVIEW:
+        await current_layers(connection, task)
     frozen = (
         {}
         if body.dataset_version is None
@@ -139,7 +136,6 @@ async def download_patch_export(
     store: Store,
 ) -> Response:
     task, whole = await readable_task(connection, principal, task_id)
-    annotate_only(task.kind)
     if not whole:
         raise DatasetHiddenError
     status = await connection.scalar(

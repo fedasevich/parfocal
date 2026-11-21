@@ -134,6 +134,7 @@ class AuditAction(StrEnum):
     REVIEW_DECISIONS_KEPT = "review.decisions-kept"
     REVIEW_OUTLINE_SETTLED = "review.outline-settled"
     REVIEW_OUTLINE_CLEARED = "review.outline-cleared"
+    REVIEW_FINAL_LAYER_BUILT = "review.final-layer-built"
     REVIEW_ADJUDICATION_SENT = "review.adjudication-sent"
     REVIEW_ADJUDICATION_DECLINED = "review.adjudication-declined"
     REVIEW_OPINION_SAVED = "review.opinion-saved"

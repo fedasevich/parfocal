@@ -60,6 +60,7 @@ from parfocal_api.tables import (
     event_attempts,
     event_outbox,
     event_targets,
+    final_layers,
     gpu_usage,
     hidden_models,
     import_sources,
@@ -248,6 +249,7 @@ CASE_TABLES = {
     "review_edits",
     "review_edit_versions",
     "dataset_versions",
+    "final_layers",
     "review_order",
     "review_tasks",
     "review_task_slides",
@@ -834,6 +836,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             number=1,
             change="edited",
             deleted=True,
+        )
+    )
+    await connection.execute(
+        insert(final_layers).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            build=1,
+            task_version=1,
+            objects=[],
+            counts={},
         )
     )
     decision_note = f"Decision note {uuid.uuid4().hex[:8]}"

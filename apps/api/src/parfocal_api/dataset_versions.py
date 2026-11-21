@@ -13,13 +13,13 @@ from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
+from parfocal_api.final_layers import FinalLayerStatus, status_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import code_of, readable_task
 from parfocal_api.tables import dataset_versions, review_tasks, slides, users
-from parfocal_api.task_kinds import annotate_only
 from parfocal_api.tenant_provisioning import storage_prefix
 from parfocal_api.training_exports import (
     MANIFEST,
@@ -52,6 +52,8 @@ class SlideCounts(BaseModel):
     objects: dict[DatasetOrigin, int]
     classes: dict[str, int]
     unchecked_left_out: int
+    unsure_left_out: int = 0
+    open_left_out: int = 0
     filtered_out: int
 
 
@@ -61,8 +63,11 @@ class DatasetSummary(BaseModel):
     objects: dict[DatasetOrigin, int]
     classes: dict[str, int]
     unchecked_left_out: int
+    unsure_left_out: int = 0
+    open_left_out: int = 0
     filtered_out: int
     slides: list[SlideCounts]
+    final_layer: FinalLayerStatus | None = None
 
 
 class FreezeRequest(BaseModel):
@@ -93,11 +98,8 @@ def user_of(principal: Principal) -> uuid.UUID | None:
     return principal.user_id if isinstance(principal, MemberPrincipal) else None
 
 
-async def whole_annotate_task(
-    connection: AsyncConnection, principal: Principal, task_id: uuid.UUID
-) -> Any:
+async def whole_task(connection: AsyncConnection, principal: Principal, task_id: uuid.UUID) -> Any:
     task, whole = await readable_task(connection, principal, task_id)
-    annotate_only(task.kind)
     if not whole:
         raise DatasetHiddenError
     return task
@@ -109,7 +111,7 @@ async def labels_of(connection: AsyncConnection, ids: list[uuid.UUID]) -> dict[u
 
 
 async def summary_of(
-    connection: AsyncConnection, manifest: Manifest, signed: int
+    connection: AsyncConnection, manifest: Manifest, signed: int, task: Any = None
 ) -> DatasetSummary:
     labels = await labels_of(connection, [entry.slide_id for entry in manifest.slides])
     objects: Counter[DatasetOrigin] = Counter()
@@ -123,7 +125,10 @@ async def summary_of(
         objects={origin: objects[origin] for origin in DatasetOrigin},
         classes=dict(sorted(classes.items())),
         unchecked_left_out=manifest.unchecked_left_out,
+        unsure_left_out=manifest.unsure_left_out,
+        open_left_out=manifest.open_left_out,
         filtered_out=manifest.filtered_out,
+        final_layer=None if task is None else await status_of(connection, task),
         slides=[
             SlideCounts(
                 slide_id=entry.slide_id,
@@ -131,6 +136,8 @@ async def summary_of(
                 objects=entry.objects,
                 classes=entry.classes,
                 unchecked_left_out=entry.unchecked_left_out,
+                unsure_left_out=entry.unsure_left_out,
+                open_left_out=entry.open_left_out,
                 filtered_out=entry.filtered_out,
             )
             for entry in manifest.slides
@@ -142,8 +149,8 @@ async def built(
     connection: AsyncConnection, task: Any, results: Results, filters: DatasetFilters
 ) -> tuple[Manifest, dict[str, bytes], DatasetSummary]:
     manifest, files = await dataset(connection, task, results, filters)
-    signed = len(await signed_off_slides(connection, task.id))
-    return manifest, files, await summary_of(connection, manifest, signed)
+    signed = len(await signed_off_slides(connection, task))
+    return manifest, files, await summary_of(connection, manifest, signed, task)
 
 
 @router.get(
@@ -159,7 +166,7 @@ async def get_task_dataset(
     slide_id: Annotated[list[uuid.UUID] | None, Query()] = None,
     include_unchecked: bool | None = None,
 ) -> DatasetSummary:
-    task = await whole_annotate_task(connection, principal, task_id)
+    task = await whole_task(connection, principal, task_id)
     filters = DatasetFilters(
         origins=origin, class_ids=class_id, slide_ids=slide_id, include_unchecked=include_unchecked
     )
@@ -197,7 +204,7 @@ def versions_query(task_id: uuid.UUID) -> Any:
 async def list_dataset_versions(
     task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> list[DatasetVersion]:
-    await whole_annotate_task(connection, principal, task_id)
+    await whole_task(connection, principal, task_id)
     rows = await connection.execute(
         versions_query(task_id).order_by(dataset_versions.c.number.desc())
     )
@@ -222,7 +229,7 @@ async def freeze_dataset_version(
     results: Results,
     store: Store,
 ) -> DatasetVersion:
-    task = await whole_annotate_task(connection, principal, task_id)
+    task = await whole_task(connection, principal, task_id)
     await connection.execute(
         select(review_tasks.c.id).where(review_tasks.c.id == task_id).with_for_update()
     )
@@ -309,7 +316,7 @@ async def download_dataset_version(
     connection: TenantConnection,
     store: Store,
 ) -> Response:
-    task = await whole_annotate_task(connection, principal, task_id)
+    task = await whole_task(connection, principal, task_id)
     row = await version_row(connection, task_id, number)
     content = await frozen_bytes(store, row)
     return Response(

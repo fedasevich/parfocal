@@ -42,6 +42,7 @@ from parfocal_api import (
     evaluation_versions,
     events_out,
     feedback,
+    final_layers,
     first_reads,
     gpu_calls,
     hidden_models,
@@ -367,6 +368,7 @@ def create_app(
     app.include_router(training_exports.router)
     app.include_router(patch_exports.router)
     app.include_router(dataset_versions.router)
+    app.include_router(final_layers.router)
     app.include_router(ai_changes.router)
     app.include_router(ai_corrections.router)
     app.include_router(task_timing.me_router)
