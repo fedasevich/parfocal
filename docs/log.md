@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-21
 
+- OPS-038 Deployed v0.35.7 (PROTO-151 panel controls in reach) to Modal main. Cost TODO.
 - OPS-038 Deployed v0.35.6 (PROTO-152 the cell task report counts its cells, and the smoke accepting a thumbnail 404) to Modal main, deploy and browser smoke passed. Cost TODO.
 - PROTO-152 The report's object count now reads the task's review order (the sampled objects) instead of the whole result set. The 100% cells agreed line could not be reproduced: a single reviewer disagreeing gives 50% in a test, so it is left as is.
 - PROTO-152 The report built its cell matrix empty and read cell classes only for regions. Now reads cell classes from the result chunks, builds the matrix from agreed and retyped cells, names worst rows by class. Test in test_report_views.py.
