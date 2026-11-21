@@ -28,10 +28,13 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import code_of
+from parfocal_api.review_objects import ai_claims
+from parfocal_api.review_order import Results
 from parfocal_api.reviewed_layer import review_slide
 from parfocal_api.tables import (
     annotations,
     cases,
+    disagreement_decisions,
     projects,
     result_objects,
     result_set_classes,
@@ -42,6 +45,7 @@ from parfocal_api.tables import (
 )
 from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import Letter, ObjectId, ObjectPath
+from parfocal_common.result_store import ResultStore
 
 OBJECT_TYPES = {"region": "annotation", "cell": "cell"}
 LETTERS = {"region": Letter.REGION, "cell": Letter.CELL}
@@ -263,43 +267,108 @@ async def layer_items(
     return out
 
 
-async def consensus_items(
-    connection: AsyncConnection, row: Any, names: dict[uuid.UUID, str]
-) -> list[dict[str, Any]]:
-    where = await path_parts(connection, row.slide_id)
-    classes = await region_classes(connection, row.task_id, names)
-    agreed = {
-        item_.number
-        for item_ in await ai_objects(connection, row.task_id, names)
-        if item_.slide == str(row.slide_id)
-        and item_.kind == "region"
-        and engine.consensus(item_) is engine.Consensus.AGREE
+type Shapes = dict[tuple[str, int], str]
+
+
+async def settled_shapes(connection: AsyncConnection, row: Any) -> Shapes:
+    return {
+        (settled.kind, settled.number): settled.geojson
+        for settled in await connection.execute(
+            select(
+                disagreement_decisions.c.kind,
+                disagreement_decisions.c.number,
+                func.ST_AsGeoJSON(disagreement_decisions.c.outline).label("geojson"),
+            ).where(
+                disagreement_decisions.c.task_id == row.task_id,
+                disagreement_decisions.c.slide_id == row.slide_id,
+                disagreement_decisions.c.outline.is_not(None),
+            )
+        )
     }
-    reshaped: dict[int, str] = {}
+
+
+async def earliest_redraws(connection: AsyncConnection, row: Any) -> Shapes:
+    reshaped: Shapes = {}
     for edit in await connection.execute(
-        select(review_edits.c.number, func.ST_AsGeoJSON(review_edits.c.geometry).label("geojson"))
+        select(
+            review_edits.c.kind,
+            review_edits.c.number,
+            func.ST_AsGeoJSON(review_edits.c.geometry).label("geojson"),
+        )
         .where(
             review_edits.c.task_id == row.task_id,
             review_edits.c.slide_id == row.slide_id,
-            review_edits.c.kind == "region",
+            review_edits.c.split == "",
             review_edits.c.geometry.is_not(None),
             review_edits.c.deleted.is_(False),
         )
         .order_by(review_edits.c.created_at, review_edits.c.user_id)
     ):
-        reshaped.setdefault(edit.number, edit.geojson)
-    out = [
-        item(
-            "region",
-            region.number,
-            shape(reshaped.get(region.number) or region.geojson),
-            classes.get((row.slide_id, region.number)),
-            where,
-            {"consensus": "agree", "changed": ["reshaped"] if region.number in reshaped else []},
+        reshaped.setdefault((edit.kind, edit.number), edit.geojson)
+    return reshaped
+
+
+def final_shape(
+    key: tuple[str, int], settled: Shapes, reshaped: Shapes
+) -> tuple[str | None, list[str]]:
+    if key in settled:
+        return settled[key], ["settled"]
+    if key in reshaped:
+        return reshaped[key], ["reshaped"]
+    return None, []
+
+
+async def consensus_items(
+    connection: AsyncConnection, store: ResultStore, row: Any, names: dict[uuid.UUID, str]
+) -> list[dict[str, Any]]:
+    where = await path_parts(connection, row.slide_id)
+    classes = await region_classes(connection, row.task_id, names)
+    agreed = {
+        (item_.kind, item_.number)
+        for item_ in await ai_objects(connection, row.task_id, names)
+        if item_.slide == str(row.slide_id) and engine.consensus(item_) is engine.Consensus.AGREE
+    }
+    settled = await settled_shapes(connection, row)
+    reshaped = await earliest_redraws(connection, row)
+    out: list[dict[str, Any]] = []
+    for region in await ai_regions(connection, row.result_set_id):
+        if ("region", region.number) not in agreed:
+            continue
+        found, changed = final_shape(("region", region.number), settled, reshaped)
+        out.append(
+            item(
+                "region",
+                region.number,
+                shape(found or region.geojson),
+                classes.get((row.slide_id, region.number)),
+                where,
+                {"consensus": "agree", "changed": changed},
+            )
         )
-        for region in await ai_regions(connection, row.result_set_id)
-        if region.number in agreed
-    ]
+    cells = sorted(number for kind, number in agreed if kind == "cell")
+    claims = await ai_claims(
+        connection,
+        store,
+        row.result_set_id,
+        row.slide_id,
+        [(Letter.CELL, number) for number in cells],
+    )
+    for number in cells:
+        claim = claims.get((Letter.CELL, number))
+        found, changed = final_shape(("cell", number), settled, reshaped)
+        geometry = shape(found) if found else ring_shape(claim.outline if claim else None)
+        if geometry is None:
+            continue
+        out.append(
+            item(
+                "cell",
+                number,
+                geometry,
+                (claim.class_name if claim else "") or UNCLASSIFIED,
+                where,
+                {"consensus": "agree", "changed": changed},
+            )
+        )
     rows = (
         await connection.execute(
             select(
@@ -333,6 +402,13 @@ async def consensus_items(
         if added.slide_id == row.slide_id and added.id in kept
     )
     return out
+
+
+def ring_shape(ring: list[float] | None) -> dict[str, Any] | None:
+    if not ring or len(ring) < 6:
+        return None
+    points = [[ring[index], ring[index + 1]] for index in range(0, len(ring) - 1, 2)]
+    return {"type": "Polygon", "coordinates": [[*points, points[0]]]}
 
 
 def as_geojson(items: list[dict[str, Any]]) -> dict[str, Any]:
@@ -406,6 +482,7 @@ async def export_reviewed_layer(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
     format: ExportFormat = ExportFormat.GEOJSON,
     reviewer_id: uuid.UUID | None = None,
     consensus: bool = False,
@@ -421,7 +498,7 @@ async def export_reviewed_layer(
     if consensus:
         if not whole:
             raise ConsensusForOwnersError
-        items = await consensus_items(connection, row, names)
+        items = await consensus_items(connection, results, row, names)
         model = f"{set_name} consensus"
     else:
         reviewer = reviewer_id or user_of(principal)

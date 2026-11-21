@@ -2816,6 +2816,10 @@ msgstr "A new code is on its way. The old one stops working."
 msgid "A new draft, Evaluation v2, copied from v1"
 msgstr "A new draft, Evaluation v2, copied from v1"
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "A new outline is settled."
+msgstr "A new outline is settled."
+
 #: src/screens/developer/developer-screen.tsx
 msgid "A new random field for the synthetic source"
 msgstr "A new random field for the synthetic source"
@@ -4656,6 +4660,10 @@ msgstr "Cancel {0} run"
 msgid "Cancel <0/>"
 msgstr "Cancel <0/>"
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Cancel drawing"
+msgstr "Cancel drawing"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/viewer/run-stream-layer.tsx
 msgid "Cancel run"
@@ -5315,6 +5323,10 @@ msgstr "Click to drop a marker. Shift-click removes one."
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Click to open the whole slide (or hold Z)"
 msgstr "Click to open the whole slide (or hold Z)"
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Click to place points. Double click or Enter closes the outline."
+msgstr "Click to place points. Double click or Enter closes the outline."
 
 #: src/viewer/compare-panes.tsx
 msgid "Click to show here"
@@ -6651,6 +6663,10 @@ msgstr "Drag to swipe between the two sets"
 msgid "Drag, or middle-drag"
 msgstr "Drag, or middle-drag"
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Draw a new outline"
+msgstr "Draw a new outline"
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Draw as"
@@ -7463,6 +7479,10 @@ msgstr "Filter by slide, file or case"
 #: src/screens/clinical-report/steps.tsx
 msgid "Final diagnosis"
 msgstr "Final diagnosis"
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Final outline"
+msgstr "Final outline"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "Final report, version 1"
@@ -10329,6 +10349,13 @@ msgstr "new outline"
 msgid "New outline saved for {0}. The AI result is not changed."
 msgstr "New outline saved for {0}. The AI result is not changed."
 
+#. placeholder {0}: current.object
+#. placeholder {0}: rowLabel(row)
+#: src/screens/disagreements/adjudicator-view.tsx
+#: src/screens/disagreements/queue-screen.tsx
+msgid "New outline settled for {0}"
+msgstr "New outline settled for {0}"
+
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "New password"
 msgstr "New password"
@@ -12054,6 +12081,22 @@ msgstr "Outline display"
 msgid "Outline model tier"
 msgstr "Outline model tier"
 
+#. placeholder {0}: nameOf(userId) ?? ""
+#. placeholder {1}: rowLabel(row)
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Outline of {0} settled for {1}"
+msgstr "Outline of {0} settled for {1}"
+
+#. placeholder {0}: entry.letter
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "Outline of reviewer {0}"
+msgstr "Outline of reviewer {0}"
+
+#. placeholder {0}: current.object
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "Outline of reviewer {letter} settled for {0}"
+msgstr "Outline of reviewer {letter} settled for {0}"
+
 #: ../../packages/ui/src/components/disagreements.tsx
 msgid "outline-2 outline-solid outline-offset-2 outline-accent"
 msgstr "outline-2 outline-solid outline-offset-2 outline-accent"
@@ -12564,6 +12607,10 @@ msgstr "Pick it from the presets menu."
 #: src/screens/clinical-report/modals.tsx
 msgid "Pick mm or µm."
 msgstr "Pick mm or µm."
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Pick one outline or draw a new one."
+msgstr "Pick one outline or draw a new one."
 
 #: src/screens/new-task/reviewers-step.tsx
 msgid "Pick someone else"
@@ -14860,6 +14907,10 @@ msgstr "Settings for {0}"
 #: ../../packages/ui/src/components/settings-dialog.tsx
 msgid "Settings sections"
 msgstr "Settings sections"
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Settled"
+msgstr "Settled"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Setup could not be finished. Try again."
@@ -18446,6 +18497,10 @@ msgstr "Use this choice"
 #: src/screens/upload/result-problems.tsx
 msgid "Use this guess"
 msgstr "Use this guess"
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Use this outline"
+msgstr "Use this outline"
 
 #: src/screens/onboarding/invite-screen.tsx
 msgid "Use Vltava single sign-on instead"

@@ -814,6 +814,22 @@ disagreement_decisions = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column[object]("outline", Geometry(spatial_index=False), nullable=True, info=OPERATIONAL),
+    Column(
+        "outline_from_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "outline_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column("outline_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "tenant_id"],
@@ -823,6 +839,12 @@ disagreement_decisions = Table(
             "review_task_slides.tenant_id",
         ],
         name="fk_disagreement_decisions_task_id_slide_id_tenant_id",
+    ),
+    CheckConstraint("outline IS NULL OR ST_IsValid(outline)", name="outline_valid"),
+    CheckConstraint(
+        "(outline IS NULL) = (outline_at IS NULL) "
+        "AND (outline IS NOT NULL OR outline_from_user_id IS NULL)",
+        name="outline_settled",
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
@@ -853,7 +875,8 @@ disagreement_decisions = Table(
     CheckConstraint("value IS NULL OR value IN ('agree', 'disagree', 'unsure')", name="value"),
     CheckConstraint(
         "NOT (left_open AND value IS NOT NULL) "
-        "AND (left_open OR value IS NOT NULL OR edits_settled_at IS NOT NULL)",
+        "AND (left_open OR value IS NOT NULL OR edits_settled_at IS NOT NULL "
+        "OR outline IS NOT NULL)",
         name="decided_or_left_open",
     ),
 )

@@ -45,6 +45,7 @@ export type LiveRow = {
   adjudicator: { by: PersonKey; note: string | null } | null;
   adjudicated: { raw: string; at: string; note?: string | null } | null;
   edited: boolean;
+  settled: { ring: number[]; from: PersonKey | null; by: PersonKey; at: string } | null;
 };
 
 export type NextVersion = { reason: string; at: string } | null;
@@ -61,6 +62,7 @@ const openRow = (): LiveRow => ({
   adjudicator: null,
   adjudicated: null,
   edited: false,
+  settled: null,
 });
 
 function freshState(scene: FakeQueueScene): QueueState {

@@ -17,6 +17,8 @@ import type {
   AdjudicationAnswer,
   AdjudicationDraft,
   AdjudicationObject,
+  AdjudicatorOutlineDraft,
+  AnonymousOutline,
   DecisionValue,
   DisagreementQueue,
   Evaluation,
@@ -25,6 +27,7 @@ import type {
   EvaluationReport,
   MyAdjudication,
   MyAdjudicationTask,
+  OutlineDraft,
   QueuedObject,
   QueuedObjectUpdate,
   QueueRow,
@@ -148,6 +151,14 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
       : null,
     edited: live.edited ? { by_user_id: idOf(editedRow.by), on: editedRow.on } : null,
     ...outlinesOf(seed),
+    settled_outline: live.settled
+      ? {
+          outline: live.settled.ring,
+          from_user_id: live.settled.from ? idOf(live.settled.from) : null,
+          by_user_id: idOf(live.settled.by),
+          at: live.settled.at,
+        }
+      : null,
   };
 };
 
@@ -211,6 +222,22 @@ const sentNote = () =>
     .map((seed) => liveRow(queueKey(seed)))
     .find((live) => forAdjudicator(live) && live.adjudicator?.note)?.adjudicator?.note ?? null;
 
+const letters: [PersonKey, "A" | "B"][] = [
+  [reviewerA, "A"],
+  [reviewerB, "B"],
+];
+
+const letterOf = (who: PersonKey | null) => letters.find(([key]) => key === who)?.[1] ?? null;
+
+const keyOfLetter = (letter: "A" | "B") => letters.find(([, at]) => at === letter)?.[0] ?? null;
+
+const letterOutlinesOf = (seed: QueueSeedRow): AnonymousOutline[] =>
+  (outlinesOf(seed).outlines ?? []).flatMap((entry) => {
+    const who = seed.answers.find((item) => idOf(item.by) === entry.user_id)?.by ?? null;
+    const letter = letterOf(who);
+    return letter ? [{ reviewer: letter, outline: entry.outline }] : [];
+  });
+
 const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
   const live = liveRow(queueKey(seed));
   return {
@@ -225,6 +252,14 @@ const toAdjudicationObject = (seed: QueueSeedRow): AdjudicationObject => {
     reviewer_b: answerOf(seed, reviewerB),
     decision: live.adjudicated?.raw ?? null,
     decision_note: live.adjudicated?.note ?? null,
+    outlines: letterOutlinesOf(seed).sort((a, b) => a.reviewer.localeCompare(b.reviewer)),
+    settled_outline: live.settled
+      ? {
+          outline: live.settled.ring,
+          from_reviewer: letterOf(live.settled.from),
+          at: live.settled.at,
+        }
+      : null,
   };
 };
 
@@ -557,6 +592,65 @@ const updateQueuedObjectInScene = () =>
     },
   );
 
+const ringOf = (geometry: OutlineDraft["geometry"]): number[] => {
+  if (!geometry || geometry.type !== "Polygon") return [];
+  const [ring = []] = geometry.coordinates as number[][][];
+  return ring.slice(0, -1).flatMap((point) => [point[0] ?? 0, point[1] ?? 0]);
+};
+
+const pickedRing = (seed: QueueSeedRow, from: PersonKey) =>
+  outlinesOf(seed).outlines?.find((entry) => entry.user_id === idOf(from))?.outline ?? [];
+
+const queueOutlinePath = `${taskPath}/disagreement-queue/:slideId/:objectId/outline`;
+
+const settleQueuedOutlineInScene = () =>
+  http.put<ObjectParams>(queueOutlinePath, async ({ params, request }) => {
+    const seed = objectOf(params);
+    if (seed === undefined) return notQueued();
+    const body = (await request.json()) as OutlineDraft;
+    const from = seed.answers.find((item) => idOf(item.by) === body.from_user_id)?.by ?? null;
+    liveRow(queueKey(seed)).settled = {
+      ring: from ? pickedRing(seed, from) : ringOf(body.geometry),
+      from,
+      by: researcher,
+      at: scenarioNow,
+    };
+    return HttpResponse.json<QueueRow>(toQueueRow(seed));
+  });
+
+const clearQueuedOutlineInScene = () =>
+  http.delete<ObjectParams>(queueOutlinePath, ({ params }) => {
+    const seed = objectOf(params);
+    if (seed === undefined) return notQueued();
+    liveRow(queueKey(seed)).settled = null;
+    return HttpResponse.json<QueueRow>(toQueueRow(seed));
+  });
+
+const adjudicationOutlinePath = `${taskPath}/adjudication/:slideId/:objectId/outline`;
+
+const settleAdjudicationOutlineInScene = () =>
+  http.put<ObjectParams>(adjudicationOutlinePath, async ({ params, request }) => {
+    const seed = objectOf(params);
+    if (seed === undefined) return notQueued();
+    const body = (await request.json()) as AdjudicatorOutlineDraft;
+    const from = body.reviewer ? keyOfLetter(body.reviewer) : null;
+    liveRow(queueKey(seed)).settled = {
+      ring: from ? pickedRing(seed, from) : ringOf(body.geometry),
+      from,
+      by: adjudicator,
+      at: scenarioNow,
+    };
+    return HttpResponse.json<AdjudicationObject>(toAdjudicationObject(seed));
+  });
+
+const clearAdjudicationOutlineInScene = () =>
+  http.delete<ObjectParams>(adjudicationOutlinePath, ({ params }) => {
+    const seed = objectOf(params);
+    if (seed === undefined) return notQueued();
+    liveRow(queueKey(seed)).settled = null;
+    return HttpResponse.json<AdjudicationObject>(toAdjudicationObject(seed));
+  });
+
 const decideAdjudicationInScene = () =>
   http.post<ObjectParams>(
     `${taskPath}/adjudication/:slideId/:objectId`,
@@ -609,6 +703,10 @@ export function adjudicationHandlers(): RequestHandler[] {
     getListTaskAdjudicationsMockHandler(() => toTaskAdjudications()),
     getGetDisagreementQueueMockHandler(({ params }) => toDisagreementQueue(String(params.taskId))),
     updateQueuedObjectInScene(),
+    settleQueuedOutlineInScene(),
+    clearQueuedOutlineInScene(),
+    settleAdjudicationOutlineInScene(),
+    clearAdjudicationOutlineInScene(),
     getGetMyAdjudicationMockHandler(({ params }) => toMyAdjudication(String(params.taskId))),
     decideAdjudicationInScene(),
     getSendToAdjudicatorMockHandler(({ request }) => sendToAdjudicatorInScene(request)),

@@ -1,5 +1,5 @@
 import { useListReviewObjects } from "@parfocal/api-client";
-import { ObjectStage, type StageOutline } from "../../viewer/object-stage.tsx";
+import { ObjectStage, type StageDraw, type StageOutline } from "../../viewer/object-stage.tsx";
 import { okData } from "../placeholder.tsx";
 
 type DisagreementStageProps = {
@@ -8,6 +8,7 @@ type DisagreementStageProps = {
   object: string;
   claimHidden?: boolean;
   outlines?: readonly StageOutline[];
+  draw?: StageDraw | null;
   className?: string;
 };
 
@@ -19,6 +20,7 @@ export function DisagreementStage({
   object,
   claimHidden = false,
   outlines = noOutlines,
+  draw = null,
   className = "",
 }: DisagreementStageProps) {
   const found = okData(useListReviewObjects(taskId, slideId).data);
@@ -29,6 +31,7 @@ export function DisagreementStage({
       object={found?.objects.find((item) => item.object === object)}
       claimHidden={claimHidden}
       outlines={outlines}
+      draw={draw}
       className={className}
     />
   );

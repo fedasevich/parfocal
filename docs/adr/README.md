@@ -372,3 +372,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0409](0409-review-edits-keep-an-append-only-version-table.md) | Review edits keep an append only version table beside the current layer | Accepted | 2026-11-20 |
 | [0410](0410-a-signature-needs-a-sign-in-from-the-last-5-minutes.md) | A signature needs a sign-in from the last 5 minutes, proved by the identity provider's auth_time | Accepted | 2026-11-20 |
 | [0412](0412-outlines-differ-below-a-per-task-overlap-of-reviewers-redraws.md) | Outlines differ below a per task overlap of reviewers' redraws | Accepted | 2026-11-21 |
+| [0413](0413-the-settled-outline-is-a-copy-on-the-queue-decision.md) | The settled outline is a copy on the queue decision | Accepted | 2026-11-21 |

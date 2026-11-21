@@ -5,31 +5,37 @@ from enum import StrEnum
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, StringConstraints, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.adjudications import decide_as_adjudicator, me, reviewers_of
+from parfocal_api.annotations import Geometry
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import ANSWERS
 from parfocal_api.disagreements import (
     DecisionDraft,
     NoteDraft,
+    OutlineDraft,
     QueuedObject,
     QueueHiddenError,
     ReviewerOutline,
+    SettledOutline,
     ask_reviewers_to_look_again,
+    clear_outline,
     decide_disagreement,
     keep_reviewer_decisions,
     leave_disagreement_open,
+    owner_outline_object,
     queue_of,
+    settle_outline,
 )
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, NotFoundError
 from parfocal_api.review_objects import UNKNOWN, AiClaim, ai_claims, kind_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task, task_row
-from parfocal_api.reviewed_layer import ai_object
+from parfocal_api.reviewed_layer import TaskSignedOffError, ai_object
 from parfocal_api.reviewer_progress import slides_left_by_reviewer
 from parfocal_api.tables import (
     REASON_TEXT,
@@ -140,6 +146,7 @@ class QueueRow(BaseModel):
     outline_differs: bool = False
     outline_overlap: float | None = None
     outlines: list[ReviewerOutline] = []
+    settled_outline: SettledOutline | None = None
 
 
 class QueueLock(BaseModel):
@@ -167,6 +174,20 @@ class AnonymousAnswer(BaseModel):
     note: str | None
 
 
+type ReviewerLetter = Literal["A", "B"]
+
+
+class AnonymousOutline(BaseModel):
+    reviewer: ReviewerLetter
+    outline: list[float]
+
+
+class AnonymousSettledOutline(BaseModel):
+    outline: list[float]
+    from_reviewer: ReviewerLetter | None
+    at: datetime
+
+
 class AdjudicationObject(BaseModel):
     key: str
     slide_id: uuid.UUID
@@ -179,6 +200,19 @@ class AdjudicationObject(BaseModel):
     reviewer_b: AnonymousAnswer
     decision: str | None
     decision_note: str | None
+    outlines: list[AnonymousOutline] = []
+    settled_outline: AnonymousSettledOutline | None = None
+
+
+class AdjudicatorOutlineDraft(BaseModel):
+    reviewer: ReviewerLetter | None = None
+    geometry: Geometry | None = None
+
+    @model_validator(mode="after")
+    def picks_or_draws(self) -> AdjudicatorOutlineDraft:
+        if (self.reviewer is None) == (self.geometry is None):
+            raise ValueError("Pick one reviewer's outline or draw a new one")
+        return self
 
 
 class MyAdjudicationTask(BaseModel):
@@ -419,6 +453,7 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
         outline_differs=item.outline_overlap is not None,
         outline_overlap=item.outline_overlap,
         outlines=item.outlines,
+        settled_outline=item.settled,
     )
 
 
@@ -549,6 +584,36 @@ async def update_queued_object(
     return await queued_row(connection, results, task, slide_id, object_id)
 
 
+POSITIONS: tuple[ReviewerLetter, ReviewerLetter] = ("A", "B")
+
+
+def positions_of(item: QueuedObject, letters: dict[uuid.UUID, str]) -> dict[uuid.UUID, Any]:
+    given = sorted(item.reviewers(), key=lambda answer: letters.get(answer.user_id, "~"))
+    return {answer.user_id: position for answer, position in zip(given, POSITIONS, strict=False)}
+
+
+def anonymous_outlines(
+    item: QueuedObject, letters: dict[uuid.UUID, str]
+) -> tuple[list[AnonymousOutline], AnonymousSettledOutline | None]:
+    placed = positions_of(item, letters)
+    outlines = sorted(
+        (
+            AnonymousOutline(reviewer=placed[drawn.user_id], outline=drawn.outline)
+            for drawn in item.outlines
+            if drawn.user_id in placed
+        ),
+        key=lambda drawn: drawn.reviewer,
+    )
+    settled = item.settled
+    if settled is None:
+        return outlines, None
+    return outlines, AnonymousSettledOutline(
+        outline=settled.outline,
+        from_reviewer=placed.get(settled.from_user_id) if settled.from_user_id else None,
+        at=settled.at,
+    )
+
+
 def anonymous(item: QueuedObject, facts: QueueFacts, letters: dict[uuid.UUID, str]) -> list[Any]:
     given = sorted(item.reviewers(), key=lambda answer: letters.get(answer.user_id, "~"))
     shown = [
@@ -571,6 +636,7 @@ def adjudication_object(
     first, second = anonymous(item, facts, letters)
     decision = item.decision
     mine = decision is not None and decision.decided_by_user_id == user_id
+    outlines, settled = anonymous_outlines(item, letters)
     return AdjudicationObject(
         key=f"{label}:{item.object}",
         slide_id=item.slide_id,
@@ -585,7 +651,16 @@ def adjudication_object(
         if mine and decision is not None
         else None,
         decision_note=item.note if mine else None,
+        outlines=outlines,
+        settled_outline=settled,
     )
+
+
+async def letters_of(connection: AsyncConnection, task_id: uuid.UUID) -> dict[uuid.UUID, str]:
+    return {
+        person: chr(ord("A") + index % 26)
+        for index, person in enumerate(await reviewers_of(connection, task_id))
+    }
 
 
 def for_me(item: QueuedObject, user_id: uuid.UUID) -> bool:
@@ -600,10 +675,7 @@ async def adjudication_task(
     if not queue:
         raise NotFoundError("Adjudication not found")
     facts = await facts_of(connection, store, task, queue)
-    letters = {
-        person: chr(ord("A") + index % 26)
-        for index, person in enumerate(await reviewers_of(connection, task.id))
-    }
+    letters = await letters_of(connection, task.id)
     latest = max(
         (item.adjudication for item in queue if item.adjudication is not None),
         key=lambda sent: sent.sent_at,
@@ -665,3 +737,139 @@ async def decide_adjudication(
     return next(
         item for item in shown.objects if item.slide_id == slide_id and item.object == found
     )
+
+
+@router.put(
+    "/disagreement-queue/{slide_id}/{object_id}/outline",
+    operation_id="settleQueuedOutline",
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def settle_queued_outline(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    draft: OutlineDraft,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> QueueRow:
+    task, found, item = await owner_outline_object(
+        connection, principal, task_id, slide_id, object_id
+    )
+    await settle_outline(connection, principal, task, item, found, draft, {})
+    return await queued_row(connection, results, task, slide_id, object_id)
+
+
+@router.delete(
+    "/disagreement-queue/{slide_id}/{object_id}/outline",
+    operation_id="clearQueuedOutline",
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def clear_queued_outline(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> QueueRow:
+    task, found, item = await owner_outline_object(
+        connection, principal, task_id, slide_id, object_id
+    )
+    await clear_outline(connection, principal, task, item, found, {})
+    return await queued_row(connection, results, task, slide_id, object_id)
+
+
+async def my_adjudicated(
+    connection: AsyncConnection, task: Any, slide_id: uuid.UUID, object_id: str, user_id: uuid.UUID
+) -> QueuedObject:
+    found = ai_object(object_id)
+    kind = "region" if found.letter is Letter.REGION else "cell"
+    item = next(
+        (
+            entry
+            for entry in await queue_of(connection, task.id)
+            if entry.slide_id == slide_id
+            and entry.kind.value == kind
+            and entry.number == found.number
+            and for_me(entry, user_id)
+        ),
+        None,
+    )
+    if item is None:
+        raise NotFoundError("Adjudication not found")
+    if task.signed_off_at is not None:
+        raise TaskSignedOffError
+    return item
+
+
+async def shown_to_me(
+    connection: AsyncConnection,
+    store: ResultStore,
+    task: Any,
+    slide_id: uuid.UUID,
+    object_id: str,
+    user_id: uuid.UUID,
+) -> AdjudicationObject:
+    shown = await adjudication_task(connection, store, task, user_id)
+    found = ai_object(object_id).text(ascii=True)
+    return next(
+        item for item in shown.objects if item.slide_id == slide_id and item.object == found
+    )
+
+
+def sent_details(item: QueuedObject) -> dict[str, Any]:
+    return {} if item.adjudication is None else {"adjudication_id": str(item.adjudication.id)}
+
+
+@adjudication_router.put(
+    "/adjudication/{slide_id}/{object_id}/outline",
+    operation_id="settleAdjudicationOutline",
+    **require(Permission.REVIEW, write=True),
+)
+async def settle_adjudication_outline(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    draft: AdjudicatorOutlineDraft,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> AdjudicationObject:
+    user_id = me(principal)
+    task = await task_row(connection, task_id)
+    item = await my_adjudicated(connection, task, slide_id, object_id, user_id)
+    placed = positions_of(item, await letters_of(connection, task_id))
+    by_letter = {position: person for person, position in placed.items()}
+    picked = None if draft.reviewer is None else by_letter.get(draft.reviewer)
+    if draft.reviewer is not None and picked is None:
+        raise NotFoundError("That reviewer has no outline of this object")
+    settled = (
+        OutlineDraft(geometry=draft.geometry)
+        if picked is None
+        else OutlineDraft(from_user_id=picked)
+    )
+    found = ai_object(object_id)
+    await settle_outline(connection, principal, task, item, found, settled, sent_details(item))
+    return await shown_to_me(connection, results, task, slide_id, object_id, user_id)
+
+
+@adjudication_router.delete(
+    "/adjudication/{slide_id}/{object_id}/outline",
+    operation_id="clearAdjudicationOutline",
+    **require(Permission.REVIEW, write=True),
+)
+async def clear_adjudication_outline(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> AdjudicationObject:
+    user_id = me(principal)
+    task = await task_row(connection, task_id)
+    item = await my_adjudicated(connection, task, slide_id, object_id, user_id)
+    found = ai_object(object_id)
+    await clear_outline(connection, principal, task, item, found, sent_details(item))
+    return await shown_to_me(connection, results, task, slide_id, object_id, user_id)

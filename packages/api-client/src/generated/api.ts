@@ -336,6 +336,24 @@ export interface AnonymousAnswer {
   note: string | null;
 }
 
+export type ReviewerLetter = (typeof ReviewerLetter)[keyof typeof ReviewerLetter];
+
+export const ReviewerLetter = {
+  A: "A",
+  B: "B",
+} as const;
+
+export interface AnonymousOutline {
+  reviewer: ReviewerLetter;
+  outline: number[];
+}
+
+export interface AnonymousSettledOutline {
+  outline: number[];
+  from_reviewer: ReviewerLetter | null;
+  at: string;
+}
+
 export interface AdjudicationObject {
   key: string;
   slide_id: string;
@@ -348,6 +366,13 @@ export interface AdjudicationObject {
   reviewer_b: AnonymousAnswer;
   decision: string | null;
   decision_note: string | null;
+  outlines?: AnonymousOutline[];
+  settled_outline?: AnonymousSettledOutline | null;
+}
+
+export interface AdjudicatorOutlineDraft {
+  reviewer?: ReviewerLetter | null;
+  geometry?: Geometry | null;
 }
 
 export interface AdminOverview {
@@ -2445,6 +2470,13 @@ export interface ReviewerOutline {
   outline: number[];
 }
 
+export interface SettledOutline {
+  outline: number[];
+  from_user_id: string | null;
+  by_user_id: string | null;
+  at: string;
+}
+
 export interface QueueRow {
   key: string;
   slide_id: string;
@@ -2462,6 +2494,7 @@ export interface QueueRow {
   outline_differs?: boolean;
   outline_overlap?: number | null;
   outlines?: ReviewerOutline[];
+  settled_outline?: SettledOutline | null;
 }
 
 export interface DisagreementQueue {
@@ -5369,6 +5402,11 @@ export const Outcome = {
   unmatched: "unmatched",
 } as const;
 
+export interface OutlineDraft {
+  from_user_id?: string | null;
+  geometry?: Geometry | null;
+}
+
 /**
  * @minimum 1
  * @maximum 99
@@ -6101,6 +6139,7 @@ export interface QueuedObject {
   decisions: ReviewerAnswer[];
   outline_overlap?: number | null;
   outlines?: ReviewerOutline[];
+  settled?: SettledOutline | null;
   decision?: QueueDecision | null;
   left_open?: boolean;
   note?: string | null;
@@ -50570,6 +50609,344 @@ export const useUpdateQueuedObject = <TError = Problem, TContext = unknown>(
   return useMutation(getUpdateQueuedObjectMutationOptions(options), queryClient);
 };
 
+export type settleQueuedOutlineResponse200 = {
+  data: QueueRow;
+  status: 200;
+};
+
+export type settleQueuedOutlineResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type settleQueuedOutlineResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type settleQueuedOutlineResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type settleQueuedOutlineResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type settleQueuedOutlineResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type settleQueuedOutlineResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type settleQueuedOutlineResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type settleQueuedOutlineResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type settleQueuedOutlineResponseSuccess = settleQueuedOutlineResponse200 & {
+  headers: Headers;
+};
+export type settleQueuedOutlineResponseError = (
+  | settleQueuedOutlineResponse400
+  | settleQueuedOutlineResponse401
+  | settleQueuedOutlineResponse403
+  | settleQueuedOutlineResponse404
+  | settleQueuedOutlineResponse409
+  | settleQueuedOutlineResponse422
+  | settleQueuedOutlineResponse429
+  | settleQueuedOutlineResponse500
+) & {
+  headers: Headers;
+};
+
+export type settleQueuedOutlineResponse =
+  | settleQueuedOutlineResponseSuccess
+  | settleQueuedOutlineResponseError;
+
+export const getSettleQueuedOutlineUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/disagreement-queue/${slideId}/${objectId}/outline`;
+};
+
+/**
+ * @summary Settle Queued Outline
+ */
+export const settleQueuedOutline = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  outlineDraft: OutlineDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<settleQueuedOutlineResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<settleQueuedOutlineResponse>(
+    getSettleQueuedOutlineUrl(taskId, slideId, objectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(outlineDraft),
+    },
+  );
+};
+
+export const getSettleQueuedOutlineMutationKey = () => ["settleQueuedOutline"] as const;
+
+export const getSettleQueuedOutlineMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settleQueuedOutline>>,
+    TError,
+    SettleQueuedOutlineMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settleQueuedOutline>>,
+  TError,
+  SettleQueuedOutlineMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSettleQueuedOutlineMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settleQueuedOutline>>,
+    SettleQueuedOutlineMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return settleQueuedOutline(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SettleQueuedOutlineMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settleQueuedOutline>>
+>;
+export type SettleQueuedOutlineMutationBody = OutlineDraft;
+export type SettleQueuedOutlineMutationError = Problem;
+export type SettleQueuedOutlineMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: OutlineDraft;
+};
+
+/**
+ * @summary Settle Queued Outline
+ */
+export const useSettleQueuedOutline = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settleQueuedOutline>>,
+      TError,
+      SettleQueuedOutlineMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof settleQueuedOutline>>,
+  TError,
+  SettleQueuedOutlineMutationVariables,
+  TContext
+> => {
+  return useMutation(getSettleQueuedOutlineMutationOptions(options), queryClient);
+};
+
+export type clearQueuedOutlineResponse200 = {
+  data: QueueRow;
+  status: 200;
+};
+
+export type clearQueuedOutlineResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearQueuedOutlineResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearQueuedOutlineResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearQueuedOutlineResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearQueuedOutlineResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearQueuedOutlineResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearQueuedOutlineResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type clearQueuedOutlineResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearQueuedOutlineResponseSuccess = clearQueuedOutlineResponse200 & {
+  headers: Headers;
+};
+export type clearQueuedOutlineResponseError = (
+  | clearQueuedOutlineResponse400
+  | clearQueuedOutlineResponse401
+  | clearQueuedOutlineResponse403
+  | clearQueuedOutlineResponse404
+  | clearQueuedOutlineResponse409
+  | clearQueuedOutlineResponse422
+  | clearQueuedOutlineResponse429
+  | clearQueuedOutlineResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearQueuedOutlineResponse =
+  | clearQueuedOutlineResponseSuccess
+  | clearQueuedOutlineResponseError;
+
+export const getClearQueuedOutlineUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/disagreement-queue/${slideId}/${objectId}/outline`;
+};
+
+/**
+ * @summary Clear Queued Outline
+ */
+export const clearQueuedOutline = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearQueuedOutlineResponse> => {
+  return apiFetch<clearQueuedOutlineResponse>(getClearQueuedOutlineUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearQueuedOutlineMutationKey = () => ["clearQueuedOutline"] as const;
+
+export const getClearQueuedOutlineMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearQueuedOutline>>,
+    TError,
+    ClearQueuedOutlineMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearQueuedOutline>>,
+  TError,
+  ClearQueuedOutlineMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearQueuedOutlineMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearQueuedOutline>>,
+    ClearQueuedOutlineMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId } = props ?? {};
+
+    return clearQueuedOutline(taskId, slideId, objectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearQueuedOutlineMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearQueuedOutline>>
+>;
+
+export type ClearQueuedOutlineMutationError = Problem;
+export type ClearQueuedOutlineMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+};
+
+/**
+ * @summary Clear Queued Outline
+ */
+export const useClearQueuedOutline = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearQueuedOutline>>,
+      TError,
+      ClearQueuedOutlineMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearQueuedOutline>>,
+  TError,
+  ClearQueuedOutlineMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearQueuedOutlineMutationOptions(options), queryClient);
+};
+
 export type getMyAdjudicationResponse200 = {
   data: MyAdjudicationTask;
   status: 200;
@@ -50938,6 +51315,355 @@ export const useDecideAdjudication = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getDecideAdjudicationMutationOptions(options), queryClient);
+};
+
+export type settleAdjudicationOutlineResponse200 = {
+  data: AdjudicationObject;
+  status: 200;
+};
+
+export type settleAdjudicationOutlineResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type settleAdjudicationOutlineResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type settleAdjudicationOutlineResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type settleAdjudicationOutlineResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type settleAdjudicationOutlineResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type settleAdjudicationOutlineResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type settleAdjudicationOutlineResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type settleAdjudicationOutlineResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type settleAdjudicationOutlineResponseSuccess = settleAdjudicationOutlineResponse200 & {
+  headers: Headers;
+};
+export type settleAdjudicationOutlineResponseError = (
+  | settleAdjudicationOutlineResponse400
+  | settleAdjudicationOutlineResponse401
+  | settleAdjudicationOutlineResponse403
+  | settleAdjudicationOutlineResponse404
+  | settleAdjudicationOutlineResponse409
+  | settleAdjudicationOutlineResponse422
+  | settleAdjudicationOutlineResponse429
+  | settleAdjudicationOutlineResponse500
+) & {
+  headers: Headers;
+};
+
+export type settleAdjudicationOutlineResponse =
+  | settleAdjudicationOutlineResponseSuccess
+  | settleAdjudicationOutlineResponseError;
+
+export const getSettleAdjudicationOutlineUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+) => {
+  return `/api/review-tasks/${taskId}/adjudication/${slideId}/${objectId}/outline`;
+};
+
+/**
+ * @summary Settle Adjudication Outline
+ */
+export const settleAdjudicationOutline = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  adjudicatorOutlineDraft: AdjudicatorOutlineDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<settleAdjudicationOutlineResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<settleAdjudicationOutlineResponse>(
+    getSettleAdjudicationOutlineUrl(taskId, slideId, objectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(adjudicatorOutlineDraft),
+    },
+  );
+};
+
+export const getSettleAdjudicationOutlineMutationKey = () => ["settleAdjudicationOutline"] as const;
+
+export const getSettleAdjudicationOutlineMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settleAdjudicationOutline>>,
+    TError,
+    SettleAdjudicationOutlineMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settleAdjudicationOutline>>,
+  TError,
+  SettleAdjudicationOutlineMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSettleAdjudicationOutlineMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settleAdjudicationOutline>>,
+    SettleAdjudicationOutlineMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return settleAdjudicationOutline(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SettleAdjudicationOutlineMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settleAdjudicationOutline>>
+>;
+export type SettleAdjudicationOutlineMutationBody = AdjudicatorOutlineDraft;
+export type SettleAdjudicationOutlineMutationError = Problem;
+export type SettleAdjudicationOutlineMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: AdjudicatorOutlineDraft;
+};
+
+/**
+ * @summary Settle Adjudication Outline
+ */
+export const useSettleAdjudicationOutline = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof settleAdjudicationOutline>>,
+      TError,
+      SettleAdjudicationOutlineMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof settleAdjudicationOutline>>,
+  TError,
+  SettleAdjudicationOutlineMutationVariables,
+  TContext
+> => {
+  return useMutation(getSettleAdjudicationOutlineMutationOptions(options), queryClient);
+};
+
+export type clearAdjudicationOutlineResponse200 = {
+  data: AdjudicationObject;
+  status: 200;
+};
+
+export type clearAdjudicationOutlineResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearAdjudicationOutlineResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearAdjudicationOutlineResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearAdjudicationOutlineResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearAdjudicationOutlineResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearAdjudicationOutlineResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearAdjudicationOutlineResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type clearAdjudicationOutlineResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearAdjudicationOutlineResponseSuccess = clearAdjudicationOutlineResponse200 & {
+  headers: Headers;
+};
+export type clearAdjudicationOutlineResponseError = (
+  | clearAdjudicationOutlineResponse400
+  | clearAdjudicationOutlineResponse401
+  | clearAdjudicationOutlineResponse403
+  | clearAdjudicationOutlineResponse404
+  | clearAdjudicationOutlineResponse409
+  | clearAdjudicationOutlineResponse422
+  | clearAdjudicationOutlineResponse429
+  | clearAdjudicationOutlineResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearAdjudicationOutlineResponse =
+  | clearAdjudicationOutlineResponseSuccess
+  | clearAdjudicationOutlineResponseError;
+
+export const getClearAdjudicationOutlineUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+) => {
+  return `/api/review-tasks/${taskId}/adjudication/${slideId}/${objectId}/outline`;
+};
+
+/**
+ * @summary Clear Adjudication Outline
+ */
+export const clearAdjudicationOutline = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearAdjudicationOutlineResponse> => {
+  return apiFetch<clearAdjudicationOutlineResponse>(
+    getClearAdjudicationOutlineUrl(taskId, slideId, objectId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getClearAdjudicationOutlineMutationKey = () => ["clearAdjudicationOutline"] as const;
+
+export const getClearAdjudicationOutlineMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearAdjudicationOutline>>,
+    TError,
+    ClearAdjudicationOutlineMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearAdjudicationOutline>>,
+  TError,
+  ClearAdjudicationOutlineMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearAdjudicationOutlineMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearAdjudicationOutline>>,
+    ClearAdjudicationOutlineMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId } = props ?? {};
+
+    return clearAdjudicationOutline(taskId, slideId, objectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearAdjudicationOutlineMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearAdjudicationOutline>>
+>;
+
+export type ClearAdjudicationOutlineMutationError = Problem;
+export type ClearAdjudicationOutlineMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+};
+
+/**
+ * @summary Clear Adjudication Outline
+ */
+export const useClearAdjudicationOutline = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearAdjudicationOutline>>,
+      TError,
+      ClearAdjudicationOutlineMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearAdjudicationOutline>>,
+  TError,
+  ClearAdjudicationOutlineMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearAdjudicationOutlineMutationOptions(options), queryClient);
 };
 
 export type exportReviewedLayerResponse200 = {

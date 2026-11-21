@@ -357,6 +357,7 @@ import {
   ResumeMode,
   Retired,
   ReviewEditChange,
+  ReviewerLetter,
   Role,
   Rule,
   ScopeKindKey,
@@ -9672,6 +9673,17 @@ export const getGetDisagreementQueueResponseMock = (
         ),
       }),
     ),
+    settled_outline: faker.helpers.arrayElement([
+      {
+        outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.number.float({ fractionDigits: 2 }),
+        ),
+        from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      },
+      null,
+    ]),
   })),
   ...overrideResponse,
 });
@@ -9741,6 +9753,175 @@ export const getUpdateQueuedObjectResponseMock = (
       ),
     }),
   ),
+  settled_outline: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getSettleQueuedOutlineResponseMock = (
+  overrideResponse: Partial<Extract<QueueRow, object>> = {},
+): QueueRow => ({
+  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slide_id: faker.string.uuid(),
+  slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+  ai: {
+    class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    score: faker.number.float({ fractionDigits: 2 }),
+  },
+  size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  tag: faker.helpers.arrayElement(Object.values(QueueTag)),
+  answers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  state: faker.helpers.arrayElement(Object.values(QueueRowState)),
+  decision: faker.helpers.arrayElement([
+    {
+      raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      by_user_id: faker.string.uuid(),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  adjudicator: faker.helpers.arrayElement([
+    {
+      user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
+  edited: faker.helpers.arrayElement([
+    { by_user_id: faker.string.uuid(), on: faker.date.past().toISOString().slice(0, 10) },
+    null,
+  ]),
+  outline_differs: faker.datatype.boolean(),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  settled_outline: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getClearQueuedOutlineResponseMock = (
+  overrideResponse: Partial<Extract<QueueRow, object>> = {},
+): QueueRow => ({
+  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slide_id: faker.string.uuid(),
+  slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+  ai: {
+    class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    score: faker.number.float({ fractionDigits: 2 }),
+  },
+  size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  tag: faker.helpers.arrayElement(Object.values(QueueTag)),
+  answers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      reason: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  state: faker.helpers.arrayElement(Object.values(QueueRowState)),
+  decision: faker.helpers.arrayElement([
+    {
+      raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      by_user_id: faker.string.uuid(),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  adjudicator: faker.helpers.arrayElement([
+    {
+      user_id: faker.string.uuid(),
+      note: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    },
+    null,
+  ]),
+  edited: faker.helpers.arrayElement([
+    { by_user_id: faker.string.uuid(), on: faker.date.past().toISOString().slice(0, 10) },
+    null,
+  ]),
+  outline_differs: faker.datatype.boolean(),
+  outline_overlap: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  settled_outline: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -9792,6 +9973,29 @@ export const getGetMyAdjudicationResponseMock = (
         faker.string.alpha({ length: { min: 10, max: 20 } }),
         null,
       ]),
+      outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          reviewer: faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+          outline: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.number.float({ fractionDigits: 2 })),
+        }),
+      ),
+      settled_outline: faker.helpers.arrayElement([
+        {
+          outline: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.number.float({ fractionDigits: 2 })),
+          from_reviewer: faker.helpers.arrayElement([
+            faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+            null,
+          ]),
+          at: faker.date.past().toISOString().slice(0, 19) + "Z",
+        },
+        null,
+      ]),
     }),
   ),
   ...overrideResponse,
@@ -9832,6 +10036,149 @@ export const getDecideAdjudicationResponseMock = (
   ]),
   decision_note: faker.helpers.arrayElement([
     faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      reviewer: faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  settled_outline: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_reviewer: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+        null,
+      ]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getSettleAdjudicationOutlineResponseMock = (
+  overrideResponse: Partial<Extract<AdjudicationObject, object>> = {},
+): AdjudicationObject => ({
+  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slide_id: faker.string.uuid(),
+  slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+  ai: {
+    class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    score: faker.number.float({ fractionDigits: 2 }),
+  },
+  size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  reviewer_a: {
+    raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  },
+  reviewer_b: {
+    raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  },
+  decision: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  decision_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      reviewer: faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  settled_outline: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_reviewer: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+        null,
+      ]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getClearAdjudicationOutlineResponseMock = (
+  overrideResponse: Partial<Extract<AdjudicationObject, object>> = {},
+): AdjudicationObject => ({
+  key: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  slide_id: faker.string.uuid(),
+  slide_label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(ObjectKind)),
+  ai: {
+    class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    score: faker.number.float({ fractionDigits: 2 }),
+  },
+  size_mm: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  reviewer_a: {
+    raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  },
+  reviewer_b: {
+    raw: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    note: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  },
+  decision: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  decision_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  outlines: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      reviewer: faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+    }),
+  ),
+  settled_outline: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_reviewer: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(ReviewerLetter)),
+        null,
+      ]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
     null,
   ]),
   ...overrideResponse,
@@ -12738,6 +13085,17 @@ export const getListDisagreementsResponseMock = (): QueuedObject[] =>
         ),
       }),
     ),
+    settled: faker.helpers.arrayElement([
+      {
+        outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.number.float({ fractionDigits: 2 }),
+        ),
+        from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      },
+      null,
+    ]),
     decision: faker.helpers.arrayElement([
       {
         style: faker.helpers.arrayElement([
@@ -12814,6 +13172,17 @@ export const getDecideDisagreementResponseMock = (
       ),
     }),
   ),
+  settled: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
   decision: faker.helpers.arrayElement([
     {
       style: faker.helpers.arrayElement([
@@ -12891,6 +13260,17 @@ export const getLeaveDisagreementOpenResponseMock = (
       ),
     }),
   ),
+  settled: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
   decision: faker.helpers.arrayElement([
     {
       style: faker.helpers.arrayElement([
@@ -12968,6 +13348,17 @@ export const getAskReviewersToLookAgainResponseMock = (
       ),
     }),
   ),
+  settled: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
   decision: faker.helpers.arrayElement([
     {
       style: faker.helpers.arrayElement([
@@ -13045,6 +13436,17 @@ export const getKeepReviewerDecisionsResponseMock = (
       ),
     }),
   ),
+  settled: faker.helpers.arrayElement([
+    {
+      outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.number.float({ fractionDigits: 2 }),
+      ),
+      from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    },
+    null,
+  ]),
   decision: faker.helpers.arrayElement([
     {
       style: faker.helpers.arrayElement([
@@ -13129,6 +13531,17 @@ export const getSendToAdjudicatorResponseMock = (): QueuedObject[] =>
         ),
       }),
     ),
+    settled: faker.helpers.arrayElement([
+      {
+        outline: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => faker.number.float({ fractionDigits: 2 }),
+        ),
+        from_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+        at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      },
+      null,
+    ]),
     decision: faker.helpers.arrayElement([
       {
         style: faker.helpers.arrayElement([
@@ -25098,6 +25511,50 @@ export const getUpdateQueuedObjectMockHandler = (
   );
 };
 
+export const getSettleQueuedOutlineMockHandler = (
+  overrideResponse?:
+    | QueueRow
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<QueueRow> | QueueRow),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/disagreement-queue/:slideId/:objectId/outline",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettleQueuedOutlineResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getClearQueuedOutlineMockHandler = (
+  overrideResponse?:
+    | QueueRow
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<QueueRow> | QueueRow),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/disagreement-queue/:slideId/:objectId/outline",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getClearQueuedOutlineResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetMyAdjudicationMockHandler = (
   overrideResponse?:
     | MyAdjudicationTask
@@ -25139,6 +25596,54 @@ export const getDecideAdjudicationMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getDecideAdjudicationResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSettleAdjudicationOutlineMockHandler = (
+  overrideResponse?:
+    | AdjudicationObject
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<AdjudicationObject> | AdjudicationObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/adjudication/:slideId/:objectId/outline",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSettleAdjudicationOutlineResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getClearAdjudicationOutlineMockHandler = (
+  overrideResponse?:
+    | AdjudicationObject
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<AdjudicationObject> | AdjudicationObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/adjudication/:slideId/:objectId/outline",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getClearAdjudicationOutlineResponseMock(),
         { status: 200 },
       );
     },
@@ -30032,8 +30537,12 @@ export const getParfocalAPIMock = () => [
   getGetResultSetTyperMockHandler(),
   getGetDisagreementQueueMockHandler(),
   getUpdateQueuedObjectMockHandler(),
+  getSettleQueuedOutlineMockHandler(),
+  getClearQueuedOutlineMockHandler(),
   getGetMyAdjudicationMockHandler(),
   getDecideAdjudicationMockHandler(),
+  getSettleAdjudicationOutlineMockHandler(),
+  getClearAdjudicationOutlineMockHandler(),
   getExportReviewedLayerMockHandler(),
   getExportSlideObjectsMockHandler(),
   getListAnnouncementsMockHandler(),

@@ -5,24 +5,24 @@ from datetime import datetime
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, StringConstraints, model_validator
 from sqlalchemy import delete, exists, func, insert, select, text, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.annotations import check_classes
+from parfocal_api.annotations import Geometry, InvalidShapeError, check_classes, checked
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import answer_in_style, counted
 from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
-from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
+from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
 from parfocal_api.review_decisions import ai_class_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task
-from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object
+from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object, outline
 from parfocal_api.tables import (
     AnnotationKind,
     Decision,
@@ -88,6 +88,26 @@ class ReviewerOutline(BaseModel):
     outline: list[float]
 
 
+class SettledOutline(BaseModel):
+    outline: list[float]
+    from_user_id: uuid.UUID | None
+    by_user_id: uuid.UUID | None
+    at: datetime
+
+
+class OutlineDraft(BaseModel):
+    from_user_id: uuid.UUID | None = None
+    geometry: Geometry | None = None
+
+    @model_validator(mode="after")
+    def picks_or_draws(self) -> OutlineDraft:
+        if (self.from_user_id is None) == (self.geometry is None):
+            raise ValueError("Pick one reviewer's outline or draw a new one")
+        if self.geometry is not None:
+            checked(self.geometry)
+        return self
+
+
 class QueuedObject(BaseModel):
     slide_id: uuid.UUID
     object: str
@@ -97,6 +117,7 @@ class QueuedObject(BaseModel):
     decisions: list[ReviewerAnswer]
     outline_overlap: float | None = None
     outlines: list[ReviewerOutline] = []
+    settled: SettledOutline | None = None
     decision: QueueDecision | None = None
     left_open: bool = False
     note: str | None = None
@@ -156,6 +177,11 @@ class NotEditedError(ConflictError):
 class WithAdjudicatorError(ConflictError):
     code = "with-adjudicator"
     title = "This object is with an adjudicator"
+
+
+class NotReviewerOutlineError(BadRequestError):
+    code = "not-a-reviewer-outline"
+    title = "That person has no outline of this object to pick"
 
 
 class LookingAgainError(ConflictError):
@@ -224,6 +250,20 @@ def decision_of(row: Any) -> QueueDecision | None:
         value=DecisionValue(row.value),
         choice=Decision(row.decision) if row.decision else None,
         decided_by_user_id=row.decided_by_user_id,
+    )
+
+
+def settled_of(row: Any) -> SettledOutline | None:
+    if row is None:
+        return None
+    ring = outline_of(row.outline_shape)
+    if ring is None:
+        return None
+    return SettledOutline(
+        outline=ring,
+        from_user_id=row.outline_from_user_id,
+        by_user_id=row.outline_by_user_id,
+        at=row.outline_at,
     )
 
 
@@ -439,7 +479,10 @@ async def queues_of(
     decided = {
         (row.task_id, row.slide_id, row.kind, row.number): row
         for row in await connection.execute(
-            select(disagreement_decisions).where(disagreement_decisions.c.task_id.in_(task_ids))
+            select(
+                disagreement_decisions,
+                func.ST_AsGeoJSON(disagreement_decisions.c.outline).label("outline_shape"),
+            ).where(disagreement_decisions.c.task_id.in_(task_ids))
         )
     }
     redrawn = await last_redrawn(connection, task_ids)
@@ -476,6 +519,7 @@ async def queues_of(
                 ],
                 outline_overlap=gaps.get(key),
                 outlines=drawn.get(key, []),
+                settled=settled_of(choice),
                 decision=decision_of(choice),
                 left_open=bool(choice and choice.left_open),
                 note=choice.note if choice else None,
@@ -823,7 +867,9 @@ async def clear_disagreement_decision(
     if item.decision is not None or item.left_open:
         await connection.execute(
             delete(disagreement_decisions).where(
-                *where, disagreement_decisions.c.edits_settled_at.is_(None)
+                *where,
+                disagreement_decisions.c.edits_settled_at.is_(None),
+                disagreement_decisions.c.outline.is_(None),
             )
         )
         await connection.execute(
@@ -921,3 +967,119 @@ def choice_value(row: Any) -> str | None:
     if row.value is not None:
         return str(row.value)
     return None
+
+
+AREAS = frozenset({"Polygon", "MultiPolygon"})
+
+UNSETTLED = {
+    "outline": None,
+    "outline_from_user_id": None,
+    "outline_by_user_id": None,
+    "outline_at": None,
+}
+
+
+async def picked_outline(
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    item: QueuedObject,
+    found: ObjectId,
+    draft: OutlineDraft,
+) -> Any:
+    if draft.geometry is not None:
+        if draft.geometry.type not in AREAS:
+            raise InvalidShapeError("A settled outline is an area")
+        return await outline(connection, KINDS[found.letter], draft.geometry)
+    if draft.from_user_id not in {drawn.user_id for drawn in item.outlines}:
+        raise NotReviewerOutlineError
+    return (
+        select(review_edits.c.geometry)
+        .where(
+            review_edits.c.task_id == task_id,
+            review_edits.c.slide_id == item.slide_id,
+            review_edits.c.kind == item.kind,
+            review_edits.c.number == item.number,
+            review_edits.c.user_id == draft.from_user_id,
+            review_edits.c.split == "",
+        )
+        .scalar_subquery()
+    )
+
+
+async def settle_outline(
+    connection: AsyncConnection,
+    principal: Principal,
+    task: Any,
+    item: QueuedObject,
+    found: ObjectId,
+    draft: OutlineDraft,
+    details: dict[str, Any],
+) -> None:
+    if task.signed_off_at is not None:
+        raise TaskSignedOffError
+    values = {
+        "outline": await picked_outline(connection, task.id, item, found, draft),
+        "outline_from_user_id": draft.from_user_id,
+        "outline_by_user_id": decider(principal),
+        "outline_at": func.now(),
+    }
+    await store(connection, task, item.slide_id, found, UNDECIDED | values, values)
+    await audit(
+        connection,
+        principal,
+        AuditAction.REVIEW_OUTLINE_SETTLED,
+        task,
+        item.slide_id,
+        found,
+        {"picked": draft.from_user_id is not None, **details},
+    )
+
+
+async def clear_outline(
+    connection: AsyncConnection,
+    principal: Principal,
+    task: Any,
+    item: QueuedObject,
+    found: ObjectId,
+    details: dict[str, Any],
+) -> None:
+    if task.signed_off_at is not None:
+        raise TaskSignedOffError
+    if item.settled is None:
+        return
+    where = same_object(task.id, item.slide_id, item.kind, item.number)
+    await connection.execute(
+        delete(disagreement_decisions).where(
+            *where,
+            disagreement_decisions.c.value.is_(None),
+            disagreement_decisions.c.left_open.is_(False),
+            disagreement_decisions.c.edits_settled_at.is_(None),
+        )
+    )
+    await connection.execute(
+        update(disagreement_decisions).where(*where).values(**UNSETTLED, updated_at=func.now())
+    )
+    await audit(
+        connection,
+        principal,
+        AuditAction.REVIEW_OUTLINE_CLEARED,
+        task,
+        item.slide_id,
+        found,
+        details,
+    )
+
+
+async def owner_outline_object(
+    connection: AsyncConnection,
+    principal: Principal,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+) -> tuple[Any, ObjectId, QueuedObject]:
+    task, found, item = await decidable(connection, principal, task_id, slide_id, object_id)
+    if item.looking_again:
+        raise LookingAgainError
+    if item.with_adjudicator():
+        raise WithAdjudicatorError
+    return task, found, item

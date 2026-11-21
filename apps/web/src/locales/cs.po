@@ -2814,6 +2814,10 @@ msgstr ""
 msgid "A new draft, Evaluation v2, copied from v1"
 msgstr ""
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "A new outline is settled."
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "A new random field for the synthetic source"
 msgstr ""
@@ -4654,6 +4658,10 @@ msgstr ""
 msgid "Cancel <0/>"
 msgstr ""
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Cancel drawing"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/viewer/run-stream-layer.tsx
 msgid "Cancel run"
@@ -5312,6 +5320,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Click to open the whole slide (or hold Z)"
+msgstr ""
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Click to place points. Double click or Enter closes the outline."
 msgstr ""
 
 #: src/viewer/compare-panes.tsx
@@ -6646,6 +6658,10 @@ msgstr ""
 msgid "Drag, or middle-drag"
 msgstr ""
 
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Draw a new outline"
+msgstr ""
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/how-step.tsx
 msgid "Draw as"
@@ -7457,6 +7473,10 @@ msgstr ""
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/steps.tsx
 msgid "Final diagnosis"
+msgstr ""
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Final outline"
 msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
@@ -10324,6 +10344,13 @@ msgstr ""
 msgid "New outline saved for {0}. The AI result is not changed."
 msgstr ""
 
+#. placeholder {0}: current.object
+#. placeholder {0}: rowLabel(row)
+#: src/screens/disagreements/adjudicator-view.tsx
+#: src/screens/disagreements/queue-screen.tsx
+msgid "New outline settled for {0}"
+msgstr ""
+
 #: src/screens/onboarding/password-reset-forms.tsx
 msgid "New password"
 msgstr ""
@@ -12049,6 +12076,22 @@ msgstr ""
 msgid "Outline model tier"
 msgstr ""
 
+#. placeholder {0}: nameOf(userId) ?? ""
+#. placeholder {1}: rowLabel(row)
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Outline of {0} settled for {1}"
+msgstr ""
+
+#. placeholder {0}: entry.letter
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "Outline of reviewer {0}"
+msgstr ""
+
+#. placeholder {0}: current.object
+#: src/screens/disagreements/adjudicator-view.tsx
+msgid "Outline of reviewer {letter} settled for {0}"
+msgstr ""
+
 #: ../../packages/ui/src/components/disagreements.tsx
 msgid "outline-2 outline-solid outline-offset-2 outline-accent"
 msgstr ""
@@ -12558,6 +12601,10 @@ msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Pick mm or µm."
+msgstr ""
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Pick one outline or draw a new one."
 msgstr ""
 
 #: src/screens/new-task/reviewers-step.tsx
@@ -14850,6 +14897,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/settings-dialog.tsx
 msgid "Settings sections"
+msgstr ""
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Settled"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -18436,6 +18487,10 @@ msgstr ""
 
 #: src/screens/upload/result-problems.tsx
 msgid "Use this guess"
+msgstr ""
+
+#: src/screens/disagreements/outline-settle.tsx
+msgid "Use this outline"
 msgstr ""
 
 #: src/screens/onboarding/invite-screen.tsx

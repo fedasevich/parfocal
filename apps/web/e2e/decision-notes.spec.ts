@@ -96,7 +96,7 @@ test("a note written in guided review shows in the Comments tab and the adjudica
   await page.getByRole("button", { name: /^T5, / }).click();
   const quote = page.locator("[data-slot=quoted-note]", { hasText: "Folded edge, ask" });
   await expect(quote).toContainText("@Daniel Hruška");
-  await expect(page.getByText("Reviewer B")).toBeVisible();
+  await expect(page.getByText("Reviewer B", { exact: true })).toBeVisible();
   await expect(page.getByText("Reviewers stay anonymous to you")).toBeVisible();
 });
 

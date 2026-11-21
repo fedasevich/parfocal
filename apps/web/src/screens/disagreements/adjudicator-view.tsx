@@ -1,13 +1,18 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
+  type AdjudicationObject,
+  type AdjudicatorOutlineDraft,
+  type AnonymousSettledOutline,
   getGetMyAdjudicationQueryKey,
   resolveSetting,
+  useClearAdjudicationOutline,
   useDecideAdjudication,
   useGetMe,
   useGetMyAdjudication,
   useGetMySettingLayers,
   useGetReviewTask,
   useListProjectClasses,
+  useSettleAdjudicationOutline,
 } from "@parfocal/api-client";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { KeyValueList } from "@parfocal/ui/components/connect-model";
@@ -26,7 +31,8 @@ import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { AccountMenu } from "../../shell/account-menu.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
@@ -34,6 +40,7 @@ import { useRouterLink } from "../../shell/router-link.tsx";
 import { slideLink } from "../../shell/slide-link.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { useScreenToast } from "../project/screen-toast.tsx";
 import { reviewConfidence } from "../review/ai-wording.ts";
 import { toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf, showsClaim } from "../review/decision-style.ts";
@@ -49,7 +56,11 @@ import {
   sentNoteLine,
 } from "./adjudicator-card.ts";
 import { DisagreementStage } from "./disagreement-stage.tsx";
+import { OutlineSettle } from "./outline-settle.tsx";
+import { type LetterOutline, letterOutlines, settledStageOutline } from "./reviewer-outlines.ts";
 import { countOf } from "./text.ts";
+
+const noStageOutlines: readonly LetterOutline[] = [];
 
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
@@ -102,6 +113,39 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         void queryClient.invalidateQueries({ queryKey: getGetMyAdjudicationQueryKey(taskId) }),
     },
   });
+  const toast = useScreenToast();
+  const refreshMine = () =>
+    void queryClient.invalidateQueries({ queryKey: getGetMyAdjudicationQueryKey(taskId) });
+  const settleOutline = useSettleAdjudicationOutline({ mutation: { onSuccess: refreshMine } });
+  const clearOutline = useClearAdjudicationOutline({ mutation: { onSuccess: refreshMine } });
+  const [drawingKey, setDrawingKey] = useState<string | null>(null);
+  const objectOf = (target: AdjudicationObject) => ({
+    taskId,
+    slideId: target.slide_id,
+    objectId: target.object,
+  });
+  const restoreOutline = (
+    target: AdjudicationObject,
+    before: AnonymousSettledOutline | null | undefined,
+  ) => {
+    if (!before) {
+      clearOutline.mutate(objectOf(target));
+      return;
+    }
+    settleOutline.mutate({
+      ...objectOf(target),
+      data: before.from_reviewer
+        ? { reviewer: before.from_reviewer }
+        : { geometry: polygonToGeoJson(Float32Array.from(before.outline)) },
+    });
+  };
+  const settle = (target: AdjudicationObject, data: AdjudicatorOutlineDraft, message: string) => {
+    const before = target.settled_outline;
+    settleOutline.mutate(
+      { ...objectOf(target), data },
+      { onSuccess: () => toast.show(message, () => restoreOutline(target, before)) },
+    );
+  };
   const objects = adjudication?.objects ?? [];
   const decided = objects.filter((object) => object.decision !== null);
   const counted = decidedRows(decided, look);
@@ -115,8 +159,14 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const current = objects[Math.max(0, Math.min(objects.length - 1, index))];
   const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? t`The researcher`;
   const goTo = (next: number) => {
+    setDrawingKey(null);
     setIndex(((next % objects.length) + objects.length) % objects.length);
   };
+  const outlines = useMemo(() => letterOutlines(current), [current]);
+  const stageOutlines = useMemo(
+    () => settledStageOutline(outlines, current?.object ?? "", current?.settled_outline?.outline),
+    [outlines, current?.object, current?.settled_outline?.outline],
+  );
   const decide = (raw: string) => {
     if (!current) return;
     decideMutation.mutate({
@@ -220,6 +270,29 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
           </EvidenceRow>
         ))}
       </EvidenceList>
+      {outlines.length > 0 ? (
+        <OutlineSettle
+          choices={outlines.map((entry) => ({
+            key: entry.letter,
+            hex: entry.hex,
+            label: t`Outline of reviewer ${entry.letter}`,
+          }))}
+          settledFrom={
+            current.settled_outline ? (current.settled_outline.from_reviewer ?? null) : undefined
+          }
+          drawing={drawingKey === current.key}
+          busy={settleOutline.isPending || clearOutline.isPending}
+          onPick={(letter) =>
+            settle(
+              current,
+              { reviewer: letter === "B" ? "B" : "A" },
+              t`Outline of reviewer ${letter} settled for ${current.object}`,
+            )
+          }
+          onDraw={() => setDrawingKey(current.key)}
+          onCancelDraw={() => setDrawingKey(null)}
+        />
+      ) : null}
       <DecisionButtons
         decisionStyle={look.style.kind}
         classes={look.classes}
@@ -273,6 +346,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   const slideLabels = [...new Set(objects.map((object) => object.slide_label))];
   return (
     <div className="grid h-dvh grid-rows-[auto_minmax(0,1fr)] bg-page">
+      {toast.node}
       <ReviewTopBar
         mode="adjudicate"
         taskName={t`Adjudication · ${task?.code ?? ""}`}
@@ -341,6 +415,22 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               slideId={shown.slide_id}
               object={shown.object}
               claimHidden={!showsClaim(look.style)}
+              outlines={shown === current ? stageOutlines : noStageOutlines}
+              draw={
+                current && shown === current && drawingKey === current.key
+                  ? {
+                      onClose: (points) => {
+                        setDrawingKey(null);
+                        settle(
+                          current,
+                          { geometry: polygonToGeoJson(points) },
+                          t`New outline settled for ${current.object}`,
+                        );
+                      },
+                      onCancel: () => setDrawingKey(null),
+                    }
+                  : null
+              }
             />
           ) : null}
         </div>
