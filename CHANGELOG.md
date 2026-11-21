@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.10 (2026-11-21)
+
+### Fixes
+
+- PROTO-154: Download sign-off exports, name appendix answers, fresh sign-in for slide sign-off
+
+### Docs
+
+- PROTO-156: Claim the lock and quiet pages task
+- PROTO-157: Claim the round five slips task
+
+### Other
+
+- PROTO-154: Merge sign-off export and the report appendix
+
 ## v0.35.9 (2026-11-21)
 
 ### Fixes
