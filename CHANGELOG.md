@@ -2,6 +2,27 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.5 (2026-11-21)
+
+### Features
+
+- PROTO-150: Tell the starter when a model run is done or failed
+
+### Fixes
+
+- PROTO-150: Finish uploads behind the bucket lock and show one job state
+- PROTO-149: Make the consensus export follow the queue decision
+
+### Docs
+
+- PROTO-151: Claim the panel controls task
+- PROTO-150: Ask about hidden label images under the bucket lock
+
+### Other
+
+- PROTO-150: Merge job states and served models
+- PROTO-150: Merge the run finished notice
+
 ## v0.35.4 (2026-11-21)
 
 ### Fixes
