@@ -19,6 +19,18 @@ const logged = (page: Page) =>
     () => JSON.parse(window.localStorage.getItem("parfocal.event-log") ?? "[]") as Logged[],
   );
 
+const recordedKinds = (page: Page) =>
+  page.evaluate(() =>
+    (
+      JSON.parse(window.sessionStorage.getItem("parfocal.fake.timing-events") ?? "[]") as {
+        name: string;
+        task_kind?: string;
+      }[]
+    )
+      .filter((event) => event.name === "task_finished")
+      .map((event) => event.task_kind),
+  );
+
 const named = (log: Logged[], name: string) => log.filter((entry) => entry.name === name);
 
 test("reviewing a slide and signing it out sends slide, area and cell times", async ({ page }) => {
@@ -34,6 +46,7 @@ test("reviewing a slide and signing it out sends slide, area and cell times", as
     .click();
   await page.getByRole("button", { name: /Submit and open slide 9/ }).click();
   await expect(page).toHaveURL(/\/submitted\?/);
+  await expect.poll(() => recordedKinds(page)).toContain("review");
 
   await page.goto(`/tasks/${rt14}/sign-off?scene=ready`);
   await page.getByRole("button", { name: /^Sign with single sign-on/ }).click();
@@ -51,6 +64,7 @@ test("reviewing a slide and signing it out sends slide, area and cell times", as
     "viewer",
   );
 
+  await expect.poll(() => recordedKinds(page)).toContain("report");
   await page.goto("/kpi");
   await expect(page.getByTestId("kpi-source")).toHaveAttribute("data-source", "recorded");
   await expect(page.getByTestId("kpi-review").getByRole("cell").nth(1)).toHaveText("1");
