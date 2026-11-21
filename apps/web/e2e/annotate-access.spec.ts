@@ -38,8 +38,9 @@ test("an annotate task opened by someone not assigned is read only with a banner
   await lookOnly(
     page,
     "not-assigned",
-    "Only the people assigned to this task can do that. You can look at it read only.",
+    "You are not assigned to this task, so you can look but not change anything.",
   );
+  await expect(page.getByTestId("start-run")).toHaveCount(0);
 });
 
 test("a withdrawn annotate task is read only with a banner", async ({ page }) => {

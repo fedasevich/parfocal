@@ -4858,6 +4858,7 @@ msgstr "Case details"
 msgid "Case ID"
 msgstr "Case ID"
 
+#: src/screens/project/project-page.tsx
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -10391,11 +10392,13 @@ msgstr "Move to"
 msgid "Move up"
 msgstr "Move up"
 
-#. placeholder {0}: tile ?? 0
-#. placeholder {1}: left ?? 0
 #: src/screens/jobs/job-window-screen.tsx
-msgid "Moved to the {parfocalGpu}. It picks up from tile {0}, about {1} min left."
-msgstr "Moved to the {parfocalGpu}. It picks up from tile {0}, about {1} min left."
+msgid "Moved to the {parfocalGpu}. It picks up from tile {from}, about {left} min left."
+msgstr "Moved to the {parfocalGpu}. It picks up from tile {from}, about {left} min left."
+
+#: src/screens/jobs/job-window-screen.tsx
+msgid "Moved to the {parfocalGpu}. It picks up from tile {from}."
+msgstr "Moved to the {parfocalGpu}. It picks up from tile {from}."
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "moves on by itself"
@@ -19724,6 +19727,10 @@ msgstr "You are not a member of {projectName}. Its owner is {ownerName}."
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of this project. Its owner is {ownerName}."
 msgstr "You are not a member of this project. Its owner is {ownerName}."
+
+#: src/screens/refusals.ts
+msgid "You are not assigned to this task, so you can look but not change anything."
+msgstr "You are not assigned to this task, so you can look but not change anything."
 
 #: src/screens/home/home-screen.tsx
 msgid "You are not in a workspace yet"

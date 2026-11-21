@@ -972,7 +972,7 @@ function OpenedSlide({
                           task={annotateTask}
                           projectId={projectId}
                           slideId={slideId}
-                          startShown={tool !== "smart"}
+                          startShown={tool !== "smart" && annotateTask?.readOnly !== true}
                         />
                       ) : null}
                       {resultPreview === null ? null : (

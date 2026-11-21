@@ -4,8 +4,8 @@ import { useResultsSlide } from "../screens/project/scene.ts";
 import { type ProjectSearch, projectSearch } from "../search/route-searches.ts";
 import { unknownValuesOf } from "../search/unknown-values.ts";
 
-const knownTabs = ["slides", "results", "tasks", "report", "settings", "people"];
-const renamedTabs = ["results", "report", "people"];
+const knownTabs = ["slides", "cases", "results", "tasks", "report", "settings", "people"];
+const renamedTabs = ["cases", "results", "report", "people"];
 
 const movedFromOf = (state: unknown): string | undefined => {
   if (typeof state !== "object" || state === null) return undefined;

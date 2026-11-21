@@ -189,6 +189,9 @@ test("an old project tab name says where it went", async ({ page }) => {
   await page.goto(`/projects/${p07}?tab=results`);
   await expect(page).toHaveURL(/tab=slides/);
   await expect(page.getByText("The Results tab moved to Slides.")).toBeVisible();
+  await page.goto(`/projects/${p07}?tab=cases`);
+  await expect(page).toHaveURL(/tab=slides/);
+  await expect(page.getByText("The Cases tab moved to Slides.")).toBeVisible();
   await page.goto(`/projects/${p07}?tab=nonsense`);
   await expect.poll(() => searchOf(page).get("tab")).toBe("slides");
 });

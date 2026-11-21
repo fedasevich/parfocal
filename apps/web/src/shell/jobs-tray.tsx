@@ -58,5 +58,5 @@ export function useResumeJob() {
 
 export function resumedMessage({ tile, left }: { tile: number | undefined; left: number | null }) {
   const from = tile === undefined ? t`Resumed.` : t`Resumed from tile ${tile}.`;
-  return left === null ? from : t`${from} About ${left} min left.`;
+  return left === null || left <= 0 ? from : t`${from} About ${left} min left.`;
 }

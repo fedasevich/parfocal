@@ -12,6 +12,7 @@ import {
   isSettled,
   jobIcon,
   jobTarget,
+  knownMinutes,
   pausedRuns,
   runEstimate,
   runSummary,
@@ -281,6 +282,17 @@ test("a finished slide names its cells, its IDs and the result set", () => {
     "HoVer-Net v2.1 · 14 Oct",
   ]);
   assert.equal(slidePercent(done), 100);
+});
+
+test("a job with no minutes left says no minutes at all", () => {
+  assert.equal(knownMinutes(0), null);
+  assert.equal(knownMinutes(null), null);
+  assert.equal(knownMinutes(undefined), null);
+  assert.equal(knownMinutes(3), 3);
+  assert.equal(runSummary(job({ percent: 40, minutes_left: 0 })).text, "40%");
+  assert.equal(runSummary(job({ minutes_left: null })).text, "Starting");
+  assert.equal(runSummary(job({ percent: 40, minutes_left: 12 })).text, "40% · about 12 min left");
+  assert.equal(trayValueText(job({ percent: 40, minutes_left: 0 })), "40%");
 });
 
 test("the whole run reads starting, paused or done in its minutes", () => {

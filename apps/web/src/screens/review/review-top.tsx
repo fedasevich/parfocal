@@ -12,19 +12,14 @@ import { slideThumbUrl } from "../slide-thumb-url.ts";
 import { useInspectorLayout } from "./inspector-layout.ts";
 import type { ReviewSession } from "./review-data.ts";
 import { useReviewTopPopovers } from "./review-top-popovers.tsx";
+import { slidesTimeLeft } from "./slides-time-left.ts";
 
 export type SlideCounts = DecisionSplit & { total: number; decided: number };
-
-const minutesPerSlide = 20;
 
 export function timeLeft(session: ReviewSession) {
   const neighbours = session.neighbours;
   if (neighbours === undefined) return "";
-  const minutes = (neighbours.total - neighbours.position) * minutesPerSlide;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) return `about ${rest} min left`;
-  return `about ${hours} h${rest ? ` ${rest} min` : ""} left`;
+  return slidesTimeLeft(neighbours.position, neighbours.total);
 }
 
 type ReviewTopProps = {

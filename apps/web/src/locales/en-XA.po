@@ -4856,6 +4856,7 @@ msgstr ""
 msgid "Case ID"
 msgstr ""
 
+#: src/screens/project/project-page.tsx
 #: src/screens/upload/check-step.tsx
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -10386,10 +10387,12 @@ msgstr ""
 msgid "Move up"
 msgstr ""
 
-#. placeholder {0}: tile ?? 0
-#. placeholder {1}: left ?? 0
 #: src/screens/jobs/job-window-screen.tsx
-msgid "Moved to the {parfocalGpu}. It picks up from tile {0}, about {1} min left."
+msgid "Moved to the {parfocalGpu}. It picks up from tile {from}, about {left} min left."
+msgstr ""
+
+#: src/screens/jobs/job-window-screen.tsx
+msgid "Moved to the {parfocalGpu}. It picks up from tile {from}."
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
@@ -19714,6 +19717,10 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of this project. Its owner is {ownerName}."
+msgstr ""
+
+#: src/screens/refusals.ts
+msgid "You are not assigned to this task, so you can look but not change anything."
 msgstr ""
 
 #: src/screens/home/home-screen.tsx

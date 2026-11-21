@@ -122,6 +122,7 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
   const preset = options.preset ?? "nuclei";
   const embeddings = new Map<string, Promise<void>>();
   const warm = new Map<string, WarmPatch>();
+  const coming = new Map<string, WarmPatch>();
   const answers = new Map<string, Answer>();
   let hoverTurn = 0;
   let hoverRunning: Promise<void> | null = null;
@@ -195,20 +196,32 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
     return found;
   }
 
+  function comingAt(point: { readonly x: number; readonly y: number }): WarmPatch | null {
+    let found: WarmPatch | null = null;
+    for (const entry of coming.values()) {
+      if (patchContains(entry.patch, point)) found = entry;
+    }
+    return found;
+  }
+
   function embed(patch: Patch, rgb: Uint8Array, frame: SamFrame): Promise<void> {
     const id = `${options.slideId}:${patch.key}`;
     const known = embeddings.get(id);
     if (known !== undefined) return known;
-    const pending = options.sam.encode(id, samPixels(rgb, frame)).then(
-      (done) => {
-        for (const gone of done.evicted) forget(gone);
-        if (embeddings.has(id)) warm.set(id, { id, patch, frame });
-      },
-      (error: unknown) => {
-        forget(id);
-        throw error;
-      },
-    );
+    coming.set(id, { id, patch, frame });
+    const pending = options.sam
+      .encode(id, samPixels(rgb, frame))
+      .then(
+        (done) => {
+          for (const gone of done.evicted) forget(gone);
+          if (embeddings.has(id)) warm.set(id, { id, patch, frame });
+        },
+        (error: unknown) => {
+          forget(id);
+          throw error;
+        },
+      )
+      .finally(() => coming.delete(id));
     embeddings.set(id, pending);
     return pending;
   }
@@ -241,6 +254,14 @@ export function createSmartSession(options: SmartSessionOptions): SmartSession {
           );
           return;
         }
+      }
+      const pending =
+        target.patch === null && target.prompts.box === null && warmAt(anchor) === null
+          ? comingAt(anchor)
+          : null;
+      if (pending !== null) {
+        target.patch = pending.patch;
+        target.frame = pending.frame;
       }
       if (target.patch === null) {
         const read = await options.reader.read({ preset, x: anchor.x, y: anchor.y });

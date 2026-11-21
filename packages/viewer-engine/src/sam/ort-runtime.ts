@@ -37,6 +37,7 @@ function wrapSession(session: ort.InferenceSession): SamSession {
 export function createOrtRuntime(hardwareConcurrency: number): SamRuntime {
   ort.env.wasm.wasmPaths = { mjs: wasmMjsUrl };
   ort.env.wasm.numThreads = hardwareConcurrency;
+  ort.env.logLevel = "error";
   let wasmBinary: Promise<ArrayBuffer> | undefined;
   return {
     async createSession(bytes: Uint8Array, provider: SamProvider) {
@@ -44,6 +45,7 @@ export function createOrtRuntime(hardwareConcurrency: number): SamRuntime {
       ort.env.wasm.wasmBinary = await wasmBinary;
       const session = await ort.InferenceSession.create(bytes, {
         executionProviders: [provider],
+        logSeverityLevel: 3,
       });
       return wrapSession(session);
     },

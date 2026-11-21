@@ -102,6 +102,7 @@ export function ProjectPage({
   useEffect(() => {
     if (movedFrom === undefined) return;
     const names: Record<string, string> = {
+      cases: t`Cases`,
       results: t`Results`,
       report: t`Report`,
       people: t`People`,
