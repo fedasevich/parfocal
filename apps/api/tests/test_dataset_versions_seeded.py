@@ -1,6 +1,7 @@
 import json
 from typing import Any
 
+import pytest
 from db_support import run_sql
 from test_showcase import RESULTS
 from test_showcase_annotation import example, in_layer
@@ -10,6 +11,8 @@ from parfocal_api.tables import review_tasks
 from parfocal_api.training_exports import DatasetFilters, DatasetOrigin, dataset
 
 __all__ = ["example"]
+
+pytestmark = pytest.mark.db
 
 MEASURED = "dataset-version-size"
 
