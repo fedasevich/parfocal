@@ -14,6 +14,7 @@ import shapely
 import tifffile
 from fixture_support import fixture_path
 from PIL import Image
+from pycocotools.coco import COCO
 from shapely.geometry import shape as shape_of
 
 from parfocal_api.check_options import check_of
@@ -232,3 +233,85 @@ async def test_a_frozen_version_that_changed_is_refused() -> None:
     store = FrozenStore({"frozen.zip": content})
     with pytest.raises(StepFailedError, match="dataset-version-changed"):
         await source_dataset(step, None, None, store)  # type: ignore[arg-type]
+
+
+def feature_with_identity(
+    kind: str, key: int | None, rings: list[list[tuple[int, int]]], name: str, origin: str
+) -> dict[str, Any]:
+    item = feature(kind, key, rings)
+    item["properties"]["parfocal"].update({"id": name, "origin": origin})
+    return item
+
+
+IDENTIFIED = [
+    feature_with_identity(
+        "region",
+        1,
+        [
+            [(100, 100), (700, 150), (600, 600), (150, 500)],
+            [(300, 250), (400, 250), (400, 350), (300, 350)],
+        ],
+        "R-one",
+        "human",
+    ),
+    feature_with_identity(
+        "region", 2, [[(500, 450), (780, 470), (760, 740), (520, 700)]], "R-two", "ai"
+    ),
+    feature_with_identity(
+        "cell", 3, [[(450, 400), (482, 400), (482, 431), (450, 431)]], "C-one", "human"
+    ),
+]
+
+
+def coco_exported() -> zipfile.ZipFile:
+    geojson = json.dumps({"type": "FeatureCollection", "features": IDENTIFIED}).encode()
+    source = source_of(uuid.UUID(int=7), fixture_path(SLIDE), geojson)
+    assert source is not None
+    target = io.BytesIO()
+    writer = PatchWriter(target, LEVEL, TILE, coco=True)
+    writer.add(source)
+    manifest = writer.finish(TASK, CLASSES, 2)
+    assert manifest.annotations == "annotations.json"
+    return zipfile.ZipFile(target)
+
+
+def test_the_coco_file_loads_and_its_areas_match_the_masks() -> None:
+    archive = coco_exported()
+    document = json.loads(archive.read("annotations.json"))
+    assert [item["id"] for item in document["categories"]] == [1, 2, 3, 4]
+    assert document["info"]["dataset_version"] == 2
+    index = COCO()
+    index.dataset = document
+    index.createIndex()
+    assert len(document["images"]) == 6
+    names = {item["file_name"] for item in document["images"]}
+    assert names <= set(archive.namelist())
+    identities = {item["parfocal_id"]: item["origin"] for item in document["annotations"]}
+    assert identities == {"R-one": "human", "R-two": "ai", "C-one": "human"}
+    by_object: dict[str, float] = {}
+    for item in document["annotations"]:
+        image = index.imgs[item["image_id"]]
+        painted = index.annToMask(item)
+        assert painted.shape == (image["height"], image["width"])
+        assert abs(int(painted.sum()) - item["area"]) <= 0.02 * item["area"] + 4
+        assert item["bbox"][0] >= 0
+        assert item["bbox"][0] + item["bbox"][2] <= image["width"] + 0.01
+        assert item["bbox"][1] + item["bbox"][3] <= image["height"] + 0.01
+        by_object[item["parfocal_id"]] = by_object.get(item["parfocal_id"], 0) + item["area"]
+    painted_totals = {"R-two": 0, "C-one": 0}
+    for image in document["images"]:
+        name = image["file_name"].replace("tiles/", "masks/")
+        mask = np.asarray(Image.open(io.BytesIO(archive.read(name))))
+        painted_totals["C-one"] += int((mask == 3).sum())
+        painted_totals["R-two"] += int((mask == 2).sum())
+    for name, total in painted_totals.items():
+        assert abs(total - by_object[name]) <= 0.05 * by_object[name]
+    expected_one = shape_of(IDENTIFIED[0]["geometry"]).area / 4
+    assert abs(by_object["R-one"] - expected_one) <= 0.01 * expected_one
+
+
+def test_a_patch_export_without_coco_has_no_annotation_file(tmp_path: Any) -> None:
+    archive, _ = exported(tmp_path)
+    assert "annotations.json" not in archive.namelist()
+    manifest = PatchManifest.model_validate_json(archive.read("manifest.json"))
+    assert manifest.annotations is None

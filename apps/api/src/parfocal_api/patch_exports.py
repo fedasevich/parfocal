@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter
 from fastapi.responses import Response
@@ -62,6 +62,7 @@ class PatchExportRequest(BaseModel):
     level: int = Field(default=0, ge=0, le=DEEPEST_LEVEL)
     tile_size: int = Field(default=DEFAULT_TILE, ge=SMALLEST_TILE, le=LARGEST_TILE)
     dataset_version: int | None = Field(default=None, ge=1)
+    format: Literal["masks", "coco"] = "masks"
 
 
 class PatchExportStarted(BaseModel):
@@ -111,7 +112,13 @@ async def start_patch_export(
         PATCH_PLAN,
         task.tenant_id,
         task.project_id,
-        {"task_id": str(task_id), "level": body.level, "tile_size": body.tile_size, **frozen},
+        {
+            "task_id": str(task_id),
+            "level": body.level,
+            "tile_size": body.tile_size,
+            "format": body.format,
+            **frozen,
+        },
     )
     return PatchExportStarted(job_id=job_id)
 

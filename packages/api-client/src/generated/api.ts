@@ -5695,6 +5695,14 @@ export interface PasswordSignInAvailability {
   available: boolean;
 }
 
+export type PatchExportRequestFormat =
+  (typeof PatchExportRequestFormat)[keyof typeof PatchExportRequestFormat];
+
+export const PatchExportRequestFormat = {
+  masks: "masks",
+  coco: "coco",
+} as const;
+
 export interface PatchExportRequest {
   /**
    * @minimum 0
@@ -5707,6 +5715,7 @@ export interface PatchExportRequest {
    */
   tile_size?: number;
   dataset_version?: number | null;
+  format?: PatchExportRequestFormat;
 }
 
 export interface PatchExportStarted {

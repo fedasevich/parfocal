@@ -74816,6 +74816,15 @@
               }
             ],
             "title": "Dataset Version"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "masks",
+              "coco"
+            ],
+            "title": "Format",
+            "default": "masks"
           }
         },
         "type": "object",

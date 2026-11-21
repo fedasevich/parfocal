@@ -3714,6 +3714,10 @@ msgstr "Already listed"
 msgid "Also viewing now: {0}"
 msgstr "Also viewing now: {0}"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "Also writes annotations.json in COCO form, one polygon per object clipped to its tile."
+msgstr "Also writes annotations.json in COCO form, one polygon per object clipped to its tile."
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Always"
 msgstr "Always"
@@ -3825,6 +3829,7 @@ msgid "Annotate workspace"
 msgstr "Annotate workspace"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/viewer/patch-export-dialog.tsx
 msgid "Annotations"
 msgstr "Annotations"
 
@@ -5314,6 +5319,10 @@ msgstr "Class list of new projects"
 #: src/screens/admin/sections.tsx
 msgid "Class lists"
 msgstr "Class lists"
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "Class masks"
+msgstr "Class masks"
 
 #: ../../packages/ui/src/components/new-forms.tsx
 #: src/screens/admin/connect-model.tsx
@@ -9909,6 +9918,10 @@ msgstr "Marked not tumor by you"
 msgid "Marker"
 msgstr "Marker"
 
+#: src/viewer/patch-export-dialog.tsx
+msgid "Masks and COCO"
+msgstr "Masks and COCO"
+
 #: src/screens/upload/formats-drawer.tsx
 msgid "Masks or heatmaps"
 msgstr "Masks or heatmaps"
@@ -11736,6 +11749,10 @@ msgstr "One agrees, one disagrees"
 #: src/viewer/annotate-task-panel.tsx
 msgid "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them."
 msgstr "One change takes at most 5,000 cells. Keys 1 to 9 retype them, X deletes them."
+
+#: src/viewer/patch-export-dialog.tsx
+msgid "One class mask per tile."
+msgstr "One class mask per tile."
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "One finger"

@@ -9,6 +9,7 @@ const zipHeaders = (name: string) => ({
 
 const cuttingPolls = 1;
 const polled = new Map<string, number>();
+const formats = new Map<string, string>();
 
 const refused = (code: string, title: string) =>
   HttpResponse.json(
@@ -32,10 +33,16 @@ export const taskExportHandlers = (): RequestHandler[] => [
       headers: zipHeaders("parfocal-AT-1-dataset.zip"),
     });
   }),
-  http.post<{ taskId: string }>("*/api/review-tasks/:taskId/patch-exports", ({ params }) => {
-    if (unsigned(params.taskId)) return nothingSignedOff();
-    return HttpResponse.json({ job_id: crypto.randomUUID() }, { status: 202 });
-  }),
+  http.post<{ taskId: string }>(
+    "*/api/review-tasks/:taskId/patch-exports",
+    async ({ params, request }) => {
+      if (unsigned(params.taskId)) return nothingSignedOff();
+      const body = (await request.json()) as { format?: string };
+      const jobId = crypto.randomUUID();
+      formats.set(jobId, body.format ?? "masks");
+      return HttpResponse.json({ job_id: jobId }, { status: 202 });
+    },
+  ),
   http.get<{ taskId: string; jobId: string }>(
     "*/api/review-tasks/:taskId/patch-exports/:jobId",
     ({ params }) => {
@@ -44,9 +51,13 @@ export const taskExportHandlers = (): RequestHandler[] => [
       if (seen <= cuttingPolls) {
         return refused("patch-export-not-ready", "The patches of this task are still being cut");
       }
-      return new HttpResponse(`PK fake patches of ${params.taskId}`, {
-        headers: zipHeaders("parfocal-AT-1-patches.zip"),
-      });
+      const coco = formats.get(params.jobId) === "coco";
+      return new HttpResponse(
+        `PK fake patches of ${params.taskId}${coco ? " with annotations.json" : ""}`,
+        {
+          headers: zipHeaders("parfocal-AT-1-patches.zip"),
+        },
+      );
     },
   ),
 ];
