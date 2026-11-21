@@ -2,6 +2,28 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.7 (2026-11-21)
+
+### Fixes
+
+- PROTO-151: Hold decision keys while drawing and add Finish outline
+- PROTO-151: Put the annotate sign-off card above the object list
+- PROTO-151: Keep the cells grid header in view and scroll the cells
+- PROTO-151: Open a task on the first slide the reviewer has not submitted
+- PROTO-151: Say a task needs a wider screen on a phone
+- PROTO-151: Refresh My work after a submit and widen the phone gate to 767 px
+
+### Docs
+
+- PROTO-153: Claim the round four slips task
+- OPS-038: Log the v0.35.6 deploy
+- PROTO-151: Log the panel fixes and move the task to review
+- PROTO-151: Correct the log note on checks and follow-ups
+
+### Other
+
+- PROTO-151: Merge panel controls in reach
+
 ## v0.35.6 (2026-11-21)
 
 ### Fixes
