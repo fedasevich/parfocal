@@ -5457,8 +5457,8 @@ msgid "Click to open the whole slide (or hold Z)"
 msgstr "Click to open the whole slide (or hold Z)"
 
 #: src/screens/disagreements/outline-settle.tsx
-msgid "Click to place points. Double click or Enter closes the outline."
-msgstr "Click to place points. Double click or Enter closes the outline."
+msgid "Click to place points. Double click, Enter or Finish outline closes the outline. Decision keys wait until you finish."
+msgstr "Click to place points. Double click, Enter or Finish outline closes the outline. Decision keys wait until you finish."
 
 #: src/viewer/compare-panes.tsx
 msgid "Click to show here"
@@ -7711,6 +7711,7 @@ msgstr "Find nuclei"
 msgid "Findings"
 msgstr "Findings"
 
+#: src/screens/disagreements/outline-settle.tsx
 #: src/screens/review/first-read.tsx
 #: src/screens/review/object-card.tsx
 msgid "Finish outline"
@@ -10579,8 +10580,8 @@ msgstr "new outline"
 msgid "New outline saved for {0}. The AI result is not changed."
 msgstr "New outline saved for {0}. The AI result is not changed."
 
-#. placeholder {0}: current.object
-#. placeholder {0}: rowLabel(row)
+#. placeholder {0}: rowLabel(target)
+#. placeholder {0}: target.object
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/disagreements/queue-screen.tsx
 msgid "New outline settled for {0}"

@@ -554,3 +554,39 @@ test("the adjudicator picks a reviewer's outline by letter, draws a new one and 
   expect((await back).postDataJSON()).toEqual({ reviewer: "B" });
   await expect(settle).toHaveAttribute("data-settled", "picked");
 });
+
+test("decision keys wait while the adjudicator draws and Finish outline closes the outline", async ({
+  page,
+}) => {
+  await page.goto(`${base}/adjudicate?stage=sent`);
+  await expect(page.getByText("The AI says T4 is tumor, 58% sure.")).toBeVisible();
+  await page.keyboard.press("x");
+  await slideDrawn(page);
+  await expect(objectStage(page)).toHaveAttribute("data-object", "T5");
+  const settle = page.getByTestId("outline-settle");
+  await settle.getByRole("button", { name: "Draw a new outline" }).click();
+  const finish = settle.getByRole("button", { name: "Finish outline" });
+  await expect(finish).toBeDisabled();
+  await objectStage(page).scrollIntoViewIfNeeded();
+  const box = (await objectStage(page).boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  for (const [x, y] of [
+    [0.4, 0.4],
+    [0.6, 0.4],
+    [0.6, 0.6],
+    [0.4, 0.6],
+    [0.5, 0.7],
+  ] as const) {
+    await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+  }
+  await expect(page.getByTestId("redraw-layer")).toHaveAttribute("data-points", "5");
+  await page.keyboard.press("k");
+  await page.keyboard.press("x");
+  await expect(page.getByTestId("redraw-layer")).toHaveAttribute("data-points", "5");
+  await expect(objectStage(page)).toHaveAttribute("data-object", "T5");
+  await expect(page.getByRole("banner").getByText("1 of 3 decided")).toBeVisible();
+  const drawn = outlineRequest(page, "PUT", "adjudication");
+  await finish.click();
+  expect(Object.keys((await drawn).postDataJSON() as object)).toEqual(["geometry"]);
+  await expect(settle).toHaveAttribute("data-settled", "drawn");
+  await expect(page.getByTestId("redraw-layer")).toHaveCount(0);
+});

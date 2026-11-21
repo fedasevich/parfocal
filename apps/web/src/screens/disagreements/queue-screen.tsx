@@ -48,6 +48,7 @@ import { answersOf } from "../review/decision-style.ts";
 import { fromMentionTokens } from "../review/mention-picking.ts";
 import { ViewerLink } from "../viewer-links.tsx";
 import { DisagreementStage } from "./disagreement-stage.tsx";
+import { useOutlineDrawing } from "./outline-drawing.ts";
 import { OutlineSettle } from "./outline-settle.tsx";
 import { reviewerOutlines, settledStageOutline } from "./reviewer-outlines.ts";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
@@ -113,7 +114,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
   const nudge = useNudgeReviewer();
   const settleOutline = useSettleQueuedOutline({ mutation: { onSuccess: () => void refresh() } });
   const clearOutline = useClearQueuedOutline({ mutation: { onSuccess: () => void refresh() } });
-  const [drawingKey, setDrawingKey] = useState<string | null>(null);
+  const drawing = useOutlineDrawing();
   const rows = queue?.rows ?? [];
   const row =
     rows.find((candidate) => candidate.key === selectedKey) ??
@@ -136,7 +137,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
 
   const select = (key: string) => {
     setSelectedKey(key);
-    setDrawingKey(null);
+    drawing.stop();
   };
 
   const objectOf = (target: QueueRow) => ({
@@ -166,6 +167,13 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     );
   };
 
+  const settleDrawn = (target: QueueRow) => (points: Float32Array) =>
+    settle(
+      target,
+      { geometry: polygonToGeoJson(points) },
+      t`New outline settled for ${rowLabel(target)}`,
+    );
+
   const decide = (target: QueueRow, raw: string) => {
     const note = notes[target.key]?.trim() || null;
     update.mutate({
@@ -187,6 +195,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
     const onKey = (event: KeyboardEvent) => {
       if (typing(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
       if (send || nudging || locked || !row || checked.length > 0) return;
+      if (drawing.drawingKey !== null) return;
       if (row.state === "with-adjudicator" || row.state === "adjudicated") return;
       const raw = answersOf(style, classes, { class_name: row.ai.class_name }).find(
         (item) => item.key.toLowerCase() === event.key.toLowerCase(),
@@ -374,21 +383,7 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   slideId={row.slide_id}
                   object={row.object}
                   outlines={stageOutlines}
-                  draw={
-                    drawingKey === row.key && outlineSettles
-                      ? {
-                          onClose: (points) => {
-                            setDrawingKey(null);
-                            settle(
-                              row,
-                              { geometry: polygonToGeoJson(points) },
-                              t`New outline settled for ${rowLabel(row)}`,
-                            );
-                          },
-                          onCancel: () => setDrawingKey(null),
-                        }
-                      : null
-                  }
+                  draw={outlineSettles ? drawing.stageDraw(row.key, settleDrawn(row)) : null}
                   className="h-full"
                 />
               </div>
@@ -433,7 +428,8 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   settledFrom={
                     row.settled_outline ? (row.settled_outline.from_user_id ?? null) : undefined
                   }
-                  drawing={drawingKey === row.key}
+                  drawing={drawing.drawingKey === row.key}
+                  canFinish={drawing.canFinish}
                   busy={settleOutline.isPending || clearOutline.isPending}
                   onPick={(userId) =>
                     settle(
@@ -442,8 +438,9 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                       t`Outline of ${nameOf(userId) ?? ""} settled for ${rowLabel(row)}`,
                     )
                   }
-                  onDraw={() => setDrawingKey(row.key)}
-                  onCancelDraw={() => setDrawingKey(null)}
+                  onDraw={() => drawing.start(row.key)}
+                  onFinishDraw={() => drawing.finish(settleDrawn(row))}
+                  onCancelDraw={drawing.stop}
                 />
               ) : null}
               <EvidenceList>
@@ -564,8 +561,8 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   }}
                   onSend={(keys, excluded) => setSend({ keys, excluded })}
                   onEdit={
-                    outlineSettles && drawingKey !== row.key && !settleOutline.isPending
-                      ? () => setDrawingKey(row.key)
+                    outlineSettles && drawing.drawingKey !== row.key && !settleOutline.isPending
+                      ? () => drawing.start(row.key)
                       : null
                   }
                   onLookAgain={() => {
