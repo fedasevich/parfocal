@@ -92,10 +92,14 @@ test("the window starts on the slides asked for, else the slides without results
 
 test("the estimate multiplies the time per slide and names the queue or the lab server", () => {
   const now = new Date(2026, 9, 15, 14, 30);
-  const gpu = runEstimate(model({}), 2, now);
+  const gpu = runEstimate(model({}), [{}, {}], now);
   assert.equal(gpu.total, 34);
   assert.match(gpu.perSlide, /One run is ahead of yours, about 4 min/);
-  const lab = runEstimate(model({ host: "lab", server: "Lab server", latency_ms: 210 }), 2, now);
+  const lab = runEstimate(
+    model({ host: "lab", server: "Lab server", latency_ms: 210 }),
+    [{}, {}],
+    now,
+  );
   assert.match(lab.perSlide, /answers now in 210 ms/);
 });
 

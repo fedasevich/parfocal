@@ -113,6 +113,7 @@ export function toModelRun(batch: RunBatchSeed, slide: RunSlideSeed): ModelRun {
         units_total: units?.[1] ?? null,
         started_at: stage === "pending" ? null : batch.createdAt,
         finished_at: stage === "done" ? (batch.finishedAt ?? batch.createdAt) : null,
+        ...(name === "Objects placed" && stage === "done" ? { objects: units?.[0] ?? 0 } : {}),
       };
     }),
     actions: actionsOf(status),

@@ -152,32 +152,54 @@ export function slideTone(run: ModelRun): ProgressTone {
 
 const thousands = (count: number) => count.toLocaleString("en-US");
 
+const counted = (count: number, one: string) =>
+  `${thousands(count)} ${one}${count === 1 ? "" : "s"}`;
+
+const stageKey = (stage: RunStage) => stage.name.toLowerCase().replaceAll(" ", "-");
+
+const stageLabels: Record<string, string> = {
+  "tiles-read": "Tiles read",
+  "tissue-found": "Tissue found",
+  "model-running": "Model running",
+  "objects-placed": "Objects placed",
+  "ids-given": "IDs given",
+  "result-set-added": "Result set added",
+};
+
+export const stageLabel = (stage: RunStage) => stageLabels[stageKey(stage)] ?? stage.name;
+
+type StepContext = { model: ProjectModel | undefined; resultSet: string };
+
+export function cellsOf(run: ModelRun): number | null {
+  const found = run.stages.find((stage) => (stage.objects ?? null) !== null);
+  return found?.objects ?? null;
+}
+
 function stageDetail(
   stage: RunStage,
   index: number,
-  context: { model: ProjectModel | undefined; resultSet: string },
+  context: StepContext,
+  cells: number | null,
+  queued: boolean,
 ): string | undefined {
-  const shown = stage.status !== "pending";
-  if (!shown) return undefined;
-  switch (index) {
-    case 0:
-      return stage.units_done > 0 && context.model
-        ? `${countWord(stage.units_done)} run ahead, ${context.model.queue_minutes} min`
-        : undefined;
-    case 1:
-      return stage.units_total ? `${stage.units_total} levels` : undefined;
-    case 2:
-      return stage.units_done > 0 ? `${stage.units_done} mm²` : undefined;
-    case 3:
-      return stage.status === "done"
-        ? "all tiles"
+  if (stage.status === "pending") return undefined;
+  const done = stage.status === "done";
+  if (index === 0 && queued && stage.units_done > 0 && context.model?.queue_minutes) {
+    return `${countWord(stage.units_done)} run ahead, about ${context.model.queue_minutes} min`;
+  }
+  switch (stageKey(stage)) {
+    case "tissue-found":
+      return stage.units_total ? counted(stage.units_total, "level") : undefined;
+    case "model-running":
+      return done
+        ? counted(stage.units_done, "tile")
         : `tile ${thousands(stage.units_done)} of ${thousands(stage.units_total ?? 0)}`;
-    case 4:
-      return stage.status === "done" ? `${thousands(stage.units_done)} cells` : undefined;
-    case 5:
-      return stage.status === "done" ? `C1 to C${stage.units_done}` : undefined;
-    case 6:
-      return stage.status === "done" && stage.finished_at
+    case "objects-placed":
+      return done && cells !== null ? counted(cells, "cell") : undefined;
+    case "ids-given":
+      return done && cells !== null && cells > 0 ? `C1 to C${cells}` : undefined;
+    case "result-set-added":
+      return done && stage.finished_at
         ? `${context.resultSet} · ${formatDayMonth(new Date(stage.finished_at))}`
         : undefined;
     default:
@@ -185,17 +207,18 @@ function stageDetail(
   }
 }
 
-export function stepsOf(
-  run: ModelRun,
-  context: { model: ProjectModel | undefined; resultSet: string },
-): JobStep[] {
+export function stepsOf(run: ModelRun, context: StepContext): JobStep[] {
+  const cells = cellsOf(run);
+  const queued = !run.stages.some(
+    (stage) => stageKey(stage) === "model-running" && stage.status !== "pending",
+  );
   return run.stages.map((stage, index) => {
     const held = run.status === "paused" && stage.status === "running";
     const current = run.status === "running" && stage.status === "running";
     const state = stageDone(stage) ? "done" : held ? "held" : current ? "current" : "waiting";
     return {
-      label: stage.name,
-      detail: stageDetail(stage, index, context),
+      label: stageLabel(stage),
+      detail: stageDetail(stage, index, context, cells, queued),
       state,
       percent: stagePercent(stage),
       valueText: held ? "paused" : `${stagePercent(stage)}%`,
@@ -275,16 +298,33 @@ function queueAhead(model: ProjectModel): string {
   return `${runs} ahead of yours, about ${model.queue_minutes} min.`;
 }
 
-export function runEstimate(model: ProjectModel, slides: number, now: Date): RunEstimate {
-  const total = model.minutes_per_slide * slides;
+export type SlideSize = { width?: number | null; height?: number | null };
+
+const tileSide = 512;
+const referenceTiles = 8000;
+const startMinutes = 1.5;
+
+export function slideMinutes(model: ProjectModel, size: SlideSize | undefined): number {
+  const typical = model.minutes_per_slide;
+  if (!size?.width || !size.height || typical <= startMinutes) return typical;
+  const tiles = Math.ceil(size.width / tileSide) * Math.ceil(size.height / tileSide);
+  return Math.max(2, Math.ceil(startMinutes + (tiles / referenceTiles) * (typical - startMinutes)));
+}
+
+export function runEstimate(model: ProjectModel, sizes: SlideSize[], now: Date): RunEstimate {
+  const each = sizes.map((size) => slideMinutes(model, size));
+  const total = each.reduce((sum, minutes) => sum + minutes, 0);
+  const least = each.length ? Math.min(...each) : model.minutes_per_slide;
+  const most = each.length ? Math.max(...each) : model.minutes_per_slide;
   const wait = model.host === "lab" ? 0 : model.queue_minutes;
   const doneAround = formatClock(new Date(now.getTime() + (total + wait) * 60000));
+  const range = least === most ? `${least}` : `${least} to ${most}`;
   const perSlide =
     model.serving === "offline"
       ? `${model.server} is not answering right now, so this run cannot start.`
       : model.host === "lab"
-        ? `About ${model.minutes_per_slide} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
-        : `About ${model.minutes_per_slide} min a slide on the ${model.server}. ${queueAhead(model)}`;
+        ? `About ${range} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
+        : `About ${range} min a slide on the ${model.server}. ${queueAhead(model)}`;
   return { total, doneAround, perSlide };
 }
 

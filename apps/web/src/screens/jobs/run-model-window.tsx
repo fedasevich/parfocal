@@ -112,7 +112,13 @@ function RunModelForm({
   const items = slideItems(slides, setNames, model);
   const again = picked.some((id) => items.find((item) => item.id === id)?.end);
   const blockers = runBlockers(picked.length, model);
-  const estimate = model ? runEstimate(model, picked.length, now()) : null;
+  const estimate = model
+    ? runEstimate(
+        model,
+        picked.map((id) => slides.find((slide) => slide.id === id) ?? {}),
+        now(),
+      )
+    : null;
   const run = async () => {
     if (model?.serving !== "ready" || picked.length === 0) return;
     await start.mutateAsync({

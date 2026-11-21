@@ -77287,6 +77287,28 @@
             },
             "type": "array",
             "title": "Result Set Ids"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
           }
         },
         "type": "object",
@@ -81902,6 +81924,17 @@
               }
             ],
             "title": "Waiting Reason"
+          },
+          "objects": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objects"
           }
         },
         "type": "object",

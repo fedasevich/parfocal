@@ -51,7 +51,10 @@ test("a lab server outage turns its answering status into offline", () => {
   const labModel = toProjectModels().find((model) => model.host === "lab");
   assert.ok(labModel);
   assert.equal(labModel.serving, "offline");
-  assert.match(runEstimate(labModel, 2, new Date(2026, 9, 15, 14, 30)).perSlide, /not answering/);
+  assert.match(
+    runEstimate(labModel, [{}, {}], new Date(2026, 9, 15, 14, 30)).perSlide,
+    /not answering/,
+  );
 });
 
 test("the answer comes back when the worker does", () => {

@@ -16,7 +16,7 @@ from pydantic import (
     TypeAdapter,
     model_validator,
 )
-from sqlalchemy import ColumnElement, func, select, text
+from sqlalchemy import ColumnElement, Integer, cast, func, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection
 from starlette.concurrency import run_in_threadpool
 
@@ -219,6 +219,7 @@ class RunStage(BaseModel):
     started_at: datetime | None
     finished_at: datetime | None
     waiting_reason: str | None = None
+    objects: int | None = None
 
 
 class ModelRun(BaseModel):
@@ -440,8 +441,13 @@ async def stages_of(
         .where(job_units.c.job_id == job_steps.c.job_id, job_units.c.ordinal == job_steps.c.ordinal)
         .scalar_subquery()
     )
+    placed = (
+        select(func.sum(cast(job_units.c.result["objects"].astext, Integer)))
+        .where(job_units.c.job_id == job_steps.c.job_id, job_units.c.ordinal == job_steps.c.ordinal)
+        .scalar_subquery()
+    )
     rows = await connection.execute(
-        select(job_steps, units.label("units_done"))
+        select(job_steps, units.label("units_done"), placed.label("objects"))
         .where(job_steps.c.job_id.in_(list(job_ids)))
         .order_by(job_steps.c.job_id, job_steps.c.ordinal)
     )
@@ -456,6 +462,7 @@ async def stages_of(
                 units_total=row.units_total,
                 started_at=row.started_at,
                 finished_at=row.finished_at,
+                objects=None if row.objects is None else int(row.objects),
             )
         )
     return stages

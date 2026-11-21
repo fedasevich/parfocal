@@ -1275,10 +1275,9 @@ msgstr "{0} on {1} measured {2} with the ruler"
 
 #. placeholder {0}: model.title
 #. placeholder {1}: model.server
-#. placeholder {2}: model.minutes_per_slide
 #: src/viewer/start-run-panel.tsx
-msgid "{0} on the {1}, about {2} min a slide"
-msgstr "{0} on the {1}, about {2} min a slide"
+msgid "{0} on the {1}, about {minutes} min for this slide"
+msgstr "{0} on the {1}, about {minutes} min for this slide"
 
 #. placeholder {0}: row.name
 #: ../../packages/ui/src/components/viewer-tools.tsx

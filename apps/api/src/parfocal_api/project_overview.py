@@ -105,6 +105,8 @@ class ProjectSlide(BaseModel):
     stain: str
     case: SlideCase | None
     result_set_ids: list[uuid.UUID]
+    width: int | None = None
+    height: int | None = None
 
 
 class ScopeRoi(BaseModel):
@@ -354,6 +356,8 @@ async def list_project_slides(
                 slides.c.label,
                 slides.c.stain,
                 slides.c.case_id,
+                slides.c.width,
+                slides.c.height,
                 cases.c.label.label("case_label"),
                 ai_hidden(principal, slides.c.project_id, slides.c.id).label("hidden"),
             )
@@ -389,6 +393,8 @@ async def list_project_slides(
                 )
             ),
             result_set_ids=[] if row.hidden else sets.get(row.id, []),
+            width=row.width,
+            height=row.height,
         )
         for row in rows
     ]

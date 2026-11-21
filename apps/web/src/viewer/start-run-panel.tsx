@@ -1,7 +1,13 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type ModelRunDraft, startModelRuns, useListProjectModels } from "@parfocal/api-client";
+import {
+  type ModelRunDraft,
+  startModelRuns,
+  useListProjectModels,
+  useListProjectSlides,
+} from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useState } from "react";
+import { slideMinutes } from "../screens/jobs/model.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { useDocked } from "./inspector-slots.tsx";
 import {
@@ -43,6 +49,11 @@ export function StartRunPanel(props: StartRunPanelProps) {
   const model = okData(useListProjectModels(props.projectId).data)?.find(
     (item) => item.name === nucleiDetector,
   );
+
+  const slide = okData(useListProjectSlides(props.projectId).data)?.find(
+    (item) => item.id === props.slideId,
+  );
+  const minutes = model ? slideMinutes(model, slide) : 0;
 
   const used: RunOptions = props.canTune
     ? {
@@ -118,7 +129,7 @@ export function StartRunPanel(props: StartRunPanelProps) {
       {model ? (
         <span className="text-fg-dim" data-testid="start-run-model">
           <Trans>
-            {model.title} on the {model.server}, about {model.minutes_per_slide} min a slide
+            {model.title} on the {model.server}, about {minutes} min for this slide
           </Trans>
         </span>
       ) : null}

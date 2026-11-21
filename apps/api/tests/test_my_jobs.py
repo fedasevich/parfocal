@@ -85,7 +85,7 @@ def test_my_jobs_lists_the_uploads_and_runs_i_started_newest_first(
     ]
     assert uploading["project"]["code"] == "P01"
     assert uploading["started_by_user_id"] == s.user("owner")
-    assert (ran["title"], ran["percent"], ran["pause"]) == ("hovernet v2.1", 100, None)
+    assert (ran["title"], ran["percent"], ran["pause"]) == ("HoVer-Net v2.1", 100, None)
     assert my_jobs(api, s, "second") == []
 
 

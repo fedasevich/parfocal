@@ -5098,6 +5098,7 @@ export interface RunStage {
   started_at: string | null;
   finished_at: string | null;
   waiting_reason?: string | null;
+  objects?: number | null;
 }
 
 export interface ModelRun {
@@ -6227,6 +6228,8 @@ export interface ProjectSlide {
   stain: string;
   case: SlideCase | null;
   result_set_ids: string[];
+  width?: number | null;
+  height?: number | null;
 }
 
 export interface ProjectWebhook {

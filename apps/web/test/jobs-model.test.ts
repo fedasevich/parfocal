@@ -16,6 +16,7 @@ import {
   pausedRuns,
   runEstimate,
   runSummary,
+  slideMinutes,
   slidePercent,
   slideValueText,
   stepsOf,
@@ -220,7 +221,7 @@ test("a finished job opens its one slide, its job window or its project", () => 
 });
 
 test("the estimate adds the queue on the Parfocal GPU and none on the lab server", () => {
-  const gpu = runEstimate(model({}), 2, today);
+  const gpu = runEstimate(model({}), [{}, {}], today);
   assert.equal(gpu.total, 34);
   assert.equal(gpu.doneAround, "15:12");
   assert.equal(
@@ -229,16 +230,40 @@ test("the estimate adds the queue on the Parfocal GPU and none on the lab server
   );
   const lab = runEstimate(
     model({ minutes_per_slide: 6, host: "lab", server: "ml.cuailab.cz", latency_ms: 210 }),
-    2,
+    [{}, {}],
     today,
   );
   assert.equal(lab.doneAround, "14:42");
   assert.equal(lab.perSlide, "About 6 min a slide on ml.cuailab.cz, which answers now in 210 ms.");
-  const shared = runEstimate(model({ runs_ahead: 0, queue_minutes: 13 }), 1, today);
+  const shared = runEstimate(model({ runs_ahead: 0, queue_minutes: 13 }), [{}], today);
   assert.equal(
     shared.perSlide,
     "About 17 min a slide on the Parfocal GPU. Runs from other workspaces are ahead of yours, about 13 min.",
   );
+});
+
+test("the estimate fits the slide, about two minutes for a small one and an hour for a huge one", () => {
+  const small = runEstimate(model({}), [{ width: 2220, height: 2967 }], today);
+  assert.equal(small.total, 2);
+  assert.equal(
+    small.perSlide,
+    "About 2 min a slide on the Parfocal GPU. One run is ahead of yours, about 8 min.",
+  );
+  const large = runEstimate(model({}), [{ width: 100000, height: 80000 }], today);
+  assert.equal(large.total, 62);
+  const mixed = runEstimate(
+    model({}),
+    [
+      { width: 2220, height: 2967 },
+      { width: 100000, height: 80000 },
+    ],
+    today,
+  );
+  assert.equal(mixed.total, 64);
+  assert.match(mixed.perSlide, /^About 2 to 62 min a slide/);
+  assert.equal(slideMinutes(model({}), undefined), 17);
+  assert.equal(slideMinutes(model({}), { width: null, height: null }), 17);
+  assert.equal(slideMinutes(model({ minutes_per_slide: 1 }), { width: 2220, height: 2967 }), 1);
 });
 
 test("a paused slide holds at the model step with tile 448 of 1,180", () => {
@@ -247,41 +272,66 @@ test("a paused slide holds at the model step with tile 448 of 1,180", () => {
   const steps = stepsOf(pausedRun, { model: undefined, resultSet: "CAMELYON tumor model v1.0" });
   assert.deepEqual(
     steps.map((step) => `${step.state} ${step.detail ?? ""}`.trim()),
-    [
-      "done",
-      "done 9 levels",
-      "done 48 mm²",
-      "held tile 448 of 1,180",
-      "waiting",
-      "waiting",
-      "waiting",
-    ],
+    ["done", "done", "done", "held tile 448 of 1,180", "waiting", "waiting", "waiting"],
   );
 });
 
-test("a finished slide names its cells, its IDs and the result set", () => {
+const rawStage = (
+  name: string,
+  status: "pending" | "running" | "done",
+  done: number,
+  total: number | null,
+  objects?: number,
+) => ({ ...stage(name, status, done, total), ...(objects === undefined ? {} : { objects }) });
+
+test("a finished run names its steps in words with its tiles, cells and IDs", () => {
   const done = run("done", [
-    stage("Queued", "done"),
-    stage("Tiles read", "done", 9, 9),
-    stage("Tissue found", "done", 61),
-    stage("Model running", "done", 1, 1),
-    stage("Objects placed", "done", 21408, 21408),
-    stage("IDs given", "done", 21408, 21408),
-    stage("Result set added", "done", 1, 1),
+    rawStage("tiles-read", "done", 11, 11),
+    rawStage("tissue-found", "done", 1, 1),
+    rawStage("model-running", "done", 11, 11, 2428),
+    rawStage("objects-placed", "done", 11, 11),
+    rawStage("ids-given", "done", 1, 1),
+    rawStage("result-set-added", "done", 1, 1),
   ]);
-  const details = stepsOf(done, { model: undefined, resultSet: "HoVer-Net v2.1" }).map(
-    (step) => step.detail ?? "",
+  const steps = stepsOf(done, { model: model({ queue_minutes: 0 }), resultSet: "HoVer-Net v2.1" });
+  assert.deepEqual(
+    steps.map((step) => step.label),
+    [
+      "Tiles read",
+      "Tissue found",
+      "Model running",
+      "Objects placed",
+      "IDs given",
+      "Result set added",
+    ],
   );
-  assert.deepEqual(details, [
-    "",
-    "9 levels",
-    "61 mm²",
-    "all tiles",
-    "21,408 cells",
-    "C1 to C21408",
-    "HoVer-Net v2.1 · 14 Oct",
-  ]);
+  assert.deepEqual(
+    steps.map((step) => step.detail ?? ""),
+    ["", "1 level", "11 tiles", "2,428 cells", "C1 to C2428", "HoVer-Net v2.1 · 14 Oct"],
+  );
   assert.equal(slidePercent(done), 100);
+});
+
+test("a run that is waiting says how long the runs ahead take, and a running one says its tile", () => {
+  const waiting = run("running", [
+    rawStage("tiles-read", "running", 1, 3),
+    rawStage("tissue-found", "pending", 0, null),
+    rawStage("model-running", "pending", 0, null),
+  ]);
+  assert.equal(
+    stepsOf(waiting, { model: model({ queue_minutes: 8 }), resultSet: "" })[0]?.detail,
+    "one run ahead, about 8 min",
+  );
+  assert.equal(
+    stepsOf(waiting, { model: model({ queue_minutes: 0 }), resultSet: "" })[0]?.detail,
+    undefined,
+  );
+  const running = run("running", [
+    rawStage("tiles-read", "done", 11, 11),
+    rawStage("tissue-found", "done", 1, 1),
+    rawStage("model-running", "running", 4, 11),
+  ]);
+  assert.equal(stepsOf(running, { model: undefined, resultSet: "" })[2]?.detail, "tile 4 of 11");
 });
 
 test("a job with no minutes left says no minutes at all", () => {

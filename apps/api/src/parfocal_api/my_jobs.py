@@ -9,6 +9,7 @@ from sqlalchemy import case, func, literal, select, union_all
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.model_catalogue import CATALOGUE
 from parfocal_api.model_runs import require_run_reading
 from parfocal_api.notifications import member_of
 from parfocal_api.principals import MemberPrincipal
@@ -91,7 +92,14 @@ def started_by(me: uuid.UUID) -> Any:
     from_runs = select(
         model_runs.c.job_id,
         literal(MyJobKind.MODEL_RUN.value),
-        func.concat(model_runs.c.detector, " ", model_runs.c.detector_version),
+        func.concat(
+            case(
+                *[(model_runs.c.detector == model.name, model.title) for model in CATALOGUE],
+                else_=model_runs.c.detector,
+            ),
+            " ",
+            model_runs.c.detector_version,
+        ),
         model_runs.c.slide_id,
         literal(""),
     ).where(model_runs.c.started_by_user_id == me)

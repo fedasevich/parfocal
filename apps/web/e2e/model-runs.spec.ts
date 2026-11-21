@@ -88,7 +88,7 @@ test("every job scene opens with its steps per slide", async ({ page }) => {
   const running = page.getByRole("dialog", { name: /PathoSAM \+ HoVer-NeXt v1.2 · running/ });
   await expect(running).toContainText("tumor_052.tif");
   await expect(running).toContainText("tumor_060.tif");
-  await expect(running).toContainText("one run ahead, 8 min");
+  await expect(running).toContainText("one run ahead, about 8 min");
   await expect(running).toContainText("Waiting");
 
   await openFromIndex(page, "A job · cam");
