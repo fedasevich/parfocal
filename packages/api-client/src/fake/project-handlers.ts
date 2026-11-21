@@ -74,6 +74,7 @@ import {
 import { annotateStubTaskId, rt13, rt18 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates } from "./scenario-task.ts";
 import { annotateTaskClasses, annotateTaskSlides } from "./shared-layer-handlers.ts";
+import { outlineOverlapOf } from "./task-outline-overlap.ts";
 import { addedResultSets } from "./upload-handlers.ts";
 import { toSlideRow } from "./work-handlers.ts";
 
@@ -187,6 +188,7 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
     study_template_version: null,
     analysis_template: task.analysisTemplate ?? "none",
     decision: decisionSettingsFor(task.code),
+    outline_overlap: outlineOverlapOf(task.id),
     counts_as_changes: countsAsChangesFor(task.code),
     display: taskDisplayFor(task.code),
     created_by_user_id: people[project.owner].id,

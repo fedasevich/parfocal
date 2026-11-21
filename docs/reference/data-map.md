@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 53 |
-| `personal` | 103 |
+| `personal` | 105 |
 | `secret` | 15 |
-| `operational` | 915 |
+| `operational` | 925 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -288,6 +288,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `edits_settled_at` | operational |
 | `note` | phi |
 | `decided_by_user_id` | personal |
+| `outline` | operational |
+| `outline_from_user_id` | personal |
+| `outline_by_user_id` | personal |
+| `outline_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -990,6 +994,19 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `audit_after_days` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## review_ai_outlines
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `kind` | operational |
+| `number` | operational |
+| `outline` | operational |
+| `created_at` | operational |
 
 ## review_assignments
 

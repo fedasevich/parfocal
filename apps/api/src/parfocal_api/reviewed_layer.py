@@ -4,12 +4,13 @@ from datetime import datetime
 from types import SimpleNamespace
 from typing import Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import delete, func, insert, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.ai_outlines import keep_ai_outline
 from parfocal_api.annotations import COLUMNS as ANNOTATION_COLUMNS
 from parfocal_api.annotations import (
     SHAPES,
@@ -518,6 +519,7 @@ async def save_review_edit(
     draft: EditDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    request: Request,
 ) -> ReviewEdit:
     row = await assigned_slide(connection, principal, task_id, slide_id)
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
@@ -532,6 +534,8 @@ async def save_review_edit(
     values: dict[str, Any] = {"class_id": draft.class_id, "deleted": draft.deleted}
     if geometry is not None or not found.split:
         values["geometry"] = geometry
+    if geometry is not None and not found.split:
+        await keep_ai_outline(connection, request.app.results, row, kind, found.number)
     await connection.execute(
         upsert(review_edits)
         .values(

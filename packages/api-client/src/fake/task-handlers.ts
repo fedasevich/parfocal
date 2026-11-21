@@ -52,6 +52,7 @@ import {
 } from "./scenario-task.ts";
 import { recordSentTask } from "./sent-tasks.ts";
 import { mergedStudyTemplates, studyTemplateHandlers } from "./study-template-store.ts";
+import { setOutlineOverlap } from "./task-outline-overlap.ts";
 import { toReviewTaskDetail } from "./work-handlers.ts";
 
 const isTaskProject = (projectId: string) =>
@@ -272,6 +273,15 @@ const changeTask = http.patch<{ taskId: string }>(
     if (task.status === "signed" && body.due_on != null)
       return problem(409, "task-signed-off", "This task is signed off");
     if (body.due_on != null) task.dueOn = body.due_on;
+    if (body.outline_overlap != null) {
+      if (task.status === "signed")
+        return problem(
+          409,
+          "outline-overlap-signed-off",
+          "The outline overlap is locked at sign-off",
+        );
+      setOutlineOverlap(task.id, body.outline_overlap);
+    }
     const after = body.decision?.counts_as;
     if (after === undefined || after === null) return HttpResponse.json(toReviewTaskDetail(task));
     if (task.status === "signed")

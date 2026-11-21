@@ -70,6 +70,7 @@ import {
 import { assignedTo, toAnnouncement, toProjectRef } from "./scenario-handlers.ts";
 import { rt18 } from "./scenario-review.ts";
 import { type SentTask, sentTasks } from "./sent-tasks.ts";
+import { outlineOverlapOf } from "./task-outline-overlap.ts";
 import { fakeView } from "./view.ts";
 
 const taskByCode = (code: string): ScenarioReviewTask => {
@@ -319,6 +320,7 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
     study_template_version: null,
     analysis_template: task.analysisTemplate ?? "none",
     decision: decisionSettingsFor(task.code),
+    outline_overlap: outlineOverlapOf(task.id),
     counts_as_changes: countsAsChangesFor(task.code),
     display: taskDisplayFor(task.code),
     created_by_user_id: people[project.owner].id,

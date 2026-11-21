@@ -88,3 +88,39 @@ test("blind first is switched off and on again from the settings of an annotate 
   await expect(blindFirst).toBeChecked();
   await expect(page.getByText(/Blind first is on for AT-21/)).toBeVisible();
 });
+
+const rt14 = "00000000-0000-4000-8007-000000000014";
+
+const goInApp = (page: Page, url: string) =>
+  page.evaluate((target) => {
+    window.history.pushState({}, "", target);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, url);
+
+test("a stricter outline overlap in the task settings adds a redraw against the AI outline to the queue", async ({
+  page,
+}) => {
+  await page.goto(`/tasks/${rt14}/disagreements`);
+  await expect(page.getByRole("radio", { name: "All 7" })).toBeVisible();
+  await expect(page.getByText("outline differs")).toHaveCount(0);
+
+  await goInApp(page, tasks);
+  await row(page, "RT-14").getByRole("button", { name: "Settings for RT-14" }).click();
+  const drawer = page.getByRole("dialog", { name: "Settings for RT-14" });
+  const overlap = drawer.getByRole("textbox", { name: "Outline overlap" });
+  await expect(overlap).toHaveValue("60");
+  const save = drawer.getByRole("button", { name: "Save Outline overlap" });
+  await expect(save).toBeDisabled();
+
+  for (let step = 0; step < 3; step += 1) {
+    await drawer.getByRole("button", { name: "Raise Outline overlap" }).click();
+  }
+  await expect(overlap).toHaveValue("75");
+  await save.click();
+  await expect(page.getByText("Outlines now differ below 75% overlap on RT-14.")).toBeVisible();
+  await expect(save).toBeDisabled();
+
+  await goInApp(page, `/tasks/${rt14}/disagreements`);
+  await expect(page.getByRole("radio", { name: "All 8" })).toBeVisible();
+  await expect(page.getByText("outline differs").first()).toBeVisible();
+});

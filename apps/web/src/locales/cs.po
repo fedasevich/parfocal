@@ -12206,12 +12206,21 @@ msgstr ""
 msgid "Outline of reviewer {letter} settled for {0}"
 msgstr ""
 
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Outline overlap"
+msgstr ""
+
 #: ../../packages/ui/src/components/disagreements.tsx
 msgid "outline-2 outline-solid outline-offset-2 outline-accent"
 msgstr ""
 
 #: src/screens/project/settings-tab.tsx
 msgid "Outlines"
+msgstr ""
+
+#. placeholder {0}: task.code
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Outlines now differ below {overlap}% overlap on {0}."
 msgstr ""
 
 #. placeholder {0}: rowLabel(row)
@@ -14470,6 +14479,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Save JSON"
+msgstr ""
+
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Save Outline overlap"
 msgstr ""
 
 #: src/screens/project/case-slides-editor.tsx
@@ -17072,6 +17085,10 @@ msgstr ""
 msgid "The outlines your server sends back show here, on the sample tile"
 msgstr ""
 
+#: src/screens/project/task-settings-drawer.tsx
+msgid "The overlap cannot change after sign-off."
+msgstr ""
+
 #: src/screens/project/project-no-access.tsx
 msgid "the owner"
 msgstr ""
@@ -17835,6 +17852,10 @@ msgstr ""
 msgid "This task is signed off, so the mapping is locked."
 msgstr ""
 
+#: src/screens/project/task-settings-drawer.tsx
+msgid "This task is signed off, so the overlap is locked."
+msgstr ""
+
 #: src/screens/refusals.ts
 msgid "This task was withdrawn, so nothing can be changed. You can look at it read only."
 msgstr ""
@@ -18250,6 +18271,10 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Two fingers"
+msgstr ""
+
+#: src/screens/project/task-settings-drawer.tsx
+msgid "Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it."
 msgstr ""
 
 #: src/screens/new-task/modals.tsx

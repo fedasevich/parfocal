@@ -20,6 +20,7 @@ export type QueueSeedRow = {
   sizeMm: number | null;
   answers: [QueueSeedAnswer, QueueSeedAnswer];
   outlineOverlap?: number;
+  againstAi?: boolean;
 };
 
 const answer = (
@@ -132,7 +133,22 @@ export const queueRows: QueueSeedRow[] = [
       answer("SM", "disagree", "It is a tumor cell"),
     ],
   },
+  {
+    slide: 1,
+    slideLabel: "A1",
+    object: "T6",
+    kind: "region",
+    className: "Tumor",
+    score: 0.77,
+    sizeMm: 1.9,
+    answers: [answer("LM", "agree"), answer("SM", "agree")],
+    outlineOverlap: 0.7,
+    againstAi: true,
+  },
 ];
+
+export const shownQueueRows = (taskOverlap: number) =>
+  queueRows.filter((seed) => !seed.againstAi || taskOverlap > (seed.outlineOverlap ?? 0) * 100);
 
 export const queueKey = (row: Pick<QueueSeedRow, "slideLabel" | "object">) =>
   `${row.slideLabel}:${row.object}`;

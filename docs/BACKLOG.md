@@ -7085,11 +7085,11 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   On 2026-11-20 the reset-production workflow spent over an hour in `parfocal_deploy.reset` on v0.32.2 (seed output from 22:17 to 23:17 UTC and still running when the lead cancelled it at 23:36), and earlier reseeds took 30 to 55 minutes. Each walkthrough uses up seeded examples, so a slow reseed holds up every deployed check. Measure where the seed spends its time against the Neon main branch (likely one round trip per row from the GitHub runner), and batch the writes or run the seed next to the database.
   Done when a result file gives the seed time by phase before and after, and a reseed on the deployed app finishes in under 15 minutes.
   Depends on nothing. Size: M.
-- [ ] PROTO-140 · A redraw against a kept AI outline reaches the queue, and the task sets its overlap
+- [x] PROTO-140 · A redraw against a kept AI outline reaches the queue, and the task sets its overlap
   PROTO-116 (reviewers' outlines that differ reach the disagreement queue) compares only two redraws. When one reviewer redraws and the other keeps the AI outline, nothing is flagged, because AI cell outlines live in chunk files the queue cannot read cheaply. Store the AI outline beside the first redraw of an object (or read it once per sign-off) so a redraw is compared with the kept AI outline too, and add a control for `outline_overlap` (1 to 99 percent, default 60, ADR 0412) to the review task settings.
   Done when DB tests cover a redraw against a kept AI region and cell below and above the threshold, and a spec changes the overlap in the task settings and sees the queue change.
   Depends on PROTO-116. Size: M.
-- [ ] PROTO-141 · A reset leaves no tenant objects behind in the slide bucket
+- [x] PROTO-141 · A reset leaves no tenant objects behind in the slide bucket
   PROTO-139 (the production reseed finishes in under 15 minutes) found on 2026-11-21 that every reset logs "0 tenant objects" deleted, because the seven day bucket lock on `parfocal-dev-eu` refuses each delete of a `t/` key, so tenant objects from every reseed stay in the bucket and the key list the reset walks grows each time. Skip keys younger than the lock age in the reset, and make sure keys older than the lock are removed, by the reset or by a bucket lifecycle rule declared in OpenTofu. Measure how many objects and bytes have piled up first, and log the storage it costs.
   Done when a result file gives the piled up count and bytes, the reset deletes or skips every `t/` key without an error, and a test covers the age rule. Any bucket rule is an additive `tofu apply`.
   Depends on PROTO-139. Size: S.
