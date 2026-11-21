@@ -340,7 +340,11 @@ function TopBar({
         </Button>
       ) : null}
       {onSubmit && reviewTask && submitState?.failed && !submitState.sending ? (
-        <span role="alert" data-testid="top-submit-failed" className="shrink-0 text-sm text-danger">
+        <span
+          role="alert"
+          data-testid="top-submit-failed"
+          className="shrink-0 text-body text-danger"
+        >
           <Trans>The slide was not submitted. Nothing was lost.</Trans>
         </span>
       ) : null}
