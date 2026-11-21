@@ -7033,7 +7033,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 13. The owner named COCO and most detection and instance segmentation trainers read it.
   Done when the patch export can write `annotations.json` in COCO form beside the tiles, with categories from the class snapshot, one polygon per object clipped to its tile and the Parfocal object ID and origin in each annotation, and a test loads it with `pycocotools` and compares areas with the masks.
   Depends on PROTO-115 and on decision 168 (which training format comes next). Size: M.
-- [ ] PROTO-122 · One spec walks the whole path on the real API
+- [x] PROTO-122 · One spec walks the whole path on the real API
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 14. The owner's sentence is one flow and nothing proves it end to end.
   Done when an end to end spec uploads a small slide, runs cell detection on a selection, has two reviewers decide and one redraw an outline, adjudicates one disagreement, signs off, freezes a dataset version and checks that the zip holds the redrawn outline with its author letter and the AI original's ID.
   Depends on PROTO-111 and PROTO-115 and PROTO-117 and PROTO-118. Size: M.
