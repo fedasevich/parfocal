@@ -7017,7 +7017,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 9. The queue decision stores an answer and a class and no geometry.
   Done when the adjudicator and the owner in the queue can pick one reviewer's outline or draw a new one, it is stored on the decision with who and when, the consensus export uses it and covers cells, and specs cover pick, draw and undo.
   Depends on PROTO-116. Size: M.
-- [ ] PROTO-118 · A signed off review task becomes a final layer the dataset builder reads
+- [x] PROTO-118 · A signed off review task becomes a final layer the dataset builder reads
   From `docs/results/2026-11-20-annotate-review-export-path.md` (the path from an uploaded slide to human reviewed training annotations), proposed task 10. `annotate_only` shuts review tasks out of the training export, so a doctor's corrections never reach a dataset.
   Done when signing off a review task, or a button on its Dataset page, builds the final layer by the rule of the chosen option (agreed objects as `ai-confirmed`, edited ones as `ai-edited` with their author, adjudicated ones with the adjudicator's outcome, rejected ones as deletions, added ones as `human`), the training dataset and the patch export accept the task, an object left open or unsure is left out and counted, and tests compare the export with the decisions and edits it came from. An ADR records where the final layer lives.
   Depends on PROTO-113 and PROTO-117 and on decision 166 (which task carries training data). Size: L.
