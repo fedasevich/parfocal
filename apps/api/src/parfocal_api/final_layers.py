@@ -221,6 +221,13 @@ def first_agreeing(given: list[Any]) -> uuid.UUID | None:
     return next((row.user_id for row in given if row.value == engine.AGREE), None)
 
 
+def upheld_by(key: Key, facts: Facts) -> set[uuid.UUID | None] | None:
+    judged = facts.adjudicated.get(key)
+    if judged is None or judged.value is None:
+        return None
+    return {row.user_id for row in facts.decisions.get(key, []) if row.value == engine.AGREE}
+
+
 def outcome_of(consensus: engine.Consensus, key: Key, facts: Facts) -> Outcome:
     given = facts.decisions.get(key, [])
     judged = facts.adjudicated.get(key)
@@ -253,7 +260,7 @@ def outcome_of(consensus: engine.Consensus, key: Key, facts: Facts) -> Outcome:
         if shape is None and retype is None:
             return Outcome(FinalState.REJECTED, author=judge, settled_by=settled_by)
     else:
-        upheld = {row.user_id for row in given if row.value == engine.AGREE} if decided else None
+        upheld = upheld_by(key, facts)
         shape = shape or facts.redraw(key, upheld)
         retype = retype or facts.retype(key, upheld)
     if shape is None and retype is None:
