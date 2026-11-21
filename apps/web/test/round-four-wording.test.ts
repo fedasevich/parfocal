@@ -6,12 +6,12 @@ import { slidesTimeLeft } from "../src/screens/review/slides-time-left.ts";
 import { liveSlideList, timeLeftText } from "../src/viewer/live-slides.ts";
 import { readOnlyCodeOf } from "../src/viewer/viewer-access.ts";
 
-test("the last or only slide of a review reads Last slide, never about 0 min left", () => {
-  assert.equal(slidesTimeLeft(1, 1), "Last slide");
-  assert.equal(slidesTimeLeft(12, 12), "Last slide");
-  assert.equal(slidesTimeLeft(11, 12), "about 20 min left");
+test("the last or only slide of a review counts its own minutes, never about 0 min left", () => {
+  assert.equal(slidesTimeLeft(1, 1), "about 16 min left");
+  assert.equal(slidesTimeLeft(12, 12), "about 16 min left");
+  assert.equal(slidesTimeLeft(11, 12), "about 32 min left");
   assert.equal(slidesTimeLeft(8, 12), "about 1 h 20 min left");
-  assert.equal(slidesTimeLeft(9, 12), "about 1 h left");
+  assert.equal(slidesTimeLeft(9, 12), "about 1 h 4 min left");
 });
 
 test("the viewer chip counts a case or project in label order and its last slide has no minutes", () => {

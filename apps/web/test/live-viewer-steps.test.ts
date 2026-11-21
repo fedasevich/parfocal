@@ -58,7 +58,7 @@ test("liveDecisionSplit never reports fewer objects than decisions", () => {
 test("timeLeftText counts twenty minutes for each slide still to go", () => {
   assert.equal(timeLeftText(2, 3), "about 20 min");
   assert.equal(timeLeftText(1, 5), "about 1 h 20 min");
-  assert.equal(timeLeftText(3, 3), "about 0 min");
+  assert.equal(timeLeftText(3, 3), null);
 });
 
 test("threadTarget uses the area of the anchored object or of its parent", () => {
