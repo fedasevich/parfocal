@@ -207,8 +207,16 @@ function GuardedViewer({
     query: { enabled: reviewTask !== null },
   });
   const nothingFound = reviewTask !== null && nothingFoundOf(okData(reviewObjects.data));
-  const meData = okData(useGetMe().data);
+  const meQuery = useGetMe();
+  const meData = okData(meQuery.data);
   const me = meData?.user_id;
+  const reviewLayerTaskId =
+    reviewTask !== null &&
+    taskDetail !== undefined &&
+    !resultMissingOf(taskDetail.slides, slideId) &&
+    assignedTo(taskDetail.slides, slideId, me)
+      ? reviewTask
+      : null;
   const othersReview =
     taskDetail?.kind === "review" ? othersReviewOf(taskDetail.slides, slideId, me) : null;
   const reviewers = useReviewerNames(othersReview?.map((id) => person(id)?.name ?? id) ?? null);
@@ -593,7 +601,8 @@ function GuardedViewer({
               outlines={fakeOutlines && task !== undefined && annotateTask === null}
               workspace={workspace}
               annotateTask={annotateTask}
-              layerKnown={layerKnown}
+              reviewLayerTaskId={reviewLayerTaskId}
+              layerKnown={layerKnown && (reviewTask === null || !meQuery.isPending)}
               readOnly={panel.readOnly}
               onOpenSlide={onOpenSlide}
               onStorage={(note) => setStorage({ slideId, note })}

@@ -1,5 +1,11 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import type { Annotation, AnnotationDraft, AnnotationEdit, LayerGroups } from "../generated/api.ts";
+import {
+  type AddedChange,
+  addedObject,
+  changeAddedObject,
+  removeAddedObject,
+} from "./added-objects.ts";
 
 const storageKey = "parfocal.fake.annotations";
 const groupsKey = "parfocal.fake.layer-groups";
@@ -77,6 +83,13 @@ export const toSavedAnnotation = (
     deleted_at: null,
   };
 };
+
+const answerOf = (change: AddedChange) =>
+  change.kind === "done"
+    ? HttpResponse.json(change.value)
+    : change.kind === "stale"
+      ? staleProblem()
+      : new HttpResponse(null, { status: 404 });
 
 const staleProblem = () =>
   HttpResponse.json(
@@ -171,10 +184,10 @@ export const annotationHandlers = (): RequestHandler[] => [
   http.get<{ slideId: string; annotationId: string }>(
     "*/api/slides/:slideId/annotations/:annotationId",
     ({ params }) => {
-      const found = (readStore()[params.slideId] ?? []).find(
-        (item) => item.id === params.annotationId,
-      );
-      return found === undefined
+      const found =
+        (readStore()[params.slideId] ?? []).find((item) => item.id === params.annotationId) ??
+        addedObject(params.slideId, params.annotationId);
+      return found === undefined || found === null
         ? new HttpResponse(null, { status: 404 })
         : HttpResponse.json(found);
     },
@@ -186,7 +199,8 @@ export const annotationHandlers = (): RequestHandler[] => [
       const store = readStore();
       const existing = store[params.slideId] ?? [];
       const found = existing.find((item) => item.id === params.annotationId);
-      if (found === undefined) return new HttpResponse(null, { status: 404 });
+      if (found === undefined)
+        return answerOf(changeAddedObject(params.slideId, params.annotationId, edit));
       if (found.version !== edit.version) return staleProblem();
       const changed: Annotation = {
         ...found,
@@ -212,6 +226,11 @@ export const annotationHandlers = (): RequestHandler[] => [
       const store = readStore();
       const found = (store[params.slideId] ?? []).find((item) => item.id === params.annotationId);
       const version = Number(new URL(request.url).searchParams.get("version"));
+      if (found === undefined) {
+        const removed = removeAddedObject(params.slideId, params.annotationId, version);
+        if (removed.kind === "stale") return staleProblem();
+        if (removed.kind === "done") return new HttpResponse(null, { status: 204 });
+      }
       if (found !== undefined && version !== found.version) return staleProblem();
       const kept = (store[params.slideId] ?? []).filter((item) => item.id !== params.annotationId);
       writeStore({ ...store, [params.slideId]: kept });

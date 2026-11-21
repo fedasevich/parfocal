@@ -60,14 +60,13 @@ import type {
   ThreadCreate,
   ThreadDetail,
 } from "../generated/api.ts";
+import { addedOn, addObject } from "./added-objects.ts";
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
 import { pagedCellSource } from "./paged-cell-source.ts";
 import { toResultSetDetail } from "./project-handlers.ts";
 import {
-  addedOn,
-  addObject,
   editHistoryFor,
   firstReadOf,
   firstReadOpen,
@@ -156,9 +155,10 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
   added:
     taskId === rt17.id
       ? addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null }))
-      : reviewsA1(taskId, slideId)
-        ? addedByLenka
-        : [],
+      : [
+          ...(reviewsA1(taskId, slideId) ? addedByLenka : []),
+          ...addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null })),
+        ],
 });
 
 export const toTaskDisplay = (taskId: string): TaskDisplay => {

@@ -195,6 +195,7 @@ export function SlideStage({
   outlines = false,
   workspace = "annotate",
   annotateTask = null,
+  reviewLayerTaskId = null,
   layerKnown = true,
   readOnly = false,
   onOpenSlide,
@@ -214,6 +215,7 @@ export function SlideStage({
   projectId?: string;
   taskId?: string;
   annotateTask?: AnnotateTask | null;
+  reviewLayerTaskId?: string | null;
   layerKnown?: boolean;
   readOnly?: boolean;
   onOpenSlide?: (slideId: string) => void;
@@ -237,6 +239,7 @@ export function SlideStage({
       outlines={outlines}
       workspace={workspace}
       annotateTask={annotateTask}
+      reviewLayerTaskId={reviewLayerTaskId}
       layerKnown={layerKnown}
       readOnly={readOnly}
       onOpenSlide={onOpenSlide}
@@ -265,6 +268,7 @@ function OpenedSlide({
   outlines,
   workspace,
   annotateTask,
+  reviewLayerTaskId,
   layerKnown,
   readOnly,
   onOpenSlide,
@@ -285,6 +289,7 @@ function OpenedSlide({
   projectId: string | undefined;
   taskId: string | undefined;
   annotateTask: AnnotateTask | null;
+  reviewLayerTaskId: string | null;
   layerKnown: boolean;
   readOnly: boolean;
   onOpenSlide: ((slideId: string) => void) | undefined;
@@ -387,6 +392,7 @@ function OpenedSlide({
     session !== null && layerKnown,
     sharedTaskId,
     liveGuard,
+    sharedTaskId === null ? reviewLayerTaskId : null,
   );
   useLiveGuardFeed(liveGuard, {
     engine: session?.engine ?? null,
@@ -736,7 +742,13 @@ function OpenedSlide({
                   data-workspace={workspace}
                   data-access={readOnly ? "read-only" : "edit"}
                   data-tools={toolsLayout}
-                  data-layer={sharedTaskId === null ? "slide" : "shared"}
+                  data-layer={
+                    sharedTaskId !== null
+                      ? "shared"
+                      : reviewLayerTaskId !== null
+                        ? "review"
+                        : "slide"
+                  }
                   data-drag={setup.dragBehaviour}
                   data-annotations={saved.loaded ? "loaded" : "loading"}
                   data-save-state={saved.saveState}

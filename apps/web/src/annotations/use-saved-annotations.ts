@@ -1,4 +1,12 @@
-import { type AnnotationDraft, listAnnotations, useGetMe } from "@parfocal/api-client";
+import {
+  type AnnotationDraft,
+  getGetReviewedLayerQueryKey,
+  getListReviewObjectsQueryKey,
+  getReviewedLayer,
+  listAnnotations,
+  useGetMe,
+} from "@parfocal/api-client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   type RefObject,
   useCallback,
@@ -36,7 +44,11 @@ import {
   type QueuePhase,
   type Remote,
 } from "./save-queue.ts";
-import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
+import {
+  annotationTransport,
+  reviewTaskTransport,
+  sharedLayerTransport,
+} from "./save-transport.ts";
 import {
   layerGroupsOf,
   readLayerGroups,
@@ -95,10 +107,27 @@ export type SavedAnnotations = {
 
 type LoadedRecord = LayerRecord & { readonly created_at?: string };
 
+async function reviewRecords(
+  slideId: string,
+  reviewTaskId: string,
+): Promise<readonly LoadedRecord[] | null> {
+  const [saved, layer] = await Promise.all([
+    listAnnotations(slideId),
+    getReviewedLayer(reviewTaskId, slideId),
+  ]);
+  if (saved.status !== 200 || layer.status !== 200) return null;
+  return inDrawnOrder([
+    ...saved.data,
+    ...layer.data.added.filter((item) => item.deleted_at === null),
+  ]);
+}
+
 async function savedRecords(
   slideId: string,
   sharedTaskId: string | null,
+  reviewTaskId: string | null = null,
 ): Promise<readonly LoadedRecord[] | null> {
+  if (reviewTaskId !== null) return reviewRecords(slideId, reviewTaskId);
   if (sharedTaskId === null) {
     const saved = await listAnnotations(slideId);
     return saved.status === 200 ? inDrawnOrder(saved.data) : null;
@@ -115,6 +144,7 @@ export function useSavedAnnotations(
   enabled: boolean,
   sharedTaskId: string | null = null,
   guard?: RefObject<LiveGuard>,
+  reviewTaskId: string | null = null,
 ): SavedAnnotations {
   const [document, setDocumentState] = useState(createDocument);
   const [loaded, setLoaded] = useState(false);
@@ -133,14 +163,24 @@ export function useSavedAnnotations(
   const remotes = useRef(new Map<ShapeId, Remote>());
   const deletedHere = useRef(new Set<string>());
   const me = okData(useGetMe().data)?.user_id;
+  const queryClient = useQueryClient();
   const queue = useMemo(
     () =>
       createSaveQueue(
-        sharedTaskId === null
-          ? annotationTransport(slideId)
-          : sharedLayerTransport(sharedTaskId, slideId),
+        reviewTaskId !== null
+          ? reviewTaskTransport(reviewTaskId, slideId, () => {
+              void queryClient.invalidateQueries({
+                queryKey: getGetReviewedLayerQueryKey(reviewTaskId, slideId),
+              });
+              void queryClient.invalidateQueries({
+                queryKey: getListReviewObjectsQueryKey(reviewTaskId, slideId),
+              });
+            })
+          : sharedTaskId === null
+            ? annotationTransport(slideId)
+            : sharedLayerTransport(sharedTaskId, slideId),
       ),
-    [slideId, sharedTaskId],
+    [slideId, sharedTaskId, reviewTaskId, queryClient],
   );
   const status = useSyncExternalStore(queue.subscribe, queue.status);
   const conflicts = useSyncExternalStore(queue.subscribe, queue.conflicts);
@@ -283,7 +323,7 @@ export function useSavedAnnotations(
     setDocument(createDocument());
     setHistory(createHistory());
     setLoaded(false);
-    void savedRecords(slideId, sharedTaskId).then(
+    void savedRecords(slideId, sharedTaskId, reviewTaskId).then(
       (records) => {
         if (cancelled || records === null) return;
         let next = createDocument();
@@ -314,7 +354,7 @@ export function useSavedAnnotations(
     return () => {
       cancelled = true;
     };
-  }, [slideId, sharedTaskId, enabled, setDocument, setHistory]);
+  }, [slideId, sharedTaskId, reviewTaskId, enabled, setDocument, setHistory]);
 
   useEffect(() => {
     if (!enabled || !loaded || status.waiting > 0) return;
