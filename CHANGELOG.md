@@ -2,6 +2,25 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.3 (2026-11-21)
+
+### Features
+
+- PROTO-147: Let an annotate slide be signed off and seed a real outline disagreement
+
+### Fixes
+
+- PROTO-148: Number uploaded slides, keep the first workspace as last used, fix wizard text
+
+### Docs
+
+- OPS-038: Log the v0.35.1 and v0.35.2 deploys and the PathoSAM weights
+- PROTO-148: Claim the names and wording task
+
+### Other
+
+- PROTO-147: Merge annotate sign off and the outline disagreement seed
+
 ## v0.35.2 (2026-11-21)
 
 ### Features
