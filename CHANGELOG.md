@@ -2,6 +2,19 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.6 (2026-11-21)
+
+### Fixes
+
+- OPS-038: Let the deploy smoke accept a slide with no stored thumbnail
+- PROTO-152: Count a cell task's cells and name their types in the report
+- PROTO-152: Count only the sampled objects in the evaluation report
+
+### Docs
+
+- OPS-038: Log the v0.35.4 and v0.35.5 deploys
+- PROTO-152: Claim the cell task report task
+
 ## v0.35.5 (2026-11-21)
 
 ### Features
