@@ -46,6 +46,7 @@ class GpuWaiting(BaseModel):
 class GpuAnswer:
     reply: dict[str, object]
     waited_seconds: float
+    call_id: str
 
 
 @dataclass(frozen=True)
@@ -126,7 +127,7 @@ class GpuCalls:
                 "slow_wait": waited > SLOW_WAIT_SECONDS,
             },
         )
-        return GpuAnswer(reply, waited)
+        return GpuAnswer(reply, waited, call_id)
 
     async def cancel(self, token: str, tenant_id: uuid.UUID, viewer: str) -> str | None:
         try:

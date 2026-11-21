@@ -1,10 +1,13 @@
 import base64
 import logging
 import uuid
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 from pydantic import BaseModel, Field
+from sqlalchemy import func, insert
+from sqlalchemy.dialects.postgresql import insert as upsert
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import ai_hidden_on
@@ -22,6 +25,7 @@ from parfocal_api.gpu_warm import warm_for, warm_gate_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.slide_coverage import readable_slide
+from parfocal_api.tables import gpu_usage, jobs
 from parfocal_common.embedding_cache import (
     EMBEDDING_BYTES,
     EMBEDDING_CONTENT_TYPE,
@@ -33,6 +37,7 @@ from parfocal_common.embedding_cache import (
     tile_key,
 )
 from parfocal_common.ingest import folder_of
+from parfocal_common.jobs import JobStatus
 from parfocal_common.object_store import StorageError
 from parfocal_common.view_embeddings import (
     ENCODER,
@@ -51,6 +56,10 @@ logger = logging.getLogger("parfocal.api.slide_embeddings")
 EMBEDDING_HEADERS = {"Cache-Control": "private, max-age=3600"}
 VIEW_EMBEDDING_HEADERS = {"Cache-Control": "no-store", "Parfocal-Encoder": ENCODER}
 MAX_SLIDE_PIXEL = 10_000_000
+VIEW_EMBEDDING_KIND = "view-embedding"
+VIEW_EMBEDDING_TIER = "best"
+VIEW_EMBEDDING_WORKER = "api"
+CALL_JOBS = uuid.UUID("5d0b6f0e-3c43-4a4e-9a55-6a1f3f7f2c58")
 
 
 class SlideEmbeddings(BaseModel):
@@ -205,6 +214,44 @@ async def embedded_view(
     return embedding, answer
 
 
+def call_job_id(tenant_id: uuid.UUID, call_id: str) -> uuid.UUID:
+    return uuid.uuid5(CALL_JOBS, f"{tenant_id}:{VIEW_EMBEDDING_KIND}:{call_id}")
+
+
+async def record_view_gpu_seconds(
+    connection: AsyncConnection, slide_id: uuid.UUID, slide: Any, call_id: str, seconds: float
+) -> None:
+    job_id = call_job_id(slide.tenant_id, call_id)
+    added = await connection.scalar(
+        upsert(jobs)
+        .values(
+            id=job_id,
+            tenant_id=slide.tenant_id,
+            project_id=slide.project_id,
+            kind=VIEW_EMBEDDING_KIND,
+            status=JobStatus.DONE,
+            input={"slide_id": str(slide_id)},
+            finished_at=func.now(),
+        )
+        .on_conflict_do_nothing(index_elements=[jobs.c.id])
+        .returning(jobs.c.id)
+    )
+    if added is None:
+        return
+    await connection.execute(
+        insert(gpu_usage).values(
+            tenant_id=slide.tenant_id,
+            job_id=job_id,
+            kind=VIEW_EMBEDDING_KIND,
+            model=ENCODER_MODEL,
+            model_version=ENCODER_VERSION,
+            tier=VIEW_EMBEDDING_TIER,
+            worker=VIEW_EMBEDDING_WORKER,
+            seconds=seconds,
+        )
+    )
+
+
 @router.post(
     "/view",
     operation_id="embedSlideView",
@@ -241,6 +288,7 @@ async def embed_slide_view(
     embedding, answer = outcome
     reported = seconds_in(answer.reply)
     gpu_seconds = answer.waited_seconds if reported is None else round(reported, 3)
+    await record_view_gpu_seconds(connection, slide_id, slide, answer.call_id, gpu_seconds)
     await record(
         connection,
         actor_of(principal),

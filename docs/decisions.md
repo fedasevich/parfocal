@@ -57,6 +57,16 @@ From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrou
 
 Your choice:
 
+### 174. Which ID does an outline drawn by hand or with one click get?
+
+From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md`, round four issue 15). ADR 0071 (object IDs are a kind letter and a per-slide number) gives AI regions T, AI cells C and measurements M. The Objects tab lists every drawn outline, by hand or with Smart select, as a measurement, so two Tumor outlines read M1 and M2 while the AI's Tumor regions read T1 and T2.
+
+- A. A drawn outline gets the letter of its kind and a person mark, as ADR 0071 already gives an object a reviewer adds: a region is T7⁺, a nucleus outline is C3022⁺. M stays for rulers. (Recommended, since one name per thing, and it fits answer A of decision 171 on reviewing hand drawn outlines.)
+- B. Keep M for every drawn shape, since each shows its size, and only rename the group to "Drawn by hand".
+- C. A drawn outline is a region of interest, R1 and R2.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.

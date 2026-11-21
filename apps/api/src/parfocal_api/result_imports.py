@@ -5,6 +5,8 @@ from typing import Any
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.notification_catalogue import TargetKind
+from parfocal_api.notifications import notify
 from parfocal_api.result_sets import (
     ChunkRow,
     RegionRow,
@@ -17,6 +19,7 @@ from parfocal_api.result_sets import (
 )
 from parfocal_api.retention import SYSTEM
 from parfocal_api.tables import (
+    NotificationKind,
     ResultObjectKind,
     ResultSource,
     ResultStatus,
@@ -215,3 +218,13 @@ async def store_result_set(
         update(uploads).where(uploads.c.id == upload.id).values(result_set_id=set_id)
     )
     await attach_waiting_tasks(connection, upload.slide_upload_id, slide.id, set_id)
+    if upload.created_by_user_id is not None and upload.job_id is not None:
+        await notify(
+            connection,
+            upload.tenant_id,
+            [upload.created_by_user_id],
+            NotificationKind.RESULT_IMPORT_DONE,
+            TargetKind.JOB,
+            upload.job_id,
+            {"upload_id": str(upload.id), "slide_id": str(slide.id), "result_set_id": str(set_id)},
+        )

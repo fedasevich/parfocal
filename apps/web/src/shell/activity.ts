@@ -12,7 +12,13 @@ export const activityFilters: readonly { value: ActivityFilter; label: string }[
 export const filterKinds: Record<ActivityFilter, readonly string[] | null> = {
   all: null,
   mentions: ["mention", "reply"],
-  jobs: ["model-run-finished", "model-run-paused", "upload-done", "upload-refused"],
+  jobs: [
+    "model-run-finished",
+    "model-run-paused",
+    "upload-done",
+    "upload-refused",
+    "result-import-done",
+  ],
 };
 
 export const kindIcons: Record<string, IconName> = {
@@ -22,6 +28,7 @@ export const kindIcons: Record<string, IconName> = {
   "model-run-paused": "warn",
   "upload-done": "upload",
   "upload-refused": "warn",
+  "result-import-done": "upload",
   "task-signed-off": "check",
   "task-assigned": "users",
   "workspace-access-asked": "users",
@@ -58,6 +65,7 @@ export const kindTitles: Record<string, string> = {
   "model-run-paused": "Model run paused",
   "upload-done": "Upload done",
   "upload-refused": "Upload refused",
+  "result-import-done": "Import done",
   "disagreements-ready": "Disagreements to decide",
   "emergency-access": "Emergency access to your project",
   "result-set-added": "Results added",

@@ -189,6 +189,57 @@ def test_the_gpu_seconds_land_on_the_person_who_asked(api: ApiAs, database: str,
     assert rows == [(0.75,)]
 
 
+def test_a_best_embedding_is_an_ai_usage_row_with_its_gpu_seconds(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    api.app.state.warm_gate = WarmGate(FakeEncoder(seconds=0.75))
+    try:
+        assert ask(api, lab, who="reader").status_code == 200
+    finally:
+        del api.app.state.warm_gate
+    answer = api(lab.people["owner"]).get("/api/tenant/ai-usage")
+    assert answer.status_code == 200, answer.text
+    usage = answer.json()
+    assert usage["gpu_seconds"] == 0.75
+    assert usage["jobs"] == 1
+    assert usage["models"] == [
+        {
+            "model": "pathosam-vit-l-encoder",
+            "model_version": "v1",
+            "gpu_seconds": 0.75,
+            "jobs": 1,
+        }
+    ]
+    [job] = usage["recent_jobs"]
+    assert job["kind"] == "view-embedding"
+    assert job["project_id"] == str(lab.project)
+    assert job["slide_id"] == str(lab.slides[0])
+    assert job["gpu_seconds"] == 0.75
+
+
+def test_a_replayed_answer_counts_its_gpu_seconds_once(api: ApiAs, database: str, lab: Lab) -> None:
+    clock = Clock()
+    queue = EuQueue(clock, FakeEncoder(seconds=0.5))
+    queue_in(api, queue, clock)
+    path = f"/api/slides/{lab.slides[0]}/embeddings/view"
+    try:
+        token = ask(api, lab).json()["call"]
+        answers: list[int] = []
+        for _ in range(20):
+            answer = api(lab.people["owner"]).post(path, params={"call": token}, json=VIEW)
+            if answer.status_code == 202:
+                token = answer.json()["call"]
+                continue
+            answers.append(answer.status_code)
+            if len(answers) == 2:
+                break
+    finally:
+        api.app.dependency_overrides.pop(gpu_calls_of, None)
+    assert answers == [200, 200]
+    rows = owner(database, f"SELECT kind, seconds FROM gpu_usage WHERE tenant_id = '{lab.tenant}'")
+    assert rows == [("view-embedding", 0.5)]
+
+
 @pytest.mark.parametrize(
     "pools",
     [None, ShortEncoder(), OtherEncoder(), BrokenEncoder()],

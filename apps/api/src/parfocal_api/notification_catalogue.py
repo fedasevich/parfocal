@@ -110,6 +110,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         QUIET,
         breaks_mute=False,
     ),
+    NotificationKind.RESULT_IMPORT_DONE: Entry(
+        TargetKind.JOB,
+        "Import done",
+        "The results you imported are on the slide.",
+        QUIET,
+        breaks_mute=False,
+    ),
     NotificationKind.UPLOAD_REFUSED: Entry(
         TargetKind.JOB,
         "Upload refused",
