@@ -13,6 +13,7 @@ from parfocal_deploy.deploy import MIGRATE
 from parfocal_deploy.environments import Environment, environment
 from parfocal_deploy.reset import (
     BUCKET_LOCKED,
+    DELETE_CONCURRENCY,
     KEPT_TABLES,
     RESET_SETTINGS,
     empty_tenant_objects,
@@ -78,6 +79,28 @@ def test_the_reset_leaves_objects_the_bucket_lock_keeps_and_removes_the_rest() -
     removed = asyncio.run(remove_unlocked(store, ["t/one/new.svs", "t/one/old.svs", "t/two/x"]))
     assert removed == 2
     assert store.removed == ["t/one/old.svs", "t/two/x"]
+
+
+class SlowLockedStore:
+    def __init__(self) -> None:
+        self.in_flight = 0
+        self.most_in_flight = 0
+
+    async def delete_object(self, key: str) -> None:
+        self.in_flight += 1
+        self.most_in_flight = max(self.most_in_flight, self.in_flight)
+        await asyncio.sleep(0.01)
+        self.in_flight -= 1
+        if key.endswith("locked"):
+            raise StorageError(409, BUCKET_LOCKED)
+
+
+def test_the_reset_sends_tenant_deletes_side_by_side_within_the_limit() -> None:
+    store = SlowLockedStore()
+    keys = [f"t/one/{index}{'locked' if index % 3 else ''}" for index in range(200)]
+    removed = asyncio.run(remove_unlocked(store, keys))
+    assert removed == len([key for key in keys if not key.endswith("locked")])
+    assert store.most_in_flight == DELETE_CONCURRENCY
 
 
 def test_the_reset_stops_on_any_other_refusal() -> None:
