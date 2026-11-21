@@ -2,6 +2,23 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.9 (2026-11-21)
+
+### Fixes
+
+- PROTO-155: Name run steps in words with true figures and fit the estimate to the slide
+
+### Docs
+
+- OPS-038: Log the v0.35.8 deploy and reseed
+- TEST-056: Add the deployed walkthrough of v0.35.8
+- TEST-056: Add the v0.35.8 walkthrough fix tasks and decision 173
+- PROTO-155: Log the run page and estimate fix
+
+### Tests
+
+- PROTO-155: Expect slide width and height in the project slides list
+
 ## v0.35.8 (2026-11-21)
 
 ### Fixes
