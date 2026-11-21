@@ -5,12 +5,18 @@ import sys
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
 import httpx2
 
 from parfocal_api.tables import slides
-from parfocal_common.object_store import ObjectStore, StorageError, StorageLocation
+from parfocal_common.object_store import (
+    ListedObject,
+    ObjectStore,
+    StorageError,
+    StorageLocation,
+)
 from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.deploy import MIGRATE
@@ -32,6 +38,7 @@ KEPT_TABLES = frozenset({"alembic_version", "platform_operators"})
 AUDIT_TABLE = "audit_events"
 AUDIT_TRUNCATE_GUARD = "audit_events_no_truncate"
 DELETE_CONCURRENCY = 32
+LOCK_AGE = timedelta(days=7)
 metadata = slides.metadata
 SEED = ("uv", "run", "--package", "parfocal-api", "python", "-m", "parfocal_api.showcase")
 PUBLISH_FIXTURES = (
@@ -61,13 +68,21 @@ def reset_statement() -> str:
     )
 
 
-async def empty_tenant_objects(location: StorageLocation) -> int:
+async def empty_tenant_objects(location: StorageLocation, now: datetime | None = None) -> int:
     async with httpx2.AsyncClient(timeout=60) as http:
         store = ObjectStore(location, http)
-        keys = [
-            key for key in await store.list_keys(TENANT_PREFIX) if key.startswith(TENANT_PREFIX)
+        listed = [
+            item
+            for item in await store.list_objects(TENANT_PREFIX)
+            if item.key.startswith(TENANT_PREFIX)
         ]
+        keys = past_the_lock(listed, now or datetime.now(UTC))
         return await remove_unlocked(store, keys)
+
+
+def past_the_lock(objects: Sequence[ListedObject], now: datetime) -> list[str]:
+    cutoff = now - LOCK_AGE
+    return [item.key for item in objects if item.modified is None or item.modified <= cutoff]
 
 
 class Deleter(Protocol):
