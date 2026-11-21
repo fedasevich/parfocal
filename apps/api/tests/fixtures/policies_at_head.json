@@ -57,6 +57,7 @@
     "result_sets",
     "resume_states",
     "retention_policies",
+    "review_ai_outlines",
     "review_assignments",
     "review_decisions",
     "review_edit_versions",

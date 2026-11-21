@@ -132,3 +132,63 @@ def test_a_reviewer_still_working_on_the_slide_is_not_compared(api: ApiAs, datab
         assert edit(api, r, who, "T1", {"geometry": shape}).status_code == 200
     assert submitted(api(r.people["first"]), r.base).status_code == 200
     assert queue(api, r) == []
+
+
+def rectangle(left: float, top: float, width: float, height: float) -> dict[str, Any]:
+    right, bottom = left + width, top + height
+    ring = [[left, top], [right, top], [right, bottom], [left, bottom], [left, top]]
+    return {"type": "Polygon", "coordinates": [ring]}
+
+
+KEPT_AI_CASES = {
+    "region close": ("T1", rectangle(0, 0, 100, 40), 0.8),
+    "region far": ("T1", rectangle(0, 0, 50, 50), 0.5),
+    "cell close": ("C1", square(99, 99, 2.2), 4 / 4.84),
+    "cell far": ("C1", square(100, 99, 2), 1 / 3),
+}
+
+
+def redrawn_against_ai(api: ApiAs, database: str, object_id: str, shape: dict[str, Any]) -> Review:
+    r = review(api, database)
+    saved = edit(api, r, "first", object_id, {"geometry": shape})
+    assert saved.status_code == 200, saved.text
+    for who in ("first", "second"):
+        assert submitted(api(r.people[who]), r.base).status_code == 200
+    return r
+
+
+@pytest.mark.parametrize(
+    ("object_id", "shape", "overlap"), KEPT_AI_CASES.values(), ids=KEPT_AI_CASES
+)
+def test_a_redraw_is_compared_with_the_ai_outline_the_other_reviewer_kept(
+    api: ApiAs, database: str, object_id: str, shape: dict[str, Any], overlap: float
+) -> None:
+    r = redrawn_against_ai(api, database, object_id, shape)
+    task = f"/api/review-tasks/{r.task}"
+    listed = [item for item in queue(api, r) if item["object"] == object_id]
+    assert bool(listed) == (overlap < 0.6)
+    stricter = api(r.people["owner"]).patch(task, json={"outline_overlap": 99})
+    assert stricter.status_code == 200, stricter.text
+    [item] = [item for item in queue(api, r) if item["object"] == object_id]
+    assert item["why"] == "outlines-differ"
+    assert item["outline_overlap"] == pytest.approx(overlap)
+    assert home_open(api, r) == 1
+    looser = api(r.people["owner"]).patch(task, json={"outline_overlap": int(overlap * 100) - 1})
+    assert looser.status_code == 200, looser.text
+    assert [item for item in queue(api, r) if item["object"] == object_id] == []
+    assert home_open(api, r) == 0
+
+
+def test_a_redraw_below_the_default_overlap_reaches_the_queue_at_once(
+    api: ApiAs, database: str
+) -> None:
+    r = redrawn_against_ai(api, database, "T1", rectangle(0, 0, 30, 50))
+    [item] = queue(api, r)
+    assert (item["object"], item["why"]) == ("T1", "outlines-differ")
+    assert item["outline_overlap"] == pytest.approx(0.3)
+    assert [entry["user_id"] for entry in item["outlines"]] == [str(r.people["first"].user_id)]
+
+
+def test_a_redraw_equal_to_the_ai_outline_is_no_gap(api: ApiAs, database: str) -> None:
+    r = redrawn_against_ai(api, database, "T1", rectangle(0, 0, 100, 50))
+    assert queue(api, r) == []

@@ -461,6 +461,38 @@ class ReviewEditChange(StrEnum):
     MERGED_INTO = "merged-into"
 
 
+review_ai_outlines = Table(
+    "review_ai_outlines",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("kind", String(10), primary_key=True, info=OPERATIONAL),
+    Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    Column[object]("outline", Geometry(spatial_index=False), nullable=False, info=OPERATIONAL),
+    Column(
+        "created_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
+        name="fk_review_ai_outlines_task_id_slide_id_tenant_id",
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
+    CheckConstraint("ST_IsValid(outline)", name="outline_valid"),
+)
+
 review_edit_versions = Table(
     "review_edit_versions",
     metadata,

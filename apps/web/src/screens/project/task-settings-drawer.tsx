@@ -1,7 +1,9 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
+  getGetDisagreementQueueQueryKey,
   getGetReviewTaskQueryKey,
+  getGetSignOffSummaryQueryKey,
   getGetTaskEvaluationQueryKey,
   getListReviewTasksQueryKey,
   type ReviewTask,
@@ -14,6 +16,7 @@ import { BlindFirstSwitch } from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
 import { CountsAsLine } from "@parfocal/ui/components/counts-as";
 import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
+import { NumberStepper } from "@parfocal/ui/components/number-stepper";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { countsAsRule } from "@parfocal/ui/lib/counts-as-rule";
@@ -62,6 +65,37 @@ export function TaskSettingsDrawer({
   const recount = recountOf(answers, storedRange, range);
 
   const annotate = detail.kind === "annotate";
+  const storedOverlap = detail.outline_overlap ?? 60;
+  const [pickedOverlap, setPickedOverlap] = useState<number | null>(null);
+  const overlap = pickedOverlap ?? storedOverlap;
+  const overlapDirty = overlap !== storedOverlap;
+
+  const saveOverlap = () => {
+    setFailure(null);
+    change.mutate(
+      { taskId: task.id, data: { outline_overlap: overlap } },
+      {
+        onSuccess: () => {
+          setPickedOverlap(null);
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: getGetReviewTaskQueryKey(task.id) }),
+            queryClient.invalidateQueries({
+              queryKey: getListReviewTasksQueryKey(task.project_id),
+            }),
+            queryClient.invalidateQueries({ queryKey: getGetDisagreementQueueQueryKey(task.id) }),
+            queryClient.invalidateQueries({ queryKey: getGetSignOffSummaryQueryKey(task.id) }),
+          ]);
+          toast(t`Outlines now differ below ${overlap}% overlap on ${task.code}.`);
+        },
+        onError: (error) =>
+          setFailure(
+            error instanceof ApiError && error.kind === "conflict"
+              ? t`The overlap cannot change after sign-off.`
+              : t`The change was not saved. Try again.`,
+          ),
+      },
+    );
+  };
 
   const switchBlindFirst = (blindFirst: boolean) => {
     setFailure(null);
@@ -208,6 +242,36 @@ export function TaskSettingsDrawer({
                 </Trans>
               </Hint>
             ) : null}
+          </Zone>
+          <Zone
+            title={t`Outline overlap`}
+            sub={t`Two outlines of one object differ below this share of overlap. A redraw is compared with the AI outline when the other reviewer kept it.`}
+          >
+            <div className="flex items-center gap-3">
+              <NumberStepper
+                label={t`Outline overlap`}
+                value={overlap}
+                min={1}
+                max={99}
+                step={5}
+                disabled={signedOff}
+                onValueChange={(next) => setPickedOverlap(next ?? storedOverlap)}
+              />
+              <span className="text-body-sm text-fg-dim">%</span>
+              <Button
+                size="sm"
+                disabled={signedOff || !overlapDirty || change.isPending}
+                onClick={saveOverlap}
+              >
+                <Trans>Save Outline overlap</Trans>
+              </Button>
+            </div>
+            {signedOff ? (
+              <Hint>
+                <Trans>This task is signed off, so the overlap is locked.</Trans>
+              </Hint>
+            ) : null}
+            {failure ? <Hint>{failure}</Hint> : null}
           </Zone>
         </>
       )}
