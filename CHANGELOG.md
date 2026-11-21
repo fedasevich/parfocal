@@ -2,6 +2,17 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.34.2 (2026-11-21)
+
+### Features
+
+- PROTO-120: Split and merge in the Select tool for review and annotate tasks
+- PROTO-120: Fix the annotate split layer and make the split and merge specs pass
+
+### Docs
+
+- PROTO-120: Log and tick split and merge on screen
+
 ## v0.34.1 (2026-11-21)
 
 ### Features
