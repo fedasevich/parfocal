@@ -26,6 +26,7 @@ from parfocal_api.opinion_forms import form_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError
 from parfocal_api.projects import code_of
+from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import code_of as task_code_of
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.study_templates import BUILT_INS, template_at
@@ -120,6 +121,25 @@ def short_of(name: str) -> str:
     return "".join(word[0] for word in name.split() if word[:1].isalnum())[:3].upper()
 
 
+def confusion_of(objects: list[engine.AiObject]) -> EvaluationReportConfusion:
+    pairs: list[tuple[str, str]] = []
+    for item in objects:
+        if item.kind != "cell":
+            continue
+        match engine.consensus(item):
+            case engine.Consensus.AGREE:
+                pairs.append((item.class_name, item.class_name))
+            case engine.Consensus.DISAGREE if (other := engine.retyped_to(item)) is not None:
+                pairs.append((item.class_name, other))
+            case _:
+                pass
+    classes = sorted({name for pair in pairs for name in pair})
+    counts = [[0] * len(classes) for _ in classes]
+    for ai, agreed in pairs:
+        counts[classes.index(ai)][classes.index(agreed)] += 1
+    return EvaluationReportConfusion(classes=classes, counts=counts)
+
+
 def worst_of(objects: list[engine.AiObject]) -> list[EvaluationReportWorst]:
     decided = [item for item in objects if item.decisions]
 
@@ -176,7 +196,10 @@ async def opinion_question_of(connection: AsyncConnection, task: Any) -> str:
     **require(Permission.SEE_SLIDES, emergency=True),
 )
 async def get_evaluation_report(
-    task_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    task_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    store: Results,
 ) -> EvaluationReport:
     task, whole = await readable_task(connection, principal, task_id)
     review_only(task.kind)
@@ -197,7 +220,9 @@ async def get_evaluation_report(
     facts = await result_set_of(connection, task)
     changes = await changes_of(connection, task_id, signed.number) if signed else []
     labels = await labels_of(connection, {row.slide_id for row in changes})
-    objects = await ai_objects(connection, task_id, await class_names(connection, task.project_id))
+    objects = await ai_objects(
+        connection, task_id, await class_names(connection, task.project_id), store
+    )
     return EvaluationReport(
         task_id=task_id,
         task_code=task_code_of(task.number),
@@ -233,7 +258,7 @@ async def get_evaluation_report(
             EvaluationReportDownload(key=key, label=DOWNLOAD_LABELS[key])
             for key in report_format.downloads
         ],
-        confusion=EvaluationReportConfusion(classes=[], counts=[]),
+        confusion=confusion_of(objects),
         worst=worst_of(objects),
         opinion_question=await opinion_question_of(connection, task),
         changes=[as_change(row, labels) for row in changes],

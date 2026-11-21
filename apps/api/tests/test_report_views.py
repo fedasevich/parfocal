@@ -2,6 +2,7 @@ import pytest
 from db_support import ApiAs
 from test_clinical_report_cosign import ready, send
 from test_clinical_reports import Clinic, audit_actions, created, make_clinic
+from test_decision_styles import cells_in_chunks
 from test_reviewed_layer import review
 from test_slide_viewer import decide
 from workspace_support import owner
@@ -52,6 +53,25 @@ def test_the_evaluation_report_reads_the_task(api: ApiAs, database: str) -> None
     assert report["changes"] == []
     hidden = api(r.people["first"]).get(url)
     assert (hidden.status_code, hidden.json()["code"]) == (403, "evaluation-hidden")
+
+
+def test_the_evaluation_report_counts_cells_and_names_their_types(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    cells_in_chunks(database, r)
+    for who in ("first", "second"):
+        for object_id in ("C1", "C2", "C4"):
+            decide(api, r, who, object_id, "agree")
+        decide(api, r, who, "C3", "disagree")
+    response = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/evaluation-report")
+    assert response.status_code == 200, response.text
+    report = response.json()
+    assert report["confusion"] == {"classes": ["Stroma", "Tumor"], "counts": [[1, 0], [0, 2]]}
+    named = {item["object"]: item["what"] for item in report["worst"]}
+    assert named["C1"] == "Tumor cell"
+    assert named["C2"] == "Stroma cell"
+    assert named["C3"] == "Unclassified cell"
 
 
 def test_the_evaluation_report_leaves_failed_and_importing_sets_out(

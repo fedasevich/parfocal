@@ -15,6 +15,7 @@ from parfocal_api.display_settings import TaskDisplaySettings, display_of
 from parfocal_api.opinions import form_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ForbiddenError
+from parfocal_api.review_order import read_chunk
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
     DecisionStyle,
@@ -24,6 +25,7 @@ from parfocal_api.tables import (
     opinions,
     project_classes,
     projects,
+    result_chunks,
     result_objects,
     result_set_classes,
     review_decisions,
@@ -31,6 +33,7 @@ from parfocal_api.tables import (
 )
 from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
+from parfocal_common.result_store import ResultStore
 
 UNCLASSIFIED = "unclassified"
 CELL_PIXELS = 16.0
@@ -136,12 +139,13 @@ async def class_names(connection: AsyncConnection, project_id: uuid.UUID) -> dic
     return {row.id: row.name for row in rows}
 
 
-async def region_classes(
+async def object_classes(
     connection: AsyncConnection, task_id: uuid.UUID, names: dict[uuid.UUID, str]
-) -> dict[tuple[uuid.UUID, int], str]:
+) -> dict[tuple[uuid.UUID, str, int], str]:
     rows = await connection.execute(
         select(
             review_task_slides.c.slide_id,
+            result_objects.c.kind,
             result_objects.c.number,
             result_set_classes.c.class_id,
             result_set_classes.c.source_name,
@@ -155,17 +159,75 @@ async def region_classes(
         .where(review_task_slides.c.task_id == task_id, result_objects.c.kind == "region")
     )
     return {
-        (row.slide_id, row.number): names.get(row.class_id, row.source_name or UNCLASSIFIED)
+        (row.slide_id, row.kind, row.number): names.get(
+            row.class_id, row.source_name or UNCLASSIFIED
+        )
         if row.class_id
         else (row.source_name or UNCLASSIFIED)
         for row in rows
     }
 
 
-async def ai_objects(
+async def cell_classes(
+    connection: AsyncConnection,
+    store: ResultStore,
+    task_id: uuid.UUID,
+    names: dict[uuid.UUID, str],
+) -> dict[tuple[uuid.UUID, str, int], str]:
+    found: dict[tuple[uuid.UUID, str, int], str] = {}
+    sets = await connection.execute(
+        select(review_task_slides.c.slide_id, review_task_slides.c.result_set_id).where(
+            review_task_slides.c.task_id == task_id
+        )
+    )
+    for slide_id, set_id in sets.all():
+        by_position = {
+            row.position: names.get(row.class_id, row.source_name or UNCLASSIFIED)
+            if row.class_id
+            else (row.source_name or UNCLASSIFIED)
+            for row in await connection.execute(
+                select(
+                    result_set_classes.c.position,
+                    result_set_classes.c.class_id,
+                    result_set_classes.c.source_name,
+                ).where(result_set_classes.c.result_set_id == set_id)
+            )
+        }
+        keys = await connection.scalars(
+            select(result_chunks.c.object_key)
+            .where(result_chunks.c.result_set_id == set_id)
+            .order_by(result_chunks.c.chunk)
+        )
+        for key in list(keys):
+            chunk = await read_chunk(store, key)
+            for number, position in zip(chunk.numbers, chunk.classes, strict=True):
+                found[(slide_id, "cell", int(number))] = by_position.get(
+                    int(position), UNCLASSIFIED
+                )
+    return found
+
+
+async def region_classes(
     connection: AsyncConnection, task_id: uuid.UUID, names: dict[uuid.UUID, str]
+) -> dict[tuple[uuid.UUID, int], str]:
+    return {
+        (slide_id, number): name
+        for (slide_id, kind, number), name in (
+            await object_classes(connection, task_id, names)
+        ).items()
+        if kind == "region"
+    }
+
+
+async def ai_objects(
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    names: dict[uuid.UUID, str],
+    store: ResultStore | None = None,
 ) -> list[engine.AiObject]:
-    regions = await region_classes(connection, task_id, names)
+    classes = await object_classes(connection, task_id, names)
+    if store is not None:
+        classes |= await cell_classes(connection, store, task_id, names)
     decisions = {
         (row.slide_id, row.kind, row.number): choice_value(row)
         for row in await connection.execute(
@@ -188,9 +250,7 @@ async def ai_objects(
             slide=str(slide_id),
             kind=kind,
             number=number,
-            class_name=regions.get((slide_id, number), UNCLASSIFIED)
-            if kind == "region"
-            else UNCLASSIFIED,
+            class_name=classes.get((slide_id, kind, number), UNCLASSIFIED),
             decisions=given,
             decision=decisions.get((slide_id, kind, number)),
         )
