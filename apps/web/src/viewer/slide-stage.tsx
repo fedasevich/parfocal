@@ -63,7 +63,7 @@ import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { ViewMapLayer } from "../results/view-map-layer.tsx";
 import { useInspectorLayout } from "../screens/review/inspector-layout.ts";
-import { annotateRail } from "../screens/viewer-tools/rails.ts";
+import { annotateRailActions, annotateToolOfAction } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
 import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
@@ -123,16 +123,6 @@ type Phase =
   | { readonly state: "failed"; readonly failure: OpenFailure };
 
 type ViewerTool = string;
-
-const toolOfAction: Readonly<Record<string, ViewerTool>> = Object.fromEntries(
-  annotateRail
-    .flat()
-    .flatMap((item) => (item.action === undefined ? [] : [[item.action, item.tool]])),
-);
-
-const railActions = annotateRail.flatMap((group) =>
-  group.flatMap((item) => (item.action === undefined ? [] : [item.action])),
-);
 
 const LabLayer = lazy(() => import("./lab-layer.tsx"));
 
@@ -331,10 +321,10 @@ function OpenedSlide({
   } | null>(null);
   const closeAddResults = useCallback(() => setAddingResults(false), []);
   useEffect(() => setTool(restingTool), [restingTool]);
-  const toolBindings = useBindings(["annotate"], railActions);
+  const toolBindings = useBindings(["annotate"], annotateRailActions);
   const onToolKey = useCallback(
     ({ phase, action }: { phase: string; action: string }) => {
-      const railTool = toolOfAction[action];
+      const railTool = annotateToolOfAction[action];
       if (!toolKeys || phase !== "press" || railTool === undefined) return;
       if (!railHasTool(setup, railTool)) return;
       const pressed = stageToolOf(railTool);

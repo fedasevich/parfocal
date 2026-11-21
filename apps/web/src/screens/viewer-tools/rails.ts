@@ -39,6 +39,16 @@ export const annotateRail: RailTool[][] = [
   [{ tool: "brush", icon: "brush", label: "Brush", action: "tbrush" }],
 ];
 
+export const annotateToolOfAction: Readonly<Record<string, string>> = Object.fromEntries(
+  annotateRail
+    .flat()
+    .flatMap((item) => (item.action === undefined ? [] : [[item.action, item.tool]])),
+);
+
+export const annotateRailActions = annotateRail.flatMap((group) =>
+  group.flatMap((item) => (item.action === undefined ? [] : [item.action])),
+);
+
 export const toolHints: Record<string, string[]> = {
   select: [
     "Drag on empty tissue for a marquee",
