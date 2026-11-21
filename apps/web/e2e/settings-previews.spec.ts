@@ -42,8 +42,13 @@ test("a changed plain row still saves", async ({ page }) => {
   await page.goto("/settings/layout");
   const minimap = dialog(page).getByRole("radiogroup", { name: "Minimap", exact: true });
   const never = minimap.getByRole("radio", { name: "Never" });
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() !== "GET" && /\/me\/setting-layers$/.test(response.url()),
+  );
   await never.click();
   await expect(never).toBeChecked();
+  await saved;
   await page.reload();
   await expect(
     dialog(page).getByRole("radiogroup", { name: "Minimap", exact: true }).getByRole("radio", {
