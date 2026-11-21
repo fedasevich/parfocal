@@ -47,6 +47,8 @@ All are set by the web app for features the user uses, hold no name or contact d
 | `parfocal.sign-in-redirect-at` | sessionStorage | The time of the last automatic trip to the sign-in page | Sends a signed-out visitor to sign in once, and stops a redirect loop if the session still fails afterwards |
 | `parfocal.drafts` | sessionStorage | Unsent comment drafts, keyed by the user id and the thread | Keeps a draft through log out and back in. Comments may describe a patient, so this stays in `sessionStorage`, which the browser clears when the tab closes, and a draft shows only to the user who wrote it |
 | `parfocal.prototype.origin` | sessionStorage | Where a prototype flow started, with the ids of its demo project, task and slides | Returns to the flow map in the prototype screens |
+| `parfocal.signature-sign-in` | sessionStorage | The address to return to and the time a sign-off asked for a fresh sign-in | Finishes the sign-off after the person signs in again within 5 minutes. No name or patient data, removed when the sign-off finishes. [ADR 0410](../adr/0410-a-signature-needs-a-sign-in-within-five-minutes.md) |
+| `parfocal.setting-notes-read` | localStorage | The ids of the settings notes already shown on this device | Stops Preferences from writing to the server just because a section was opened. Shared by everyone on the device, no name or patient data |
 
 ## Third parties
 
