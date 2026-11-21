@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.1 (2026-11-21)
+
+### Features
+
+- PROTO-146: Make every way into editing a reviewed object visible and working
+
+### Docs
+
+- OPS-038: Log the v0.35.0 deploy
+- PROTO-147: Claim the annotate sign off task
+
+### Other
+
+- PROTO-146: Merge the edit entry points
+
 ## v0.35.0 (2026-11-21)
 
 ### Fixes
