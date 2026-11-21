@@ -12,6 +12,7 @@ import {
   useFreezeDatasetVersion,
   useGetProject,
   useGetReviewTask,
+  useGetReviewTaskStates,
   useGetTaskDataset,
   useListDatasetVersions,
 } from "@parfocal/api-client";
@@ -352,11 +353,22 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
   const project = okData(
     useGetProject(task?.project_id ?? "", { query: { enabled: Boolean(task) } }).data,
   );
-  const baseQuery = useGetTaskDataset(taskId, { include_unchecked: false });
+  const statesQuery = useGetReviewTaskStates(taskId, {
+    query: { enabled: task?.kind === "review" },
+  });
+  const states = okData(statesQuery.data);
+  const known = task !== undefined && (task.kind !== "review" || !statesQuery.isPending);
+  const notSignedOff = task?.kind === "review" && states !== undefined && !states.signed_off_at;
+  const asking = known && !notSignedOff;
+  const baseQuery = useGetTaskDataset(
+    taskId,
+    { include_unchecked: false },
+    { query: { enabled: asking } },
+  );
   const base = okData(baseQuery.data);
   const summary = okData(
     useGetTaskDataset(taskId, datasetParams(filters), {
-      query: { placeholderData: keepPreviousData },
+      query: { placeholderData: keepPreviousData, enabled: asking },
     }).data,
   );
   const versions = okData(useListDatasetVersions(taskId).data) ?? [];
@@ -403,10 +415,13 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
 
   const refusedCode = baseQuery.isError ? problemCode(baseQuery.error) : null;
   const unsignedReview =
-    review && (refusedCode === "nothing-signed-off" || refusedCode === "task-not-signed-off");
-  const refusal = baseQuery.isError
-    ? refusalText(unsignedReview ? "task-not-signed-off" : refusedCode)
-    : null;
+    notSignedOff ||
+    (review && (refusedCode === "nothing-signed-off" || refusedCode === "task-not-signed-off"));
+  const refusal = unsignedReview
+    ? refusalText("task-not-signed-off")
+    : baseQuery.isError
+      ? refusalText(refusedCode)
+      : null;
 
   return (
     <main

@@ -121,7 +121,9 @@ export const slideSearch = lenientSearch({
 export type SlideSearch = ReturnType<typeof slideSearch.read>;
 
 export const projectSearch = lenientSearch({
-  tab: z.enum(["slides", "results", "tasks", "report", "settings", "people"]).default("slides"),
+  tab: z
+    .enum(["slides", "cases", "results", "tasks", "report", "settings", "people"])
+    .default("slides"),
   status: z.string().optional(),
   q: z.string().optional(),
   sets: z.string().optional(),

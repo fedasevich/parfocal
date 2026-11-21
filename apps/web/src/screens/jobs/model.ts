@@ -48,11 +48,13 @@ export function trayValueText(job: MyJob): string {
   if (job.status === "done") return "Done";
   if (job.status === "paused") return `Paused at ${job.percent}%`;
   if (job.status === "queued") return "Waiting to start";
-  if (job.percent < 5 && job.minutes_left !== null) return `Starting · ${job.minutes_left} min`;
-  return job.minutes_left === null
-    ? `${job.percent}%`
-    : `${job.percent}% · ${job.minutes_left} min left`;
+  const left = knownMinutes(job.minutes_left);
+  if (job.percent < 5 && left !== null) return `Starting · ${left} min`;
+  return left === null ? `${job.percent}%` : `${job.percent}% · ${left} min left`;
 }
+
+export const knownMinutes = (minutes: number | null | undefined): number | null =>
+  minutes === null || minutes === undefined || minutes <= 0 ? null : minutes;
 
 export function finishedWhen(at: Date, today: Date): string {
   const minutes = (today.getTime() - at.getTime()) / 60000;
@@ -241,17 +243,18 @@ export function runSummary(job: MyJob): RunSummary {
   if (job.status === "queued") {
     return { state: "running", percent, text: "Waiting to start" };
   }
+  const left = knownMinutes(job.minutes_left);
   if (percent < 5) {
     return {
       state: "running",
       percent,
-      text: `Starting · about ${job.minutes_left ?? 0} min`,
+      text: left === null ? "Starting" : `Starting · about ${left} min`,
     };
   }
   return {
     state: "running",
     percent,
-    text: `${percent}% · about ${job.minutes_left ?? 0} min left`,
+    text: left === null ? `${percent}%` : `${percent}% · about ${left} min left`,
   };
 }
 

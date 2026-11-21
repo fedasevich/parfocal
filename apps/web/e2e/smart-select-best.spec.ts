@@ -68,6 +68,44 @@ test("an offline Best GPU says so and the next click asks Best again", async ({ 
   await expect.poll(() => asked.length).toBeGreaterThan(before);
 });
 
+test("one Best click a second after picking Best asks the GPU for the view once", async ({
+  page,
+}) => {
+  test.slow();
+  const asked: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (
+      request.method() === "POST" &&
+      url.pathname.endsWith("/embeddings/view") &&
+      !url.searchParams.has("call")
+    ) {
+      asked.push(request.postData() ?? "");
+    }
+  });
+  await page.goto(`/projects/${p07}?tab=slides&best=slow`);
+  await page
+    .getByTestId("slide-row")
+    .filter({ hasText: "tumor_044" })
+    .getByRole("button", { name: "Open" })
+    .click();
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await page.keyboard.press("s");
+  const choice = page.getByRole("group", { name: "Model for outlining nuclei" });
+  await choice.getByRole("button", { name: "Best" }).click();
+  await expect(choice).toHaveAttribute("data-tier", "best");
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
+  const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.move(centre.x, centre.y);
+  await page.waitForTimeout(1000);
+  await page.mouse.click(centre.x, centre.y);
+  await expect(layer(page)).toHaveAttribute("data-phase", "ready", { timeout: 20_000 });
+  await expect(layer(page)).toHaveAttribute("data-encoder", "server");
+  expect(asked).toHaveLength(1);
+});
+
 test("cancelling the GPU wait lets Good outline and says the wait was stopped", async ({
   page,
 }) => {

@@ -324,6 +324,18 @@ async def test_an_agent_adjudicates_the_seeded_disagreement_queue(showcase: str)
         f"WHERE task_id = '{task_id}' AND submitted_at IS NULL",
     )
     assert pending[0][0] == 0
+    counts = await run_sql(
+        showcase,
+        "SELECT (SELECT count(DISTINCT (slide_id, number)) FROM review_decisions "
+        f"WHERE task_id = '{task_id}' AND kind = 'region'), "
+        "(SELECT count(*) FROM result_objects o JOIN review_task_slides s "
+        "ON s.result_set_id = o.result_set_id "
+        f"WHERE s.task_id = '{task_id}' AND o.kind = 'region')",
+    )
+    decided, objects = int(str(counts[0][0])), int(str(counts[0][1]))
+    assert objects > 0
+    assert decided * 2 > objects
+    assert decided < objects
     async with rolled_back(showcase, agent) as connection:
         queue = await queue_of(connection, task_id)
         whys = [item.why for item in queue]

@@ -30,6 +30,7 @@ import {
   canOpenSlide,
   gpuText,
   isSettled,
+  knownMinutes,
   pausedRuns,
   runSummary,
   slidePercent,
@@ -107,11 +108,16 @@ function JobWindowBody({
     }
     await refresh();
     const tile = paused[0]?.stages.find((stage) => stage.status === "running")?.units_done;
-    const left = queryClient
-      .getQueryData<{ data: MyJob[] }>(getListMyJobsQueryKey())
-      ?.data.find((item) => item.id === job.id)?.minutes_left;
+    const left = knownMinutes(
+      queryClient
+        .getQueryData<{ data: MyJob[] }>(getListMyJobsQueryKey())
+        ?.data.find((item) => item.id === job.id)?.minutes_left,
+    );
+    const from = tile ?? 0;
     tray.notify(
-      t`Moved to the ${parfocalGpu}. It picks up from tile ${tile ?? 0}, about ${left ?? 0} min left.`,
+      left === null
+        ? t`Moved to the ${parfocalGpu}. It picks up from tile ${from}.`
+        : t`Moved to the ${parfocalGpu}. It picks up from tile ${from}, about ${left} min left.`,
     );
   };
   const cancel = async () => {

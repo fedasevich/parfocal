@@ -206,6 +206,35 @@ describe("smart select session", () => {
     assert.equal(sam.encodes.length, 1);
   });
 
+  it("a click while the prewarm still encodes nearby waits for it and encodes once", async () => {
+    const sam = createFakeSam();
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const session = createSmartSession({
+      slideId: "slide-1",
+      reader: createFakeReader(slide),
+      sam: {
+        ...sam,
+        async encode(id, pixels) {
+          const done = await sam.encode(id, pixels);
+          await held;
+          return done;
+        },
+      },
+      onChange: () => undefined,
+    });
+    opened.push(session);
+    const warming = session.prewarm({ x: 1000, y: 1000 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const pressing = session.press(click(1040, 1020));
+    release();
+    await Promise.all([warming, pressing]);
+    assert.equal(sam.encodes.length, 1);
+    assert.equal(session.snapshot().phase, "ready");
+  });
+
   it("shift+click extends the same object and feeds the previous logits back", async () => {
     const { session, sam } = open();
     await session.press(click(1000, 1000));

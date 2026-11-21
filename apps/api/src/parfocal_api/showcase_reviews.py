@@ -23,12 +23,15 @@ from parfocal_api.tables import (
     DecisionReason,
     DecisionStyle,
     DecisionValue,
+    ResultObjectKind,
     TaskKind,
     TaskScope,
     TaskSplit,
     adjudications,
+    result_objects,
     review_assignments,
     review_decisions,
+    review_task_slides,
     review_tasks,
 )
 from parfocal_common.disagreements import Why
@@ -172,6 +175,61 @@ async def redraw_apart(
             request,
         )
     return target.number
+
+
+def left_for_agreement(
+    numbers: Sequence[tuple[uuid.UUID, int]], decided: Mapping[uuid.UUID, set[int]]
+) -> list[tuple[uuid.UUID, int]]:
+    by_slide: dict[uuid.UUID, list[int]] = {}
+    for slide_id, number in numbers:
+        if number not in decided.get(slide_id, set()):
+            by_slide.setdefault(slide_id, []).append(number)
+    return [
+        (slide_id, number)
+        for slide_id, open_numbers in by_slide.items()
+        for number in sorted(open_numbers)[:-1]
+    ]
+
+
+async def agree_on_the_rest(
+    connection: AsyncConnection,
+    seeded: Seeded,
+    project_id: uuid.UUID,
+    task_id: uuid.UUID,
+    decided: Mapping[uuid.UUID, set[int]],
+) -> None:
+    numbers = await connection.execute(
+        select(review_task_slides.c.slide_id, result_objects.c.number)
+        .join(
+            result_objects,
+            (result_objects.c.result_set_id == review_task_slides.c.result_set_id)
+            & (result_objects.c.kind == ResultObjectKind.REGION),
+        )
+        .where(review_task_slides.c.task_id == task_id)
+    )
+    rest = left_for_agreement([(row.slide_id, row.number) for row in numbers], decided)
+    if not rest:
+        return
+    await connection.execute(
+        insert(review_decisions),
+        [
+            {
+                "tenant_id": seeded.tenant_id,
+                "project_id": project_id,
+                "task_id": task_id,
+                "slide_id": slide_id,
+                "user_id": seeded.people[key],
+                "kind": "region",
+                "number": number,
+                "value": DecisionValue.AGREE,
+                "style": DecisionStyle.AGREE,
+                "answer": DecisionValue.AGREE,
+                "reasons": [],
+            }
+            for slide_id, number in rest
+            for key in ("rhea", "remy")
+        ],
+    )
 
 
 async def seed_adjudication(

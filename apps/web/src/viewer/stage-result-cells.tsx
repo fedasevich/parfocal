@@ -81,6 +81,7 @@ function usePagedCells(setId: string) {
         setPaged(cells);
       },
       (error: unknown) => {
+        if (aborter.signal.aborted) return;
         console.error("result set cells failed", error);
         setPaged(null);
       },

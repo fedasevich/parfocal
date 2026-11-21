@@ -13,6 +13,7 @@ const sentences: Record<string, MessageDescriptor> = {
   "objects-unchecked": msg`The task needs every AI object checked before sign-off.`,
   "annotation-changed": msg`A colleague changed some of these cells, so nothing was changed. Look at them and try again.`,
   "not-assigned": msg`Only the people assigned to this task can do that. You can look at it read only.`,
+  "not-assigned-notice": msg`You are not assigned to this task, so you can look but not change anything.`,
   "unknown-object": msg`That object is no longer in this result, so nothing was changed. Reload the slide and try again.`,
   "project-owners-only": msg`Only an owner of this project can do that.`,
   "task-signed-off": msg`The task is signed off. An owner can reopen it.`,

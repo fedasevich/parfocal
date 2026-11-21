@@ -56,7 +56,7 @@ export function lookOnlyLayer(access: ViewerAccess): boolean {
 const refusalCodes: Record<ReadOnlyReason, string> = {
   "no-review-right": "no-review-right",
   withdrawn: "task-withdrawn",
-  "not-assigned": "not-assigned",
+  "not-assigned": "not-assigned-notice",
   "signed-off": "task-signed-off",
 };
 

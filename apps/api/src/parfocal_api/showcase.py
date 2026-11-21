@@ -47,6 +47,7 @@ from parfocal_api.showcase_reviews import (
     QUEUE_TASK,
     Seeded,
     agree_and_submit,
+    agree_on_the_rest,
     decide,
     redraw_apart,
     review_task,
@@ -711,6 +712,7 @@ async def seed_queue(
         DecisionStyle.AGREE,
     )
     reviewers = [principal_of(seeded, key, Role.REVIEWER, False) for key in ("rhea", "remy")]
+    decided: dict[uuid.UUID, set[int]] = {}
     for slide_id in queued:
         redrawn = await redraw_apart(connection, reviewers, results, task_id, slide_id)
         if redrawn is not None:
@@ -736,6 +738,9 @@ async def seed_queue(
             DecisionValue.DISAGREE,
             [DecisionReason.BOUNDARY_OFF],
         )
+        decided[slide_id] = {1} if redrawn is None else {1, redrawn}
+    await agree_on_the_rest(connection, seeded, project_id, task_id, decided)
+    for slide_id in queued:
         await submit(connection, task_id, slide_id)
 
 
