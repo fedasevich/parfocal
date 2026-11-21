@@ -7097,6 +7097,30 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   PROTO-119 (shapes drawn in a review task's Annotate mode belong to the task) saves regions and cells with the task, but notes, arrows and rulers still save slide wide, where other reviewers can see them while blinding holds. Layer groups also save slide wide and can hold the ids of a reviewer's hidden shapes, the slide export from Annotate leaves task shapes out, shapes saved slide wide before PROTO-119 are not moved, and the API still lets an author change or delete a task shape after sign-off or withdrawal. Save every kind of mark with the task while blinding holds, refuse changes after sign-off in the API, and include task shapes in the slide export.
   Done when DB tests cover the refusal after sign-off and a note hidden from the other reviewer, and a spec draws a note, an arrow and a ruler in a review task and finds them only in the author's layer.
   Depends on PROTO-119. Size: M.
+- [ ] PROTO-143 · Agree with the rest holds at 200 cells and a failed submit says so
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 1 and 2. Agree with the rest on 200 cells saved 80 and answered 500 for 120 on v0.34.2, and the API answered 500 to other calls for about a minute. "Slide 1 submitted" showed although the submit call answered 500. Find the cause (likely one request or transaction per cell exhausting the database pool), make agreeing with the rest one batched call, and show a failed submit as failed with a retry.
+  Done when a DB test agrees with the rest on 1,000 cells in one call within a time bound, a spec shows a failed submit as failed, and the deployed app agrees with the rest on the seeded 200 cell slide with no 500.
+  Depends on nothing. Size: M.
+- [ ] PROTO-144 · Patches and the dataset carry class names and stay small
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 3, 8, 9 and 19. Patches with masks and COCO from a review task held no labels (0 annotations, no category, blank masks, 199 objects dropped as unclassed) because the manifest's class snapshot is empty, and the dataset page shows class IDs instead of names. A patch export of one object wrote 575 MB in 1,115 tiles in 240 s and polled with 409 answers, 110 console errors.
+  Done when the class snapshot of a review task's final layer and dataset holds the project classes, a test exports patches with masks and COCO from a review task and finds labelled masks and annotations, the patch export of one object cuts only tiles that object touches, and the job poll stops on a finished or refused job.
+  Depends on nothing. Size: M.
+- [ ] PROTO-145 · Whole slide cell detection starts, and a review shows only its own runs
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 4, 18 and 20. Find nuclei on the whole slide stayed queued for at least 17 minutes on "0 of 0 tiles" and never started. A queued run of another result set shows inside a review. One Best click asks the GPU twice.
+  Done when a whole slide run on a seeded slide starts and finishes on the deployed app with its time and GPU cost logged, a test covers a run with no tiles planned, a review lists only its own result set's runs, and one Best click makes one GPU call.
+  Depends on nothing. Size: M.
+- [ ] PROTO-146 · Every way into editing a reviewed object is visible and works
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 6, 7, 12 and 13. "Edit T1 myself in the viewer" from the disagreement queue opens the slide read only. In a 5 point certainty task key 1 saved "Probably not, wrong class Tumor", key 5 did nothing and Disagree offers no Redraw. Handles and brush have no visible way in. After a reload Guided has no way to the opinion questions.
+  Done when specs cover editing from the queue, the number keys on 2, 3 and 5 point tasks, a visible Edit shape button opening handles and brush, and the opinion questions after a reload.
+  Depends on nothing. Size: M.
+- [ ] PROTO-147 · An annotate task can be signed off and the seed has a real outline disagreement
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 10, 11 and 17. An annotate task shows no way to sign its slide off, so its dataset could not be reached. The seed has no object with two different outlines and its reviewers left most objects open, so the outline queue and the adjudicator outline pick could not be walked. A task with one reviewer speaks of both reviewers.
+  Done when a spec signs off an annotate slide and reaches its dataset, the seed gives the first agent account an outline differs item to adjudicate after the next reset, and the one reviewer wording has a unit test.
+  Depends on nothing. Size: M.
+- [ ] PROTO-148 · Names and wording after an upload and in the task wizard
+  From `docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md` (the deployed walkthrough of v0.34.1), new issues 14, 15 and 16. An uploaded slide is called "Slide" instead of its file name, a fresh sign-in lands in Machine Learning Lab rather than the last workspace, and the task wizard has wording slips.
+  Done when unit tests cover the upload name and the wizard wording, and a spec signs in and lands in the last used workspace.
+  Depends on nothing. Size: S.
 
 ---
 

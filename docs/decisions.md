@@ -28,6 +28,16 @@ ADR 0408 (MIRAX and DICOM zips become one tiled TIFF at ingest) stores the conve
 
 Your choice:
 
+### 171. Can outlines drawn by hand or with one click tools be reviewed by a second person?
+
+From the third deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md`, issue 5). Today a review task takes only AI result sets, so the wizard greys out a slide whose shapes were drawn by hand, with the single word "no".
+
+- A. Yes, a review task accepts hand drawn and one click objects like AI objects, so a second expert can agree, disagree or fix them. (Recommended, since your path is "annotate by hand or with one click tools, then have it human reviewed".)
+- B. No, the annotate task with its second expert check is the review, and the wizard only says so.
+- C. Yes, but only after the shapes are saved as a result set.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.
