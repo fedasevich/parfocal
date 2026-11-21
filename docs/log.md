@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-21
 
+- OPS-038 Deployed v0.35.6 (PROTO-152 the cell task report counts its cells, and the smoke accepting a thumbnail 404) to Modal main, deploy and browser smoke passed. Cost TODO.
 - PROTO-152 The report's object count now reads the task's review order (the sampled objects) instead of the whole result set. The 100% cells agreed line could not be reproduced: a single reviewer disagreeing gives 50% in a test, so it is left as is.
 - PROTO-152 The report built its cell matrix empty and read cell classes only for regions. Now reads cell classes from the result chunks, builds the matrix from agreed and retyped cells, names worst rows by class. Test in test_report_views.py.
 - OPS-038 Deployed v0.35.4 (PROTO-149 the queue decision rules the final layer) and v0.35.5 (PROTO-149 consensus export, PROTO-150 job states, served models and the run finished notice) to Modal main and Neon main. Both deploys passed, both browser smokes failed only on GET thumbnail 404 for the seeded Missing file.svs slide, which the walkthrough had opened so it now shows on home. 8e86531d lets the smoke accept a thumbnail 404 and ships with the next release. Cost TODO.
