@@ -2,6 +2,25 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.34.1 (2026-11-21)
+
+### Features
+
+- PROTO-142: Keep every mark of a review task with the task and lock it after sign-off
+- PROTO-142: Keep task rulers out of case reports and search, check rulers in the spec
+
+### Docs
+
+- PROTO-139: Log the v0.33.0 and v0.34.0 production runs
+- PROTO-142: Log and tick task marks and the sign-off lock
+- PROTO-122: Log and tick the whole path spec
+- PROTO-139: Log the 8 minute deployed reseed and tick
+
+### Tests
+
+- PROTO-122: Walk one slide from upload to a frozen dataset on the local stack
+- PROTO-122: Review real model cells and check who settled the outline
+
 ## v0.34.0 (2026-11-21)
 
 ### Features
