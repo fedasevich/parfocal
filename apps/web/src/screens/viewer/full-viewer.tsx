@@ -57,7 +57,7 @@ export function FullViewer(props: FullViewerProps) {
 }
 
 function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
-  const session = useReviewSession(props.taskId, props.slideId);
+  const session = useReviewSession(props.taskId, props.slideId, props.projectId);
   const project = okData(useGetProject(props.projectId).data);
   const progress = useGetSlideAiProgress(props.slideId);
   if (!session.ready || project === undefined || progress.isPending) return <SlideLoader />;

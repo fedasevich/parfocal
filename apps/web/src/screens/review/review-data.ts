@@ -11,6 +11,7 @@ import {
   useGetReviewTask,
   useGetSlideNeighbours,
   useListDecisions,
+  useListMySlides,
   useListProjectClasses,
   useListProjects,
   useListReviewObjects,
@@ -82,13 +83,22 @@ export type ReviewSession = {
   retryOrder: () => void;
 };
 
-export function useReviewSession(taskId: string, slideId: string): ReviewSession {
+export function useReviewSession(
+  taskId: string,
+  slideId: string,
+  viewedProjectId?: string,
+): ReviewSession {
   const task = okData(useGetReviewTask(taskId).data);
   const projectId = task?.project_id ?? "";
+  const slideOutsideTask =
+    task !== undefined && viewedProjectId !== undefined && task.project_id !== viewedProjectId;
   const objectsQuery = useListReviewObjects(taskId, slideId, {
-    query: { refetchInterval: (query) => preparingInterval(query.state.error) },
+    query: {
+      enabled: viewedProjectId === undefined || (task !== undefined && !slideOutsideTask),
+      refetchInterval: (query) => preparingInterval(query.state.error),
+    },
   });
-  const reviewObjects = okData(objectsQuery.data);
+  const reviewObjects = slideOutsideTask ? undefined : okData(objectsQuery.data);
   const [heldOrder, holdOrder] = useState<ReviewOrderState>("ready");
   const order = nextReviewOrderState(heldOrder, objectsQuery.error, objectsQuery.isFetching);
   if (order !== heldOrder) holdOrder(order);
@@ -106,14 +116,21 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const projectName =
     okData(useListProjects().data)?.find((project) => project.id === projectId)?.name ?? "";
   const slide = reviewObjects?.slide;
+  const projectSlides = useListMySlides(
+    { project_id: viewedProjectId ?? "" },
+    { query: { enabled: slideOutsideTask } },
+  );
+  const listed = slideOutsideTask
+    ? okData(projectSlides.data)?.slides.find((row) => row.id === slideId)
+    : undefined;
   return {
     taskId,
     slideId,
     task,
     taskName: task?.name ?? "",
     taskSub: task?.due_on ? `${projectName} · due ${formatDue(task.due_on)}` : projectName,
-    slideName: slide ? `${slide.label} · ${slide.stain}` : "",
-    caseLabel: slide?.case_label ?? null,
+    slideName: slide ? `${slide.label} · ${slide.stain}` : (listed?.label ?? ""),
+    caseLabel: slide?.case_label ?? listed?.case_label ?? null,
     objects: reviewObjects?.objects ?? [],
     added: reviewObjects?.added ?? [],
     decisions: new Map(
@@ -132,7 +149,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     meId: me?.user_id,
     nodeStaging: task?.analysis_template === "sentinel-node",
     slideSize: slide?.width && slide.height ? { width: slide.width, height: slide.height } : null,
-    ready: task !== undefined && reviewObjects !== undefined,
+    ready: task !== undefined && (reviewObjects !== undefined || slideOutsideTask),
     order,
     retryOrder: () => void objectsQuery.refetch(),
   };

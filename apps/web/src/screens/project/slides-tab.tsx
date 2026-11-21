@@ -367,7 +367,7 @@ export function SlidesTab({
                           <Link
                             to="/projects/$projectId/cases/$caseId/report"
                             params={{ projectId: project.id, caseId: caseIdOf(group.key) ?? "" }}
-                            className="text-accent"
+                            className="inline-flex min-h-6 items-center text-accent"
                             onClick={(event) => event.stopPropagation()}
                           >
                             <Trans>Open report</Trans>

@@ -45,6 +45,7 @@ import {
   reviewTasks,
   type ScenarioProject,
   type ScenarioReviewTask,
+  sampleSlides,
   slides,
 } from "./scenario.ts";
 import {
@@ -519,6 +520,11 @@ const viewedSlideOf = (request: Request): string | undefined => {
   return /\/slides\/([^/?#]+)/.exec(page)?.[1];
 };
 
+const uuidShaped = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+const unlistedSlide = (slideId: string) =>
+  sampleSlides.some((slide) => slide.id === slideId) || !uuidShaped.test(slideId);
+
 export function projectHandlers(): RequestHandler[] {
   return [
     http.get("*/api/me/slides", ({ request }) => {
@@ -527,7 +533,7 @@ export function projectHandlers(): RequestHandler[] {
         return HttpResponse.json({ slides: projectSlideRows(projectId), next_cursor: null });
       }
       const viewed = viewedSlideOf(request);
-      if (viewed === undefined || slides.some((slide) => slide.id === viewed)) return undefined;
+      if (viewed === undefined || !unlistedSlide(viewed)) return undefined;
       return HttpResponse.json({ slides: [], next_cursor: unlistedSlidesCursor });
     }),
     getGetProjectOverviewMockHandler(({ params }) => toProjectOverview(String(params.projectId))),
