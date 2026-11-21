@@ -4,7 +4,7 @@ import io
 import json
 import uuid
 import zipfile
-from typing import Any
+from typing import Any, cast
 
 import httpx2
 import pytest
@@ -148,7 +148,9 @@ def test_patches_are_cut_from_a_frozen_version(api: ApiAs, database: str) -> Non
         owner.post(f"/api/review-tasks/{task}/patch-exports", json={"dataset_version": 1}), 202
     )
     (row,) = as_owner(database, f"SELECT input FROM jobs WHERE id = '{started['job_id']}'")
-    job_input = row[0] if isinstance(row[0], dict) else json.loads(row[0])
+    raw: Any = row[0]
+    raw = json.loads(raw) if isinstance(raw, str) else raw
+    job_input = cast(dict[str, Any], raw)
     assert job_input["dataset_version"] == 1
     assert job_input["dataset_sha256"] == version["sha256"]
     assert job_input["dataset_key"].startswith(f"t/{o.tenant}/datasets/{task}/")

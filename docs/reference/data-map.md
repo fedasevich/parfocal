@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | Class | Columns |
 |---|---|
 | `phi` | 53 |
-| `personal` | 105 |
+| `personal` | 107 |
 | `secret` | 15 |
-| `operational` | 925 |
+| `operational` | 935 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -412,6 +412,23 @@ Generated from the table models in `apps/api/src/parfocal_api/tables/` by `pnpm 
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## final_layers
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `build` | operational |
+| `task_version` | operational |
+| `objects` | personal |
+| `counts` | operational |
+| `classes` | operational |
+| `built_by_user_id` | personal |
+| `built_at` | operational |
 
 ## gpu_usage
 

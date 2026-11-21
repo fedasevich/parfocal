@@ -183,7 +183,7 @@ def test_the_pdf_facts_leave_out_an_empty_microscopic_description_and_comment() 
 
     from parfocal_api.clinical_report_pdf import facts_of
 
-    values = {
+    values: dict[str, object] = {
         "specimen": "Node",
         "category": None,
         "nodes_examined": None,

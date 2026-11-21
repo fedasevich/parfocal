@@ -824,7 +824,7 @@ async def test_one_demo_task_is_half_done_and_one_is_submitted_with_a_report(
                 for slide in done_states.slides
                 for reviewer in slide.reviewers
             )
-            report = await get_evaluation_report(done, principal, connection)
+            report = await get_evaluation_report(done, principal, connection, RESULTS)  # type: ignore[arg-type]
             assert report.slides == 2
             assert report.objects > 0
     finally:
