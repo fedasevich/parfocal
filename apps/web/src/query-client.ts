@@ -9,6 +9,7 @@ import {
   getListMyReviewTasksQueryKey,
   getListProjectsQueryKey,
   getListTenantMembersQueryKey,
+  getSubmitSlideReviewMutationKey,
   isDraftNotAvailable,
 } from "@parfocal/api-client";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
@@ -46,6 +47,11 @@ export function createQueryClient(
   const client: QueryClient = new QueryClient({
     queryCache: new QueryCache({ onError: (error, query) => onAnyError?.(error, query.queryKey) }),
     mutationCache: new MutationCache({
+      onSuccess: (_data, _variables, _context, mutation) => {
+        if (mutation.options.mutationKey?.[0] !== getSubmitSlideReviewMutationKey()[0]) return;
+        void client.invalidateQueries({ queryKey: getListMyReviewTasksQueryKey() });
+        void client.invalidateQueries({ queryKey: getGetMyHomeQueryKey() });
+      },
       onError: (error, _variables, _context, mutation) => {
         onAnyError?.(error);
         if (isMaintenanceError(error)) {

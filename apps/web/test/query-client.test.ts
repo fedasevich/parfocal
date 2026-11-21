@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ApiError, DraftNotAvailableError } from "@parfocal/api-client";
+import {
+  ApiError,
+  DraftNotAvailableError,
+  getGetMyHomeQueryKey,
+  getListMyReviewTasksQueryKey,
+  getListProjectsQueryKey,
+  getSubmitSlideReviewMutationKey,
+} from "@parfocal/api-client";
 import {
   createQueryClient,
   retryDelay,
@@ -59,6 +66,25 @@ test("the query client hands an unhandled mutation failure to the toast", async 
     .execute(undefined)
     .catch(() => {});
   assert.deepEqual(seen, ["forbidden"]);
+});
+
+test("a submitted slide marks My work and the home resume out of date", async () => {
+  const client = createQueryClient();
+  client.setQueryData(getListMyReviewTasksQueryKey(), { data: [], status: 200 });
+  client.setQueryData(getGetMyHomeQueryKey(), { data: {}, status: 200 });
+  client.setQueryData(getListProjectsQueryKey(), { data: [], status: 200 });
+  await client
+    .getMutationCache()
+    .build(client, {
+      mutationKey: getSubmitSlideReviewMutationKey(),
+      mutationFn: () => Promise.resolve(null),
+    })
+    .execute(undefined);
+  const stale = (key: readonly unknown[]) => client.getQueryState(key)?.isInvalidated;
+  assert.equal(stale(getListMyReviewTasksQueryKey()), true);
+  assert.equal(stale(getGetMyHomeQueryKey()), true);
+  assert.equal(stale(getListProjectsQueryKey()), false);
+  client.clear();
 });
 
 test("a draft route missing in production always toasts and never retries", () => {

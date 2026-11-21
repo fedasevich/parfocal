@@ -15,6 +15,9 @@ test("guided review on a 375 pixel phone says it needs a wider screen and does n
   await expect(notice).toContainText("Review needs a wider screen");
   await expect(page.getByTestId("slide-stage")).toHaveCount(0);
   expect(await sideways(page)).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 700, height: 812 });
+  await expect(notice).toBeVisible();
+  expect(await sideways(page)).toBeLessThanOrEqual(0);
   await page.setViewportSize({ width: 1024, height: 812 });
   await expect(notice).toHaveCount(0);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {

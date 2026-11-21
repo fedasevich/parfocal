@@ -135,7 +135,7 @@ function CellsPanel({
             role="group"
             aria-label={t`Sampled cells`}
             data-slot="cells-panel-grid"
-            className="grid min-h-0 gap-1.5 overflow-x-hidden overflow-y-auto"
+            className="-m-2.5 grid min-h-0 gap-1.5 overflow-x-hidden overflow-y-auto p-2.5"
             style={{ gridTemplateColumns: `repeat(${columns}, 40px)` }}
           >
             {children}

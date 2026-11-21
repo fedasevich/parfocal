@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useSyncExternalStore } from "react";
 import { IssuePage } from "../shell/issue-pages.tsx";
 
-export const narrowScreenQuery = "(max-width: 639px)";
+export const narrowScreenQuery = "(max-width: 767px)";
 
 const subscribe = (notify: () => void) => {
   if (typeof window.matchMedia !== "function") return () => {};
