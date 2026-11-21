@@ -229,13 +229,15 @@ async def freeze_dataset_version(
     manifest, files, summary = await built(connection, task, results, body.filters)
     if not manifest.slides or sum(summary.objects.values()) == 0:
         raise NothingChosenError
-    number = (
+    latest: int = (
         await connection.scalar(
             select(func.coalesce(func.max(dataset_versions.c.number), 0)).where(
                 dataset_versions.c.task_id == task_id
             )
         )
-    ) + 1
+        or 0
+    )
+    number = latest + 1
     content = frozen_zip(manifest, files, number)
     version_id = uuid.uuid4()
     key = dataset_version_key(task.tenant_id, task_id, version_id)

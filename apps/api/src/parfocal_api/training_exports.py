@@ -8,7 +8,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter
 from fastapi.responses import Response
@@ -344,9 +344,9 @@ def rounded(value: Any) -> Any:
     if isinstance(value, float):
         return round(value, 6)
     if isinstance(value, list):
-        return [rounded(item) for item in value]
+        return [rounded(item) for item in cast("list[Any]", value)]
     if isinstance(value, dict):
-        return {key: rounded(item) for key, item in value.items()}
+        return {key: rounded(item) for key, item in cast("dict[str, Any]", value).items()}
     return value
 
 
