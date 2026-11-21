@@ -4,8 +4,11 @@ import {
   type DatasetOrigin,
   type DatasetSummary,
   type DatasetVersion,
+  type FinalLayerStatus,
+  getGetTaskDatasetQueryKey,
   getListDatasetVersionsQueryKey,
   type ProjectClass,
+  useBuildFinalLayer,
   useFreezeDatasetVersion,
   useGetProject,
   useGetReviewTask,
@@ -109,6 +112,57 @@ function CountRows({ rows }: { rows: { key: string; label: string; count: number
   );
 }
 
+function FinalLayer({
+  status,
+  building,
+  onBuild,
+}: {
+  status: FinalLayerStatus | null | undefined;
+  building: boolean;
+  onBuild: () => void;
+}) {
+  const { i18n } = useLingui();
+  const counts = status?.counts;
+  const when = status
+    ? new Intl.DateTimeFormat(i18n.locale, { dateStyle: "medium", timeStyle: "short" }).format(
+        new Date(status.built_at),
+      )
+    : "";
+  return (
+    <Section title={<Trans>Final layer</Trans>}>
+      <p className="m-0 text-body-sm text-fg-dim">
+        <Trans>
+          Signing off the task turns its decisions and edits into one final layer. Agreed objects go
+          in as agreed, redrawn or retyped ones as edited with who edited them, the adjudicator's
+          outcome wins, rejected objects are deleted and added ones go in as added by a person.
+        </Trans>
+      </p>
+      {status && counts ? (
+        <p className="m-0 text-body-sm text-fg" data-testid="final-layer-status">
+          <Trans>
+            Build {status.build} on {when}: {counts.confirmed ?? 0} agreed, {counts.edited ?? 0}{" "}
+            edited, {counts.rejected ?? 0} rejected, {counts.added ?? 0} added, {counts.unsure ?? 0}{" "}
+            unsure and {counts.open ?? 0} open left out.
+          </Trans>
+        </p>
+      ) : (
+        <p className="m-0 text-body-sm text-fg-dim" data-testid="final-layer-status">
+          <Trans>No final layer is built yet.</Trans>
+        </p>
+      )}
+      <div>
+        <Button data-testid="final-layer-build" disabled={building} onClick={onBuild}>
+          {status ? (
+            <Trans>Build the final layer again</Trans>
+          ) : (
+            <Trans>Build the final layer</Trans>
+          )}
+        </Button>
+      </div>
+    </Section>
+  );
+}
+
 function Counts({ summary, classes }: { summary: DatasetSummary; classes: ProjectClass[] }) {
   const { t } = useLingui();
   const names = useOriginNames();
@@ -129,10 +183,17 @@ function Counts({ summary, classes }: { summary: DatasetSummary; classes: Projec
         </p>
         <CountRows rows={originRows} />
         <p className="m-0 text-caption text-fg-dim" data-testid="dataset-left-out">
-          <Trans>
-            Left out: {summary.unchecked_left_out} not checked, {summary.filtered_out} by the
-            filters
-          </Trans>
+          {summary.final_layer ? (
+            <Trans>
+              Left out: {summary.unsure_left_out ?? 0} unsure, {summary.open_left_out ?? 0} open,{" "}
+              {summary.unchecked_left_out} not checked, {summary.filtered_out} by the filters
+            </Trans>
+          ) : (
+            <Trans>
+              Left out: {summary.unchecked_left_out} not checked, {summary.filtered_out} by the
+              filters
+            </Trans>
+          )}
         </p>
       </Section>
       <Section title={<Trans>By class</Trans>}>
@@ -297,6 +358,8 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
   );
   const versions = okData(useListDatasetVersions(taskId).data) ?? [];
   const freeze = useFreezeDatasetVersion();
+  const rebuild = useBuildFinalLayer();
+  const review = task?.kind === "review";
   const classes = task?.classes ?? [];
   const code = task?.code ?? "";
 
@@ -309,6 +372,20 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
           setNote("");
           void queryClient.invalidateQueries({ queryKey: getListDatasetVersionsQueryKey(taskId) });
           toast.show(t`Version ${response.data.number} is frozen`);
+        },
+        onError: (error) => toast.show(refusalText(problemCode(error))),
+      },
+    );
+  };
+
+  const buildNow = () => {
+    rebuild.mutate(
+      { taskId },
+      {
+        onSuccess: (response) => {
+          if (response.status !== 200) return;
+          void queryClient.invalidateQueries({ queryKey: getGetTaskDatasetQueryKey(taskId) });
+          toast.show(t`Final layer build ${response.data.build} is ready`);
         },
         onError: (error) => toast.show(refusalText(problemCode(error))),
       },
@@ -347,12 +424,23 @@ export function DatasetScreen({ taskId }: { taskId: string }) {
           <Trans>Dataset of {code}</Trans>
         </h1>
         <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>
-            Only signed off slides go in. By default only objects a person checked go in: added,
-            agreed and edited. Freeze a version to name exactly which data trained a model.
-          </Trans>
+          {review ? (
+            <Trans>
+              A review task goes in once it is signed off, through its final layer. Only objects a
+              person checked go in: added, agreed and edited. Unsure and open objects are left out
+              and counted. Freeze a version to name exactly which data trained a model.
+            </Trans>
+          ) : (
+            <Trans>
+              Only signed off slides go in. By default only objects a person checked go in: added,
+              agreed and edited. Freeze a version to name exactly which data trained a model.
+            </Trans>
+          )}
         </p>
       </header>
+      {review ? (
+        <FinalLayer status={base?.final_layer} building={rebuild.isPending} onBuild={buildNow} />
+      ) : null}
       {refusal !== null ? (
         <p role="alert" className="m-0 text-body text-bad" data-testid="dataset-refusal">
           {refusal}

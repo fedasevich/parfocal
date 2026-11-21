@@ -24,6 +24,7 @@
     "event_attempts",
     "event_outbox",
     "event_targets",
+    "final_layers",
     "gpu_usage",
     "hidden_models",
     "import_sources",
