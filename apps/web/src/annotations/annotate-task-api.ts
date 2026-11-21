@@ -1,5 +1,6 @@
 import {
   type AiObjectChange,
+  type AiObjectChanges,
   type AiObjectConfirm,
   type AnnotateSlideStatus,
   apiFetch,
@@ -79,7 +80,12 @@ export const changeAiBatch = (
   taskId: string,
   slideId: string,
   changes: readonly AiObjectChange[],
-) => send<ChangedAiObjects>(`${sharedLayerPath(taskId, slideId)}/ai-changes`, "POST", { changes });
+  parts: Omit<AiObjectChanges, "changes"> = {},
+) =>
+  send<ChangedAiObjects>(`${sharedLayerPath(taskId, slideId)}/ai-changes`, "POST", {
+    changes,
+    ...parts,
+  });
 
 const AI_PAGE = 5000;
 

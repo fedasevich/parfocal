@@ -16,6 +16,7 @@ import { type AnnotationDocument, isShapeHidden } from "./document.ts";
 import { strokeSamples } from "./freehand.ts";
 import type { Point } from "./polygon-draft.ts";
 import { at, ringCount, ringOf } from "./shapes.ts";
+import { cutWidthPx } from "./split-merge.ts";
 import {
   bindSpacePan,
   buttonReleased,
@@ -34,6 +35,7 @@ type BrushLayerProps = {
   document: AnnotationDocument;
   classKey: string | null;
   colour: string;
+  cut?: boolean;
   onApply: (next: AnnotationDocument, label: string) => void;
 };
 
@@ -46,15 +48,17 @@ export function BrushLayer({
   document,
   classKey,
   colour,
+  cut = false,
   onApply,
 }: BrushLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const [stroke, setStroke] = useState<{ mode: BrushMode; points: readonly Point[] } | null>(null);
-  const [size, setSize] = useState(brushDefaultSize);
+  const [chosenSize, setSize] = useState(brushDefaultSize);
+  const size = cut ? cutWidthPx : chosenSize;
   const escRegistry = useEscRegistry();
-  const latest = useRef({ engine, document, classKey, onApply, size });
-  latest.current = { engine, document, classKey, onApply, size };
+  const latest = useRef({ engine, document, classKey, onApply, size, cut });
+  latest.current = { engine, document, classKey, onApply, size, cut };
 
   useEffect(() => {
     if (!active) {
@@ -80,7 +84,8 @@ export function BrushLayer({
       event.preventDefault();
       interruptMotion(latest.current.engine);
       capturePointer(stage, event.pointerId);
-      drawing = { id: event.pointerId, mode: brushModeOf(event), points: [toSlide(event)] };
+      const mode = latest.current.cut ? "erase" : brushModeOf(event);
+      drawing = { id: event.pointerId, mode, points: [toSlide(event)] };
       setStroke({ mode: drawing.mode, points: [...drawing.points] });
     };
     const move = (event: PointerEvent) => {

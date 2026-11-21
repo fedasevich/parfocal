@@ -2,17 +2,24 @@ import { useLingui } from "@lingui/react/macro";
 import type { EditDraft } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useMemo, useRef } from "react";
-import { type AiCell, boundsOf, geometryOf, type Ring } from "../annotations/ai-edit.ts";
+import {
+  type AiCell,
+  boundsOf,
+  geometryOf,
+  type PickMode,
+  type Ring,
+} from "../annotations/ai-edit.ts";
 import { AiLayer } from "../annotations/ai-layer.tsx";
 import { mapOf } from "../annotations/brush.ts";
 import { BrushLayer } from "../annotations/brush-layer.tsx";
 import { type AnnotationDocument, addShape, createDocument } from "../annotations/document.ts";
-import { polygonToGeoJson } from "../annotations/geojson.ts";
-import { at, ringCount, ringOf } from "../annotations/shapes.ts";
+import { partsOf, ringsOfGeometry } from "../annotations/split-merge.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
-export type ShapeTool = "handles" | "brush";
+export type ShapeTool = "handles" | "brush" | "cut" | "merge";
+
+export type MergeCandidate = { readonly object: string; readonly ring: Ring };
 
 export const ringOfOutline = (outline: readonly number[] | null | undefined): Ring => {
   const ring: [number, number][] = [];
@@ -22,29 +29,38 @@ export const ringOfOutline = (outline: readonly number[] | null | undefined): Ri
   return ring;
 };
 
-const ringArea = (points: Float32Array) => {
-  let sum = 0;
-  for (let index = 0; index + 1 < points.length; index += 2) {
-    const next = (index + 2) % points.length;
-    sum += at(points, index) * at(points, next + 1) - at(points, next) * at(points, index + 1);
-  }
-  return Math.abs(sum) / 2;
+const sameRing = (left: Ring, right: Ring) =>
+  left.length === right.length &&
+  right.every(([x, y], index) => left[index]?.[0] === x && left[index]?.[1] === y);
+
+const cellOfRing = (object: string, classId: string | null, ring: Ring, edited: boolean) => {
+  const bounds = boundsOf(ring);
+  return {
+    object,
+    classId,
+    ring,
+    deleted: false,
+    bounds,
+    centre: { x: (bounds[0] + bounds[2]) / 2, y: (bounds[1] + bounds[3]) / 2 },
+    edited,
+    version: null,
+    score: null,
+    original: { classId: null, ring },
+  };
 };
 
-function largestRing(shape: NonNullable<ReturnType<typeof mapOf>>): Float32Array | null {
-  let best: Float32Array | null = null;
-  for (let ring = 0; ring < ringCount(shape); ring++) {
-    const points = ringOf(shape, ring);
-    if (points.length >= 6 && (best === null || ringArea(points) > ringArea(best))) best = points;
+const picked = (now: readonly string[], ids: readonly string[], mode: PickMode, keep: string) => {
+  if (mode === "replace") return [...new Set([keep, ...ids])];
+  const next = new Set(now);
+  for (const id of ids) {
+    if (id === keep) continue;
+    if (mode === "toggle" && next.has(id)) next.delete(id);
+    else next.add(id);
   }
-  return best;
-}
+  return [...next];
+};
 
-const sameRing = (left: Float32Array, right: Ring) =>
-  left.length === right.length * 2 &&
-  right.every(([x, y], index) => left[index * 2] === x && left[index * 2 + 1] === y);
-
-const brushDocument = (ring: Ring): AnnotationDocument =>
+export const brushDocument = (ring: Ring): AnnotationDocument =>
   addShape(createDocument(), {
     kind: "brush",
     points: Float32Array.from(ring.flat()),
@@ -61,7 +77,11 @@ export function StageShapeEdit({
   original,
   edited,
   tool,
+  candidates = [],
+  merging = [],
+  onMerging,
   onSave,
+  onSplit,
   onClose,
   onStep,
 }: {
@@ -73,50 +93,78 @@ export function StageShapeEdit({
   original: Ring;
   edited: boolean;
   tool: ShapeTool;
+  candidates?: readonly MergeCandidate[];
+  merging?: readonly string[];
+  onMerging?: (objects: readonly string[]) => void;
   onSave: (geometry: EditDraft["geometry"]) => void;
+  onSplit?: (parts: readonly Ring[]) => void;
   onClose: () => void;
   onStep: (delta: 1 | -1) => void;
 }) {
   const escRegistry = useEscRegistry();
   const closing = useRef(onClose);
   closing.current = onClose;
-  const cells = useMemo((): AiCell[] => {
-    const bounds = boundsOf(ring);
-    return [
-      {
-        object,
-        classId,
-        ring,
-        deleted: false,
-        bounds,
-        centre: { x: (bounds[0] + bounds[2]) / 2, y: (bounds[1] + bounds[3]) / 2 },
-        edited,
-        version: null,
-        score: null,
-        original: { classId: null, ring: original },
-      },
-    ];
-  }, [object, classId, ring, original, edited]);
+  const cells = useMemo(
+    (): AiCell[] => [
+      { ...cellOfRing(object, classId, ring, edited), original: { classId: null, ring: original } },
+    ],
+    [object, classId, ring, original, edited],
+  );
+  const mergeCells = useMemo(
+    (): AiCell[] => [
+      cellOfRing(object, classId, ring, edited),
+      ...candidates
+        .filter((item) => item.object !== object)
+        .map((item) => cellOfRing(item.object, null, item.ring, false)),
+    ],
+    [object, classId, ring, edited, candidates],
+  );
   const document = useMemo(() => brushDocument(ring), [ring]);
   useEffect(() => {
-    if (tool !== "brush") return;
+    if (tool !== "brush" && tool !== "cut") return;
     return escRegistry?.add("vertex", { open: () => true, peel: () => closing.current() });
   }, [tool, escRegistry]);
-  if (tool === "brush") {
+  if (tool === "brush" || tool === "cut") {
     return (
       <BrushLayer
         engine={engine}
         stage={stage}
         active
+        cut={tool === "cut"}
         document={document}
         classKey={null}
         colour="var(--accent)"
         onApply={(next) => {
           const shape = mapOf(next, null);
-          const points = shape === null ? null : largestRing(shape);
-          if (points === null || sameRing(points, ring)) return;
-          onSave(polygonToGeoJson(points));
+          const parts = shape === null ? [] : partsOf(ringsOfGeometry(shape));
+          if (parts.length >= 2 && onSplit !== undefined) {
+            onSplit(parts);
+            return;
+          }
+          const kept = parts[0];
+          if (tool === "cut" || kept === undefined || sameRing(kept, ring)) return;
+          onSave(geometryOf(kept));
         }}
+      />
+    );
+  }
+  if (tool === "merge") {
+    const chosen = merging.includes(object) ? merging : [object, ...merging];
+    return (
+      <AiLayer
+        engine={engine}
+        stage={stage}
+        cells={mergeCells}
+        checkOf={() => "confirmed"}
+        selection={chosen}
+        selecting
+        locked={false}
+        tag={null}
+        colourOf={() => "var(--accent)"}
+        onPick={(ids, mode) => onMerging?.(picked(chosen, ids, mode, object))}
+        onReshape={() => undefined}
+        onDelete={() => undefined}
+        onStep={onStep}
       />
     );
   }
@@ -145,22 +193,62 @@ export function StageShapeEdit({
   );
 }
 
+export function StageShapeFateBar({
+  object,
+  line,
+  undoLabel,
+  onUndo,
+}: {
+  object: string;
+  line: string;
+  undoLabel: string;
+  onUndo: () => void;
+}) {
+  const { t } = useLingui();
+  return (
+    <fieldset
+      data-testid="shape-fate-bar"
+      aria-label={t`What happened to ${object}`}
+      className="m-0 flex min-w-0 flex-col gap-2 rounded-ctl border border-line p-3"
+    >
+      <p className="m-0 text-body-sm text-fg">{line}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="ghost" onClick={onUndo}>
+          {undoLabel}
+        </Button>
+      </div>
+    </fieldset>
+  );
+}
+
 export function StageShapeEditBar({
   object,
   tool,
   edited,
+  canSplit = false,
+  merging = 0,
   onTool,
   onRestore,
+  onMerge,
   onDone,
 }: {
   object: string;
   tool: ShapeTool;
   edited: boolean;
+  canSplit?: boolean;
+  merging?: number;
   onTool: (tool: ShapeTool) => void;
   onRestore: () => void;
+  onMerge?: () => void;
   onDone: () => void;
 }) {
   const { t } = useLingui();
+  const hints: Record<ShapeTool, string> = {
+    handles: t`Drag a point or the outline of ${object}. Each move is saved as your edit.`,
+    brush: t`Paint to add to ${object}, hold Shift to erase. The [ and ] keys change the size.`,
+    cut: t`Draw a line across ${object} to split it into parts.`,
+    merge: t`Click the regions to merge with ${object}, then press Merge.`,
+  };
   return (
     <fieldset
       data-testid="shape-edit-bar"
@@ -168,11 +256,7 @@ export function StageShapeEditBar({
       aria-label={t`Edit the outline of ${object}`}
       className="m-0 flex min-w-0 flex-col gap-2 rounded-ctl border border-line p-3"
     >
-      <p className="m-0 text-body-sm text-fg">
-        {tool === "handles"
-          ? t`Drag a point or the outline of ${object}. Each move is saved as your edit.`
-          : t`Paint to add to ${object}, hold Shift to erase. The [ and ] keys change the size.`}
-      </p>
+      <p className="m-0 text-body-sm text-fg">{hints[tool]}</p>
       <div className="flex flex-wrap gap-2">
         <Button
           size="sm"
@@ -190,6 +274,31 @@ export function StageShapeEditBar({
         >
           {t`Brush`}
         </Button>
+        {canSplit ? (
+          <>
+            <Button
+              size="sm"
+              variant={tool === "cut" ? "secondary" : "ghost"}
+              aria-pressed={tool === "cut"}
+              onClick={() => onTool("cut")}
+            >
+              {t`Split`}
+            </Button>
+            <Button
+              size="sm"
+              variant={tool === "merge" ? "secondary" : "ghost"}
+              aria-pressed={tool === "merge"}
+              onClick={() => onTool("merge")}
+            >
+              {t`Merge`}
+            </Button>
+          </>
+        ) : null}
+        {tool === "merge" ? (
+          <Button size="sm" variant="primary" disabled={merging < 2} onClick={onMerge}>
+            {t`Merge ${merging} regions`}
+          </Button>
+        ) : null}
         {edited ? (
           <Button size="sm" variant="ghost" onClick={onRestore}>
             {t`Restore the AI original`}

@@ -1003,6 +1003,8 @@ function OpenedSlide({
                           colourOf={colourOf}
                           selecting={tool === "select"}
                           bridge={aiBridge}
+                          onAdopt={saved.adopt}
+                          onDrop={saved.drop}
                           onOpenSlide={onOpenSlide}
                           onShowPanel={showObjectsPanel}
                         />

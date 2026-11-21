@@ -3,9 +3,11 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { inRing } from "../annotations/ai-edit.ts";
+import { inRing, type Ring } from "../annotations/ai-edit.ts";
+import { loadClipper } from "../annotations/brush.ts";
 import { polygonToGeoJson } from "../annotations/geojson.ts";
 import { closeDraft, type PolygonDraft } from "../annotations/polygon-draft.ts";
+import { keeperOf, mergeRings } from "../annotations/split-merge.ts";
 import { slideAt } from "../annotations/stage-pointer.ts";
 import { isTyping } from "../keys/registry.ts";
 import { useAnswerKeys } from "../screens/review/answer-keys.ts";
@@ -59,12 +61,19 @@ import { useStageRulers } from "./stage-measurements.tsx";
 import { StageObjectsPanel } from "./stage-objects-panel.tsx";
 import { ReviewOpinion } from "./stage-opinion.tsx";
 import { StageRedrawLayer } from "./stage-redraw-layer.tsx";
-import { type ReviewFix, ringOfFix, useReviewFixes } from "./stage-review-fixes.ts";
 import {
+  type ReviewFate,
+  type ReviewFix,
+  ringOfFix,
+  useReviewFixes,
+} from "./stage-review-fixes.ts";
+import {
+  type MergeCandidate,
   ringOfOutline,
   type ShapeTool,
   StageShapeEdit,
   StageShapeEditBar,
+  StageShapeFateBar,
 } from "./stage-shape-edit.tsx";
 import { StageSlideMarks, sampleOf, useSampleCollapsed } from "./stage-slide-marks.tsx";
 import { StageTypePicker } from "./stage-type-picker.tsx";
@@ -122,9 +131,15 @@ function withDecisions(shown: Placed, decisionKey: string): Placed {
 function reviewedObjects(
   objects: readonly ReviewObject[],
   fixed: ReadonlyMap<string, ReviewFix>,
+  fates: ReadonlyMap<string, ReviewFate>,
   classes: readonly { id: string; name: string }[],
 ): ReviewObject[] {
   return objects.flatMap((item) => {
+    const fate = fates.get(item.object);
+    if (fate?.kind === "merged") return [];
+    if (fate?.kind === "split") {
+      return fate.parts.map((part) => ({ ...item, object: part.object, outline: part.outline }));
+    }
     const fix = fixed.get(item.object);
     if (fix === undefined || fix.deleted) return [];
     const name = classes.find((entry) => entry.id === fix.classId)?.name;
@@ -148,6 +163,7 @@ function ObjectOutlines({
   decisions,
   settings,
   fixed,
+  fates,
 }: {
   engine: ViewerEngine;
   module: ViewerModule;
@@ -158,6 +174,7 @@ function ObjectOutlines({
   decisions: ReviewSession["decisions"];
   settings: DisplaySettings;
   fixed: ReadonlyMap<string, ReviewFix>;
+  fates: ReadonlyMap<string, ReviewFate>;
 }) {
   const defaults = useDisplayDefaults();
   const classKey = JSON.stringify(classes.map((item) => [item.id, item.name, item.color]));
@@ -190,16 +207,22 @@ function ObjectOutlines({
     () =>
       withDecisions(
         placedObjects(
-          reviewedObjects(shownObjects, fixed, projectClasses),
+          reviewedObjects(shownObjects, fixed, fates, projectClasses),
           projectClasses,
           defaults.classPalette,
         ),
         decisionKey,
       ),
-    [shownObjects, fixed, projectClasses, decisionKey, defaults.classPalette],
+    [shownObjects, fixed, fates, projectClasses, decisionKey, defaults.classPalette],
   );
-  const kept = useMemo(() => placed.filter((item) => !fixed.has(item.id)), [placed, fixed]);
-  const dimmed = useMemo(() => placed.filter((item) => fixed.has(item.id)), [placed, fixed]);
+  const kept = useMemo(
+    () => placed.filter((item) => !fixed.has(item.id) && !fates.has(item.id)),
+    [placed, fixed, fates],
+  );
+  const dimmed = useMemo(
+    () => placed.filter((item) => fixed.has(item.id) || fates.has(item.id)),
+    [placed, fixed, fates],
+  );
   const choices = useMemo(() => drawChoicesOf(settings), [settings]);
   const dimmedChoices = useMemo(
     () => ({ ...choices, opacity: Math.round((choices.opacity ?? 100) * dimmedShare) }),
@@ -291,6 +314,7 @@ export function StageReviewObjects({
     readonly object: string;
     readonly tool: ShapeTool;
   } | null>(null);
+  const [merging, setMerging] = useState<readonly string[]>([]);
   const objects = session.objects;
   const order = objects.map((item) => item.object);
   const decided = new Set(session.decisions.keys());
@@ -422,13 +446,69 @@ export function StageReviewObjects({
     const fixedRing = ringOfFix(currentFix);
     return fixedRing === null ? originalRing : ringOfOutline(fixedRing);
   }, [currentFix, originalRing]);
+  const currentFate = current === null ? undefined : fixes.fates.get(current);
+  const canSplit = currentItem?.kind === "region";
   const canShape =
     canFix &&
     session.style.kind !== "blind" &&
     !done &&
     stage !== null &&
     current !== null &&
+    currentFate === undefined &&
     currentRing.length >= 3;
+  const candidates = useMemo(
+    (): MergeCandidate[] =>
+      objects.flatMap((item) => {
+        if (item.kind !== "region" || fixes.fates.has(item.object)) return [];
+        const fix = fixes.fixed.get(item.object);
+        if (fix?.deleted) return [];
+        const ring: Ring = ringOfOutline(ringOfFix(fix) ?? item.outline);
+        return ring.length >= 3 ? [{ object: item.object, ring }] : [];
+      }),
+    [objects, fixes.fates, fixes.fixed],
+  );
+  const splitCurrent = (parts: readonly Ring[]) => {
+    if (current === null) return;
+    const parent = current;
+    const count = parts.length;
+    setShaping(null);
+    void fixes.split(parent, parts).then((saved) => {
+      if (!saved) return;
+      showUndoToast({
+        message: t`${parent} is split into ${count} parts. The AI result is not changed.`,
+        undo: () => void fixes.unsplit(parent),
+      });
+    });
+  };
+  const fateLine = (object: string, fate: ReviewFate) => {
+    if (fate.kind === "merged") return t`${object} is merged into ${fate.into}.`;
+    const parts = fate.parts.map((part) => part.object).join(", ");
+    return t`${object} is split into ${parts}.`;
+  };
+  const mergeCurrent = async () => {
+    if (current === null) return;
+    const chosen = merging.includes(current) ? merging : [current, ...merging];
+    const rings = chosen.flatMap((id) => {
+      const ring = candidates.find((item) => item.object === id)?.ring;
+      return ring === undefined ? [] : [ring];
+    });
+    await loadClipper();
+    const outline = rings.length === chosen.length ? mergeRings(rings) : null;
+    const keeper = keeperOf(chosen);
+    if (outline === null || keeper === null) {
+      showUndoToast({ message: t`Only regions that touch or overlap can be merged.` });
+      return;
+    }
+    setShaping(null);
+    setMerging([]);
+    const saved = await fixes.merge(chosen, outline);
+    if (!saved) return;
+    const count = chosen.length;
+    showUndoToast({
+      message: t`${count} regions merged into ${keeper}. The AI result is not changed.`,
+      undo: () => void fixes.unsplit(keeper),
+    });
+  };
   const shapeTool =
     canShape && fixStep === null && shaping?.object === current ? shaping.tool : null;
   const busy = fixStep !== null || shapeTool !== null;
@@ -618,6 +698,7 @@ export function StageReviewObjects({
         decisions={session.decisions}
         settings={settings}
         fixed={fixes.fixed}
+        fates={fixes.fates}
       />
       {fixStep === "redraw" && stage !== null && currentItem !== undefined ? (
         <StageRedrawLayer
@@ -640,7 +721,11 @@ export function StageReviewObjects({
           original={originalRing}
           edited={currentFix !== undefined}
           tool={shapeTool}
+          candidates={candidates}
+          merging={merging}
+          onMerging={setMerging}
           onSave={(geometry) => fixes.change(current, { geometry })}
+          {...(canSplit ? { onSplit: splitCurrent } : {})}
           onClose={() => setShaping(null)}
           onStep={(delta) => {
             setShaping(null);
@@ -755,9 +840,25 @@ export function StageReviewObjects({
               object={current}
               tool={shapeTool}
               edited={currentFix !== undefined}
-              onTool={(tool) => setShaping({ object: current, tool })}
+              canSplit={canSplit}
+              merging={(merging.includes(current) ? merging : [current, ...merging]).length}
+              onTool={(tool) => {
+                setMerging([]);
+                setShaping({ object: current, tool });
+              }}
               onRestore={() => fixes.restore(current, undefined)}
+              onMerge={() => void mergeCurrent()}
               onDone={() => setShaping(null)}
+            />
+          ) : null}
+          {canFix && current !== null && currentFate !== undefined ? (
+            <StageShapeFateBar
+              object={current}
+              line={fateLine(current, currentFate)}
+              undoLabel={currentFate.kind === "split" ? t`Undo the split` : t`Undo the merge`}
+              onUndo={() =>
+                void fixes.unsplit(currentFate.kind === "split" ? current : currentFate.into)
+              }
             />
           ) : null}
           {orderWait ? (

@@ -23,6 +23,7 @@ import {
   getListThreadCommentsMockHandler,
   getListThreadsMockHandler,
   getListThreadsOnSlideMockHandler,
+  getMergeReviewObjectsMockHandler,
   getMoveThreadMockHandler,
   getMoveThreadOnSlideMockHandler,
   getReopenThreadMockHandler,
@@ -34,6 +35,7 @@ import {
   getSaveDecisionMockHandler,
   getSaveOpinionMockHandler,
   getSaveReviewEditMockHandler,
+  getSplitReviewObjectMockHandler,
   getSubmitFirstReadMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
@@ -41,6 +43,7 @@ import type {
   AddedDraft,
   EditDraft,
   Mentionable,
+  MergeDraft,
   Message,
   MessageCreate,
   Neighbours,
@@ -49,10 +52,12 @@ import type {
   PinMove,
   ProjectClass,
   ReviewDecisionDraft,
+  ReviewEdit,
   ReviewObjects,
   SlideAgreement,
   SlideThread,
   SlideThreadCreate,
+  SplitDraft,
   TaskDisplay,
   TaskStates,
   Thread,
@@ -75,6 +80,8 @@ import {
   recordFirstRead,
   rememberDecision,
   rememberEdit,
+  rememberMerge,
+  rememberSplit,
   reviewedLayerFor,
   reviewedSlide,
   reviewsA1,
@@ -851,6 +858,26 @@ export function reviewHandlers(): RequestHandler[] {
       );
       if (saved === undefined) throw new Error("edit was not kept");
       return saved;
+    }),
+    getSplitReviewObjectMockHandler(async ({ request, params }) => {
+      const draft = (await request.json()) as SplitDraft;
+      return rememberSplit(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        String(params["objectId"]),
+        draft.parts.map((part) => part.geometry as unknown as ReviewEdit["geometry"]),
+      );
+    }),
+    getMergeReviewObjectsMockHandler(async ({ request, params }) => {
+      const draft = (await request.json()) as MergeDraft;
+      const kept = rememberMerge(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        draft.objects,
+        draft.geometry as unknown as ReviewEdit["geometry"],
+      );
+      if (kept === undefined) throw new Error("merge was not kept");
+      return kept;
     }),
     getClearReviewEditMockHandler(({ params }) => {
       rememberEdit(

@@ -1,8 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
+  type AnnotationDraft,
   getGetReviewTaskQueryKey,
   type LayerObject,
   type ProjectClass,
+  type RemovedObject,
   type SharedLayer,
   useGetMe,
   useGetReviewOrder,
@@ -31,6 +33,7 @@ import {
   changeOf,
   chipsOf,
   emptyAiHistory,
+  geometryOf,
   idleAiBridge,
   maxBatchCells,
   narrow,
@@ -75,6 +78,8 @@ import {
   useSharedAiObjects,
   useSharedLayer,
 } from "../annotations/annotate-task-api.ts";
+import { loadClipper, mapOf } from "../annotations/brush.ts";
+import { BrushLayer } from "../annotations/brush-layer.tsx";
 import { confirmAction, confirmActions, confirms } from "../annotations/check-state.ts";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import {
@@ -85,6 +90,7 @@ import {
   nextClassOf,
   selectionAfterRowClick,
 } from "../annotations/guided-check.ts";
+import { keeperOf, mergeRings, partsOf, ringsOfGeometry } from "../annotations/split-merge.ts";
 import { interruptMotion } from "../annotations/stage-pointer.ts";
 
 import type { SaveState } from "../annotations/use-saved-annotations.ts";
@@ -98,6 +104,7 @@ import { useRefusals } from "../screens/refusals.ts";
 import { GuidedCheck } from "./guided-check.tsx";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import { useFinishSlot } from "./stage-notices.tsx";
+import { brushDocument } from "./stage-shape-edit.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
 import { screenToSlide } from "./viewer-engine.ts";
 
@@ -114,11 +121,15 @@ type AnnotateTaskPanelProps = {
   colourOf: (classKey: string | null) => string;
   selecting?: boolean;
   bridge?: RefObject<AiEditBridge>;
+  onAdopt?: (records: readonly LayerObject[]) => void;
+  onDrop?: (ids: readonly string[]) => void;
   onOpenSlide?: ((slideId: string) => void) | undefined;
   onShowPanel?: (() => void) | undefined;
 };
 
 const noSelection: readonly string[] = [];
+
+const kindOfObject = (object: string) => (object.startsWith("T") ? "region" : "cell");
 const noPending: ReadonlyMap<string, AiState> = new Map();
 
 export function AnnotateTaskPanel({
@@ -130,6 +141,8 @@ export function AnnotateTaskPanel({
   colourOf,
   selecting = false,
   bridge,
+  onAdopt,
+  onDrop,
   onOpenSlide,
   onShowPanel,
 }: AnnotateTaskPanelProps) {
@@ -171,6 +184,10 @@ export function AnnotateTaskPanel({
   const [refusal, setRefusal] = useState<string | null>(null);
   const [guided, setGuided] = useState(false);
   const [addingRun, setAddingRun] = useState<string | null>(null);
+  const [splitting, setSplitting] = useState<string | null>(null);
+  const madeParts = useRef(new WeakMap<AiEntry, readonly RemovedObject[]>());
+  const serverSide = useRef({ onAdopt, onDrop });
+  serverSide.current = { onAdopt, onDrop };
 
   const refetchLayer = layerQuery.refetch;
   const lastSave = useRef(saveState);
@@ -317,7 +334,13 @@ export function AnnotateTaskPanel({
   live.current = { cells, selection, aiHistory, locked, lookOnly };
 
   const send = useCallback(
-    (states: readonly AiState[]) => {
+    (
+      states: readonly AiState[],
+      parts: {
+        readonly added?: readonly AnnotationDraft[];
+        readonly removed?: readonly RemovedObject[];
+      } = {},
+    ): Promise<readonly LayerObject[] | null> => {
       setRefusal(null);
       setPending((now) => {
         const next = new Map(now);
@@ -338,21 +361,29 @@ export function AnnotateTaskPanel({
             taskId,
             slideId,
             states.map((state) => changeOf(state, versions.current.get(state.object) ?? null)),
+            {
+              ...(parts.added === undefined ? {} : { added: [...parts.added] }),
+              ...(parts.removed === undefined ? {} : { removed: [...parts.removed] }),
+            },
           );
           const saved = answer.data.objects;
           for (const item of saved) {
             if (item.source !== null) versions.current.set(item.source, item.version);
           }
-          keepSaved(saved);
+          const added = answer.data.added ?? [];
+          keepSaved([...saved, ...added]);
+          if (added.length > 0) serverSide.current.onAdopt?.(added);
+          const removed = parts.removed ?? [];
+          if (removed.length > 0) serverSide.current.onDrop?.(removed.map((item) => item.id));
           settle();
-          return true;
+          return added;
         } catch (error) {
           setRefusal(refusalOf(error));
           setNotice(null);
           settle();
           versions.current.clear();
           await refresh();
-          return false;
+          return null;
         }
       });
       sending.current = work;
@@ -435,6 +466,70 @@ export function AnnotateTaskPanel({
     [edit],
   );
 
+  const pickedRegions = useCallback(() => {
+    const picked = selectedCells().filter((cell) => !cell.deleted);
+    const kinds = new Set(picked.map((cell) => kindOfObject(cell.object)));
+    return kinds.size === 1 ? picked : [];
+  }, [selectedCells]);
+
+  const splitCell = useCallback(
+    (object: string, parts: readonly Ring[]) => {
+      const now = live.current;
+      const cell = now.cells.find((item) => item.object === object);
+      const [kept, ...rest] = parts;
+      if (cell === undefined || kept === undefined || rest.length === 0) return;
+      if (now.locked) {
+        setRefusal(sentenceOf(now.lookOnly ? "not-assigned" : "slide-signed-off"));
+        return;
+      }
+      const added: AnnotationDraft[] = rest.map((ring) => ({
+        kind: kindOfObject(object),
+        geometry: geometryOf(ring),
+        class_id: cell.classId,
+      }));
+      const entry: AiEntry = {
+        label: "Split",
+        before: [stateOf(cell)],
+        after: [{ ...stateOf(cell), ring: kept }],
+        added,
+      };
+      setAiHistory((history) => recordAi(history, entry));
+      aiStamp.current = Date.now();
+      setNotice(`${object} is split into ${parts.length} parts`);
+      void send(entry.after, { added }).then((made) => {
+        if (made !== null) madeParts.current.set(entry, made);
+      });
+    },
+    [send, sentenceOf],
+  );
+
+  const mergeSelected = useCallback(async () => {
+    const picked = pickedRegions();
+    const keeper = keeperOf(picked.map((cell) => cell.object));
+    await loadClipper();
+    const ring = picked.length < 2 ? null : mergeRings(picked.map((cell) => cell.ring));
+    if (ring === null || keeper === null) {
+      setRefusal("Only objects of one kind that touch or overlap can be merged.");
+      return;
+    }
+    edit(
+      picked.map((cell) =>
+        cell.object === keeper ? { ...stateOf(cell), ring } : { ...stateOf(cell), deleted: true },
+      ),
+      "Merge",
+      (count) => `${count} objects merged into ${keeper}`,
+    );
+    setSelection([keeper]);
+  }, [edit, pickedRegions]);
+
+  const chosenRegions = cells.filter((cell) => selection.includes(cell.object) && !cell.deleted);
+  const regionCount = chosenRegions.length;
+  const soleRegion = regionCount === 1 && selection.length === 1 ? chosenRegions[0] : undefined;
+  const splitCellNow =
+    splitting === null || locked ? undefined : cells.find((cell) => cell.object === splitting);
+  const splitRing = splitCellNow?.ring;
+  const splitDocument = useMemo(() => brushDocument(splitRing ?? []), [splitRing]);
+
   const restoreSelection = useCallback(() => {
     const picked = selectedCells().filter((cell) => cell.edited);
     edit(picked.map(originalOf), "Restore the AI original", () => "The AI original is back");
@@ -502,10 +597,14 @@ export function AnnotateTaskPanel({
   }, [focusObject, cells, engine, stage]);
 
   const replay = useCallback(
-    (states: readonly AiState[], label: string) => {
+    (
+      states: readonly AiState[],
+      label: string,
+      parts: Parameters<typeof send>[1] = {},
+    ): Promise<readonly LayerObject[] | null> => {
       aiStamp.current = Date.now();
       setNotice(label);
-      void send(states);
+      return send(states, parts);
     },
     [send],
   );
@@ -513,14 +612,21 @@ export function AnnotateTaskPanel({
     const done = undoAi(live.current.aiHistory);
     if (done === null || live.current.locked) return false;
     setAiHistory(done.history);
-    replay(done.entry.before, `Undid ${done.entry.label.toLowerCase()}`);
+    const { entry } = done;
+    const removed = madeParts.current.get(entry) ?? [];
+    void replay(entry.before, `Undid ${entry.label.toLowerCase()}`, { removed });
     return true;
   }, [replay]);
   const redoAiEdit = useCallback(() => {
     const done = redoAi(live.current.aiHistory);
     if (done === null || live.current.locked) return false;
     setAiHistory(done.history);
-    replay(done.entry.after, `Redid ${done.entry.label.toLowerCase()}`);
+    const { entry } = done;
+    void replay(entry.after, `Redid ${entry.label.toLowerCase()}`, {
+      added: entry.added ?? [],
+    }).then((made) => {
+      if (made !== null && entry.added !== undefined) madeParts.current.set(entry, made);
+    });
     return true;
   }, [replay]);
 
@@ -614,6 +720,24 @@ export function AnnotateTaskPanel({
           onReshape={reshape}
           onDelete={deleteSelection}
           onStep={stepCell}
+        />
+      ) : null}
+      {splitCellNow !== undefined ? (
+        <BrushLayer
+          engine={engine}
+          stage={stage}
+          active
+          cut
+          document={splitDocument}
+          classKey={null}
+          colour="var(--accent)"
+          onApply={(next) => {
+            const shape = mapOf(next, null);
+            const parts = shape === null ? [] : partsOf(ringsOfGeometry(shape));
+            if (parts.length < 2) return;
+            setSplitting(null);
+            splitCell(splitCellNow.object, parts);
+          }}
         />
       ) : null}
       <DockCard section="objects" order={0}>
@@ -790,6 +914,30 @@ export function AnnotateTaskPanel({
                 </Button>
               ) : null}
             </p>
+          ) : null}
+          {!locked && (soleRegion !== undefined || regionCount >= 2) ? (
+            <div className="flex flex-wrap items-center gap-2" data-testid="split-merge">
+              {soleRegion !== undefined ? (
+                <Button
+                  size="sm"
+                  variant={splitting === null ? "secondary" : "primary"}
+                  aria-pressed={splitting !== null}
+                  onClick={() => setSplitting((now) => (now === null ? soleRegion.object : null))}
+                >
+                  {splitting === null ? t`Split` : t`Cancel the split`}
+                </Button>
+              ) : null}
+              {regionCount >= 2 ? (
+                <Button size="sm" variant="secondary" onClick={() => void mergeSelected()}>
+                  {t`Merge ${regionCount} objects`}
+                </Button>
+              ) : null}
+              {splitting !== null ? (
+                <span className="text-body-sm text-fg-dim">
+                  {t`Draw a line across ${splitting} to split it into parts.`}
+                </span>
+              ) : null}
+            </div>
           ) : null}
           {selectedAi && !locked ? (
             <div className="flex gap-2">

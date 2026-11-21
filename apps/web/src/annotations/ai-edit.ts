@@ -1,4 +1,4 @@
-import type { AiObjectChange, ProjectClass } from "@parfocal/api-client";
+import type { AiObjectChange, AnnotationDraft, ProjectClass } from "@parfocal/api-client";
 import type { CheckedAiObject } from "./annotate-task.ts";
 import type { Point } from "./polygon-draft.ts";
 import type { Extent } from "./shapes.ts";
@@ -324,6 +324,7 @@ export type AiEntry = {
   readonly label: string;
   readonly before: readonly AiState[];
   readonly after: readonly AiState[];
+  readonly added?: readonly AnnotationDraft[];
 };
 
 export type AiHistory = { readonly entries: readonly AiEntry[]; readonly cursor: number };

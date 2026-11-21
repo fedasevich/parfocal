@@ -579,12 +579,29 @@ export interface AiObjectChange {
   version?: number | null;
 }
 
+export interface AnnotationDraft {
+  kind: AnnotationKind;
+  geometry: Geometry;
+  class_id?: string | null;
+  text?: Words | null;
+}
+
+export interface RemovedObject {
+  id: string;
+  /** @minimum 1 */
+  version: number;
+}
+
 export interface AiObjectChanges {
   /**
    * @minItems 1
    * @maxItems 5000
    */
   changes: AiObjectChange[];
+  /** @maxItems 26 */
+  added?: AnnotationDraft[];
+  /** @maxItems 26 */
+  removed?: RemovedObject[];
 }
 
 export interface AiObjectConfirm {
@@ -733,13 +750,6 @@ export const AnnotationChange = {
   deleted: "deleted",
   restored: "restored",
 } as const;
-
-export interface AnnotationDraft {
-  kind: AnnotationKind;
-  geometry: Geometry;
-  class_id?: string | null;
-  text?: Words | null;
-}
 
 export interface AnnotationDrafts {
   /**
@@ -1578,6 +1588,7 @@ export interface LayerObject {
 
 export interface ChangedAiObjects {
   objects: LayerObject[];
+  added?: LayerObject[];
 }
 
 /**

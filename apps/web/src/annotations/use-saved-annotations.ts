@@ -35,7 +35,13 @@ import {
 } from "./history.ts";
 import { intoGroup, skippedTarget } from "./layers.ts";
 import { applyLiveChanges } from "./live-apply.ts";
-import { type ChangeSummary, createLiveBatch, type LayerRecord, summarise } from "./live-batch.ts";
+import {
+  type ChangeSummary,
+  createLiveBatch,
+  type LayerRecord,
+  type LiveChange,
+  summarise,
+} from "./live-batch.ts";
 import type { Point } from "./polygon-draft.ts";
 import {
   type Choice,
@@ -78,6 +84,8 @@ const groupRetryMs = 4000;
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
   readonly setDocument: (next: AnnotationDocument) => void;
+  readonly adopt: (records: readonly LayerRecord[]) => void;
+  readonly drop: (ids: readonly string[]) => void;
   readonly savePolygon: (points: Float32Array, classKey?: string | null) => void;
   readonly saveMarker: (point: Point, classKey: string | null) => void;
   readonly removeMarker: (id: ShapeId) => void;
@@ -496,10 +504,34 @@ export function useSavedAnnotations(
 
   const latest = useCallback(() => current.current, []);
 
+  const takeServer = useCallback(
+    (changes: readonly LiveChange[]) => {
+      const next = applyLiveChanges(current.current, remotes.current, changes);
+      if (next === current.current) return;
+      setDocument(next);
+      setHistory(createHistory());
+    },
+    [setDocument, setHistory],
+  );
+  const adopt = useCallback(
+    (records: readonly LayerRecord[]) =>
+      takeServer(
+        records.map((record) => ({ kind: "add", annotationId: record.id, record }) as const),
+      ),
+    [takeServer],
+  );
+  const drop = useCallback(
+    (ids: readonly string[]) =>
+      takeServer(ids.map((id) => ({ kind: "remove", annotationId: id, by: me ?? null }) as const)),
+    [takeServer, me],
+  );
+
   return {
     document,
     setDocument,
     latest,
+    adopt,
+    drop,
     savePolygon,
     saveMarker,
     removeMarker,

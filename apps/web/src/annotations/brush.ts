@@ -15,7 +15,7 @@ export const brushMaxSize = 160;
 export const brushDefaultSize = 24;
 export const brushSizeStep = 1.25;
 
-const fixedScale = 100;
+export const fixedScale = 100;
 const circleSegments = 48;
 
 type Clipper = typeof import("clipper2-ts");
@@ -26,7 +26,7 @@ export async function loadClipper(): Promise<void> {
   clipper ??= await import("clipper2-ts");
 }
 
-function engine(): Clipper {
+export function engine(): Clipper {
   if (clipper === null) throw new Error("Clipper2 is not loaded yet, await loadClipper first");
   return clipper;
 }

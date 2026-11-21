@@ -513,7 +513,7 @@ const layerHandlers = (): RequestHandler[] => [
     if (isSignedOff(params)) return signedOff();
     const refusedChange = refusedWrite();
     if (refusedChange !== null) return refusedChange;
-    const { changes } = (await request.json()) as AiObjectChanges;
+    const { changes, added = [], removed = [] } = (await request.json()) as AiObjectChanges;
     const sources = aiObjectsOf(params.taskId, params.slideId);
     let objects = layerOf(readStore(), keyOf(params.taskId, params.slideId));
     const saved: LayerObject[] = [];
@@ -549,9 +549,31 @@ const layerHandlers = (): RequestHandler[] => [
           : objects.map((item) => (item === found ? made : item));
       saved.push(made);
     }
+    for (const gone of removed) {
+      const found = objects.find((item) => item.id === gone.id && item.deleted_at === null);
+      if (found === undefined || found.version !== gone.version)
+        return problem(409, "annotation-changed", "This shape changed since you loaded it");
+      objects = objects.map((item) =>
+        item === found
+          ? { ...item, deleted_at: stamp(), version: item.version + 1, updated_at: stamp() }
+          : item,
+      );
+    }
+    const parts: LayerObject[] = [];
+    for (const draft of added) {
+      const part = newObject(params.slideId, objects, {
+        kind: draft.kind,
+        geometry: draft.geometry,
+        class_id: draft.class_id ?? null,
+        origin: "human",
+        source: null,
+      });
+      objects = [...objects, part];
+      parts.push(part);
+    }
     const next = objects;
     writeLayer(params, () => next);
-    return HttpResponse.json({ objects: saved });
+    return HttpResponse.json({ objects: saved, added: parts });
   }),
   http.post<Params & { objectId: string }>(
     `${base}/shared-layer/ai/:objectId/confirm`,

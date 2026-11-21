@@ -9008,6 +9008,30 @@ export const getChangeAiObjectsResponseMock = (
       ]),
     }),
   ),
+  added: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    slide_id: faker.string.uuid(),
+    kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+    number: faker.number.int(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+    source: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: {},
+    class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    text: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    version: faker.number.int(),
+    created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    deleted_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  })),
   ...overrideResponse,
 });
 

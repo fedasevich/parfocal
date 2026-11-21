@@ -139,8 +139,18 @@ class AiObjectChange(BaseModel):
         return self
 
 
+MAX_BATCH_PARTS = 26
+
+
+class RemovedObject(BaseModel):
+    id: uuid.UUID
+    version: int = Field(ge=1)
+
+
 class AiObjectChanges(BaseModel):
     changes: list[AiObjectChange] = Field(min_length=1, max_length=MAX_AI_BATCH)
+    added: list[AnnotationDraft] = Field(default_factory=list, max_length=MAX_BATCH_PARTS)
+    removed: list[RemovedObject] = Field(default_factory=list, max_length=MAX_BATCH_PARTS)
 
     @model_validator(mode="after")
     def one_change_per_object(self) -> AiObjectChanges:
@@ -151,6 +161,7 @@ class AiObjectChanges(BaseModel):
 
 class ChangedAiObjects(BaseModel):
     objects: list[LayerObject]
+    added: list[LayerObject] = []
 
 
 class SharedLayer(BaseModel):
@@ -664,7 +675,42 @@ async def change_ai_objects(
             await announce(connection, background, live, row, made)
             await logged(connection, principal, row, code, logged_as, reason)
             saved.append(await layer_object(connection, task_id, slide_id, made))
-    return ChangedAiObjects(objects=saved)
+        added = await add_parts(connection, principal, row, batch.added, background, live, reason)
+        for gone in batch.removed:
+            removed = await save(
+                connection,
+                principal,
+                row,
+                gone.id,
+                gone.version,
+                {"deleted_at": func.now()},
+                AnnotationChange.DELETED,
+            )
+            await announce(connection, background, live, row, gone.id)
+            await logged(connection, principal, row, removed.code, LayerChange.DELETED, reason)
+    return ChangedAiObjects(objects=saved, added=added)
+
+
+async def add_parts(
+    connection: AsyncConnection,
+    principal: Principal,
+    row: Any,
+    drafts: Sequence[AnnotationDraft],
+    background: BackgroundTasks,
+    live: Realtime,
+    reason: str | None,
+) -> list[LayerObject]:
+    if not drafts:
+        return []
+    slide = SimpleNamespace(id=row.slide_id, project_id=row.project_id)
+    made = await add(connection, principal, slide, drafts, task_id=row.task_id)
+    added: list[LayerObject] = []
+    for ref in made:
+        await announce(connection, background, live, row, ref.id)
+        part = await layer_object(connection, row.task_id, row.slide_id, ref.id)
+        await logged(connection, principal, row, part.code, LayerChange.ADDED, reason)
+        added.append(part)
+    return added
 
 
 @router.post(

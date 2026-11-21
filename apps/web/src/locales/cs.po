@@ -1929,6 +1929,10 @@ msgstr ""
 msgid "{count} object{0} · {1} decided"
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "{count} regions merged into {keeper}. The AI result is not changed."
+msgstr ""
+
 #. placeholder {0}: group.title
 #: src/screens/new-task/steps.tsx
 msgid "{count} slide in {0} has no {short} and is left out. <0>Run a model</0> to include it."
@@ -2072,6 +2076,15 @@ msgstr ""
 msgid "{more, plural, one {# more conflict follows this one.} other {# more conflicts follow this one.}}"
 msgstr ""
 
+#. placeholder {0}: fate.into
+#: src/viewer/stage-review-objects.tsx
+msgid "{object} is merged into {0}."
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "{object} is split into {parts}."
+msgstr ""
+
 #: src/screens/viewer/use-viewer-state.tsx
 msgid "{object}: not a nucleus, counts as disagree"
 msgstr ""
@@ -2125,6 +2138,10 @@ msgstr ""
 
 #: src/screens/evaluation/evaluation-screen.tsx
 msgid "{pageCount} pages"
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "{parent} is split into {count} parts. The AI result is not changed."
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -4742,6 +4759,10 @@ msgstr ""
 msgid "Cancel the run"
 msgstr ""
 
+#: src/viewer/annotate-task-panel.tsx
+msgid "Cancel the split"
+msgstr ""
+
 #: src/viewer/run-stream-layer.tsx
 msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
 msgstr ""
@@ -5388,6 +5409,10 @@ msgstr ""
 
 #: src/viewer/annotate-task-panel.tsx
 msgid "Click keeps only this type. Shift and click drops it."
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Click the regions to merge with {object}, then press Merge."
 msgstr ""
 
 #: src/annotations/count-panel.tsx
@@ -6757,6 +6782,14 @@ msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Drag, or middle-drag"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Draw a line across {object} to split it into parts."
+msgstr ""
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Draw a line across {splitting} to split it into parts."
 msgstr ""
 
 #: src/screens/disagreements/outline-settle.tsx
@@ -10061,6 +10094,18 @@ msgstr ""
 msgid "Mentions and replies"
 msgstr ""
 
+#: src/viewer/stage-shape-edit.tsx
+msgid "Merge"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "Merge {merging} regions"
+msgstr ""
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Merge {regionCount} objects"
+msgstr ""
+
 #: src/screens/review/object-edit-history.tsx
 msgid "Merged into {related}"
 msgstr ""
@@ -11828,6 +11873,10 @@ msgstr ""
 
 #: src/annotations/task-export.ts
 msgid "Only people who see the whole task can export its training data."
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Only regions that touch or overlap can be merged."
 msgstr ""
 
 #: src/screens/dataset/dataset-screen.tsx
@@ -16104,6 +16153,8 @@ msgstr ""
 
 #: src/screens/admin/template-editor.tsx
 #: src/screens/new-task/send-step.tsx
+#: src/viewer/annotate-task-panel.tsx
+#: src/viewer/stage-shape-edit.tsx
 msgid "Split"
 msgstr ""
 
@@ -18466,6 +18517,14 @@ msgstr ""
 msgid "Undo all"
 msgstr ""
 
+#: src/viewer/stage-review-objects.tsx
+msgid "Undo the merge"
+msgstr ""
+
+#: src/viewer/stage-review-objects.tsx
+msgid "Undo the split"
+msgstr ""
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Ungroup"
 msgstr ""
@@ -19074,6 +19133,10 @@ msgstr ""
 
 #: src/screens/upload/files-step.tsx
 msgid "What folder shape works"
+msgstr ""
+
+#: src/viewer/stage-shape-edit.tsx
+msgid "What happened to {object}"
 msgstr ""
 
 #: src/feedback/feedback-dialog.tsx

@@ -245,8 +245,13 @@ export const rememberEdit = (
   const key = savedKey(taskId, slideId);
   const store = readEdits();
   const kept = { ...store[key] };
-  if (draft === null) delete kept[object];
-  else {
+  if (draft === null) {
+    delete kept[object];
+    for (const [name, edit] of Object.entries(kept)) {
+      const part = name !== object && name.replace(/[a-z]+$/, "") === object;
+      if (part || edit.merged_into === object) delete kept[name];
+    }
+  } else {
     kept[object] = {
       object,
       kind: object.includes("C") ? "cell" : "region",
@@ -375,4 +380,57 @@ export const decisionNotesOf = (taskId: string, slideId: string): DecisionNote[]
       updated_at: "2026-10-15T11:05:00+02:00",
     },
   ];
+};
+
+const fateEdit = (object: string, geometry: ReviewEdit["geometry"]): ReviewEdit => ({
+  object,
+  kind: "region",
+  number: Number(object.replace(/\D/g, "")) || 0,
+  split: /[a-z]+$/.exec(object)?.[0] ?? "",
+  class_id: null,
+  geometry,
+  deleted: false,
+  retired: null,
+  merged_into: null,
+  updated_at: new Date().toISOString(),
+});
+
+export const rememberSplit = (
+  taskId: string,
+  slideId: string,
+  object: string,
+  parts: readonly ReviewEdit["geometry"][],
+): ReviewEdit[] => {
+  const key = savedKey(taskId, slideId);
+  const store = readEdits();
+  const kept = { ...store[key] };
+  kept[object] = { ...fateEdit(object, null), retired: "split" };
+  const made = parts.map((geometry, index) =>
+    fateEdit(`${object}${"abcdefghijklmnopqrstuvwxyz"[index] ?? ""}`, geometry),
+  );
+  for (const part of made) kept[part.object] = part;
+  writeEdits({ ...store, [key]: kept });
+  return made;
+};
+
+export const rememberMerge = (
+  taskId: string,
+  slideId: string,
+  objects: readonly string[],
+  geometry: ReviewEdit["geometry"],
+): ReviewEdit | undefined => {
+  const numberOf = (object: string) => Number(object.replace(/\D/g, "")) || 0;
+  const [keeper] = [...objects].sort((left, right) => numberOf(left) - numberOf(right));
+  if (keeper === undefined) return undefined;
+  const key = savedKey(taskId, slideId);
+  const store = readEdits();
+  const kept = { ...store[key] };
+  kept[keeper] = fateEdit(keeper, geometry);
+  for (const object of objects) {
+    if (object !== keeper) {
+      kept[object] = { ...fateEdit(object, null), retired: "merged", merged_into: keeper };
+    }
+  }
+  writeEdits({ ...store, [key]: kept });
+  return kept[keeper];
 };

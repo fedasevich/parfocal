@@ -60081,6 +60081,22 @@
             "maxItems": 5000,
             "minItems": 1,
             "title": "Changes"
+          },
+          "added": {
+            "items": {
+              "$ref": "#/components/schemas/AnnotationDraft"
+            },
+            "type": "array",
+            "maxItems": 26,
+            "title": "Added"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/components/schemas/RemovedObject"
+            },
+            "type": "array",
+            "maxItems": 26,
+            "title": "Removed"
           }
         },
         "type": "object",
@@ -63113,6 +63129,14 @@
             },
             "type": "array",
             "title": "Objects"
+          },
+          "added": {
+            "items": {
+              "$ref": "#/components/schemas/LayerObject"
+            },
+            "type": "array",
+            "title": "Added",
+            "default": []
           }
         },
         "type": "object",
@@ -77929,6 +77953,26 @@
         },
         "type": "array",
         "maxItems": 3
+      },
+      "RemovedObject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version"
+        ],
+        "title": "RemovedObject"
       },
       "ReportBlock": {
         "oneOf": [
