@@ -170,6 +170,7 @@ def test_reviewers_submit_and_the_owner_signs_off_and_reopens(api: ApiAs, databa
         "review.object-edited",
         "task.review-submitted",
         "task.review-submitted",
+        "review.final-layer-built",
         "task.signed-off",
         "task.reopened",
         "task.review-reopened",

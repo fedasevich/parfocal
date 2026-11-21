@@ -667,6 +667,15 @@ WRITE_ROUTES: dict[str, Write] = {
         path=OBJECT, body=constant({"action": "leave-open"}), owner=CONFLICT
     ),
     "decideAdjudication": Write(path=OBJECT, body=constant({"raw": "1"})),
+    "saveDecisionBatch": Write(body=constant({"decisions": [{"object": "T1", "answer": "1"}]})),
+    "clearDecisionBatch": Write(body=constant({"objects": ["T1"]})),
+    "settleQueuedOutline": Write(path=OBJECT, body=constant({"geometry": POINT}), owner=CONFLICT),
+    "clearQueuedOutline": Write(path=OBJECT, owner=CONFLICT),
+    "settleAdjudicationOutline": Write(
+        path=OBJECT, body=constant({"reviewer": "A"}), owner=BAD_REQUEST
+    ),
+    "clearAdjudicationOutline": Write(path=OBJECT),
+    "buildFinalLayer": Write(owner=CONFLICT),
     "createWebhookSecret": Write(admin_rights=True),
     "retireWebhookSecret": Write(admin_rights=True),
     "watchSource": Write(
