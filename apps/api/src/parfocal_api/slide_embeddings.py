@@ -113,20 +113,27 @@ async def stored(store: Store, key: str, missing: NotFoundError) -> bytes:
         raise
 
 
-@router.get("", operation_id="getSlideEmbeddings", **require(Permission.SEE_SLIDES))
+@router.get(
+    "",
+    operation_id="getSlideEmbeddings",
+    response_model=SlideEmbeddings,
+    responses={204: {"description": "The slide has no server embeddings yet"}},
+    **require(Permission.SEE_SLIDES),
+)
 async def get_slide_embeddings(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
     store: Store,
     response: Response,
-) -> SlideEmbeddings:
+) -> SlideEmbeddings | Response:
     row = await readable_slide(connection, principal, slide_id)
-    data = await stored(store, manifest_key(row.tenant_id, slide_id), EmbeddingsMissingError())
     try:
-        manifest = read_manifest(data)
-    except ManifestUnreadableError as error:
-        raise EmbeddingsMissingError from error
+        manifest = read_manifest(
+            await stored(store, manifest_key(row.tenant_id, slide_id), EmbeddingsMissingError())
+        )
+    except EmbeddingsMissingError, ManifestUnreadableError:
+        return Response(status_code=204)
     response.headers.update(EMBEDDING_HEADERS)
     return SlideEmbeddings(
         slide_id=slide_id,

@@ -272,4 +272,9 @@ describe("the http embedding transport", () => {
       `/api/slides/${slideId}/embeddings/0/0`,
     ]);
   });
+
+  it("reads no content as a slide without embeddings", async () => {
+    const fetcher = (() => Promise.resolve(new Response(null, { status: 204 }))) as typeof fetch;
+    assert.equal(await httpEmbeddingTransport(fetcher).manifest(slideId), null);
+  });
 });

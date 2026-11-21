@@ -98,6 +98,7 @@ import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
 import { FeelPreview } from "./feel-preview.tsx";
+import { forgetNotesRead, readNotesRead, rememberNotesRead } from "./notes-read.ts";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
 import { Segments, Stepper } from "./row-controls.tsx";
 import {
@@ -214,6 +215,8 @@ function LoadedSettings({
   });
   const { mutate: saveShortcutValues } = saveLayers;
   const hints = useHintsSeen();
+  const [notesRead, setNotesRead] = useState(readNotesRead);
+  const seenOrRead = new Set([...hints.seen, ...notesRead]);
   const [hintsShownAgain, setHintsShownAgain] = useState(0);
   const [picked, setPicked] = useState<Partial<SettingValues>>({});
   const values: SettingValues = {
@@ -513,9 +516,11 @@ function LoadedSettings({
     ),
     hints: () => (
       <Button
-        disabled={hints.seen.size === 0}
+        disabled={seenOrRead.size === 0}
         onClick={() => {
           hints.showAllAgain();
+          forgetNotesRead();
+          setNotesRead(new Set());
           setHintsShownAgain((count) => count + 1);
           notify(t`Every hint shows again, once, under its setting.`);
         }}
@@ -1004,13 +1009,13 @@ function LoadedSettings({
   const [entry, setEntry] = useState({
     key: sectionKey,
     again: hintsShownAgain,
-    seen: hints.seen,
+    seen: seenOrRead,
   });
   if (entry.key !== sectionKey || entry.again !== hintsShownAgain) {
     setEntry({
       key: sectionKey,
       again: hintsShownAgain,
-      seen: entry.again !== hintsShownAgain ? new Set<string>() : hints.seen,
+      seen: entry.again !== hintsShownAgain ? new Set<string>() : seenOrRead,
     });
   }
   const notedRows =
@@ -1021,10 +1026,8 @@ function LoadedSettings({
           .map((item) => hintId(item.key));
   const leavingNotes = useRef<string[]>([]);
   const visiting = useRef<string | undefined>(undefined);
-  const markHintsSeen = useRef(hints.markSeen);
   useEffect(() => {
     leavingNotes.current = notedRows;
-    markHintsSeen.current = hints.markSeen;
   });
   useEffect(() => {
     if (sectionKey === undefined) return;
@@ -1033,7 +1036,7 @@ function LoadedSettings({
       const leaving = leavingNotes.current;
       visiting.current = undefined;
       setTimeout(() => {
-        if (visiting.current !== sectionKey) markHintsSeen.current(leaving);
+        if (visiting.current !== sectionKey) setNotesRead(rememberNotesRead(leaving));
       }, 0);
     };
   }, [sectionKey]);

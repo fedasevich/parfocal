@@ -17575,6 +17575,10 @@ msgstr ""
 msgid "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
 msgstr ""
 
+#: src/session/session-lock.tsx
+msgid "The screen locks soon without input. Press a key or click to keep working."
+msgstr ""
+
 #: src/study/study-screen.tsx
 msgid "The screen recorder did not load. An ad blocker may be blocking it. Sessions will record the pointer and keys only, without the screen."
 msgstr ""

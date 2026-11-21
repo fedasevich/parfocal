@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import {
   getSession,
   lockSession,
@@ -6,6 +7,7 @@ import {
   useGetMe,
   useGetSessionPolicy,
 } from "@parfocal/api-client";
+import { Banner } from "@parfocal/ui/components/banner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
@@ -17,11 +19,13 @@ import {
   createActivityThrottle,
   defaultIdleLockMinutes,
   idleCheckDue,
+  idleWarningDue,
   isSessionLocked,
   lockRequestEvent,
   locksAt,
   needsSecondFactor,
   sessionGate,
+  warningCheckMs,
 } from "./lock-rules.ts";
 import { signedOutTarget, signInRedirect } from "./sign-in-redirect.ts";
 
@@ -49,19 +53,33 @@ function useRefusedByApi(refused: (error: unknown) => boolean, onRefused: () => 
   }, [queryClient]);
 }
 
-function useActivity(active: boolean, idleMinutes: number, onLocked: () => void) {
+function useActivity(
+  active: boolean,
+  idleMinutes: number,
+  onLocked: () => void,
+  onWarning: (warned: boolean) => void,
+) {
   const report = useRef(onLocked);
   report.current = onLocked;
+  const warn = useRef(onWarning);
+  warn.current = onWarning;
   useEffect(() => {
     if (!active) return;
     const throttle = createActivityThrottle();
     let lastInput = Date.now();
+    let warned = false;
+    const setWarned = (next: boolean) => {
+      if (warned === next) return;
+      warned = next;
+      warn.current(next);
+    };
     const check = (request: () => Promise<unknown>) =>
       request().catch((error: unknown) => {
         if (isSessionLocked(error)) report.current();
       });
     const onInput = () => {
       lastInput = Date.now();
+      setWarned(false);
       if (throttle.shouldSend(lastInput)) void check(() => recordActivity());
     };
     for (const name of inputEvents) {
@@ -70,9 +88,14 @@ function useActivity(active: boolean, idleMinutes: number, onLocked: () => void)
     const timer = window.setInterval(() => {
       if (idleCheckDue(lastInput, Date.now(), idleMinutes)) void check(() => getSession());
     }, activityIntervalMs);
+    const warning = window.setInterval(() => {
+      if (idleWarningDue(lastInput, Date.now(), idleMinutes)) setWarned(true);
+    }, warningCheckMs);
     return () => {
       for (const name of inputEvents) window.removeEventListener(name, onInput, { capture: true });
       window.clearInterval(timer);
+      window.clearInterval(warning);
+      setWarned(false);
     };
   }, [active, idleMinutes]);
 }
@@ -126,6 +149,7 @@ function LockGuard({
 }) {
   const [locked, setLocked] = useState<"idle" | "manual" | null>(null);
   const [secondFactor, setSecondFactor] = useState(false);
+  const [warned, setWarned] = useState(false);
   const lock = () => {
     if (!guarded) return;
     if (person === undefined) {
@@ -155,13 +179,24 @@ function LockGuard({
   const minutes = policy?.idle_lock_minutes ?? defaultIdleLockMinutes;
   useRefusedByApi(isSessionLocked, lock);
   useRefusedByApi(needsSecondFactor, askForSecondFactor);
-  useActivity(guarded && locked === null && !secondFactor, minutes, lock);
-  const covered = locked !== null || secondFactor;
+  useActivity(guarded && locked === null && !secondFactor, minutes, lock, setWarned);
+  const hidden = locked !== null && person !== undefined;
   return (
     <>
-      <div inert={covered} aria-hidden={covered || undefined} className="contents">
-        {children}
-      </div>
+      {hidden ? null : (
+        <div inert={secondFactor} aria-hidden={secondFactor || undefined} className="contents">
+          {children}
+        </div>
+      )}
+      {warned && !hidden && !secondFactor ? (
+        <div className="fixed inset-x-0 top-0 z-[1000]">
+          <Banner tone="warn" icon="lock">
+            <Trans>
+              The screen locks soon without input. Press a key or click to keep working.
+            </Trans>
+          </Banner>
+        </div>
+      ) : null}
       {locked !== null && person !== undefined ? (
         <Suspense fallback={null}>
           <LockScreen me={person} minutes={minutes} reason={locked} />

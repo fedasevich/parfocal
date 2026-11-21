@@ -6,6 +6,7 @@ import {
   canShowLock,
   createActivityThrottle,
   idleCheckDue,
+  idleWarningDue,
   isSessionLocked,
   locksAt,
   needsSecondFactor,
@@ -54,6 +55,13 @@ test("activity is sent at most once a minute", () => {
 test("the idle check asks the API once the idle time has passed", () => {
   assert.equal(idleCheckDue(0, 14 * 60_000, 15), false);
   assert.equal(idleCheckDue(0, 15 * 60_000, 15), true);
+});
+
+test("the warning comes two minutes before the idle lock, or halfway for a short lock", () => {
+  assert.equal(idleWarningDue(0, 12 * 60_000, 15), false);
+  assert.equal(idleWarningDue(0, 13 * 60_000, 15), true);
+  assert.equal(idleWarningDue(0, 1.4 * 60_000, 3), false);
+  assert.equal(idleWarningDue(0, 1.5 * 60_000, 3), true);
 });
 
 test("unlocking signs in again and returns to the same path and query", () => {

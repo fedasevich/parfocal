@@ -1,5 +1,6 @@
 import type { Me } from "@parfocal/api-client";
 import { LockCard } from "@parfocal/ui/components/auth";
+import { useEffect } from "react";
 import { personOf } from "../shell/global-shell.tsx";
 import { reauthUrl } from "./lock-rules.ts";
 import { PasskeyCancelledError, passkeysSupported, signInWithPasskey } from "./passkeys.ts";
@@ -18,6 +19,9 @@ export default function LockScreen({
   minutes: number;
   reason: "idle" | "manual";
 }) {
+  useEffect(() => {
+    document.title = "Parfocal";
+  }, []);
   const unlock = () => window.location.assign(reauthUrl(currentPath()));
   const unlockWithHostedLogin = () =>
     void startNamedLogin({ returnTo: currentPath(), loginHint: me.email, reauth: true });
