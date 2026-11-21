@@ -2,6 +2,19 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.11 (2026-11-21)
+
+### Fixes
+
+- PROTO-157: Link cases to their report, one slide count and time, fresh object count
+- PROTO-157: Cells mode tag, queue wording, no decide while drawing, finished run hint
+
+### Docs
+
+- OPS-038: Log the v0.35.9 and v0.35.10 deploys
+- PROTO-158: Add the leftover import notice and GPU seconds task
+- PROTO-158: Claim the leftover task
+
 ## v0.35.10 (2026-11-21)
 
 ### Fixes
