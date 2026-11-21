@@ -57,3 +57,20 @@ test("opening a draft report and leaving it unchanged writes nothing", async ({ 
   await page.clock.runFor(2_000);
   expect(writes).toEqual([]);
 });
+
+test("a kept draft edit that never reached the server is saved on the next open", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const writes = watchWrites(page);
+  await page.goto(`/projects/${p03}/cases/${sentinelCase}/report`);
+  const specimen = page.getByRole("textbox", { name: "Specimen" });
+  await expect(specimen).toBeVisible();
+  await specimen.fill("Sentinel lymph node #1, left axilla, excision");
+  await page.reload();
+  await expect(specimen).toHaveValue("Sentinel lymph node #1, left axilla, excision");
+  await page.clock.runFor(2_000);
+  await expect
+    .poll(() => writes.filter((write) => write.startsWith("PATCH")).length)
+    .toBeGreaterThan(0);
+});

@@ -217,7 +217,9 @@ function ReportFlow({
   const { writer, keep: remember } = useReportWriter(projectId, caseId);
   const savedRef = useRef<Values>(valuesOfCaseReport(loaded.server, flow.draft.values));
   const latest = useRef<Values>(report.values);
-  const opened = useRef<Values>(report.values);
+  const opened = useRef<Values | null>(
+    JSON.stringify(report.values) === JSON.stringify(loaded.report.values) ? report.values : null,
+  );
   const serverRef = useRef<CaseReport>(loaded.server);
   const chain = useRef<Promise<unknown>>(Promise.resolve());
   const flush = useCallback((): Promise<CaseReport> => {
