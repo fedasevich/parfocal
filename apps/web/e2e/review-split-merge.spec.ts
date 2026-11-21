@@ -94,7 +94,7 @@ test("a reviewer splits a region along a drawn line and undoing the split brings
   await expect(fate).toHaveCount(0);
 });
 
-test.fixme("a reviewer merges two touching regions and undoing the merge brings both back", async ({
+test("a reviewer merges two touching regions and undoing the merge brings both back", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -118,8 +118,18 @@ test.fixme("a reviewer merges two touching regions and undoing the merge brings 
   const bar = panel.getByTestId("shape-edit-bar");
   await bar.getByRole("button", { name: "Merge", exact: true }).click();
   await expect(bar).toHaveAttribute("data-tool", "merge");
-  const inside = toScreen(525, 480, origin);
-  await page.mouse.click(inside.x, inside.y);
+  const other = page.locator('[data-testid="ai-object"][data-object="T3"]');
+  const view = page.viewportSize() ?? { width: 1440, height: 900 };
+  for (let turn = 0; turn < 4; turn += 1) {
+    const box = await other.boundingBox();
+    const shown = box !== null && box.x > 0 && box.y > 0 && box.x + box.width < view.width * 0.6;
+    if (shown) break;
+    await page.getByRole("button", { name: "Zoom out" }).click();
+    await page.waitForTimeout(600);
+  }
+  const target = await other.boundingBox();
+  if (target === null) throw new Error("T3 is not drawn");
+  await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
   const merged = posted(page, "POST", "/merges");
   await bar.getByRole("button", { name: "Merge 2 regions" }).click();
   const body = (await merged).postDataJSON() as { objects: string[]; geometry: { type: string } };

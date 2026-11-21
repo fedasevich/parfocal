@@ -77,7 +77,8 @@ export function BrushLayer({
         fingerPans(event) ||
         (event.button !== 0 && !isPenErase(event)) ||
         drawing !== null ||
-        pan.held()
+        pan.held() ||
+        (cut && !(event.target instanceof Node && stage.contains(event.target)))
       )
         return;
       event.stopImmediatePropagation();
@@ -139,7 +140,8 @@ export function BrushLayer({
       if (event.key === "[") setSize((value) => stepBrushSize(value, -1));
       if (event.key === "]") setSize((value) => stepBrushSize(value, 1));
     };
-    stage.addEventListener("pointerdown", down, true);
+    const pressed = cut ? stage.ownerDocument : stage;
+    pressed.addEventListener("pointerdown", down as EventListener, true);
     stage.addEventListener("pointermove", move, true);
     stage.addEventListener("pointerup", up, true);
     stage.addEventListener("pointercancel", cancel, true);
@@ -147,7 +149,7 @@ export function BrushLayer({
     window.addEventListener("keydown", resize);
     const leaveRung = escRegistry?.add("drag", { open: () => drawing !== null, peel: abandon });
     return () => {
-      stage.removeEventListener("pointerdown", down, true);
+      pressed.removeEventListener("pointerdown", down as EventListener, true);
       stage.removeEventListener("pointermove", move, true);
       stage.removeEventListener("pointerup", up, true);
       stage.removeEventListener("pointercancel", cancel, true);
@@ -156,7 +158,7 @@ export function BrushLayer({
       pan.dispose();
       leaveRung?.();
     };
-  }, [active, stage, escRegistry]);
+  }, [active, cut, stage, escRegistry]);
 
   const map = mapOf(document, classKey);
   const mapPath =
@@ -184,6 +186,7 @@ export function BrushLayer({
   return (
     <svg
       data-testid="brush-layer"
+      data-cut={cut ? "true" : undefined}
       data-size={size}
       data-drawing={stroke === null ? 0 : stroke.points.length}
       aria-hidden="true"

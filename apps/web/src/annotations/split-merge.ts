@@ -6,6 +6,8 @@ import { at, type Geometry, ringCount, ringOf } from "./shapes.ts";
 
 export const cutWidthPx = 4;
 
+const sliverShare = 0.02;
+
 const toPath = (ring: Ring): Path64 =>
   ring.map(([x, y]) => ({ x: Math.round(x * fixedScale), y: Math.round(y * fixedScale) }));
 
@@ -14,10 +16,14 @@ const toRing = (path: Path64): Ring =>
 
 function outerRings(paths: Paths64, rule: "evenOdd" | "nonZero" = "evenOdd"): Ring[] {
   const { area, FillRule, isPositive, union } = engine();
-  return union(paths, rule === "evenOdd" ? FillRule.EvenOdd : FillRule.NonZero)
+  const outers = union(paths, rule === "evenOdd" ? FillRule.EvenOdd : FillRule.NonZero)
     .filter((path) => path.length >= 3 && isPositive(path))
-    .sort((left, right) => Math.abs(area(right)) - Math.abs(area(left)))
-    .map(toRing);
+    .map((path) => ({ path, size: Math.abs(area(path)) }))
+    .sort((left, right) => right.size - left.size);
+  const largest = outers[0]?.size ?? 0;
+  return outers
+    .filter((outer) => outer.size >= largest * sliverShare)
+    .map((outer) => toRing(outer.path));
 }
 
 export function ringsOfGeometry(geometry: Geometry): Ring[] {

@@ -57,7 +57,7 @@ const batch = (page: Page) =>
     (request) => request.method() === "POST" && request.url().endsWith("/shared-layer/ai-changes"),
   );
 
-test.fixme("an expert splits an AI cell along a drawn line in one batch and undo brings it back", async ({
+test("an expert splits an AI cell along a drawn line in one batch and undo brings it back", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -65,7 +65,7 @@ test.fixme("an expert splits an AI cell along a drawn line in one batch and undo
   await clickCell(page, "C1");
   const tools = page.getByTestId("split-merge");
   await tools.getByRole("button", { name: "Split", exact: true }).click();
-  await expect(page.getByTestId("brush-layer")).toBeVisible();
+  await expect(page.locator('[data-testid="brush-layer"][data-cut="true"]')).toBeVisible();
 
   const split = batch(page);
   const middle = before.x + before.width / 2;
@@ -91,7 +91,7 @@ test.fixme("an expert splits an AI cell along a drawn line in one batch and undo
     .toBeGreaterThan(before.width * 0.95);
 });
 
-test.fixme("an expert merges two touching AI cells in one batch and undo brings both back", async ({
+test("an expert merges two touching AI cells in one batch and undo brings both back", async ({
   page,
 }) => {
   test.setTimeout(120_000);

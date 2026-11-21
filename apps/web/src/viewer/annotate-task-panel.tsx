@@ -528,7 +528,10 @@ export function AnnotateTaskPanel({
   const splitCellNow =
     splitting === null || locked ? undefined : cells.find((cell) => cell.object === splitting);
   const splitRing = splitCellNow?.ring;
-  const splitDocument = useMemo(() => brushDocument(splitRing ?? []), [splitRing]);
+  const splitDocument = useMemo(
+    () => (splitRing === undefined || splitRing.length < 3 ? null : brushDocument(splitRing)),
+    [splitRing],
+  );
 
   const restoreSelection = useCallback(() => {
     const picked = selectedCells().filter((cell) => cell.edited);
@@ -712,7 +715,7 @@ export function AnnotateTaskPanel({
           cells={cells}
           checkOf={checkOf}
           selection={selection}
-          selecting={selecting && !guided}
+          selecting={selecting && !guided && splitting === null}
           locked={locked}
           tag={soleTag}
           colourOf={colourOf}
@@ -722,7 +725,7 @@ export function AnnotateTaskPanel({
           onStep={stepCell}
         />
       ) : null}
-      {splitCellNow !== undefined ? (
+      {splitCellNow !== undefined && splitDocument !== null ? (
         <BrushLayer
           engine={engine}
           stage={stage}
