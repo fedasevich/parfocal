@@ -46,7 +46,6 @@ from parfocal_api.result_membership import require_ai_object
 from parfocal_api.review_order import result_store
 from parfocal_api.reviewed_layer import (
     NotAssignedError,
-    TaskSignedOffError,
     UnknownObjectError,
     task_slide,
 )
@@ -67,6 +66,7 @@ from parfocal_api.tables import (
     threads,
     users,
 )
+from parfocal_api.task_kinds import TaskSignedOffError
 from parfocal_common.object_ids import Letter, ObjectId, ObjectIdError, parse
 from parfocal_common.result_store import ResultStore
 
