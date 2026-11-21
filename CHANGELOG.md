@@ -2,6 +2,18 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.35.4 (2026-11-21)
+
+### Fixes
+
+- PROTO-149: Make the final layer follow the queue decision and show one reviewer's edits
+
+### Docs
+
+- OPS-038: Log the v0.35.3 deploy and reseed
+- TEST-056: Add the deployed walkthrough of v0.35.3
+- TEST-056: Add the v0.35.3 walkthrough fix tasks
+
 ## v0.35.3 (2026-11-21)
 
 ### Features
