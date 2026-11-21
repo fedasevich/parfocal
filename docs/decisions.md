@@ -38,6 +38,15 @@ From the third deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrou
 
 Your choice:
 
+### 172. May a hidden label image of a de-identified slide stay in storage for 7 days?
+
+From PROTO-150 (upload and model run jobs tell one story). In a de-identified project the app hides a slide's label image, because a label often shows a name or a case number, and then deletes the original copy. The dev bucket keeps every new file locked for 7 days, so that delete is refused and the upload job fails although the slide works. No screen shows the label, it only sits in storage until the lock ends.
+
+- A. Allow it. The job treats the refused delete as done and deletes the copy again after the 7 days. (Recommended, since nobody can open it and the lock protects against losing slides.)
+- B. Never write the label into the locked folder. Uploads to de-identified projects go to a folder without the lock, which needs a new storage rule.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Last checked 2026-11-19.
