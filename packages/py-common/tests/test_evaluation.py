@@ -145,6 +145,16 @@ def test_cell_agreement_and_reasons_match_the_hand_counts() -> None:
     assert [list(pair) for pair in reasons(objects())] == EXPECTED["reasons"]
 
 
+def test_agreement_between_reviewers_has_no_value_with_one_reviewer() -> None:
+    alone = [
+        AiObject("s", "cell", number, "Tumor", {"anna": ReviewDecision(value, ())})
+        for number, value in enumerate(("agree", "disagree", "unsure"))
+    ]
+    with_ai, between = cell_agreement(alone)
+    assert (with_ai.numerator, with_ai.denominator) == (1, 3)
+    assert between == Ratio(None, 0, 0)
+
+
 def test_each_code_of_a_decision_counts_once() -> None:
     several = ReviewDecision(
         "disagree", ("wrong_class", "boundary_off", "wrong_class"), "lymphocyte"

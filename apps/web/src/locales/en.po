@@ -741,12 +741,6 @@ msgstr "{0} disagreements"
 msgid "{0} does nothing yet. Click any action below, then press {1} to give it that key."
 msgstr "{0} does nothing yet. Click any action below, then press {1} to give it that key."
 
-#. placeholder {0}: plural(picked.length, "file")
-#. placeholder {1}: andJoin( exportsList .filter((item) => picked.includes(item.key)) .map((item) => item.label.toLowerCase()), )
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "{0} downloading: {1}"
-msgstr "{0} downloading: {1}"
-
 #. placeholder {0}: shortName(home.resume)
 #. placeholder {1}: formatWeekday(home.resume.due_on)
 #: src/screens/home/home-screen.tsx
@@ -1151,6 +1145,12 @@ msgstr "{0} of {1} decided"
 msgid "{0} of {1} done"
 msgstr "{0} of {1} done"
 
+#. placeholder {0}: saved.length
+#. placeholder {1}: kinds.length
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} of {1} files saved. Try the others again from the evaluation report."
+msgstr "{0} of {1} files saved. Try the others again from the evaluation report."
+
 #. placeholder {0}: row.gb
 #. placeholder {0}: space.gb
 #. placeholder {1}: row.cap_gb
@@ -1410,6 +1410,11 @@ msgstr "{0} runs going now"
 #: src/viewer/stage-review-objects.tsx
 msgid "{0} saved as {name}. The AI result is not changed."
 msgstr "{0} saved as {name}. The AI result is not changed."
+
+#. placeholder {0}: plural(saved.length, "file")
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "{0} saved to Downloads"
+msgstr "{0} saved to Downloads"
 
 #. placeholder {0}: model.name
 #: src/screens/admin/sections.tsx
@@ -12272,10 +12277,6 @@ msgstr "Opinion"
 #: src/screens/project/settings-tab.tsx
 msgid "Opinion form"
 msgstr "Opinion form"
-
-#: src/screens/sign-off/sign-off-screen.tsx
-msgid "Opinion forms"
-msgstr "Opinion forms"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Opinion scores"

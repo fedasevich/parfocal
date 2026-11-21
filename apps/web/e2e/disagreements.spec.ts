@@ -132,6 +132,18 @@ test("the sign-off page of a task signed before shows the signed state and opens
   await expect(page).toHaveURL(new RegExp(`/tasks/${rt09}/evaluation`));
 });
 
+test("the signed window downloads the three ticked files", async ({ page }) => {
+  const rt09 = "00000000-0000-4000-8007-000000000009";
+  await page.goto(`/tasks/${rt09}/sign-off`);
+  const modal = page.getByRole("dialog", { name: "Sign off RT-09" });
+  const names: string[] = [];
+  page.on("download", (download) => names.push(download.suggestedFilename()));
+  await modal.getByRole("button", { name: "Download 3 files" }).click();
+  await expect.poll(() => names.length).toBe(3);
+  expect(names.sort()).toEqual(["annotations.json", "decisions.csv", "report.pdf"]);
+  await expect(page.getByText("3 files saved to Downloads")).toBeVisible();
+});
+
 test("the sign-off page of an annotate task says slides are signed off in the viewer", async ({
   page,
 }) => {

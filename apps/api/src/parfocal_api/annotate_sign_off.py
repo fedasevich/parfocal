@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.auth import SignedInAt, require_fresh_sign_in
 from parfocal_api.blind_first import announce_visibility, seen_by
 from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -354,6 +355,7 @@ async def sign_off_annotate_slide(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    signed_in: SignedInAt,
 ) -> AnnotateSlideStatus:
     row = await annotate_slide(connection, principal, task_id, slide_id)
     if not await is_owner(connection, principal, row):
@@ -366,6 +368,7 @@ async def sign_off_annotate_slide(
     if before.all_checked_required and before.unchecked_objects:
         raise ObjectsUncheckedError
     writable(row)
+    require_fresh_sign_in(signed_in)
     await connection.execute(
         update(review_task_slides)
         .where(review_task_slides.c.task_id == task_id, review_task_slides.c.slide_id == slide_id)

@@ -29,6 +29,7 @@ import { slideLink } from "../../shell/slide-link.ts";
 import { useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { closeOn, ReasonModal, useSignature } from "../clinical-report/modals.tsx";
 import { AdjudicationRows, useTaskAdjudications } from "../disagreements/adjudication-rows.tsx";
+import { downloadExport } from "../evaluation/download-export.ts";
 import { headlineTiles } from "../evaluation/numbers.ts";
 import { andJoin } from "../format.ts";
 import { ProjectBackground } from "../jobs/project-background.tsx";
@@ -41,9 +42,9 @@ export type SignOffScene = "blocked" | "ready" | "ssofail" | "signed" | "amend";
 
 const exportsList = lazyText(() => [
   { key: "pdf", label: t`Evaluation report`, format: "PDF" },
-  { key: "csv", label: t`Decisions per object`, format: "CSV" },
-  { key: "json", label: t`Reviewed annotations`, format: "Parfocal JSON and GeoJSON" },
-  { key: "forms", label: t`Opinion forms`, format: "CSV" },
+  { key: "decisions", label: t`Decisions per object`, format: "CSV" },
+  { key: "json", label: t`Reviewed annotations`, format: "Parfocal JSON" },
+  { key: "geojson", label: t`Reviewed annotations`, format: "GeoJSON" },
 ]);
 
 const longDate = (iso: string) => {
@@ -185,7 +186,23 @@ function SignOffModal({
   const timing = useTaskRun("report", taskId, "reports");
   const [amending, setAmending] = useState(scene === "amend");
   const [signingNext, setSigningNext] = useState(false);
-  const [picked, setPicked] = useState(["pdf", "csv", "json"]);
+  const [picked, setPicked] = useState(["pdf", "decisions", "json"]);
+  const [downloading, setDownloading] = useState(false);
+  const downloadPicked = async () => {
+    setDownloading(true);
+    const kinds = exportsList.filter((item) => picked.includes(item.key));
+    const saved: string[] = [];
+    for (const item of kinds) {
+      const name = await downloadExport(taskId, item.key);
+      if (name !== null) saved.push(name);
+    }
+    setDownloading(false);
+    toast.show(
+      saved.length === kinds.length
+        ? t`${plural(saved.length, "file")} saved to Downloads`
+        : t`${saved.length} of ${kinds.length} files saved. Try the others again from the evaluation report.`,
+    );
+  };
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: getGetSignOffSummaryQueryKey(taskId) }),
@@ -352,16 +369,8 @@ function SignOffModal({
             </div>
             <div className="flex items-center gap-3">
               <Button
-                disabled={picked.length === 0}
-                onClick={() =>
-                  toast.show(
-                    t`${plural(picked.length, "file")} downloading: ${andJoin(
-                      exportsList
-                        .filter((item) => picked.includes(item.key))
-                        .map((item) => item.label.toLowerCase()),
-                    )}`,
-                  )
-                }
+                disabled={picked.length === 0 || downloading}
+                onClick={() => void downloadPicked()}
               >
                 <Icon name="download" />
                 {picked.length ? t`Download ${plural(picked.length, "file")}` : t`Download`}

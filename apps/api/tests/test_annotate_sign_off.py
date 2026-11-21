@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Any
 
 import pytest
@@ -105,6 +106,11 @@ def test_sign_off_waits_for_every_expert_and_locks_the_layer(api: ApiAs, databas
     assert problem(post(api, o, "owner", f"{slide}/sign-off")) == (409, "experts-unchecked")
     assert post(api, o, "second", f"{slide}/check").status_code == 200
     assert problem(post(api, o, "second", f"{slide}/sign-off"))[0] == 403
+    api.acting.signed_in_ago = timedelta(minutes=12)
+    assert problem(post(api, o, "owner", f"{slide}/sign-off")) == (403, "fresh-sign-in-needed")
+    api.acting.signed_in_ago = None
+    assert problem(post(api, o, "owner", f"{slide}/sign-off")) == (403, "fresh-sign-in-needed")
+    api.acting.signed_in_ago = timedelta(0)
     signed = post(api, o, "owner", f"{slide}/sign-off")
     assert signed.status_code == 200, signed.text
     assert signed.json()["signed_off_at"] is not None

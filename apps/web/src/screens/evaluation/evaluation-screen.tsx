@@ -35,6 +35,7 @@ import { AdjudicationRows, useTaskAdjudications } from "../disagreements/adjudic
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useScreenToast } from "../project/screen-toast.tsx";
+import { toReviewStyle } from "../review/decision-mapping.ts";
 import { ArrangeEditor } from "./arrange-editor.tsx";
 import { downloadExport, hasExport } from "./download-export.ts";
 import { LazyTaskPdf } from "./pdf-overlay-lazy.tsx";
@@ -101,7 +102,9 @@ function EvaluationBody({
   const { t } = useLingui();
 
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
-  const countsAsChanges = okData(useGetReviewTask(taskId).data)?.counts_as_changes;
+  const task = okData(useGetReviewTask(taskId).data);
+  const countsAsChanges = task?.counts_as_changes;
+  const style = toReviewStyle(task?.decision);
   const queue = okData(useGetDisagreementQueue(taskId).data)?.rows ?? [];
   const adjudicated = useTaskAdjudications(taskId);
   const logged = okData(useListEvaluationChanges(taskId).data);
@@ -141,6 +144,7 @@ function EvaluationBody({
     templateVersion: version,
     nameOf,
     countsAsChanges,
+    style,
   };
 
   const change = (next: PageBlock[]) => {

@@ -28,9 +28,10 @@ import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { slideLink } from "../../shell/slide-link.ts";
-import { answerOf, answerWord } from "../disagreements/text.ts";
 import { okData } from "../placeholder.tsx";
+import { agreeWithTheAi, type ReviewStyle } from "../review/decision-mapping.ts";
 import { slideThumbUrl } from "../slide-thumb-url.ts";
+import { appendixWord, decisionCell, reviewerCells } from "./appendix.ts";
 import {
   comparisonRows,
   comparisonSlidesOf,
@@ -91,6 +92,7 @@ type PagesProps = {
   templateVersion: number;
   nameOf: (userId: string) => string;
   countsAsChanges?: CountsAsChange[] | undefined;
+  style?: ReviewStyle | undefined;
   selected?: string | null | undefined;
   onSelect?: ((id: string) => void) | undefined;
 };
@@ -504,6 +506,7 @@ function Appendix({
   evaluation,
   nameOf,
   countsAsChanges = [],
+  style = agreeWithTheAi,
 }: PagesProps & { name: NonNullable<LayoutPage["appendix"]> }) {
   const { t } = useLingui();
 
@@ -532,7 +535,7 @@ function Appendix({
               row.object,
               row.slide_label,
               nameOf(answer.user_id),
-              answerWord[answerOf(answer.raw)],
+              appendixWord(style, answer.raw, row),
             ]),
           )}
         />
@@ -569,16 +572,11 @@ function Appendix({
                 </ObjectLink>
               </td>
               <td>{row.slide_label}</td>
-              {report.reviewer_ids.map((id) => {
-                const answer = row.answers.find((item) => item.user_id === id);
-                return <td key={id}>{answer ? answerWord[answerOf(answer.raw)] : ""}</td>;
-              })}
+              {reviewerCells(row, report.reviewer_ids, style).map((word, index) => (
+                <td key={report.reviewer_ids[index]}>{word}</td>
+              ))}
               <td>
-                {row.decision
-                  ? answerWord[answerOf(row.decision.raw)]
-                  : row.state === "left-open"
-                    ? t`Left open`
-                    : t`Open`}
+                {decisionCell(row, style) ?? (row.state === "left-open" ? t`Left open` : t`Open`)}
               </td>
             </tr>
           ))}

@@ -2,6 +2,7 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator, Iterator
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -249,7 +250,9 @@ async def test_the_agent_finishes_the_example_alone_and_reaches_its_dataset(exam
         await check_annotate_slide(
             task_id, slide_id, agent, connection, BackgroundTasks(), NoRealtime()
         )
-        signed = await sign_off_annotate_slide(task_id, slide_id, agent, connection)
+        signed = await sign_off_annotate_slide(
+            task_id, slide_id, agent, connection, datetime.now(UTC)
+        )
         assert signed.signed_off_at is not None
         summary = await get_task_dataset(
             task_id,

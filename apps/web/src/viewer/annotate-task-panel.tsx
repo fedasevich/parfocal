@@ -101,6 +101,13 @@ import { ReasonModal } from "../screens/clinical-report/modals.tsx";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { useRefusals } from "../screens/refusals.ts";
+import { startNamedLogin } from "../session/sign-in-redirect.ts";
+import {
+  currentPath,
+  needsFreshSignIn,
+  rememberSigning,
+  takePendingSigning,
+} from "../session/signature-sign-in.ts";
 import { GuidedCheck } from "./guided-check.tsx";
 import { DockCard, dockedCard, useDocked } from "./inspector-slots.tsx";
 import { useFinishSlot } from "./stage-notices.tsx";
@@ -154,7 +161,8 @@ export function AnnotateTaskPanel({
   const finishSlot = useFinishSlot();
   const { taskId, slideId, focusObject } = task;
   const queryClient = useQueryClient();
-  const me = okData(useGetMe().data)?.user_id ?? null;
+  const signedIn = okData(useGetMe().data);
+  const me = signedIn?.user_id ?? null;
   const personOf = usePeople();
   const layerQuery = useSharedLayer(taskId, slideId);
   const layer = okData(layerQuery.data)?.objects ?? [];
@@ -250,6 +258,33 @@ export function AnnotateTaskPanel({
     },
     [refresh, refusalOf],
   );
+
+  const resumedSignOff = useRef(false);
+  const signOff = useCallback(
+    () =>
+      void run(async () => {
+        try {
+          await signOffSlide(taskId, slideId);
+        } catch (error) {
+          if (!needsFreshSignIn(error) || resumedSignOff.current) throw error;
+          const path = currentPath();
+          rememberSigning(path);
+          await startNamedLogin({
+            returnTo: path,
+            loginHint: signedIn?.email ?? "",
+            reauth: true,
+          });
+        }
+      }),
+    [run, taskId, slideId, signedIn?.email],
+  );
+  const resumeSignOff = useRef(signOff);
+  resumeSignOff.current = signOff;
+  useEffect(() => {
+    if (!takePendingSigning(currentPath())) return;
+    resumedSignOff.current = true;
+    resumeSignOff.current();
+  }, []);
 
   const setsQuery = useListSlideResultSets(slideId);
   const newRuns = runsToAddOf(okData(setsQuery.data) ?? [], task);
@@ -772,7 +807,7 @@ export function AnnotateTaskPanel({
                 checked: expert.checked_at !== null,
                 sub: expert.nothing_to_mark ? t`Nothing to mark` : t`Checked`,
               }))}
-              onSignOff={() => void run(() => signOffSlide(taskId, slideId))}
+              onSignOff={signOff}
             />
           ) : null}
           {step !== "open" ? (
