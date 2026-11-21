@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { fixturePath } from "@parfocal/test-fixtures";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { expect, type Researcher, test } from "./harness.ts";
@@ -10,6 +11,7 @@ import {
   field,
   idOf,
   type Reply,
+  root,
   signIn,
   sql,
   zitadelAdmin,
@@ -18,7 +20,7 @@ import {
 test.skip(adjudicatorUsername === "", "The local stack has no adjudicator test user");
 
 const SLIDE = "CMU-1-Small-Region.svs";
-const CELLS = "whole-path-cells.geojson";
+const CELLS = `${root}packages/test-fixtures/model-results/cmu-1-small-region-svs/cells.geojson`;
 const organisation = process.env["ZITADEL_ORGANIZATION_ID"] ?? "";
 const run = process.env["PARFOCAL_E2E_RUN"] ?? "";
 
@@ -35,16 +37,16 @@ function square(x: number, y: number, side: number): Ring {
 }
 
 const selection = { type: "Polygon", coordinates: [square(300, 300, 600)] };
-const redraw = { type: "Polygon", coordinates: [square(372, 412, 44)] };
 
-const cells = JSON.stringify({
-  type: "FeatureCollection",
-  features: [400, 520, 640].map((x) => ({
-    type: "Feature",
-    geometry: { type: "Polygon", coordinates: [square(x, 400, 36)] },
-    properties: { objectType: "cell", classification: { name: "Tumor" } },
-  })),
-});
+function redrawOf(outline: number[]): { type: "Polygon"; coordinates: Ring[] } {
+  const xs = outline.filter((_, index) => index % 2 === 0);
+  const ys = outline.filter((_, index) => index % 2 === 1);
+  const [left, top] = [Math.min(...xs), Math.min(...ys)];
+  const [width, height] = [Math.max(...xs) - left, Math.max(...ys) - top];
+  const x = Math.round(left + width * 0.6);
+  const y = Math.round(top + height * 0.6);
+  return { type: "Polygon", coordinates: [square(x, y, Math.ceil(width + height) + 4)] };
+}
 
 interface Question {
   key: string;
@@ -61,7 +63,13 @@ interface Outline {
 interface Feature {
   geometry: { coordinates: Ring[] };
   properties: {
-    parfocal: { id: string; origin: string; author: string | null; source: string | null };
+    parfocal: {
+      id: string;
+      origin: string;
+      author: string | null;
+      changed_by: string | null;
+      source: string | null;
+    };
   };
 }
 
@@ -90,9 +98,9 @@ async function uploadStatus(page: Page, uploadId: string): Promise<Reply> {
 }
 
 async function uploadCells(page: Page, projectId: string, slideId: string): Promise<string> {
-  const bytes = Buffer.from(cells, "utf8");
+  const bytes = readFileSync(CELLS);
   const created = await call(page, "POST", "/api/uploads/s3/multipart", {
-    filename: CELLS,
+    filename: "cells.geojson",
     type: "application/geo+json",
     metadata: { project_id: projectId, size: bytes.length, kind: "result", slide_id: slideId },
   });
@@ -262,11 +270,15 @@ test("a slide goes from upload through detection, review, adjudication and sign-
       )
       .not.toBe(409);
     expect(listed.status, JSON.stringify(listed.json)).toBe(200);
-    const objects = (Reflect.get(listed.json ?? {}, "objects") as { object: string }[]).map(
-      (item) => item.object,
-    );
+    const listedObjects = Reflect.get(listed.json ?? {}, "objects") as {
+      object: string;
+      outline: number[] | null;
+    }[];
+    const objects = listedObjects.map((item) => item.object);
     expect(objects).toHaveLength(3);
     const target = objects[0] ?? "";
+    const redraw = redrawOf(listedObjects[0]?.outline ?? []);
+    const start = redraw.coordinates[0]?.[0]?.[0];
 
     await decideAll(page, slide, objects);
     await decideAll(reviewer.page, slide, objects);
@@ -293,7 +305,7 @@ test("a slide goes from upload through detection, review, adjudication and sign-
     const asked = (
       Reflect.get(mine.json ?? {}, "objects") as { object: string; outlines: Outline[] }[]
     ).find((item) => item.object === target);
-    const picked = asked?.outlines.find((item) => Math.round(item.outline[0] ?? 0) === 372);
+    const picked = asked?.outlines.find((item) => Math.round(item.outline[0] ?? 0) === start);
     expect(picked, JSON.stringify(asked)).toBeDefined();
     const settled = await call(
       adjudicator.page,
@@ -340,6 +352,7 @@ test("a slide goes from upload through detection, review, adjudication and sign-
     expect(edited?.properties.parfocal, JSON.stringify(features)).toMatchObject({
       origin: "ai-edited",
       author: letter,
+      changed_by: "C",
       source: target,
     });
     expect(bounds(edited?.geometry.coordinates[0] ?? [])).toEqual(
