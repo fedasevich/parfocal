@@ -73,7 +73,7 @@ import {
   uploadUnscored,
 } from "./scenario-project.ts";
 import { annotateStubTaskId, rt13, rt18 } from "./scenario-review.ts";
-import { opinionForms, studyTemplates } from "./scenario-task.ts";
+import { opinionForms, studyTemplates, taskSlides } from "./scenario-task.ts";
 import { annotateTaskClasses, annotateTaskSlides } from "./shared-layer-handlers.ts";
 import { outlineOverlapOf } from "./task-outline-overlap.ts";
 import { addedResultSets } from "./upload-handlers.ts";
@@ -522,8 +522,13 @@ const viewedSlideOf = (request: Request): string | undefined => {
 
 const uuidShaped = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
+const caseOnlySlide = (slideId: string) =>
+  taskSlides.some((slide) => slide.id === slideId) && !slides.some((slide) => slide.id === slideId);
+
 const unlistedSlide = (slideId: string) =>
-  sampleSlides.some((slide) => slide.id === slideId) || !uuidShaped.test(slideId);
+  sampleSlides.some((slide) => slide.id === slideId) ||
+  caseOnlySlide(slideId) ||
+  !uuidShaped.test(slideId);
 
 export function projectHandlers(): RequestHandler[] {
   return [
