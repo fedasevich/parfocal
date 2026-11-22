@@ -62,11 +62,61 @@ export type CardText = {
   chip: ConfidenceChip | null;
 };
 
+const toolWords: Record<NonNullable<ReviewObject["tool"]>, string> = {
+  hand: "by hand",
+  "smart-select": "with Smart select",
+};
+
+export const shownCode = (object: Pick<ReviewObject, "object" | "drawn">) =>
+  object.drawn ? `${object.object}⁺` : object.object;
+
+function drawnCardText(style: ReviewStyle, object: ReviewObject): CardText {
+  const code = shownCode(object);
+  const how = object.tool ? ` ${toolWords[object.tool]}` : "";
+  const cls = object.class_name.toLowerCase();
+  const size = object.size_mm === null ? null : `${formatMillimetres(object.size_mm)} across`;
+  if (style.kind === "certainty") {
+    return {
+      hiddenNote: null,
+      above: `Drawn${how}${size ? ` · ${size}` : ""}`,
+      question: cls ? `How sure are you that ${code} is ${cls}?` : `How sure are you of ${code}?`,
+      context: null,
+      chip: null,
+    };
+  }
+  if (style.kind === "agree") {
+    return {
+      hiddenNote: null,
+      above: null,
+      question: cls ? `A person drew ${code}${how} as ${cls}.` : `A person drew ${code}${how}.`,
+      context: size,
+      chip: null,
+    };
+  }
+  if (style.kind === "yesno") {
+    return {
+      hiddenNote: null,
+      above: `Drawn${how}`,
+      question: style.question ?? "Is this tumor?",
+      context: null,
+      chip: null,
+    };
+  }
+  return {
+    hiddenNote: null,
+    above: `Drawn${how}`,
+    question: `What is ${code}?`,
+    context: null,
+    chip: null,
+  };
+}
+
 export function cardText(
   style: ReviewStyle,
   object: ReviewObject,
   confidence: ReviewConfidence,
 ): CardText {
+  if (object.drawn) return drawnCardText(style, object);
   const cls = object.class_name.toLowerCase();
   const cell = object.kind === "cell";
   const sure = sureText(object, confidence);

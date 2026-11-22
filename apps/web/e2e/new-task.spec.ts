@@ -117,7 +117,7 @@ test("a sent task lists each result once, shows its date, and reaches the bell a
   await page.goto(`${newTask}?scene=slides`);
   await expect(
     flow(page).getByRole("radiogroup", { name: "AI result to check" }).getByRole("radio"),
-  ).toHaveCount(2);
+  ).toHaveCount(3);
   for (const step of ["Reviewers", "What to check", "How it runs", "Send"]) {
     await flow(page).getByRole("button", { name: "Next" }).click();
     await expect(flow(page).locator('[aria-current="step"]')).toHaveText(new RegExp(step));
@@ -361,4 +361,31 @@ test("a task created from another template pins it and marks what the template f
     study_template_version: 1,
     decision: { style: "yes-no" },
   });
+});
+
+test("a review task picks a slide's drawn outlines as its source and sends them", async ({
+  page,
+}) => {
+  await page.goto(`${newTask}?scene=slides`);
+  const body = flow(page);
+  await body.getByRole("radio", { name: /^Drawn and Smart select outlines/ }).click();
+  await expect(body.getByText(/1 with drawn outlines/)).toBeVisible();
+  await expect(body.getByText(/no result sets/)).toHaveCount(0);
+  const step = body.locator('[aria-current="step"]');
+  for (let index = 0; index < 4; index += 1) {
+    await body.getByRole("button", { name: "Next" }).click();
+  }
+  await expect(step).toHaveText(/Send/);
+  const created = page.waitForRequest(
+    (request) => request.method() === "POST" && /\/review-tasks$/.test(request.url()),
+  );
+  await body.getByRole("button", { name: /^Create and notify/ }).click();
+  const draft = (await created).postDataJSON() as {
+    slide_ids: string[];
+    drawn_slide_ids: string[];
+    result_sets: unknown[];
+  };
+  expect(draft.result_sets).toEqual([]);
+  expect(draft.drawn_slide_ids).toHaveLength(1);
+  expect(draft.slide_ids).toEqual(draft.drawn_slide_ids);
 });

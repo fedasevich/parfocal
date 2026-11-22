@@ -21,6 +21,7 @@ export type TaskSlide = {
   caseLabel: string | null;
   specimen: string | null;
   sets: TaskSlideSet[];
+  drawn?: number;
 };
 
 const caseIds: Record<string, string> = {
@@ -61,7 +62,7 @@ const taskSlide = (
 };
 
 export const taskSlides: TaskSlide[] = [
-  taskSlide("S26-04812", "A1", ["cam", "sam"]),
+  { ...taskSlide("S26-04812", "A1", ["cam", "sam"]), drawn: 3 },
   taskSlide("S26-04812", "A2", ["cam", "sam"]),
   taskSlide("S26-04812", "A3", ["cam", "sam"]),
   ...["B1", "B2", "B3", "B4", "B5", "B6"].map((label, index) =>

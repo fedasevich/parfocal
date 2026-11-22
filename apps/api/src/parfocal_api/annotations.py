@@ -22,6 +22,7 @@ from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.tables import (
     AnnotationChange,
     AnnotationKind,
+    DrawingTool,
     PrivacyMode,
     TaskKind,
     annotation_versions,
@@ -118,6 +119,7 @@ class AnnotationDraft(BaseModel):
     geometry: Geometry
     class_id: uuid.UUID | None = None
     text: Words | None = None
+    tool: DrawingTool | None = None
 
     @model_validator(mode="after")
     def fits_kind(self) -> AnnotationDraft:
@@ -325,11 +327,11 @@ async def check_shapes(connection: AsyncConnection, shapes: Sequence[str]) -> No
 
 INSERT_ANNOTATIONS = text(
     "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry, "
-    "class_id, text, task_id, created_by_user_id) "
+    "class_id, text, task_id, created_by_user_id, tool) "
     "SELECT :tenant_id, :project_id, :slide_id, kind, number, "
-    "ST_SetSRID(ST_GeomFromGeoJSON(shape), 0), class_id, words, :task_id, :user_id "
-    "FROM unnest(:kinds, :numbers, :shapes, :class_ids, :texts) "
-    "AS given(kind, number, shape, class_id, words) "
+    "ST_SetSRID(ST_GeomFromGeoJSON(shape), 0), class_id, words, :task_id, :user_id, tool "
+    "FROM unnest(:kinds, :numbers, :shapes, :class_ids, :texts, :tools) "
+    "AS given(kind, number, shape, class_id, words, tool) "
     "RETURNING id, kind, number"
 ).bindparams(
     bindparam("task_id", type_=Uuid()),
@@ -338,6 +340,7 @@ INSERT_ANNOTATIONS = text(
     bindparam("shapes", type_=ARRAY(String)),
     bindparam("class_ids", type_=ARRAY(Uuid())),
     bindparam("texts", type_=ARRAY(String)),
+    bindparam("tools", type_=ARRAY(String)),
 )
 
 RECORD_VERSIONS = text(
@@ -395,6 +398,7 @@ async def add(
                 "shapes": shapes,
                 "class_ids": [draft.class_id for draft in drafts],
                 "texts": [draft.text for draft in drafts],
+                "tools": [None if draft.tool is None else draft.tool.value for draft in drafts],
             },
         )
     ).all()

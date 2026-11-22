@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, pseudonym_of
 from parfocal_api.blinding import ai_hidden, sees_whole
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.drawn_sources import drawn_counts
 from parfocal_api.my_work import describe
 from parfocal_api.notifications import deliver_after_commit, member_of, notify
 from parfocal_api.permissions import Permission, require
@@ -26,6 +27,7 @@ from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
     ResultObjectKind,
+    ResultSource,
     ResultStatus,
     annotations,
     audit_events,
@@ -105,6 +107,7 @@ class ProjectSlide(BaseModel):
     stain: str
     case: SlideCase | None
     result_set_ids: list[uuid.UUID]
+    drawn_count: int = 0
     width: int | None = None
     height: int | None = None
 
@@ -187,7 +190,11 @@ def live_slides(project_id: uuid.UUID) -> Any:
 
 
 def live_sets(project_id: uuid.UUID) -> Any:
-    return and_(result_sets.c.project_id == project_id, result_sets.c.deleted_at.is_(None))
+    return and_(
+        result_sets.c.project_id == project_id,
+        result_sets.c.deleted_at.is_(None),
+        result_sets.c.source != ResultSource.DRAWN,
+    )
 
 
 async def first_specimens(connection: AsyncConnection, project_id: uuid.UUID) -> dict[Any, str]:
@@ -380,6 +387,7 @@ async def list_project_slides(
         .order_by(result_sets.c.created_at, result_sets.c.id)
     ):
         sets.setdefault(item.slide_id, []).append(item.id)
+    drawn = await drawn_counts(connection, [row.id for row in rows])
     return [
         ProjectSlide(
             id=row.id,
@@ -393,6 +401,7 @@ async def list_project_slides(
                 )
             ),
             result_set_ids=[] if row.hidden else sets.get(row.id, []),
+            drawn_count=drawn.get(row.id, 0),
             width=row.width,
             height=row.height,
         )

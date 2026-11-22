@@ -21,6 +21,7 @@ from sqlalchemy import (
 
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import case_timestamps, owned_ids
+from parfocal_api.tables.results import DrawingTool
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
 from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
@@ -85,6 +86,7 @@ annotations = Table(
         info=OPERATIONAL,
     ),
     Column("source_number", Integer, nullable=True, info=OPERATIONAL),
+    Column("tool", String(20), nullable=True, info=OPERATIONAL),
     Column(
         "created_by_user_id",
         Uuid[uuid.UUID](),
@@ -104,6 +106,7 @@ annotations = Table(
         postgresql_where=text("source_number IS NOT NULL"),
     ),
     one_of("origin", AnnotationOrigin),
+    one_of("tool", DrawingTool),
     CheckConstraint("(origin <> 'human') = (source_number IS NOT NULL)", name="source"),
     CheckConstraint("origin = 'human' OR task_id IS NOT NULL", name="source_task"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),

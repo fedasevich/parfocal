@@ -59726,6 +59726,16 @@
                 "type": "null"
               }
             ]
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DrawingTool"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -61316,6 +61326,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Words"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DrawingTool"
               },
               {
                 "type": "null"
@@ -66885,6 +66905,14 @@
           "dots"
         ],
         "title": "DrawAs"
+      },
+      "DrawingTool": {
+        "type": "string",
+        "enum": [
+          "hand",
+          "smart-select"
+        ],
+        "title": "DrawingTool"
       },
       "DroppedFile": {
         "properties": {
@@ -77478,6 +77506,11 @@
             "type": "array",
             "title": "Result Set Ids"
           },
+          "drawn_count": {
+            "type": "integer",
+            "title": "Drawn Count",
+            "default": 0
+          },
           "width": {
             "anyOf": [
               {
@@ -78223,6 +78256,11 @@
                 "type": "null"
               }
             ]
+          },
+          "drawn": {
+            "type": "boolean",
+            "title": "Drawn",
+            "default": false
           }
         },
         "type": "object",
@@ -79897,7 +79935,8 @@
         "type": "string",
         "enum": [
           "import",
-          "run"
+          "run",
+          "drawn"
         ],
         "title": "ResultSource"
       },
@@ -80733,6 +80772,33 @@
               }
             ],
             "title": "Outline"
+          },
+          "drawn": {
+            "type": "boolean",
+            "title": "Drawn",
+            "default": false
+          },
+          "drawn_by_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drawn By User Id"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DrawingTool"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -87511,6 +87577,16 @@
             "type": "array",
             "maxItems": 500,
             "title": "Result Sets",
+            "default": []
+          },
+          "drawn_slide_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Drawn Slide Ids",
             "default": []
           },
           "model_name": {

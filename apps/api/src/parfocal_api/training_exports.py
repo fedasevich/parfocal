@@ -219,6 +219,8 @@ class Shape:
     source: str | None
     versions: int
     differs: AiDifference | None
+    drawn_by: str | None = None
+    tool: str | None = None
 
 
 @dataclass(frozen=True)
@@ -284,6 +286,8 @@ def qupath_feature(
         "versions": shape.versions,
         "differs_from_ai": shape.differs.value if shape.differs else None,
     }
+    if shape.drawn_by is not None or shape.tool is not None:
+        parfocal |= {"drawn_by": shape.drawn_by, "tool": shape.tool}
     classification = (
         {"name": name, "color": rgb_of(found.colour)} if found else {"name": name} if name else None
     )
@@ -479,6 +483,8 @@ async def slide_objects(
                 else ObjectId(LETTERS[kind], row.source_number).text(ascii=True),
                 row.version,
                 difference_of(geometry, row.class_id, source),
+                letters.of(row.drawn_by_user_id),
+                row.tool,
             )
         )
     covered.update((AnnotationKind(kind), number) for kind, number in undecided)

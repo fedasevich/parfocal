@@ -1,4 +1,4 @@
-import type { AnnotationDraft } from "@parfocal/api-client";
+import type { AnnotationDraft, DrawingTool } from "@parfocal/api-client";
 import type { NewShape } from "./document.ts";
 import {
   brushGeometryOf,
@@ -26,6 +26,9 @@ export type SavedRecord = {
 
 const spot = (shape: Shape) => pointToGeoJson({ x: at(shape.points, 0), y: at(shape.points, 1) });
 
+export const toolOf = (shape: Shape): DrawingTool =>
+  shape.provenance.kind === "model" ? "smart-select" : "hand";
+
 export function draftOf(shape: Shape): AnnotationDraft | null {
   switch (shape.kind) {
     case "polygon":
@@ -33,6 +36,7 @@ export function draftOf(shape: Shape): AnnotationDraft | null {
         kind: savedPolygonKind,
         geometry: polygonToGeoJson(shape.points),
         class_id: shape.classKey,
+        tool: toolOf(shape),
       };
     case "point":
       return { kind: savedMarkerKind, geometry: spot(shape), class_id: shape.classKey };
@@ -49,6 +53,7 @@ export function draftOf(shape: Shape): AnnotationDraft | null {
         kind: savedPolygonKind,
         geometry: brushToGeoJson(shape.points, shape.ringStarts),
         class_id: shape.classKey,
+        tool: toolOf(shape),
       };
     case "freehand":
     case "rectangle":

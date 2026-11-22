@@ -32,7 +32,7 @@ import {
   type TemplateChoice,
 } from "./model.ts";
 import { CheckRow, FieldNote, fieldId, RadioRows, RowText, SlideThumb, Warn } from "./parts.tsx";
-import { templateFor } from "./result-sets.ts";
+import { isDrawn, templateFor } from "./result-sets.ts";
 
 export type StepProps = {
   draft: Draft;
@@ -293,12 +293,14 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                     : next;
                 })
               }
-              options={data.resultSets.map((set) => ({
-                value: set.id,
-                title: set.label,
-                sub: set.detail,
-                end: t`on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
-              }))}
+              options={data.resultSets
+                .filter((set) => !annotate || !isDrawn(set.id))
+                .map((set) => ({
+                  value: set.id,
+                  title: set.label,
+                  sub: set.detail,
+                  end: t`on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
+                }))}
             />
             <FieldNote error={errors.get("rset")} />
             {!annotate && !sum.ns && all.length ? (

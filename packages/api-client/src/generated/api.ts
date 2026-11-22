@@ -195,11 +195,19 @@ export type Geometry = PointGeometry | LineStringGeometry | PolygonGeometry | Mu
  */
 export type Words = string;
 
+export type DrawingTool = (typeof DrawingTool)[keyof typeof DrawingTool];
+
+export const DrawingTool = {
+  hand: "hand",
+  "smart-select": "smart-select",
+} as const;
+
 export interface AddedDraft {
   kind: AnnotationKind;
   geometry: Geometry;
   class_id?: string | null;
   text?: Words | null;
+  tool?: DrawingTool | null;
 }
 
 export interface AddedObject {
@@ -584,6 +592,7 @@ export interface AnnotationDraft {
   geometry: Geometry;
   class_id?: string | null;
   text?: Words | null;
+  tool?: DrawingTool | null;
 }
 
 export interface RemovedObject {
@@ -6236,6 +6245,7 @@ export interface ProjectSlide {
   stain: string;
   case: SlideCase | null;
   result_set_ids: string[];
+  drawn_count?: number;
   width?: number | null;
   height?: number | null;
 }
@@ -6322,6 +6332,7 @@ export interface QueuedObject {
   edited_after_decisions?: boolean;
   looking_again?: boolean;
   adjudication?: Adjudication | null;
+  drawn?: boolean;
 }
 
 export interface QueuedObjectUpdate {
@@ -6578,6 +6589,7 @@ export type ResultSource = (typeof ResultSource)[keyof typeof ResultSource];
 export const ResultSource = {
   import: "import",
   run: "run",
+  drawn: "drawn",
 } as const;
 
 export type ResultStatus = (typeof ResultStatus)[keyof typeof ResultStatus];
@@ -6807,6 +6819,9 @@ export interface ReviewObject {
   detector_score?: number | null;
   foreground?: number | null;
   outline?: number[] | null;
+  drawn?: boolean;
+  drawn_by_user_id?: string | null;
+  tool?: DrawingTool | null;
 }
 
 export interface SlideFacts {
@@ -7969,6 +7984,8 @@ export interface TaskDraft {
   case_ids?: string[];
   /** @maxItems 500 */
   result_sets?: SlideSet[];
+  /** @maxItems 500 */
+  drawn_slide_ids?: string[];
   model_name?: string | null;
   /**
    * @minItems 1

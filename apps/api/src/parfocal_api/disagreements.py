@@ -14,6 +14,7 @@ from parfocal_api.annotations import Geometry, InvalidShapeError, check_classes,
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import answer_in_style, counted
+from parfocal_api.drawn_sources import drawn_task_slides
 from parfocal_api.outlines import outline_of
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -126,6 +127,7 @@ class QueuedObject(BaseModel):
     edited_after_decisions: bool = False
     looking_again: bool = False
     adjudication: Adjudication | None = None
+    drawn: bool = False
 
     def reviewers(self) -> list[ReviewerAnswer]:
         return self.decisions
@@ -519,6 +521,7 @@ async def queues_of(
     sent = await sent_objects(connection, task_ids)
     gaps = await outline_gaps(connection, task_ids)
     drawn = await outlines_of(connection, task_ids, grouped.keys() | gaps.keys())
+    by_hand = await drawn_task_slides(connection, task_ids)
     for key in sorted(grouped.keys() | gaps.keys()):
         task_id, slide_id, kind, number = key
         rows = grouped.get(key, [])
@@ -535,6 +538,7 @@ async def queues_of(
                 object=ObjectId(letter, number).text(ascii=True),
                 kind=object_kind,
                 number=number,
+                drawn=letter is Letter.REGION and (task_id, slide_id) in by_hand,
                 why=why,
                 decisions=[
                     ReviewerAnswer(

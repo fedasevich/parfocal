@@ -32,6 +32,7 @@ from parfocal_api.display_settings import (
     display_of,
     stored_display,
 )
+from parfocal_api.drawn_sources import drawn_sets, not_drawn
 from parfocal_api.notifications import deliver_after_commit
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -151,6 +152,7 @@ class TaskDraft(BaseModel):
     slide_ids: Annotated[list[uuid.UUID], Field(max_length=MAX_SLIDES)] = []
     case_ids: Annotated[list[uuid.UUID], Field(max_length=MAX_SLIDES)] = []
     result_sets: Annotated[list[SlideSet], Field(max_length=MAX_SLIDES)] = []
+    drawn_slide_ids: Annotated[list[uuid.UUID], Field(max_length=MAX_SLIDES)] = []
     model_name: (
         Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
         | None
@@ -181,8 +183,12 @@ class TaskDraft(BaseModel):
         if self.kind is TaskKind.ANNOTATE:
             if self.model_name is not None and self.result_sets:
                 raise ValueError("Pick a result set per slide or a model name, not both")
-        elif (self.model_name is None) == (not self.result_sets):
+            if self.drawn_slide_ids:
+                raise ValueError("Only a review task reviews drawn objects")
+        elif (self.model_name is None) == (not self.result_sets and not self.drawn_slide_ids):
             raise ValueError("Pick a result set per slide or a model name, not both")
+        if {pick.slide_id for pick in self.result_sets} & set(self.drawn_slide_ids):
+            raise ValueError("A slide takes a result set or its drawn objects, not both")
         scope_fits(self.kind, self.scope, self.extra_scopes)
         if self.kind is TaskKind.REVIEW and (self.preset is not None or self.check is not None):
             raise ValueError("Only an annotate task has check options")
@@ -495,7 +501,10 @@ async def slides_named(
 
 
 async def sets_for(
-    connection: AsyncConnection, task_slides: Sequence[Any], draft: TaskDraft
+    connection: AsyncConnection,
+    task_slides: Sequence[Any],
+    draft: TaskDraft,
+    drawn: Mapping[uuid.UUID, uuid.UUID],
 ) -> dict[uuid.UUID, uuid.UUID]:
     usable = (
         select(result_sets.c.id, result_sets.c.slide_id, result_sets.c.name)
@@ -503,6 +512,7 @@ async def sets_for(
             result_sets.c.slide_id.in_([slide.id for slide in task_slides]),
             result_sets.c.status == ResultStatus.READY,
             result_sets.c.deleted_at.is_(None),
+            not_drawn(),
         )
         .order_by(result_sets.c.created_at)
     )
@@ -522,6 +532,7 @@ async def sets_for(
         if unknown:
             raise NoResultSetError("Pin only a finished result set of the same slide")
         return picked
+    picked.update(drawn)
     missing = [slide.label for slide in task_slides if slide.id not in picked]
     if missing:
         raise NoResultSetError(f"No finished result set for {', '.join(missing[:5])}")
@@ -812,7 +823,10 @@ async def create_review_task(
     if project.archived_at is not None:
         raise ProjectArchivedError
     task_slides = await slides_named(connection, project_id, draft)
-    picked = await sets_for(connection, task_slides, draft)
+    drawn = await drawn_sets(
+        connection, project, [slide.id for slide in task_slides], draft.drawn_slide_ids, principal
+    )
+    picked = await sets_for(connection, task_slides, draft, drawn)
     await check_reviewers(connection, project_id, draft.reviewer_ids)
     slide_ids = [slide.id for slide in task_slides]
     pairs = assignments_for(draft, slide_ids)
@@ -925,6 +939,7 @@ async def create_review_task(
             "kind": draft.kind.value,
             "slides": len(slide_ids),
             "pinned_result_sets": len(picked),
+            "drawn_sources": len(drawn),
             "reviewers": len(draft.reviewer_ids),
             "split": draft.split.value,
             "decision_style": decision.style.value,

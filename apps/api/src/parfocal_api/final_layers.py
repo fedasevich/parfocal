@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.disagreements import signed_version
+from parfocal_api.drawn_sources import Drawer, drawers_of
 from parfocal_api.evaluation import ai_objects, class_names, first_of_each_match
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
@@ -102,6 +103,8 @@ class LayerRow:
     changed_by_user_id: uuid.UUID | None
     deleted: bool
     geojson: str | None
+    drawn_by_user_id: uuid.UUID | None = None
+    tool: str | None = None
 
 
 @dataclass(frozen=True)
@@ -281,14 +284,27 @@ def outcome_of(consensus: engine.Consensus, key: Key, facts: Facts) -> Outcome:
 
 
 def ai_entry(
-    task_id: uuid.UUID, slide_id: uuid.UUID, key: Key, outcome: Outcome, versions: int
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    key: Key,
+    outcome: Outcome,
+    versions: int,
+    drawer: Drawer | None = None,
 ) -> dict[str, Any]:
     kind, number = key
-    return {
+    drawn = (
+        {}
+        if drawer is None
+        else {
+            "drawn_by": None if drawer.user_id is None else str(drawer.user_id),
+            "tool": drawer.tool,
+        }
+    )
+    return drawn | {
         "feature_id": str(uuid.uuid5(FEATURE_NAMESPACE, f"{task_id}/{slide_id}/{kind}/{number}")),
         "kind": kind,
         "number": number,
-        "person": False,
+        "person": drawer is not None,
         "source_number": number,
         "state": outcome.state.value,
         "settled_by": outcome.settled_by.value,
@@ -379,19 +395,20 @@ async def build_final_layer(connection: AsyncConnection, task: Any, principal: P
         or 0
     )
     version = await signed_version(connection, task.id)
-    slide_ids = (
+    task_slides = (
         await connection.execute(
-            select(review_task_slides.c.slide_id)
+            select(review_task_slides.c.slide_id, review_task_slides.c.result_set_id)
             .where(review_task_slides.c.task_id == task.id)
             .order_by(review_task_slides.c.position)
         )
-    ).scalars()
+    ).all()
     snapshot = [
         item.model_dump(mode="json") for item in await classes_of(connection, task.project_id)
     ]
     totals: Counter[str] = Counter()
-    for slide_id in list(slide_ids):
+    for slide_id, set_id in task_slides:
         facts = await facts_of(connection, task.id, slide_id)
+        drawers = await drawers_of(connection, set_id)
         objects = [
             ai_entry(
                 task.id,
@@ -399,6 +416,7 @@ async def build_final_layer(connection: AsyncConnection, task: Any, principal: P
                 (kind, number),
                 outcome_of(found, (kind, number), facts),
                 facts.edit_versions[(kind, number)],
+                drawers.get(number) if kind == "region" else None,
             )
             for (slide, kind, number), found in sorted(
                 consensus.items(), key=lambda item: (item[0][1], item[0][2])
@@ -466,6 +484,10 @@ def layer_rows(
                 ),
                 deleted=state is FinalState.REJECTED,
                 geojson=None if entry["geometry"] is None else json.dumps(entry["geometry"]),
+                drawn_by_user_id=(
+                    uuid.UUID(entry["drawn_by"]) if entry.get("drawn_by") is not None else None
+                ),
+                tool=entry.get("tool"),
             )
         )
     return rows, left_out
