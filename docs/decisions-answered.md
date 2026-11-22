@@ -2,6 +2,17 @@
 
 Every decision the owner has answered, newest first. Open ones are in [decisions.md](decisions.md).
 
+## Answers of 2026-11-22
+
+You wrote these in decisions.md and said "Apply them and do the tasks it will create" in chat on 2026-11-22.
+
+- Decision 165 (whether converted MIRAX and DICOM slides may use JPEG tiles), option B. Converted slides stay lossless as ADR 0408 (MIRAX and DICOM zips become one tiled TIFF at ingest) builds them. No work.
+- Decision 171 (whether outlines drawn by hand or with one click tools can be reviewed by a second person), option A. A review task takes them like AI objects, [ADR 0430](adr/0430-a-review-task-takes-drawn-and-one-click-objects.md). PROTO-160 (a review task takes drawn and one click objects) builds it.
+- Decision 172 (whether a hidden label image of a de-identified slide may stay in storage for 7 days). In your words, "remove that lock it is harmful for now". The seven day lock on `t/` is switched off by a module variable on `parfocal-dev-eu` and `parfocal-prod`, applied on 2026-11-22, [ADR 0429](adr/0429-the-tenant-object-lock-is-off-until-a-real-user.md). OPS-014 (prepare production for the first real user) turns it back on.
+- Decision 173 (whether the disagreement queue can keep a reviewer's new type), option A. A third answer, "Keep with the reviewer's type", [ADR 0431](adr/0431-the-queue-can-keep-a-reviewers-new-type.md). PROTO-161 (the disagreement queue keeps a reviewer's new type) builds it.
+- Decision 174 (which ID an outline drawn by hand or with one click gets), option A. The kind letter with a person mark, such as T7⁺, under ADR 0071 (object IDs are a kind letter and a per-slide number). PROTO-162 (a drawn outline takes its kind letter and a person mark) builds it.
+- The Modal environment `staging` is deleted. You ran the delete in your terminal on 2026-11-22.
+
 ## Answers of 2026-11-20
 
 You answered decisions 166 to 170 in chat on 2026-11-20 with "Yes, all recommended".

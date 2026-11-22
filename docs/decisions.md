@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-20
+Last updated: 2026-11-22
 
 This file holds only what is open. Everything you have answered is in [decisions-answered.md](decisions-answered.md), newest first.
 
@@ -19,53 +19,7 @@ To answer a question, write your letter after "Your choice:", or leave it empty 
 
 ## Open questions
 
-### 165. May converted MIRAX and DICOM slides use JPEG tiles instead of lossless?
-
-ADR 0408 (MIRAX and DICOM zips become one tiled TIFF at ingest) stores the converted slide losslessly, so every pixel matches the source. The DICOM fixture came out at 1.08 GB, 8.4 times its zip. At that rate 100 DICOM slides of 1 GB would cost about $13 a month in R2.
-
-- A. JPEG at quality 90. Near the source size, with tiny pixel differences an AI comparison might notice.
-- B. Keep lossless. Exact pixels, about 8 times the storage. (Recommended while only test slides exist, since the cost today is about $0.02 a month.)
-
-Your choice:B
-
-### 171. Can outlines drawn by hand or with one click tools be reviewed by a second person?
-
-From the third deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrough-v0.34.1.md`, issue 5). Today a review task takes only AI result sets, so the wizard greys out a slide whose shapes were drawn by hand, with the single word "no".
-
-- A. Yes, a review task accepts hand drawn and one click objects like AI objects, so a second expert can agree, disagree or fix them. (Recommended, since your path is "annotate by hand or with one click tools, then have it human reviewed".)
-- B. No, the annotate task with its second expert check is the review, and the wizard only says so.
-- C. Yes, but only after the shapes are saved as a result set.
-
-Your choice: A
-
-### 172. May a hidden label image of a de-identified slide stay in storage for 7 days?
-
-From PROTO-150 (upload and model run jobs tell one story). In a de-identified project the app hides a slide's label image, because a label often shows a name or a case number, and then deletes the original copy. The dev bucket keeps every new file locked for 7 days, so that delete is refused and the upload job fails although the slide works. No screen shows the label, it only sits in storage until the lock ends.
-
-- A. Allow it. The job treats the refused delete as done and deletes the copy again after the 7 days. (Recommended, since nobody can open it and the lock protects against losing slides.)
-- B. Never write the label into the locked folder. Uploads to de-identified projects go to a folder without the lock, which needs a new storage rule.
-
-Your choice: a remove that lock it is harmful for now
-
-### 173. When a reviewer disagrees and retypes a cell, can the disagreement queue keep the reviewer's type?
-
-From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md`, issue 3). Today the queue offers only Disagree, which leaves the cell out of the training data, and Agree with the AI, which keeps the AI's class. A reviewer's new type for the cell cannot be kept.
-
-- A. The queue offers a third answer, "Keep with the reviewer's type", which keeps the outline and the new type. (Recommended, since a corrected type is the most useful training data and the choice stays explicit.)
-- B. Keep it as it is. Disagree removes the cell and Agree keeps the AI's class.
-- C. Agree keeps the reviewer's type on its own when a reviewer retyped the cell.
-
-Your choice: a
-
-### 174. Which ID does an outline drawn by hand or with one click get?
-
-From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrough-v0.35.8.md`, round four issue 15). ADR 0071 (object IDs are a kind letter and a per-slide number) gives AI regions T, AI cells C and measurements M. The Objects tab lists every drawn outline, by hand or with Smart select, as a measurement, so two Tumor outlines read M1 and M2 while the AI's Tumor regions read T1 and T2.
-
-- A. A drawn outline gets the letter of its kind and a person mark, as ADR 0071 already gives an object a reviewer adds: a region is T7⁺, a nucleus outline is C3022⁺. M stays for rulers. (Recommended, since one name per thing, and it fits answer A of decision 171 on reviewing hand drawn outlines.)
-- B. Keep M for every drawn shape, since each shows its size, and only rename the group to "Drawn by hand".
-- C. A drawn outline is a region of interest, R1 and R2.
-
-Your choice: a
+None right now.
 
 ## The review column, what each task waits for
 
