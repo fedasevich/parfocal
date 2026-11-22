@@ -2,6 +2,18 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.37.0 (2026-11-22)
+
+### Features
+
+- PROTO-160: Let a review task take a slide's drawn and Smart select outlines
+- PROTO-160: Mark drawn outlines in the queue and dots and review one in the browser
+
+### Docs
+
+- Number the ADRs from the merge
+- PROTO-160: Log the merge and wait for the deployed walk
+
 ## v0.36.0 (2026-11-22)
 
 ### Features
