@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Review Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: a patient teacher explaining to a curious twelve year old, short sentences, no jargon left unexplained.
+IDEA: a black and white printed school workbook about one slide's journey, with numbered stops on a track.
+PICTURE: one large track diagram from slide to exported file, then a small diagram for each stop.
+COLOUR and TYPE: pure black, white and two greys only. Inter Tight for titles, Inter for text.
+LAYOUT: one column of chapters, each a heading that states its point, a drawing, then plain text.
+*/
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#000000);--ink:light-dark(#000000,#ffffff);--soft:light-dark(#f2f2f2,#1a1a1a);--mid:light-dark(#6b6b6b,#a3a3a3);--line:light-dark(#000000,#ffffff)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,64px) max(5vw,16px)}
+.wrap{max-width:1000px;margin:0 auto}
+h1,h2,h3{font-family:"Inter Tight",Inter,sans-serif;line-height:1.08;text-wrap:balance;margin:0 0 14px}
+h1{font-size:clamp(34px,5vw,52px)}
+h2{font-size:clamp(26px,3.4vw,34px);margin-top:8px}
+h3{font-size:20px;margin-top:24px}
+p,li{max-width:68ch}
+.lead{font-size:19px}
+.hero{border-bottom:3px solid var(--line)}
+.dark{background:var(--ink);color:var(--bg)}
+.dark .mid{color:var(--bg);opacity:.75}
+.mid{color:var(--mid)}
+nav.scroll{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:12px max(5vw,16px);border-bottom:1px solid var(--line);background:var(--bg)}
+nav.scroll a{flex:none;color:var(--ink);text-decoration:none;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14px;min-height:44px;display:inline-flex;align-items:center}
+nav.scroll a:hover,nav.scroll a:focus-visible{background:var(--ink);color:var(--bg);outline:none}
+@media(min-width:900px){nav.scroll{position:sticky;top:0;z-index:2}}
+html{scroll-padding-top:80px}
+figure{margin:22px 0}
+figure svg{width:100%;height:auto;display:block;color:var(--ink)}
+figcaption{font-size:14px;color:var(--mid);margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px;margin:18px 0}
+.card{border:2px solid var(--line);border-radius:10px;padding:16px}
+.card h3{margin-top:0;font-size:18px}
+.card p{margin:0;font-size:15.5px}
+.tag{display:inline-block;border:1.5px solid var(--line);border-radius:4px;padding:1px 7px;font-size:13px;font-weight:600;margin-bottom:8px}
+.tag.solid{background:var(--ink);color:var(--bg)}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:15.5px}
+th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top}
+th{border-bottom:2.5px solid var(--line);font-family:"Inter Tight",sans-serif}
+.note{border-left:5px solid var(--line);background:var(--soft);padding:14px 18px;margin:18px 0}
+.note p{margin:0}
+ol.steps{padding-left:0;list-style:none;counter-reset:s}
+ol.steps li{counter-increment:s;position:relative;padding-left:48px;margin:14px 0}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:15px}
+.word{font-weight:600}
+@media(max-width:600px){table{font-size:13.5px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;font-weight:600}.stack td:empty{display:none}}
+@media (prefers-reduced-motion:no-preference){.track .dot{animation:go 9s linear infinite}@keyframes go{0%{offset-distance:0%}100%{offset-distance:100%}}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+
+<header class="band hero">
+<div class="wrap">
+<h1>How a shape on a slide becomes training data</h1>
+<p class="lead">A slide is a giant photo of a thin piece of tissue. People and computers draw shapes on it, like "this is a tumour" or "this is one cell". Before a computer can learn from those shapes, other people check them. This page shows every way a shape gets checked, when the result is ready, and what you can still change and download.</p>
+
+<figure>
+<svg viewBox="0 0 960 300" role="img" aria-label="The whole journey: shapes come from four places, go into a review task or an annotate task, get checked, signed off, built into a final layer, frozen as a dataset version and exported as files." fill="none" stroke="currentColor" font-family="Inter, sans-serif">
+<defs><marker id="a0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs>
+<g stroke-width="2">
+<rect x="10" y="20" width="150" height="44" rx="8"/><rect x="10" y="78" width="150" height="44" rx="8"/><rect x="10" y="136" width="150" height="44" rx="8"/><rect x="10" y="194" width="150" height="44" rx="8"/>
+</g>
+<g font-size="14" fill="currentColor" stroke="none" text-anchor="middle">
+<text x="85" y="47">AI model run</text><text x="85" y="105">Imported AI file</text><text x="85" y="163">Drawn by hand</text><text x="85" y="221">One click tool</text>
+<text x="85" y="268" font-size="13">1. Shapes appear</text>
+</g>
+<g stroke-width="1.6"><path d="M160 42C200 42 200 100 228 100" marker-end="url(#a0)"/><path d="M160 100H228" marker-end="url(#a0)"/><path d="M160 158C200 158 200 186 228 186" marker-end="url(#a0)"/><path d="M160 216C200 216 200 186 228 186" marker-end="url(#a0)"/></g>
+<g stroke-width="2.5"><rect x="232" y="72" width="150" height="56" rx="8"/><rect x="232" y="158" width="150" height="56" rx="8"/></g>
+<g font-size="14" fill="currentColor" stroke="none" text-anchor="middle" font-weight="600">
+<text x="307" y="97">Review task</text><text x="307" y="183">Annotate task</text>
+</g>
+<g font-size="12" fill="currentColor" stroke="none" text-anchor="middle"><text x="307" y="115">people judge AI</text><text x="307" y="201">people draw and fix</text><text x="307" y="268" font-size="13">2. A task is made</text></g>
+<path d="M382 100C420 100 420 140 452 140M382 186C420 186 420 140 452 140" stroke-width="1.6" marker-end="url(#a0)"/>
+<g stroke-width="2"><rect x="456" y="112" width="110" height="56" rx="8"/><rect x="600" y="112" width="100" height="56" rx="28"/><rect x="734" y="112" width="96" height="56" rx="8"/><rect x="864" y="96" width="88" height="88" rx="8"/></g>
+<g stroke-width="1.6"><path d="M566 140H596" marker-end="url(#a0)"/><path d="M700 140H730" marker-end="url(#a0)"/><path d="M830 140H860" marker-end="url(#a0)"/></g>
+<g font-size="14" fill="currentColor" stroke="none" text-anchor="middle" font-weight="600">
+<text x="511" y="137">Checking</text><text x="650" y="137">Sign off</text><text x="782" y="137">Final layer</text><text x="908" y="132">Files</text>
+</g>
+<g font-size="12" fill="currentColor" stroke="none" text-anchor="middle">
+<text x="511" y="155">and the queue</text><text x="650" y="155">with a fresh sign in</text><text x="782" y="155">the answer</text><text x="908" y="150">dataset,</text><text x="908" y="165">patches, report</text>
+<text x="511" y="268" font-size="13">3. People check</text><text x="650" y="268" font-size="13">4. It is final</text><text x="782" y="268" font-size="13">5. Result built</text><text x="908" y="268" font-size="13">6. Download</text>
+</g>
+</svg>
+<figcaption>The whole journey in six stops. Each stop has its own chapter below.</figcaption>
+</figure>
+</div>
+</header>
+
+<nav class="scroll" aria-label="Chapters">
+<a href="#sources">1. Where shapes come from</a><a href="#tasks">2. Two kinds of task</a><a href="#review">3a. Review task</a><a href="#queue">3b. The queue</a><a href="#annotate">3c. Annotate task</a><a href="#signoff">4. Sign off</a><a href="#final">5. The result</a><a href="#change">Changing it later</a><a href="#exports">6. Downloads</a><a href="#soon">Being built now</a><a href="#words">Word list</a>
+</nav>
+
+<section class="band" id="sources"><div class="wrap">
+<h2>1. Shapes come from four places</h2>
+<p>Every shape on a slide is called an <span class="word">object</span>. An object can be a big area, like a patch of tumour, which is called a <span class="word">region</span>. It can also be one tiny <span class="word">cell</span>. Every object remembers where it came from.</p>
+<div class="grid">
+<div class="card"><span class="tag solid">AI</span><h3>An AI model run</h3><p>Someone presses Run a model or Find nuclei. A computer program looks at the slide on a GPU and draws thousands of cells or regions. Each one gets a guess, like "Tumour, 91% sure".</p></div>
+<div class="card"><span class="tag solid">AI</span><h3>An imported AI file</h3><p>A researcher ran their own model somewhere else and uploads its answer as a file, such as GeoJSON or CSV. The app turns it into objects the same way.</p></div>
+<div class="card"><span class="tag">Person</span><h3>Drawn by hand</h3><p>An expert takes the pen or brush and draws the outline around something themselves.</p></div>
+<div class="card"><span class="tag">Person</span><h3>A one click tool</h3><p>Smart select: the expert clicks once on a cell or area and a helper model proposes an outline. The expert keeps it, fixes it or throws it away.</p></div>
+</div>
+<div class="note"><p>The AI's own answer is never changed. When someone fixes an AI object, the app keeps a copy with the fix and a link back to the original. So you can always see what the AI said first.</p></div>
+</div></section>
+
+<section class="band dark" id="tasks"><div class="wrap">
+<h2>2. Checking always happens inside a task</h2>
+<p>A <span class="word">task</span> is a job the researcher gives to people: "please look at these slides". There are two kinds, and they check in different ways.</p>
+<figure>
+<svg viewBox="0 0 900 230" role="img" aria-label="A review task asks each reviewer alone to judge every AI object, and a computer compares their answers. An annotate task gives all experts one shared drawing on which they draw and fix together." fill="none" stroke="currentColor" font-family="Inter, sans-serif">
+<g stroke-width="2.5"><rect x="10" y="10" width="420" height="210" rx="12"/><rect x="470" y="10" width="420" height="210" rx="12"/></g>
+<g fill="currentColor" stroke="none" font-size="17" font-weight="700"><text x="30" y="42">Review task</text><text x="490" y="42">Annotate task</text></g>
+<g stroke-width="2"><circle cx="80" cy="110" r="26"/><circle cx="80" cy="180" r="26"/><rect x="190" y="105" width="90" height="80" rx="8"/><rect x="330" y="125" width="80" height="40" rx="20"/></g>
+<g fill="currentColor" stroke="none" font-size="13" text-anchor="middle"><text x="80" y="115">A</text><text x="80" y="185">B</text><text x="235" y="140">same AI</text><text x="235" y="158">objects</text><text x="370" y="150">compare</text></g>
+<g stroke-width="1.6"><path d="M106 110H186"/><path d="M106 180H186"/><path d="M280 145H326"/></g>
+<g fill="currentColor" stroke="none" font-size="12"><text x="30" y="70">each reviewer alone, cannot see the other</text></g>
+<g stroke-width="2"><circle cx="540" cy="110" r="26"/><circle cx="540" cy="180" r="26"/><rect x="640" y="90" width="230" height="110" rx="8" stroke-dasharray="0"/><path d="M680 170c20-40 60-50 90-30s40 10 60-20" stroke-width="2.5"/></g>
+<g fill="currentColor" stroke="none" font-size="13" text-anchor="middle"><text x="540" y="115">A</text><text x="540" y="185">B</text><text x="755" y="115">one shared drawing</text></g>
+<g stroke-width="1.6"><path d="M566 110H636"/><path d="M566 180H636"/></g>
+<g fill="currentColor" stroke="none" font-size="12"><text x="490" y="70">experts work together on one layer</text></g>
+</svg>
+<figcaption class="mid">Review task: separate answers that get compared. Annotate task: one drawing that people improve together.</figcaption>
+</figure>
+<table class="stack">
+<thead><tr><th>Question</th><th>Review task</th><th>Annotate task</th></tr></thead>
+<tbody>
+<tr><td>What is it for?</td><td>To find out if the AI was right, object by object.</td><td>To make a correct drawing, starting from nothing or from the AI.</td></tr>
+<tr><td>Who works on it?</td><td>Two or more reviewers, each on their own.</td><td>One or more experts, all on the same drawing.</td></tr>
+<tr><td>What do people do?</td><td>Answer a question about each object, and fix or add shapes when needed.</td><td>Draw, fix, confirm or delete shapes.</td></tr>
+<tr><td>Is there a disagreement queue?</td><td>Yes, when reviewers disagree.</td><td>No. Experts see each other's work and agree on one drawing.</td></tr>
+<tr><td>Who closes it?</td><td>The researcher signs off the whole task.</td><td>The researcher signs off each slide.</td></tr>
+</tbody>
+</table>
+</div></section>
+
+<section class="band" id="review"><div class="wrap">
+<h2>3a. In a review task, every reviewer answers about every object</h2>
+<ol class="steps">
+<li>The researcher makes the task. They pick the slides, the AI result to check and the reviewers. They also pick the <span class="word">decision style</span>, which is how the question is asked.</li>
+<li>Each reviewer opens a slide. The app shows one object at a time and asks a question. The usual style is "How sure are you that T2 is tumour?" with five buttons from Certainly not to Certainly. The keys 1 to 5 work too.</li>
+<li>The answer counts as <span class="word">agree</span>, <span class="word">not sure</span> or <span class="word">disagree</span>. With five buttons, 4 and 5 mean agree, 3 means not sure, and 1 and 2 mean disagree.</li>
+<li>While answering, a reviewer can also fix the object: <span class="word">redraw</span> its outline, <span class="word">retype</span> it to another class, or <span class="word">add</span> something the AI missed. Every fix is saved in a history that never gets erased.</li>
+<li>When every object is answered, the reviewer presses Submit for that slide.</li>
+<li>When every reviewer has submitted, the app compares their answers. If they agree, the object is settled. If not, it goes to the queue.</li>
+</ol>
+<div class="grid">
+<div class="card"><h3>Other ways to ask</h3><p>Agree with the AI (Agree, Disagree, Not sure). Yes or no ("Is this tumour?"). Pick the class blind, where the reviewer does not see the AI's guess and chooses the class themselves.</p></div>
+<div class="card"><h3>Blind means fair</h3><p>Reviewers cannot see each other's answers, so nobody copies. Some styles hide the AI's guess too.</p></div>
+<div class="card"><h3>Comments</h3><p>Anyone in the task can start a thread on an object, like a sticky note, and mention a colleague.</p></div>
+</div>
+</div></section>
+
+<section class="band dark" id="queue"><div class="wrap">
+<h2>3b. When people disagree, the object waits in the queue</h2>
+<p>The <span class="word">disagreement queue</span> is a waiting list of objects that need one more person to decide. An object goes there for one of four reasons.</p>
+<figure>
+<svg viewBox="0 0 900 250" role="img" aria-label="Four reasons send an object to the queue. The researcher then decides it, leaves it open on purpose, sends it to an adjudicator who sees reviewers only as A and B, or asks both reviewers to look again." fill="none" stroke="currentColor" font-family="Inter, sans-serif">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" stroke="none"/></marker></defs>
+<g stroke-width="2"><rect x="10" y="14" width="250" height="44" rx="8"/><rect x="10" y="72" width="250" height="44" rx="8"/><rect x="10" y="130" width="250" height="44" rx="8"/><rect x="10" y="188" width="250" height="44" rx="8"/></g>
+<g fill="currentColor" stroke="none" font-size="14" text-anchor="middle"><text x="135" y="41">Reviewers differ</text><text x="135" y="99">Both say the AI is wrong</text><text x="135" y="157">Someone asked a second look</text><text x="135" y="215">Their outlines differ a lot</text></g>
+<g stroke-width="1.6"><path d="M260 36C300 36 300 123 330 123" marker-end="url(#a1)"/><path d="M260 94C300 94 300 123 330 123" marker-end="url(#a1)"/><path d="M260 152C300 152 300 123 330 123" marker-end="url(#a1)"/><path d="M260 210C300 210 300 123 330 123" marker-end="url(#a1)"/></g>
+<rect x="334" y="88" width="150" height="70" rx="35" stroke-width="3"/>
+<g fill="currentColor" stroke="none" text-anchor="middle"><text x="409" y="120" font-size="16" font-weight="700">Queue</text><text x="409" y="140" font-size="12">researcher looks</text></g>
+<g stroke-width="1.6"><path d="M484 123C520 123 520 36 556 36" marker-end="url(#a1)"/><path d="M484 123C520 123 520 94 556 94" marker-end="url(#a1)"/><path d="M484 123C520 123 520 152 556 152" marker-end="url(#a1)"/><path d="M484 123C520 123 520 210 556 210" marker-end="url(#a1)"/></g>
+<g stroke-width="2"><rect x="560" y="14" width="330" height="44" rx="8"/><rect x="560" y="72" width="330" height="44" rx="8"/><rect x="560" y="130" width="330" height="44" rx="8"/><rect x="560" y="188" width="330" height="44" rx="8"/></g>
+<g fill="currentColor" stroke="none" font-size="14" text-anchor="middle"><text x="725" y="41">Decide it themselves</text><text x="725" y="99">Send it to an adjudicator</text><text x="725" y="157">Ask both reviewers to look again</text><text x="725" y="215">Leave it open on purpose</text></g>
+</svg>
+<figcaption class="mid">"Outlines differ a lot" means two reviewers both redrew it and their outlines overlap less than 60%. The researcher can change that number per task.</figcaption>
+</figure>
+<h3>What each answer does to the training data</h3>
+<table class="stack">
+<thead><tr><th>Queue answer</th><th>What happens to the object</th></tr></thead>
+<tbody>
+<tr><td>Agree</td><td>It stays. It uses the outline picked in the queue, or else the fix of a reviewer who agreed, or else the AI's outline.</td></tr>
+<tr><td>Disagree</td><td>It is left out of the training data.</td></tr>
+<tr><td>Disagree and choose a class</td><td>It stays, with the new class.</td></tr>
+<tr><td>Use this outline</td><td>The researcher picks one reviewer's outline, or draws a new one. That outline is copied onto the queue answer.</td></tr>
+<tr><td>Left open on purpose</td><td>Nobody decides it. It is left out and counted, and the report names it.</td></tr>
+</tbody>
+</table>
+<div class="note" style="background:transparent;border-color:var(--bg)"><p>The <span class="word">adjudicator</span> is a referee who was not a reviewer. They see the reviewers only as "Reviewer A" and "Reviewer B", never their names, so they judge the work and not the person. Their answer is added as a third answer and never erases the reviewers' answers.</p></div>
+</div></section>
+
+<section class="band" id="annotate"><div class="wrap">
+<h2>3c. In an annotate task, experts improve one shared drawing</h2>
+<ol class="steps">
+<li>The researcher makes the task and picks a preset, such as "Annotate by hand" (an empty drawing) or "Check a whole slide run" (start from the AI's shapes).</li>
+<li>Experts open the slide and draw with the pen, the brush or Smart select. They can also run a model on part of the slide, and its shapes land on the drawing.</li>
+<li>Each AI object has a <span class="word">check state</span>: unchecked, confirmed, edited or deleted. One key confirms. A <span class="word">guided check</span> walks through the objects one by one, least sure first if the researcher wants.</li>
+<li>Everyone sees everyone's changes, which arrive calmly when you pause. A switch called <span class="word">blind first</span> can hide each expert's new shapes from the others until that expert is done.</li>
+<li>When an expert is happy with a slide, they mark it <span class="word">checked</span>, or "nothing to mark" if it is empty.</li>
+<li>When every expert has checked the slide, the researcher signs that slide off.</li>
+</ol>
+</div></section>
+
+<section class="band dark" id="signoff"><div class="wrap">
+<h2>4. Sign off is the moment it becomes final</h2>
+<p><span class="word">Sign off</span> is like the teacher signing a test. After it, the work is locked.</p>
+<div class="grid">
+<div class="card" style="border-color:var(--bg)"><h3>A review task can be signed off when</h3><p>Every reviewer has submitted every slide, and every object in the queue is decided or left open on purpose. An object still with an adjudicator blocks it.</p></div>
+<div class="card" style="border-color:var(--bg)"><h3>An annotate slide can be signed off when</h3><p>Every expert has checked it. If the task's rule says so, every AI object in scope must be checked too. Open comment threads only give a warning.</p></div>
+<div class="card" style="border-color:var(--bg)"><h3>Prove it is you</h3><p>Signing needs a sign in from the last 5 minutes. If yours is older, the app asks for your password again. A signature by someone who just walked up to an open laptop cannot happen.</p></div>
+</div>
+<p>The sign off window shows the counts and offers three files at once: the report as PDF, the decisions as CSV and the evaluation as JSON. Each carries a checksum, a fingerprint that proves the file was not changed.</p>
+</div></section>
+
+<section class="band" id="final"><div class="wrap">
+<h2>5. The result is the final layer, built at sign off</h2>
+<p>The <span class="word">final layer</span> is the clean answer for each slide: one list of objects that people checked, each with its class and outline. It is built in the same moment as the sign off.</p>
+<figure>
+<svg viewBox="0 0 900 200" role="img" aria-label="Each AI object ends as confirmed, edited or rejected, objects people added stay as human, and unsure or open objects are left out and counted." fill="none" stroke="currentColor" font-family="Inter, sans-serif">
+<g stroke-width="2"><rect x="10" y="20" width="200" height="160" rx="10"/></g>
+<g fill="currentColor" stroke="none" font-size="15" font-weight="700" text-anchor="middle"><text x="110" y="90">All objects</text></g>
+<g fill="currentColor" stroke="none" font-size="12" text-anchor="middle"><text x="110" y="112">after checking</text></g>
+<g stroke-width="1.6"><path d="M210 100H270"/><path d="M270 40V180"/><path d="M270 40H300M270 75H300M270 110H300M270 145H300M270 180H300"/></g>
+<g stroke-width="2"><rect x="300" y="24" width="250" height="32" rx="6"/><rect x="300" y="59" width="250" height="32" rx="6"/><rect x="300" y="94" width="250" height="32" rx="6"/><rect x="300" y="129" width="250" height="32" rx="6"/><rect x="300" y="164" width="250" height="32" rx="6" stroke-dasharray="5 4"/></g>
+<g fill="currentColor" stroke="none" font-size="13"><text x="314" y="45">ai-confirmed: the AI was right</text><text x="314" y="80">ai-edited: right, with a fix</text><text x="314" y="115">rejected: the AI was wrong</text><text x="314" y="150">human: a person added it</text><text x="314" y="185">unsure or open: left out</text></g>
+<g stroke-width="2"><rect x="620" y="40" width="270" height="120" rx="10" stroke-width="3"/></g>
+<g stroke-width="1.6"><path d="M550 40H600V140H620M550 75H600M550 145H600"/></g>
+<g fill="currentColor" stroke="none" text-anchor="middle"><text x="755" y="90" font-size="16" font-weight="700">Goes into training data</text><text x="755" y="114" font-size="13">confirmed, edited and human</text><text x="755" y="134" font-size="13">rejected are dropped</text></g>
+</svg>
+<figcaption>What becomes of each object. Only things a person checked go into the training data. Unsure and open objects are counted, so you know what was left out.</figcaption>
+</figure>
+<h3>When is each result ready?</h3>
+<table class="stack">
+<thead><tr><th>Moment</th><th>What you get</th></tr></thead>
+<tbody>
+<tr><td>While people work</td><td>Live progress: how many objects are decided, how many wait in the queue. Nothing is final yet.</td></tr>
+<tr><td>A reviewer submits a slide</td><td>That reviewer's answers for that slide are in. They can still be reopened by the researcher.</td></tr>
+<tr><td>Sign off</td><td>The final layer is built, the report and its three files are ready, and the training dataset can be downloaded.</td></tr>
+<tr><td>Freeze a dataset version</td><td>A numbered copy that never changes, such as version 1, with a note, the filters used, who froze it and when.</td></tr>
+</tbody>
+</table>
+</div></section>
+
+<section class="band dark" id="change"><div class="wrap">
+<h2>Yes, it can be changed later, and every change leaves a trace</h2>
+<div class="grid">
+<div class="card" style="border-color:var(--bg)"><h3>Before sign off</h3><p>Reviewers can change their answers and fixes. The researcher can ask both reviewers to look again, which reopens their answers with a note instead of deleting them. Undo works on fixes.</p></div>
+<div class="card" style="border-color:var(--bg)"><h3>After sign off</h3><p>Only the project owner can still change things, and must write a reason. Each change goes into a change log with who, when and why.</p></div>
+<div class="card" style="border-color:var(--bg)"><h3>The signed fingerprint stays</h3><p>The PDF says the checksum belongs to the version as signed, and lists the changes after sign off in a table at the end.</p></div>
+<div class="card" style="border-color:var(--bg)"><h3>Build it again</h3><p>After a change, the Dataset page has a button to build the final layer again. Every build is kept, the newest is used.</p></div>
+<div class="card" style="border-color:var(--bg)"><h3>Old versions never move</h3><p>A frozen dataset version can never be overwritten. A change means freezing a new version with the next number. Every download checks the fingerprint first.</p></div>
+</div>
+</div></section>
+
+<section class="band" id="exports"><div class="wrap">
+<h2>6. What you can download</h2>
+<p>Only slides that are signed off go into training files. If none are, the app says "nothing signed off" in words.</p>
+<table class="stack">
+<thead><tr><th>File</th><th>What is inside</th><th>Who it is for</th></tr></thead>
+<tbody>
+<tr><td>Training dataset</td><td>A zip with one QuPath GeoJSON file per slide: every object with its class, colour, ID, origin and who made it as a letter, never a name. A manifest lists the slides, the sizes and a checksum per file.</td><td>Someone training a model, or opening the shapes in QuPath.</td></tr>
+<tr><td>Patches with masks</td><td>The slide cut into small square tiles, each with a black and white mask where every pixel says which class it is, plus an index table. You choose the zoom level and tile size. It runs as a job and you get a notice when it is done.</td><td>Training a model that learns from pixels.</td></tr>
+<tr><td>COCO</td><td>The same patches with their shapes in the COCO JSON format that many AI tools read.</td><td>Tools that expect COCO.</td></tr>
+<tr><td>Dataset version</td><td>A frozen zip with a number, a note, filters such as which classes and origins, and a SHA-256 fingerprint. Patches can be cut from a version, so they match it exactly.</td><td>Repeating an experiment months later with the same data.</td></tr>
+<tr><td>Consensus export</td><td>The agreed answer per object of a review task, with the outline the queue settled.</td><td>Comparing people with the AI.</td></tr>
+<tr><td>Report PDF, CSV and JSON</td><td>The evaluation: how often reviewers agreed with the AI, per class, with an appendix naming agreed, disagreed and unsure objects.</td><td>The researcher, a paper or a supervisor.</td></tr>
+</tbody>
+</table>
+<div class="note"><p>Arrows, text notes and rulers are for people, so they never go into training files. They are only counted.</p></div>
+</div></section>
+
+<section class="band dark" id="soon"><div class="wrap">
+<h2>Being built now, from your answers of 22 November</h2>
+<div class="grid">
+<div class="card" style="border-color:var(--bg)"><span class="tag" style="border-color:var(--bg)">Coming</span><h3>Review what people drew</h3><p>A review task will accept shapes drawn by hand or with Smart select, not only AI shapes. So a second expert can agree, disagree or fix a colleague's outline.</p></div>
+<div class="card" style="border-color:var(--bg)"><span class="tag" style="border-color:var(--bg)">Coming</span><h3>Keep the reviewer's type</h3><p>The queue will get a third answer, "Keep with the reviewer's type", for an object a reviewer gave a new class. The outline stays and the new class goes into the data.</p></div>
+<div class="card" style="border-color:var(--bg)"><span class="tag" style="border-color:var(--bg)">Coming</span><h3>Better names for drawn shapes</h3><p>A drawn tumour outline will be called T7⁺ instead of M1. The letter says what it is and the small plus says a person drew it. M stays for rulers.</p></div>
+</div>
+</div></section>
+
+<section class="band" id="words"><div class="wrap">
+<h2>Word list</h2>
+<table class="stack">
+<thead><tr><th>Word</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>Slide</td><td>A huge photo of a thin slice of tissue, so big you zoom in like a map.</td></tr>
+<tr><td>Object</td><td>Any shape on a slide: a region or a cell.</td></tr>
+<tr><td>Result set</td><td>All the objects one AI run or one imported file made for a slide.</td></tr>
+<tr><td>Object ID</td><td>A short name you can say out loud: T2 for a tumour region, C145 for a cell, M1 for a ruler.</td></tr>
+<tr><td>Researcher</td><td>The person who makes tasks, decides the queue and signs off.</td></tr>
+<tr><td>Reviewer or expert</td><td>A doctor or specialist who checks objects. Reviewers work in review tasks, experts in annotate tasks.</td></tr>
+<tr><td>Adjudicator</td><td>A referee who decides objects the reviewers disagreed on, without knowing who the reviewers are.</td></tr>
+<tr><td>Checksum</td><td>A fingerprint of a file. If even one letter changes, the fingerprint changes.</td></tr>
+<tr><td>Final layer</td><td>The clean, checked answer for a slide, built at sign off.</td></tr>
+<tr><td>Dataset version</td><td>A frozen, numbered copy of the training data that never changes.</td></tr>
+</tbody>
+</table>
+<p class="mid">Written on 22 November 2026 from the design records of the deployed app, release v0.35.13.</p>
+</div></section>
+
+</body>
+</html>
