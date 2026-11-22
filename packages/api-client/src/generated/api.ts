@@ -2575,6 +2575,7 @@ export const QueueRowState = {
 
 export interface QueueRowDecision {
   raw: string;
+  kept_type?: string | null;
   note: string | null;
   by_user_id: string;
   at: string;
@@ -4370,6 +4371,12 @@ export interface JoinableWorkspace {
   projects: number;
   how: JoinPolicy;
   asked: boolean;
+}
+
+export interface KeptTypeDraft {
+  class_id: string;
+  note?: ParfocalApiDisagreementsNote | null;
+  reason?: ChangeReason | null;
 }
 
 export type LabConnectionTestOutcome =
@@ -6260,6 +6267,7 @@ export const QueueAction = {
   "leave-open": "leave-open",
   "look-again": "look-again",
   "keep-decisions": "keep-decisions",
+  "keep-type": "keep-type",
 } as const;
 
 export type QueueAnswer = (typeof QueueAnswer)[keyof typeof QueueAnswer];
@@ -6274,6 +6282,7 @@ export interface QueueDecision {
   style: DecisionStyle | null;
   answer: string | null;
   answer_class_id: string | null;
+  kept_class_id?: string | null;
   value: DecisionValue;
   choice: Decision | null;
   decided_by_user_id: string | null;
@@ -66541,6 +66550,182 @@ export const useClearDisagreementDecision = <TError = Problem, TContext = unknow
   TContext
 > => {
   return useMutation(getClearDisagreementDecisionMutationOptions(options), queryClient);
+};
+
+export type keepReviewerTypeResponse200 = {
+  data: QueuedObject;
+  status: 200;
+};
+
+export type keepReviewerTypeResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type keepReviewerTypeResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type keepReviewerTypeResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type keepReviewerTypeResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type keepReviewerTypeResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type keepReviewerTypeResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type keepReviewerTypeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type keepReviewerTypeResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type keepReviewerTypeResponseSuccess = keepReviewerTypeResponse200 & {
+  headers: Headers;
+};
+export type keepReviewerTypeResponseError = (
+  | keepReviewerTypeResponse400
+  | keepReviewerTypeResponse401
+  | keepReviewerTypeResponse403
+  | keepReviewerTypeResponse404
+  | keepReviewerTypeResponse409
+  | keepReviewerTypeResponse422
+  | keepReviewerTypeResponse429
+  | keepReviewerTypeResponse500
+) & {
+  headers: Headers;
+};
+
+export type keepReviewerTypeResponse =
+  | keepReviewerTypeResponseSuccess
+  | keepReviewerTypeResponseError;
+
+export const getKeepReviewerTypeUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/disagreements/${slideId}/${objectId}/kept-type`;
+};
+
+/**
+ * @summary Keep Reviewer Type
+ */
+export const keepReviewerType = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  keptTypeDraft: KeptTypeDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<keepReviewerTypeResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<keepReviewerTypeResponse>(getKeepReviewerTypeUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(keptTypeDraft),
+  });
+};
+
+export const getKeepReviewerTypeMutationKey = () => ["keepReviewerType"] as const;
+
+export const getKeepReviewerTypeMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof keepReviewerType>>,
+    TError,
+    KeepReviewerTypeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof keepReviewerType>>,
+  TError,
+  KeepReviewerTypeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getKeepReviewerTypeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof keepReviewerType>>,
+    KeepReviewerTypeMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return keepReviewerType(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type KeepReviewerTypeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof keepReviewerType>>
+>;
+export type KeepReviewerTypeMutationBody = KeptTypeDraft;
+export type KeepReviewerTypeMutationError = Problem;
+export type KeepReviewerTypeMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: KeptTypeDraft;
+};
+
+/**
+ * @summary Keep Reviewer Type
+ */
+export const useKeepReviewerType = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof keepReviewerType>>,
+      TError,
+      KeepReviewerTypeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof keepReviewerType>>,
+  TError,
+  KeepReviewerTypeMutationVariables,
+  TContext
+> => {
+  return useMutation(getKeepReviewerTypeMutationOptions(options), queryClient);
 };
 
 export type leaveDisagreementOpenResponse200 = {

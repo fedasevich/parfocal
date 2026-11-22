@@ -124,6 +124,11 @@ msgstr " Every object has an ID."
 msgid " in {projectCode}"
 msgstr " in {projectCode}"
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid " Keep with the reviewer's type keeps the settled outline, or else the AI's, with the reviewer's type, and counts {0} as edited."
+msgstr " Keep with the reviewer's type keeps the settled outline, or else the AI's, with the reviewer's type, and counts {0} as edited."
+
 #: src/screens/review/guided-review.tsx
 #: src/viewer/stage-coach.tsx
 msgid " or $1"
@@ -9135,6 +9140,10 @@ msgstr "Just now"
 msgid "Keep all loose"
 msgstr "Keep all loose"
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Keep as {className}"
+msgstr "Keep as {className}"
+
 #: src/screens/admin/retention.tsx
 msgid "Keep audit events for"
 msgstr "Keep audit events for"
@@ -9176,6 +9185,10 @@ msgstr "Keep theirs"
 msgid "Keep with no score"
 msgstr "Keep with no score"
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Keep with the reviewer's type"
+msgstr "Keep with the reviewer's type"
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č."
 msgstr "Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č."
@@ -9207,6 +9220,11 @@ msgstr "Kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so 
 #: src/screens/upload/result-problems.tsx
 msgid "Kept with no score"
 msgstr "Kept with no score"
+
+#. placeholder {0}: row.decision.kept_type
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Kept with the reviewer's type, {0}"
+msgstr "Kept with the reviewer's type, {0}"
 
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/project/add-class-modal.tsx

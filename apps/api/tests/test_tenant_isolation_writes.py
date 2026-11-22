@@ -435,6 +435,11 @@ WRITE_ROUTES: dict[str, Write] = {
     "clearDisagreementDecision": Write(path=OBJECT),
     "keepReviewerDecisions": Write(path=OBJECT, owner=CONFLICT),
     "leaveDisagreementOpen": Write(path=OBJECT, body=constant({}), owner=CONFLICT),
+    "keepReviewerType": Write(
+        path=OBJECT,
+        body=constant({"class_id": "00000000-0000-4000-8000-000000000000"}),
+        owner=CONFLICT,
+    ),
     "askReviewersToLookAgain": Write(path=OBJECT, body=constant({}), owner=CONFLICT),
     "startEvaluationVersion": Write(
         body=constant({"reason": "A corrected class list"}), owner=CONFLICT

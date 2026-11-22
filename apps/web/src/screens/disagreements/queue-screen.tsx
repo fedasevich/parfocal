@@ -486,11 +486,17 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                 <EvidenceRow icon="check" title={t`Decision`}>
                   {row.decision ? (
                     <>
-                      <StatusTag
-                        tone={answerTone[countOf(style, row.decision.raw, row.ai.class_name)]}
-                      >
-                        {styledWord(style, row.decision.raw, classes, row.ai.class_name)}
-                      </StatusTag>
+                      {row.decision.kept_type ? (
+                        <StatusTag tone={answerTone.disagree} data-testid="decision-kept-type">
+                          <Trans>Kept with the reviewer's type, {row.decision.kept_type}</Trans>
+                        </StatusTag>
+                      ) : (
+                        <StatusTag
+                          tone={answerTone[countOf(style, row.decision.raw, row.ai.class_name)]}
+                        >
+                          {styledWord(style, row.decision.raw, classes, row.ai.class_name)}
+                        </StatusTag>
+                      )}
                       {row.state === "adjudicated" ? (
                         <small className="text-caption text-fg-dim">
                           <Trans>{nameOf(row.decision.by_user_id)}, adjudicator</Trans>
@@ -550,6 +556,20 @@ export function QueueScreen({ taskId }: { taskId: string }) {
                   person={person}
                   onNote={(text) => setNotes((now) => ({ ...now, [row.key]: text }))}
                   onDecide={(raw) => decide(row, raw)}
+                  onKeepType={(className) => {
+                    update.mutate({
+                      taskId,
+                      slideId: row.slide_id,
+                      objectId: row.object,
+                      data: {
+                        action: "keep-type",
+                        raw: className,
+                        note: notes[row.key]?.trim() || null,
+                      },
+                    });
+                    const next = nextOpen(rows, row);
+                    if (next) select(next.key);
+                  }}
                   drawing={drawing.drawingKey === row.key}
                   onLeaveOpen={() => {
                     update.mutate({
@@ -640,6 +660,7 @@ type DecidePanelProps = {
   person: ReturnType<typeof usePeople>;
   onNote: (text: string) => void;
   onDecide: (raw: string) => void;
+  onKeepType: (className: string) => void;
   drawing: boolean;
   onLeaveOpen: () => void;
   onSend: (keys: string[], excluded: string[]) => void;
@@ -661,6 +682,7 @@ function DecidePanel({
   person,
   onNote,
   onDecide,
+  onKeepType,
   drawing,
   onLeaveOpen,
   onSend,
@@ -750,6 +772,9 @@ function DecidePanel({
       : ""
   }`;
   const declinedKeys = rows.filter((item) => item.state === "declined").map((item) => item.key);
+  const retypes = [
+    ...new Set(row.answers.flatMap((answer) => (answer.retyped_to ? [answer.retyped_to] : []))),
+  ];
   return (
     <div className="grid gap-3">
       {head}
@@ -796,19 +821,43 @@ function DecidePanel({
         onValueChange={onDecide}
         disabled={drawing}
       />
+      {retypes.length ? (
+        <div className="flex flex-wrap gap-2">
+          {retypes.map((className) => (
+            <Button
+              key={className}
+              data-testid="queue-keep-type"
+              aria-pressed={row.decision?.kept_type === className}
+              disabled={drawing}
+              onClick={() => onKeepType(className)}
+            >
+              {retypes.length === 1 ? (
+                <Trans>Keep with the reviewer's type</Trans>
+              ) : (
+                <Trans>Keep as {className}</Trans>
+              )}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       {look.style.kind === "agree" ? (
         <p data-testid="queue-mapping" className="m-0 text-body-sm text-fg-dim">
           {mapping}
         </p>
       ) : null}
-      {(row.outlines ?? []).length ||
-      row.settled_outline ||
-      row.answers.some((a) => a.retyped_to) ? (
+      {(row.outlines ?? []).length || row.settled_outline || retypes.length ? (
         <p data-testid="queue-training-note" className="m-0 text-body-sm text-fg-dim">
           <Trans>
             In the training data, Disagree removes {row.object}, a settled outline included. Agree
             keeps the settled outline, or else the edits of the reviewers who agreed.
           </Trans>
+          {retypes.length ? (
+            <Trans>
+              {" "}
+              Keep with the reviewer's type keeps the settled outline, or else the AI's, with the
+              reviewer's type, and counts {row.object} as edited.
+            </Trans>
+          ) : null}
         </p>
       ) : null}
       {row.state === "declined" && row.adjudicator ? (

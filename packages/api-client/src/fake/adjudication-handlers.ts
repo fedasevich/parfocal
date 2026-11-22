@@ -127,6 +127,7 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
     : live.decision
       ? {
           raw: live.decision.raw,
+          kept_type: live.decision.keptType ?? null,
           note: live.decision.note,
           by_user_id: idOf(live.decision.by),
           at: live.decision.at,
@@ -602,6 +603,24 @@ const updateQueuedObjectInScene = () =>
         Object.assign(live, {
           state: "decided",
           decision: { raw: body.raw, note: body.note ?? null, by: researcher, at: scenarioNow },
+        });
+      }
+      if (body.action === "keep-type") {
+        if (!body.raw || seed.edited?.retypedTo !== body.raw) {
+          return HttpResponse.json(
+            { status: 400, code: "not-retyped", title: "No reviewer gave this object that type" },
+            { status: 400 },
+          );
+        }
+        Object.assign(live, {
+          state: "decided",
+          decision: {
+            raw: "",
+            keptType: body.raw,
+            note: body.note ?? null,
+            by: researcher,
+            at: scenarioNow,
+          },
         });
       }
       if (body.action === "leave-open") Object.assign(live, { state: "left-open", decision: null });

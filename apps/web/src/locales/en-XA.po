@@ -124,6 +124,11 @@ msgstr ""
 msgid " in {projectCode}"
 msgstr ""
 
+#. placeholder {0}: row.object
+#: src/screens/disagreements/queue-screen.tsx
+msgid " Keep with the reviewer's type keeps the settled outline, or else the AI's, with the reviewer's type, and counts {0} as edited."
+msgstr ""
+
 #: src/screens/review/guided-review.tsx
 #: src/viewer/stage-coach.tsx
 msgid " or $1"
@@ -9130,6 +9135,10 @@ msgstr ""
 msgid "Keep all loose"
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Keep as {className}"
+msgstr ""
+
 #: src/screens/admin/retention.tsx
 msgid "Keep audit events for"
 msgstr ""
@@ -9171,6 +9180,10 @@ msgstr ""
 msgid "Keep with no score"
 msgstr ""
 
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Keep with the reviewer's type"
+msgstr ""
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č."
 msgstr ""
@@ -9201,6 +9214,11 @@ msgstr ""
 
 #: src/screens/upload/result-problems.tsx
 msgid "Kept with no score"
+msgstr ""
+
+#. placeholder {0}: row.decision.kept_type
+#: src/screens/disagreements/queue-screen.tsx
+msgid "Kept with the reviewer's type, {0}"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx

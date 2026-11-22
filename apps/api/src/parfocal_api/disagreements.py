@@ -66,6 +66,7 @@ class QueueDecision(BaseModel):
     style: DecisionStyle | None
     answer: str | None
     answer_class_id: uuid.UUID | None
+    kept_class_id: uuid.UUID | None = None
     value: DecisionValue
     choice: Decision | None
     decided_by_user_id: uuid.UUID | None
@@ -140,6 +141,12 @@ class DecisionDraft(BaseModel):
     reason: ChangeReason | None = None
 
 
+class KeptTypeDraft(BaseModel):
+    class_id: uuid.UUID
+    note: Note | None = None
+    reason: ChangeReason | None = None
+
+
 class NoteDraft(BaseModel):
     note: Note | None = None
     reason: ChangeReason | None = None
@@ -183,6 +190,11 @@ class WithAdjudicatorError(ConflictError):
 class NotReviewerOutlineError(BadRequestError):
     code = "not-a-reviewer-outline"
     title = "That person has no outline of this object to pick"
+
+
+class NotRetypedError(BadRequestError):
+    code = "not-retyped"
+    title = "No reviewer gave this object that type"
 
 
 class LookingAgainError(ConflictError):
@@ -248,6 +260,7 @@ def decision_of(row: Any) -> QueueDecision | None:
         style=DecisionStyle(row.style) if row.style else None,
         answer=row.answer,
         answer_class_id=row.answer_class_id,
+        kept_class_id=row.kept_class_id,
         value=DecisionValue(row.value),
         choice=Decision(row.decision) if row.decision else None,
         decided_by_user_id=row.decided_by_user_id,
@@ -645,6 +658,7 @@ UNDECIDED = {
     "style": None,
     "answer": None,
     "answer_class_id": None,
+    "kept_class_id": None,
     "value": None,
     "left_open": False,
     "note": None,
@@ -822,6 +836,68 @@ async def decide_disagreement(
         slide_id,
         found,
         {"style": task.decision_style, "answer": draft.answer, "value": value.value, **late},
+    )
+    return await refreshed(connection, task_id, slide_id, found)
+
+
+async def reviewer_types(
+    connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID, found: ObjectId
+) -> set[uuid.UUID]:
+    rows = await connection.scalars(
+        select(review_edits.c.class_id).where(
+            review_edits.c.task_id == task_id,
+            review_edits.c.slide_id == slide_id,
+            review_edits.c.kind == KINDS[found.letter],
+            review_edits.c.number == found.number,
+            review_edits.c.class_id.is_not(None),
+            review_edits.c.split == "",
+            review_edits.c.deleted.is_(False),
+            review_edits.c.retired.is_(None),
+        )
+    )
+    return set(rows)
+
+
+@router.put(
+    "/{slide_id}/{object_id}/kept-type",
+    operation_id="keepReviewerType",
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def keep_reviewer_type(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    draft: KeptTypeDraft,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> QueuedObject:
+    task, found, item = await decidable(
+        connection, principal, task_id, slide_id, object_id, Late(draft.reason)
+    )
+    if item.looking_again:
+        raise LookingAgainError
+    if item.with_adjudicator():
+        raise WithAdjudicatorError
+    if draft.class_id not in await reviewer_types(connection, task_id, slide_id, found):
+        raise NotRetypedError
+    values = UNDECIDED | {
+        "kept_class_id": draft.class_id,
+        "value": DecisionValue.DISAGREE,
+        "note": draft.note or None,
+        "decided_by_user_id": decider(principal),
+    }
+    await store(connection, task, slide_id, found, values, values)
+    late = await changed_after_sign_off(
+        connection, principal, task, slide_id, found, "Kept the reviewer's type", draft.reason
+    )
+    await audit(
+        connection,
+        principal,
+        AuditAction.REVIEW_DECISION_SET,
+        task,
+        slide_id,
+        found,
+        {"kept_type": True, "value": DecisionValue.DISAGREE.value, **late},
     )
     return await refreshed(connection, task_id, slide_id, found)
 

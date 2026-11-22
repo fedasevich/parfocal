@@ -245,7 +245,7 @@ def outcome_of(consensus: engine.Consensus, key: Key, facts: Facts) -> Outcome:
         else None
     )
     shape_changer = judged.outline_by_user_id if shape is not None and judged is not None else None
-    answer_class = judged.answer_class_id if judged is not None else None
+    answer_class = judged.answer_class_id or judged.kept_class_id if judged is not None else None
     retype: Retype | None = (
         Retype(answer_class, judged.decided_by_user_id)
         if answer_class is not None and judged is not None

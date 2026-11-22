@@ -15,7 +15,9 @@ from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.decision_styles import ANSWERS
 from parfocal_api.disagreements import (
     DecisionDraft,
+    KeptTypeDraft,
     NoteDraft,
+    NotRetypedError,
     OutlineDraft,
     QueuedObject,
     QueueHiddenError,
@@ -25,6 +27,7 @@ from parfocal_api.disagreements import (
     clear_outline,
     decide_disagreement,
     keep_reviewer_decisions,
+    keep_reviewer_type,
     leave_disagreement_open,
     owner_outline_object,
     queue_of,
@@ -85,6 +88,7 @@ class QueueAction(StrEnum):
     LEAVE_OPEN = "leave-open"
     LOOK_AGAIN = "look-again"
     KEEP_DECISIONS = "keep-decisions"
+    KEEP_TYPE = "keep-type"
 
 
 class QueueAnswer(StrEnum):
@@ -115,6 +119,7 @@ class QueueAnswerRecord(BaseModel):
 
 class QueueRowDecision(BaseModel):
     raw: str
+    kept_type: str | None = None
     note: str | None
     by_user_id: uuid.UUID
     at: datetime
@@ -467,6 +472,9 @@ def row_of(item: QueuedObject, facts: QueueFacts) -> QueueRow:
         if decision is None or decision.decided_by_user_id is None
         else QueueRowDecision(
             raw=raw_of(decision.answer, decision.answer_class_id, facts.names),
+            kept_type=None
+            if decision.kept_class_id is None
+            else facts.names.get(decision.kept_class_id),
             note=item.note,
             by_user_id=decision.decided_by_user_id,
             at=facts.decided.get(key_of(item), datetime.now().astimezone()),
@@ -555,6 +563,20 @@ async def answer_for(
     return CLASS_ANSWER, class_id
 
 
+async def kept_class(connection: AsyncConnection, task: Any, raw: str | None) -> uuid.UUID:
+    if raw is None:
+        raise RawNeededError
+    class_id = await connection.scalar(
+        select(project_classes.c.id).where(
+            project_classes.c.project_id == task.project_id,
+            func.lower(project_classes.c.name) == raw.lower(),
+        )
+    )
+    if class_id is None:
+        raise NotRetypedError
+    return class_id
+
+
 async def queued_row(
     connection: AsyncConnection,
     store: ResultStore,
@@ -611,6 +633,17 @@ async def update_queued_object(
             )
         case QueueAction.KEEP_DECISIONS:
             await keep_reviewer_decisions(task_id, slide_id, object_id, principal, connection)
+        case QueueAction.KEEP_TYPE:
+            await keep_reviewer_type(
+                task_id,
+                slide_id,
+                object_id,
+                KeptTypeDraft(
+                    class_id=await kept_class(connection, task, update.raw), note=update.note
+                ),
+                principal,
+                connection,
+            )
     return await queued_row(connection, results, task, slide_id, object_id)
 
 
