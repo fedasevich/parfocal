@@ -2,6 +2,12 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.38.1 (2026-11-22)
+
+### Fixes
+
+- PROTO-163: Word the opinion form, outline settle and overlap note for drawn tasks
+
 ## v0.38.0 (2026-11-22)
 
 ### Features
