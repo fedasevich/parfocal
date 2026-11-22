@@ -7,6 +7,7 @@ import {
   listShapes,
   placePin,
 } from "./document.ts";
+import { drawnObjectIds } from "./drawn-object-ids.ts";
 import { type History, record } from "./history.ts";
 import {
   at,
@@ -159,9 +160,10 @@ export function geometryOf(shape: Shape): Json {
   }
 }
 
-function ownDetails(shape: Shape, names: ClassNames): Json {
+function ownDetails(shape: Shape, names: ClassNames, objectId: string | undefined): Json {
   return {
     id: shape.id,
+    ...(objectId === undefined ? {} : { object_id: objectId }),
     shape: shape.kind,
     points: Array.from(shape.points),
     ring_starts: Array.from(shape.ringStarts),
@@ -194,6 +196,7 @@ function pinsOf(doc: AnnotationDocument): Json[] {
 }
 
 export function toOwnJson(doc: AnnotationDocument, names: ClassNames = sameClassNames): Json {
+  const ids = drawnObjectIds(doc);
   return {
     format: ownFormat,
     version: ownVersion,
@@ -203,7 +206,7 @@ export function toOwnJson(doc: AnnotationDocument, names: ClassNames = sameClass
     objects: listShapes(doc).map((shape) => {
       const kind = layerKinds[shape.kind];
       return {
-        ...ownDetails(shape, names),
+        ...ownDetails(shape, names, ids.get(shape.id)?.ascii),
         ...(kind === undefined ? {} : { kind }),
         geometry: geometryOf(shape),
       };
@@ -212,6 +215,7 @@ export function toOwnJson(doc: AnnotationDocument, names: ClassNames = sameClass
 }
 
 export function toGeoJson(doc: AnnotationDocument, names: ClassNames = sameClassNames): Json {
+  const ids = drawnObjectIds(doc);
   return {
     type: "FeatureCollection",
     parfocal: {
@@ -231,7 +235,7 @@ export function toGeoJson(doc: AnnotationDocument, names: ClassNames = sameClass
           ? {}
           : { classification: { name: names.nameOf(shape.classKey) } }),
         ...(shape.text === null ? {} : { name: shape.text }),
-        parfocal: ownDetails(shape, names),
+        parfocal: ownDetails(shape, names, ids.get(shape.id)?.ascii),
       },
     })),
   };
