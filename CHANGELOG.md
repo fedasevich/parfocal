@@ -2,6 +2,31 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.36.0 (2026-11-22)
+
+### Features
+
+- PROTO-162: Name drawn outlines by kind letter and person mark, rulers keep M
+- PROTO-162: Show the server code of a saved drawn shape in the Objects tab and review card
+- PROTO-161: Let the disagreement queue keep a reviewer's new type
+
+### Fixes
+
+- OPS-009: Let Modal budgets use the whole monthly credit
+
+### Docs
+
+- OPS-009: Log the owner's delete of the Modal staging environment
+- OPS-009: Apply the owner's answers and switch the tenant object lock off
+- OPS-009: Move the answered decisions and add the lock step to OPS-014
+- PROTO-162: Log the merge and wait for the deployed check
+- PROTO-161: Log the merge and wait for the deployed check
+- PROTO-161: Add a plain explainer of how review works
+
+### Other
+
+- PROTO-161: Claim PROTO-161 PROTO-162 PROTO-160 for the parallel run
+
 ## v0.35.13 (2026-11-22)
 
 ### Fixes
