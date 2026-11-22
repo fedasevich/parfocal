@@ -2,6 +2,21 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.38.0 (2026-11-22)
+
+### Features
+
+- PROTO-163: Read drawn objects as drawn in the wizard, queue, sign-off and export
+
+### Fixes
+
+- PROTO-163: Guard the last shown dataset origin and tighten the drawn review checks
+- PROTO-163: Drop AI wording and model scores from the rest of a drawn review
+
+### Docs
+
+- PROTO-160: Tick the drawn review tasks after the deployed walk
+
 ## v0.37.0 (2026-11-22)
 
 ### Features
