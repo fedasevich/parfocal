@@ -46,8 +46,7 @@ test("the queue's Decide panel names who drew the outline and with which tool", 
   await expect(page.getByText(/^Drawn by .+ (by hand|with Smart select)$/).first()).toBeVisible();
   await expect(page.getByText(/% sure$/)).toHaveCount(0);
   await expect(panel).not.toContainText(aiWording);
-  const mapping = panel.getByTestId("queue-mapping");
-  if (await mapping.count()) await expect(mapping).toContainText("Agree keeps the outline");
+  await expect(panel.getByTestId("queue-mapping")).toContainText(/^Agree keeps the outline \S+/);
 });
 
 test("the sign-off of a drawn review shows no model scores", async ({ page }) => {

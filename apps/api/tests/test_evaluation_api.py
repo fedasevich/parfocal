@@ -60,6 +60,7 @@ def test_the_evaluation_matches_the_hand_computed_task(api: ApiAs, database: str
     response = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/evaluation")
     assert response.status_code == 200, response.text
     body = response.json()
+    assert body["ai_result"] is True
     by_class = {(item["kind"], item["class_name"]): item for item in body["classes"]}
     regions = by_class[("region", "unclassified")]
     assert (regions["true_positives"], regions["false_positives"], regions["false_negatives"]) == (

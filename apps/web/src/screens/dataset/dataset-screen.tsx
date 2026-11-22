@@ -234,21 +234,23 @@ function Filters({
   const names = useOriginNames();
   const classIds = classes.map((item) => item.id);
   const slideIds = base.slides.map((slide) => slide.slide_id);
+  const shown = checkedOrigins.filter(
+    (origin) => !drawnOrigins.has(origin) || (base.objects[origin] ?? 0) > 0,
+  );
+  const picked = shown.filter((origin) => filters.origins.includes(origin));
   return (
     <aside className="grid content-start gap-4" data-testid="dataset-filters">
       <Section title={<Trans>Origin</Trans>}>
-        {checkedOrigins
-          .filter((origin) => !drawnOrigins.has(origin) || (base.objects[origin] ?? 0) > 0)
-          .map((origin: CheckedOrigin) => (
-            <Choice
-              key={origin}
-              testId={`filter-origin-${origin}`}
-              label={names[origin]}
-              checked={filters.origins.includes(origin)}
-              disabled={filters.origins.length === 1 && filters.origins.includes(origin)}
-              onChange={() => setFilters({ ...filters, origins: toggled(filters.origins, origin) })}
-            />
-          ))}
+        {shown.map((origin: CheckedOrigin) => (
+          <Choice
+            key={origin}
+            testId={`filter-origin-${origin}`}
+            label={names[origin]}
+            checked={filters.origins.includes(origin)}
+            disabled={picked.length === 1 && filters.origins.includes(origin)}
+            onChange={() => setFilters({ ...filters, origins: toggled(filters.origins, origin) })}
+          />
+        ))}
         <Choice
           testId="filter-include-unchecked"
           label={<Trans>Include AI objects nobody checked</Trans>}
