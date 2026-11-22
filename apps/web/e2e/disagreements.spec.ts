@@ -215,6 +215,24 @@ test("one reviewer's redraw and retype show in the queue and the outline can be 
   await expect(settle).toHaveAttribute("data-settled", "picked");
 });
 
+test("only a retyped object offers to keep the reviewer's type, and it is kept", async ({
+  page,
+}) => {
+  await page.goto(`${base}/disagreements?stage=open`);
+  await page.getByRole("button", { name: /^T2·C88 / }).click();
+  const decide = page.getByRole("complementary", { name: "Decide" });
+  const keep = decide.getByTestId("queue-keep-type");
+  await expect(keep).toHaveText("Keep with the reviewer's type");
+  await expect(page.getByTestId("queue-training-note")).toContainText("counts T2·C88 as edited");
+  await keep.click();
+  await expect(decide.getByTestId("queue-keep-type")).toHaveCount(0);
+  await page.getByRole("button", { name: /^T2·C88 / }).click();
+  await expect(page.getByTestId("decision-kept-type")).toHaveText(
+    "Kept with the reviewer's type, Tumor",
+  );
+  await expect(keep).toHaveAttribute("aria-pressed", "true");
+});
+
 test("a declined object shows the note and can go to someone else", async ({ page }) => {
   await page.goto(`${base}/disagreements?stage=declined`);
   await page.getByRole("button", { name: /^T4 / }).click();

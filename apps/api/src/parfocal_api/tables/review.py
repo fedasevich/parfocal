@@ -835,6 +835,7 @@ disagreement_decisions = Table(
     Column("style", String(10), nullable=True, info=OPERATIONAL),
     Column("answer", String(10), nullable=True, info=OPERATIONAL),
     Column("answer_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("kept_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("value", String(10), nullable=True, info=OPERATIONAL),
     Column("left_open", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     Column("edits_settled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
@@ -886,6 +887,14 @@ disagreement_decisions = Table(
         ["answer_class_id", "project_id", "tenant_id"],
         ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
         name="fk_disagreement_decisions_answer_class_id_project_id_tenant_id",
+    ),
+    ForeignKeyConstraint(
+        ["kept_class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_disagreement_decisions_kept_class_id_project_id_tenant_id",
+    ),
+    CheckConstraint(
+        "kept_class_id IS NULL OR (answer IS NULL AND value = 'disagree')", name="kept_type"
     ),
     CheckConstraint(
         "style IS NULL OR style IN ('certainty', 'agree', 'yes-no', 'blind')", name="style"

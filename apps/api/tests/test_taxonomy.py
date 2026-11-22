@@ -53,6 +53,7 @@ def test_every_column_that_keeps_a_class_alive_is_checked_before_a_class_is_remo
     assert sorted(f"{column.table.name}.{column.name}" for column in CLASS_USES) == [
         "annotations.class_id",
         "disagreement_decisions.answer_class_id",
+        "disagreement_decisions.kept_class_id",
         "result_set_classes.class_id",
         "review_decisions.ai_class_id",
         "review_decisions.answer_class_id",

@@ -307,6 +307,35 @@ def final_shape(
     return None, []
 
 
+async def kept_types(connection: AsyncConnection, row: Any) -> dict[Key, uuid.UUID]:
+    kept = func.coalesce(
+        disagreement_decisions.c.kept_class_id, disagreement_decisions.c.answer_class_id
+    )
+    return {
+        (decided.kind, decided.number): decided.class_id
+        for decided in await connection.execute(
+            select(
+                disagreement_decisions.c.kind,
+                disagreement_decisions.c.number,
+                kept.label("class_id"),
+            ).where(
+                disagreement_decisions.c.task_id == row.task_id,
+                disagreement_decisions.c.slide_id == row.slide_id,
+                disagreement_decisions.c.value == engine.DISAGREE,
+                kept.is_not(None),
+            )
+        )
+    }
+
+
+def consensus_details(
+    key: Key, changed: list[str], kept: dict[Key, uuid.UUID], ai_class: str | None
+) -> dict[str, Any]:
+    if key not in kept:
+        return {"consensus": "agree", "changed": changed}
+    return {"consensus": "disagree", "changed": ["retyped", *changed], "ai_class": ai_class}
+
+
 async def consensus_items(
     connection: AsyncConnection, store: ResultStore, row: Any, names: dict[uuid.UUID, str]
 ) -> list[dict[str, Any]]:
@@ -317,24 +346,28 @@ async def consensus_items(
         for item_ in await ai_objects(connection, row.task_id, names)
         if item_.slide == str(row.slide_id) and engine.consensus(item_) is engine.Consensus.AGREE
     }
+    kept = await kept_types(connection, row)
+    wanted = agreed | kept.keys()
     settled = await settled_shapes(connection, row)
     reshaped = await agreed_redraws(connection, row, agreed)
     out: list[dict[str, Any]] = []
     for region in await ai_regions(connection, row.result_set_id):
-        if ("region", region.number) not in agreed:
+        key = ("region", region.number)
+        if key not in wanted:
             continue
-        found, changed = final_shape(("region", region.number), settled, reshaped)
+        found, changed = final_shape(key, settled, reshaped)
+        ai_class = classes.get((row.slide_id, region.number))
         out.append(
             item(
                 "region",
                 region.number,
                 shape(found or region.geojson),
-                classes.get((row.slide_id, region.number)),
+                names.get(kept[key]) if key in kept else ai_class,
                 where,
-                {"consensus": "agree", "changed": changed},
+                consensus_details(key, changed, kept, ai_class),
             )
         )
-    cells = sorted(number for kind, number in agreed if kind == "cell")
+    cells = sorted(number for kind, number in wanted if kind == "cell")
     claims = await ai_claims(
         connection,
         store,
@@ -343,19 +376,21 @@ async def consensus_items(
         [(Letter.CELL, number) for number in cells],
     )
     for number in cells:
+        key = ("cell", number)
         claim = claims.get((Letter.CELL, number))
-        found, changed = final_shape(("cell", number), settled, reshaped)
+        found, changed = final_shape(key, settled, reshaped)
         geometry = shape(found) if found else ring_shape(claim.outline if claim else None)
         if geometry is None:
             continue
+        ai_class = (claim.class_name if claim else "") or UNCLASSIFIED
         out.append(
             item(
                 "cell",
                 number,
                 geometry,
-                (claim.class_name if claim else "") or UNCLASSIFIED,
+                names.get(kept[key], ai_class) if key in kept else ai_class,
                 where,
-                {"consensus": "agree", "changed": changed},
+                consensus_details(key, changed, kept, ai_class),
             )
         )
     rows = (

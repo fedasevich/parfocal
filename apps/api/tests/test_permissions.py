@@ -1314,6 +1314,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "leaveDisagreementOpen": lambda w: Call(
         "PUT", f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T1/left-open", {}
     ),
+    "keepReviewerType": lambda w: Call(
+        "PUT",
+        f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T4/kept-type",
+        {"class_id": str(w.project_class)},
+    ),
     "askReviewersToLookAgain": lambda w: Call(
         "POST",
         f"/api/review-tasks/{w.queued_task}/disagreements/{w.slide}/T2/look-again",
@@ -2520,6 +2525,18 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     }
                     for number in (2, 3)
                 ],
+            )
+            await connection.execute(
+                insert(review_edits).values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    task_id=queued_task,
+                    slide_id=case.loose_slide_id,
+                    user_id=people[lead],
+                    kind="region",
+                    number=4,
+                    class_id=project_class,
+                )
             )
             await connection.execute(
                 insert(slide_counters).values(

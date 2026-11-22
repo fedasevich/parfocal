@@ -89,8 +89,10 @@ def worked_review(api: ApiAs, database: str) -> Review:
     return r
 
 
-def exported(api: ApiAs, r: Review) -> tuple[dict[str, Any], dict[str, Any]]:
-    response = ok(api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/training-dataset"))
+def exported(
+    api: ApiAs, r: Review, path: str = "training-dataset"
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    response = ok(api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/{path}"))
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
         manifest = json.loads(archive.read("manifest.json"))
         collection = json.loads(archive.read(f"slides/{r.slide}.geojson"))
@@ -333,3 +335,48 @@ def test_the_consensus_export_keeps_only_the_agreeing_reviewers_redraw(
     assert same_shape(features["T1"]["geometry"], REDRAWN)
     assert same_shape(features["T2"]["geometry"], AI_T2)
     assert features["T2"]["properties"]["parfocal"]["changed"] == []
+
+
+def test_the_queue_keeps_a_reviewers_new_type_in_the_training_data(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database, reviewers=("first",))
+    first = str(r.people["first"].user_id)
+    task = f"/api/review-tasks/{r.task}"
+    disagree = {"value": "disagree", "reasons": ["artefact"]}
+    for object_id in ("T1", "T2"):
+        ok(api(r.people["first"]).put(f"{r.base}/decisions/{object_id}", json=disagree))
+    ok(edit(api, r, "first", "T1", {"geometry": REDRAWN, "class_id": str(r.tumor)}))
+    ok(submitted(api(r.people["first"]), r.base))
+    as_owner = api(r.people["owner"])
+    queue = f"{task}/disagreement-queue/{r.slide}"
+    keep = {"action": "keep-type", "raw": "Tumor"}
+    refused = as_owner.post(f"{queue}/T2", json=keep)
+    assert (refused.status_code, refused.json()["code"]) == (400, "not-retyped")
+    ok(as_owner.put(f"{queue}/T1/outline", json={"from_user_id": first}))
+    ok(as_owner.put(f"{task}/disagreements/{r.slide}/T1", json={"answer": "agree"}))
+    kept = ok(as_owner.post(f"{queue}/T1", json=keep)).json()
+    assert (kept["state"], kept["decision"]["kept_type"]) == ("decided", "Tumor")
+    ok(as_owner.put(f"{task}/disagreements/{r.slide}/T2", json={"answer": "agree"}))
+    stored = owner(
+        database,
+        f"SELECT number, kept_class_id, value FROM disagreement_decisions "
+        f"WHERE task_id = '{r.task}' ORDER BY number",
+    )
+    assert stored == [(1, r.tumor, "disagree"), (2, None, "agree")]
+    consensus = ok(as_owner.get(f"{r.base}/export", params={"consensus": "true"}))
+    shown = {feature["id"]: feature for feature in consensus.json()["features"]}
+    t1 = shown["T1"]["properties"]
+    assert t1["classification"] == {"name": "Tumor"}
+    assert t1["parfocal"]["changed"] == ["retyped", "reshaped", "settled"]
+    assert same_shape(shown["T1"]["geometry"], REDRAWN)
+    ok(as_owner.post(f"{task}/sign-off"))
+    for path in ("training-dataset", "dataset-versions/1"):
+        if path != "training-dataset":
+            ok(as_owner.post(f"{task}/dataset-versions", json={"note": "Kept type"}), 201)
+        _, features = exported(api, r, path)
+        parfocal = features["T1"]["properties"]["parfocal"]
+        assert (parfocal["origin"], parfocal["class_key"]) == ("ai-edited", 1)
+        assert same_shape(features["T1"]["geometry"], REDRAWN)
+    counts = ok(as_owner.get(f"{task}/dataset")).json()["final_layer"]["counts"]
+    assert (counts["edited"], counts["confirmed"]) == (1, 1)
