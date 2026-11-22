@@ -7165,6 +7165,18 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   From `docs/results/2026-11-21-deployed-walkthrough-v0.35.12.md` (the deployed walkthrough of v0.35.12), new issues 1 to 7. The decisions CSV of the sign-off window says "unclassified" for every cell while the report and dataset name the types. The top bar Upload button on a project's upload page opens the first project and drops the picked files. A slide outside an annotate task opens with no notice and two 404 calls, and one outside a review task makes three 404 calls. Guided review opens a 15 µm region at 297× as a blur and the first coach bubble covers the object. /objects answers 409 with console errors while a new task prepares. Picking Best and then clicking makes two GPU calls on the deployed app. The run notice says "pathosam-hovernext v1.2", the job counts 16 units against 11 tiles, the import job reads running after its notice, and the walk's project says "100% reviewed".
   Done when unit tests or specs cover each item and the next deployed walk finds none of them.
   Depends on nothing. Size: M.
+- [ ] PROTO-160 · A review task takes drawn and one click objects
+  Decision 171, answer A, and [ADR 0430](adr/0430-a-review-task-takes-drawn-and-one-click-objects.md) (a review task takes objects drawn by hand or with one click tools). The task wizard lists a slide's hand drawn and Smart select objects as a source beside its AI result sets instead of greying the slide out with "no". The review stage, the disagreement queue, the final layer and the dataset treat them like AI objects, and each keeps who drew it and with which tool.
+  Done when an API test creates a review task from a slide's drawn objects and a DB test builds its final layer after a review, a spec picks drawn objects in the wizard on the fake API and a reviewer agrees, disagrees and fixes one, and the deployed app reviews a drawn outline end to end.
+  Depends on nothing. Size: L.
+- [ ] PROTO-161 · The disagreement queue keeps a reviewer's new type
+  Decision 173, answer A, and [ADR 0431](adr/0431-the-queue-can-keep-a-reviewers-new-type.md) (the disagreement queue can keep a reviewer's new type). On an object a reviewer retyped, the queue offers a third answer, "Keep with the reviewer's type", which keeps the settled outline with the reviewer's class and counts the object as edited.
+  Done when a DB test builds a final layer after the new answer and finds the reviewer's class, the frozen dataset and the consensus export carry it, a spec shows the answer only on a retyped object on the fake API, and the deployed queue keeps a seeded retype.
+  Depends on nothing. Size: M.
+- [ ] PROTO-162 · A drawn outline takes its kind letter and a person mark
+  Decision 174, answer A, under [ADR 0071](adr/0071-object-id-grammar.md) (object IDs are a kind letter and a per-slide number). An outline drawn by hand or with one click tools takes the letter of its kind and the person mark, such as T7⁺ for a region and C3022⁺ for a nucleus outline, in the Objects tab, the review card, exports and search. M stays for rulers.
+  Done when unit tests name a drawn region and a drawn nucleus outline with the person mark and a ruler with M, an export test writes the ASCII form `T7+`, and the deployed Objects tab lists a drawn Tumor outline as T⁺ and not M.
+  Depends on nothing. Size: S.
 
 ---
 

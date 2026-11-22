@@ -55,6 +55,11 @@ variable "tier_after_days" {
   }
 }
 
+variable "lock_tenant_objects" {
+  type    = bool
+  default = false
+}
+
 variable "locked_days" {
   type    = number
   default = 7

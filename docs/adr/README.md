@@ -381,3 +381,6 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0419](0419-the-queue-decision-rules-the-final-layer-over-reviewer-edits.md) | The queue decision rules the final layer over reviewer edits | Accepted | 2026-11-21 |
 | [0420](0420-a-worker-leaves-a-staged-upload-the-bucket-lock-keeps.md) | A worker leaves a staged upload the bucket lock keeps, and background jobs wait behind uploads | Accepted | 2026-11-21 |
 | [0428](0428-a-best-embedding-call-is-a-finished-job-with-gpu-seconds.md) | A Best embedding call is a finished job with its GPU seconds | Accepted | 2026-11-21 |
+| [0429](0429-the-tenant-object-lock-is-off-until-a-real-user.md) | The tenant object lock is off until a real user | Accepted | 2026-11-22 |
+| [0430](0430-a-review-task-takes-drawn-and-one-click-objects.md) | A review task takes objects drawn by hand or with one click tools | Accepted | 2026-11-22 |
+| [0431](0431-the-queue-can-keep-a-reviewers-new-type.md) | The disagreement queue can keep a reviewer's new type | Accepted | 2026-11-22 |

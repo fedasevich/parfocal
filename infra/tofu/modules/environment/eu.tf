@@ -69,7 +69,7 @@ resource "cloudflare_r2_bucket_lock" "recovery_eu" {
 
   rules = [{
     id      = "keep-tenant-objects"
-    enabled = true
+    enabled = var.lock_tenant_objects
     prefix  = "t/"
     condition = {
       type            = "Age"

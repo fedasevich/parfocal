@@ -190,6 +190,11 @@ test_missing_bucket_lock_fails if {
 	denied(in_module(lifecycle(tier_rule)), "must keep an enabled R2 bucket lock")
 }
 
+test_bucket_lock_switched_by_its_variable_passes if {
+	rule := object.union(lock_rule, {"enabled": "${var.lock_tenant_objects}"})
+	not denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
+}
+
 test_disabled_bucket_lock_fails if {
 	rule := object.union(lock_rule, {"enabled": false})
 	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")

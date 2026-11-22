@@ -26,7 +26,7 @@ ADR 0408 (MIRAX and DICOM zips become one tiled TIFF at ingest) stores the conve
 - A. JPEG at quality 90. Near the source size, with tiny pixel differences an AI comparison might notice.
 - B. Keep lossless. Exact pixels, about 8 times the storage. (Recommended while only test slides exist, since the cost today is about $0.02 a month.)
 
-Your choice:
+Your choice:B
 
 ### 171. Can outlines drawn by hand or with one click tools be reviewed by a second person?
 
@@ -36,7 +36,7 @@ From the third deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrou
 - B. No, the annotate task with its second expert check is the review, and the wizard only says so.
 - C. Yes, but only after the shapes are saved as a result set.
 
-Your choice:
+Your choice: A
 
 ### 172. May a hidden label image of a de-identified slide stay in storage for 7 days?
 
@@ -45,7 +45,7 @@ From PROTO-150 (upload and model run jobs tell one story). In a de-identified pr
 - A. Allow it. The job treats the refused delete as done and deletes the copy again after the 7 days. (Recommended, since nobody can open it and the lock protects against losing slides.)
 - B. Never write the label into the locked folder. Uploads to de-identified projects go to a folder without the lock, which needs a new storage rule.
 
-Your choice:
+Your choice: a remove that lock it is harmful for now
 
 ### 173. When a reviewer disagrees and retypes a cell, can the disagreement queue keep the reviewer's type?
 
@@ -55,7 +55,7 @@ From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrou
 - B. Keep it as it is. Disagree removes the cell and Agree keeps the AI's class.
 - C. Agree keeps the reviewer's type on its own when a reviewer retyped the cell.
 
-Your choice:
+Your choice: a
 
 ### 174. Which ID does an outline drawn by hand or with one click get?
 
@@ -65,7 +65,7 @@ From the fifth deployed walkthrough (`docs/results/2026-11-21-deployed-walkthrou
 - B. Keep M for every drawn shape, since each shows its size, and only rename the group to "Drawn by hand".
 - C. A drawn outline is a region of interest, R1 and R2.
 
-Your choice:
+Your choice: a
 
 ## The review column, what each task waits for
 

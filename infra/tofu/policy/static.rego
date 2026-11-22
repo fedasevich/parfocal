@@ -176,7 +176,7 @@ deny contains msg if {
 
 deny contains msg if {
 	not locks_tenant_objects
-	msg := "the environment module must keep an enabled R2 bucket lock on the prefix t/, the recovery rule for deleted or overwritten slides"
+	msg := "the environment module must keep an enabled R2 bucket lock on the prefix t/, or one switched by var.lock_tenant_objects, the recovery rule for deleted or overwritten slides"
 }
 
 locks_tenant_objects if {
@@ -185,9 +185,13 @@ locks_tenant_objects if {
 	some _, blocks in file.contents.resource.cloudflare_r2_bucket_lock
 	some block in blocks
 	some rule in block.rules
-	rule.enabled == true
+	switchable(rule.enabled)
 	rule.prefix == allowed.lifecycle_prefix
 }
+
+switchable(enabled) if enabled == true
+
+switchable(enabled) if enabled == "${var.lock_tenant_objects}"
 
 tiers_old_objects if {
 	some [path, rule] in lifecycle_rules
