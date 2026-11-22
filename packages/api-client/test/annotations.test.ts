@@ -41,7 +41,7 @@ test("a saved polygon comes back in the slide's list with its geometry", async (
   if (listed.status !== 200 || created.status !== 201) return;
   assert.deepEqual(
     listed.data.map((item) => [item.id, item.code, item.geometry]),
-    [[created.data.id, "T+1", triangle]],
+    [[created.data.id, "T1+", triangle]],
   );
 });
 

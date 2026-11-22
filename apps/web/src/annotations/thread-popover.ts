@@ -6,6 +6,7 @@ import { buildMeasurementRows } from "../measure/measurement-list.ts";
 import { relativeTime } from "../screens/format.ts";
 import { fromMentionTokens } from "../screens/review/mention-picking.ts";
 import type { AnnotationDocument } from "./document.ts";
+import type { SavedCodes } from "./drawn-object-ids.ts";
 import type { Point } from "./polygon-draft.ts";
 
 export const popoverWidth = 320;
@@ -34,12 +35,18 @@ export function threadMeasurement(
   doc: AnnotationDocument,
   threadId: string,
   micronsPerPixel: number | null,
+  codes?: SavedCodes,
 ): ThreadMeasurement | undefined {
   const shapeId = doc.pins.get(threadId)?.shapeId;
   if (shapeId === null || shapeId === undefined) return undefined;
-  const row = buildMeasurementRows(doc, micronsPerPixel, new Map()).find(
-    (candidate) => candidate.shapeId === shapeId,
-  );
+  const row = buildMeasurementRows(
+    doc,
+    micronsPerPixel,
+    new Map(),
+    undefined,
+    undefined,
+    codes,
+  ).find((candidate) => candidate.shapeId === shapeId);
   if (row === undefined) return undefined;
   const label = `${row.label} · ${row.category}`;
   if (row.kind === "ruler") return { label, values: [{ name: "Length", value: row.value }] };

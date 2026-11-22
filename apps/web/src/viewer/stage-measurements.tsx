@@ -9,6 +9,7 @@ import {
 } from "react";
 import { deleteShapes } from "../annotations/clear.ts";
 import type { AnnotationDocument } from "../annotations/document.ts";
+import { type SavedCodes, SavedCodesProvider } from "../annotations/drawn-object-ids.ts";
 import type { ShapeId } from "../annotations/shapes.ts";
 import { useLengthUnits } from "../measure/length-units.ts";
 import { buildMeasurementRows } from "../measure/measurement-list.ts";
@@ -26,6 +27,7 @@ export type StageMeasurements = {
   readonly remove: (shapeId: ShapeId) => void;
   readonly claim: () => () => void;
   readonly claimed: boolean;
+  readonly codes: SavedCodes;
 };
 
 const MeasurementsContext = createContext<StageMeasurements | null>(null);
@@ -41,7 +43,9 @@ export function StageDockProvider({
 }) {
   return (
     <InspectorSlotsProvider value={slots}>
-      <MeasurementsContext.Provider value={measurements}>{children}</MeasurementsContext.Provider>
+      <SavedCodesProvider value={measurements.codes}>
+        <MeasurementsContext.Provider value={measurements}>{children}</MeasurementsContext.Provider>
+      </SavedCodesProvider>
     </InspectorSlotsProvider>
   );
 }
@@ -53,6 +57,7 @@ const noTimes = new Map<ShapeId, number>();
 export function useStageMeasurementsValue(
   saved: {
     readonly document: AnnotationDocument;
+    readonly codes: SavedCodes;
     readonly apply: (next: AnnotationDocument, label: string) => void;
   },
   micronsPerPixel: number | null,
@@ -65,6 +70,7 @@ export function useStageMeasurementsValue(
     [apply, doc, removeLabel],
   );
   const units = useLengthUnits();
+  const { codes } = saved;
   const [claims, setClaims] = useState(0);
   const claim = useCallback(() => {
     setClaims((count) => count + 1);
@@ -72,7 +78,7 @@ export function useStageMeasurementsValue(
   }, []);
   const rulers = useMemo(
     () =>
-      buildMeasurementRows(doc, micronsPerPixel, noTimes, undefined, units).flatMap((row) =>
+      buildMeasurementRows(doc, micronsPerPixel, noTimes, undefined, units, codes).flatMap((row) =>
         row.kind === "ruler"
           ? [
               {
@@ -84,10 +90,13 @@ export function useStageMeasurementsValue(
             ]
           : [],
       ),
-    [doc, micronsPerPixel, units],
+    [doc, micronsPerPixel, units, codes],
   );
   const claimed = claims > 0;
-  return useMemo(() => ({ rulers, remove, claim, claimed }), [rulers, remove, claim, claimed]);
+  return useMemo(
+    () => ({ rulers, remove, claim, claimed, codes }),
+    [rulers, remove, claim, claimed, codes],
+  );
 }
 
 export function useStageRulers(active: boolean): StageMeasurements | null {

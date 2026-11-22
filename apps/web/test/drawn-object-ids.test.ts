@@ -8,6 +8,7 @@ import {
 } from "../src/annotations/document.ts";
 import { drawnObjectIds } from "../src/annotations/drawn-object-ids.ts";
 import { toGeoJson, toOwnJson } from "../src/annotations/interchange.ts";
+import { createSaveQueue, type Remote, type Transport } from "../src/annotations/save-queue.ts";
 
 const square: NewShape = { kind: "polygon", points: Float32Array.of(0, 0, 10, 0, 10, 10, 0, 10) };
 
@@ -75,5 +76,51 @@ describe("ids of drawn shapes", () => {
       properties: { parfocal: { object_id: string } };
     }[];
     assert.equal(features[6]?.properties.parfocal.object_id, "T7+");
+  });
+
+  test("a saved region on a slide with AI regions shows the number the server gave", () => {
+    const added = addShape(createDocument(), square);
+    const codes = new Map([[added.shape.id, "T7+"]]);
+    const id = drawnObjectIds(added.document, codes).get(added.shape.id);
+    assert.equal(id?.shown, "T7⁺");
+    assert.equal(id?.ascii, "T7+");
+    assert.equal(drawnObjectIds(added.document).get(added.shape.id)?.shown, "T1⁺");
+  });
+
+  test("a shape the server has not answered for shows no number yet", () => {
+    const first = addShape(createDocument(), square);
+    const second = addShape(first.document, square);
+    const codes = new Map([[first.shape.id, "T7+"]]);
+    const ids = drawnObjectIds(second.document, codes);
+    assert.equal(ids.get(second.shape.id)?.shown, "T⁺");
+    assert.equal(ids.get(second.shape.id)?.number, null);
+  });
+
+  test("a saved ruler keeps the server's M code", () => {
+    const ruler = addShape(createDocument(), {
+      kind: "ruler",
+      points: Float32Array.of(0, 0, 5, 0),
+    });
+    const codes = new Map([[ruler.shape.id, "M3"]]);
+    assert.equal(drawnObjectIds(ruler.document, codes).get(ruler.shape.id)?.shown, "M3");
+  });
+
+  test("the save queue keeps the code the server answers a create with", async () => {
+    const transport: Transport<string> = {
+      create: () => Promise.resolve({ kind: "done", value: { id: "a", version: 1, code: "T7+" } }),
+      update: () => Promise.resolve({ kind: "done", value: { version: 2 } }),
+      remove: () => Promise.resolve({ kind: "done", value: null }),
+    };
+    const queue = createSaveQueue(transport, {
+      timers: {
+        set: (run) => setTimeout(run, 0),
+        clear: (handle) => clearTimeout(handle as never),
+      },
+    });
+    const remote: Remote = { id: null, version: 1 };
+    queue.enqueueCreate(remote, "body");
+    queue.flushNow();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(remote.code, "T7+");
   });
 });

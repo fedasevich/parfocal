@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useMemo, useRef } from "react";
 import type { AnnotationDocument } from "../annotations/document.ts";
+import { useSavedCodes } from "../annotations/drawn-object-ids.ts";
 import type { ShapeId } from "../annotations/shapes.ts";
 import { useDocked } from "../viewer/inspector-slots.tsx";
 import { useRulersClaimed } from "../viewer/stage-measurements.tsx";
@@ -42,12 +43,13 @@ export function MeasurementList({
   times.current = noteDrawnTimes(times.current, doc, Date.now());
   const drawn = times.current;
   const units = useLengthUnits();
+  const codes = useSavedCodes();
   const rows = useMemo(
     () =>
-      buildMeasurementRows(doc, micronsPerPixel, drawn, classNames, units).filter(
+      buildMeasurementRows(doc, micronsPerPixel, drawn, classNames, units, codes).filter(
         (row) => !skipRulers || row.kind !== "ruler",
       ),
-    [doc, micronsPerPixel, drawn, classNames, units, skipRulers],
+    [doc, micronsPerPixel, drawn, classNames, units, codes, skipRulers],
   );
   if (skipRulers && rows.length === 0) return null;
   const shapes = holdsDrawnShapes(rows);

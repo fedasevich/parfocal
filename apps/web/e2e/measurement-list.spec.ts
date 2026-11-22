@@ -38,7 +38,7 @@ test("each ruler line joins the measurement list with its value and a time, and 
   await expect(rows.first().locator("[data-slot=time]")).toHaveText(/^\d\d:\d\d$/);
   await page.getByRole("button", { name: "Remove M1" }).click();
   await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText("M1");
+  await expect(rows.first()).toContainText("M2");
 });
 
 test("an area row keeps its size on one line with the perimeter under it, and the area list grows", async ({

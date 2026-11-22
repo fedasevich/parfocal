@@ -18,7 +18,11 @@ export function applyLiveChanges(
       if (input === null) continue;
       const added = addShape(next, input);
       next = added.document;
-      remotes.set(added.shape.id, { id: change.annotationId, version: change.record.version });
+      remotes.set(added.shape.id, {
+        id: change.annotationId,
+        version: change.record.version,
+        code: change.record.code ?? null,
+      });
       continue;
     }
     const shapeId = shapeIdOf(change.annotationId);

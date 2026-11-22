@@ -1,5 +1,5 @@
 import { type AnnotationDocument, isShapeHidden } from "../annotations/document.ts";
-import { drawnObjectIds } from "../annotations/drawn-object-ids.ts";
+import { drawnObjectIds, type SavedCodes } from "../annotations/drawn-object-ids.ts";
 import { isClosedKind, type Shape, type ShapeId } from "../annotations/shapes.ts";
 import type { LengthUnits } from "./length-units.ts";
 import { formatRulerLength, segmentOfRuler } from "./ruler-maths.ts";
@@ -57,9 +57,10 @@ export function buildMeasurementRows(
   drawnAt: ReadonlyMap<ShapeId, number>,
   classNames: MeasurementNames = new Map(),
   units?: LengthUnits,
+  codes?: SavedCodes,
 ): MeasurementRow[] {
   const rows: MeasurementRow[] = [];
-  const ids = drawnObjectIds(doc);
+  const ids = drawnObjectIds(doc, codes);
   const shapes = [...doc.shapes.values()].sort((a, b) => a.id - b.id);
   for (const shape of shapes) {
     const isRuler = shape.kind === "ruler";
