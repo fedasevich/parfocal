@@ -40,3 +40,7 @@ Every 200 was `image/jpeg`. The 204 answers, with no body, came from these slide
 
 - `TODO` find why the seed writes no thumbnail for `test_065` and extend the seed test so it covers this slide.
 - `TODO` decide whether a slide seeded without a file counts for INGEST-032.
+
+## Recheck on 2026-11-22 after v0.35.13
+
+The ingest backfill now also stores a thumbnail it renders from a sample original beside that original, so a reseed finds it (commit 9131f46d). After the deploy of v0.35.13 one run of the Modal function `backfill_thumbnails` on environment `main` reported stored 1, copied 101, present 0, skipped 4 (3 with no original file, 1 tenant upload), failed 0, and `samples/camelyon16/test_065/thumbnail.jpg` exists (6,515 bytes). The same check over the three workspaces then gave 103 answers of 200 and 3 of 204. The three are the seeded `Missing file.svs` of each workspace, which has no file on purpose (TEST-053, the seed gives audits a broken slide), so every slide that has a file returns a thumbnail.

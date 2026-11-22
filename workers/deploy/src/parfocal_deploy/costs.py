@@ -28,7 +28,7 @@ class Service(StrEnum):
 
 
 BUDGETS: dict[str, dict[Service, Decimal]] = {
-    "production": {Service.MODAL: Decimal(20), Service.R2: Decimal(3)},
+    "production": {Service.MODAL: Decimal("23.5"), Service.R2: Decimal(3)},
     "dev": {Service.MODAL: Decimal(3)},
     "drill": {Service.MODAL: Decimal(2), Service.R2: Decimal("0.5")},
     "preview": {Service.MODAL: Decimal("1.5")},
@@ -141,8 +141,9 @@ def table_row(*cells: str) -> str:
 
 
 def render(lines: list[Line], today: date) -> str:
-    total_spend = sum((line.spend for line in lines), Decimal(0))
-    total_budget = sum((line.budget for line in lines), Decimal(0))
+    modal_lines = [line for line in lines if line.service is Service.MODAL]
+    total_spend = sum((line.spend for line in modal_lines), Decimal(0))
+    total_budget = sum((line.budget for line in modal_lines), Decimal(0))
     rows = [
         table_row(line.environment, line.service, usd(line.spend), usd(line.budget), line.status)
         for line in lines
@@ -161,10 +162,10 @@ def render(lines: list[Line], today: date) -> str:
             *rows,
             table_row(
                 "all",
-                "all",
+                Service.MODAL,
                 usd(total_spend),
                 usd(total_budget),
-                f"{cap_status} against the {usd(MONTHLY_CAP_USD)} cap",
+                f"{cap_status} against the {usd(MONTHLY_CAP_USD)} Modal credit",
             ),
             "",
         ]

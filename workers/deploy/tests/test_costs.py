@@ -31,9 +31,9 @@ from parfocal_deploy.environments import ENVIRONMENTS
 GB = 10**9
 
 
-def test_budgets_fit_inside_the_monthly_cap():
-    total = sum(sum(services.values(), Decimal(0)) for services in BUDGETS.values())
-    assert total <= MONTHLY_CAP_USD
+def test_modal_budgets_use_the_whole_monthly_credit():
+    total = sum(services.get(Service.MODAL, Decimal(0)) for services in BUDGETS.values())
+    assert total == MONTHLY_CAP_USD
 
 
 def test_every_cloud_environment_has_a_budget():
@@ -106,12 +106,12 @@ def test_collect_reads_modal_from_the_first_of_the_month():
     assert [(line.environment, line.service) for line in over] == [("production", Service.MODAL)]
 
 
-def test_render_shows_each_line_and_the_cap():
+def test_render_shows_each_line_and_the_modal_credit():
     lines = budget_lines({Service.MODAL: {"production": Decimal("4.567")}, Service.R2: {}})
     text = render(lines, date(2026, 11, 15))
     assert "# Cost dashboard for 2026-11" in text
-    assert "| production | Modal | $4.57 | $20.00 | ok |" in text
-    assert "| all | all | $4.57 | $30.00 | ok against the $30.00 cap |" in text
+    assert "| production | Modal | $4.57 | $23.50 | ok |" in text
+    assert "| all | Modal | $4.57 | $30.00 | ok against the $30.00 Modal credit |" in text
 
 
 def test_latest_bucket_sizes_keep_the_newest_sample_per_bucket():
@@ -173,11 +173,11 @@ def test_read_r2_live_raises_on_analytics_errors(monkeypatch: pytest.MonkeyPatch
 def test_main_writes_the_dashboard_and_fails_over_budget(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
-    monkeypatch.setattr(costs, "read_modal_live", lambda _: [ModalCost("main", Decimal(21))])
+    monkeypatch.setattr(costs, "read_modal_live", lambda _: [ModalCost("main", Decimal(24))])
     monkeypatch.setattr(costs, "read_r2_live", lambda *_: {"parfocal-dev": GB})
     out = tmp_path / "costs.md"
     assert costs.main(["--out", str(out)]) == 1
-    assert "| production | Modal | $21.00 | $20.00 | over |" in out.read_text()
+    assert "| production | Modal | $24.00 | $23.50 | over |" in out.read_text()
     assert capsys.readouterr().out == out.read_text()
 
 
