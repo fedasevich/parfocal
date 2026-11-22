@@ -43,6 +43,7 @@ BUCKETS = {
 }
 DRILL_PREFIX = "drill"
 PREVIEW_ENVIRONMENT = re.compile(r"pr-[1-9][0-9]*")
+JURISDICTION_PREFIX = re.compile(r"^(eu|fedramp)_")
 
 
 class Status(StrEnum):
@@ -86,6 +87,7 @@ def environment_of_modal(name: str) -> str:
 
 
 def environment_of_bucket(name: str) -> str:
+    name = JURISDICTION_PREFIX.sub("", name)
     if name.startswith(f"parfocal-{DRILL_PREFIX}"):
         return "drill"
     return BUCKETS.get(name, UNBUDGETED)

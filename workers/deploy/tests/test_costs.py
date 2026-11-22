@@ -185,3 +185,7 @@ def test_main_passes_inside_budget(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(costs, "read_modal_live", lambda _: [])
     monkeypatch.setattr(costs, "read_r2_live", lambda *_: {})
     assert costs.main([]) == 0
+
+
+def test_a_bucket_in_a_jurisdiction_counts_for_its_environment():
+    assert set(r2_spend({"eu_parfocal-dev-eu": 20 * GB})) == {"production"}
