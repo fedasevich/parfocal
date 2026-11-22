@@ -52,3 +52,26 @@ async def run() -> list[str]:
 @pytest.mark.db
 def test_a_slide_without_a_thumbnail_gets_one_and_a_second_run_changes_nothing() -> None:
     assert asyncio.run(run()) == [STORED, COPIED, PRESENT, SKIPPED]
+
+
+SAMPLE_ORIGINAL = "samples/camelyon16/sample/original.tiff"
+
+
+async def run_sample() -> tuple[str, bool, str]:
+    async with httpx2.AsyncClient(timeout=60) as http:
+        store = ObjectStore(STORAGE, http)
+        await store.create_bucket()
+        for key in await store.list_keys(""):
+            await store.delete_object(key)
+        await store.put_object(
+            SAMPLE_ORIGINAL, (SYNTHETIC_FOLDER / SLIDE).read_bytes(), "image/tiff"
+        )
+        first = await ensure_thumbnail(store, TENANT, uuid.uuid4(), SAMPLE_ORIGINAL, {})
+        beside = await store.head_object("samples/camelyon16/sample/thumbnail.jpg") is not None
+        second = await ensure_thumbnail(store, TENANT, uuid.uuid4(), SAMPLE_ORIGINAL, {})
+        return first, beside, second
+
+
+@pytest.mark.db
+def test_a_rendered_sample_thumbnail_stays_beside_its_original_for_the_next_reseed() -> None:
+    assert asyncio.run(run_sample()) == (STORED, True, COPIED)

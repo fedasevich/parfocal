@@ -74,6 +74,12 @@ async def derived_beside(store: ObjectStore, original_key: str) -> bytes | None:
     return await store.get_object(key)
 
 
+async def keep_beside(store: ObjectStore, original_key: str, body: bytes) -> None:
+    folder = folder_of(original_key)
+    if folder != FIXTURES_PREFIX:
+        await store.put_object(f"{folder}{THUMBNAIL_FILE}", body, "image/jpeg")
+
+
 async def render(store: ObjectStore, original_key: str) -> bytes:
     with tempfile.TemporaryDirectory(prefix="thumbnail-backfill-") as folder:
         work = Path(folder)
@@ -102,6 +108,7 @@ async def ensure_thumbnail(
     if body is None:
         body = await render(store, original_key)
         state = STORED
+        await keep_beside(store, original_key, body)
     made[original_key] = body
     await store.put_object(key, body, "image/jpeg")
     return state
