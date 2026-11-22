@@ -78,7 +78,7 @@ describe("the measurement embed", () => {
     const doc = placePin(added.document, "t1", { x: 50, y: 50 }, 2);
     const embed = threadMeasurement(doc, "t1", 0.5);
     assert.ok(embed);
-    assert.match(embed.label, /^M1 · /);
+    assert.match(embed.label, /^T1⁺ · /);
     assert.deepEqual(
       embed.values.map((entry) => entry.name),
       ["Area", "Perimeter"],

@@ -22,6 +22,7 @@ import { readSharedLayer } from "./annotate-task-api.ts";
 import { adoptTheirs } from "./conflicts.ts";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
 import { type AnnotationDocument, addShape, createDocument } from "./document.ts";
+import type { SavedCodes } from "./drawn-object-ids.ts";
 import {
   canRedo,
   canUndo,
@@ -83,6 +84,7 @@ const groupRetryMs = 4000;
 
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
+  readonly codes: SavedCodes;
   readonly setDocument: (next: AnnotationDocument) => void;
   readonly adopt: (records: readonly LayerRecord[]) => void;
   readonly drop: (ids: readonly string[]) => void;
@@ -112,6 +114,24 @@ export type SavedAnnotations = {
   readonly showIncoming: () => void;
   readonly noteActivity: () => void;
 };
+
+function codesOf(doc: AnnotationDocument, remotes: ReadonlyMap<ShapeId, Remote>): SavedCodes {
+  const found = new Map<ShapeId, string>();
+  for (const shapeId of doc.shapes.keys()) {
+    const code = remotes.get(shapeId)?.code;
+    if (code) found.set(shapeId, code);
+  }
+  return found;
+}
+
+function sameCodes(
+  shown: SavedCodes,
+  doc: AnnotationDocument,
+  remotes: ReadonlyMap<ShapeId, Remote>,
+): boolean {
+  const wanted = codesOf(doc, remotes);
+  return wanted.size === shown.size && [...wanted].every(([id, code]) => shown.get(id) === code);
+}
 
 type LoadedRecord = LayerRecord & { readonly created_at?: string };
 
@@ -228,6 +248,11 @@ export function useSavedAnnotations(
       }),
     [queue, me, guard],
   );
+  const shownCodes = useRef<SavedCodes>(new Map());
+  const codes = sameCodes(shownCodes.current, document, remotes.current)
+    ? shownCodes.current
+    : codesOf(document, remotes.current);
+  shownCodes.current = codes;
   const incomingChanges = useSyncExternalStore(batch.subscribe, batch.pending);
   const incoming = useMemo(() => summarise(incomingChanges), [incomingChanges]);
 
@@ -342,7 +367,11 @@ export function useSavedAnnotations(
           if (input === null) continue;
           const added = addShape(next, input);
           next = added.document;
-          remotes.current.set(added.shape.id, { id: annotation.id, version: annotation.version });
+          remotes.current.set(added.shape.id, {
+            id: annotation.id,
+            version: annotation.version,
+            code: annotation.code ?? null,
+          });
         }
         const finish = (grouped: AnnotationDocument, remembered: string | null) => {
           if (cancelled) return;
@@ -528,6 +557,7 @@ export function useSavedAnnotations(
 
   return {
     document,
+    codes,
     setDocument,
     latest,
     adopt,

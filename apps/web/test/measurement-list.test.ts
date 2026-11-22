@@ -10,7 +10,7 @@ import {
 } from "../src/measure/measurement-list.ts";
 
 describe("the measurement list", () => {
-  test("lists rulers and closed shapes in drawing order with labels M1 and up", () => {
+  test("lists rulers and closed shapes in drawing order with a kind letter and a person mark, and M for rulers", () => {
     let doc = createDocument();
     doc = addShape(doc, { kind: "ruler", points: Float32Array.of(0, 0, 2000, 0) }).document;
     doc = addShape(doc, { kind: "point", points: Float32Array.of(5, 5) }).document;
@@ -24,7 +24,7 @@ describe("the measurement list", () => {
       rows.map((row) => [row.label, row.kind, row.value, row.area, row.category]),
       [
         ["M1", "ruler", "1.00 mm", null, "Ruler"],
-        ["M2", "area", "6.00 mm", "2.00 mm²", "Tumor"],
+        ["T1⁺", "area", "6.00 mm", "2.00 mm²", "Tumor"],
       ],
     );
     assert.equal(holdsDrawnShapes(rows), true);
@@ -104,8 +104,8 @@ describe("the measurement list", () => {
         group.rows.map((row) => row.label),
       ]),
       [
-        ["Tumor", "area", ["M3", "M4"]],
-        ["No class", "area", ["M2"]],
+        ["Tumor", "area", ["T2⁺", "T3⁺"]],
+        ["No class", "area", ["T1⁺"]],
         ["Rulers", "ruler", ["M1"]],
       ],
     );

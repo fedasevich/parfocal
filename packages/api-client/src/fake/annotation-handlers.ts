@@ -15,11 +15,13 @@ const groupsKey = "parfocal.fake.layer-groups";
 const letters: Record<Annotation["kind"], string> = {
   roi: "R",
   measurement: "M",
-  region: "T+",
-  cell: "C+",
+  region: "T",
+  cell: "C",
   arrow: "A",
   text: "N",
 };
+
+const personMade: ReadonlySet<Annotation["kind"]> = new Set(["region", "cell"]);
 
 type Store = Record<string, Annotation[]>;
 
@@ -73,7 +75,7 @@ export const toSavedAnnotation = (
     slide_id: slideId,
     kind: draft.kind,
     number,
-    code: `${letters[draft.kind]}${number}`,
+    code: `${letters[draft.kind]}${number}${personMade.has(draft.kind) ? "+" : ""}`,
     geometry: { ...draft.geometry },
     class_id: draft.class_id ?? null,
     text: draft.kind === "text" ? (draft.text?.trim() ?? null) : null,

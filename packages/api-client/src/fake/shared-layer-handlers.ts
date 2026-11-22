@@ -168,8 +168,8 @@ const viewerId = () => people[fakeView().viewer].id;
 const letters: Record<LayerObject["kind"], string> = {
   roi: "R",
   measurement: "M",
-  region: "T+",
-  cell: "C+",
+  region: "T",
+  cell: "C",
   arrow: "A",
   text: "N",
 };
@@ -253,7 +253,9 @@ function newObject(
     slide_id: slideId,
     kind: fields.kind,
     number,
-    code: fields.code ?? `${letters[fields.kind]}${number}`,
+    code:
+      fields.code ??
+      `${letters[fields.kind]}${number}${fields.kind === "region" || fields.kind === "cell" ? "+" : ""}`,
     origin: fields.origin,
     source: fields.source,
     geometry: { ...fields.geometry },

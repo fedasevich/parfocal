@@ -153,7 +153,7 @@ describe("personal layer saves", () => {
 });
 
 describe("review task saves", () => {
-  const saved = { ...colleagueObject, id: "a-1", version: 1, task_id: "t-1" };
+  const saved = { ...colleagueObject, id: "a-1", version: 1, code: "T7+", task_id: "t-1" };
 
   test("a region drawn in a review task is added to the task", async () => {
     let told = 0;
@@ -161,7 +161,7 @@ describe("review task saves", () => {
     const outcome = await reviewTaskTransport("t-1", "s-1", () => {
       told += 1;
     }).create({ ...draft, class_id: "k-1" });
-    assert.deepEqual(outcome, { kind: "done", value: { id: "a-1", version: 1 } });
+    assert.deepEqual(outcome, { kind: "done", value: { id: "a-1", version: 1, code: "T7+" } });
     assert.equal(calls[0]?.method, "POST");
     assert.ok(calls[0]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/added"));
     assert.deepEqual(calls[0]?.body, { kind: "region", geometry: draft.geometry, class_id: "k-1" });

@@ -51,7 +51,14 @@ export function annotationTransport(slideId: string): Transport<AnnotationDraft>
       try {
         const response = await createAnnotation(slideId, body);
         if (response.status !== 201) return failure(response.status);
-        return { kind: "done", value: { id: response.data.id, version: response.data.version } };
+        return {
+          kind: "done",
+          value: {
+            id: response.data.id,
+            version: response.data.version,
+            code: response.data.code,
+          },
+        };
       } catch (error) {
         return failureOf(error);
       }
@@ -91,13 +98,17 @@ export function reviewTaskTransport(
   return {
     create: (body) =>
       told(
-        (async (): Promise<Outcome<{ id: string; version: number }>> => {
+        (async (): Promise<Outcome<{ id: string; version: number; code?: string | null }>> => {
           try {
             const response = await addReviewObject(taskId, slideId, body);
             if (response.status !== 201) return failure(response.status);
             return {
               kind: "done",
-              value: { id: response.data.id, version: response.data.version },
+              value: {
+                id: response.data.id,
+                version: response.data.version,
+                code: response.data.code,
+              },
             };
           } catch (error) {
             return failureOf(error);
@@ -119,7 +130,14 @@ export function sharedLayerTransport(taskId: string, slideId: string): Transport
       try {
         const response = await createSharedObject(taskId, slideId, body);
         if (response.status !== 201) return failure(response.status);
-        return { kind: "done", value: { id: response.data.id, version: response.data.version } };
+        return {
+          kind: "done",
+          value: {
+            id: response.data.id,
+            version: response.data.version,
+            code: response.data.code,
+          },
+        };
       } catch (error) {
         return failureOf(error);
       }

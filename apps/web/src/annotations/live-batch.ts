@@ -4,6 +4,7 @@ import type { SavedRecord } from "./saved-shapes.ts";
 export type LayerRecord = SavedRecord & {
   readonly id: string;
   readonly version: number;
+  readonly code?: string | null;
   readonly changed_by_user_id?: string | null;
 };
 

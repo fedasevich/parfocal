@@ -38,7 +38,7 @@ test("each ruler line joins the measurement list with its value and a time, and 
   await expect(rows.first().locator("[data-slot=time]")).toHaveText(/^\d\d:\d\d$/);
   await page.getByRole("button", { name: "Remove M1" }).click();
   await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText("M1");
+  await expect(rows.first()).toContainText("M2");
 });
 
 test("an area row keeps its size on one line with the perimeter under it, and the area list grows", async ({
@@ -73,7 +73,7 @@ test("an area row keeps its size on one line with the perimeter under it, and th
   expect(clipped).toBe(false);
 });
 
-test("drawn regions head with the class name, keep their M numbers on reload, and Clear all asks first", async ({
+test("drawn regions head with the class name, keep their T numbers on reload, and Clear all asks first", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -113,11 +113,15 @@ test("drawn regions head with the class name, keep their M numbers on reload, an
   await named();
   const ruler = list.getByTestId("measurement-row").and(page.locator("[data-kind=ruler]"));
   await expect(ruler).toContainText("M1");
+  const region = list.getByTestId("measurement-row").and(page.locator("[data-kind=area]"));
+  await expect(region).toContainText("T1⁺");
+  await expect(region).not.toContainText("M2");
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await page.reload();
   await expect(stage).toHaveAttribute("data-annotations", "loaded", { timeout: 15_000 });
   await expect(rows).toHaveCount(2);
   await expect(ruler).toContainText("M1");
+  await expect(region).toContainText("T1⁺");
   await named();
 
   await page.getByTestId("clear-annotations").click();

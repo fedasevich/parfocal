@@ -1,4 +1,4 @@
-export type Remote = { id: string | null; version: number };
+export type Remote = { id: string | null; version: number; code?: string | null };
 
 export type Theirs = {
   readonly version: number;
@@ -17,7 +17,9 @@ export type Outcome<T> =
   | { readonly kind: "conflict"; readonly theirs: Theirs };
 
 export type Transport<Body> = {
-  readonly create: (body: Body) => Promise<Outcome<{ id: string; version: number }>>;
+  readonly create: (
+    body: Body,
+  ) => Promise<Outcome<{ id: string; version: number; code?: string | null }>>;
   readonly update: (
     id: string,
     version: number,
@@ -138,6 +140,7 @@ export function createSaveQueue<Body>(
         if (outcome.kind === "done") {
           operation.remote.id = outcome.value.id;
           operation.remote.version = outcome.value.version;
+          operation.remote.code = outcome.value.code ?? null;
         }
         return outcome.kind === "conflict" ? outcome : { kind: outcome.kind };
       }

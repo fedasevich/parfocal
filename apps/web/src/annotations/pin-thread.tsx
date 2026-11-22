@@ -8,6 +8,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { toMentionTokens } from "../screens/review/mention-picking.ts";
 import { useMentionable } from "../screens/review/use-mentionable.ts";
 import type { AnnotationDocument } from "./document.ts";
+import { useSavedCodes } from "./drawn-object-ids.ts";
 import {
   homeOf,
   markResolved,
@@ -38,6 +39,7 @@ export function PinThread({
   const queryClient = useQueryClient();
   const person = usePeople();
   const members = useMentionable();
+  const codes = useSavedCodes();
   const me = okData(useGetMe().data);
   const detail = okData(
     useQuery({ queryKey: threadKey(home, threadId), queryFn: () => readThread(home, threadId) })
@@ -114,7 +116,7 @@ export function PinThread({
         resolved={resolved}
         loading={detail === undefined}
         messages={threadMessages(detail?.messages ?? [], person, me?.user_id, now())}
-        measurement={threadMeasurement(doc, threadId, micronsPerPixel)}
+        measurement={threadMeasurement(doc, threadId, micronsPerPixel, codes)}
         reply={reply}
         onReplyChange={setReply}
         onSend={send}
