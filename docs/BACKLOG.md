@@ -7179,7 +7179,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when unit tests name a drawn region and a drawn nucleus outline with the person mark and a ruler with M, an export test writes the ASCII form `T7+`, and the deployed Objects tab lists a drawn Tumor outline as T⁺ and not M.
   Depends on nothing. Size: S.
 
-- [ ] PROTO-163 · Drawn objects read as drawn in the queue, sign-off and export
+- [x] PROTO-163 · Drawn objects read as drawn in the queue, sign-off and export
   The deployed walk of 2026-11-22 found AI wording on a review of drawn outlines. The wizard keeps the AI result set's default task name after the source switches to drawn outlines. The queue's Decide panel says "the reviewer vs AI" and "Agree keeps the AI's call" and shows an AI class with score 0.0, and the default five point question starts with "The AI's claim". The export labels drawn objects "ai-confirmed" and "ai-edited", and the sign-off page shows sensitivity, precision and Dice for a task with no AI result. Name the drawer and the tool instead of the AI, give drawn objects their own export origin, and hide model scores when the task has no AI result.
   Done when a spec on the fake API reviews drawn outlines and finds no AI wording in the wizard, queue and sign-off, an export test writes the drawn origin, and the deployed app shows the same.
   Depends on PROTO-160. Size: M.
